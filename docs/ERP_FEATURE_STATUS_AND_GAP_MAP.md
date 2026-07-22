@@ -1,5 +1,9 @@
 # ERP Feature Status and Gap Map
 
+## DEVOPS-1C staging readiness
+
+DEVOPS-1B clean-install migration repair is fully cleared. Staging architecture/readiness is in progress on `devops/staging-readiness-plan`; this is infrastructure planning/local synthetic rehearsal, not a deployed ERP feature. SQLite is acceptable only with one process and one persistent local disk. No cloud/DNS/operational database/live provider action occurred. Physical PWA certification and external staging remain pending user provider/budget/hostname/access/backup/monitoring/uptime decisions. Prompt 21B-21D remain blocked, Prompt 22B conditional, and Parent/Teacher/Principal Schoolknot audits pending.
+
 ## Prompt 22A-QA status update
 
 Prompt 22A is fully cleared as a current, privacy-safe and legally cautious planning package. QA fixed three documentation-precision gaps and confirmed no runtime implementation. Verification passed with 274 pages, 376 APIs, 1,419 tests across 156 files, 211/211 static pages and backup version 37. Prompt 22B remains conditional on named leadership, professional EPFO/labour-law and privacy approvals plus the decision-record controls; Prompt 22C/22D remain separately blocked. Release result: `PROMPT_22A_CLEARED_BUT_22B_CONDITIONAL`.

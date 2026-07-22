@@ -59,6 +59,12 @@ Never paste credentials into chat, issues, pull requests, commit messages, shell
 
 ## DEVOPS-1B migration-chain repair
 
-The implementation branch is `devops/clean-install-migration-repair`. Its active migration chain is one generated baseline; the original chain is preserved under `prisma/migration-archives/devops1b-legacy-chain/` with a checksum manifest. Empty deploy/status, schema equivalence, copied-database onboarding, repeated onboarding, version-37 restore, and fresh-clone checks are mandatory before independent DEVOPS-1B-QA. Do not merge the branch into `main` until QA clears it.
+DEVOPS-1B and its independent QA are fully cleared on `main`. Its active migration chain is one generated baseline; the original chain is preserved under `prisma/migration-archives/devops1b-legacy-chain/` with a checksum manifest. Empty deploy/status, schema equivalence, copied-database onboarding, repeated onboarding, version-37 restore, and fresh-clone checks remain mandatory regression gates.
 
-The operational database remains unbaselined during implementation. `migrate resolve` is rehearsed only on a copy; production onboarding needs separate approval and the exact controls in `CLEAN_INSTALL_AND_EXISTING_DATABASE_ONBOARDING.md`.
+The operational database remains unbaselined after DEVOPS-1B clearance. `migrate resolve` was rehearsed only on a copy; real operational onboarding needs separate approval and the exact controls in `CLEAN_INSTALL_AND_EXISTING_DATABASE_ONBOARDING.md`.
+
+## DEVOPS-1C staging-readiness branch
+
+`devops/staging-readiness-plan` contains planning, provider-neutral templates, environment validation and synthetic local rehearsal only. Git never carries a completed environment file, database, sidecar, backup, OCR/upload, log, provider object or rehearsal root. No cloud deployment or DNS change is part of DEVOPS-1C. Read the staging documents in `docs/INDEX.md` and run `deployment:env-check` with an isolated environment before any deployment proposal.
+
+DEVOPS-1C implementation verification completed locally with 274 pages, 377 APIs, 1,471 passing tests across 162 files, 211/211 static pages, version-37 backup and unchanged operational/schema/migration integrity. DEVOPS-1C-QA and any later merge remain separate gates; the feature branch must be pushed cleanly before QA begins.

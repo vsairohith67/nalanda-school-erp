@@ -97,6 +97,18 @@ export function contentSecurityPolicy(nonce: string, enableUpgrade = process.env
   ].join("; ");
 }
 
+export function applicationOrigin(
+  request: Pick<NextRequest, "nextUrl">,
+  configuredOrigin = process.env.APP_ORIGIN?.trim()
+) {
+  if (configuredOrigin) {
+    try {
+      return new URL(configuredOrigin).origin;
+    } catch {}
+  }
+  return request.nextUrl.origin;
+}
+
 function validOrigin(value: string, expectedOrigins: Set<string>) {
   try {
     const parsed = new URL(value);
@@ -109,7 +121,8 @@ function validOrigin(value: string, expectedOrigins: Set<string>) {
 
 function requestOrigins(
   request: Pick<NextRequest, "headers" | "nextUrl">,
-  trustProxyHeaders = process.env.TRUST_PROXY_HEADERS === "true"
+  trustProxyHeaders = process.env.TRUST_PROXY_HEADERS === "true" &&
+    process.env.NALANDA_TRUSTED_PROXY_MODE === "single-hop-sanitized"
 ) {
   const origins = new Set([request.nextUrl.origin]);
   const host = trustProxyHeaders

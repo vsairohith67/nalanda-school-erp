@@ -1,5 +1,13 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## DEVOPS-1C — HTTPS staging architecture and local readiness (2026-07-23)
+
+Continued from the fully cleared DEVOPS-1A/1B checkpoints on feature branch `devops/staging-readiness-plan`. Inventoried Next.js/Prisma/SQLite, every persistent write class, providers/jobs, security headers, proxy/IP logic, logging, health and PWA. Selected restricted single-instance SQLite staging; recommended a 2 GB Linux VPS in Mumbai and a paid managed container with one persistent disk as fallback; rejected serverless and ephemeral-disk platforms. Added a fail-closed secret/path/provider environment validator, a non-mutating health route, trusted-proxy dual opt-in, staging process templates, synthetic deployment/rollback/privacy/PWA/cost plans and focused tests. The ignored local rehearsal passed fresh migration, synthetic seed/backup, production start, loopback HTTPS proxy, secure cookie, HSTS, private/static cache checks, persistent restart and rollback to a distinct prior build.
+
+No cloud deployment, externally accessible server, account/resource purchase, DNS/Google Workspace change, operational database onboarding/upload/migration, production secret, live WhatsApp/SMS/Email/AI/OCR/cloud-backup/payment provider, Prompt 21/22 expansion or Schoolknot gap implementation occurred. Physical PWA certification and Parent/Teacher/Principal Schoolknot audits remain pending.
+
+DEVOPS-1C implementation verification: 274 pages, 377 APIs, typecheck, 1,471 tests across 162 files, 211/211 static pages and Git safety passed. Final clean backup is version 37 `nalanda-fee-control-backup-2026-07-23-04-19.json`. Operational database SHA-256 `1556B98FCAF0F2475C0C0F1BAEEFCE4E638680B9D4C7DC9BFFB8B6F0D09B4392`, 4,771,840-byte size, timestamp, schema/migration hashes and the 8/8/19/₹99,100 business baseline remained unchanged. This is feature-branch readiness evidence, not a staging deployment claim.
+
 ## Prompt 22A-QA — Staff DOB, EPFO/EPS and Age-58 Planning QA
 
 Reverified the Prompt 22A package against current official EPFO, India Code, Ministry of Labour and Employment, PIB and MeitY sources. Confirmed that age 58 is only a human EPS administration review trigger; it is not automatic retirement, termination, eligibility, a claim, contribution action or a pension promise. Confirmed full-UAN omission, masked-last-four evaluation, distinct unknown/unverified states, Director-only reminder defaults, purpose-based role access, privacy/retention controls, deterministic India-local reminder design, no-certification checklist wording and exact 22B/22C/22D separation.

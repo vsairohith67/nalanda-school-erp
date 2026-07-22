@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session-token";
 import { isPublicWebsitePath } from "@/lib/public-website-routing";
 import {
+  applicationOrigin,
   contentSecurityPolicy,
   isProviderWebhookPath,
   requestBodyTooLarge,
@@ -16,6 +17,7 @@ const publicPaths = [
   "/sw.js",
   "/nalanda-logo.jpg",
   "/api/auth/login",
+  "/api/deployment-health",
   "/api/setup"
 ];
 const publicPathPrefixes = ["/api/whatsapp/webhook/", "/api/sms-email/webhook/", "/icons/"];
@@ -54,7 +56,7 @@ export async function middleware(request: NextRequest) {
       response.headers.set("cache-control", "private, no-store");
       return applySecurityHeaders(response);
     }
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = new URL("/login", applicationOrigin(request));
     loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     const response = NextResponse.redirect(loginUrl);
     response.headers.set("cache-control", "private, no-store");

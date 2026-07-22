@@ -11,7 +11,7 @@ async function main() {
     generatedAt,
     generatedBy: process.env.USERNAME || process.env.USER || "Local CLI"
   });
-  const backupDirectory = path.resolve(process.cwd(), "backups");
+  const backupDirectory = path.resolve(process.env.BACKUP_DIRECTORY?.trim() || path.join(process.cwd(), "backups"));
   const backupPath = path.join(backupDirectory, formatBackupFilename(generatedAt));
 
   await mkdir(backupDirectory, { recursive: true });

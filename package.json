@@ -50,7 +50,11 @@
     "migration:fresh-check": "tsx scripts/migration-fresh-install-check.ts",
     "migration:existing-db-check": "tsx scripts/migration-existing-db-rehearsal.ts",
     "migration:schema-check": "tsx scripts/migration-schema-equivalence.ts",
-    "migration:restore-check": "tsx scripts/migration-backup-restore-check.ts"
+    "migration:restore-check": "tsx scripts/migration-backup-restore-check.ts",
+    "deployment:env-check": "tsx scripts/validate-deployment-environment.ts",
+    "deployment:integrity-check": "tsx scripts/verify-devops1c-operational-integrity.ts",
+    "staging:synthetic-seed": "tsx scripts/seed-staging-synthetic.ts",
+    "staging:synthetic-check": "tsx scripts/verify-staging-synthetic.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.10.1",

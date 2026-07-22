@@ -49,7 +49,7 @@ Prompt 15B-QA additionally verifies that API serializers independently allowlist
 
 Not built: promotion, repeat, double promotion, transfer/left/dropout action workflows, rejoin, correction UI, bulk rollover/finalization, UDISE+ export, exams, admissions, or certificates. Prompt 15C must add preview, evidence, approval, finalization, and compensating correction behavior without weakening this history model.
 
-The operational database is still intentionally unbaselined during DEVOPS-1B implementation. The repaired feature branch uses a generated active baseline and rehearses `migrate resolve --applied` only on byte-for-byte copies. Follow `CLEAN_INSTALL_AND_EXISTING_DATABASE_ONBOARDING.md`; never casually mark a database applied and never use `db push` as deployment.
+DEVOPS-1B and independent QA are fully cleared on `main`; the operational database is still intentionally unbaselined. The repaired active chain uses a generated baseline and rehearses `migrate resolve --applied` only on byte-for-byte copies. Follow `CLEAN_INSTALL_AND_EXISTING_DATABASE_ONBOARDING.md`; never casually mark a database applied and never use `db push` as deployment.
 
 ## Architecture overview
 
@@ -947,4 +947,10 @@ Prompt 23B-M-QA final verification: 1,437 tests across 158 files passed; optimiz
 
 The source baseline belongs only in private `vsairohith67/nalanda-school-erp`. Read `GIT_BASELINE_AND_RECOVERY_WORKFLOW.md` before staging or pushing. Run `pnpm.cmd git:safety-check` before and after staging, inspect the full staged name list, and never track `.env`, SQLite/sidecar files, backup JSON, private uploads/OCR/provider storage, QA/log/export artifacts, Schoolknot files, `node_modules`, `.next`, or coverage. The stable source tag is `baseline-sec1-management-2026-07-22`.
 
-The Git baseline does not contain operational recovery data and does not repair the known clean-install migration-chain limitation. DEVOPS-1B migration repair is a separate later phase and may begin only after independent DEVOPS-1A-QA clears the private baseline. Prompt 21B/21C/21D remain blocked, Prompt 22B remains conditional, and Parent/Teacher/Principal Schoolknot audits remain pending.
+The Git baseline does not contain operational recovery data. DEVOPS-1B and its independent QA later cleared the clean-install migration-chain repair without onboarding the real operational database. Prompt 21B/21C/21D remain blocked, Prompt 22B remains conditional, and Parent/Teacher/Principal Schoolknot audits remain pending.
+
+## DEVOPS-1C staging readiness
+
+DEVOPS-1B is fully cleared. DEVOPS-1C runs only on `devops/staging-readiness-plan` and defines restricted single-instance SQLite staging, a Mumbai Linux VPS recommendation, a managed persistent-disk container fallback, fail-closed environment validation, synthetic database deployment, HTTPS/proxy/cache controls, monitoring/logging, singleton jobs, rollback, privacy, cost decisions and physical PWA entry gates. No cloud deployment, DNS record, provider account/resource, operational database onboarding or live provider activation occurred. Physical Android/iPhone certification remains pending HTTPS staging. Prompt 21B-21D remain blocked, Prompt 22B conditional, and Parent/Teacher/Principal Schoolknot audits pending.
+
+The DEVOPS-1C local rehearsal passed on loopback with a fresh synthetic database, version-37 synthetic backup, production build/start, disposable self-signed HTTPS proxy, HSTS/secure-cookie/no-store/static-cache checks, database persistence across restart and rollback to a distinct prior build. Implementation verification passed 274 pages, 377 APIs, 1,471 tests across 162 files and 211/211 static pages. The operational database remained byte-for-byte at SHA-256 `1556B98FCAF0F2475C0C0F1BAEEFCE4E638680B9D4C7DC9BFFB8B6F0D09B4392`; final operational backup is version 37 `nalanda-fee-control-backup-2026-07-23-04-19.json`.

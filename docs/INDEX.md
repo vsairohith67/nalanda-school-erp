@@ -182,3 +182,22 @@ The Management audit and corrected Management-only reconciliation are independen
 - [Clean Install and Existing Database Onboarding](CLEAN_INSTALL_AND_EXISTING_DATABASE_ONBOARDING.md) - fresh clone, empty deploy, copied unbaselined-database procedure, rollback and future migration workflow.
 
 DEVOPS-1B changes only migration history/tooling/documentation. Prompt 21B/21C/21D remain blocked, Prompt 22B remains conditional, and the operational database remains untouched and unbaselined pending separate approval.
+
+## DEVOPS-1C staging architecture and readiness
+
+- [Current Runtime Inventory](STAGING_CURRENT_RUNTIME_INVENTORY.md) - Node/Next/Prisma/SQLite, filesystem, providers, jobs, security, PWA, memory and runtime classification.
+- [SQLite Feasibility and Limits](STAGING_SQLITE_FEASIBILITY_AND_LIMITS.md) - restricted single-instance decision, concurrency, WAL/SHM, backups, recovery and exit thresholds.
+- [Hosting Options](STAGING_HOSTING_OPTIONS.md) - official-source VPS/container/serverless/ephemeral/Windows comparison and recommendation.
+- [Deployment Architecture](STAGING_DEPLOYMENT_ARCHITECTURE.md) - process, TLS ingress, persistent volume, isolation, health, migration and rollback topology.
+- [Environment and Secret Matrix](STAGING_ENVIRONMENT_AND_SECRET_MATRIX.md) - complete staging contract, validation, rotation, owners and live-disabled providers.
+- [Database Deployment and Rollback](STAGING_DATABASE_DEPLOYMENT_AND_ROLLBACK.md) - fresh synthetic path, prohibited copied-data path, backup/restore controls.
+- [Deployment Pipeline](STAGING_DEPLOYMENT_PIPELINE.md) - immutable releases, gates, maintenance, singleton migration and rollback.
+- [TLS, Proxy and Headers](STAGING_TLS_PROXY_AND_SECURITY_HEADERS.md) - HTTPS/HSTS/cookies/forwarding/limits/CSP/cache/CORS/rate limits.
+- [Monitoring and Logging](STAGING_MONITORING_AND_LOGGING_PLAN.md) - safe signals, redaction, retention, alerts and central sink requirement.
+- [Scheduler and Singleton Jobs](STAGING_SCHEDULER_AND_SINGLETON_JOBS.md) - backup/messaging/OCR/AI/cleanup/reconciliation/health job state.
+- [Staging Data and Privacy](STAGING_DATA_AND_PRIVACY_POLICY.md) - synthetic-only fixtures, access, screenshots, deletion and exception process.
+- [PWA Physical Device Checklist](PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md) - gated Android/iPhone installation/auth/update/offline/cache/uninstall plan.
+- [Cost and Decision Register](STAGING_COST_AND_DECISION_REGISTER.md) - low/expected/high costs, India considerations and user decisions.
+- [Local Staging Rehearsal Report](STAGING_LOCAL_REHEARSAL_REPORT.md) - synthetic migrate/build/HTTPS/restart/backup/rollback evidence and corrected defects.
+
+DEVOPS-1B is fully cleared. DEVOPS-1C does not claim a cloud deployment, DNS change, operational database onboarding or paid resource. Physical PWA certification remains pending. Prompt 21B/21C/21D remain blocked, Prompt 22B remains conditional, and Parent/Teacher/Principal Schoolknot audits remain pending.

@@ -1,5 +1,9 @@
 # Nalanda Fee Control — Beginner Operating Guide
 
+## DEVOPS-1C staging readiness planning (2026-07-23)
+
+DEVOPS-1B and its independent QA are fully cleared. No website/server was put online in DEVOPS-1C. No hosting account, bill, DNS record, Google Workspace record, real database, secret or live provider was created or changed. The safe plan uses one Linux server/process and one persistent local disk for a fresh synthetic SQLite database. Read `STAGING_DEPLOYMENT_ARCHITECTURE.md`, `STAGING_ENVIRONMENT_AND_SECRET_MATRIX.md`, and `PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md`; do not try physical phone certification until an approved HTTPS staging site exists.
+
 ## Staff DOB and EPFO/EPS planning
 
 Prompt 22A and its QA are cleared plans only. There is no Staff DOB form, EPFO status screen, UAN field, age-58 reminder or compliance checklist yet. Do not start collecting or typing real DOB, Aadhaar, PAN, UAN, EPFO password, OTP, bank detail, portal screenshot or source-document image into the ERP, notes, chat, spreadsheets or AI tools.

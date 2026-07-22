@@ -2,11 +2,13 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import {
   checkLoginRateLimit,
+  loginRequestSource,
   recordLoginFailure,
   resetLoginRateLimitForTests
 } from "../lib/auth-rate-limit";
 import { parsePositiveIntegerPathParameter } from "../lib/path-parameters";
 import {
+  applicationOrigin,
   contentSecurityPolicy,
   requestBodyLimitBytes,
   requestBodyTooLarge,
@@ -17,6 +19,7 @@ describe("SEC-1 runtime security hardening", () => {
   const previousSecret = process.env.AUTH_SECRET;
   const previousSecure = process.env.SESSION_COOKIE_SECURE;
   const previousTrustProxy = process.env.TRUST_PROXY_HEADERS;
+  const previousTrustedProxyMode = process.env.NALANDA_TRUSTED_PROXY_MODE;
 
   it("provides a safe custom 404 with an explicit recovery action", () => {
     const source = readFileSync("app/not-found.tsx", "utf8");
@@ -31,6 +34,7 @@ describe("SEC-1 runtime security hardening", () => {
     process.env.AUTH_SECRET = "qasec1-test-secret-that-is-longer-than-thirty-two-characters";
     process.env.SESSION_COOKIE_SECURE = "false";
     delete process.env.TRUST_PROXY_HEADERS;
+    delete process.env.NALANDA_TRUSTED_PROXY_MODE;
   });
 
   afterEach(() => {
@@ -38,6 +42,8 @@ describe("SEC-1 runtime security hardening", () => {
     process.env.SESSION_COOKIE_SECURE = previousSecure;
     if (previousTrustProxy === undefined) delete process.env.TRUST_PROXY_HEADERS;
     else process.env.TRUST_PROXY_HEADERS = previousTrustProxy;
+    if (previousTrustedProxyMode === undefined) delete process.env.NALANDA_TRUSTED_PROXY_MODE;
+    else process.env.NALANDA_TRUSTED_PROXY_MODE = previousTrustedProxyMode;
   });
 
   it("bounds repeated account and source login failures without permanent lockout", async () => {
@@ -183,7 +189,24 @@ describe("SEC-1 runtime security hardening", () => {
     };
     expect(unsafeRequestOriginAllowed(request as never)).toBe(false);
     process.env.TRUST_PROXY_HEADERS = "true";
+    expect(unsafeRequestOriginAllowed(request as never)).toBe(false);
+    process.env.NALANDA_TRUSTED_PROXY_MODE = "single-hop-sanitized";
     expect(unsafeRequestOriginAllowed(request as never)).toBe(true);
+  });
+
+  it("builds protected redirects from the validated application origin", () => {
+    const request = { nextUrl: new URL("http://127.0.0.1:3101/settings") };
+    expect(applicationOrigin(request as never, "https://staging.nalandaps.com/path")).toBe("https://staging.nalandaps.com");
+    expect(applicationOrigin(request as never, "not-a-url")).toBe("http://127.0.0.1:3101");
+  });
+
+  it("accepts a forwarded client address only in the sanitized single-hop mode", () => {
+    const headers = new Headers({ "x-forwarded-for": "203.0.113.10, 198.51.100.2", "x-real-ip": "192.0.2.20" });
+    expect(loginRequestSource(headers, { TRUST_PROXY_HEADERS: "true" })).toBe("direct");
+    expect(loginRequestSource(headers, {
+      TRUST_PROXY_HEADERS: "true",
+      NALANDA_TRUSTED_PROXY_MODE: "single-hop-sanitized"
+    })).toBe("203.0.113.10");
   });
 
   it("uses a nonce-based CSP without script unsafe-inline or remote wildcards", () => {

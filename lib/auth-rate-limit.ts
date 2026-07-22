@@ -65,8 +65,14 @@ export async function clearLoginAccountFailures(identifier: string) {
   }
 }
 
-export function loginRequestSource(headers: Pick<Headers, "get">, environment = process.env) {
-  if (environment.TRUST_PROXY_HEADERS === "true") {
+export function loginRequestSource(
+  headers: Pick<Headers, "get">,
+  environment: Record<string, string | undefined> = process.env
+) {
+  if (
+    environment.TRUST_PROXY_HEADERS === "true" &&
+    environment.NALANDA_TRUSTED_PROXY_MODE === "single-hop-sanitized"
+  ) {
     const forwarded = headers.get("x-forwarded-for")?.split(",", 1)[0]?.trim();
     const real = headers.get("x-real-ip")?.trim();
     const value = forwarded || real;

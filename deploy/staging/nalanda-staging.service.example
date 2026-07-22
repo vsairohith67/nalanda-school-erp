@@ -1,0 +1,30 @@
+[Unit]
+Description=Nalanda ERP synthetic staging
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nalanda-staging
+Group=nalanda-staging
+WorkingDirectory=/srv/nalanda-staging/current
+EnvironmentFile=/etc/nalanda-staging/environment
+ExecStart=/usr/bin/pnpm exec next start --hostname 127.0.0.1 --port 3000
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=60
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictSUIDSGID=true
+UMask=0077
+LimitNOFILE=16384
+
+[Install]
+WantedBy=multi-user.target

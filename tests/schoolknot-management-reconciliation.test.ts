@@ -185,7 +185,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
     expect(countRouteFiles("app", "page.tsx")).toBe(273);
     expect(existsSync("app/sw.js/route.ts")).toBe(true);
     expect(countRouteFiles("app", "page.tsx") + 1).toBe(274);
-    expect(countRouteFiles("app/api", "route.ts")).toBe(376);
+    expect(countRouteFiles("app/api", "route.ts")).toBe(376 + Number(existsSync("app/api/deployment-health/route.ts")));
     expect(read("lib/backup.ts")).toContain("backupVersion: 37");
   });
 

@@ -1,0 +1,25 @@
+# DESIGN TEMPLATE ONLY. Do not apply until the hostname/DNS/provider are approved.
+staging.nalandaps.com {
+  encode zstd gzip
+
+  # Overwrite client-supplied forwarding values for the app's single-hop trust mode.
+  reverse_proxy 127.0.0.1:3000 {
+    header_up X-Forwarded-For {remote_host}
+    header_up X-Real-IP {remote_host}
+    header_up X-Forwarded-Host {host}
+    header_up X-Forwarded-Proto {scheme}
+  }
+
+  header {
+    -Server
+  }
+
+  log {
+    output stdout
+    format json
+  }
+}
+
+# Before production use, add reviewed request-body, header, connection, route-specific
+# OCR (26 MiB) and default (5 MiB) limits using the selected Caddy version's syntax.
+# The application remains the fail-closed second enforcement layer.
