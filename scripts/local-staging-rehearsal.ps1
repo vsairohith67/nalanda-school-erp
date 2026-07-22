@@ -108,7 +108,7 @@ function Start-App([string]$workingDirectory, [string]$name) {
 function Invoke-Check([string]$name, [string]$path, [string]$method = "GET", [string]$body = "") {
   $headers = Join-Path $logRoot "$name.headers"
   $response = Join-Path $logRoot "$name.body"
-  $arguments = @("-k", "-sS", "--connect-timeout", "2", "--max-time", "15", "-D", $headers, "-o", $response, "-w", "%{http_code}", "https://127.0.0.1:$ProxyPort$path")
+  $arguments = @("-k", "-sS", "--connect-timeout", "2", "--max-time", "15", "-D", "-", "-o", $response, "-w", "`n__STATUS__:%{http_code}", "https://127.0.0.1:$ProxyPort$path")
   $requestFile = $null
   if ($method -eq "POST") {
     $requestFile = Join-Path $logRoot "$name.request.json"
@@ -116,11 +116,21 @@ function Invoke-Check([string]$name, [string]$path, [string]$method = "GET", [st
     $arguments += @("-X", "POST", "-H", "content-type: application/json", "--data-binary", "@$requestFile")
   }
   try {
-    $status = & curl.exe @arguments
+    $curlOutput = & curl.exe @arguments
     Assert-Exit "curl $name"
+    $rawHeaders = $curlOutput -join "`n"
+    if ($rawHeaders -notmatch "__STATUS__:(\d{3})") { throw "curl $name returned no status" }
+    $status = [int]$Matches[1]
+    $rawHeaders = $rawHeaders -replace "(?m)^__STATUS__:\d{3}\s*$", ""
+    $safeHeaders = [Text.RegularExpressions.Regex]::Replace(
+      $rawHeaders,
+      "(?im)^(set-cookie:\s*[^=;\r\n]+)=[^;\r\n]*(.*)$",
+      '$1=[REDACTED]$2'
+    )
+    [IO.File]::WriteAllText($headers, $safeHeaders, [Text.UTF8Encoding]::new($false))
     return [pscustomobject]@{
-      Status = [int]$status
-      Headers = (Get-Content -LiteralPath $headers -Raw).ToLowerInvariant()
+      Status = $status
+      Headers = $safeHeaders.ToLowerInvariant()
       Body = (Get-Content -LiteralPath $response -Raw)
     }
   } finally {
@@ -149,6 +159,13 @@ try {
     Assert-Exit "synthetic seed"
     & pnpm.cmd staging:synthetic-check
     Assert-Exit "synthetic check"
+    & pnpm.cmd backup
+    Assert-Exit "synthetic backup"
+    $latestBackup = Get-ChildItem -LiteralPath $env:BACKUP_DIRECTORY -File | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+    $backupDocument = Get-Content -LiteralPath $latestBackup.FullName -Raw | ConvertFrom-Json
+    if ($backupDocument.metadata.backupVersion -ne 37 -or @($backupDocument.students).Count -ne 1 -or @($backupDocument.payments).Count -ne 0) {
+      throw "LOCAL_REHEARSAL_BACKUP_VALIDATION_FAILED"
+    }
   } finally {
     Pop-Location
   }
@@ -247,6 +264,7 @@ try {
     hsts = $true
     privateNoStore = $true
     staticImmutable = $true
+    backupVersion = 37
     restartDatabaseHashStable = $true
     rollbackLogin = $rollbackLogin.Status
     currentBuildId = $currentBuildId
@@ -258,6 +276,7 @@ try {
   Stop-ExactProcess $rollback
   Stop-ExactProcess $backend
   Stop-ExactProcess $proxy
+  if (Test-Path -LiteralPath $pfxPath) { Remove-Item -LiteralPath $pfxPath -Force }
   Remove-Item Env:STAGING_SYNTHETIC_DIRECTOR_PASSWORD -ErrorAction SilentlyContinue
   Remove-Item Env:LOCAL_STAGING_PFX_PASSPHRASE -ErrorAction SilentlyContinue
 }

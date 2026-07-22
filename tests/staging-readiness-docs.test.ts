@@ -15,7 +15,8 @@ const docs = [
   "STAGING_DATA_AND_PRIVACY_POLICY.md",
   "PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md",
   "STAGING_COST_AND_DECISION_REGISTER.md",
-  "STAGING_LOCAL_REHEARSAL_REPORT.md"
+  "STAGING_LOCAL_REHEARSAL_REPORT.md",
+  "STAGING_READINESS_QA_REPORT.md"
 ];
 const source = (name: string) => readFileSync(`docs/${name}`, "utf8");
 

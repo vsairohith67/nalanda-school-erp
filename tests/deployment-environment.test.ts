@@ -1,4 +1,6 @@
 import path from "node:path";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 import {
   formatDeploymentEnvironmentResult,
@@ -14,6 +16,7 @@ function validEnvironment(): NodeJS.ProcessEnv {
     NODE_ENV: "production",
     NALANDA_ENVIRONMENT: "staging",
     NALANDA_DEPLOYMENT_ID: "staging-validator-20260723",
+    NEXT_PUBLIC_PWA_BUILD_VERSION: "staging-validator-20260723",
     NALANDA_LOCAL_REHEARSAL: "true",
     QA20C_ISOLATED_DATABASE: "true",
     APP_ORIGIN: "https://staging.localhost",
@@ -86,6 +89,24 @@ describe("staging deployment environment validation", () => {
     environment.SESSION_COOKIE_SECURE = "false";
     environment.NALANDA_TRUSTED_PROXY_MODE = "disabled";
     expect(codes(environment).filter((code) => code === "SECURE_TRANSPORT_SETTING_REQUIRED")).toHaveLength(2);
+  });
+
+  it("rejects production mixing in the public PWA build identifier", () => {
+    const environment = validEnvironment();
+    environment.NEXT_PUBLIC_PWA_BUILD_VERSION = "staging-production-release";
+    expect(codes(environment)).toContain("ENVIRONMENT_IDENTIFIER_MIXED");
+  });
+
+  it("rejects every release-local Next environment file outside local rehearsal", () => {
+    const release = mkdtempSync(path.join(tmpdir(), "nalanda-staging-release-"));
+    try {
+      writeFileSync(path.join(release, ".env.production"), "AUTH_SECRET=not-printed\n", "utf8");
+      const environment = validEnvironment();
+      environment.NALANDA_LOCAL_REHEARSAL = "false";
+      expect(validateDeploymentEnvironment(environment, release).issues.map((issue) => issue.code)).toContain("RELEASE_ENV_FILE_REJECTED");
+    } finally {
+      rmSync(release, { recursive: true, force: true });
+    }
   });
 
   it("rejects database and persistent-path escapes", () => {

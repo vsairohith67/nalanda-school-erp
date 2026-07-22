@@ -15,6 +15,7 @@ Internet later
        private/fee-register-ocr/
        backups/json/
        backups/encrypted/
+       cache/next/<build-id>/
        temp/cloud-backup/
        temp/restore-rehearsal/
 ```
@@ -27,7 +28,8 @@ Use a dedicated unprivileged deployment/service account. The app release is read
 - `/srv/nalanda-staging/current` is an atomic symlink to the selected release.
 - `/srv/nalanda-staging/data` persists independently of releases.
 - `/etc/nalanda-staging/environment` (or the provider secret store) contains mode `0600` environment values; it is never in Git or a release archive.
-- systemd runs one `pnpm exec next start --hostname 127.0.0.1 --port 3000` process, restarts on failure with bounds, and captures stdout/stderr.
+- Before a release becomes read-only, deployment creates a release-specific writable `.next/cache` symlink to `/srv/nalanda-staging/data/cache/next/<build-id>/`. It is disposable cache, excluded from backups, and is never shared across build IDs.
+- systemd runs one explicit Node/Next CLI process on `127.0.0.1:3000`, makes releases read-only, grants writes only to the data/lock roots, restarts on failure with bounds, and captures stdout/stderr.
 - `flock` or the platform's equivalent serializes deploy, migration, backup, restore, cleanup, and scheduled singleton jobs.
 
 ## HTTPS, hostname, and Google Workspace boundary

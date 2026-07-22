@@ -199,5 +199,6 @@ DEVOPS-1B changes only migration history/tooling/documentation. Prompt 21B/21C/2
 - [PWA Physical Device Checklist](PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md) - gated Android/iPhone installation/auth/update/offline/cache/uninstall plan.
 - [Cost and Decision Register](STAGING_COST_AND_DECISION_REGISTER.md) - low/expected/high costs, India considerations and user decisions.
 - [Local Staging Rehearsal Report](STAGING_LOCAL_REHEARSAL_REPORT.md) - synthetic migrate/build/HTTPS/restart/backup/rollback evidence and corrected defects.
+- [DEVOPS-1C-QA Independent Report](STAGING_READINESS_QA_REPORT.md) - independent architecture/security/cost review, corrected defects and fresh synthetic rehearsal evidence.
 
 DEVOPS-1B is fully cleared. DEVOPS-1C does not claim a cloud deployment, DNS change, operational database onboarding or paid resource. Physical PWA certification remains pending. Prompt 21B/21C/21D remain blocked, Prompt 22B remains conditional, and Parent/Teacher/Principal Schoolknot audits remain pending.

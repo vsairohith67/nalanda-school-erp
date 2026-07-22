@@ -27,7 +27,7 @@ The operational database has no `_prisma_migrations` table. It is never a stagin
 - Next.js 15 App Router runs as a long-lived Node server. `next.config.ts` does not set static export or `output: "standalone"`; the supported local production command is `pnpm exec next start` after `pnpm build`.
 - `pnpm build` runs `prisma generate` before `next build`. The generated Prisma client must match the checked-out schema and active migration.
 - Prisma uses SQLite exclusively through `DATABASE_URL`. The application process opens the file directly; it is not a network database client.
-- React/Next caches and image optimization use process memory and `.next` runtime/build artifacts. Authenticated dynamic pages are explicitly `private, no-store`.
+- React/Next caches and image optimization use process memory and a writable `.next/cache`. Staging maps that path to a release-specific disposable directory under the data root so the release remains read-only; it is not a recovery artifact. Authenticated dynamic pages are explicitly `private, no-store`.
 - Session state is a signed, 12-hour, HttpOnly, SameSite=strict cookie. Every authenticated request revalidates the current User, active state, role, and password-derived credential tag in SQLite.
 - Build/typecheck can exceed Node's default 2 GB heap in this checkout. The bounded 4 GB heap is a build-time ceiling only. Start staging with 2 GB RAM and measure steady-state/RSS before considering a smaller instance; 512 MB is not an approved assumption.
 
@@ -70,7 +70,7 @@ Runtime writes discovered by source inspection:
 5. SQLite database plus journal/WAL/SHM beside the configured database file.
 6. Explicit CLI-only pilot/sample, migration QA, and SEC-1 evidence outputs. These are not normal staging server writes and must remain disabled or pointed at ignored synthetic roots.
 
-No private asset is intentionally written under `public/`. `.next`, source releases, and dependencies are replaceable release artifacts, not persistence locations.
+No private asset is intentionally written under `public/`. Source releases and dependencies are replaceable read-only artifacts. The only runtime exception is `.next/cache`, which is symlinked to a build-specific disposable data-root cache and excluded from backup/rollback state.
 
 ## Security, proxy, cache, and PWA observations
 

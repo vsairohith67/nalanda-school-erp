@@ -1,5 +1,5 @@
 import path from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 
 export type DeploymentEnvironmentIssue = {
   code: string;
@@ -92,6 +92,13 @@ export function validateDeploymentEnvironment(
   if (/\bprod(?:uction)?\b/i.test(deploymentId)) {
     add("ENVIRONMENT_IDENTIFIER_MIXED", "NALANDA_DEPLOYMENT_ID", "Production and staging identifiers must not be mixed.");
   }
+  const pwaBuildVersion = value(environment, "NEXT_PUBLIC_PWA_BUILD_VERSION");
+  if (!/^staging-[a-z0-9][a-z0-9._-]{2,80}$/i.test(pwaBuildVersion)) {
+    add("PWA_BUILD_ID_INVALID", "NEXT_PUBLIC_PWA_BUILD_VERSION", "Must be a staging-prefixed non-secret release identifier.");
+  }
+  if (/\bprod(?:uction)?\b/i.test(pwaBuildVersion)) {
+    add("ENVIRONMENT_IDENTIFIER_MIXED", "NEXT_PUBLIC_PWA_BUILD_VERSION", "Production and staging identifiers must not be mixed.");
+  }
 
   const origin = value(environment, "APP_ORIGIN");
   try {
@@ -129,11 +136,16 @@ export function validateDeploymentEnvironment(
   const dataRootValue = value(environment, "STAGING_DATA_DIR");
   const dataRoot = dataRootValue ? path.resolve(dataRootValue) : "";
   const localRehearsal = value(environment, "NALANDA_LOCAL_REHEARSAL") === "true";
-  if (!localRehearsal && existsSync(path.join(path.resolve(workspaceRoot), ".env"))) {
+  const releaseEnvFiles = existsSync(path.resolve(workspaceRoot))
+    ? readdirSync(path.resolve(workspaceRoot), { withFileTypes: true })
+      .filter((entry) => entry.isFile() && (entry.name === ".env" || (entry.name.startsWith(".env.") && entry.name !== ".env.example")))
+      .map((entry) => entry.name)
+    : [];
+  if (!localRehearsal && releaseEnvFiles.length) {
     add(
       "RELEASE_ENV_FILE_REJECTED",
-      ".env",
-      "Staging secrets must be injected by the host and must not be stored in the application release."
+      ".env*",
+      "Staging secrets must be injected by the host; release-local Next environment files are not allowed."
     );
   }
   if (!dataRootValue || !path.isAbsolute(dataRootValue)) {

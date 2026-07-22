@@ -10,6 +10,7 @@ Design only. There is no automatic production deployment.
   current -> releases/<release-id>/
   previous -> releases/<previous-id>/
   data/{database,private,backups,temp}/
+  data/cache/next/<build-id>/ # disposable, not backed up
   locks/{deploy,backup,scheduler}.lock
   logs/                  # service-manager spool only; shipped/redacted
 /etc/nalanda-staging/environment   # root/service readable, mode 0600
@@ -27,7 +28,7 @@ Release IDs are immutable and begin `staging-`; the deployment log records full 
 6. Acquire the deploy singleton lock. Create and validate the pre-migration staging backup.
 7. If the release changes migrations, enable ingress maintenance, stop the one Node writer, and require zero remaining DB owners.
 8. Run `prisma migrate deploy` once, then `prisma migrate status`. Never run `migrate dev`, `db push`, or `migrate resolve` automatically.
-9. Point `current` to the new release and start exactly one service instance.
+9. Create `.next/cache` as a symlink to the release-specific disposable data-cache directory, make the release tree read-only, point `current` to the new release and start exactly one service instance.
 10. Check `/api/deployment-health`, anonymous login page, protected redirect/API 401, secure headers/private cache, database read/synthetic login, PWA manifest/service worker, and no 5xx burst.
 11. Exit maintenance only after all checks pass. Retain the previous release via `previous` and keep the paired pre-migration backup.
 12. On failure, execute the declared code-only or code+database rollback automatically while maintenance remains active.
