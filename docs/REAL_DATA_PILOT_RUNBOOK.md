@@ -9,8 +9,7 @@ Keep the physical school registers and source files as the source of truth durin
 ## 1. Take a backup first
 
 1. Stop the app if it is running.
-2. Open PowerShell in the project folder:
-   `C:\Users\dell\Documents\school software`
+2. Open PowerShell in the repository root of the current clone.
 3. Run:
    `pnpm backup`
 4. Confirm that a new JSON file appears in `backups\`.

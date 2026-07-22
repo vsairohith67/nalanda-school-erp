@@ -89,9 +89,20 @@ describe("DEVOPS-1B clean-install migration repair", () => {
   it("contains no operational fixture values, seeded secret DML, or db-push install dependency", () => {
     const baseline = readFileSync(path.join(ACTIVE_MIGRATION_ROOT, BASELINE_MIGRATION, "migration.sql"), "utf8");
     const packageJson = JSON.parse(readFileSync(path.join(WORKSPACE_ROOT, "package.json"), "utf8")) as { scripts: Record<string, string> };
+    const privacyDocs = [
+      "README.md",
+      "docs/DEVELOPER_CONTINUATION_GUIDE.md",
+      "docs/ERP_ROUTE_AND_MODULE_INVENTORY.md",
+      "docs/PROJECT_HANDOVER.md",
+      "docs/REAL_DATA_PILOT_RUNBOOK.md"
+    ].map((file) => readFileSync(path.join(WORKSPACE_ROOT, file), "utf8"));
     expect(baseline).not.toMatch(/NPS26001|Aarav|99100|Nalanda@|INSERT\s+INTO|UPDATE\s+[^\s]+\s+SET|DELETE\s+FROM/i);
     for (const name of ["migration:fresh-check", "migration:schema-check", "migration:existing-db-check"]) {
       expect(packageJson.scripts[name]).not.toContain("db push");
+    }
+    for (const text of privacyDocs) expect(text).not.toMatch(/C:[\\/]Users[\\/]dell/i);
+    for (const file of ["README.md", "docs/PROJECT_HANDOVER.md"]) {
+      expect(readFileSync(path.join(WORKSPACE_ROOT, file), "utf8")).not.toMatch(/pnpm(?:\.cmd)?\s+db:push|prisma\s+db\s+push/i);
     }
   });
 });

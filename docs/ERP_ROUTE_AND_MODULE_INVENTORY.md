@@ -1,7 +1,7 @@
 # ERP Route and Module Inventory
 
 Audit phase: Prompt 14A  
-Workspace: `C:\Users\dell\Documents\school software`  
+Workspace: repository root of the audited clone.
 Generated with source review plus `pnpm.cmd routes:list`.
 
 ## Summary

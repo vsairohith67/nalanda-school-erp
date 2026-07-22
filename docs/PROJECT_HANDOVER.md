@@ -3,7 +3,7 @@
 ## Project name and purpose
 
 **Project:** Nalanda Fee Control  
-**Local folder:** `C:\Users\dell\Documents\school software`
+**Local folder:** repository root of the current clone
 
 Nalanda Fee Control is a local-first school operations application for the 2026–27 academic year. It keeps student details, fee collections, pending dues, ledgers, receipts, audit history, imports, backups, users, school settings, and timetables in one controlled system.
 
@@ -41,8 +41,8 @@ Implemented areas include authentication, Super Admin and role permission matrix
 
 ```powershell
 npm install --global pnpm
-cd "C:\Users\dell\Documents\school software"
-pnpm install
+Set-Location "<repository-root>"
+pnpm.cmd install --frozen-lockfile
 Copy-Item .env.example .env
 ```
 
@@ -50,7 +50,9 @@ Copy-Item .env.example .env
 4. Prepare the database:
 
 ```powershell
-pnpm db:push
+pnpm.cmd exec prisma generate --schema prisma/schema.prisma
+pnpm.cmd exec prisma migrate deploy --schema prisma/schema.prisma
+pnpm.cmd db:seed
 ```
 
 5. Start the app:

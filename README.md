@@ -10,13 +10,15 @@ Nalanda Fee Control is a local-first school operations app for student records, 
 npm install --global pnpm
 ```
 
-2. Open PowerShell in `C:\Users\dell\Documents\school software`.
+2. Open PowerShell in the repository root.
 3. Install packages and create the environment file:
 
 ```powershell
-pnpm install
+pnpm.cmd install --frozen-lockfile
 Copy-Item .env.example .env
-pnpm db:push
+pnpm.cmd exec prisma generate --schema prisma/schema.prisma
+pnpm.cmd exec prisma migrate deploy --schema prisma/schema.prisma
+pnpm.cmd db:seed
 ```
 
 4. Put a unique secret of at least 32 characters in `.env` as `AUTH_SECRET`.

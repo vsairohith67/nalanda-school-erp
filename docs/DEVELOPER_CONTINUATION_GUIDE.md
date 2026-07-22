@@ -24,7 +24,7 @@ This guide is for Codex, Claude, or another developer continuing the existing pr
 
 ## Baseline and scope
 
-Workspace: `C:\Users\dell\Documents\school software`
+Workspace: the repository root of the current clone.
 
 Current verified baseline:
 
