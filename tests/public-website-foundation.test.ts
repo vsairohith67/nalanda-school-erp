@@ -288,7 +288,7 @@ describe("Prompt 20D public website foundation", () => {
   });
 
   it("ships the reproducible migration and both planning documents", () => {
-    const migration = readFileSync(path.resolve("prisma", "migrations", "20260720_public_website_foundation", "migration.sql"), "utf8");
+    const migration = readFileSync(path.resolve("prisma", "migration-archives", "devops1b-legacy-chain", "20260720_public_website_foundation", "migration.sql"), "utf8");
     for (const table of [
       "PublicWebsiteSettings", "PublicWebsitePage", "PublicWebsitePageVersion",
       "PublicWebsitePost", "PublicWebsitePostVersion", "PublicWebsiteNavigationItem",

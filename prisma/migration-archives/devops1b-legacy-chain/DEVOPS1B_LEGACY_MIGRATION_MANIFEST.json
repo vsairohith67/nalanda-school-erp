@@ -1,0 +1,209 @@
+{
+  "formatVersion": 1,
+  "archivePurpose": "DEVOPS-1B preserved pre-baseline Prisma migration evidence",
+  "archivedFromCommit": "2d1ac63ae4ed987ed9aaf7e9754b93e0f3213758",
+  "authoritativeSchemaSha256": "B1135F63C2E5579F320A5FFD01BDB3A167520B42D479D3906F7BB611FC82FC00",
+  "migrationCount": 40,
+  "migrations": [
+    {
+      "directory": "20260618_phase2_auth_audit",
+      "sha256": "8FE53A0E25BD00D3F2D682E5D656ED3AD9069CF79D00B06B99621A0B0390F0C6",
+      "bytes": 1814
+    },
+    {
+      "directory": "20260618_student_import_fields",
+      "sha256": "AFF4D8A666616E23DE9C5110CDF6A68280A16AEDC0CAB4388BA1A84B4005947B",
+      "bytes": 158
+    },
+    {
+      "directory": "20260619_import_verification_trial_mode",
+      "sha256": "88D1DDD07E83E6A07F7423F2C0BEE0052E02859B33AA39261D77E6246ADC2D52",
+      "bytes": 1970
+    },
+    {
+      "directory": "20260619_manual_timetable_builder",
+      "sha256": "ED56508308BE1F6B8BDAEF5CE458AF539AB2B97D1677065C9BA9FAD7E9ED1632",
+      "bytes": 2765
+    },
+    {
+      "directory": "20260619_timetable_foundation",
+      "sha256": "B1D28B02D89EBF5B6E39730E8BE541D64B28DED48E6C0A4A59EDD208F2D66071",
+      "bytes": 6806
+    },
+    {
+      "directory": "20260619_user_management_school_settings",
+      "sha256": "9AA964BF311AFB9058CC10197FC8796C6D35658258A53ED2F7354AB34D78F9DC",
+      "bytes": 1477
+    },
+    {
+      "directory": "20260624_role_permission_matrix",
+      "sha256": "A2B5BC66A1B0ADA685E235447F7270C6BFF55975209F337DB2842151A4BDC66E",
+      "bytes": 580
+    },
+    {
+      "directory": "20260626_guardian_access_foundation",
+      "sha256": "B94DA631256AFAA75358AA8313C8A5F075BBD7A49DD34953FA9AE121B9D63543",
+      "bytes": 2120
+    },
+    {
+      "directory": "20260627_parent_notices",
+      "sha256": "2458CC1BEE634899E4F38A73DAE2B9FC2ABEB72854E2F22C22340B2AE9A87D55",
+      "bytes": 1107
+    },
+    {
+      "directory": "20260627_staff_teacher_foundation",
+      "sha256": "6926AA133AAEA8279262EA92897EF34610CB63CD9BB5E07381CBC68B99CB2504",
+      "bytes": 2004
+    },
+    {
+      "directory": "20260627_student_attendance_foundation",
+      "sha256": "C5D0D07A83F83B0BB6D49765F1BAF480EED661F9898C344463A9C2E9BA73B7F3",
+      "bytes": 2485
+    },
+    {
+      "directory": "20260628_staff_attendance_foundation",
+      "sha256": "18B53DEB38E7D5F9D26A06E7F0D0F8C64E9707E66E8E2301400D52EA3B4D405D",
+      "bytes": 2254
+    },
+    {
+      "directory": "20260628_staff_leave_foundation",
+      "sha256": "11FE8753B8173BDF5EA8CBCB7424BD670048C0F78256525AA9601841AC7773F9",
+      "bytes": 1986
+    },
+    {
+      "directory": "20260628_substitute_teacher_foundation",
+      "sha256": "BF7DAA7151366915CBF3E25A14BB0B5A13CCC2955EF27EA316774F665B900409",
+      "bytes": 2928
+    },
+    {
+      "directory": "20260701_student_lifecycle_foundation",
+      "sha256": "0D27C99F67DBA742FDD3EC1C7AF97D162430DF738DBCD2CA79645A89FB8B1634",
+      "bytes": 2595
+    },
+    {
+      "directory": "20260701_student_progression_foundation",
+      "sha256": "5CBF4683BD649257EF33CEFC081D93BB83298103918E59DB34DF8751E8EBDC21",
+      "bytes": 2800
+    },
+    {
+      "directory": "20260715_books_library_finance_foundation",
+      "sha256": "DEE080DDD6C8D9B9976CB379FB43D1AB3E1852599FAE0C21C85A05A96B671F28",
+      "bytes": 7153
+    },
+    {
+      "directory": "20260715_budget_spending_controls",
+      "sha256": "8B051A860FA4386F06BE02AEC0D9177C3F38D835C2B3BEDB726C761ED4C83B26",
+      "bytes": 4688
+    },
+    {
+      "directory": "20260715_expense_vendor_foundation",
+      "sha256": "FC212F7F93A5559C2B84D0CFF997CFDB11AE53BE6B8AFB5118B2F28A04E610A2",
+      "bytes": 9267
+    },
+    {
+      "directory": "20260715_library_catalog_accession_foundation",
+      "sha256": "AC39F2C7998204D4BE869F435DE37739F2221AA0784FD991B8AF5878BDC092C0",
+      "bytes": 4449
+    },
+    {
+      "directory": "20260715_library_membership_circulation_foundation",
+      "sha256": "A20936252D13E489DBD96C57F47F0CAE94486E655F6B873630D7F19BA93A6ABD",
+      "bytes": 10584
+    },
+    {
+      "directory": "20260715_misc_income_cash_book_foundation",
+      "sha256": "B2F11530913B905E020CCB971F2373116A9B3007E4AE0A2DA6734321EB0FEF07",
+      "bytes": 7964
+    },
+    {
+      "directory": "20260716_digital_report_cards_kg_rubric",
+      "sha256": "7DFB12F1ACD37D185CF034B80AA3693BD3DE852B722397C0F8762FC3749A8E2D",
+      "bytes": 8219
+    },
+    {
+      "directory": "20260716_exams_marks_foundation",
+      "sha256": "9B2F797C47074C0AA2E21219DE7476D2D9990D497D662BDAD9AAAFB38A0DF555",
+      "bytes": 4522
+    },
+    {
+      "directory": "20260716_homework_assignments_foundation",
+      "sha256": "70584C962D0D986CD54C372B2FF023E5B9EABE23D09AB0EACDD88BCBC6630334",
+      "bytes": 3461
+    },
+    {
+      "directory": "20260716_library_incident_charge_portal_foundation",
+      "sha256": "93406ECBFA486B4FFBFE0FE45DD371C9F4777353685BE4F25761740B59E733AD",
+      "bytes": 10819
+    },
+    {
+      "directory": "20260716_library_stock_verification_foundation",
+      "sha256": "A02ED972114B02CBDA5F4BCE707D0AD05E1DFA0748A4CF2AD1D314AAF0EBC715",
+      "bytes": 7869
+    },
+    {
+      "directory": "20260717_class_x_document_package_workflow",
+      "sha256": "47D7A34CD8861C5BE704CD353D846A690555602ED85BED49D20D70CC8F3ABBE4",
+      "bytes": 9787
+    },
+    {
+      "directory": "20260717_in_app_notification_centre",
+      "sha256": "4D9BD78557A9E83FBBFE6B86255E146B5856A33CBDF3C1ED937E8904E189E3E1",
+      "bytes": 6981
+    },
+    {
+      "directory": "20260717_student_certificates_foundation",
+      "sha256": "8EB8A44A8D2EF56F4098A7F6931C77CF909020824A7767DA6FF06A655DC4998F",
+      "bytes": 5817
+    },
+    {
+      "directory": "20260717_teacher_performance_analytics_foundation",
+      "sha256": "D0CC708A5BC684A47FEBC3E63E28F0481BA1BCF41DEED665FBE65F29C0F4A94B",
+      "bytes": 4826
+    },
+    {
+      "directory": "20260717_virtual_identity_cards",
+      "sha256": "CF73930260DA1DBF9A2906182FFFF76349F7789C875BC888E420077550A20EBE",
+      "bytes": 7873
+    },
+    {
+      "directory": "20260717_whatsapp_business_one_way_foundation",
+      "sha256": "90293B72BED58E6022BA9761F15BDFEAD3B8EEE7203BA88B725544E965A40922",
+      "bytes": 12716
+    },
+    {
+      "directory": "20260718_ai_assistant_read_only_foundation",
+      "sha256": "E5279248AAB88021E9A209F5D505C32649A94DFDF40CE220D4EA6FE997F6CD9C",
+      "bytes": 5621
+    },
+    {
+      "directory": "20260718_sms_email_one_way_foundation",
+      "sha256": "CF0240BCBBF8A22220D495D00D501DDCB01E859FCAB86805D1A56F948480156E",
+      "bytes": 16438
+    },
+    {
+      "directory": "20260718_whatsapp_release_blockers_recovery",
+      "sha256": "608B8B987ECE24A9ACE5E5A1D28E4B2912E6C20775D88355F14D4D8E5CC8E59F",
+      "bytes": 2917
+    },
+    {
+      "directory": "20260719_cloud_backup_disaster_recovery",
+      "sha256": "3E918E164F2B8A8BC7DD803B83C88F1D6B31DA4ED7B5BFC7B3DF002C21E1EF99",
+      "bytes": 11080
+    },
+    {
+      "directory": "20260719_handwritten_fee_register_ocr",
+      "sha256": "75FF4BED30E04A0EDFD47F51326AC680E97D1EC52861DE16CA2C553819B09E22",
+      "bytes": 8978
+    },
+    {
+      "directory": "20260719_premium_public_website_foundation",
+      "sha256": "4D3C73D2F24C9DDC18EA842599270194066BD4B6358F87F46A6A62ACE26B7E09",
+      "bytes": 7805
+    },
+    {
+      "directory": "20260720_public_website_foundation",
+      "sha256": "F6509CA311192626DE90393205DFEBDFD4617D2B26CB0034AB63416025F4C154",
+      "bytes": 7839
+    }
+  ]
+}

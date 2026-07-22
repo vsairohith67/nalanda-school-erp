@@ -841,6 +841,12 @@ The GitHub repository is private-only: `vsairohith67/nalanda-school-erp`. Git st
 
 Stop immediately if Git shows `.env`, any database, backup JSON, upload/OCR/provider file, log, generated export, Schoolknot artifact, `.next`, or `node_modules`. Do not paste a token or password into GitHub or chat. If a secret might have been committed, revoke/rotate it first and follow `GIT_BASELINE_AND_RECOVERY_WORKFLOW.md`; do not force-push `main`.
 
+### Fresh installation and migration safety
+
+For a brand-new computer or clone, use `CLEAN_INSTALL_AND_EXISTING_DATABASE_ONBOARDING.md`. Create a private local `.env` from `.env.example`, use a new empty database, then run `prisma migrate deploy` and `prisma migrate status`. Do not copy `prisma/dev.db` from Git—the operational database is intentionally not in the repository.
+
+Do not run `db push`, `migrate dev`, `migrate resolve`, or `migrate deploy` against the school operational database. The DEVOPS-1B existing-database command makes a temporary copy and tests that copy. If onboarding is ever approved, a developer must first stop writes, verify backups/hashes, prove schema equivalence, and follow the documented copied rehearsal. Operators must not improvise this process.
+
 ### Prompt 21B approval status
 
 Prompt 21A and its QA are complete, but Prompt 21B is not approved. The approval record is `PENDING`, every required blocker is `UNRESOLVED`, and the final gate is `PROMPT_21B_BLOCKED`. No leadership approval or qualified Indian privacy/legal review has been supplied.

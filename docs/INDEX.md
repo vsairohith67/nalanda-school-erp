@@ -175,4 +175,10 @@ The Management audit and corrected Management-only reconciliation are independen
 
 # DevOps and private source recovery
 
-- [Private Git Baseline and Recovery Workflow](GIT_BASELINE_AND_RECOVERY_WORKFLOW.md) - private-only repository contract, official Git installation, ignore/scanner policy, initial commit/tag, branch/PR rules, database/backup exclusion, accidental-secret response, source recovery, and the DEVOPS-1B gate.
+- [Private Git Baseline and Recovery Workflow](GIT_BASELINE_AND_RECOVERY_WORKFLOW.md) - private-only repository contract, ignore/scanner policy, branch rules, source recovery, and DEVOPS-1B review boundary.
+- [Clean-Install Migration Failure Analysis](CLEAN_INSTALL_MIGRATION_FAILURE_ANALYSIS.md) - reproduced P3018, exact missing `Payment` dependency and wider historical-chain findings.
+- [Prisma Migration Dependency Inventory](PRISMA_MIGRATION_DEPENDENCY_INVENTORY.md) - all 40 legacy migrations, purposes, created/altered objects, dependencies, empty safety and SHA-256 values.
+- [Clean-Install Migration Repair Decision](CLEAN_INSTALL_MIGRATION_REPAIR_DECISION.md) - Strategy B rationale, rejected alternatives, archive/baseline controls and rollback boundary.
+- [Clean Install and Existing Database Onboarding](CLEAN_INSTALL_AND_EXISTING_DATABASE_ONBOARDING.md) - fresh clone, empty deploy, copied unbaselined-database procedure, rollback and future migration workflow.
+
+DEVOPS-1B changes only migration history/tooling/documentation. Prompt 21B/21C/21D remain blocked, Prompt 22B remains conditional, and the operational database remains untouched and unbaselined pending separate approval.

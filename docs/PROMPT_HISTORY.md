@@ -683,3 +683,11 @@ Two copied-database cleanup inspections returned zero QASEC1 records. Provider/u
 Installed official Git for Windows through Winget, verified the exact private empty GitHub repository, hardened `.gitignore`/`.gitattributes`, added the reusable candidate/staged/tracked safety scanner and regression tests, and created the private source/recovery workflow. The source audit removed literal non-production secret/default-password values while preserving production environment requirements and explicit demo-only behavior.
 
 The trusted initial commit uses message `chore: establish verified Nalanda ERP baseline` and annotated tag `baseline-sec1-management-2026-07-22`. Operational SQLite/sidecars, backup JSON, OCR/private uploads, provider objects, QA/log/export/Schoolknot artifacts, dependencies, build output, coverage, and IDE/agent state remain local and ignored. No schema/migration or operational record was changed; Prompt 21/22 and pending Schoolknot role-audit boundaries remain unchanged. Independent DEVOPS-1A-QA is required before DEVOPS-1B migration repair.
+
+# DEVOPS-1B - Clean-Install Migration-Chain Repair (2026-07-22)
+
+Reproduced Prisma P3018 from an empty isolated SQLite file: the first historical migration altered missing `Payment`, the second altered missing `Student`, and dependency inventory found 16 legacy migrations with unresolved prior dependencies. Selected the new-squashed-baseline strategy because the original core schema was absent and the operational database had no `_prisma_migrations` checksum history.
+
+Archived all 40 original migrations outside active `prisma/migrations` with their exact SHA-256 manifest. Prisma 6.19.3 generated `20260722_clean_install_baseline` from the byte-unchanged schema. Added fail-closed isolation, inventory, fresh-deploy/status, schema-equivalence, copied-onboarding, and version-37 restore checks plus focused regressions and operating documentation. No business schema, backup format, Prompt 21/22 boundary, operational record, deployment, DNS or `main` history changed.
+
+Implementation remains on `devops/clean-install-migration-repair` for independent DEVOPS-1B-QA; do not merge until the final verification and remote fresh-clone proof are complete.

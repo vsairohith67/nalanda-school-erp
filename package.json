@@ -45,7 +45,12 @@
     "pilot:reset-sample-data": "tsx scripts/reset-pilot-sample-data.ts",
     "routes:list": "tsx scripts/list-routes.ts",
     "lifecycle:backfill": "tsx scripts/backfill-student-lifecycle.ts",
-    "git:safety-check": "tsx scripts/git-safety-check.ts"
+    "git:safety-check": "tsx scripts/git-safety-check.ts",
+    "migration:inventory": "tsx scripts/migration-inventory.ts",
+    "migration:fresh-check": "tsx scripts/migration-fresh-install-check.ts",
+    "migration:existing-db-check": "tsx scripts/migration-existing-db-rehearsal.ts",
+    "migration:schema-check": "tsx scripts/migration-schema-equivalence.ts",
+    "migration:restore-check": "tsx scripts/migration-backup-restore-check.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.10.1",

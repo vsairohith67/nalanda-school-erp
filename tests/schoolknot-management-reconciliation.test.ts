@@ -177,8 +177,11 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
       "B1135F63C2E5579F320A5FFD01BDB3A167520B42D479D3906F7BB611FC82FC00",
     );
     const migrationEntries = readdirSync("prisma/migrations");
-    expect(migrationEntries).toHaveLength(41);
-    expect(migrationEntries.filter((name) => statSync(join("prisma/migrations", name)).isDirectory())).toHaveLength(40);
+    expect(migrationEntries).toHaveLength(2);
+    expect(migrationEntries.filter((name) => statSync(join("prisma/migrations", name)).isDirectory())).toEqual(["20260722_clean_install_baseline"]);
+    const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
+    expect(archivedMigrationEntries).toHaveLength(42);
+    expect(archivedMigrationEntries.filter((name) => statSync(join("prisma/migration-archives/devops1b-legacy-chain", name)).isDirectory())).toHaveLength(40);
     expect(countRouteFiles("app", "page.tsx")).toBe(273);
     expect(existsSync("app/sw.js/route.ts")).toBe(true);
     expect(countRouteFiles("app", "page.tsx") + 1).toBe(274);

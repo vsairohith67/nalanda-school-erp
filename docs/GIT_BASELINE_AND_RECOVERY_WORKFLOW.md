@@ -49,7 +49,7 @@ The scanner examines candidate, staged, and tracked files. Failures print only a
 
 Git restores source only. The operational SQLite database, JSON backups, encrypted provider objects, OCR images/crops, uploads, logs, exports, and business records are not in the repository. Recover them only from the separately controlled local/off-device backup workflow after verifying version, hash, custody, and restore scope. Never copy an operational database into a branch to make a test pass.
 
-For source recovery, clone the private repository, verify `origin`, check out `main` or the signed-off tag, install from `pnpm-lock.yaml`, create a new local `.env` from `.env.example`, and restore operational data through the documented recovery process. The current migration chain still has the known clean-install baseline limitation; DEVOPS-1A does not repair or conceal it.
+For source recovery, clone the private repository, verify `origin`, check out an approved commit, install from `pnpm-lock.yaml`, and create a new local `.env` from `.env.example`. DEVOPS-1B replaces the broken active migration chain on its feature branch with a Prisma-generated baseline while retaining all 40 legacy migrations and checksums outside the active directory. Follow `CLEAN_INSTALL_AND_EXISTING_DATABASE_ONBOARDING.md`; Git still does not contain operational data.
 
 ## Accidental-secret procedure
 
@@ -57,7 +57,8 @@ If a secret is staged but not committed, unstage it, remove it from the file, ro
 
 Never paste credentials into chat, issues, pull requests, commit messages, shell history, or project files. Never force-push `main` as an improvised secret-removal step.
 
-## Next phase
+## DEVOPS-1B migration-chain repair
 
-After DEVOPS-1A and independent DEVOPS-1A-QA are fully cleared, the next authorised DevOps phase is DEVOPS-1B clean-install migration-chain repair. That phase must work from a separate safe copy/branch, must not mutate the operational database, and requires its own exact verification and recovery plan.
+The implementation branch is `devops/clean-install-migration-repair`. Its active migration chain is one generated baseline; the original chain is preserved under `prisma/migration-archives/devops1b-legacy-chain/` with a checksum manifest. Empty deploy/status, schema equivalence, copied-database onboarding, repeated onboarding, version-37 restore, and fresh-clone checks are mandatory before independent DEVOPS-1B-QA. Do not merge the branch into `main` until QA clears it.
 
+The operational database remains unbaselined during implementation. `migrate resolve` is rehearsed only on a copy; production onboarding needs separate approval and the exact controls in `CLEAN_INSTALL_AND_EXISTING_DATABASE_ONBOARDING.md`.
