@@ -1,13 +1,11 @@
 import { createHash } from "node:crypto";
-import { copyFileSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import { createBackupDocument } from "../lib/backup";
 import { restorePublicWebsiteData } from "../lib/public-website-restore";
 import { publicWebsiteReadinessReport, publicWebsiteReportCsv } from "../lib/public-website-reports";
 import { parseAndValidateBackup } from "../lib/restore";
+import { createFreshTestDatabase, removeFreshTestDatabase } from "./helpers/fresh-test-database";
 
 const websiteKeys = [
   "publicWebsiteSettings", "publicWebsitePages", "publicWebsitePageVersions",
@@ -172,11 +170,8 @@ function websiteHash(rows: Awaited<ReturnType<typeof websiteRows>>) {
 
 describe("Prompt 20D copied-database website restore", () => {
   it("restores all seven arrays, preserves links, and is idempotent", async () => {
-    const root = mkdtempSync(path.join(tmpdir(), "qa20d-restore-"));
-    const sourcePath = path.join(root, "source.db");
-    const targetPath = path.join(root, "target.db");
-    copyFileSync(path.resolve("prisma", "dev.db"), sourcePath);
-    copyFileSync(path.resolve("prisma", "dev.db"), targetPath);
+    const sourcePath = createFreshTestDatabase("public-website-restore-source");
+    const targetPath = createFreshTestDatabase("public-website-restore-target");
     const source = new PrismaClient({ datasources: { db: { url: fileUrl(sourcePath) } } });
     const target = new PrismaClient({ datasources: { db: { url: fileUrl(targetPath) } } });
     try {
@@ -239,14 +234,13 @@ describe("Prompt 20D copied-database website restore", () => {
     } finally {
       await source.$disconnect();
       await target.$disconnect();
-      rmSync(root, { recursive: true, force: true });
+      removeFreshTestDatabase(sourcePath);
+      removeFreshTestDatabase(targetPath);
     }
   });
 
   it("isolates a natural-key collision without overwriting local content", async () => {
-    const root = mkdtempSync(path.join(tmpdir(), "qa20d-collision-"));
-    const databasePath = path.join(root, "target.db");
-    copyFileSync(path.resolve("prisma", "dev.db"), databasePath);
+    const databasePath = createFreshTestDatabase("public-website-collision-target");
     const target = new PrismaClient({ datasources: { db: { url: fileUrl(databasePath) } } });
     try {
       await clearWebsiteRows(target);
@@ -259,9 +253,7 @@ describe("Prompt 20D copied-database website restore", () => {
         }),
         status: "DRAFT", reviewVersion: 1, showInNavigation: false, indexable: true
       } });
-      const fixtureRoot = mkdtempSync(path.join(tmpdir(), "qa20d-collision-source-"));
-      const sourcePath = path.join(fixtureRoot, "source.db");
-      copyFileSync(path.resolve("prisma", "dev.db"), sourcePath);
+      const sourcePath = createFreshTestDatabase("public-website-collision-source");
       const source = new PrismaClient({ datasources: { db: { url: fileUrl(sourcePath) } } });
       try {
         await clearWebsiteRows(source);
@@ -279,11 +271,11 @@ describe("Prompt 20D copied-database website restore", () => {
         expect(await target.publicWebsitePageVersion.count({ where: { pageId: "qa20d-page-about" } })).toBe(0);
       } finally {
         await source.$disconnect();
-        rmSync(fixtureRoot, { recursive: true, force: true });
+        removeFreshTestDatabase(sourcePath);
       }
     } finally {
       await target.$disconnect();
-      rmSync(root, { recursive: true, force: true });
+      removeFreshTestDatabase(databasePath);
     }
   });
 });

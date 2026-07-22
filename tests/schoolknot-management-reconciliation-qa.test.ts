@@ -129,7 +129,9 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
     const schema = read("prisma/schema.prisma");
     expect((schema.match(/^model /gm) ?? [])).toHaveLength(160);
     expect(createHash("sha256").update(schema).digest("hex").toUpperCase()).toBe("B1135F63C2E5579F320A5FFD01BDB3A167520B42D479D3906F7BB611FC82FC00");
-    expect(createHash("sha256").update(readFileSync("prisma/dev.db")).digest("hex").toUpperCase()).toBe("1556B98FCAF0F2475C0C0F1BAEEFCE4E638680B9D4C7DC9BFFB8B6F0D09B4392");
+    if (existsSync("prisma/dev.db")) {
+      expect(createHash("sha256").update(readFileSync("prisma/dev.db")).digest("hex").toUpperCase()).toBe("1556B98FCAF0F2475C0C0F1BAEEFCE4E638680B9D4C7DC9BFFB8B6F0D09B4392");
+    }
     const migrationEntries = readdirSync("prisma/migrations");
     expect(migrationEntries).toHaveLength(2);
     expect(migrationEntries.filter((name) => statSync(join("prisma/migrations", name)).isDirectory())).toEqual(["20260722_clean_install_baseline"]);

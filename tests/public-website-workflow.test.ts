@@ -1,8 +1,6 @@
-import { copyFileSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createFreshTestDatabase, removeFreshTestDatabase } from "./helpers/fresh-test-database";
 import {
   createPublicWebsitePage,
   createPublicWebsitePost,
@@ -19,8 +17,7 @@ import {
 } from "../lib/public-website-content";
 
 const actor = "QA20D-ACTOR";
-const root = mkdtempSync(path.join(tmpdir(), "qa20d-workflow-"));
-const copiedDatabase = path.join(root, "qa20d-workflow.db");
+const copiedDatabase = createFreshTestDatabase("public-website-workflow");
 let prisma: PrismaClient;
 let publishedPageId = "";
 
@@ -74,13 +71,12 @@ function postInput(overrides: Record<string, unknown> = {}) {
 }
 
 beforeAll(() => {
-  copyFileSync(path.resolve("prisma", "dev.db"), copiedDatabase);
   prisma = new PrismaClient({ datasources: { db: { url: fileUrl(copiedDatabase) } } });
 });
 
 afterAll(async () => {
   await prisma?.$disconnect();
-  rmSync(root, { recursive: true, force: true });
+  removeFreshTestDatabase(copiedDatabase);
 });
 
 describe.sequential("Prompt 20D publication workflow on a copied database", () => {

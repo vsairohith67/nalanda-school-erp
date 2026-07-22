@@ -39,3 +39,5 @@
 *.sqlite binary
 *.sqlite3 binary
 
+# Preserve the one historically mixed-line-ending migration byte-for-byte.
+prisma/migration-archives/devops1b-legacy-chain/20260716_library_incident_charge_portal_foundation/migration.sql binary
