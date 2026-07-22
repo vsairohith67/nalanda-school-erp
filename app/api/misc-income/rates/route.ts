@@ -1,0 +1,8 @@
+import { safeClientError } from "@/lib/client-errors";
+import { NextRequest, NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { assertNoActiveRateOverlap, validateMiscRateInput } from "@/lib/misc-income";
+import { prisma } from "@/lib/prisma";
+
+export async function POST(request: NextRequest) { const auth = await requireApiPermission("MANAGE_MISC_INCOME_ITEMS"); if (auth.response) return auth.response; try { const body = await request.json(); const data = validateMiscRateInput(body); const rate = await prisma.$transaction(async (tx) => { if (!(await tx.miscIncomeItem.findUnique({ where: { id: data.itemId }, select: { id: true } }))) throw new Error("Income item not found"); await assertNoActiveRateOverlap(tx, data); return tx.miscIncomeRate.create({ data }); }); return NextResponse.json({ rate }, { status: 201 }); } catch (error) { return NextResponse.json({ error: safeClientError(error, "Unable to create rate") }, { status: 400 }); } }
+export async function PATCH(request: NextRequest) { const auth = await requireApiPermission("MANAGE_MISC_INCOME_ITEMS"); if (auth.response) return auth.response; try { const body = await request.json(); const id = String(body.id ?? ""); if (!id) throw new Error("Rate is required"); const data = validateMiscRateInput(body); const rate = await prisma.$transaction(async (tx) => { await assertNoActiveRateOverlap(tx, data, id); return tx.miscIncomeRate.update({ where: { id }, data }); }); return NextResponse.json({ rate }); } catch (error) { return NextResponse.json({ error: safeClientError(error, "Unable to update rate") }, { status: 400 }); } }

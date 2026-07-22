@@ -1,0 +1,9 @@
+import { safeClientError } from "@/lib/client-errors";
+import { NextRequest, NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { normalizeBarcodeValue } from "@/lib/library-barcodes";
+import { deriveOverdue, returnLibraryBook } from "@/lib/library-circulation";
+import { publicLibraryLoan } from "@/lib/library-api";
+import { prisma } from "@/lib/prisma";
+async function activeLoan(barcodeRaw: unknown) { const copy = await prisma.libraryCopy.findUnique({ where: { barcodeValue: normalizeBarcodeValue(barcodeRaw) }, include: { title: { select: { title: true } }, loans: { where: { status: "ISSUED" }, include: { member: { select: { memberCode: true } } } } } }); if (!copy) throw new Error("No exact barcode match"); const loan = copy.loans[0]; if (!loan) throw new Error("This copy has no active loan to return"); return { copy, loan }; }
+export async function POST(request: NextRequest) { const auth = await requireApiPermission("USE_LIBRARY_SCANNER"); if (auth.response) return auth.response; try { const body = await request.json(); const { copy, loan } = await activeLoan(body.barcodeValue); if (body.action === "confirm") { const returnAuth = await requireApiPermission("RETURN_LIBRARY_BOOKS"); if (returnAuth.response) return returnAuth.response; return NextResponse.json({ loan: publicLibraryLoan(await returnLibraryBook(prisma, { loanId: loan.id, returnedDate: body.returnedDate, returnCondition: body.returnCondition, returnNotes: body.returnNotes, reportDamage: "no" }, returnAuth.user.id)) }); } return NextResponse.json({ preview: { loanNumber: loan.loanNumber, accessionNumber: copy.accessionNumber, title: copy.title.title, memberCode: loan.member.memberCode, dueDate: loan.dueDate, issueCondition: loan.issueConditionSnapshot, ...deriveOverdue(loan) } }); } catch (error) { return NextResponse.json({ error: safeClientError(error, "Unable to preview return") }, { status: 400 }); } }

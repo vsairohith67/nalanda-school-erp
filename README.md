@@ -1,0 +1,63 @@
+# Nalanda Fee Control
+
+Nalanda Fee Control is a local-first school operations app for student records, fee collection, dues, receipts, imports, backups, users, and timetable preparation. It is designed for a trusted Windows school computer.
+
+## Setup
+
+1. Install Node.js LTS and pnpm:
+
+```powershell
+npm install --global pnpm
+```
+
+2. Open PowerShell in `C:\Users\dell\Documents\school software`.
+3. Install packages and create the environment file:
+
+```powershell
+pnpm install
+Copy-Item .env.example .env
+pnpm db:push
+```
+
+4. Put a unique secret of at least 32 characters in `.env` as `AUTH_SECRET`.
+
+## Run
+
+```powershell
+pnpm dev
+```
+
+Open `http://localhost:3000`. On a new database, complete the first Director setup. Windows users may instead double-click `tools\start-dev.bat`.
+
+## Backup
+
+Director/Admin can use **Import / Export → Download Full Backup**, or run:
+
+```powershell
+pnpm backup
+```
+
+Copy important backup files from `backups` to a USB drive or another protected location.
+
+## Emergency commands
+
+```powershell
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm backup
+```
+
+Windows helpers are available in `tools`: `run-checks.bat`, `build-app.bat`, and `backup-now.bat`.
+
+Never import or restore real data without taking a fresh backup first. Test restore only on a copied database.
+
+## Full documentation
+
+Start with [docs/INDEX.md](docs/INDEX.md).
+
+- Operator guide: [docs/NOOB_OPERATING_GUIDE.md](docs/NOOB_OPERATING_GUIDE.md)
+- Project handover: [docs/PROJECT_HANDOVER.md](docs/PROJECT_HANDOVER.md)
+- Developer continuation: [docs/DEVELOPER_CONTINUATION_GUIDE.md](docs/DEVELOPER_CONTINUATION_GUIDE.md)
+- Real-data pilot: [docs/REAL_DATA_PILOT_PLAN.md](docs/REAL_DATA_PILOT_PLAN.md)
+- Routine operations: [docs/OPERATIONS.md](docs/OPERATIONS.md)

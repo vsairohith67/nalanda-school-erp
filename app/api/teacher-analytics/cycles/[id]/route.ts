@@ -1,0 +1,4 @@
+import { NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+export async function GET(_:Request,{params}:{params:Promise<{id:string}>}){const auth=await requireApiPermission("VIEW_TEACHER_ANALYTICS");if(auth.response)return auth.response;const row=await prisma.teacherAnalyticsReviewCycle.findUnique({where:{id:(await params).id},select:{id:true,cycleCode:true,academicYear:true,title:true,periodStart:true,periodEnd:true,status:true,minimumStudentCohort:true,metricDefinitionVersion:true,notes:true,cancellationReason:true,openedAt:true,finalisedAt:true,archivedAt:true,cancelledAt:true,createdAt:true,updatedAt:true,_count:{select:{snapshots:true,events:true}}}});return row?NextResponse.json({cycle:row}):NextResponse.json({error:"Analytics review cycle was not found."},{status:404});}

@@ -1,0 +1,685 @@
+# Nalanda Fee Control — Major Prompt and Phase History
+
+## Prompt 22A-QA — Staff DOB, EPFO/EPS and Age-58 Planning QA
+
+Reverified the Prompt 22A package against current official EPFO, India Code, Ministry of Labour and Employment, PIB and MeitY sources. Confirmed that age 58 is only a human EPS administration review trigger; it is not automatic retirement, termination, eligibility, a claim, contribution action or a pension promise. Confirmed full-UAN omission, masked-last-four evaluation, distinct unknown/unverified states, Director-only reminder defaults, purpose-based role access, privacy/retention controls, deterministic India-local reminder design, no-certification checklist wording and exact 22B/22C/22D separation.
+
+Fixed three documentation-precision defects: added an official-only authority statement, stated explicitly that reminders create and submit no EPFO claim, and separated public read-only portal review from prohibited authentication/provider/API/action calls. No schema, migration, route, API, permission, Staff DOB/EPFO/UAN record, reminder, compliance workflow, portal integration, credential, operational record or backup-version change was made. Final evidence: 274 pages, 376 APIs, 1,419 tests across 156 files, 211/211 static pages built, and backup version 37 `nalanda-fee-control-backup-2026-07-20-11-32.json`; schema and operational database hashes/totals remained unchanged. Release result: `PROMPT_22A_CLEARED_BUT_22B_CONDITIONAL`.
+
+## Prompt 22A — Staff DOB, EPFO/EPS Status and Age-58 Reminder Planning
+
+Completed a documentation-only review of the current Staff schema, employment/joining/status fields, role/permission and linked-Staff self-service architecture, audit/event patterns, sensitive identifier masking, backup/cloud encryption, PWA/AI/public boundaries and operational baseline. Reviewed current official EPFO scheme/FAQ/portal/profile-correction sources, the Code on Social Security transition and 2026 Central Rules, and phased DPDP commencement.
+
+Defined the non-employment age-58 boundary; recommended 365/180/90/30/date-reached/overdue review milestones; classified every proposed field; omitted full UAN and the lossy UAN boolean; required controlled unknown/disputed/guidance states; specified DOB correction/history/timezone/leap-day rules; designed dedicated role permissions, retention/backup exclusions, Director-only reminders, a no-certification checklist and exact 22B/22C/22D boundaries.
+
+Decision: `PROMPT_22B_CONDITIONALLY_APPROVED`. Prompt 22B remains limited to neutral human-reviewed fields, correction/verification, permissions, append-only events and backup/restore after leadership/professional/privacy conditions. Prompt 22C and Prompt 22D retain separate blocked gates. No schema, migration, route, API, permission, runtime field, Staff DOB/EPFO/UAN record, reminder, portal call, credential, Staff/finance/attendance mutation, backup-version increase or Prompt 21B/21C/21D work was performed. Final command evidence is recorded in the release handoff.
+
+## SEC-1-QA — Independent adversarial security and runtime closure
+
+Rechecked SEC-1 without trusting the earlier conclusions, using a new
+byte-for-byte copied database, fresh `QASEC1QA` fixtures, local MOCK/disabled
+providers, a complete 5,850-request nine-role route/API sweep, safe adversarial
+probes, and an optimized Browser pass at 1366×768, 768×1024, 390×844, and
+320×568 in light/dark mode.
+
+The independent pass confirmed and fixed one High reachable SheetJS dependency
+advisory and three Medium defects: state-changing GET behavior, misleading
+cross-portal wrong-role 200 responses/matrix semantics, and a scrollbar-reduced
+mobile drawer dismiss target. Regression tests were added. Browser console,
+hydration errors, and production stderr were zero. Two cleanup inspections found
+zero QA rows/files, the copied root was removed, and the operational database
+hash/totals remained unchanged. Final evidence: 274 pages, 376 APIs, 1,410 tests
+across 155 files, 211/211 static pages built, and clean backup version 37
+`nalanda-fee-control-backup-2026-07-20-08-31.json`. Release decision:
+`SEC_1_FULLY_CLEARED`. Prompt 21B/21C/21D remain blocked.
+
+## Prompt 19B — WhatsApp Business One-Way Communication Foundation
+
+Added official Meta Cloud API and MOCK adapters, disabled LIVE activation, explicit Guardian/Staff phone-bound consent, approved mappings, Prompt 19A reuse, preview/approval/queue/worker/retry/cancel, signed monotonic status and opt-out webhooks, quiet hours, versioned estimates, masked reports/CSV, Parent/Teacher isolation, sixteen permissions, ten pages, protected APIs/commands, and backup/restore version 31. Prompt 19C was not started.
+
+This is a functional history, not a verbatim transcript. Exact test counts from every old phase were not preserved. Unless noted otherwise, each completed phase was checked with the relevant targeted tests and the release checks available at that time. The verified baseline after Prompt 14C-QA is 342 passing tests across 58 files, passing typecheck, passing production build, and backup version 12.
+
+## Prompt 17B-QA — Exams and Marks Foundation QA
+
+**Goal:** Independently verify exam configuration, assessment sheets, Teacher scope, mark workflow safety, preview-first import, internal reports, privacy, and backup/restore without adding report cards or publication.
+
+**QA fixes:** Corrected intentionally class-wide enrollment matching across marks entry, import, reporting, backup validation, and restore; blocked approved-mark correction after exam cancellation; aligned the explicit `Apply Marks Correction` action label; and added visible zero-assessment configuration gaps plus result-distribution reporting. Version-24 restore now accepts blank class-wide sections and blank optional main-component names while retaining exact-link and collision protections.
+
+## Phase 1 — Core fee app
+
+**Goal:** Create the basic local school fee-control application.
+
+**Implemented:** Dashboard, Student Master, payment entry/list, pending dues, student ledger, daily collection, fee settings, basic import/export, and local SQLite storage.
+
+**Verification:** Functionality is covered by the current full typecheck/test/build baseline.
+
+**Limitations:** Early scope was local-first and did not yet include mature authentication, audit, restore, import verification, or timetable.
+
+## Branding and dark mode
+
+**Goal:** Make the app recognizable and comfortable for daily school use.
+
+**Implemented:** Nalanda branding, school identity display, responsive application shell, theme provider, and light/dark theme control.
+
+**Verification:** Current build and navigation tests pass.
+
+**Limitations:** Branding is configured for this school; there is no multi-school theming system.
+
+## Authentication, roles, and audit
+
+**Goal:** Protect data and separate Director, Admin, Accountant, and Viewer responsibilities.
+
+**Implemented:** Login/logout, signed sessions, server/API permission guards, role permission map, payment cancellation/edit controls, payment audit history, and unauthorized handling.
+
+**Verification:** Permission, password-control, payment-control, receipt-audit, and navigation tests pass in the current suite.
+
+**Limitations:** Local password authentication only; no email recovery, SSO, MFA, or internet-facing security review.
+
+## Receipts and reminders
+
+**Goal:** Support reliable receipt printing and parent due communication.
+
+**Implemented:** Grouped receipt print, split-receipt handling, cancellation markings, receipt audit classifications, WhatsApp message preparation, open-WhatsApp links, and reminder CSV export.
+
+**Verification:** Receipt, receipt-audit, reminders, typecheck, and build pass.
+
+**Limitations:** Browser printing only; no WhatsApp API or automated message delivery.
+
+## Backup
+
+**Goal:** Export a safe complete copy of operational data.
+
+**Implemented:** Full JSON backup download, CLI backup script, timestamped filenames, Windows helper, safe user metadata, and password-hash exclusion.
+
+**Verification:** Backup tests and `pnpm backup` pass.
+
+**Limitations:** Backups require an operator to copy files off the computer; no automatic remote backup service.
+
+## Restore
+
+**Goal:** Validate and restore backup data safely.
+
+**Implemented:** JSON validation, preview counts/warnings, exact confirmation text, transaction-based restore, created/updated/skipped/error reporting, user-login safety, and older-backup compatibility.
+
+**Verification:** Restore tests and current full checks pass.
+
+**Limitations:** Restore must be tested on a copied database; no one-click rollback of a restore.
+
+## Student import
+
+**Goal:** Import inconsistent school Student Master Excel/CSV data safely.
+
+**Implemented:** Header normalization, preview, errors/warnings, duplicate handling, create/update modes, error CSV, Faculty Child defaults, status/class/start-month normalization.
+
+**Verification:** Student-import and validation tests pass.
+
+**Limitations:** Source files still require human review; ambiguous records cannot be safely guessed.
+
+## Payment import
+
+**Goal:** Import daily collection rows and preserve receipt/payment rules.
+
+**Implemented:** Student matching, date/amount/mode/account normalization, duplicate fingerprints, split-receipt support, dry run, expected totals, reconciliation by date/mode/account, error CSV, and payment audit creation.
+
+**Verification:** Payment-import, payment-control, import-verification, and current release checks pass.
+
+**Limitations:** No batch rollback; recovery is pre-import backup plus restore.
+
+## Workflow QA
+
+**Goal:** Test realistic fee workflows and harden validation.
+
+**Implemented:** Fee allocation rules, IX/X April start, other-class June start, Faculty Child discount behavior, split payments, duplicate/cancellation handling, reporting checks, and safer defaults.
+
+**Verification:** Fee-allocation, validation, payment-control, receipt, and report-related tests pass.
+
+**Limitations:** Real school data must still be reconciled against physical registers during the pilot.
+
+## User management and school settings
+
+**Goal:** Let authorized staff manage named accounts and school/receipt configuration.
+
+**Implemented:** Create/update/deactivate users, role hierarchy, privileged password reset, own-password change, school profile, receipt settings, fee structures, and audit support.
+
+**Verification:** User-management, password-control, school-settings, permission, typecheck, and build checks pass.
+
+**Limitations:** No email-based self-service reset; sensitive role changes remain Director-controlled.
+
+## First-run setup and system health
+
+**Goal:** Make a fresh installation safe and understandable.
+
+**Implemented:** First active Director setup, school basics, `/setup` gating, API setup-required responses, Director/Admin system health, sample/default-password/readiness warnings, and Windows helper scripts/docs.
+
+**Verification:** Setup, seed-user, system-health, app-info, navigation, and current full checks pass.
+
+**Limitations:** Operator must still install Node/pnpm and maintain the Windows computer.
+
+## Import verification
+
+**Goal:** Save trial/import history and reconcile real-data imports before go-live.
+
+**Implemented:** `ImportBatch`, Student/Payment trial runs, payment expected totals, saved samples/errors/warnings, role-gated verification history, go-live checklist, and payment-only Accountant visibility.
+
+**Verification:** Import-verification and related import tests pass.
+
+**Limitations:** Verification supports human reconciliation; it cannot prove a source register is correct.
+
+## Timetable foundation
+
+**Goal:** Create clean timetable master data and scheduling rules.
+
+**Implemented:** Teachers, subjects, class sections, group period templates, workload assignments, teacher unavailability, fixed periods, load/readiness warnings, and Friday timing support.
+
+**Verification:** Timetable validation tests and current release checks pass.
+
+**Limitations:** Foundation data must be entered correctly before generation can succeed.
+
+## Timetable backup coverage
+
+**Goal:** Include timetable foundation data in safe backup/restore.
+
+**Implemented:** Backup version 3 timetable foundation arrays, optional validation for older backups, dependency-ordered restore, mapping/deduplication, and detailed preview/result counts.
+
+**Verification:** At that phase, 103 tests passed plus typecheck, build, and backup. Current expanded suite also passes.
+
+**Limitations:** Early live verification had some empty timetable entities; populated pilot data should be used for restore drills.
+
+## Manual timetable builder
+
+**Goal:** Let staff create, edit, validate, and approve timetable drafts.
+
+**Implemented:** `TimetableDraft` and `TimetableEntry`, class grid, teacher preview, locked entries, workload progress, conflict/warning checks, draft status, activation/archive/restore, and fixed-period application.
+
+**Verification:** Timetable draft-validation and backup/restore coverage pass in the current suite.
+
+**Limitations:** Manual completion is still required for unusual school constraints.
+
+## Automatic timetable generator
+
+**Goal:** Produce a useful safe draft from foundation data.
+
+**Implemented:** Deterministic generation, scoped class/group generation, optional base draft, locked-entry preservation, fixed-period behavior, hard constraints, soft scoring, unresolved-workload reasons, preview-before-save, and new-draft-only saving.
+
+**Verification:** Generator tests and current typecheck/test/build baseline pass.
+
+**Limitations:** The generator does not model rooms, leave, substitute eligibility, or every preference; output always requires review.
+
+## Timetable print and export — Prompt 7D
+
+**Goal:** Publish reviewed timetables for classes, teachers, workload, and free-period planning.
+
+**Implemented:** Class-wise and teacher-wise browser print, one/all selection, active-draft preference, workload summary, free-period summary, class/teacher/workload/free-period CSV export, and print-safe layouts. Backup version 4 added timetable drafts and entries.
+
+**Verification:** Timetable print/export, timetable backup/restore, generator, and full release checks pass. Current baseline: 128 tests across 26 files, typecheck/build/backup passing.
+
+**Limitations:** Browser print rather than server PDF; CSV rather than XLSX; free-period reports do not model leave, room availability, or substitute qualifications.
+
+## Documentation and handover
+
+**Goal:** Make the completed local project operable by school staff and continuable by another developer.
+
+**Implemented:** Project handover, beginner operating guide, developer continuation guide, prompt history, real-data pilot plan, future attendance procurement plan, short README, and documentation index.
+
+**Verification:** Documentation was reconciled with current routes, permissions, models, backup version 4, timetable Prompt 7D behavior, and the final release command results.
+
+**Limitations:** Repository Markdown is not exposed as an in-app help page. Operators open it from the project folder or through `docs/INDEX.md`.
+
+## Super Admin and Role Permission Matrix — Prompt 10A
+
+**Goal:** Create an ERP-style role and permission foundation without adding parent portal, teacher dashboard, principal dashboard, cloud deployment, attendance, payment gateway, SMS/WhatsApp API, payroll, or a redesign.
+
+**Implemented:** `SUPER_ADMIN`, `PRINCIPAL`, `TEACHER`, and `PARENT` roles were added alongside existing Director/Admin/Accountant/Viewer. A database-backed `RolePermission` matrix, `/roles` page, save/reset APIs, Super Admin promotion script, user-management role updates, matrix-aware page/API guards, and backup/restore coverage were added. Teacher and Parent began as future module roles; they now have their later safe placeholder/read-only surfaces.
+
+**Verification:** Permission, user-management, backup, restore, and full release checks pass in the current suite. Backup version 5 includes role permission rows and still excludes password hashes.
+
+**Limitations:** No role-specific teacher, parent, or principal dashboards were built. Super Admin promotion only promotes an existing user; it does not create a new account or password.
+
+## Role Matrix Access Testing and Lockout Safety Pass — Prompt 10A-QA
+
+**Goal:** Test and polish the Prompt 10A permission foundation before planning Parent, Teacher, or Principal modules.
+
+**Implemented:** Sidebar permission rules were extracted into testable access helpers, `/import-export` now redirects denied direct access to `/unauthorized`, the role matrix table was tightened with a sticky permission column and smaller checkbox columns, and QA tests were added for lockout safety, matrix save/reset, sidebar visibility, API guard declarations, direct unauthorized handling, backup/restore permission rows, Viewer / Auditor labeling, and Teacher/Parent placeholder access.
+
+**Verification:** The required typecheck, test, build, and backup commands must pass before using this as the next stable baseline.
+
+**Limitations:** This pass intentionally did not add Parent portal, Teacher dashboard, Principal dashboard, cloud, attendance, payment gateway, SMS/WhatsApp API, payroll, or redesign work.
+
+## Logout Stability and Payment Form UX Polish - Prompt 10B
+
+**Goal:** Harden logout behavior, add login password show/hide, support multiple UPI transactions under one receipt, clarify Bank/Other labels, and record the ERP calendar idea as documentation only.
+
+**Calendar planning note:** Start with an internal ERP calendar first for school-wide tasks, reminders, academic holidays, exam schedules, alerts, and overdue work. Consider Google Calendar sync later only after the ERP calendar is stable.
+
+**Scope guard:** No Parent portal, Teacher dashboard, Principal dashboard, calendar module, attendance, messaging automation, payment gateway, cloud sync, or redesign was part of this prompt.
+# Prompt 12A — Staff/Teacher Foundation and Teacher Profile Management
+
+Added the optional `StaffMember` master, staff list/detail/search, safe Teacher user and timetable links, preview-first staff import, staff permissions/defaults, `/teacher` placeholder routing, and backup/restore version 8 support. No leave, substitutes, attendance, biometric/RFID, payroll, ID cards, marks analytics, messaging, or broad redesign was added.
+
+## Prompt 12A-QA — Staff/Teacher Foundation Safety Polish
+
+Deep QA hardened staff contact/date validation, transactional and duplicate-safe User/TimetableTeacher linking, ambiguous import/restore matching, Teacher navigation isolation, role-matrix wording, and version-8 staff restore behavior. Browser and API checks covered privileged/read-only/blocked roles, staff CRUD/search/filter/import, linked and unlinked Teacher placeholders, timetable/parent regressions, and QA-data cleanup. No new staff-adjacent module was added.
+
+## Prompt 14A - Whole ERP Audit, UI/UX, Navigation, Mobile Responsiveness, and Feature Gap Review
+
+**Goal:** Stop feature expansion briefly and create a route/module inventory, feature and Schoolknot gap map, UI/UX redesign plan, dashboard audit, bug/tech-debt register, UDISE+ planning notes, and Codex prompt strategy.
+
+**Implemented:** Documentation-only stabilization plan plus a tiny `pnpm.cmd routes:list` helper. No new ERP module, shell redesign, dashboard redesign, expenses, exams, UDISE+, certificates, website/app/PWA, WhatsApp/SMS/email, biometric integration, payment gateway, AI assistant, or broad style change was added.
+
+**Follow-up:** Prompt 14B completed the app shell/navigation foundation. Continue with Prompt 14C dashboard redesign when ready.
+
+## Prompt 14B - App Shell, Navigation, Responsive Layout, and Design System Implementation
+
+**Goal:** Improve the whole ERP shell and responsive navigation without changing business logic, schema, backup format, or adding new modules.
+
+**Implemented:** Permission-derived sidebar grouping, desktop sidebar hide/show preservation, mobile off-canvas navigation drawer, drawer close button/backdrop/Escape/link-close behavior, compact mobile topbar behavior, shared table overflow containment, and design-system primitives for page shells, section cards, status badges, empty states, filter panels, form panels, page tabs, and responsive grids. The dashboard was lightly moved onto the new `PageShell` and `SectionCard` primitives only.
+
+**Verification:** Prompt 14B added navigation/shell tests for grouped permissions, Parent/Teacher/Viewer safety, drawer source contracts, and mobile off-canvas CSS. Final verification passed targeted tests, `pnpm.cmd typecheck`, `pnpm.cmd test` with 330 tests across 57 files, `pnpm.cmd build`, browser QA at 1366x768 and 390x844, production light/dark toggle proof, and `pnpm.cmd backup`.
+
+**Limitations:** Dashboard redesign is not complete and remains Prompt 14C. Route-specific mobile table/card-row designs, collapsible filters, and deep page-level form polish remain later UI prompts. No expenses, UDISE+, exams, certificates, website/app/PWA, WhatsApp/SMS/email, biometric integration, payment gateway, AI assistant, or new ERP module was added.
+
+## Prompt 14C - Dashboard Redesign and Premium Summary Cards
+
+**Goal:** Turn the main dashboard into a useful modern school ERP command center using existing data only.
+
+**Implemented:** A school/date/role/system-status welcome header; permission-filtered Today at a glance cards; finance, attendance, leave, substitute, notice, import-warning, and recent-activity summaries; premium collection emphasis; role-derived quick actions; responsive desktop/mobile grids; and light/dark dashboard styling. Parent and Teacher retain dedicated portal redirects, Accountant remains fee-focused, and Viewer / Auditor remains read-only.
+
+**Data and safety:** `lib/dashboard.ts` conditionally queries and defensively filters each dataset using effective permissions. Existing `getDashboard()` fee logic remains authoritative and received only additive payment-count/mode totals. No schema, migration, backup/restore format, business transition, or external charting dependency changed.
+
+**Verification:** Added six dashboard behavior/source tests covering safe metrics, no-data handling, quick actions, Parent/Teacher isolation, Viewer read-only behavior, and recent receipt/notice privacy. Final verification passed `pnpm.cmd typecheck`, 338 tests across 58 files, the production build, Browser QA at 1366x768 and 390x844 in light/dark mode with zero console errors, Director/Accountant/Parent/Teacher/Viewer role checks, and backup version 12 in `nalanda-fee-control-backup-2026-06-30-23-32.json`.
+
+**Limitations:** No server-side last-backup history, collection trend chart, expenses/budget, exams, UDISE+, certificates, AI recommendation, biometric sync, messaging, payment gateway, website/app, or cloud feature was added. Attendance stays manual and displays an explicit no-session state when absent.
+
+## Prompt 14C-QA - Dashboard Accuracy, Role Safety, and Responsive QA
+
+**Goal:** Verify and minimally harden the redesigned dashboard without adding modules, changing schema/backup format, or changing fee/attendance/leave/substitute workflows.
+
+**Bugs fixed:** Dashboard today/month collection keys now use the explicit India school timezone; current published notices include valid undated publications; and `/api/dashboard` now returns the same effective-permission-filtered view as the server-rendered page. The payment-mode heading now states that it covers all recorded payments.
+
+**Metric evidence:** At the live 1 July midnight boundary, direct valid-payment totals matched the dashboard at `₹0` today, zero payments today, and `₹0` for July. Existing pending-dues logic matched at `₹1,90,800` across seven students. Active counts were eight students, zero active guardians, and zero active staff. No attendance sessions, pending leave, substitute rows, or current notices existed, and the dashboard showed the corresponding real zero/empty states.
+
+**Role and visual evidence:** Director/Super Admin, Accountant, Parent, Teacher, and Viewer browser checks passed. Parent/Teacher remained isolated to their portals; Accountant showed only Add Payment and Import/Export actions; Viewer showed zero actions. Desktop `1366x768`, mobile `390x844`, light/dark contrast, mobile drawer/Escape, keyboard focus, and horizontal-overflow checks passed with no application console errors.
+
+**Final verification:** `pnpm.cmd typecheck`, 342 tests across 58 files, and `pnpm.cmd build` passed. Backup version 12 was created as `nalanda-fee-control-backup-2026-07-01-00-29.json`; it contains zero password-hash fields. Temporary role QA changes were restored, and the shared Viewer account finished as `VIEWER` with no guardian link.
+
+**Limitations:** In-app Browser URL policy prevented completing a new navigation click-through of every quick-action destination in this QA run. Their exact server-rendered hrefs, permission filtering, destination route guards, prior Prompt 14C browser proof, and the full regression suite were used instead. Existing limitations for backup history, trends, expenses/budget, exams, and automatic attendance estimates remain unchanged.
+
+## Prompt 15A - UDISE+ and Academic Progression Planning / Compliance Gap Map
+
+**Goal:** Start the academic/compliance planning phase by mapping data, workflow, privacy, approval, and reporting gaps before building annual rollover, progression, UDISE+, exams, admissions, or certificate features.
+
+**Audit findings:** The Student master has current year/class/section, identity/contact, optional DOB/Aadhaar, broad status, and free-text TC status. Guardian and manual attendance foundations exist. The ERP does not yet preserve academic-year enrollments, lifecycle events, promotion decisions, structured transfer/left/dropout evidence, gender/category/CWSN/language data, demographic strength reports, or marks evidence.
+
+**Documents:** Expanded `UDISE_PLUS_PLANNING_NOTES.md` and added `ACADEMIC_PROGRESSION_WORKFLOW_PLAN.md`, `STUDENT_LIFECYCLE_STATUS_MODEL_PLAN.md`, and `STUDENT_DATA_GAP_CHECKLIST_FOR_UDISE_AND_ACADEMICS.md`. The risk register, feature roadmap, developer guide, prompt history, and documentation index were updated.
+
+**Scope guard:** Planning/checklist only. No schema, route, permission, business logic, backup format, promotion, UDISE+ exchange, Aadhaar verification, exams, admissions, or certificates were added.
+
+**Verification:** Route inventory remained 52 page routes and 62 API routes. `pnpm.cmd typecheck`, all 342 tests across 58 files, and `pnpm.cmd build` passed. Backup version 12 was created as `nalanda-fee-control-backup-2026-07-01-09-12.json` with zero password-hash fields.
+
+**Recommended next prompt:** Prompt 15B - Academic Year Rollover and Student Lifecycle Foundation. Prompt 15C should add reviewed progression/departure workflows only after 15B is verified; Prompt 15D should add a read-only UDISE+ checklist/data-gap dashboard before any export is considered. Exams remain Prompt 17B or later, and certificates/TC linkage remains Prompt 18A.
+
+## Prompt 15B - Academic Year Rollover and Student Lifecycle Foundation
+
+**Goal:** Preserve academic-year enrollment and student lifecycle history safely before any promotion/repeat/transfer/left workflow is built.
+
+**Implemented:** Added `AcademicYearEnrollment` with a unique student/year guard and `StudentLifecycleEvent` append-only history; protected lifecycle overview/detail pages and GET APIs; lifecycle view/manage permissions with leadership defaults, Viewer read-only, and Parent/Teacher/Accountant blocked by default; a dry-run-first idempotent `pnpm.cmd lifecycle:backfill` command; and backup/restore version 13 coverage with old-backup compatibility, link validation, duplicate avoidance, local-history preservation, and password-hash exclusion.
+
+**Scope guard:** No promotion, repeat, double promotion, transfer/left/dropout action, rejoin action, correction UI, UDISE+ export, exams, admissions, certificates, maps, notifications, or changes to fee/payment/attendance/leave/substitute business logic were added.
+
+**Next:** Prompt 15B-QA should verify the lifecycle pages, role isolation, responsive themes, console health, backfill data, and cleanup. Prompt 15C remains the reviewed progression/departure workflow.
+
+**Verification:** The additive schema was applied locally through the established `pnpm.cmd db:push` path because the pre-existing non-empty SQLite database is not migration-baselined and `migrate deploy` safely refused with P3005. Backfill dry-run found 8 missing enrollments, apply created 8 enrollments plus 8 ENROLLED events, and a second dry-run found zero missing. `pnpm.cmd typecheck`, all 351 tests across 60 files, and `pnpm.cmd build` passed. Browser QA passed on the production build at 1366x768 and 390x844 in light/dark mode, with working filters, detail history, no promotion/repeat actions, Parent/Teacher blocking, Viewer read-only access, contained mobile tables, and zero application console errors/warnings. The temporary QA user and logs were removed. Backup version 13 was created as `nalanda-fee-control-backup-2026-07-01-10-07.json` with 8 enrollments, 8 events, and zero password-hash fields.
+
+## Prompt 15B-QA - Academic Year Rollover and Student Lifecycle Foundation QA
+
+**Goal:** Verify and minimally harden the existing lifecycle foundation without adding progression, transfer/departure, UDISE+, exam, admission, certificate, or unrelated module behavior.
+
+**Bugs fixed:** Backfill and coverage warnings now exclude non-active and soft-deleted Student rows; real backfill enrollment/event creation is transactional; detail API serialization now independently allowlists fields; restore detects exact semantic event duplicates across different backup IDs; and lifecycle dates use the shared school-time-zone formatter.
+
+**Safety evidence:** Live data has 8 valid enrollment links and 8 valid lifecycle-event links, with zero invalid statuses/types, duplicate student/year keys, or current class/section mismatches. Live API checks returned 200 for Super Admin, Director, Admin, Principal, and Viewer, and 403 for Accountant, Teacher, and Parent; both lifecycle API payloads contained zero internal record/user ID keys. A temporary database-copy restore rehearsal preserved 8 enrollments and 8 events across two repeated restores with zero lifecycle restore errors and zero password hashes.
+
+**Browser evidence:** Production browser QA passed at 1366x768 and 390x844 in light/dark mode. Combined year/class/section/status filters, zero-result empty state, overview counts, detail history, mobile table containment, mobile drawer/Escape, Viewer read-only access, and Accountant/Teacher/Parent blocking passed with zero application console errors/warnings. No promotion, repeat, double-promotion, transfer, left, or dropout final-action control exists.
+
+**Final verification:** `pnpm.cmd lifecycle:backfill` reported all 8 active students already enrolled with zero changes. `pnpm.cmd typecheck`, all 353 tests across 60 files, and `pnpm.cmd build` passed. Backup version 13 was created as `nalanda-fee-control-backup-2026-07-01-14-22.json` with 8 enrollments, 8 lifecycle events, zero password-hash fields, and no temporary QA user remaining.
+
+**Scope and next step:** Prompt 15C may now build a separately reviewed progression/departure workflow on this foundation. It must retain preview, evidence, approval/finalization, acknowledgement, reconciliation, and compensating correction safeguards; the remaining P3005 migration-baseline issue is unchanged.
+
+## Prompt 15C - Promotion / Repeat / Transfer / Left Workflow Foundation
+
+**Implemented:** Added the future-safe `StudentProgressionDecision` ledger; five progression permissions; protected list/create/detail pages and list/create/detail/action APIs; draft, submit, approve/reject, cancel, and explicit finalization transitions; preview text and audit fields; transactional lifecycle/enrollment finalization; duplicate-target prevention; progression links from lifecycle pages; and backup/restore version 14 coverage.
+
+**Decision behavior:** PROMOTE and REPEAT close the source as PROMOTED/REPEATED and create one ACTIVE target-year enrollment. TRANSFER_OUT, LEFT, DROPPED_OUT, and PASSED_OUT close the source without a target. All append a lifecycle event. Repeat requires reason, evidence, and parent acknowledgement. Rejection/cancellation require reasons. Finalized records are immutable. CORRECTION remains review-only, fee warnings remain advisory, and approval never auto-finalizes.
+
+**Scope guard:** No UDISE+ export, exam/marks module, admissions, certificates/TC, maps, Aadhaar verification, AI decision-making, notifications, biometric, payment gateway, automatic class mapping, bulk rollover, or fee/payment/attendance/leave/substitute business-rule change was added. The existing P3005 migration-baseline limitation remains documented.
+
+**Verification:** `lifecycle:backfill` reported 8 active enrollments, 8 existing lifecycle events, and 0 missing/created events. Typecheck, 377 tests across 62 files, and the production build passed. Browser QA passed at 1366x768 and 390x844 in light/dark mode with no page-level horizontal overflow or console errors. Director/Super Admin management and Viewer read-only behavior worked; Accountant, Teacher, and Parent were blocked. Reason validation, approval/finalization warnings, and cancellation were exercised. Sample data was not finalized: 2 temporary decisions and 5 temporary users were removed, leaving 8 enrollments and 8 lifecycle events. Backup `nalanda-fee-control-backup-2026-07-01-15-04.json` is version 14 and contains no password hashes.
+
+## Prompt 15C-QA - Progression Workflow Foundation QA Only
+
+**Bugs fixed:** Locked draft student identity and source-year consistency, added an APPROVED compare-and-set transaction claim to prevent concurrent/double finalization, added type-count summary cards, and expanded restore/audit-field tests.
+
+**Safety evidence:** Disposable database rehearsals finalized PROMOTE, REPEAT, TRANSFER_OUT, LEFT, DROPPED_OUT, and PASSED_OUT with the correct source status, target-enrollment behavior, and append-only event. CORRECTION finalization, duplicate targets, and repeat finalization were blocked. Forced target-write failure rolled back the decision claim and all partial work.
+
+**Browser evidence:** Super Admin workflow passed draft, submit, required rejection reason, separate approval, irreversible confirmation, and finalization. The list/detail views passed 1366x768 and 390x844 containment with zero page overflow and zero console errors/warnings. Permission/API defaults remained unchanged and are covered by role-sensitive regression tests.
+
+**Final verification:** `lifecycle:backfill`, typecheck, 381 tests across 62 files, and the production build passed; the documented Windows Prisma DLL `EPERM` was cleared with stale-Node termination. QA records/users were removed before the final version-14 backup. Prompt 15D may proceed only as a read-only UDISE+ checklist/dashboard.
+
+## Prompt 15D - Read-only UDISE+ Checklist and Student Data Gap Dashboard
+
+**Implemented:** Added `VIEW_UDISE_CHECKLIST` and `EXPORT_UDISE_CHECKLIST`; permission-gated `/udise`, student/staff detail reports, and compact summary; protected summary/student/staff/export APIs; an allowlisted read-only helper over existing ERP records; category counts; class/section consistency signals; and a formula-safe checklist CSV.
+
+**Privacy and scope:** Student/staff contact, address, and DOB are availability statuses only. Full Aadhaar, raw internal IDs, password hashes, secrets, and filesystem details are excluded. The fixed planning-only and latest-portal warnings appear in UI/export. No schema, backup format, official export/submission, portal automation, Aadhaar verification, lifecycle/progression mutation, exams, admissions, certificates, maps, AI, or unrelated module was added.
+
+**Permissions:** Super Admin, Director, Admin, and Principal view/export; Viewer view-only; Accountant, Teacher, and Parent blocked by default. Every page and API enforces its permission server-side.
+
+**Verification:** `pnpm.cmd lifecycle:backfill` found 8 active students already enrolled and changed nothing. Typecheck, 395 tests across 64 files, and the production build passed. In-app Browser QA passed at 1366x768 and 390x844 in light/dark mode: warning/cards, student filters, empty staff report, checklist download, contained tables, zero page overflow, Viewer no-export, and Accountant/Teacher/Parent blocking all passed with zero console errors/warnings. Temporary role reuse was restored, leaving 0 QA users/students, 8 enrollments, 8 lifecycle events, and 0 progression decisions. Version-14 backup `nalanda-fee-control-backup-2026-07-01-19-58.json` contains 8 enrollments, 8 events, 0 decisions, and no password hashes or secrets.
+
+**Future:** Prompt 15E may add reviewed gap-fix forms only after the school confirms fields. Prompt 17B remains exams/marks, Prompt 18A certificates/TC/bonafide linkage, and Prompt 21A student location privacy/cost/feasibility planning.
+
+## Prompt 15D-QA - Read-only UDISE+ Checklist Accuracy, Privacy, and Permission QA
+
+**Goal:** Verify the existing UDISE+ planning dashboard as a read-only, permission-safe, privacy-safe school-review tool without adding a new module or official exchange behavior.
+
+**Bugs fixed:** Student numeric gap totals now count the same unique non-privacy gap types displayed as badges; checklist filenames sanitize academic-year text and retain clear planning/gap-report wording; and the shell theme toggle reads the active theme-provider state.
+
+**QA evidence:** All four pages and all four APIs remain GET-only and server-protected. Live role checks allowed Super Admin, Director, Admin, and Principal to view/export; allowed Viewer to view but returned 403 for export; and blocked Accountant, Teacher, and Parent from pages, navigation, data APIs, and export. Student filters and helpful empty states worked. Page/API/CSV scans found no full Aadhaar, raw internal/user IDs, password hashes, secrets, or filesystem paths; spreadsheet-formula neutralization remained covered.
+
+**Scope:** No schema, backup format, official UDISE+ export/submission, portal automation, Aadhaar verification, data-fix form, lifecycle/progression mutation, exams, admissions, certificates, maps, biometric, notification, payment gateway, AI, or unrelated business-logic change was made.
+
+**Final verification:** `lifecycle:backfill` scanned 8 Active students and changed nothing. Typecheck, 397 tests across 64 files, and the production build passed. Browser QA at 1366x768 and 390x844 passed in light/dark mode with contained tables, zero page overflow, and zero console errors/warnings. Cleanup left 8 enrollments, 8 lifecycle events, 0 progression decisions, 0 staff/guardians, and 0 QA users/students. Version-14 backup `nalanda-fee-control-backup-2026-07-14-23-51.json` contains no password hashes or secrets.
+
+**Next:** The read-only checklist is safe for school review. Prompt 15E should proceed only after the school confirms which fields and source registers it wants to maintain; Prompt 17B, 18A, and 21A remain separate future phases.
+
+## Prompt 16A - Expense and Vendor Foundation
+
+**Implemented:** Added Vendor, ExpenseCategory, ExpenseDepartment, ExpenseRecord, ExpensePayment, and append-only ExpenseAudit models plus an additive SQLite migration and safe initial category/department masters. Added nine permissions, permission-derived navigation, protected vendor/list/create/detail behavior, expense list/create/detail workflow, partial payment ledger, six read-only report groupings, formula-safe CSV, and two permission-filtered dashboard counts. Expenses remain completely separate from student Payment records.
+
+**Workflow and security:** Draft is the only editable state. Submit, approve, reject, payment, and cancel are server-validated, compare-and-set, transactional actions with audit rows. Rejection/cancellation require reasons. Approved/paid records cannot be silently edited. Non-cash references and cheque details are enforced at payment time. Viewer/Auditor sees expenses/reports only; Principal is conservatively read-only; Accountant can manage/pay/report but cannot approve/cancel; Parent/Teacher are blocked. Sensitive vendor tax/banking fields require vendor-management permission and only four account digits are stored.
+
+**Reports and backup:** Active totals exclude cancelled records. CSV uses allowlisted fields, formula-injection protection, and no raw user IDs, secrets, or vendor tax/banking details. Backup version 15 includes all six new entities, remains compatible with old backups, validates relationships/status/money, avoids duplicate expense numbers/master rows, preserves newer local vendor data, and excludes password hashes.
+
+**Scope guard:** No budget/threshold alert, cash book, miscellaneous income, books/library income, payroll, GST/tax filing, bank reconciliation, gateway, AI, inventory/stores, invoice-document storage, or student fee/payment change was added. UDISE, lifecycle, and progression data were not changed.
+
+**Verification:** `lifecycle:backfill` scanned 8 active students and changed nothing. Typecheck, 440 tests across 67 files, and the production build passed. Browser QA covered create/draft/submit/approve/pay, reject and cancel with reasons, blocked invalid actions, reports/CSV, Accountant/Viewer/Teacher/Parent boundaries, 1366x768 and 390x844, light/dark mode, contained tables, zero page overflow, and zero console errors/warnings. Browser QA found and fixed a date-only offset defect before sign-off. Cleanup left 8 active students, 8 enrollments, 8 lifecycle events, 0 progression decisions, 0 QA users, and 0 vendor/expense/payment/audit records. Backup version 15 is `nalanda-fee-control-backup-2026-07-15-00-48.json`; it contains 15 categories, 8 departments, no QA markers, and no password hashes. The migration was applied through the established direct SQLite execute path because the documented P3005 baseline limitation remains.
+
+**Next:** Run Prompt 16A-QA before Prompt 16B. Later phases remain Prompt 16B budgets/budget controls, Prompt 16C daily cash book, and Prompt 16D miscellaneous income.
+
+## Prompt 16A-QA - Expense and Vendor Foundation QA Only
+
+**QA fixes:** Tightened vendor and expense input handling so overlong identifiers/notes and over-precision numeric money are rejected instead of silently truncated or rounded. Impossible calendar dates are rejected. Expense create/update now validates that selected vendor, category, and department masters are active inside the write transaction. Cash/cheque/electronic reference fields are normalized to the selected method. Read-only expense and vendor pages/APIs no longer serialize tax/banking, payment-reference, private-note/reason, or finance-actor fields into restricted payloads.
+
+**Audit and restore safety:** Vendor status changes now require confirmation, rejection and cancellation use independent UI reason state, and paid/final records remain non-editable. Restore validation now applies exact two-decimal money rules, vendor privacy/format limits, workflow-status consistency, and payment-reference checks. A same-number/different-ID expense collision no longer maps dependent backup payments or audits to an unrelated local expense. Isolated copied-database QA proved first restore, repeated restore without duplicates, collision isolation with warnings, version 15, link preservation, and password-hash exclusion.
+
+**Browser and permissions:** Full workflow QA covered vendor validation/duplicate/status/linked-history behavior; draft, submit, approve, pay, reject, and cancel; missing-reference/reason errors; report totals and CSV; Super Admin, Director, Admin, Principal, Accountant, Viewer, Teacher, and Parent defaults. Viewer payloads hid payment references, private notes/reasons, and actor names. Accountant could manage and record payment but had no approve/cancel action. At 1366x768 and 390x844, vendor/expense list/new/detail/reports passed in light and dark mode with no page overflow, mobile tables scrolling inside `.table-wrap`, and 0 console warnings/errors.
+
+**Verification and cleanup:** `lifecycle:backfill` scanned 8 active students and changed nothing. Typecheck, 450 tests across 67 files, and the production build passed. Regression smoke coverage included payments, receipt print, pending dues, daily collection, dashboard, lifecycle/progression, UDISE checklist, attendance, leave, substitutes, timetable, role matrix, import/export, and backup. Cleanup removed every QA16A user, vendor, expense, payment, and audit; the database remains at 8 students, 8 enrollments, 8 lifecycle events, and 0 progression decisions. Clean backup `nalanda-fee-control-backup-2026-07-15-01-26.json` is version 15 with 15 categories, 8 departments, 0 finance records, 0 QA markers, and 0 password-hash fields.
+
+**Next:** Expense and Vendor Foundation is safe to proceed to Prompt 16B. Budgets, cash book, miscellaneous income, payroll, GST/tax filing, bank reconciliation, gateway integration, AI, inventory, and student fee/payment changes remain outside this phase.
+
+## Prompt 16B - Budget and Department Spending Controls
+
+**Foundation:** Added `BudgetPlan`, `BudgetAllocation`, and `BudgetRevision` with Decimal amounts, calculated allocation totals, normalized duplicate-combination keys, a one-official-plan-per-year rule, and immutable approved/locked workflow boundaries. Revisions store preserved before/after allocation snapshots instead of silently overwriting approved figures.
+
+**Spending control:** Added `lib/budgets.ts` and guarded list/detail/workflow/revision/report/export APIs. Actual spending uses only same-year APPROVED `ExpenseRecord` rows and their `ExpensePayment` rows. Paid, committed, utilized, available, utilization, over-budget, unmatched approved spend, and warning/critical states are distinct. Deterministic matching prevents one expense from counting in more than one allocation. Student payments are never queried.
+
+**Operator surfaces and roles:** Added budget list, new-plan allocation builder with required preview, detail/workflow confirmations, revision history, and read-only category/department/combined/threshold reports with formula-safe CSV. Permission-aware dashboard cards show allocated, utilized, threshold, and pending-approval totals. Defaults: Super Admin/Director full; Admin/Accountant draft manage and export without approve/lock/revise; Principal/Viewer read-only; Teacher/Parent none.
+
+**Data safety:** Backup version 16 adds plans, allocations, and revisions. Restore is backward-compatible, validates money/totals/thresholds/statuses/reasons/links/snapshots/official-year uniqueness, isolates same-number/different-ID plan collisions, preserves local-newer rows, avoids duplicates, never deletes local budget data, and excludes password hashes. The existing Prisma P3005 baseline issue remains documented.
+
+**Verification checkpoint:** Final verification passed `lifecycle:backfill` with 8 active students already enrolled and no changes, typecheck, 493 tests across 69 files, and the 119-page production build. Browser QA covered the full draft/duplicate/submit/approve/lock/reject/cancel/revision workflow, paid/committed/threshold calculations, CSV, Accountant/Viewer/Teacher/Parent boundaries, 1366×768 and 390×844, light/dark mode, contained table scrolling, and zero console errors or warnings. Cleanup removed all temporary budget, expense, vendor, payment/audit, and QA-user records. Backup version 16 was written as `nalanda-fee-control-backup-2026-07-15-02-25.json`; it contains zero clean-state budget rows and no password hashes.
+
+**Next:** Run Prompt 16B-QA after implementation sign-off. Prompt 16C daily cash book/day close and Prompt 16D miscellaneous income remain separate future phases. Payroll, GST filing, bank reconciliation, payment gateway, AI, procurement, inventory, and student fee/payment changes remain out of scope.
+
+## Prompt 16B-QA - Budget and Department Spending Controls QA Only
+
+**Bugs fixed:** Cancellation now needs `APPROVE_BUDGETS`, closing a direct-API path for draft managers. Effective allocation thresholds are validated after inheriting plan defaults. Master links are checked inside plan/revision transactions. Budget displays retain paise, reports aggregate with Decimal, and category-only matching has documented precedence over department-only matching. Restore now deeply validates academic years, effective dates, and revision snapshot links, keys, duplicates, exact amounts, thresholds, and reconciled totals.
+
+**Financial/workflow evidence:** Disposable approved, paid, partial, unpaid, draft, rejected, and cancelled expenses produced exact totals of 2,200.65 allocated, 1,000.25 paid, 1,125.35 committed, 2,125.60 utilized, and 75.05 available. Draft/edit/submit/approve/lock, double-lock rejection, locked immutability, rejection/cancellation reasons, terminal-state blocking, threshold states, reports, and CSV passed. Seven-role live checks confirmed leadership control, conservative Admin/Principal/Accountant/Viewer boundaries, and Teacher/Parent denial.
+
+**Backup/regression:** Isolated restore recreated plan/allocation/revision rows once, remained idempotent on repeat, and did not attach children to a same-number/different-ID local plan. Lifecycle backfill changed nothing; typecheck, 502 tests across 69 files, and the 119-page production build passed. Cleanup removed 4 plans, 6 allocations, 6 expenses/audits, 2 payments, 1 vendor, and 7 QA users, leaving no QA markers. Clean backup `nalanda-fee-control-backup-2026-07-15-10-25.json` is version 16 with 15 categories, 8 departments, 0 finance/budget rows, and no password hashes.
+
+**Open gate:** The requested in-app Browser rerun could not initialize because the bundled Browser client threw `Cannot redefine property: process` before any page opened. Current 1366x768/390x844, light/dark, overflow, table-scroll, confirmation, and console-zero evidence is therefore pending. Prompt 16C is not cleared until that browser-only gate is rerun; no Prompt 16C or unrelated finance work was added.
+
+## Prompt 16C - Miscellaneous Income and Daily Cash Book Foundation
+
+**Foundation:** Added six independent models, an additive SQLite migration, fourteen permissions, conservative role defaults, permission-derived navigation, protected item/rate/receipt/cancel/report/export APIs and pages, black-and-white receipt print, physical-cash day list/detail/reports, movement and workflow APIs, source snapshots/drift warning, and small dashboard summaries. Miscellaneous receipts use their own numbering and never write student fee `Payment`.
+
+**Cash control:** The formula reads active fee cash, active miscellaneous CASH receipts, non-cancelled CASH `ExpensePayment` rows, and active manual/disposition movements with exact Decimal paise. Bank deposit and Director handover are separate cash outflows and support split disposition. Counted closing and variance are preserved. Submission snapshots, approval, and lock are separate transaction-safe compare-and-set transitions; locked days are immutable and later source changes create warnings instead of rewrites.
+
+**Security and restore:** Director/Super Admin have full control; Admin/Accountant manage and submit without default approve/lock; Principal/Viewer are read-only; Teacher/Parent are blocked. Restricted payloads omit sensitive references and actors. Backup version 17 adds all six entities, supports older backups, validates totals/links, isolates same-number/date collisions, preserves newer local rows, is idempotent, and excludes password hashes.
+
+**Scope:** No books/library-specific accounting, payroll, GST, bank reconciliation, inventory, gateway, AI, or fee/dues/ledger change. Prompt 16D is Books/Library Income and Publisher Payment Flow.
+
+**Verification:** Browser QA found and fixed three release defects: received-account labels now submit enum values, receipt cancellation uses an explicit inline reason confirmation instead of a browser prompt, and cash-day/movement dates serialize as `YYYY-MM-DD` before API calls. The complete cash workflow calculated authoritative sources, split ₹200 to the school current account and ₹100 to Director Sir, preserved a documented ₹-10 variance, submitted, approved, locked, rejected edits, and showed source drift without rewriting snapshots. Accountant could manage/submit but not approve/lock/cancel; Principal/Viewer were read-only without export or sensitive references; Teacher/Parent page access was denied. Reports, both CSV downloads, print output, 1366×768 and 390×844, light/dark mode, contained tables, and zero page overflow passed with zero console errors/warnings.
+
+**Release evidence:** `lifecycle:backfill` changed nothing; typecheck, 558 tests across 72 files, and the 133-page production build passed. Cleanup removed 4 QA receipts, 5 lines, 4 rates, 2 cash days, 2 movements, and 3 temporary role users. Final state is 6 seeded items, zero Prompt 16C transactions, zero vendor/expense/budget rows, 8 students, 8 enrollments, 8 lifecycle events, and 0 progression decisions. Backup version 17 is `nalanda-fee-control-backup-2026-07-15-13-30.json` and contains no password hashes. The implementation is ready for Prompt 16C-QA.
+
+## Prompt 16D — Books Sales, Library Income, Publisher Bills, and Payment Flow Foundation
+
+**Implemented:** separate academic-year book catalog/rates; immutable `BOOK-...` sale receipts and line snapshots; CASH-only physical-cash sourcing; daily book-cash draft/submit/approve/cancel workflow; exactly-one Director handover; cash-book snapshot/drift; books dashboard, pages, reports, formula-safe CSV, and black-and-white receipt print.
+
+**Expense reuse:** publisher vendors, invoice drafts, approval, partial/final bank or cheque payments, and annual library-management service drafts remain existing `Vendor`, `ExpenseRecord`, and `ExpensePayment`. No parallel publisher payment or payroll ledger was added.
+
+**Security and backup:** eleven books permissions enforce server-side role defaults. Admin/Accountant cannot approve settlements by default; Principal/Viewer are masked read-only without export; Teacher/Parent are blocked. Backup version 18 adds all books entities and book cash snapshots, supports older backups, validates exact links/collisions/overlaps/totals, preserves newer local roots, remains idempotent, and excludes password hashes.
+
+**Scope:** no circulation, accession, barcode/RFID, inventory, valuation, purchase order, procurement approval, payroll, GST, bank reconciliation, gateway, AI, or fee/lifecycle/UDISE/attendance/leave/timetable change.
+
+## Prompt 16E - Library Circulation, Accession Register, Barcode/RFID, and Inventory-Boundary Planning
+
+**Planning audit:** Reviewed the current Student/Guardian/StaffMember/User/RolePermission relationships; books-finance and publisher expense reuse; Miscellaneous Income; permissions/navigation; backup/restore version 18; parent/teacher portal boundaries; import/export and CSV safety; and Decimal/local-date helpers. `BookCatalogItem` remains a sale-item/rate model and is not the circulation catalogue.
+
+**Plan delivered:** Added separate title/copy, membership, loan, reservation, charge, event, policy, and stock-verification model plans; permanent accession rules; server-side lifecycle and privacy rules; barcode-first and RFID evidence gates; import templates; permissions; routes; reports; financial/procurement/valuation boundaries; and a phased Prompt 16F-16J roadmap. The recommended future charge design is a dedicated operational `LibraryCharge` linked once to Miscellaneous Income only when payment is collected.
+
+**Scope:** Documentation only: no schema/migration, route/API, feature code, backup array/version, external package, finance record, or application behavior changed. The exact next implementation prompt is **Prompt 16F - Library Catalog and Accession Register Foundation**.
+
+## Prompt 16E-QA - Library Circulation and Accession Planning Review Only
+
+**Planning corrections:** Made the loan record the canonical source for `OVERDUE` so copy and loan states cannot diverge; specified that `RESERVED` means a specifically allocated held copy; required migration-managed exactly-one membership linkage and an enforceable unique nullable active-loan key; added successor-copy linkage for replacements; and clarified the optional Vendor/ExpenseRecord provenance rule.
+
+**Financial/privacy hardening:** Documented the exact once-only LibraryCharge-to-Miscellaneous-Income receipt link, pre-final cancellation/reopen path, locked-cash-day compensating-correction requirement, waiver boundary, and parent-safe receipt visibility. Barcode identifiers are normalized exact matches with UI debounce and server idempotency/transactional locking; RFID remains copy-only, non-authentication, and non-location tracking.
+
+**16F scope gate:** Prompt 16F is limited to bibliographic titles, physical copies/accession register, preview import, non-circulation reports, permissions, and backup/restore. It explicitly excludes members, loans, returns, reservations, overdue, charges/fines, barcode/RFID, procurement, and valuation. No runtime or schema changes were made in this review.
+
+## Prompt 16F - Library Catalog and Accession Register Foundation
+
+**Implemented:** Added separate `LibraryTitle`, `LibraryCopy`, and append-only `LibraryCopyEvent` models; normalized/unique title code, ISBN, accession, and optional barcode; permanent accessions; audited condition/shelf/status/withdraw/correction actions; exact Vendor/Expense provenance validation; and safe masked serializers.
+
+**Surfaces:** Added nine `/library` pages and protected `/api/library/*` title, copy, event, import-template/preview/confirm, report, and export routes. Added six permissions with Director/Admin writes, Principal/Viewer read-only, Viewer no export, and Accountant/Teacher/Parent blocked. Added exact preview-first imports through `ImportBatch` and formula-safe non-circulation reports.
+
+**Durability:** Backup version 19 adds library title/copy/event arrays, older-backup defaults, exact link validation, collision isolation, local-newer preservation, append-only event retention, idempotent repeated restore behavior, and continued password-hash exclusion. Books-finance, fee Payment, miscellaneous income, expenses, budgets, and cash book remain separate.
+
+**Deferred:** Prompt 16G membership/issue/return/renewal/reservation; Prompt 16H overdue/lost/damaged/charges/waivers/portals; Prompt 16I labels/scanning; Prompt 16J stock verification. RFID, procurement, and inventory valuation remain separately gated.
+
+## Prompt 16G - Library Membership and Circulation Foundation
+
+**Implemented:** Added exclusive Student/Staff memberships, explicit priority policies, transactional issue/return/renewal/issued-in-error cancellation, title reservation queues and fulfilment, derived overdue, append-only circulation events, and open-loan withdrawal protection. Unique database keys guard double issue and duplicate waiting reservations.
+
+**Surfaces:** Added eleven circulation pages, protected member/policy/issue/return/loan/reservation/report APIs, nine permissions, Principal read-only access, masked Viewer/Auditor reports without export, and default blocks for Accountant/Teacher/Parent.
+
+**Durability:** Backup version 20 adds membership, policy, loan, reservation, and loan-event arrays with exact-link validation, snapshot preservation, active-loan uniqueness, fulfilment validation, collision isolation, older-backup compatibility, idempotent event restore, and continued password-hash exclusion.
+
+**Deferred:** Prompt 16H lost/damaged/charges/waivers/portal scope; Prompt 16I labels/scanning; Prompt 16J stock verification. No fines, payments, Parent/Teacher library portal, barcode scanner, RFID, procurement, or valuation was added.
+
+## Prompt 16H - Library Incidents, Charges, Waivers, and Portals
+
+**Implemented:** Added explicit LOST/DAMAGED incident lifecycles, safe copy transitions, configurable charge-rule matching, manual/rule/acquisition suggestions, overdue snapshots, separate incident and charge approval, full/partial waiver, terminal immutability, and append-only charge/incident events. Duplicate active incidents, overdue charges, collections, and concurrent workflow actions are guarded.
+
+**Finance and portals:** Approved positive charges collect exactly once through one Miscellaneous Income receipt/line. CASH reaches Cash Book through that existing source only; no fee `Payment`, fee due, student fee ledger, or separate Library ledger changes. Linked-receipt cancellation creates a reconciliation warning. Parent access is linked-child-only and Teacher access is own-StaffMember-only; both are allowlisted and read-only.
+
+**Surfaces and durability:** Added incident, charge, charge-rule, report/export, Parent Library, and Teacher Library pages/APIs plus server-side permissions. Backup version 21 adds all four accountability arrays and validates links, ownership, receipt identity, amounts, collisions, and append-only history while supporting older backups and excluding password hashes.
+
+**Deferred:** Prompt 16I barcode labels/scanning; Prompt 16J stock verification. Payment gateway, automated fine posting, RFID, procurement, purchase orders, and inventory valuation remain absent.
+
+**Prompt 16H release evidence:** Route inventory passed at 123 page routes and 154 API routes; lifecycle backfill changed nothing; typecheck passed; 713 tests across 85 files passed; and the 193-route production build passed. Browser QA passed the explicit overdue, LOST, DAMAGED, partial/full waiver, CASH/UPI collection, receipt-cancellation warning, role/ownership isolation, CSV, responsive, light/dark, focus, overflow, and table-containment checks with zero console errors/warnings and empty production stderr. Cleanup returned every temporary Prompt 16H entity and receipt count to zero while retaining the two configured Library charge Miscellaneous Income items. Backup version 21 is `nalanda-fee-control-backup-2026-07-16-10-33.json`, contains all four accountability arrays, and excludes password hashes. Prompt 16H-QA is safe to begin.
+
+## Prompt 16H-QA - Library Incidents, Charges, Waivers, and Own-Portal QA
+
+**Resolved findings:** QA now rejects DAMAGED incidents against cancelled loans, pre-issue incident dates, unsupported damage conditions, and unavailable replacement copies. Collection revalidates the exact Student/Staff member ownership inside the financial transaction. Charge and incident forms use India-local date defaults. Paid-charge restore rechecks the local Miscellaneous Income receipt identity, borrower, stable Library item, and exact amount before linking it. Prompt 16H client boundaries now pass allowlisted plain option/action payloads instead of Prisma Decimal graphs, eliminating the Next.js production console/stderr warning.
+
+**Workflow and privacy evidence:** Browser QA covered explicit overdue preview without posting, due-today exclusion, exact class/staff rule matching, partial and full waiver, exactly-once concurrent CASH collection, Staff UPI reference validation, stable Student/Staff receipt items, LOST original-return and replacement resolutions, post-return DAMAGED repair resolution, receipt-cancellation correction history, Parent sibling isolation, Teacher own-account isolation, unlinked-Teacher state, Accountant collection-only scope, Principal review scope, Admin export scope, masked Viewer reports/no export, and Super Admin/Director access. Reports reconciled exact paise and showed the cancelled-receipt warning. Temporary QA counts returned to zero except the two intentionally retained stable Library charge income items; fee `Payment` stayed at 19 and no cash day/movement was created.
+
+**Release evidence and remaining gate:** Route inventory is 123 page and 154 API routes; lifecycle backfill is a no-op; typecheck, 725 tests across 86 files, and the 193-route production build pass. Production Browser smoke has zero console errors/warnings and empty stderr. Clean backup version 21 is `nalanda-fee-control-backup-2026-07-16-11-47.json`, contains empty accountability arrays after cleanup, retains both configured Library income items, and excludes password hashes. The in-app Browser viewport override did not change the rendered viewport from its 1280px desktop surface when asked for 390x844, so the exact mobile rerun remains an environmental QA gate. Prompt 16H is not fully cleared and Prompt 16I should wait for that one Browser rerun.
+# Prompt 16I
+
+Added Library Code 39 barcode labels, preview-first assignment/correction, printable sheets, safe CSV exports, and confirmation-based keyboard scanner assistance. No RFID, camera, stock verification, or location tracking was added.
+# Prompt 16J — Library Stock Verification Foundation (2026-07-16)
+
+Added scoped/transactional stock sessions, immutable expected-copy snapshots, exact barcode/accession/manual verification, duplicate/out-of-scope/unknown/withdrawn scan logs, safe missing proposals, itemized review/application through existing append-only copy helpers, separate approval and Director-only default lock, masked reports/formula-safe CSV, permissions, backup/restore v22, tests, and Browser QA targets. No RFID, camera scanning, valuation, procurement, accounting, automatic charges/expenses, fee changes, or location tracking. Next planned Prompt 17A.
+
+# Prompt 16J-QA — Library Stock Verification QA (2026-07-16)
+
+# Prompt 17A - Homework and Assignments Foundation (2026-07-16)
+
+Added HomeworkAssignment and append-only HomeworkAssignmentEvent, conservative timetable-linked Teacher scope, linked-child/current-enrollment Parent isolation, audited workflow, staff and portal pages, reports/formula-safe CSV, seven permissions, backup/restore v23, tests, and Browser QA targets. HomeworkViewReceipt was deferred. No submission/upload, grading/marks, report cards, AI generation, notifications, storage, or unrelated module changes.
+
+QA corrected expected-versus-unexpected counting, deliberate recheck handling, normalized out-of-scope confirmation, safe scan payloads, incident guards, Viewer report-only enforcement, applied-event restore ownership validation, locked-scanner controls, detailed report/scan history, accessible inline reasons, and 44px mobile controls. Browser checks passed at 1366x768 and exact 390x844 in light/dark modes with no overflow, all tables contained, zero console warnings/errors, and empty production stderr. Temporary sessions, records, scans, events, titles, copies, loans, members, policies, users, and related events were removed before the clean v22 backup. Physical USB scanner certification remains unavailable; keyboard-input simulation passed.
+# Prompt 17B — Exams and Marks Foundation
+
+Implemented four Prisma models and the checked-in `20260716_exams_marks_foundation` migration; ten role permissions and exact timetable Teacher scope; exam and assessment workflow with concurrency checks; accessible raw-mark entry with zero/absent distinction; audited approved-mark correction; preview-confirm exact CSV import; internal privacy-safe analytics/export; nine requested pages plus guarded APIs; append-only history; backup/restore version 24; and regression/security tests. Final report cards, KG rubrics, published results, ranks, automated progression, online exams, notifications, and Teacher performance analytics remain out of scope.
+
+## Prompt 17B-QA - Exams and Marks Foundation QA (2026-07-16)
+
+QA corrected class-wide enrollment matching in entry, import, reports, validation, and restore; accepted blank class-wide sections and main components in version-24 backups; blocked approved-mark corrections after exam cancellation; added explicit configuration-gap, result-distribution, and configuration-only cancellation reporting; aligned the audited correction action label; made repeated exam transitions serialize safely; masked Prisma uniqueness details; and enforced Viewer exam-code masking in report responses. Targeted tests cover restore idempotence, locked history, collision isolation, workflow/scope/privacy regressions, and exact report metrics. Final clearance remains contingent on the requested in-app Browser viewport/accessibility rerun if that bridge is unavailable during QA.
+
+# Prompt 17C - Digital Report Cards and KG Rubrics (2026-07-16)
+
+Implemented grading schemes and templates; mark-based cards from one locked Exam Cycle; the full five-evaluation LKG/UKG rubric, attendance and growth snapshots; exact Teacher scope; separate Student/batch submission, approval, issue, archive, and pre-issue cancellation; immutable issued corrections; linked-child Parent result/history views; operational reports and safe CSV; A4 and ten-page KG print structures; eleven permissions; append-only events; and backup/restore version 25. Raw marks and progression remain read-only. No rank, automatic promotion, Teacher analytics, notifications, Student login, or external document/storage packages were added.
+
+## Prompt 17C-QA - Digital Report Cards and KG Rubrics QA (2026-07-17)
+
+QA corrected Teacher batch/correction scope, Parent mark snapshot field mapping, KG attendance provenance and exact evaluation/growth keys, typed approval-role enforcement, mark-card attendance/source snapshot tampering, restricted API serialization, report queue/distribution coverage, historical/cancelled print watermarks, version-25 link validation and replay tests, exact unattended dialog labels, archived Teacher history visibility, Teacher read-only issued-card controls, mobile action sizing, and confirmation-dialog focus.
+
+Browser QA covered active mark-based and KG templates, locked-exam zero/absent/missing handling, incomplete KG issue blocking, separate workflow transitions, audited correction version 2 without overwriting version 1, all five KG evaluations, all criterion response sets, 20 personality traits, June-April attendance, I/III/V growth, linked-child Parent isolation, exact/unlinked Teacher scope, Director/Admin/Viewer/Accountant/Parent role boundaries, masked Viewer reports/no export, A4 and ten-page black-and-white KG print, CANCELLED/SUPERSEDED watermarks, 1366x768 and exact 390x844 layouts, light/dark themes, table containment, 44px mobile controls, accessible labels/focus, zero horizontal overflow, zero console warnings/errors, and empty production stderr.
+
+Release evidence: 159 page routes and 220 API routes; lifecycle backfill scanned 8 active Students and changed nothing; typecheck passed; 915 tests across 101 files passed; and the 250-page optimized production build passed without a DLL lock or `taskkill`. Cleanup removed 8 temporary users, 3 Students, 1 Guardian, 2 exam cycles, 3 templates, 2 schemes, 3 batches/cards, 4 versions, and 15 events; every QA17C count returned to zero and progression stayed at zero. Clean backup version 25 is `nalanda-fee-control-backup-2026-07-17-02-19.json`; all eight report-card arrays are empty after cleanup, QA17C and password hashes are absent, and SHA-256 is `14BD6268CDEB9EAC175D175C662BDB3ED8051E7DDF905C56F0ABF2CF1F08FD82`. Prompt 17C is cleared and Prompt 17D is safe to begin.
+
+## Prompt 17D - Teacher Performance Analytics and Review Foundation (2026-07-17)
+
+Added four preserved analytics/review models; nine employment-sensitive permissions; versioned workload, attendance/approved-leave, substitute, Homework, marks workflow, aggregate Student outcome, report-card, KG, and data-quality evidence; minimum cohort 5; explicit cycle/review/share/Teacher-response/finalisation dialogs; own-Teacher isolation; aggregate Viewer reporting/no export; formula-safe leadership CSV; and backup/restore version 26. No composite score, ranking, automatic employment action, causation claim, Student identity/raw marks, AI conclusion, surveillance, or Prompt 18A work was added.
+
+## Prompt 18A - Student Certificates, TC and Bonafide Foundation (2026-07-17)
+
+Added the four controlled certificate types; six preserved models; thirteen permissions/defaults; validated non-executable templates; transaction-safe issue-time numbering; internal and Parent linked-child requests; separate request/certificate approval and issue; authoritative enrollment/Attendance/progression snapshots; TC active-enrollment warning and explicit leadership reason; immutable correction/reissue/cancellation history; A4 monochrome staff/Parent print; operational reports and formula-safe allowlisted CSV; and backup/restore version 27. No certificate fees/payments, Migration/board packages, public verification, QR codes, signature images, digital signatures, or automatic lifecycle/progression/financial mutation were added.
+# Prompt 18B - Class X document package, Migration tracking, and payment workflow
+
+Implemented configurable immutable package/checklist snapshots, current or historical Class X source preview, Prompt 18A school-certificate version links, external Board/Migration custody-only tracking, compare-and-set audited workflow, approved Miscellaneous Income collection or full waiver, partial/complete physical handover, Parent linked-child isolation, operational reports/formula-safe CSV, A4 acknowledgment, permission-aware navigation/APIs, focused security/regression tests, and backup/restore version 28.
+
+Hard boundaries: no Board certificate generation/branding/scans, no Board eligibility inference, no fee `Payment` or payment gateway, no dues blocking, and no lifecycle/progression/marks/report-card mutation. The school must verify official procedures. Prompt 18C remains out of scope.
+# Prompt 18C — Virtual Student and Teacher ID Cards
+
+Implemented privacy-safe Student/Staff ID-card templates, number series, individual/batch lifecycle, immutable versions/events, correction/replacement/revocation, Parent/Teacher isolation, CR80/A4 printing, Code 39 exact lookup, aggregate reports and safe CSV, and backup/restore version 29. Personal-photo storage and public/authentication use are explicitly excluded.
+
+# Prompt 19A - In-App Notification Centre and Delivery Ledger Foundation
+
+Implemented five preserved notification models; reusable plain-text templates; separate draft, review, approval, schedule/publication, cancellation, withdrawal, archive, and correction workflow; immutable audience/template snapshots; one deduplicated recipient row per campaign/User; safe skipped-target reasons; append-only events; idempotent read/acknowledge/dismiss actions; deterministic scheduled/expiry visibility; exact Parent/Teacher/Staff/role/class/section/Student/Guardian/User targeting; conservative timetable-linked Teacher drafts; Parent/Teacher/staff inboxes and unread bells; aggregate-only reporting and formula-safe CSV; and backup/restore version 30.
+
+Existing Parent Notices remain unchanged and are adapted into a separate linked-child-safe read-only legacy feed without duplicate campaigns or fabricated receipts. The implementation contains no WhatsApp, SMS, email, push, Firebase, service worker, external provider, credentials, webhook, contact-field recipient snapshot, or external delivery queue.
+# Prompt 19C — SMS and Email One-Way Communication Foundation (2026-07-18)
+
+Added shared privacy-safe SMS/Email profiles, independent exact-contact consent and history, DLT-safe SMS and plain-text Email mappings, published Prompt 19A audience reuse, masked preview, separate approval/send, persistent bounded MOCK queues, revalidation/retry/rate/quiet-hour/cost controls, signed mock delivery/bounce/complaint fixtures, contact-hash suppression, aggregate formula-safe reporting, role-gated Parent/Staff preferences, eight staff pages/APIs, environment-only Gmail API architecture, and backup/restore version 33. No live provider was activated, no real contact was sent, and no credentials or full destination contacts were added to channel tables.
+
+The SMS LIVE adapter intentionally remains unavailable until the school's exact provider contract exists. Gmail API acceptance remains `ACCEPTED`, not delivery. No two-way inbox, inbound content, automatic reply, OTP, marketing, arbitrary HTML, remote image, tracking pixel, attachment, Student-direct delivery, finance posting, or Prompt 19D work was added.
+
+# Prompt 19D — Privacy-Safe PWA Foundation and Mobile App Strategy (2026-07-18)
+
+**Goal:** Add standards-compliant installability and a narrowly scoped service worker without caching authenticated school data, enabling offline writes, background sync, push notification, device tracking, a native wrapper, or Prompt 20A.
+
+**Implemented:** App Router manifest, 192/512 normal and maskable icons plus Apple touch icon, production-only registration, versioned Nalanda-only caches, static allowlist, generic offline fallback, online/offline banner, user-confirmed waiting-worker updates, Install App guidance, logout/manual cache clearing, `VIEW_SYSTEM_HEALTH` diagnostics, security headers, tests, and `PWA_AND_MOBILE_APP_STRATEGY.md`.
+
+**Data and backup:** No Prisma/schema change, device/install record, analytics, offline-operation table, or subscription table. Backup format remains version 33.
+
+**Boundaries:** No push, notification permission, background/periodic sync, offline mutation queue, cached authenticated page/API, IndexedDB school data, wrapper/APK/IPA/store package, device permission, or Prompt 20A.
+
+# Prompt 20A — AI Assistant Planning, Safety Boundaries and Read-Only Retrieval Foundation (2026-07-18)
+
+Implemented a leadership-only read-only assistant for explicit local documentation and handwritten aggregate operational retrieval; seven permissions; five staff pages; protected APIs; strict instruction/personal-data/SQL/shell/file/URL/write refusal; pre/post redaction; provider schema and citation validation; timestamps, completeness and uncertainty; minimum group five; per-user throttling/concurrency; hash/count/timing-only audit; synthetic evaluations; accessible workflow dialogs; and backup/restore version 34.
+
+Only deterministic MOCK is active. Local HTTP and cloud adapters remain disabled, have no persisted credentials/endpoints, and make no live calls. No personal-data answer, individual marks, Teacher ranking, external source, autonomous action, SQL, filesystem/model tool, write mutation, communication send, semantic/vector store, attachment ingestion, live model, or Prompt 20B work was added.
+
+# Prompt 20B - Handwritten Fee Register OCR, Human Review and Controlled Payment Import (2026-07-19)
+
+Implemented private JPEG/PNG/still-WebP page storage; deterministic MOCK and MANUAL modes; disabled provider-neutral local/cloud states; strict untrusted response validation; exact/conservative Student matching; immutable row revisions; field confidence and mandatory human checklist; duplicate evidence/resolution; review-version approval; zero-write posting preview; private purge; aggregate/reconciliation reports; formula-safe reviewed staging CSV; twelve workflow permissions plus explicit image permission; eight pages; protected APIs; and backup/restore version 35.
+
+The finance audit confirmed that `Payment.date` drives historical Cash Book source dates, but the normal creation route does not expose one proven helper for all allocation, balance, overpayment, receipt, and idempotency invariants. Posting therefore remains disabled and no Payment/receipt/Cash Book mutation is performed. PDF, live local/cloud OCR, automatic Student selection, automatic payment, and Prompt 20C were not added.
+
+# Prompt 20C - Automatic Encrypted Off-Device Backup and Disaster-Recovery Foundation (2026-07-19)
+
+Added eight operational/history models; backup/restore version 36; gzip plus AES-256-GCM versioned containers; environment-only keys; plaintext/ciphertext SHA-256; MOCK and contained atomic LOCAL_FOLDER providers; disabled OBJECT_STORAGE/GOOGLE_DRIVE foundations; India-local database schedules and worker commands; read-after-write/decrypt/schema verification; health/RPO/failure reporting; isolated copied-database repeated-restore rehearsal; preview-first exact-object retention; twelve permissions; seven pages and protected APIs; aggregate reports/formula-safe CSV; and an incident runbook.
+
+No live provider call, credential request/storage, Browser key input, plaintext upload, operational-database restore, finance/business mutation, private OCR image archive, provider object-lock claim, or Prompt 20D work is included. Deployment scheduling remains external to Prisma. Database coverage explicitly excludes private uploaded asset bytes.
+
+# Prompt 21A - Student Location Mapping Privacy, Cost, Feasibility and Decision Gate (2026-07-19)
+
+Completed a documentation-only review of current Student/Guardian/address foundations, server permissions, Parent isolation, generic Student export, backup/restore, PWA, AI, public-site boundaries, applicable Indian child-data/privacy considerations, Google Maps Platform, Mapbox, OpenStreetMap/Nominatim, self-hosting, cost scenarios, abuse controls, threat model, precision tiers, correction/verification flow, and phased 21B/21C/21D gates.
+
+Decision: **CONDITIONAL GO FOR 21B** after leadership and qualified legal/privacy approval. The safe 21B boundary is structured postal address plus linked-Parent correction and, only if justified, a separate nullable manually verified coarse point. There is no schema/migration, route/API, map, geocoder, provider call/account/credential, address processing, browser location permission, AI/PWA/public exposure, exact coordinate, or persistent-data change. Backup remains version 37.
+
+# Prompt 21A-QA - Student Location Mapping Planning QA Only (2026-07-19)
+
+Re-audited the complete decision package, current schema/routes/dependencies, official MeitY/Google/Mapbox/OSM/Nominatim material, 35-threat register, access matrix, precision tiers, provider constraints, cost formulas/scenarios, lifecycle, map privacy, and 21B/21C/21D boundaries.
+
+Fixed documentation traceability gaps for per-use-case lower-risk/module boundaries, threat-model review status, separate Super Admin/Director rows, separate admissions/correction/development calculations, explicit map-payload exclusions, one threat phase, and the current public Nominatim generic-integration warning. Added focused QA tests and `STUDENT_LOCATION_MAPPING_21A_QA_REPORT.md`.
+
+No runtime/schema/migration/route/API/dependency/provider/key/geolocation/map/address/coordinate/data change was made. The planning decision remains **CONDITIONAL GO**: Prompt 21A is cleared after final verification; Prompt 21B remains blocked pending recorded leadership and qualified legal/privacy decisions.
+
+# Prompt 21B-Preflight - Student Address Leadership, Legal and Privacy Approval Gate (2026-07-19)
+
+Created a documentation-only approval record, Parent/child privacy-notice draft, retention/deletion policy draft, and access/incident matrix. Added focused stable governance tests that treat an externally blocked approval as the expected safe state.
+
+Evidence result: no leadership approving person/date/reference and no qualified Indian privacy/legal reviewer/written reference were supplied or found. Decision status remains `PENDING`; all 15 mandatory release blockers are `UNRESOLVED`; final gate is `PROMPT_21B_BLOCKED`.
+
+The recommended boundary is Tier 1 structured postal address and linked-Parent correction only, with optional suppressed text-derived Tier 2 aggregates. The exact proposed coordinate decision is `OMIT_ALL_COORDINATES_FROM_21B`; it is not formally approved. Tier 3 requires a separate phase; Tier 4 and Tier 5 are prohibited.
+
+No schema, migration, field/model, route/API, correction form, map, geocoder, provider package/call/key, real Student address processing, operational record, Browser location permission, Prompt 21C, or Prompt 21D implementation was added. Backup remains version 37.
+
+# Prompt 21B-Preflight-QA - Student Address Approval-Gate Verification Only (2026-07-19)
+
+# SEC-1A - Whole Repository Security Audit and Critical Hardening (2026-07-20)
+
+Audited authentication, sessions, authorization/IDOR, injection/RCE, XSS/CSRF/CORS/redirect/clickjacking, SSRF, uploads/paths, resource exhaustion, crypto/secrets, errors/logging, dependencies, backup/PWA/AI/public boundaries, and security UX against OWASP Top 10:2025 and ASVS 5.0.0.
+
+Confirmed 0 Critical, 4 High, and 18 Medium findings. Fixed first-run claim, copied-QA restore, privileged-user races, seed/provider secrets, receipt/import invariants, streamed bodies, login denial behavior, password/session policy, proxy trust, raw errors, OCR/Class X/fee/cash controls, CSV formulas, webhook/send/AI limits, report caps, native dialogs, and permission-nav leakage. No schema change or operational database mutation was made.
+
+Mandatory reports are `SECURITY_RUNTIME_AUDIT_AND_BACKLOG_RECONCILIATION.md`, `ERP_SECURITY_ATTACK_SURFACE_AND_THREAT_MODEL.md`, and `SEC_1_SECURITY_AUDIT_AND_HARDENING_REPORT.md`. SEC-1B must use a fresh copied database. Prompt 21B/21C/21D remain blocked.
+
+Verified the four Prompt 21B governance documents for completeness, evidence authenticity, purpose/minimisation, precision, Parent notice, role access, retention/deletion, incident ownership, backup/PWA/AI/log/public exclusions, blocker consistency, and the no-implementation boundary.
+
+Fixed three documentation-only traceability defects: explicitly omitted house photographs/device/live history, stated that no coordinate permission/default role exists, and independently listed ordinary-log and public-structured-data exclusions. Added focused stable QA tests and `STUDENT_ADDRESS_21B_PREFLIGHT_QA_REPORT.md`.
+
+No leadership or qualified Indian privacy/legal evidence was supplied. All 15 blockers remain `UNRESOLVED`; no accountable incident person is named; the approval record remains `PENDING` / `PROMPT_21B_BLOCKED`. QA release decision: `PROMPT_21B_REMAINS_BLOCKED`.
+
+No schema, migration, field/model, page/route/API, Parent correction form, coordinate, map, geocoder, provider, credential, operational record, Browser permission, Prompt 21B runtime, Prompt 21C, or Prompt 21D implementation was added. Backup remains version 37.
+
+# Prompt 23B-M — Schoolknot Management Audit Reconciliation and Provisional Gap Backlog (2026-07-22)
+
+Read the completed authenticated MANAGEMENT-role report from the connected Notion source and reconciled it against the actual Nalanda routes, APIs, Prisma models, permissions, navigation, helpers, reports, exports, portals, workflow history, backup/recovery and security boundaries. Source evidence is 15 top-level modules, 119 desktop observations and 39 exact 390×844 checks, all read-only and privacy-safe. Parent, Teacher and Principal evidence remains pending.
+
+Created the Management replacement matrix, should-not-copy register, provisional M1-M6 implementation waves, authorised future export/migration requirements and explicit cross-role hold lists. Updated the status/gap map, replacement roadmap, limitation register, developer/operator guides and index. The main provisional missing areas are Admissions CRM; payroll/payslips/salary/advance/exit; transport; internal events/calendar; Student submissions/attachments; richer exam consolidation; discipline; cafeteria; and selected settings/reports. Core finance, Guardians, lifecycle, timetable, permissions, certificates/TC, Library and recovery are fully covered or stronger.
+
+No Prisma model, migration, page, API, provider, deployment, Schoolknot export, credential or real school record was added or changed. Prompt 23B is not complete; final cross-role priorities remain held. Prompt 21B/21C/21D remain blocked and Prompt 22B remains conditional. The next safe gate is focused `Prompt 23B-M-QA` only.
+
+Verification passed: 274 pages, 376 APIs, zero-write lifecycle backfill, typecheck, 1,429 tests across 157 files, optimized build with 211/211 static pages, and backup version 37 `nalanda-fee-control-backup-2026-07-22-02-03.json`. Schema hash, 41-entry migration inventory, operational database hash and 8 Students / 8 active enrollments / 19 Payments / INR 99,100 remained unchanged.
+
+# Prompt 23B-M-QA — Independent Management Gap Reconciliation QA Only (2026-07-22)
+
+Independently refetched the authenticated, completed 21 July 2026 MANAGEMENT report from the connected Notion source and rechecked its 15 top-level menus, 119 desktop observations, 39 exact 390×844 mobile checks, blank/inaccessible areas, privacy method and strict no-write boundary. Re-read the actual pages, APIs, Prisma models, permissions, reports, portals, exports, workflow histories and security guards supporting the replacement matrix.
+
+Found and corrected 13 documentation-quality defects. Dashboard, notification compose, Add Student, Add Teacher/Employee, exam analytics, Old Fee Reports, HR daily attendance, Subjects and Classes were reduced to `PARTIALLY_REPLACED`; inaccessible Schoolknot Library, backup/restore and expense/budget/Cash Book rows were reduced to `NEEDS_MORE_EVIDENCE`; every should-not-copy row gained an explicit Schoolknot evidence column. No runtime defect or missing module was implemented.
+
+Admissions, payroll/payslips/salary/advance/exit, events/calendar, transport, Student submissions/attachments, multiple-exam/board analytics, discipline, cafeteria, assets, refunds and Day Closer remain missing, partial, blocked or evidence-dependent as documented. M1-M6 remain provisional. Parent, Teacher and Principal holds remain binding. Exact result: `MANAGEMENT_RECONCILIATION_CLEARED`; final Prompt 23B is not complete and must wait for the three pending authenticated role audits. Prompt 21B/21C/21D and Prompt 22B remain blocked.
+
+Final verification passed: 274 pages, 376 APIs, lifecycle dry run with 8 scanned/8 already enrolled/0 created, typecheck, 1,437 tests across 158 files, and optimized build with 211/211 static pages. Final clean backup is version 37 `nalanda-fee-control-backup-2026-07-22-02-29.json`; schema/database hashes, 41-entry migration inventory and 8 Students / 8 active enrollments / 19 Payments / INR 99,100 remain unchanged. The backup contains no password-hash key.
+
+# SEC-1B - Production Portal Runtime Security, Role and UI/UX Regression Audit (2026-07-20)
+
+Ran the optimized portal against a fresh byte-identical copied database, created only minimal QASEC1 role/ownership fixtures, generated the 274-page/375-API matrix, completed 5,841 authenticated/unauthenticated requests with zero network/5xx/private-cache violations, passed 40 adversarial runtime checks, exercised all eight roles, and visually inspected 41 major module surfaces.
+
+Confirmed and fixed two Medium runtime UX defects: 37 px mobile drawer links now meet the 44 px minimum, and unknown routes now provide a safe custom 404 recovery action. Repeated the full Browser pass at 1440×900, 1366×768, 1024×768, 768×1024, 390×844, 375×667, and 320×568 in light/dark modes. Browser console and hydration errors were zero.
+
+Two copied-database cleanup inspections returned zero QASEC1 records. Provider/upload/backup roots were empty, the server/logs/copied database were removed, and operational SHA-256/totals/`.env` remained unchanged. See `SEC_1_RUNTIME_BROWSER_AND_UI_UX_AUDIT.md`. Prompt 21B/21C/21D remain blocked.
+
+# DEVOPS-1A - Private Git Baseline, Secret Scan and Trusted Initial Push (2026-07-22)
+
+Installed official Git for Windows through Winget, verified the exact private empty GitHub repository, hardened `.gitignore`/`.gitattributes`, added the reusable candidate/staged/tracked safety scanner and regression tests, and created the private source/recovery workflow. The source audit removed literal non-production secret/default-password values while preserving production environment requirements and explicit demo-only behavior.
+
+The trusted initial commit uses message `chore: establish verified Nalanda ERP baseline` and annotated tag `baseline-sec1-management-2026-07-22`. Operational SQLite/sidecars, backup JSON, OCR/private uploads, provider objects, QA/log/export/Schoolknot artifacts, dependencies, build output, coverage, and IDE/agent state remain local and ignored. No schema/migration or operational record was changed; Prompt 21/22 and pending Schoolknot role-audit boundaries remain unchanged. Independent DEVOPS-1A-QA is required before DEVOPS-1B migration repair.

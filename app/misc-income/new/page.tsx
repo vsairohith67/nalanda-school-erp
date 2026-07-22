@@ -1,0 +1,7 @@
+import { MiscIncomeForm } from "@/components/misc-income-form";
+import { PageHeader, PageShell } from "@/components/ui";
+import { requirePermission } from "@/lib/auth";
+import { schoolDateKey } from "@/lib/format";
+import { prisma } from "@/lib/prisma";
+import { getSchoolSettings } from "@/lib/school-settings";
+export default async function NewMiscIncomePage() { await requirePermission("MANAGE_MISC_INCOME"); const settings = await getSchoolSettings(prisma); const [items, students] = await Promise.all([prisma.miscIncomeItem.findMany({ where: { status: "ACTIVE" }, include: { rates: { where: { status: "ACTIVE", academicYear: settings.academicYear } } }, orderBy: { name: "asc" } }), prisma.student.findMany({ where: { deletedAt: null, status: "Active" }, select: { id: true, admissionNo: true, studentName: true, className: true, section: true }, orderBy: { studentName: "asc" } })]); const serialized = items.map((item) => ({ ...item, createdAt: undefined, updatedAt: undefined, rates: item.rates.map((rate) => ({ id: rate.id, academicYear: rate.academicYear, amount: rate.amount.toString(), effectiveFrom: rate.effectiveFrom?.toISOString() ?? null, effectiveTo: rate.effectiveTo?.toISOString() ?? null })) })); return <PageShell><PageHeader title="Issue Miscellaneous-Income Receipt" description="Select configured items and academic-year rates. All totals are recalculated and saved by the server." /><MiscIncomeForm items={serialized} students={students} academicYear={settings.academicYear} today={schoolDateKey()} /></PageShell>; }

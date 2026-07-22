@@ -1,0 +1,3 @@
+import { safeClientError } from "@/lib/client-errors";
+import { NextRequest, NextResponse } from "next/server"; import { requireApiPermission } from "@/lib/auth"; import { applyStockResolution } from "@/lib/library-stock-verification"; import { prisma } from "@/lib/prisma";
+export async function POST(request:NextRequest,{params}:{params:Promise<{id:string}>}){const auth=await requireApiPermission("APPLY_LIBRARY_STOCK_CORRECTIONS");if(auth.response)return auth.response;try{const body=await request.json();return NextResponse.json(await applyStockResolution(prisma,(await params).id,String(body.recordId??""),auth.user.id));}catch(error){return NextResponse.json({error:safeClientError(error, "Unable to apply approved correction")},{status:400});}}

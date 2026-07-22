@@ -1,0 +1,5 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth"; import { prisma } from "@/lib/prisma";
+import { createReportCardTemplate } from "@/lib/report-cards"; import { reportCardApiError } from "@/lib/report-card-api";
+export async function GET() { const auth = await requireApiPermission("MANAGE_REPORT_CARD_TEMPLATES"); if (auth.response) return auth.response; const templates = await prisma.reportCardTemplate.findMany({ select: { id:true,templateCode:true,name:true,reportType:true,academicYear:true,className:true,status:true,versionNumber:true,updatedAt:true,gradingScheme:{select:{schemeCode:true,name:true}} }, orderBy: [{ status: "asc" }, { name: "asc" }] }); return NextResponse.json({ templates }); }
+export async function POST(request: NextRequest) { const auth = await requireApiPermission("MANAGE_REPORT_CARD_TEMPLATES"); if (auth.response) return auth.response; try { return NextResponse.json({ template: await createReportCardTemplate(prisma, await request.json(), auth.user.id) }, { status: 201 }); } catch (error) { return reportCardApiError(error); } }

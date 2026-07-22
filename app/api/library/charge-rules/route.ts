@@ -1,0 +1,7 @@
+import { safeClientError } from "@/lib/client-errors";
+import { NextRequest, NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { createLibraryChargeRule } from "@/lib/library-charge-rules";
+import { prisma } from "@/lib/prisma";
+export async function GET() { const auth = await requireApiPermission("VIEW_LIBRARY_CHARGES"); if (auth.response) return auth.response; const rows = await prisma.libraryChargeRule.findMany({ orderBy: [{ memberType: "asc" }, { priority: "desc" }, { ruleCode: "asc" }] }); return NextResponse.json({ rules: rows.map((r) => ({ id: r.id, ruleCode: r.ruleCode, name: r.name, memberType: r.memberType, className: r.className, staffType: r.staffType, graceDays: r.graceDays, overdueAmountPerDay: r.overdueAmountPerDay.toFixed(2), maximumOverdueAmount: r.maximumOverdueAmount?.toFixed(2) ?? null, lostChargeBasis: r.lostChargeBasis, fixedLostAmount: r.fixedLostAmount?.toFixed(2) ?? null, damagedChargeBasis: r.damagedChargeBasis, fixedDamagedAmount: r.fixedDamagedAmount?.toFixed(2) ?? null, priority: r.priority, status: r.status })) }); }
+export async function POST(request: NextRequest) { const auth = await requireApiPermission("ASSESS_LIBRARY_CHARGES"); if (auth.response) return auth.response; try { const row = await createLibraryChargeRule(prisma, await request.json(), auth.user.id); return NextResponse.json({ rule: { id: row.id, ruleCode: row.ruleCode } }, { status: 201 }); } catch (error) { return NextResponse.json({ error: safeClientError(error, "Unable to create rule") }, { status: 400 }); } }

@@ -1,0 +1,14 @@
+import Link from "next/link";
+import { PageHeader, StatusBadge } from "@/components/ui";
+import { requirePermission } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export default async function CloudBackupRunsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await requirePermission("VERIFY_CLOUD_BACKUP");
+  const query = await searchParams, status = typeof query.status === "string" ? query.status : "", provider = typeof query.provider === "string" ? query.provider : "", trigger = typeof query.trigger === "string" ? query.trigger : "";
+  const runs = await prisma.cloudBackupRun.findMany({ where: { ...(status ? { status } : {}), ...(trigger ? { triggerType: trigger } : {}), ...(provider ? { profile: { providerKind: provider } } : {}) }, include: { profile: true, artifacts: true, _count: { select: { verifications: true } } }, orderBy: { createdAt: "desc" }, take: 500 });
+  return <div className="page cloud-backup-page"><PageHeader title="Encrypted Backup Runs" description="Immutable safe metadata only. No decrypted payload, personal records, credentials, key material, absolute paths or public URLs." action={<Link className="button secondary" href="/cloud-backup">Backup health</Link>} />
+    <form className="card card-pad filter-grid" method="get"><label>Status<select name="status" defaultValue={status}><option value="">All</option>{["PENDING","CREATING_BACKUP","VALIDATING","COMPRESSING","ENCRYPTING","UPLOADING","VERIFYING","VERIFIED","FAILED","CANCELLED"].map((value) => <option key={value}>{value}</option>)}</select></label><label>Provider<select name="provider" defaultValue={provider}><option value="">All</option>{["MOCK","LOCAL_FOLDER","OBJECT_STORAGE","GOOGLE_DRIVE"].map((value) => <option key={value}>{value}</option>)}</select></label><label>Trigger<select name="trigger" defaultValue={trigger}><option value="">All</option>{["MANUAL","SCHEDULED","MISSED_RUN_RECOVERY","RETRY"].map((value) => <option key={value}>{value}</option>)}</select></label><button>Apply filters</button></form>
+    <section className="card"><div className="table-wrap"><table><thead><tr><th>Run</th><th>Provider</th><th>Status</th><th>Trigger</th><th>Started</th><th>Encrypted size</th><th>Verification</th></tr></thead><tbody>{runs.map((run) => <tr key={run.id}><td><Link href={`/cloud-backup/runs/${run.id}`}>{run.runNumber}</Link></td><td>{run.profile.providerKind}</td><td><StatusBadge status={run.status} /></td><td>{run.triggerType}</td><td>{run.startedAt?.toLocaleString("en-IN") ?? "Pending"}</td><td>{run.encryptedBytes ? `${Math.round(run.encryptedBytes / 1024)} KB` : "—"}</td><td>{run._count.verifications} checks</td></tr>)}</tbody></table></div>{!runs.length ? <p className="empty-state">No backup runs match these filters.</p> : null}</section>
+  </div>;
+}

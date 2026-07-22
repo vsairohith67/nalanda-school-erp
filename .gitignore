@@ -1,0 +1,96 @@
+# Environment-only configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and package-manager caches
+node_modules/
+.pnpm-store/
+
+# Framework/build/test output
+.next/
+out/
+dist/
+build/
+coverage/
+.cache/
+.turbo/
+.eslintcache
+*.tsbuildinfo
+test-results/
+playwright-report/
+
+# Operational and rehearsal databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Local backups (retain only the empty directory marker)
+backups/*
+!backups/.gitkeep
+*.backup.json
+*-backup-*.json
+
+# Private runtime storage, uploads, OCR images/crops, and provider objects
+data/
+storage/
+uploads/
+private-uploads/
+ocr-storage/
+cloud-backup-objects/
+cloud-backup-provider-objects/
+*.enc
+*.encrypted
+*.cipher
+*.age
+
+# Pilot/rehearsal data and temporary QA roots
+pilot-data/
+tmp/
+temp/
+.qa-artifacts/
+.qa*-runtime/
+qa-artifacts/
+
+# Logs and local process output
+*.log
+*.log.*
+*.pid
+*.pid.lock
+
+# Generated exports, private screenshots, and Schoolknot artifacts
+exports/
+generated-exports/
+generated-reports/
+screenshots/
+private-screenshots/
+*schoolknot*.csv
+*schoolknot*.xlsx
+*schoolknot*.xls
+*schoolknot*.json
+*schoolknot*.zip
+
+# Local tools, IDEs, OS state, and temporary files
+.agents/
+.codex/
+.vscode/
+.idea/
+.vs/
+.vercel/
+.netlify/
+.DS_Store
+Thumbs.db
+Desktop.ini
+~$*
+*.tmp
+*.temp
+*.swp
+*.swo
+start-test.txt
+

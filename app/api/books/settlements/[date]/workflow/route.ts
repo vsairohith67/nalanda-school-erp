@@ -1,0 +1,7 @@
+import { safeClientError } from "@/lib/client-errors";
+import { NextRequest, NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { serializeBookSettlement, transitionBookCashSettlement } from "@/lib/book-cash-settlement";
+import { localDate } from "@/lib/expenses";
+import { prisma } from "@/lib/prisma";
+export async function POST(request: NextRequest, { params }: { params: Promise<{ date: string }> }) { try { const body = await request.json(); const action = String(body.action ?? "").toLowerCase(); const permission = action === "submit" ? "SUBMIT_BOOK_CASH_SETTLEMENT" : action === "approve" ? "APPROVE_BOOK_CASH_SETTLEMENT" : "MANAGE_BOOK_CASH_SETTLEMENT"; const auth = await requireApiPermission(permission); if (auth.response) return auth.response; if (!["submit", "approve", "cancel"].includes(action)) throw new Error("Settlement action is not supported"); const settlementDate = localDate((await params).date, "Settlement date"); const current = await prisma.bookCashSettlement.findUnique({ where: { settlementDate }, select: { id: true } }); if (!current) return NextResponse.json({ error: "Book-cash settlement not found" }, { status: 404 }); const settlement = await transitionBookCashSettlement(prisma, current.id, action as "submit" | "approve" | "cancel", auth.user.id, body.reason); return NextResponse.json({ settlement: serializeBookSettlement(settlement) }); } catch (error) { return NextResponse.json({ error: safeClientError(error, "Unable to change settlement status") }, { status: 400 }); } }

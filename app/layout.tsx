@@ -1,0 +1,85 @@
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+import { AppShell } from "@/components/app-shell";
+import { ThemeProvider } from "@/components/theme-provider";
+import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { getSchoolSettings } from "@/lib/school-settings";
+import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import type { CanonicalPermission } from "@/lib/permissions";
+import { BANNER_HEALTH_CODES, getSystemHealth } from "@/lib/system-health";
+import { getAppInfo } from "@/lib/app-info";
+import { isPilotDatabaseUrl } from "@/lib/pilot";
+import { PwaRuntime } from "@/components/pwa-runtime";
+import { ModalAccessibilityGuard } from "@/components/modal-accessibility-guard";
+import { SecurityDialogProvider } from "@/components/security-dialog-provider";
+import { headers } from "next/headers";
+
+// The shared layout resolves the authenticated user and role permissions.
+// Force per-request rendering so a previously rendered private page can never
+// outlive logout, password changes, account disabling, or role changes.
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Nalanda Public School ERP",
+  description: "Secure school operations, Parent and Teacher portal",
+  robots: { index: false, follow: false },
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/nalanda-logo.jpg", type: "image/jpeg" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }]
+  }
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#0f766e" },
+    { media: "(prefers-color-scheme: dark)", color: "#172438" }
+  ]
+};
+
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const requestHeaders = await headers();
+  if (requestHeaders.get("x-nalanda-public-website") === "1") {
+    return (
+      <html lang="en" suppressHydrationWarning>
+        <body className="public-website-body">{children}</body>
+      </html>
+    );
+  }
+  const [user, settings] = await Promise.all([getCurrentUser(), getSchoolSettings(prisma)]);
+  const effectivePermissions = user
+    ? await getEffectivePermissions(prisma, user.role)
+    : new Set<CanonicalPermission>();
+  const health = user && permissionSetCan(effectivePermissions, "VIEW_SYSTEM_HEALTH")
+    ? await getSystemHealth(prisma)
+    : null;
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <ThemeProvider>
+          <ModalAccessibilityGuard />
+          <SecurityDialogProvider>
+            <PwaRuntime>
+              <AppShell
+                user={user}
+                permissions={[...effectivePermissions]}
+                settings={settings}
+                health={health}
+                healthBannerIssues={health?.issues.filter((issue) => BANNER_HEALTH_CODES.has(issue.code)) ?? []}
+                appInfo={getAppInfo()}
+                pilotMode={Boolean(user && permissionSetCan(effectivePermissions, "VIEW_SYSTEM_HEALTH")
+                  && isPilotDatabaseUrl(process.env.DATABASE_URL))}
+              >
+                {children}
+              </AppShell>
+            </PwaRuntime>
+          </SecurityDialogProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}

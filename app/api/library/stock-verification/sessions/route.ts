@@ -1,0 +1,7 @@
+import { safeClientError } from "@/lib/client-errors";
+import { NextRequest, NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { createStockSession } from "@/lib/library-stock-verification";
+import { prisma } from "@/lib/prisma";
+export async function GET(request: NextRequest) { const auth = await requireApiPermission("VIEW_LIBRARY_STOCK_VERIFICATION"); if (auth.response) return auth.response; const q=request.nextUrl.searchParams; const sessions=await prisma.libraryStockVerificationSession.findMany({where:{...(q.get("academicYear")?{academicYear:q.get("academicYear")!}:{}),...(q.get("status")?{status:q.get("status")!}:{}),...(q.get("scopeType")?{scopeType:q.get("scopeType")!}:{})},orderBy:[{verificationDate:"desc"},{sessionNumber:"desc"}]}); return NextResponse.json({sessions:sessions.map(({createdByUserId:_a,startedByUserId:_b,submittedByUserId:_c,reviewedByUserId:_d,approvedByUserId:_e,lockedByUserId:_f,cancelledByUserId:_g,...row})=>row)}); }
+export async function POST(request: NextRequest) { const auth=await requireApiPermission("MANAGE_LIBRARY_STOCK_VERIFICATION"); if(auth.response)return auth.response; try{return NextResponse.json({session:await createStockSession(prisma,await request.json(),auth.user.id)},{status:201});}catch(error){return NextResponse.json({error:safeClientError(error, "Unable to create stock-verification session")},{status:400});}}

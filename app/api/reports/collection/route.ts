@@ -1,0 +1,69 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { requireApiPermission } from "@/lib/auth";
+import { sumCountablePayments } from "@/lib/payment-controls";
+import { classSectionLabel, displayCollectionTermLabel, groupTotalByLabel } from "@/lib/collection-report";
+
+export async function GET(request: NextRequest) {
+  const auth = await requireApiPermission("VIEW_DAILY_COLLECTION");
+  if (auth.response) return auth.response;
+  const sp = request.nextUrl.searchParams;
+  const date = sp.get("date");
+  const month = sp.get("month");
+  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return NextResponse.json({ error: "A valid report date is required" }, { status: 400 });
+  }
+  if (month && !/^\d{4}-\d{2}$/.test(month)) {
+    return NextResponse.json({ error: "A valid report month is required" }, { status: 400 });
+  }
+  const where = {
+    deletedAt: null,
+    isCancelled: false,
+    ...(date ? { date: dayRange(date) } : {}),
+    ...(month ? { date: monthRange(month) } : {})
+  };
+  const payments = await prisma.payment.findMany({ where, orderBy: [{ date: "asc" }, { receiptNo: "asc" }], take: 10_000 });
+  const byAccount = groupTotal(payments, "receivedAccount");
+  const byMode = groupTotal(payments, "paymentMode");
+  const byClass = groupTotalByLabel(payments, (payment) => classSectionLabel(payment.className, payment.section));
+  const byStudent = groupTotal(payments, "studentName");
+  const byTerm = groupTotalByLabel(payments, (payment) => displayCollectionTermLabel(payment.termHint));
+  return NextResponse.json({
+    totalCash: byMode.Cash ?? 0,
+    totalDirectorGPay: byAccount["Director Sir GPay"] ?? 0,
+    totalNpsUpi: byAccount["NPS Current Account UPI"] ?? 0,
+    totalBank: byAccount["NPS Bank Account"] ?? 0,
+    totalCheque: byMode.Cheque ?? 0,
+    totalOther: byMode.Other ?? 0,
+    grandTotal: sumCountablePayments(payments),
+    receipts: Array.from(new Set(payments.map((p) => p.receiptNo))).sort(),
+    byAccount,
+    byMode,
+    byClass,
+    byStudent,
+    byTerm,
+    payments
+  });
+}
+
+function dayRange(dateText: string) {
+  const start = new Date(`${dateText}T00:00:00.000Z`);
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { gte: start, lt: end };
+}
+
+function monthRange(monthText: string) {
+  const start = new Date(`${monthText}-01T00:00:00.000Z`);
+  const end = new Date(start);
+  end.setUTCMonth(end.getUTCMonth() + 1);
+  return { gte: start, lt: end };
+}
+
+function groupTotal<T extends Record<string, unknown>>(rows: T[], key: keyof T) {
+  return rows.reduce<Record<string, number>>((acc, row) => {
+    const name = String(row[key] ?? "Blank");
+    acc[name] = (acc[name] ?? 0) + Number(row.amountPaid ?? 0);
+    return acc;
+  }, {});
+}

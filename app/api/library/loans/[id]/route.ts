@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { publicLibraryLoan } from "@/lib/library-api";
+import { prisma } from "@/lib/prisma";
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) { const auth = await requireApiPermission("VIEW_LIBRARY_CIRCULATION"); if (auth.response) return auth.response; const loan = await prisma.libraryLoan.findUnique({ where: { id: (await params).id }, include: { member: { include: { student: { select: { studentName: true, admissionNo: true, className: true, section: true } }, staffMember: { select: { fullName: true, staffCode: true, staffType: true, designation: true } } } }, copy: { include: { title: true } }, events: { include: { recordedBy: { select: { name: true } } }, orderBy: { eventDate: "desc" } }, fulfilledReservation: { select: { reservationNumber: true } } } }); return loan ? NextResponse.json({ loan: publicLibraryLoan(loan) }) : NextResponse.json({ error: "Library loan not found" }, { status: 404 }); }

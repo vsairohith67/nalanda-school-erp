@@ -1,0 +1,5 @@
+import { NextRequest,NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { friendlySubstituteError,substituteDate,suggestSubstituteStaff } from "@/lib/substitutes";
+export async function GET(request:NextRequest){const auth=await requireApiPermission("ASSIGN_SUBSTITUTES");if(auth.response)return auth.response;try{const sp=request.nextUrl.searchParams;const absentStaffMemberId=sp.get("absentStaffMemberId")??"";if(!absentStaffMemberId)throw new Error("Choose the absent staff member first");const suggestions=await suggestSubstituteStaff(prisma,{assignmentDate:substituteDate(sp.get("assignmentDate")),absentStaffMemberId,subject:sp.get("subject"),department:sp.get("department"),periodLabel:sp.get("periodLabel"),periodStartTime:sp.get("periodStartTime"),periodEndTime:sp.get("periodEndTime"),excludeId:sp.get("excludeId")??undefined});return NextResponse.json({suggestions,advisory:true});}catch(error){return NextResponse.json({error:friendlySubstituteError(error)},{status:400});}}

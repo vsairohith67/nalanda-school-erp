@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { calculateCashSources, cashBookCsv, effectiveCashSources, hasSourceDrift } from "@/lib/cash-book";
+import { prisma } from "@/lib/prisma";
+export async function GET() { const auth = await requireApiPermission("EXPORT_CASH_BOOK_REPORTS"); if (auth.response) return auth.response; const rows = await prisma.cashBookDay.findMany({ orderBy: { cashDate: "asc" }, take: 10_000 }); const data = await Promise.all(rows.map(async (row) => { const live = await calculateCashSources(prisma, row.cashDate, row.openingBalance, row.id); return { ...row, reportSources: effectiveCashSources(row, live), sourceDrift: row.status !== "DRAFT" && hasSourceDrift(row.sourceSummarySnapshot, live) }; })); return new NextResponse(cashBookCsv(data), { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": "attachment; filename=\"cash-book-report.csv\"", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } }); }

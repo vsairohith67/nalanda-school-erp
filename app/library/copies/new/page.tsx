@@ -1,0 +1,6 @@
+import Link from "next/link";
+import { LibraryCopyForm } from "@/components/library-forms";
+import { PageHeader, PageShell } from "@/components/ui";
+import { requirePermission } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+export default async function NewLibraryCopyPage() { await requirePermission("MANAGE_LIBRARY_COPIES"); const [titles, vendors, expenses] = await Promise.all([prisma.libraryTitle.findMany({ where: { status: "ACTIVE" }, select: { id: true, titleCode: true, title: true, defaultShelfCode: true }, orderBy: { title: "asc" } }), prisma.vendor.findMany({ where: { status: "ACTIVE" }, select: { id: true, vendorCode: true, name: true }, orderBy: { name: "asc" } }), prisma.expenseRecord.findMany({ where: { approvalStatus: { not: "CANCELLED" } }, select: { id: true, expenseNumber: true, vendorId: true }, orderBy: [{ expenseDate: "desc" }, { expenseNumber: "asc" }], take: 500 })]); return <PageShell className="library-page"><PageHeader title="Accession Physical Copy" description="Select an existing bibliographic title, preview the physical-copy record, then confirm. Acquisition cost and finance links are informational only." action={<Link className="button secondary" href="/library/accession-register">Back to register</Link>} /><LibraryCopyForm titles={titles} vendors={vendors} expenses={expenses} /></PageShell>; }

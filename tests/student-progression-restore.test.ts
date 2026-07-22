@@ -1,0 +1,16 @@
+import { describe, expect, it } from "vitest";
+import { restoreStudentProgressionData } from "../lib/restore-database";
+import { emptyEntityResult, parseAndValidateBackup } from "../lib/restore";
+
+describe("student progression backup restore", () => {
+  it("restores an audited decision and maps links", async () => {
+    const decisions = new Map<string, any>();
+    const client: any = { academicYearEnrollment: { findFirst: async () => ({ id: "local-enrollment" }) }, studentProgressionDecision: { findUnique: async ({ where }: any) => decisions.get(where.id) ?? null, findFirst: async () => null, create: async ({ data }: any) => { decisions.set(data.id, data); return data; } } };
+    const backup = { studentProgressionDecisions: [{ id: "decision-1", studentId: "backup-student", sourceEnrollmentId: "backup-enrollment", academicYear: "2026-27", decisionType: "PROMOTE", status: "FINALIZED", fromClass: "VI", fromStatus: "ACTIVE", toAcademicYear: "2027-28", toClass: "VII", toStatus: "ACTIVE", effectiveDate: "2027-04-01T00:00:00.000Z", reason: "Reviewed progression", evidenceNotes: "Register checked", parentAcknowledgementNotes: "Parent informed", feeWarningNotes: "Information only", approvedByUserId: "backup-approver", finalizedByUserId: "backup-finalizer", submittedAt: "2027-03-19T00:00:00.000Z", approvedAt: "2027-03-20T00:00:00.000Z", finalizedAt: "2027-03-21T00:00:00.000Z", createdAt: "2027-03-01T00:00:00.000Z" }] };
+    const result = { studentProgressionDecisions: emptyEntityResult(), warnings: [] as string[] };
+    await restoreStudentProgressionData(client, backup, new Map([["backup-student", "local-student"]]), new Map([["backup-approver", "local-approver"], ["backup-finalizer", "local-finalizer"]]), result);
+    expect(result.studentProgressionDecisions.created).toBe(1); expect(decisions.get("decision-1")).toMatchObject({ studentId: "local-student", sourceEnrollmentId: "local-enrollment", status: "FINALIZED", reason: "Reviewed progression", evidenceNotes: "Register checked", parentAcknowledgementNotes: "Parent informed", feeWarningNotes: "Information only", approvedByUserId: "local-approver", finalizedByUserId: "local-finalizer", submittedAt: new Date("2027-03-19T00:00:00.000Z"), finalizedAt: new Date("2027-03-21T00:00:00.000Z") });
+  });
+  it("skips a decision whose student link cannot be restored safely", async () => { const client: any = { academicYearEnrollment: {}, studentProgressionDecision: {} }; const result = { studentProgressionDecisions: emptyEntityResult(), warnings: [] as string[] }; await restoreStudentProgressionData(client, { studentProgressionDecisions: [{ id: "unsafe", studentId: "missing", academicYear: "2026-27", decisionType: "LEFT", status: "DRAFT", effectiveDate: "2027-04-01T00:00:00.000Z" }] } as any, new Map(), new Map(), result); expect(result.studentProgressionDecisions.skipped).toBe(1); expect(result.warnings[0]).toContain("student link"); });
+  it("keeps old backup compatibility", () => { const old: any = { metadata: { appName: "Nalanda Fee Control", academicYear: "2026-27", generatedAt: "2026-07-01T00:00:00.000Z", generatedBy: "Director", backupVersion: 13 }, students: [], feeStructures: [], payments: [], paymentAudits: [], users: [], receiptNotes: [] }; expect(parseAndValidateBackup(old).studentProgressionDecisions).toEqual([]); });
+});

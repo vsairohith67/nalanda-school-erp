@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { publicTeacherAnalyticsSnapshot } from "@/lib/teacher-analytics";
+export async function GET(_:Request,{params}:{params:Promise<{snapshotId:string}>}){const auth=await requireApiPermission("VIEW_TEACHER_ANALYTICS");if(auth.response)return auth.response;const row=await prisma.teacherAnalyticsSnapshot.findUnique({where:{id:(await params).snapshotId},include:{reviewCycle:true,review:true}});return row?NextResponse.json({snapshot:publicTeacherAnalyticsSnapshot(row),review:row.review?{status:row.review.status,strengthsNote:row.review.strengthsNote,supportNeededNote:row.review.supportNeededNote,agreedActionsNote:row.review.agreedActionsNote,leadershipContextNote:row.review.leadershipContextNote,teacherResponse:row.review.teacherResponse,nextReviewDate:row.review.nextReviewDate,sharedAt:row.review.sharedAt,finalisedAt:row.review.finalisedAt}:null}):NextResponse.json({error:"Snapshot was not found."},{status:404});}

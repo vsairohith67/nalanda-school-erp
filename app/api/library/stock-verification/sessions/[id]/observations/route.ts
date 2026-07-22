@@ -1,0 +1,3 @@
+import { safeClientError } from "@/lib/client-errors";
+import { NextRequest, NextResponse } from "next/server"; import { requireApiPermission } from "@/lib/auth"; import { recordManualObservation } from "@/lib/library-stock-verification"; import { prisma } from "@/lib/prisma";
+export async function POST(request:NextRequest,{params}:{params:Promise<{id:string}>}){const auth=await requireApiPermission("SCAN_LIBRARY_STOCK");if(auth.response)return auth.response;try{const body=await request.json();return NextResponse.json({record:await recordManualObservation(prisma,(await params).id,String(body.recordId??""),body,auth.user.id)});}catch(error){return NextResponse.json({error:safeClientError(error, "Unable to record observation")},{status:400});}}

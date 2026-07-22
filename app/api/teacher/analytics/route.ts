@@ -1,0 +1,8 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { publicTeacherAnalyticsSnapshot } from "@/lib/teacher-analytics";
+import { ownTeacherSnapshotWhere, requireOwnTeacherStaff, safeTeacherReview } from "@/lib/teacher-analytics-scope";
+import { addTeacherAnalyticsResponse, teacherAnalyticsApiError } from "@/lib/teacher-analytics-snapshots";
+export async function GET(){const auth=await requireApiPermission("VIEW_OWN_TEACHER_ANALYTICS");if(auth.response)return auth.response;try{const staff=await requireOwnTeacherStaff(prisma,auth.user);const rows=await prisma.teacherAnalyticsSnapshot.findMany({where:ownTeacherSnapshotWhere(staff.id),include:{reviewCycle:true,review:true},orderBy:{reviewCycle:{periodStart:"desc"}}});return NextResponse.json({snapshots:rows.map((row)=>({...publicTeacherAnalyticsSnapshot(row),review:safeTeacherReview(row.review)}))});}catch(error){const out=teacherAnalyticsApiError(error);return NextResponse.json({error:out.message},{status:out.status});}}
+export async function POST(request:NextRequest){const auth=await requireApiPermission("VIEW_OWN_TEACHER_ANALYTICS");if(auth.response)return auth.response;try{const staff=await requireOwnTeacherStaff(prisma,auth.user);const body=await request.json();const review=await addTeacherAnalyticsResponse(prisma,String(body.reviewId),staff.id,body.teacherResponse);return NextResponse.json({review:safeTeacherReview(review)});}catch(error){const out=teacherAnalyticsApiError(error);return NextResponse.json({error:out.message},{status:out.status});}}

@@ -1,0 +1,5 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { teacherAnalyticsApiError, transitionTeacherAnalyticsCycle } from "@/lib/teacher-analytics-snapshots";
+export async function POST(request:NextRequest,{params}:{params:Promise<{id:string}>}){const body=await request.json();const action=String(body.action??"") as "open"|"finalise"|"archive"|"cancel";const permission=action==="finalise"?"FINALISE_TEACHER_ANALYTICS_REVIEW":"MANAGE_TEACHER_ANALYTICS_CYCLES";const auth=await requireApiPermission(permission);if(auth.response)return auth.response;if(!["open","finalise","archive","cancel"].includes(action))return NextResponse.json({error:"Unsupported cycle action."},{status:400});try{return NextResponse.json({cycle:await transitionTeacherAnalyticsCycle(prisma,(await params).id,action,body.expectedUpdatedAt,auth.user.id,body.reason)});}catch(error){const out=teacherAnalyticsApiError(error);return NextResponse.json({error:out.message},{status:out.status});}}

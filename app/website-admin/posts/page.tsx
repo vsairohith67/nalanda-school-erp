@@ -1,0 +1,6 @@
+import Link from "next/link";
+import { PageHeader, StatusBadge } from "@/components/ui";
+import { WebsitePostCreateForm } from "@/components/website-admin-forms";
+import { requirePermission } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+export default async function PostsAdmin(){await requirePermission("MANAGE_PUBLIC_WEBSITE_POSTS");const posts=await prisma.publicWebsitePost.findMany({orderBy:{createdAt:"desc"}});return <div className="page website-admin-page"><PageHeader title="Public News & Announcements" description="Separate from Parent notices and internal communication campaigns." action={<Link className="button secondary" href="/website-admin">Readiness</Link>}/><WebsitePostCreateForm/><section className="card"><div className="table-wrap"><table><thead><tr><th>Number</th><th>Type</th><th>Title</th><th>Status</th><th>Schedule</th></tr></thead><tbody>{posts.map(post=><tr key={post.id}><td><Link href={`/website-admin/posts/${post.id}`}>{post.postNumber}</Link></td><td>{post.postType}</td><td>{post.title}</td><td><StatusBadge status={post.status}/></td><td>{post.publishAt?.toLocaleString("en-IN")??"Immediate after publish"}</td></tr>)}</tbody></table></div></section></div>;}

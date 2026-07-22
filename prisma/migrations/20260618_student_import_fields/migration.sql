@@ -1,0 +1,3 @@
+ALTER TABLE "Student" ADD COLUMN "dateOfBirth" DATETIME;
+ALTER TABLE "Student" ADD COLUMN "aadhaarNo" TEXT;
+ALTER TABLE "Student" ADD COLUMN "tcStatus" TEXT;

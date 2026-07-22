@@ -1,0 +1,7 @@
+import { safeClientError } from "@/lib/client-errors";
+import { NextRequest, NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { issueLibraryBook, previewLibraryIssue } from "@/lib/library-circulation";
+import { publicLibraryLoan, publicLibraryPolicy } from "@/lib/library-api";
+import { prisma } from "@/lib/prisma";
+export async function POST(request: NextRequest) { const auth = await requireApiPermission("ISSUE_LIBRARY_BOOKS"); if (auth.response) return auth.response; try { const body = await request.json(); if (body.action === "preview") { const preview = await previewLibraryIssue(prisma, String(body.memberId ?? ""), String(body.copyId ?? ""), body.issueDate); return NextResponse.json({ preview: { dueDate: preview.dueDate, policy: publicLibraryPolicy(preview.policy), policyScope: preview.policyScope, activeLoanCount: preview.member._count.loans, memberStatus: preview.member.status, copy: { accessionNumber: preview.copy.accessionNumber, condition: preview.copy.condition, title: preview.copy.title.title }, reservation: preview.priorityReservation ? { reservationNumber: preview.priorityReservation.reservationNumber } : null } }); } return NextResponse.json({ loan: publicLibraryLoan(await issueLibraryBook(prisma, body, auth.user.id)) }, { status: 201 }); } catch (error) { return NextResponse.json({ error: safeClientError(error, "Unable to issue copy") }, { status: 400 }); } }

@@ -1,0 +1,9 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { miscIncomeItemWriteError, serializeMiscIncomeItem, validateMiscItemInput } from "@/lib/misc-income";
+import { prisma } from "@/lib/prisma";
+
+const includeRates = { rates: { orderBy: [{ academicYear: "desc" as const }, { effectiveFrom: "desc" as const }] } };
+export async function GET() { const auth = await requireApiPermission("VIEW_MISC_INCOME"); if (auth.response) return auth.response; const items = await prisma.miscIncomeItem.findMany({ include: includeRates, orderBy: { name: "asc" } }); return NextResponse.json({ items: items.map(serializeMiscIncomeItem) }); }
+export async function POST(request: NextRequest) { const auth = await requireApiPermission("MANAGE_MISC_INCOME_ITEMS"); if (auth.response) return auth.response; try { const data = validateMiscItemInput(await request.json()); const item = await prisma.miscIncomeItem.create({ data: { ...data, createdByUserId: auth.user.id }, include: includeRates }); return NextResponse.json({ item: serializeMiscIncomeItem(item) }, { status: 201 }); } catch (error) { return NextResponse.json({ error: miscIncomeItemWriteError(error, "Unable to create income item") }, { status: 400 }); } }
+export async function PATCH(request: NextRequest) { const auth = await requireApiPermission("MANAGE_MISC_INCOME_ITEMS"); if (auth.response) return auth.response; try { const body = await request.json(); const id = String(body.id ?? ""); if (!id) throw new Error("Item is required"); const data = validateMiscItemInput(body); const item = await prisma.miscIncomeItem.update({ where: { id }, data, include: includeRates }); return NextResponse.json({ item: serializeMiscIncomeItem(item) }); } catch (error) { return NextResponse.json({ error: miscIncomeItemWriteError(error, "Unable to update income item") }, { status: 400 }); } }

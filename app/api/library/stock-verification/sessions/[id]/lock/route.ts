@@ -1,0 +1,3 @@
+import { safeClientError } from "@/lib/client-errors";
+import { NextResponse } from "next/server"; import { requireApiPermission } from "@/lib/auth"; import { lockStockSession } from "@/lib/library-stock-verification"; import { prisma } from "@/lib/prisma";
+export async function POST(_:Request,{params}:{params:Promise<{id:string}>}){const auth=await requireApiPermission("LOCK_LIBRARY_STOCK_VERIFICATION");if(auth.response)return auth.response;try{return NextResponse.json({session:await lockStockSession(prisma,(await params).id,auth.user.id)});}catch(error){return NextResponse.json({error:safeClientError(error, "Unable to lock session")},{status:400});}}
