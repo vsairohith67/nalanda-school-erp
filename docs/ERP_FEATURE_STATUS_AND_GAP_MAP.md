@@ -1,8 +1,8 @@
 # ERP Feature Status and Gap Map
 
-## DEVOPS-1C staging readiness
+## DEVOPS-1D synthetic staging deployment status
 
-DEVOPS-1B clean-install migration repair is fully cleared. Staging architecture/readiness is in progress on `devops/staging-readiness-plan`; this is infrastructure planning/local synthetic rehearsal, not a deployed ERP feature. SQLite is acceptable only with one process and one persistent local disk. No cloud/DNS/operational database/live provider action occurred. Physical PWA certification and external staging remain pending user provider/budget/hostname/access/backup/monitoring/uptime decisions. Prompt 21B-21D remain blocked, Prompt 22B conditional, and Parent/Teacher/Principal Schoolknot audits pending.
+DEVOPS-1C-QA is cleared. DEVOPS-1D preparation is in progress on `devops/synthetic-staging-deployment`, but it is not a deployed ERP feature. AWS is excluded; every replacement-provider account/payment/billable action is deferred until costs and concepts are explained. SQLite remains acceptable only with one process and one persistent local disk. No cloud resource, DNS, deploy key, operational database/live provider, off-host backup or external monitor exists. DEVOPS-1D-QA and physical PWA certification remain blocked. Prompt 21B-21D remain blocked, Prompt 22B conditional, and Parent/Teacher/Principal Schoolknot audits pending.
 
 ## Prompt 22A-QA status update
 

@@ -6,11 +6,11 @@ Staging is synthetic-only. It contains no real Student/staff/guardian data, Scho
 
 ## Approved synthetic fixtures
 
-- Names use obvious markers such as `STG-<release>-Student-001`; admission/receipt/user IDs start `STG`.
+- Names use the fixed obvious markers `QA-DIRECTOR`, `QA-PRINCIPAL`, `QA-TEACHER`, `QA-PARENT` and `QA-STUDENT`; admission/user IDs start `QA-`.
 - Domains use `example.invalid`; phone-like fields use reserved/non-routable test patterns and must never be capable of delivery.
 - Amounts/classes/marks are fabricated and cannot reproduce the operational 8/8/19/INR 99,100 baseline.
 - Documents/images are generated test assets with no person, handwriting, metadata, logo licensing issue, or copied Schoolknot content.
-- Test accounts are least-privilege, uniquely passworded, MFA/allowlist if the chosen provider supports it, and carry an expiry date.
+- Test accounts are least-privilege, have different strong temporary passwords generated directly on the server, use MFA/allowlisting if later approved and supported, and carry an expiry date. Credentials are privately handed to the named tester, never stored in Git/docs/logs/chat, and the transient seed variables are removed immediately.
 
 ## Access, screenshots, and lifecycle
 
@@ -24,6 +24,6 @@ Staging is synthetic-only. It contains no real Student/staff/guardian data, Scho
 
 If real or suspected real data enters staging: stop access and jobs, preserve minimal audit evidence, notify the privacy/security owner, identify source/scope/recipients/backups/screenshots/logs, revoke accounts/secrets, remove data and derived artifacts under approval, prove zero remaining copies, and record corrective controls. Do not silently relabel it synthetic.
 
-## Copied-production-data exception
+## Operational-data prohibition
 
-Requires separate written approval naming data owner, purpose, fields, minimization/masking, users, host/region, encryption, retention/deletion time, privacy review, maintenance window, copied database identity, pre/post hashes/reconciliation and rollback. The real operational DB remains untouched. DEVOPS-1C grants none of these approvals.
+DEVOPS-1D does not include a copied-production-data exception. The operational database, backups, Schoolknot data and derived real-person records are prohibited from staging. The real operational DB remains untouched and receives no `_prisma_migrations` onboarding or `migrate resolve`.

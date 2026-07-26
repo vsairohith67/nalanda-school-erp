@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 export const WORKSPACE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const PRISMA_ROOT = path.join(WORKSPACE_ROOT, "prisma");
 export const QA_ROOT = path.join(WORKSPACE_ROOT, "tmp", "devops1b");
+export const STAGING_REHEARSAL_ROOT = path.join(WORKSPACE_ROOT, "tmp", "devops1c");
 export const OPERATIONAL_DATABASE = path.join(PRISMA_ROOT, "dev.db");
 export const BASELINE_MIGRATION = "20260722_clean_install_baseline";
 
@@ -35,10 +36,16 @@ export function assertIsolatedDatabasePath(candidate: string) {
   if (resolved.toLowerCase() === path.resolve(OPERATIONAL_DATABASE).toLowerCase()) {
     throw new Error("ISOLATION_REFUSED_OPERATIONAL_DATABASE");
   }
-  if (!inside(QA_ROOT, resolved)) throw new Error("ISOLATION_REFUSED_OUTSIDE_DEVOPS1B_ROOT");
-  const realRoot = realpathSync(QA_ROOT);
-  let current = QA_ROOT;
-  for (const segment of path.relative(QA_ROOT, resolved).split(path.sep).filter(Boolean)) {
+  const approvedRoot = inside(QA_ROOT, resolved)
+    ? QA_ROOT
+    : inside(STAGING_REHEARSAL_ROOT, resolved)
+      ? STAGING_REHEARSAL_ROOT
+      : null;
+  if (!approvedRoot) throw new Error("ISOLATION_REFUSED_OUTSIDE_APPROVED_ROOT");
+  mkdirSync(approvedRoot, { recursive: true });
+  const realRoot = realpathSync(approvedRoot);
+  let current = approvedRoot;
+  for (const segment of path.relative(approvedRoot, resolved).split(path.sep).filter(Boolean)) {
     current = path.join(current, segment);
     if (!existsSync(current)) break;
     if (lstatSync(current).isSymbolicLink()) throw new Error("ISOLATION_REFUSED_SYMLINK_ESCAPE");
@@ -59,6 +66,38 @@ export function createEmptyIsolatedDatabase(group: "empty-db" | "operational-cop
 
 export function cleanupIsolatedDatabase(databasePath: string) {
   const checked = assertIsolatedDatabasePath(databasePath);
+  for (const suffix of ["", "-journal", "-wal", "-shm"]) {
+    const target = `${checked}${suffix}`;
+    if (existsSync(target)) rmSync(target, { force: true });
+  }
+}
+
+export function createEmptyStagingRehearsalDatabase(label: string) {
+  const safeLabel = label.replace(/[^A-Za-z0-9-]/g, "-");
+  mkdirSync(STAGING_REHEARSAL_ROOT, { recursive: true });
+  const databaseRoot = path.join(STAGING_REHEARSAL_ROOT, "synthetic-rehearsal", "database");
+  mkdirSync(databaseRoot, { recursive: true });
+  const candidate = path.resolve(
+    databaseRoot,
+    `DEVOPS1D-${safeLabel}-${process.pid}-${Date.now()}.db`
+  );
+  if (!inside(STAGING_REHEARSAL_ROOT, candidate)) {
+    throw new Error("STAGING_REHEARSAL_PATH_REJECTED");
+  }
+  const realRoot = realpathSync(STAGING_REHEARSAL_ROOT);
+  if (!inside(realRoot, realpathSync(path.dirname(candidate)))) {
+    throw new Error("STAGING_REHEARSAL_SYMLINK_ESCAPE");
+  }
+  const descriptor = openSync(candidate, "wx");
+  closeSync(descriptor);
+  return candidate;
+}
+
+export function cleanupStagingRehearsalDatabase(databasePath: string) {
+  const checked = path.resolve(databasePath);
+  if (!inside(STAGING_REHEARSAL_ROOT, checked) || checked.toLowerCase() === path.resolve(OPERATIONAL_DATABASE).toLowerCase()) {
+    throw new Error("STAGING_REHEARSAL_CLEANUP_REJECTED");
+  }
   for (const suffix of ["", "-journal", "-wal", "-shm"]) {
     const target = `${checked}${suffix}`;
     if (existsSync(target)) rmSync(target, { force: true });

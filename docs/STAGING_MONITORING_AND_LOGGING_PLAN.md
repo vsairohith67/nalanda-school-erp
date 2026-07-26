@@ -1,6 +1,6 @@
 # Staging Monitoring and Logging Plan
 
-Centralised immutable logging is a requirement before external staging access. DEVOPS-1C does not create a logging or monitoring service.
+No external logging or monitoring account/resource is authorised. Initial attended staging may use privacy-filtered local systemd/Caddy health evidence only. Centralised immutable logging and external alerts are requirements before unattended continuous operation and remain separate hard approval gates.
 
 ## Signals and ownership
 
@@ -28,11 +28,11 @@ Allow safe fields only: UTC timestamp, severity, service/environment/release, ro
 
 1. App emits structured single-line JSON to stdout/stderr through a redaction wrapper; no direct mutable log file dependency.
 2. Service manager journals locally with size/time caps and permissions.
-3. A future approved agent ships over TLS to a separate immutable append-only sink using a staging-only credential.
+3. Only after explicit provider/cost/data/retention approval, a staging-only agent may ship over TLS to a separate immutable append-only sink.
 4. Alerts notify named operators; messages contain safe codes/links, never records.
 5. Monthly access/retention review and quarterly restore/security-log sample audit.
 
-The current app mostly emits console errors and durable database audit events; a consistent structured logger/central sink is therefore a remaining prerequisite, not a completed feature.
+The current app mostly emits console errors and durable database audit events; a consistent structured logger/central sink is therefore a remaining prerequisite, not a completed feature. Until it is approved and verified, staging is supervised-only and not ready for unattended continuous operation.
 
 ## Incident response
 

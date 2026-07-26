@@ -57,8 +57,8 @@ describe("DEVOPS-1B clean-install migration repair", () => {
 
   it("fails closed for the operational path, outside paths, traversal, and symlink escapes", () => {
     expect(() => assertIsolatedDatabasePath(OPERATIONAL_DATABASE)).toThrow("ISOLATION_REFUSED_OPERATIONAL_DATABASE");
-    expect(() => assertIsolatedDatabasePath(path.join(WORKSPACE_ROOT, "outside.db"))).toThrow("ISOLATION_REFUSED_OUTSIDE_DEVOPS1B_ROOT");
-    expect(() => assertIsolatedDatabasePath(path.join(QA_ROOT, "..", "escaped.db"))).toThrow("ISOLATION_REFUSED_OUTSIDE_DEVOPS1B_ROOT");
+    expect(() => assertIsolatedDatabasePath(path.join(WORKSPACE_ROOT, "outside.db"))).toThrow("ISOLATION_REFUSED_OUTSIDE_APPROVED_ROOT");
+    expect(() => assertIsolatedDatabasePath(path.join(QA_ROOT, "..", "escaped.db"))).toThrow("ISOLATION_REFUSED_OUTSIDE_APPROVED_ROOT");
     const link = path.join(QA_ROOT, "empty-db", "DEVOPS1B-symlink-escape");
     try {
       symlinkSync(path.join(WORKSPACE_ROOT, "prisma"), link, "junction");

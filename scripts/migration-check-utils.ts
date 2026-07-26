@@ -13,7 +13,7 @@ function sanitize(value: string) {
   return value
     .replaceAll(WORKSPACE_ROOT, "<workspace>")
     .replaceAll(WORKSPACE_ROOT.replaceAll("\\", "/"), "<workspace>")
-    .replace(/((?:SEED_(?:DIRECTOR|ADMIN|ACCOUNTANT|VIEWER)_PASSWORD|AUTH_SECRET|SESSION_SECRET))=[^\s]+/gi, "$1=<redacted>");
+    .replace(/((?:SEED_(?:DIRECTOR|ADMIN|ACCOUNTANT|VIEWER)_PASSWORD|STAGING_SYNTHETIC_(?:DIRECTOR|PRINCIPAL|TEACHER|PARENT)_PASSWORD|AUTH_SECRET|SESSION_SECRET))=[^\s]+/gi, "$1=<redacted>");
 }
 
 export type CommandResult = { stdout: string; stderr: string; combined: string };
@@ -32,6 +32,9 @@ export function runPnpm(
     ...extraEnvironment,
     ...(databasePath ? { DATABASE_URL: databaseUrl(databasePath) } : {})
   };
+  for (const [name, configured] of Object.entries(environment)) {
+    if (configured === undefined) delete environment[name as keyof typeof environment];
+  }
   const result = spawnSync(command, commandArgs, {
     cwd: WORKSPACE_ROOT,
     env: environment,

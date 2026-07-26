@@ -86,9 +86,12 @@ foreach ($name in @(
 )) {
   Set-Item -Path "Env:$name" -Value (New-RandomHex 32)
 }
-$syntheticPassword = New-RandomHex 24
 $env:STAGING_SYNTHETIC_SEED_OPT_IN = "true"
-$env:STAGING_SYNTHETIC_DIRECTOR_PASSWORD = $syntheticPassword
+$syntheticDirectorPassword = New-RandomHex 24
+$env:STAGING_SYNTHETIC_DIRECTOR_PASSWORD = $syntheticDirectorPassword
+$env:STAGING_SYNTHETIC_PRINCIPAL_PASSWORD = New-RandomHex 24
+$env:STAGING_SYNTHETIC_TEACHER_PASSWORD = New-RandomHex 24
+$env:STAGING_SYNTHETIC_PARENT_PASSWORD = New-RandomHex 24
 
 $backend = $null
 $proxy = $null
@@ -219,7 +222,7 @@ try {
   if ($static.Status -ne 200 -or $static.Headers -notmatch "cache-control:.*immutable") {
     throw "LOCAL_REHEARSAL_STATIC_CACHE_FAILED"
   }
-  $loginBody = @{ identifier = "stg-director"; password = $syntheticPassword } | ConvertTo-Json -Compress
+  $loginBody = @{ identifier = "qa-director"; password = $syntheticDirectorPassword } | ConvertTo-Json -Compress
   $signedIn = Invoke-Check "signed-in" "/api/auth/login" "POST" $loginBody
   if (
     $signedIn.Status -ne 200 -or $signedIn.Headers -notmatch "set-cookie:.*secure" -or
@@ -277,6 +280,13 @@ try {
   Stop-ExactProcess $backend
   Stop-ExactProcess $proxy
   if (Test-Path -LiteralPath $pfxPath) { Remove-Item -LiteralPath $pfxPath -Force }
-  Remove-Item Env:STAGING_SYNTHETIC_DIRECTOR_PASSWORD -ErrorAction SilentlyContinue
+  foreach ($name in @(
+    "STAGING_SYNTHETIC_DIRECTOR_PASSWORD",
+    "STAGING_SYNTHETIC_PRINCIPAL_PASSWORD",
+    "STAGING_SYNTHETIC_TEACHER_PASSWORD",
+    "STAGING_SYNTHETIC_PARENT_PASSWORD"
+  )) {
+    Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+  }
   Remove-Item Env:LOCAL_STAGING_PFX_PASSPHRASE -ErrorAction SilentlyContinue
 }

@@ -11,13 +11,13 @@ ENABLE_HSTS=true
 ENABLE_HTTPS_UPGRADE=true
 TRUST_PROXY_HEADERS=true
 NALANDA_TRUSTED_PROXY_MODE=single-hop-sanitized
-STAGING_DATA_DIR=/srv/nalanda-staging/data
-DATABASE_URL=file:/srv/nalanda-staging/data/database/staging.db
-FEE_REGISTER_OCR_STORAGE_DIR=/srv/nalanda-staging/data/private/fee-register-ocr
-BACKUP_DIRECTORY=/srv/nalanda-staging/data/backups/json
-CLOUD_BACKUP_LOCAL_FOLDER=/srv/nalanda-staging/data/backups/encrypted
-CLOUD_BACKUP_TEMP_DIR=/srv/nalanda-staging/data/temp/cloud-backup
-CLOUD_BACKUP_REHEARSAL_DIR=/srv/nalanda-staging/data/temp/restore-rehearsal
+STAGING_DATA_DIR=/var/lib/nalanda
+DATABASE_URL=file:/var/lib/nalanda/data/database/staging.db
+FEE_REGISTER_OCR_STORAGE_DIR=/var/lib/nalanda/uploads/fee-register-ocr
+BACKUP_DIRECTORY=/var/lib/nalanda/backups/json
+CLOUD_BACKUP_LOCAL_FOLDER=/var/lib/nalanda/backups/encrypted
+CLOUD_BACKUP_TEMP_DIR=/var/lib/nalanda/data/temp/cloud-backup
+CLOUD_BACKUP_REHEARSAL_DIR=/var/lib/nalanda/data/temp/restore-rehearsal
 NEXT_PUBLIC_PWA_BUILD_VERSION=staging-<utc>-<commit>
 AUTH_SECRET=<secret-store-reference>
 FIRST_RUN_BOOTSTRAP_TOKEN=<secret-store-reference>
@@ -32,3 +32,11 @@ WHATSAPP_LIVE_SENDING_ENABLED=false
 SMS_EMAIL_SMS_LIVE_ENABLED=false
 SMS_EMAIL_EMAIL_LIVE_ENABLED=false
 SMS_EMAIL_SUPERVISED_LIVE_ACTIVATION_ENABLED=false
+NEXT_TELEMETRY_DISABLED=1
+DEBUG=false
+NEXT_PUBLIC_DEBUG=false
+NALANDA_DEBUG=false
+
+# The STAGING_SYNTHETIC_*_PASSWORD values used by the one-time synthetic seed
+# are deliberately absent. Inject unique temporary values only for that command,
+# do not echo them, then remove them from the shell and long-running environment.

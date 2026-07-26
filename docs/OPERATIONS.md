@@ -1,5 +1,9 @@
 # Nalanda Fee Control Operations
 
+## Synthetic staging payment hold
+
+DEVOPS-1D provider-neutral preparation is allowed, but every provider account, payment method, paid plan, VPS, DNS, deploy key, off-host backup and external monitoring/logging action remains paused for explicit approval. AWS is excluded. Do not treat the Vultr/Linode research or `docs/SYNTHETIC_STAGING_DEPLOYMENT_REPORT.md` as deployment approval. The operational `prisma/dev.db` and every operational backup remain prohibited from staging.
+
 ## Daily workflow
 
 1. Confirm the Windows computer date and time.

@@ -2,6 +2,8 @@
 
 Status: planning only. Certification must not begin until an approved, trusted-certificate HTTPS staging origin exists. A localhost/self-signed proxy rehearsal is not certification.
 
+DEVOPS-1D payment/provider work is currently deferred, so this checklist remains blocked and must not be treated as evidence that Android/iPhone certification is safe to begin.
+
 ## Entry gates
 
 - HTTPS certificate/redirect/HSTS/secure-cookie/proxy/cache tests passed on `staging.nalandaps.com` or the approved staging name.

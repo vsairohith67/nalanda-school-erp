@@ -20,7 +20,7 @@ The Next.js server has no durable in-process scheduler. Periodic work is invoked
 
 ## Scheduler controls
 
-- Every scheduled command loads the same staging environment contract, then acquires `/srv/nalanda-staging/locks/scheduler.lock` or a narrower mutually exclusive lock before opening SQLite.
+- Every scheduled command loads the same staging environment contract, then acquires `/run/nalanda/scheduler.lock` or a narrower mutually exclusive lock before opening SQLite.
 - `Persistent=true` catch-up is disabled for messaging and any job that could send externally. Backup catch-up may run once after restart if no deploy/restore is active.
 - Set explicit timeouts, maximum retries with exponential backoff/jitter, and a dead-letter/failed DB status. Never infinite-loop.
 - Record job ID, safe status/counts, start/end/duration, release and next action. Do not log payloads/recipients/records.

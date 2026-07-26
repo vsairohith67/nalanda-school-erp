@@ -7,17 +7,15 @@
 3. Export the absolute query-free `DATABASE_URL`; run `pnpm deployment:env-check`.
 4. Run `pnpm exec prisma migrate deploy` exactly once under the deployment singleton lock.
 5. Run `pnpm exec prisma migrate status` and require the single active migration to be applied with no pending/failed entry.
-6. Create unique synthetic staging users/fixtures only. Remove transient seed password variables and rotate initial passwords.
-7. Prove the database does not contain the 8/8/19/INR 99,100 operational baseline, real admission/contact/document values, or an operational DB hash match.
+6. Create only the obvious `QA-DIRECTOR`, `QA-PRINCIPAL`, `QA-TEACHER`, `QA-PARENT` and `QA-STUDENT` fixtures. Inject a different strong temporary password for each login, never print it, remove the seed variables immediately, and rotate or privately deliver the temporary credentials before use.
+7. Prove the database contains exactly the declared QA fixtures, uses only `.invalid` email addresses and non-routable phone placeholders, and does not contain the 8/8/19/INR 99,100 operational baseline, real admission/contact/document values, or an operational DB hash match.
 8. Run schema equivalence, auth/role, private-cache, PWA, and core smoke tests.
-9. Create and validate an immediate version-37 backup; record hash, byte size, migration status, release and synthetic aggregate counts.
+9. Create and validate an immediate version-37 local encrypted backup; restore it into a disposable database, rerun the synthetic proof, and record hash, byte size, migration status, release and aggregate counts. This same-host copy is not sufficient for unattended or long-term staging.
 10. Exit maintenance only after health checks pass.
 
-## Path 2 — Later authorised copied operational-data rehearsal
+## Path 2 — Prohibited operational-data path
 
-This path is **not authorised in DEVOPS-1C** and was not performed.
-
-It requires written scope/owner/time approval, a copied database only, privacy and retention review, maintenance mode, verified pre/post hashes and business reconciliation, a documented baseline-resolve procedure for the copy, restricted access/logging, and a tested rollback. The real `prisma/dev.db` must never be uploaded, marked resolved, or migrated by this plan. Any command that cannot prove it targets the approved copy must fail closed.
+This path is **not authorised in DEVOPS-1D** and must not be performed. No operational database, operational backup, Schoolknot export, or derived real-person record may be uploaded, onboarded, resolved or migrated. Any command that cannot prove it targets the fresh synthetic database must fail closed.
 
 ## Pre-migration backup
 

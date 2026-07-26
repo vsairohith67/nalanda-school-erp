@@ -183,7 +183,7 @@ The Management audit and corrected Management-only reconciliation are independen
 
 DEVOPS-1B changes only migration history/tooling/documentation. Prompt 21B/21C/21D remain blocked, Prompt 22B remains conditional, and the operational database remains untouched and unbaselined pending separate approval.
 
-## DEVOPS-1C staging architecture and readiness
+## DEVOPS-1C/1D staging architecture and deployment preparation
 
 - [Current Runtime Inventory](STAGING_CURRENT_RUNTIME_INVENTORY.md) - Node/Next/Prisma/SQLite, filesystem, providers, jobs, security, PWA, memory and runtime classification.
 - [SQLite Feasibility and Limits](STAGING_SQLITE_FEASIBILITY_AND_LIMITS.md) - restricted single-instance decision, concurrency, WAL/SHM, backups, recovery and exit thresholds.
@@ -200,5 +200,6 @@ DEVOPS-1B changes only migration history/tooling/documentation. Prompt 21B/21C/2
 - [Cost and Decision Register](STAGING_COST_AND_DECISION_REGISTER.md) - low/expected/high costs, India considerations and user decisions.
 - [Local Staging Rehearsal Report](STAGING_LOCAL_REHEARSAL_REPORT.md) - synthetic migrate/build/HTTPS/restart/backup/rollback evidence and corrected defects.
 - [DEVOPS-1C-QA Independent Report](STAGING_READINESS_QA_REPORT.md) - independent architecture/security/cost review, corrected defects and fresh synthetic rehearsal evidence.
+- [Synthetic HTTPS Staging Deployment Report](SYNTHETIC_STAGING_DEPLOYMENT_REPORT.md) - DEVOPS-1D approval/resource/deployment evidence; currently payment-gated and incomplete.
 
-DEVOPS-1B is fully cleared. DEVOPS-1C does not claim a cloud deployment, DNS change, operational database onboarding or paid resource. Physical PWA certification remains pending. Prompt 21B/21C/21D remain blocked, Prompt 22B remains conditional, and Parent/Teacher/Principal Schoolknot audits remain pending.
+DEVOPS-1B and DEVOPS-1C-QA are cleared. DEVOPS-1D preparation is on `devops/synthetic-staging-deployment`; AWS is excluded and every replacement-provider account/payment/billable action is deferred. No cloud resource, DNS change, deploy key, operational database onboarding or live provider exists. DEVOPS-1D-QA and physical PWA certification remain blocked. Prompt 21B/21C/21D remain blocked, Prompt 22B remains conditional, and Parent/Teacher/Principal Schoolknot audits remain pending.

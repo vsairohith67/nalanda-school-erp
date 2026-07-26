@@ -1,25 +1,52 @@
-# DESIGN TEMPLATE ONLY. Do not apply until the hostname/DNS/provider are approved.
-staging.nalandaps.com {
-  encode zstd gzip
+# DESIGN TEMPLATE ONLY. Do not apply until provider, hostname, DNS and billable
+# actions are approved. Requires Caddy 2.10+ for request_body max_size.
 
-  # Overwrite client-supplied forwarding values for the app's single-hop trust mode.
+(nalanda_upstream) {
   reverse_proxy 127.0.0.1:3000 {
+    # Overwrite client-supplied forwarding values for the app's single-hop trust mode.
     header_up X-Forwarded-For {remote_host}
     header_up X-Real-IP {remote_host}
     header_up X-Forwarded-Host {host}
     header_up X-Forwarded-Proto {scheme}
+    header_up -Forwarded
+
+    transport http {
+      dial_timeout 3s
+      response_header_timeout 60s
+      read_timeout 60s
+      write_timeout 60s
+    }
+  }
+}
+
+staging.nalandaps.com {
+  encode zstd gzip
+
+  @ocr_page_upload {
+    method POST
+    path_regexp ocr_upload ^/api/fee-register-ocr/batches/[^/]+/pages$
+  }
+
+  # Exclusive handles prevent the general 5 MiB limit from overriding the one
+  # reviewed 26 MiB OCR upload route.
+  handle @ocr_page_upload {
+    request_body {
+      max_size 26MiB
+    }
+    import nalanda_upstream
+  }
+
+  handle {
+    request_body {
+      max_size 5MiB
+    }
+    import nalanda_upstream
   }
 
   header {
     -Server
   }
 
-  log {
-    output stdout
-    format json
-  }
+  # Do not enable raw access logging here: request paths and query strings can
+  # contain identifiers. Use only the separately approved redacted logging plan.
 }
-
-# Before production use, add reviewed request-body, header, connection, route-specific
-# OCR (26 MiB) and default (5 MiB) limits using the selected Caddy version's syntax.
-# The application remains the fail-closed second enforcement layer.

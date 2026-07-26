@@ -30,6 +30,8 @@ Reject multiple/invalid hosts, unexpected schemes, CR/LF, oversized header block
 | Permissions | camera/mic/geolocation/Bluetooth/USB/serial denied | preserve. Device file chooser/camera requires a separately scoped future decision. |
 | MIME/COOP/CORP | nosniff, same-origin opener/resource policies | preserve |
 
+The reviewed Caddy template implements mutually exclusive request-body handlers and requires Caddy 2.10 or newer. The only 26 MiB exception is `POST /api/fee-register-ocr/batches/<one-segment-id>/pages`; every other request remains at 5 MiB. Validate with the exact installed Caddy binary before DNS activation.
+
 ## Cache rules
 
 - Authenticated pages, redirects, APIs, provider webhooks, auth, health and private exports: `Cache-Control: private, no-store` (health may also use `no-store`). Never CDN-cache them.
@@ -44,4 +46,4 @@ The in-process login limiter blocks a trusted client source/account combination 
 
 ## Local/automated evidence
 
-Focused tests cover secure cookies, proxy-mode dual opt-in, origin handling, request sizes, CSP, private cache and deployment health. The local rehearsal must prove HTTPS proxy redirect/forwarding behavior, HSTS, protected-page redirect/API denial, no-store headers and safe static caching. A self-signed local certificate proves proxy mechanics only; it is not physical PWA certification.
+Focused tests cover secure cookies, proxy-mode dual opt-in, origin handling, request sizes, CSP, private cache and deployment health. The local rehearsal must prove HTTPS proxy redirect/forwarding behavior, HSTS, protected-page redirect/API denial, no-store headers and safe static caching. A self-signed local certificate proves proxy mechanics only; it is not physical PWA certification. Raw Caddy access logging remains disabled until a separately approved configuration proves route-template normalization, query-string removal and header redaction.
