@@ -134,7 +134,7 @@ export function PaymentEditForm({
             <h3 id="payment-cancel-title">Cancel receipt {payment.receiptNo}?</h3>
             <p id="payment-cancel-description">All split components will be cancelled in one transaction. Dues reopen and the receipt stays available only as visibly cancelled history.</p>
             <label>Cancellation reason (required)
-              <textarea autoFocus rows={3} minLength={3} maxLength={500} value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} />
+              <textarea autoFocus required rows={3} minLength={3} maxLength={500} value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} />
             </label>
             <div className="page-actions">
               <button type="button" className="secondary" disabled={busy} onClick={() => { setCancelDialog(false); setCancelReason(""); }}>Go Back</button>

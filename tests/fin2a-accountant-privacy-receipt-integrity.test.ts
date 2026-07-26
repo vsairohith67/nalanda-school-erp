@@ -621,6 +621,8 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
       expect(source).toContain('role="dialog"');
       expect(source).toContain('aria-modal="true"');
       expect(source).toMatch(/Cancellation reason|Reason/);
+      expect(source).toMatch(/<textarea[^>]*\brequired\b/);
+      expect(source).toContain("minLength={3}");
       expect(source).not.toMatch(/\b(?:alert|confirm|prompt)\s*\(/);
     }
     const directRoute = readFileSync("app/api/payments/[id]/route.ts", "utf8");

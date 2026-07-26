@@ -492,4 +492,4 @@ Remaining:
 - Old broad `PaymentAudit` JSON may remain at rest in an existing database. It is response-redacted, but an at-rest migration would require separate retention/legal/schema approval.
 - `ReceiptNote` is synchronized metadata, not a separately versioned approval model.
 - SQLite remains a supported single-instance write architecture; horizontal scaling is not approved.
-- FIN-2A-QA must independently verify the branch before merge.
+- FIN-2A-QA independently verified the feature branch with new FIN2AQA fixtures. The only QA defect was missing native `required`/`minLength=3` semantics on the otherwise enforced cancellation reason fields; both dialogs were corrected and reverified.

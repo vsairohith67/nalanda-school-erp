@@ -108,7 +108,7 @@ export function ReceiptAudit({
             <h3 id="receipt-cancel-title">Cancel receipt {pendingCancellation.receiptNo}?</h3>
             <p id="receipt-cancel-description">Every component will be cancelled transactionally. The receipt, components, and append-only audit history remain preserved.</p>
             <label>Cancellation reason (required)
-              <textarea autoFocus rows={3} maxLength={500} value={cancellationReason} onChange={(event) => setCancellationReason(event.target.value)} />
+              <textarea autoFocus required rows={3} minLength={3} maxLength={500} value={cancellationReason} onChange={(event) => setCancellationReason(event.target.value)} />
             </label>
             <div className="page-actions">
               <button type="button" className="secondary" disabled={busy} onClick={() => { setPendingCancellation(null); setCancellationReason(""); }}>Go Back</button>

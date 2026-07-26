@@ -153,6 +153,25 @@ The first final backup rehearsal exposed a defect in FIN-2A's permission seeding
 
 The seeder now creates missing safe defaults but never rewrites an existing operational override during backup. Non-delegable restrictions remain fail-closed in effective permission reads, matrix display, payload validation, and explicit matrix saves. A disposable recovery candidate was reconstructed from the exact pre-change values and SQLite counters; it matched the authorised SHA-256 byte-for-byte before a rollback-protected atomic replacement. The project integrity checker then confirmed the exact hash, size, timestamp, schema hash, migration hash, business baseline, absence of `_prisma_migrations`, active migration, and backup version. All private recovery copies were removed after verification, and the final backup proved both hash and timestamp remain unchanged.
 
+## FIN-2A-QA independent closure
+
+Independent QA used a new ignored copied database and newly generated `FIN2AQA` Director, Accountant, Viewer, Student, and Cash plus two-UPI split-receipt fixtures.
+
+The independent pass verified:
+
+- Accountant lookup returned exactly `academicYear`, `admissionNo`, `className`, `feeAllocation`, `section`, `status`, and `studentName`; the broader Student API returned 403.
+- Accountant direct final-receipt cancellation and Student-master export returned 403. Purpose-specific payment, dues, and collection CSVs returned only their documented headers with private/no-store caching.
+- Viewer pending dues remained aggregate-only with no Student identity or export control; direct payment export returned 403 and ledger print ended at `/unauthorized` without identity content.
+- Director cancellation returned 400 without a reason and 409 for a stale active version. The valid accessible confirmation cancelled all three components, wrote exactly three append-only audits, synchronized `ReceiptNote`, and remained idempotent with zero changes on repeat.
+- The cancelled receipt reopened INR 6,000 of dues, left zero paid allocation for the synthetic Student, left zero Daily Collection and fee-cash residue, disappeared from dashboard activity, and printed all three components under a visible `CANCELLED` watermark.
+- A later create request against the existing receipt returned 409 and left the component count at three. Unsafe receipt-audit range `1e308` returned 400.
+- Concurrent cancellation produced one three-component result and one idempotent result. The forced failure rehearsal preserved all three active components and wrote zero audits.
+- Desktop Browser QA passed at `1366x768` in dark and light mode. Mobile QA passed at `window.innerWidth=390`, `window.innerHeight=844`, `document.documentElement.clientHeight=844`; the active form client width was 375 because of its scrollbar. No page overflow or uncontained table was present and every visible control was at least 44px.
+- Independent QA found that both reason textareas relied on button/server enforcement without native required semantics. Both now have `required` and `minLength=3`; a fresh rebuilt FIN2AQA run verified the required/minimum-length properties, labelled/described modal, disabled pre-reason confirmation, 44px controls, no native dialog, zero console warnings/errors, and zero clean-run production stderr.
+- The deliberate invalid-login run stayed on `/login` with the safe generic error and produced one redacted authentication warning containing no credential, Student identifier, fee balance, or cookie.
+- Each FIN2AQA copied database was cleaned, inspected twice at zero synthetic records, and destroyed. The operational checkpoint remained exact after every command.
+- Final closure retained backup version 37 in ignored, unstaged `nalanda-fee-control-backup-2026-07-26-20-40.json`; Git safety and the operational integrity checker passed.
+
 ## Remaining limitations
 
 - There is no partial final-receipt cancellation. The whole receipt is the only safe rule.
@@ -160,4 +179,4 @@ The seeder now creates missing safe defaults but never rewrites an existing oper
 - `ReceiptNote` remains metadata; its schema was not expanded into a workflow/version model.
 - SQLite serializes writes. FIN-2A handles concurrent final-state requests idempotently, but horizontal multi-instance deployment remains outside the supported architecture.
 - Historical broad audit JSON may still exist at rest in old databases; FIN-2A redacts it at every restricted response/render boundary and writes only safe snapshots going forward.
-- Independent FIN-2A-QA must use the new `FIN2AQA` copied database and fixtures before merge.
+- Physical Android/iPhone PWA certification remains a separate device phase; FIN-2A-QA does not claim physical-device evidence.
