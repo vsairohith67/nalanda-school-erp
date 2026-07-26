@@ -13,6 +13,13 @@ export default async function PaymentsPage({
   const sp = await searchParams;
   const user = await requirePermission("VIEW_PAYMENTS");
   const permissions = await getEffectivePermissions(prisma, user.role);
+  const exportQuery = new URLSearchParams({
+    ...(sp.date ? { from: sp.date, to: sp.date } : {}),
+    ...(sp.receiptNo ? { receiptNo: sp.receiptNo } : {}),
+    ...(sp.admissionNo ? { admissionNo: sp.admissionNo } : {}),
+    ...(sp.paymentMode ? { paymentMode: sp.paymentMode } : {}),
+    ...(sp.receivedAccount ? { receivedAccount: sp.receivedAccount } : {})
+  }).toString();
   const payments = await prisma.payment.findMany({
     where: {
       deletedAt: null,
@@ -39,7 +46,7 @@ export default async function PaymentsPage({
         <label>Mode<input name="paymentMode" defaultValue={sp.paymentMode ?? ""} /></label>
         <label>Account<input name="receivedAccount" defaultValue={sp.receivedAccount ?? ""} /></label>
         <button>Apply</button>
-        {permissionSetCan(permissions, "EXPORT_PAYMENTS") ? <Link className="button secondary" href="/api/export/payments">Export CSV</Link> : null}
+        {permissionSetCan(permissions, "EXPORT_PAYMENTS") ? <Link className="button secondary" href={`/api/export/payments${exportQuery ? `?${exportQuery}` : ""}`}>Export CSV</Link> : null}
       </form>
       <section className="card">
         <div className="section-title"><h3>{payments.length} Payment Rows</h3></div>

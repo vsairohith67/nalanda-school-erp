@@ -12,6 +12,16 @@
 8. Resolve errors before closing the day.
 9. Sign out when leaving the computer.
 
+## Fee receipt privacy and cancellation
+
+- Accountant uses the payment lookup, ledger, pending-dues, collection, receipt, and audit screens only for fee collection. Those surfaces must not be used to obtain Parent contacts, address, date of birth, Aadhaar-related data, documents, marks, medical information, private Student notes, credentials, or internal actor IDs.
+- Accountant cannot cancel a final fee receipt, prepare Parent communication from the ledger, or export reminder destinations.
+- A Director or Super Admin with `CANCEL_PAYMENTS` opens the payment or Receipt Audit entry, reviews the whole receipt, selects **Cancel entire receipt**, enters a specific reason, and confirms the in-app dialog.
+- Cancellation always applies to every Cash/UPI/bank component under that receipt. It preserves the receipt and audit history, reopens dues, removes the receipt from active collection/Cash Book sources, and visibly marks the print as cancelled.
+- Never delete a `Payment`, edit the database, or change only one split component to imitate cancellation.
+- If the page reports that the receipt changed after it was loaded, refresh and review it. Do not retry with stale details.
+- Finance CSV downloads are purpose-specific, formula-safe, private/no-store, audited, limited to 2,000 output rows, and date-bounded where applicable. Narrow filters instead of creating an unreviewed bulk personal-data extract.
+
 ## Weekly backup routine
 
 1. Director/Admin opens **Import / Export**.
@@ -116,7 +126,8 @@ Keep `pilot:reset-sample-data` separate: it is for copied pilot databases and `P
 
 - Owns first-run setup, school profile, fee policy, user access, backups, restores, and final reconciliation.
 - Reviews System Health and resolves Critical/Warning items before real-data use.
-- Approves cancellation/restoration and investigates receipt audit issues.
+- May cancel/restore a final receipt only with the exact permission, current receipt version, explicit reason, and whole-receipt review.
+- Investigates partial component state and `ReceiptNote` disagreement before trusting totals.
 - Should not remove or bypass Super Admin safety.
 
 ### Principal
@@ -132,13 +143,14 @@ Keep `pilot:reset-sample-data` separate: it is for copied pilot databases and `P
 
 ### Accountant
 
-- Enters payments, prints receipts, reviews ledgers, daily collection, pending dues, and receipt audit.
+- Enters payments, prints receipts, and reviews purpose-limited ledgers, Daily Collection, Pending Dues, and Receipt Audit.
 - Reconciles app totals with cash, bank/UPI, and the physical register.
-- Reports errors; does not perform backup restore, user administration, or school configuration.
+- Does not open the Student Master, access Parent/contact/private Student fields, prepare reminder destinations, or cancel a final receipt.
+- Reports errors to the Director/Super Admin; does not perform backup restore, user administration, or school configuration.
 
 ### Viewer
 
-- Uses read-only dashboard/report access.
+- Uses aggregate-only dues/collection dashboard and report access; no Student ledger or personal-data export.
 - Must not receive or share credentials for higher-privilege accounts.
 - Reports discrepancies to the Director/Admin/Accountant.
 

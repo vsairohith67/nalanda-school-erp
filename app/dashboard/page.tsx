@@ -186,7 +186,7 @@ export default async function DashboardPage() {
         <SectionCard title="Recent activity & alerts" description="Only information permitted for your role is included." className="dashboard-panel dashboard-activity-panel">
           <div className="dashboard-activity">
             {dashboard.finance?.recentReceipts.map((receipt) => (
-              <Link href="/payments" key={receipt.id}><ReceiptText size={18} aria-hidden /><span><strong>{receipt.receiptNo}</strong><small>{receipt.studentName} · {displayDate(receipt.date)}</small></span><b>{money(receipt.amount)}</b></Link>
+              <Link href="/payments" key={receipt.key}><ReceiptText size={18} aria-hidden /><span><strong>{receipt.receiptNo}</strong><small>{receipt.studentName} · {displayDate(receipt.date)}</small></span><b>{money(receipt.amount)}</b></Link>
             ))}
             {dashboard.recentNotices.map((notice) => (
               <Link href="/notices" key={notice.id}><Megaphone size={18} aria-hidden /><span><strong>{notice.title}</strong><small>{notice.publishDate ? `Published ${displayDate(notice.publishDate)}` : "Published notice"}</small></span></Link>

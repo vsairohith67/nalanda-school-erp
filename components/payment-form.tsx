@@ -8,12 +8,15 @@ import { isoDateInput, money } from "@/lib/format";
 type StudentLookup = {
   admissionNo: string;
   studentName: string;
-  fatherName: string;
   className: string;
   section?: string | null;
-  phone1: string;
-  phone2?: string | null;
-  whatsappNumber?: string | null;
+  academicYear: string;
+  status: string;
+  feeAllocation: {
+    totalCurrentYearPaid: number;
+    totalPending: number;
+    dueStatus: string;
+  } | null;
 };
 
 type UpiTransactionRow = {
@@ -98,7 +101,7 @@ export function PaymentForm() {
       return;
     }
     const timer = window.setTimeout(async () => {
-      const response = await fetch(`/api/students/by-admission/${encodeURIComponent(admissionNo.trim())}`);
+      const response = await fetch(`/api/finance/students/lookup?admissionNo=${encodeURIComponent(admissionNo.trim())}`);
       if (response.ok) {
         setStudent(await response.json());
         setMessage("");
@@ -184,8 +187,8 @@ export function PaymentForm() {
             <div className="grid four">
               <div><span className="badge">Student name</span><p>{student.studentName}</p></div>
               <div><span className="badge">Class/Section</span><p>{student.className}{student.section ? `-${student.section}` : ""}</p></div>
-              <div><span className="badge">Father/Parent name</span><p>{student.fatherName}</p></div>
-              <div><span className="badge">Contact</span><p>{student.phone1}{student.phone2 ? ` / ${student.phone2}` : ""}</p></div>
+              <div><span className="badge">Academic year / status</span><p>{student.academicYear} · {student.status}</p></div>
+              <div><span className="badge">Current-year due</span><p>{student.feeAllocation ? `${money(student.feeAllocation.totalPending)} · ${student.feeAllocation.dueStatus}` : "Fee structure not configured"}</p></div>
             </div>
           </section>
         ) : null}

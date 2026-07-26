@@ -11,6 +11,7 @@ type AuditRow = {
   total: number;
   rowCount: number;
   issues: string;
+  version: string | null;
 };
 
 type PaymentAuditRow = {
@@ -26,16 +27,19 @@ type PaymentAuditRow = {
 
 export function ReceiptAudit({
   audits,
-  canManageReceipts
+  canCancelReceipts
 }: {
   audits: PaymentAuditRow[];
-  canManageReceipts: boolean;
+  canCancelReceipts: boolean;
 }) {
   const [startReceiptNo, setStart] = useState("12500");
   const [endReceiptNo, setEnd] = useState("12520");
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error">("success");
+  const [pendingCancellation, setPendingCancellation] = useState<AuditRow | null>(null);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [busy, setBusy] = useState(false);
 
   async function load(event: React.FormEvent) {
     event.preventDefault();
@@ -50,23 +54,32 @@ export function ReceiptAudit({
     setMessage("");
   }
 
-  async function cancelReceipt(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  async function cancelReceipt() {
+    if (!pendingCancellation) return;
+    setBusy(true);
     const response = await fetch("/api/receipt-audit", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        receiptNo: pendingCancellation.receiptNo,
+        reason: cancellationReason,
+        expectedVersion: pendingCancellation.version
+      })
     });
     const json = await response.json();
+    setBusy(false);
     if (!response.ok) {
       setMessageType("error");
-      setMessage(json.error || "Unable to mark receipt cancelled");
+      setMessage(json.error || "Unable to cancel receipt");
       return;
     }
-    (event.currentTarget as HTMLFormElement).reset();
     setMessageType("success");
-    setMessage(`Receipt ${json.receiptNo} marked cancelled.`);
+    setMessage(`Receipt ${json.receiptNo} and all ${json.componentCount} component(s) are cancelled.`);
+    setRows((current) => current.map((row) => row.receiptNo === json.receiptNo
+      ? { ...row, status: "Cancelled", total: 0, issues: "All payment rows cancelled", version: json.version }
+      : row));
+    setPendingCancellation(null);
+    setCancellationReason("");
   }
 
   return (
@@ -76,27 +89,34 @@ export function ReceiptAudit({
         <label>End Receipt No<input value={endReceiptNo} onChange={(e) => setEnd(e.target.value)} /></label>
         <button>Audit Range</button>
       </form>
-      {canManageReceipts ? (
-        <form className="card card-pad filters" onSubmit={cancelReceipt}>
-          <label>Cancelled Receipt No<input name="receiptNo" required /></label>
-          <label>Remarks<input name="remarks" /></label>
-          <input type="hidden" name="status" value="Cancelled" />
-          <button className="secondary">Mark Cancelled</button>
-        </form>
-      ) : null}
       {message ? <div className={messageType === "error" ? "error" : "notice"} role="status">{message}</div> : null}
       <section className="card">
         <div className="section-title"><h3>Audit Output</h3></div>
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Receipt</th><th>Status</th><th>Total</th><th>Rows</th><th>Issues</th></tr></thead>
+            <thead><tr><th>Receipt</th><th>Status</th><th>Total</th><th>Rows</th><th>Issues</th><th>Action</th></tr></thead>
             <tbody>
-              {rows.map((row) => <tr key={row.receiptNo}><td>{row.receiptNo}</td><td><StatusBadge status={row.status} /></td><td>{money(row.total)}</td><td>{row.rowCount}</td><td>{row.issues || "—"}</td></tr>)}
-              {!rows.length ? <tr><td colSpan={5}>Choose a receipt range and run the audit.</td></tr> : null}
+              {rows.map((row) => <tr key={row.receiptNo}><td>{row.receiptNo}</td><td><StatusBadge status={row.status} /></td><td>{money(row.total)}</td><td>{row.rowCount}</td><td>{row.issues || "-"}</td><td>{canCancelReceipts && row.rowCount > 0 && row.status !== "Cancelled" ? <button type="button" className="danger" onClick={() => { setMessage(""); setPendingCancellation(row); }}>Cancel receipt</button> : "-"}</td></tr>)}
+              {!rows.length ? <tr><td colSpan={6}>Choose a receipt range and run the audit.</td></tr> : null}
             </tbody>
           </table>
         </div>
       </section>
+      {pendingCancellation ? (
+        <div className="confirmation-overlay" role="presentation">
+          <section className="card confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="receipt-cancel-title" aria-describedby="receipt-cancel-description">
+            <h3 id="receipt-cancel-title">Cancel receipt {pendingCancellation.receiptNo}?</h3>
+            <p id="receipt-cancel-description">Every component will be cancelled transactionally. The receipt, components, and append-only audit history remain preserved.</p>
+            <label>Cancellation reason (required)
+              <textarea autoFocus rows={3} maxLength={500} value={cancellationReason} onChange={(event) => setCancellationReason(event.target.value)} />
+            </label>
+            <div className="page-actions">
+              <button type="button" className="secondary" disabled={busy} onClick={() => { setPendingCancellation(null); setCancellationReason(""); }}>Go Back</button>
+              <button type="button" className="danger" disabled={busy || cancellationReason.trim().length < 3} onClick={cancelReceipt}>{busy ? "Cancelling safely..." : "Cancel entire receipt"}</button>
+            </div>
+          </section>
+        </div>
+      ) : null}
       <section className="card">
         <div className="section-title"><h3>Payment Audit History</h3></div>
         <div className="table-wrap">

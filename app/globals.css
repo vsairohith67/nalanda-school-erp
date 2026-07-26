@@ -2670,6 +2670,7 @@ details summary {
 .homework-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .homework-filter-grid { align-items: end; }
 .homework-editor-page details > summary { min-height: 44px; display: inline-flex; align-items: center; cursor: pointer; }
+.finance-payment-edit-page details > summary { min-height: 44px; display: inline-flex; align-items: center; cursor: pointer; }
 @media (max-width: 640px) {
   .homework-meta { align-items: flex-start; flex-direction: column; }
   .homework-form-grid .wide { grid-column: 1 / -1; }

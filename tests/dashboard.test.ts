@@ -13,7 +13,7 @@ const raw: DashboardRawData = {
     pendingDues: 45000,
     pendingStudentCount: 3,
     paymentModeSplit: [{ label: "Cash", amount: 12500 }],
-    recentReceipts: [{ id: "payment-private", receiptNo: "R-1", studentName: "Private Student", amount: 12500, date: new Date("2026-06-30T00:00:00.000Z") }]
+    recentReceipts: [{ key: "receipt-private", receiptNo: "R-1", studentName: "Private Student", amount: 12500, date: new Date("2026-06-30T00:00:00.000Z") }]
   },
   activeStudents: 20,
   activeGuardians: 18,

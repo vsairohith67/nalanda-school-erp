@@ -99,6 +99,21 @@ The software safely stores internal component rows with the same receipt number.
 
 Never print a receipt before checking the amount and student.
 
+### Correct or cancel a final fee receipt
+
+Accountant can make an audited payment correction, but cannot cancel a final receipt. Receipt and admission numbers are locked during correction so one component cannot be moved away from the receipt or reassigned to another Student.
+
+Director or Super Admin:
+
+1. Open the payment or **Receipt Audit**.
+2. Check the Student, receipt number, total, and every Cash/UPI/bank component.
+3. Select **Cancel entire receipt**.
+4. Enter a clear reason of at least 3 characters.
+5. Read the in-app confirmation and confirm only if the whole receipt must be cancelled.
+6. Check that the receipt print says cancelled, Pending Dues reopened, and Daily Collection no longer includes the amount.
+
+The app keeps the receipt, components, and audit history. Do not delete rows, edit the SQLite database, or cancel only one split component. If the app says the receipt changed after it was loaded, refresh and review it again.
+
 ### Check Daily Collection
 
 1. Open **Daily Collection**.
@@ -136,6 +151,8 @@ The software prepares the message. It does not automatically send messages throu
 2. Select **Export Reminder CSV**.
 3. Open the downloaded file in Excel.
 4. Check the rows before using it for calls or reminders.
+
+Accountant does not receive reminder destinations or Parent/contact fields. Finance exports are purpose-specific, private, audited, limited to 2,000 rows, and date-bounded where applicable. Viewer/Auditor receives aggregate reports only.
 
 ## C. Student Master
 

@@ -22,7 +22,7 @@ export type DashboardRawData = {
     pendingDues: number;
     pendingStudentCount: number;
     paymentModeSplit: Array<{ label: string; amount: number }>;
-    recentReceipts: Array<{ id: string; receiptNo: string; studentName: string; amount: number; date: Date }>;
+    recentReceipts: Array<{ key: string; receiptNo: string; studentName: string; amount: number; date: Date }>;
   };
   activeStudents: number | null;
   activeGuardians: number | null;
@@ -116,7 +116,9 @@ export function buildDashboardView(raw: DashboardRawData, permissions: Iterable<
   const access = dashboardDataAccess(permissionList);
   return {
     ...raw,
-    finance: access.finance ? raw.finance : null,
+    finance: access.finance && raw.finance
+      ? { ...raw.finance, recentReceipts: role === "VIEWER" ? [] : raw.finance.recentReceipts }
+      : null,
     activeStudents: access.students ? raw.activeStudents : null,
     activeGuardians: access.guardians ? raw.activeGuardians : null,
     activeStaff: access.staff ? raw.activeStaff : null,
@@ -211,8 +213,8 @@ export async function getDashboardCommandCenter(
       pendingDues: financeData.totalPendingCurrentYear,
       pendingStudentCount: financeData.pendingStudentCount,
       paymentModeSplit: financeData.paymentModeSplit,
-      recentReceipts: financeData.recentPayments.slice(0, 5).map((payment) => ({
-        id: payment.id,
+      recentReceipts: financeData.recentPayments.slice(0, 5).map((payment, index) => ({
+        key: `${payment.receiptNo}-${index}`,
         receiptNo: payment.receiptNo,
         studentName: payment.studentName,
         amount: payment.amountPaid,

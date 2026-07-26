@@ -1,5 +1,5 @@
 import { safeClientError } from "@/lib/client-errors";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validatePaymentPayload } from "@/lib/validation";
 import { requireApiPermission } from "@/lib/auth";
@@ -7,6 +7,13 @@ import {
   assertReceiptStudentMatchInDatabase,
   normalizePaymentComponents
 } from "@/lib/payment-controls";
+import {
+  FINANCE_PAYMENT_SELECT,
+  paymentManagementResponse,
+  privateFinanceJson
+} from "@/lib/finance-privacy";
+import { assertReceiptIsNewForCreate } from "@/lib/receipt-integrity";
+import { receiptAuditSnapshot } from "@/lib/receipt";
 
 export async function GET(request: NextRequest) {
   const auth = await requireApiPermission("VIEW_PAYMENTS");
@@ -21,10 +28,11 @@ export async function GET(request: NextRequest) {
       ...(searchParams.get("paymentMode") ? { paymentMode: searchParams.get("paymentMode")! } : {}),
       ...(searchParams.get("receivedAccount") ? { receivedAccount: searchParams.get("receivedAccount")! } : {})
     },
+    select: FINANCE_PAYMENT_SELECT,
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     take: 500
   });
-  return NextResponse.json(payments);
+  return privateFinanceJson(payments.map((payment) => paymentManagementResponse(payment)));
 }
 
 export async function POST(request: NextRequest) {
@@ -49,9 +57,17 @@ export async function POST(request: NextRequest) {
     const student = await prisma.student.findUnique({ where: { admissionNo: firstPayload.admissionNo } });
     if (!student || student.deletedAt) throw new Error("Admission number not found in Student Master");
     const payments = await prisma.$transaction(async (tx) => {
+      await assertReceiptIsNewForCreate(tx, firstPayload.receiptNo);
       await assertReceiptStudentMatchInDatabase(tx, {
         receiptNo: firstPayload.receiptNo,
         admissionNo: firstPayload.admissionNo
+      });
+      await tx.receiptNote.create({
+        data: {
+          receiptNo: firstPayload.receiptNo,
+          status: "Active",
+          remarks: "Payment receipt created"
+        }
       });
       const createdRows = [];
       for (const payload of payloads) {
@@ -70,7 +86,7 @@ export async function POST(request: NextRequest) {
           data: {
             paymentId: created.id,
             action: "CREATED",
-            newValueJson: JSON.stringify(created),
+            newValueJson: JSON.stringify(receiptAuditSnapshot(created)),
             changedByUserId: auth.user.id,
             changedByName: auth.user.name,
             reason: payloads.length > 1 ? "Split receipt component created" : "Payment entry created"
@@ -80,14 +96,18 @@ export async function POST(request: NextRequest) {
       }
       return createdRows;
     });
-    return NextResponse.json({
+    return privateFinanceJson({
       receiptNo: firstPayload.receiptNo,
       split: payments.length > 1,
       total: payments.reduce((sum, payment) => sum + payment.amountPaid, 0),
-      payments
+      status: "ACTIVE",
+      components: payments.map((payment) => paymentManagementResponse(payment))
     }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: safeClientError(error, "Unable to save payment") }, { status: 400 });
+    const status = error && typeof error === "object" && "status" in error
+      ? Number((error as { status: unknown }).status)
+      : 400;
+    return privateFinanceJson({ error: safeClientError(error, "Unable to save payment") }, { status });
   }
 }
 

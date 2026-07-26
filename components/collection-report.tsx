@@ -7,6 +7,7 @@ import { PrintButton } from "@/components/print-button";
 import type { SchoolSettingsValue } from "@/lib/school-settings";
 
 type Report = {
+  aggregateOnly: boolean;
   totalCash: number;
   totalDirectorGPay: number;
   totalNpsUpi: number;
@@ -109,15 +110,15 @@ export function CollectionReport({
               helperText="Auto allocation means the software allocated the amount by fee rules."
             />
           </div>
-          <section className="card">
+          {!report.aggregateOnly ? <section className="card">
             <div className="section-title"><h3>Receipt List</h3></div>
             <div className="card-pad receipt-link-list">
               {report.receipts.length ? report.receipts.map((receipt) =>
                 canPrintReceipt ? <Link key={receipt} href={`/receipts/${encodeURIComponent(receipt)}/print`} target="_blank">{receipt}</Link> : <span key={receipt}>{receipt}</span>
               ) : "No receipts"}
             </div>
-          </section>
-          <section className="card">
+          </section> : null}
+          {!report.aggregateOnly ? <section className="card">
             <div className="section-title"><h3>Student-wise Collection</h3></div>
             <div className="table-wrap">
               <table>
@@ -128,7 +129,7 @@ export function CollectionReport({
                 </tbody>
               </table>
             </div>
-          </section>
+          </section> : <section className="card card-pad"><p>Viewer/Auditor mode is aggregate-only. Student and receipt-level rows are not included.</p></section>}
         </div>
       ) : null}
     </div>

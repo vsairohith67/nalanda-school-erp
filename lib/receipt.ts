@@ -1,3 +1,5 @@
+import { effectiveReceiptState, type ReceiptIntegrityNote } from "@/lib/receipt-integrity";
+
 export type ReceiptPaymentRow = {
   id: string;
   receiptNo: string;
@@ -6,6 +8,8 @@ export type ReceiptPaymentRow = {
   receivedAccount: string;
   transactionRefNo?: string | null;
   isCancelled?: boolean | null;
+  deletedAt?: Date | string | null;
+  updatedAt?: Date | string | null;
 };
 
 export type ReceiptStatus = "ACTIVE" | "PARTIALLY_CANCELLED" | "CANCELLED";
@@ -31,15 +35,15 @@ export function receiptPublicRows<T extends ReceiptPaymentRow>(rows: T[]) {
   });
 }
 
-export function groupReceiptPayments<T extends ReceiptPaymentRow>(rows: T[]) {
+export function groupReceiptPayments<T extends ReceiptPaymentRow>(
+  rows: T[],
+  note?: ReceiptIntegrityNote
+) {
   if (!rows.length) throw new Error("Receipt has no payment rows");
-  const activeRows = rows.filter((row) => !row.isCancelled);
+  const integrity = effectiveReceiptState(rows, note);
+  const activeRows = integrity.activeRows as T[];
   const status: ReceiptStatus =
-    activeRows.length === 0
-      ? "CANCELLED"
-      : activeRows.length === rows.length
-        ? "ACTIVE"
-        : "PARTIALLY_CANCELLED";
+    integrity.status === "INCONSISTENT" ? "PARTIALLY_CANCELLED" : integrity.status;
   const rowsForTotals = activeRows.length ? activeRows : rows;
   const breakup = rowsForTotals.reduce<Record<string, number>>((acc, row) => {
     const key = `${row.paymentMode} / ${row.receivedAccount}`;
@@ -59,6 +63,60 @@ export function groupReceiptPayments<T extends ReceiptPaymentRow>(rows: T[]) {
     rows,
     breakup,
     publicBreakup,
-    isSplit: rows.length > 1
+    isSplit: rows.length > 1,
+    version: integrity.version,
+    noteConsistent: integrity.noteConsistent
   };
+}
+
+export function receiptAuditSnapshot(row: Record<string, unknown>) {
+  return {
+    receiptNo: text(row.receiptNo),
+    admissionNo: text(row.admissionNo),
+    studentName: text(row.studentName),
+    className: text(row.className),
+    section: nullableText(row.section),
+    date: dateText(row.date),
+    amountPaid: numberValue(row.amountPaid),
+    paymentMode: text(row.paymentMode),
+    receivedAccount: text(row.receivedAccount),
+    transactionRefNo: nullableText(row.transactionRefNo),
+    feeType: text(row.feeType),
+    termHint: text(row.termHint),
+    remarks: nullableText(row.remarks),
+    isCancelled: Boolean(row.isCancelled),
+    cancelledAt: dateText(row.cancelledAt),
+    cancellationReason: nullableText(row.cancellationReason)
+  };
+}
+
+export function sanitizedPaymentAuditJson(value: string | null) {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    return JSON.stringify(receiptAuditSnapshot(parsed as Record<string, unknown>));
+  } catch {
+    return null;
+  }
+}
+
+function text(value: unknown) {
+  return String(value ?? "").trim();
+}
+
+function nullableText(value: unknown) {
+  const result = text(value);
+  return result || null;
+}
+
+function dateText(value: unknown) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function numberValue(value: unknown) {
+  const result = Number(value);
+  return Number.isFinite(result) ? result : 0;
 }

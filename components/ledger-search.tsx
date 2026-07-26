@@ -16,6 +16,7 @@ type LedgerData = {
   shortMessage: string;
   detailedMessage: string;
   whatsappLink: string | null;
+  canCommunicate: boolean;
 };
 
 export function LedgerSearch() {
@@ -28,7 +29,7 @@ export function LedgerSearch() {
   async function load(search = q) {
     if (!search.trim()) {
       setData(null);
-      setMessage("Enter an admission number, student name, or phone number.");
+      setMessage("Enter an admission number or student name.");
       return;
     }
     setMessage("Loading ledger...");
@@ -53,7 +54,7 @@ export function LedgerSearch() {
   return (
     <div className="grid">
       <form className="card card-pad filters" onSubmit={(event) => { event.preventDefault(); load(); }}>
-        <label>Search Admission No, Student Name, Phone<input value={q} onChange={(e) => setQ(e.target.value)} /></label>
+        <label>Search Admission No or Student Name<input value={q} onChange={(e) => setQ(e.target.value)} /></label>
         <button>Search</button>
       </form>
       {message ? <div className="error">{message}</div> : null}
@@ -63,8 +64,8 @@ export function LedgerSearch() {
             <div className="grid four">
               <div><span className="badge">Student</span><p>{data.student.studentName}</p></div>
               <div><span className="badge">Class</span><p>{data.student.className}{data.student.section ? `-${data.student.section}` : ""}</p></div>
-              <div><span className="badge">Parent</span><p>{data.student.fatherName}</p></div>
-              <div><span className="badge">Contact</span><p>{data.student.phone1}{data.student.phone2 ? ` / ${data.student.phone2}` : ""}</p></div>
+              <div><span className="badge">Academic year</span><p>{data.student.academicYear}</p></div>
+              <div><span className="badge">Status</span><p>{data.student.status}</p></div>
             </div>
           </section>
           <div className="grid four">
@@ -88,7 +89,7 @@ export function LedgerSearch() {
               <table>
                 <thead><tr><th>Date</th><th>Receipt</th><th>Amount</th><th>Mode</th><th>Account</th><th>Ref</th><th>Fee Type</th><th>Remarks</th><th></th></tr></thead>
                 <tbody>
-                  {data.payments.map((p) => <tr key={p.id} className={p.isCancelled ? "cancelled-row" : ""}><td>{displayDate(p.date)}</td><td>{p.receiptNo}</td><td>{money(p.amountPaid)}</td><td>{p.paymentMode}</td><td>{p.receivedAccount}</td><td>{p.transactionRefNo || "-"}</td><td>{p.feeType}</td><td>{p.isCancelled ? `Cancelled: ${p.cancellationReason}` : p.remarks}</td><td><Link href={`/receipts/${encodeURIComponent(p.receiptNo)}/print`} target="_blank">Print Receipt</Link></td></tr>)}
+                  {data.payments.map((p) => <tr key={p.rowKey} className={p.isCancelled ? "cancelled-row" : ""}><td>{displayDate(p.date)}</td><td>{p.receiptNo}</td><td>{money(p.amountPaid)}</td><td>{p.paymentMode}</td><td>{p.receivedAccount}</td><td>{p.transactionRefNo || "-"}</td><td>{p.feeType}</td><td>{p.isCancelled ? `Cancelled: ${p.cancellationReason}` : p.remarks || "—"}</td><td><Link href={`/receipts/${encodeURIComponent(p.receiptNo)}/print`} target="_blank">Print Receipt</Link></td></tr>)}
                   {!data.payments.length ? <tr><td colSpan={9}>No payment history found.</td></tr> : null}
                 </tbody>
               </table>
@@ -102,7 +103,7 @@ export function LedgerSearch() {
                 <tbody>
                   {data.payments.flatMap((payment) =>
                     (payment.audits ?? []).map((audit: any) => (
-                      <tr key={audit.id}>
+                      <tr key={audit.rowKey}>
                         <td>{payment.receiptNo}</td>
                         <td>{audit.action}</td>
                         <td>{audit.changedByName}</td>
@@ -116,7 +117,7 @@ export function LedgerSearch() {
               </table>
             </div>
           </section>
-          <section className="card card-pad">
+          {data.canCommunicate ? <section className="card card-pad">
             <div className="section-title inline-section-title">
               <h3>Parent Communication</h3>
               <Link className="button secondary" href={`/ledger/print?q=${encodeURIComponent(data.student.admissionNo)}`} target="_blank">Print Ledger</Link>
@@ -124,7 +125,7 @@ export function LedgerSearch() {
             <label>Short WhatsApp Message<textarea readOnly value={data.shortMessage} /></label>
             <label>Detailed WhatsApp Message<textarea readOnly value={data.detailedMessage} /></label>
             <ReminderActions shortMessage={data.shortMessage} detailedMessage={data.detailedMessage} whatsappLink={data.whatsappLink} />
-          </section>
+          </section> : null}
         </>
       ) : null}
     </div>

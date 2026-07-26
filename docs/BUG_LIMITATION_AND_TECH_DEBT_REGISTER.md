@@ -472,3 +472,24 @@ Prompt 23B-M-QA found and corrected 13 documentation-quality defects: 12 classif
 | Git hosting continuity | Private GitHub dependency | Local and remote availability are separate from operational backup availability | Keep the stable annotated tag, verified local clone, and independent non-Git operational backups |
 
 DEVOPS-1A changes no Prisma schema, migration, route/API boundary, operational record, Prompt 21/22 decision, or Schoolknot role-audit status.
+
+## FIN-2A Accountant privacy and receipt integrity
+
+Resolved:
+
+- Broad Accountant Student access was replaced by an exact-admission finance lookup and explicit response allowlists.
+- Accountant Parent/contact reminder permissions and final-receipt cancellation are non-delegably denied even when a stale database permission row is enabled.
+- Viewer/Auditor student-level ledger access is non-delegably denied; dues and collection remain aggregate-only.
+- Generic and specialized Accountant finance exports now have purpose/field contracts, formula neutralisation, private/no-store headers, safe filenames, 2,000-row limits, bounded date scopes where applicable, and append-only export audit.
+- Whole-receipt cancellation is Director/Super Admin only, reasoned, versioned, transactional, append-only, idempotent, and safe for split Cash/UPI components.
+- `Payment` components now define the effective receipt state. Mixed component state and `ReceiptNote` disagreement fail closed across receipt, ledger, dues, collection, dashboard/export, audit, and Cash Book calculations.
+- New audit JSON uses a restricted snapshot; historical broad JSON is redacted before restricted output.
+- Final verification caught a backup-time seeder that rewrote six existing operational permission overrides. The seeder now creates missing rows without modifying existing rows; a byte-identical rollback restored the authorised operational checkpoint and a repeat backup proved no hash/timestamp change.
+
+Remaining:
+
+- There is no partial final-receipt cancellation, refund, gateway reversal, chargeback, or locked-day compensating correction workflow.
+- Old broad `PaymentAudit` JSON may remain at rest in an existing database. It is response-redacted, but an at-rest migration would require separate retention/legal/schema approval.
+- `ReceiptNote` is synchronized metadata, not a separately versioned approval model.
+- SQLite remains a supported single-instance write architecture; horizontal scaling is not approved.
+- FIN-2A-QA must independently verify the branch before merge.

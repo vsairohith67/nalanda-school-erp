@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiPermission } from "@/lib/auth";
 import { sumCountablePayments } from "@/lib/payment-controls";
 import { classSectionLabel, displayCollectionTermLabel, groupTotalByLabel } from "@/lib/collection-report";
+import { effectiveActiveSelectedReceiptPayments } from "@/lib/receipt-integrity";
+import { collectionPaymentResponse, privateFinanceJson } from "@/lib/finance-privacy";
 
 export async function GET(request: NextRequest) {
   const auth = await requireApiPermission("VIEW_DAILY_COLLECTION");
@@ -11,24 +13,26 @@ export async function GET(request: NextRequest) {
   const date = sp.get("date");
   const month = sp.get("month");
   if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return NextResponse.json({ error: "A valid report date is required" }, { status: 400 });
+    return privateFinanceJson({ error: "A valid report date is required" }, { status: 400 });
   }
   if (month && !/^\d{4}-\d{2}$/.test(month)) {
-    return NextResponse.json({ error: "A valid report month is required" }, { status: 400 });
+    return privateFinanceJson({ error: "A valid report month is required" }, { status: 400 });
   }
   const where = {
     deletedAt: null,
-    isCancelled: false,
     ...(date ? { date: dayRange(date) } : {}),
     ...(month ? { date: monthRange(month) } : {})
   };
-  const payments = await prisma.payment.findMany({ where, orderBy: [{ date: "asc" }, { receiptNo: "asc" }], take: 10_000 });
+  const receiptRows = await prisma.payment.findMany({ where, orderBy: [{ date: "asc" }, { receiptNo: "asc" }], take: 10_000 });
+  const payments = await effectiveActiveSelectedReceiptPayments(prisma, receiptRows);
   const byAccount = groupTotal(payments, "receivedAccount");
   const byMode = groupTotal(payments, "paymentMode");
   const byClass = groupTotalByLabel(payments, (payment) => classSectionLabel(payment.className, payment.section));
   const byStudent = groupTotal(payments, "studentName");
   const byTerm = groupTotalByLabel(payments, (payment) => displayCollectionTermLabel(payment.termHint));
-  return NextResponse.json({
+  const aggregateOnly = auth.user.role === "VIEWER";
+  return privateFinanceJson({
+    aggregateOnly,
     totalCash: byMode.Cash ?? 0,
     totalDirectorGPay: byAccount["Director Sir GPay"] ?? 0,
     totalNpsUpi: byAccount["NPS Current Account UPI"] ?? 0,
@@ -36,13 +40,13 @@ export async function GET(request: NextRequest) {
     totalCheque: byMode.Cheque ?? 0,
     totalOther: byMode.Other ?? 0,
     grandTotal: sumCountablePayments(payments),
-    receipts: Array.from(new Set(payments.map((p) => p.receiptNo))).sort(),
+    receipts: aggregateOnly ? [] : Array.from(new Set(payments.map((p) => p.receiptNo))).sort(),
     byAccount,
     byMode,
     byClass,
-    byStudent,
+    byStudent: aggregateOnly ? {} : byStudent,
     byTerm,
-    payments
+    payments: aggregateOnly ? [] : payments.map((payment) => collectionPaymentResponse(payment))
   });
 }
 

@@ -39,7 +39,6 @@ describe("access rules", () => {
     const accountantNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "ACCOUNTANT"));
     expect(accountantNav.map((item) => item.href)).toEqual(expect.arrayContaining([
       "/dashboard",
-      "/students",
       "/payments",
       "/payments/new",
       "/pending-dues",
@@ -85,7 +84,6 @@ describe("access rules", () => {
       "/website-admin",
       "/pending-dues",
       "/daily-collection",
-      "/ledger",
       "/expenses",
       "/expenses/reports",
       "/budgets",
@@ -186,7 +184,6 @@ describe("access rules", () => {
       .flatMap((group) => group.items.map((item) => item.href));
     expect(accountantHrefs).toEqual([
       "/dashboard",
-      "/students",
       "/fee-register-ocr",
       "/fee-register-ocr/reports",
       "/payments",
@@ -237,8 +234,7 @@ describe("access rules", () => {
       "/leave/staff/reports",
       "/substitutes/reports",
       "/pending-dues",
-      "/daily-collection",
-      "/ledger"
+      "/daily-collection"
     ]));
   });
 

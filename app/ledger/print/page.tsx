@@ -6,14 +6,19 @@ import { displayDate, money } from "@/lib/format";
 import { PrintButton } from "@/components/print-button";
 import { prisma } from "@/lib/prisma";
 import { getSchoolSettings } from "@/lib/school-settings";
+import { ledgerStudentForRole } from "@/lib/finance-privacy";
 
 export default async function LedgerPrintPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  await requirePermission("PRINT_LEDGER");
+  const user = await requirePermission("PRINT_LEDGER");
   const { q } = await searchParams;
   if (!q) notFound();
-  const [ledger, settings] = await Promise.all([getStudentLedgerData(q), getSchoolSettings(prisma)]);
+  const [ledger, settings] = await Promise.all([
+    getStudentLedgerData(q, { allowContactSearch: user.role !== "ACCOUNTANT" }),
+    getSchoolSettings(prisma)
+  ]);
   if (!ledger) notFound();
   const { student, allocation, payments } = ledger;
+  const visibleStudent = ledgerStudentForRole(student, user.role);
 
   return (
     <div className="page print-route-page">
@@ -25,16 +30,15 @@ export default async function LedgerPrintPage({ searchParams }: { searchParams: 
             <h1>{settings.schoolName}</h1>
             {settings.showSchoolAddress ? <p>{settings.addressLine1}, {settings.city}</p> : null}
             {settings.showSchoolPhone ? <p>Tel: {settings.phone}</p> : null}
-            <p>Student Fee Ledger - Academic Year {student.academicYear}</p>
+            <p>Student Fee Ledger - Academic Year {visibleStudent.academicYear}</p>
           </div>
         </header>
         <section className="receipt-meta">
-          <div><span>Admission No.</span><strong>{student.admissionNo}</strong></div>
-          <div><span>Student</span><strong>{student.studentName}</strong></div>
-          <div><span>Class/Sec</span><strong>{student.className}{student.section ? `-${student.section}` : ""}</strong></div>
-          <div><span>Father</span><strong>{student.fatherName}</strong></div>
-          <div><span>Mother</span><strong>{student.motherName || "-"}</strong></div>
-          <div><span>Contacts</span><strong>{student.phone1}{student.phone2 ? ` / ${student.phone2}` : ""}</strong></div>
+          <div><span>Admission No.</span><strong>{visibleStudent.admissionNo}</strong></div>
+          <div><span>Student</span><strong>{visibleStudent.studentName}</strong></div>
+          <div><span>Class/Sec</span><strong>{visibleStudent.className}{visibleStudent.section ? `-${visibleStudent.section}` : ""}</strong></div>
+          <div><span>Academic Year</span><strong>{visibleStudent.academicYear}</strong></div>
+          <div><span>Status</span><strong>{visibleStudent.status}</strong></div>
         </section>
         <section className="ledger-summary">
           <div><span>Annual Fee</span><strong>{money(allocation.annualFee)}</strong></div>

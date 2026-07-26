@@ -274,7 +274,7 @@ Roles are `SUPER_ADMIN`, `DIRECTOR`, `PRINCIPAL`, `ADMIN`, `ACCOUNTANT`, `TEACHE
 - Missing rows fall back to recommended defaults.
 - `SUPER_ADMIN` always has every permission.
 - `/roles` calls `ensureDefaultRolePermissions()` before showing the matrix.
-- Backup scripts/API also materialize default rows before export so backups include the matrix.
+- Backup scripts/API materialize missing default rows before export so backups include the matrix, but they must never rewrite an existing operational override merely by taking a backup.
 
 Default role intent:
 
@@ -956,3 +956,24 @@ DEVOPS-1B is fully cleared. DEVOPS-1C runs only on `devops/staging-readiness-pla
 The DEVOPS-1C local rehearsal passed on loopback with a fresh synthetic database, version-37 synthetic backup, production build/start, disposable self-signed HTTPS proxy, HSTS/secure-cookie/no-store/static-cache checks, database persistence across restart and rollback to a distinct prior build. Implementation verification passed 274 pages, 377 APIs, 1,471 tests across 162 files and 211/211 static pages. The operational database remained byte-for-byte at SHA-256 `1556B98FCAF0F2475C0C0F1BAEEFCE4E638680B9D4C7DC9BFFB8B6F0D09B4392`; final operational backup is version 37 `nalanda-fee-control-backup-2026-07-23-04-19.json`.
 
 Independent DEVOPS-1C-QA passed after correcting `.env*`/PWA identifier validation, rehearsal secret-artifact redaction/deletion, the complete environment inventory, immutable systemd write boundaries and build-specific Next cache placement. The new QA synthetic root passed migrate/status, version-37 backup, HTTPS/proxy/cache/cookie, restart and rollback. Final regression is 1,473 tests across 162 files and 211/211 static pages; final operational backup is `nalanda-fee-control-backup-2026-07-23-04-38.json` with all checkpoint integrity values unchanged.
+
+## FIN-2A Accountant privacy and receipt integrity
+
+Read `ACCOUNTANT_DATA_MINIMISATION_AND_RECEIPT_INTEGRITY.md` before changing Student lookup, fee reports, payment exports, payment correction, receipt print, cancellation, dues, ledger, Daily Collection, dashboard totals, Receipt Audit, or Cash Book fee sources.
+
+Developer invariants:
+
+1. Accountant must use `app/api/finance/students/lookup/route.ts`; never grant broad Student serializers as a shortcut.
+2. Add a purpose-specific `select` and serializer for each finance response. Do not return a Prisma Student or Payment object.
+3. Keep Accountant hard denials for `VIEW_STUDENTS`, `CANCEL_PAYMENTS`, `MANAGE_RECEIPTS`, `COMMUNICATE_PARENT`, and `EXPORT_REMINDERS`, and Viewer/Auditor hard denial for `VIEW_LEDGER`, across safe defaults, effective reads, matrix display, validation, and explicit save. Backup-time seeding must preserve existing stored rows.
+4. New finance CSV routes must use a documented field allowlist, formula-safe cell encoding, a 2,000-row fail-closed limit, a maximum 366-day range where dates apply, private/no-store headers, safe filenames, and `FINANCE_EXPORT_DOWNLOADED` audit.
+5. `lib/receipt-integrity.ts` is authoritative. Never calculate collection from only `Payment.isCancelled = false`; first exclude any mixed-state receipt.
+6. Final cancellation is whole-receipt, Director/Super Admin only, reasoned, versioned, transactional, append-only, and idempotent. Do not add a one-component cancel button.
+7. Receipt/admission numbers stay immutable during payment correction. Any future reassignment requires a separately reviewed correction workflow.
+8. Store `receiptAuditSnapshot` only; sanitize historical JSON before a restricted response or render.
+9. Mutation tests run only on an isolated copied/fresh database. `pnpm.cmd qa:fin2a` refuses to operate outside the established QA root and hash-checks the operational database.
+10. Do not interpret FIN-2A as refund, gateway, partial cancellation, payroll, Day Closer, or Schoolknot-parity approval.
+
+FIN-2A verification passed 274 page routes, 378 API routes, typecheck, 1,496 tests across 163 files, and 212/212 build entries. Copied-database Browser QA passed at 1366x768 and exact 390x844 in light/dark mode with aggregate-only Viewer behavior, accessible whole-receipt cancellation, contained 44px mobile controls, zero final console warnings/errors, and zero final production stderr. Cleanup was verified twice and the isolated database was destroyed. The final version-37 backup is `nalanda-fee-control-backup-2026-07-26-19-36.json`. Independent QA must use the separate `FIN2AQA` fixture mode before merge.
+
+The final backup initially exposed and stopped a six-row operational permission-seeding rewrite. The seeder was corrected to preserve existing rows, a byte-identical rollback candidate was independently verified, and the operational database was atomically restored to SHA-256 `1556B98FCAF0F2475C0C0F1BAEEFCE4E638680B9D4C7DC9BFFB8B6F0D09B4392`, 4,771,840 bytes, timestamp `2026-07-19T13:21:15.353Z`, with the exact schema/migration/business checkpoint. A repeat backup left hash and timestamp unchanged.

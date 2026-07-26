@@ -1,5 +1,43 @@
 import { requiresTransactionReference } from "@/lib/payment-controls";
 import { publicPaymentModeLabel } from "@/lib/receipt";
+import { effectiveReceiptState } from "@/lib/receipt-integrity";
+
+export const RECEIPT_AUDIT_RANGE_LIMIT = 500;
+
+export class ReceiptAuditRangeError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ReceiptAuditRangeError";
+  }
+}
+
+export function parseReceiptAuditRange(
+  startValue: string | null,
+  endValue: string | null
+) {
+  const start = Number(startValue);
+  const end = Number(endValue);
+  if (
+    !Number.isSafeInteger(start) ||
+    !Number.isSafeInteger(end) ||
+    start <= 0 ||
+    end <= 0 ||
+    start > end
+  ) {
+    throw new ReceiptAuditRangeError("Valid positive receipt range is required");
+  }
+  const length = end - start + 1;
+  if (!Number.isSafeInteger(length) || length > RECEIPT_AUDIT_RANGE_LIMIT) {
+    throw new ReceiptAuditRangeError(
+      `Receipt audit range is limited to ${RECEIPT_AUDIT_RANGE_LIMIT} numbers`
+    );
+  }
+  return {
+    start,
+    end,
+    receiptNumbers: Array.from({ length }, (_, index) => String(start + index))
+  };
+}
 
 type ReceiptAuditPayment = {
   admissionNo: string;
@@ -18,7 +56,14 @@ export function analyzeReceiptPayments(
   receiptPayments: ReceiptAuditPayment[],
   note?: ReceiptAuditNote
 ) {
-  const activePayments = receiptPayments.filter((payment) => !payment.isCancelled);
+  const integrity = effectiveReceiptState(receiptPayments.map((payment, index) => ({
+    ...payment,
+    id: `audit-${index}`,
+    receiptNo: "audit"
+  })), note);
+  const activePayments = integrity.status === "ACTIVE"
+    ? receiptPayments
+    : [];
   const total = activePayments.reduce((sum, payment) => sum + payment.amountPaid, 0);
   let status = receiptPayments.length ? "Used" : "Missing";
   const issues: string[] = [];
@@ -31,12 +76,16 @@ export function analyzeReceiptPayments(
     status = "Duplicate";
     issues.push("Same receipt used for multiple students");
   }
-  if (receiptPayments.length > 0 && activePayments.length === 0) {
+  if (integrity.status === "CANCELLED") {
     status = "Cancelled";
     issues.push("All payment rows cancelled");
-  } else if (note?.status === "Cancelled") {
-    status = "Cancelled";
-    issues.push(note.remarks || "Cancelled");
+  } else if (integrity.status === "INCONSISTENT") {
+    status = "Needs Review";
+    issues.push("Receipt contains both active and cancelled components");
+  }
+  if (!integrity.noteConsistent) {
+    status = "Needs Review";
+    issues.push("Receipt note disagrees with authoritative payment components");
   }
   if (activePayments.length > 0 && total <= 0) {
     status = "Needs Review";

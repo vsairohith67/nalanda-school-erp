@@ -55,7 +55,9 @@ describe("SEC-1 safe client errors", () => {
       "app/api/class-x-documents/reports/export/route.ts"
     ];
     for (const file of files) {
-      expect(readFileSync(file, "utf8"), file).toMatch(/take:\s*(?:10_000|CLASS_X_REPORT_ROW_LIMIT)/);
+      expect(readFileSync(file, "utf8"), file).toMatch(
+        /take:\s*(?:10_000|CLASS_X_REPORT_ROW_LIMIT|FINANCE_EXPORT_ROW_LIMIT\s*\+\s*1)/
+      );
     }
   });
 });

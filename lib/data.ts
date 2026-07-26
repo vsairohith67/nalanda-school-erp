@@ -4,6 +4,7 @@ import { allocateFees } from "@/lib/fee-allocation";
 import { sumPendingAmounts } from "@/lib/payment-controls";
 import { analyzeReceiptPayments } from "@/lib/receipt-audit";
 import { schoolDateKey } from "@/lib/format";
+import { effectiveActiveReceiptPayments } from "@/lib/receipt-integrity";
 
 export async function getFeeStructures(academicYear = ACADEMIC_YEAR) {
   return prisma.feeStructure.findMany({
@@ -38,21 +39,21 @@ export async function getPendingDues(params: {
     prisma.payment.findMany({
       where: {
         deletedAt: null,
-        isCancelled: false,
-        ...(params.receivedAccount ? { receivedAccount: params.receivedAccount } : {}),
-        ...(params.paymentMode ? { paymentMode: params.paymentMode } : {})
       }
     })
   ]);
+  const activePayments = effectiveActiveReceiptPayments(payments)
+    .filter((payment) => !params.receivedAccount || payment.receivedAccount === params.receivedAccount)
+    .filter((payment) => !params.paymentMode || payment.paymentMode === params.paymentMode);
   const feeMap = new Map(fees.map((fee) => [fee.className, fee]));
   return students
     .map((student) => {
       const fee = feeMap.get(student.className);
       if (!fee) return null;
-      const studentPayments = payments.filter((payment) => payment.admissionNo === student.admissionNo);
+      const studentPayments = activePayments.filter((payment) => payment.admissionNo === student.admissionNo);
       const allocation = allocateFees(student, fee, studentPayments);
       const row = {
-        id: student.id,
+        academicYear: student.academicYear,
         admissionNo: student.admissionNo,
         studentName: student.studentName,
         fatherName: student.fatherName,
@@ -61,6 +62,7 @@ export async function getPendingDues(params: {
         phone1: student.phone1,
         phone2: student.phone2,
         whatsappNumber: student.whatsappNumber,
+        status: student.status,
         annualFee: allocation.annualFee,
         discountPercent: allocation.effectiveDiscountPercent,
         annualFeeAfterDiscount: allocation.annualFeeAfterDiscount,
@@ -115,12 +117,13 @@ export async function getDashboard(academicYear = ACADEMIC_YEAR, now = new Date(
     prisma.student.findMany({ where: { academicYear, deletedAt: null, status: "Active" } }),
     getFeeStructures(academicYear),
     prisma.payment.findMany({
-      where: { deletedAt: null, isCancelled: false },
+      where: { deletedAt: null },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }]
     }),
     getPendingDues({ academicYear, status: "Active" }),
     prisma.receiptNote.findMany()
   ]);
+  const activePayments = effectiveActiveReceiptPayments(payments);
   const feeMap = new Map(fees.map((fee) => [fee.className, fee]));
   const expected = pendingRows.reduce(
     (sum, row) => sum + (row?.annualFee ?? 0),
@@ -130,14 +133,14 @@ export async function getDashboard(academicYear = ACADEMIC_YEAR, now = new Date(
     (sum, row) => sum + (row?.annualFeeAfterDiscount ?? 0),
     0
   );
-  const currentYearCollected = payments
+  const currentYearCollected = activePayments
     .filter((payment) => payment.feeType === "Current Year Fee")
     .reduce((sum, payment) => sum + payment.amountPaid, 0);
-  const oldDuesCollected = payments
+  const oldDuesCollected = activePayments
     .filter((payment) => payment.feeType === "Old Due")
     .reduce((sum, payment) => sum + payment.amountPaid, 0);
-  const collectionMetrics = dashboardCollectionMetrics(payments, now);
-  const byAccount = totalBy(payments, "receivedAccount");
+  const collectionMetrics = dashboardCollectionMetrics(activePayments, now);
+  const byAccount = totalBy(activePayments, "receivedAccount");
   const classWise = Array.from(
     pendingRows.reduce((map, row) => {
       if (!row) return map;
@@ -150,7 +153,7 @@ export async function getDashboard(academicYear = ACADEMIC_YEAR, now = new Date(
     }, new Map<string, { className: string; expected: number; collected: number; pending: number }>())
   ).map(([, value]) => value);
 
-  const recentPayments = payments.slice(0, 10);
+  const recentPayments = activePayments.slice(0, 10);
   const paymentsByReceipt = payments.reduce((map, payment) => {
     map.set(payment.receiptNo, [...(map.get(payment.receiptNo) ?? []), payment]);
     return map;

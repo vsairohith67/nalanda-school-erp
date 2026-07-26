@@ -1,40 +1,34 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiPermission } from "@/lib/auth";
+import { safeClientError } from "@/lib/client-errors";
+import { privateFinanceJson } from "@/lib/finance-privacy";
+import {
+  isReceiptCancellationAuthority,
+  ReceiptIntegrityError,
+  restoreWholeReceipt
+} from "@/lib/receipt-integrity";
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const auth = await requireApiPermission("RESTORE_PAYMENTS");
   if (auth.response) return auth.response;
+  if (!isReceiptCancellationAuthority(auth.user.role)) {
+    return privateFinanceJson({ error: "Only the Director or Super Admin can restore a cancelled receipt" }, { status: 403 });
+  }
   const { id } = await context.params;
   const body = await request.json().catch(() => ({}));
-  const reason = String(body.reason ?? "").trim();
-  if (!reason) return NextResponse.json({ error: "Restore reason is required" }, { status: 400 });
-  const existing = await prisma.payment.findUnique({ where: { id } });
-  if (!existing) return NextResponse.json({ error: "Payment not found" }, { status: 404 });
-  if (!existing.isCancelled) return NextResponse.json({ error: "Payment is not cancelled" }, { status: 400 });
-  const payment = await prisma.$transaction(async (tx) => {
-    const restored = await tx.payment.update({
-      where: { id },
-      data: {
-        isCancelled: false,
-        cancelledAt: null,
-        cancelledByUserId: null,
-        cancellationReason: null,
-        editedBy: auth.user.name
-      }
+  const existing = await prisma.payment.findUnique({ where: { id }, select: { receiptNo: true } });
+  if (!existing) return privateFinanceJson({ error: "Payment not found" }, { status: 404 });
+  try {
+    const result = await restoreWholeReceipt(prisma, {
+      receiptNo: existing.receiptNo,
+      reason: body.reason,
+      expectedVersion: body.expectedVersion,
+      actor: auth.user
     });
-    await tx.paymentAudit.create({
-      data: {
-        paymentId: id,
-        action: "RESTORED",
-        oldValueJson: JSON.stringify(existing),
-        newValueJson: JSON.stringify(restored),
-        changedByUserId: auth.user.id,
-        changedByName: auth.user.name,
-        reason
-      }
-    });
-    return restored;
-  });
-  return NextResponse.json(payment);
+    return privateFinanceJson(result);
+  } catch (error) {
+    const status = error instanceof ReceiptIntegrityError ? error.status : 409;
+    return privateFinanceJson({ error: safeClientError(error, "Unable to restore receipt") }, { status });
+  }
 }

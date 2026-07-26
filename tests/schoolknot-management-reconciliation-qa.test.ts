@@ -139,7 +139,11 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
     expect(archivedMigrationEntries).toHaveLength(42);
     expect(archivedMigrationEntries.filter((name) => statSync(join("prisma/migration-archives/devops1b-legacy-chain", name)).isDirectory())).toHaveLength(40);
     expect(countRouteFiles("app", "page.tsx") + (existsSync("app/sw.js/route.ts") ? 1 : 0)).toBe(274);
-    expect(countRouteFiles("app/api", "route.ts")).toBe(376 + Number(existsSync("app/api/deployment-health/route.ts")));
+    expect(countRouteFiles("app/api", "route.ts")).toBe(
+      376
+      + Number(existsSync("app/api/deployment-health/route.ts"))
+      + Number(existsSync("app/api/finance/students/lookup/route.ts")),
+    );
     expect(read("lib/backup.ts")).toContain("backupVersion: 37");
     for (const model of ["AdmissionEnquiry", "PayrollRun", "TransportRoute", "AssignmentSubmission", "DisciplineIncident", "CafeteriaPlan"]) {
       expect(schema).not.toContain(`model ${model} {`);

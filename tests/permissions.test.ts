@@ -33,7 +33,7 @@ describe("role permissions", () => {
     expect(can("ADMIN", "RUN_RESTORE")).toBe(false);
     expect(can("ADMIN", "MANAGE_ROLE_PERMISSIONS")).toBe(false);
     expect(can("ACCOUNTANT", "ADD_PAYMENT")).toBe(true);
-    expect(can("ACCOUNTANT", "CANCEL_PAYMENT")).toBe(true);
+    expect(can("ACCOUNTANT", "CANCEL_PAYMENT")).toBe(false);
     expect(can("ACCOUNTANT", "MANAGE_FEES")).toBe(false);
     expect(can("ACCOUNTANT", "VIEW_GUARDIANS")).toBe(false);
     expect(can("ACCOUNTANT", "VIEW_NOTICES")).toBe(false);

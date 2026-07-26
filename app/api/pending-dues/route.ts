@@ -1,7 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getPendingDues } from "@/lib/data";
 import { requireApiPermission } from "@/lib/auth";
-import { maskPhone } from "@/lib/privacy";
+import {
+  pendingDuesFinanceRow,
+  pendingDuesViewerAggregate,
+  privateFinanceJson
+} from "@/lib/finance-privacy";
 
 export async function GET(request: NextRequest) {
   const auth = await requireApiPermission("VIEW_PENDING_DUES");
@@ -17,9 +21,12 @@ export async function GET(request: NextRequest) {
     paymentMode: sp.get("paymentMode") || undefined,
     term: sp.get("term") || undefined
   });
-  return NextResponse.json(
+  const financeRows = rows.filter(Boolean).map((row) =>
+    pendingDuesFinanceRow(row as unknown as Record<string, unknown>)
+  );
+  return privateFinanceJson(
     auth.user.role === "VIEWER"
-      ? rows.map((row) => row ? { ...row, phone1: maskPhone(row.phone1), phone2: maskPhone(row.phone2) } : row)
-      : rows
+      ? { aggregateOnly: true, rows: pendingDuesViewerAggregate(financeRows) }
+      : { aggregateOnly: false, rows: financeRows }
   );
 }

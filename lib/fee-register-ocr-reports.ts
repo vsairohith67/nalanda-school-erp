@@ -45,7 +45,8 @@ export async function feeRegisterOcrReportData(client: any) {
       status: batch.status, providerKind: batch.profile.providerKind, pages: batch.pages.length,
       rows: batch.pages.reduce((sum: number, page: any) => sum + page.rows.length, 0),
       verifiedAmountMinor: batch.totalVerifiedAmountMinor, postedAmountMinor: batch.totalPostedAmountMinor,
-      paymentPostingEnabled: batch.profile.paymentPostingEnabled
+      paymentPostingEnabled: batch.profile.paymentPostingEnabled,
+      createdAt: batch.createdAt
     }))
   };
 }

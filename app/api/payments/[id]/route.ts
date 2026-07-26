@@ -1,9 +1,18 @@
 import { safeClientError } from "@/lib/client-errors";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validatePaymentPayload } from "@/lib/validation";
 import { requireApiPermission } from "@/lib/auth";
 import { assertReceiptStudentMatchInDatabase } from "@/lib/payment-controls";
+import {
+  assertReceiptAcceptsActiveComponent,
+  assertReceiptMutationVersion,
+  cancelWholeReceipt,
+  isReceiptCancellationAuthority,
+  ReceiptIntegrityError
+} from "@/lib/receipt-integrity";
+import { paymentManagementResponse, privateFinanceJson } from "@/lib/finance-privacy";
+import { receiptAuditSnapshot } from "@/lib/receipt";
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const auth = await requireApiPermission("EDIT_PAYMENTS");
@@ -19,12 +28,23 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     const existing = await prisma.payment.findUnique({ where: { id } });
     if (!existing) throw new Error("Payment not found");
     if (existing.isCancelled) throw new Error("Cancelled payments must be restored before editing");
+    if (
+      payload.receiptNo !== existing.receiptNo ||
+      payload.admissionNo !== existing.admissionNo
+    ) {
+      throw new ReceiptIntegrityError(
+        "Receipt and admission numbers cannot be changed during a payment correction",
+        409
+      );
+    }
     const payment = await prisma.$transaction(async (tx) => {
+      await assertReceiptMutationVersion(tx, existing.receiptNo, body.expectedVersion);
       await assertReceiptStudentMatchInDatabase(tx, {
         receiptNo: payload.receiptNo,
         admissionNo: payload.admissionNo,
         excludePaymentId: id
       });
+      await assertReceiptAcceptsActiveComponent(tx, payload, id);
       const updated = await tx.payment.update({
         where: { id },
         data: {
@@ -41,68 +61,47 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         data: {
           paymentId: id,
           action: "UPDATED",
-          oldValueJson: JSON.stringify(existing),
-          newValueJson: JSON.stringify(updated),
+          oldValueJson: JSON.stringify(receiptAuditSnapshot(existing)),
+          newValueJson: JSON.stringify(receiptAuditSnapshot(updated)),
           changedByUserId: auth.user.id,
           changedByName: auth.user.name,
           reason
         }
       });
+      await tx.receiptNote.upsert({
+        where: { receiptNo: payload.receiptNo },
+        update: { status: "Active" },
+        create: { receiptNo: payload.receiptNo, status: "Active", remarks: "Audited payment correction" }
+      });
       return updated;
     });
-    return NextResponse.json(payment);
+    return privateFinanceJson(paymentManagementResponse(payment));
   } catch (error) {
-    return NextResponse.json({ error: safeClientError(error, "Unable to update payment") }, { status: 400 });
+    const status = error instanceof ReceiptIntegrityError ? error.status : 400;
+    return privateFinanceJson({ error: safeClientError(error, "Unable to update payment") }, { status });
   }
 }
 
 export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const auth = await requireApiPermission("CANCEL_PAYMENTS");
   if (auth.response) return auth.response;
+  if (!isReceiptCancellationAuthority(auth.user.role)) {
+    return privateFinanceJson({ error: "Only the Director or Super Admin can cancel a final receipt" }, { status: 403 });
+  }
   const { id } = await context.params;
   const body = await request.json().catch(() => ({}));
-  const reason = String(body.reason ?? "").trim();
-  const existing = await prisma.payment.findUnique({ where: { id } });
-  if (!existing) return NextResponse.json({ error: "Payment not found" }, { status: 404 });
-  if (!reason) {
-    await prisma.paymentAudit.create({
-      data: {
-        paymentId: id,
-        action: "DELETED_ATTEMPT",
-        oldValueJson: JSON.stringify(existing),
-        changedByUserId: auth.user.id,
-        changedByName: auth.user.name,
-        reason: "Cancellation attempted without a reason"
-      }
+  const existing = await prisma.payment.findUnique({ where: { id }, select: { receiptNo: true } });
+  if (!existing) return privateFinanceJson({ error: "Payment not found" }, { status: 404 });
+  try {
+    const result = await cancelWholeReceipt(prisma, {
+      receiptNo: existing.receiptNo,
+      reason: body.reason,
+      expectedVersion: body.expectedVersion,
+      actor: auth.user
     });
-    return NextResponse.json({ error: "Cancellation reason is required" }, { status: 400 });
+    return privateFinanceJson(result);
+  } catch (error) {
+    const status = error instanceof ReceiptIntegrityError ? error.status : 409;
+    return privateFinanceJson({ error: safeClientError(error, "Unable to cancel receipt") }, { status });
   }
-  if (existing.isCancelled) {
-    return NextResponse.json({ error: "Payment is already cancelled" }, { status: 400 });
-  }
-  const payment = await prisma.$transaction(async (tx) => {
-    const cancelled = await tx.payment.update({
-      where: { id },
-      data: {
-        isCancelled: true,
-        cancelledAt: new Date(),
-        cancelledByUserId: auth.user.id,
-        cancellationReason: reason,
-        editedBy: auth.user.name
-      }
-    });
-    await tx.paymentAudit.create({
-      data: {
-        paymentId: id,
-        action: "CANCELLED",
-        oldValueJson: JSON.stringify(existing),
-        newValueJson: JSON.stringify(cancelled),
-        changedByUserId: auth.user.id,
-        changedByName: auth.user.name,
-        reason
-      }
-    });
-    return cancelled;
-  });
-  return NextResponse.json(payment);
 }

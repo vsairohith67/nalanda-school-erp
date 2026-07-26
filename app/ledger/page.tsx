@@ -7,7 +7,7 @@ export default async function LedgerPage() {
   await requirePermission("VIEW_LEDGER");
   return (
     <div className="page">
-      <PageHeader title="Student Ledger" description="Search one student and see profile, contact, payments, receipt history, and term dues." />
+      <PageHeader title="Student Ledger" description="Search one student and review purpose-limited identity, payments, receipt history, and term dues." />
       <Suspense fallback={<div className="card card-pad">Loading ledger...</div>}>
         <LedgerSearch />
       </Suspense>

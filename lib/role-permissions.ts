@@ -15,6 +15,26 @@ type RolePermissionClient = Pick<PrismaClient | Prisma.TransactionClient, "roleP
 
 export type RolePermissionMatrix = Record<Role, Record<CanonicalPermission, boolean>>;
 
+const NON_DELEGABLE_ROLE_DENIALS: Partial<Record<Role, ReadonlySet<CanonicalPermission>>> = {
+  ACCOUNTANT: new Set<CanonicalPermission>([
+    "VIEW_STUDENTS",
+    "EXPORT_STUDENTS",
+    "CANCEL_PAYMENTS",
+    "MANAGE_RECEIPTS",
+    "COMMUNICATE_PARENT",
+    "EXPORT_REMINDERS"
+  ]),
+  VIEWER: new Set<CanonicalPermission>([
+    "VIEW_LEDGER",
+    "PRINT_LEDGER",
+    ...PERMISSIONS.filter((permission) => permission.startsWith("EXPORT_"))
+  ])
+};
+
+function rolePermissionIsHardDenied(role: Role, permission: CanonicalPermission) {
+  return NON_DELEGABLE_ROLE_DENIALS[role]?.has(permission) ?? false;
+}
+
 export function defaultPermissionMatrix(): RolePermissionMatrix {
   return Object.fromEntries(
     ROLES.map((role) => [
@@ -22,7 +42,8 @@ export function defaultPermissionMatrix(): RolePermissionMatrix {
       Object.fromEntries(
         PERMISSIONS.map((permission) => [
           permission,
-          role === "SUPER_ADMIN" || RECOMMENDED_ROLE_PERMISSIONS[role].has(permission)
+          !rolePermissionIsHardDenied(role, permission) &&
+          (role === "SUPER_ADMIN" || RECOMMENDED_ROLE_PERMISSIONS[role].has(permission))
         ])
       )
     ])
@@ -32,13 +53,20 @@ export function defaultPermissionMatrix(): RolePermissionMatrix {
 export async function ensureDefaultRolePermissions(client: RolePermissionClient) {
   for (const role of ROLES) {
     for (const permission of PERMISSIONS) {
+      const enabled =
+        role === "SUPER_ADMIN" ||
+        (!rolePermissionIsHardDenied(role, permission) &&
+          RECOMMENDED_ROLE_PERMISSIONS[role].has(permission));
       await client.rolePermission.upsert({
         where: { role_permission: { role, permission } },
+        // Baseline seeding must never rewrite an existing operational override.
+        // Non-delegable boundaries are enforced when permissions are read or
+        // explicitly saved, while new databases still receive safe defaults.
         update: {},
         create: {
           role,
           permission,
-          enabled: role === "SUPER_ADMIN" || RECOMMENDED_ROLE_PERMISSIONS[role].has(permission)
+          enabled
         }
       });
     }
@@ -52,7 +80,10 @@ export async function getRolePermissionMatrix(client: RolePermissionClient): Pro
     if (!isRole(row.role)) continue;
     const permission = normalizePermission(row.permission);
     if (!permission) continue;
-    matrix[row.role][permission] = row.role === "SUPER_ADMIN" ? true : row.enabled;
+    matrix[row.role][permission] =
+      row.role === "SUPER_ADMIN"
+        ? true
+        : !rolePermissionIsHardDenied(row.role, permission) && row.enabled;
   }
   return matrix;
 }
@@ -67,6 +98,9 @@ export async function getEffectivePermissions(client: RolePermissionClient, role
     if (row.enabled) permissions.add(permission);
     else permissions.delete(permission);
   }
+  for (const permission of NON_DELEGABLE_ROLE_DENIALS[role] ?? []) {
+    permissions.delete(permission);
+  }
   return permissions;
 }
 
@@ -78,6 +112,7 @@ export async function hasRolePermission(
   if (role === "SUPER_ADMIN") return true;
   const canonical = normalizePermission(permission);
   if (!canonical) return false;
+  if (rolePermissionIsHardDenied(role, canonical)) return false;
   const row = await client.rolePermission.findUnique({ where: { role_permission: { role, permission: canonical } } });
   return row ? row.enabled : can(role, canonical);
 }
@@ -105,6 +140,9 @@ export function validateRolePermissionPayload(input: unknown): RolePermissionMat
       if (role === "SUPER_ADMIN" && enabled === false) {
         throw new Error("SUPER_ADMIN permissions are locked and cannot be disabled");
       }
+      if (enabled && rolePermissionIsHardDenied(role, permission)) {
+        throw new Error(`${permission} cannot be delegated to ${role}`);
+      }
       matrix[role][permission] = role === "SUPER_ADMIN" ? true : enabled;
     }
   }
@@ -116,8 +154,20 @@ export async function saveRolePermissionMatrix(client: RolePermissionClient, mat
     for (const permission of PERMISSIONS) {
       await client.rolePermission.upsert({
         where: { role_permission: { role, permission } },
-        update: { enabled: role === "SUPER_ADMIN" ? true : matrix[role][permission] },
-        create: { role, permission, enabled: role === "SUPER_ADMIN" ? true : matrix[role][permission] }
+        update: {
+          enabled:
+            role === "SUPER_ADMIN"
+              ? true
+              : !rolePermissionIsHardDenied(role, permission) && matrix[role][permission]
+        },
+        create: {
+          role,
+          permission,
+          enabled:
+            role === "SUPER_ADMIN"
+              ? true
+              : !rolePermissionIsHardDenied(role, permission) && matrix[role][permission]
+        }
       });
     }
   }

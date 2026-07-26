@@ -21,13 +21,14 @@ export default async function ReceiptPrintPage({
   const { receiptNo } = await params;
   const { size } = await searchParams;
   const decodedReceiptNo = decodeURIComponent(receiptNo);
-  const [rows, settings] = await Promise.all([
+  const [rows, settings, note] = await Promise.all([
     prisma.payment.findMany({
       where: { receiptNo: decodedReceiptNo, deletedAt: null },
-      include: { student: true },
+      include: { student: { select: { academicYear: true } } },
       orderBy: [{ date: "asc" }, { createdAt: "asc" }]
     }),
-    getSchoolSettings(prisma)
+    getSchoolSettings(prisma),
+    prisma.receiptNote.findUnique({ where: { receiptNo: decodedReceiptNo } })
   ]);
   if (!rows.length) notFound();
   if (user.role === "PARENT") {
@@ -35,7 +36,7 @@ export default async function ReceiptPrintPage({
   } else if (!(await hasRolePermission(prisma, user.role, "PRINT_RECEIPTS"))) {
     redirect("/unauthorized");
   }
-  const grouped = groupReceiptPayments(rows);
+  const grouped = groupReceiptPayments(rows, note);
   const first = rows[0];
   const student = first.student;
   const printSize = size === "a4" ? "A4" : size === "a6" ? "A6" : "A5";
@@ -72,12 +73,13 @@ export default async function ReceiptPrintPage({
           <div><span>Class/Sec</span><strong>{first.className}{first.section ? `-${first.section}` : ""}</strong></div>
         </section>
         {differentStudents ? <p className="receipt-warning">Needs review: this receipt number is linked to more than one student.</p> : null}
+        {!grouped.noteConsistent ? <p className="receipt-warning">Integrity warning: receipt metadata disagrees with payment-component state. Treat this receipt as cancelled until leadership reviews it.</p> : null}
         <table className="receipt-table">
           <thead><tr><th>Fee details</th><th>Payment particulars</th><th>Reference/UTR</th><th>Amount</th><th>Status</th></tr></thead>
           <tbody>
             {publicRows.map((row) => (
               <tr key={row.id} className={row.isCancelled ? "cancelled-row" : ""}>
-                <td>{row.feeType}{row.termHint !== "Auto" ? ` - ${row.termHint}` : ""}{row.remarks ? ` (${row.remarks})` : ""}</td>
+                <td>{row.feeType}{row.termHint !== "Auto" ? ` - ${row.termHint}` : ""}</td>
                 <td>{row.publicModeLabel}</td>
                 <td>{row.transactionRefNo || "-"}</td>
                 <td>{money(row.amountPaid)}</td>

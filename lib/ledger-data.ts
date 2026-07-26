@@ -3,17 +3,24 @@ import { getFeeStructures } from "@/lib/data";
 import { allocateFees } from "@/lib/fee-allocation";
 import { buildDetailedReminder, buildShortReminder, buildWhatsAppLink } from "@/lib/reminders";
 import { getSchoolSettings } from "@/lib/school-settings";
+import { effectiveActiveSelectedReceiptPayments } from "@/lib/receipt-integrity";
 
-export async function getStudentLedgerData(query: string) {
+export async function getStudentLedgerData(
+  query: string,
+  options: { allowContactSearch?: boolean } = {}
+) {
+  const allowContactSearch = options.allowContactSearch !== false;
   const student = await prisma.student.findFirst({
     where: {
       deletedAt: null,
       OR: [
         { admissionNo: { contains: query } },
         { studentName: { contains: query } },
-        { phone1: { contains: query } },
-        { phone2: { contains: query } },
-        { whatsappNumber: { contains: query } }
+        ...(allowContactSearch ? [
+          { phone1: { contains: query } },
+          { phone2: { contains: query } },
+          { whatsappNumber: { contains: query } }
+        ] : [])
       ]
     }
   });
@@ -29,7 +36,11 @@ export async function getStudentLedgerData(query: string) {
   ]);
   const fee = fees.find((item) => item.className === student.className);
   if (!fee) return null;
-  const allocation = allocateFees(student, fee, payments);
+  const allocation = allocateFees(
+    student,
+    fee,
+    await effectiveActiveSelectedReceiptPayments(prisma, payments)
+  );
   const reminderInput = {
     academicYear: student.academicYear,
     studentName: student.studentName,

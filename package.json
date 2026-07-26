@@ -23,6 +23,7 @@
     "qa20c:fixtures": "tsx scripts/qa20c-fixtures.ts",
     "qa20c:provider-scenarios": "tsx scripts/qa20c-provider-scenarios.ts",
     "qa20c:isolation-check": "tsx scripts/qa20c-isolation-check.ts",
+    "qa:fin2a": "tsx scripts/qa-fin2a-copied-db.ts",
     "whatsapp:process": "tsx scripts/whatsapp-process.ts",
     "whatsapp:health": "tsx scripts/whatsapp-health.ts",
     "whatsapp:webhook-fixtures": "tsx scripts/whatsapp-webhook-fixtures.ts",
