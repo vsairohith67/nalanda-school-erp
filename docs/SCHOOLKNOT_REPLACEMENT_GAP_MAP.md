@@ -1,5 +1,21 @@
 # Schoolknot Replacement Gap Map and Biometric Integration Plan
 
+## Prompt 23B final multi-role supersession
+
+The final authoritative planning set is:
+
+- `SCHOOLKNOT_FINAL_MULTI_ROLE_REPLACEMENT_MATRIX.md`;
+- `SCHOOLKNOT_FINAL_UNRESOLVED_EVIDENCE_LEDGER.md` (exactly 109 unique rows and all eight source dispositions);
+- `SCHOOLKNOT_ROLE_PERMISSION_AND_PRIVACY_COMPARISON.md`;
+- `TEACHER_ATTENDANCE_SCOPE_CUTOVER_BLOCKER.md`;
+- `SCHOOLKNOT_CUTOVER_BLOCKERS_AND_ACCEPTANCE_GATES.md`;
+- `SCHOOLKNOT_GAP_IMPLEMENTATION_ROADMAP_23C_ONWARD.md`;
+- `SCHOOLKNOT_SYNTHETIC_WRITE_TEST_PLAN.md`;
+- `SCHOOLKNOT_VENDOR_EXPORT_AND_DATA_DICTIONARY_REQUEST.md`;
+- `SCHOOLKNOT_FINAL_REPLACEMENT_DECISION.md`.
+
+Prompt 23A role reports and Prompt 23A-E are complete and `READY_FOR_PROMPT_23B`. Prompt 23B is consolidation only: no Schoolknot data was imported and no Admissions, Parent, Teacher, Classwork, attachments, calendar, payroll, transport, gateway or other business module was implemented. Teacher remains `NO_GO`; 23C may start only after 23B-QA. FIN-2A is cleared; DEVOPS-1D is payment-gated; Prompt 21/22 gates are unchanged.
+
 ## WhatsApp one-way communication
 
 Prompt 19B supplies a privacy-safe official Meta Cloud API foundation with MOCK QA, explicit consent, approved templates, controlled batches, queue/webhooks, and aggregate reporting. It is not a two-way inbox, chatbot, group tool, media sender, OTP channel, or direct Student messaging system. Production equivalence remains conditional on supervised Meta approval, environment credentials, HTTPS webhook deployment, and current rate review.

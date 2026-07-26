@@ -1,5 +1,20 @@
 # Documentation Index
 
+## Prompt 23B final Schoolknot consolidation
+
+- [Final Multi-Role Replacement Matrix](SCHOOLKNOT_FINAL_MULTI_ROLE_REPLACEMENT_MATRIX.md) - authoritative role/source verification, current repository inventory and non-duplicated final classifications.
+- [Final Unresolved Evidence Ledger](SCHOOLKNOT_FINAL_UNRESOLVED_EVIDENCE_LEDGER.md) - exact 109 source rows, all eight dispositions, role/module/priority/cutover reconciliation.
+- [Role Permission and Privacy Comparison](SCHOOLKNOT_ROLE_PERMISSION_AND_PRIVACY_COMPARISON.md) - five-role observed/current/intended authority and object scope.
+- [Teacher Attendance Scope Cutover Blocker](TEACHER_ATTENDANCE_SCOPE_CUTOVER_BLOCKER.md) - confirmed permission-only scope defect, affected cohorts, fail-closed design and tests.
+- [Cutover Blockers and Acceptance Gates](SCHOOLKNOT_CUTOVER_BLOCKERS_AND_ACCEPTANCE_GATES.md) - role, migration, vendor, write, deployment, privacy and training gates.
+- [23C Onward Roadmap](SCHOOLKNOT_GAP_IMPLEMENTATION_ROADMAP_23C_ONWARD.md) - gated sequence from Teacher attendance through optional transport.
+- [Synthetic Write-Test Plan](SCHOOLKNOT_SYNTHETIC_WRITE_TEST_PLAN.md) - non-production invented-data plan only.
+- [Vendor Export and Data Dictionary Request](SCHOOLKNOT_VENDOR_EXPORT_AND_DATA_DICTIONARY_REQUEST.md) - credential-free documentation/sample request pack.
+- [Final Replacement Decision](SCHOOLKNOT_FINAL_REPLACEMENT_DECISION.md) - `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`.
+- [Features Not to Copy](SCHOOLKNOT_FEATURES_NOT_TO_COPY.md) - final multi-role rejection/redesign policy.
+
+Prompt 23A roles and 23A-E are complete and `READY_FOR_PROMPT_23B`. Prompt 23B is consolidation-only; no Schoolknot data or module was imported/implemented. Teacher is `NO_GO`; 23C only after 23B-QA. FIN-2A is cleared, DEVOPS-1D is payment-gated, and Prompt 21/22 decisions are unchanged.
+
 ## Prompt 22A Staff DOB and EPFO/EPS planning
 
 - [Staff DOB, EPFO/EPS Status and Age-58 Reminder Planning](STAFF_DOB_EPFO_EPS_REMINDER_PLANNING.md) - official-source register, current Staff baseline, age-58 boundary, field classifications, DOB quality, reminder windows, exceptions and exact 22B/22C/22D gates.

@@ -1,5 +1,13 @@
 # Bug, Limitation, and Tech Debt Register
 
+## Prompt 23B critical finding and consolidation status
+
+- Confirmed critical defect: a Teacher default receives Student attendance view/manage/submit permission, `/attendance/students` lists every active class/section, and both Student attendance APIs accept caller-supplied scope without resolving the exact active `StaffMember -> TimetableTeacher -> TimetableAssignment`. This is an object-scope/IDOR-class risk. No Teacher user exists in the current operational baseline, so the defect is dormant but release-blocking.
+- Current timetable data has zero Teacher assignments. The attendance scope must fail closed for no link/assignment and handle exact section, dated substitutes and an explicit audited Principal override. Teacher result: `NO_GO_FOR_TEACHER_CUTOVER`.
+- Prompt 23B reconciled exactly 109 source items: 23 vendor, 10 different-role, 14 populated-data, 29 synthetic-write, 6 export-sample, 7 not-used, 11 safe-to-defer and 9 already-replaced-without-parity-evidence.
+- No schema, migration, business route/API, operational record, Schoolknot data, credential, provider, deployment or DNS changed.
+- FIN-2A is resolved. DEVOPS-1D remains `PAYMENT_GATED_DEFERRED`; 21B-21D remain blocked; 22B conditional and 22C-22D blocked.
+
 ## Prompt 22A-QA closure
 
 - QA found and fixed three documentation-precision defects: official-only authority wording, explicit no-claim wording and public-read-only portal-review wording.

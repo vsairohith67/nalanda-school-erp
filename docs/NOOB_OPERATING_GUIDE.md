@@ -1,5 +1,15 @@
 # Nalanda Fee Control — Beginner Operating Guide
 
+## Schoolknot replacement decision (Prompt 23B)
+
+The planning audit is complete, but the school must **not switch everyone from Schoolknot yet**. No Schoolknot data was downloaded or imported and no new business feature was built in Prompt 23B.
+
+- Management, Parent, Principal and Accountant can be considered only for small, supervised pilots that use features Nalanda already has.
+- Teachers must not be cut over yet. The current attendance page can be permission-enabled without limiting the Teacher to the exact class and section assigned in the timetable.
+- The first future build is Prompt 23C, after a separate QA review, to fix only that Teacher attendance scope.
+- Keep live hosting, DNS, payment, external backup and monitoring off until the separate paid/provider deployment gates are approved.
+- FIN-2A finance privacy and receipt integrity is already cleared. Payroll, refunds, live payment gateway, transport/GPS and Schoolknot migration are not approved by this document.
+
 ## DEVOPS-1C staging readiness planning (2026-07-23)
 
 DEVOPS-1B and its independent QA are fully cleared. No website/server was put online in DEVOPS-1C. No hosting account, bill, DNS record, Google Workspace record, real database, secret or live provider was created or changed. The safe plan uses one Linux server/process and one persistent local disk for a fresh synthetic SQLite database. Read `STAGING_DEPLOYMENT_ARCHITECTURE.md`, `STAGING_ENVIRONMENT_AND_SECRET_MATRIX.md`, and `PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md`; do not try physical phone certification until an approved HTTPS staging site exists.

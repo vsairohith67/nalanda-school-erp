@@ -1,5 +1,13 @@
 # Nalanda Fee Control — Developer Continuation Guide
 
+## Prompt 23B handoff
+
+Read the nine final Schoolknot 23B documents listed in `docs/INDEX.md` before any gap work. The result is `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`; it is not a whole-school cutover or parity claim. The Notion source has five role reports plus exactly 109 dispositioned unresolved items.
+
+Do not begin 23C until independent 23B-QA clears this branch. 23C must address only exact Teacher timetable attendance authorization: shared server resolver, filtered UI, GET/POST enforcement, no-assignment fail-closed, dated substitute scope, explicit reasoned Principal override, audit and negative API tests. Do not combine Parent attendance, timetable UI, Classwork, calendar or other modules into 23C.
+
+FIN-2A is complete and cleared; do not reopen its Accountant privacy/export/cancellation/receipt integrity fixes as an unresolved Nalanda gap. Payroll and employee self-service remain separate evidence/governance gaps. DEVOPS-1D remains payment-gated and Prompt 21/22 gates are unchanged.
+
 ## Prompt 22A-QA handoff
 
 Prompt 22A is fully cleared for planning/governance only. Read `STAFF_DOB_EPFO_22A_QA_REPORT.md` with the four Prompt 22A documents before any later work. The release result is `PROMPT_22A_CLEARED_BUT_22B_CONDITIONAL`: do not begin Prompt 22B coding or real-data entry until every decision-record condition has dated evidence. Prompt 22C and Prompt 22D remain separately blocked.

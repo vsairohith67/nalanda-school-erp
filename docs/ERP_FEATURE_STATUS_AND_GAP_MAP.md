@@ -1,5 +1,13 @@
 # ERP Feature Status and Gap Map
 
+## Prompt 23B final Schoolknot multi-role consolidation
+
+Prompt 23A role evidence is complete for Management, Parent, Principal, Teacher and the supporting Accountant/Employee report. Prompt 23A-E finished the exact 109-item unresolved-evidence classification and the authoritative Notion handoff is `READY_FOR_PROMPT_23B`. Prompt 23B reconciles that evidence against the current repository only; it imports no Schoolknot data and implements no module.
+
+Final decision: `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`. Management, Parent, Principal and Accountant have narrow `CONDITIONAL_GO` pilot decisions; Teacher is `NO_GO` because Student attendance is permission-gated but not restricted to exact active timetable class/section assignments. Prompt 23C is the first proposed implementation and may begin only after 23B-QA.
+
+FIN-2A and FIN-2A-QA are complete with `FINANCE_PRIVACY_AND_RECEIPT_INTEGRITY_CLEARED`. `DEVOPS-1D PAYMENT_GATED_DEFERRED`; no provider, VPS, DNS, external backup or monitoring was activated. Prompt 21B-21D remain blocked. Prompt 22B remains conditional and Prompt 22C-22D remain blocked.
+
 ## DEVOPS-1C staging readiness
 
 DEVOPS-1B clean-install migration repair is fully cleared. Staging architecture/readiness is in progress on `devops/staging-readiness-plan`; this is infrastructure planning/local synthetic rehearsal, not a deployed ERP feature. SQLite is acceptable only with one process and one persistent local disk. No cloud/DNS/operational database/live provider action occurred. Physical PWA certification and external staging remain pending user provider/budget/hostname/access/backup/monitoring/uptime decisions. Prompt 21B-21D remain blocked, Prompt 22B conditional, and Parent/Teacher/Principal Schoolknot audits pending.

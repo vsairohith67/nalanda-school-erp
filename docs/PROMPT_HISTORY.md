@@ -1,5 +1,13 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## Prompt 23B - Final Schoolknot multi-role consolidation (2026-07-26)
+
+Started from clean synced `main` at `a3e55f34531f1bdc0a06e8b93c25690fb4d87563` after exact operational integrity verification. Re-fetched the authoritative Notion audit without reopening Schoolknot. Verified completed Management, Parent, Principal, Teacher and Accountant/Employee evidence, `READY_FOR_PROMPT_23B`, and exactly 109 unique unresolved items with one of all eight authorised dispositions.
+
+Created the final replacement matrix, exact evidence ledger, five-role permission/privacy comparison, Teacher attendance cutover blocker, should-not-copy supersession, role/migration/vendor/write/deployment/privacy/training gates, 23C-23J roadmap, synthetic-write plan, vendor/export pack and final decision. The current code inspection confirmed that Teacher Student attendance is permission-only and not exact-timetable scoped; Teacher remains `NO_GO`.
+
+Prompt 23B made no schema/migration/business page/API/operational DB/Schoolknot data/provider/deployment change. FIN-2A remains `FINANCE_PRIVACY_AND_RECEIPT_INTEGRITY_CLEARED`. DEVOPS-1D is `PAYMENT_GATED_DEFERRED`; Prompt 21B-21D are blocked; Prompt 22B conditional and Prompt 22C-22D blocked. Prompt 23C may begin only after 23B-QA.
+
 ## DEVOPS-1C — HTTPS staging architecture and local readiness (2026-07-23)
 
 Continued from the fully cleared DEVOPS-1A/1B checkpoints on feature branch `devops/staging-readiness-plan`. Inventoried Next.js/Prisma/SQLite, every persistent write class, providers/jobs, security headers, proxy/IP logic, logging, health and PWA. Selected restricted single-instance SQLite staging; recommended a 2 GB Linux VPS in Mumbai and a paid managed container with one persistent disk as fallback; rejected serverless and ephemeral-disk platforms. Added a fail-closed secret/path/provider environment validator, a non-mutating health route, trusted-proxy dual opt-in, staging process templates, synthetic deployment/rollback/privacy/PWA/cost plans and focused tests. The ignored local rehearsal passed fresh migration, synthetic seed/backup, production start, loopback HTTPS proxy, secure cookie, HSTS, private/static cache checks, persistent restart and rollback to a distinct prior build.

@@ -1,7 +1,28 @@
 # Schoolknot Features Not to Copy
 
-Status: Management-audit rejection/redesign register, 22 July 2026  
-Scope: observational evidence only; no Schoolknot write/export test was performed
+Status: **Prompt 23B final multi-role rejection/redesign register, 26 July 2026**
+Scope: Management, Parent, Principal, Teacher and Accountant/Employee observational evidence; no Schoolknot write/export test was performed
+
+The 23B multi-role consolidation supersedes the old Management-only status. Existing evidence rows remain valid and are strengthened by these decisions.
+
+## Final decisions
+
+| Pattern | Final evidence/risk/policy | Safer alternative | Final decision |
+|---|---|---|---|
+| Predictable or DOB-derived passwords | Source settings/legacy forms exposed unsafe patterns; personal facts are guessable credentials | Random one-time setup, forced change, current-password verification, rate limiting and audited recovery | `REJECT` |
+| Broad role access | Principal and Accountant source access exceeded job need; Teacher/Parent need exact objects | Academic-first Principal, finance-only Accountant, timetable-scoped Teacher, linked-child Parent | `REJECT` |
+| Historical deletion | Visible destructive controls could erase operational evidence; write effects unproven | Cancel/reverse/supersede with reason, approval and immutable event | `REJECT` |
+| Unrestricted exports/bulk edits | Broad field selectors and reports create leakage and mass-error risk | Fixed allowlist, preview, row/date cap, formula safety, audit, checksum and recovery | `REDESIGN_REQUIRED` |
+| Recipient surveillance and usage rankings | Delivery/login/usage surfaces can become unfair monitoring | Aggregate support health; narrow incident access; never employment scoring | `REJECT` |
+| Marks-only appraisal | Student outcomes are multi-causal and sensitive | Defined multi-source descriptive review, human context and appeal | `REJECT` |
+| Public attachment URLs | File links/authorization were not tested; cross-child/class exposure would be critical | Private object IDs, server authorization, expiring links, malware/MIME/size checks and retention | `REJECT` |
+| Weak password change | Teacher legacy route lacked visible current-password evidence | Current-password gate, policy, CSRF/rate/session rotation and invalidation | `REJECT` |
+| Personal-data overexposure | Broad Student/Staff/profile/birthday/finance fields were visible beyond least privilege | Purpose-specific server projections, masking and no-store responses | `REJECT` |
+| Mobile omissions | Parent Classwork omission, hidden Management navigation, small Teacher controls and wide tables | Same authorised navigation, 44px controls, contained tables, exact `390 x 844` light/dark QA | `REJECT_UI_PATTERN` |
+| Blank/refresh/null errors | Empty, broken and permission states were ambiguous; runtime errors were frequent | Explicit loading/empty/denied/error states, safe retry and redacted logging | `REJECT_UI_PATTERN` |
+| Inaccessible controls or unsupported claims | Off-menu/hidden/blank routes do not prove absence or capability | Evidence ledger with vendor/role/data/write/export dispositions | `NEEDS_EXTERNAL_EVIDENCE` |
+| Provider lock-in | Portability, settlement, storage and integration evidence is absent | Provider-neutral domain records, adapter boundary, export/offboarding and tested fallback | `BLOCKED_APPROVAL` |
+| High-impact action without confirmation/reason/audit | Visible send/edit/cancel/delete controls had unproven safeguards | Accessible in-app confirmation, explicit reason, append-only event and recovery | `REDESIGN_REQUIRED` |
 
 ## Policy
 
@@ -40,6 +61,6 @@ Nalanda will not copy a feature merely because it exists in Schoolknot. A featur
 4. Exports use a fixed field dictionary, row/date bounds, masking, formula-injection protection, checksum and named custody.
 5. External delivery/location/biometric/payment providers remain disabled until contract, privacy/legal, credential, incident and reconciliation evidence is approved.
 6. Mobile navigation and workflows pass exact 390×844 light/dark checks with keyboard and error/empty states.
-7. Parent/Teacher/Principal decisions wait for their authenticated audits when their workflow or visibility is affected.
+7. The prior safeguard `Parent/Teacher/Principal decisions wait` is satisfied by the completed authenticated reports. Accountant/Employee and Management evidence plus the exact 109-row ledger now govern the final decisions; uncertainty never becomes a confirmed gap.
 
-This register is a binding design constraint for the provisional Management backlog. It is not authorisation to implement a redesigned feature.
+This register is a binding design constraint for Prompt 23C onward. It is not authorisation to implement a redesigned feature.
