@@ -4,7 +4,7 @@
 
 Read the nine final Schoolknot 23B documents listed in `docs/INDEX.md` before any gap work. The result is `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`; it is not a whole-school cutover or parity claim. The Notion source has five role reports plus exactly 109 dispositioned unresolved items.
 
-Do not begin 23C until independent 23B-QA clears this branch. 23C must address only exact Teacher timetable attendance authorization: shared server resolver, filtered UI, GET/POST enforcement, no-assignment fail-closed, dated substitute scope, explicit reasoned Principal override, audit and negative API tests. Do not combine Parent attendance, timetable UI, Classwork, calendar or other modules into 23C.
+Independent 23B-QA cleared this branch and its final roadmap correction. Begin 23C only from the merged/tagged QA baseline. 23C must address only exact Teacher timetable attendance authorization: shared server resolver, filtered UI, GET/POST/report enforcement, no-assignment fail-closed, dated substitute scope, explicit reasoned Principal override, audit and negative API tests. Do not combine Parent attendance, timetable UI, Classwork, calendar or other modules into 23C.
 
 FIN-2A is complete and cleared; do not reopen its Accountant privacy/export/cancellation/receipt integrity fixes as an unresolved Nalanda gap. Payroll and employee self-service remain separate evidence/governance gaps. DEVOPS-1D remains payment-gated and Prompt 21/22 gates are unchanged.
 

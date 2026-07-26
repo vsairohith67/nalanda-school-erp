@@ -4,7 +4,7 @@
 
 Prompt 23A role evidence is complete for Management, Parent, Principal, Teacher and the supporting Accountant/Employee report. Prompt 23A-E finished the exact 109-item unresolved-evidence classification and the authoritative Notion handoff is `READY_FOR_PROMPT_23B`. Prompt 23B reconciles that evidence against the current repository only; it imports no Schoolknot data and implements no module.
 
-Final decision: `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`. Management, Parent, Principal and Accountant have narrow `CONDITIONAL_GO` pilot decisions; Teacher is `NO_GO` because Student attendance is permission-gated but not restricted to exact active timetable class/section assignments. Prompt 23C is the first proposed implementation and may begin only after 23B-QA.
+Final decision: `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`. Management, Parent, Principal and Accountant have narrow `CONDITIONAL_GO` pilot decisions; Teacher is `NO_GO` because Student attendance is permission-gated but not restricted to exact active timetable class/section assignments. Independent 23B-QA cleared the source, exact-ledger, repository, privacy and cutover-gate reconciliation after making the roadmap's per-prompt boundaries explicit. Prompt 23C is the first implementation and may begin from the merged/tagged QA baseline; it must not include adjacent Parent, timetable-UI, Classwork or calendar work.
 
 FIN-2A and FIN-2A-QA are complete with `FINANCE_PRIVACY_AND_RECEIPT_INTEGRITY_CLEARED`. `DEVOPS-1D PAYMENT_GATED_DEFERRED`; no provider, VPS, DNS, external backup or monitoring was activated. Prompt 21B-21D remain blocked. Prompt 22B remains conditional and Prompt 22C-22D remain blocked.
 

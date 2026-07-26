@@ -13,7 +13,7 @@
 - [Final Replacement Decision](SCHOOLKNOT_FINAL_REPLACEMENT_DECISION.md) - `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`.
 - [Features Not to Copy](SCHOOLKNOT_FEATURES_NOT_TO_COPY.md) - final multi-role rejection/redesign policy.
 
-Prompt 23A roles and 23A-E are complete and `READY_FOR_PROMPT_23B`. Prompt 23B is consolidation-only; no Schoolknot data or module was imported/implemented. Teacher is `NO_GO`; 23C only after 23B-QA. FIN-2A is cleared, DEVOPS-1D is payment-gated, and Prompt 21/22 decisions are unchanged.
+Prompt 23A roles and 23A-E are complete and `READY_FOR_PROMPT_23B`. Prompt 23B is consolidation-only; no Schoolknot data or module was imported/implemented. Independent 23B-QA cleared the source, exact 109-row ledger, repository evidence and cutover gates after one roadmap-contract correction. Teacher remains `NO_GO`; 23C may begin from the merged/tagged QA baseline. FIN-2A is cleared, DEVOPS-1D is payment-gated, and Prompt 21/22 decisions are unchanged.
 
 ## Prompt 22A Staff DOB and EPFO/EPS planning
 

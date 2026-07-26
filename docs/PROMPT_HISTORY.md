@@ -1,12 +1,20 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## Prompt 23B-QA - Independent final consolidation QA (2026-07-26)
+
+Independently re-fetched the complete Notion audit without reopening Schoolknot and matched all 109 unique source IDs, workflow labels, exact dispositions and rationales to the repository ledger. All eight dispositions and the 22/22/26/20/19 role split were preserved. Earlier role reports remained before the single Prompt 23B append and verification closure; the appended content contained no exposed email or phone value.
+
+Repository inspection reconfirmed the five role decisions, Parent linked-child enforcement, academic-first Principal policy, FIN-2A clearance and the Teacher attendance defect. Teacher defaults grant Student attendance view/manage/submit, the page lists all active cohorts, and the page/GET/POST/report paths contain no `User -> StaffMember -> TimetableTeacher -> TimetableAssignment` or dated-substitute authorization. The operational database currently has no Teacher user, active teaching Staff link, timetable Teacher, assignment or substitute, so the defect is dormant rather than disproved and Teacher remains `NO_GO`.
+
+QA found one documentation defect: the 23C-23J roadmap compressed schema, provider, migration, release-gate and cutover-impact details instead of naming each contract explicitly. The roadmap and focused reconciliation test now require those fields for every prompt. No business feature, schema, migration, page, API, operational record, Schoolknot export/credential, provider or deployment was added. Corrected-branch verification is 274 page routes, 378 APIs, lifecycle dry-run with no change, typecheck, 1,507 tests across 164 files, 212/212 build entries with the established bounded heap, backup version 37 and unchanged operational integrity. Prompt 23C may begin from the merged/tagged QA baseline; it does not authorize Teacher cutover.
+
 ## Prompt 23B - Final Schoolknot multi-role consolidation (2026-07-26)
 
 Started from clean synced `main` at `a3e55f34531f1bdc0a06e8b93c25690fb4d87563` after exact operational integrity verification. Re-fetched the authoritative Notion audit without reopening Schoolknot. Verified completed Management, Parent, Principal, Teacher and Accountant/Employee evidence, `READY_FOR_PROMPT_23B`, and exactly 109 unique unresolved items with one of all eight authorised dispositions.
 
 Created the final replacement matrix, exact evidence ledger, five-role permission/privacy comparison, Teacher attendance cutover blocker, should-not-copy supersession, role/migration/vendor/write/deployment/privacy/training gates, 23C-23J roadmap, synthetic-write plan, vendor/export pack and final decision. The current code inspection confirmed that Teacher Student attendance is permission-only and not exact-timetable scoped; Teacher remains `NO_GO`.
 
-Prompt 23B made no schema/migration/business page/API/operational DB/Schoolknot data/provider/deployment change. FIN-2A remains `FINANCE_PRIVACY_AND_RECEIPT_INTEGRITY_CLEARED`. DEVOPS-1D is `PAYMENT_GATED_DEFERRED`; Prompt 21B-21D are blocked; Prompt 22B conditional and Prompt 22C-22D blocked. Prompt 23C may begin only after 23B-QA.
+Prompt 23B made no schema/migration/business page/API/operational DB/Schoolknot data/provider/deployment change. FIN-2A remains `FINANCE_PRIVACY_AND_RECEIPT_INTEGRITY_CLEARED`. DEVOPS-1D is `PAYMENT_GATED_DEFERRED`; Prompt 21B-21D are blocked; Prompt 22B conditional and Prompt 22C-22D blocked. Prompt 23C was gated on independent 23B-QA, which is recorded above.
 
 ## DEVOPS-1C — HTTPS staging architecture and local readiness (2026-07-23)
 

@@ -66,4 +66,4 @@ Record the actor user/role/staff/teacher assignment, requested class/section/yea
 - Reports remain separately permissioned and do not leak unassigned cohorts.
 - Existing Homework/marks/report-card scopes remain unchanged.
 
-Prompt 23C may begin only after Prompt 23B-QA. Teacher cutover remains `NO_GO` until implementation and independent negative-security QA pass.
+Prompt 23B-QA cleared this blocker analysis without implementing the fix. Prompt 23C may begin from the merged/tagged QA baseline. Teacher cutover remains `NO_GO` until the implementation and independent negative-security QA pass.

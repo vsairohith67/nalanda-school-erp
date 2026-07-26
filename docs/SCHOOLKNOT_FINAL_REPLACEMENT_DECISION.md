@@ -24,7 +24,7 @@ Payroll and employee self-service remain absent/unverified.
 
 Management, Parent, Principal and Accountant may only enter narrowly defined conditional pilots after their stated gates. Teacher cannot. `DEVOPS-1D PAYMENT_GATED_DEFERRED`, Prompt 21B-21D blocked, Prompt 22B conditional and Prompt 22C-22D blocked remain unchanged.
 
-Prompt 23B-QA may begin after the repository and Notion updates, tests and full verification in this branch pass.
+Independent Prompt 23B-QA cleared the source, exact-ledger, repository, role, privacy and cutover-gate reconciliation after one roadmap-contract correction. Prompt 23C may begin only from the merged/tagged QA baseline and does not clear Teacher cutover.
 
 ## Final gap decisions
 

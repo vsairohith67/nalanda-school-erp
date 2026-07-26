@@ -132,6 +132,28 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
     expect(roadmap).toContain("Parent attendance, timetable UI redesign, biometric/RFID, new attendance lifecycle");
   });
 
+  it("gives every 23C-23J prompt an explicit implementation and cutover contract", () => {
+    for (const heading of [
+      "Schema / data boundary",
+      "Privacy boundary",
+      "Finance boundary",
+      "Storage / provider boundary",
+      "Migration boundary",
+      "Required tests",
+      "Release gate",
+      "Dependencies",
+      "Cutover impact",
+    ]) expect(roadmap).toContain(heading);
+
+    const rows = roadmap.split(/\r?\n/).filter((line) => /^\| 23[C-J] \|/.test(line));
+    expect(rows).toHaveLength(8);
+    for (const row of rows) {
+      expect(row.split("|").slice(1, -1)).toHaveLength(14);
+      expect(row).toMatch(/independent 23[C-J]-QA/i);
+      expect(row).toMatch(/cutover|NO_GO|blocker|parity/i);
+    }
+  });
+
   it("keeps Prompt 21/22 and DEVOPS-1D gates unchanged", () => {
     for (const doc of [roadmap, decision, statusDocs]) {
       expect(doc).toMatch(/21B-21D (?:remain |are )?blocked/);
