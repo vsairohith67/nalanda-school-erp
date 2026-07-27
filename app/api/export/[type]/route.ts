@@ -17,6 +17,7 @@ import {
   privateFinanceJson,
   studentMasterExportRow
 } from "@/lib/finance-privacy";
+import { receiptCorrectionDisplay } from "@/lib/receipt";
 import {
   effectiveActiveSelectedReceiptPayments,
   loadReceiptStateMap
@@ -163,15 +164,38 @@ async function buildExportRows(
       orderBy: [{ date: "desc" }, { receiptNo: "asc" }],
       take: FINANCE_EXPORT_ROW_LIMIT + 1
     });
-    const states = await loadReceiptStateMap(
-      prisma,
-      receiptRows.map((row) => row.receiptNo)
-    );
+    const [states, correctionAudits] = await Promise.all([
+      loadReceiptStateMap(
+        prisma,
+        receiptRows.map((row) => row.receiptNo)
+      ),
+      prisma.paymentAudit.findMany({
+        where: {
+          paymentId: { in: receiptRows.map((row) => row.id) },
+          action: {
+            in: ["RECEIPT_CORRECTED", "RECEIPT_SUPERSEDED", "RECEIPT_REISSUED"]
+          }
+        },
+        select: { paymentId: true, action: true, newValueJson: true }
+      })
+    ]);
+    const auditsByPayment = new Map<string, typeof correctionAudits>();
+    for (const audit of correctionAudits) {
+      auditsByPayment.set(audit.paymentId, [
+        ...(auditsByPayment.get(audit.paymentId) ?? []),
+        audit
+      ]);
+    }
     return {
       scope: range.label,
-      rows: receiptRows.map((row) =>
-        paymentExportRow(row, states.get(row.receiptNo)?.status ?? "INCONSISTENT")
-      )
+      rows: receiptRows.map((row) => {
+        const status = states.get(row.receiptNo)?.status ?? "INCONSISTENT";
+        return paymentExportRow(
+          row,
+          status,
+          receiptCorrectionDisplay(auditsByPayment.get(row.id) ?? [], status)
+        );
+      })
     };
   }
 

@@ -19,7 +19,6 @@ const NON_DELEGABLE_ROLE_DENIALS: Partial<Record<Role, ReadonlySet<CanonicalPerm
   ACCOUNTANT: new Set<CanonicalPermission>([
     "VIEW_STUDENTS",
     "EXPORT_STUDENTS",
-    "CANCEL_PAYMENTS",
     "MANAGE_RECEIPTS",
     "COMMUNICATE_PARENT",
     "EXPORT_REMINDERS"

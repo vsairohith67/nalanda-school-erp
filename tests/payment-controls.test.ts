@@ -159,11 +159,12 @@ describe("payment collection controls", () => {
   it("routes every payment writer through the shared receipt-owner invariant", () => {
     for (const file of [
       "app/api/payments/route.ts",
-      "app/api/payments/[id]/route.ts",
       "lib/payment-import.ts",
       "lib/restore-database.ts"
     ]) {
       expect(readFileSync(file, "utf8")).toContain("assertReceiptStudentMatchInDatabase");
     }
+    expect(readFileSync("app/api/payments/[id]/route.ts", "utf8")).toContain("correctFinalReceipt");
+    expect(readFileSync("lib/receipt-integrity.ts", "utf8")).toContain("assertReceiptStudentMatchInDatabase");
   });
 });

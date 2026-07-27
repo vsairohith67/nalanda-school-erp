@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { money } from "@/lib/format";
+import { useEffect, useRef, useState } from "react";
+import { displayDate, money, moneyExact } from "@/lib/format";
 import { StatusBadge } from "@/components/ui";
 import { paymentAuditSummaryFields } from "@/lib/receipt-audit";
 
@@ -12,6 +12,8 @@ type AuditRow = {
   rowCount: number;
   issues: string;
   version: string | null;
+  date: string | null;
+  paymentModes: string;
 };
 
 type PaymentAuditRow = {
@@ -40,6 +42,40 @@ export function ReceiptAudit({
   const [pendingCancellation, setPendingCancellation] = useState<AuditRow | null>(null);
   const [cancellationReason, setCancellationReason] = useState("");
   const [busy, setBusy] = useState(false);
+  const cancelTrigger = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!pendingCancellation || !dialogRef.current) return;
+    const dialog = dialogRef.current;
+    const focusable = () => Array.from(dialog.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    ));
+    (focusable()[0] ?? dialog).focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setPendingCancellation(null);
+        setCancellationReason("");
+      } else if (event.key === "Tab") {
+        const items = focusable();
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    dialog.addEventListener("keydown", keydown);
+    return () => {
+      dialog.removeEventListener("keydown", keydown);
+      cancelTrigger.current?.focus();
+    };
+  }, [pendingCancellation]);
 
   async function load(event: React.FormEvent) {
     event.preventDefault();
@@ -96,7 +132,7 @@ export function ReceiptAudit({
           <table>
             <thead><tr><th>Receipt</th><th>Status</th><th>Total</th><th>Rows</th><th>Issues</th><th>Action</th></tr></thead>
             <tbody>
-              {rows.map((row) => <tr key={row.receiptNo}><td>{row.receiptNo}</td><td><StatusBadge status={row.status} /></td><td>{money(row.total)}</td><td>{row.rowCount}</td><td>{row.issues || "-"}</td><td>{canCancelReceipts && row.rowCount > 0 && row.status !== "Cancelled" ? <button type="button" className="danger" onClick={() => { setMessage(""); setPendingCancellation(row); }}>Cancel receipt</button> : "-"}</td></tr>)}
+              {rows.map((row) => <tr key={row.receiptNo}><td>{row.receiptNo}</td><td><StatusBadge status={row.status} /></td><td>{money(row.total)}</td><td>{row.rowCount}</td><td>{row.issues || "-"}</td><td>{canCancelReceipts && row.rowCount > 0 && row.status !== "Cancelled" ? <button type="button" className="danger" onClick={(event) => { cancelTrigger.current = event.currentTarget; setMessage(""); setPendingCancellation(row); }}>Cancel receipt</button> : "-"}</td></tr>)}
               {!rows.length ? <tr><td colSpan={6}>Choose a receipt range and run the audit.</td></tr> : null}
             </tbody>
           </table>
@@ -104,12 +140,13 @@ export function ReceiptAudit({
       </section>
       {pendingCancellation ? (
         <div className="confirmation-overlay" role="presentation">
-          <section className="card confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="receipt-cancel-title" aria-describedby="receipt-cancel-description">
+          <section ref={dialogRef} className="card confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="receipt-cancel-title" aria-describedby="receipt-cancel-description" tabIndex={-1}>
             <h3 id="receipt-cancel-title">Cancel receipt {pendingCancellation.receiptNo}?</h3>
-            <p id="receipt-cancel-description">Every component will be cancelled transactionally. The receipt, components, and append-only audit history remain preserved.</p>
-            <label>Cancellation reason (required)
-              <textarea autoFocus required rows={3} minLength={3} maxLength={500} value={cancellationReason} onChange={(event) => setCancellationReason(event.target.value)} />
-            </label>
+            <p id="receipt-cancel-description">Every component will be cancelled transactionally. Dues reopen; Daily Collection and Cash Book exclude the cancelled amount. The receipt and append-only audit history remain preserved.</p>
+            <dl className="receipt-confirmation-facts"><div><dt>Receipt</dt><dd>{pendingCancellation.receiptNo}</dd></div><div><dt>Amount</dt><dd>{moneyExact(pendingCancellation.total)}</dd></div><div><dt>Date</dt><dd>{pendingCancellation.date ? displayDate(pendingCancellation.date) : "Not available"}</dd></div><div><dt>Payment modes</dt><dd>{pendingCancellation.paymentModes || "Not available"}</dd></div></dl>
+            <p><strong>This action is neither deletion nor refund. An Accountant action notifies every active Director and Super Admin.</strong></p>
+            <label htmlFor="audit-cancellation-reason">Cancellation reason (required)</label>
+            <textarea id="audit-cancellation-reason" autoFocus required rows={3} minLength={3} maxLength={500} value={cancellationReason} onChange={(event) => setCancellationReason(event.target.value)} />
             <div className="page-actions">
               <button type="button" className="secondary" disabled={busy} onClick={() => { setPendingCancellation(null); setCancellationReason(""); }}>Go Back</button>
               <button type="button" className="danger" disabled={busy || cancellationReason.trim().length < 3} onClick={cancelReceipt}>{busy ? "Cancelling safely..." : "Cancel entire receipt"}</button>

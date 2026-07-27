@@ -15,9 +15,11 @@
 ## Fee receipt privacy and cancellation
 
 - Accountant uses the payment lookup, ledger, pending-dues, collection, receipt, and audit screens only for fee collection. Those surfaces must not be used to obtain Parent contacts, address, date of birth, Aadhaar-related data, documents, marks, medical information, private Student notes, credentials, or internal actor IDs.
-- Accountant cannot cancel a final fee receipt, prepare Parent communication from the ledger, or export reminder destinations.
-- A Director or Super Admin with `CANCEL_PAYMENTS` opens the payment or Receipt Audit entry, reviews the whole receipt, selects **Cancel entire receipt**, enters a specific reason, and confirms the in-app dialog.
+- Accountant cannot prepare Parent communication from the ledger or export reminder destinations. An Accountant may cancel a final receipt only with `CANCEL_FINAL_RECEIPT`, and may correct one only with `CORRECT_FINAL_RECEIPT`; broad finance permissions do not substitute.
+- An authorised Accountant, Director or Super Admin opens the payment or Receipt Audit entry, reviews the whole receipt, selects **Cancel entire receipt** or the governed correction action, enters a specific reason, and confirms the in-app dialog. Successful Accountant actions notify every active Director and Super Admin.
 - Cancellation always applies to every Cash/UPI/bank component under that receipt. It preserves the receipt and audit history, reopens dues, removes the receipt from active collection/Cash Book sources, and visibly marks the print as cancelled.
+- Non-financial correction appends an immutable audit version. Financial correction cancels and reissues a linked replacement receipt; it never overwrites the original receipt number. Neither path is deletion or refund.
+- Accountant action is blocked for a submitted, approved or locked accounting day. Use the existing authorised leadership correction path; never rewrite a locked snapshot.
 - Never delete a `Payment`, edit the database, or change only one split component to imitate cancellation.
 - If the page reports that the receipt changed after it was loaded, refresh and review it. Do not retry with stale details.
 - Finance CSV downloads are purpose-specific, formula-safe, private/no-store, audited, limited to 2,000 output rows, and date-bounded where applicable. Narrow filters instead of creating an unreviewed bulk personal-data extract.

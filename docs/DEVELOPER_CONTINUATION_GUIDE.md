@@ -6,7 +6,7 @@ Read the nine final Schoolknot 23B documents listed in `docs/INDEX.md` before an
 
 Independent 23B-QA cleared this branch and its final roadmap correction. Begin 23C only from the merged/tagged QA baseline. 23C must address only exact Teacher timetable attendance authorization: shared server resolver, filtered UI, GET/POST/report enforcement, no-assignment fail-closed, dated substitute scope, explicit reasoned Principal override, audit and negative API tests. Do not combine Parent attendance, timetable UI, Classwork, calendar or other modules into 23C.
 
-FIN-2A is complete and cleared; do not reopen its Accountant privacy/export/cancellation/receipt integrity fixes as an unresolved Nalanda gap. Payroll and employee self-service remain separate evidence/governance gaps. DEVOPS-1D remains payment-gated and Prompt 21/22 gates are unchanged.
+FIN-2A is complete and cleared. FIN-2B deliberately supersedes only its Accountant cancellation authority through exact `CANCEL_FINAL_RECEIPT` and `CORRECT_FINAL_RECEIPT` permissions, immutable audit and Director/Super Admin notification. Do not reopen the retained Accountant privacy/export/receipt-integrity safeguards as unresolved Nalanda gaps. Payroll and employee self-service remain separate evidence/governance gaps. DEVOPS-1D remains payment-gated and Prompt 21/22 gates are unchanged.
 
 ## Prompt 22A-QA handoff
 
@@ -973,7 +973,7 @@ Developer invariants:
 
 1. Accountant must use `app/api/finance/students/lookup/route.ts`; never grant broad Student serializers as a shortcut.
 2. Add a purpose-specific `select` and serializer for each finance response. Do not return a Prisma Student or Payment object.
-3. Keep Accountant hard denials for `VIEW_STUDENTS`, `CANCEL_PAYMENTS`, `MANAGE_RECEIPTS`, `COMMUNICATE_PARENT`, and `EXPORT_REMINDERS`, and Viewer/Auditor hard denial for `VIEW_LEDGER`, across safe defaults, effective reads, matrix display, validation, and explicit save. Backup-time seeding must preserve existing stored rows.
+3. Keep Accountant hard denials for `VIEW_STUDENTS`, `MANAGE_RECEIPTS`, `COMMUNICATE_PARENT`, and `EXPORT_REMINDERS`, and Viewer/Auditor hard denial for `VIEW_LEDGER`, across safe defaults, effective reads, matrix display, validation, and explicit save. Final-receipt actions must use only `CANCEL_FINAL_RECEIPT` or `CORRECT_FINAL_RECEIPT`; legacy `CANCEL_PAYMENTS`, `EDIT_PAYMENTS`, or `MANAGE_FINANCE` do not substitute. Backup generation must remain read-only and preserve stored role rows.
 4. New finance CSV routes must use a documented field allowlist, formula-safe cell encoding, a 2,000-row fail-closed limit, a maximum 366-day range where dates apply, private/no-store headers, safe filenames, and `FINANCE_EXPORT_DOWNLOADED` audit.
 5. `lib/receipt-integrity.ts` is authoritative. Never calculate collection from only `Payment.isCancelled = false`; first exclude any mixed-state receipt.
 6. Final cancellation is whole-receipt, Director/Super Admin only, reasoned, versioned, transactional, append-only, and idempotent. Do not add a one-component cancel button.
@@ -983,5 +983,9 @@ Developer invariants:
 10. Do not interpret FIN-2A as refund, gateway, partial cancellation, payroll, Day Closer, or Schoolknot-parity approval.
 
 FIN-2A verification passed 274 page routes, 378 API routes, typecheck, 1,496 tests across 163 files, and 212/212 build entries. Copied-database Browser QA passed at 1366x768 and exact 390x844 in light/dark mode with aggregate-only Viewer behavior, accessible whole-receipt cancellation, contained 44px mobile controls, zero final console warnings/errors, and zero final production stderr. Cleanup was verified twice and the isolated database was destroyed. The final version-37 backup is `nalanda-fee-control-backup-2026-07-26-19-36.json`. Independent QA must use the separate `FIN2AQA` fixture mode before merge.
+
+## FIN-2B Accountant final-receipt cancellation and correction
+
+Read `ACCOUNTANT_RECEIPT_CANCELLATION_CORRECTION_AND_NOTIFICATION.md` before changing final-receipt behavior. Cancellation is whole-receipt, versioned and transactional. Non-financial correction appends an immutable audit version; financial correction cancels and reissues a linked replacement. Successful Accountant actions create exactly-once in-app notifications for active Directors and Super Admins. Non-mutable Cash Book days block ordinary Accountant action and create a leadership review alert without rewriting the snapshot. These workflows are not deletion or refund.
 
 The final backup initially exposed and stopped a six-row operational permission-seeding rewrite. The seeder was corrected to preserve existing rows, a byte-identical rollback candidate was independently verified, and the operational database was atomically restored to SHA-256 `1556B98FCAF0F2475C0C0F1BAEEFCE4E638680B9D4C7DC9BFFB8B6F0D09B4392`, 4,771,840 bytes, timestamp `2026-07-19T13:21:15.353Z`, with the exact schema/migration/business checkpoint. A repeat backup left hash and timestamp unchanged.

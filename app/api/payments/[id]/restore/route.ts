@@ -4,7 +4,6 @@ import { requireApiPermission } from "@/lib/auth";
 import { safeClientError } from "@/lib/client-errors";
 import { privateFinanceJson } from "@/lib/finance-privacy";
 import {
-  isReceiptCancellationAuthority,
   ReceiptIntegrityError,
   restoreWholeReceipt
 } from "@/lib/receipt-integrity";
@@ -12,7 +11,7 @@ import {
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const auth = await requireApiPermission("RESTORE_PAYMENTS");
   if (auth.response) return auth.response;
-  if (!isReceiptCancellationAuthority(auth.user.role)) {
+  if (!["DIRECTOR", "SUPER_ADMIN"].includes(auth.user.role)) {
     return privateFinanceJson({ error: "Only the Director or Super Admin can restore a cancelled receipt" }, { status: 403 });
   }
   const { id } = await context.params;

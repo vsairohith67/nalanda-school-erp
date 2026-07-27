@@ -1,12 +1,14 @@
 # Accountant Data Minimisation and Receipt Integrity
 
+> **FIN-2B supersession:** FIN-2B deliberately authorises final-receipt cancellation and governed correction for an Accountant holding the exact narrow permission. The actions remain transactional, immutable, audited and leadership-notified. Read `ACCOUNTANT_RECEIPT_CANCELLATION_CORRECTION_AND_NOTIFICATION.md`. All FIN-2A privacy, export and receipt-integrity safeguards remain.
+
 ## FIN-2A scope
 
 FIN-2A fixes four confirmed Nalanda risks:
 
 1. Accountant fee-collection screens no longer depend on broad Student serializers.
 2. Accountant-accessible finance exports are purpose-specific, bounded, formula-safe, private, and audited.
-3. An Accountant cannot cancel a final fee receipt.
+3. At the FIN-2A checkpoint, an Accountant could not cancel a final fee receipt. FIN-2B intentionally supersedes only that authority rule through exact narrow permissions.
 4. `Payment` components are authoritative for the effective receipt state, while `ReceiptNote` is transactionally synchronized metadata.
 
 This phase adds no payroll, salary, payslip, resignation, advance-salary, payment-gateway, refund, Schoolknot-parity, or large finance module. It adds no Prisma model or migration.

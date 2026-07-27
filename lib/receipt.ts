@@ -14,6 +14,12 @@ export type ReceiptPaymentRow = {
 
 export type ReceiptStatus = "ACTIVE" | "PARTIALLY_CANCELLED" | "CANCELLED";
 
+export type ReceiptCorrectionDisplay = {
+  lifecycleStatus: "ACTIVE" | "CANCELLED" | "INCONSISTENT" | "CORRECTED" | "SUPERSEDED" | "CORRECTED_REPLACEMENT";
+  originalReceiptNo: string | null;
+  replacementReceiptNo: string | null;
+};
+
 export function publicPaymentModeLabel(
   row: Pick<ReceiptPaymentRow, "paymentMode">,
   upiIndex?: number
@@ -86,7 +92,10 @@ export function receiptAuditSnapshot(row: Record<string, unknown>) {
     remarks: nullableText(row.remarks),
     isCancelled: Boolean(row.isCancelled),
     cancelledAt: dateText(row.cancelledAt),
-    cancellationReason: nullableText(row.cancellationReason)
+    cancellationReason: nullableText(row.cancellationReason),
+    correctionType: nullableText(row.correctionType),
+    originalReceiptNo: nullableText(row.originalReceiptNo),
+    replacementReceiptNo: nullableText(row.replacementReceiptNo)
   };
 }
 
@@ -99,6 +108,44 @@ export function sanitizedPaymentAuditJson(value: string | null) {
   } catch {
     return null;
   }
+}
+
+export function receiptCorrectionDisplay(
+  audits: Array<{ action?: string | null; newValueJson?: string | null }>,
+  effectiveStatus: "ACTIVE" | "CANCELLED" | "INCONSISTENT" | "PARTIALLY_CANCELLED"
+): ReceiptCorrectionDisplay {
+  let corrected = false;
+  let superseded = false;
+  let reissued = false;
+  let originalReceiptNo: string | null = null;
+  let replacementReceiptNo: string | null = null;
+  for (const audit of audits) {
+    corrected ||= audit.action === "RECEIPT_CORRECTED";
+    superseded ||= audit.action === "RECEIPT_SUPERSEDED";
+    reissued ||= audit.action === "RECEIPT_REISSUED";
+    try {
+      const snapshot = JSON.parse(audit.newValueJson ?? "{}") as Record<string, unknown>;
+      originalReceiptNo ??= nullableText(snapshot.originalReceiptNo);
+      replacementReceiptNo ??= nullableText(snapshot.replacementReceiptNo);
+    } catch {}
+  }
+  if (superseded) {
+    return { lifecycleStatus: "SUPERSEDED", originalReceiptNo, replacementReceiptNo };
+  }
+  if (reissued) {
+    return { lifecycleStatus: "CORRECTED_REPLACEMENT", originalReceiptNo, replacementReceiptNo };
+  }
+  if (corrected) {
+    return { lifecycleStatus: "CORRECTED", originalReceiptNo, replacementReceiptNo };
+  }
+  return {
+    lifecycleStatus:
+      effectiveStatus === "PARTIALLY_CANCELLED"
+        ? "INCONSISTENT"
+        : effectiveStatus,
+    originalReceiptNo,
+    replacementReceiptNo
+  };
 }
 
 function text(value: unknown) {

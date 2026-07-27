@@ -3,6 +3,7 @@ import { NextResponse, type NextResponse as NextResponseType } from "next/server
 import { classSectionLabel } from "@/lib/collection-report";
 import { schoolDateKey } from "@/lib/format";
 import { sanitizedPaymentAuditJson } from "@/lib/receipt";
+import type { ReceiptCorrectionDisplay } from "@/lib/receipt";
 
 export const FINANCE_EXPORT_ROW_LIMIT = 2_000;
 export const REMINDER_EXPORT_ROW_LIMIT = 1_000;
@@ -302,7 +303,8 @@ export function paymentExportRow(
     "date" | "receiptNo" | "admissionNo" | "studentName" | "className" | "section" |
     "amountPaid" | "paymentMode" | "receivedAccount" | "transactionRefNo" | "feeType" |
     "termHint" | "isCancelled">,
-  effectiveReceiptStatus: "ACTIVE" | "CANCELLED" | "INCONSISTENT"
+  effectiveReceiptStatus: "ACTIVE" | "CANCELLED" | "INCONSISTENT",
+  correction?: ReceiptCorrectionDisplay
 ) {
   return {
     date: row.date.toISOString().slice(0, 10),
@@ -318,7 +320,10 @@ export function paymentExportRow(
     feeType: row.feeType,
     term: row.termHint,
     componentStatus: row.isCancelled ? "CANCELLED" : "ACTIVE",
-    effectiveReceiptStatus
+    effectiveReceiptStatus,
+    receiptLifecycleStatus: correction?.lifecycleStatus ?? effectiveReceiptStatus,
+    originalReceiptReference: correction?.originalReceiptNo ?? null,
+    replacementReceiptReference: correction?.replacementReceiptNo ?? null
   };
 }
 

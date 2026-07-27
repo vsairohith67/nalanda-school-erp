@@ -48,7 +48,7 @@ Independent Prompt 23B-QA cleared the source, exact-ledger, repository, role, pr
 | Inventory/assets | **External evidence / defer** | Source existence/use unverified and no approved requirement |
 | Appointments and complaints | **External evidence / defer** | No confirmed Schoolknot or Nalanda day-one workflow |
 | Universal tamper-evident history | **Partial** | Many targeted append-only events exist; no universal cross-module ledger claim |
-| Refunds | **External evidence / approval blocked** | Whole-receipt cancellation exists; refund state/provider/ledger rule unproven |
+| Refunds | **External evidence / approval blocked** | FIN-2B whole-receipt cancellation and governed correction/reissue are not refunds; refund state/provider/ledger rule remains unproven |
 | Day Closer | **External evidence / defer** | Blank source route; Cash Book and Daily Collection are not treated as parity |
 | Live gateway | **Deployment/provider approval blocked** | No provider, merchant, settlement or external environment |
 | Native app parity | **Safe to defer** | Governed web/PWA is the target; physical certification remains later |

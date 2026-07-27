@@ -70,7 +70,7 @@ export default async function PaymentsPage({
                   <td>
                     <div className="table-actions">
                       {permissionSetCan(permissions, "PRINT_RECEIPTS") ? <Link href={`/receipts/${encodeURIComponent(payment.receiptNo)}/print`} target="_blank">Print Receipt</Link> : null}
-                      {permissionSetCan(permissions, "EDIT_PAYMENTS") ? <Link href={`/payments/${payment.id}/edit`}>Review</Link> : null}
+                      {permissionSetCan(permissions, "CORRECT_FINAL_RECEIPT") || permissionSetCan(permissions, "CANCEL_FINAL_RECEIPT") || permissionSetCan(permissions, "RESTORE_PAYMENTS") ? <Link href={`/payments/${payment.id}/edit`}>Review</Link> : null}
                     </div>
                   </td>
                 </tr>

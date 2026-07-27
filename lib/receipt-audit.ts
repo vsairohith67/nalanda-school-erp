@@ -40,6 +40,7 @@ export function parseReceiptAuditRange(
 }
 
 type ReceiptAuditPayment = {
+  date?: Date | string | null;
   admissionNo: string;
   amountPaid: number;
   paymentMode: string;
@@ -102,7 +103,13 @@ export function analyzeReceiptPayments(
     status,
     total,
     rowCount: receiptPayments.length,
-    issues: issues.join("; ")
+    issues: issues.join("; "),
+    date: receiptPayments[0]?.date
+      ? new Date(receiptPayments[0].date).toISOString()
+      : null,
+    paymentModes: Array.from(
+      new Set(receiptPayments.map((payment) => publicPaymentModeLabel(payment)))
+    ).join(" + ")
   };
 }
 
@@ -147,6 +154,9 @@ export function paymentAuditSummaryFields(
     ["Fee Type", data.feeType],
     ["Term", data.termHint],
     ["Remarks", data.remarks],
+    ["Correction type", data.correctionType],
+    ["Original receipt", data.originalReceiptNo],
+    ["Replacement receipt", data.replacementReceiptNo],
     ["Changed by", context.changedByName],
     ["Action", context.action],
     ["Reason", context.reason]

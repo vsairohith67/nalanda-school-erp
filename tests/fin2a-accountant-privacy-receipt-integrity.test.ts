@@ -16,6 +16,7 @@ import {
   privateFinanceJson
 } from "../lib/finance-privacy";
 import { toCsv } from "../lib/format";
+import { can } from "../lib/permissions";
 import {
   assertReceiptAcceptsActiveComponent,
   assertReceiptIsNewForCreate,
@@ -23,7 +24,6 @@ import {
   effectiveActiveReceiptPayments,
   effectiveActiveSelectedReceiptPayments,
   effectiveReceiptState,
-  isReceiptCancellationAuthority,
   loadReceiptStateMap,
   receiptVersion,
   restoreWholeReceipt,
@@ -224,21 +224,22 @@ describe("FIN-2A export privacy", () => {
     const active = await effectiveActiveSelectedReceiptPayments(client, selected);
     expect(active).toEqual([]);
     const source = readFileSync("app/api/export/[type]/route.ts", "utf8");
-    expect(source).toContain("await loadReceiptStateMap");
+    expect(source).toContain("loadReceiptStateMap(");
     expect(source).toContain("receiptRows.map((row) => row.receiptNo)");
   });
 });
 
 describe("FIN-2A cancellation authority and receipt integrity", () => {
-  it("permits final-receipt cancellation only for Director and Super Admin", () => {
-    expect(isReceiptCancellationAuthority("DIRECTOR")).toBe(true);
-    expect(isReceiptCancellationAuthority("SUPER_ADMIN")).toBe(true);
-    for (const role of ["ACCOUNTANT", "ADMIN", "PRINCIPAL", "VIEWER"]) {
-      expect(isReceiptCancellationAuthority(role)).toBe(false);
+  it("uses the exact final-receipt permission for leadership and Accountant", () => {
+    expect(can("DIRECTOR", "CANCEL_FINAL_RECEIPT")).toBe(true);
+    expect(can("SUPER_ADMIN", "CANCEL_FINAL_RECEIPT")).toBe(true);
+    expect(can("ACCOUNTANT", "CANCEL_FINAL_RECEIPT")).toBe(true);
+    for (const role of ["ADMIN", "PRINCIPAL", "VIEWER"] as const) {
+      expect(can(role, "CANCEL_FINAL_RECEIPT")).toBe(false);
     }
   });
 
-  it("hard-denies Accountant cancellation and broad Student access even if legacy rows are enabled", async () => {
+  it("authorizes only the narrow Accountant final-receipt permission while retaining privacy hard denials", async () => {
     const rows = [
       { role: "ACCOUNTANT", permission: "CANCEL_PAYMENTS", enabled: true },
       { role: "ACCOUNTANT", permission: "VIEW_STUDENTS", enabled: true },
@@ -261,7 +262,7 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
           ) ?? null
       }
     };
-    expect(await hasRolePermission(client as never, "ACCOUNTANT", "CANCEL_PAYMENTS")).toBe(false);
+    expect(await hasRolePermission(client as never, "ACCOUNTANT", "CANCEL_FINAL_RECEIPT")).toBe(true);
     expect(await hasRolePermission(client as never, "ACCOUNTANT", "VIEW_STUDENTS")).toBe(false);
     expect(await hasRolePermission(client as never, "ACCOUNTANT", "EXPORT_STUDENTS")).toBe(false);
     expect(await hasRolePermission(client as never, "ACCOUNTANT", "COMMUNICATE_PARENT")).toBe(false);
@@ -270,7 +271,7 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
     expect(await hasRolePermission(client as never, "VIEWER", "PRINT_LEDGER")).toBe(false);
     expect(await hasRolePermission(client as never, "VIEWER", "EXPORT_REPORTS")).toBe(false);
     const effective = await getEffectivePermissions(client as never, "ACCOUNTANT");
-    expect(effective.has("CANCEL_PAYMENTS")).toBe(false);
+    expect(effective.has("CANCEL_FINAL_RECEIPT")).toBe(true);
     expect(effective.has("VIEW_STUDENTS")).toBe(false);
     expect(effective.has("EXPORT_STUDENTS")).toBe(false);
     const viewerEffective = await getEffectivePermissions(client as never, "VIEWER");
@@ -278,14 +279,17 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
     expect(viewerEffective.has("PRINT_LEDGER")).toBe(false);
     expect(viewerEffective.has("EXPORT_REPORTS")).toBe(false);
     const matrix = await getRolePermissionMatrix(client as never);
-    expect(matrix.ACCOUNTANT.CANCEL_PAYMENTS).toBe(false);
+    expect(matrix.ACCOUNTANT.CANCEL_FINAL_RECEIPT).toBe(true);
     expect(matrix.ACCOUNTANT.EXPORT_STUDENTS).toBe(false);
     expect(matrix.ACCOUNTANT.COMMUNICATE_PARENT).toBe(false);
     expect(matrix.VIEWER.VIEW_LEDGER).toBe(false);
     expect(matrix.VIEWER.PRINT_LEDGER).toBe(false);
     expect(matrix.VIEWER.EXPORT_REPORTS).toBe(false);
     expect(() => validateRolePermissionPayload({
-      ACCOUNTANT: { CANCEL_PAYMENTS: true, EXPORT_STUDENTS: true }
+      ACCOUNTANT: { CANCEL_FINAL_RECEIPT: true, CORRECT_FINAL_RECEIPT: true }
+    })).not.toThrow();
+    expect(() => validateRolePermissionPayload({
+      ACCOUNTANT: { EXPORT_STUDENTS: true }
     })).toThrow(/cannot be delegated/);
     expect(() => validateRolePermissionPayload({
       VIEWER: { PRINT_LEDGER: true, EXPORT_REPORTS: true }
@@ -424,6 +428,7 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
     const fixture = receiptClient();
     const version = receiptVersion(fixture.rows);
     const result = await cancelWholeReceipt(fixture.client, {
+      authorization: "CANCEL_FINAL_RECEIPT",
       receiptNo: "FIN2A-100",
       reason: "Duplicate receipt confirmed against the register",
       expectedVersion: version,
@@ -445,6 +450,7 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
   it("rejects missing reasons and stale versions without partial mutation", async () => {
     const missing = receiptClient();
     await expect(cancelWholeReceipt(missing.client, {
+      authorization: "CANCEL_FINAL_RECEIPT",
       receiptNo: "FIN2A-100",
       reason: "",
       actor: { id: "director-private-id", name: "FIN2A Director" }
@@ -453,6 +459,7 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
 
     const missingVersion = receiptClient();
     await expect(cancelWholeReceipt(missingVersion.client, {
+      authorization: "CANCEL_FINAL_RECEIPT",
       receiptNo: "FIN2A-100",
       reason: "Register reconciliation",
       actor: { id: "director-private-id", name: "FIN2A Director" }
@@ -461,6 +468,7 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
 
     const stale = receiptClient();
     await expect(cancelWholeReceipt(stale.client, {
+      authorization: "CANCEL_FINAL_RECEIPT",
       receiptNo: "FIN2A-100",
       reason: "Register reconciliation",
       expectedVersion: "stale-version",
@@ -473,6 +481,7 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
   it("rolls back component state when append-only audit creation fails", async () => {
     const fixture = receiptClient({ failAudit: true });
     await expect(cancelWholeReceipt(fixture.client, {
+      authorization: "CANCEL_FINAL_RECEIPT",
       receiptNo: "FIN2A-100",
       reason: "Register reconciliation",
       expectedVersion: receiptVersion(fixture.rows),
@@ -486,6 +495,7 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
   it("makes repeated and concurrent cancellation one harmless logical result", async () => {
     const fixture = receiptClient();
     const input = {
+      authorization: "CANCEL_FINAL_RECEIPT" as const,
       receiptNo: "FIN2A-100",
       reason: "Register reconciliation",
       expectedVersion: receiptVersion(fixture.rows),
@@ -506,6 +516,7 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
   it("keeps idempotent cancel and restore branches read-only for ReceiptNote evidence", async () => {
     const cancelled = receiptClient();
     const cancellationInput = {
+      authorization: "CANCEL_FINAL_RECEIPT" as const,
       receiptNo: "FIN2A-100",
       reason: "Register reconciliation",
       expectedVersion: receiptVersion(cancelled.rows),
@@ -626,10 +637,9 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
       expect(source).not.toMatch(/\b(?:alert|confirm|prompt)\s*\(/);
     }
     const directRoute = readFileSync("app/api/payments/[id]/route.ts", "utf8");
-    expect(directRoute).toContain('requireApiPermission("CANCEL_PAYMENTS")');
-    expect(directRoute).toContain("isReceiptCancellationAuthority");
+    expect(directRoute).toContain('requireApiPermission("CANCEL_FINAL_RECEIPT")');
     expect(directRoute).toContain("cancelWholeReceipt");
-    expect(directRoute).toContain("assertReceiptMutationVersion");
+    expect(directRoute).toContain("correctFinalReceipt");
     const middleware = readFileSync("middleware.ts", "utf8");
     expect(middleware).toContain("unsafeRequestOriginAllowed");
   });

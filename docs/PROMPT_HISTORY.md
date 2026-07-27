@@ -1,5 +1,13 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## FIN-2B-R - Accountant final-receipt cancellation, correction and leadership notification (2026-07-27)
+
+Resumed from the authorised Prompt 23B-QA-cleared `main` checkpoint `9752304952a02d840a5d2a629b0f1896d0589a1b`; the earlier FIN-2A commit remains an ancestor. FIN-2B intentionally supersedes only Prompt 23B/FIN-2A Accountant cancellation wording. It adds exact `CANCEL_FINAL_RECEIPT` and `CORRECT_FINAL_RECEIPT` authority, accessible in-app confirmation, whole split-receipt cancellation, immutable non-financial correction, governed linked cancellation/reissue for financial correction, locked-day protection, audit-event-keyed Director/Super Admin notifications and missing-leadership warning. Cancellation/correction is not deletion or refund.
+
+Copied-database fixtures verified cancellation idempotence, split Cash plus two UPI components, `ReceiptNote`, dues/allocation reopening, Daily Collection/Cash Book/dashboard exclusion, print/audit state, non-financial correction, linked financial reissue, locked-day denial and leadership correction source drift, exactly-once minimized notifications, missing-leader handling and unchanged operational integrity. Final Browser/full-regression/backup/publish evidence is recorded only after those gates pass.
+
+Prompt 23B was completed before FIN-2B. Teacher attendance NO-GO, Parent gaps, Principal least-privilege conclusions, Management evidence, the unrelated 109-item evidence ledger and all other Prompt 23B decisions remain unchanged.
+
 ## Prompt 23B-QA - Independent final consolidation QA (2026-07-26)
 
 Independently re-fetched the complete Notion audit without reopening Schoolknot and matched all 109 unique source IDs, workflow labels, exact dispositions and rationales to the repository ledger. All eight dispositions and the 22/22/26/20/19 role split were preserved. Earlier role reports remained before the single Prompt 23B append and verification closure; the appended content contained no exposed email or phone value.

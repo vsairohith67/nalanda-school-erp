@@ -1,5 +1,7 @@
 # Schoolknot Replacement Gap Map and Biometric Integration Plan
 
+> **FIN-2B scoped supersession:** Prompt 23B was completed before FIN-2B. FIN-2B supersedes only earlier Accountant final-receipt cancellation/correction wording: exact narrow permissions now govern immutable audited action, active Directors/Super Admins are notified, and locked-day protection remains. Teacher attendance NO-GO, Parent gaps, Principal least-privilege conclusions, Management evidence and every unrelated Prompt 23B decision remain unchanged.
+
 ## Prompt 23B final multi-role supersession
 
 The final authoritative planning set is:

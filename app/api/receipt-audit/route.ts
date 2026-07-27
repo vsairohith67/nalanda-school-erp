@@ -11,7 +11,6 @@ import { privateFinanceJson } from "@/lib/finance-privacy";
 import {
   cancelWholeReceipt,
   effectiveReceiptState,
-  isReceiptCancellationAuthority,
   ReceiptIntegrityError
 } from "@/lib/receipt-integrity";
 
@@ -36,6 +35,7 @@ export async function GET(request: NextRequest) {
       where: { deletedAt: null, receiptNo: { in: receiptNumbers } },
       select: {
         receiptNo: true,
+        date: true,
         admissionNo: true,
         amountPaid: true,
         paymentMode: true,
@@ -75,16 +75,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireApiPermission("CANCEL_PAYMENTS");
+  const auth = await requireApiPermission("CANCEL_FINAL_RECEIPT");
   if (auth.response) return auth.response;
-  if (!isReceiptCancellationAuthority(auth.user.role)) {
-    return privateFinanceJson({ error: "Only the Director or Super Admin can cancel a final receipt" }, { status: 403 });
-  }
   const body = await request.json().catch(() => ({}));
   const receiptNo = String(body.receiptNo ?? "").trim();
   if (!receiptNo) return privateFinanceJson({ error: "Receipt number is required" }, { status: 400 });
   try {
     const result = await cancelWholeReceipt(prisma, {
+      authorization: "CANCEL_FINAL_RECEIPT",
       receiptNo,
       reason: body.reason,
       expectedVersion: body.expectedVersion,

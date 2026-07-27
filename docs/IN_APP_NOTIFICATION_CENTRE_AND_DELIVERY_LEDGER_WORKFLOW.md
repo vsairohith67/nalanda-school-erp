@@ -77,6 +77,10 @@ The permission set separates own-inbox access, scoped drafting, template managem
 - Viewer/Auditor receives masked aggregate reports and an own inbox only when targeted; export is blocked.
 - Accountant receives an own inbox only by default.
 
+## FIN-2B system finance notifications
+
+FIN-2B adds direct internal `IN_APP` notifications for final-receipt governance; it does not grant Accountant campaign-management authority. Every successful Accountant cancellation or correction produces one logical unread recipient row for each active Director and Super Admin, keyed to the immutable receipt audit event. A locked-day denial produces an idempotent leadership review alert. Visible fields are minimized to a safe receipt reference, action, amount/date, Accountant display label, privacy-filtered reason, India-local timestamp, reconciliation warning and `/receipt-audit` link. No external provider is invoked. A missing active leader is recorded as a skipped delivery/system-health warning and does not corrupt the financial transaction.
+
 The main surfaces are `/notifications`, `/notifications/manage`, `/notifications/manage/new`, `/notifications/manage/[id]`, `/notifications/templates`, `/notifications/reports`, `/teacher/notifications`, and `/parent/notifications`. The notification bell requests only the authenticated User's unread count and refreshes on navigation/user actions without WebSockets or aggressive polling.
 
 ## Reporting and CSV

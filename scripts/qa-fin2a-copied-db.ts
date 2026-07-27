@@ -261,6 +261,7 @@ async function exerciseIntegrity() {
       where: { receiptNo: RACE_RECEIPT_NO, deletedAt: null }
     });
     const input = {
+      authorization: "CANCEL_FINAL_RECEIPT" as const,
       receiptNo: RACE_RECEIPT_NO,
       reason: `${FIXTURE_LABEL} concurrent cancellation rehearsal`,
       expectedVersion: receiptVersion(raceRows),
@@ -292,6 +293,7 @@ async function exerciseIntegrity() {
     let rollbackFailed = false;
     try {
       await cancelWholeReceipt(prisma, {
+        authorization: "CANCEL_FINAL_RECEIPT",
         receiptNo: ROLLBACK_RECEIPT_NO,
         reason: `${FIXTURE_LABEL} forced rollback rehearsal`,
         expectedVersion: receiptVersion(rollbackRows),

@@ -24,7 +24,8 @@ export const NOTIFICATION_INTERNAL_PATHS = {
     "/certificates",
     "/report-cards",
     "/homework",
-    "/notifications"
+    "/notifications",
+    "/receipt-audit"
   ]
 } as const;
 

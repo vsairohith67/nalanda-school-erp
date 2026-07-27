@@ -97,7 +97,8 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
 
   it("treats FIN-2A as resolved and preserves payroll/self-service uncertainty", () => {
     expect(matrix).toContain("FIN-2A Nalanda defects resolved");
-    expect(roles).toContain("FIN-2A privacy/export/cancellation/`ReceiptNote`-`Payment` issues are resolved");
+    expect(roles).toContain("FIN-2A privacy/export/`ReceiptNote`-`Payment` integrity issues are resolved");
+    expect(roles).toContain("FIN-2B supersedes only Prompt 23B's earlier Accountant cancellation wording");
     expect(decision).toContain("Payroll and employee self-service remain absent/unverified");
     expect(combined).not.toContain("FIN-2A implementation pending");
   });
@@ -208,7 +209,9 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
     expect(countRouteFiles("app/api", "route.ts")).toBe(378);
     expect(read("lib/backup.ts")).toContain("backupVersion: 37");
     const permissionTokens = new Set([...read("lib/permissions.ts").matchAll(/permission:\s*"([A-Z0-9_]+)"/g)].map((match) => match[1]));
-    expect(permissionTokens.size).toBe(337);
+    expect(permissionTokens.size).toBe(339);
+    expect(permissionTokens.has("CANCEL_FINAL_RECEIPT")).toBe(true);
+    expect(permissionTokens.has("CORRECT_FINAL_RECEIPT")).toBe(true);
     for (const model of ["AdmissionEnquiry", "PayrollRun", "TransportRoute", "ClassworkSubmission", "DisciplineIncident", "CafeteriaPlan"]) {
       expect(schema).not.toContain(`model ${model} {`);
     }

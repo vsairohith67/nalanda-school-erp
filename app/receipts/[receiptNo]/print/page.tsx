@@ -3,7 +3,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { groupReceiptPayments, receiptPublicRows } from "@/lib/receipt";
+import {
+  groupReceiptPayments,
+  receiptCorrectionDisplay,
+  receiptPublicRows
+} from "@/lib/receipt";
 import { displayDate, money } from "@/lib/format";
 import { PrintButton } from "@/components/print-button";
 import { displayReceiptNumber, getSchoolSettings } from "@/lib/school-settings";
@@ -24,7 +28,17 @@ export default async function ReceiptPrintPage({
   const [rows, settings, note] = await Promise.all([
     prisma.payment.findMany({
       where: { receiptNo: decodedReceiptNo, deletedAt: null },
-      include: { student: { select: { academicYear: true } } },
+      include: {
+        student: { select: { academicYear: true } },
+        audits: {
+          where: {
+            action: {
+              in: ["RECEIPT_CORRECTED", "RECEIPT_SUPERSEDED", "RECEIPT_REISSUED"]
+            }
+          },
+          select: { action: true, newValueJson: true }
+        }
+      },
       orderBy: [{ date: "asc" }, { createdAt: "asc" }]
     }),
     getSchoolSettings(prisma),
@@ -44,6 +58,18 @@ export default async function ReceiptPrintPage({
   const receivedByLabel = user.role === "PARENT" ? "School Office" : receivedBy;
   const differentStudents = new Set(rows.map((row) => row.admissionNo)).size > 1;
   const publicRows = receiptPublicRows(rows);
+  const correction = receiptCorrectionDisplay(
+    rows.flatMap((row) => row.audits),
+    grouped.status
+  );
+  const watermark =
+    correction.lifecycleStatus === "SUPERSEDED"
+      ? "SUPERSEDED"
+      : grouped.status === "CANCELLED"
+        ? "CANCELLED"
+        : grouped.status === "PARTIALLY_CANCELLED"
+          ? "INCONSISTENT"
+          : null;
 
   return (
     <div className="page print-route-page">
@@ -54,7 +80,7 @@ export default async function ReceiptPrintPage({
         <PrintButton label="Print Receipt" />
       </div>
       <article className={`print-document receipt-document receipt-size-${printSize.toLowerCase()} ${user.role === "PARENT" ? "parent-receipt-print" : ""} ${grouped.status !== "ACTIVE" ? "receipt-cancelled" : ""}`}>
-        {grouped.status !== "ACTIVE" ? <div className="cancelled-watermark">{grouped.status === "CANCELLED" ? "CANCELLED" : "PARTIALLY CANCELLED"}</div> : null}
+        {watermark ? <div className="cancelled-watermark">{watermark}</div> : null}
         <header className="receipt-header">
           <Image src={settings.logoPath} alt={settings.schoolName} width={74} height={74} priority />
           <div>
@@ -64,6 +90,15 @@ export default async function ReceiptPrintPage({
           </div>
         </header>
         <div className="receipt-title">{settings.receiptTitle}</div>
+        <p className="receipt-lifecycle-status">
+          Receipt state: <strong>{correction.lifecycleStatus.replaceAll("_", " ")}</strong>
+          {user.role !== "PARENT" && correction.originalReceiptNo && correction.originalReceiptNo !== decodedReceiptNo ? (
+            <> · Original <Link href={`/receipts/${encodeURIComponent(correction.originalReceiptNo)}/print`}>{correction.originalReceiptNo}</Link></>
+          ) : null}
+          {user.role !== "PARENT" && correction.replacementReceiptNo && correction.replacementReceiptNo !== decodedReceiptNo ? (
+            <> · Replacement <Link href={`/receipts/${encodeURIComponent(correction.replacementReceiptNo)}/print`}>{correction.replacementReceiptNo}</Link></>
+          ) : null}
+        </p>
         <section className="receipt-meta">
           <div><span>Academic Year</span><strong>{student?.academicYear ?? "2026-27"}</strong></div>
           <div><span>Receipt No.</span><strong>{displayReceiptNumber(decodedReceiptNo, settings.receiptPrefix)}</strong></div>

@@ -4,11 +4,11 @@ import { requirePermission } from "@/lib/auth";
 import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { PaymentEditForm } from "@/components/payment-edit-form";
-import { isReceiptCancellationAuthority, receiptVersion } from "@/lib/receipt-integrity";
+import { receiptVersion } from "@/lib/receipt-integrity";
 import { sanitizePaymentAuditJson } from "@/lib/finance-privacy";
 
 export default async function EditPaymentPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await requirePermission("EDIT_PAYMENTS");
+  const user = await requirePermission("VIEW_PAYMENTS");
   const { id } = await params;
   const [payment, permissions] = await Promise.all([
     prisma.payment.findUnique({
@@ -51,6 +51,8 @@ export default async function EditPaymentPage({ params }: { params: Promise<{ id
       id: true,
       receiptNo: true,
       amountPaid: true,
+      date: true,
+      paymentMode: true,
       isCancelled: true,
       deletedAt: true,
       updatedAt: true
@@ -81,8 +83,15 @@ export default async function EditPaymentPage({ params }: { params: Promise<{ id
           cancellationReason: payment.cancellationReason
         }}
         canRestore={permissionSetCan(permissions, "RESTORE_PAYMENTS")}
-        canCancel={isReceiptCancellationAuthority(user.role) && permissionSetCan(permissions, "CANCEL_PAYMENTS")}
+        canCancel={permissionSetCan(permissions, "CANCEL_FINAL_RECEIPT")}
+        canCorrect={permissionSetCan(permissions, "CORRECT_FINAL_RECEIPT")}
         receiptVersion={receiptVersion(receiptRows)}
+        receiptSummary={{
+          date: receiptRows[0]?.date.toISOString() ?? payment.date.toISOString(),
+          totalAmount: receiptRows.reduce((sum, row) => sum + row.amountPaid, 0),
+          paymentModes: Array.from(new Set(receiptRows.map((row) => row.paymentMode))).join(" + "),
+          componentCount: receiptRows.length
+        }}
       />
       <section className="card">
         <div className="section-title"><h3>Payment Audit History</h3></div>

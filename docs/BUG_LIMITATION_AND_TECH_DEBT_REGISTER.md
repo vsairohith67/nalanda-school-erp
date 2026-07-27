@@ -483,20 +483,22 @@ DEVOPS-1A changes no Prisma schema, migration, route/API boundary, operational r
 
 ## FIN-2A Accountant privacy and receipt integrity
 
+FIN-2B intentionally supersedes only the Accountant cancellation/correction authority statements below. The retained FIN-2A privacy, projection, export, audit, split-receipt and reconciliation controls remain mandatory.
+
 Resolved:
 
 - Broad Accountant Student access was replaced by an exact-admission finance lookup and explicit response allowlists.
-- Accountant Parent/contact reminder permissions and final-receipt cancellation are non-delegably denied even when a stale database permission row is enabled.
+- Accountant Parent/contact reminder permissions remain non-delegably denied. Final-receipt cancellation and correction are deliberately authorised only through the exact FIN-2B permissions; broad finance or legacy payment permissions cannot substitute.
 - Viewer/Auditor student-level ledger access is non-delegably denied; dues and collection remain aggregate-only.
 - Generic and specialized Accountant finance exports now have purpose/field contracts, formula neutralisation, private/no-store headers, safe filenames, 2,000-row limits, bounded date scopes where applicable, and append-only export audit.
-- Whole-receipt cancellation is Director/Super Admin only, reasoned, versioned, transactional, append-only, idempotent, and safe for split Cash/UPI components.
+- Whole-receipt cancellation is available to Super Admin, Director and an Accountant with `CANCEL_FINAL_RECEIPT`; governed correction requires `CORRECT_FINAL_RECEIPT`. Both are reasoned, versioned, transactional, append-only and safe for split Cash/UPI components. Successful Accountant actions notify active leadership.
 - `Payment` components now define the effective receipt state. Mixed component state and `ReceiptNote` disagreement fail closed across receipt, ledger, dues, collection, dashboard/export, audit, and Cash Book calculations.
 - New audit JSON uses a restricted snapshot; historical broad JSON is redacted before restricted output.
 - Final verification caught a backup-time seeder that rewrote six existing operational permission overrides. The seeder now creates missing rows without modifying existing rows; a byte-identical rollback restored the authorised operational checkpoint and a repeat backup proved no hash/timestamp change.
 
 Remaining:
 
-- There is no partial final-receipt cancellation, refund, gateway reversal, chargeback, or locked-day compensating correction workflow.
+- There is no partial final-receipt cancellation, refund, gateway reversal or chargeback. FIN-2B blocks ordinary Accountant action on non-mutable accounting days and routes review to existing authorised leadership without rewriting the locked snapshot.
 - Old broad `PaymentAudit` JSON may remain at rest in an existing database. It is response-redacted, but an at-rest migration would require separate retention/legal/schema approval.
 - `ReceiptNote` is synchronized metadata, not a separately versioned approval model.
 - SQLite remains a supported single-instance write architecture; horizontal scaling is not approved.

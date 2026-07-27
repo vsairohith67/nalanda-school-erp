@@ -4,7 +4,6 @@ import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
 import { sanitizePaymentAuditJson } from "@/lib/finance-privacy";
-import { isReceiptCancellationAuthority } from "@/lib/receipt-integrity";
 
 export default async function ReceiptAuditPage() {
   const user = await requirePermission("VIEW_RECEIPT_AUDIT");
@@ -28,7 +27,7 @@ export default async function ReceiptAuditPage() {
     <div className="page">
       <PageHeader title="Receipt Audit" description="Detect missing, duplicate, cancelled, split payment, invalid, and UPI reference issues." />
       <ReceiptAudit
-        canCancelReceipts={isReceiptCancellationAuthority(user.role) && permissionSetCan(permissions, "CANCEL_PAYMENTS")}
+        canCancelReceipts={permissionSetCan(permissions, "CANCEL_FINAL_RECEIPT")}
         audits={audits.map((audit, index) => ({
           ...audit,
           id: `audit-${index}-${audit.createdAt.getTime()}`,

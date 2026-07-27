@@ -2,11 +2,9 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { formatBackupFilename, generateFullBackup, serializeBackup } from "../lib/backup";
 import { prisma } from "../lib/prisma";
-import { ensureDefaultRolePermissions } from "../lib/role-permissions";
 
 async function main() {
   const generatedAt = new Date();
-  await ensureDefaultRolePermissions(prisma);
   const backup = await generateFullBackup(prisma, {
     generatedAt,
     generatedBy: process.env.USERNAME || process.env.USER || "Local CLI"
