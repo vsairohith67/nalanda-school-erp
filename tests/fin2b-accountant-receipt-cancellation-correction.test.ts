@@ -18,6 +18,13 @@ describe("FIN-2B backup safety", () => {
     expect(backupScript).not.toContain("ensureDefaultRolePermissions");
     expect(backupScript).toContain("generateFullBackup");
   });
+
+  it("preserves immutable payment audits when the original actor login is unavailable during restore", () => {
+    const restore = source("lib/restore-database.ts");
+    expect(restore).toContain("mappedChangedByUserId ?? restoredBy.id");
+    expect(restore).toContain("preserved its original actor label");
+    expect(restore).not.toContain("Payment audit ${index + 1} skipped because its user account could not be matched safely.");
+  });
 });
 
 describe("FIN-2B narrow permission and route policy", () => {
@@ -35,10 +42,15 @@ describe("FIN-2B narrow permission and route policy", () => {
   it("uses exact server permissions without a hard-coded Accountant denial or broad substitute", () => {
     const paymentRoute = source("app/api/payments/[id]/route.ts");
     const auditRoute = source("app/api/receipt-audit/route.ts");
+    const paymentPage = source("app/payments/[id]/edit/page.tsx");
     expect(paymentRoute).toContain('requireApiPermission("CORRECT_FINAL_RECEIPT")');
     expect(paymentRoute).toContain('requireApiPermission("CANCEL_FINAL_RECEIPT")');
     expect(auditRoute).toContain('requireApiPermission("CANCEL_FINAL_RECEIPT")');
+    expect(paymentPage).toContain('permissionSetCan(permissions, "CORRECT_FINAL_RECEIPT")');
+    expect(paymentPage).toContain('permissionSetCan(permissions, "CANCEL_FINAL_RECEIPT")');
+    expect(paymentPage).toContain('if (!canRestore && !canCancel && !canCorrect) redirect("/unauthorized")');
     expect(`${paymentRoute}\n${auditRoute}`).not.toMatch(/MANAGE_FINANCE|Only the Director or Super Admin can cancel/);
+    expect(paymentPage).not.toContain('requirePermission("VIEW_PAYMENTS")');
   });
 
   it("requires the exact helper authorization and rejects blank, short, oversized, and unsafe reasons", async () => {

@@ -1,5 +1,13 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## FIN-2B-QA - Independent Accountant receipt governance QA (2026-07-28)
+
+Independently exercised FIN-2B on a fresh copied database with `FIN2BQA` fixtures across all eight roles. Exact permissions, authenticated page/API access, reason/version/origin validation, immutable non-financial correction, financial cancellation/reissue, receipt-number immutability and linkage, split-component and `ReceiptNote` consistency, dues/Ledger/collection/Receipt Audit/Cash Book/dashboard/print/export reconciliation, open/locked days, exactly-once private leadership inbox rows, missing-leader warning, retry/concurrency, forced rollback and in-app-only delivery all passed.
+
+QA found and fixed two defects: generic payment viewers could load the governed correction page, and version-37 restore skipped `PaymentAudit` history when the original actor login was unavailable. The page now requires one exact governed action authority before receipt lookup. Restore preserves the original actor label while safely linking the immutable row to the authorised restore operator. A copied backup/restore retained 27 payment components, 19 audits, nine ReceiptNotes and the `973103` to `973103-R1` correction history, and a repeated restore was count-idempotent.
+
+Production Browser QA passed at `1366x768` and exact `390x844` in light/dark mode with locked-day warning, Director/Super Admin inboxes, denied Admin page access, no overflow or sub-44px visible mobile control, accessible modal focus behavior, no native dialog, zero console/hydration warnings or errors, and zero stderr bytes. Cleanup returned zero FIN2BQA rows twice and removed the copy, credential state, scripts and logs. Full verification passed 274 pages, 378 APIs, zero-write lifecycle backfill, typecheck, 1,520 tests across 165 files, 212/212 build output, version-37 backup/restore and Git safety. Prompt 23B Teacher attendance NO-GO and every unrelated Prompt 23B decision remain unchanged.
+
 ## FIN-2B-R - Accountant final-receipt cancellation, correction and leadership notification (2026-07-27)
 
 Resumed from the authorised Prompt 23B-QA-cleared `main` checkpoint `9752304952a02d840a5d2a629b0f1896d0589a1b`; the earlier FIN-2A commit remains an ancestor. FIN-2B intentionally supersedes only Prompt 23B/FIN-2A Accountant cancellation wording. It adds exact `CANCEL_FINAL_RECEIPT` and `CORRECT_FINAL_RECEIPT` authority, accessible in-app confirmation, whole split-receipt cancellation, immutable non-financial correction, governed linked cancellation/reissue for financial correction, locked-day protection, audit-event-keyed Director/Super Admin notifications and missing-leadership warning. Cancellation/correction is not deletion or refund.

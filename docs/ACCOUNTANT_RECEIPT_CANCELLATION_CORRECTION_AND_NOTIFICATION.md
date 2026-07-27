@@ -55,10 +55,21 @@ The dialog is keyboard accessible, traps focus while open, returns focus on clos
 
 The cancellation and correction endpoints require an authenticated active session, exact permission, object access, same-origin/CSRF protection, bounded JSON, expected version, meaningful safe reason and an active final receipt. Responses are private/no-store and use controlled 400, 403, 404, 409 or 500 results without exposing Prisma details, filesystem paths or secrets.
 
-## Verification and non-goals
+## Independent FIN-2B-QA closure
 
-FIN-2B copied-database QA uses only ignored `FIN2B` synthetic fixtures and an ignored copied SQLite database. The operational database is checked before and after the work. No Prisma schema or migration change is required; backup format remains version 37.
+Independent QA on 28 July 2026 used only ignored `FIN2BQA` synthetic fixtures in a fresh copied SQLite database. It verified the exact permission defaults, authenticated API and page-route enforcement, five denied roles, reason/version/origin controls, split-receipt atomicity, `ReceiptNote`, allocation/dues and reporting reconciliation, non-financial versions, financial cancellation/reissue, immutable receipt numbers, original/replacement linkage, locked-day review, exactly-once leadership notification, privacy minimisation, missing-leadership warning, concurrent/retry idempotence, forced rollback, print/export state, and no external delivery channel.
+
+QA found and fixed two defects before clearance:
+
+- generic payment-view access could load the governed edit page even though the APIs and actions were narrowly protected; the page now requires restore, `CANCEL_FINAL_RECEIPT`, or `CORRECT_FINAL_RECEIPT` authority before it resolves the receipt;
+- version-37 restore skipped immutable `PaymentAudit` rows when the original actor account was absent; restore now preserves the original actor display snapshot and links the required local foreign key to the authorised restore operator.
+
+The copied version-37 backup contained 27 FIN2BQA Payment components, 19 immutable audits, nine `ReceiptNote` rows, seven in-app leadership campaigns and 12 recipient rows. A separate copied restore preserved all 27 components, all 19 audits, all nine notes, the `973103` to `973103-R1` correction history, and remained count-idempotent on retry. Cleanup returned zero FIN2BQA users, Students, enrollments, Payments, notes, audits, Cash Book days, campaigns, recipients and events in two consecutive inspections; the copied database, runtime credential state and logs were then removed.
+
+Production Browser QA covered Accountant controls/dialogs, the locked-day warning, the corrected/replacement print views, Receipt Audit, Director and Super Admin inboxes, and denied Admin access. Desktop `1366x768` and exact mobile `390x844` passed in light and dark themes with no page horizontal overflow, no visible control below 44 px, labelled required reason, modal focus containment/return, no native dialog, zero console warnings/errors or hydration errors, and zero production stderr bytes.
+
+Final verification passed 274 page routes, 378 API routes, zero-write lifecycle backfill, typecheck, 1,520 tests across 165 files, the 212/212 production build, version-37 backup/restore and Git safety. No Prisma schema or migration change was required; backup format remains version 37.
 
 FIN-2B adds no payroll, refund, chargeback, payment gateway, provider delivery, staging deployment or unrelated Schoolknot gap work.
 
-Pre-existing local operational data of unverified provenance, currently believed to be sample/demo data. Deletion is separately gated by DATA-0A.
+Pre-existing local operational data of unverified provenance, currently believed to be sample/demo data. Deletion remains separately gated by DATA-0A.

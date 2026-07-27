@@ -28,21 +28,24 @@ import {
   ensureQaRoot
 } from "./migration-isolation";
 
-const PREFIX = "fin2b-";
-const MARKER = "FIN2B";
+const PREFIX = "fin2bqa-";
+const MARKER = "FIN2BQA";
 const QA_DATE = new Date("2099-02-01T00:00:00.000Z");
 const LOCKED_DATE = new Date("2099-02-02T00:00:00.000Z");
-const DATABASE_PATH = path.join(QA_ROOT, "operational-copy", "FIN2B-browser.db");
-const STATE_PATH = path.join(QA_ROOT, "operational-copy", "FIN2B-state.json");
-const ADMISSION_NO = "FIN2B-STUDENT";
-const TARGET_ADMISSION_NO = "FIN2B-STUDENT-CORRECTED";
-const PASSWORD_LABEL = "Stored only in the ignored FIN2B runtime state file; not printed";
+const DATABASE_PATH = path.join(QA_ROOT, "operational-copy", "FIN2BQA-browser.db");
+const STATE_PATH = path.join(QA_ROOT, "operational-copy", "FIN2BQA-state.json");
+const ADMISSION_NO = "FIN2BQA-STUDENT";
+const TARGET_ADMISSION_NO = "FIN2BQA-STUDENT-CORRECTED";
+const PASSWORD_LABEL = "Stored only in the ignored FIN2BQA runtime state file; not printed";
 const RECEIPTS = {
-  cancel: "972101",
-  nonFinancial: "972102",
-  financial: "972103",
-  locked: "972104",
-  missingLeader: "972105"
+  cancel: "973101",
+  nonFinancial: "973102",
+  financial: "973103",
+  locked: "973104",
+  missingLeader: "973105",
+  race: "973106",
+  rollback: "973107",
+  lockedPending: "973108"
 } as const;
 const ROLES = [
   "SUPER_ADMIN",
@@ -85,7 +88,7 @@ async function prepare() {
       where: { active: true },
       orderBy: [{ academicYear: "desc" }, { className: "asc" }]
     });
-    if (!fee) throw new Error("FIN2B_COPY_HAS_NO_ACTIVE_FEE_STRUCTURE");
+    if (!fee) throw new Error("FIN2BQA_COPY_HAS_NO_ACTIVE_FEE_STRUCTURE");
     const browserAccessValue = `${randomBytes(24).toString("base64url")}!Aa9`;
     const passwordHash = await hashPassword(browserAccessValue);
     await prisma.user.updateMany({
@@ -165,7 +168,9 @@ async function prepare() {
         prisma,
         student,
         receiptNo,
-        receiptNo === RECEIPTS.locked ? LOCKED_DATE : QA_DATE
+        receiptNo === RECEIPTS.locked || receiptNo === RECEIPTS.lockedPending
+          ? LOCKED_DATE
+          : QA_DATE
       );
     }
     await prisma.cashBookDay.create({
@@ -226,7 +231,7 @@ async function prepare() {
     );
     assertOperationalHash(operationalHash);
     console.log(JSON.stringify({
-      status: "FIN2B_COPY_PREPARED",
+      status: "FIN2BQA_COPY_PREPARED",
       databasePath,
       databaseUrl: databaseUrl(databasePath),
       roles: ROLES.map((role) => ({ role, username: `${PREFIX}${role.toLowerCase().replaceAll("_", "-")}` })),
@@ -278,7 +283,7 @@ async function exercise() {
       },
       reason: `${MARKER} verified reference correction`,
       expectedVersion: receiptVersion(nonFinancialRows),
-      idempotencyKey: "fin2b-non-financial-001",
+      idempotencyKey: "fin2bqa-non-financial-001",
       actor: actor("ACCOUNTANT")
     });
     const nonFinancialRetry = await correctFinalReceipt(prisma, {
@@ -298,7 +303,7 @@ async function exercise() {
       },
       reason: `${MARKER} verified reference correction`,
       expectedVersion: receiptVersion(nonFinancialRows),
-      idempotencyKey: "fin2b-non-financial-001",
+      idempotencyKey: "fin2bqa-non-financial-001",
       actor: actor("ACCOUNTANT")
     });
 
@@ -320,9 +325,73 @@ async function exercise() {
       },
       reason: `${MARKER} verified amount correction`,
       expectedVersion: receiptVersion(financialRows),
-      idempotencyKey: "fin2b-financial-reissue-001",
+      idempotencyKey: "fin2bqa-financial-reissue-001",
       actor: actor("ACCOUNTANT")
     });
+    const financialRetry = await correctFinalReceipt(prisma, {
+      authorization: "CORRECT_FINAL_RECEIPT",
+      paymentId: financialRows[0].id,
+      payload: {
+        date: financialRows[0].date,
+        receiptNo: RECEIPTS.financial,
+        admissionNo: TARGET_ADMISSION_NO,
+        amountPaid: 1_500,
+        paymentMode: financialRows[0].paymentMode,
+        receivedAccount: financialRows[0].receivedAccount,
+        transactionRefNo: financialRows[0].transactionRefNo,
+        feeType: financialRows[0].feeType,
+        termHint: financialRows[0].termHint,
+        remarks: `${MARKER} financial correction`
+      },
+      reason: `${MARKER} verified amount correction`,
+      expectedVersion: receiptVersion(financialRows),
+      idempotencyKey: "fin2bqa-financial-reissue-001",
+      actor: actor("ACCOUNTANT")
+    });
+
+    const raceRows = await receiptRows(prisma, RECEIPTS.race);
+    const raceInput = {
+      authorization: "CANCEL_FINAL_RECEIPT" as const,
+      receiptNo: RECEIPTS.race,
+      reason: `${MARKER} concurrent cancellation rehearsal`,
+      expectedVersion: receiptVersion(raceRows),
+      actor: actor("ACCOUNTANT")
+    };
+    const concurrent = await Promise.all([
+      cancelWholeReceipt(prisma, raceInput),
+      cancelWholeReceipt(prisma, raceInput)
+    ]);
+    const raceRetry = await cancelWholeReceipt(prisma, raceInput);
+    const raceAudits = await prisma.paymentAudit.count({
+      where: {
+        payment: { receiptNo: RECEIPTS.race },
+        action: "RECEIPT_CANCELLED"
+      }
+    });
+
+    const rollbackRows = await receiptRows(prisma, RECEIPTS.rollback);
+    let rollbackFailed = false;
+    try {
+      await cancelWholeReceipt(prisma, {
+        authorization: "CANCEL_FINAL_RECEIPT",
+        receiptNo: RECEIPTS.rollback,
+        reason: `${MARKER} forced rollback rehearsal`,
+        expectedVersion: receiptVersion(rollbackRows),
+        actor: {
+          id: `${PREFIX}missing-accountant`,
+          name: `${MARKER} Missing Accountant`,
+          role: "ACCOUNTANT"
+        }
+      });
+    } catch {
+      rollbackFailed = true;
+    }
+    const [rollbackAfter, rollbackNote, rollbackAudits] = await Promise.all([
+      receiptRows(prisma, RECEIPTS.rollback),
+      prisma.receiptNote.findUnique({ where: { receiptNo: RECEIPTS.rollback } }),
+      prisma.paymentAudit.count({ where: { payment: { receiptNo: RECEIPTS.rollback } } })
+    ]);
+    const rollbackState = effectiveReceiptState(rollbackAfter, rollbackNote);
 
     const lockedRows = await receiptRows(prisma, RECEIPTS.locked);
     let lockedBlocked = false;
@@ -337,10 +406,10 @@ async function exercise() {
     } catch (error) {
       lockedBlocked = error instanceof ReceiptLockedDayError;
     }
-    if (!lockedBlocked) throw new Error("FIN2B_LOCKED_DAY_ACCOUNTANT_NOT_BLOCKED");
+    if (!lockedBlocked) throw new Error("FIN2BQA_LOCKED_DAY_ACCOUNTANT_NOT_BLOCKED");
     const lockedAfterAccountant = await receiptRows(prisma, RECEIPTS.locked);
     if (effectiveReceiptState(lockedAfterAccountant).status !== "ACTIVE") {
-      throw new Error("FIN2B_LOCKED_DAY_CHANGED_BY_ACCOUNTANT");
+      throw new Error("FIN2BQA_LOCKED_DAY_CHANGED_BY_ACCOUNTANT");
     }
     const directorCorrection = await cancelWholeReceipt(prisma, {
       authorization: "CANCEL_FINAL_RECEIPT",
@@ -391,22 +460,31 @@ async function exercise() {
       nonFinancial.correctionType !== "NON_FINANCIAL_VERSION" ||
       !nonFinancialRetry.idempotent ||
       financial.correctionType !== "FINANCIAL_REISSUE" ||
+      !financialRetry.idempotent ||
       effectiveReceiptState(originalFinancial).status !== "CANCELLED" ||
       effectiveReceiptState(replacementRows).status !== "ACTIVE" ||
       replacementRows.some((row) => row.admissionNo !== TARGET_ADMISSION_NO) ||
+      concurrent.some((result) => result.status !== "CANCELLED") ||
+      concurrent.reduce((sum, result) => sum + result.changedComponents, 0) !== 3 ||
+      raceRetry.changedComponents !== 0 ||
+      raceAudits !== 3 ||
+      !rollbackFailed ||
+      rollbackState.status !== "ACTIVE" ||
+      !rollbackState.noteConsistent ||
+      rollbackAudits !== 0 ||
       directorCorrection.status !== "CANCELLED" ||
       missingLeadership.leadershipNotification?.missingLeadership !== true ||
       warnings.length !== 1
     ) {
-      throw new Error("FIN2B_COPIED_DATABASE_RECONCILIATION_FAILED");
+      throw new Error("FIN2BQA_COPIED_DATABASE_RECONCILIATION_FAILED");
     }
     const unsafeNotification = campaigns.some((campaign) =>
       /guardian|aadhaar|date\s*of\s*birth|medical|password|session/i.test(`${campaign.title} ${campaign.body}`)
     );
-    if (unsafeNotification) throw new Error("FIN2B_NOTIFICATION_PRIVACY_ALLOWLIST_FAILED");
+    if (unsafeNotification) throw new Error("FIN2BQA_NOTIFICATION_PRIVACY_ALLOWLIST_FAILED");
     assertOperationalHash(state.operationalHash);
     console.log(JSON.stringify({
-      status: "FIN2B_COPY_EXERCISED",
+      status: "FIN2BQA_COPY_EXERCISED",
       cancellation: {
         components: cancelled.componentCount,
         changedOnce: cancelled.changedComponents,
@@ -419,12 +497,28 @@ async function exercise() {
       },
       financialCorrection: {
         type: financial.correctionType,
+        retryIdempotent: financialRetry.idempotent,
         originalReceipt: financial.originalReceiptNo,
         replacementReceipt: financial.replacementReceiptNo,
         originalStatus: effectiveReceiptState(originalFinancial).status,
         replacementStatus: effectiveReceiptState(replacementRows).status,
         originalTotal: financial.originalTotal,
         replacementTotal: financial.replacementTotal
+      },
+      concurrency: {
+        results: concurrent.map((result) => ({
+          changedComponents: result.changedComponents,
+          idempotent: result.idempotent
+        })),
+        retryChanged: raceRetry.changedComponents,
+        audits: raceAudits
+      },
+      rollback: {
+        forcedFailure: rollbackFailed,
+        status: rollbackState.status,
+        noteConsistent: rollbackState.noteConsistent,
+        activeComponents: rollbackAfter.length,
+        audits: rollbackAudits
       },
       reconciliation: {
         cashBefore: beforeSources.feeCash.toFixed(2),
@@ -460,7 +554,7 @@ async function inspect() {
   try {
     const evidence = await inspection(prisma);
     assertOperationalHash(state.operationalHash);
-    console.log(JSON.stringify({ status: "FIN2B_COPY_INSPECTED", ...evidence, operationalHash: state.operationalHash }));
+    console.log(JSON.stringify({ status: "FIN2BQA_COPY_INSPECTED", ...evidence, operationalHash: state.operationalHash }));
   } finally {
     await prisma.$disconnect();
   }
@@ -473,10 +567,10 @@ async function cleanup() {
     await cleanupMarkers(prisma);
     const first = await inspection(prisma);
     const second = await inspection(prisma);
-    if (first.total !== 0 || second.total !== 0) throw new Error("FIN2B_CLEANUP_NOT_EMPTY");
+    if (first.total !== 0 || second.total !== 0) throw new Error("FIN2BQA_CLEANUP_NOT_EMPTY");
     assertOperationalHash(state.operationalHash);
     console.log(JSON.stringify({
-      status: "FIN2B_COPY_CLEANUP_VERIFIED_TWICE",
+      status: "FIN2BQA_COPY_CLEANUP_VERIFIED_TWICE",
       first,
       second,
       operationalHash: state.operationalHash
@@ -491,14 +585,14 @@ async function destroy() {
   const prisma = client(state.databasePath);
   try {
     const evidence = await inspection(prisma);
-    if (evidence.total !== 0) throw new Error("FIN2B_DESTROY_REFUSED_BEFORE_CLEANUP");
+    if (evidence.total !== 0) throw new Error("FIN2BQA_DESTROY_REFUSED_BEFORE_CLEANUP");
   } finally {
     await prisma.$disconnect();
   }
   assertOperationalHash(state.operationalHash);
   cleanupIsolatedDatabase(state.databasePath);
   if (existsSync(STATE_PATH)) rmSync(STATE_PATH, { force: true });
-  console.log(JSON.stringify({ status: "FIN2B_ISOLATED_COPY_REMOVED", operationalHash: state.operationalHash }));
+  console.log(JSON.stringify({ status: "FIN2BQA_ISOLATED_COPY_REMOVED", operationalHash: state.operationalHash }));
 }
 
 async function createReceipt(
@@ -576,7 +670,7 @@ async function cleanupMarkers(prisma: PrismaClient) {
     where: {
       OR: [
         { id: { startsWith: PREFIX } },
-        { receiptNo: { startsWith: "97210" } }
+        { receiptNo: { startsWith: "97310" } }
       ]
     },
     select: { id: true }
@@ -590,12 +684,12 @@ async function cleanupMarkers(prisma: PrismaClient) {
       await tx.notificationCampaign.deleteMany({ where: { id: { in: campaignIds } } });
     }
     if (paymentIds.length) await tx.paymentAudit.deleteMany({ where: { paymentId: { in: paymentIds } } });
-    await tx.receiptNote.deleteMany({ where: { OR: [{ id: { startsWith: PREFIX } }, { receiptNo: { startsWith: "97210" } }] } });
+    await tx.receiptNote.deleteMany({ where: { OR: [{ id: { startsWith: PREFIX } }, { receiptNo: { startsWith: "97310" } }] } });
     await tx.payment.deleteMany({
       where: {
         OR: [
           { id: { startsWith: PREFIX } },
-          { receiptNo: { startsWith: "97210" } }
+          { receiptNo: { startsWith: "97310" } }
         ]
       }
     });
@@ -633,17 +727,17 @@ async function inspection(prisma: PrismaClient) {
       where: {
         OR: [
           { id: { startsWith: PREFIX } },
-          { receiptNo: { startsWith: "97210" } }
+          { receiptNo: { startsWith: "97310" } }
         ]
       }
     }),
-    prisma.receiptNote.count({ where: { OR: [{ id: { startsWith: PREFIX } }, { receiptNo: { startsWith: "97210" } }] } }),
+    prisma.receiptNote.count({ where: { OR: [{ id: { startsWith: PREFIX } }, { receiptNo: { startsWith: "97310" } }] } }),
     prisma.paymentAudit.count({
       where: {
         payment: {
           OR: [
             { id: { startsWith: PREFIX } },
-            { receiptNo: { startsWith: "97210" } }
+            { receiptNo: { startsWith: "97310" } }
           ]
         }
       }
@@ -669,11 +763,11 @@ async function inspection(prisma: PrismaClient) {
 }
 
 function readState(): State {
-  if (!existsSync(STATE_PATH)) throw new Error("FIN2B_STATE_NOT_FOUND");
+  if (!existsSync(STATE_PATH)) throw new Error("FIN2BQA_STATE_NOT_FOUND");
   const state = JSON.parse(readFileSync(STATE_PATH, "utf8")) as State;
   state.databasePath = assertIsolatedDatabasePath(state.databasePath);
   if (state.databasePath.toLowerCase() !== path.resolve(DATABASE_PATH).toLowerCase()) {
-    throw new Error("FIN2B_STATE_DATABASE_MISMATCH");
+    throw new Error("FIN2BQA_STATE_DATABASE_MISMATCH");
   }
   return state;
 }
@@ -689,7 +783,7 @@ function fileHash(filePath: string) {
 function assertOperationalHash(expected: string) {
   const actual = fileHash(OPERATIONAL_DATABASE);
   if (actual !== expected) {
-    throw new Error(`FIN2B_OPERATIONAL_HASH_CHANGED expected=${expected} actual=${actual}`);
+    throw new Error(`FIN2BQA_OPERATIONAL_HASH_CHANGED expected=${expected} actual=${actual}`);
   }
 }
 

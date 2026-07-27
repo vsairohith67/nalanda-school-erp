@@ -71,7 +71,7 @@ describe("API and direct route permission declarations", () => {
       "app/students/[id]/edit/page.tsx": 'requirePermission("EDIT_STUDENTS")',
       "app/payments/page.tsx": 'requirePermission("VIEW_PAYMENTS")',
       "app/payments/new/page.tsx": 'requirePermission("CREATE_PAYMENTS")',
-      "app/payments/[id]/edit/page.tsx": 'requirePermission("VIEW_PAYMENTS")',
+      "app/payments/[id]/edit/page.tsx": 'requireUser()',
       "app/ledger/page.tsx": 'requirePermission("VIEW_LEDGER")',
       "app/ledger/print/page.tsx": 'requirePermission("PRINT_LEDGER")',
       "app/pending-dues/page.tsx": 'requirePermission("VIEW_PENDING_DUES")',

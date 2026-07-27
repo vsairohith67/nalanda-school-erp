@@ -382,11 +382,13 @@ async function restoreIntoDatabase(
         result.warnings.push(`Payment audit ${index + 1} skipped because its payment was not restored or matched.`);
         continue;
       }
-      const changedByUserId = backupUserToLocalUser.get(requiredText(row.changedByUserId, "Changed-by user ID"));
-      if (!changedByUserId) {
-        result.paymentAudits.skipped += 1;
-        result.warnings.push(`Payment audit ${index + 1} skipped because its user account could not be matched safely.`);
-        continue;
+      const backupChangedByUserId = requiredText(row.changedByUserId, "Changed-by user ID");
+      const mappedChangedByUserId = backupUserToLocalUser.get(backupChangedByUserId);
+      const changedByUserId = mappedChangedByUserId ?? restoredBy.id;
+      if (!mappedChangedByUserId) {
+        result.warnings.push(
+          `Payment audit ${index + 1} preserved its original actor label and was linked to the authorized restore operator because its prior user account was unavailable.`
+        );
       }
       const auditData = {
         paymentId,

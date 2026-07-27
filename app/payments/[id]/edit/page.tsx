@@ -1,6 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { PaymentEditForm } from "@/components/payment-edit-form";
@@ -8,42 +8,44 @@ import { receiptVersion } from "@/lib/receipt-integrity";
 import { sanitizePaymentAuditJson } from "@/lib/finance-privacy";
 
 export default async function EditPaymentPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await requirePermission("VIEW_PAYMENTS");
+  const user = await requireUser();
+  const permissions = await getEffectivePermissions(prisma, user.role);
+  const canRestore = permissionSetCan(permissions, "RESTORE_PAYMENTS");
+  const canCancel = permissionSetCan(permissions, "CANCEL_FINAL_RECEIPT");
+  const canCorrect = permissionSetCan(permissions, "CORRECT_FINAL_RECEIPT");
+  if (!canRestore && !canCancel && !canCorrect) redirect("/unauthorized");
   const { id } = await params;
-  const [payment, permissions] = await Promise.all([
-    prisma.payment.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        date: true,
-        receiptNo: true,
-        admissionNo: true,
-        studentName: true,
-        amountPaid: true,
-        paymentMode: true,
-        receivedAccount: true,
-        transactionRefNo: true,
-        feeType: true,
-        termHint: true,
-        remarks: true,
-        isCancelled: true,
-        cancellationReason: true,
-        audits: {
-          select: {
-            id: true,
-            action: true,
-            oldValueJson: true,
-            newValueJson: true,
-            changedByName: true,
-            reason: true,
-            createdAt: true
-          },
-          orderBy: { createdAt: "desc" }
-        }
+  const payment = await prisma.payment.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      date: true,
+      receiptNo: true,
+      admissionNo: true,
+      studentName: true,
+      amountPaid: true,
+      paymentMode: true,
+      receivedAccount: true,
+      transactionRefNo: true,
+      feeType: true,
+      termHint: true,
+      remarks: true,
+      isCancelled: true,
+      cancellationReason: true,
+      audits: {
+        select: {
+          id: true,
+          action: true,
+          oldValueJson: true,
+          newValueJson: true,
+          changedByName: true,
+          reason: true,
+          createdAt: true
+        },
+        orderBy: { createdAt: "desc" }
       }
-    }),
-    getEffectivePermissions(prisma, user.role)
-  ]);
+    }
+  });
   if (!payment) notFound();
   const receiptRows = await prisma.payment.findMany({
     where: { receiptNo: payment.receiptNo, deletedAt: null },
@@ -82,9 +84,9 @@ export default async function EditPaymentPage({ params }: { params: Promise<{ id
           isCancelled: payment.isCancelled,
           cancellationReason: payment.cancellationReason
         }}
-        canRestore={permissionSetCan(permissions, "RESTORE_PAYMENTS")}
-        canCancel={permissionSetCan(permissions, "CANCEL_FINAL_RECEIPT")}
-        canCorrect={permissionSetCan(permissions, "CORRECT_FINAL_RECEIPT")}
+        canRestore={canRestore}
+        canCancel={canCancel}
+        canCorrect={canCorrect}
         receiptVersion={receiptVersion(receiptRows)}
         receiptSummary={{
           date: receiptRows[0]?.date.toISOString() ?? payment.date.toISOString(),
