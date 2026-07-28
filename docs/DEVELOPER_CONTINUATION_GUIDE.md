@@ -8,6 +8,8 @@ Independent 23B-QA cleared this branch and its final roadmap correction. Begin 2
 
 FIN-2A is complete and cleared. FIN-2B deliberately supersedes only its Accountant cancellation authority through exact `CANCEL_FINAL_RECEIPT` and `CORRECT_FINAL_RECEIPT` permissions, immutable audit and Director/Super Admin notification. Do not reopen the retained Accountant privacy/export/receipt-integrity safeguards as unresolved Nalanda gaps. Payroll and employee self-service remain separate evidence/governance gaps. DEVOPS-1D remains payment-gated and Prompt 21/22 gates are unchanged.
 
+RECON-1A preserves the parallel Prompt 23B and FIN-2B workstreams and their final commit order. No feature commit is replayed. Treat `ACCOUNTANT_RECEIPT_CANCELLATION_CORRECTION_AND_NOTIFICATION.md` as the final finance-policy supersession and `RECON_1A_SCHOOLKNOT_FINANCE_POLICY_RECONCILIATION.md` as the integration record. No `FIN-2C` scope is approved or implied.
+
 ## Prompt 22A-QA handoff
 
 Prompt 22A is fully cleared for planning/governance only. Read `STAFF_DOB_EPFO_22A_QA_REPORT.md` with the four Prompt 22A documents before any later work. The release result is `PROMPT_22A_CLEARED_BUT_22B_CONDITIONAL`: do not begin Prompt 22B coding or real-data entry until every decision-record condition has dated evidence. Prompt 22C and Prompt 22D remain separately blocked.
@@ -976,7 +978,7 @@ Developer invariants:
 3. Keep Accountant hard denials for `VIEW_STUDENTS`, `MANAGE_RECEIPTS`, `COMMUNICATE_PARENT`, and `EXPORT_REMINDERS`, and Viewer/Auditor hard denial for `VIEW_LEDGER`, across safe defaults, effective reads, matrix display, validation, and explicit save. Final-receipt actions must use only `CANCEL_FINAL_RECEIPT` or `CORRECT_FINAL_RECEIPT`; legacy `CANCEL_PAYMENTS`, `EDIT_PAYMENTS`, or `MANAGE_FINANCE` do not substitute. Backup generation must remain read-only and preserve stored role rows.
 4. New finance CSV routes must use a documented field allowlist, formula-safe cell encoding, a 2,000-row fail-closed limit, a maximum 366-day range where dates apply, private/no-store headers, safe filenames, and `FINANCE_EXPORT_DOWNLOADED` audit.
 5. `lib/receipt-integrity.ts` is authoritative. Never calculate collection from only `Payment.isCancelled = false`; first exclude any mixed-state receipt.
-6. Final cancellation is whole-receipt, Director/Super Admin only, reasoned, versioned, transactional, append-only, and idempotent. Do not add a one-component cancel button.
+6. Final cancellation is whole-receipt, reasoned, versioned, transactional, append-only and idempotent. It requires exact `CANCEL_FINAL_RECEIPT` authority and is available to an active Accountant, Director or Super Admin with that permission. Correction requires exact `CORRECT_FINAL_RECEIPT`; non-financial changes append a version and financial changes use linked cancellation/reissue. Do not add a one-component cancel button or in-place final-receipt overwrite.
 7. Receipt/admission numbers stay immutable during payment correction. Any future reassignment requires a separately reviewed correction workflow.
 8. Store `receiptAuditSnapshot` only; sanitize historical JSON before a restricted response or render.
 9. Mutation tests run only on an isolated copied/fresh database. `pnpm.cmd qa:fin2a` refuses to operate outside the established QA root and hash-checks the operational database.
@@ -987,5 +989,7 @@ FIN-2A verification passed 274 page routes, 378 API routes, typecheck, 1,496 tes
 ## FIN-2B Accountant final-receipt cancellation and correction
 
 Read `ACCOUNTANT_RECEIPT_CANCELLATION_CORRECTION_AND_NOTIFICATION.md` before changing final-receipt behavior. Cancellation is whole-receipt, versioned and transactional. Non-financial correction appends an immutable audit version; financial correction cancels and reissues a linked replacement. Successful Accountant actions create exactly-once in-app notifications for active Directors and Super Admins. Non-mutable Cash Book days block ordinary Accountant action and create a leadership review alert without rewriting the snapshot. These workflows are not deletion or refund.
+
+FIN-2B and FIN-2B-QA are complete. No FIN-2C implementation is authorised. Do not fold refunds, chargebacks, gateway/settlement, Day Closer, payroll or employee self-service into receipt-governance maintenance.
 
 The final backup initially exposed and stopped a six-row operational permission-seeding rewrite. The seeder was corrected to preserve existing rows, a byte-identical rollback candidate was independently verified, and the operational database was atomically restored to SHA-256 `1556B98FCAF0F2475C0C0F1BAEEFCE4E638680B9D4C7DC9BFFB8B6F0D09B4392`, 4,771,840 bytes, timestamp `2026-07-19T13:21:15.353Z`, with the exact schema/migration/business checkpoint. A repeat backup left hash and timestamp unchanged.

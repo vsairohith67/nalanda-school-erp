@@ -14,6 +14,8 @@
 
 ## Fee receipt privacy and cancellation
 
+FIN-2A privacy/export/integrity and FIN-2B final-receipt governance are complete. The policy below supersedes earlier operator wording that limited final-receipt cancellation to leadership. No FIN-2C workflow is approved; refund, gateway/settlement, Day Closer, payroll and employee self-service remain outside this routine.
+
 - Accountant uses the payment lookup, ledger, pending-dues, collection, receipt, and audit screens only for fee collection. Those surfaces must not be used to obtain Parent contacts, address, date of birth, Aadhaar-related data, documents, marks, medical information, private Student notes, credentials, or internal actor IDs.
 - Accountant cannot prepare Parent communication from the ledger or export reminder destinations. An Accountant may cancel a final receipt only with `CANCEL_FINAL_RECEIPT`, and may correct one only with `CORRECT_FINAL_RECEIPT`; broad finance permissions do not substitute.
 - An authorised Accountant, Director or Super Admin opens the payment or Receipt Audit entry, reviews the whole receipt, selects **Cancel entire receipt** or the governed correction action, enters a specific reason, and confirms the in-app dialog. Successful Accountant actions notify every active Director and Super Admin.

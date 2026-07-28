@@ -485,6 +485,8 @@ DEVOPS-1A changes no Prisma schema, migration, route/API boundary, operational r
 
 FIN-2B intentionally supersedes only the Accountant cancellation/correction authority statements below. The retained FIN-2A privacy, projection, export, audit, split-receipt and reconciliation controls remain mandatory.
 
+RECON-1A records the parallel Prompt 23B/FIN-2B execution and the preserved final lineage without rewriting either feature branch. FIN-2A and FIN-2B are complete: an Accountant needs the exact cancellation/correction permission; every successful action is audited and notifies active Directors/Super Admins; and non-mutable days block ordinary action without silently rewriting the stored snapshot. No approved `FIN-2C` scope exists. Refund, gateway/settlement, Day Closer, payroll and employee self-service remain separate evidence/approval items, not unfinished FIN-2A/FIN-2B defects.
+
 Resolved:
 
 - Broad Accountant Student access was replaced by an exact-admission finance lookup and explicit response allowlists.

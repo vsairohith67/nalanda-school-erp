@@ -6,6 +6,10 @@ Decision date: **26 July 2026**
 
 Final build decision: `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`
 
+## RECON-1A finance supersession — 28 July 2026
+
+Prompt 23B and FIN-2B were initiated in parallel, while the preserved final Git lineage places the cleared Prompt 23B commits before the two FIN-2B commits. FIN-2B now supersedes only Prompt 23B's earlier Accountant final-receipt wording. FIN-2A privacy/export/`Payment`-`ReceiptNote` integrity and FIN-2B Accountant cancellation, immutable correction/reissue, audit, active Director/Super Admin notification and locked-day protection are complete. No approved `FIN-2C` scope exists; refund, gateway/settlement, Day Closer, payroll and employee self-service remain separate evidence/approval gates. Teacher attendance and every unrelated Prompt 23B conclusion are unchanged.
+
 ## Source and repository checkpoint
 
 The authoritative source is the Notion page **Schoolknot Multi-Role Replacement Audit**. It was re-fetched through the connected Notion app. No live Schoolknot page was reopened. No personal value, credential, screenshot, download or export was retained.
@@ -15,13 +19,17 @@ The authoritative source is the Notion page **Schoolknot Multi-Role Replacement 
 | Management | Authenticated Management/Admin; completed 21 July 2026 | 15 top-level modules; 119 desktop observations; 39 exact `390 x 844` checks; read-only | `MANAGEMENT_RECONCILIATION_CLEARED` |
 | Parent | Authenticated Parent; repeat completed 24 July 2026 | 18 visible desktop entries across 15 routes; desktop and exact `390 x 844`; no writes/downloads | Read-only evidence complete; parity not cleared |
 | Principal | Authenticated Principal; completed 24 July 2026 | 9 top-level areas; desktop and exact mobile; blank/error/inaccessible surfaces retained as gaps | Excessive source authority; Nalanda must be academic-first |
-| Accountant / Employee | Schoolknot designation `Admin Executive`; operational role confirmed by the user as Accountant; 25 July 2026 | Finance surfaces partially observed; payroll and employee self-service not proven | `ACCOUNTANT_AUDIT_PARTIAL_NEEDS_EVIDENCE`; FIN-2A Nalanda defects resolved |
+| Accountant / Employee | Schoolknot designation `Admin Executive`; operational role confirmed by the user as Accountant; 25 July 2026 | Finance surfaces partially observed; payroll and employee self-service not proven | `ACCOUNTANT_AUDIT_PARTIAL_NEEDS_EVIDENCE` for source payroll/self-service evidence; FIN-2A and FIN-2B Nalanda controls resolved |
 | Teacher | Authenticated Teacher; completed 26 July 2026 | 5 menu groups; 9 menu routes plus one legacy password route; exact desktop/mobile; no writes | `TEACHER_AUDIT_COMPLETE_WITH_EVIDENCE_GAPS`; `NO_GO_FOR_TEACHER_CUTOVER` |
 | Closure | Prompt 23A-E completed 26 July 2026 | Exactly 109 unique unresolved items, each assigned one of eight authorised dispositions | `READY_FOR_PROMPT_23B` |
 
 FIN-2A and FIN-2A-QA result: `FINANCE_PRIVACY_AND_RECEIPT_INTEGRITY_CLEARED`.
 
+FIN-2B and FIN-2B-QA result: `ACCOUNTANT_RECEIPT_GOVERNANCE_CLEARED`.
+
 Repository checkpoint: branch created from clean `main` at `a3e55f34531f1bdc0a06e8b93c25690fb4d87563`, private origin synced, 274 page routes, 378 API routes, 160 Prisma models, 337 permission tokens, schema SHA-256 `B1135F63C2E5579F320A5FFD01BDB3A167520B42D479D3906F7BB611FC82FC00`, migration `20260722_clean_install_baseline` with SQL SHA-256 `E6D467206CFA536487C8C63882D13BA489C0235BE74E9E076423323A511C3025`, and backup version 37.
+
+RECON-1A starts from synchronized `main` at `f1c29def5073d45e486878481e2b6e2d2b069e8d`. Both feature branches and their existing annotated tags remain preserved; no already-merged commit is replayed.
 
 ## Classification rule
 

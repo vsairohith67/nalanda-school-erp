@@ -15,6 +15,10 @@
 
 Prompt 23A roles and 23A-E are complete and `READY_FOR_PROMPT_23B`. Prompt 23B is consolidation-only; no Schoolknot data or module was imported/implemented. Independent 23B-QA cleared the source, exact 109-row ledger, repository evidence and cutover gates after one roadmap-contract correction. Teacher remains `NO_GO`; 23C may begin from the merged/tagged QA baseline. FIN-2A is cleared, DEVOPS-1D is payment-gated, and Prompt 21/22 decisions are unchanged.
 
+- [RECON-1A Schoolknot and Finance Policy Reconciliation](RECON_1A_SCHOOLKNOT_FINANCE_POLICY_RECONCILIATION.md) - preserved Prompt 23B/FIN-2B branch and tag lineage, overlapping files, authoritative Accountant policy, superseded wording and remaining finance gates.
+
+RECON-1A records that Prompt 23B and FIN-2B ran as parallel workstreams while preserving the final Prompt 23B-then-FIN-2B commit lineage. FIN-2A and FIN-2B/FIN-2B-QA are complete. No FIN-2C scope is approved; refunds, gateway/settlement, Day Closer, payroll and employee self-service remain separate gates.
+
 ## Prompt 22A Staff DOB and EPFO/EPS planning
 
 - [Staff DOB, EPFO/EPS Status and Age-58 Reminder Planning](STAFF_DOB_EPFO_EPS_REMINDER_PLANNING.md) - official-source register, current Staff baseline, age-58 boundary, field classifications, DOB quality, reminder windows, exceptions and exact 22B/22C/22D gates.
@@ -63,6 +67,7 @@ Use this page as the starting point for all Nalanda Fee Control documentation.
 | [OPERATIONS.md](OPERATIONS.md) | Director, Admin, Accountant | Daily, weekly, monthly, import, restore, and role-responsibility routines. |
 | [ACCOUNTANT_DATA_MINIMISATION_AND_RECEIPT_INTEGRITY.md](ACCOUNTANT_DATA_MINIMISATION_AND_RECEIPT_INTEGRITY.md) | Director, Super Admin, Accountant, Viewer/Auditor, future developer | FIN-2A exact Accountant allowlists, export contracts, shared receipt state, copied-database evidence, and retained safeguards; read the FIN-2B supersession. |
 | [ACCOUNTANT_RECEIPT_CANCELLATION_CORRECTION_AND_NOTIFICATION.md](ACCOUNTANT_RECEIPT_CANCELLATION_CORRECTION_AND_NOTIFICATION.md) | Director, Super Admin, Accountant, future developer | FIN-2B exact cancellation/correction permissions, immutable audit/reissue, locked-day protection, reconciliation, leadership notification policy, independent copied-database and Browser QA closure. |
+| [RECON_1A_SCHOOLKNOT_FINANCE_POLICY_RECONCILIATION.md](RECON_1A_SCHOOLKNOT_FINANCE_POLICY_RECONCILIATION.md) | School leadership and future developer | RECON-1A parallel-workstream lineage, supersession policy, overlap, preserved conclusions and remaining finance gates. |
 | [REAL_DATA_GO_LIVE_CHECKLIST.md](REAL_DATA_GO_LIVE_CHECKLIST.md) | Director and Principal | Final checklist before live school data is trusted. |
 | [ATTENDANCE_FUTURE_MODULE_PLAN.md](ATTENDANCE_FUTURE_MODULE_PLAN.md) | Management and future developer | Planning for later third-party attendance-device integration. Manual student and staff attendance foundations are available; device integration is not. |
 | [SCHOOLKNOT_REPLACEMENT_GAP_MAP.md](SCHOOLKNOT_REPLACEMENT_GAP_MAP.md) | School leadership and future developer | Replacement priorities, migration gates, Biomax BM-70W integration stages, quotation questions, and next prompts. Planning only. |

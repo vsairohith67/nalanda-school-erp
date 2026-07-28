@@ -14,6 +14,12 @@ const roadmap = read("docs/SCHOOLKNOT_GAP_IMPLEMENTATION_ROADMAP_23C_ONWARD.md")
 const synthetic = read("docs/SCHOOLKNOT_SYNTHETIC_WRITE_TEST_PLAN.md");
 const vendor = read("docs/SCHOOLKNOT_VENDOR_EXPORT_AND_DATA_DICTIONARY_REQUEST.md");
 const decision = read("docs/SCHOOLKNOT_FINAL_REPLACEMENT_DECISION.md");
+const reconciliation = read("docs/RECON_1A_SCHOOLKNOT_FINANCE_POLICY_RECONCILIATION.md");
+const fin2a = read("docs/ACCOUNTANT_DATA_MINIMISATION_AND_RECEIPT_INTEGRITY.md");
+const fin2b = read("docs/ACCOUNTANT_RECEIPT_CANCELLATION_CORRECTION_AND_NOTIFICATION.md");
+const developerGuide = read("docs/DEVELOPER_CONTINUATION_GUIDE.md");
+const operationsGuide = read("docs/OPERATIONS.md");
+const beginnerGuide = read("docs/NOOB_OPERATING_GUIDE.md");
 const statusDocs = [
   "docs/ERP_FEATURE_STATUS_AND_GAP_MAP.md",
   "docs/SCHOOLKNOT_REPLACEMENT_GAP_MAP.md",
@@ -96,11 +102,37 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
   });
 
   it("treats FIN-2A as resolved and preserves payroll/self-service uncertainty", () => {
-    expect(matrix).toContain("FIN-2A Nalanda defects resolved");
+    expect(matrix).toContain("FIN-2A and FIN-2B Nalanda controls resolved");
     expect(roles).toContain("FIN-2A privacy/export/`ReceiptNote`-`Payment` integrity issues are resolved");
     expect(roles).toContain("FIN-2B supersedes only Prompt 23B's earlier Accountant cancellation wording");
     expect(decision).toContain("Payroll and employee self-service remain absent/unverified");
     expect(combined).not.toContain("FIN-2A implementation pending");
+  });
+
+  it("locks the RECON-1A Accountant policy without rewriting unrelated Prompt 23B conclusions", () => {
+    for (const fact of [
+      "Prompt 23B and FIN-2B were initiated as parallel workstreams",
+      "9752304952a02d840a5d2a629b0f1896d0589a1b",
+      "65b4b00f49d97276cd3f8a1f31093be94cb98ccf",
+      "f1c29def5073d45e486878481e2b6e2d2b069e8d",
+      "CANCEL_FINAL_RECEIPT",
+      "CORRECT_FINAL_RECEIPT",
+      "Every successful Accountant cancellation or correction",
+      "No approved or implemented `FIN-2C` scope exists",
+      "Teacher remains `NO_GO`",
+    ]) expect(reconciliation).toContain(fact);
+
+    for (const doc of [matrix, roles, decision, gates, roadmap, fin2b, developerGuide, operationsGuide, beginnerGuide]) {
+      expect(doc).toMatch(/FIN-2A/);
+      expect(doc).toMatch(/FIN-2B/);
+      expect(doc).toMatch(/FIN-2C/);
+    }
+
+    expect(fin2a).toContain("FIN-2B supersedes only that authority rule");
+    expect(fin2a).toContain("Payment` components are authoritative");
+    expect(developerGuide).not.toContain("Final cancellation is whole-receipt, Director/Super Admin only");
+    expect(beginnerGuide).not.toContain("Accountant can make an audited payment correction, but cannot cancel a final receipt");
+    expect(reconciliation).toContain("Teacher attendance and every unrelated Prompt 23B conclusion are unchanged");
   });
 
   it("records the exact Teacher attendance defect and holds Teacher cutover", () => {

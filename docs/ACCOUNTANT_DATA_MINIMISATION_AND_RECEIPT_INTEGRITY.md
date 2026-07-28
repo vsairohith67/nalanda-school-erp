@@ -78,10 +78,12 @@ No export includes Parent contacts, address, date of birth, Student documents, m
 
 ## Final fee-receipt cancellation
 
-`CANCEL_PAYMENTS` is non-delegably denied to Accountant. The direct payment and receipt-audit APIs also require:
+At the FIN-2A checkpoint, `CANCEL_PAYMENTS` was non-delegably denied to Accountant and the direct cancellation path was limited to Director/Super Admin. FIN-2B supersedes only that authority rule. `CANCEL_PAYMENTS` remains denied and cannot substitute for either exact final-receipt permission.
 
-- authenticated `CANCEL_PAYMENTS`;
-- role `DIRECTOR` or `SUPER_ADMIN`;
+The current direct payment and Receipt Audit actions require:
+
+- authenticated `CANCEL_FINAL_RECEIPT` for cancellation or `CORRECT_FINAL_RECEIPT` for correction;
+- an active Accountant, Director or Super Admin with the exact effective permission;
 - a 3-to-500-character reason;
 - the receipt version presented to the user;
 - the current version to match inside the transaction.
@@ -162,7 +164,7 @@ Independent QA used a new ignored copied database and newly generated `FIN2AQA` 
 The independent pass verified:
 
 - Accountant lookup returned exactly `academicYear`, `admissionNo`, `className`, `feeAllocation`, `section`, `status`, and `studentName`; the broader Student API returned 403.
-- Accountant direct final-receipt cancellation and Student-master export returned 403. Purpose-specific payment, dues, and collection CSVs returned only their documented headers with private/no-store caching.
+- At the FIN-2A checkpoint, Accountant direct final-receipt cancellation and Student-master export returned 403. FIN-2B later superseded only the cancellation authority through `CANCEL_FINAL_RECEIPT`; broad Student export remains denied. Purpose-specific payment, dues, and collection CSVs returned only their documented headers with private/no-store caching.
 - Viewer pending dues remained aggregate-only with no Student identity or export control; direct payment export returned 403 and ledger print ended at `/unauthorized` without identity content.
 - Director cancellation returned 400 without a reason and 409 for a stale active version. The valid accessible confirmation cancelled all three components, wrote exactly three append-only audits, synchronized `ReceiptNote`, and remained idempotent with zero changes on repeat.
 - The cancelled receipt reopened INR 6,000 of dues, left zero paid allocation for the synthetic Student, left zero Daily Collection and fee-cash residue, disappeared from dashboard activity, and printed all three components under a visible `CANCELLED` watermark.
@@ -177,7 +179,7 @@ The independent pass verified:
 ## Remaining limitations
 
 - There is no partial final-receipt cancellation. The whole receipt is the only safe rule.
-- There is no refund, chargeback, gateway, or compensating locked-day correction module.
+- There is no refund, chargeback, gateway or silent locked-day rewrite. FIN-2B blocks ordinary Accountant action on a non-mutable day and uses the existing authorised leadership correction/reconciliation path while preserving the locked snapshot and visible source drift.
 - `ReceiptNote` remains metadata; its schema was not expanded into a workflow/version model.
 - SQLite serializes writes. FIN-2A handles concurrent final-state requests idempotently, but horizontal multi-instance deployment remains outside the supported architecture.
 - Historical broad audit JSON may still exist at rest in old databases; FIN-2A redacts it at every restricted response/render boundary and writes only safe snapshots going forward.

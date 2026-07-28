@@ -1,5 +1,11 @@
 # Accountant Final-Receipt Cancellation, Correction and Leadership Notification
 
+## RECON-1A status — 28 July 2026
+
+Prompt 23B and FIN-2B were initiated in parallel. Their preserved final Git lineage applies the Prompt 23B-QA consolidation first and the two FIN-2B commits second. RECON-1A changes no finance behavior: it records this document as the authoritative supersession for Accountant final-receipt policy while retaining all unrelated Prompt 23B conclusions.
+
+FIN-2A privacy/export/receipt-integrity hardening and FIN-2B/FIN-2B-QA are complete. No approved or implemented `FIN-2C` scope exists. Refund, chargeback, live gateway/settlement, Day Closer, payroll and employee self-service remain separate evidence and approval gates.
+
 ## FIN-2B policy
 
 FIN-2B deliberately supersedes only the earlier FIN-2A and Prompt 23B wording that prohibited Accountant final-receipt cancellation or left Accountant correction unresolved. Every FIN-2A privacy, export, receipt-integrity, reconciliation, audit and concurrency safeguard remains in force.

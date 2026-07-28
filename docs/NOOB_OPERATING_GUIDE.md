@@ -8,7 +8,7 @@ The planning audit is complete, but the school must **not switch everyone from S
 - Teachers must not be cut over yet. The current attendance page can be permission-enabled without limiting the Teacher to the exact class and section assigned in the timetable.
 - The first future build is Prompt 23C, after a separate QA review, to fix only that Teacher attendance scope.
 - Keep live hosting, DNS, payment, external backup and monitoring off until the separate paid/provider deployment gates are approved.
-- FIN-2A finance privacy and receipt integrity is already cleared. Payroll, refunds, live payment gateway, transport/GPS and Schoolknot migration are not approved by this document.
+- FIN-2A finance privacy/export/receipt integrity and FIN-2B Accountant final-receipt governance are cleared. An Accountant needs the exact permission, every successful cancellation/correction is audited and notifies active Directors/Super Admins, financial correction cancels/reissues instead of overwriting, and a locked day cannot be silently rewritten. Payroll, refunds, live payment gateway, transport/GPS and Schoolknot migration are not approved by this document. No FIN-2C scope is currently approved.
 
 ## DEVOPS-1C staging readiness planning (2026-07-23)
 
@@ -111,7 +111,7 @@ Never print a receipt before checking the amount and student.
 
 ### Correct or cancel a final fee receipt
 
-Accountant can make an audited payment correction, but cannot cancel a final receipt. Receipt and admission numbers are locked during correction so one component cannot be moved away from the receipt or reassigned to another Student.
+An Accountant may cancel a final receipt only with `CANCEL_FINAL_RECEIPT` and may correct one only with `CORRECT_FINAL_RECEIPT`. Cancellation applies to the whole receipt. A non-financial correction appends an immutable audit version; a financial correction cancels and reissues a linked replacement instead of overwriting the issued receipt. Every successful Accountant action is audited and notifies active Directors and Super Admins. Submitted, approved and locked accounting days block ordinary Accountant action and are never silently rewritten.
 
 Director or Super Admin:
 

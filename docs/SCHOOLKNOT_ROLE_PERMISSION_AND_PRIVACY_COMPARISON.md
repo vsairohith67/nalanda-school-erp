@@ -1,8 +1,10 @@
 # Schoolknot Role Permission and Privacy Comparison
 
-Status: **Prompt 23B final role design; no permission code changed**
+Status: **Prompt 23B role design reconciled with completed FIN-2B; RECON-1A changes documentation only**
 
 FIN-2A privacy/export/`ReceiptNote`-`Payment` integrity issues are resolved. FIN-2B supersedes only Prompt 23B's earlier Accountant cancellation wording by adding exact cancellation and correction permissions, immutable reissue history and leadership notification; all FIN-2A privacy and export safeguards remain.
+
+For an Accountant, `CANCEL_FINAL_RECEIPT` authorises only governed whole-receipt cancellation and `CORRECT_FINAL_RECEIPT` authorises only governed correction. Every successful action is audited and notifies all active Directors and Super Admins. Non-mutable Cash Book days block ordinary Accountant action without rewriting the locked snapshot. No broad finance or legacy payment permission substitutes. No approved `FIN-2C` scope exists.
 
 ## Final role comparison
 
@@ -27,6 +29,8 @@ FIN-2A privacy/export/`ReceiptNote`-`Payment` integrity issues are resolved. FIN
 | Authority | Management | Principal intended | Accountant | Teacher intended | Parent intended |
 |---|---|---|---|---|---|
 | Financial mutation | Explicit permission and workflow | None by default | Implemented finance actions only | None | None |
+| Final receipt cancellation | Exact `CANCEL_FINAL_RECEIPT` | None by default | Exact `CANCEL_FINAL_RECEIPT`; whole-receipt, audited, leadership-notified | None | None |
+| Final receipt correction | Exact `CORRECT_FINAL_RECEIPT` | None by default | Exact `CORRECT_FINAL_RECEIPT`; immutable version or linked cancel/reissue | None | None |
 | Academic entry | Oversight/configuration only as needed | Approve/lock/correct under policy | None | Assigned scope entry/submit | None |
 | Communication | Approve/publish by policy | Governed academic audiences | Own inbox/preferences | Assigned-scope draft; no self-approval | Own inbox/ack/preferences |
 | Export | Purpose-specific audited allowlists | Academic allowlists only | FIN-2A finance allowlists | None by default | None |

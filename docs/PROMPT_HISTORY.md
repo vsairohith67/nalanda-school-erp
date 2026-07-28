@@ -1,5 +1,11 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## RECON-1A - Parallel Prompt 23B and FIN-2B policy reconciliation (2026-07-28)
+
+Prompt 23B and FIN-2B were initiated as parallel workstreams. The preserved final Git lineage is Prompt 23B commits `737ee86`/`9752304`, then FIN-2B commits `65b4b00`/`f1c29de`; the common ancestor of the two retained feature branches is `9752304`. Both branches and their existing annotated tags remain visible, and synchronized `main` already contained every verified feature commit before the documentation-only reconciliation branch was created.
+
+The final policy supersedes only stale Accountant final-receipt wording. FIN-2A privacy/export/`Payment`-`ReceiptNote` integrity is complete. Exact `CANCEL_FINAL_RECEIPT` and `CORRECT_FINAL_RECEIPT` authority governs whole-receipt cancellation and immutable correction/reissue; every successful Accountant action is audited and notifies all active Directors and Super Admins; and non-mutable days block ordinary Accountant action without silently rewriting the locked snapshot. No FIN-2C scope is approved. Refund, gateway/settlement, Day Closer, payroll and employee self-service remain separate gates. Teacher attendance NO-GO and every unrelated Prompt 23B conclusion remain unchanged.
+
 ## FIN-2B-QA - Independent Accountant receipt governance QA (2026-07-28)
 
 Independently exercised FIN-2B on a fresh copied database with `FIN2BQA` fixtures across all eight roles. Exact permissions, authenticated page/API access, reason/version/origin validation, immutable non-financial correction, financial cancellation/reissue, receipt-number immutability and linkage, split-component and `ReceiptNote` consistency, dues/Ledger/collection/Receipt Audit/Cash Book/dashboard/print/export reconciliation, open/locked days, exactly-once private leadership inbox rows, missing-leader warning, retry/concurrency, forced rollback and in-app-only delivery all passed.
@@ -738,7 +744,7 @@ Implementation remains on `devops/clean-install-migration-repair` for independen
 
 Started from clean synchronized `main` commit `44ab30bde1298035b58fcce0a8aacc6ea9c95705` on feature branch `finance/accountant-privacy-receipt-integrity`. The confirmed source risks were limited to excess Accountant Student/finance-export data, weak final-receipt cancellation authority/confirmation/audit, and possible `ReceiptNote`/`Payment` divergence.
 
-Implemented an exact-admission finance Student lookup and purpose-specific Student, payment, ledger, collection, dues, and Viewer aggregate serializers. Accountant is non-delegably denied broad Student access, Student/reminder export, Parent communication, receipt-note management, and final-receipt cancellation. Viewer/Auditor is aggregate-only and non-delegably denied all exports and Student-ledger printing.
+Implemented an exact-admission finance Student lookup and purpose-specific Student, payment, ledger, collection, dues, and Viewer aggregate serializers. At the FIN-2A checkpoint, Accountant was non-delegably denied broad Student access, Student/reminder export, Parent communication, receipt-note management, and final-receipt cancellation. FIN-2B later superseded only the final-receipt authority rule through its exact permissions. Viewer/Auditor remains aggregate-only and non-delegably denied all exports and Student-ledger printing.
 
 Hardened generic and specialized finance exports with explicit field/purpose contracts, formula neutralisation, a 2,000-row limit, date bounds where applicable, safe names, private/no-store headers, and append-only download audit. No export contains Parent contacts, address, date of birth, documents, marks, medical data, raw Student/internal actor IDs, passwords/secrets, or private Student notes.
 
@@ -752,7 +758,7 @@ Final verification passed 274 page routes, 378 API routes, typecheck, 1,496/1,49
 
 # FIN-2A-QA - Independent Accountant Privacy and Receipt-Cancellation Closure (2026-07-26)
 
-Independent QA used a fresh ignored operational copy with new `FIN2AQA` Director, Accountant, Viewer, Student, and three-component Cash plus two-UPI receipt fixtures. Direct API checks proved the exact Accountant lookup allowlist, 403 broad Student access, 403 Accountant cancellation/Student export, purpose-specific CSV headers, aggregate-only Viewer data, 403 Viewer export, and Viewer ledger print redirect to `/unauthorized`.
+Independent QA used a fresh ignored operational copy with new `FIN2AQA` Director, Accountant, Viewer, Student, and three-component Cash plus two-UPI receipt fixtures. At that FIN-2A checkpoint, direct API checks proved the exact Accountant lookup allowlist, 403 broad Student access, 403 Accountant cancellation/Student export, purpose-specific CSV headers, aggregate-only Viewer data, 403 Viewer export, and Viewer ledger print redirect to `/unauthorized`. FIN-2B later superseded only the Accountant cancellation authority; the Student/export restrictions remain.
 
 Reasonless and stale Director cancellation returned 400 and 409. Valid cancellation synchronized all three components and `ReceiptNote`, wrote three append-only audits, reopened INR 6,000, removed Daily Collection/Cash Book/dashboard residue, and printed `CANCELLED`. Repeat/concurrent cancellation was idempotent, forced failure rolled back completely, cross-request receipt append returned 409 with three components retained, and the unsafe `1e308` receipt range returned 400.
 

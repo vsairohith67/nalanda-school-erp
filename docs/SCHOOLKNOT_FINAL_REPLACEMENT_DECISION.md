@@ -4,6 +4,8 @@ Decision: `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`
 
 Date: **26 July 2026**
 
+Finance supersession — **28 July 2026**: Prompt 23B and FIN-2B ran as parallel workstreams, and the preserved final lineage applies FIN-2B after Prompt 23B-QA. FIN-2A privacy/export/integrity and FIN-2B Accountant cancellation/correction are complete. Exact permissions, immutable audit/reissue, active Director/Super Admin notification and locked-day protection now govern final receipts. No approved `FIN-2C` scope exists; refund, gateway/settlement, Day Closer, payroll and employee self-service remain separate gates.
+
 ## Defensible answers
 
 - **Already replaced or stronger:** core Students/Guardians/lifecycle, governed finance and split receipts, expenses/budgets/Cash Book/misc/books, timetable foundation, staff leave/substitutes, Homework publishing, exams/marks/report cards, Library, certificates/Class X/ID cards, targeted communications, roles/server guards, backup/rehearsal, public/private split, PWA safety, AI and OCR boundaries.
@@ -22,7 +24,7 @@ Payroll and employee self-service remain absent/unverified.
 
 ## Role decision
 
-Management, Parent, Principal and Accountant may only enter narrowly defined conditional pilots after their stated gates. Teacher cannot. `DEVOPS-1D PAYMENT_GATED_DEFERRED`, Prompt 21B-21D blocked, Prompt 22B conditional and Prompt 22C-22D blocked remain unchanged.
+Management, Parent, Principal and Accountant may only enter narrowly defined conditional pilots after their stated gates. The Accountant pilot may include FIN-2A-hardened finance views/exports and FIN-2B-governed final-receipt cancellation/correction only when the exact permissions are granted; it does not include refund, gateway/settlement, Day Closer, payroll or employee self-service. Teacher cannot. `DEVOPS-1D PAYMENT_GATED_DEFERRED`, Prompt 21B-21D blocked, Prompt 22B conditional and Prompt 22C-22D blocked remain unchanged.
 
 Independent Prompt 23B-QA cleared the source, exact-ledger, repository, role, privacy and cutover-gate reconciliation after one roadmap-contract correction. Prompt 23C may begin only from the merged/tagged QA baseline and does not clear Teacher cutover.
 
