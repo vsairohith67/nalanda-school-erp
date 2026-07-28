@@ -395,10 +395,14 @@ async function verifySafeSystemHealth() {
       seedAccounts: health.seedAccounts
     };
     const serialized = JSON.stringify(safeEvidence);
+    const activeSeedRole = safeEvidence.seedAccounts[0];
     if (
-      health.status !== "Critical" ||
-      !safeEvidence.issueCodes.includes("default-seed-password") ||
-      !safeEvidence.issueCodes.includes("seed-account-decision-missing") ||
+      health.status !== "Good" ||
+      safeEvidence.issueCodes.length !== 0 ||
+      safeEvidence.seedAccounts.length !== 1 ||
+      activeSeedRole?.role !== "SUPER_ADMIN" ||
+      activeSeedRole.activeCount !== 1 ||
+      activeSeedRole.defaultPasswordMatches !== 0 ||
       /username|email|passwordHash|@nalanda\.local/i.test(serialized)
     ) {
       throw new Error("AUTH2A_SYSTEM_HEALTH_SAFE_COUNTS_FAILED");
