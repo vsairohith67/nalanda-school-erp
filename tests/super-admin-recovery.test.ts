@@ -130,6 +130,11 @@ describe("local Super Admin recovery utility", () => {
 
   it("performs a valid copied-database recovery and creates one safe audit event", async () => {
     const testScenario = await scenario("valid");
+    const beforeClient = prismaFor(testScenario.databasePath);
+    const auditEventsBefore = await beforeClient.userAudit.count({
+      where: { action: "SUPER_ADMIN_PASSWORD_RECOVERED" }
+    });
+    await beforeClient.$disconnect();
     const password = strongPassword("ValidRecovery");
     const result = await executeSuperAdminRecovery(recoveryInput(testScenario, {
       newPassword: password,
@@ -149,6 +154,8 @@ describe("local Super Admin recovery utility", () => {
       expect(await verifyPassword(password, user.passwordHash)).toBe(true);
       const events = await client.userAudit.findMany({
         where: { action: "SUPER_ADMIN_PASSWORD_RECOVERED" },
+        orderBy: { createdAt: "asc" },
+        skip: auditEventsBefore,
         select: { actorName: true, detailsJson: true }
       });
       expect(events).toEqual([{
@@ -189,7 +196,12 @@ describe("local Super Admin recovery utility", () => {
   });
 
   it("refuses a non-Super-Admin target", async () => {
-    const testScenario = await scenario("non-super-admin");
+    const testScenario = await scenario("non-super-admin", async (client) => {
+      await client.user.update({
+        where: { username: "admin" },
+        data: { isActive: true }
+      });
+    });
     await expectCode(
       executeSuperAdminRecovery(recoveryInput(testScenario, {
         identifier: "admin"
@@ -384,6 +396,11 @@ describe("local Super Admin recovery utility", () => {
 
   it("supports repeated governed recovery with a fresh checkpoint each time", async () => {
     const testScenario = await scenario("repeated");
+    const beforeClient = prismaFor(testScenario.databasePath);
+    const auditEventsBefore = await beforeClient.userAudit.count({
+      where: { action: "SUPER_ADMIN_PASSWORD_RECOVERED" }
+    });
+    await beforeClient.$disconnect();
     await executeSuperAdminRecovery(recoveryInput(testScenario));
     copyFileSync(testScenario.databasePath, testScenario.rollbackPath);
     testScenario.environment.AUTH_RECOVERY_EXPECTED_DB_SHA256 =
@@ -399,7 +416,7 @@ describe("local Super Admin recovery utility", () => {
     try {
       expect(await client.userAudit.count({
         where: { action: "SUPER_ADMIN_PASSWORD_RECOVERED" }
-      })).toBe(2);
+      })).toBe(auditEventsBefore + 2);
       const row = await client.user.findUniqueOrThrow({
         where: { username: "director" },
         select: { passwordHash: true }

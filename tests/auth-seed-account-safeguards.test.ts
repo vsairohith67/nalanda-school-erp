@@ -6,7 +6,7 @@ function read(relativePath: string) {
   return readFileSync(path.resolve(relativePath), "utf8");
 }
 
-describe("AUTH-2A-P2 architecture and decision boundary", () => {
+describe("AUTH-2A architecture and decision boundary", () => {
   it("adds no AuthSession model or migration", () => {
     expect(read("prisma/schema.prisma")).not.toMatch(/\bmodel\s+AuthSession\b/);
     const packageJson = JSON.parse(read("package.json")) as { scripts: Record<string, string> };
@@ -33,10 +33,10 @@ describe("AUTH-2A-P2 architecture and decision boundary", () => {
     expect(health).not.toContain("defaultSeedUsers.join");
   });
 
-  it("records exact P3 choices without claiming operational changes", () => {
+  it("records exact choices and the verified P4C outcome without credential material", () => {
     const decision = read("docs/OPERATIONAL_ACCOUNT_OWNERSHIP_DECISION.md");
     for (const phrase of [
-      "DECISIONS_CAPTURED_RECOVERY_PENDING",
+      "SECONDARY_SEED_ACCOUNTS_DISABLED",
       "ASSIGN_OWNER_ROTATE_VERIFY",
       "DISABLE_NOW",
       "Lockout-prevention sequence",
@@ -44,14 +44,16 @@ describe("AUTH-2A-P2 architecture and decision boundary", () => {
       "Rollback procedure",
       "AuthSession",
       "DEVOPS-1E",
-      "No operational User, password, role, status, session, or database row changed"
+      "No User\nwas deleted",
+      "safe `UserAudit` total"
     ]) {
       expect(decision).toContain(phrase);
     }
     expect(decision).toContain("version-37 JSON backup intentionally excludes password hashes");
+    expect(decision).not.toMatch(/passwordHash|@nalanda\.local/i);
   });
 
-  it("updates the required documentation set and preserves the no-change claim", () => {
+  it("updates the required documentation set while retaining the historical P2 boundary", () => {
     for (const file of [
       "docs/INDEX.md",
       "docs/SEC_1_SECURITY_AUDIT_AND_HARDENING_REPORT.md",
@@ -60,10 +62,13 @@ describe("AUTH-2A-P2 architecture and decision boundary", () => {
       "docs/BUG_LIMITATION_AND_TECH_DEBT_REGISTER.md",
       "docs/PROMPT_HISTORY.md"
     ]) {
-      expect(read(file)).toMatch(/AUTH-2A-P2|AUTH-2A-P3|Operational Account Ownership Decision|OPERATIONAL_ACCOUNT_OWNERSHIP_DECISION/);
+      expect(read(file)).toContain("AUTH-2A");
     }
     expect(read("docs/PROMPT_HISTORY.md")).toContain(
       "No operational account,\npassword, role, status, session, or database row changed."
+    );
+    expect(read("docs/PROMPT_HISTORY.md")).toContain(
+      "AUTH-2A-P4B2/P4C - Operational Recovery and Secondary Account Disable"
     );
   });
 });

@@ -2,14 +2,14 @@
 
 ## AUTH-2A operational account decision gate
 
-- [Operational Account Ownership Decision](OPERATIONAL_ACCOUNT_OWNERSHIP_DECISION.md) - role-only proposed keep/disable treatment, lockout sequence, session effects, rollback, required user choices, exact AUTH-2A-P3 options, and AUTH-2B deferral.
-- [Local Super Admin Recovery Procedure](LOCAL_SUPER_ADMIN_RECOVERY_PROCEDURE.md) - local-only hidden-input recovery command, exact database/rollback/hash gates, copied-database QA, audit and credential-tag invalidation, rollback, and future IAM/RBAC boundary.
+- [Operational Account Ownership Decision](OPERATIONAL_ACCOUNT_OWNERSHIP_DECISION.md) - verified P4C active/inactive role state, applied decisions, lockout sequence, audit/session effects, rollback, and AUTH-2B deferral.
+- [Local Super Admin Recovery Procedure](LOCAL_SUPER_ADMIN_RECOVERY_PROCEDURE.md) - local-only hidden-input recovery command, exact database/rollback/hash gates, completed operational recovery evidence, audit/credential-tag invalidation, rollback, and future IAM/RBAC boundary.
 
-AUTH-2A-P2 hardens demo-user creation and System Health without a Prisma model,
-migration, or operational account/database change. `AUTH-2A-P3` remains
-decision-captured. AUTH-2A-R1 adds the governed recovery utility but does not
-perform the operational reset; no password, role, status, session or
-operational database row changed.
+AUTH-2A is complete through P4C. The owned, rotated and twice-login-verified
+`SUPER_ADMIN` remains active; `ADMIN`, `ACCOUNTANT` and `VIEWER` are inactive
+with preserved accounts and audit history. No role or permission row changed.
+AUTH-2B session/login-alias/reset-channel persistence and IAM-1A delegated
+accounts remain deferred until after DEVOPS-1E.
 
 ## DATA-0B controlled cleanup and zero-data baseline
 
@@ -19,8 +19,8 @@ DATA-0B completed the approved operational transaction. The old
 8 / 8 / 19 / ₹99,100 baseline is historical rollback evidence; the current
 official operational baseline is 0 Students / 0 active enrollments /
 0 Payments / ₹0 collected. Demo business seeding is disabled by default.
-`AUTH-2A-P3` remains mandatory for named ownership, password rotation, and the
-approved disable decisions. Prompt
+The AUTH-2A named ownership, password recovery and approved disable decisions
+are complete through P4C. Prompt
 23C is next after DATA-0B-QA, whose result is
 `CLEAN_ZERO_DATA_BASELINE_CLEARED`, completes its fast-forward merge/tag
 closure.

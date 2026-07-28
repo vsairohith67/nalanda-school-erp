@@ -23,11 +23,18 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       const existing = await tx.user.findUnique({ where: { id } });
       if (!existing || !isRole(existing.role)) return null;
       assertCanManageUser(auth.user.role, existing.role);
+      const expectedUpdatedAt = requiredExpectedUpdatedAt(body.expectedUpdatedAt);
+      if (existing.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
+        throw new Error("User record changed; refresh and try again");
+      }
 
       const role = String(body.role ?? existing.role);
       if (!isRole(role)) throw new Error("A valid role is required");
       assertCanAssignRole(auth.user.role, role);
       const isActive = body.isActive === undefined ? existing.isActive : body.isActive === true;
+      const deactivationReason = existing.isActive && !isActive
+        ? requiredDeactivationReason(body.reason)
+        : null;
       const [activeDirectorCount, activeSuperAdminCount] = await Promise.all([
         tx.user.count({ where: { role: "DIRECTOR", isActive: true } }),
         tx.user.count({ where: { role: "SUPER_ADMIN", isActive: true } })
@@ -52,11 +59,18 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       const name = requiredText(body.name ?? existing.name, "Name");
       const username = requiredText(body.username ?? existing.username, "Username").toLowerCase();
       const email = optionalText(body.email)?.toLowerCase() ?? null;
-      const result = await tx.user.update({
-        where: { id },
-        data: { name, username, email, role, isActive },
-        select: SAFE_USER_SELECT
+      const changed = await tx.user.updateMany({
+        where: {
+          id,
+          updatedAt: existing.updatedAt,
+          role: existing.role,
+          isActive: existing.isActive
+        },
+        data: { name, username, email, role, isActive }
       });
+      if (changed.count !== 1) throw new Error("User record changed; refresh and try again");
+      const result = await tx.user.findUnique({ where: { id }, select: SAFE_USER_SELECT });
+      if (!result) throw new Error("User not found");
       if (existing.role !== role) {
         await logUserAction(tx, {
           action: "USER_ROLE_CHANGED",
@@ -70,7 +84,9 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
           action: isActive ? "USER_REACTIVATED" : "USER_DEACTIVATED",
           actor: auth.user,
           targetUserId: id,
-          details: { username }
+          details: isActive
+            ? { role }
+            : { role: existing.role, reason: deactivationReason }
         });
       }
       if (
@@ -107,4 +123,20 @@ function requiredText(value: unknown, label: string) {
 function optionalText(value: unknown) {
   const result = String(value ?? "").trim();
   return result || null;
+}
+
+function requiredExpectedUpdatedAt(value: unknown) {
+  const raw = requiredText(value, "Expected user version");
+  const parsed = new Date(raw);
+  if (!Number.isFinite(parsed.getTime())) throw new Error("Expected user version is invalid");
+  return parsed;
+}
+
+function requiredDeactivationReason(value: unknown) {
+  const result = requiredText(value, "Deactivation reason");
+  if (result.length < 12 || result.length > 500) {
+    throw new Error("Deactivation reason must be between 12 and 500 characters");
+  }
+  if (/[<>]/.test(result)) throw new Error("Deactivation reason contains unsupported characters");
+  return result;
 }

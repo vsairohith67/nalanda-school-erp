@@ -1,5 +1,22 @@
 # Nalanda Fee Control — Developer Continuation Guide
 
+## AUTH-2A-P4C operational account outcome
+
+The operational account sequence is complete: one owned, rotated and
+fresh-login-verified `SUPER_ADMIN` remains active; the retained `ADMIN`,
+`ACCOUNTANT` and `VIEWER` accounts are inactive. No User was deleted and no
+role/permission row changed. The governed update route requires an exact
+`expectedUpdatedAt` value, uses a compare-and-set update, and requires a
+privacy-safe reason for active-to-inactive changes. Status changes continue to
+invalidate stale authorization through the current account-state check.
+
+Do not reactivate a retained account until it has a named owner and current
+operational need. AUTH-2B remains deferred until after DEVOPS-1E and must add a
+central session registry, username plus verified personal/work login aliases,
+selectable verified reset channels, and single-use reset links that never
+email a password. A later IAM-1A phase must add named leadership and operational
+accounts, reusable permission profiles, and per-user grants/denials.
+
 ## AUTH-2A-P2 seed-account and readiness boundary
 
 `ensureSeedUsers` is disabled unless `ALLOW_DEMO_USERS=true`. When enabled it

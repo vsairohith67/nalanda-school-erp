@@ -1,8 +1,9 @@
 # Operational Account Ownership Decision
 
-Status: `DECISIONS_CAPTURED_RECOVERY_PENDING`
-Phase: `AUTH-2A-P3 / AUTH-2A-R1`
-Operational account changes performed in this phase: **none**
+Status: `SECONDARY_SEED_ACCOUNTS_DISABLED`
+Phase: `AUTH-2A-P4C`
+Operational account changes performed: **governed Super Admin recovery in
+P4B2, followed by three approved status-only disables in P4C**
 
 This document records role-level decisions only. It must never contain a
 username, email address, password, password hash, token, cookie, recovery
@@ -10,30 +11,42 @@ value, database ID, or copied credential material.
 
 ## Current safe evidence
 
-The zero-data operational baseline retains one enabled seed-origin account in
-each of these roles: `SUPER_ADMIN`, `ADMIN`, `ACCOUNTANT`, and `VIEWER`.
-All four require password rotation before real data or deployment. The current
-System Health check reports only role-level counts, documented-password match
-counts, and whether a role-level operator decision is recorded.
+The zero-data operational baseline now retains one active `SUPER_ADMIN`, owned
+by V. Sai Rohith, whose password recovery and two fresh logins were verified.
+The retained `ADMIN`, `ACCOUNTANT`, and `VIEWER` accounts are inactive. No User
+was deleted, no role or role-permission row changed, and the three disabled
+credentials and stale authorization are rejected.
+
+P4C created exactly three append-only `USER_DEACTIVATED` audit events with
+role-level details and the approved reason. The zero-data business baseline
+remains 0 Students, 0 active enrollments, 0 Payments, INR 0 collected,
+0 Guardians and 0 Staff.
+
+Post-P4C operational database identity:
+
+- SHA-256:
+  `8688F92BD85B14D0AD46294761F0F938EE5A3F7E759B79802CEA6B669A9B5919`
+- size: `4,771,840` bytes
+- modified UTC: `2026-07-28T15:33:22.7523601Z`
+- safe `UserAudit` total: `14` (`3` new P4C deactivation events)
 
 AUTH-2A-P2 added no Prisma model or migration. Centralized `AuthSession` and
 persisted ownership/rotation metadata remain deferred to `AUTH-2B`, after
 `DEVOPS-1E` migration-baseline onboarding.
 
-The validated decisions name V. Sai Rohith as the temporary `SUPER_ADMIN`
-owner, require private password recovery/rotation and fresh-login verification,
-and approve disabling `ADMIN`, `ACCOUNTANT` and `VIEWER` only after that
-verification succeeds. AUTH-2A-R1 implements the required local recovery
-utility without performing the operational reset.
+The validated decisions named V. Sai Rohith as the `SUPER_ADMIN` owner,
+required private password recovery/rotation and fresh-login verification, and
+approved disabling `ADMIN`, `ACCOUNTANT` and `VIEWER` only after that proof.
+P4B2 and P4C completed that exact sequence.
 
-## Proposed treatment
+## Applied treatment
 
-| Role | Proposed decision | Required treatment | May remain active after P3? |
+| Role | Decision | Verified treatment | Active after P4C? |
 |---|---|---|---|
-| `SUPER_ADMIN` | `KEEP_TEMPORARILY` | Assign one named human owner, rotate the password, and verify a fresh login | Yes, after successful ownership and login verification |
-| `ADMIN` | `DISABLE_UNTIL_OWNER_ASSIGNED` | Disable until a named owner has a current operational need | No |
-| `ACCOUNTANT` | `DISABLE_UNTIL_OWNER_ASSIGNED` | Disable until a named Accountant has a current finance need | No |
-| `VIEWER` | `DISABLE_UNTIL_OWNER_ASSIGNED` | Disable until a named Viewer/Auditor has a current review need | No |
+| `SUPER_ADMIN` | `ASSIGN_OWNER_ROTATE_VERIFY` | Named owner recorded; password rotated; two fresh logins and protected access verified | Yes |
+| `ADMIN` | `DISABLE_NOW` | Disabled pending a named owner and current operational need | No |
+| `ACCOUNTANT` | `DISABLE_NOW` | Disabled pending a named Accountant and current finance need | No |
+| `VIEWER` | `DISABLE_NOW` | Disabled pending a named Viewer/Auditor and current review need | No |
 
 ## Lockout-prevention sequence
 
@@ -105,19 +118,18 @@ The user must provide or confirm, outside credential-bearing chat:
 
 No password or recovery material is required in this document.
 
-## Captured AUTH-2A-P3 choices
+## Executed AUTH-2A choices
 
-All four role decisions are captured. Execution remains blocked until the
-governed Super Admin recovery and fresh-login verification succeed:
+All four role decisions were executed in the approved lockout-safe order:
 
 | Role | Allowed P3 choice | Recommended |
 |---|---|---|
-| `SUPER_ADMIN` | `ASSIGN_OWNER_ROTATE_VERIFY` | V. Sai Rohith; recovery pending |
-| `ADMIN` | `DISABLE_NOW` | Pending verified Super Admin recovery |
-| `ACCOUNTANT` | `DISABLE_NOW` | Pending verified Super Admin recovery |
-| `VIEWER` | `DISABLE_NOW` | Pending verified Super Admin recovery |
+| `SUPER_ADMIN` | `ASSIGN_OWNER_ROTATE_VERIFY` | Completed; active |
+| `ADMIN` | `DISABLE_NOW` | Completed; inactive |
+| `ACCOUNTANT` | `DISABLE_NOW` | Completed; inactive |
+| `VIEWER` | `DISABLE_NOW` | Completed; inactive |
 
-After approval, the role-only System Health decision record may use:
+The optional role-only System Health decision record may use:
 
 `AUTH_SEED_ACCOUNT_DECISIONS=SUPER_ADMIN:KEEP_TEMPORARILY,ADMIN:DISABLE_UNTIL_OWNER_ASSIGNED,ACCOUNTANT:DISABLE_UNTIL_OWNER_ASSIGNED,VIEWER:DISABLE_UNTIL_OWNER_ASSIGNED`
 

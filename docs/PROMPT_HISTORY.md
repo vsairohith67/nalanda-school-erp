@@ -837,3 +837,38 @@ entries, copied-database AUTH-2A QA, and Git safety. Ignored backup version 37
 `nalanda-fee-control-backup-2026-07-28-16-07.json` was created. The operational
 database SHA-256, size, timestamp, exact zero-data business counts, and four
 role-level account counts remained unchanged.
+
+# AUTH-2A-P4B2/P4C - Operational Recovery and Secondary Account Disable (2026-07-28)
+
+After exact operational approval and verified rollback artifacts, the governed
+local recovery utility privately rotated the single active Super Admin
+credential. Two fresh logins, dashboard/protected-page access, logout,
+credential-tag invalidation and cleared seed-password provenance were verified.
+No credential material was captured in chat, logs, Git, documentation or
+Notion.
+
+P4C retained that owned Super Admin as the only active leadership account and
+disabled exactly the approved `ADMIN`, `ACCOUNTANT` and `VIEWER` accounts
+through the governed User Management route. The route now requires the current
+`updatedAt` value, applies a compare-and-set update, and requires a
+privacy-safe reason for active-to-inactive changes. Exactly three append-only
+`USER_DEACTIVATED` events were created. No User was deleted; role, credential
+and role-permission values remained unchanged.
+
+Read-only comparison with the byte-identical post-rotation rollback copy proved
+the four User rows were preserved, the three intended active-to-inactive
+transitions occurred, the Super Admin stayed active with the same credential,
+role permissions were unchanged, and stale authorization for each disabled
+account was rejected. One controlled documented-credential attempt per
+disabled role returned the same generic 401 and no cookie. Browser verification
+proved the retained Super Admin still opened Dashboard and Role Permissions.
+The business baseline remained 0 Students / 0 active enrollments / 0 Payments /
+INR 0 / 0 Guardians / 0 Staff.
+
+Verification passed focused recovery/user/seed safeguards (24/24), typecheck,
+all 1,567 tests across 169 files, the production build, diff checks and Git
+safety. AUTH-2B remains deferred until after DEVOPS-1E for centralized sessions,
+verified personal/work aliases, selectable verified reset channels and
+single-use reset links that never email a password. IAM-1A remains a separate
+future phase for named leadership/operational accounts, reusable permission
+profiles and per-user grants/denials.

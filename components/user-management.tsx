@@ -16,7 +16,7 @@ type UserRow = {
   isActive: boolean;
   lastLoginAt: Date | null;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt: Date | string;
 };
 
 export function UserManagement({
@@ -64,9 +64,12 @@ export function UserManagement({
   async function update(event: React.FormEvent<HTMLFormElement>, user: UserRow) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    const isActive = data.get("isActive") === "true";
     await request(`/api/users/${user.id}`, "PUT", {
       ...Object.fromEntries(data.entries()),
-      isActive: data.get("isActive") === "true"
+      isActive,
+      expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
+      reason: isActive ? "" : String(data.get("reason") ?? "")
     }, "User updated");
   }
 
@@ -128,6 +131,7 @@ export function UserManagement({
                               <label>Email<input name="email" type="email" defaultValue={user.email ?? ""} /></label>
                               <label>Role<select name="role" defaultValue={user.role}>{Array.from(new Set(roles)).map((role) => <option value={role} key={role}>{roleDisplayLabel(role)}</option>)}</select></label>
                               <label>Status<select name="isActive" defaultValue={String(user.isActive)}><option value="true">Active</option><option value="false">Inactive</option></select></label>
+                              <label className="wide">Deactivation reason<textarea name="reason" maxLength={500} placeholder="Required when changing an active account to inactive" /></label>
                               <p className="full muted-text">{ROLE_DESCRIPTIONS[targetRole]}</p>
                               <div className="page-actions"><button>Save User</button></div>
                             </form>

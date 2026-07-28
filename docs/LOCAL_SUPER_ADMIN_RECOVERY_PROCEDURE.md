@@ -1,8 +1,11 @@
 # Local Super Admin Recovery Procedure
 
-Status: implementation and copied-database verification only
+Status: utility implemented, copied-database tested, and approved operational
+recovery verified
 
-Operational password reset performed by AUTH-2A-R1: **no**
+Operational password reset performed by AUTH-2A-R1 implementation phase:
+**no**. The separately approved AUTH-2A-P4B2 execution later completed the
+recovery and verified two fresh logins without recording credential material.
 
 ## When recovery is permitted
 
@@ -100,8 +103,9 @@ After a separately approved operational execution:
 9. Record only safe audit count, completion timestamp and post-change database
    identity.
 
-Do not disable `ADMIN`, `ACCOUNTANT` or `VIEWER` until fresh Super Admin access
-is proven.
+Fresh Super Admin access was proven before P4C. P4C then disabled only
+`ADMIN`, `ACCOUNTANT` and `VIEWER`, preserved their User and audit history, and
+reverified Super Admin access.
 
 ## Failure and rollback
 
@@ -126,8 +130,12 @@ authentication bypasses and hash copying between accounts are prohibited.
 
 A dedicated IAM/RBAC phase after `DEVOPS-1E` must design:
 
-- multiple named Director-level and operational accounts;
-- selectable feature permissions;
+- multiple named Directors/Associate Directors, Principal, Accountant,
+  Computer Operator, Teacher, Parent and other operational accounts;
+- username plus separately verified personal/work login aliases;
+- a selectable verified personal/work reset channel with single-use reset
+  links only; never email a password;
+- selectable feature permissions and reusable permission profiles;
 - base roles plus explicit per-account grants and denials;
 - owner, lifecycle, rotation, review and emergency-access governance;
 - centralized session inventory and revocation through the deferred

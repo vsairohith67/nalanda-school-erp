@@ -1,20 +1,15 @@
 # Nalanda Fee Control — Beginner Operating Guide
 
-## AUTH-2A account decision is still pending
+## AUTH-2A operational accounts are secured
 
-The software now blocks seed-user creation on the school database and shows
-only safe role-level account warnings in System Health. This did not assign an
-owner, change a password, disable an account, or sign anyone out.
-
-Before real data or deployment, school leadership must complete the choices in
-`OPERATIONAL_ACCOUNT_OWNERSHIP_DECISION.md`: name the Super Admin owner, rotate
-that password privately, prove a fresh login, and then decide whether Admin,
-Accountant, and Viewer should be disabled. The proposed choice is to disable
-those three until named people need them.
+The operational Super Admin has a named owner, its password was recovered
+privately, and two fresh logins were verified. The retained Admin, Accountant
+and Viewer accounts are inactive until named people have a current operational
+need. Their accounts and audit history were preserved; nothing was deleted.
 
 Never send a password in chat, email, Notion, a screenshot, or a document.
-Never disable the last active Super Admin. If the fresh Super Admin login does
-not work, stop immediately and use the approved private rollback procedure.
+Never reactivate or share a retained account without leadership approval and a
+named owner. Never disable the last active Super Admin.
 
 ## DATA-0B clean starting point
 
@@ -26,10 +21,9 @@ Do not run `demo:seed` or set `ALLOW_DEMO_USERS` or
 `ALLOW_DEMO_BUSINESS_DATA` on this
 school database. Add only reviewed school records through approved operator
 workflows. Plain `db:seed` no longer creates demo users without the dedicated
-copied-test gate. Before real data, complete `AUTH-2A-P3`: assign the approved
-named owner, rotate every retained documented/default password that will remain
-usable, apply the approved disables, and verify recovery access without
-deleting the last working leadership login.
+copied-test gate. AUTH-2A is complete through P4C; preserve its named ownership,
+private password handling, inactive secondary accounts, audit history and
+last-working-leadership-login safeguards.
 
 ## Schoolknot replacement decision (Prompt 23B)
 

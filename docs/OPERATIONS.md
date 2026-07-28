@@ -8,8 +8,10 @@ collected. Demo business seeding is disabled and must never be enabled against
 identities. Protected pre-clean rollback and post-clean v37 artifacts are
 listed in `CONTROLLED_SAMPLE_DATA_CLEANUP_AND_NEW_BASELINE.md`.
 
-Complete the separate `AUTH-2A` named-owner/password-rotation gate before real
-imports or deployment.
+`AUTH-2A` is complete through P4C: one named, rotated and verified Super Admin
+remains active; Admin, Accountant and Viewer are inactive. Do not reactivate
+one of those accounts until a named owner has a current operational need.
+Never share credentials or disable the last active Super Admin.
 
 ## Daily workflow
 
