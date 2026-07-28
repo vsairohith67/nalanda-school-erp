@@ -26,6 +26,7 @@
     "qa:fin2a": "tsx scripts/qa-fin2a-copied-db.ts",
     "qa:fin2b": "tsx scripts/qa-fin2b-copied-db.ts",
     "qa:auth2a": "tsx scripts/qa-auth2a-copied-db.ts",
+    "auth:recover-super-admin": "tsx scripts/recover-super-admin.ts",
     "data0a:audit": "node scripts/data0a-provenance-audit.mjs",
     "data0a:backup": "tsx scripts/data0a-encrypted-backup.ts",
     "data0a:cleanup": "tsx scripts/data0a-copied-cleanup.ts",

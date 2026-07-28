@@ -36,10 +36,9 @@ describe("AUTH-2A-P2 architecture and decision boundary", () => {
   it("records exact P3 choices without claiming operational changes", () => {
     const decision = read("docs/OPERATIONAL_ACCOUNT_OWNERSHIP_DECISION.md");
     for (const phrase of [
-      "AWAITING_USER_DECISION",
+      "DECISIONS_CAPTURED_RECOVERY_PENDING",
       "ASSIGN_OWNER_ROTATE_VERIFY",
       "DISABLE_NOW",
-      "RETAIN_WITH_NAMED_OWNER",
       "Lockout-prevention sequence",
       "Session-invalidation effect",
       "Rollback procedure",

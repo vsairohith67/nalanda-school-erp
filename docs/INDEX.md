@@ -3,11 +3,13 @@
 ## AUTH-2A operational account decision gate
 
 - [Operational Account Ownership Decision](OPERATIONAL_ACCOUNT_OWNERSHIP_DECISION.md) - role-only proposed keep/disable treatment, lockout sequence, session effects, rollback, required user choices, exact AUTH-2A-P3 options, and AUTH-2B deferral.
+- [Local Super Admin Recovery Procedure](LOCAL_SUPER_ADMIN_RECOVERY_PROCEDURE.md) - local-only hidden-input recovery command, exact database/rollback/hash gates, copied-database QA, audit and credential-tag invalidation, rollback, and future IAM/RBAC boundary.
 
 AUTH-2A-P2 hardens demo-user creation and System Health without a Prisma model,
 migration, or operational account/database change. `AUTH-2A-P3` remains
-`AWAITING_USER_DECISION`; no password rotation, ownership assignment, role
-change, disable, or session action has occurred.
+decision-captured. AUTH-2A-R1 adds the governed recovery utility but does not
+perform the operational reset; no password, role, status, session or
+operational database row changed.
 
 ## DATA-0B controlled cleanup and zero-data baseline
 

@@ -1,7 +1,7 @@
 # Operational Account Ownership Decision
 
-Status: `AWAITING_USER_DECISION`
-Phase: `AUTH-2A-P2`
+Status: `DECISIONS_CAPTURED_RECOVERY_PENDING`
+Phase: `AUTH-2A-P3 / AUTH-2A-R1`
 Operational account changes performed in this phase: **none**
 
 This document records role-level decisions only. It must never contain a
@@ -19,6 +19,12 @@ counts, and whether a role-level operator decision is recorded.
 AUTH-2A-P2 added no Prisma model or migration. Centralized `AuthSession` and
 persisted ownership/rotation metadata remain deferred to `AUTH-2B`, after
 `DEVOPS-1E` migration-baseline onboarding.
+
+The validated decisions name V. Sai Rohith as the temporary `SUPER_ADMIN`
+owner, require private password recovery/rotation and fresh-login verification,
+and approve disabling `ADMIN`, `ACCOUNTANT` and `VIEWER` only after that
+verification succeeds. AUTH-2A-R1 implements the required local recovery
+utility without performing the operational reset.
 
 ## Proposed treatment
 
@@ -99,16 +105,17 @@ The user must provide or confirm, outside credential-bearing chat:
 
 No password or recovery material is required in this document.
 
-## Exact AUTH-2A-P3 choices
+## Captured AUTH-2A-P3 choices
 
-AUTH-2A-P3 remains blocked until all four rows have one approved choice:
+All four role decisions are captured. Execution remains blocked until the
+governed Super Admin recovery and fresh-login verification succeed:
 
 | Role | Allowed P3 choice | Recommended |
 |---|---|---|
-| `SUPER_ADMIN` | `ASSIGN_OWNER_ROTATE_VERIFY` or `STOP_NO_CHANGE` | `ASSIGN_OWNER_ROTATE_VERIFY` |
-| `ADMIN` | `DISABLE_NOW` or `RETAIN_WITH_NAMED_OWNER` | `DISABLE_NOW` |
-| `ACCOUNTANT` | `DISABLE_NOW` or `RETAIN_WITH_NAMED_OWNER` | `DISABLE_NOW` |
-| `VIEWER` | `DISABLE_NOW` or `RETAIN_WITH_NAMED_OWNER` | `DISABLE_NOW` |
+| `SUPER_ADMIN` | `ASSIGN_OWNER_ROTATE_VERIFY` | V. Sai Rohith; recovery pending |
+| `ADMIN` | `DISABLE_NOW` | Pending verified Super Admin recovery |
+| `ACCOUNTANT` | `DISABLE_NOW` | Pending verified Super Admin recovery |
+| `VIEWER` | `DISABLE_NOW` | Pending verified Super Admin recovery |
 
 After approval, the role-only System Health decision record may use:
 
