@@ -872,3 +872,33 @@ verified personal/work aliases, selectable verified reset channels and
 single-use reset links that never email a password. IAM-1A remains a separate
 future phase for named leadership/operational accounts, reusable permission
 profiles and per-user grants/denials.
+
+# EXAM-RC-PLAN-1 - Examination, Marks Entry and Progress Report Architecture (2026-07-29)
+
+From the exact AUTH-2A-QA commit and zero-business-data/account checkpoint, this
+planning-only phase audited the Prompt 17B/17C foundation and the directly
+available PII-controlled report-card evidence. It added no schema, migration,
+API or production UI. The architecture specifies exact examination-entry
+assignments, explicit marks states, versioned formulas and schemes, moderation,
+immutable publication/reopen, A4 colour and pattern-safe monochrome layouts,
+bounded PDF/ZIP generation, Parent/Student object access, and an all-or-none
+future student/enrollment/guardian workbook dependency.
+
+Direct evidence consisted of the retained LKG/UKG booklet and supplied Class V
+and IX pages. The retained inventory references broader Class I-X families, but
+those source PDFs were unavailable for direct revalidation. The Class V
+`0/0`-total/54.57-percent output and blank-component treatment, and the Class IX
+Science average mismatch, were recorded as defects requiring confirmation,
+not copied as formulas. A PII-free JSON fixture and durable high-level/detailed
+Mermaid sources preserve the evidence and whiteboard design.
+
+The current foundation is classified as useful but partial. Exact
+exam/paper/component Teacher authority, combined formulas, explicit
+`NOT_ENTERED`, bulk artifacts, Student self-access and notification integration
+remain missing; KG/report comment approval contains a role-name/field-ownership
+authorization seam that must be fixed before implementation clearance.
+Leadership must approve template-family mapping, grading/grade points,
+paper/group and combined weights, state handling, rank, attendance, signatures
+and print identity. Result: `EXAM_REPORT_ARCHITECTURE_REQUIRES_DECISIONS`.
+EXAM-RC-IMPL-1, EXAM-RC-IMPL-2 and independent EXAM-RC-QA remain separately
+gated.

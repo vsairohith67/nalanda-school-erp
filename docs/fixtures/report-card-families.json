@@ -1,0 +1,318 @@
+{
+  "schemaVersion": 1,
+  "fixturePurpose": "PII-free design evidence for EXAM-RC-PLAN-1; not executable calculation configuration",
+  "generatedFrom": {
+    "directEvidence": [
+      {
+        "sourceId": "BW_PROGRESS_SAMPLE",
+        "sha256": "6C16C7AE346C24B8AFE2275CFBFC54AF509AA60CF1EB396111D814B571D74585",
+        "pages": 2,
+        "scope": ["CLASS_V", "CLASS_IX"]
+      },
+      {
+        "sourceId": "KG_RETAINED_SCAN",
+        "sha256": "2DB870B175EA01C4A72ED5E3DEEA7025D43BE108FB7F7BBCA3AB39DC605C8648",
+        "pages": 10,
+        "scope": ["LKG", "UKG"]
+      }
+    ],
+    "retainedSummary": {
+      "sourceId": "ACADEMIC_RECORDS_INVENTORY",
+      "directSourceAvailable": false,
+      "scope": ["I", "II", "III", "V", "VI", "VII", "VIII", "IX", "X"],
+      "warning": "Family lead only. Revalidate original PDFs before creating executable formulas or templates."
+    }
+  },
+  "entryStatesRequired": [
+    "NOT_ENTERED",
+    "PRESENT",
+    "ABSENT",
+    "NOT_APPLICABLE",
+    "EXEMPT"
+  ],
+  "classifications": [
+    "FULLY_IMPLEMENTED",
+    "PARTIALLY_IMPLEMENTED",
+    "MISSING",
+    "IMPLEMENTED_BUT_UNSAFE",
+    "NEEDS_PRODUCT_DECISION"
+  ],
+  "families": [
+    {
+      "familyId": "KG_DEVELOPMENTAL_BOOKLET",
+      "evidenceStatus": "DIRECT_PDF",
+      "classRange": "LKG-UKG",
+      "observedClasses": ["LKG", "UKG"],
+      "examinationNames": ["Evaluation I", "Evaluation II", "Evaluation III", "Evaluation IV", "Evaluation V"],
+      "subjects": ["English", "Hindi", "Mathematics", "Environmental Studies", "Drawing and Colouring"],
+      "paperLevelSubjects": [],
+      "componentMaximums": {
+        "internal": null,
+        "written": null,
+        "total": null,
+        "note": "Developmental rubric evidence; no authoritative numeric component maxima observed."
+      },
+      "groupedAverages": [],
+      "skillsOrPersonalityAreas": {
+        "summaryAreas": [
+          "English reading, conversation, recitation, written, dictation and home assignment",
+          "Hindi reading, recitation and written",
+          "Mathematics recognition, operations, written, dictation and home assignment",
+          "Environmental Studies",
+          "Drawing and Colouring"
+        ],
+        "rubricCriteriaCount": 21,
+        "personalityTraitCount": 20,
+        "ratingSet": ["G", "S", "N"]
+      },
+      "gradingSystem": {
+        "bandsAsPrinted": ["A+:90-100", "A:80-89", "B:60-79", "C:50-59", "D:40-49", "E:0-39"],
+        "approvedExecutableBoundaries": false
+      },
+      "gradePointSystem": {
+        "observed": false,
+        "rule": null
+      },
+      "attendancePresentation": {
+        "type": "MONTHLY",
+        "months": ["June", "July", "August", "September", "October", "November", "December", "January", "February", "March", "April"],
+        "fields": ["workingDays", "daysPresent", "total"],
+        "additionalMeasurements": ["height at evaluations I, III and V", "weight at evaluations I, III and V"]
+      },
+      "rankPresentation": {
+        "observed": false
+      },
+      "remarks": ["evaluation comments", "compliments", "final certification and promotion"],
+      "chartSeries": [],
+      "signatureFields": ["Class Teacher", "Principal", "Parent or Guardian", "Director"],
+      "combinedResultWeighting": {
+        "observed": false,
+        "rule": null
+      },
+      "stateHandling": {
+        "absent": "NOT_EVIDENCED",
+        "notApplicable": "NOT_EVIDENCED",
+        "exempt": "NOT_EVIDENCED",
+        "notEntered": "NOT_EVIDENCED"
+      },
+      "historicalInconsistencies": [
+        "The mapping from detailed rubric selections to an overall grade was not evidenced as an approved formula."
+      ],
+      "leadershipDecisions": [
+        "mandatory evaluation and signature fields",
+        "overall-grade derivation",
+        "promotion certification authority"
+      ]
+    },
+    {
+      "familyId": "PRIMARY_10_40_SKILLS",
+      "evidenceStatus": "DIRECT_PDF_LIMITED_CLASS",
+      "classRange": "Provisionally I-V",
+      "observedClasses": ["V"],
+      "examinationNames": ["Comprehensive Test 1"],
+      "subjects": ["English", "Hindi", "Mathematics", "Science", "Social", "Computers", "Telugu", "GK or Value Education"],
+      "paperLevelSubjects": [],
+      "componentMaximums": {
+        "internal": 10,
+        "written": 40,
+        "total": 50,
+        "note": "Typical observed maximum; Telugu and GK or Value Education rows require explicit applicability rules."
+      },
+      "groupedAverages": [],
+      "skillsOrPersonalityAreas": {
+        "areas": [
+          "Reading",
+          "Writing",
+          "Speaking",
+          "Listening",
+          "Problem Solving Techniques",
+          "Mental Ability",
+          "Concepts",
+          "Tables",
+          "Environmental Sensitivity",
+          "Spoken English"
+        ],
+        "ratingSet": ["G", "S", "N"]
+      },
+      "gradingSystem": {
+        "bandsAsPrinted": ["A+:90-100", "A:80-89", "B:60-79", "C:50-59", "D:40-49", "E:0-39"],
+        "approvedExecutableBoundaries": false
+      },
+      "gradePointSystem": {
+        "observed": true,
+        "rule": null,
+        "warning": "A displayed value exists but the derivation is not evidenced."
+      },
+      "attendancePresentation": {
+        "type": "NOT_VISIBLE_ON_SUPPLIED_PAGE"
+      },
+      "rankPresentation": {
+        "observed": true,
+        "enabledRule": null,
+        "tieRule": null
+      },
+      "remarks": ["teacher-written remarks"],
+      "chartSeries": ["Student Marks", "Class Average", "Highest Score"],
+      "signatureFields": ["Parent", "Class Teacher", "Principal or HM"],
+      "combinedResultWeighting": {
+        "observed": false,
+        "rule": null
+      },
+      "stateHandling": {
+        "absent": "NOT_EVIDENCED",
+        "notApplicable": "NOT_EVIDENCED",
+        "exempt": "NOT_EVIDENCED",
+        "notEntered": "A blank internal value appears to have been treated as zero; this behavior is rejected pending leadership policy."
+      },
+      "historicalInconsistencies": [
+        "Printed total is 0/0 while the printed percentage is 54.57.",
+        "The printed percentage can be reproduced as 191/350, treating a blank Telugu internal as zero and retaining the full subject maximum."
+      ],
+      "leadershipDecisions": [
+        "family mapping for Classes I-IV",
+        "GK or Value Education numeric versus grade-only mode",
+        "blank component correction policy",
+        "grade-point values",
+        "rank and attendance policy"
+      ]
+    },
+    {
+      "familyId": "SECONDARY_10_40_GROUPED",
+      "evidenceStatus": "DIRECT_PDF_LIMITED_CLASS",
+      "classRange": "Provisionally VI-X",
+      "observedClasses": ["IX"],
+      "examinationNames": ["Comprehensive Test 1"],
+      "subjects": ["English", "Hindi", "History", "Geography", "Mathematics", "Physics", "Chemistry", "Biology", "Computers"],
+      "paperLevelSubjects": [
+        {
+          "group": "First Language or English",
+          "members": ["English Paper 1", "English Paper 2"]
+        },
+        {
+          "group": "Social",
+          "members": ["History", "Geography"]
+        },
+        {
+          "group": "Science",
+          "members": ["Physics", "Chemistry", "Biology"]
+        }
+      ],
+      "componentMaximums": {
+        "internal": 10,
+        "written": 40,
+        "total": 50
+      },
+      "groupedAverages": [
+        "First Language or English average",
+        "Social average",
+        "Science average"
+      ],
+      "skillsOrPersonalityAreas": {
+        "type": "PERSONALITY_DEVELOPMENT",
+        "ratingSet": ["G", "S", "N"],
+        "exactAreaList": "REQUIRES_SOURCE_REVALIDATION"
+      },
+      "gradingSystem": {
+        "bandsAsPrinted": ["A+:90-100", "A:80-89", "B:70-79", "C:60-69", "D:50-59", "E:35-49", "F:0-34"],
+        "approvedExecutableBoundaries": false
+      },
+      "gradePointSystem": {
+        "observed": true,
+        "rule": null,
+        "warning": "A displayed value exists but the derivation is not evidenced."
+      },
+      "attendancePresentation": {
+        "type": "SUMMARY",
+        "fields": ["daysPresent", "workingDays", "attendancePercentage"]
+      },
+      "rankPresentation": {
+        "observed": true,
+        "enabledRule": null,
+        "tieRule": null
+      },
+      "remarks": ["teacher-written remarks"],
+      "chartSeries": ["Student Marks", "Class Average", "Highest Score"],
+      "signatureFields": ["Teacher", "Principal", "Parent", "Director"],
+      "combinedResultWeighting": {
+        "observed": false,
+        "rule": null
+      },
+      "stateHandling": {
+        "absent": "NOT_EVIDENCED",
+        "notApplicable": "NOT_EVIDENCED",
+        "exempt": "NOT_EVIDENCED",
+        "notEntered": "NOT_EVIDENCED"
+      },
+      "historicalInconsistencies": [
+        "Printed Science average 7.5/15.3/22.8 does not equal the equal-weight average of the printed Physics, Chemistry and Biology values, which is 7.33/15.67/23.00.",
+        "Printed total 114.3/300 follows the inconsistent displayed Science group; replacing it with the equal average yields 114.5/300 before final rounding.",
+        "Printed integer grade ranges do not define decimal boundary behavior."
+      ],
+      "leadershipDecisions": [
+        "paper normalization and group formula",
+        "family mapping for Classes VI-VIII and X",
+        "grade-point values",
+        "rank cohort and tie rule",
+        "attendance date range"
+      ]
+    },
+    {
+      "familyId": "RETAINED_MULTI_EXAM_I_X",
+      "evidenceStatus": "RETAINED_SUMMARY_REQUIRES_SOURCE_REVALIDATION",
+      "classRange": "I-X",
+      "observedClasses": [],
+      "reportedClasses": ["I", "II", "III", "V", "VI", "VII", "VIII", "IX", "X"],
+      "examinationNames": ["CT", "Session", "Annual or Session-End", "Preboard or Revision", "Combined Result"],
+      "subjects": [],
+      "paperLevelSubjects": [],
+      "componentMaximums": {
+        "internal": null,
+        "written": null,
+        "total": null,
+        "note": "Do not infer from the retained summary."
+      },
+      "groupedAverages": ["reported for secondary families; exact membership unverified"],
+      "skillsOrPersonalityAreas": {
+        "reported": ["Classes I-V skills", "Classes VI-X personality development"],
+        "exactConfiguration": "REQUIRES_SOURCE_REVALIDATION"
+      },
+      "gradingSystem": {
+        "bandsAsPrinted": [],
+        "approvedExecutableBoundaries": false
+      },
+      "gradePointSystem": {
+        "observed": null,
+        "rule": null
+      },
+      "attendancePresentation": {
+        "type": "REQUIRES_SOURCE_REVALIDATION"
+      },
+      "rankPresentation": {
+        "observed": null,
+        "enabledRule": null,
+        "tieRule": null
+      },
+      "remarks": [],
+      "chartSeries": [],
+      "signatureFields": [],
+      "combinedResultWeighting": {
+        "observed": "REPORTED_BUT_UNVERIFIED",
+        "rule": null
+      },
+      "stateHandling": {
+        "absent": "REQUIRES_SOURCE_REVALIDATION",
+        "notApplicable": "REQUIRES_SOURCE_REVALIDATION",
+        "exempt": "REQUIRES_SOURCE_REVALIDATION",
+        "notEntered": "REQUIRES_SOURCE_REVALIDATION"
+      },
+      "historicalInconsistencies": [
+        "Original source PDFs were unavailable in the current evidence locations, so no arithmetic was copied or confirmed."
+      ],
+      "leadershipDecisions": [
+        "reacquire and hash source PDFs",
+        "approve exact family-by-class matrix",
+        "approve combined-source weights and calculations"
+      ]
+    }
+  ]
+}

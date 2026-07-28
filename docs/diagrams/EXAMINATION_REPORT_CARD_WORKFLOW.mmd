@@ -1,0 +1,31 @@
+flowchart LR
+  SETUP["Principal setup<br/>year · targets · exam type · dates"]
+  SCHEME["Immutable scheme version<br/>components · maxima · papers · groups · grading"]
+  ASSIGN["Exact marks-entry assignments<br/>Teacher + class-section + subject-paper + component + exam"]
+  ENTRY["Marks grid<br/>draft · explicit states · zero valid · version protection"]
+  SUBMIT["Teacher submit<br/>read-only checksum + timestamp"]
+  MODERATE["Principal moderation<br/>missing · unusual · absent · exempt · corrections"]
+  LOCK["Source lock<br/>approved marks + formula inputs"]
+  CALC["Calculation preview<br/>groups · combined weights · grades · attendance · rank"]
+  APPROVE["Result approval"]
+  PREVIEW["A4 preview<br/>colour + pattern-safe monochrome"]
+  GENERATE["Bounded idempotent generation<br/>single · selected · class · cohort"]
+  PUBLISH["Immutable publication version<br/>private PDF · merged PDF · ZIP"]
+  ACCESS["Issued-only access<br/>linked child / own report · no-store · audited"]
+  TEACHER["Assigned Teacher"]
+  PRINCIPAL["Principal / permitted Super Admin"]
+  CORRECT["Bounded correction version"]
+  SECURITY["Every request<br/>semantic permission + exact object scope + lifecycle + optimistic version"]
+  AUDIT["Append-only audit<br/>assignment · entry · correction · lock · generation · publication · download"]
+
+  SETUP --> SCHEME --> ASSIGN --> ENTRY --> SUBMIT --> MODERATE
+  MODERATE --> LOCK --> CALC --> APPROVE --> PREVIEW --> GENERATE --> PUBLISH --> ACCESS
+  TEACHER --> ENTRY
+  PRINCIPAL --> SETUP
+  PRINCIPAL --> MODERATE
+  PUBLISH -->|controlled reopen with reason| CORRECT --> MODERATE
+  SECURITY -. gates .-> ENTRY
+  SECURITY -. gates .-> MODERATE
+  SECURITY -. gates .-> ACCESS
+  AUDIT -. records .-> MODERATE
+  AUDIT -. records .-> PUBLISH

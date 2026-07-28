@@ -1,0 +1,35 @@
+flowchart LR
+  USERS["Users and contexts<br/>Leadership · Staff · Teacher · Parent · Student"]
+  AUTH["Authentication and DB-backed permissions<br/>object scope · no-store · session gates"]
+  SHELL["Nalanda ERP application shell<br/>server pages · guarded APIs · accessible workflows"]
+  STUDENTS["Students and Guardians<br/>enrollment · lifecycle · parent links"]
+  STAFF["Staff and Timetable<br/>teachers · offerings · assignments"]
+  ATTENDANCE["Attendance<br/>student · staff · locked records"]
+  FINANCE["Finance<br/>fees · income · expenses · books"]
+  EXAMS["Examinations and Report Cards<br/>schemes · marks · calculation · publication"]
+  COMMS["Communications<br/>notices · delivery ledger · notifications"]
+  DOCS["Documents and Library<br/>certificates · inventory · circulation"]
+  AUDIT["Cross-cutting controls<br/>append-only audit · privacy · backup/restore · Git safety"]
+  DATA[("Prisma / SQLite operational data<br/>private local-first baseline")]
+  DETAIL["Detailed phase board<br/>Examination and Report Card workflow"]
+
+  USERS --> AUTH --> SHELL
+  SHELL --> STUDENTS
+  SHELL --> STAFF
+  SHELL --> ATTENDANCE
+  SHELL --> FINANCE
+  SHELL --> EXAMS
+  SHELL --> COMMS
+  SHELL --> DOCS
+  STUDENTS --> DATA
+  STAFF --> DATA
+  ATTENDANCE --> DATA
+  FINANCE --> DATA
+  EXAMS --> DATA
+  COMMS --> DATA
+  DOCS --> DATA
+  AUDIT -. governs .-> AUTH
+  AUDIT -. governs .-> SHELL
+  AUDIT -. protects .-> DATA
+  EXAMS -. see phase-specific detail .-> DETAIL
+  click DETAIL href "EXAMINATION_REPORT_CARD_WORKFLOW.mmd" "Open detailed workflow source"

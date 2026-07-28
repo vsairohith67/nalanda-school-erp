@@ -158,6 +158,9 @@ Prompt 16H adds explicit lost/damaged incidents, rule-guided overdue assessment,
 # Exams and Marks
 
 - [Exams and Marks Foundation](EXAMS_AND_MARKS_WORKFLOW.md) — exam cycles, timetable-backed assessment sheets, Teacher scope, raw mark entry, submit/approve/lock workflow, corrections, import, reports, and backup v24.
+- [EXAM-RC-PLAN-1 Examination and Report Card Architecture](EXAMINATION_REPORT_CARD_ARCHITECTURE_AND_GAP_AUDIT.md) - implementation-ready gap/evidence audit, domain and authorization model, versioned calculation design, publication lifecycle, PII-free report-family fixture, print/bulk architecture, risks, leadership decisions and phased implementation gates.
+- [Nalanda ERP System Architecture Mermaid](diagrams/NALANDA_ERP_SYSTEM_ARCHITECTURE.mmd) - readable high-level system map with the examination domain linked to phase detail.
+- [Examination and Report Card Workflow Mermaid](diagrams/EXAMINATION_REPORT_CARD_WORKFLOW.mmd) - phase-specific setup, assignment, entry, moderation, calculation, generation, publication, access and controlled-reopen lifecycle.
 
 # Digital Report Cards
 
