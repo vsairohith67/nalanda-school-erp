@@ -52,6 +52,7 @@ cloud-backup-provider-objects/
 
 # Pilot/rehearsal data and temporary QA roots
 pilot-data/
+.data0a/
 tmp/
 temp/
 .qa-artifacts/
@@ -93,4 +94,3 @@ Desktop.ini
 *.swp
 *.swo
 start-test.txt
-

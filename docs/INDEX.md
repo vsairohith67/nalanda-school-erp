@@ -1,5 +1,15 @@
 # Documentation Index
 
+## DATA-0A sample-data provenance
+
+- [Pre-Existing Sample Data Provenance and Cleanup Plan](PRE_EXISTING_SAMPLE_DATA_PROVENANCE_AND_CLEANUP_PLAN.md) - read-only operational provenance, count-only dependency graph, copied-database cleanup/restore rehearsal, retained configuration and the explicit approval-gated cleanup runbook.
+
+DATA-0A concludes `VERIFIED_SAMPLE_DATA_SAFE_FOR_CONTROLLED_DELETION`. The
+independent DATA-0A-QA result is `SAMPLE_DATA_PROVENANCE_CLEARED`. The
+operational database was not modified; DATA-0B must first add the seed-database
+refusal safeguard, rotate all four enabled seed-account passwords and receive
+explicit user approval before the developer-only cleanup command may be used.
+
 ## Prompt 23B final Schoolknot consolidation
 
 - [Final Multi-Role Replacement Matrix](SCHOOLKNOT_FINAL_MULTI_ROLE_REPLACEMENT_MATRIX.md) - authoritative role/source verification, current repository inventory and non-duplicated final classifications.
