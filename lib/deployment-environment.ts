@@ -230,6 +230,9 @@ export function validateDeploymentEnvironment(
   if (value(environment, "NALANDA_DEMO_SEED_OPT_IN") === "true") {
     add("DEMO_SEED_REJECTED", "NALANDA_DEMO_SEED_OPT_IN", "Demo seed defaults are disabled in staging.");
   }
+  if (value(environment, "ALLOW_DEMO_BUSINESS_DATA") === "true") {
+    add("DEMO_BUSINESS_DATA_REJECTED", "ALLOW_DEMO_BUSINESS_DATA", "Demo business seeding is disabled in staging and production.");
+  }
 
   const liveFlags = [
     "WHATSAPP_LIVE_SENDING_ENABLED",

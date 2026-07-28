@@ -4,6 +4,12 @@ Status: **QA-corrected sequenced proposal; every prompt remains separately gated
 
 No prompt below is authorised merely by appearing in this roadmap. Prompt 23B-QA cleared the corrected documentation consolidation; Prompt 23C may start only from the merged/tagged QA baseline and remains separately QA-gated.
 
+DATA-0B has established the zero-business-data operational baseline on its
+feature branch. Prompt 23C remains the next product prompt, but it must start
+only after DATA-0B-QA independently clears and merges the clean-baseline branch
+and tag. `AUTH-2A` account ownership/rotation remains a separate production
+readiness gate.
+
 RECON-1A records that Prompt 23B and FIN-2B ran as parallel workstreams and that the final preserved lineage applies FIN-2B's exact Accountant final-receipt policy after Prompt 23B-QA. FIN-2A privacy/export/integrity and FIN-2B cancellation/correction/audit/leadership-notification/locked-day controls are complete. They are not 23C-23J work. No `FIN-2C` scope is approved or implemented; refund, gateway/settlement, Day Closer, payroll and employee self-service remain separately gated.
 
 | Prompt | Business value / source evidence | In scope | Out of scope | Roles | Schema / data boundary | Privacy boundary | Finance boundary | Storage / provider boundary | Migration boundary | Required tests | Release gate | Dependencies | Cutover impact |

@@ -232,11 +232,9 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
     expect(createHash("sha256").update(readFileSync("prisma/migrations/20260722_clean_install_baseline/migration.sql")).digest("hex").toUpperCase()).toBe(
       "E6D467206CFA536487C8C63882D13BA489C0235BE74E9E076423323A511C3025",
     );
-    if (existsSync("prisma/dev.db")) {
-      expect(createHash("sha256").update(readFileSync("prisma/dev.db")).digest("hex").toUpperCase()).toBe(
-        "1556B98FCAF0F2475C0C0F1BAEEFCE4E638680B9D4C7DC9BFFB8B6F0D09B4392",
-      );
-    }
+    expect(read("docs/CONTROLLED_SAMPLE_DATA_CLEANUP_AND_NEW_BASELINE.md")).toContain(
+      "baseline is historical rollback/provenance evidence only.",
+    );
     expect(countRouteFiles("app", "page.tsx") + Number(existsSync("app/sw.js/route.ts"))).toBe(274);
     expect(countRouteFiles("app/api", "route.ts")).toBe(378);
     expect(read("lib/backup.ts")).toContain("backupVersion: 37");

@@ -59,6 +59,7 @@ describe("backup restore validation", () => {
 
   it("accepts old backups without import verification data", () => {
     const validated = parseAndValidateBackup(validBackup());
+    expect(validated.schoolSettings).toBeNull();
     expect(validated.importBatches).toEqual([]);
     expect(validated.goLiveChecklist).toEqual([]);
     expect(validated.rolePermissions).toEqual([]);
@@ -80,6 +81,63 @@ describe("backup restore validation", () => {
     expect(validated.timetableFixedPeriods).toEqual([]);
     expect(validated.timetableDrafts).toEqual([]);
     expect(validated.timetableEntries).toEqual([]);
+  });
+
+  it("accepts an allowlisted version-37 school settings snapshot", () => {
+    const validated = parseAndValidateBackup({
+      ...validBackup(),
+      schoolSettings: {
+        id: "school",
+        schoolName: "Nalanda Public School",
+        addressLine1: "Nanalnagar, Mehdipatnam",
+        city: "Hyderabad",
+        phone: "040-23513913",
+        academicYear: "2026-27",
+        receiptPrefix: null,
+        defaultCurrency: "INR",
+        whatsappReminderFooter: "Nalanda Public School",
+        logoPath: "/nalanda-logo.jpg",
+        receiptTitle: "FEE RECEIPT",
+        showSchoolPhone: true,
+        showSchoolAddress: true,
+        defaultPrintSize: "A5",
+        signatureLabel: "Receiver Signature"
+      }
+    });
+
+    expect(validated.schoolSettings).toMatchObject({
+      id: "school",
+      academicYear: "2026-27",
+      defaultCurrency: "INR"
+    });
+  });
+
+  it("rejects unsafe or unknown school settings fields", () => {
+    const settings = {
+      id: "school",
+      schoolName: "Nalanda Public School",
+      addressLine1: "Address",
+      city: "Hyderabad",
+      phone: "040-00000000",
+      academicYear: "2026-27",
+      receiptPrefix: null,
+      defaultCurrency: "INR",
+      whatsappReminderFooter: "Nalanda Public School",
+      logoPath: "/nalanda-logo.jpg",
+      receiptTitle: "FEE RECEIPT",
+      showSchoolPhone: true,
+      showSchoolAddress: true,
+      defaultPrintSize: "A5",
+      signatureLabel: "Receiver Signature"
+    };
+    expect(() => parseAndValidateBackup({
+      ...validBackup(),
+      schoolSettings: { ...settings, passwordHash: "forbidden" }
+    })).toThrow("unknown field");
+    expect(() => parseAndValidateBackup({
+      ...validBackup(),
+      schoolSettings: { ...settings, logoPath: "https://example.com/logo.png" }
+    })).toThrow("local path");
   });
 
   it("accepts and validates optional timetable foundation arrays", () => {

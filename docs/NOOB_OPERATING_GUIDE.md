@@ -1,5 +1,17 @@
 # Nalanda Fee Control — Beginner Operating Guide
 
+## DATA-0B clean starting point
+
+The official operational starting point is now 0 Students, 0 active
+enrollments, 0 Payments and ₹0 collected. The older 8 / 8 / 19 / ₹99,100
+figures are historical rollback evidence only.
+
+Do not run `db:seed`, `demo:seed` or set `ALLOW_DEMO_BUSINESS_DATA` on this
+school database. Add only reviewed school records through approved operator
+workflows. Before real data, complete `AUTH-2A`: assign a named owner to each
+retained account, rotate every documented/default password and verify recovery
+access without deleting the last working leadership login.
+
 ## Schoolknot replacement decision (Prompt 23B)
 
 The planning audit is complete, but the school must **not switch everyone from Schoolknot yet**. No Schoolknot data was downloaded or imported and no new business feature was built in Prompt 23B.

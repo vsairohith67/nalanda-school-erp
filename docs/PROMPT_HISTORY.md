@@ -1,5 +1,31 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## DATA-0B - Controlled verified sample/QA cleanup (2026-07-28)
+
+After DATA-0A-QA returned `SAMPLE_DATA_PROVENANCE_CLEARED`, DATA-0B made demo
+business seeding fail closed, captured the exact required user approval,
+created protected v37 and byte-identical pre-clean backups, rehearsed restore
+and applied one locked transaction to the exact six-table manifest. It deleted
+8 verified sample Students, 8 enrollments, 8 lifecycle events, 19 Payments
+(11 verified sample and 8 verified QA), 19 audits and one receipt note. No
+potentially real or unknown row was in scope.
+
+The new operational baseline is 0 Students / 0 active enrollments / 0 Payments /
+₹0 collected, with zero Guardians, Staff, residue, sample markers, or foreign
+key violations. Intentional settings, roles, 2,696 permissions, masters,
+templates, provider configuration and four authorized accounts remain.
+Receipt sequencing was preserved. Accounts require the separate mandatory
+`AUTH-2A` named-owner/password-rotation follow-up.
+
+The first post-clean blank-database rehearsal correctly exposed a v37 defect:
+the backup omitted the full `SchoolSettings` singleton. An allowlisted,
+backward-compatible snapshot and idempotent restore upsert fixed it. The
+post-clean backup then restored twice with the zero baseline and retained
+configuration. Production Browser QA passed desktop and exact 390×844 mobile,
+light/dark, empty states, portal isolation, two restarts, zero Browser
+console/hydration errors and zero production stderr. DATA-0B is ready for its
+independent QA gate; it is not merged yet.
+
 ## RECON-1A - Parallel Prompt 23B and FIN-2B policy reconciliation (2026-07-28)
 
 Prompt 23B and FIN-2B were initiated as parallel workstreams. The preserved final Git lineage is Prompt 23B commits `737ee86`/`9752304`, then FIN-2B commits `65b4b00`/`f1c29de`; the common ancestor of the two retained feature branches is `9752304`. Both branches and their existing annotated tags remain visible, and synchronized `main` already contained every verified feature commit before the documentation-only reconciliation branch was created.

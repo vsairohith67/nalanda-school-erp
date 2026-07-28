@@ -57,7 +57,8 @@ describe("permanent seed users", () => {
       }
     }, {
       NODE_ENV: "development",
-      NALANDA_DEMO_SEED_OPT_IN: "true"
+      NALANDA_DEMO_SEED_OPT_IN: "true",
+      ALLOW_DEMO_BUSINESS_DATA: "true"
     }, (message) => warnings.push(message));
     expect(result.created).toEqual(["director", "admin", "accountant", "viewer"]);
     expect(create).toHaveBeenCalledTimes(4);

@@ -1,14 +1,25 @@
 # Documentation Index
 
+## DATA-0B controlled cleanup and zero-data baseline
+
+- [Controlled Sample-Data Cleanup and New Baseline](CONTROLLED_SAMPLE_DATA_CLEANUP_AND_NEW_BASELINE.md) - exact approval, six-table verified deletion manifest, protected rollback evidence, zero baseline, retained configuration, seed safeguards, account treatment, Browser QA and DATA-0B-QA gate.
+
+DATA-0B completed the approved operational transaction. The old
+8 / 8 / 19 / ₹99,100 baseline is historical rollback evidence; the current
+official operational baseline is 0 Students / 0 active enrollments /
+0 Payments / ₹0 collected. Demo business seeding is disabled by default.
+`AUTH-2A` remains mandatory for named ownership and password rotation. Prompt
+23C remains next after the independent DATA-0B-QA merge/tag closure.
+
 ## DATA-0A sample-data provenance
 
 - [Pre-Existing Sample Data Provenance and Cleanup Plan](PRE_EXISTING_SAMPLE_DATA_PROVENANCE_AND_CLEANUP_PLAN.md) - read-only operational provenance, count-only dependency graph, copied-database cleanup/restore rehearsal, retained configuration and the explicit approval-gated cleanup runbook.
 
 DATA-0A concludes `VERIFIED_SAMPLE_DATA_SAFE_FOR_CONTROLLED_DELETION`. The
 independent DATA-0A-QA result is `SAMPLE_DATA_PROVENANCE_CLEARED`. The
-operational database was not modified; DATA-0B must first add the seed-database
-refusal safeguard, rotate all four enabled seed-account passwords and receive
-explicit user approval before the developer-only cleanup command may be used.
+DATA-0A was read-only. DATA-0B later added the seed-database refusal safeguard,
+captured exact approval and completed the cleanup. Account rotation is tracked
+separately as `AUTH-2A` so the school is not locked out.
 
 ## Prompt 23B final Schoolknot consolidation
 

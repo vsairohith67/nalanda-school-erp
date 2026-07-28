@@ -29,6 +29,8 @@
     "data0a:backup": "tsx scripts/data0a-encrypted-backup.ts",
     "data0a:cleanup": "tsx scripts/data0a-copied-cleanup.ts",
     "data0aqa:verify": "tsx scripts/data0aqa-independent-verification.ts",
+    "data0b:preclean-backup": "tsx scripts/data0b-preclean-backup.ts",
+    "data0b:postclean-backup": "tsx scripts/data0b-preclean-backup.ts --post-clean",
     "whatsapp:process": "tsx scripts/whatsapp-process.ts",
     "whatsapp:health": "tsx scripts/whatsapp-health.ts",
     "whatsapp:webhook-fixtures": "tsx scripts/whatsapp-webhook-fixtures.ts",

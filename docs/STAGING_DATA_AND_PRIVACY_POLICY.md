@@ -1,5 +1,17 @@
 # Staging Data and Privacy Policy
 
+## Zero-data operational baseline and demo-seed rule
+
+As of DATA-0B, the operational business baseline is 0 Students, 0 active
+enrollments, 0 Payments and ₹0 collected. The former 8 / 8 / 19 / ₹99,100
+sample/QA baseline is historical only and must not be copied into staging.
+
+`ALLOW_DEMO_BUSINESS_DATA=true` is rejected in staging and production/release.
+Synthetic staging fixtures may be created only in a separate isolated database
+root under the existing staging rehearsal controls. No startup, deployment,
+migration, restore or ordinary bootstrap may recreate demo Students or
+Payments.
+
 ## Default rule
 
 Staging is synthetic-only. It contains no real Student/staff/guardian data, Schoolknot export, fee balance/payment, contact information, uploaded document/photo, biometric/location data, live messaging recipient, or live payment/provider data. Operational `prisma/dev.db` is never uploaded or onboarded.

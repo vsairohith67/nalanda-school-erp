@@ -1,5 +1,23 @@
 # SEC-1 Security Audit and Hardening Report
 
+## DATA-0B follow-up: seed and restore hardening
+
+DATA-0B disabled demo business seeding by default, required an explicit
+isolated database root and exact opt-in, refused the operational database by
+path/realpath/file identity, and made staging/production validation reject the
+demo flag. The cleanup changed only the six DATA-0A-QA-approved business
+tables.
+
+The first blank-database restore rehearsal found that v37 backups carried only
+the academic-year metadata and not the full `SchoolSettings` row. Backup and
+restore now use an allowlisted settings snapshot and idempotent upsert; old
+backups remain compatible. Focused tests and two blank migrated restores pass
+without password hashes or secrets.
+
+Retained enabled accounts still require named human ownership and password
+rotation. This is the mandatory `AUTH-2A` follow-up; DATA-0B preserved them to
+avoid an unsafe school lockout.
+
 Scope: repository-wide SEC-1A security audit and hardening, SEC-1B production
 runtime verification, and SEC-1-QA independent closure. Local authorized testing
 only; no real-system penetration testing. Baselines: OWASP Top 10:2025 and OWASP

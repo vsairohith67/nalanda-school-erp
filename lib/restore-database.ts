@@ -12,12 +12,14 @@ import { restoreFeeRegisterOcrData } from "@/lib/fee-register-ocr-restore";
 import { validatePaymentPayload, validateStudentPayload } from "@/lib/validation";
 import { restorePublicWebsiteData } from "@/lib/public-website-restore";
 import { assertReceiptStudentMatchInDatabase } from "@/lib/payment-controls";
+import { validateSchoolSettings } from "@/lib/school-settings";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
 type RestoreDatabaseClient = Pick<
   Prisma.TransactionClient,
   "student" | "feeStructure" | "payment" | "paymentAudit" | "user" | "receiptNote"
+  | "schoolSettings"
   | "importBatch" | "goLiveChecklist" | "timetableTeacher" | "timetableSubject"
   | "timetableClassSection" | "timetablePeriodTemplate" | "timetableAssignment"
   | "timetableTeacherUnavailability" | "timetableFixedPeriod" | "timetableDraft"
@@ -85,6 +87,7 @@ async function restoreIntoDatabase(
   restoredBy: { id: string; name: string }
 ): Promise<RestoreResult> {
   const result: RestoreResult = {
+    schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
     feeStructures: emptyEntityResult(),
     payments: emptyEntityResult(),
@@ -245,6 +248,24 @@ async function restoreIntoDatabase(
     timetableEntries: emptyEntityResult(),
     warnings: []
   };
+
+  if (backup.schoolSettings) {
+    try {
+      const existing = await client.schoolSettings.findUnique({ where: { id: "school" } });
+      const settings = validateSchoolSettings(backup.schoolSettings);
+      await client.schoolSettings.upsert({
+        where: { id: "school" },
+        create: { id: "school", ...settings },
+        update: settings
+      });
+      if (existing) result.schoolSettings.updated += 1;
+      else result.schoolSettings.created += 1;
+    } catch (error) {
+      result.schoolSettings.errors.push(
+        error instanceof Error ? error.message : "School settings could not be restored"
+      );
+    }
+  }
 
   const backupStudentIds = new Map<string, string>();
   const backupStudentLocalIds = new Map<string, string>();

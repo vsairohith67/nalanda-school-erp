@@ -5,11 +5,13 @@ import { ensureDefaultRolePermissions } from "../lib/role-permissions";
 import { ensureSeedUsers } from "../lib/seed-users";
 import { seedTimetableDefaults } from "../lib/timetable";
 import { ensureDefaultMiscIncomeItems } from "../lib/misc-income";
+import { demoBusinessSeedDecision } from "../lib/demo-business-seed-safety";
 
 loadEnvFile();
 const prisma = new PrismaClient();
 
 async function main() {
+  const demoBusinessSeed = demoBusinessSeedDecision(process.env, process.cwd());
   const seedResult = await ensureSeedUsers(prisma);
   console.log(`Seed users created: ${seedResult.created.join(", ") || "none"}`);
   console.log(`Existing seed users preserved: ${seedResult.skipped.join(", ") || "none"}`);
@@ -35,6 +37,12 @@ async function main() {
       });
     }
   }
+
+  if (!demoBusinessSeed.enabled) {
+    console.log("Demo business data skipped. Intentional system and master seeding remains enabled.");
+    return;
+  }
+  console.log("Demo business data seeding authorized for an isolated database.");
 
   const students = [
     {

@@ -1,5 +1,12 @@
 # Bug, Limitation, and Tech Debt Register
 
+## DATA-0B follow-up
+
+| ID | Area | Status | Risk | Required action |
+|---|---|---|---|---|
+| `AUTH-2A` | Retained enabled accounts | OPEN / mandatory before real data or deployment | Known seed-origin identities remain enabled; deleting or replacing them without a supplied named owner could lock out the school | Classify one named human owner per account, verify exact role and active decision, rotate every known default password, record recovery/rotation evidence and reject duplicate active role identities |
+| `DATA0B-BACKUP-SETTINGS` | v37 blank-database restore | FIXED in DATA-0B | Prior backup omitted the full `SchoolSettings` singleton, which a restore over a preconfigured copy could mask | Keep the allowlisted settings snapshot, parser validation, idempotent upsert and blank migrated restore-twice regression |
+
 ## Prompt 23B critical finding and consolidation status
 
 - Confirmed critical defect: a Teacher default receives Student attendance view/manage/submit permission, `/attendance/students` lists every active class/section, and both Student attendance APIs accept caller-supplied scope without resolving the exact active `StaffMember -> TimetableTeacher -> TimetableAssignment`. This is an object-scope/IDOR-class risk. No Teacher user exists in the current operational baseline, so the defect is dormant but release-blocking.

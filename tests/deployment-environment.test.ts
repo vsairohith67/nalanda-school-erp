@@ -68,6 +68,12 @@ describe("staging deployment environment validation", () => {
     expect(codes(environment)).toContain("OPERATIONAL_DATABASE_REJECTED");
   });
 
+  it("rejects demo business-data opt-in in the release environment", () => {
+    const environment = validEnvironment();
+    environment.ALLOW_DEMO_BUSINESS_DATA = "true";
+    expect(codes(environment)).toContain("DEMO_BUSINESS_DATA_REJECTED");
+  });
+
   it("rejects an HTTP staging URL", () => {
     const environment = validEnvironment();
     environment.APP_ORIGIN = "http://staging.localhost";

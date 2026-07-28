@@ -1,4 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
+import path from "node:path";
 import {
   assertSchemaEquivalent,
   cleanupIsolatedDatabase,
@@ -24,7 +25,11 @@ export async function runMigrationFreshInstallCheck() {
     const status = runPrisma(["migrate", "status", "--schema", "prisma/schema.prisma"], databasePath);
     if (!/database schema is up to date/i.test(status.combined)) throw new Error("MIGRATION_STATUS_NOT_CLEAN");
     const schema = assertSchemaEquivalent(databasePath);
-    runPnpm(["db:seed"], databasePath, SYNTHETIC_SEED_ENV);
+    runPnpm(["db:seed"], databasePath, {
+      ...SYNTHETIC_SEED_ENV,
+      ALLOW_DEMO_BUSINESS_DATA: "true",
+      DEMO_BUSINESS_DATA_ROOT: path.dirname(databasePath)
+    });
     const lifecycle = runPnpm(["lifecycle:backfill"], databasePath, SYNTHETIC_SEED_ENV);
     if (!/No data changed/.test(lifecycle.combined)) throw new Error("LIFECYCLE_BACKFILL_NOT_DRY");
 

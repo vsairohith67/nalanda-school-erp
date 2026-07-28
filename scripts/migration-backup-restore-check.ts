@@ -68,7 +68,11 @@ export async function runMigrationBackupRestoreCheck() {
     for (const databasePath of [sourcePath, targetPath, collisionPath]) {
       runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"], databasePath);
     }
-    runPnpm(["db:seed"], sourcePath, SYNTHETIC_ENV);
+    runPnpm(["db:seed"], sourcePath, {
+      ...SYNTHETIC_ENV,
+      ALLOW_DEMO_BUSINESS_DATA: "true",
+      DEMO_BUSINESS_DATA_ROOT: path.dirname(sourcePath)
+    });
     const source = prismaFor(sourcePath);
     const generated = await generateFullBackup(source, {
       generatedAt: new Date("2026-07-22T00:00:00.000Z"),

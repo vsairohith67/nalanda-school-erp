@@ -5,6 +5,12 @@
 **Operational database action in DATA-0A and DATA-0A-QA:** read-only
 **Final decision:** `VERIFIED_SAMPLE_DATA_SAFE_FOR_CONTROLLED_DELETION`
 **Independent QA result:** `SAMPLE_DATA_PROVENANCE_CLEARED`
+**DATA-0B operational cleanup:** completed 28 July 2026; see
+`CONTROLLED_SAMPLE_DATA_CLEANUP_AND_NEW_BASELINE.md`
+
+> Historical provenance notice: the 8 Students / 8 active enrollments /
+> 19 Payments / ₹99,100 collected figures below describe the approved pre-clean
+> rollback baseline. The current operational baseline is 0 / 0 / 0 / ₹0.
 
 ## Decision and approval gate
 
@@ -23,9 +29,10 @@ still required before the operational cleanup command in this document may be
 run. The command is a developer-only CLI operation and is not present in any
 ordinary operator-facing UI.
 
-DATA-0B must first close two separate production-readiness gates: prevent
-ordinary seeding from targeting the operational database, and rotate every
-enabled seed-account password. Operational deletion has not occurred.
+DATA-0B prevented ordinary/demo business seeding from targeting the operational
+database and completed the exact approved cleanup. The four enabled accounts
+were preserved to avoid lockout; their named-owner and password-rotation work
+is the separately tracked mandatory `AUTH-2A` follow-up.
 
 ## A. Preflight evidence
 

@@ -17,6 +17,7 @@ const MAX_ENTITY_ROWS = 100_000;
 
 const TOP_LEVEL_KEYS = new Set([
   "metadata",
+  "schoolSettings",
   "students",
   "feeStructures",
   "payments",
@@ -81,6 +82,7 @@ const METADATA_KEYS = new Set([
   "appName", "academicYear", "generatedAt", "generatedBy", "appVersion", "backupVersion", "counts"
 ]);
 const BACKUP_COUNT_KEYS = new Set([
+  "schoolSettings",
   "timetableTeachers", "timetableSubjects", "timetableClassSections",
   "rolePermissions", "guardians", "studentGuardians", "notices", "staffMembers", "timetablePeriodTemplates",
   "studentAttendanceSessions", "studentAttendanceRecords",
@@ -293,6 +295,12 @@ const IMPORT_BATCH_STATUSES = new Set(["DRY_RUN", "COMPLETED", "FAILED", "PARTIA
 const CHECKLIST_BOOLEAN_KEYS = [...GO_LIVE_CHECKLIST_KEYS].filter(
   (key) => !["id", "updatedBy", "updatedAt", "createdAt"].includes(key)
 );
+const SCHOOL_SETTINGS_KEYS = new Set([
+  "id", "schoolName", "addressLine1", "city", "phone", "academicYear",
+  "receiptPrefix", "defaultCurrency", "whatsappReminderFooter", "logoPath",
+  "receiptTitle", "showSchoolPhone", "showSchoolAddress", "defaultPrintSize",
+  "signatureLabel"
+]);
 
 export type RestoreRecord = Record<string, unknown>;
 
@@ -306,6 +314,7 @@ export type ValidatedBackup = {
     backupVersion?: number;
     counts?: Record<string, number>;
   };
+  schoolSettings: RestoreRecord | null;
   students: RestoreRecord[];
   feeStructures: RestoreRecord[];
   payments: RestoreRecord[];
@@ -475,6 +484,7 @@ export type EntityRestoreResult = {
 };
 
 export type RestoreResult = {
+  schoolSettings: EntityRestoreResult;
   students: EntityRestoreResult;
   feeStructures: EntityRestoreResult;
   payments: EntityRestoreResult;
@@ -668,6 +678,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     throw new Error("metadata.generatedAt must be a valid date");
   }
 
+  const schoolSettings = validateOptionalSchoolSettings(root.schoolSettings);
   const students = validateRows(root.students, "students", STUDENT_KEYS, ["admissionNo"]);
   const feeStructures = validateRows(
     root.feeStructures,
@@ -1259,6 +1270,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
         : {}),
       ...(counts ? { counts } : {})
     },
+    schoolSettings,
     students,
     feeStructures,
     payments,
@@ -1442,6 +1454,41 @@ function validateOptionalBackupCounts(value: unknown) {
     validated[key] = Number(count);
   }
   return validated;
+}
+
+function validateOptionalSchoolSettings(value: unknown): RestoreRecord | null {
+  if (value === undefined || value === null) return null;
+  const settings = requireRecord(value, "schoolSettings");
+  rejectUnknownKeys(settings, SCHOOL_SETTINGS_KEYS, "schoolSettings");
+  if (requireString(settings.id, "schoolSettings.id") !== "school") {
+    throw new Error("schoolSettings.id must be school");
+  }
+  for (const key of [
+    "schoolName", "addressLine1", "city", "phone", "academicYear",
+    "defaultCurrency", "whatsappReminderFooter", "logoPath", "receiptTitle",
+    "defaultPrintSize", "signatureLabel"
+  ]) {
+    requireString(settings[key], `schoolSettings.${key}`);
+  }
+  if (!/^\d{4}-\d{2}$/.test(String(settings.academicYear))) {
+    throw new Error("schoolSettings.academicYear must use YYYY-YY");
+  }
+  if (settings.defaultCurrency !== "INR") {
+    throw new Error("schoolSettings.defaultCurrency must be INR");
+  }
+  if (!["A4", "A5"].includes(String(settings.defaultPrintSize))) {
+    throw new Error("schoolSettings.defaultPrintSize must be A4 or A5");
+  }
+  if (!String(settings.logoPath).startsWith("/") || String(settings.logoPath).startsWith("//")) {
+    throw new Error("schoolSettings.logoPath must be a local path");
+  }
+  if (settings.receiptPrefix !== null && settings.receiptPrefix !== undefined && typeof settings.receiptPrefix !== "string") {
+    throw new Error("schoolSettings.receiptPrefix must be a string or null");
+  }
+  if (typeof settings.showSchoolPhone !== "boolean" || typeof settings.showSchoolAddress !== "boolean") {
+    throw new Error("schoolSettings visibility fields must be booleans");
+  }
+  return pickRecord(settings, [...SCHOOL_SETTINGS_KEYS]);
 }
 
 function validateRows(

@@ -37,7 +37,8 @@ export async function ensureSeedUsers(
 
   const demoSeedOptIn =
     environment.NODE_ENV !== "production" &&
-    environment.NALANDA_DEMO_SEED_OPT_IN === "true";
+    environment.NALANDA_DEMO_SEED_OPT_IN === "true" &&
+    environment.ALLOW_DEMO_BUSINESS_DATA === "true";
   const passwords = new Map<string, string>();
   for (const definition of missing) {
     const configured = environment[definition.env];
@@ -47,7 +48,7 @@ export async function ensureSeedUsers(
     }
     if (!demoSeedOptIn) {
       throw new Error(
-        `${definition.env} is required for database seeding unless NALANDA_DEMO_SEED_OPT_IN=true`
+        `${definition.env} is required unless isolated demo seeding has both explicit opt-ins`
       );
     }
     passwords.set(definition.username, demoTemporaryPassword(definition));
@@ -71,4 +72,3 @@ export async function ensureSeedUsers(
   }
   return { created, skipped };
 }
-

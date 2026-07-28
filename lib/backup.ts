@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import packageJson from "../package.json";
-import { getSchoolSettings } from "./school-settings";
+import { getSchoolSettings, type SchoolSettingsValue } from "./school-settings";
 
 const APP_NAME = "Nalanda Fee Control";
 
@@ -60,6 +60,7 @@ type BackupClient = Pick<
 type BackupDocumentInput = {
   generatedAt: Date;
   generatedBy: string;
+  schoolSettings?: SchoolSettingsValue;
   students: readonly unknown[];
   feeStructures: readonly unknown[];
   payments: readonly unknown[];
@@ -382,6 +383,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
       appVersion: packageJson.version,
       backupVersion: 37,
       counts: {
+        schoolSettings: input.schoolSettings ? 1 : 0,
         rolePermissions: rolePermissions.length,
         guardians: guardians.length,
         studentGuardians: studentGuardians.length,
@@ -532,6 +534,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
         timetableEntries: timetableEntries.length
       }
     },
+    schoolSettings: input.schoolSettings ?? null,
     students: [...input.students],
     feeStructures: [...input.feeStructures],
     payments: [...input.payments],
@@ -1213,6 +1216,7 @@ export async function generateFullBackup(
     timetableFixedPeriods,
     timetableDrafts,
     timetableEntries,
+    schoolSettings: settings,
     academicYear: settings.academicYear
   });
 }

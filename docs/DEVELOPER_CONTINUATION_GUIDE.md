@@ -1,5 +1,22 @@
 # Nalanda Fee Control — Developer Continuation Guide
 
+## DATA-0B zero-data and demo-seed boundary
+
+The operational business baseline is 0 Students / 0 active enrollments /
+0 Payments / ₹0 collected. Treat the prior 8 / 8 / 19 / ₹99,100 state only as
+historical rollback/provenance evidence.
+
+Demo business seeding requires all of: exact
+`ALLOW_DEMO_BUSINESS_DATA=true`, a separate existing database, and an explicit
+isolated copied/test root. The guard refuses `prisma/dev.db` by resolved path,
+real path and file identity; staging and production/release validation reject
+the flag. Do not weaken this guard or attach demo seeding to startup.
+
+Version-37 backup now includes an allowlisted `SchoolSettings` snapshot.
+Restore upserts that singleton idempotently, while older backups without the
+field remain accepted. DATA-0B protected backup/rehearsal tooling writes only
+under ignored `.data0a/data0b`.
+
 ## Prompt 23B handoff
 
 Read the nine final Schoolknot 23B documents listed in `docs/INDEX.md` before any gap work. The result is `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`; it is not a whole-school cutover or parity claim. The Notion source has five role reports plus exactly 109 dispositioned unresolved items.

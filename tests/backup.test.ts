@@ -49,6 +49,7 @@ describe("full backup", () => {
     expect(backup.metadata.appVersion).toBeTruthy();
     expect(backup.metadata.backupVersion).toBe(37);
     expect(backup.metadata.counts).toEqual({
+      schoolSettings: 0,
       rolePermissions: 1,
       guardians: 1,
       studentGuardians: 1,
@@ -236,6 +237,13 @@ describe("full backup", () => {
     expect(backup.timetableFixedPeriods).toEqual([{ id: "fixed-1" }]);
     expect(backup.timetableDrafts).toEqual([{ id: "draft-1" }]);
     expect(backup.timetableEntries).toEqual([{ id: "entry-1" }]);
+    expect(backup.schoolSettings).toMatchObject({
+      id: "school",
+      academicYear: "2026-27",
+      defaultCurrency: "INR",
+      defaultPrintSize: "A5"
+    });
+    expect(backup.metadata.counts.schoolSettings).toBe(1);
   });
 
   it("removes password hashes from exported users", () => {

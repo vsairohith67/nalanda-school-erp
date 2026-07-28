@@ -320,6 +320,8 @@ function createReference() {
     runPnpm(["db:seed"], REFERENCE, {
       NODE_ENV: "development",
       NALANDA_DEMO_SEED_OPT_IN: "true",
+      ALLOW_DEMO_BUSINESS_DATA: "true",
+      DEMO_BUSINESS_DATA_ROOT: ROOT,
       SEED_DIRECTOR_PASSWORD: password(),
       SEED_ADMIN_PASSWORD: password(),
       SEED_ACCOUNTANT_PASSWORD: password(),

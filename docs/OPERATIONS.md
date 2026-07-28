@@ -1,5 +1,16 @@
 # Nalanda Fee Control Operations
 
+## Current operational baseline
+
+DATA-0B established 0 Students / 0 active enrollments / 0 Payments / ₹0
+collected. Demo business seeding is disabled and must never be enabled against
+`prisma/dev.db`. Preserve receipt numbering; do not reuse historical receipt
+identities. Protected pre-clean rollback and post-clean v37 artifacts are
+listed in `CONTROLLED_SAMPLE_DATA_CLEANUP_AND_NEW_BASELINE.md`.
+
+Complete the separate `AUTH-2A` named-owner/password-rotation gate before real
+imports or deployment.
+
 ## Daily workflow
 
 1. Confirm the Windows computer date and time.
