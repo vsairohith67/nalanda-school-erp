@@ -7,8 +7,7 @@ import { isRole, type Permission, type Role } from "@/lib/permissions";
 import { hasRolePermission } from "@/lib/role-permissions";
 import {
   SESSION_COOKIE,
-  sessionCredentialTagMatches,
-  sessionRoleMatches,
+  sessionAccountStateMatches,
   verifySessionToken
 } from "@/lib/session-token";
 import { isFirstRunRequired } from "@/lib/setup";
@@ -41,10 +40,12 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
   });
   if (
     !user ||
-    !user.isActive ||
     !isRole(user.role) ||
-    !sessionRoleMatches(payload, user.role) ||
-    !(await sessionCredentialTagMatches(payload, user.passwordHash))
+    !(await sessionAccountStateMatches(payload, {
+      isActive: user.isActive,
+      role: user.role,
+      passwordHash: user.passwordHash
+    }))
   ) {
     return null;
   }

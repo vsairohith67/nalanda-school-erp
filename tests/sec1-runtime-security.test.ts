@@ -68,6 +68,7 @@ describe("SEC-1 runtime security hardening", () => {
     const {
       createSessionCredentialTag,
       createSessionToken,
+      sessionAccountStateMatches,
       sessionCredentialTagMatches,
       sessionRoleMatches,
       verifySessionToken
@@ -87,7 +88,17 @@ describe("SEC-1 runtime security hardening", () => {
     expect(await sessionCredentialTagMatches(firstPayload!, "qasec1-password-hash-v2")).toBe(false);
     expect(sessionRoleMatches(firstPayload!, "VIEWER")).toBe(true);
     expect(sessionRoleMatches(firstPayload!, "DIRECTOR")).toBe(false);
-    expect(readFileSync("lib/auth.ts", "utf8")).toContain("!sessionRoleMatches(payload, user.role)");
+    expect(await sessionAccountStateMatches(firstPayload!, {
+      isActive: true,
+      role: "VIEWER",
+      passwordHash: "qasec1-password-hash-v1"
+    })).toBe(true);
+    expect(await sessionAccountStateMatches(firstPayload!, {
+      isActive: false,
+      role: "VIEWER",
+      passwordHash: "qasec1-password-hash-v1"
+    })).toBe(false);
+    expect(readFileSync("lib/auth.ts", "utf8")).toContain("sessionAccountStateMatches(payload");
   });
 
   it("uses a Host-prefixed Secure cookie by default in production", async () => {

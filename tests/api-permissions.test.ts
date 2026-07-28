@@ -121,8 +121,9 @@ describe("API and direct route permission declarations", () => {
     const auth = source("lib/auth.ts");
     expect(auth).toContain('"Authentication required"');
     expect(auth).toContain('"You do not have permission for this action"');
-    expect(auth).toContain("sessionCredentialTagMatches(payload, user.passwordHash)");
-    expect(auth).not.toContain("passwordHash: user.passwordHash");
+    expect(auth).toContain("sessionAccountStateMatches(payload");
+    const safeUserType = auth.slice(auth.indexOf("export type AuthUser"), auth.indexOf("export const getCurrentUser"));
+    expect(safeUserType).not.toContain("passwordHash");
   });
 
   it("keeps the parent portal read-only and free of internal ERP links", () => {

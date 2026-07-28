@@ -27,6 +27,8 @@ export async function runMigrationFreshInstallCheck() {
     const schema = assertSchemaEquivalent(databasePath);
     runPnpm(["db:seed"], databasePath, {
       ...SYNTHETIC_SEED_ENV,
+      ALLOW_DEMO_USERS: "true",
+      DEMO_USER_DATABASE_ROOT: path.dirname(databasePath),
       ALLOW_DEMO_BUSINESS_DATA: "true",
       DEMO_BUSINESS_DATA_ROOT: path.dirname(databasePath)
     });

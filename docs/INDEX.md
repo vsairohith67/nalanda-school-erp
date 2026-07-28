@@ -1,5 +1,14 @@
 # Documentation Index
 
+## AUTH-2A operational account decision gate
+
+- [Operational Account Ownership Decision](OPERATIONAL_ACCOUNT_OWNERSHIP_DECISION.md) - role-only proposed keep/disable treatment, lockout sequence, session effects, rollback, required user choices, exact AUTH-2A-P3 options, and AUTH-2B deferral.
+
+AUTH-2A-P2 hardens demo-user creation and System Health without a Prisma model,
+migration, or operational account/database change. `AUTH-2A-P3` remains
+`AWAITING_USER_DECISION`; no password rotation, ownership assignment, role
+change, disable, or session action has occurred.
+
 ## DATA-0B controlled cleanup and zero-data baseline
 
 - [Controlled Sample-Data Cleanup and New Baseline](CONTROLLED_SAMPLE_DATA_CLEANUP_AND_NEW_BASELINE.md) - exact approval, six-table verified deletion manifest, protected rollback evidence, zero baseline, retained configuration, seed safeguards, account treatment, Browser QA and DATA-0B-QA gate.
@@ -8,7 +17,8 @@ DATA-0B completed the approved operational transaction. The old
 8 / 8 / 19 / ₹99,100 baseline is historical rollback evidence; the current
 official operational baseline is 0 Students / 0 active enrollments /
 0 Payments / ₹0 collected. Demo business seeding is disabled by default.
-`AUTH-2A` remains mandatory for named ownership and password rotation. Prompt
+`AUTH-2A-P3` remains mandatory for named ownership, password rotation, and the
+approved disable decisions. Prompt
 23C is next after DATA-0B-QA, whose result is
 `CLEAN_ZERO_DATA_BASELINE_CLEARED`, completes its fast-forward merge/tag
 closure.

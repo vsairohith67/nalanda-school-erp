@@ -70,6 +70,8 @@ export async function runMigrationBackupRestoreCheck() {
     }
     runPnpm(["db:seed"], sourcePath, {
       ...SYNTHETIC_ENV,
+      ALLOW_DEMO_USERS: "true",
+      DEMO_USER_DATABASE_ROOT: path.dirname(sourcePath),
       ALLOW_DEMO_BUSINESS_DATA: "true",
       DEMO_BUSINESS_DATA_ROOT: path.dirname(sourcePath)
     });

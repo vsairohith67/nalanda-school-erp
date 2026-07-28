@@ -72,6 +72,8 @@ describe("staging deployment environment validation", () => {
     const environment = validEnvironment();
     environment.ALLOW_DEMO_BUSINESS_DATA = "true";
     expect(codes(environment)).toContain("DEMO_BUSINESS_DATA_REJECTED");
+    environment.ALLOW_DEMO_USERS = "true";
+    expect(codes(environment)).toContain("DEMO_USERS_REJECTED");
   });
 
   it("rejects an HTTP staging URL", () => {

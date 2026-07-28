@@ -85,6 +85,15 @@ export function sessionRoleMatches(
   return payload.role === currentRole;
 }
 
+export async function sessionAccountStateMatches(
+  payload: Pick<SessionPayload, "userId" | "role" | "credentialTag">,
+  user: { isActive: boolean; role: Role; passwordHash: string }
+) {
+  return user.isActive &&
+    sessionRoleMatches(payload, user.role) &&
+    await sessionCredentialTagMatches(payload, user.passwordHash);
+}
+
 async function sign(value: string) {
   const secret = process.env.AUTH_SECRET || process.env.SESSION_SECRET;
   if (!secret || secret.length < 32) {

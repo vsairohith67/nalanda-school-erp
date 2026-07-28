@@ -40,6 +40,9 @@ Legend: R = required for staging runtime; C = conditional; O = optional/tool-onl
 | Name | Purpose | Req | Local / staging | Secret | Validation and rotation | LIVE state / owner |
 | --- | --- | --- | --- | --- | --- | --- |
 | `SEED_DIRECTOR_PASSWORD`, `SEED_ADMIN_PASSWORD`, `SEED_ACCOUNTANT_PASSWORD`, `SEED_VIEWER_PASSWORD` | transient fresh synthetic seed credentials | C | isolated values / transient secret injection only | Yes | >=16, unique, no documented/default/dev value; rotate accounts immediately and remove variables | synthetic only / School Director+Security |
+| `ALLOW_DEMO_USERS` | explicit demo-user creation gate | O | true only for ignored copied/test DB / false or unset | No | validator rejects true in staging/production; never use with `prisma/dev.db` | disabled / Security |
+| `DEMO_USER_DATABASE_ROOT` | demo-user copied/test isolation root | O | absolute ignored `tmp/` child / unset | Sensitive path | existing absolute root containing the target DB; operational path/file identity refused | disposable QA only / Security |
+| `AUTH_SEED_ACCOUNT_DECISIONS` | role-only AUTH-2A operator decision record | C | approved role/action pairs / approved role/action pairs | No | no person or credential data; does not perform account changes | remove after AUTH-2B persistence / School Director+Security |
 | `NALANDA_DEMO_SEED_OPT_IN` | documented demo defaults | O | explicit local only / false or unset | No | validator rejects true | disabled / Security |
 | `WHATSAPP_MOCK_WEBHOOK_SECRET` | mock webhook HMAC | R | unique local / unique staging | Yes | >=32 random; rotate with mock fixtures | MOCK only / Messaging |
 | `WHATSAPP_MOCK_VERIFY_TOKEN` | mock verification | R | unique local / unique staging | Yes | >=32 random | MOCK only / Messaging |

@@ -12,9 +12,15 @@ const prisma = new PrismaClient();
 
 async function main() {
   const demoBusinessSeed = demoBusinessSeedDecision(process.env, process.cwd());
-  const seedResult = await ensureSeedUsers(prisma);
-  console.log(`Seed users created: ${seedResult.created.join(", ") || "none"}`);
-  console.log(`Existing seed users preserved: ${seedResult.skipped.join(", ") || "none"}`);
+  const seedResult = await ensureSeedUsers(prisma, process.env, process.cwd());
+  if (demoBusinessSeed.enabled && !seedResult.enabled) {
+    throw new Error("DEMO_BUSINESS_DATA_REQUIRES_EXPLICIT_DEMO_USERS");
+  }
+  console.log(
+    seedResult.enabled
+      ? `Demo user safeguard checked: created=${seedResult.createdRoles.length} preserved=${seedResult.preservedRoles.length} disabled-preserved=${seedResult.disabledPreservedRoles.length}.`
+      : "Demo user creation skipped; intentional system and master seeding remains enabled."
+  );
   await ensureDefaultRolePermissions(prisma);
   console.log("Role permission defaults checked.");
   await ensureDefaultMiscIncomeItems(prisma);

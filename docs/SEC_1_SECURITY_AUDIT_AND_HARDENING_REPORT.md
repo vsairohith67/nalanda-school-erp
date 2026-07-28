@@ -14,9 +14,17 @@ restore now use an allowlisted settings snapshot and idempotent upsert; old
 backups remain compatible. Focused tests and two blank migrated restores pass
 without password hashes or secrets.
 
-Retained enabled accounts still require named human ownership and password
-rotation. This is the mandatory `AUTH-2A` follow-up; DATA-0B preserved them to
-avoid an unsafe school lockout.
+AUTH-2A-P2 now makes demo-user creation opt-in and copied/test-only, refuses
+release environments and `prisma/dev.db`, refuses partial retained sets,
+requires supplied unique non-documented passwords, preserves disabled users,
+and leaves intentional system/master seeding available. System Health blocks
+readiness with safe role-level counts when an enabled seed-origin account still
+matches documented password provenance or required role decisions are absent.
+
+No operational account changed. Named ownership, password rotation, fresh-login
+proof, and three proposed disables remain approval-gated AUTH-2A-P3 work.
+Central session inventory/revocation and persisted ownership/rotation metadata
+are deferred to AUTH-2B after DEVOPS-1E.
 
 Scope: repository-wide SEC-1A security audit and hardening, SEC-1B production
 runtime verification, and SEC-1-QA independent closure. Local authorized testing
@@ -40,7 +48,7 @@ Pre-remediation discovery consolidated 0 Critical, 4 High, and 18 Medium confirm
 | SEC1-H01 | Anonymous first-run Director claim. CWE-306; OWASP A01/A07; ASVS V2/V4 | An uninitialized production database could be claimed through public setup. | `FIRST_RUN_BOOTSTRAP_TOKEN` required in production before writes; UI proof handling; setup tests. | Secret provisioning is deployment work. | `FIXED` |
 | SEC1-H02 | Operational Browser restore. CWE-284/494; A01/A08; ASVS V4/V12 | Authorized Browser restore could replace operational data/RBAC with supplied JSON. | Execution requires absolute DB inside `BROWSER_RESTORE_COPIED_QA_ROOT`, rejects `prisma/dev.db`, rejects role-permission restore; preview retained. | CLI/operator restore remains a controlled operational procedure. | `FIXED` |
 | SEC1-H03 | Last privileged account TOCTOU. CWE-367/269; A01; ASVS V4 | Concurrent role/status changes could remove the final privileged user and reopen setup. | Serializable transaction recheck; role sessions invalidate; user-management tests. | Distributed databases should preserve equivalent isolation. | `FIXED` |
-| SEC1-H04 | Known seed/provider credentials. CWE-798; A02/A07; ASVS V2/V6 | Generic seed or MOCK provider defaults could create known privileged credentials/signatures. | Generic seed fails closed; demo defaults require explicit opt-in; production MOCK secrets/tokens require 32+ characters. | Secret rotation is operational. | `FIXED` |
+| SEC1-H04 | Known seed/provider credentials. CWE-798; A02/A07; ASVS V2/V6 | Generic seed or MOCK provider defaults could create known privileged credentials/signatures. | Demo-user creation requires `ALLOW_DEMO_USERS=true`, a supplied unique non-documented password per role, and an existing ignored copied/test DB; production/staging, `prisma/dev.db`, and partial retained sets are refused. | Operational rotation remains AUTH-2A-P3; central session revocation remains AUTH-2B. | `FIXED_CODE / OPERATIONAL_DECISION_PENDING` |
 | SEC1-M01 | Receipt/Student ownership invariant. CWE-639; A01; ASVS V4 | Editing/import/restoring a Payment could bind a receipt shared with another Student. | Shared ownership enforcement for create/edit/import/restore; regression tests. | None beyond operator data quality. | `FIXED` |
 | SEC1-M02 | Payment import race/unbounded rows. CWE-400/362; A04; ASVS V5/V11 | Large imports or stale duplicate snapshots could exhaust resources/create duplicates. | 2,000-row cap and exact duplicate recheck in transaction. | Multi-node database isolation must remain equivalent. | `FIXED` |
 | SEC1-M03 | Content-Length-only limits. CWE-400; A04; ASVS V5/V12 | Lengthless/chunked bodies bypassed pre-parse size checks. | Clone-stream byte counting; malformed lengths reject; 413 tests. | Edge/proxy limits still recommended. | `FIXED` |

@@ -794,3 +794,46 @@ Reasonless and stale Director cancellation returned 400 and 409. Valid cancellat
 Browser QA passed 1366x768 and exact `window.innerWidth=390`, `window.innerHeight=844` in light/dark modes, with no overflow, contained tables, 44px controls, no native dialogs, zero console warnings/errors, and zero clean-run production stderr. QA found and corrected missing native `required`/`minLength=3` semantics on both cancellation-reason textareas, then rebuilt and reverified the corrected accessible modal on a fresh FIN2AQA copy. The deliberate invalid login returned only the safe generic message and one redacted warning. Both QA copies were cleaned to zero twice and destroyed; operational integrity remained exact.
 
 Final QA regression passed 274 page routes, 378 API routes, typecheck, 1,496/1,496 tests across 163 files, 212/212 build entries, Git safety, and ignored backup version 37 `nalanda-fee-control-backup-2026-07-26-20-40.json`. The feature branch is ready for the guarded fast-forward merge and annotated release tag.
+# AUTH-2A-P2 - Seed-Account Safeguards and Ownership Decision Package (2026-07-28)
+
+Started from clean synchronized `main` commit
+`414f12d4b8cf73f203bfc2d26161e69ad68bd98b` and the reachable
+`clean-operational-baseline-v37-2026-07-28` tag. Preflight confirmed the exact
+0 Student / 0 active enrollment / 0 Payment / INR 0 / 0 Guardian / 0 Staff
+baseline, four enabled seed-origin roles, backup version 37, 274 page routes,
+378 API routes, clean lifecycle dry-run, Git safety, and baseline typecheck.
+
+Added a dedicated fail-closed demo-user gate: explicit
+`ALLOW_DEMO_USERS=true`, an existing ignored copied/test database under
+`DEMO_USER_DATABASE_ROOT`, four supplied unique non-documented passwords, and
+a complete empty seed set are required. Production/staging, `prisma/dev.db`,
+partial retained sets, documented passwords, and non-ignored roots are
+refused. Existing and disabled seed accounts are preserved; ordinary startup
+remains seed-free; intentional system/master seeding remains available.
+Deployment validation rejects the demo-user flag.
+
+System Health now blocks readiness using safe role-level counts when enabled
+seed-origin accounts retain documented password provenance or more than one
+active seed-origin account lacks a role-level operator decision. It exposes no
+username, email, hash, password detail, token, cookie, or database ID.
+
+The ignored copied-database rehearsal passed operational/release/partial-set
+seed refusal, isolated creation, disabled-account preservation, ordinary
+startup no-op, password/role/status stale-authorization rejection, concurrent
+last-Super-Admin protection, repeat idempotence, safe System Health output, the
+future rotate/disable sequence, and exact rollback. The operational database
+hash, size, timestamp, business counts, and account rows remained unchanged.
+
+Created `OPERATIONAL_ACCOUNT_OWNERSHIP_DECISION.md`. Proposed P3 treatment:
+assign/rotate/verify the temporarily retained Super Admin first, then disable Admin,
+Accountant, and Viewer until named owners need them. No operational account,
+password, role, status, session, or database row changed. No Prisma model or
+migration was added. Central `AuthSession` plus persisted ownership/rotation
+metadata is deferred to AUTH-2B after DEVOPS-1E.
+
+Final verification passed 274 page routes, 378 API routes, lifecycle zero-change
+dry run, typecheck, 1,553/1,553 tests across 168 files, all 212 production-build
+entries, copied-database AUTH-2A QA, and Git safety. Ignored backup version 37
+`nalanda-fee-control-backup-2026-07-28-16-07.json` was created. The operational
+database SHA-256, size, timestamp, exact zero-data business counts, and four
+role-level account counts remained unchanged.

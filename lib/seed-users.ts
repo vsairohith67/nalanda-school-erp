@@ -1,4 +1,6 @@
 import { hashPassword } from "@/lib/password";
+import { demoUserSeedDecision } from "@/lib/demo-user-seed-safety";
+import type { PrismaClient } from "@prisma/client";
 
 export const SEED_USER_DEFINITIONS = [
   { name: "Director", username: "director", email: "director@nalanda.local", role: "DIRECTOR", env: "SEED_DIRECTOR_PASSWORD" },
@@ -7,68 +9,90 @@ export const SEED_USER_DEFINITIONS = [
   { name: "Viewer", username: "viewer", email: "viewer@nalanda.local", role: "VIEWER", env: "SEED_VIEWER_PASSWORD" }
 ] as const;
 
-export function demoTemporaryPassword(definition: typeof SEED_USER_DEFINITIONS[number]) {
+export function documentedSeedPasswordForAudit(definition: typeof SEED_USER_DEFINITIONS[number]) {
   return ["Nalanda", definition.name.replace(/[^A-Za-z0-9]/g, ""), "@", "2026"].join("");
 }
 
-type SeedClient = {
-  user: {
-    findUnique(args: { where: { username: string } }): Promise<{ id: string } | null>;
-    create(args: { data: Record<string, unknown> }): Promise<unknown>;
-  };
-};
+type SeedClient = Pick<PrismaClient, "user">;
 
 export async function ensureSeedUsers(
   client: SeedClient,
   environment: NodeJS.ProcessEnv = process.env,
-  warn: (message: string) => void = console.warn
+  workspaceRoot = process.cwd()
 ) {
-  const created: string[] = [];
-  const skipped: string[] = [];
+  const decision = demoUserSeedDecision(environment, workspaceRoot);
+  if (!decision.enabled) {
+    return {
+      enabled: false as const,
+      createdRoles: [] as string[],
+      preservedRoles: [] as string[],
+      disabledPreservedRoles: [] as string[]
+    };
+  }
+
+  const existingRows = new Map<string, { id: string; isActive?: boolean; role?: string }>();
   const missing: typeof SEED_USER_DEFINITIONS[number][] = [];
   for (const definition of SEED_USER_DEFINITIONS) {
     const existing = await client.user.findUnique({ where: { username: definition.username } });
     if (existing) {
-      skipped.push(definition.username);
+      existingRows.set(definition.username, existing);
       continue;
     }
     missing.push(definition);
   }
 
-  const demoSeedOptIn =
-    environment.NODE_ENV !== "production" &&
-    environment.NALANDA_DEMO_SEED_OPT_IN === "true" &&
-    environment.ALLOW_DEMO_BUSINESS_DATA === "true";
-  const passwords = new Map<string, string>();
-  for (const definition of missing) {
-    const configured = environment[definition.env];
-    if (configured) {
-      passwords.set(definition.username, configured);
-      continue;
-    }
-    if (!demoSeedOptIn) {
-      throw new Error(
-        `${definition.env} is required unless isolated demo seeding has both explicit opt-ins`
-      );
-    }
-    passwords.set(definition.username, demoTemporaryPassword(definition));
-    warn(`WARNING: Explicit demo-seed opt-in is using a generated non-production default for ${definition.username}.`);
+  if (existingRows.size > 0 && missing.length > 0) {
+    throw new Error("DEMO_USERS_PARTIAL_RETAINED_SET_REFUSED");
   }
 
-  for (const definition of missing) {
-    const password = passwords.get(definition.username);
-    if (!password) throw new Error(`${definition.env} is required for database seeding`);
-    await client.user.create({
-      data: {
-        name: definition.name,
-        username: definition.username,
-        email: definition.email,
-        role: definition.role,
-        passwordHash: await hashPassword(password),
-        isActive: true
-      }
-    });
-    created.push(definition.username);
+  const preservedRoles = SEED_USER_DEFINITIONS
+    .filter((definition) => existingRows.has(definition.username))
+    .map((definition) => existingRows.get(definition.username)?.role ?? definition.role);
+  const disabledPreservedRoles = SEED_USER_DEFINITIONS
+    .filter((definition) => existingRows.get(definition.username)?.isActive === false)
+    .map((definition) => existingRows.get(definition.username)?.role ?? definition.role);
+  if (missing.length === 0) {
+    return {
+      enabled: true as const,
+      createdRoles: [] as string[],
+      preservedRoles,
+      disabledPreservedRoles
+    };
   }
-  return { created, skipped };
+
+  const passwords = new Map<string, string>();
+  for (const definition of missing) {
+    const configured = environment[definition.env]?.trim();
+    if (!configured) throw new Error("DEMO_USER_PASSWORDS_REQUIRED");
+    if (configured === documentedSeedPasswordForAudit(definition)) {
+      throw new Error("DOCUMENTED_SEED_PASSWORD_REFUSED");
+    }
+    passwords.set(definition.username, configured);
+  }
+  if (new Set(passwords.values()).size !== passwords.size) {
+    throw new Error("DEMO_USER_PASSWORDS_MUST_BE_UNIQUE");
+  }
+
+  const rows = await Promise.all(missing.map(async (definition) => {
+    const password = passwords.get(definition.username);
+    if (!password) throw new Error("DEMO_USER_PASSWORDS_REQUIRED");
+    return {
+      name: definition.name,
+      username: definition.username,
+      email: definition.email,
+      role: definition.role,
+      passwordHash: await hashPassword(password),
+      isActive: true
+    };
+  }));
+  const inserted = await client.user.createMany({ data: rows });
+  if (inserted.count !== rows.length) {
+    throw new Error("DEMO_USER_ATOMIC_CREATE_COUNT_MISMATCH");
+  }
+  return {
+    enabled: true as const,
+    createdRoles: missing.map((definition) => definition.role),
+    preservedRoles,
+    disabledPreservedRoles
+  };
 }

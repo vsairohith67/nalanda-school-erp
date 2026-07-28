@@ -118,7 +118,7 @@ describe("demo business seed safety", () => {
     const { readFile } = await import("node:fs/promises");
     const source = await readFile(path.join(process.cwd(), "prisma", "seed.ts"), "utf8");
     const gate = source.indexOf("demoBusinessSeedDecision(process.env, process.cwd())");
-    const firstMutation = source.indexOf("ensureSeedUsers(prisma)");
+    const firstMutation = source.indexOf("ensureSeedUsers(prisma, process.env, process.cwd())");
     const studentMutation = source.indexOf("prisma.student.upsert");
     expect(gate).toBeGreaterThan(-1);
     expect(gate).toBeLessThan(firstMutation);

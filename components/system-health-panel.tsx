@@ -26,6 +26,31 @@ export function SystemHealthPanel({
         <div><span>Database</span><strong>{appInfo.databaseProvider}</strong></div>
       </div>
 
+      {health.seedAccounts.length ? (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Seed-origin role</th>
+                <th>Enabled</th>
+                <th>Documented-password matches</th>
+                <th>Operator decision</th>
+              </tr>
+            </thead>
+            <tbody>
+              {health.seedAccounts.map((row) => (
+                <tr key={row.role}>
+                  <td>{row.role.replaceAll("_", " ")}</td>
+                  <td>{row.activeCount}</td>
+                  <td>{row.defaultPasswordMatches}</td>
+                  <td>{row.decisionRecorded ? "Recorded" : "Required"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+
       {health.issues.length ? (
         <div className="health-issues">
           {health.issues.map((issue) => (

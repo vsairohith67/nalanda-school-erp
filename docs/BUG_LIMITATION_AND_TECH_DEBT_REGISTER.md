@@ -4,7 +4,8 @@
 
 | ID | Area | Status | Risk | Required action |
 |---|---|---|---|---|
-| `AUTH-2A` | Retained enabled accounts | OPEN / mandatory before real data or deployment | Known seed-origin identities remain enabled; deleting or replacing them without a supplied named owner could lock out the school | Classify one named human owner per account, verify exact role and active decision, rotate every known default password, record recovery/rotation evidence and reject duplicate active role identities |
+| `AUTH-2A` | Retained enabled accounts | P1/P2 safeguards complete; P3 `AWAITING_USER_DECISION` | Four seed-origin identities remain enabled and match documented password provenance; changing them without a named owner and fresh-login proof could lock out the school | Use `OPERATIONAL_ACCOUNT_OWNERSHIP_DECISION.md`; assign/rotate/verify Super Admin first, then apply only the approved role-level disables in AUTH-2A-P3 |
+| `AUTH-2B` | Central session and ownership state | DEFERRED until after DEVOPS-1E migration-baseline onboarding | Stateless sessions cannot be centrally counted/revoked and ownership/rotation decisions are not persisted in the database | Add `AuthSession` plus persisted ownership/rotation metadata only after the approved migration-baseline gate; do not add a Prisma model/migration in AUTH-2A |
 | `DATA0B-BACKUP-SETTINGS` | v37 blank-database restore | FIXED in DATA-0B | Prior backup omitted the full `SchoolSettings` singleton, which a restore over a preconfigured copy could mask | Keep the allowlisted settings snapshot, parser validation, idempotent upsert and blank migrated restore-twice regression |
 
 ## Prompt 23B critical finding and consolidation status

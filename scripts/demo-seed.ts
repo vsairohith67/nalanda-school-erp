@@ -15,7 +15,12 @@ console.log("Adding or refreshing documented demo records in an isolated databas
 const command = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const result = spawnSync(command, ["db:seed"], {
   cwd: process.cwd(),
-  env: { ...process.env, NALANDA_DEMO_SEED_OPT_IN: "true" },
+  env: {
+    ...process.env,
+    NALANDA_DEMO_SEED_OPT_IN: "true",
+    ALLOW_DEMO_USERS: "true",
+    DEMO_USER_DATABASE_ROOT: process.env.DEMO_BUSINESS_DATA_ROOT
+  },
   stdio: "inherit"
 });
 

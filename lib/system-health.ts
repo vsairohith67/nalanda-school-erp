@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import { demoTemporaryPassword, SEED_USER_DEFINITIONS } from "@/lib/seed-users";
+import { documentedSeedPasswordForAudit, SEED_USER_DEFINITIONS } from "@/lib/seed-users";
 import { verifyPassword } from "@/lib/password";
 
 export type HealthSeverity = "warning" | "critical";
@@ -16,6 +16,12 @@ export type SystemHealth = {
   status: HealthStatus;
   issues: SystemHealthIssue[];
   sampleDataDetected: boolean;
+  seedAccounts: Array<{
+    role: string;
+    activeCount: number;
+    defaultPasswordMatches: number;
+    decisionRecorded: boolean;
+  }>;
   checks: {
     sessionSecret: boolean;
     databaseUrl: boolean;
@@ -24,6 +30,7 @@ export type SystemHealth = {
     backupFeature: boolean;
     recognizedBuildMode: boolean;
     defaultSeedPasswords: boolean;
+    seedAccountDecisions: boolean;
   };
 };
 
@@ -33,33 +40,59 @@ const defaultPasswordCache = new Map<string, boolean>();
 export const BANNER_HEALTH_CODES = new Set([
   "missing-session-secret",
   "default-seed-password",
+  "seed-account-decision-missing",
   "missing-director"
 ]);
 
 export function detectDefaultSeedPasswordWarnings(environment: NodeJS.ProcessEnv = process.env) {
   return SEED_USER_DEFINITIONS.filter((definition) => {
     const configured = environment[definition.env];
-    return configured === demoTemporaryPassword(definition)
+    return configured === documentedSeedPasswordForAudit(definition)
       || (!configured && environment.NODE_ENV !== "production");
-  }).map((definition) => definition.username);
+  }).map((definition) => definition.role);
 }
 
 export async function detectDefaultSeedAccountPasswords(
-  users: ReadonlyArray<{ username: string; passwordHash: string }>
+  users: ReadonlyArray<{
+    username: string;
+    passwordHash: string;
+    role?: string;
+    isActive?: boolean;
+  }>
 ) {
-  const defaults: string[] = [];
+  const defaultRoles: string[] = [];
   for (const definition of SEED_USER_DEFINITIONS) {
     const user = users.find((row) => row.username === definition.username);
-    if (!user) continue;
+    if (!user || user.isActive === false) continue;
     const cacheKey = `${user.username}:${user.passwordHash}`;
     let isDefault = defaultPasswordCache.get(cacheKey);
     if (isDefault === undefined) {
-      isDefault = await verifyPassword(demoTemporaryPassword(definition), user.passwordHash);
+      isDefault = await verifyPassword(documentedSeedPasswordForAudit(definition), user.passwordHash);
       defaultPasswordCache.set(cacheKey, isDefault);
     }
-    if (isDefault) defaults.push(user.username);
+    if (isDefault) defaultRoles.push(safeRole(user.role ?? definition.role));
   }
-  return defaults;
+  return defaultRoles;
+}
+
+const SEED_ACCOUNT_DECISIONS = new Set([
+  "KEEP_TEMPORARILY",
+  "DISABLE_UNTIL_OWNER_ASSIGNED"
+]);
+
+export function recordedSeedAccountDecisionRoles(environment: NodeJS.ProcessEnv = process.env) {
+  const result = new Set<string>();
+  for (const entry of (environment.AUTH_SEED_ACCOUNT_DECISIONS ?? "").split(",")) {
+    const [rawRole, rawDecision, ...extra] = entry.split(":").map((value) => value.trim().toUpperCase());
+    if (extra.length || !rawRole || !rawDecision || !/^[A-Z_]+$/.test(rawRole)) continue;
+    if (SEED_ACCOUNT_DECISIONS.has(rawDecision)) result.add(rawRole);
+  }
+  return [...result].sort();
+}
+
+function safeRole(value: string) {
+  const normalized = value.trim().toUpperCase();
+  return /^[A-Z_]+$/.test(normalized) ? normalized : "UNRECOGNIZED";
 }
 
 export function evaluateSystemHealth(input: {
@@ -68,12 +101,30 @@ export function evaluateSystemHealth(input: {
   activeLeadershipCount: number;
   backupFeatureAvailable: boolean;
   sampleDataDetected: boolean;
-  defaultSeedUsers?: string[];
+  defaultSeedPasswordRoles?: string[];
+  activeSeedRoleCounts?: Array<{ role: string; count: number }>;
+  seedDecisionRoles?: string[];
 }): SystemHealth {
   const environment = input.environment ?? process.env;
   const secret = environment.AUTH_SECRET || environment.SESSION_SECRET;
   const recognizedBuildMode = environment.NODE_ENV === "development" || environment.NODE_ENV === "production";
-  const defaultSeedUsers = input.defaultSeedUsers ?? detectDefaultSeedPasswordWarnings(environment);
+  const defaultSeedPasswordRoles =
+    input.defaultSeedPasswordRoles ?? detectDefaultSeedPasswordWarnings(environment);
+  const decisionRoles = new Set(input.seedDecisionRoles ?? recordedSeedAccountDecisionRoles(environment));
+  const activeSeedRoleCounts = (input.activeSeedRoleCounts ?? [])
+    .map((row) => ({ role: safeRole(row.role), count: Math.max(0, Math.trunc(row.count)) }))
+    .filter((row) => row.count > 0)
+    .sort((left, right) => left.role.localeCompare(right.role));
+  const seedAccounts = activeSeedRoleCounts.map((row) => ({
+    role: row.role,
+    activeCount: row.count,
+    defaultPasswordMatches: defaultSeedPasswordRoles.filter((role) => safeRole(role) === row.role).length,
+    decisionRecorded: decisionRoles.has(row.role)
+  }));
+  const activeSeedAccountCount = seedAccounts.reduce((sum, row) => sum + row.activeCount, 0);
+  const missingSeedDecisionCount = activeSeedAccountCount > 1
+    ? seedAccounts.filter((row) => !row.decisionRecorded).reduce((sum, row) => sum + row.activeCount, 0)
+    : 0;
   const issues: SystemHealthIssue[] = [];
 
   if (!secret) {
@@ -131,12 +182,20 @@ export function evaluateSystemHealth(input: {
       action: "Run the app with NODE_ENV set by the standard pnpm dev or pnpm build/start commands."
     });
   }
-  if (defaultSeedUsers.length) {
+  if (defaultSeedPasswordRoles.length) {
     issues.push({
       code: "default-seed-password",
-      severity: environment.NODE_ENV === "production" ? "critical" : "warning",
-      message: `Documented seed passwords may still be in use for: ${defaultSeedUsers.join(", ")}.`,
-      action: "Change those account passwords in User Management before entering real data."
+      severity: "critical",
+      message: `${defaultSeedPasswordRoles.length} enabled seed-origin account(s) still match documented password provenance.`,
+      action: "Rotate every affected password and verify a fresh login before real data or deployment."
+    });
+  }
+  if (missingSeedDecisionCount > 0) {
+    issues.push({
+      code: "seed-account-decision-missing",
+      severity: "critical",
+      message: `${activeSeedAccountCount} active seed-origin account(s) require role-level operator decisions; ${missingSeedDecisionCount} decision(s) are missing.`,
+      action: "Record only the approved role-level keep/disable decisions after completing the ownership decision document."
     });
   }
   if (input.sampleDataDetected) {
@@ -156,6 +215,7 @@ export function evaluateSystemHealth(input: {
         : "Good",
     issues,
     sampleDataDetected: input.sampleDataDetected,
+    seedAccounts,
     checks: {
       sessionSecret: Boolean(secret),
       databaseUrl: Boolean(environment.DATABASE_URL),
@@ -163,7 +223,8 @@ export function evaluateSystemHealth(input: {
       activeLeadership: input.activeLeadershipCount > 0,
       backupFeature: input.backupFeatureAvailable,
       recognizedBuildMode,
-      defaultSeedPasswords: defaultSeedUsers.length === 0
+      defaultSeedPasswords: defaultSeedPasswordRoles.length === 0,
+      seedAccountDecisions: missingSeedDecisionCount === 0
     }
   };
 }
@@ -186,10 +247,18 @@ export async function getSystemHealth(
     client.payment.count({ where: { enteredBy: "Seed" } }),
     client.user.findMany({
       where: { username: { in: SEED_USER_DEFINITIONS.map((definition) => definition.username) } },
-      select: { username: true, passwordHash: true }
+      select: { username: true, passwordHash: true, role: true, isActive: true }
     })
   ]);
-  const defaultSeedUsers = await detectDefaultSeedAccountPasswords(seedUsers);
+  const defaultSeedPasswordRoles = await detectDefaultSeedAccountPasswords(seedUsers);
+  const activeSeedRoleCounts = [...seedUsers
+    .filter((row) => row.isActive)
+    .reduce((counts, row) => {
+      const role = safeRole(row.role);
+      counts.set(role, (counts.get(role) ?? 0) + 1);
+      return counts;
+    }, new Map<string, number>())]
+    .map(([role, count]) => ({ role, count }));
 
   return evaluateSystemHealth({
     environment,
@@ -197,6 +266,8 @@ export async function getSystemHealth(
     activeLeadershipCount,
     backupFeatureAvailable: true,
     sampleDataDetected: sampleStudentCount > 0 || samplePaymentCount > 0,
-    defaultSeedUsers
+    defaultSeedPasswordRoles,
+    activeSeedRoleCounts,
+    seedDecisionRoles: recordedSeedAccountDecisionRoles(environment)
   });
 }

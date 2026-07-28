@@ -1,5 +1,33 @@
 # Nalanda Fee Control — Developer Continuation Guide
 
+## AUTH-2A-P2 seed-account and readiness boundary
+
+`ensureSeedUsers` is disabled unless `ALLOW_DEMO_USERS=true`. When enabled it
+requires `DEMO_USER_DATABASE_ROOT` under the ignored workspace `tmp/` tree, an
+existing contained database, and four supplied unique non-documented
+passwords. It refuses production/staging, `prisma/dev.db` by path/file
+identity, and a partial retained seed set. A complete existing set is preserved
+byte-for-byte, including disabled status. No fallback password or password log
+exists.
+
+Ordinary startup remains seed-free. Plain `db:seed` with demo users disabled
+continues intentional system/master configuration seeding without creating a
+User. `demo:seed` and isolated migration rehearsals must provide both the
+dedicated demo-user gate/root and the separate demo-business gate/root.
+Deployment validation rejects `ALLOW_DEMO_USERS=true`.
+
+System Health derives seed origin only from the existing exact seed
+fingerprint and emits safe role-level counts. Approved role-only decisions use
+`AUTH_SEED_ACCOUNT_DECISIONS`; the value performs no mutation. Read
+`OPERATIONAL_ACCOUNT_OWNERSHIP_DECISION.md` before AUTH-2A-P3. Do not claim
+ownership assignment, rotation, disable, or fresh-login proof until P3
+actually performs and verifies it.
+
+No Prisma model/migration belongs in AUTH-2A. Central `AuthSession` and
+persisted ownership/rotation metadata are AUTH-2B work after DEVOPS-1E.
+`pnpm.cmd qa:auth2a` must operate only on ignored byte-identical copies and
+must prove the operational DB identity unchanged.
+
 ## DATA-0B zero-data and demo-seed boundary
 
 The operational business baseline is 0 Students / 0 active enrollments /
