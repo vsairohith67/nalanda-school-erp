@@ -6,6 +6,7 @@
 **Approval captured:** exact required phrase, before operational mutation
 **Receipt policy:** `PRESERVE_RECEIPT_SEQUENCE`
 **DATA-0B result:** `CONTROLLED_SAMPLE_DATA_CLEANUP_READY_FOR_QA`
+**DATA-0B-QA result:** `CLEAN_ZERO_DATA_BASELINE_CLEARED`
 
 ## Scope and deletion proof
 
@@ -34,9 +35,9 @@ deleted.
 | Approved pre-clean SHA-256 | `1556B98FCAF0F2475C0C0F1BAEEFCE4E638680B9D4C7DC9BFFB8B6F0D09B4392` |
 | Pre-clean bytes | 4,771,840 |
 | Immediate post-transaction SHA-256 | `38D9BF773EF4DBA1141AFD4FD1727C876F323CF88CECB392DDED9DBC71B9E7C9` |
-| Final post-QA SHA-256 | `EBBADEC788164CD7F80DF44BB96F18C854963AE44F2F2BDF8037F23C24C199D6` |
+| Final post-QA SHA-256 | `5B79A340CCE4613AD08DD3A57801993587B93A0DFC0458803380C09F1EC928CF` |
 | Final bytes | 4,771,840 |
-| Final timestamp (UTC) | `2026-07-28T07:14:01.4109604Z` |
+| Final timestamp (UTC) | `2026-07-28T07:41:07.5798196Z` |
 
 The immediate and final post-clean hashes differ because authorized Browser
 login/restart QA recorded normal user login/audit activity. The six business
@@ -64,7 +65,11 @@ Protected ignored artifacts:
   `38D9BF773EF4DBA1141AFD4FD1727C876F323CF88CECB392DDED9DBC71B9E7C9`;
 - final standard version-37 backup:
   `backups/nalanda-fee-control-backup-2026-07-28-13-04.json`, SHA-256
-  `EA131902BDDE14FD5B878B33C12484C6ED767D6B645CDDD056617AF3D56FE627`.
+  `EA131902BDDE14FD5B878B33C12484C6ED767D6B645CDDD056617AF3D56FE627`;
+- final independent-QA version-37 backup:
+  `.data0a/data0b/post-clean/DATA0B-POSTCLEAN-20260728T074343Z/DATA0B-POSTCLEAN-20260728T074343Z-v37.json`,
+  SHA-256
+  `06794DB01F74E5B64754E1B8FC6F164B8D75535470662FF42FAB65FAB07B9A81`.
 
 Both v37 backups parsed without sensitive keys. The pre-clean raw copy opened
 with SQLite integrity `ok`. The post-clean backup restored twice into a blank
@@ -173,8 +178,14 @@ Business demo seeding now fails closed:
 - two production restarts retained the zero baseline and created no sample
   rows.
 
-## Next gate
+## Independent QA closure
 
-DATA-0B-QA must independently verify this evidence on the retained feature
-branch. The branch must not merge and the clean-baseline tag must not be
-created until that independent gate clears.
+DATA-0B-QA independently repeated the zero-data, integrity, configuration,
+ignored-artifact, version-37 restore-twice, seed refusal, Browser empty-state
+and restart checks. Browser QA added only normal append-only login/audit rows;
+it created no business record. A final restart without Browser activity left
+the final SHA-256 unchanged and produced zero stderr bytes.
+
+The clean-baseline feature branch is authorized for the required fast-forward
+merge and annotated tag. Prompt 23C is next after that Git closure. `AUTH-2A`
+remains a separate mandatory account-ownership and password-rotation gate.

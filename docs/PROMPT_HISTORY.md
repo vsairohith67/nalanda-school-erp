@@ -23,8 +23,11 @@ backward-compatible snapshot and idempotent restore upsert fixed it. The
 post-clean backup then restored twice with the zero baseline and retained
 configuration. Production Browser QA passed desktop and exact 390×844 mobile,
 light/dark, empty states, portal isolation, two restarts, zero Browser
-console/hydration errors and zero production stderr. DATA-0B is ready for its
-independent QA gate; it is not merged yet.
+console/hydration errors and zero production stderr. DATA-0B-QA independently
+repeated the protected backup/restore-twice, zero-data, integrity,
+configuration, seed-refusal, ignored-artifact, Browser and restart gates. Its
+result is `CLEAN_ZERO_DATA_BASELINE_CLEARED`; the branch is authorized for the
+required fast-forward merge and clean-baseline tag.
 
 ## RECON-1A - Parallel Prompt 23B and FIN-2B policy reconciliation (2026-07-28)
 

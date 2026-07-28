@@ -9,7 +9,9 @@ DATA-0B completed the approved operational transaction. The old
 official operational baseline is 0 Students / 0 active enrollments /
 0 Payments / ₹0 collected. Demo business seeding is disabled by default.
 `AUTH-2A` remains mandatory for named ownership and password rotation. Prompt
-23C remains next after the independent DATA-0B-QA merge/tag closure.
+23C is next after DATA-0B-QA, whose result is
+`CLEAN_ZERO_DATA_BASELINE_CLEARED`, completes its fast-forward merge/tag
+closure.
 
 ## DATA-0A sample-data provenance
 
