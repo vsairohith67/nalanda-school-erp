@@ -82,7 +82,34 @@ under ignored `.data0a/data0b`.
 
 Read the nine final Schoolknot 23B documents listed in `docs/INDEX.md` before any gap work. The result is `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`; it is not a whole-school cutover or parity claim. The Notion source has five role reports plus exactly 109 dispositioned unresolved items.
 
-Independent 23B-QA cleared this branch and its final roadmap correction. Begin 23C only from the merged/tagged QA baseline. 23C must address only exact Teacher timetable attendance authorization: shared server resolver, filtered UI, GET/POST/report enforcement, no-assignment fail-closed, dated substitute scope, explicit reasoned Principal override, audit and negative API tests. Do not combine Parent attendance, timetable UI, Classwork, calendar or other modules into 23C.
+Independent 23B-QA cleared the consolidation baseline. Prompt 23C is now
+implemented on `security/teacher-attendance-exact-scope` and is
+`READY_FOR_PROMPT_23C_QA`. Read
+`TEACHER_ATTENDANCE_EXACT_SCOPE_WORKFLOW.md` before changing attendance.
+
+The single authority is `lib/teacher-attendance-scope.ts`. Keep page, API,
+report, CSV, Teacher portal and dashboard consumers on that resolver. A Teacher
+needs an active User/session, active linked Staff, active linked timetable
+Teacher and exact active current-year timetable target, or a confirmed
+same-date substitute target. Permission alone is never a cohort. Blank section
+is exact, never wildcard; the current substitute schema is one approved date
+per row. Do not add normalization or a broad catch fallback.
+
+Attendance mutation requires the caller's exact `updatedAt`, one-winner
+compare-and-set within a serializable transaction, bounded full-roster
+validation for submit/correct, and append-only privacy-safe `UserAudit`
+evidence. Corrections require an in-app reason. The middleware remains the
+CSRF/origin and body-limit boundary.
+
+`scripts/qa23c-copied-db.ts` is an ignored copied-database harness. Preserve
+its guarded root, operational hash checks, namespaced `QA23C` fixtures,
+idempotent targeted cleanup and whole-database logical-digest restoration. Do
+not point it at `prisma/dev.db`.
+
+Prompt 23C deliberately does not combine Parent attendance, timetable UI,
+Classwork, calendar, schema expansion or operational account creation.
+Leadership permissions remain separate. Do not merge or claim Teacher cutover
+GO before independent Prompt 23C-QA.
 
 FIN-2A is complete and cleared. FIN-2B deliberately supersedes only its Accountant cancellation authority through exact `CANCEL_FINAL_RECEIPT` and `CORRECT_FINAL_RECEIPT` permissions, immutable audit and Director/Super Admin notification. Do not reopen the retained Accountant privacy/export/receipt-integrity safeguards as unresolved Nalanda gaps. Payroll and employee self-service remain separate evidence/governance gaps. DEVOPS-1D remains payment-gated and Prompt 21/22 gates are unchanged.
 

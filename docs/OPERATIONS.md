@@ -181,7 +181,42 @@ Keep `pilot:reset-sample-data` separate: it is for copied pilot databases and `P
 - Must not receive or share credentials for higher-privilege accounts.
 - Reports discrepancies to the Director/Admin/Accountant.
 
-### Teacher and Parent
+### Teacher
 
-- Future module roles only.
-- They can exist in User Management but no teacher dashboard or parent portal is currently built.
+- Opens Student attendance only when the account has an active linked
+  `StaffMember`, active timetable Teacher, and an exact current-year
+  class/section assignment, or a confirmed substitute assignment for that
+  exact date and cohort.
+- Treats the class/section selector as a convenience, not authority. A missing
+  or empty selector is a safe denial and must be reported to the
+  Principal/Director; never grant a broad role permission as a workaround.
+- Uses **Correct Attendance** only on a submitted, unlocked session, changes at
+  least one mark/remark and records a specific reason in the in-app dialog.
+- Reloads after a 409/stale-version message. The other writer won; do not retry
+  from the stale screen.
+- Substitute access ends automatically outside the confirmed date. A multi-day
+  substitute needs one approved dated assignment per day in the current model.
+- Does not lock attendance by default. Leadership locking remains separately
+  permissioned.
+
+### Parent
+
+- Uses only the linked-child portal surfaces granted to the account.
+- Parent attendance expansion remains a separate Schoolknot follow-up and is
+  not part of Prompt 23C.
+
+### Prompt 23C copied-database check
+
+Use only on the ignored copy:
+
+```powershell
+pnpm.cmd qa:23c prepare
+pnpm.cmd qa:23c verify
+pnpm.cmd qa:23c inspect
+pnpm.cmd qa:23c cleanup
+pnpm.cmd qa:23c destroy
+```
+
+The command refuses the operational database by path, compares its hash at
+every phase, keeps the synthetic password only in the ignored state file and
+restores the copy's complete non-QA logical state before destruction.

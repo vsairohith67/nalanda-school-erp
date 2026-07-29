@@ -66,4 +66,18 @@ Record the actor user/role/staff/teacher assignment, requested class/section/yea
 - Reports remain separately permissioned and do not leak unassigned cohorts.
 - Existing Homework/marks/report-card scopes remain unchanged.
 
-Prompt 23B-QA cleared this blocker analysis without implementing the fix. Prompt 23C may begin from the merged/tagged QA baseline. Teacher cutover remains `NO_GO` until the implementation and independent negative-security QA pass.
+Prompt 23B-QA cleared this blocker analysis without implementing the fix.
+
+## Prompt 23C implementation disposition
+
+Prompt 23C now implements the shared server-side exact-scope resolver, filtered
+Teacher UI, exact GET/POST/report/CSV/dashboard enforcement, dated confirmed
+substitutes, bounded bodies, compare-and-set session writes, reasoned
+corrections and append-only audit evidence. The pre-change over-broad path above
+is retained as the authoritative defect record. The implementation contract and
+phase diagram are in
+`TEACHER_ATTENDANCE_EXACT_SCOPE_WORKFLOW.md`.
+
+Implementation status: `READY_FOR_PROMPT_23C_QA`.
+Teacher cutover remains `NO_GO_PENDING_PROMPT_23C_QA`; the feature branch must
+not merge before independent negative-security QA.

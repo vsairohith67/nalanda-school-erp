@@ -12,7 +12,8 @@ describe("staff UI and access safety", () => {
     const page = source("app/teacher/page.tsx");
     expect(page).toContain('requirePermission("VIEW_TEACHER_PLACEHOLDER")');
     expect(page).toContain("Staff Profile Basics");
-    expect(page).toContain("Manual student attendance is available");
+    expect(page).toContain("Exact-scope student attendance is available");
+    expect(page).toContain("Permission alone never grants a cohort");
   });
   it("does not create users during import and keeps timetable linking optional", () => {
     const api = source("app/api/import/staff/route.ts");

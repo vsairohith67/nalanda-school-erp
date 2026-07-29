@@ -52,6 +52,7 @@ separately as `AUTH-2A` so the school is not locked out.
 - [Final Unresolved Evidence Ledger](SCHOOLKNOT_FINAL_UNRESOLVED_EVIDENCE_LEDGER.md) - exact 109 source rows, all eight dispositions, role/module/priority/cutover reconciliation.
 - [Role Permission and Privacy Comparison](SCHOOLKNOT_ROLE_PERMISSION_AND_PRIVACY_COMPARISON.md) - five-role observed/current/intended authority and object scope.
 - [Teacher Attendance Scope Cutover Blocker](TEACHER_ATTENDANCE_SCOPE_CUTOVER_BLOCKER.md) - confirmed permission-only scope defect, affected cohorts, fail-closed design and tests.
+- [Teacher Attendance Exact Scope Workflow](TEACHER_ATTENDANCE_EXACT_SCOPE_WORKFLOW.md) - Prompt 23C exact Staff/timetable/substitute authority, enforcement points, mutation integrity, UI behavior, copied-database QA and release gate.
 - [Cutover Blockers and Acceptance Gates](SCHOOLKNOT_CUTOVER_BLOCKERS_AND_ACCEPTANCE_GATES.md) - role, migration, vendor, write, deployment, privacy and training gates.
 - [23C Onward Roadmap](SCHOOLKNOT_GAP_IMPLEMENTATION_ROADMAP_23C_ONWARD.md) - gated sequence from Teacher attendance through optional transport.
 - [Synthetic Write-Test Plan](SCHOOLKNOT_SYNTHETIC_WRITE_TEST_PLAN.md) - non-production invented-data plan only.
@@ -59,7 +60,7 @@ separately as `AUTH-2A` so the school is not locked out.
 - [Final Replacement Decision](SCHOOLKNOT_FINAL_REPLACEMENT_DECISION.md) - `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`.
 - [Features Not to Copy](SCHOOLKNOT_FEATURES_NOT_TO_COPY.md) - final multi-role rejection/redesign policy.
 
-Prompt 23A roles and 23A-E are complete and `READY_FOR_PROMPT_23B`. Prompt 23B is consolidation-only; no Schoolknot data or module was imported/implemented. Independent 23B-QA cleared the source, exact 109-row ledger, repository evidence and cutover gates after one roadmap-contract correction. Teacher remains `NO_GO`; 23C may begin from the merged/tagged QA baseline. FIN-2A is cleared, DEVOPS-1D is payment-gated, and Prompt 21/22 decisions are unchanged.
+Prompt 23A roles and 23A-E are complete and `READY_FOR_PROMPT_23B`. Prompt 23B is consolidation-only; no Schoolknot data or module was imported/implemented. Independent 23B-QA cleared the source, exact 109-row ledger, repository evidence and cutover gates after one roadmap-contract correction. Prompt 23C exact Teacher attendance scoping is now implemented on its unmerged feature branch and is `READY_FOR_PROMPT_23C_QA`; Teacher remains `NO_GO_PENDING_PROMPT_23C_QA`. FIN-2A is cleared, DEVOPS-1D is payment-gated, and Prompt 21/22 decisions are unchanged.
 
 - [RECON-1A Schoolknot and Finance Policy Reconciliation](RECON_1A_SCHOOLKNOT_FINANCE_POLICY_RECONCILIATION.md) - preserved Prompt 23B/FIN-2B branch and tag lineage, overlapping files, authoritative Accountant policy, superseded wording and remaining finance gates.
 

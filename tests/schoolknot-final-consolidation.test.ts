@@ -149,7 +149,7 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
       "fail closed",
       "NO_GO_FOR_TEACHER_CUTOVER",
     ]) expect(teacher).toContain(fact);
-    expect(gates).toContain("| Teacher | `NO_GO` |");
+    expect(gates).toContain("| Teacher | `NO_GO_PENDING_PROMPT_23C_QA` |");
     expect(gates).toContain("No role currently has an unconditional `GO`");
   });
 

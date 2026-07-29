@@ -4,20 +4,32 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth";
 import { PageHeader } from "@/components/ui";
 import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { getSchoolSettings } from "@/lib/school-settings";
+import { attendanceDay, localDateText } from "@/lib/student-attendance";
+import { attendanceScopeOptionsForDate, resolveTeacherAttendanceScope } from "@/lib/teacher-attendance-scope";
 
 export default async function TeacherPage() {
   const user = await requirePermission("VIEW_TEACHER_PLACEHOLDER");
   if (user.role !== "TEACHER") redirect("/unauthorized");
-  const [staff, permissions] = await Promise.all([
+  const [staff, permissions, settings] = await Promise.all([
     prisma.staffMember.findUnique({ where: { userId: user.id }, include: { timetableTeacher: { select: { name: true, shortName: true } } } }),
-    getEffectivePermissions(prisma, user.role)
+    getEffectivePermissions(prisma, user.role),
+    getSchoolSettings(prisma)
   ]);
-  const canTakeAttendance = permissionSetCan(permissions, "VIEW_STUDENT_ATTENDANCE");
+  const today = attendanceDay(localDateText());
+  const attendanceScope = await resolveTeacherAttendanceScope(prisma, user, {
+    academicYear: settings.academicYear,
+    date: today
+  });
+  const attendanceOptions = attendanceScopeOptionsForDate(attendanceScope, today);
+  const canTakeAttendance = permissionSetCan(permissions, "VIEW_STUDENT_ATTENDANCE") && attendanceOptions.length > 0;
+  const canViewAttendanceReports = permissionSetCan(permissions, "VIEW_STUDENT_ATTENDANCE_REPORTS") && attendanceScope.targets.length > 0;
   const canViewLeave = permissionSetCan(permissions, "VIEW_STAFF_LEAVE");
   const canViewSubstitutes = permissionSetCan(permissions, "VIEW_SUBSTITUTES");
   return <div className="page">
     <PageHeader title="Teacher Portal" description="A safe starting page for teacher access." action={canTakeAttendance ? <Link className="button" href="/attendance/students">Take Student Attendance</Link> : undefined} />
-    <section className="notice"><strong>{canTakeAttendance ? "Manual student attendance is available." : "Student attendance is not enabled for this account."}</strong> Substitute duties are read-only for Teachers. Analytics self-view contains only explicitly shared or finalised evidence and never includes peer data, ranking, or an automatic employment decision.</section>
+    <section className="notice"><strong>{canTakeAttendance ? "Exact-scope student attendance is available." : "No student-attendance scope is authorised today."}</strong> Permission alone never grants a cohort: the page and APIs require an active linked StaffMember, active timetable Teacher, and exact active timetable or confirmed dated substitute assignment. Substitute-duty administration stays read-only for Teachers; confirmed dated substitute attendance remains available only on its approved date.</section>
+    <section className="card card-pad"><h3>My Student Attendance</h3>{attendanceOptions.length ? <><p>Open only the class and section scopes authorised for this date. Submitted corrections require a reason and append-only audit evidence.</p><div className="page-actions">{canTakeAttendance?<Link className="button" href="/attendance/students">Take Student Attendance</Link>:<p>Attendance entry permission is not enabled.</p>}{canViewAttendanceReports?<Link className="button secondary" href="/attendance/students/reports">Open My Attendance Reports</Link>:null}</div></> : <p>{attendanceScope.reason || "No exact active timetable or confirmed dated substitute scope is available."}</p>}</section>
     <section className="card card-pad"><h3>My Leave</h3>{staff ? <><p>Create and track leave requests for your linked staff profile. You cannot see other staff leave.</p>{canViewLeave?<Link className="button" href="/leave/staff">Open My Leave</Link>:<p>Leave access is not enabled for this account.</p>}</> : <p>No staff profile is linked to this Teacher login yet. Please ask an authorized administrator to link it before applying for leave.</p>}</section>
     <section className="card card-pad"><h3>My Substitute Duties</h3>{staff ? <><p>See only duties where your linked staff profile is the assigned substitute. Leadership manages all workflow actions.</p>{canViewSubstitutes?<Link className="button" href="/substitutes">Open My Substitute Duties</Link>:<p>Substitute duty access is not enabled for this account.</p>}</>:<p>No staff profile is linked to this Teacher login yet.</p>}</section>
     <section className="card card-pad"><h3>My Library Account</h3><p>Review only your own StaffMember-linked loans, reservations, cases, charges, and Library Charge Receipts.</p><Link className="button" href="/teacher/library">Open My Library Account</Link></section>

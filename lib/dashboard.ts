@@ -7,6 +7,7 @@ import type { CanonicalPermission, Role } from "@/lib/permissions";
 import { schoolDateKey } from "@/lib/format";
 import { getBudgetMetrics } from "@/lib/budgets";
 import { calculateCashSources } from "@/lib/cash-book";
+import { attendanceScopeWhere, resolveTeacherAttendanceScope } from "@/lib/teacher-attendance-scope";
 
 export type DashboardQuickAction = {
   id: "payment" | "student" | "studentAttendance" | "staffAttendance" | "leave" | "substitute" | "notice" | "importExport" | "backup";
@@ -143,12 +144,21 @@ export async function getDashboardCommandCenter(
   permissions: Iterable<CanonicalPermission>,
   academicYear: string,
   role: Role,
-  now = new Date()
+  now = new Date(),
+  actor?: { id: string; role: Role }
 ) {
   const permissionList = new Set(permissions);
   const access = dashboardDataAccess(permissionList);
   const today = attendanceDay(schoolDateKey(now));
   const currentNoticeWhere = currentPublishedNoticeWhere(now);
+  const teacherAttendanceScope = role === "TEACHER" && actor
+    ? await resolveTeacherAttendanceScope(client, actor, { academicYear, date: today })
+    : null;
+  const studentAttendanceWhere = role === "TEACHER"
+    ? teacherAttendanceScope
+      ? attendanceScopeWhere(teacherAttendanceScope)
+      : { id: "__NO_AUTHORISED_ATTENDANCE_SCOPE__" }
+    : {};
 
   const [financeData, activeStudents, activeGuardians, activeStaff, studentSessions, staffSession, pendingLeave, substitutes, currentNotices, recentNotices, importBatch, expenseStatus] = await Promise.all([
     access.finance ? getDashboard(academicYear, now) : Promise.resolve(null),
@@ -156,7 +166,7 @@ export async function getDashboardCommandCenter(
     access.guardians ? client.guardian.count({ where: { status: "Active" } }) : Promise.resolve(null),
     access.staff ? client.staffMember.count({ where: { status: "ACTIVE" } }) : Promise.resolve(null),
     access.studentAttendance ? client.studentAttendanceSession.findMany({
-      where: { attendanceDate: today, academicYear },
+      where: { attendanceDate: today, academicYear, AND: [studentAttendanceWhere] },
       select: { records: { select: { status: true } } }
     }) : Promise.resolve(null),
     access.staffAttendance ? client.staffAttendanceSession.findUnique({

@@ -16,6 +16,8 @@ export async function GET() {
     prisma,
     permissions,
     settings.academicYear,
-    auth.user.role
+    auth.user.role,
+    new Date(),
+    auth.user
   ));
 }

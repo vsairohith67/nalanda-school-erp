@@ -47,15 +47,19 @@ describe("student attendance foundation", () => {
     expect(output).toContain('"2026-06-27","VI","A","N1","2","\'=BAD()","LATE","\'+unsafe"');
   });
 
-  it("keeps create/save/submit/lock and inactive-student safety enforced in the API", () => {
+  it("keeps create/save/submit/correct/lock, exact scope, audit, and inactive-student safety enforced in the API", () => {
     const api = readFileSync("app/api/attendance/students/route.ts", "utf8");
-    expect(api).toContain("studentAttendanceSession.upsert");
+    expect(api).toContain("studentAttendanceSession.create");
+    expect(api).toContain("studentAttendanceSession.updateMany");
     expect(api).toContain('action === "clear"');
     expect(api).toContain('action === "submit"');
+    expect(api).toContain('action === "correct"');
     expect(api).toContain('action === "lock"');
-    expect(api).toContain('session.status !== "DRAFT"');
+    expect(api).toContain("requireAttendanceTarget");
+    expect(api).toContain("updatedAt: expected");
+    expect(api).toContain("STUDENT_ATTENDANCE_");
+    expect(api).toContain("correctionReason");
     expect(api).toContain("Mark every active student before submitting attendance");
-    expect(api).toContain("inactive, left, deleted, or outside this class");
     expect(api.match(/requireApiPermission\("MANAGE_STUDENT_ATTENDANCE"\)/g)?.length).toBeGreaterThanOrEqual(1);
     expect(api.indexOf('requireApiPermission("VIEW_STUDENT_ATTENDANCE")')).toBeLessThan(api.indexOf("request.json()"));
   });
@@ -69,8 +73,11 @@ describe("student attendance foundation", () => {
     const entry = readFileSync("components/student-attendance-entry.tsx", "utf8");
     expect(entry).toContain("selectionChanged()");
     expect(entry).toContain("Selection changed. Select Load Attendance");
-    expect(entry).toContain("hasLoaded ?");
+    expect(entry).toContain(": hasLoaded");
     expect(entry).toContain("It cannot be unlocked in the app");
+    expect(entry).toContain("Apply attendance correction?");
+    expect(entry).toContain("No authorised attendance scope");
+    expect(entry).not.toMatch(/\b(?:alert|confirm|prompt)\s*\(/);
     const teacher = readFileSync("app/teacher/page.tsx", "utf8");
     expect(teacher).toContain('permissionSetCan(permissions, "VIEW_STUDENT_ATTENDANCE")');
   });

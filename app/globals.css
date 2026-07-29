@@ -3838,6 +3838,8 @@ details summary {
 }
 
 .attendance-stack { display: grid; gap: 16px; }
+.attendance-page :is(button, .button, input, select, textarea) { min-height: 44px; }
+.attendance-page .subnav a { display: inline-flex; min-height: 44px; align-items: center; }
 .leave-stack { display: grid; gap: 16px; }
 .leave-filters { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
 .leave-filters label { min-width: 150px; flex: 1; }

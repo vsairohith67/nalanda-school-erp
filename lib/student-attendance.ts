@@ -3,6 +3,9 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 export const ATTENDANCE_STATUSES = ["PRESENT", "ABSENT", "LATE", "HALF_DAY", "EXCUSED"] as const;
 export const ATTENDANCE_SESSION_STATUSES = ["DRAFT", "SUBMITTED", "LOCKED"] as const;
 export type AttendanceStatus = (typeof ATTENDANCE_STATUSES)[number];
+export const MAX_ATTENDANCE_RECORDS = 2_500;
+export const MAX_ATTENDANCE_REMARK_LENGTH = 500;
+export const MAX_ATTENDANCE_CORRECTION_REASON_LENGTH = 500;
 
 export type AttendanceRecordInput = { studentId?: unknown; status?: unknown; remarks?: unknown };
 
@@ -34,6 +37,7 @@ export function attendanceScope(input: { attendanceDate?: unknown; className?: u
 
 export function validateAttendanceRecords(rows: unknown): Array<{ studentId: string; status: AttendanceStatus; remarks: string | null }> {
   if (!Array.isArray(rows)) throw new Error("Attendance records are required");
+  if (rows.length > MAX_ATTENDANCE_RECORDS) throw new Error(`Attendance is limited to ${MAX_ATTENDANCE_RECORDS} students per request`);
   const seen = new Set<string>();
   return rows.map((raw, index) => {
     const row = (raw ?? {}) as AttendanceRecordInput;
@@ -43,8 +47,36 @@ export function validateAttendanceRecords(rows: unknown): Array<{ studentId: str
     if (seen.has(studentId)) throw new Error("A student appears more than once in this attendance session");
     seen.add(studentId);
     if (!(ATTENDANCE_STATUSES as readonly string[]).includes(status)) throw new Error(`Choose a valid attendance status for row ${index + 1}`);
-    return { studentId, status: status as AttendanceStatus, remarks: String(row.remarks ?? "").trim() || null };
+    const remarks = String(row.remarks ?? "").trim();
+    if (remarks.length > MAX_ATTENDANCE_REMARK_LENGTH) throw new Error(`Attendance row ${index + 1} remarks are too long`);
+    return { studentId, status: status as AttendanceStatus, remarks: remarks || null };
   });
+}
+
+export function attendanceCorrectionReason(value: unknown) {
+  const reason = String(value ?? "").trim();
+  if (reason.length < 12 || reason.length > MAX_ATTENDANCE_CORRECTION_REASON_LENGTH) {
+    throw new Error(`Correction reason must be between 12 and ${MAX_ATTENDANCE_CORRECTION_REASON_LENGTH} characters`);
+  }
+  if (/[\u0000-\u001f\u007f<>]/.test(reason)) throw new Error("Correction reason contains unsupported characters");
+  return reason;
+}
+
+export function expectedAttendanceVersion(value: unknown) {
+  const raw = String(value ?? "").trim();
+  if (!raw) throw new Error("Attendance changed since it was opened. Reload and try again.");
+  const parsed = new Date(raw);
+  if (!Number.isFinite(parsed.getTime())) throw new Error("Attendance changed since it was opened. Reload and try again.");
+  return parsed;
+}
+
+export function attendanceDateRange(fromValue: unknown, toValue: unknown, maximumDays = 366) {
+  const from = attendanceDay(fromValue);
+  const to = attendanceDay(toValue);
+  const days = Math.floor((to.getTime() - from.getTime()) / 86_400_000) + 1;
+  if (days < 1) throw new Error("The attendance report start date must be on or before the end date");
+  if (days > maximumDays) throw new Error(`Attendance reports are limited to ${maximumDays} days`);
+  return { from, to };
 }
 
 export function attendanceTotals(rows: Array<{ status: string }>) {
@@ -82,13 +114,14 @@ export async function activeStudentsForScope(client: AttendanceClient, scope: { 
   });
 }
 
-export async function attendanceReportData(client: Pick<PrismaClient, "studentAttendanceSession">, filters: { from: Date; to: Date; academicYear: string; className?: string; section?: string }) {
+export async function attendanceReportData(client: Pick<PrismaClient, "studentAttendanceSession">, filters: { from: Date; to: Date; academicYear: string; className?: string; section?: string; scopeWhere?: Prisma.StudentAttendanceSessionWhereInput }) {
   const sessions = await client.studentAttendanceSession.findMany({
     where: {
       attendanceDate: { gte: filters.from, lte: filters.to }, academicYear: filters.academicYear,
       status: { in: ["SUBMITTED", "LOCKED"] },
       ...(filters.className ? { className: filters.className } : {}),
-      ...(filters.section !== undefined ? { section: filters.section } : {})
+      ...(filters.section !== undefined ? { section: filters.section } : {}),
+      ...(filters.scopeWhere ? { AND: [filters.scopeWhere] } : {})
     },
     include: { records: { include: { student: { select: { studentName: true, rollNo: true } } } } },
     orderBy: [{ attendanceDate: "desc" }, { className: "asc" }, { section: "asc" }]

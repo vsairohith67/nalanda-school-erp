@@ -98,7 +98,7 @@ describe("access rules", () => {
     ]);
 
     const teacherNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"));
-    expect(teacherNav.map((item) => item.href)).toEqual(["/attendance/students", "/leave/staff", "/substitutes", "/homework/reports", "/homework", "/exams", "/marks", "/report-cards", "/teacher/analytics"]);
+    expect(teacherNav.map((item) => item.href)).toEqual(["/attendance/students", "/attendance/students/reports", "/leave/staff", "/substitutes", "/homework/reports", "/homework", "/exams", "/marks", "/report-cards", "/teacher/analytics"]);
 
     const parentNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"));
     expect(parentNav.map((item) => item.href)).toEqual(["/parent/class-x-documents"]);
@@ -133,6 +133,7 @@ describe("access rules", () => {
     expect(teacherGroups.map((group) => group.label)).toEqual(["Attendance", "Staff & Leave", "Communication"]);
     expect(teacherGroups.flatMap((group) => group.items.map((item) => item.href))).toEqual([
       "/attendance/students",
+      "/attendance/students/reports",
       "/leave/staff",
       "/substitutes",
       "/teacher/analytics",

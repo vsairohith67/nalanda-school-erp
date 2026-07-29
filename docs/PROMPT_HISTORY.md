@@ -1,5 +1,49 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## Prompt 23C - Teacher attendance exact timetable scope (2026-07-29)
+
+Started from dynamically captured synchronized private `main` commit
+`39d4b5a495273d45656a981cd66ea3da2eaacdde` after verifying the reachable
+operational-migration-baseline tag, Git safety, clean migration status,
+zero-data operational baseline and exact account states. Created only
+`security/teacher-attendance-exact-scope`.
+
+The pre-change path treated Teacher attendance permission as global cohort
+authority. Prompt 23C adds one shared resolver requiring active User/session,
+active linked Staff and timetable Teacher, exact active current-year
+class/section assignment or confirmed same-date substitute. The same target
+governs selector, list, mark/bulk/submit/correct/lock, report, CSV, Teacher
+portal and dashboard paths. Cross-class/section/year/date and unrelated Student
+tampering fail closed.
+
+Mutations now have a 512 KiB route body cap, 2,500-record bound, exact
+`updatedAt` compare-and-set in a serializable transaction, reasoned submitted
+correction and append-only privacy-safe audit. The UI exposes only authorised
+cohorts, safe one-option defaults, an unlinked empty state, dated-substitute
+notice, 44 px mobile controls, wrapped tables and accessible in-app correction
+confirmation.
+
+Ignored copied-database QA uses only namespaced `QA23C` fixtures. It proves two
+Teacher boundaries, unlinked empty state, date-limited substitution, shared
+report/CSV scope, leadership/non-teaching role boundaries, one-winner
+concurrency, operational hash preservation and exact non-QA logical restoration
+after idempotent cleanup.
+
+Final verification passed 274 page routes, 378 APIs, lifecycle zero-change dry
+run, typecheck, 1,576/1,576 tests across 170 files, all 212 production-build
+entries with the bounded 4 GB heap, backup version 37 and Git safety.
+Production Browser QA passed 1366x768 and exact 390x844 in light and dark
+modes with 44 px mobile targets, contained tables, zero page overflow, no
+native dialogs, no console/hydration errors and zero production stderr. The
+copied database passed all eleven proofs, two complete idempotent cleanups,
+pre-fixture digest restoration and destruction. The operational database hash,
+zero-data baseline, account states and sole migration remained exact.
+
+Implementation result: `READY_FOR_PROMPT_23C_QA`. Teacher cutover remains
+`NO_GO_PENDING_PROMPT_23C_QA`, the feature branch remains unmerged, and no
+schema, migration, operational account, business/configuration row, Parent
+attendance, timetable UI, Classwork or calendar behavior changed.
+
 ## DATA-0B - Controlled verified sample/QA cleanup (2026-07-28)
 
 After DATA-0A-QA returned `SAMPLE_DATA_PROVENANCE_CLEARED`, DATA-0B made demo

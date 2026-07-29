@@ -54,7 +54,7 @@ export default async function DashboardPage() {
 
   const now = new Date();
   const [dashboard, health] = await Promise.all([
-    getDashboardCommandCenter(prisma, permissions, settings.academicYear, user.role, now),
+    getDashboardCommandCenter(prisma, permissions, settings.academicYear, user.role, now, user),
     permissionSetCan(permissions, "VIEW_SYSTEM_HEALTH") ? getSystemHealth(prisma) : Promise.resolve(null)
   ]);
   const studentAttendance = dashboardAttendanceSummary(dashboard.studentAttendance);

@@ -11,8 +11,25 @@
 
 ## Prompt 23B critical finding and consolidation status
 
-- Confirmed critical defect: a Teacher default receives Student attendance view/manage/submit permission, `/attendance/students` lists every active class/section, and both Student attendance APIs accept caller-supplied scope without resolving the exact active `StaffMember -> TimetableTeacher -> TimetableAssignment`. This is an object-scope/IDOR-class risk. No Teacher user exists in the current operational baseline, so the defect is dormant but release-blocking.
-- Current timetable data has zero Teacher assignments. The attendance scope must fail closed for no link/assignment and handle exact section, dated substitutes and an explicit audited Principal override. Teacher result: `NO_GO_FOR_TEACHER_CUTOVER`.
+- The Prompt 23B critical Teacher attendance object-scope defect is fixed on the
+  Prompt 23C feature branch. Page, GET/POST API, reports, CSV, Teacher portal
+  and dashboard now use one exact active
+  `StaffMember -> TimetableTeacher -> TimetableAssignment` or confirmed dated
+  substitute resolver. Permission alone grants no cohort.
+- Implementation status is `READY_FOR_PROMPT_23C_QA`. Teacher cutover remains
+  `NO_GO_PENDING_PROMPT_23C_QA`; this is not a merged or independently cleared
+  release.
+- Residual design limit `ATTENDANCE-SCOPE-1`: the current timetable model has
+  no explicit class-wide attendance-owner record. Blank section is treated as
+  an exact cohort, never a wildcard. Any future class-wide authority needs an
+  approved explicit model and migration.
+- Residual design limit `ATTENDANCE-SCOPE-2`: substitutes are dated rows, not
+  date ranges. Approved multi-day coverage requires one confirmed row per day.
+  Do not infer a range or convert substitute evidence into permanent authority.
+- Residual release gate `ATTENDANCE-SCOPE-3`: operational data has no Teacher,
+  Staff or assignment. Only namespaced copied-database fixtures were used;
+  independent Prompt 23C-QA must repeat negative API and Browser checks before
+  any operational Teacher provisioning or merge.
 - Prompt 23B reconciled exactly 109 source items: 23 vendor, 10 different-role, 14 populated-data, 29 synthetic-write, 6 export-sample, 7 not-used, 11 safe-to-defer and 9 already-replaced-without-parity-evidence.
 - No schema, migration, business route/API, operational record, Schoolknot data, credential, provider, deployment or DNS changed.
 - FIN-2A is resolved. DEVOPS-1D remains `PAYMENT_GATED_DEFERRED`; 21B-21D remain blocked; 22B conditional and 22C-22D blocked.
