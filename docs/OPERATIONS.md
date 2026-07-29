@@ -13,6 +13,16 @@ remains active; Admin, Accountant and Viewer are inactive. Do not reactivate
 one of those accounts until a named owner has a current operational need.
 Never share credentials or disable the last active Super Admin.
 
+DEVOPS-1E registered the already-present clean schema as the applied Prisma
+baseline by adding only `_prisma_migrations` metadata. No application data,
+configuration, account, role, permission, or schema changed. The protected
+version-37 logical backup and byte-identical raw rollback copy are retained in
+ignored operator storage. See
+`OPERATIONAL_MIGRATION_BASELINE_ONBOARDING.md` for hashes and restoration
+evidence. Do not delete or edit migration metadata, run `db push`, or rerun
+`migrate resolve` manually. Escalate any migration-status discrepancy and keep
+the application stopped until the reviewed recovery procedure is chosen.
+
 ## Daily workflow
 
 1. Confirm the Windows computer date and time.

@@ -1,5 +1,16 @@
 # Documentation Index
 
+## DEVOPS-1E operational migration baseline
+
+- [Operational Prisma Migration-Baseline Onboarding](OPERATIONAL_MIGRATION_BASELINE_ONBOARDING.md) - dynamic synchronized-main preflight, exact approval, copied-database rehearsal, protected version-37 rollback and restore evidence, metadata-only operational result, unchanged application controls, and DEVOPS-1E-QA gate.
+- [Clean Install and Existing Database Onboarding](CLEAN_INSTALL_AND_EXISTING_DATABASE_ONBOARDING.md) - active baseline rules, fresh-install workflow, one-time operational onboarding boundary, future migration discipline, and rollback guidance.
+
+DEVOPS-1E recorded `20260722_clean_install_baseline` exactly once in the
+operational database. The zero-data baseline, account states, application
+digest, configuration, schema, integrity, and foreign keys remained exact.
+Independent DEVOPS-1E-QA is next; no merge is authorized by the implementation
+result.
+
 ## AUTH-2A operational account decision gate
 
 - [Operational Account Ownership Decision](OPERATIONAL_ACCOUNT_OWNERSHIP_DECISION.md) - verified P4C active/inactive role state, applied decisions, lockout sequence, audit/session effects, rollback, and AUTH-2B deferral.

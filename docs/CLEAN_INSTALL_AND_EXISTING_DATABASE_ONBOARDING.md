@@ -6,6 +6,14 @@ The active Prisma chain contains one Prisma-generated SQLite baseline: `20260722
 
 Never run `migrate deploy`, `migrate dev`, `db push`, or `migrate resolve` against an existing operational database without a separately approved maintenance window, verified backup/copy, schema-equivalence proof, rollback owner, and independent review. DEVOPS-1B ran onboarding only against byte-for-byte copies.
 
+DEVOPS-1E later completed the separately approved metadata-only onboarding of
+the clean operational SQLite database. Read
+`OPERATIONAL_MIGRATION_BASELINE_ONBOARDING.md` for the exact pre/post hashes,
+copied-database rehearsal, protected version-37 rollback evidence, approval
+gate, idempotence proof, and unchanged application controls. This is not
+general permission to run migration commands against an operational database;
+every future operation requires its own reviewed maintenance gate.
+
 ## Fresh clone and empty database
 
 1. Clone the private repository and check out an approved commit containing the DEVOPS-1B baseline.
@@ -63,7 +71,10 @@ The repository rehearsal command performs those checks against a new copy and de
 pnpm.cmd migration:existing-db-check
 ```
 
-It refuses the operational path as a migration target. DEVOPS-1B does not authorize running the resolve sequence on `prisma/dev.db`.
+It refuses the operational path as a migration target. DEVOPS-1B did not
+authorize running the resolve sequence on `prisma/dev.db`; DEVOPS-1E supplied
+the later one-time approval and evidence package for this exact operational
+baseline only.
 
 ## Future migrations
 

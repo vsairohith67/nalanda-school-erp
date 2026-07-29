@@ -872,3 +872,58 @@ verified personal/work aliases, selectable verified reset channels and
 single-use reset links that never email a password. IAM-1A remains a separate
 future phase for named leadership/operational accounts, reusable permission
 profiles and per-user grants/denials.
+
+# DEVOPS-1E - Operational Prisma Migration-Baseline Onboarding (2026-07-29)
+
+Started from the dynamically captured clean synchronized private `main`
+commit `2bc71254d01d0bc57fa5b91867269f5ddba52661`. The required
+`operational-account-hardening-v37-2026-07-28` tag was verified as its
+ancestor. Git safety, 274 page routes, 378 API routes, lifecycle zero-write
+dry-run, typecheck, the exact clean business baseline, account states,
+configuration counts, SQLite integrity, and foreign keys passed before any
+change.
+
+An ignored byte-identical copy proved the complete Prisma sequence twice:
+`migrate resolve --applied 20260722_clean_install_baseline`, deploy, and
+status. It produced exactly one completed baseline row, no pending migration,
+and no application digest, count, account, configuration, schema, integrity,
+or foreign-key change. A fresh version-37 logical backup and byte-identical raw
+copy were hashed in protected ignored storage; logical restore was rehearsed
+twice into a disposable database.
+
+After the exact approval phrase and an immediate operational hash recheck, the
+same resolve/deploy/status sequence was run against the stopped operational
+database and repeated to prove idempotence. The physical database SHA-256
+changed from
+`3BA84F4834C4BE4B682D3BCE624490A99337BCAEC8027EFC27B9C4FF4FE11022`
+to
+`9A888627EA2AF32433FDBA4F2F5D02C471995145E41ACE9A6D1CD0729C6EAE93`
+because Prisma metadata was added. The application-table digest remained
+`E019FCE5B0A3347BE0BFFC037AEEA207705E6ECA915B80B112E5D91AD69BA08C`.
+The 0 Student / 0 active enrollment / 0 Payment / INR 0 / 0 Guardian / 0
+Staff baseline and the one-active-Super-Admin/three-inactive-retained-account
+state remained exact. No schema, configuration, user, permission, or business
+row changed, and no rollback was required.
+
+Implementation is on `devops/operational-migration-onboarding`. Independent
+DEVOPS-1E-QA is the next gate; no merge is authorized by this implementation
+record.
+
+Recovery classified the operational state as
+`ONBOARDING_ALREADY_COMPLETE`. The earlier blocked result came only from
+`COPY_UNCHANGED_TIMEOUT` after a five-minute monitor waited for an unnecessary
+private login on an ignored copied database; no Prisma command, operational
+lock, partial metadata, or unexpected application change caused it. Recovery
+therefore did not rerun `migrate resolve`. It stopped only the verified
+copied-database server and proved deploy/status twice with no pending or
+applied migration.
+
+Final verification passed the focused migration suite (8/8), 274 page routes,
+378 API routes, lifecycle zero-write dry-run, typecheck, all 1,567 tests across
+169 files, the 212/212 production build, final version-37 backup and Git
+safety. Copied-database Browser verification proved startup, protected-route
+redirect and the login form with zero console warnings/errors; no credential
+was submitted because operational login would update `lastLoginAt`. The final
+application digest, physical post-onboarding database hash, metadata row,
+zero-data baseline, account states, configuration, schema hashes, integrity,
+foreign keys and rollback hashes remained exact.

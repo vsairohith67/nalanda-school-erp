@@ -1,5 +1,21 @@
 # Nalanda Fee Control — Developer Continuation Guide
 
+## DEVOPS-1E operational migration baseline
+
+The clean operational SQLite database now records
+`20260722_clean_install_baseline` exactly once in `_prisma_migrations`. This was
+a separately approved metadata-only operation after a byte-identical copied
+database rehearsal, protected raw and version-37 logical backups, and a
+restore-twice rehearsal. The application-table digest, application schema,
+zero-data baseline, account states, configuration counts, Prisma schema, and
+migration SQL remained unchanged.
+
+Read `OPERATIONAL_MIGRATION_BASELINE_ONBOARDING.md` before any Prisma migration
+work. Do not edit the committed baseline, restore the archived migration chain,
+run `db push`, or treat this one-time approval as authority for another
+database. DEVOPS-1E-QA must clear the feature branch before merge. AUTH-2B may
+be planned only after that independent result.
+
 ## AUTH-2A-P4C operational account outcome
 
 The operational account sequence is complete: one owned, rotated and
