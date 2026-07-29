@@ -1,4 +1,19 @@
-flowchart LR
+flowchart TB
+  subgraph DELIVERY["Approved delivery gates"]
+    direction LR
+    DECISION["Leadership decision approval<br/>40 selections or approved safe defaults<br/>unresolved formulas stay disabled"]
+    DEVOPS["DEVOPS-1E<br/>operational migration-baseline prerequisite"]
+    P23C["Prompt 23C<br/>exact Teacher timetable scope"]
+    UX["UX-1A<br/>approved marks-entry and report-card interaction design"]
+    IMPL1["EXAM-RC-IMPL-1<br/>setup · assignment · entry · moderation · locking"]
+    QA1["Independent QA<br/>authorization · states · formulas · concurrency"]
+    IMPL2["EXAM-RC-IMPL-2<br/>publication · bulk output · colour/B&W print"]
+    QA2["Independent QA + physical print test<br/>pagination · patterns · photocopy legibility"]
+    DECISION --> DEVOPS --> P23C --> UX --> IMPL1 --> QA1 --> IMPL2 --> QA2
+  end
+
+  subgraph OPERATION["Governed examination and report-card operation after release clearance"]
+    direction LR
   SETUP["Principal setup<br/>year · targets · exam type · dates"]
   SCHEME["Immutable scheme version<br/>components · maxima · papers · groups · grading"]
   ASSIGN["Exact marks-entry assignments<br/>Teacher + class-section + subject-paper + component + exam"]
@@ -17,7 +32,9 @@ flowchart LR
   CORRECT["Bounded correction version"]
   SECURITY["Every request<br/>semantic permission + exact object scope + lifecycle + optimistic version"]
   AUDIT["Append-only audit<br/>assignment · entry · correction · lock · generation · publication · download"]
+  end
 
+  QA2 -. enables only after clearance .-> SETUP
   SETUP --> SCHEME --> ASSIGN --> ENTRY --> SUBMIT --> MODERATE
   MODERATE --> LOCK --> CALC --> APPROVE --> PREVIEW --> GENERATE --> PUBLISH --> ACCESS
   TEACHER --> ENTRY

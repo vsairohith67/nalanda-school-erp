@@ -1,10 +1,14 @@
 # EXAM-RC-DECISIONS-1 - Examination and Report-Card Leadership Decision Register
 
 **Package result:** `EXAM_REPORT_DECISION_PACKAGE_READY`
+**Presentation status:** `EXAM_REPORT_DECISIONS_READY_FOR_USER_APPROVAL`
 **Decision count:** 40
 **Implementation state:** paused; `EXAM-RC-IMPL-1` has not started
 **Branch:** `feature/exam-report-card-architecture`
 **Architecture commit reviewed:** `c93d1f894a2a931473b5c6ea631b33e48522d8ab`
+**Decision-package input commit:** `2a3218aff8214414d0317010458a530a75256c30`
+**Leadership-selection state:** unresolved; no option is approved by this sheet
+**Next technical prerequisite after selections:** `DEVOPS-1E`
 **Scope:** leadership decisions and documentation only
 
 This package converts every unresolved product or policy item in
@@ -17,9 +21,10 @@ no student name, admission number, parent name, contact detail or sample mark.
 | Control | Verified state |
 | --- | --- |
 | Current branch | `feature/exam-report-card-architecture` |
-| Current local commit before this decision package | `c93d1f894a2a931473b5c6ea631b33e48522d8ab` |
-| Pushed branch commit | `origin/feature/exam-report-card-architecture` resolves to the same commit |
-| Git status before this package | clean and tracking the remote feature branch |
+| Current local commit before this freeze package | `2a3218aff8214414d0317010458a530a75256c30` |
+| Pushed branch commit before this freeze package | `origin/feature/exam-report-card-architecture` resolves to the same commit |
+| Git status before this freeze package | clean and synchronized with the remote feature branch |
+| Decision register | `docs/EXAM_REPORT_CARD_LEADERSHIP_DECISION_REGISTER.md` |
 | Private repository | `vsairohith67/nalanda-school-erp` |
 | Operational database SHA-256 | `3BA84F4834C4BE4B682D3BCE624490A99337BCAEC8027EFC27B9C4FF4FE11022` |
 | Prisma schema SHA-256 | `B1135F63C2E5579F320A5FFD01BDB3A167520B42D479D3906F7BB611FC82FC00` |
@@ -66,6 +71,60 @@ recommendation, select an alternative, or write a bounded custom answer.
 Selecting a configurable default does not change old published reports.
 Configuration changes apply only through a new version for a future exam or
 publication.
+
+No decision is marked `NO_SAFE_DEFAULT`. Codex can safely recommend `OPTION_A`
+for all 40 items because every unsupported formula, template, access path or
+automation remains disabled until its evidence and approval gate is satisfied.
+
+## 3A. Frozen concise leadership approval sheet
+
+This is the plain-language presentation layer for the detailed evidence below.
+It freezes the questions and options, not the answers. Leadership selections
+remain unresolved until an authorized response supplies `RC-01` through
+`RC-40` or approves all recommended options.
+
+| ID | Short question | Affected classes/exams | Recommended option | Other options | One-sentence reason | Implementation impact | Blocks implementation? |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| RC-01 | Which report-card family applies to each class and exam? | LKG-X; all exam types | `OPTION_A`: reacquire/hash the Class I-X sources, approve the mapping, and keep unevidenced families disabled. | B: provisional I-V/VI-X mapping; C: launch only directly evidenced families. | A source-controlled mapping prevents assumptions from becoming production rules. | Determines template sections and formula bindings. | Yes. |
+| RC-02 | Which assessment components and maxima apply? | All numeric exams | `OPTION_A`: version components/maxima per class/exam and seed only approved 10+40 schemes. | B: one school-wide scheme; C: class-band defaults with overrides. | Per-exam versions avoid hard-coding one denominator for every class. | Defines marks-grid columns, validation and denominators. | Yes. |
+| RC-03 | Which grade scale should each class/exam use? | LKG-X | `OPTION_A`: separate versioned KG/I-V and VI-X scales. | B: one school-wide scale; C: a unique scale per exam. | The printed Primary and Secondary bands do not mean the same thing. | Controls grade labels and printed legends. | Yes. |
+| RC-04 | Should grade points be shown, and how are they derived? | I-X numeric reports | `OPTION_A`: hide grade points until an explicit band-to-point table is approved. | B: approve a table now; C: remove grade points permanently. | The historical derivation is not evidenced and must not be reverse-engineered. | Hides the field/legend without changing marks or grades. | Yes. |
+| RC-05 | How should decimals, rounding and grade boundaries work? | All calculated results | `OPTION_A`: decimal arithmetic, six-place intermediates, half-up two-decimal output, and grades/ranks from the unrounded canonical result. | B: round each input first; C: truncate. | One canonical policy prevents different pages from producing different results. | Governs every total, percentage, grade and rank comparison. | Yes. |
+| RC-06 | How should English paper groups be averaged? | Classes/exams with English papers | `OPTION_A`: normalize each paper and use an equal-weight mean unless approved weights exist. | B: raw sum; C: approved weighted normalized mean. | Normalization remains fair when paper maxima differ. | Changes English group, total, grade, chart and rank. | Yes. |
+| RC-07 | How should Science paper groups be averaged? | Provisionally VI-X grouped Science | `OPTION_A`: normalize each paper and use an equal-weight mean. | B: raw sum; C: approved weighted normalized mean. | The historical Science value is arithmetically inconsistent and cannot be copied. | Changes Science group, total, grade, chart and rank. | Yes. |
+| RC-08 | How should Social paper groups be averaged? | Provisionally VI-X grouped Social | `OPTION_A`: normalize History and Geography and use an equal-weight mean. | B: raw sum; C: approved weighted normalized mean. | The evidence shows a group but does not prove weights. | Changes Social group, total, grade, chart and rank. | Yes. |
+| RC-09 | What weights combine CT, terminal and annual results? | Any combined-result report | `OPTION_A`: keep combined publication disabled until approved weights total 100%. | B: approve a weight table now; C: omit combined reports initially. | Guessing weights would create false academic results. | Controls combined totals, grades, charts and columns. | Yes. |
+| RC-10 | What happens when a combined-result source is missing? | Combined-result reports | `OPTION_A`: block calculation/publication until every required locked source exists. | B: exclude and renormalize; C: count it as zero. | Silent exclusion or zero changes the denominator unfairly. | Controls combined-result eligibility and moderation errors. | Yes. |
+| RC-11 | Which mark-entry states are authoritative? | All numeric marks | `OPTION_A`: `NOT_ENTERED`, `PRESENT`, `ABSENT`, `NOT_APPLICABLE`, `EXEMPT`; real zero is valid only for `PRESENT`. | B: combine EXEMPT and N/A; C: keep implicit blank. | Explicit states prevent blank, zero and absence from being conflated. | Drives validation, calculation, labels and audit. | Yes. |
+| RC-12 | Does an absence contribute zero? | Required numeric subjects/components | `OPTION_A`: print `AB`, add zero to the numerator and retain the required maximum in the denominator. | B: exclude from both; C: block until a makeup exam. | Keeping the denominator avoids inflating a result while preserving absence as a fact. | Changes totals, averages, pass/fail and rank. | Yes. |
+| RC-13 | What are the pass/fail rules? | LKG-X; summative vs formative exams | `OPTION_A`: no KG pass/fail, descriptive I-V, and VI-X summative minimum 35% per required subject and overall; CT formative by default. | B: 35% for I-X; C: overall only; D: custom thresholds. | Grade bands alone do not prove a universal pass policy. | Controls result status and printed wording. | Yes. |
+| RC-14 | When should rank be visible? | LKG-X; CT, terminal, annual, preboard | `OPTION_A`: hide for LKG-V and formative/CT; Principal may enable for VI-X summative exams. | B: show for every numeric exam; C: never show. | Ranking young/formative cohorts by default is not educationally or evidentially justified. | Controls rank calculation exposure and print fields. | Yes. |
+| RC-15 | What cohort and tie rule should rank use? | Exams where rank is enabled | `OPTION_A`: exact class-section cohort, competition ranking, unrounded canonical result and no hidden tie-breaker. | B: class-wide; C: dense ranking; D: custom tie-breaker. | An explicit cohort and tie method prevents disputed hidden rules. | Changes rank values and requires a printed cohort label. | Yes. |
+| RC-16 | How are class average and highest score calculated? | Numeric reports with comparison charts | `OPTION_A`: comparable percentages at the same subject/group grain in the exact class-section cohort with state-aware exclusions. | B: class-wide cohort; C: present students only. | Comparable denominators and a declared cohort prevent misleading charts. | Produces chart reference series, not the student's own marks. | Yes. |
+| RC-17 | Which attendance period and source should print? | Every family displaying attendance | `OPTION_A`: store inclusive exam dates and snapshot only locked daily attendance; annual defaults year-start through exam close. | B: month-to-date; C: year-to-date for every exam; D: custom range. | A declared range prevents different pages from reporting different periods. | Controls attendance totals, percentage and period label. | Yes. |
+| RC-18 | What counts as a working day or half-day? | Attendance-bearing reports | `OPTION_A`: locked instructional sessions only; holidays excluded; present=1, absent=0, approved half-day=0.5 when supported. | B: calendar school days; C: no half-days. | The denominator must exclude non-instructional and unlocked days. | Changes attendance denominator and decimal-day display. | Yes. |
+| RC-19 | Which co-scholastic schemes apply? | LKG/UKG rubrics; I-V skills; VI-X personality development | `OPTION_A`: three independently versioned ordered G/S/N schemes, excluded from academic percentage. | B: one shared list; C: A-E ratings; D: custom class lists. | One shared list would erase class-stage meaning. | Controls co-scholastic tables only. | Yes. |
+| RC-20 | Should KG have an automatic overall grade or promotion? | LKG/UKG final reports | `OPTION_A`: no calculated overall grade; promotion/certification is a separate Principal-approved human decision. | B: approved rubric mapping; C: Teacher-proposed holistic grade with Principal approval. | The booklet does not evidence a calculation and promotion must not be automated. | Controls KG summary and certification blocks. | Yes. |
+| RC-21 | Is GK/Value Education a mark or a grade? | Primary and any Secondary family containing GK/VE | `OPTION_A`: grade-only and excluded from numeric total, percentage and rank. | B: numeric and included; C: numeric but excluded; D: not applicable. | The evidence does not prove numeric treatment, so inclusion would change results without authority. | Controls denominator and table placement. | Yes. |
+| RC-22 | Who writes and approves general remarks? | All report-card families | `OPTION_A`: Class Teacher writes/selects from an approved bank; Principal may edit/approve; preserve original and approved text. | B: Teacher-only final; C: Principal-only. | Clear authorship and append-only history close the current broad role-name seam. | Controls printed remarks, permissions and audit. | Yes. |
+| RC-23 | Who may correct or reopen results? | Submitted, locked and published results | `OPTION_A`: explicitly permitted Principal, with mandatory reason and a new version; permitted Super Admin only as governed fallback. | B: Principal only; C: Principal plus Director dual approval. | Issued evidence must never be overwritten. | Defines correction authority, recalculation and publication versions. | Yes. |
+| RC-24 | Which signature/acknowledgement fields print? | LKG-X families | `OPTION_A`: family-specific Teacher, Principal and Parent/Guardian fields; Director only for approved final/Class X uses; labels/statuses, not ungoverned signature images. | B: always all four roles; C: Teacher and Principal only. | A printed signature label must match a real approval requirement. | Controls prerequisites and signature-block layout. | Yes. |
+| RC-25 | How should old reports and arithmetic defects be handled? | Historical PDFs/imports | `OPTION_A`: preserve originals, flag known defects to authorized staff and use only approved versioned formulas for new reports. | B: create corrected new versions while retaining originals; C: archive PDFs only. | History must not be rewritten and bad arithmetic must not become a golden rule. | Governs migration/import and legacy/current labelling. | Yes. |
+| RC-26 | How should Class X revision and preboard reports work? | Class X revision/preboard/internal combined reports | `OPTION_A`: separate, clearly labelled school-internal reports; never call them Board results or combine without approved weights. | B: one combined internal report; C: no Parent revision publication. | Internal exams must not be mistaken for Board outcomes. | Controls titles, disclaimers, sources and formula eligibility. | Yes. |
+| RC-27 | Should the identity block show Father Name or Guardian Name? | All report-card families | `OPTION_A`: `Guardian Name (Relationship)` from the approved primary link, with legacy father-name fallback only for unmigrated history. | B: Father Name; C: Father and Mother; D: configured labels. | Guardian-based display is more accurate and aligned with governed relationships. | Changes template identity fields and future import requirements. | Yes. |
+| RC-28 | How are publication versions frozen? | Every generated report | `OPTION_A`: immutable snapshot-bound versions, idempotent identical regeneration and new versions for corrections. | B: replace the prior PDF; C: one version with no correction. | Publication must remain historically reproducible without duplicates or overwrites. | Defines calculation/template snapshots and version labels. | Yes. |
+| RC-29 | How should colour and black-and-white charts differ? | Numeric report charts | `OPTION_A`: colour mode plus pattern-safe monochrome—solid Student, diagonal Class Average, dotted/cross-hatched Highest—with direct labels. | B: monochrome tables only; C: line-style chart. | Photocopies must remain readable without relying on colour. | Rendering only; required before IMPL-2 print clearance. | No for IMPL-1; yes before IMPL-2 clearance. |
+| RC-30 | When should bulk output be merged PDF or ZIP? | Section, class, multi-class and cohort generation | `OPTION_A`: bounded merged PDF for section/class; ZIP with deterministic PDFs and manifest for large scopes. | B: ZIP only; C: merged PDF only. | Bounded packaging balances staff usability and resource safety. | Controls job limits, packaging and download behavior. | No; finalize in IMPL-2. |
+| RC-31 | What print identity and layout should be the default? | All promoted families | `OPTION_A`: A4 portrait, approved logo, Georgia Bold school name with fallback, family-specific ordered sections and pagination instead of shrinking. | B: school-supplied design; C: plain printer-first typography. | Readability and stable branding matter more than forcing every subject onto one page. | Controls typography, section order and page breaks. | No; required before IMPL-2 promotion. |
+| RC-32 | What can Parents/Students access and what is audited? | Published portal reports | `OPTION_A`: Parent issued-only linked-child access, audited PDF downloads and Student self-access only after an approved IAM link. | B: audit downloads only; C: disable Parent access initially. | Draft and cross-child access must remain impossible. | Controls portal authorization, no-store delivery and access events. | No for core engine; yes before portal publication. |
+| RC-33 | How long are reports and access logs kept? | Publications, manifests and view/download events | `OPTION_A`: no automatic deletion of issued reports; detailed access events for three academic years pending approved privacy/legal policy. | B: seven years; C: permanent; D: custom. | Academic history should persist while detailed access logs remain proportionate. | Controls storage and future cleanup jobs. | No; decide before cleanup automation. |
+| RC-34 | How should academic-year/class strings become governed masters? | Existing and future academic offerings | `OPTION_A`: preserve historical aliases, add governed offerings and rehearse mapping on a copied database. | B: retain strings; C: rewrite old labels in place. | In-place rewriting risks binding history to the wrong cohort. | Controls configuration identity and later migration rehearsal. | No; copied-DB gate before operational migration. |
+| RC-35 | How should co-teaching overlap work? | Same exam/paper/component assigned to multiple Teachers | `OPTION_A`: reject overlap unless Principal names one primary submitter and audited contributors. | B: equal editors; C: no co-teaching. | One final owner prevents conflicting drafts and submissions. | Controls assignment validation, concurrency and audit. | No; safe default is ready. |
+| RC-36 | Which examination notifications ship first? | Entry windows, corrections and publication | `OPTION_A`: private in-app notifications only; no WhatsApp/SMS/email. | B: no notifications; C: separately approved providers later. | Internal messages avoid consent, duplication and live-provider risk. | Adds workflow notices without changing calculations. | No; may follow core workflow. |
+| RC-37 | Should report cards include a student photo? | All families | `OPTION_A`: no photo in the first release. | B: optional governed local photo; C: family-specific photo. | Photos add unnecessary private-asset and print complexity. | Simplifies identity blocks and privacy controls. | No; safe to defer. |
+| RC-38 | Should an exempt item receive a substitute mark? | Any `EXEMPT` item | `OPTION_A`: exclude from numerator/denominator, require approval/reason, print `EX`, and use no substitute mark. | B: cohort-average substitute; C: prior-exam substitute. | No substitute rule is evidenced and an invented value could inflate results. | Controls denominator and `EX` display. | No; safe default is ready. |
+| RC-39 | Should Student accounts or teacher-parent switching ship now? | Student self-access; dual staff/parent users | `OPTION_A`: keep both disabled until IAM-1A defines claims, links, switching and invalidation; preserve Parent access separately. | B: Student accounts now; C: permanent separate accounts. | Premature context switching creates cross-context exposure risk. | Defers portal contexts without affecting reports. | No; intentionally deferred. |
+| RC-40 | Should AI suggest remarks? | Future remark drafting | `OPTION_A`: keep AI remark suggestions disabled; ship the human remark bank/approval flow first. | B: later privacy-approved suggestions with mandatory human approval; C: never allow AI remarks. | Private data and hallucination risk require a separate approval gate. | Leaves only human-authored/approved remarks. | No; intentionally deferred. |
 
 ## 4. MUST_DECIDE_BEFORE_IMPLEMENTATION
 
@@ -775,13 +834,29 @@ That approval should be recorded before implementation begins. A custom answer
 must name the affected Decision ID and supply enough detail to make the rule
 testable.
 
-## 8. Next gate
+## 8. Security correction
+
+- The credential-like value visible in the reference screenshot was
+  deliberately fake.
+- `AUTH-INC-1=CANCELLED_NOT_REQUIRED`.
+- No credential incident occurred, no extra password rotation is required, and
+  the example value must never be reproduced.
+- No account, password, role, status, session or operational row changed in
+  this phase.
+
+## 9. Frozen delivery sequence
 
 Architecture planning is complete. Implementation remains paused until
 leadership answers the 28 `MUST_DECIDE_BEFORE_IMPLEMENTATION` items or explicitly
 approves their `OPTION_A` recommendations. The eight recommended defaults and
 four safe deferrals are already implementation-safe if `OPTION_A` is approved.
 
-After approval, the next phase is `EXAM-RC-IMPL-1`. Approval does not authorize
-`EXAM-RC-IMPL-2`, operational database migration, production publication,
-AUTH-2B, IAM-1A, deployment, DNS, provider creation or payment.
+The approved delivery order is:
+
+`Decision approval -> DEVOPS-1E -> Prompt 23C -> UX-1A ->
+EXAM-RC-IMPL-1 -> QA -> EXAM-RC-IMPL-2 -> QA/physical print test`.
+
+Decision approval therefore makes `DEVOPS-1E` the next technical prerequisite;
+it does not authorize `EXAM-RC-IMPL-1`, `EXAM-RC-IMPL-2`, operational database
+migration, production publication, AUTH-2B, IAM-1A, deployment, DNS, provider
+creation or payment.

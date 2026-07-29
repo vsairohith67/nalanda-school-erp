@@ -922,3 +922,29 @@ operational database, business data or account state changed. Architecture
 planning is complete, but implementation remains paused for leadership
 approval. The next phase after approval is `EXAM-RC-IMPL-1`; IMPL-2, QA, IAM,
 AUTH, deployment and payment gates remain separate.
+
+# EXAM-RC-DECISIONS-2 - Leadership Decision Sheet Freeze (2026-07-29)
+
+This documentation-only continuation reverified the clean, pushed
+`feature/exam-report-card-architecture` branch and froze one concise
+plain-language presentation of all 40 unresolved decisions inside
+`docs/EXAM_REPORT_CARD_LEADERSHIP_DECISION_REGISTER.md`. The counts remain 28
+`MUST_DECIDE_BEFORE_IMPLEMENTATION`, 8
+`RECOMMENDED_DEFAULT_CAN_BE_CHANGED_LATER` and 4 `SAFE_TO_DEFER`. The copyable
+`RC-01` through `RC-40` answer block still contains each decision exactly once.
+All 40 recommended `OPTION_A` choices are safe conservative defaults; uncertain
+formulas, templates, access paths and automation remain disabled until their
+evidence/approval gate is satisfied.
+
+The detailed Examination/Report Card workflow now records the delivery order:
+Decision approval, DEVOPS-1E, Prompt 23C, UX-1A, EXAM-RC-IMPL-1, independent QA,
+EXAM-RC-IMPL-2, and independent QA plus a physical print/photocopy test. The
+diagram does not promote any unresolved formula into a final rule.
+
+The credential-like value visible in the reference screenshot was deliberately
+fake. `AUTH-INC-1` is `CANCELLED_NOT_REQUIRED`: no credential incident occurred,
+no extra password rotation is required, and the example value is not recorded.
+No account, schema, migration, API, calculation, production UI, report
+generation, operational database or business record changed. Implementation
+remains paused for leadership selections, and `DEVOPS-1E` is the next technical
+prerequisite after those selections.
