@@ -1,0 +1,18 @@
+flowchart TD
+  U["Authenticated active User"] --> S["Active linked StaffMember"]
+  S --> T["Active linked TimetableTeacher"]
+  T --> A{"Exact authority source"}
+  A -->|"Active current-year timetable assignment"| P["Exact assignment"]
+  A -->|"Confirmed substitute on approved date"| D["Dated substitute"]
+  A -->|"Missing, inactive or mismatched"| X["Safe empty state or generic 403/404"]
+  P --> E["Academic year + class + section + valid date"]
+  D --> E
+  E --> Z{"Requested target matches exactly"}
+  Z -->|"No"| X
+  Z -->|"Yes"| R["Shared page / API / report / CSV / dashboard authorization"]
+  R --> L["Scoped roster/session read"]
+  R --> M["POST-only bounded mutation"]
+  M --> C["Expected-version compare-and-set in serializable transaction"]
+  C --> H["Append-only UserAudit evidence and reasoned correction history"]
+  R --> O["Private, no-store and privacy-safe response"]
+  L --> O

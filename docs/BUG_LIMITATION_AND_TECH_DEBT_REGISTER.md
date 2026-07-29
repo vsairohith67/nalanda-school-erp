@@ -16,9 +16,9 @@
   and dashboard now use one exact active
   `StaffMember -> TimetableTeacher -> TimetableAssignment` or confirmed dated
   substitute resolver. Permission alone grants no cohort.
-- Implementation status is `READY_FOR_PROMPT_23C_QA`. Teacher cutover remains
-  `NO_GO_PENDING_PROMPT_23C_QA`; this is not a merged or independently cleared
-  release.
+- Prompt 23C-QA independently cleared the exact attendance boundary. The
+  critical attendance blocker is resolved; overall Teacher replacement remains
+  `CONDITIONAL` and is not a full parity release.
 - Residual design limit `ATTENDANCE-SCOPE-1`: the current timetable model has
   no explicit class-wide attendance-owner record. Blank section is treated as
   an exact cohort, never a wildcard. Any future class-wide authority needs an
@@ -26,10 +26,9 @@
 - Residual design limit `ATTENDANCE-SCOPE-2`: substitutes are dated rows, not
   date ranges. Approved multi-day coverage requires one confirmed row per day.
   Do not infer a range or convert substitute evidence into permanent authority.
-- Residual release gate `ATTENDANCE-SCOPE-3`: operational data has no Teacher,
-  Staff or assignment. Only namespaced copied-database fixtures were used;
-  independent Prompt 23C-QA must repeat negative API and Browser checks before
-  any operational Teacher provisioning or merge.
+- Resolved release gate `ATTENDANCE-SCOPE-3`: fresh namespaced copied-database,
+  production HTTP and Browser negative checks passed, cleanup was inspected
+  twice, and no operational Teacher/Staff/assignment was provisioned.
 - Prompt 23B reconciled exactly 109 source items: 23 vendor, 10 different-role, 14 populated-data, 29 synthetic-write, 6 export-sample, 7 not-used, 11 safe-to-defer and 9 already-replaced-without-parity-evidence.
 - No schema, migration, business route/API, operational record, Schoolknot data, credential, provider, deployment or DNS changed.
 - FIN-2A is resolved. DEVOPS-1D remains `PAYMENT_GATED_DEFERRED`; 21B-21D remain blocked; 22B conditional and 22C-22D blocked.
@@ -531,3 +530,30 @@ Remaining:
 - `ReceiptNote` is synchronized metadata, not a separately versioned approval model.
 - SQLite remains a supported single-instance write architecture; horizontal scaling is not approved.
 - FIN-2A-QA independently verified the feature branch with new FIN2AQA fixtures. The only QA defect was missing native `required`/`minLength=3` semantics on the otherwise enforced cancellation reason fields; both dialogs were corrected and reverified.
+
+## Prompt 23C Teacher attendance exact-scope disposition
+
+Resolved:
+
+- Permission-only Teacher cohort access across list, mutation, report, CSV and
+  dashboard totals was replaced by one exact active
+  `User -> StaffMember -> TimetableTeacher -> assignment/substitute` resolver.
+- Cross-Teacher, class, section and year tampering; inactive or missing links;
+  expired/cancelled substitutes; unrelated objects; and permission-only access
+  fail closed without Student identity leakage.
+- Mutation is POST-only, same-origin, bounded, expected-version protected,
+  serializable and append-only audited. Correction requires a reason and an
+  actual change.
+- Prompt 23C-QA independently passed copied-database, production HTTP,
+  desktop/mobile light/dark Browser, concurrency, privacy and cleanup gates.
+
+Remaining:
+
+- Overall Teacher replacement is still `CONDITIONAL`; own timetable,
+  Classwork, marks/report-card, communication and remaining role QA are not
+  made complete by this attendance clearance.
+- The current model represents a multi-day substitute as one confirmed row per
+  date. A range model or explicit class-wide attendance-owner concept would
+  require separate schema, policy and security review.
+- Horizontal multi-instance writes remain outside the supported SQLite
+  architecture.

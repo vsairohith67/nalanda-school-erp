@@ -1,0 +1,8 @@
+flowchart LR
+  UI["Authenticated web UI"] --> APP["Next.js page and API layer"]
+  APP --> AUTH["Session, role and permission gates"]
+  AUTH --> TAS["Teacher Attendance Scope\nexact active timetable or dated substitute"]
+  AUTH --> GOV["Separately governed leadership and other-role scopes"]
+  TAS --> DATA["Prisma / operational SQLite"]
+  GOV --> DATA
+  DATA --> AUDIT["Append-only audit and versioned backup"]

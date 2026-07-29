@@ -83,8 +83,9 @@ under ignored `.data0a/data0b`.
 Read the nine final Schoolknot 23B documents listed in `docs/INDEX.md` before any gap work. The result is `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`; it is not a whole-school cutover or parity claim. The Notion source has five role reports plus exactly 109 dispositioned unresolved items.
 
 Independent 23B-QA cleared the consolidation baseline. Prompt 23C is now
-implemented on `security/teacher-attendance-exact-scope` and is
-`READY_FOR_PROMPT_23C_QA`. Read
+independently cleared for its exact attendance boundary on
+`security/teacher-attendance-exact-scope`. Its critical attendance blocker is
+resolved, while overall Teacher replacement remains `CONDITIONAL`. Read
 `TEACHER_ATTENDANCE_EXACT_SCOPE_WORKFLOW.md` before changing attendance.
 
 The single authority is `lib/teacher-attendance-scope.ts`. Keep page, API,
@@ -1098,3 +1099,26 @@ Read `ACCOUNTANT_RECEIPT_CANCELLATION_CORRECTION_AND_NOTIFICATION.md` before cha
 FIN-2B and FIN-2B-QA are complete. No FIN-2C implementation is authorised. Do not fold refunds, chargebacks, gateway/settlement, Day Closer, payroll or employee self-service into receipt-governance maintenance.
 
 The final backup initially exposed and stopped a six-row operational permission-seeding rewrite. The seeder was corrected to preserve existing rows, a byte-identical rollback candidate was independently verified, and the operational database was atomically restored to SHA-256 `1556B98FCAF0F2475C0C0F1BAEEFCE4E638680B9D4C7DC9BFFB8B6F0D09B4392`, 4,771,840 bytes, timestamp `2026-07-19T13:21:15.353Z`, with the exact schema/migration/business checkpoint. A repeat backup left hash and timestamp unchanged.
+
+## Prompt 23C Teacher attendance exact scope
+
+Read `TEACHER_ATTENDANCE_EXACT_SCOPE_WORKFLOW.md` before changing Student
+attendance, Teacher timetable links, substitute duties, Teacher dashboard
+totals, attendance reports or CSV.
+
+`lib/teacher-attendance-scope.ts` is the one server-side authority. For a
+Teacher, permission never creates cohort access: require the active User,
+active linked StaffMember, active linked TimetableTeacher and exact active
+current-year class/section assignment, or a confirmed substitute row for the
+exact date and cohort. Never infer scope from role, subject name, a previous
+assignment or an empty section. Leadership remains separately permissioned.
+
+Every new Teacher attendance surface must reuse that resolver before reading
+Student/session data. Preserve generic privacy-safe errors, private/no-store,
+same-origin mutation protection, the 512 KiB/2,500-record bounds,
+serializable expected-version compare-and-set and append-only reasoned
+correction audit. Use only ignored copied databases for mutation QA.
+
+Prompt 23C-QA independently cleared the critical attendance blocker. It did
+not approve full Teacher parity. The next phase is `UX-1A`; remaining Teacher
+workflows and role QA remain separately gated.

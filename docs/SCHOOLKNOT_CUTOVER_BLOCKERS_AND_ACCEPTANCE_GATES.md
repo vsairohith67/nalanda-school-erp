@@ -6,7 +6,7 @@ Status: `NO_WHOLE_SCHOOL_GO`
 
 | Class | Current blockers | Acceptance evidence |
 |---|---|---|
-| Role | Teacher attendance scope is implemented but awaits independent Prompt 23C-QA; broad current Principal defaults; Accountant source identity ambiguity; Parent feature gaps | Role/default matrix, object-scope tests, blocked-role/API tests and named role owners |
+| Role | Teacher attendance critical blocker is cleared, but remaining Teacher workflows/role QA, broad current Principal defaults, Accountant source identity ambiguity and Parent feature gaps remain | Role/default matrix, object-scope tests, blocked-role/API tests and named role owners |
 | Migration | 109 evidence items include vendor/sample dependencies; no Schoolknot data exported | Vendor dictionaries, stable IDs, counts, checksums, mapping, copied-DB rehearsal, reconciliation and rollback |
 | Vendor | Role/branch matrix, exports, files, audit, integrations, backup/restore, payroll, transport/GPS and gateway details missing | Redacted/synthetic documents and samples; no credentials |
 | Write workflow | Attendance, marks/report-card, files, communication, finance, admissions, password/session and bulk controls unproven | Authorised non-production synthetic tests with audits and cleanup |
@@ -22,7 +22,7 @@ Status: `NO_WHOLE_SCHOOL_GO`
 | Parent | `CONDITIONAL_GO` | Existing linked-child read-only fees/receipts/results/Homework/Library/documents/notifications | 23D attendance/exam timetable and 23E/23F gaps before broad Parent replacement; file/object tests |
 | Principal | `CONDITIONAL_GO` | Academic pilot after a reduced academic-first permission bundle is configured and tested | No implicit finance/password/role/fee/settings authority; masked views and export rules |
 | Accountant | `CONDITIONAL_GO` | Implemented finance, expenses, budget, Cash Book, misc income, books, allowed charge collection, and exact-permission FIN-2B final-receipt cancellation/correction | FIN-2A and FIN-2B are resolved; every successful Accountant final-receipt action is audited and leadership-notified, while non-mutable days block ordinary action. Refunds/gateway/Day Closer/payroll/employee self-service remain outside this go; no FIN-2C is authorised |
-| Teacher | `NO_GO_PENDING_PROMPT_23C_QA` | None for cutover | Prompt 23C exact timetable/dated-substitute implementation is ready for QA, but independent negative-security QA and merge approval remain; own timetable/Classwork decisions remain follow-ups |
+| Teacher | `CONDITIONAL_GO` | Exact timetable/dated-substitute Student attendance scope after Prompt 23C-QA release | Critical attendance blocker is cleared; own timetable, Classwork and remaining Teacher workflow/role QA are still required before whole-role replacement |
 
 ## Acceptance levels
 
@@ -41,7 +41,14 @@ fails closed for missing/inactive links and uses server-side target checks,
 bounded bodies, same-origin protection, compare-and-set writes, reasoned
 corrections and append-only audit evidence.
 
-This closes the code blocker for QA only. Teacher remains `NO_GO` until
-Prompt 23C-QA independently verifies the implementation and authorises the
-next release step. Prompt 23C does not change any Parent, Principal,
-deployment, migration, privacy, vendor or training blocker.
+Prompt 23C-QA independently passed the fresh copied-database authorization,
+negative-security, privacy, concurrency, production HTTP and desktop/mobile
+Browser matrix. Cleanup was inspected twice and the operational zero-data
+baseline, account states, migration state and backup version 37 stayed exact.
+The previous Teacher attendance object-scope defect and critical attendance
+blocker are therefore resolved.
+
+Overall Teacher replacement remains `CONDITIONAL`: this clearance does not
+claim own-timetable, Classwork, marks, communications or complete Teacher
+parity. Prompt 23C does not change any Parent, Principal, deployment,
+migration, privacy, vendor or training blocker.

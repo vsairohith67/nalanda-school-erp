@@ -1,7 +1,8 @@
 # Teacher Attendance Exact Scope Workflow
 
-Status: `PROMPT_23C_IMPLEMENTED_READY_FOR_INDEPENDENT_QA`
-Teacher cutover: `NO_GO_PENDING_PROMPT_23C_QA`
+Status: `PROMPT_23C_QA_CLEARED`
+Teacher attendance cutover: `CRITICAL_BLOCKER_CLEARED`
+Overall Teacher replacement: `CONDITIONAL`
 Branch: `security/teacher-attendance-exact-scope`
 Schema or migration change: none
 Operational data change: none
@@ -143,7 +144,8 @@ flowchart TD
 ## Copied-database QA contract
 
 `pnpm.cmd qa:23c prepare|verify|inspect|cleanup|destroy` works only against the
-ignored `QA23C-browser.db` copy under the guarded QA root. It creates two linked
+ignored `QA23C-browser.db` copy under the guarded QA root. Independent QA uses
+the separate `pnpm.cmd qa:23cqa` wrapper and fresh `QA23CQA-browser.db`. It creates two linked
 Teachers, one unlinked Teacher, multiple namespaced classes/sections, active and
 previous-year timetable assignments, one confirmed dated substitute, Students,
 enrollments and attendance sessions. It verifies exact cross-Teacher,
@@ -177,10 +179,31 @@ denial, the accessible correction dialog used no native browser dialog, all
 mobile targets were at least 44 px, tables were contained, page overflow was
 zero, and console/hydration errors plus production stderr were zero.
 
-## Release gate
+## Independent Prompt 23C-QA disposition
 
-Prompt 23C implementation does not make Teacher cutover live. The branch must
-remain unmerged until Prompt 23C-QA independently repeats negative API,
-privacy, concurrency and browser checks. The next decision is therefore
-`Prompt 23C-QA`; Teacher cutover remains `NO_GO` until that gate explicitly
-clears it.
+Independent QA used a fresh ignored `QA23CQA` copied database and proved the
+exact timetable, dated substitute, inactive-link, cross-Teacher,
+cross-class/section/year, privacy, role, operation, report, CSV, CSRF, bounded
+body and one-winner compare-and-set matrix. Production Browser QA passed
+1366x768 and exact 390x844 in light and dark modes with contained tables,
+44 px controls, visible focus, an accessible in-app correction dialog, zero
+document overflow, no native browser dialog, zero console/hydration errors and
+zero production stderr.
+
+Cleanup ran twice. All QA User, StaffMember, timetable, substitute, Student,
+enrollment, attendance, audit and Guardian counts were zero before the copied
+database, ignored state and production logs were destroyed. The operational
+database SHA-256 remained
+`9a888627ea2af32433fdba4f2f5d02c471995145e41ace9a6d1cd0729c6eae93`,
+with the official zero-data baseline, one active owned Super Admin, inactive
+Admin/Accountant/Viewer accounts, one clean baseline migration and backup
+version 37 unchanged.
+
+Release verification passed 274 page routes, 378 API routes, lifecycle
+zero-write dry run, typecheck, all 1,577 tests across 170 files, the bounded
+4 GB production build with 212/212 entries, version-37 backup and Git safety.
+
+The previous attendance object-scope defect is resolved. This clears the
+critical Teacher attendance blocker only. It is not a full Teacher parity
+claim: overall Teacher replacement remains `CONDITIONAL` until the remaining
+Teacher workflows and role QA are complete. The next phase is `UX-1A`.

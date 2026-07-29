@@ -971,3 +971,45 @@ was submitted because operational login would update `lastLoginAt`. The final
 application digest, physical post-onboarding database hash, metadata row,
 zero-data baseline, account states, configuration, schema hashes, integrity,
 foreign keys and rollback hashes remained exact.
+
+## Prompt 23C-QA — Independent Teacher attendance exact-scope QA (2026-07-30)
+
+Independently inspected the Prompt 23C implementation with no Prisma schema or
+migration change. A fresh ignored `QA23CQA` operational copy created two
+Teachers, active/inactive Staff and timetable links, multiple years/classes/
+sections, exact assignments, confirmed/cancelled substitutes, Students,
+enrollments, attendance sessions/correction evidence, linked Parent,
+Principal, Director, Accountant and Viewer fixtures.
+
+Database and production HTTP tests proved exact Teacher A scope, Teacher B and
+cross-class/section/year denial, inactive and unlinked fail-closed behavior,
+permission-only denial, dated substitute start/expiry/status, identical
+list/mutation/report/CSV/dashboard scope, privacy-safe errors, POST-only
+mutation, CSRF, body/record bounds, formula-safe CSV, append-only correction
+evidence and one-winner expected-version concurrency. Leadership and
+non-Teacher roles retained their documented boundaries.
+
+Production Browser QA passed 1366x768 and exact 390x844 in light and dark:
+assigned, empty, denied and substitute states; entry and correction dialog;
+reports/export controls; Principal/Director review; mobile drawer; 44 px
+controls; visible focus; contained tables; zero document overflow; no native
+dialog; zero console/hydration errors; and zero production stderr.
+
+Cleanup was inspected twice with every QA entity count zero. The copied
+database, ignored state and logs were destroyed. The operational database hash
+remained
+`9a888627ea2af32433fdba4f2f5d02c471995145e41ace9a6d1cd0729c6eae93`;
+the zero-data business baseline, one active owned Super Admin, inactive
+Admin/Accountant/Viewer accounts, single clean
+`20260722_clean_install_baseline` migration and backup version 37 were
+unchanged.
+
+Final release verification passed 274 page routes, 378 API routes, lifecycle
+zero-write dry run, typecheck, 1,577/1,577 tests across 170 files, all 212
+production-build entries with the bounded 4 GB heap, version-37 backup
+`nalanda-fee-control-backup-2026-07-30-00-43.json` and Git safety.
+
+Result: the previous attendance object-scope defect and critical Teacher
+attendance blocker are resolved. Overall Teacher replacement remains
+`CONDITIONAL`; no full Teacher parity is claimed. Release tag:
+`teacher-attendance-scope-v37-2026-07-29`. Next phase: `UX-1A`.

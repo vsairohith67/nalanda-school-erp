@@ -135,7 +135,7 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
     expect(reconciliation).toContain("Teacher attendance and every unrelated Prompt 23B conclusion are unchanged");
   });
 
-  it("records the exact Teacher attendance defect and holds Teacher cutover", () => {
+  it("retains the exact Teacher attendance defect and records its narrow QA clearance", () => {
     for (const fact of [
       "VIEW_STUDENT_ATTENDANCE",
       "MANAGE_STUDENT_ATTENDANCE",
@@ -147,9 +147,13 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
       "VI-C",
       "zero subject assignments",
       "fail closed",
-      "NO_GO_FOR_TEACHER_CUTOVER",
+      "RESOLVED_BY_PROMPT_23C_QA",
+      "CRITICAL_BLOCKER_CLEARED",
+      "Overall Teacher replacement: `CONDITIONAL`",
     ]) expect(teacher).toContain(fact);
-    expect(gates).toContain("| Teacher | `NO_GO_PENDING_PROMPT_23C_QA` |");
+    expect(gates).toContain("| Teacher | `CONDITIONAL_GO` |");
+    expect(gates).toContain("blocker are therefore resolved.");
+    expect(gates).toContain("Overall Teacher replacement remains `CONDITIONAL`");
     expect(gates).toContain("No role currently has an unconditional `GO`");
   });
 

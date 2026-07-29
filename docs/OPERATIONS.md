@@ -220,3 +220,23 @@ pnpm.cmd qa:23c destroy
 The command refuses the operational database by path, compares its hash at
 every phase, keeps the synthetic password only in the ignored state file and
 restores the copy's complete non-QA logical state before destruction.
+
+Independent release QA must use the separate namespace:
+
+```powershell
+pnpm.cmd qa:23cqa prepare
+pnpm.cmd qa:23cqa verify
+pnpm.cmd qa:23cqa http
+pnpm.cmd qa:23cqa inspect
+pnpm.cmd qa:23cqa cleanup
+pnpm.cmd qa:23cqa cleanup
+pnpm.cmd qa:23cqa operational-check
+pnpm.cmd qa:23cqa destroy
+```
+
+Run the HTTP action only against the production server configured with the
+ignored copied-database URL. Never point it at the operational database.
+Cleanup matches both namespaced fixture IDs and server-generated attendance
+session/record IDs through their QA User, cohort and Student relations.
+Prompt 23C-QA cleared the critical attendance blocker with zero QA residue;
+overall Teacher replacement remains conditional.

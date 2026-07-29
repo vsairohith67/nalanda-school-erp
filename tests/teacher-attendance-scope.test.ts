@@ -264,6 +264,18 @@ describe("Prompt 23C exact Teacher attendance scope", () => {
     expect(qaHarness).toContain("updatedAt: new Date(saved.previous.updatedAt)");
   });
 
+  it("keeps independent QA isolated and cleans server-generated attendance objects", () => {
+    const packageJson = readFileSync("package.json", "utf8");
+    expect(packageJson).toContain('"qa:23cqa": "tsx scripts/qa23cqa-copied-db.ts"');
+    const wrapper = readFileSync("scripts/qa23cqa-copied-db.ts", "utf8");
+    expect(wrapper).toContain('process.env.QA23C_PROFILE = "QA23CQA"');
+    const qaHarness = readFileSync("scripts/qa23c-copied-db.ts", "utf8");
+    expect(qaHarness).toContain('if (action === "http") return httpVerify()');
+    expect(qaHarness).toContain("{ takenByUserId: { startsWith: PREFIX } }");
+    expect(qaHarness).toContain("{ records: { some: { studentId: { startsWith: PREFIX } } } }");
+    expect(qaHarness).toContain("productionLogsRemoved");
+  });
+
   it("treats only April-to-March dates as belonging to the selected academic year", () => {
     expect(attendanceDateBelongsToAcademicYear(new Date("2026-04-01T00:00:00Z"), "2026-27")).toBe(true);
     expect(attendanceDateBelongsToAcademicYear(new Date("2027-03-31T00:00:00Z"), "2026-27")).toBe(true);

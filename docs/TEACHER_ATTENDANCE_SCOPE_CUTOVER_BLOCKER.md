@@ -1,7 +1,8 @@
 # Teacher Attendance Scope Cutover Blocker
 
-Status: `CONFIRMED_CRITICAL_DEFECT`
-Teacher cutover: `NO_GO_FOR_TEACHER_CUTOVER`
+Status: `RESOLVED_BY_PROMPT_23C_QA`
+Teacher attendance cutover: `CRITICAL_BLOCKER_CLEARED`
+Overall Teacher replacement: `CONDITIONAL`
 
 This is a code and data inspection only. No fix, attendance record, role permission, timetable assignment or operational database value was changed.
 
@@ -78,6 +79,19 @@ is retained as the authoritative defect record. The implementation contract and
 phase diagram are in
 `TEACHER_ATTENDANCE_EXACT_SCOPE_WORKFLOW.md`.
 
-Implementation status: `READY_FOR_PROMPT_23C_QA`.
-Teacher cutover remains `NO_GO_PENDING_PROMPT_23C_QA`; the feature branch must
-not merge before independent negative-security QA.
+Implementation status: `PROMPT_23C_QA_CLEARED`.
+
+Independent Prompt 23C-QA repeated the authorization matrix on a fresh
+`QA23CQA` copied database and production build. Exact page/API/report/CSV and
+dashboard scope, dated substitute expiry, inactive links, cross-scope
+tampering, privacy-safe denials, other-role boundaries, CSRF, bounded bodies,
+compare-and-set concurrency, append-only correction evidence and formula-safe
+CSV all passed. Desktop/mobile light/dark Browser QA passed with zero
+console/hydration errors and zero production stderr. Cleanup was inspected
+twice with zero QA residue and the operational zero-data/account/migration
+baseline plus backup version 37 remained unchanged.
+
+The historical defect record above is retained for traceability. Its critical
+attendance blocker is cleared; this is not a full Teacher parity claim.
+Remaining Teacher workflows and role QA keep overall Teacher replacement
+`CONDITIONAL`.
