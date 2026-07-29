@@ -159,7 +159,8 @@ Prompt 16H adds explicit lost/damaged incidents, rule-guided overdue assessment,
 
 - [Exams and Marks Foundation](EXAMS_AND_MARKS_WORKFLOW.md) — exam cycles, timetable-backed assessment sheets, Teacher scope, raw mark entry, submit/approve/lock workflow, corrections, import, reports, and backup v24.
 - [EXAM-RC-PLAN-1 Examination and Report Card Architecture](EXAMINATION_REPORT_CARD_ARCHITECTURE_AND_GAP_AUDIT.md) - implementation-ready gap/evidence audit, domain and authorization model, versioned calculation design, publication lifecycle, PII-free report-family fixture, print/bulk architecture, risks, leadership decisions and phased implementation gates.
-- [EXAM-RC-DECISIONS-1 Leadership Decision Register](EXAM_REPORT_CARD_LEADERSHIP_DECISION_REGISTER.md) - 40 atomic leadership decisions with report-card evidence, safe recommendations, alternatives, calculation/print effects, implementation gates and one copy-ready answer block.
+- [EXAM-RC Leadership Decision Register](EXAM_REPORT_CARD_LEADERSHIP_DECISION_REGISTER.md) - approved policy version 1 covering all 40 decisions, including six custom configurable rules, calculation modes, authority boundaries and historical-preservation controls.
+- [EXAM-RC Policy Version 1 Fixture](fixtures/exam-report-policy-v1.json) - machine-readable approved selections, configurable scheme and combined-result rules, calculation modes, workflow authority and historical-example guards.
 - [Nalanda ERP System Architecture Mermaid](diagrams/NALANDA_ERP_SYSTEM_ARCHITECTURE.mmd) - readable high-level system map with the examination domain linked to phase detail.
 - [Examination and Report Card Workflow Mermaid](diagrams/EXAMINATION_REPORT_CARD_WORKFLOW.mmd) - phase-specific setup, assignment, entry, moderation, calculation, generation, publication, access and controlled-reopen lifecycle.
 

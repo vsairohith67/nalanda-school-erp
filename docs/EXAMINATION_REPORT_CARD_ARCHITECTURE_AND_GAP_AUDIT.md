@@ -1,6 +1,8 @@
 # EXAM-RC-PLAN-1 — Examination, Marks Entry and Progress Report Architecture
 
 **Planning result:** `EXAM_REPORT_ARCHITECTURE_REQUIRES_DECISIONS`
+**Leadership-policy result:** `EXAM_REPORT_LEADERSHIP_DECISIONS_APPROVED`
+**Approved policy version:** `EXAM_REPORT_POLICY_V1`
 **Branch:** `feature/exam-report-card-architecture`
 **Authoritative starting commit:** `2bc71254d01d0bc57fa5b91867269f5ddba52661`
 **Authoritative release tag:** `operational-account-hardening-v37-2026-07-28`
@@ -108,7 +110,8 @@ not route presence.
 2. Do not derive examination authority from timetable assignment alone.
 3. Replace hard-coded KG/report approval role names with semantic permission
    plus exact assignment/approval ownership checks.
-4. Do not silently treat a missing component as zero.
+4. The calculation engine must never silently zero a missing component or
+   treat it as an entered mark.
 5. Do not label browser print as bulk PDF generation.
 6. Do not expose a draft or unpublished report through a guessed identifier,
    stale cache, parent-child mismatch or broad permission alone.
@@ -159,12 +162,12 @@ it must not rewrite the working audit and snapshot foundation.
 | --- | --- |
 | `AcademicYear` | One governed year code, dates, state and closure metadata. A migration decision must reconcile existing string years without mutating history. |
 | `AcademicOffering` | Stable academic-year/class/section target used by enrollment, timetable and examination. Unique by year/class/section; inactive offerings remain historical. |
-| `ExamSchemeVersion` | Immutable published configuration version with title, type, entry dates, attendance range, rank flag, rounding policy, status and source version. Draft edits create/promote versions; a published report never points to mutable JSON. |
+| `ExamSchemeVersion` | Immutable configuration version keyed to academic year, examination and class, with title, type, calculation mode, entry dates, attendance range, rank flag, rounding policy, status and source version. Draft edits create/promote versions; a published report never points to mutable JSON. |
 | `ExamSchemeTarget` | Exact applicable academic offering. No class-wide wildcard may silently include a new section. |
-| `ExamComponent` | Ordered component definition, maximum/pass marks and entry-state policy. Supports 10+40, 20+80, 25+25 and future configurations without class-specific code. |
-| `ExamSubjectPaper` | Subject or paper offering, display order, component applicability and maximum overrides. English Paper 1/2 and science papers are first-class rows. |
+| `ExamComponent` | Ordered Internal, Written, Practical, Oral, Project or other approved component with positive maximum, optional contribution weight, pass marks and entry-state policy. No combination is a universal default. |
+| `ExamSubjectPaper` | Subject or paper offering, display order, component applicability and explicitly approved maximum/weight overrides. English Paper 1/2 and science papers are first-class rows. |
 | `ExamSubjectGroup` / `ExamSubjectGroupMember` | Versioned, ordered group with member weights/normalization, such as First Language, Social or Science. A group cannot recursively include itself. |
-| `ExamCombinedSource` | Links another locked exam scheme version with an explicit decimal weight and missing-source policy. Weights must pass a configured sum rule before approval. |
+| `ExamCombinedSource` | Links a Principal-selected locked examination version with an explicit decimal weight. Sources and weights are configured per academic-year/class/combined-result scheme, total exactly 100% and block when required sources are missing or unlocked. |
 | `MarksEntryAssignment` | Exact user/staff, year, offering, subject/paper, component, examination scheme version, validity window and status. It is the server-side authority boundary. |
 | `MarkSheetSubmission` | One assignment/sheet version, completeness counts, submit/approve/lock timestamps and optimistic version. |
 | `MarkCorrectionRequest` | Teacher request, affected rows, reason, decision, decision actor and resulting sheet version. A request does not itself mutate approved marks. |
@@ -199,9 +202,12 @@ AND requested students are active members of that offering
 AND optimistic version matches
 ```
 
-- Principal and permitted Super Admin users configure schemes, assign entry,
-  moderate, approve, lock, publish, reopen and archive only through semantic
-  permissions. A role name alone grants nothing.
+- A Teacher may propose components/maxima/weights only for an assigned subject.
+  A proposal grants no activation or edit authority over the final scheme.
+- A Principal with semantic permission reviews and activates the final
+  class/exam scheme. A permitted Super Admin may intervene only with an explicit
+  governed permission and mandatory audit reason. A role name alone grants
+  nothing.
 - A Teacher may have many assignments, but each query starts from their active
   assignment IDs. Client selectors are never trusted as authorization.
 - Section-wide and class-wide leadership reads still require an object-scope
@@ -223,14 +229,18 @@ AND optimistic version matches
 1. Create a draft exam and choose the governed academic year.
 2. Select exact class-section targets.
 3. Select exam type and a template family.
-4. Add ordered subjects/papers and configurable components/maxima.
-5. Add group formulas and combined locked-exam sources, if applicable.
-6. Bind grading, grade-point, co-scholastic and attendance policies.
-7. Choose rank visibility and record its cohort/tie policy.
-8. Set marks-entry opening/closing dates.
-9. Run a configuration preview that shows every target, denominator, formula,
+4. Review any assigned-Teacher proposals; add ordered subjects/papers and
+   configurable components, positive maxima and optional weights.
+5. Select `RAW_SUM` or `WEIGHTED_NORMALIZED`; approve any subject/paper override
+   and record a reason/audit for any section-specific exception.
+6. Add group formulas and Principal-selected combined locked-exam sources, if
+   applicable; combined weights must total exactly 100%.
+7. Bind grading, grade-point, co-scholastic and attendance policies.
+8. Choose rank visibility and record its cohort/tie policy.
+9. Set marks-entry opening/closing dates.
+10. Run a configuration preview that shows every target, denominator, formula,
    display row and unresolved configuration error.
-10. Promote the immutable scheme version, then publish entry assignments.
+11. Activate the immutable scheme version, then publish entry assignments.
 
 The exam lifecycle is:
 
@@ -330,7 +340,9 @@ formula is:
 
 The formula engine supports:
 
-- configurable component sums such as 10+40, 20+80 and 25+25;
+- versioned ordered components with positive maxima and optional contribution
+  weights;
+- an explicit `RAW_SUM` or `WEIGHTED_NORMALIZED` mode on every scheme;
 - paper marks and normalized or weighted groups;
 - First Language/English, Social and Science averages;
 - arbitrary approved subject groups;
@@ -338,6 +350,12 @@ The formula engine supports:
 - total, percentage, grade, grade point and optional rank;
 - attendance percentage;
 - class average and highest score at the same result grain.
+
+The structures 10+40, 20+80 and 25+25 are illustrative/historical test
+vectors, not seeded school-wide defaults. A scheme is keyed by academic year,
+examination and class. Subject/paper overrides require explicit Principal
+approval; a section exception additionally requires a Principal reason and
+append-only audit.
 
 ### 8.2 Canonical state semantics
 
@@ -349,7 +367,31 @@ The formula engine supports:
 | `NOT_APPLICABLE` | none | excluded from numerator and denominator | allowed only where scheme says item is inapplicable |
 | `EXEMPT` | none | excluded by default; reason and approval required | policy may define an approved substitute, never an implicit zero |
 
-### 8.3 Group and combined formulas
+### 8.3 Component, group and combined formulas
+
+Every scheme must select exactly one component calculation mode.
+
+For `RAW_SUM`:
+
+```text
+component_contribution = obtained_marks
+scheme_obtained = sum(component_contribution)
+scheme_maximum = sum(component_maximum_marks)
+```
+
+No contribution weight is inferred in this mode.
+
+For `WEIGHTED_NORMALIZED`:
+
+```text
+component_contribution =
+  (obtained_marks / component_maximum_marks) * component_weight
+scheme_result = sum(component_contribution)
+```
+
+Every maximum must be positive, every required component must exist,
+component identities must be unique, no mark may exceed its maximum and
+component weights must total exactly 100%.
 
 For a group with member normalized percentages `p_i` and positive weights
 `w_i`:
@@ -370,12 +412,16 @@ combined_percentage = sum(source_percentage_i * source_weight_i)
 ```
 
 Every source is a locked exam publication/calculation version. A missing source
-either blocks calculation or follows an explicitly approved exclusion policy.
-It is never silently zero.
+or unlocked source blocks calculation and activation. The Principal selects the
+sources and percentage weights separately for each academic-year, class and
+combined-result scheme; weights total exactly 100%. The retained
+10%+10%+10%+20%+50% structure is evidence only and is never automatically
+seeded. A preview must show the selected sources, formula and calculated result
+before activation.
 
 ### 8.4 Precision and rounding
 
-Recommended rule, subject to leadership approval:
+Approved RC-05 policy:
 
 - input marks: up to four decimal places;
 - intermediate normalization/group/combined values: decimal arithmetic at six
@@ -400,7 +446,9 @@ Versioned schemes must support:
 - Classes I–V skill areas;
 - Classes VI–X personality-development areas;
 - G/S/N and other leadership-approved rating sets;
-- GK/VE as numeric marks, grade-only rows or not applicable by scheme;
+- GK/VE configured per class/exam scheme. The policy-v1 default is grade-only
+  and excluded from total, percentage and rank; numeric-included or
+  numeric-excluded mode requires explicit Principal approval;
 - Principal-approved remark banks and free teacher remarks;
 - Principal edit/approval with the original text retained in audit history.
 
@@ -414,7 +462,7 @@ review and approve the final remark; no AI output can submit or publish itself.
 | Stage | Mutable content | Required controls |
 | --- | --- | --- |
 | Scheme draft | configuration only | manage permission, validation preview, optimistic version |
-| Entry open | Teacher draft marks | exact assignment, entry dates, server validation |
+| Entry open | Teacher draft marks; scheme frozen for this version | exact assignment, entry dates, server validation; scheme change requires governed reopen and new version |
 | Submitted sheet | none for Teacher | checksum, timestamp, correction request |
 | Approved/locked source | no direct mutation | moderation approval, append-only event |
 | Calculation preview | derived only | formula trace, exceptions, no publication |
@@ -441,7 +489,11 @@ visible only after its required artifacts and manifest are successful.
 
 ### 11.2 A4 design tokens
 
-- A4 portrait, stable millimetre-based margins and print-safe content area.
+- Normal examination reports use A4 portrait with stable millimetre-based
+  margins and a print-safe content area.
+- Wide combined-result reports use A4 landscape or a readable multi-page
+  portrait layout. Text never drops below the approved minimum size merely to
+  force one page.
 - School logo and approved identity lockup; Georgia Bold school name where the
   approved family specifies it, with a metrically safe fallback.
 - Student block wraps long names and identifiers without clipping or reducing
@@ -453,8 +505,10 @@ visible only after its required artifacts and manifest are successful.
   text. Paper/group indentation is semantic and accessible.
 - Co-scholastic tables, totals, attendance, remarks, grade legend and signature
   blocks have explicit keep-together and continuation rules.
-- Signature labels never imply a captured signature when no approved signature
-  artifact exists.
+- Final reports provide Class Teacher, Principal, Parent/Guardian and Director
+  signature or acknowledgement spaces. Interim templates may omit Director.
+  Governed approval statuses and physical spaces are used; uncontrolled
+  uploaded signature images are not accepted.
 - HTML preview uses correct table headers, reading order, contrast and text
   equivalents. PDF tagging capability must be assessed in implementation QA.
 - Colour and monochrome are separate promoted template render modes sharing
@@ -598,8 +652,9 @@ links.
 
 ### EXAM-RC-IMPL-1 — Configuration, authorization and entry
 
-Prerequisites: leadership decisions RC-D01 through RC-D09 below, complete
-source-family revalidation, and an approved migration rehearsal plan.
+Prerequisites: approved `EXAM_REPORT_POLICY_V1`, `DEVOPS-1E`, complete
+source-family revalidation, Prompt 23C and UX-1A gates, and an approved
+migration rehearsal plan.
 
 - Add governed academic/exam scheme versions, exact targets, papers/groups,
   components, formulas and marks-entry assignments.
@@ -642,8 +697,10 @@ resource-failure, object-isolation, idempotency and cleanup tests all pass.
 - Prove unrelated Teacher assignments and students cannot be enumerated.
 - Test every entry state, real zero, maxima, decimals, conflicts, late windows,
   correction, reopen and permission removal.
-- Compare golden results for 10+40, 20+80, 25+25, paper groups and combined
-  weights; prove historical inconsistencies are flagged.
+- Compare explicit `RAW_SUM` and `WEIGHTED_NORMALIZED` test vectors, including
+  illustrative 10+40, 20+80 and 25+25 examples, paper groups and configured
+  combined weights; prove no example is seeded as a universal rule and
+  historical inconsistencies are flagged.
 - Validate A4 colour and monochrome output, pattern legend, long names,
   many-subject pagination, merged/ZIP manifests and repeated generation.
 - Validate desktop primary flow and exact 390x844 mobile fallback, including
@@ -652,7 +709,21 @@ resource-failure, object-isolation, idempotency and cleanup tests all pass.
   temporary cleanup.
 - Remove all invented QA data and verify baseline/backup evidence before signoff.
 
-## 18. Leadership decision register
+## 18. Leadership policy version 1
+
+The authoritative 40-item selection manifest and full rationale are in
+`docs/EXAM_REPORT_CARD_LEADERSHIP_DECISION_REGISTER.md`; the machine-readable
+freeze is `docs/fixtures/exam-report-policy-v1.json`. Policy version 1 contains
+34 `OPTION_A` selections and 6 `CUSTOM` selections, with no missing or duplicate
+Decision IDs.
+
+The custom rules establish versioned component schemes with explicit
+`RAW_SUM`/`WEIGHTED_NORMALIZED` mode, per-class combined-result sources and
+weights totaling exactly 100%, locked-attendance ranges, configurable GK/VE,
+final/interim signature spaces and readable portrait/landscape print behavior.
+No fixed marks structure or combined-result weighting is universal.
+
+The table below is retained as the historical planning-question crosswalk.
 
 | Decision | Required answer |
 | --- | --- |
@@ -670,9 +741,10 @@ resource-failure, object-isolation, idempotency and cleanup tests all pass.
 | RC-D12 | Whether any approved alternative mark may replace an exemption |
 | RC-D13 | Whether report cards may contain photos; external AI remains separately prohibited |
 
-Until these are approved, the repository is implementation-ready at the
-architecture level but not cleared to encode production calculation rules or
-promote report-card templates.
+These policy questions are approved in `EXAM_REPORT_POLICY_V1`, but approval
+does not promote a production formula or template. Source revalidation,
+DEVOPS-1E, Prompt 23C, UX-1A, implementation and independent QA remain separate
+gates.
 
 ## 19. Verification evidence
 
@@ -726,3 +798,8 @@ missing direct Class I–X evidence and unresolved calculation/product decisions
 mean the correct result is:
 
 `EXAM_REPORT_ARCHITECTURE_REQUIRES_DECISIONS`
+
+The later leadership-policy continuation resolved the 40 selections without
+implementing them. Its approved planning result is:
+
+`EXAM_REPORT_LEADERSHIP_DECISIONS_APPROVED`

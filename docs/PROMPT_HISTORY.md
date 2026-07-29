@@ -948,3 +948,31 @@ No account, schema, migration, API, calculation, production UI, report
 generation, operational database or business record changed. Implementation
 remains paused for leadership selections, and `DEVOPS-1E` is the next technical
 prerequisite after those selections.
+
+# EXAM-RC-DECISIONS-APPROVAL-V2 - Configurable Examination Policy Version 1 (2026-07-29)
+
+Leadership approved all `RC-01` through `RC-40` decisions exactly once as
+`EXAM_REPORT_POLICY_V1`: 34 use `OPTION_A` and RC-02, RC-09, RC-17, RC-21,
+RC-24 and RC-31 use the supplied `CUSTOM` rules. There is no fixed school-wide
+marks structure and no universal combined-result weighting. Component kinds,
+maxima and optional contribution weights are versioned per academic year,
+examination and class; explicitly approved subject/paper overrides are allowed,
+while section exceptions require a Principal reason and append-only audit.
+
+Every scheme must explicitly select `RAW_SUM` or `WEIGHTED_NORMALIZED`.
+Weighted components and combined-result source examinations must total exactly
+100 percent under their respective approved schemes, with preview, source-lock
+and version controls. Teachers may propose a structure only for their assigned
+subjects; the Principal reviews and activates it; Super Admin intervention
+requires an explicit permission and audit reason. Once marks entry opens, that
+scheme version is frozen, and correction creates a new version without changing
+old schemes, results or published reports.
+
+The retained 10+40, 20+80, 25+25 and 10%+10%+10%+20%+50% structures remain
+historical evidence or examples only and must never be seeded as universal
+defaults. This planning-only freeze changed documentation, diagrams, a
+PII-free machine policy fixture and focused evidence tests. It did not change
+schema, migrations, APIs, calculations, production UI, the operational
+database, business data or account state. Implementation remains paused;
+`DEVOPS-1E` is the next technical prerequisite before Prompt 23C, UX-1A and
+EXAM-RC-IMPL-1.

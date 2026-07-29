@@ -1,48 +1,51 @@
 flowchart TB
   subgraph DELIVERY["Approved delivery gates"]
     direction LR
-    DECISION["Leadership decision approval<br/>40 selections or approved safe defaults<br/>unresolved formulas stay disabled"]
+    POLICY["Leadership policy v1 approved<br/>40 decisions: 34 OPTION_A + 6 CUSTOM<br/>no universal marks or weighting default"]
     DEVOPS["DEVOPS-1E<br/>operational migration-baseline prerequisite"]
     P23C["Prompt 23C<br/>exact Teacher timetable scope"]
     UX["UX-1A<br/>approved marks-entry and report-card interaction design"]
     IMPL1["EXAM-RC-IMPL-1<br/>setup · assignment · entry · moderation · locking"]
-    QA1["Independent QA<br/>authorization · states · formulas · concurrency"]
+    QA1["Independent QA<br/>authorization · states · modes · formulas · concurrency"]
     IMPL2["EXAM-RC-IMPL-2<br/>publication · bulk output · colour/B&W print"]
-    QA2["Independent QA + physical print test<br/>pagination · patterns · photocopy legibility"]
-    DECISION --> DEVOPS --> P23C --> UX --> IMPL1 --> QA1 --> IMPL2 --> QA2
+    QA2["Independent QA + physical print test<br/>pagination · patterns · orientation · photocopy legibility"]
+    POLICY --> DEVOPS --> P23C --> UX --> IMPL1 --> QA1 --> IMPL2 --> QA2
   end
 
   subgraph OPERATION["Governed examination and report-card operation after release clearance"]
     direction LR
-  SETUP["Principal setup<br/>year · targets · exam type · dates"]
-  SCHEME["Immutable scheme version<br/>components · maxima · papers · groups · grading"]
-  ASSIGN["Exact marks-entry assignments<br/>Teacher + class-section + subject-paper + component + exam"]
-  ENTRY["Marks grid<br/>draft · explicit states · zero valid · version protection"]
-  SUBMIT["Teacher submit<br/>read-only checksum + timestamp"]
-  MODERATE["Principal moderation<br/>missing · unusual · absent · exempt · corrections"]
-  LOCK["Source lock<br/>approved marks + formula inputs"]
-  CALC["Calculation preview<br/>groups · combined weights · grades · attendance · rank"]
-  APPROVE["Result approval"]
-  PREVIEW["A4 preview<br/>colour + pattern-safe monochrome"]
-  GENERATE["Bounded idempotent generation<br/>single · selected · class · cohort"]
-  PUBLISH["Immutable publication version<br/>private PDF · merged PDF · ZIP"]
-  ACCESS["Issued-only access<br/>linked child / own report · no-store · audited"]
-  TEACHER["Assigned Teacher"]
-  PRINCIPAL["Principal / permitted Super Admin"]
-  CORRECT["Bounded correction version"]
-  SECURITY["Every request<br/>semantic permission + exact object scope + lifecycle + optimistic version"]
-  AUDIT["Append-only audit<br/>assignment · entry · correction · lock · generation · publication · download"]
+    SETUP["Principal draft setup<br/>academic year · exam · class · dates"]
+    PROPOSE["Assigned Teacher proposal<br/>assigned subject/paper only<br/>cannot activate or silently change"]
+    SCHEME["Versioned scheme<br/>ordered components · positive maxima · optional weights<br/>RAW_SUM or WEIGHTED_NORMALIZED<br/>subject override approval · section reason + audit"]
+    ACTIVATE["Principal review + activation<br/>Super Admin only with explicit permission<br/>and mandatory audit reason"]
+    ASSIGN["Exact marks-entry assignments<br/>Teacher + class-section + subject-paper + component + exam"]
+    ENTRY["Marks grid<br/>scheme version frozen when entry opens<br/>draft · explicit states · zero valid · version protection"]
+    SUBMIT["Teacher submit<br/>read-only checksum + timestamp"]
+    MODERATE["Principal moderation<br/>missing · unusual · absent · exempt · corrections"]
+    LOCK["Source lock<br/>approved marks + formula inputs"]
+    CALC["Calculation preview<br/>selected locked sources · combined weights total 100%<br/>groups · grades · attendance · optional rank"]
+    APPROVE["Result approval"]
+    PREVIEW["A4 preview<br/>portrait normally · landscape/readable multipage when wide<br/>colour + pattern-safe monochrome · governed signature spaces"]
+    GENERATE["Bounded idempotent generation<br/>single · selected · class · cohort"]
+    PUBLISH["Immutable publication version<br/>private PDF · merged PDF · ZIP"]
+    ACCESS["Issued-only access<br/>linked child / own report · no-store · audited"]
+    CORRECT["Governed correction<br/>new scheme/result version<br/>old publication unchanged"]
+    SECURITY["Every request<br/>semantic permission + exact object scope + lifecycle + optimistic version"]
+    AUDIT["Append-only audit<br/>proposal · override · activation · entry · correction<br/>lock · generation · publication · download"]
   end
 
   QA2 -. enables only after clearance .-> SETUP
-  SETUP --> SCHEME --> ASSIGN --> ENTRY --> SUBMIT --> MODERATE
+  SETUP --> SCHEME
+  PROPOSE --> SCHEME
+  SCHEME --> ACTIVATE --> ASSIGN --> ENTRY --> SUBMIT --> MODERATE
   MODERATE --> LOCK --> CALC --> APPROVE --> PREVIEW --> GENERATE --> PUBLISH --> ACCESS
-  TEACHER --> ENTRY
-  PRINCIPAL --> SETUP
-  PRINCIPAL --> MODERATE
-  PUBLISH -->|controlled reopen with reason| CORRECT --> MODERATE
+  PUBLISH -->|controlled reopen with reason| CORRECT --> SCHEME
+  SECURITY -. gates .-> PROPOSE
+  SECURITY -. gates .-> ACTIVATE
   SECURITY -. gates .-> ENTRY
   SECURITY -. gates .-> MODERATE
   SECURITY -. gates .-> ACCESS
+  AUDIT -. records .-> SCHEME
+  AUDIT -. records .-> ACTIVATE
   AUDIT -. records .-> MODERATE
   AUDIT -. records .-> PUBLISH
