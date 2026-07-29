@@ -902,3 +902,23 @@ paper/group and combined weights, state handling, rank, attendance, signatures
 and print identity. Result: `EXAM_REPORT_ARCHITECTURE_REQUIRES_DECISIONS`.
 EXAM-RC-IMPL-1, EXAM-RC-IMPL-2 and independent EXAM-RC-QA remain separately
 gated.
+
+# EXAM-RC-DECISIONS-1 - Leadership Decision Package (2026-07-29)
+
+This documentation-only continuation converted the EXAM-RC-PLAN-1 leadership
+register, evidence-family questions, historical arithmetic concerns and
+product-policy gaps into 40 atomic decisions. The package contains 28
+`MUST_DECIDE_BEFORE_IMPLEMENTATION`, 8
+`RECOMMENDED_DEFAULT_CAN_BE_CHANGED_LATER` and 4 `SAFE_TO_DEFER` decisions.
+
+Each decision records the affected classes/exams, available report-card
+evidence, historical behaviour, risk, recommended `OPTION_A`, alternatives,
+calculation and print effects, implementation gate and future configurability.
+The compact answer form supports individual `RC-01` through `RC-40` answers or
+one `EXAM-RC-DECISIONS-1=APPROVE_ALL_OPTION_A` approval.
+
+No schema, migration, API, calculation, production UI, report generation,
+operational database, business data or account state changed. Architecture
+planning is complete, but implementation remains paused for leadership
+approval. The next phase after approval is `EXAM-RC-IMPL-1`; IMPL-2, QA, IAM,
+AUTH, deployment and payment gates remain separate.
