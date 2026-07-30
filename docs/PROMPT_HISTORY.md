@@ -1,5 +1,42 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## EXAM-RC-IMPL-1 - Examination scheme and assignment foundation (2026-07-30)
+
+Started from dynamically captured synchronized private `main` commit
+`de5fb89a0c5582443c839bbff2e176f99d7ba293`, with
+`ux-shared-shell-v37-2026-07-30` verified as an ancestor, clean Git/migration
+state, and the exact zero-business/four-account operational checkpoint.
+Created only `feature/exam-scheme-assignment-foundation`; history was not
+reset or rewritten.
+
+Implemented the additive, versioned examination domain, Principal configuration
+pages/APIs, explicit `RAW_SUM` and `WEIGHTED_NORMALIZED` validation, components
+and maxima, subject papers/groups, grade/co-scholastic/template bindings,
+activation/freeze/archive audit, and exact timetable-backed primary/contributor
+Teacher assignments. No universal historical weighting is supplied.
+
+The single additive migration passed fresh and copied existing-database
+rehearsals. `EXAM1` copied fixtures covered configuration, overlap rejection,
+activation/freeze and version cloning. Principal and Teacher assignment views
+passed desktop and exact `390x844` mobile Browser checks in light/dark;
+Teacher access to Principal setup failed closed. The isolated runtime, fixture
+copy, credentials and state were destroyed, and the operational business
+baseline/hash remained unchanged.
+
+Final verification passed 278 page routes, 391 API routes, lifecycle with zero
+writes, default-memory sequential typecheck, all 1,594 tests across 172 files,
+the 214-static-page bounded production build, version-37 backup
+`nalanda-fee-control-backup-2026-07-30-20-02.json`, and Git safety. The
+operational SHA-256 remained
+`9A888627EA2AF32433FDBA4F2F5D02C471995145E41ACE9A6D1CD0729C6EAE93`
+with integrity `ok`, zero foreign-key violations and no examination tables
+applied.
+
+The Canvs master and detailed Examination boards were updated and re-fetched.
+The feature branch is intentionally not merged. Marks entry, Student result
+calculation, publication and bulk PDF generation are deferred. Next:
+`EXAM-RC-IMPL-1-QA`.
+
 ## UX-1A - Shared login, header, navigation, and design system (2026-07-30)
 
 Implemented the exact Nalanda public sign-in identity, safe generic login

@@ -1,5 +1,20 @@
 # Nalanda Fee Control — Project Handover
 
+## Current governed implementation checkpoint
+
+`EXAM-RC-IMPL-1` is implemented on the unmerged
+`feature/exam-scheme-assignment-foundation` branch. It introduces one additive
+Prisma migration for Principal examination creation, class/section scope,
+versioned raw or weighted schemes, components, papers/groups,
+grade/co-scholastic/template bindings, exact timetable-backed Teacher
+assignments, activation/freeze/archive lifecycle and append-only audit.
+
+The implementation does not enter Student marks, calculate or publish results,
+or generate report-card PDFs. Independent `EXAM-RC-IMPL-1-QA` is the next
+gate. See
+[`EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md`](EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md)
+before operating or extending this domain.
+
 ## Project name and purpose
 
 **Project:** Nalanda Fee Control  

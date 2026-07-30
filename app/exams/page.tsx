@@ -1,8 +1,94 @@
 import Link from "next/link";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
 import { requirePermission } from "@/lib/auth";
+import { displayDate } from "@/lib/format";
+import { marksScopeWhere, resolveMarksScope } from "@/lib/marks-scope";
 import { prisma } from "@/lib/prisma";
 import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
-import { marksScopeWhere, resolveMarksScope } from "@/lib/marks-scope";
-import { displayDate } from "@/lib/format";
-export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) { const user = await requirePermission("VIEW_EXAMS"); const params = await searchParams; const [permissions, scope] = await Promise.all([getEffectivePermissions(prisma, user.role), resolveMarksScope(prisma, user, params.academicYear)]); const assessmentWhere = marksScopeWhere(scope); const rows = await prisma.examCycle.findMany({ where: { ...(params.academicYear ? { academicYear: params.academicYear } : {}), ...(params.status ? { status: params.status } : {}), ...(!scope.broad ? { assessments: { some: assessmentWhere } } : {}) }, include: { assessments: { where: assessmentWhere, select: { entryStatus: true } } }, orderBy: [{ startDate: "desc" }, { name: "asc" }] }); const count = (status: string) => rows.filter((row) => row.status === status).length; return <div className="page exams-page"><PageHeader title="Exams and Marks" description="Configure raw-mark cycles and assessment sheets. Report cards and portal publication are not part of this phase." action={permissionSetCan(permissions, "MANAGE_EXAMS") ? <Link className="button" href="/exams/new">Create Exam</Link> : undefined} />{scope.reason ? <div className="notice">{scope.reason}</div> : null}<div className="grid three"><StatCard label="Draft" value={String(count("DRAFT"))} /><StatCard label="Open for Entry" value={String(count("OPEN_FOR_ENTRY"))} /><StatCard label="Entry Closed" value={String(count("ENTRY_CLOSED"))} /><StatCard label="Approved" value={String(count("APPROVED"))} /><StatCard label="Locked" value={String(count("LOCKED"))} /><StatCard label="Cancelled" value={String(count("CANCELLED"))} /></div><form className="card filter-grid"><label>Academic year<input name="academicYear" defaultValue={params.academicYear ?? ""} /></label><label>Status<select name="status" defaultValue={params.status ?? ""}><option value="">All</option>{["DRAFT", "OPEN_FOR_ENTRY", "ENTRY_CLOSED", "APPROVED", "LOCKED", "CANCELLED"].map((value) => <option key={value}>{value}</option>)}</select></label><button type="submit">Apply Filters</button><Link className="button secondary" href="/exams">Clear</Link></form><section className="card"><div className="table-wrap"><table><thead><tr><th>Code</th><th>Exam</th><th>Dates</th><th>Status</th><th>Sheets</th><th>Open</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{row.examCode}</td><td>{row.name}<br /><small>{row.examType.replaceAll("_", " ")}</small></td><td>{displayDate(row.startDate)} – {displayDate(row.endDate)}</td><td><StatusBadge status={row.status} /></td><td>{row.assessments.length}</td><td><Link href={`/exams/${encodeURIComponent(row.id)}`}>View Exam</Link></td></tr>)}{!rows.length ? <tr><td colSpan={6}>No authorised exams match these filters.</td></tr> : null}</tbody></table></div></section></div>; }
+
+export default async function Page({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const user = await requirePermission("VIEW_EXAMS");
+  const params = await searchParams;
+  const [permissions, scope] = await Promise.all([
+    getEffectivePermissions(prisma, user.role),
+    resolveMarksScope(prisma, user, params.academicYear)
+  ]);
+  const assessmentWhere = marksScopeWhere(scope);
+  const rows = await prisma.examCycle.findMany({
+    where: {
+      ...(params.academicYear ? { academicYear: params.academicYear } : {}),
+      ...(params.status ? { status: params.status } : {}),
+      ...(!scope.broad ? { assessments: { some: assessmentWhere } } : {})
+    },
+    include: { assessments: { where: assessmentWhere, select: { entryStatus: true } } },
+    orderBy: [{ startDate: "desc" }, { name: "asc" }]
+  });
+  const count = (status: string) => rows.filter((row) => row.status === status).length;
+  const actions = permissionSetCan(permissions, "MANAGE_EXAMS") ||
+    permissionSetCan(permissions, "VIEW_EXAM_CONFIGURATION") ? (
+      <div className="page-actions">
+        {permissionSetCan(permissions, "VIEW_EXAM_CONFIGURATION") ? (
+          <Link className="button secondary" href="/exams/configuration">Examination Setup</Link>
+        ) : null}
+        {permissionSetCan(permissions, "MANAGE_EXAMS") ? (
+          <Link className="button" href="/exams/new">Create Legacy Exam Cycle</Link>
+        ) : null}
+      </div>
+    ) : undefined;
+  return (
+    <div className="page exams-page">
+      <PageHeader
+        title="Exams and Marks"
+        description="Legacy raw-mark cycles remain available. Principal configuration schemes are managed separately and do not open marks entry in this phase."
+        action={actions}
+      />
+      {scope.reason ? <div className="notice">{scope.reason}</div> : null}
+      <div className="grid three">
+        <StatCard label="Draft" value={String(count("DRAFT"))} />
+        <StatCard label="Open for Entry" value={String(count("OPEN_FOR_ENTRY"))} />
+        <StatCard label="Entry Closed" value={String(count("ENTRY_CLOSED"))} />
+        <StatCard label="Approved" value={String(count("APPROVED"))} />
+        <StatCard label="Locked" value={String(count("LOCKED"))} />
+        <StatCard label="Cancelled" value={String(count("CANCELLED"))} />
+      </div>
+      <form className="card filter-grid">
+        <label>Academic year<input name="academicYear" defaultValue={params.academicYear ?? ""} /></label>
+        <label>
+          Status
+          <select name="status" defaultValue={params.status ?? ""}>
+            <option value="">All</option>
+            {["DRAFT", "OPEN_FOR_ENTRY", "ENTRY_CLOSED", "APPROVED", "LOCKED", "CANCELLED"].map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+        <button type="submit">Apply Filters</button>
+        <Link className="button secondary" href="/exams">Clear</Link>
+      </form>
+      <section className="card">
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Code</th><th>Exam</th><th>Dates</th><th>Status</th><th>Sheets</th><th>Open</th></tr></thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.examCode}</td>
+                  <td>{row.name}<br /><small>{row.examType.replaceAll("_", " ")}</small></td>
+                  <td>{displayDate(row.startDate)} – {displayDate(row.endDate)}</td>
+                  <td><StatusBadge status={row.status} /></td>
+                  <td>{row.assessments.length}</td>
+                  <td><Link href={`/exams/${encodeURIComponent(row.id)}`}>View Exam</Link></td>
+                </tr>
+              ))}
+              {!rows.length ? <tr><td colSpan={6}>No authorised exams match these filters.</td></tr> : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
+}

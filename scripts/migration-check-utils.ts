@@ -115,12 +115,14 @@ export function schemaFingerprint(databasePath: string) {
   return sha256(JSON.stringify(schemaInventory(databasePath)));
 }
 
-export function databaseDataSnapshot(databasePath: string) {
+export function databaseDataSnapshot(databasePath: string, includedTables?: string[]) {
   const db = new DatabaseSync(databasePath, { readOnly: true });
   try {
-    const tables = db.prepare(
+    const rows = db.prepare(
       "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name <> '_prisma_migrations' ORDER BY name"
     ).all() as Array<{ name: string }>;
+    const allowed = includedTables ? new Set(includedTables) : null;
+    const tables = allowed ? rows.filter(({ name }) => allowed.has(name)) : rows;
     const counts: Record<string, number> = {};
     const hash = createHash("sha256");
     for (const { name } of tables) {

@@ -81,9 +81,10 @@ export function unsafeRequestOriginAllowed(
 }
 
 export function contentSecurityPolicy(nonce: string, enableUpgrade = process.env.ENABLE_HTTPS_UPGRADE === "true") {
+  const developmentEval = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${developmentEval}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self'",

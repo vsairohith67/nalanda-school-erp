@@ -1,0 +1,24 @@
+flowchart LR
+  P["Principal / permitted leadership"] --> E["Examination<br/>year · type · dates · class/section scope"]
+  E --> V["Draft scheme version<br/>RAW_SUM or WEIGHTED_NORMALIZED"]
+  V --> C["Ordered components<br/>positive maxima · exact 100% when weighted"]
+  V --> S["Subject papers and groups"]
+  V --> B["Grade · co-scholastic · template bindings"]
+  T["Active Staff + timetable Teacher"] --> A["Exact Teacher assignment<br/>year · exam · class · section · subject · paper/component"]
+  V --> A
+  A --> O{"Ownership valid?"}
+  O -->|"one primary"| R["Preview complete configuration"]
+  O -->|"explicit contributor"| R
+  O -->|"overlap / missing link"| X["Fail closed"]
+  C --> R
+  S --> R
+  B --> R
+  R --> Q{"Activation validation"}
+  Q -->|"valid"| F["Activate and freeze<br/>append-only audit"]
+  Q -->|"invalid"| X
+  F --> N["Future marks-entry phase<br/>not implemented here"]
+  F --> K["Correction by cloned new version"]
+  SA["Super Admin"] --> I["Explicit intervention permission<br/>mandatory audit reason"]
+  I --> E
+  TE["Assigned Teacher + explicit proposal grant"] --> PR["Non-activating subject proposal"]
+  PR --> R

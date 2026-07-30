@@ -426,6 +426,7 @@ model StaffMember {
   smsEmailConsents          SmsEmailConsent[]
   smsEmailSuppressions      SmsEmailSuppression[]
   smsEmailDeliveries        SmsEmailDelivery[]
+  examAssignments           TeacherExamAssignment[]
 
   @@index([fullName])
   @@index([staffType])
@@ -1850,6 +1851,7 @@ model TimetableTeacher {
   fixedPeriods         TimetableFixedPeriod[]
   timetableEntries     TimetableEntry[]
   staffMember          StaffMember?
+  examAssignments      TeacherExamAssignment[]
 
   @@index([name])
   @@index([department])
@@ -1873,6 +1875,7 @@ model TimetableSubject {
   timetableEntries        TimetableEntry[]
   homeworkAssignments     HomeworkAssignment[]
   examAssessments         ExamAssessment[]
+  examSubjectPapers       ExamSubjectPaper[]
 
   @@index([name])
   @@index([department])
@@ -2051,6 +2054,385 @@ model StudentMarkEvent {
   @@index([eventType])
 }
 
+model Examination {
+  id                         String                      @id @default(cuid())
+  examCode                   String                      @unique
+  academicYear               String
+  name                       String
+  examType                   String
+  startDate                  DateTime
+  endDate                    DateTime
+  status                     String                      @default("DRAFT")
+  description                String?
+  version                    Int                         @default(1)
+  createdByUserId            String
+  activatedByUserId          String?
+  archivedByUserId           String?
+  interventionReason         String?
+  archiveReason              String?
+  activatedAt                DateTime?
+  archivedAt                 DateTime?
+  createdAt                  DateTime                    @default(now())
+  updatedAt                  DateTime                    @updatedAt
+  classScopes                ExaminationClassScope[]
+  schemeVersions             ExaminationSchemeVersion[]
+  subjectPapers              ExamSubjectPaper[]
+  subjectGroups              ExamSubjectGroup[]
+  gradeScaleVersions         GradeScaleVersion[]
+  coScholasticSchemeVersions CoScholasticSchemeVersion[]
+  templateBindings           ExamTemplateFamilyBinding[]
+  teacherAssignments         TeacherExamAssignment[]
+  schemeAudits               ExaminationSchemeAudit[]
+
+  @@index([academicYear, status])
+  @@index([startDate, endDate])
+}
+
+model ExaminationClassScope {
+  id                      String                      @id @default(cuid())
+  examinationId           String
+  examination             Examination                 @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  academicYear            String
+  className               String
+  section                 String                      @default("")
+  timetableClassSectionId String
+  timetableClassSection   TimetableClassSection       @relation(fields: [timetableClassSectionId], references: [id], onDelete: Restrict)
+  status                  String                      @default("ACTIVE")
+  createdByUserId         String
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
+  schemeVersions          ExaminationSchemeVersion[]
+  subjectPapers           ExamSubjectPaper[]
+  subjectGroups           ExamSubjectGroup[]
+  gradeScaleVersions      GradeScaleVersion[]
+  coScholasticVersions    CoScholasticSchemeVersion[]
+  templateBindings        ExamTemplateFamilyBinding[]
+  teacherAssignments      TeacherExamAssignment[]
+
+  @@unique([examinationId, className, section])
+  @@unique([examinationId, timetableClassSectionId])
+  @@index([academicYear, className, section])
+  @@index([timetableClassSectionId])
+  @@index([status])
+}
+
+model ExaminationSchemeVersion {
+  id                    String                     @id @default(cuid())
+  examinationId         String
+  examination           Examination                @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  classScopeId          String
+  classScope            ExaminationClassScope      @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
+  academicYear          String
+  className             String
+  section               String                     @default("")
+  scopeKey              String                     @default("BASE")
+  subjectPaperId        String?
+  subjectPaper          ExamSubjectPaper?          @relation(fields: [subjectPaperId], references: [id], onDelete: Restrict)
+  versionNumber         Int
+  calculationMode       String
+  roundingPolicyVersion String                     @default("RC05_V1_DECIMAL6_HALF_UP2")
+  status                String                     @default("DRAFT")
+  version               Int                        @default(1)
+  supersedesVersionId   String?
+  supersedesVersion     ExaminationSchemeVersion?  @relation("ExaminationSchemeSupersession", fields: [supersedesVersionId], references: [id], onDelete: Restrict)
+  supersededByVersions  ExaminationSchemeVersion[] @relation("ExaminationSchemeSupersession")
+  createdByUserId       String
+  activatedByUserId     String?
+  archivedByUserId      String?
+  activationReason      String?
+  archiveReason         String?
+  activatedAt           DateTime?
+  frozenAt              DateTime?
+  marksEntryOpenedAt    DateTime?
+  archivedAt            DateTime?
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  components            ExaminationComponent[]
+  teacherAssignments    TeacherExamAssignment[]
+  schemeAudits          ExaminationSchemeAudit[]
+
+  @@unique([examinationId, classScopeId, scopeKey, versionNumber])
+  @@index([examinationId, classScopeId, status])
+  @@index([subjectPaperId])
+  @@index([supersedesVersionId])
+}
+
+model ExaminationComponent {
+  id                 String                   @id @default(cuid())
+  schemeVersionId    String
+  schemeVersion      ExaminationSchemeVersion @relation(fields: [schemeVersionId], references: [id], onDelete: Restrict)
+  componentCode      String
+  name               String
+  componentKind      String
+  displayOrder       Int
+  maximumMarks       Decimal
+  contributionWeight Decimal?
+  isRequired         Boolean                  @default(true)
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  teacherAssignments TeacherExamAssignment[]
+
+  @@unique([schemeVersionId, componentCode])
+  @@unique([schemeVersionId, displayOrder])
+  @@index([schemeVersionId, isRequired])
+}
+
+model ExamSubjectPaper {
+  id                  String                     @id @default(cuid())
+  examinationId       String
+  examination         Examination                @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  classScopeId        String
+  classScope          ExaminationClassScope      @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
+  academicYear        String
+  className           String
+  section             String                     @default("")
+  timetableSubjectId  String
+  timetableSubject    TimetableSubject           @relation(fields: [timetableSubjectId], references: [id], onDelete: Restrict)
+  subjectNameSnapshot String
+  paperCode           String
+  paperName           String
+  displayOrder        Int
+  status              String                     @default("ACTIVE")
+  createdByUserId     String
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  schemeOverrides     ExaminationSchemeVersion[]
+  groupMemberships    ExamSubjectGroupMember[]
+  teacherAssignments  TeacherExamAssignment[]
+
+  @@unique([examinationId, classScopeId, timetableSubjectId, paperCode])
+  @@unique([examinationId, classScopeId, displayOrder])
+  @@index([timetableSubjectId])
+  @@index([status])
+}
+
+model ExamSubjectGroup {
+  id              String                   @id @default(cuid())
+  examinationId   String
+  examination     Examination              @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  classScopeId    String
+  classScope      ExaminationClassScope    @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
+  academicYear    String
+  className       String
+  section         String                   @default("")
+  groupCode       String
+  groupName       String
+  calculationMode String
+  displayOrder    Int
+  status          String                   @default("ACTIVE")
+  createdByUserId String
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  members         ExamSubjectGroupMember[]
+
+  @@unique([examinationId, classScopeId, groupCode])
+  @@unique([examinationId, classScopeId, displayOrder])
+  @@index([status])
+}
+
+model ExamSubjectGroupMember {
+  id                 String           @id @default(cuid())
+  subjectGroupId     String
+  subjectGroup       ExamSubjectGroup @relation(fields: [subjectGroupId], references: [id], onDelete: Restrict)
+  subjectPaperId     String
+  subjectPaper       ExamSubjectPaper @relation(fields: [subjectPaperId], references: [id], onDelete: Restrict)
+  displayOrder       Int
+  contributionWeight Decimal?
+  createdAt          DateTime         @default(now())
+
+  @@unique([subjectGroupId, subjectPaperId])
+  @@unique([subjectGroupId, displayOrder])
+  @@index([subjectPaperId])
+}
+
+model GradeScaleVersion {
+  id                  String                @id @default(cuid())
+  examinationId       String
+  examination         Examination           @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  classScopeId        String
+  classScope          ExaminationClassScope @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
+  academicYear        String
+  className           String
+  section             String                @default("")
+  name                String
+  scaleFamily         String
+  versionNumber       Int
+  status              String                @default("DRAFT")
+  version             Int                   @default(1)
+  supersedesVersionId String?
+  activatedByUserId   String?
+  activatedAt         DateTime?
+  frozenAt            DateTime?
+  createdByUserId     String
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  bands               GradeScaleBand[]
+
+  @@unique([examinationId, classScopeId, versionNumber])
+  @@index([examinationId, classScopeId, status])
+  @@index([supersedesVersionId])
+}
+
+model GradeScaleBand {
+  id                  String            @id @default(cuid())
+  gradeScaleVersionId String
+  gradeScaleVersion   GradeScaleVersion @relation(fields: [gradeScaleVersionId], references: [id], onDelete: Restrict)
+  gradeCode           String
+  label               String
+  minimumPercentage   Decimal
+  maximumPercentage   Decimal
+  displayOrder        Int
+  gradePoint          Decimal?
+  remarks             String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@unique([gradeScaleVersionId, gradeCode])
+  @@unique([gradeScaleVersionId, displayOrder])
+  @@index([gradeScaleVersionId, minimumPercentage])
+}
+
+model CoScholasticSchemeVersion {
+  id                  String                @id @default(cuid())
+  examinationId       String
+  examination         Examination           @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  classScopeId        String
+  classScope          ExaminationClassScope @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
+  academicYear        String
+  className           String
+  section             String                @default("")
+  name                String
+  schemeFamily        String
+  ratingScaleJson     String
+  versionNumber       Int
+  status              String                @default("DRAFT")
+  version             Int                   @default(1)
+  supersedesVersionId String?
+  activatedByUserId   String?
+  activatedAt         DateTime?
+  frozenAt            DateTime?
+  createdByUserId     String
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  items               CoScholasticItem[]
+
+  @@unique([examinationId, classScopeId, versionNumber])
+  @@index([examinationId, classScopeId, status])
+  @@index([supersedesVersionId])
+}
+
+model CoScholasticItem {
+  id                          String                    @id @default(cuid())
+  coScholasticSchemeVersionId String
+  schemeVersion               CoScholasticSchemeVersion @relation(fields: [coScholasticSchemeVersionId], references: [id], onDelete: Restrict)
+  itemCode                    String
+  label                       String
+  displayOrder                Int
+  isRequired                  Boolean                   @default(true)
+  createdAt                   DateTime                  @default(now())
+  updatedAt                   DateTime                  @updatedAt
+
+  @@unique([coScholasticSchemeVersionId, itemCode])
+  @@unique([coScholasticSchemeVersionId, displayOrder])
+}
+
+model ExamTemplateFamilyBinding {
+  id                   String                @id @default(cuid())
+  examinationId        String
+  examination          Examination           @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  classScopeId         String
+  classScope           ExaminationClassScope @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
+  academicYear         String
+  className            String
+  section              String                @default("")
+  templateFamily       String
+  reportCardTemplateId String?
+  reportCardTemplate   ReportCardTemplate?   @relation(fields: [reportCardTemplateId], references: [id], onDelete: Restrict)
+  versionNumber        Int
+  status               String                @default("DRAFT")
+  version              Int                   @default(1)
+  evidenceStatus       String                @default("DIRECTLY_EVIDENCED")
+  activatedByUserId    String?
+  activatedAt          DateTime?
+  frozenAt             DateTime?
+  createdByUserId      String
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  @@unique([examinationId, classScopeId, versionNumber])
+  @@index([templateFamily, status])
+  @@index([reportCardTemplateId])
+}
+
+model TeacherExamAssignment {
+  id                      String                   @id @default(cuid())
+  examinationId           String
+  examination             Examination              @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  classScopeId            String
+  classScope              ExaminationClassScope    @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
+  timetableClassSectionId String
+  timetableClassSection   TimetableClassSection    @relation(fields: [timetableClassSectionId], references: [id], onDelete: Restrict)
+  subjectPaperId          String
+  subjectPaper            ExamSubjectPaper         @relation(fields: [subjectPaperId], references: [id], onDelete: Restrict)
+  schemeVersionId         String
+  schemeVersion           ExaminationSchemeVersion @relation(fields: [schemeVersionId], references: [id], onDelete: Restrict)
+  componentId             String
+  component               ExaminationComponent     @relation(fields: [componentId], references: [id], onDelete: Restrict)
+  academicYear            String
+  className               String
+  section                 String
+  staffMemberId           String
+  staffMember             StaffMember              @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  timetableTeacherId      String
+  timetableTeacher        TimetableTeacher         @relation(fields: [timetableTeacherId], references: [id], onDelete: Restrict)
+  timetableAssignmentId   String
+  timetableAssignment     TimetableAssignment      @relation(fields: [timetableAssignmentId], references: [id], onDelete: Restrict)
+  assignmentRole          String
+  status                  String                   @default("ACTIVE")
+  version                 Int                      @default(1)
+  assignmentReason        String
+  assignedByUserId        String
+  archivedByUserId        String?
+  archivedAt              DateTime?
+  archiveReason           String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  schemeAudits            ExaminationSchemeAudit[]
+
+  @@unique([examinationId, classScopeId, subjectPaperId, componentId, staffMemberId])
+  @@index([academicYear, className, section])
+  @@index([staffMemberId, status])
+  @@index([timetableTeacherId])
+  @@index([timetableAssignmentId])
+  @@index([subjectPaperId, componentId, assignmentRole, status])
+}
+
+model ExaminationSchemeAudit {
+  id              String                    @id @default(cuid())
+  examinationId   String
+  examination     Examination               @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  schemeVersionId String?
+  schemeVersion   ExaminationSchemeVersion? @relation(fields: [schemeVersionId], references: [id], onDelete: Restrict)
+  assignmentId    String?
+  assignment      TeacherExamAssignment?    @relation(fields: [assignmentId], references: [id], onDelete: Restrict)
+  eventType       String
+  targetType      String
+  targetId        String
+  previousStatus  String?
+  newStatus       String?
+  reason          String?
+  actorUserId     String
+  actorRole       String
+  snapshotJson    String
+  eventDate       DateTime
+  createdAt       DateTime                  @default(now())
+
+  @@index([examinationId, eventDate])
+  @@index([schemeVersionId, eventDate])
+  @@index([assignmentId, eventDate])
+  @@index([eventType])
+}
+
 model GradingScheme {
   id              String               @id @default(cuid())
   schemeCode      String               @unique
@@ -2087,23 +2469,24 @@ model GradeBand {
 }
 
 model ReportCardTemplate {
-  id                     String            @id @default(cuid())
-  templateCode           String            @unique
+  id                     String                      @id @default(cuid())
+  templateCode           String                      @unique
   name                   String
   reportType             String
   academicYear           String?
   className              String?
   gradingSchemeId        String?
-  gradingScheme          GradingScheme?    @relation(fields: [gradingSchemeId], references: [id], onDelete: Restrict)
-  status                 String            @default("DRAFT")
+  gradingScheme          GradingScheme?              @relation(fields: [gradingSchemeId], references: [id], onDelete: Restrict)
+  status                 String                      @default("DRAFT")
   templateDefinitionJson String
   printSettingsJson      String?
-  versionNumber          Int               @default(1)
+  versionNumber          Int                         @default(1)
   createdByUserId        String?
   activatedByUserId      String?
-  createdAt              DateTime          @default(now())
-  updatedAt              DateTime          @updatedAt
+  createdAt              DateTime                    @default(now())
+  updatedAt              DateTime                    @updatedAt
   batches                ReportCardBatch[]
+  examTemplateBindings   ExamTemplateFamilyBinding[]
 
   @@index([reportType, status])
   @@index([academicYear, className])
@@ -2242,18 +2625,20 @@ model StudentReportCardEvent {
 }
 
 model TimetableClassSection {
-  id               String                 @id @default(cuid())
-  className        String
-  section          String                 @default("")
-  displayName      String
-  groupName        String
-  academicYear     String                 @default("2026-27")
-  isActive         Boolean                @default(true)
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @updatedAt
-  assignments      TimetableAssignment[]
-  fixedPeriods     TimetableFixedPeriod[]
-  timetableEntries TimetableEntry[]
+  id                String                  @id @default(cuid())
+  className         String
+  section           String                  @default("")
+  displayName       String
+  groupName         String
+  academicYear      String                  @default("2026-27")
+  isActive          Boolean                 @default(true)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  assignments       TimetableAssignment[]
+  fixedPeriods      TimetableFixedPeriod[]
+  timetableEntries  TimetableEntry[]
+  examinationScopes ExaminationClassScope[]
+  examAssignments   TeacherExamAssignment[]
 
   @@unique([academicYear, className, section])
   @@index([academicYear])
@@ -2280,22 +2665,23 @@ model TimetablePeriodTemplate {
 }
 
 model TimetableAssignment {
-  id                       String                 @id @default(cuid())
-  academicYear             String                 @default("2026-27")
+  id                       String                  @id @default(cuid())
+  academicYear             String                  @default("2026-27")
   classSectionId           String
-  classSection             TimetableClassSection  @relation(fields: [classSectionId], references: [id], onDelete: Cascade)
+  classSection             TimetableClassSection   @relation(fields: [classSectionId], references: [id], onDelete: Cascade)
   subjectId                String
-  subject                  TimetableSubject       @relation(fields: [subjectId], references: [id])
+  subject                  TimetableSubject        @relation(fields: [subjectId], references: [id])
   teacherId                String
-  teacher                  TimetableTeacher       @relation(fields: [teacherId], references: [id])
+  teacher                  TimetableTeacher        @relation(fields: [teacherId], references: [id])
   periodsPerWeek           Int
   allowConsecutiveOverride Boolean?
   priority                 Int?
   notes                    String?
-  createdAt                DateTime               @default(now())
-  updatedAt                DateTime               @updatedAt
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
   timetableEntries         TimetableEntry[]
   substituteAssignments    SubstituteAssignment[]
+  examAssignments          TeacherExamAssignment[]
 
   @@unique([academicYear, classSectionId, subjectId, teacherId])
   @@index([academicYear])
@@ -4422,8 +4808,8 @@ model CloudBackupEvent {
 // drafts and immutable public snapshots only; they do not relate to private ERP
 // people, finance, attendance, assessment or communication records.
 model PublicWebsiteSettings {
-  id                         String   @id @default(cuid())
-  settingsCode               String   @unique
+  id                         String    @id @default(cuid())
+  settingsCode               String    @unique
   siteName                   String
   shortName                  String
   tagline                    String?
@@ -4433,45 +4819,45 @@ model PublicWebsiteSettings {
   publicOfficeEmail          String?
   publicOfficeHours          String?
   publicDirectionsUrl        String?
-  portalLoginPath            String   @default("/login")
+  portalLoginPath            String    @default("/login")
   defaultSeoTitle            String
   defaultSeoDescription      String
   defaultSocialImageKey      String?
-  themeConfigJson            String   @default("{}")
-  contactConfigJson          String   @default("{}")
+  themeConfigJson            String    @default("{}")
+  contactConfigJson          String    @default("{}")
   socialLinksJson            String?
-  mandatoryDisclosureEnabled Boolean  @default(false)
-  status                     String   @default("DRAFT")
-  reviewVersion              Int      @default(1)
+  mandatoryDisclosureEnabled Boolean   @default(false)
+  status                     String    @default("DRAFT")
+  reviewVersion              Int       @default(1)
   approvedReviewVersion      Int?
   createdByUserId            String?
   reviewedByUserId           String?
   publishedByUserId          String?
   reviewedAt                 DateTime?
   publishedAt                DateTime?
-  createdAt                  DateTime @default(now())
-  updatedAt                  DateTime @updatedAt
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
 
   @@index([status, publishedAt])
 }
 
 model PublicWebsitePage {
-  id                        String                     @id @default(cuid())
-  pageCode                  String                     @unique
+  id                        String                        @id @default(cuid())
+  pageCode                  String                        @unique
   pageType                  String
   title                     String
-  slug                      String                     @unique
+  slug                      String                        @unique
   navigationLabel           String?
   summary                   String?
   draftContentJson          String
   draftSeoJson              String
-  status                    String                     @default("DRAFT")
-  reviewVersion             Int                        @default(1)
+  status                    String                        @default("DRAFT")
+  reviewVersion             Int                           @default(1)
   approvedReviewVersion     Int?
   currentPublishedVersionId String?
-  showInNavigation          Boolean                    @default(false)
+  showInNavigation          Boolean                       @default(false)
   navigationOrder           Int?
-  indexable                 Boolean                    @default(true)
+  indexable                 Boolean                       @default(true)
   createdByUserId           String?
   reviewedByUserId          String?
   publishedByUserId         String?
@@ -4479,8 +4865,8 @@ model PublicWebsitePage {
   reviewedAt                DateTime?
   publishedAt               DateTime?
   archivedAt                DateTime?
-  createdAt                 DateTime                   @default(now())
-  updatedAt                 DateTime                   @updatedAt
+  createdAt                 DateTime                      @default(now())
+  updatedAt                 DateTime                      @updatedAt
   versions                  PublicWebsitePageVersion[]
   navigationItems           PublicWebsiteNavigationItem[]
 

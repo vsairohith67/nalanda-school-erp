@@ -1,5 +1,16 @@
 # Documentation Index
 
+## EXAM-RC-IMPL-1 examination scheme and assignment foundation
+
+- [Examination Scheme and Assignment Foundation](EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md) - versioned domain, explicit calculation modes, Principal workflow, exact timetable-backed Teacher ownership, permissions, APIs, migration, copied-database QA and operator rules.
+- [Examination Scheme and Assignment Diagram](diagrams/examination-scheme-assignment-foundation.mmd) - editable configuration, validation, assignment, activation and future-phase boundary.
+
+`EXAM-RC-IMPL-1` is implemented on
+`feature/exam-scheme-assignment-foundation` and remains unmerged. It adds one
+additive Prisma migration and changes no operational business record.
+Independent `EXAM-RC-IMPL-1-QA` is next. Marks entry, result calculation,
+publication and bulk PDF generation remain out of scope.
+
 ## UX-1A shared login and authenticated shell
 
 - [Shared Login and App Shell Specification](UX_1A_SHARED_LOGIN_APP_SHELL_SPEC.md) - governed identity, login/change-password contracts, role-aware header, academic-year/health boundaries, security invariants, and independent QA gate.

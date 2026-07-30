@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit --project tsconfig.tools.json",
     "test": "vitest run",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -29,6 +29,7 @@
     "qa:23c": "tsx scripts/qa23c-copied-db.ts",
     "qa:23cqa": "tsx scripts/qa23cqa-copied-db.ts",
     "qa:ux1a": "tsx scripts/qa-ux1a-copied-db.ts",
+    "qa:exam1": "tsx scripts/qa-exam1-copied-db.ts",
     "auth:recover-super-admin": "tsx scripts/recover-super-admin.ts",
     "data0a:audit": "node scripts/data0a-provenance-audit.mjs",
     "data0a:backup": "tsx scripts/data0a-encrypted-backup.ts",

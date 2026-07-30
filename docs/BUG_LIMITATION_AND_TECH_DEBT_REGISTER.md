@@ -1,5 +1,37 @@
 # Bug, Limitation, and Tech Debt Register
 
+## EXAM-RC-IMPL-1 disposition
+
+Resolved:
+
+- Examination configuration is additive and versioned by academic year,
+  examination and class with governed section/subject/paper overrides.
+- Numeric schemes explicitly select `RAW_SUM` or `WEIGHTED_NORMALIZED`;
+  maxima, duplicates, denominator safety and exact weighted total are validated
+  before activation.
+- Exact Teacher ownership requires active Staff, timetable Teacher and matching
+  year/class/section/subject assignment. Permission alone grants no ownership.
+- Activation, archive, proposal and exceptional intervention are append-only
+  audited; active/frozen schemes are corrected through a new version.
+- Development CSP permits the Next.js hydration requirement only when
+  `NODE_ENV=development`; production/test CSP remain strict. Login has a
+  POST fallback so a pre-hydration submit cannot put a password in the URL.
+
+Remaining:
+
+- `EXAM-RC-IMPL-1-QA` must independently verify the unmerged feature branch.
+- The marks-entry grid, result calculation/moderation/approval, publication,
+  report-card issue and bulk PDF/ZIP generation are intentionally not
+  implemented.
+- Multi-examination/board-family consolidation remains
+  `REQUIRES_SOURCE_APPROVAL`; the configuration foundation does not infer a
+  formula.
+- Historical active-version immutability after marks entry opens will become
+  enforceable only when that later marks lifecycle is implemented; the current
+  phase already exposes no in-place mutation path for active/frozen versions.
+- SQLite remains a supported single-instance write architecture; horizontal
+  multi-instance writes are outside this phase.
+
 ## DATA-0B follow-up
 
 | ID | Area | Status | Risk | Required action |

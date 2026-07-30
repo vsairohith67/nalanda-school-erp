@@ -49,7 +49,7 @@ export function LoginForm() {
   }
 
   return (
-    <form className="login-form" onSubmit={submit} aria-busy={submitting}>
+    <form className="login-form" method="post" action="/api/auth/login" onSubmit={submit} aria-busy={submitting}>
       {searchParams.get("passwordChanged") === "1" ? (
         <div className="login-success" role="status">
           Password updated. Sign in again with your new password.

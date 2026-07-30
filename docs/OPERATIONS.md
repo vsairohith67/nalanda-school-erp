@@ -23,6 +23,38 @@ evidence. Do not delete or edit migration metadata, run `db push`, or rerun
 `migrate resolve` manually. Escalate any migration-status discrepancy and keep
 the application stopped until the reviewed recovery procedure is chosen.
 
+## Examination configuration
+
+`EXAM-RC-IMPL-1` adds configuration only. An authorised Principal creates the
+examination, selects exact class/section scope, chooses `RAW_SUM` or
+`WEIGHTED_NORMALIZED`, enters every component maximum/weight explicitly,
+configures papers/groups and governed bindings, previews the full version, and
+then activates/freezes it. Do not reuse historical ratios as defaults.
+
+Teacher assignment requires an active Staff record, active timetable Teacher
+and exact academic-year/class/section/subject timetable assignment. Use one
+primary submitter for each exact paper/component ownership scope; record other
+Teachers as explicit contributors. Never compensate for a missing timetable
+link by granting broad permissions.
+
+Archive records instead of deleting them. Clone an activated version to make a
+future correction. Super Admin intervention requires
+`INTERVENE_EXAM_SCHEMES` and a specific audit reason. Activation does not open
+marks entry: Student marks, results, publication and bulk PDFs remain deferred
+until a later independently approved phase.
+
+The ignored copied-database operator check is:
+
+```powershell
+pnpm.cmd qa:exam1 -- prepare
+pnpm.cmd qa:exam1 -- inspect
+pnpm.cmd qa:exam1 -- cleanup
+```
+
+Never point that workflow at `prisma/dev.db`. Full rules and API/permission
+boundaries are in
+[`EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md`](EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md).
+
 ## Daily workflow
 
 1. Confirm the Windows computer date and time.

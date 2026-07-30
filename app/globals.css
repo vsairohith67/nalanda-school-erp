@@ -5089,6 +5089,148 @@ textarea:focus-visible {
   }
 }
 
+.exam-configuration-workspace {
+  display: grid;
+  gap: 16px;
+}
+
+.configuration-scope-header {
+  display: grid;
+  gap: 14px;
+}
+
+.configuration-readiness,
+.scope-option-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.configuration-readiness span {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+}
+
+.configuration-readiness .ready {
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
+  color: var(--success);
+}
+
+.configuration-readiness .pending {
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  border-color: color-mix(in srgb, var(--warning) 40%, var(--border));
+  color: var(--warning);
+}
+
+.configuration-scope-picker {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.scope-option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.scope-option-grid label {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.group-member-row {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 140px;
+}
+
+.intervention-reason textarea {
+  width: 100%;
+}
+
+.exam-configuration-workspace h2 {
+  margin-top: 0;
+}
+
+@media (max-width: 700px) {
+  .group-member-row {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .exam-configuration-workspace .table-wrap input,
+  .exam-configuration-workspace .table-wrap select {
+    min-width: 120px;
+  }
+
+  .teacher-exam-assignment-page .table-wrap {
+    overflow: visible;
+  }
+
+  .teacher-exam-assignment-page .table-wrap .teacher-exam-assignment-table {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .teacher-exam-assignment-table,
+  .teacher-exam-assignment-table tbody,
+  .teacher-exam-assignment-table tr,
+  .teacher-exam-assignment-table td {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .teacher-exam-assignment-table thead {
+    display: none;
+  }
+
+  .teacher-exam-assignment-table tr {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+
+  .teacher-exam-assignment-table td {
+    align-items: start;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(96px, 34%) minmax(0, 1fr);
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  .teacher-exam-assignment-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .teacher-exam-assignment-table td::before {
+    color: var(--muted);
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .teacher-exam-assignment-table td > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .app-shell *,
   .app-shell *::before,

@@ -35,12 +35,12 @@ describe("DEVOPS-1B clean-install migration repair", () => {
     expect(output).toMatch(/no such table: Payment/i);
   });
 
-  it("keeps one generated active baseline in deterministic order", () => {
+  it("keeps the generated baseline first and the examination migration additive", () => {
     const active = readdirSync(ACTIVE_MIGRATION_ROOT, { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
       .sort();
-    expect(active).toEqual([BASELINE_MIGRATION]);
+    expect(active).toEqual([BASELINE_MIGRATION, "20260730_exam_scheme_assignment_foundation"]);
     expect(readFileSync(path.join(ACTIVE_MIGRATION_ROOT, BASELINE_MIGRATION, "migration.sql"), "utf8"))
       .toContain('CREATE TABLE "Payment"');
   });
@@ -70,7 +70,7 @@ describe("DEVOPS-1B clean-install migration repair", () => {
 
   it("deploys from empty, reports clean status, matches the schema, and bootstraps synthetic data", async () => {
     const output = pnpm(["migration:fresh-check"]);
-    expect(output).toContain("Fresh migration check passed: migrations=1 models=160 tables=160");
+    expect(output).toContain("Fresh migration check passed: migrations=2 models=174 tables=174");
     expect(output).toContain("Synthetic bootstrap passed");
   }, 180_000);
 

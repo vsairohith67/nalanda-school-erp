@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "plugins": [],
+    "tsBuildInfoFile": ".next/cache/tsconfig.tools.tsbuildinfo"
+  },
+  "include": [
+    "scripts/**/*.ts",
+    "tests/**/*.ts",
+    "vitest.config.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

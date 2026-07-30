@@ -1,9 +1,10 @@
-import { copyFileSync, existsSync } from "node:fs";
+import { copyFileSync, existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import {
   BASELINE_MIGRATION,
   OPERATIONAL_DATABASE,
+  PRISMA_ROOT,
   assertSchemaEquivalent,
   assertIsolatedDatabasePath,
   businessBaseline,
@@ -46,30 +47,37 @@ export async function runExistingDatabaseRehearsal(sourcePath = OPERATIONAL_DATA
     copyFileSync(source, destination);
     const sourceHashBefore = fileSha256(source);
     if (fileSha256(destination) !== sourceHashBefore) throw new Error("OPERATIONAL_COPY_HASH_MISMATCH");
-    assertSchemaEquivalent(destination);
     const before = {
       schema: schemaFingerprint(destination),
       data: databaseDataSnapshot(destination),
       business: businessBaseline(destination)
     };
     onboard(destination);
+    const existingTableNames = Object.keys(before.data.counts);
     const afterFirst = {
       schema: schemaFingerprint(destination),
       data: databaseDataSnapshot(destination),
+      existingData: databaseDataSnapshot(destination, existingTableNames),
       business: businessBaseline(destination)
     };
+    assertSchemaEquivalent(destination);
     onboard(destination);
     const afterSecond = {
       schema: schemaFingerprint(destination),
       data: databaseDataSnapshot(destination),
+      existingData: databaseDataSnapshot(destination, existingTableNames),
       business: businessBaseline(destination)
     };
-    if (JSON.stringify(before) !== JSON.stringify(afterFirst) || JSON.stringify(afterFirst) !== JSON.stringify(afterSecond)) {
+    if (
+      JSON.stringify(before.data) !== JSON.stringify(afterFirst.existingData) ||
+      JSON.stringify(before.business) !== JSON.stringify(afterFirst.business) ||
+      JSON.stringify(afterFirst) !== JSON.stringify(afterSecond)
+    ) {
       throw new Error("APPLICATION_DATA_OR_SCHEMA_CHANGED_DURING_ONBOARDING");
     }
     if (fileSha256(source) !== sourceHashBefore) throw new Error("OPERATIONAL_DATABASE_CHANGED_DURING_REHEARSAL");
     success = true;
-    console.log(`Existing database onboarding passed twice: applicationTables=${Object.keys(before.data.counts).length}`);
+    console.log(`Existing database onboarding passed twice: preservedTables=${existingTableNames.length} migratedTables=${Object.keys(afterFirst.data.counts).length}`);
     console.log(`Business baseline preserved: students=${before.business.students} activeEnrollments=${before.business.activeEnrollments} payments=${before.business.payments} collected=${before.business.collected}`);
     console.log(`Application schema fingerprint: ${before.schema}`);
     console.log(`Business data digest: ${before.data.digest}`);
@@ -84,10 +92,12 @@ if (process.argv[1]?.replaceAll("\\", "/").endsWith("/scripts/migration-existing
     if (!process.argv.includes("--synthetic")) return runExistingDatabaseRehearsal();
     const source = createEmptyIsolatedDatabase("operational-copy", "synthetic-unbaselined-source");
     try {
-      runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"], source);
       const db = new DatabaseSync(source);
-      db.exec("DROP TABLE _prisma_migrations");
-      db.close();
+      try {
+        db.exec(readFileSync(path.join(PRISMA_ROOT, "migrations", BASELINE_MIGRATION, "migration.sql"), "utf8"));
+      } finally {
+        db.close();
+      }
       return await runExistingDatabaseRehearsal(source);
     } finally {
       cleanupIsolatedDatabase(source);

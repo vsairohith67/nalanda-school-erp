@@ -98,7 +98,7 @@ describe("access rules", () => {
     ]);
 
     const teacherNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"));
-    expect(teacherNav.map((item) => item.href)).toEqual(["/attendance/students", "/attendance/students/reports", "/leave/staff", "/substitutes", "/homework/reports", "/homework", "/exams", "/marks", "/report-cards", "/teacher/analytics"]);
+    expect(teacherNav.map((item) => item.href)).toEqual(["/attendance/students", "/attendance/students/reports", "/leave/staff", "/substitutes", "/homework/reports", "/homework", "/exams", "/teacher/exam-assignments", "/marks", "/report-cards", "/teacher/analytics"]);
 
     const parentNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"));
     expect(parentNav.map((item) => item.href)).toEqual(["/parent/class-x-documents"]);
@@ -140,6 +140,7 @@ describe("access rules", () => {
       "/homework/reports",
       "/homework",
       "/exams",
+      "/teacher/exam-assignments",
       "/marks",
       "/report-cards"
     ]);
@@ -174,7 +175,7 @@ describe("access rules", () => {
 
     const principalHrefs = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PRINCIPAL"))
       .flatMap((group) => group.items.map((item) => item.href));
-    expect(principalHrefs).toEqual(expect.arrayContaining(["/students", "/staff", "/attendance/students", "/attendance/staff", "/leave/staff", "/substitutes", "/timetable", "/notices"]));
+    expect(principalHrefs).toEqual(expect.arrayContaining(["/students", "/staff", "/attendance/students", "/attendance/staff", "/leave/staff", "/substitutes", "/timetable", "/notices", "/exams/configuration"]));
     expect(principalHrefs).not.toContain("/payments");
     expect(principalHrefs).not.toContain("/users");
     expect(principalHrefs).not.toContain("/roles");

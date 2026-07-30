@@ -123,6 +123,13 @@ export const PERMISSIONS = [
   "CORRECT_APPROVED_MARKS",
   "VIEW_EXAM_REPORTS",
   "EXPORT_EXAM_REPORTS",
+  "VIEW_EXAM_CONFIGURATION",
+  "MANAGE_EXAM_CONFIGURATION",
+  "ACTIVATE_EXAM_SCHEMES",
+  "ASSIGN_EXAM_TEACHERS",
+  "PROPOSE_EXAM_SCHEMES",
+  "VIEW_OWN_EXAM_ASSIGNMENTS",
+  "INTERVENE_EXAM_SCHEMES",
   "VIEW_REPORT_CARDS",
   "MANAGE_REPORT_CARD_TEMPLATES",
   "MANAGE_REPORT_CARD_BATCHES",
@@ -711,7 +718,14 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { permission: "LOCK_EXAMS", label: "Lock exams", description: "Lock approved sheets and exams as immutable raw-mark snapshots." },
       { permission: "CORRECT_APPROVED_MARKS", label: "Correct approved marks", description: "Apply a reasoned correction to an approved but unlocked mark with previous values preserved." },
       { permission: "VIEW_EXAM_REPORTS", label: "View exam reports", description: "View internal completeness, mark, status, and workflow summaries." },
-      { permission: "EXPORT_EXAM_REPORTS", label: "Export exam reports", description: "Download privacy-allowlisted formula-safe exam CSV data." }
+      { permission: "EXPORT_EXAM_REPORTS", label: "Export exam reports", description: "Download privacy-allowlisted formula-safe exam CSV data." },
+      { permission: "VIEW_EXAM_CONFIGURATION", label: "View examination configuration", description: "View Principal-owned examination scopes, versioned schemes, bindings, and exact Teacher assignments." },
+      { permission: "MANAGE_EXAM_CONFIGURATION", label: "Manage examination configuration", description: "Create and edit draft examinations and governed configuration versions." },
+      { permission: "ACTIVATE_EXAM_SCHEMES", label: "Activate examination schemes", description: "Validate, activate, and freeze a complete class examination scheme." },
+      { permission: "ASSIGN_EXAM_TEACHERS", label: "Assign examination Teachers", description: "Assign exact timetable-backed primary submitters and audited contributors." },
+      { permission: "PROPOSE_EXAM_SCHEMES", label: "Propose assigned-subject schemes", description: "Allow a Teacher to submit a non-activating proposal only for an exact assigned subject." },
+      { permission: "VIEW_OWN_EXAM_ASSIGNMENTS", label: "View own examination assignments", description: "View only the authenticated Teacher's exact active examination assignments." },
+      { permission: "INTERVENE_EXAM_SCHEMES", label: "Govern Super Admin examination intervention", description: "Permit exceptional Super Admin intervention only with an explicit audit reason." }
     ]
   },
   {
@@ -946,6 +960,7 @@ const principalPermissions = new Set<CanonicalPermission>([
   "VIEW_SMS_EMAIL_CENTRE", "CREATE_SMS_EMAIL_BATCHES", "APPROVE_SMS_EMAIL_BATCHES", "SEND_SMS_EMAIL_BATCHES", "SCHEDULE_SMS_EMAIL_BATCHES", "RETRY_SMS_EMAIL_DELIVERIES", "CANCEL_SMS_EMAIL_BATCHES", "VIEW_SMS_EMAIL_DELIVERIES", "VIEW_SMS_EMAIL_REPORTS", "EXPORT_SMS_EMAIL_REPORTS",
   "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "ARCHIVE_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "EXPORT_HOMEWORK_REPORTS",
   "VIEW_EXAMS", "MANAGE_EXAMS", "CONFIGURE_EXAM_ASSESSMENTS", "ENTER_MARKS", "SUBMIT_MARKS", "APPROVE_MARKS", "LOCK_EXAMS", "CORRECT_APPROVED_MARKS", "VIEW_EXAM_REPORTS", "EXPORT_EXAM_REPORTS",
+  "VIEW_EXAM_CONFIGURATION", "MANAGE_EXAM_CONFIGURATION", "ACTIVATE_EXAM_SCHEMES", "ASSIGN_EXAM_TEACHERS",
   "VIEW_REPORT_CARDS", "MANAGE_REPORT_CARD_BATCHES", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "APPROVE_REPORT_CARDS", "ISSUE_REPORT_CARDS", "VIEW_REPORT_CARD_REPORTS", "EXPORT_REPORT_CARD_REPORTS",
   "VIEW_CERTIFICATES", "MANAGE_CERTIFICATE_REQUESTS", "CREATE_CERTIFICATES", "REVIEW_CERTIFICATES", "APPROVE_CERTIFICATES", "ISSUE_CERTIFICATES", "CORRECT_ISSUED_CERTIFICATES", "CANCEL_ISSUED_CERTIFICATES", "VIEW_CERTIFICATE_REPORTS", "EXPORT_CERTIFICATE_REPORTS",
   "VIEW_CLASS_X_PACKAGES", "MANAGE_CLASS_X_PACKAGES", "REVIEW_CLASS_X_PACKAGES", "APPROVE_CLASS_X_PACKAGES", "MANAGE_CLASS_X_DOCUMENT_CUSTODY", "HANDOVER_CLASS_X_DOCUMENTS", "VIEW_CLASS_X_PACKAGE_REPORTS", "EXPORT_CLASS_X_PACKAGE_REPORTS",
@@ -1125,7 +1140,7 @@ export const RECOMMENDED_ROLE_PERMISSIONS: Record<Role, ReadonlySet<CanonicalPer
   PRINCIPAL: principalPermissions,
   ADMIN: adminPermissions,
   ACCOUNTANT: accountantPermissions,
-  TEACHER: new Set(["VIEW_TEACHER_PLACEHOLDER", "VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS", "VIEW_STAFF_LEAVE", "APPLY_STAFF_LEAVE", "VIEW_SUBSTITUTES", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_EXAMS", "ENTER_MARKS", "SUBMIT_MARKS", "VIEW_REPORT_CARDS", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "VIEW_OWN_TEACHER_ANALYTICS", "VIEW_OWN_STAFF_ID_CARD", "VIEW_OWN_NOTIFICATIONS", "CREATE_SCOPED_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT"]),
+  TEACHER: new Set(["VIEW_TEACHER_PLACEHOLDER", "VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS", "VIEW_STAFF_LEAVE", "APPLY_STAFF_LEAVE", "VIEW_SUBSTITUTES", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_EXAMS", "ENTER_MARKS", "SUBMIT_MARKS", "VIEW_OWN_EXAM_ASSIGNMENTS", "VIEW_REPORT_CARDS", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "VIEW_OWN_TEACHER_ANALYTICS", "VIEW_OWN_STAFF_ID_CARD", "VIEW_OWN_NOTIFICATIONS", "CREATE_SCOPED_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT"]),
   PARENT: new Set(["VIEW_PARENT_PLACEHOLDER", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_OWN_REPORT_CARDS", "REQUEST_OWN_CHILD_CERTIFICATES", "VIEW_OWN_CHILD_CERTIFICATES", "REQUEST_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_STUDENT_ID_CARDS", "VIEW_OWN_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT"]),
   VIEWER: viewerPermissions
 };
