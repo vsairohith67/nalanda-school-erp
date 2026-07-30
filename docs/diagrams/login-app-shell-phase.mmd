@@ -1,0 +1,21 @@
+flowchart TD
+  P["Public sign-in\nexact Nalanda identity"] --> L["Generic login boundary\nusername or email + password"]
+  L --> A["Existing active-account authentication\nrate limit + strict cookie + credential tag"]
+  A --> R{"Authenticated role"}
+  R --> H["Shared responsive header\nlogo + one year + bell + named profile"]
+  R --> N["Permission-derived navigation\nno role picker or raw enum"]
+  H --> M["Mobile order\nmenu - logo - year - bell - avatar"]
+  N --> D["Accessible off-canvas drawer\nfocus trap + Escape + focus return"]
+  H --> C["Account menu\nchange password + appearance + logout"]
+  C --> X["Current-password change\nstrong policy + audit + stale-session invalidation"]
+  R --> S{"Health permission?"}
+  S -->|"Yes"| T["Core application health\nand Deployment readiness"]
+  S -->|"No"| O["Concise permitted operational content"]
+  A --> B["Preserved boundaries\nCSRF/origin + private/no-store + disabled-account denial"]
+  Q["Copied operational database"] --> F["Eight synthetic roles"]
+  F --> V["Seven viewports + light/dark + state QA"]
+  V --> E["Cleanup + operational hash proof"]
+  FUT["Future only"] --> AB["AUTH-2B reset/session/alias"]
+  FUT --> IAM["IAM-1A multi-role/per-user grants"]
+  FUT --> SUP["SUPPORT-1A support operations"]
+  FUT --> OBS["OBS-1A monitoring"]

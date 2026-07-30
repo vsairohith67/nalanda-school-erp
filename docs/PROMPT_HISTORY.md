@@ -1,5 +1,27 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## UX-1A - Shared login, header, navigation, and design system (2026-07-30)
+
+Implemented the exact Nalanda public sign-in identity, safe generic login
+feedback, password visibility/Caps Lock/busy semantics, real policy/support
+links, shared design tokens, official transparent logo derivative, compact
+desktop/mobile role-aware shell, human designations, one authenticated
+academic-year control, account/change-password/logout actions, separate health
+and deployment-readiness presentation, and accessible state pages.
+
+Browser QA uses a copied operational database and eight random-password
+synthetic roles. It validates all seven required viewports, zero overflow,
+light/dark, drawer focus trap/Escape/focus return, named account menus,
+permission-derived navigation, logout, change-password surface, Viewer denial,
+404, and no native dialogs. The operational zero-business and exact account
+baseline/hash remain unchanged.
+
+UX-1A adds no schema, migration, authentication model, real account activation,
+report-card logic, Teacher-attendance scope, role switcher, password-reset
+backend, academic-year creation, Sentry, or PostHog. AUTH-2B, IAM-1A,
+SUPPORT-1A, and OBS-1A remain future phases. Branch
+`ux/shared-login-shell-redesign` must not merge before UX-1A-QA.
+
 ## Prompt 23C - Teacher attendance exact timetable scope (2026-07-29)
 
 Started from dynamically captured synchronized private `main` commit
@@ -1013,3 +1035,41 @@ Result: the previous attendance object-scope defect and critical Teacher
 attendance blocker are resolved. Overall Teacher replacement remains
 `CONDITIONAL`; no full Teacher parity is claimed. Release tag:
 `teacher-attendance-scope-v37-2026-07-29`. Next phase: `UX-1A`.
+
+## UX-1A — Shared Login, Header, Navigation and Design-System Redesign (2026-07-30)
+
+Implemented a reusable navy/teal/gold token system and responsive public
+sign-in/authenticated shell without changing authentication models, Prisma,
+report-card logic, Teacher attendance, operational accounts, or business
+records. The login now presents the exact Nalanda identity, truthful username
+or email label, accessible password visibility, Caps Lock and busy status,
+generic anti-enumeration failure, real policy/support links, and no invented
+password-reset workflow.
+
+The authenticated shell now has one academic-year control, official
+transparent logo, compact human-labelled account menu, permission-derived
+navigation, role-specific dashboard titles, separated application
+health/deployment readiness, and exact mobile order
+menu–logo–year–bell–avatar. Existing change-password verification, strong
+policy, audit and stale-session invalidation were retained and exposed through
+the account menu. AUTH-2B, IAM-1A, SUPPORT-1A and OBS-1A remain explicit future
+boundaries.
+
+Production Browser QA used an isolated operational copy and eight synthetic
+roles. All seven required viewports, both themes, login failure, drawer focus
+trap/Escape/focus return, account menu, logout, change-password form, denial,
+404, health visibility, role-default routes, 44 px controls and zero overflow
+passed. A final screenshot caught the transparent PNG missing from the public
+middleware allowlist; that production-only defect was fixed before closure,
+then the full 1,585-test suite and 212-entry build were repeated successfully.
+
+Cleanup passed twice and was inspected twice. The copy, credentials, scratch
+database and UX-1A logs were destroyed; 0 fixture users remain. The operational
+hash stayed
+`9a888627ea2af32433fdba4f2f5d02c471995145e41ace9a6d1cd0729c6eae93`,
+with the exact zero-business/four-account baseline, one clean migration,
+integrity and foreign keys unchanged. Canvs master and detailed phase boards
+were created and re-fetched.
+
+Implementation branch: `ux/shared-login-shell-redesign`. It is not merged.
+Next gate: independent `UX-1A-QA`; this entry does not start that phase.

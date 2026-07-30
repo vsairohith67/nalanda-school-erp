@@ -1,13 +1,16 @@
 "use client";
 
-import { Download, KeyRound, LogOut, UserRound } from "lucide-react";
+import { ChevronDown, Download, KeyRound, LogOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { AuthUser } from "@/lib/auth";
 import Link from "next/link";
 import { logoutErrorMessage, postLogout } from "@/lib/logout-action-state";
 import { clearNalandaPwaCaches } from "@/lib/pwa-client";
+import { roleDisplayLabel, userInitials } from "@/lib/role-presentation";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function UserMenu({ user }: { user: AuthUser }) {
+  const designation = roleDisplayLabel(user.role);
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
   const logoutInFlight = useRef(false);
@@ -46,18 +49,19 @@ export function UserMenu({ user }: { user: AuthUser }) {
 
   return (
     <details className="user-menu">
-      <summary>
-        <UserRound size={17} aria-hidden />
-        <span>
+      <summary aria-label={`Account menu for ${user.name}, ${designation}`}>
+        <span className="user-avatar" aria-hidden>{userInitials(user.name)}</span>
+        <span className="user-menu-summary-copy">
           <strong>{user.name}</strong>
-          <small>{user.role}</small>
+          <small>{designation}</small>
         </span>
+        <ChevronDown className="user-menu-chevron" size={15} aria-hidden />
       </summary>
       <div className="user-menu-popover">
-        <div>
+        <div className="user-menu-identity">
           <strong>{user.name}</strong>
           <span>@{user.username}</span>
-          <span>{user.role}</span>
+          <span>{designation}</span>
         </div>
         <Link className="button secondary" href="/change-password">
           <KeyRound size={16} aria-hidden />
@@ -67,6 +71,10 @@ export function UserMenu({ user }: { user: AuthUser }) {
           <Download size={16} aria-hidden />
           Install App
         </Link>
+        <div className="user-menu-theme">
+          <span>Appearance</span>
+          <ThemeToggle />
+        </div>
         <button type="button" className="secondary" onClick={logout} disabled={loggingOut}>
           <LogOut size={16} aria-hidden />
           {loggingOut ? "Logging out..." : "Logout"}

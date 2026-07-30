@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import {
   BarChart3,
   ClipboardList,
@@ -42,9 +42,12 @@ import type { SystemHealth, SystemHealthIssue } from "@/lib/system-health";
 import type { AppInfo } from "@/lib/app-info";
 import { ProductionWarningBanner } from "@/components/production-warning-banner";
 import { NotificationBell } from "@/components/notification-bell";
-import { isExactActiveRoute } from "@/lib/navigation";
+import { defaultPathForRole, isExactActiveRoute } from "@/lib/navigation";
 import { isPublicWebsitePath } from "@/lib/public-website-routing";
 import { groupedVisibleNavigationItems, visibleNavigationItems, type NavigationIcon, type NavigationItem } from "@/lib/access-rules";
+import { roleDashboardTitle } from "@/lib/role-presentation";
+
+const OFFICIAL_LOGO_PATH = "/nalanda-logo-transparent.png";
 
 const icons: Record<NavigationIcon, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -75,6 +78,104 @@ const icons: Record<NavigationIcon, LucideIcon> = {
   ,cloudBackup: ShieldCheck
   ,website: Sparkles
 };
+
+function ShellBrand({ settings }: { settings: SchoolSettingsValue }) {
+  return (
+    <div className="brand">
+      <div className="brand-main">
+        <div className="brand-logo">
+          <Image src={OFFICIAL_LOGO_PATH} alt="" width={54} height={54} priority />
+        </div>
+        <div className="brand-name" aria-label={settings.schoolName}>
+          <strong>{settings.schoolName}</strong>
+        </div>
+      </div>
+      <span className="brand-product">Education Management System</span>
+    </div>
+  );
+}
+
+function AcademicYearControl({ academicYear }: { academicYear: string }) {
+  return (
+    <label className="academic-year-control" title="Current academic year">
+      <span className="sr-only">Academic year</span>
+      <select aria-label="Academic year" defaultValue={academicYear}>
+        <option value={academicYear}>{academicYear}</option>
+      </select>
+    </label>
+  );
+}
+
+function ShellHeader({
+  user,
+  permissions,
+  settings,
+  menuButtonRef,
+  mobileNavOpen,
+  onOpenMobileNav,
+  sidebarCollapsed,
+  onToggleSidebar
+}: {
+  user: AuthUser;
+  permissions: CanonicalPermission[];
+  settings: SchoolSettingsValue;
+  menuButtonRef: RefObject<HTMLButtonElement | null>;
+  mobileNavOpen: boolean;
+  onOpenMobileNav: () => void;
+  sidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
+}) {
+  const SidebarToggleIcon = sidebarCollapsed ? PanelLeftOpen : PanelLeftClose;
+  const notificationHref = user.role === "PARENT"
+    ? "/parent/notifications"
+    : user.role === "TEACHER"
+      ? "/teacher/notifications"
+      : "/notifications";
+  return (
+    <header className="topbar">
+      <div className="mobile-header-cluster">
+        <button
+          ref={menuButtonRef}
+          type="button"
+          className="icon-button mobile-menu-toggle"
+          aria-label="Open navigation menu"
+          aria-expanded={mobileNavOpen}
+          aria-controls="mobile-navigation"
+          onClick={onOpenMobileNav}
+        >
+          <Menu size={20} aria-hidden />
+        </button>
+        <Link className="mobile-brand-mark" href={defaultPathForRole(user.role)} aria-label={`${settings.schoolName} home`}>
+          <Image src={OFFICIAL_LOGO_PATH} alt="" width={38} height={38} priority />
+        </Link>
+      </div>
+      <div className="topbar-identity">
+        <Image src={OFFICIAL_LOGO_PATH} alt="" width={40} height={40} priority />
+        <span>
+          <strong>{settings.schoolName}</strong>
+          <small>{roleDashboardTitle(user.role)}</small>
+        </span>
+      </div>
+      <div className="top-actions">
+        {onToggleSidebar ? (
+          <button
+            type="button"
+            className="icon-button sidebar-toggle desktop-sidebar-toggle"
+            aria-label={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+            title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+            onClick={onToggleSidebar}
+          >
+            <SidebarToggleIcon size={18} aria-hidden />
+          </button>
+        ) : null}
+        <AcademicYearControl academicYear={settings.academicYear} />
+        <span className="desktop-theme-toggle"><ThemeToggle /></span>
+        {permissions.includes("VIEW_OWN_NOTIFICATIONS") ? <NotificationBell href={notificationHref} /> : null}
+        <UserMenu user={user} />
+      </div>
+    </header>
+  );
+}
 
 export function AppShell({
   children,
@@ -168,24 +269,7 @@ export function AppShell({
         />
         <aside className="sidebar parent-sidebar" id="mobile-navigation">
           <button type="button" className="icon-button drawer-close" aria-label="Close navigation menu" onClick={() => setMobileNavOpen(false)}><X size={18} aria-hidden /></button>
-          <div className="brand">
-            <div className="brand-main">
-              <div className="brand-logo">
-                <Image
-                  src={settings.logoPath}
-                  alt={settings.schoolName}
-                  width={58}
-                  height={58}
-                  priority
-                />
-              </div>
-              <div className="brand-name" aria-label={settings.schoolName}>
-                <strong>{settings.schoolName}</strong>
-              </div>
-            </div>
-            <span className="brand-product">Parent Portal</span>
-            <span>Academic Year {settings.academicYear}</span>
-          </div>
+          <ShellBrand settings={settings} />
           <nav className="nav parent-nav" aria-label="Parent navigation">
             <Link
               href="/parent"
@@ -207,28 +291,14 @@ export function AppShell({
           </nav>
         </aside>
         <main className="content" id="main-content" tabIndex={-1}>
-          <header className="topbar parent-topbar">
-            <div>
-              <h1>{settings.schoolName}</h1>
-              <div className="topbar-subtitle">Academic Year {settings.academicYear} - Parent access</div>
-            </div>
-            <div className="top-actions">
-              <button
-                ref={mobileMenuButtonRef}
-                type="button"
-                className="icon-button mobile-menu-toggle"
-                aria-label="Open navigation menu"
-                aria-expanded={mobileNavOpen}
-                aria-controls="mobile-navigation"
-                onClick={() => setMobileNavOpen(true)}
-              >
-                <Menu size={18} aria-hidden />
-              </button>
-              <ThemeToggle />
-              {permissions.includes("VIEW_OWN_NOTIFICATIONS") ? <NotificationBell href="/parent/notifications" /> : null}
-              <UserMenu user={user} />
-            </div>
-          </header>
+          <ShellHeader
+            user={user}
+            permissions={permissions}
+            settings={settings}
+            menuButtonRef={mobileMenuButtonRef}
+            mobileNavOpen={mobileNavOpen}
+            onOpenMobileNav={() => setMobileNavOpen(true)}
+          />
           {children}
         </main>
       </div>
@@ -247,15 +317,24 @@ export function AppShell({
         />
         <aside className="sidebar parent-sidebar" id="mobile-navigation">
           <button type="button" className="icon-button drawer-close" aria-label="Close navigation menu" onClick={() => setMobileNavOpen(false)}><X size={18} aria-hidden /></button>
-          <div className="brand"><div className="brand-main"><div className="brand-logo"><Image src={settings.logoPath} alt={settings.schoolName} width={58} height={58} priority /></div><div className="brand-name"><strong>{settings.schoolName}</strong></div></div><span className="brand-product">Teacher Portal</span><span>Academic Year {settings.academicYear}</span></div>
+          <ShellBrand settings={settings} />
           <nav className="nav parent-nav" aria-label="Teacher navigation"><Link href="/teacher" className={pathname === "/teacher" ? "active" : ""} aria-current={pathname === "/teacher" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Home size={17} aria-hidden />Teacher Portal</Link><Link href="/teacher/notifications" className={pathname.startsWith("/teacher/notifications") ? "active" : ""} aria-current={pathname.startsWith("/teacher/notifications") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Megaphone size={17} aria-hidden />Notifications</Link>{permissions.includes("MANAGE_OWN_WHATSAPP_CONSENT") && permissions.includes("MANAGE_OWN_SMS_EMAIL_CONSENT") ? <Link href="/teacher/communication-preferences" className={pathname === "/teacher/communication-preferences" ? "active" : ""} aria-current={pathname === "/teacher/communication-preferences" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Settings size={17} aria-hidden />Communication Preferences</Link> : null}<Link href="/teacher/marks" className={pathname.startsWith("/teacher/marks") ? "active" : ""} aria-current={pathname.startsWith("/teacher/marks") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><ClipboardCheck size={17} aria-hidden />Marks</Link><Link href="/teacher/homework" className={pathname.startsWith("/teacher/homework") ? "active" : ""} aria-current={pathname.startsWith("/teacher/homework") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><ClipboardList size={17} aria-hidden />Homework</Link><Link href="/teacher/library" className={pathname === "/teacher/library" ? "active" : ""} aria-current={pathname === "/teacher/library" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><ClipboardList size={17} aria-hidden />My Library</Link><Link href="/teacher/id-card" className={pathname === "/teacher/id-card" ? "active" : ""} aria-current={pathname === "/teacher/id-card" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><ClipboardList size={17} aria-hidden />My ID Card</Link><Link href="/install-app" className={pathname === "/install-app" ? "active" : ""} aria-current={pathname === "/install-app" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Download size={17} aria-hidden />Install App</Link></nav>
         </aside>
-        <main className="content" id="main-content" tabIndex={-1}><header className="topbar parent-topbar"><div><h1>{settings.schoolName}</h1><div className="topbar-subtitle">Academic Year {settings.academicYear} - Teacher access</div></div><div className="top-actions"><button ref={mobileMenuButtonRef} type="button" className="icon-button mobile-menu-toggle" aria-label="Open navigation menu" aria-expanded={mobileNavOpen} aria-controls="mobile-navigation" onClick={() => setMobileNavOpen(true)}><Menu size={18} aria-hidden /></button><ThemeToggle />{permissions.includes("VIEW_OWN_NOTIFICATIONS") ? <NotificationBell href="/teacher/notifications" /> : null}<UserMenu user={user} /></div></header>{children}</main>
+        <main className="content" id="main-content" tabIndex={-1}>
+          <ShellHeader
+            user={user}
+            permissions={permissions}
+            settings={settings}
+            menuButtonRef={mobileMenuButtonRef}
+            mobileNavOpen={mobileNavOpen}
+            onOpenMobileNav={() => setMobileNavOpen(true)}
+          />
+          {children}
+        </main>
       </div>
     );
   }
   const navGroups = groupedVisibleNavigationItems(permissions, user.role);
-  const SidebarToggleIcon = sidebarCollapsed ? PanelLeftOpen : PanelLeftClose;
   const renderNavLink = (item: NavigationItem) => {
     const Icon = icons[item.icon];
     const active = isExactActiveRoute(pathname, item.href);
@@ -291,24 +370,7 @@ export function AppShell({
         >
           <X size={18} aria-hidden />
         </button>
-        <div className="brand">
-          <div className="brand-main">
-            <div className="brand-logo">
-              <Image
-                src={settings.logoPath}
-                alt={settings.schoolName}
-                width={58}
-                height={58}
-                priority
-              />
-            </div>
-            <div className="brand-name" aria-label={settings.schoolName}>
-              <strong>{settings.schoolName}</strong>
-            </div>
-          </div>
-          <span className="brand-product">Fee Control</span>
-          <span>Academic Year {settings.academicYear}</span>
-        </div>
+        <ShellBrand settings={settings} />
         <nav className="nav" aria-label="Main navigation">
           {user.role === "TEACHER" ? <Link href="/teacher" className={pathname === "/teacher" ? "active" : ""} aria-current={pathname === "/teacher" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Home size={17} aria-hidden /><span>Teacher Portal</span></Link> : null}
           {user.role === "TEACHER" ? <Link href="/teacher/library" className={pathname === "/teacher/library" ? "active" : ""} aria-current={pathname === "/teacher/library" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><ClipboardList size={17} aria-hidden /><span>My Library</span></Link> : null}
@@ -333,40 +395,16 @@ export function AppShell({
         </div>
       </aside>
       <main className="content" id="main-content" tabIndex={-1}>
-        <header className="topbar">
-          <div>
-            <h1>{settings.schoolName}</h1>
-            <div className="topbar-subtitle">Academic Year {settings.academicYear}</div>
-          </div>
-          <div className="top-actions">
-            <button
-              type="button"
-              className="icon-button sidebar-toggle desktop-sidebar-toggle"
-              aria-label={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
-              title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
-              onClick={() => setSidebarCollapsed((value) => !value)}
-            >
-              <SidebarToggleIcon size={18} aria-hidden />
-            </button>
-            <button
-              ref={mobileMenuButtonRef}
-              type="button"
-              className="icon-button mobile-menu-toggle"
-              aria-label="Open navigation menu"
-              aria-expanded={mobileNavOpen}
-              aria-controls="mobile-navigation"
-              onClick={() => setMobileNavOpen(true)}
-            >
-              <Menu size={18} aria-hidden />
-            </button>
-            <select aria-label="Academic year" defaultValue={settings.academicYear}>
-              <option>{settings.academicYear}</option>
-            </select>
-            <ThemeToggle />
-            {permissions.includes("VIEW_OWN_NOTIFICATIONS") ? <NotificationBell href={user.role === "TEACHER" ? "/teacher/notifications" : "/notifications"} /> : null}
-            <UserMenu user={user} />
-          </div>
-        </header>
+        <ShellHeader
+          user={user}
+          permissions={permissions}
+          settings={settings}
+          menuButtonRef={mobileMenuButtonRef}
+          mobileNavOpen={mobileNavOpen}
+          onOpenMobileNav={() => setMobileNavOpen(true)}
+          sidebarCollapsed={sidebarCollapsed}
+          onToggleSidebar={() => setSidebarCollapsed((value) => !value)}
+        />
         {health ? (
           <ProductionWarningBanner issues={healthBannerIssues} />
         ) : null}

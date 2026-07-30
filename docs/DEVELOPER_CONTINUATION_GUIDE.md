@@ -1,5 +1,35 @@
 # Nalanda Fee Control — Developer Continuation Guide
 
+## UX-1A shared shell boundary
+
+Read `UX_1A_SHARED_LOGIN_APP_SHELL_SPEC.md`,
+`UX_1A_DESIGN_TOKENS.md`,
+`UX_1A_RESPONSIVE_ACCESSIBILITY_CHECKLIST.md`, and
+`UX_1A_QA_REPORT.md` before changing login or the authenticated shell.
+
+`components/app-shell.tsx` owns the shared responsive header, one
+academic-year control, permission-derived navigation, and the preserved mobile
+drawer focus contract. `components/user-menu.tsx` owns human identity,
+appearance, Change Password, Install App, and Logout.
+`lib/role-presentation.ts` is the only raw-role-to-human-label map. Do not
+format role enums ad hoc in pages.
+
+The official transparent PNG is generated deterministically from the governed
+JPEG by `tools/export-transparent-logo.ps1`; never replace or generatively
+redraw the crest. Login failures must remain exactly generic, auth responses
+private/no-store, session cookies strict, and disabled accounts denied.
+
+The single current year in `SchoolSettings` is not a historical context
+switcher. Do not add options or year creation without a separately approved
+data/permission/history design. Do not add a role picker. AUTH-2B owns
+aliases/reset/session inventory; IAM-1A owns per-user/multi-role authority;
+SUPPORT-1A owns support operations; OBS-1A owns monitoring.
+
+Run `pnpm.cmd qa:ux1a prepare` only against its isolated copied-database
+target. Complete `inspect`, Browser QA, `cleanup`, `operational-check`, and
+`destroy`; never print its runtime password. UX-1A-QA must independently clear
+the feature branch before merge.
+
 ## DEVOPS-1E operational migration baseline
 
 The clean operational SQLite database now records

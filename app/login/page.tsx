@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/login-form";
@@ -15,21 +16,37 @@ export default async function LoginPage() {
   return (
     <main className="login-page">
       <div className="login-theme"><ThemeToggle /></div>
-      <section className="login-panel">
-        <div className="login-brand">
-          <Image src="/nalanda-logo.jpg" alt="Nalanda Public School" width={82} height={82} priority />
-          <div>
-            <strong>NALANDA</strong>
-            <span>PUBLIC SCHOOL</span>
+      <section className="login-panel" aria-labelledby="login-heading">
+        <div className="login-brand-panel">
+          <div className="login-identity">
+            <Image className="login-logo" src="/nalanda-logo-transparent.png" alt="" width={72} height={72} priority />
+            <div>
+              <p className="login-school-name">Nalanda Public School</p>
+              <p className="login-system-name">Nalanda Education Management System</p>
+            </div>
           </div>
+          <div className="login-platform-copy">
+            <span>Secure school portal</span>
+            <h1>Unified School Management Platform</h1>
+            <p>One protected workspace for authorised school operations, communication, learning, and administration.</p>
+          </div>
+          <p className="login-security-note">Private access for authorised users only.</p>
         </div>
-        <div className="login-copy">
-          <h1>Nalanda Fee Control 2026-27</h1>
-          <p>Private school management access</p>
+        <div className="login-form-panel">
+          <div className="login-copy">
+            <span className="login-kicker">Welcome back</span>
+            <h2 id="login-heading">Sign in to Nalanda</h2>
+            <p>Use your school-issued username or email and password.</p>
+          </div>
+          <Suspense fallback={<div className="login-form" role="status">Loading secure sign-in…</div>}>
+            <LoginForm />
+          </Suspense>
+          <nav className="login-links" aria-label="Login support links">
+            <Link href="/privacy">Privacy Policy</Link>
+            <Link href="/terms">Terms of Use</Link>
+            <Link href="/contact">Contact Support</Link>
+          </nav>
         </div>
-        <Suspense fallback={<div className="login-form">Loading login...</div>}>
-          <LoginForm />
-        </Suspense>
       </section>
     </main>
   );

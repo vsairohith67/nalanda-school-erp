@@ -16,6 +16,7 @@ const publicPaths = [
   "/manifest.webmanifest",
   "/sw.js",
   "/nalanda-logo.jpg",
+  "/nalanda-logo-transparent.png",
   "/api/auth/login",
   "/api/deployment-health",
   "/api/setup"

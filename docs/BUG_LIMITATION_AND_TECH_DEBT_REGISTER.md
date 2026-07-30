@@ -7,7 +7,33 @@
 | `AUTH-2A` | Retained operational accounts | COMPLETE through P4C | One owned/rotated Super Admin remains active; Admin, Accountant and Viewer are inactive with preserved audit history | Do not reactivate a retained account without a named owner and current need; preserve the governed status-change and last-Super-Admin safeguards |
 | `AUTH-2B` | Central session, login alias, reset-channel and ownership state | DEFERRED until after DEVOPS-1E migration-baseline onboarding | Stateless sessions cannot be centrally inventoried/revoked and ownership/rotation/login-alias/reset-channel decisions are not persisted | Add `AuthSession`, username plus verified personal/work aliases, selectable verified personal/work reset channels, single-use reset links only, and persisted ownership/rotation metadata; never email a password |
 | `IAM-1A` | Delegated named accounts and fine-grained authorization | FUTURE after DEVOPS-1E | Current base roles do not provide reusable profiles or explicit per-user grants/denials for multiple named leaders and operators | Add named Directors/Associate Directors, Principal, Accountant, Computer Operator, Teacher, Parent and other users with base roles, reusable permission profiles, and explicit per-user grants/denials |
+| `SUPPORT-1A` | Governed support operations | FUTURE | Login links to the real public Contact route, but no approved support owner, hours, intake classification, or service workflow exists | Define the supported contact channel, owner, privacy-safe intake, escalation, retention, and availability before adding in-app support workflow |
+| `OBS-1A` | Redacted monitoring and incident alerting | FUTURE | Core health/readiness is local and permission-gated; no central monitoring provider is active | Approve allowlisted events, retention, access, incident ownership, hosting and processor terms before any Sentry/PostHog/provider integration |
 | `DATA0B-BACKUP-SETTINGS` | v37 blank-database restore | FIXED in DATA-0B | Prior backup omitted the full `SchoolSettings` singleton, which a restore over a preconfigured copy could mask | Keep the allowlisted settings snapshot, parser validation, idempotent upsert and blank migrated restore-twice regression |
+
+## UX-1A shared shell disposition
+
+- Shared login/header/navigation/design tokens are implemented without an auth
+  or data-model change. Independent UX-1A-QA remains the merge gate.
+- `UX-YEAR-1`: only one current `SchoolSettings.academicYear` exists. There is
+  no historical context switch or year-creation workflow; the shell must not
+  imply otherwise.
+- `UX-DEV-CSP-1`: strict production CSP is preserved. Current Next development
+  mode requests `unsafe-eval`, so production builds are the reliable Browser
+  QA target until a separately reviewed nonce/hash-compatible dev strategy
+  exists. Never weaken production CSP to silence this tooling mismatch.
+- `UX-AUTH-1`: password reset, verified aliases, central sessions, and reset
+  channels remain AUTH-2B. No fake Forgot Password action is permitted.
+- `UX-IAM-1`: the human designation is presentation only. It does not add
+  multi-role switching or per-user permission state; that remains IAM-1A.
+- `UX-OBS-1`: health and deployment readiness are separated, but continuous
+  monitoring remains OBS-1A.
+- `UX-SUPPORT-1`: Contact Support uses the existing public Contact route.
+  Service ownership and intake workflow remain SUPPORT-1A.
+- `UX-VERIFIER-1`: `deployment:integrity-check` still encodes the superseded
+  8 / 8 / 19 baseline and pre-DEVOPS-1E migration state. UX-1A uses exact
+  read-only live checks and its isolated harness; repair the legacy verifier
+  only in a separately scoped governance task.
 
 ## Prompt 23B critical finding and consolidation status
 

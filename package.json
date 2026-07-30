@@ -28,6 +28,7 @@
     "qa:auth2a": "tsx scripts/qa-auth2a-copied-db.ts",
     "qa:23c": "tsx scripts/qa23c-copied-db.ts",
     "qa:23cqa": "tsx scripts/qa23cqa-copied-db.ts",
+    "qa:ux1a": "tsx scripts/qa-ux1a-copied-db.ts",
     "auth:recover-super-admin": "tsx scripts/recover-super-admin.ts",
     "data0a:audit": "node scripts/data0a-provenance-audit.mjs",
     "data0a:backup": "tsx scripts/data0a-encrypted-backup.ts",

@@ -18,6 +18,7 @@ import {
 } from "@/lib/auth-rate-limit";
 
 const dummyPasswordHash = hashPassword("invalid-login-placeholder");
+const GENERIC_LOGIN_ERROR = "We couldn’t sign you in with those details.";
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,21 +30,21 @@ export async function POST(request: NextRequest) {
     }
     const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
     if (!contentType.startsWith("application/json")) {
-      return privateJson({ error: "A JSON request body is required" }, 415);
+      return privateJson({ error: GENERIC_LOGIN_ERROR }, 415);
     }
     let body: Record<string, unknown>;
     try {
       body = await request.json();
     } catch {
-      return privateJson({ error: "The sign-in request is malformed" }, 400);
+      return privateJson({ error: GENERIC_LOGIN_ERROR }, 400);
     }
     const identifier = String(body.identifier ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
     if (!identifier || !password) {
-      return privateJson({ error: "Username/email and password are required" }, 400);
+      return privateJson({ error: GENERIC_LOGIN_ERROR }, 400);
     }
     if (identifier.length > 254 || password.length > 1024) {
-      return privateJson({ error: "Invalid username/email or password" }, 401);
+      return privateJson({ error: GENERIC_LOGIN_ERROR }, 401);
     }
 
     const source = loginRequestSource(request.headers);
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
       const failure = await recordLoginFailure({ identifier, source });
       console.warn(`AUTH_LOGIN_FAILURE account=${failure.accountHash} source=${failure.sourceHash}`);
       if (failure.blocked) return rateLimitResponse(failure.retryAfterSeconds);
-      return privateJson({ error: "Invalid username/email or password" }, 401);
+      return privateJson({ error: GENERIC_LOGIN_ERROR }, 401);
     }
 
     await clearLoginAccountFailures(identifier);
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       credentialTag: await createSessionCredentialTag(user.id, user.passwordHash)
     });
     const response = NextResponse.json({
-      user: { id: user.id, name: user.name, username: user.username, role: user.role }
+      user: { name: user.name, username: user.username, role: user.role }
     });
     response.cookies.set(sessionCookieName(), token, {
       httpOnly: true,
@@ -89,10 +90,8 @@ export async function POST(request: NextRequest) {
     response.headers.set("cache-control", "private, no-store");
     return response;
   } catch (error) {
-    const message = error instanceof Error && error.message.includes("SECRET")
-      ? "Server authentication is not configured. Set AUTH_SECRET or SESSION_SECRET and restart the app."
-      : "Unable to sign in";
-    return privateJson({ error: message }, 500);
+    void error;
+    return privateJson({ error: GENERIC_LOGIN_ERROR }, 500);
   }
 }
 
@@ -103,7 +102,7 @@ function privateJson(body: Record<string, unknown>, status: number) {
 }
 
 function rateLimitResponse(retryAfterSeconds: number) {
-  const response = privateJson({ error: "Unable to sign in. Please try again later." }, 429);
+  const response = privateJson({ error: GENERIC_LOGIN_ERROR }, 429);
   response.headers.set("retry-after", String(Math.max(1, retryAfterSeconds)));
   return response;
 }

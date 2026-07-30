@@ -3,14 +3,12 @@
 import { useState } from "react";
 
 export function ChangePasswordForm() {
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
-    setMessage("");
     setError("");
     const form = event.currentTarget;
     const body = Object.fromEntries(new FormData(form).entries());
@@ -23,7 +21,7 @@ export function ChangePasswordForm() {
       const json = await response.json();
       if (!response.ok) throw new Error(json.error || "Unable to change password");
       form.reset();
-      setMessage(json.message);
+      window.location.replace("/login?passwordChanged=1");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to change password");
     } finally {
@@ -32,15 +30,23 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <form className="card card-pad form-grid password-form" onSubmit={submit}>
-      <label>Current Password<input name="currentPassword" type="password" autoComplete="current-password" required /></label>
-      <label>New Password<input name="newPassword" type="password" minLength={12} maxLength={128} autoComplete="new-password" required /></label>
-      <label>Confirm New Password<input name="confirmPassword" type="password" minLength={12} maxLength={128} autoComplete="new-password" required /></label>
-      <div className="full page-actions">
-        <button disabled={saving}>{saving ? "Saving..." : "Change Password"}</button>
+    <form className="card card-pad form-grid password-form" onSubmit={submit} aria-busy={saving}>
+      <div className="full password-policy" aria-labelledby="password-policy-heading">
+        <strong id="password-policy-heading">Choose a strong new password</strong>
+        <ul>
+          <li>Use 12 to 128 characters.</li>
+          <li>Avoid common or repeated-character passwords.</li>
+          <li>Use a password different from your current password.</li>
+        </ul>
       </div>
-      {message ? <div className="full success-text" role="status">{message}</div> : null}
+      <label>Current password<input name="currentPassword" type="password" autoComplete="current-password" required /></label>
+      <label>New password<input name="newPassword" type="password" minLength={12} maxLength={128} autoComplete="new-password" required /></label>
+      <label>Confirm new password<input name="confirmPassword" type="password" minLength={12} maxLength={128} autoComplete="new-password" required /></label>
+      <div className="full page-actions">
+        <button disabled={saving} type="submit">{saving ? "Updating password…" : "Change password"}</button>
+      </div>
       {error ? <div className="full error" role="alert">{error}</div> : null}
+      <span className="sr-only" role="status" aria-live="polite">{saving ? "Updating password securely." : ""}</span>
     </form>
   );
 }

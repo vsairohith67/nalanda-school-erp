@@ -5,17 +5,18 @@ import { getCurrentUser } from "@/lib/auth";
 import { hashPassword } from "@/lib/password";
 import { validateOwnPasswordChange } from "@/lib/password-control";
 import { logUserAction } from "@/lib/user-audit";
+import { sessionCookieName, sessionCookieSecure } from "@/lib/session-token";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  if (!user) return privateJson({ error: "Authentication required" }, 401);
   try {
     const body = await request.json();
     const currentPassword = String(body.currentPassword ?? "");
     const newPassword = String(body.newPassword ?? "");
     const confirmPassword = String(body.confirmPassword ?? "");
     const account = await prisma.user.findUnique({ where: { id: user.id } });
-    if (!account) return NextResponse.json({ error: "User account not found" }, { status: 404 });
+    if (!account) return privateJson({ error: "User account not found" }, 404);
     await validateOwnPasswordChange({
       currentPassword,
       storedHash: account.passwordHash,
@@ -30,11 +31,25 @@ export async function POST(request: NextRequest) {
         targetUserId: user.id
       });
     });
-    return NextResponse.json({ success: true, message: "Password changed successfully" });
+    const response = privateJson({
+      success: true,
+      message: "Password updated. Sign in again with your new password."
+    }, 200);
+    response.cookies.set(sessionCookieName(), "", {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: sessionCookieSecure(),
+      path: "/",
+      expires: new Date(0)
+    });
+    return response;
   } catch (error) {
-    return NextResponse.json(
-      { error: safeClientError(error, "Unable to change password") },
-      { status: 400 }
-    );
+    return privateJson({ error: safeClientError(error, "Unable to change password") }, 400);
   }
+}
+
+function privateJson(body: Record<string, unknown>, status: number) {
+  const response = NextResponse.json(body, { status });
+  response.headers.set("cache-control", "private, no-store");
+  return response;
 }

@@ -1,5 +1,18 @@
 # Documentation Index
 
+## UX-1A shared login and authenticated shell
+
+- [Shared Login and App Shell Specification](UX_1A_SHARED_LOGIN_APP_SHELL_SPEC.md) - governed identity, login/change-password contracts, role-aware header, academic-year/health boundaries, security invariants, and independent QA gate.
+- [Design Tokens](UX_1A_DESIGN_TOKENS.md) - official palette, typography, spacing, radius, elevation, control, motion, and component-ownership rules.
+- [Responsive and Accessibility Checklist](UX_1A_RESPONSIVE_ACCESSIBILITY_CHECKLIST.md) - seven exact viewports, keyboard/drawer, state semantics, and eight-role copied-database matrix.
+- [UX-1A Implementation QA Report](UX_1A_QA_REPORT.md) - preflight, operational identity, Browser evidence, fixtures, cleanup, verification, and no-merge handoff.
+- [Login and App Shell Phase Diagram](diagrams/login-app-shell-phase.mmd) - editable login-to-role-shell, accessibility, security, QA, and future-boundary flow.
+- [Master Architecture Diagram](diagrams/master-architecture.mmd) - compact Shared UX Shell node linked to the existing auth and data boundaries.
+
+UX-1A is implemented on `ux/shared-login-shell-redesign`. It changes no auth
+model, Prisma schema/migration, operational record, report-card logic, or
+Teacher-attendance scope. Do not merge before independent UX-1A-QA.
+
 ## DEVOPS-1E operational migration baseline
 
 - [Operational Prisma Migration-Baseline Onboarding](OPERATIONAL_MIGRATION_BASELINE_ONBOARDING.md) - dynamic synchronized-main preflight, exact approval, copied-database rehearsal, protected version-37 rollback and restore evidence, metadata-only operational result, unchanged application controls, and DEVOPS-1E-QA gate.

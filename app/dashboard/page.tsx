@@ -24,6 +24,7 @@ import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permission
 import { dashboardAttendanceSummary, getDashboardCommandCenter, type DashboardQuickAction } from "@/lib/dashboard";
 import { displayDate, money, moneyExact, SCHOOL_TIME_ZONE, schoolHour } from "@/lib/format";
 import { getSystemHealth } from "@/lib/system-health";
+import { roleDashboardTitle, roleDisplayLabel } from "@/lib/role-presentation";
 
 const actionIcons: Record<DashboardQuickAction["id"], LucideIcon> = {
   payment: IndianRupee,
@@ -36,10 +37,6 @@ const actionIcons: Record<DashboardQuickAction["id"], LucideIcon> = {
   importExport: Download,
   backup: DatabaseBackup
 };
-
-function roleLabel(role: string) {
-  return role.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -96,6 +93,7 @@ export default async function DashboardPage() {
     <PageShell className="dashboard-page">
       <section className="dashboard-welcome" aria-labelledby="dashboard-heading">
         <div className="dashboard-welcome-copy">
+          <span className="dashboard-eyebrow">{roleDashboardTitle(user.role)}</span>
           <h2 id="dashboard-heading">Good {currentSchoolHour < 12 ? "morning" : currentSchoolHour < 17 ? "afternoon" : "evening"}, {user.name}</h2>
           <div className="dashboard-context">
             <span>{settings.schoolName}</span>
@@ -104,11 +102,17 @@ export default async function DashboardPage() {
           </div>
         </div>
         <div className="dashboard-statuses">
-          <span className="dashboard-role">{roleLabel(user.role)}</span>
+          <span className="dashboard-role">{roleDisplayLabel(user.role)}</span>
           {health ? (
-            <div className={`dashboard-health ${health.status === "Good" ? "is-good" : "is-warning"}`}>
-              <ShieldCheck size={19} aria-hidden />
-              <span><strong>System {health.status.toLowerCase()}</strong><small>{health.issues.length ? `${health.issues.length} item${health.issues.length === 1 ? "" : "s"} need attention` : "Core checks are ready"}</small></span>
+            <div className="dashboard-health-group" aria-label="Authorised system status">
+              <div className={`dashboard-health ${health.status === "Good" ? "is-good" : "is-warning"}`}>
+                <ShieldCheck size={19} aria-hidden />
+                <span><strong>Core application health</strong><small>{health.status === "Good" ? "Operational" : "Attention required"}</small></span>
+              </div>
+              <div className={`dashboard-health ${health.issues.length ? "is-warning" : "is-good"}`}>
+                <DatabaseBackup size={19} aria-hidden />
+                <span><strong>Deployment readiness</strong><small>{health.issues.length ? `${health.issues.length} gate${health.issues.length === 1 ? "" : "s"} need review` : "Readiness checks passed"}</small></span>
+              </div>
             </div>
           ) : null}
         </div>
