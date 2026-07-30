@@ -6,12 +6,16 @@
 - [Design Tokens](UX_1A_DESIGN_TOKENS.md) - official palette, typography, spacing, radius, elevation, control, motion, and component-ownership rules.
 - [Responsive and Accessibility Checklist](UX_1A_RESPONSIVE_ACCESSIBILITY_CHECKLIST.md) - seven exact viewports, keyboard/drawer, state semantics, and eight-role copied-database matrix.
 - [UX-1A Implementation QA Report](UX_1A_QA_REPORT.md) - preflight, operational identity, Browser evidence, fixtures, cleanup, verification, and no-merge handoff.
+- [UX-1A Independent QA Closure](UX_1A_INDEPENDENT_QA_CLOSURE.md) - independent role, responsive, security, workflow, regression, cleanup, release, and external-system verification.
 - [Login and App Shell Phase Diagram](diagrams/login-app-shell-phase.mmd) - editable login-to-role-shell, accessibility, security, QA, and future-boundary flow.
 - [Master Architecture Diagram](diagrams/master-architecture.mmd) - compact Shared UX Shell node linked to the existing auth and data boundaries.
 
-UX-1A is implemented on `ux/shared-login-shell-redesign`. It changes no auth
-model, Prisma schema/migration, operational record, report-card logic, or
-Teacher-attendance scope. Do not merge before independent UX-1A-QA.
+UX-1A and its independent QA are complete. The release retains
+`ux/shared-login-shell-redesign` and is identified by
+`ux-shared-shell-v37-2026-07-30`. It changes no auth model, Prisma
+schema/migration, operational record, report-card logic, or Teacher-attendance
+scope. No deployment or staging authorization is implied. The next governed
+phase is `EXAM-RC-IMPL-1`.
 
 ## DEVOPS-1E operational migration baseline
 

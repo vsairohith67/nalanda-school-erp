@@ -20,7 +20,8 @@ UX-1A adds no schema, migration, authentication model, real account activation,
 report-card logic, Teacher-attendance scope, role switcher, password-reset
 backend, academic-year creation, Sentry, or PostHog. AUTH-2B, IAM-1A,
 SUPPORT-1A, and OBS-1A remain future phases. Branch
-`ux/shared-login-shell-redesign` must not merge before UX-1A-QA.
+`ux/shared-login-shell-redesign` was retained through the independent UX-1A-QA
+gate; the later closure entry records the cleared release.
 
 ## Prompt 23C - Teacher attendance exact timetable scope (2026-07-29)
 
@@ -1073,3 +1074,52 @@ were created and re-fetched.
 
 Implementation branch: `ux/shared-login-shell-redesign`. It is not merged.
 Next gate: independent `UX-1A-QA`; this entry does not start that phase.
+
+## UX-1A-QA — Independent Shared Login and App-Shell QA (2026-07-30)
+
+Independent QA resumed from the accepted UX-1A implementation handoff and
+used a fresh copied-database role matrix without activating or changing real
+accounts. Super Admin, Director, Principal, Admin, Accountant, Viewer,
+Teacher, and Parent passed human designation, permission-derived navigation,
+single-role account-menu, default-route, and unauthorized-route checks.
+
+QA found and corrected three shared 44 px target gaps: desktop navigation
+links, the System Health action, and Change Password controls. Focused
+regression assertions were added. All seven required viewports passed in light
+and dark with zero document overflow, correct mobile control order, contained
+menus and text, visible 2 px focus, drawer focus trap, Escape, and focus
+return.
+
+Login anti-enumeration, origin/CSRF, disabled-account denial, no-store,
+secure-cookie, duplicate-submit, password-control, rate-limit, error-state,
+permission, credential-log, and PWA cache boundaries passed. Change Password
+rejected wrong, weak, and mismatched input; a valid copied-user change expired
+the stale session, rejected the old password, accepted a fresh login, and
+left only privacy-safe audit evidence.
+
+Browser regression covered Students, fees/receipts, Attendance, Homework,
+Exams/Marks, report cards, Library, certificates, notifications,
+communications, AI Assistant, OCR, Cloud Backup, the public website, and
+Parent/Teacher portal boundaries. Console warnings/errors, hydration errors,
+native dialogs, document overflow, and final production stderr were all zero.
+
+The first copied cleanup failed closed on two copied profile `updatedAt`
+timestamps changed by module smoke tests. It was safely reset only after the
+operational hash was reconfirmed. Cleanup and inspection then passed twice,
+and every fixture, credential, copy, harness, runtime, and namespaced log was
+destroyed. The operational SHA-256 stayed
+`9a888627ea2af32433fdba4f2f5d02c471995145e41ace9a6d1cd0729c6eae93`;
+the exact zero-business/four-account baseline and single clean migration were
+unchanged.
+
+Final verification passed 274 page routes, 378 API routes, lifecycle
+zero-write backfill, typecheck, all 1,585 tests across 171 files, the 212-entry
+production build, version-37 backup
+`nalanda-fee-control-backup-2026-07-30-17-05.json`, Git safety, privacy scan,
+and Prisma migration status. Canvs, private GitHub, and all five governed
+Notion pages were re-fetched during closure.
+
+Result: `UX_SHARED_SHELL_CLEARED`. Release tag:
+`ux-shared-shell-v37-2026-07-30`. No staging or deployment is authorized.
+`AUTH-2B`, `IAM-1A`, `SUPPORT-1A`, and `OBS-1A` remain separate. Next phase:
+`EXAM-RC-IMPL-1`.
