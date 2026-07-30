@@ -16,7 +16,8 @@ flowchart LR
   R --> Q{"Activation validation"}
   Q -->|"valid"| F["Activate and freeze<br/>append-only audit"]
   Q -->|"invalid"| X
-  F --> N["Future marks-entry phase<br/>not implemented here"]
+  F --> QA["Independent QA cleared<br/>migration applied · empty operational configuration"]
+  QA --> N["EXAM-RC-IMPL-2<br/>marks entry and calculation not implemented here"]
   F --> K["Correction by cloned new version"]
   SA["Super Admin"] --> I["Explicit intervention permission<br/>mandatory audit reason"]
   I --> E

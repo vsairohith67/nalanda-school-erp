@@ -1,5 +1,11 @@
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { requirePermission } from "@/lib/auth";
+import {
+  assignmentRoleLabel,
+  calculationModeLabel,
+  configurationStatusLabel,
+  roundingPolicyLabel
+} from "@/lib/exam-configuration-labels";
 import { listTeacherExamAssignments } from "@/lib/exam-configurations";
 import { displayDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -24,9 +30,9 @@ export default async function Page() {
                   <td data-label="Class / section"><span>{assignment.className} - {assignment.section}</span></td>
                   <td data-label="Subject / paper"><span>{assignment.subjectPaper.subjectNameSnapshot}<br /><small>{assignment.subjectPaper.paperName}</small></span></td>
                   <td data-label="Component"><span>{assignment.component.name}<br /><small>Maximum {assignment.component.maximumMarks.toString()}</small></span></td>
-                  <td data-label="Ownership"><span>{assignment.assignmentRole.replaceAll("_", " ")}</span></td>
-                  <td data-label="Scheme"><span>v{assignment.schemeVersion.versionNumber} - {assignment.schemeVersion.calculationMode}<br /><small>{assignment.schemeVersion.roundingPolicyVersion}</small></span></td>
-                  <td data-label="Status"><StatusBadge status={assignment.examination.status} /></td>
+                  <td data-label="Ownership"><span>{assignmentRoleLabel(assignment.assignmentRole)}</span></td>
+                  <td data-label="Scheme"><span>v{assignment.schemeVersion.versionNumber} - {calculationModeLabel(assignment.schemeVersion.calculationMode)}<br /><small>{roundingPolicyLabel(assignment.schemeVersion.roundingPolicyVersion)}</small></span></td>
+                  <td data-label="Status"><StatusBadge status={configurationStatusLabel(assignment.examination.status)} /></td>
                 </tr>
               ))}
               {!assignments.length ? <tr><td colSpan={7}>No active exact examination assignment is linked to this Teacher account.</td></tr> : null}

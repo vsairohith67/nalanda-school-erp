@@ -19,7 +19,6 @@ Resolved:
 
 Remaining:
 
-- `EXAM-RC-IMPL-1-QA` must independently verify the unmerged feature branch.
 - The marks-entry grid, result calculation/moderation/approval, publication,
   report-card issue and bulk PDF/ZIP generation are intentionally not
   implemented.
@@ -31,6 +30,11 @@ Remaining:
   phase already exposes no in-place mutation path for active/frozen versions.
 - SQLite remains a supported single-instance write architecture; horizontal
   multi-instance writes are outside this phase.
+
+Independent QA is complete. It corrected cross-workflow optimistic
+concurrency, paper/component applicability, assignment-version immutability,
+contributor ownership, Teacher-state revalidation and accessibility before
+the fast-forward release.
 
 ## DATA-0B follow-up
 

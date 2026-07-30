@@ -1,5 +1,33 @@
 # Nalanda Fee Control — Developer Continuation Guide
 
+## EXAM-RC-IMPL-1 cleared scheme boundary
+
+Read `EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md` and
+`EXAMINATION_SCHEME_ASSIGNMENT_QA_CLOSURE.md` before changing examinations,
+scheme versions, components, subject papers/groups, grade/co-scholastic
+versions, template bindings or Teacher examination assignments.
+
+Preserve these independently cleared invariants:
+
+- every configuration mutation carries the expected examination version;
+- raw sum and weighted/normalised are explicit and no historical combination
+  is a default;
+- active/frozen configuration and assignments are corrected through a new
+  draft version;
+- exact Teacher ownership requires active User, Staff, timetable Teacher and
+  year/class/section/subject timetable assignment;
+- paper-specific components cannot be assigned to another paper;
+- one primary submitter is required before explicit contributors, and a
+  primary cannot be archived while contributors remain;
+- Teacher proposal never activates;
+- Super Admin intervention requires its exact permission and a reason;
+- archive preserves history and no hard-delete path is added.
+
+The operational database contains both completed migrations and empty
+configuration tables. The next phase is `EXAM-RC-IMPL-2`; it must not reuse
+legacy marks-entry/result/report-card behavior without a separately approved
+integration design.
+
 ## UX-1A shared shell boundary
 
 Read `UX_1A_SHARED_LOGIN_APP_SHELL_SPEC.md`,

@@ -1,5 +1,33 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## EXAM-RC-IMPL-1-QA - Independent scheme and assignment QA (2026-07-30)
+
+Independently verified the pushed feature commit on the exact retained branch
+and private origin while `main` remained unchanged. The EXAM1QA copied matrix
+covered raw/weighted configuration, subject/paper overrides, grade,
+co-scholastic and template versions, clone/freeze/archive/concurrency,
+permission boundaries and exact primary/contributor Teacher ownership.
+
+QA corrected examination-level concurrency, paper/component cross-wiring,
+active/frozen assignment correction, contributor-final-owner protection,
+Teacher state revalidation, human labels, accessible confirmation and 44 px
+targets. Principal/Teacher Browser QA passed at 1440x900 and exact 390x844 in
+light/dark with no overflow, raw IDs/enums, console errors or clean-runtime
+stderr. Copied fixtures/state were destroyed and cleanup was confirmed twice.
+
+Fresh/existing/restore-twice rehearsal passed. Protected raw and version-37
+rollback artifacts were created, then the additive migration was deployed
+twice idempotently to the operational database. Its physical SHA-256 became
+`1288102356A1D4EE5CFCBF08C1D79306EC758FF905BC091660EC195B6BF64F8A`
+while the application-data digest, zero-business baseline, four account
+states, integrity and foreign keys remained exact; all new tables are empty.
+
+Final verification passed 278 page routes, 391 API routes, zero-write
+lifecycle, typecheck, 1,596 tests across 172 files, 214/214 static pages with
+the bounded heap, version-37 backup and Git safety. Release tag:
+`exam-scheme-foundation-v37-2026-07-30`. Next:
+`EXAM-RC-IMPL-2 — Teacher Marks Entry, Moderation and Calculation Foundation`.
+
 ## EXAM-RC-IMPL-1 - Examination scheme and assignment foundation (2026-07-30)
 
 Started from dynamically captured synchronized private `main` commit

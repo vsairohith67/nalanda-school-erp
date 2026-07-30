@@ -1,5 +1,11 @@
 # Exams and Marks Foundation
 
+> The legacy raw-marks workflow below predates the independently cleared
+> versioned examination-scheme foundation. New configuration uses
+> `EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md`; it does not open marks entry
+> or authorize this legacy workflow to consume a new scheme. That integration
+> belongs to `EXAM-RC-IMPL-2`.
+
 ## Scope
 
 Prompt 17B stores internal raw marks. It supports exam cycles, exact class/section/subject/component assessment sheets, decimal maximum and pass marks, Teacher-scoped entry, absent/exempt/not-applicable states, workflow, preview-first CSV import, internal reports, append-only history, and backup/restore version 24.

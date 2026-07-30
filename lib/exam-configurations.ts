@@ -321,7 +321,7 @@ export async function createSchemeVersion(client: PrismaClient, examinationId: s
   const source = objectInput(input);
   const interventionReason = governedInterventionReason(actor, source.interventionReason);
   return client.$transaction(async (tx) => {
-    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId);
+    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId, source.expectedExaminationVersion);
     const subjectPaperId = optionalId(source.subjectPaperId);
     const subjectPaper = subjectPaperId
       ? await tx.examSubjectPaper.findFirst({ where: { id: subjectPaperId, examinationId, classScopeId: classScope.id, status: "ACTIVE" } })
@@ -392,7 +392,7 @@ export async function createSubjectPaper(client: PrismaClient, examinationId: st
   const source = objectInput(input);
   const interventionReason = governedInterventionReason(actor, source.interventionReason);
   return client.$transaction(async (tx) => {
-    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId);
+    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId, source.expectedExaminationVersion);
     const timetableSubjectId = requiredId(source.timetableSubjectId, "Timetable subject");
     const timetableSubject = await tx.timetableSubject.findFirst({ where: { id: timetableSubjectId, isActive: true } });
     if (!timetableSubject) throw new ExamConfigurationError("An active timetable subject is required.");
@@ -439,7 +439,7 @@ export async function createSubjectGroup(client: PrismaClient, examinationId: st
   const source = objectInput(input);
   const interventionReason = governedInterventionReason(actor, source.interventionReason);
   return client.$transaction(async (tx) => {
-    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId);
+    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId, source.expectedExaminationVersion);
     const calculationMode = enumText(source.calculationMode, EXAM_CALCULATION_MODES, "Group calculation mode");
     if (!Array.isArray(source.members) || source.members.length < 2 || source.members.length > 20) {
       throw new ExamConfigurationError("A subject group requires between 2 and 20 papers.");
@@ -505,7 +505,7 @@ export async function createGradeScaleVersion(client: PrismaClient, examinationI
   const interventionReason = governedInterventionReason(actor, source.interventionReason);
   const bands = validateGradeBands(source.bands);
   return client.$transaction(async (tx) => {
-    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId);
+    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId, source.expectedExaminationVersion);
     const latest = await tx.gradeScaleVersion.findFirst({ where: { examinationId, classScopeId: classScope.id }, orderBy: { versionNumber: "desc" } });
     const created = await tx.gradeScaleVersion.create({
       data: {
@@ -544,7 +544,7 @@ export async function createCoScholasticSchemeVersion(client: PrismaClient, exam
   const ratingScale = uniqueShortTextArray(source.ratingScale, "Co-scholastic rating scale", 2, 10);
   const itemLabels = uniqueShortTextArray(source.items, "Co-scholastic items", 1, 50);
   return client.$transaction(async (tx) => {
-    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId);
+    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId, source.expectedExaminationVersion);
     const latest = await tx.coScholasticSchemeVersion.findFirst({ where: { examinationId, classScopeId: classScope.id }, orderBy: { versionNumber: "desc" } });
     const created = await tx.coScholasticSchemeVersion.create({
       data: {
@@ -589,7 +589,7 @@ export async function createTemplateFamilyBinding(client: PrismaClient, examinat
   const source = objectInput(input);
   const interventionReason = governedInterventionReason(actor, source.interventionReason);
   return client.$transaction(async (tx) => {
-    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId);
+    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId, source.expectedExaminationVersion);
     const templateFamily = enumText(source.templateFamily, EXAM_TEMPLATE_FAMILIES, "Template family");
     const reportCardTemplateId = optionalId(source.reportCardTemplateId);
     if (reportCardTemplateId) {
@@ -631,7 +631,7 @@ export async function createTeacherExamAssignment(client: PrismaClient, examinat
   const interventionReason = governedInterventionReason(actor, source.interventionReason);
   const assignmentReason = safeText(source.assignmentReason, "Assignment reason", 1_000);
   return client.$transaction(async (tx) => {
-    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId);
+    const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId, source.expectedExaminationVersion);
     const subjectPaperId = requiredId(source.subjectPaperId, "Subject paper");
     const componentId = requiredId(source.componentId, "Scheme component");
     const staffMemberId = requiredId(source.staffMemberId, "Staff member");
@@ -645,6 +645,9 @@ export async function createTeacherExamAssignment(client: PrismaClient, examinat
       include: { schemeVersion: true }
     });
     if (!component) throw new ExamConfigurationError("The selected component is outside the current draft scheme version.");
+    if (component.schemeVersion.subjectPaperId && component.schemeVersion.subjectPaperId !== subjectPaperId) {
+      throw new ExamConfigurationError("The selected component belongs to a different subject-paper override.");
+    }
     const staff = await tx.staffMember.findFirst({
       where: { id: staffMemberId, status: "ACTIVE", user: { isActive: true, role: "TEACHER" } },
       include: { timetableTeacher: true }
@@ -728,14 +731,48 @@ export async function archiveTeacherExamAssignment(
   const archiveReason = safeText(source.archiveReason, "Assignment archive reason", 1_000);
   const expectedVersion = expectedExamVersion(source.expectedVersion, "assignment");
   return client.$transaction(async (tx) => {
-    const current = await tx.teacherExamAssignment.findFirst({ where: { id: assignmentId, examinationId } });
+    const current = await tx.teacherExamAssignment.findFirst({
+      where: { id: assignmentId, examinationId },
+      include: { schemeVersion: { select: { status: true } } }
+    });
     if (!current) throw new ExamConfigurationError("Teacher assignment was not found.", 404);
     if (current.status === "ARCHIVED") return current;
+    const { examination } = await mutableScope(
+      tx,
+      examinationId,
+      current.classScopeId,
+      source.expectedExaminationVersion
+    );
+    if (current.schemeVersion.status !== "DRAFT") {
+      throw new ExamConfigurationError(
+        "Assignments in an active or frozen scheme are immutable; clone a new version for correction.",
+        409
+      );
+    }
+    if (current.assignmentRole === "PRIMARY_SUBMITTER") {
+      const activeContributors = await tx.teacherExamAssignment.count({
+        where: {
+          examinationId,
+          classScopeId: current.classScopeId,
+          subjectPaperId: current.subjectPaperId,
+          componentId: current.componentId,
+          status: "ACTIVE",
+          assignmentRole: "CONTRIBUTOR"
+        }
+      });
+      if (activeContributors) {
+        throw new ExamConfigurationError(
+          "Archive explicit contributors before archiving the primary submitter; contributors cannot become hidden final owners.",
+          409
+        );
+      }
+    }
     const changed = await tx.teacherExamAssignment.updateMany({
       where: { id: assignmentId, examinationId, status: "ACTIVE", version: expectedVersion },
       data: { status: "ARCHIVED", archivedAt: new Date(), archivedByUserId: actor.id, archiveReason, version: { increment: 1 } }
     });
     if (changed.count !== 1) throw new ExamConfigurationError("This assignment changed in another session. Reload it before archiving.", 409);
+    await bumpExamination(tx, examinationId, examination.version);
     const updated = await tx.teacherExamAssignment.findUniqueOrThrow({ where: { id: assignmentId } });
     await appendAudit(tx, {
       examinationId,
@@ -760,10 +797,14 @@ export async function activateSchemeVersion(client: PrismaClient, examinationId:
   const schemeVersionId = requiredId(source.schemeVersionId, "Scheme version");
   const activationReason = safeText(source.activationReason, "Activation reason", 1_000);
   const expectedVersion = expectedExamVersion(source.expectedVersion, "scheme");
+  const expectedExaminationVersion = expectedExamVersion(source.expectedExaminationVersion, "examination");
   return client.$transaction(async (tx) => {
     const examination = await tx.examination.findUnique({ where: { id: examinationId }, include: { classScopes: { where: { status: "ACTIVE" } } } });
     if (!examination) throw new ExamConfigurationError("Examination configuration was not found.", 404);
     if (examination.status === "ARCHIVED") throw new ExamConfigurationError("An archived examination cannot activate a scheme.", 409);
+    if (examination.version !== expectedExaminationVersion) {
+      throw new ExamConfigurationError("This examination changed in another session. Reload it before activation.", 409);
+    }
     const scheme = await tx.examinationSchemeVersion.findFirst({
       where: { id: schemeVersionId, examinationId },
       include: {
@@ -877,13 +918,14 @@ export async function activateSchemeVersion(client: PrismaClient, examinationId:
       select: { classScopeId: true },
       distinct: ["classScopeId"]
     });
-    if (activeScopeIds.length === examination.classScopes.length) {
-      await tx.examination.update({
-        where: { id: examinationId },
-        data: { status: "ACTIVE", activatedAt: examination.activatedAt ?? now, activatedByUserId: actor.id, version: { increment: 1 } }
-      });
-    } else {
-      await tx.examination.update({ where: { id: examinationId }, data: { version: { increment: 1 } } });
+    const examinationChanged = await tx.examination.updateMany({
+      where: { id: examinationId, version: expectedExaminationVersion, status: { not: "ARCHIVED" } },
+      data: activeScopeIds.length === examination.classScopes.length
+        ? { status: "ACTIVE", activatedAt: examination.activatedAt ?? now, activatedByUserId: actor.id, version: { increment: 1 } }
+        : { version: { increment: 1 } }
+    });
+    if (examinationChanged.count !== 1) {
+      throw new ExamConfigurationError("This examination changed in another session. Reload it before activation.", 409);
     }
     const updated = await tx.examinationSchemeVersion.findUniqueOrThrow({
       where: { id: schemeVersionId },
@@ -965,7 +1007,13 @@ export async function recordTeacherSchemeProposal(client: PrismaClient, examinat
         examinationId,
         subjectPaperId,
         status: "ACTIVE",
-        staffMember: { userId: actor.id, status: "ACTIVE" }
+        examination: { status: { in: ["DRAFT", "ACTIVE"] } },
+        staffMember: {
+          userId: actor.id,
+          status: "ACTIVE",
+          user: { isActive: true, role: "TEACHER" },
+          timetableTeacher: { is: { isActive: true } }
+        }
       },
       include: { subjectPaper: true, classScope: true }
     });
@@ -1000,7 +1048,16 @@ export async function recordTeacherSchemeProposal(client: PrismaClient, examinat
 export async function listTeacherExamAssignments(client: ExamClient, actor: Pick<ExamActor, "id" | "role">) {
   if (actor.role !== "TEACHER") throw new ExamConfigurationError("Teacher assignment view is available only to a Teacher.", 403);
   return client.teacherExamAssignment.findMany({
-    where: { status: "ACTIVE", staffMember: { userId: actor.id, status: "ACTIVE" } },
+    where: {
+      status: "ACTIVE",
+      examination: { status: { in: ["DRAFT", "ACTIVE"] } },
+      staffMember: {
+        userId: actor.id,
+        status: "ACTIVE",
+        user: { isActive: true, role: "TEACHER" },
+        timetableTeacher: { is: { isActive: true } }
+      }
+    },
     select: {
       id: true,
       academicYear: true,
@@ -1042,10 +1099,19 @@ function publicGradeScale(row: object) {
   return JSON.parse(JSON.stringify(row)) as Record<string, unknown>;
 }
 
-async function mutableScope(tx: Prisma.TransactionClient, examinationId: string, classScopeIdValue: unknown) {
+async function mutableScope(
+  tx: Prisma.TransactionClient,
+  examinationId: string,
+  classScopeIdValue: unknown,
+  expectedExaminationVersionValue: unknown
+) {
+  const expectedExaminationVersion = expectedExamVersion(expectedExaminationVersionValue, "examination");
   const examination = await tx.examination.findUnique({ where: { id: examinationId } });
   if (!examination) throw new ExamConfigurationError("Examination configuration was not found.", 404);
   if (examination.status === "ARCHIVED") throw new ExamConfigurationError("An archived examination is immutable.", 409);
+  if (examination.version !== expectedExaminationVersion) {
+    throw new ExamConfigurationError("This examination changed in another session. Reload it before continuing.", 409);
+  }
   const classScopeId = requiredId(classScopeIdValue, "Class scope");
   const classScope = await tx.examinationClassScope.findFirst({
     where: { id: classScopeId, examinationId, status: "ACTIVE" }

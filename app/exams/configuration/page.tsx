@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
 import { requirePermission } from "@/lib/auth";
+import { examTypeLabel } from "@/lib/exam-configuration-labels";
 import { listExaminationConfigurations } from "@/lib/exam-configurations";
 import { prisma } from "@/lib/prisma";
 import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
@@ -37,7 +38,7 @@ export default async function Page() {
               {rows.map((row) => (
                 <tr key={row.id}>
                   <td>{row.examCode}</td>
-                  <td>{row.name}<br /><small>{row.examType.replaceAll("_", " ")}</small></td>
+                  <td>{row.name}<br /><small>{examTypeLabel(row.examType)}</small></td>
                   <td>{displayDate(row.startDate)} – {displayDate(row.endDate)}</td>
                   <td>{row._count.classScopes}</td>
                   <td>{row._count.schemeVersions}</td>

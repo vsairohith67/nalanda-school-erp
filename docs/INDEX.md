@@ -3,13 +3,16 @@
 ## EXAM-RC-IMPL-1 examination scheme and assignment foundation
 
 - [Examination Scheme and Assignment Foundation](EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md) - versioned domain, explicit calculation modes, Principal workflow, exact timetable-backed Teacher ownership, permissions, APIs, migration, copied-database QA and operator rules.
+- [Examination Scheme and Assignment Independent QA Closure](EXAMINATION_SCHEME_ASSIGNMENT_QA_CLOSURE.md) - independent scheme/assignment matrix, Browser/accessibility evidence, migration/restore rehearsal, operational migration controls, cleanup and release evidence.
 - [Examination Scheme and Assignment Diagram](diagrams/examination-scheme-assignment-foundation.mmd) - editable configuration, validation, assignment, activation and future-phase boundary.
 
-`EXAM-RC-IMPL-1` is implemented on
-`feature/exam-scheme-assignment-foundation` and remains unmerged. It adds one
-additive Prisma migration and changes no operational business record.
-Independent `EXAM-RC-IMPL-1-QA` is next. Marks entry, result calculation,
-publication and bulk PDF generation remain out of scope.
+`EXAM-RC-IMPL-1` and independent QA are complete. The retained branch is
+`feature/exam-scheme-assignment-foundation`; release tag
+`exam-scheme-foundation-v37-2026-07-30` identifies the fast-forwarded main
+release. The additive operational migration preserves the exact zero-business
+and account baseline. Marks entry, calculation/moderation, publication and
+bulk PDF generation remain out of scope. Next:
+`EXAM-RC-IMPL-2 — Teacher Marks Entry, Moderation and Calculation Foundation`.
 
 ## UX-1A shared login and authenticated shell
 

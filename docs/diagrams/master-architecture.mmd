@@ -4,7 +4,10 @@ flowchart LR
   UX --> AUTH
   APP --> AUTH["Session, role and permission gates"]
   AUTH --> TAS["Teacher Attendance Scope\nexact active timetable or dated substitute"]
+  AUTH --> EXAM["Versioned Examination Configuration\nPrincipal setup and exact Teacher assignment"]
   AUTH --> GOV["Separately governed leadership and other-role scopes"]
   TAS --> DATA["Prisma / operational SQLite"]
+  EXAM --> DATA
+  EXAM -. "future EXAM-RC-IMPL-2 only" .-> MARKS["Marks entry and calculation"]
   GOV --> DATA
   DATA --> AUDIT["Append-only audit and versioned backup"]

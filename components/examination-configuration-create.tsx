@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { examTypeLabel } from "@/lib/exam-configuration-labels";
 
 type ClassSectionOption = {
   id: string;
@@ -75,7 +76,7 @@ export function ExaminationConfigurationCreate({
         <select name="examType" required defaultValue="">
           <option value="" disabled>Select type</option>
           {["FORMATIVE", "SUMMATIVE", "TERM", "ANNUAL", "PREBOARD", "PRACTICAL", "OTHER_APPROVED"].map((value) => (
-            <option key={value} value={value}>{value.replaceAll("_", " ")}</option>
+            <option key={value} value={value}>{examTypeLabel(value)}</option>
           ))}
         </select>
       </label>

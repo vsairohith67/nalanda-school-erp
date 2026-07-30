@@ -54,6 +54,15 @@ function removeState() {
   if (existsSync(STATE_PATH)) rmSync(STATE_PATH, { force: true });
 }
 
+async function examinationVersion(client: PrismaClient, examinationId: string) {
+  return {
+    expectedExaminationVersion: (await client.examination.findUniqueOrThrow({
+      where: { id: examinationId },
+      select: { version: true }
+    })).version
+  };
+}
+
 async function prepare() {
   if (existsSync(STATE_PATH)) {
     const previous = readState();
@@ -169,6 +178,7 @@ async function prepare() {
     const classScopeId = examination.classScopes[0]?.id;
     if (!classScopeId) throw new Error("EXAM1_CLASS_SCOPE_MISSING");
     const mathPaper = await createSubjectPaper(client, examination.id, {
+      ...(await examinationVersion(client, examination.id)),
       classScopeId,
       timetableSubjectId: mathematics.id,
       paperCode: "MATH",
@@ -176,6 +186,7 @@ async function prepare() {
       displayOrder: 1
     }, principalActor);
     const sciencePaper = await createSubjectPaper(client, examination.id, {
+      ...(await examinationVersion(client, examination.id)),
       classScopeId,
       timetableSubjectId: science.id,
       paperCode: "SCI",
@@ -183,6 +194,7 @@ async function prepare() {
       displayOrder: 2
     }, principalActor);
     await createSubjectGroup(client, examination.id, {
+      ...(await examinationVersion(client, examination.id)),
       classScopeId,
       groupCode: "CORE",
       groupName: "Core Subjects",
@@ -194,6 +206,7 @@ async function prepare() {
       ]
     }, principalActor);
     const scheme = await createSchemeVersion(client, examination.id, {
+      ...(await examinationVersion(client, examination.id)),
       classScopeId,
       calculationMode: "WEIGHTED_NORMALIZED",
       components: [
@@ -218,6 +231,7 @@ async function prepare() {
       ]
     }, principalActor);
     await createGradeScaleVersion(client, examination.id, {
+      ...(await examinationVersion(client, examination.id)),
       classScopeId,
       name: "EXAM1 Grade Scale",
       scaleFamily: "PERCENTAGE",
@@ -228,6 +242,7 @@ async function prepare() {
       ]
     }, principalActor);
     await createCoScholasticSchemeVersion(client, examination.id, {
+      ...(await examinationVersion(client, examination.id)),
       classScopeId,
       name: "EXAM1 Co-Scholastic",
       schemeFamily: "RATING",
@@ -235,6 +250,7 @@ async function prepare() {
       items: ["Work Education", "Art Education", "Health and Physical Education"]
     }, principalActor);
     await createTemplateFamilyBinding(client, examination.id, {
+      ...(await examinationVersion(client, examination.id)),
       classScopeId,
       templateFamily: "SECONDARY_10_40_GROUPED"
     }, principalActor);
@@ -242,6 +258,7 @@ async function prepare() {
     for (const paper of [mathPaper, sciencePaper]) {
       for (const component of scheme.components) {
         await createTeacherExamAssignment(client, examination.id, {
+          ...(await examinationVersion(client, examination.id)),
           classScopeId,
           subjectPaperId: paper.id,
           componentId: component.id,
@@ -254,6 +271,7 @@ async function prepare() {
     let overlapRejected = false;
     try {
       await createTeacherExamAssignment(client, examination.id, {
+        ...(await examinationVersion(client, examination.id)),
         classScopeId,
         subjectPaperId: mathPaper.id,
         componentId: scheme.components[0].id,
@@ -267,11 +285,13 @@ async function prepare() {
     if (!overlapRejected) throw new Error("EXAM1_OVERLAPPING_PRIMARY_NOT_REJECTED");
 
     await activateSchemeVersion(client, examination.id, {
+      ...(await examinationVersion(client, examination.id)),
       schemeVersionId: scheme.id,
       expectedVersion: scheme.version,
       activationReason: "EXAM1 copied-database activation and freeze verification."
     }, principalActor);
     await createSchemeVersion(client, examination.id, {
+      ...(await examinationVersion(client, examination.id)),
       classScopeId,
       cloneSourceId: scheme.id
     }, principalActor);

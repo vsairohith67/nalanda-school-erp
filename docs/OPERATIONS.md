@@ -54,6 +54,11 @@ pnpm.cmd qa:exam1 -- cleanup
 Never point that workflow at `prisma/dev.db`. Full rules and API/permission
 boundaries are in
 [`EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md`](EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md).
+Independent QA evidence and operational migration/rollback details are in
+[`EXAMINATION_SCHEME_ASSIGNMENT_QA_CLOSURE.md`](EXAMINATION_SCHEME_ASSIGNMENT_QA_CLOSURE.md).
+Both migrations are now complete in the operational database; the new
+configuration tables are intentionally empty until a Principal creates the
+first governed examination.
 
 ## Daily workflow
 

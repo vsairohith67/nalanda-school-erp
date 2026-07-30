@@ -231,18 +231,25 @@ The editable repository source is
 
 ## Release gate
 
-Final implementation verification recorded 278 page routes, 391 API routes, a
-zero-write lifecycle dry run, default-memory sequential application/tools
-typecheck, 1,594 passing tests across 172 files, 214 generated static pages,
-backup version 37
-`nalanda-fee-control-backup-2026-07-30-20-02.json`, and a passing Git safety
-scan. The operational database SHA-256 remained
-`9A888627EA2AF32433FDBA4F2F5D02C471995145E41ACE9A6D1CD0729C6EAE93`
-with the exact zero-business/four-account baseline, integrity `ok` and zero
-foreign-key violations. The feature migration is intentionally pending on the
-operational database.
+Independent `EXAM-RC-IMPL-1-QA` is cleared. QA added examination-level
+optimistic concurrency to every mutable workflow, enforced paper-specific
+components, made active/frozen Teacher assignments immutable, protected
+explicit contributor ownership, revalidated Teacher/Staff/timetable state,
+and corrected human labels, accessible confirmation and 44 px controls.
 
-The feature branch is `feature/exam-scheme-assignment-foundation`. It must be
-committed and pushed without merging. Independent `EXAM-RC-IMPL-1-QA` is the
-next gate. This document does not authorize staging, deployment, marks entry,
-result calculation, publication, or PDF generation.
+Final verification recorded 278 page routes, 391 API routes, a zero-write
+lifecycle dry run, application/tools typecheck, 1,596 passing tests across 172
+files, 214/214 generated static pages, backup version 37 and Git safety.
+
+The additive migration was applied to the operational database after protected
+raw/logical rollback creation. The physical database hash changed as expected
+to `1288102356A1D4EE5CFCBF08C1D79306EC758FF905BC091660EC195B6BF64F8A`;
+the 160-table application-data digest, zero-business baseline, account states,
+integrity and foreign-key controls remained exact. All new configuration
+tables are empty.
+
+The feature branch is retained and release is identified by
+`exam-scheme-foundation-v37-2026-07-30`. Read
+[`EXAMINATION_SCHEME_ASSIGNMENT_QA_CLOSURE.md`](EXAMINATION_SCHEME_ASSIGNMENT_QA_CLOSURE.md)
+for independent evidence. This clearance does not authorize staging,
+deployment, marks entry, result calculation, publication, or PDF generation.

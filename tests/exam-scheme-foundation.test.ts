@@ -72,8 +72,34 @@ describe("EXAM-RC-IMPL-1 scheme policy", () => {
     expect(source).toContain("The Teacher has no exact timetable assignment");
     expect(source).toContain("Assign one primary submitter before adding contributors");
     expect(source).toContain("already has a primary submitter");
+    expect(source).toContain("The selected component belongs to a different subject-paper override");
+    expect(source).toContain("contributors cannot become hidden final owners");
+    expect(source).toContain("Assignments in an active or frozen scheme are immutable");
     expect(source).toContain("SCHEME_VERSION_ACTIVATED_AND_FROZEN");
     expect(source).not.toMatch(/teacherExamAssignment\.delete|examinationSchemeVersion\.delete|examination\.delete/);
+  });
+
+  it("requires examination-level optimistic concurrency for every mutable workflow", () => {
+    const service = readFileSync("lib/exam-configurations.ts", "utf8");
+    const workspace = readFileSync("components/examination-configuration-workspace.tsx", "utf8");
+    expect(service.match(/source\.expectedExaminationVersion/g)?.length).toBeGreaterThanOrEqual(9);
+    expect(workspace).toContain("expectedExaminationVersion: examination.version");
+    expect(service).toContain("This examination changed in another session");
+  });
+
+  it("keeps confirmation dialogs accessible and displays human labels", () => {
+    const workspace = readFileSync("components/examination-configuration-workspace.tsx", "utf8");
+    const teacherPage = readFileSync("app/teacher/exam-assignments/page.tsx", "utf8");
+    const labels = readFileSync("lib/exam-configuration-labels.ts", "utf8");
+    const styles = readFileSync("app/globals.css", "utf8");
+    expect(workspace).toContain('role="dialog"');
+    expect(workspace).toContain('aria-modal="true"');
+    expect(workspace).toContain('aria-describedby="exam-confirmation-description"');
+    expect(workspace).toContain('event.key === "Escape"');
+    expect(teacherPage).toContain("configurationStatusLabel(assignment.examination.status)");
+    expect(labels).toContain('RAW_SUM: "Raw sum"');
+    expect(labels).toContain('WEIGHTED_NORMALIZED: "Weighted and normalised"');
+    expect(styles).toContain('.exam-configuration-workspace td input[type="checkbox"]');
   });
 
   it("does not encode historical mark combinations as defaults", () => {

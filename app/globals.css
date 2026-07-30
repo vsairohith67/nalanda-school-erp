@@ -5094,6 +5094,12 @@ textarea:focus-visible {
   gap: 16px;
 }
 
+.exam-configuration-page :is(button, .button, input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+.teacher-exam-assignment-page :is(button, .button, input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+.exam-configuration-page .check-row {
+  min-height: 44px;
+}
+
 .configuration-scope-header {
   display: grid;
   gap: 14px;
@@ -5160,6 +5166,11 @@ textarea:focus-visible {
 
 .exam-configuration-workspace h2 {
   margin-top: 0;
+}
+
+.exam-configuration-workspace td input[type="checkbox"] {
+  min-height: 44px;
+  min-width: 44px;
 }
 
 @media (max-width: 700px) {
