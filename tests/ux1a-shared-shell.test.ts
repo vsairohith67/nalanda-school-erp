@@ -83,6 +83,9 @@ describe("UX-1A shared login and shell", () => {
     expect(css).toMatch(/button:focus-visible,[\s\S]*?outline:\s*2px solid var\(--accent\)/);
     expect(css).toContain("@media (prefers-reduced-motion: reduce)");
     expect(css).toContain("overflow-x: hidden");
+    expect(css).toMatch(/\.nav a \{[\s\S]*?min-height:\s*44px/);
+    expect(css).toMatch(/\.production-warning a \{[\s\S]*?min-height:\s*44px[\s\S]*?display:\s*inline-flex/);
+    expect(css).toMatch(/\.password-form :is\(input, button\) \{\s*min-height:\s*44px/);
   });
 
   it("ships a transparent derivative pipeline from the governed logo and copied-database QA only", () => {

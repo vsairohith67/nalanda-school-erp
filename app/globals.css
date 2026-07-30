@@ -876,6 +876,7 @@ th {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-height: 44px;
   border-radius: 8px;
   padding: 10px;
   color: var(--sidebar-text);
@@ -1983,6 +1984,10 @@ th {
   max-width: 760px;
 }
 
+.password-form :is(input, button) {
+  min-height: 44px;
+}
+
 .checkbox-label {
   display: flex;
   align-items: center;
@@ -2213,6 +2218,9 @@ th {
 }
 
 .production-warning a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   color: var(--accent);
   font-size: 13px;
   font-weight: 800;
