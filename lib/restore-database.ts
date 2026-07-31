@@ -14,6 +14,7 @@ import { restorePublicWebsiteData } from "@/lib/public-website-restore";
 import { assertReceiptStudentMatchInDatabase } from "@/lib/payment-controls";
 import { validateSchoolSettings } from "@/lib/school-settings";
 import { restoreExamGovernanceBackup } from "@/lib/exam-governance-backup";
+import { createHash } from "node:crypto";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -69,6 +70,7 @@ type RestoreDatabaseClient = Pick<
   | "cloudBackupRestoreRehearsal" | "cloudBackupEvent"
   | "publicWebsiteSettings" | "publicWebsitePage" | "publicWebsitePageVersion"
   | "publicWebsitePost" | "publicWebsitePostVersion" | "publicWebsiteNavigationItem" | "publicWebsiteEvent"
+  | "authLoginAlias" | "authVerificationChallenge" | "authPasswordResetToken" | "authSession" | "authSecurityEvent"
 >;
 
 export async function restoreValidatedBackup(
@@ -94,6 +96,7 @@ async function restoreIntoDatabase(
     payments: emptyEntityResult(),
     paymentAudits: emptyEntityResult(),
     users: emptyEntityResult(),
+    authSecurity: emptyEntityResult(),
     rolePermissions: emptyEntityResult(),
     guardians: emptyEntityResult(),
     studentGuardians: emptyEntityResult(),
@@ -320,6 +323,7 @@ async function restoreIntoDatabase(
 
   const backupGuardianIds = await restoreGuardianData(client, backup, backupStudentLocalIds, result);
   const backupUserToLocalUser = await mapBackupUsersToLocalUsers(client, backup.users);
+  await restoreAuthSecurityData(client, backup, backupUserToLocalUser, backupStudentLocalIds, result);
   await restoreStaffData(client, backup, backupUserToLocalUser, result);
   const expenseMasterMaps = await restoreExpenseData(client, backup, backupUserToLocalUser, result);
   await restoreBudgetData(client, backup, backupUserToLocalUser, expenseMasterMaps, result);
@@ -3334,6 +3338,164 @@ function smsEmailRestoreData(row: RestoreRecord, dateFields: string[], actorFiel
   }
   for (const key of actorFields) data[key] = null;
   return data;
+}
+
+export async function restoreAuthSecurityData(
+  client: RestoreDatabaseClient,
+  backup: ValidatedBackup,
+  userMap: Map<string, string>,
+  studentMap: Map<string, string>,
+  result: Pick<RestoreResult, "authSecurity" | "warnings">
+) {
+  const restoredAt = new Date();
+  const aliasMap = new Map<string, string>();
+  const sessionMap = new Map<string, string>();
+
+  for (const [index, row] of backup.authSecurity.aliases.entries()) {
+    try {
+      const backupId = requiredText(row.id, "Auth alias ID");
+      const userId = userMap.get(requiredText(row.userId, "Auth alias user"));
+      if (!userId) { result.authSecurity.skipped += 1; continue; }
+      const normalizedValue = requiredText(row.normalizedValue, "Auth alias normalized value");
+      const byId = await client.authLoginAlias.findUnique({ where: { id: backupId } });
+      if (byId) {
+        aliasMap.set(backupId, byId.id);
+        result.authSecurity.skipped += 1;
+        continue;
+      }
+      const byValue = await client.authLoginAlias.findUnique({ where: { normalizedValue } });
+      if (byValue) {
+        if (byValue.userId === userId) aliasMap.set(backupId, byValue.id);
+        result.authSecurity.skipped += 1;
+        continue;
+      }
+      const admissionStudentId = row.admissionStudentId == null
+        ? null
+        : studentMap.get(requiredText(row.admissionStudentId, "Auth alias admission student")) ?? null;
+      const created = await client.authLoginAlias.create({ data: {
+        id: backupId,
+        userId,
+        type: requiredText(row.type, "Auth alias type"),
+        normalizedValue,
+        displayMasked: requiredText(row.displayMasked, "Auth alias masked value"),
+        status: requiredText(row.status, "Auth alias status"),
+        isSchoolGoverned: row.isSchoolGoverned === true,
+        admissionStudentId,
+        verifiedAt: optionalDate(row.verifiedAt, "Auth alias verified date"),
+        removedAt: optionalDate(row.removedAt, "Auth alias removed date"),
+        version: positiveInteger(row.version, "Auth alias version"),
+        createdAt: requiredDate(row.createdAt, "Auth alias created date"),
+        updatedAt: requiredDate(row.updatedAt, "Auth alias updated date")
+      } });
+      aliasMap.set(backupId, created.id);
+      result.authSecurity.created += 1;
+    } catch (error) {
+      result.authSecurity.errors.push(rowError("Auth alias", index, error));
+    }
+  }
+
+  for (const [index, row] of backup.authSecurity.verificationHistory.entries()) {
+    try {
+      const id = requiredText(row.id, "Auth verification ID");
+      if (await client.authVerificationChallenge.findUnique({ where: { id } })) { result.authSecurity.skipped += 1; continue; }
+      const userId = userMap.get(requiredText(row.userId, "Auth verification user"));
+      const aliasId = aliasMap.get(requiredText(row.aliasId, "Auth verification alias"));
+      if (!userId || !aliasId) { result.authSecurity.skipped += 1; continue; }
+      await client.authVerificationChallenge.create({ data: {
+        id, userId, aliasId,
+        purpose: requiredText(row.purpose, "Auth verification purpose"),
+        codeHash: restoredAuthHash("verification", id),
+        credentialVersion: positiveInteger(row.credentialVersion, "Auth verification credential version"),
+        attempts: nonNegativeInteger(row.attempts, "Auth verification attempts"),
+        maxAttempts: positiveInteger(row.maxAttempts, "Auth verification maximum attempts"),
+        expiresAt: requiredDate(row.expiresAt, "Auth verification expiry"),
+        usedAt: optionalDate(row.usedAt, "Auth verification used date"),
+        invalidatedAt: optionalDate(row.invalidatedAt, "Auth verification invalidated date") ?? restoredAt,
+        createdAt: requiredDate(row.createdAt, "Auth verification created date")
+      } });
+      result.authSecurity.created += 1;
+    } catch (error) { result.authSecurity.errors.push(rowError("Auth verification history", index, error)); }
+  }
+
+  for (const [index, row] of backup.authSecurity.resetHistory.entries()) {
+    try {
+      const id = requiredText(row.id, "Auth reset ID");
+      if (await client.authPasswordResetToken.findUnique({ where: { id } })) { result.authSecurity.skipped += 1; continue; }
+      const userId = userMap.get(requiredText(row.userId, "Auth reset user"));
+      const aliasId = aliasMap.get(requiredText(row.aliasId, "Auth reset alias"));
+      if (!userId || !aliasId) { result.authSecurity.skipped += 1; continue; }
+      await client.authPasswordResetToken.create({ data: {
+        id, userId, aliasId,
+        channelType: requiredText(row.channelType, "Auth reset channel"),
+        purpose: requiredText(row.purpose, "Auth reset purpose"),
+        tokenHash: restoredAuthHash("reset", id),
+        credentialVersion: positiveInteger(row.credentialVersion, "Auth reset credential version"),
+        attempts: nonNegativeInteger(row.attempts, "Auth reset attempts"),
+        maxAttempts: positiveInteger(row.maxAttempts, "Auth reset maximum attempts"),
+        expiresAt: requiredDate(row.expiresAt, "Auth reset expiry"),
+        usedAt: optionalDate(row.usedAt, "Auth reset used date"),
+        invalidatedAt: optionalDate(row.invalidatedAt, "Auth reset invalidated date") ?? restoredAt,
+        invalidationReason: nullableText(row.invalidationReason) ?? "RESTORED_WITHOUT_SECRET",
+        createdAt: requiredDate(row.createdAt, "Auth reset created date")
+      } });
+      result.authSecurity.created += 1;
+    } catch (error) { result.authSecurity.errors.push(rowError("Auth reset history", index, error)); }
+  }
+
+  for (const [index, row] of backup.authSecurity.sessions.entries()) {
+    try {
+      const id = requiredText(row.id, "Auth session ID");
+      const existing = await client.authSession.findUnique({ where: { id } });
+      if (existing) { sessionMap.set(id, existing.id); result.authSecurity.skipped += 1; continue; }
+      const userId = userMap.get(requiredText(row.userId, "Auth session user"));
+      if (!userId) { result.authSecurity.skipped += 1; continue; }
+      const created = await client.authSession.create({ data: {
+        id, userId,
+        tokenHash: restoredAuthHash("session", id),
+        credentialVersion: positiveInteger(row.credentialVersion, "Auth session credential version"),
+        createdAt: requiredDate(row.createdAt, "Auth session created date"),
+        lastSeenAt: requiredDate(row.lastSeenAt, "Auth session last seen date"),
+        expiresAt: requiredDate(row.expiresAt, "Auth session expiry"),
+        revokedAt: optionalDate(row.revokedAt, "Auth session revoked date") ?? restoredAt,
+        revocationReason: nullableText(row.revocationReason) ?? "RESTORED_WITHOUT_SECRET",
+        deviceSummary: requiredText(row.deviceSummary, "Auth session device"),
+        browserSummary: requiredText(row.browserSummary, "Auth session browser"),
+        networkEvidenceMasked: requiredText(row.networkEvidenceMasked, "Auth session network"),
+        version: positiveInteger(row.version, "Auth session version")
+      } });
+      sessionMap.set(id, created.id);
+      result.authSecurity.created += 1;
+    } catch (error) { result.authSecurity.errors.push(rowError("Auth session", index, error)); }
+  }
+
+  for (const [index, row] of backup.authSecurity.events.entries()) {
+    try {
+      const id = requiredText(row.id, "Auth security event ID");
+      if (await client.authSecurityEvent.findUnique({ where: { id } })) { result.authSecurity.skipped += 1; continue; }
+      const subjectType = nullableText(row.subjectType);
+      const sourceSubjectId = nullableText(row.subjectId);
+      const subjectId = sourceSubjectId && subjectType === "LOGIN_ALIAS"
+        ? aliasMap.get(sourceSubjectId) ?? sourceSubjectId
+        : sourceSubjectId && subjectType === "AUTH_SESSION"
+          ? sessionMap.get(sourceSubjectId) ?? sourceSubjectId
+          : sourceSubjectId;
+      await client.authSecurityEvent.create({ data: {
+        id,
+        userId: mapOptionalUserId(row.userId, userMap),
+        actorUserId: mapOptionalUserId(row.actorUserId, userMap),
+        eventType: requiredText(row.eventType, "Auth security event type"),
+        subjectType,
+        subjectId,
+        detailsJson: nullableText(row.detailsJson),
+        createdAt: requiredDate(row.createdAt, "Auth security event created date")
+      } });
+      result.authSecurity.created += 1;
+    } catch (error) { result.authSecurity.errors.push(rowError("Auth security event", index, error)); }
+  }
+}
+
+function restoredAuthHash(kind: string, id: string) {
+  return createHash("sha256").update(`nalanda-restored-${kind}:${id}`).digest("hex");
 }
 
 async function mapBackupUsersToLocalUsers(client: RestoreDatabaseClient, users: RestoreRecord[]) {

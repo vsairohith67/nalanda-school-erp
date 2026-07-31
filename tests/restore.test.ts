@@ -63,6 +63,7 @@ describe("backup restore validation", () => {
     expect(validated.importBatches).toEqual([]);
     expect(validated.goLiveChecklist).toEqual([]);
     expect(validated.rolePermissions).toEqual([]);
+    expect(validated.authSecurity).toEqual({ aliases: [], verificationHistory: [], resetHistory: [], sessions: [], events: [] });
     expect(validated.guardians).toEqual([]);
     expect(validated.studentGuardians).toEqual([]);
     expect(validated.notices).toEqual([]);

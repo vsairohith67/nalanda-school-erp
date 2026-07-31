@@ -1,7 +1,7 @@
 # AUTH-2B Verified Recovery and Session Registry
 
-Status: `AUTH_VERIFIED_RECOVERY_READY_FOR_QA` on retained feature branch only.
-Independent `AUTH-2B-QA` remains the merge gate. No live email/SMS provider,
+Status: `AUTH_VERIFIED_RECOVERY_CLEARED` after independent AUTH-2B-QA.
+The retained feature branch and release tag preserve the reviewed boundary. No live email/SMS provider,
 cloud service, account activation, permission profile, role switching or
 delegated account administration is authorised.
 
@@ -143,7 +143,9 @@ an explicitly Student-linked admission alias and multiple sessions. It proves
 verification, masked evidence, recovery, single use, session revocation,
 security events, database cleanup and unchanged operational DB identity.
 
-Before AUTH-2B-QA, run sequentially:
+Independent QA also runs `pnpm.cmd qa:auth2b:independent`, isolated HTTP probes,
+exact desktop/mobile Browser checks, and each migration/restore rehearsal twice.
+The release verification commands run sequentially:
 
 ```powershell
 pnpm.cmd routes:list
@@ -155,8 +157,13 @@ pnpm.cmd backup
 pnpm.cmd git:safety-check
 ```
 
-Operational migration and merge remain prohibited until independent AUTH-2B-QA.
-Version-37 backup intentionally continues to exclude password hashes, session
-secrets, verification/reset material and the central session registry. A restore
-therefore requires governed account recovery and fresh login; it cannot revive
-stale sessions or recovery credentials.
+Version-37 backup now carries an optional `authSecurity` evidence section for
+aliases, verification history, reset history, session history and append-only
+security events. Password hashes, verification-code hashes, reset-token hashes
+and session-token hashes are excluded. Restore invalidates verification/reset
+records and restores every session as revoked with a non-secret replacement
+reference, so no backup can revive a session or credential. Older version-37
+documents without `authSecurity` remain valid.
+
+See `AUTH_2B_INDEPENDENT_QA_CLOSURE.md` for the independent matrix, Browser
+evidence, migration/restore results, cleanup and release boundary.

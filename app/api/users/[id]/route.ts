@@ -14,6 +14,7 @@ import {
 import { logUserAction } from "@/lib/user-audit";
 import { maskAlias, normalizeAliasValue } from "@/lib/auth-identifiers";
 import { logAuthSecurityEvent } from "@/lib/auth-security";
+import { randomUUID } from "node:crypto";
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const auth = await requireApiPermission("MANAGE_USERS");
@@ -61,7 +62,8 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       const name = requiredText(body.name ?? existing.name, "Name");
       const username = normalizeAliasValue("USERNAME", requiredText(body.username ?? existing.username, "Username"));
       const email = optionalText(body.email)?.toLowerCase() ?? null;
-      const accountSecurityChanged = existing.role !== role || existing.isActive !== isActive;
+      const usernameChanged = normalizeAliasValue("USERNAME", existing.username) !== username;
+      const accountSecurityChanged = existing.role !== role || existing.isActive !== isActive || usernameChanged;
       const changed = await tx.user.updateMany({
         where: {
           id,
@@ -79,18 +81,47 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         }
       });
       if (changed.count !== 1) throw new Error("User record changed; refresh and try again");
-      const usernameAlias = await tx.authLoginAlias.findFirst({ where: { userId: id, type: "USERNAME" } });
+      const usernameAlias = await tx.authLoginAlias.findFirst({ where: { userId: id, type: "USERNAME", status: "VERIFIED", removedAt: null } });
       if (usernameAlias) {
         if (usernameAlias.normalizedValue !== username) {
+          const now = new Date();
           await tx.authLoginAlias.update({
             where: { id: usernameAlias.id },
-            data: { normalizedValue: username, displayMasked: maskAlias("USERNAME", username), version: { increment: 1 } }
+            data: { status: "REMOVED", removedAt: now, version: { increment: 1 } }
+          });
+          await tx.authVerificationChallenge.updateMany({
+            where: { aliasId: usernameAlias.id, usedAt: null, invalidatedAt: null },
+            data: { invalidatedAt: now }
+          });
+          await tx.authPasswordResetToken.updateMany({
+            where: { aliasId: usernameAlias.id, usedAt: null, invalidatedAt: null },
+            data: { invalidatedAt: now, invalidationReason: "ALIAS_REPLACED" }
+          });
+          await tx.authLoginAlias.create({
+            data: {
+              id: randomUUID(),
+              userId: id,
+              type: "USERNAME",
+              normalizedValue: username,
+              displayMasked: maskAlias("USERNAME", username),
+              status: "VERIFIED",
+              isSchoolGoverned: true,
+              verifiedAt: now
+            }
+          });
+          await logAuthSecurityEvent(tx, {
+            eventType: "LOGIN_ALIAS_REPLACED_BY_ADMIN",
+            userId: id,
+            actorUserId: auth.user.id,
+            subjectType: "LOGIN_ALIAS",
+            subjectId: usernameAlias.id,
+            details: { aliasType: "USERNAME" }
           });
         }
       } else {
         await tx.authLoginAlias.create({
           data: {
-            id: `auth2b_username_${id}`,
+            id: randomUUID(),
             userId: id,
             type: "USERNAME",
             normalizedValue: username,
@@ -105,7 +136,14 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         const now = new Date();
         await tx.authSession.updateMany({
           where: { userId: id, revokedAt: null },
-          data: { revokedAt: now, revocationReason: existing.isActive !== isActive ? "ACCOUNT_STATUS_CHANGED" : "ROLE_CHANGED" }
+          data: {
+            revokedAt: now,
+            revocationReason: existing.isActive !== isActive
+              ? "ACCOUNT_STATUS_CHANGED"
+              : usernameChanged
+                ? "LOGIN_IDENTIFIER_CHANGED"
+                : "ROLE_CHANGED"
+          }
         });
         await tx.authPasswordResetToken.updateMany({
           where: { userId: id, usedAt: null, invalidatedAt: null },

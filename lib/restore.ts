@@ -15,6 +15,7 @@ import {
   validateExamGovernanceBackup,
   type ExamGovernanceBackup
 } from "@/lib/exam-governance-backup";
+import { validateAuthSecurityBackup, type AuthSecurityBackup } from "@/lib/auth-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 const MAX_ENTITY_ROWS = 100_000;
@@ -27,6 +28,7 @@ const TOP_LEVEL_KEYS = new Set([
   "payments",
   "paymentAudits",
   "users",
+  "authSecurity",
   "rolePermissions",
   "guardians",
   "studentGuardians",
@@ -88,6 +90,7 @@ const METADATA_KEYS = new Set([
 ]);
 const BACKUP_COUNT_KEYS = new Set([
   "schoolSettings",
+  "authSecurityRecords",
   "timetableTeachers", "timetableSubjects", "timetableClassSections",
   "rolePermissions", "guardians", "studentGuardians", "notices", "staffMembers", "timetablePeriodTemplates",
   "studentAttendanceSessions", "studentAttendanceRecords",
@@ -326,6 +329,7 @@ export type ValidatedBackup = {
   payments: RestoreRecord[];
   paymentAudits: RestoreRecord[];
   users: RestoreRecord[];
+  authSecurity: AuthSecurityBackup;
   rolePermissions: RestoreRecord[];
   guardians: RestoreRecord[];
   studentGuardians: RestoreRecord[];
@@ -497,6 +501,7 @@ export type RestoreResult = {
   payments: EntityRestoreResult;
   paymentAudits: EntityRestoreResult;
   users: EntityRestoreResult;
+  authSecurity: EntityRestoreResult;
   rolePermissions: EntityRestoreResult;
   guardians: EntityRestoreResult;
   studentGuardians: EntityRestoreResult;
@@ -1223,6 +1228,10 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   const examAssessments=validateOptionalRows(root.examAssessments,"examAssessments",EXAM_ASSESSMENT_KEYS,["id","examCycleId","academicYear","className","subjectName","assessmentType","maxMarks","entryStatus"]);const assessmentIds=new Set<string>(),assessmentKeys=new Set<string>();
   examAssessments.forEach((row,index)=>{const prefix=`examAssessments[${index}]`,id=requireString(row.id,`${prefix}.id`),examCycleId=requireString(row.examCycleId,`${prefix}.examCycleId`),academicYear=requireString(row.academicYear,`${prefix}.academicYear`),section=String(row.section??""),component=String(row.componentName??""),key=`${examCycleId}|${requireString(row.className,`${prefix}.className`)}|${section}|${requireString(row.subjectName,`${prefix}.subjectName`)}|${component}`,max=decimal(row.maxMarks,`${prefix}.maxMarks`,true),status=requireString(row.entryStatus,`${prefix}.entryStatus`);if(assessmentIds.has(id)||assessmentKeys.has(key)||!examIds.has(examCycleId))throw new Error(`${prefix} has a duplicate identity, combination, or invalid exam link`);assessmentIds.add(id);assessmentKeys.add(key);const exam=examCycles.find((item)=>item.id===examCycleId);if(exam?.academicYear!==academicYear)throw new Error(`${prefix}.academicYear does not match exam`);if(hasValue(row.passMarks)&&decimal(row.passMarks,`${prefix}.passMarks`)>max)throw new Error(`${prefix}.passMarks exceeds maximum`);if(hasValue(row.weightagePercent)&&decimal(row.weightagePercent,`${prefix}.weightagePercent`)>100)throw new Error(`${prefix}.weightagePercent exceeds 100`);if(!["THEORY","PRACTICAL","ORAL","PROJECT","INTERNAL","OTHER"].includes(requireString(row.assessmentType,`${prefix}.assessmentType`)))throw new Error(`${prefix}.assessmentType is unsupported`);if(!["DRAFT","OPEN","SUBMITTED","APPROVED","LOCKED","CANCELLED"].includes(status))throw new Error(`${prefix}.entryStatus is unsupported`);if(hasValue(row.timetableSubjectId)&&!timetableSubjectIds.has(String(row.timetableSubjectId)))throw new Error(`${prefix}.timetableSubjectId does not match a backup subject`);});
   const studentIds=new Set(students.map((row)=>String(row.id??"")).filter(Boolean));const activeEnrollments=academicYearEnrollments.filter((row)=>row.status==="ACTIVE");
+  const authSecurity = validateAuthSecurityBackup(root.authSecurity, {
+    userIds: new Set(users.map((row) => String(row.id ?? "")).filter(Boolean)),
+    studentIds
+  });
   const studentMarks=validateOptionalRows(root.studentMarks,"studentMarks",STUDENT_MARK_KEYS,["id","assessmentId","studentId","academicYear","entryStatus"]);const markIds=new Set<string>(),markKeys=new Set<string>();
   studentMarks.forEach((row,index)=>{const prefix=`studentMarks[${index}]`,id=requireString(row.id,`${prefix}.id`),assessmentId=requireString(row.assessmentId,`${prefix}.assessmentId`),studentId=requireString(row.studentId,`${prefix}.studentId`),status=requireString(row.entryStatus,`${prefix}.entryStatus`),key=`${assessmentId}|${studentId}`,assessment=examAssessments.find((item)=>item.id===assessmentId);if(markIds.has(id)||markKeys.has(key)||!assessment||!studentIds.has(studentId))throw new Error(`${prefix} has a duplicate identity or invalid assessment/Student link`);markIds.add(id);markKeys.add(key);const matchingEnrollment=activeEnrollments.some((enrollment)=>String(enrollment.studentId)===studentId&&String(enrollment.academicYear)===String(assessment.academicYear)&&String(enrollment.className)===String(assessment.className)&&(!String(assessment.section??"")||String(enrollment.section??"")===String(assessment.section??"")));if(String(row.academicYear)!==String(assessment.academicYear)||!matchingEnrollment)throw new Error(`${prefix} is incompatible with active academic-year enrollment`);if(!["PRESENT","ABSENT","EXEMPT","NOT_APPLICABLE"].includes(status))throw new Error(`${prefix}.entryStatus is unsupported`);if(status==="PRESENT"){if(!hasValue(row.marksObtained)||decimal(row.marksObtained,`${prefix}.marksObtained`)>decimal(assessment.maxMarks,`${prefix}.assessment.maxMarks`))throw new Error(`${prefix} present mark is missing or above maximum`);}else if(hasValue(row.marksObtained))throw new Error(`${prefix} non-present status must not carry marks`);});
   const studentMarkEvents=validateOptionalRows(root.studentMarkEvents,"studentMarkEvents",STUDENT_MARK_EVENT_KEYS,["id","assessmentId","eventType","eventDate"]);const markEventIds=new Set<string>();studentMarkEvents.forEach((row,index)=>{const prefix=`studentMarkEvents[${index}]`,id=requireString(row.id,`${prefix}.id`),assessmentId=requireString(row.assessmentId,`${prefix}.assessmentId`),eventType=requireString(row.eventType,`${prefix}.eventType`);if(markEventIds.has(id)||!assessmentIds.has(assessmentId))throw new Error(`${prefix} has duplicate identity or invalid assessment link`);markEventIds.add(id);if(hasValue(row.studentMarkId)&&!markIds.has(String(row.studentMarkId)))throw new Error(`${prefix}.studentMarkId does not match a backup mark`);if(!["MARK_CREATED","MARK_UPDATED","MARK_STATUS_CHANGED","MARKS_SUBMITTED","MARKS_APPROVED","MARKS_LOCKED","CORRECTION_REQUESTED","CORRECTION_APPLIED","ASSESSMENT_CANCELLED"].includes(eventType))throw new Error(`${prefix}.eventType is unsupported`);requireDateString(row.eventDate,`${prefix}.eventDate`);if(["CORRECTION_REQUESTED","CORRECTION_APPLIED"].includes(eventType)&&!hasValue(row.reason))throw new Error(`${prefix}.reason is required for correction`);});
@@ -1285,6 +1294,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     payments,
     paymentAudits,
     users,
+    authSecurity,
     rolePermissions,
     guardians,
     studentGuardians,

@@ -5,13 +5,15 @@
 - [Verified Recovery and Session Registry](AUTH_2B_VERIFIED_RECOVERY_SESSION_REGISTRY.md)
 - [AUTH-2B Architecture Diagram](diagrams/auth-verified-recovery-session-registry.mmd)
 - [Implementation Checkpoint](evidence/AUTH_2B_IMPLEMENTATION_CHECKPOINT.md)
+- [Independent QA and Release Closure](AUTH_2B_INDEPENDENT_QA_CLOSURE.md)
 
-AUTH-2B is implemented on `auth/verified-recovery-session-registry` and is
-ready for independent QA. One additive migration adds governed verified aliases,
+AUTH-2B passed independent QA and is released with retained branch
+`auth/verified-recovery-session-registry`. One additive migration adds governed verified aliases,
 hashed expiring verification/reset records, credential versions, append-only
 security events and persisted revocable sessions. Live email/SMS, account
 activation, named users, permission profiles, role switching, delegated account
-administration, merge and deployment remain unauthorised.
+administration and deployment remain unauthorised. The next governed phase is
+IAM-1A.
 
 ## EXAM-RC-IMPL-3 report publication, Parent delivery and PDFs
 

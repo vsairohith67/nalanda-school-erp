@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentAuthContext } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { logAuthSecurityEvent } from "@/lib/auth-security";
+import { authPublicHandleMatches, logAuthSecurityEvent } from "@/lib/auth-security";
 import { safeClientError } from "@/lib/client-errors";
 import { sessionCookieName, sessionCookieSecure } from "@/lib/session-token";
 
@@ -16,8 +16,21 @@ export async function POST(request: NextRequest) {
     let revokedCount = 0;
     await prisma.$transaction(async (tx) => {
       if (action === "revoke-one") {
-        const sessionId = boundedId(body.sessionId);
+        const sessionHandle = boundedHandle(body.sessionHandle);
         const expectedVersion = expectedVersionValue(body.expectedVersion);
+        const sessions = await tx.authSession.findMany({
+          where: { userId: context.user.id, version: expectedVersion },
+          select: { id: true, version: true }
+        });
+        const session = sessions.find((candidate) => authPublicHandleMatches(
+          sessionHandle,
+          "SESSION",
+          context.user.id,
+          candidate.id,
+          candidate.version
+        ));
+        if (!session) throw new Error("Session changed; refresh and try again");
+        const sessionId = session.id;
         const changed = await tx.authSession.updateMany({
           where: { id: sessionId, userId: context.user.id, version: expectedVersion, revokedAt: null, expiresAt: { gt: now } },
           data: { revokedAt: now, revocationReason: "USER_REVOKED", version: { increment: 1 } }
@@ -70,9 +83,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function boundedId(value: unknown) {
+function boundedHandle(value: unknown) {
   const result = String(value ?? "").trim();
-  if (!result || result.length > 80) throw new Error("Session is invalid");
+  if (!/^auth_[a-f0-9]{64}$/.test(result)) throw new Error("Session is invalid");
   return result;
 }
 function expectedVersionValue(value: unknown) {

@@ -28,6 +28,21 @@ function baselineApplied(databasePath: string) {
   }
 }
 
+function existingColumnMap(databasePath: string) {
+  const db = new DatabaseSync(databasePath, { readOnly: true });
+  try {
+    const tables = db.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name <> '_prisma_migrations' ORDER BY name"
+    ).all() as Array<{ name: string }>;
+    return Object.fromEntries(tables.map(({ name }) => [
+      name,
+      (db.prepare(`PRAGMA table_info("${name.replaceAll('"', '""')}")`).all() as Array<{ name: string }>).map((column) => column.name)
+    ]));
+  } finally {
+    db.close();
+  }
+}
+
 function onboard(databasePath: string) {
   if (!baselineApplied(databasePath)) {
     runPrisma(["migrate", "resolve", "--applied", BASELINE_MIGRATION, "--schema", "prisma/schema.prisma"], databasePath);
@@ -52,12 +67,13 @@ export async function runExistingDatabaseRehearsal(sourcePath = OPERATIONAL_DATA
       data: databaseDataSnapshot(destination),
       business: businessBaseline(destination)
     };
+    const existingColumns = existingColumnMap(destination);
     onboard(destination);
     const existingTableNames = Object.keys(before.data.counts);
     const afterFirst = {
       schema: schemaFingerprint(destination),
       data: databaseDataSnapshot(destination),
-      existingData: databaseDataSnapshot(destination, existingTableNames),
+      existingData: databaseDataSnapshot(destination, existingTableNames, existingColumns),
       business: businessBaseline(destination)
     };
     assertSchemaEquivalent(destination);
@@ -65,7 +81,7 @@ export async function runExistingDatabaseRehearsal(sourcePath = OPERATIONAL_DATA
     const afterSecond = {
       schema: schemaFingerprint(destination),
       data: databaseDataSnapshot(destination),
-      existingData: databaseDataSnapshot(destination, existingTableNames),
+      existingData: databaseDataSnapshot(destination, existingTableNames, existingColumns),
       business: businessBaseline(destination)
     };
     if (

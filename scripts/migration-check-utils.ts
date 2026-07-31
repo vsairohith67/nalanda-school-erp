@@ -115,7 +115,11 @@ export function schemaFingerprint(databasePath: string) {
   return sha256(JSON.stringify(schemaInventory(databasePath)));
 }
 
-export function databaseDataSnapshot(databasePath: string, includedTables?: string[]) {
+export function databaseDataSnapshot(
+  databasePath: string,
+  includedTables?: string[],
+  selectedColumns: Record<string, string[]> = {}
+) {
   const db = new DatabaseSync(databasePath, { readOnly: true });
   try {
     const rows = db.prepare(
@@ -127,9 +131,17 @@ export function databaseDataSnapshot(databasePath: string, includedTables?: stri
     const hash = createHash("sha256");
     for (const { name } of tables) {
       const columns = (db.prepare(`PRAGMA table_info(${quote(name)})`).all() as Array<{ name: string; pk: number }>);
-      const order = columns.filter((column) => column.pk > 0).sort((a, b) => a.pk - b.pk).map((column) => quote(column.name));
-      const fallback = columns.map((column) => quote(column.name));
-      const rows = db.prepare(`SELECT * FROM ${quote(name)}${columns.length ? ` ORDER BY ${(order.length ? order : fallback).join(", ")}` : ""}`).all();
+      const available = new Set(columns.map((column) => column.name));
+      const selection = selectedColumns[name] ?? columns.map((column) => column.name);
+      if (selection.some((column) => !available.has(column))) throw new Error(`DATA_SNAPSHOT_COLUMN_MISSING: ${name}`);
+      const selectionSet = new Set(selection);
+      const order = columns
+        .filter((column) => column.pk > 0 && selectionSet.has(column.name))
+        .sort((a, b) => a.pk - b.pk)
+        .map((column) => quote(column.name));
+      const fallback = selection.map(quote);
+      const projection = selection.length ? selection.map(quote).join(", ") : "*";
+      const rows = db.prepare(`SELECT ${projection} FROM ${quote(name)}${selection.length ? ` ORDER BY ${(order.length ? order : fallback).join(", ")}` : ""}`).all();
       counts[name] = rows.length;
       hash.update(name);
       hash.update(JSON.stringify(rows.map(jsonValue)));

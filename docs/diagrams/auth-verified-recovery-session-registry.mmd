@@ -31,3 +31,15 @@ flowchart TD
   CopiedOnly -->|No / operational / release| Refuse[Fail closed]
   CopiedOnly -->|Yes| Code
   LiveProvider[Live email/SMS] -. not authorised .-> Refuse
+
+  Registry --> SafeBackup[Version 37 authSecurity evidence]
+  Code --> SafeBackup
+  Reset --> SafeBackup
+  SafeBackup --> Exclude[Exclude code, reset, session and password hashes]
+  SafeBackup --> RestoreSafe[Restore challenges/resets invalid; sessions revoked]
+
+  Matrix[Independent copied-DB, HTTP and Browser QA] --> ReleaseGate{All gates pass?}
+  RestoreSafe --> ReleaseGate
+  ReleaseGate -->|Yes| Release[Fast-forward main; retained branch and release tag]
+  ReleaseGate -->|No| Refuse
+  Release -. no deployment or provider activation .-> Refuse

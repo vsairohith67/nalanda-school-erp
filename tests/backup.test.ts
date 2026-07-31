@@ -50,6 +50,7 @@ describe("full backup", () => {
     expect(backup.metadata.backupVersion).toBe(37);
     expect(backup.metadata.counts).toEqual({
       schoolSettings: 0,
+      authSecurityRecords: 0,
       rolePermissions: 1,
       guardians: 1,
       studentGuardians: 1,

@@ -245,8 +245,8 @@
 .security-row { align-items: center; border: 1px solid var(--border); border-radius: 14px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr) auto; padding: 14px; }
 .security-row > div:not(.session-icon) { display: grid; gap: 4px; min-width: 0; }
 .security-row span, .security-row small { color: var(--muted); overflow-wrap: anywhere; }
-.security-row button, .security-section .page-actions button, .security-add-form button, .inline-verify button, .security-dialog button { min-height: 44px; }
-.inline-verify { align-items: end; display: flex; gap: 10px; grid-column: 1 / -1; }
+.security-row button, .security-section .page-actions button, .security-section a.button, .security-add-form button, .security-add-form input, .security-add-form select, .inline-verify button, .security-dialog button { min-height: 44px; }
+.inline-verify { align-items: flex-end; display: flex; gap: 10px; grid-column: 1 / -1; }
 .inline-verify label { flex: 1; }
 .inline-verify input { min-height: 44px; }
 .security-add-form { border-top: 1px solid var(--border); padding-top: 18px; }

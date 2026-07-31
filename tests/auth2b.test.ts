@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { loginIdentifierCandidates, maskAlias, normalizeAliasValue } from "@/lib/auth-identifiers";
-import { authHashSecret, authSecretMatches, createPasswordResetToken, createVerificationCode } from "@/lib/auth-security";
+import { authHashSecret, authPublicHandleMatches, authSecretMatches, createAuthPublicHandle, createPasswordResetToken, createVerificationCode } from "@/lib/auth-security";
 import { createSessionCookieValue, hashSessionSecret, sessionHashMatches, verifySessionToken } from "@/lib/session-token";
 
 function source(file: string) { return readFileSync(path.resolve(file), "utf8"); }
@@ -41,6 +41,38 @@ describe("AUTH-2B verified identifiers and recovery", () => {
     expect(sessionHashMatches(await hashSessionSecret(created.secret), stored)).toBe(true);
   });
 
+  it("uses opaque version-bound browser handles instead of database IDs", () => {
+    const handle = createAuthPublicHandle("LOGIN_ALIAS", "user-db-id", "alias-db-id", 3);
+    expect(handle).toMatch(/^auth_[a-f0-9]{64}$/);
+    expect(handle).not.toContain("alias-db-id");
+    expect(authPublicHandleMatches(handle, "LOGIN_ALIAS", "user-db-id", "alias-db-id", 3)).toBe(true);
+    expect(authPublicHandleMatches(handle, "LOGIN_ALIAS", "user-db-id", "alias-db-id", 4)).toBe(false);
+    expect(authPublicHandleMatches(handle, "LOGIN_ALIAS", "other-user", "alias-db-id", 3)).toBe(false);
+  });
+
+  it("keeps account-security database IDs private and resolves only owned opaque handles", () => {
+    const listing = source("app/api/auth/security/route.ts");
+    const aliases = source("app/api/auth/security/aliases/route.ts");
+    const sessions = source("app/api/auth/security/sessions/route.ts");
+    expect(listing).toContain('handle: createAuthPublicHandle("LOGIN_ALIAS"');
+    expect(listing).toContain('handle: createAuthPublicHandle("SESSION"');
+    expect(listing).not.toMatch(/\b(?:aliasId|sessionId|id):\s*(?:alias|session)\.id/);
+    expect(aliases).toContain('userId: context.user.id');
+    expect(aliases).toMatch(/authPublicHandleMatches\(\s*aliasHandle,\s*"LOGIN_ALIAS"/);
+    expect(sessions).toContain('userId: context.user.id');
+    expect(sessions).toMatch(/authPublicHandleMatches\(\s*sessionHandle,\s*"SESSION"/);
+  });
+
+  it("replaces governed username aliases append-only and revokes sessions with an exact reason", () => {
+    const route = source("app/api/users/[id]/route.ts");
+    expect(route).toContain('status: "REMOVED"');
+    expect(route).toContain("removedAt: now");
+    expect(route).toContain("id: randomUUID()");
+    expect(route).toContain('eventType: "LOGIN_ALIAS_REPLACED_BY_ADMIN"');
+    expect(route).toContain('"LOGIN_IDENTIFIER_CHANGED"');
+    expect(route).toContain("credentialVersion: { increment: 1 }");
+  });
+
   it("uses one additive migration with database checks and username-only backfill", () => {
     const schema = source("prisma/schema.prisma");
     const migration = source("prisma/migrations/20260731130549_auth_verified_recovery_session_registry/migration.sql");
@@ -69,6 +101,7 @@ describe("AUTH-2B verified identifiers and recovery", () => {
     const middleware = source("middleware.ts");
     const shell = source("components/app-shell.tsx");
     expect(panel).toContain('role="dialog"');
+    expect(panel).toContain('event.key === "Escape"');
     expect(panel).not.toMatch(/\b(?:alert|confirm|prompt)\s*\(/);
     expect(middleware).toContain('pathname === "/forgot-password" || pathname === "/reset-password"');
     expect(middleware).toContain('"private, no-store"');

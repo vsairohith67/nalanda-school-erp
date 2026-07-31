@@ -7,6 +7,7 @@ import {
   type ExamGovernanceBackup
 } from "./exam-governance-backup";
 import { getSchoolSettings, type SchoolSettingsValue } from "./school-settings";
+import { authSecurityRecordCount, createAuthSecurityBackup, type AuthSecurityBackup } from "./auth-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 
@@ -61,6 +62,7 @@ type BackupClient = Pick<
   | "cloudBackupRestoreRehearsal" | "cloudBackupEvent"
   | "publicWebsiteSettings" | "publicWebsitePage" | "publicWebsitePageVersion"
   | "publicWebsitePost" | "publicWebsitePostVersion" | "publicWebsiteNavigationItem" | "publicWebsiteEvent"
+  | "authLoginAlias" | "authVerificationChallenge" | "authPasswordResetToken" | "authSession" | "authSecurityEvent"
 >;
 
 type BackupDocumentInput = {
@@ -72,6 +74,7 @@ type BackupDocumentInput = {
   payments: readonly unknown[];
   paymentAudits: readonly unknown[];
   users: readonly object[];
+  authSecurity?: Partial<Record<keyof AuthSecurityBackup, readonly object[]>>;
   rolePermissions?: readonly unknown[];
   guardians?: readonly unknown[];
   studentGuardians?: readonly unknown[];
@@ -238,6 +241,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const timetableDrafts = [...(input.timetableDrafts ?? [])];
   const timetableEntries = [...(input.timetableEntries ?? [])];
   const rolePermissions = [...(input.rolePermissions ?? [])];
+  const authSecurity = createAuthSecurityBackup(input.authSecurity);
   const guardians = [...(input.guardians ?? [])];
   const studentGuardians = [...(input.studentGuardians ?? [])];
   const notices = [...(input.notices ?? [])];
@@ -392,6 +396,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
       backupVersion: 37,
       counts: {
         schoolSettings: input.schoolSettings ? 1 : 0,
+        authSecurityRecords: authSecurityRecordCount(authSecurity),
         rolePermissions: rolePermissions.length,
         guardians: guardians.length,
         studentGuardians: studentGuardians.length,
@@ -549,6 +554,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     payments: [...input.payments],
     paymentAudits: [...input.paymentAudits],
     users: sanitizeUsers(input.users),
+    authSecurity,
     rolePermissions,
     guardians,
     studentGuardians,
@@ -869,6 +875,11 @@ export async function generateFullBackup(
     timetableFixedPeriods,
     timetableDrafts,
     timetableEntries,
+    authSecurityAliases,
+    authVerificationHistory,
+    authResetHistory,
+    authSessions,
+    authSecurityEvents,
     examGovernance,
     settings
   ] = await Promise.all([
@@ -1063,6 +1074,11 @@ export async function generateFullBackup(
     client.timetableEntry.findMany({
       orderBy: [{ academicYear: "asc" }, { draftId: "asc" }, { classSectionId: "asc" }, { dayOfWeek: "asc" }, { periodNumber: "asc" }]
     }),
+    (client as any).authLoginAlias?.findMany ? (client as any).authLoginAlias.findMany({ orderBy: [{ userId: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
+    (client as any).authVerificationChallenge?.findMany ? (client as any).authVerificationChallenge.findMany({ orderBy: [{ userId: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
+    (client as any).authPasswordResetToken?.findMany ? (client as any).authPasswordResetToken.findMany({ orderBy: [{ userId: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
+    (client as any).authSession?.findMany ? (client as any).authSession.findMany({ orderBy: [{ userId: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
+    (client as any).authSecurityEvent?.findMany ? (client as any).authSecurityEvent.findMany({ orderBy: [{ createdAt: "asc" }] }) : Promise.resolve([]),
     loadExamGovernanceBackup(client as PrismaClient),
     getSchoolSettings(client)
   ]);
@@ -1075,6 +1091,13 @@ export async function generateFullBackup(
     payments,
     paymentAudits,
     users,
+    authSecurity: {
+      aliases: authSecurityAliases,
+      verificationHistory: authVerificationHistory,
+      resetHistory: authResetHistory,
+      sessions: authSessions,
+      events: authSecurityEvents
+    },
     rolePermissions,
     guardians,
     studentGuardians,

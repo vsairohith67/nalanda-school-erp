@@ -16,6 +16,28 @@ export function authSecretMatches(value: string, purpose: string, expectedHash: 
   }
 }
 
+export type AuthPublicHandleKind = "LOGIN_ALIAS" | "SESSION";
+
+export function createAuthPublicHandle(kind: AuthPublicHandleKind, userId: string, resourceId: string, version: number) {
+  return `auth_${authHashSecret(`${userId}:${resourceId}:${version}`, `public-handle:${kind}`)}`;
+}
+
+export function authPublicHandleMatches(
+  handle: string,
+  kind: AuthPublicHandleKind,
+  userId: string,
+  resourceId: string,
+  version: number
+) {
+  try {
+    const actual = Buffer.from(handle);
+    const expected = Buffer.from(createAuthPublicHandle(kind, userId, resourceId, version));
+    return actual.length === expected.length && timingSafeEqual(actual, expected);
+  } catch {
+    return false;
+  }
+}
+
 export function createVerificationCode() {
   return String(randomInt(0, 1_000_000)).padStart(6, "0");
 }

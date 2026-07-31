@@ -3,6 +3,7 @@ import { getCurrentAuthContext } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { aliasTypeLabel } from "@/lib/auth-identifiers";
 import { sessionPublicState } from "@/lib/auth-sessions";
+import { createAuthPublicHandle } from "@/lib/auth-security";
 
 export async function GET() {
   const context = await getCurrentAuthContext();
@@ -13,7 +14,7 @@ export async function GET() {
   ]);
   return privateJson({
     aliases: aliases.map((alias) => ({
-      id: alias.id,
+      handle: createAuthPublicHandle("LOGIN_ALIAS", context.user.id, alias.id, alias.version),
       type: alias.type,
       label: aliasTypeLabel(alias.type),
       maskedValue: alias.displayMasked,
@@ -24,7 +25,7 @@ export async function GET() {
       removedAt: alias.removedAt
     })),
     sessions: sessions.map((session) => ({
-      id: session.id,
+      handle: createAuthPublicHandle("SESSION", context.user.id, session.id, session.version),
       current: session.id === context.sessionId,
       state: sessionPublicState(session),
       device: session.deviceSummary,

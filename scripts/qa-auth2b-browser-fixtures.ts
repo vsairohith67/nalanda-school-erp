@@ -5,6 +5,7 @@ import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { maskAlias, normalizeAliasValue } from "../lib/auth-identifiers";
 import { hashPassword } from "../lib/password";
+import { authHashSecret, createPasswordResetToken } from "../lib/auth-security";
 import { fileSha256 } from "./migration-check-utils";
 
 const WORKSPACE = path.resolve(".");
@@ -43,7 +44,9 @@ async function prepare() {
     APP_ORIGIN: "http://127.0.0.1:3012",
     AUTH2B_DELIVERY_ADAPTER: "LOCAL_TEST_SINK",
     AUTH2B_COPIED_DATABASE_ROOT: ROOT,
-    AUTH2B_LOCAL_DELIVERY_MAILBOX: MAILBOX
+    AUTH2B_LOCAL_DELIVERY_MAILBOX: MAILBOX,
+    TRUST_PROXY_HEADERS: "true",
+    NALANDA_TRUSTED_PROXY_MODE: "single-hop-sanitized"
   };
   execFileSync(process.env.ComSpec || "C:\\Windows\\System32\\cmd.exe", ["/d", "/s", "/c", "pnpm.cmd exec prisma migrate deploy --schema prisma/schema.prisma"], {
     cwd: WORKSPACE, env: environment, stdio: "pipe"
@@ -77,9 +80,42 @@ async function prepare() {
       status: "VERIFIED",
       verifiedAt: new Date()
     } });
+    const disabledUsername = normalizeAliasValue("USERNAME", `auth2b-browser-disabled-${randomUUID().slice(0, 8)}`);
+    const disabledUser = await client.user.create({ data: {
+      name: "AUTH2B Browser Disabled",
+      username: disabledUsername,
+      passwordHash: await hashPassword(password),
+      role: "VIEWER",
+      isActive: false
+    } });
+    await client.authLoginAlias.create({ data: {
+      userId: disabledUser.id, type: "USERNAME", normalizedValue: disabledUsername,
+      displayMasked: disabledUsername, status: "VERIFIED", isSchoolGoverned: true, verifiedAt: new Date()
+    } });
+    const pendingAlias = `browser.pending.${randomUUID().slice(0, 8)}@example.invalid`;
+    await client.authLoginAlias.create({ data: {
+      userId: user.id, type: "PERSONAL_EMAIL", normalizedValue: pendingAlias,
+      displayMasked: maskAlias("PERSONAL_EMAIL", pendingAlias), status: "PENDING"
+    } });
+    const expiredResetToken = createPasswordResetToken();
+    const usedResetToken = createPasswordResetToken();
+    const resetAlias = await client.authLoginAlias.findUniqueOrThrow({ where: { normalizedValue: workEmail } });
+    await client.authPasswordResetToken.createMany({ data: [{
+      userId: user.id, aliasId: resetAlias.id, channelType: "WORK_EMAIL",
+      tokenHash: authHashSecret(expiredResetToken, "password-reset", environment),
+      credentialVersion: user.credentialVersion, expiresAt: new Date(Date.now() - 60_000)
+    }, {
+      userId: user.id, aliasId: resetAlias.id, channelType: "WORK_EMAIL",
+      tokenHash: authHashSecret(usedResetToken, "password-reset", environment),
+      credentialVersion: user.credentialVersion, expiresAt: new Date(Date.now() + 10 * 60_000), usedAt: new Date()
+    }] });
     writeFileSync(PRIVATE_RUNTIME, JSON.stringify({
       username,
       password,
+      disabledUsername,
+      pendingAlias,
+      expiredResetToken,
+      usedResetToken,
       authSecret,
       verificationSecret,
       databaseUrl: databaseUrl(DATABASE),

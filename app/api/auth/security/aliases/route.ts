@@ -5,6 +5,7 @@ import { beginAliasVerification, removeLoginAlias, verifyLoginAlias } from "@/li
 import { configuredAuthDeliveryAdapter } from "@/lib/auth-delivery";
 import { isAuthAliasType } from "@/lib/auth-identifiers";
 import { safeClientError } from "@/lib/client-errors";
+import { authPublicHandleMatches } from "@/lib/auth-security";
 
 export async function POST(request: NextRequest) {
   const context = await getCurrentAuthContext();
@@ -17,17 +18,31 @@ export async function POST(request: NextRequest) {
       const value = String(body.value ?? "");
       if (!isAuthAliasType(type) || value.length > 254) throw new Error("Enter a valid login identifier");
       const result = await beginAliasVerification(prisma, { userId: context.user.id, type, value }, configuredAuthDeliveryAdapter());
-      return privateJson({ success: true, ...result }, 201);
+      return privateJson({ success: true, displayMasked: result.displayMasked, expiresInMinutes: result.expiresInMinutes }, 201);
     }
-    const aliasId = boundedId(body.aliasId);
+    const aliasHandle = boundedHandle(body.aliasHandle);
     const expectedVersion = expectedVersionValue(body.expectedVersion);
+    const aliases = await prisma.authLoginAlias.findMany({
+      where: { userId: context.user.id, version: expectedVersion },
+      select: { id: true, version: true }
+    });
+    const alias = aliases.find((candidate) => authPublicHandleMatches(
+      aliasHandle,
+      "LOGIN_ALIAS",
+      context.user.id,
+      candidate.id,
+      candidate.version
+    ));
+    if (!alias) throw new Error("Login identifier changed; refresh and try again");
     if (action === "verify") {
       const code = String(body.code ?? "").trim();
       if (!/^\d{6}$/.test(code)) throw new Error("Enter the six-digit verification code");
-      return privateJson({ success: true, ...(await verifyLoginAlias(prisma, { userId: context.user.id, aliasId, expectedVersion, code })) }, 200);
+      await verifyLoginAlias(prisma, { userId: context.user.id, aliasId: alias.id, expectedVersion, code });
+      return privateJson({ success: true }, 200);
     }
     if (action === "remove") {
-      return privateJson({ success: true, ...(await removeLoginAlias(prisma, { userId: context.user.id, aliasId, expectedVersion })) }, 200);
+      await removeLoginAlias(prisma, { userId: context.user.id, aliasId: alias.id, expectedVersion });
+      return privateJson({ success: true }, 200);
     }
     throw new Error("Unsupported login identifier action");
   } catch (error) {
@@ -35,9 +50,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function boundedId(value: unknown) {
+function boundedHandle(value: unknown) {
   const result = String(value ?? "").trim();
-  if (!result || result.length > 80) throw new Error("Login identifier is invalid");
+  if (!/^auth_[a-f0-9]{64}$/.test(result)) throw new Error("Login identifier is invalid");
   return result;
 }
 
