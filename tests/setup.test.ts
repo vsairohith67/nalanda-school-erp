@@ -10,15 +10,17 @@ import {
 describe("first-run setup", () => {
   it("allows setup when no active Director exists", async () => {
     const createdUsers: Array<Record<string, unknown>> = [];
+    const createdAliases: Array<Record<string, unknown>> = [];
     const savedSettings: Array<Record<string, unknown>> = [];
     const client = {
       user: {
         count: async () => 0,
         create: async ({ data }: { data: Record<string, unknown> }) => {
           createdUsers.push(data);
-          return data;
+          return { id: "setup-user-1", ...data };
         }
       },
+      authLoginAlias: { create: async ({ data }: { data: Record<string, unknown> }) => { createdAliases.push(data); return data; } },
       schoolSettings: {
         upsert: async (args: Record<string, unknown>) => {
           savedSettings.push(args);
@@ -47,6 +49,7 @@ describe("first-run setup", () => {
     });
     expect(String(createdUsers[0].passwordHash)).toMatch(/^scrypt\$/);
     expect(savedSettings).toHaveLength(1);
+    expect(createdAliases[0]).toMatchObject({ type: "USERNAME", normalizedValue: "director.real", status: "VERIFIED" });
   });
 
   it("blocks setup after an active Director exists", async () => {
@@ -57,6 +60,7 @@ describe("first-run setup", () => {
           throw new Error("should not create");
         }
       },
+      authLoginAlias: { create: async () => { throw new Error("should not create alias"); } },
       schoolSettings: {
         upsert: async () => {
           throw new Error("should not save");
@@ -87,6 +91,7 @@ describe("first-run setup", () => {
           throw new Error("should not create");
         }
       },
+      authLoginAlias: { create: async () => { throw new Error("should not create alias"); } },
       schoolSettings: {
         upsert: async () => {
           throw new Error("should not save");
@@ -142,6 +147,7 @@ describe("first-run setup", () => {
     });
     await expect(createFirstRunSetup({
       user: { count: async () => 0, create },
+      authLoginAlias: { create: vi.fn() },
       schoolSettings: { upsert }
     }, input, {
       NODE_ENV: "production",

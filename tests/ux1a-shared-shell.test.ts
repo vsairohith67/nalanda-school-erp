@@ -21,7 +21,7 @@ describe("UX-1A shared login and shell", () => {
     const form = source("components/login-form.tsx");
     const route = source("app/api/auth/login/route.ts");
     const generic = "We couldn’t sign you in with those details.";
-    expect(form).toContain("Username or email");
+    expect(form).toContain("Username or verified login identifier");
     expect(form).toContain('autoComplete="username"');
     expect(form).toContain('autoComplete="current-password"');
     expect(form).toContain('getModifierState("CapsLock")');
@@ -32,15 +32,15 @@ describe("UX-1A shared login and shell", () => {
     expect(route).not.toContain("user: { id:");
   });
 
-  it("uses the exact governed login identity and real support routes without a fake reset", () => {
+  it("uses the exact governed login identity and real support and recovery routes", () => {
     const page = source("app/login/page.tsx");
     for (const text of [
       "Nalanda Public School",
       "Nalanda Education Management System",
       "Unified School Management Platform"
     ]) expect(page).toContain(text);
-    for (const href of ["/privacy", "/terms", "/contact"]) expect(page).toContain(`href="${href}"`);
-    expect(page).not.toMatch(/Forgot Password/i);
+    for (const href of ["/forgot-password", "/privacy", "/terms", "/contact"]) expect(page).toContain(`href="${href}"`);
+    expect(page).toContain("Forgot Password");
     expect(page).not.toContain("Academic Year");
   });
 
@@ -54,7 +54,7 @@ describe("UX-1A shared login and shell", () => {
     expect(shell).not.toMatch(/role picker|switch role/i);
   });
 
-  it("preserves the current-password gate and expires the current session after change", () => {
+  it("preserves the current-password gate and rotates the current session after change", () => {
     const control = source("lib/password-control.ts");
     const route = source("app/api/auth/change-password/route.ts");
     expect(control).toContain("verifyPassword(input.currentPassword");
@@ -62,7 +62,9 @@ describe("UX-1A shared login and shell", () => {
     expect(control).toContain("different from the current password");
     expect(route).toContain('action: "OWN_PASSWORD_CHANGED"');
     expect(route).toContain("sessionCookieName()");
-    expect(route).toContain("expires: new Date(0)");
+    expect(route).toContain("createPersistedSession");
+    expect(route).toContain("maxAge: SESSION_MAX_AGE_SECONDS");
+    expect(route).toContain('revocationReason: "PASSWORD_CHANGED"');
     expect(route).toContain('"cache-control", "private, no-store"');
   });
 

@@ -230,6 +230,44 @@
   .public-site *, .public-site *::before, .public-site *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
+/* AUTH-2B: verified recovery and persisted account-security controls. */
+.recovery-panel { max-width: 980px; }
+.recovery-form fieldset { border: 1px solid var(--border); border-radius: 14px; display: grid; gap: 8px; margin: 0; padding: 14px; }
+.recovery-form legend { font-weight: 800; padding: 0 6px; }
+.recovery-form .radio-option { align-items: center; display: flex; flex-direction: row; gap: 10px; min-height: 44px; }
+.recovery-form .radio-option input { height: 20px; margin: 0; width: 20px; }
+.recovery-back-link { align-items: center; display: inline-flex; justify-content: center; min-height: 44px; }
+
+.security-stack { display: grid; gap: 18px; }
+.security-section { display: grid; gap: 18px; }
+.security-section .section-title h3 { align-items: center; display: flex; gap: 8px; }
+.security-list { display: grid; gap: 10px; }
+.security-row { align-items: center; border: 1px solid var(--border); border-radius: 14px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr) auto; padding: 14px; }
+.security-row > div:not(.session-icon) { display: grid; gap: 4px; min-width: 0; }
+.security-row span, .security-row small { color: var(--muted); overflow-wrap: anywhere; }
+.security-row button, .security-section .page-actions button, .security-add-form button, .inline-verify button, .security-dialog button { min-height: 44px; }
+.inline-verify { align-items: end; display: flex; gap: 10px; grid-column: 1 / -1; }
+.inline-verify label { flex: 1; }
+.inline-verify input { min-height: 44px; }
+.security-add-form { border-top: 1px solid var(--border); padding-top: 18px; }
+.session-row { grid-template-columns: auto minmax(0, 1fr) auto; }
+.session-icon { align-items: center; background: var(--surface-subtle, var(--background)); border-radius: 999px; display: flex; height: 44px; justify-content: center; width: 44px; }
+.security-dialog-backdrop { align-items: center; background: rgb(0 0 0 / 55%); display: flex; inset: 0; justify-content: center; padding: 20px; position: fixed; z-index: 1000; }
+.security-dialog { background: var(--card, var(--background)); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 24px 70px rgb(0 0 0 / 30%); display: grid; gap: 14px; max-width: 480px; padding: 24px; width: 100%; }
+.security-dialog h3, .security-dialog p { margin: 0; }
+.dialog-confirm { align-items: flex-start; border: 1px solid var(--border); border-radius: 12px; display: flex; gap: 10px; min-height: 44px; padding: 12px; }
+.dialog-confirm input { height: 20px; margin: 1px 0 0; width: 20px; }
+
+@media (max-width: 700px) {
+  .security-row, .session-row { align-items: stretch; grid-template-columns: 1fr; }
+  .session-icon { display: none; }
+  .security-row > button { width: 100%; }
+  .inline-verify { align-items: stretch; flex-direction: column; }
+  .security-section .section-title { align-items: stretch; }
+  .security-section .section-title .page-actions { display: grid; width: 100%; }
+  .security-dialog { max-height: calc(100vh - 40px); overflow: auto; }
+}
+
 /* Prompt 16C: miscellaneous income and physical cash book */
 .content-stack { display: grid; gap: 1rem; }
 .receipt-lines { border: 1px solid var(--border); border-radius: 12px; padding: 1rem; min-width: 0; }

@@ -25,6 +25,7 @@ const DATA_PATH_VARIABLES = [
 ] as const;
 const REQUIRED_SECRETS = [
   "AUTH_SECRET",
+  "AUTH_VERIFICATION_SECRET",
   "FIRST_RUN_BOOTSTRAP_TOKEN",
   "WHATSAPP_MOCK_WEBHOOK_SECRET",
   "WHATSAPP_MOCK_VERIFY_TOKEN",
@@ -235,6 +236,13 @@ export function validateDeploymentEnvironment(
   }
   if (value(environment, "ALLOW_DEMO_BUSINESS_DATA") === "true") {
     add("DEMO_BUSINESS_DATA_REJECTED", "ALLOW_DEMO_BUSINESS_DATA", "Demo business seeding is disabled in staging and production.");
+  }
+  if (value(environment, "AUTH2B_DELIVERY_ADAPTER") !== "DISABLED") {
+    add(
+      "AUTH2B_DELIVERY_NOT_DISABLED",
+      "AUTH2B_DELIVERY_ADAPTER",
+      "AUTH-2B recovery delivery must remain disabled until a separately approved governed provider is configured."
+    );
   }
 
   const liveFlags = [

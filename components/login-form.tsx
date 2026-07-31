@@ -56,7 +56,7 @@ export function LoginForm() {
         </div>
       ) : null}
       <label>
-        Username or email
+        Username or verified login identifier
         <input
           name="identifier"
           autoComplete="username"

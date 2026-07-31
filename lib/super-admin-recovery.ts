@@ -12,6 +12,7 @@ import {
   documentedSeedPasswordForAudit,
   SEED_USER_DEFINITIONS
 } from "@/lib/seed-users";
+import { loginIdentifierCandidates } from "@/lib/auth-identifiers";
 
 export const SUPER_ADMIN_RECOVERY_CONFIRMATION =
   "RECOVER LOCAL OPERATIONAL SUPER ADMIN";
@@ -51,6 +52,7 @@ type RecoveryTarget = {
   role: string;
   isActive: boolean;
   passwordHash: string;
+  credentialVersion: number;
 };
 
 function canonicalPath(candidate: string) {
@@ -290,29 +292,19 @@ async function findRecoveryTarget(
   client: PrismaClient | Prisma.TransactionClient,
   identifier: string
 ): Promise<RecoveryTarget> {
-  const matches = await client.user.findMany({
-    where: {
-      OR: [
-        { username: identifier },
-        { email: identifier }
-      ]
-    },
-    select: {
-      id: true,
-      name: true,
-      role: true,
-      isActive: true,
-      passwordHash: true
-    },
+  const candidates = loginIdentifierCandidates(identifier);
+  const aliases = await client.authLoginAlias.findMany({
+    where: { normalizedValue: { in: candidates }, status: "VERIFIED" },
+    include: { user: true },
     take: 2
   });
-  if (matches.length === 0) {
+  if (aliases.length === 0) {
     throw new SuperAdminRecoveryRefusal("AUTH_RECOVERY_ACCOUNT_NOT_FOUND");
   }
-  if (matches.length !== 1) {
+  if (aliases.length !== 1) {
     throw new SuperAdminRecoveryRefusal("AUTH_RECOVERY_IDENTIFIER_AMBIGUOUS");
   }
-  const target = matches[0];
+  const target = aliases[0].user;
   if (!target.isActive) {
     throw new SuperAdminRecoveryRefusal("AUTH_RECOVERY_ACCOUNT_INACTIVE");
   }
@@ -393,20 +385,45 @@ export async function executeSuperAdminRecovery(
           id: target.id,
           role: "SUPER_ADMIN",
           isActive: true,
-          passwordHash: target.passwordHash
+          passwordHash: target.passwordHash,
+          credentialVersion: target.credentialVersion
         },
-        data: { passwordHash: nextPasswordHash }
+        data: { passwordHash: nextPasswordHash, credentialVersion: { increment: 1 } }
       });
       if (
         updated.count !== 1 ||
         currentTarget.id !== target.id ||
-        currentTarget.passwordHash !== target.passwordHash
+        currentTarget.passwordHash !== target.passwordHash ||
+        currentTarget.credentialVersion !== target.credentialVersion
       ) {
         throw new SuperAdminRecoveryRefusal("AUTH_RECOVERY_CONCURRENT_ACCOUNT_CHANGE");
       }
       if (input.qaSimulateFailureAfterCredentialUpdate) {
         throw new SuperAdminRecoveryRefusal("AUTH_RECOVERY_QA_SIMULATED_FAILURE");
       }
+      const now = new Date();
+      await tx.authSession.updateMany({
+        where: { userId: target.id, revokedAt: null },
+        data: { revokedAt: now, revocationReason: "LOCAL_SUPER_ADMIN_RECOVERY" }
+      });
+      await tx.authPasswordResetToken.updateMany({
+        where: { userId: target.id, usedAt: null, invalidatedAt: null },
+        data: { invalidatedAt: now, invalidationReason: "LOCAL_SUPER_ADMIN_RECOVERY" }
+      });
+      await tx.authVerificationChallenge.updateMany({
+        where: { userId: target.id, usedAt: null, invalidatedAt: null },
+        data: { invalidatedAt: now }
+      });
+      await tx.authSecurityEvent.create({
+        data: {
+          userId: target.id,
+          actorUserId: target.id,
+          eventType: "PASSWORD_RECOVERED_LOCALLY",
+          subjectType: "USER",
+          subjectId: target.id,
+          detailsJson: JSON.stringify({ method: "LOCAL_HIDDEN_INPUT", sessionsRevoked: true })
+        }
+      });
       await tx.userAudit.create({
         data: {
           action: "SUPER_ADMIN_PASSWORD_RECOVERED",

@@ -1,5 +1,15 @@
 # SEC-1 Security Audit and Hardening Report
 
+## AUTH-2B follow-up
+
+AUTH-2B replaces stateless authorization with signed opaque cookies backed by a
+persisted hash-only session registry, credential-version binding, expiry,
+revocation, bounded last-seen updates and masked client/network summaries.
+Verified governed aliases replace direct `User.email` login; public recovery is
+enumeration-resistant and uses hashed, expiring, single-use records. Password,
+role and status changes revoke stale sessions. No live delivery provider is
+enabled; the isolated local sink refuses the operational database.
+
 ## DATA-0B follow-up: seed and restore hardening
 
 DATA-0B disabled demo business seeding by default, required an explicit
@@ -56,8 +66,8 @@ Pre-remediation discovery consolidated 0 Critical, 4 High, and 18 Medium confirm
 | SEC1-M01 | Receipt/Student ownership invariant. CWE-639; A01; ASVS V4 | Editing/import/restoring a Payment could bind a receipt shared with another Student. | Shared ownership enforcement for create/edit/import/restore; regression tests. | None beyond operator data quality. | `FIXED` |
 | SEC1-M02 | Payment import race/unbounded rows. CWE-400/362; A04; ASVS V5/V11 | Large imports or stale duplicate snapshots could exhaust resources/create duplicates. | 2,000-row cap and exact duplicate recheck in transaction. | Multi-node database isolation must remain equivalent. | `FIXED` |
 | SEC1-M03 | Content-Length-only limits. CWE-400; A04; ASVS V5/V12 | Lengthless/chunked bodies bypassed pre-parse size checks. | Clone-stream byte counting; malformed lengths reject; 413 tests. | Edge/proxy limits still recommended. | `FIXED` |
-| SEC1-M04 | Login throttling denial risk. CWE-307/400; A07; ASVS V2 | Shared “direct” source or pure account bucket could let an attacker continuously deny a victim. | Trusted source + account/source buckets; shared untrusted direct source never hard-blocks; generic errors and dummy scrypt retained. | Distributed limiter required for multiple instances. | `FIXED` |
-| SEC1-M05 | Weak new-password and stale role session policy. CWE-521/613; A07; ASVS V2/V3 | Eight-character/common passwords and role-stale sessions weakened credentials. | 12–128 characters, common/repeated rejection, UI alignment, credential and role tags. | MFA is a future recommendation, not SEC-1 scope. | `FIXED` |
+| SEC1-M04 | Login throttling denial risk. CWE-307/400; A07; ASVS V2 | Repeated account attacks or identifier spraying could remain unbounded. | Trusted source + account/source and broad-source buckets, generic errors and dummy scrypt. Direct mode is bounded without trusting forwarded headers. | Distributed limiter required for multiple instances. | `FIXED_AUTH2B_UPDATED` |
+| SEC1-M05 | Weak new-password and stale role session policy. CWE-521/613; A07; ASVS V2/V3 | Eight-character/common passwords and stale sessions weakened credentials. | 12–128 characters, common/repeated/current-password rejection, credential versions, central revocation and session rotation. | MFA is a future recommendation, not AUTH-2B scope. | `FIXED_AUTH2B_UPDATED` |
 | SEC1-M06 | Forwarded host/protocol trust. CWE-346; A05; ASVS V14 | Client-supplied forwarded headers could influence same-origin validation. | Ignore unless `TRUST_PROXY_HEADERS=true`; configured `APP_ORIGIN` preferred; tests. | Proxy must strip/sanitize headers. | `FIXED` |
 | SEC1-M07 | Raw exception disclosure. CWE-209/117; A05/A09; ASVS V7/V13 | Prisma/SQL/path/secret/stack messages could be reflected by APIs or error UI. | 205 API responses use `safeClientError`; generic app error page; control-character and source-scan tests. | Detailed server logging must be protected. | `FIXED` |
 | SEC1-M08 | OCR state/storage authorization. CWE-284/22/59; A01/A08; ASVS V4/V12 | Paused profiles could reactivate, terminal rows mutate, weak cancel states, or configured roots escape. | State/permission guards, manual cap, canonical realpath containment, symlink/junction/public rejection. | Real Windows junction creation was not used in tests. | `FIXED` |

@@ -35,6 +35,8 @@ function validEnvironment(): NodeJS.ProcessEnv {
     CLOUD_BACKUP_TEMP_DIR: child("tmp/cloud-backup"),
     CLOUD_BACKUP_REHEARSAL_DIR: child("tmp/restore-rehearsal"),
     AUTH_SECRET: "unique-staging-auth-material-91f67bda-a7d5-4c65",
+    AUTH_VERIFICATION_SECRET: "unique-staging-verification-material-f47e8b75-9ad2-4d71",
+    AUTH2B_DELIVERY_ADAPTER: "DISABLED",
     FIRST_RUN_BOOTSTRAP_TOKEN: "unique-staging-bootstrap-72ec8567-7454-49aa",
     WHATSAPP_MOCK_WEBHOOK_SECRET: "unique-staging-wa-hook-1d093694-d402-448a",
     WHATSAPP_MOCK_VERIFY_TOKEN: "unique-staging-wa-verify-38baaf79-a31b-4f04",
@@ -131,6 +133,12 @@ describe("staging deployment environment validation", () => {
     const enabled = validEnvironment();
     enabled.WHATSAPP_LIVE_SENDING_ENABLED = "true";
     expect(codes(enabled)).toContain("LIVE_PROVIDER_NOT_DISABLED");
+  });
+
+  it("keeps AUTH-2B recovery delivery disabled in staging", () => {
+    const environment = validEnvironment();
+    environment.AUTH2B_DELIVERY_ADAPTER = "LOCAL_TEST_SINK";
+    expect(codes(environment)).toContain("AUTH2B_DELIVERY_NOT_DISABLED");
   });
 
   it("rejects production/staging identifier mixing and dangerous debug modes", () => {

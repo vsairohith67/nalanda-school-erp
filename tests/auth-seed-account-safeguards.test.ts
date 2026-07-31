@@ -7,19 +7,19 @@ function read(relativePath: string) {
 }
 
 describe("AUTH-2A architecture and decision boundary", () => {
-  it("adds no AuthSession model or migration", () => {
-    expect(read("prisma/schema.prisma")).not.toMatch(/\bmodel\s+AuthSession\b/);
+  it("hands the deferred session registry boundary to AUTH-2B", () => {
+    expect(read("prisma/schema.prisma")).toMatch(/\bmodel\s+AuthSession\b/);
     const packageJson = JSON.parse(read("package.json")) as { scripts: Record<string, string> };
     expect(packageJson.scripts["qa:auth2a"]).toBe("tsx scripts/qa-auth2a-copied-db.ts");
   });
 
-  it("keeps session invalidation tied to current password, role, and status", () => {
-    const session = read("lib/session-token.ts");
+  it("keeps session invalidation tied to credential version, status, expiry, and revocation", () => {
+    const session = read("lib/auth-sessions.ts");
     const auth = read("lib/auth.ts");
-    expect(session).toContain("user.isActive");
-    expect(session).toContain("sessionRoleMatches(payload, user.role)");
-    expect(session).toContain("sessionCredentialTagMatches(payload, user.passwordHash)");
-    expect(auth).toContain("sessionAccountStateMatches(payload");
+    expect(session).toContain("!row.user.isActive");
+    expect(session).toContain("row.credentialVersion !== row.user.credentialVersion");
+    expect(session).toContain("row.revokedAt || row.expiresAt <= now");
+    expect(auth).toContain("resolvePersistedSession(prisma");
   });
 
   it("keeps System Health output role-level and credential-free", () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Download, KeyRound, LogOut } from "lucide-react";
+import { ChevronDown, Download, KeyRound, LogOut, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { AuthUser } from "@/lib/auth";
 import Link from "next/link";
@@ -66,6 +66,10 @@ export function UserMenu({ user }: { user: AuthUser }) {
         <Link className="button secondary" href="/change-password">
           <KeyRound size={16} aria-hidden />
           Change Password
+        </Link>
+        <Link className="button secondary" href="/account-security">
+          <ShieldCheck size={16} aria-hidden />
+          Account Security
         </Link>
         <Link className="button secondary" href="/install-app">
           <Download size={16} aria-hidden />

@@ -1,5 +1,17 @@
 # Nalanda Fee Control — Developer Continuation Guide
 
+## AUTH-2B security boundary
+
+Read `AUTH_2B_VERIFIED_RECOVERY_SESSION_REGISTRY.md` before modifying login,
+cookies, password change/reset, User status/role, profile contacts or local
+recovery. Preserve global normalized alias uniqueness, verification before
+email/mobile authentication, exact admission Student linkage, generic public
+responses, HMAC-only verification/reset storage, URL-fragment reset delivery,
+credential-version binding, signed opaque cookies plus registry hash checks,
+bounded last-seen writes, masked network evidence and append-only events.
+Profile email/mobile is never an alias automatically. Live delivery, IAM-1A
+account delegation and merge remain separate approval gates.
+
 ## EXAM-RC-IMPL-3 publication boundary
 
 Use `lib/report-publication.ts` as the only publication lifecycle service,

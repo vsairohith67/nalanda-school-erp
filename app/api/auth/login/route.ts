@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { isRole } from "@/lib/permissions";
 import {
-  createSessionCredentialTag,
-  createSessionToken,
   SESSION_MAX_AGE_SECONDS,
   sessionCookieName,
   sessionCookieSecure
 } from "@/lib/session-token";
+import { createPersistedSession } from "@/lib/auth-sessions";
+import { resolveLoginIdentifier } from "@/lib/auth-identifiers";
+import { logAuthSecurityEvent } from "@/lib/auth-security";
 import { isFirstRunRequired } from "@/lib/setup";
 import {
   checkLoginRateLimit,
@@ -54,15 +55,11 @@ export async function POST(request: NextRequest) {
       return rateLimitResponse(before.retryAfterSeconds);
     }
 
-    const user = await prisma.user.findFirst({
-      where: {
-        isActive: true,
-        OR: [{ username: identifier }, { email: identifier }]
-      }
-    });
+    const resolved = await resolveLoginIdentifier(prisma, identifier);
+    const user = resolved.kind === "resolved" ? resolved.user : null;
     const passwordMatches = await verifyPassword(password, user?.passwordHash ?? await dummyPasswordHash);
 
-    if (!user || !isRole(user.role) || !passwordMatches) {
+    if (!user || !user.isActive || !isRole(user.role) || !passwordMatches) {
       const failure = await recordLoginFailure({ identifier, source });
       console.warn(`AUTH_LOGIN_FAILURE account=${failure.accountHash} source=${failure.sourceHash}`);
       if (failure.blocked) return rateLimitResponse(failure.retryAfterSeconds);
@@ -70,17 +67,24 @@ export async function POST(request: NextRequest) {
     }
 
     await clearLoginAccountFailures(identifier);
-    await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-    const token = await createSessionToken({
-      userId: user.id,
-      name: user.name,
-      role: user.role,
-      credentialTag: await createSessionCredentialTag(user.id, user.passwordHash)
+    const token = await prisma.$transaction(async (tx) => {
+      const now = new Date();
+      await tx.user.update({ where: { id: user.id }, data: { lastLoginAt: now } });
+      const created = await createPersistedSession(tx, user, request.headers, now);
+      await logAuthSecurityEvent(tx, {
+        eventType: "LOGIN_SUCCEEDED",
+        userId: user.id,
+        actorUserId: user.id,
+        subjectType: "AUTH_SESSION",
+        subjectId: created.sessionId,
+        details: { aliasType: resolved.kind === "resolved" ? resolved.alias.type : "UNKNOWN" }
+      });
+      return created;
     });
     const response = NextResponse.json({
       user: { name: user.name, username: user.username, role: user.role }
     });
-    response.cookies.set(sessionCookieName(), token, {
+    response.cookies.set(sessionCookieName(), token.cookieValue, {
       httpOnly: true,
       sameSite: "strict",
       secure: sessionCookieSecure(),

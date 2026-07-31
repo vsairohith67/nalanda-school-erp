@@ -255,7 +255,13 @@ export function AppShell({
   }, [mobileNavOpen]);
 
   if (isPublicWebsitePath(pathname)) return children;
-  if (pathname === "/login" || pathname === "/setup" || pathname === "/offline") return children;
+  if (
+    pathname === "/login" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password" ||
+    pathname === "/setup" ||
+    pathname === "/offline"
+  ) return children;
   if (!user) return null;
   if (user.role === "PARENT") {
     return (

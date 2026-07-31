@@ -14,11 +14,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       const user = await linkExistingParentUser(prisma, id, String(body.username ?? ""));
       return NextResponse.json({ user });
     }
-    const user = await createParentUserFromGuardian(prisma, id, {
-      username: String(body.username ?? ""),
-      email: body.email ? String(body.email) : null,
-      password: String(body.password ?? "")
-    });
+    const user = await prisma.$transaction((tx) => createParentUserFromGuardian(tx, id, {
+        username: String(body.username ?? ""),
+        email: body.email ? String(body.email) : null,
+        password: String(body.password ?? "")
+      }));
     return NextResponse.json({ user }, { status: 201 });
   } catch (error) {
     return NextResponse.json(

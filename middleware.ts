@@ -11,6 +11,8 @@ import {
 
 const publicPaths = [
   "/login",
+  "/forgot-password",
+  "/reset-password",
   "/setup",
   "/offline",
   "/manifest.webmanifest",
@@ -18,6 +20,8 @@ const publicPaths = [
   "/nalanda-logo.jpg",
   "/nalanda-logo-transparent.png",
   "/api/auth/login",
+  "/api/auth/recovery/request",
+  "/api/auth/recovery/reset",
   "/api/deployment-health",
   "/api/setup"
 ];
@@ -73,6 +77,9 @@ export async function middleware(request: NextRequest) {
     response.headers.set("x-nalanda-route-boundary", "public-content-only");
   }
   if (pathname.startsWith("/api/")) response.headers.set("cache-control", "private, no-store");
+  if (pathname === "/forgot-password" || pathname === "/reset-password") {
+    response.headers.set("cache-control", "private, no-store");
+  }
   if (!isPublic && !pathname.startsWith("/_next/")) {
     response.headers.set("cache-control", "private, no-store");
   }

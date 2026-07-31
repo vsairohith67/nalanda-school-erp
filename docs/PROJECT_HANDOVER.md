@@ -1,5 +1,15 @@
 # Nalanda Fee Control — Project Handover
 
+## AUTH-2B current feature checkpoint
+
+`auth/verified-recovery-session-registry` implements the deferred verified
+alias, password-recovery and central-session boundary. Read
+`AUTH_2B_VERIFIED_RECOVERY_SESSION_REGISTRY.md` and its implementation
+checkpoint before changing login, passwords, cookies, Staff/Guardian contact
+links or user status/role handling. The branch is not merged; AUTH-2B-QA is
+required. No operational account or provider was activated, and IAM-1A remains
+out of scope.
+
 ## Current governed implementation checkpoint
 
 `EXAM-RC-IMPL-1` and independent QA are complete. The retained

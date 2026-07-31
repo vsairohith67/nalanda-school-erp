@@ -30,6 +30,7 @@ model Student {
   startMonth              String                       @default("June")
   remarks                 String?
   deletedAt               DateTime?
+  authLoginAliases        AuthLoginAlias[]
   createdAt               DateTime                     @default(now())
   updatedAt               DateTime                     @updatedAt
   payments                Payment[]
@@ -124,6 +125,7 @@ model User {
   username                         String                              @unique
   email                            String?                             @unique
   passwordHash                     String
+  credentialVersion                Int                                 @default(1)
   role                             String
   isActive                         Boolean                             @default(true)
   lastLoginAt                      DateTime?
@@ -235,6 +237,12 @@ model User {
   homeworkAssignmentsCancelled     HomeworkAssignment[]                @relation("HomeworkCancelledBy")
   homeworkEventsRecorded           HomeworkAssignmentEvent[]           @relation("HomeworkEventRecordedBy")
   notificationRecipients           NotificationRecipient[]
+  authLoginAliases                 AuthLoginAlias[]
+  authVerificationChallenges       AuthVerificationChallenge[]
+  authPasswordResetTokens          AuthPasswordResetToken[]
+  authSessions                     AuthSession[]
+  authSecurityEvents               AuthSecurityEvent[]                 @relation("AuthSecurityEventSubject")
+  authSecurityEventsActed          AuthSecurityEvent[]                 @relation("AuthSecurityEventActor")
 
   @@index([role])
   @@index([isActive])
@@ -665,6 +673,110 @@ model UserAudit {
   @@index([actorUserId])
   @@index([targetUserId])
   @@index([createdAt])
+}
+
+model AuthLoginAlias {
+  id                     String                      @id @default(cuid())
+  userId                 String
+  user                   User                        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  type                   String
+  normalizedValue        String                      @unique
+  displayMasked          String
+  status                 String                      @default("PENDING")
+  isSchoolGoverned       Boolean                     @default(false)
+  admissionStudentId     String?
+  admissionStudent       Student?                    @relation(fields: [admissionStudentId], references: [id], onDelete: Restrict)
+  verifiedAt             DateTime?
+  removedAt              DateTime?
+  version                Int                         @default(1)
+  createdAt              DateTime                    @default(now())
+  updatedAt              DateTime                    @updatedAt
+  verificationChallenges AuthVerificationChallenge[]
+  passwordResetTokens    AuthPasswordResetToken[]
+
+  @@index([userId, status])
+  @@index([type, status])
+  @@index([admissionStudentId])
+}
+
+model AuthVerificationChallenge {
+  id                String         @id @default(cuid())
+  aliasId           String
+  alias             AuthLoginAlias @relation(fields: [aliasId], references: [id], onDelete: Restrict)
+  userId            String
+  user              User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  purpose           String
+  codeHash          String
+  credentialVersion Int
+  attempts          Int            @default(0)
+  maxAttempts       Int            @default(5)
+  expiresAt         DateTime
+  usedAt            DateTime?
+  invalidatedAt     DateTime?
+  createdAt         DateTime       @default(now())
+
+  @@index([aliasId, purpose, createdAt])
+  @@index([userId, purpose, createdAt])
+  @@index([expiresAt])
+}
+
+model AuthPasswordResetToken {
+  id                 String         @id @default(cuid())
+  userId             String
+  user               User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  aliasId            String
+  alias              AuthLoginAlias @relation(fields: [aliasId], references: [id], onDelete: Restrict)
+  channelType        String
+  purpose            String         @default("PASSWORD_RESET")
+  tokenHash          String         @unique
+  credentialVersion  Int
+  attempts           Int            @default(0)
+  maxAttempts        Int            @default(5)
+  expiresAt          DateTime
+  usedAt             DateTime?
+  invalidatedAt      DateTime?
+  invalidationReason String?
+  createdAt          DateTime       @default(now())
+
+  @@index([userId, purpose, createdAt])
+  @@index([expiresAt])
+}
+
+model AuthSession {
+  id                    String    @id @default(cuid())
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  tokenHash             String    @unique
+  credentialVersion     Int
+  createdAt             DateTime  @default(now())
+  lastSeenAt            DateTime  @default(now())
+  expiresAt             DateTime
+  revokedAt             DateTime?
+  revocationReason      String?
+  deviceSummary         String
+  browserSummary        String
+  networkEvidenceMasked String
+  version               Int       @default(1)
+
+  @@index([userId, revokedAt, expiresAt])
+  @@index([expiresAt])
+}
+
+model AuthSecurityEvent {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation("AuthSecurityEventSubject", fields: [userId], references: [id], onDelete: SetNull)
+  actorUserId String?
+  actor       User?    @relation("AuthSecurityEventActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  eventType   String
+  subjectType String?
+  subjectId   String?
+  detailsJson String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([eventType, createdAt])
 }
 
 model RolePermission {

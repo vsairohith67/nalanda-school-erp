@@ -6,10 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { isRole, type Permission, type Role } from "@/lib/permissions";
 import { hasRolePermission } from "@/lib/role-permissions";
 import {
-  SESSION_COOKIE,
-  sessionAccountStateMatches,
-  verifySessionToken
+  SESSION_COOKIE
 } from "@/lib/session-token";
+import { resolvePersistedSession } from "@/lib/auth-sessions";
 import { isFirstRunRequired } from "@/lib/setup";
 
 export type AuthUser = {
@@ -21,43 +20,23 @@ export type AuthUser = {
   guardianId: string | null;
 };
 
-export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
+export const getCurrentAuthContext = cache(async (): Promise<{ user: AuthUser; sessionId: string } | null> => {
   const cookieStore = await cookies();
-  const payload = await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
-  if (!payload) return null;
-  const user = await prisma.user.findUnique({
-    where: { id: payload.userId },
-    select: {
-      id: true,
-      name: true,
-      username: true,
-      email: true,
-      role: true,
-      guardianId: true,
-      isActive: true,
-      passwordHash: true
-    }
-  });
-  if (
-    !user ||
-    !isRole(user.role) ||
-    !(await sessionAccountStateMatches(payload, {
-      isActive: user.isActive,
-      role: user.role,
-      passwordHash: user.passwordHash
-    }))
-  ) {
-    return null;
-  }
-  return {
-    id: user.id,
-    name: user.name,
-    username: user.username,
-    email: user.email,
-    role: user.role,
-    guardianId: user.guardianId
-  };
+  const session = await resolvePersistedSession(prisma, cookieStore.get(SESSION_COOKIE)?.value);
+  if (!session || !isRole(session.user.role)) return null;
+  return { sessionId: session.id, user: {
+    id: session.user.id,
+    name: session.user.name,
+    username: session.user.username,
+    email: session.user.email,
+    role: session.user.role,
+    guardianId: session.user.guardianId
+  } };
 });
+
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  return (await getCurrentAuthContext())?.user ?? null;
+}
 
 export async function requireUser() {
   if (await isFirstRunRequired(prisma)) redirect("/setup");

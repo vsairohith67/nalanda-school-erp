@@ -45,8 +45,10 @@ function allowedEnvironment(extra: Partial<NodeJS.ProcessEnv> = {}): NodeJS.Proc
 }
 
 function fakeClient(rows = new Map<string, Record<string, unknown>>()) {
+  const aliases: Array<Record<string, unknown>> = [];
   return {
     rows,
+    aliases,
     user: {
       findUnique: async ({ where }: { where: { username: string } }) =>
         rows.get(where.username) as { id: string; isActive?: boolean; role?: string } | undefined ?? null,
@@ -55,8 +57,11 @@ function fakeClient(rows = new Map<string, Record<string, unknown>>()) {
           rows.set(String(row.username), { id: `${row.username}-id`, ...row });
         }
         return { count: data.length };
-      })
-    }
+      }),
+      findMany: async ({ where }: { where: { username: { in: string[] } } }) =>
+        where.username.in.map((username) => rows.get(username)).filter(Boolean).map((row) => ({ id: String(row!.id), username: String(row!.username) }))
+    },
+    authLoginAlias: { createMany: vi.fn(async ({ data }: { data: Array<Record<string, unknown>> }) => { aliases.push(...data); return { count: data.length }; }) }
   };
 }
 
@@ -77,6 +82,7 @@ describe("fail-closed demo user creation", () => {
     expect(result.enabled).toBe(true);
     expect(result.createdRoles).toEqual(["DIRECTOR", "ADMIN", "ACCOUNTANT", "VIEWER"]);
     expect(client.user.createMany).toHaveBeenCalledTimes(1);
+    expect(client.aliases).toHaveLength(4);
     expect(() => execFileSync("git", ["check-ignore", databasePath], {
       cwd: WORKSPACE_ROOT,
       encoding: "utf8"

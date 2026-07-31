@@ -1,5 +1,16 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## AUTH-2B - Verified Login Aliases, Recovery and Session Registry (2026-07-31)
+
+Implemented one additive migration for username/work email/personal email/mobile
+and explicitly linked admission-number aliases; hashed expiring possession and
+reset records; credential-version binding; persisted revocable sessions; masked
+login activity; and public generic recovery. Existing usernames alone are
+backfilled. Profile contact fields are not promoted. The only delivery adapter
+is an operationally refused copied-database local test sink; no live provider or
+account activation occurred. The retained feature branch remains unmerged until
+AUTH-2B-QA.
+
 ## EXAM-RC-IMPL-3-QA - Independent publication and PDF QA (2026-07-31)
 
 Independent QA cleared exact locked-snapshot sourcing, governed Principal

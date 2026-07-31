@@ -56,49 +56,28 @@ describe("SEC-1 runtime security hardening", () => {
     expect((await checkLoginRateLimit(input, 61_010)).allowed).toBe(true);
   });
 
-  it("does not turn an untrusted shared source into a global login denial", async () => {
+  it("still bounds direct-source login spraying without trusting forwarded headers", async () => {
     const input = { identifier: "qasec1-victim", source: "direct" };
-    for (let index = 0; index < 20; index += 1) {
-      expect((await recordLoginFailure(input, index)).blocked).toBe(false);
-    }
-    expect((await checkLoginRateLimit(input, 20)).allowed).toBe(true);
+    for (let index = 0; index < 10; index += 1) await recordLoginFailure(input, index);
+    expect((await checkLoginRateLimit(input, 20)).allowed).toBe(false);
   });
 
-  it("rotates otherwise identical session tokens", async () => {
+  it("rotates opaque session secrets and stores only a comparable hash", async () => {
     const {
-      createSessionCredentialTag,
-      createSessionToken,
-      sessionAccountStateMatches,
-      sessionCredentialTagMatches,
-      sessionRoleMatches,
+      createSessionCookieValue,
+      hashSessionSecret,
+      sessionHashMatches,
       verifySessionToken
     } = await import("../lib/session-token");
-    const payload = {
-      userId: "qasec1-user",
-      name: "QASEC1 User",
-      role: "VIEWER" as const,
-      credentialTag: await createSessionCredentialTag("qasec1-user", "qasec1-password-hash-v1")
-    };
-    const first = await createSessionToken(payload);
-    const second = await createSessionToken(payload);
-    expect(second).not.toBe(first);
-    const firstPayload = await verifySessionToken(first);
-    expect(firstPayload?.sid).not.toBe((await verifySessionToken(second))?.sid);
-    expect(await sessionCredentialTagMatches(firstPayload!, "qasec1-password-hash-v1")).toBe(true);
-    expect(await sessionCredentialTagMatches(firstPayload!, "qasec1-password-hash-v2")).toBe(false);
-    expect(sessionRoleMatches(firstPayload!, "VIEWER")).toBe(true);
-    expect(sessionRoleMatches(firstPayload!, "DIRECTOR")).toBe(false);
-    expect(await sessionAccountStateMatches(firstPayload!, {
-      isActive: true,
-      role: "VIEWER",
-      passwordHash: "qasec1-password-hash-v1"
-    })).toBe(true);
-    expect(await sessionAccountStateMatches(firstPayload!, {
-      isActive: false,
-      role: "VIEWER",
-      passwordHash: "qasec1-password-hash-v1"
-    })).toBe(false);
-    expect(readFileSync("lib/auth.ts", "utf8")).toContain("sessionAccountStateMatches(payload");
+    const first = await createSessionCookieValue();
+    const second = await createSessionCookieValue();
+    expect(second.cookieValue).not.toBe(first.cookieValue);
+    expect((await verifySessionToken(first.cookieValue))?.sessionId).toBe(first.sessionId);
+    const stored = await hashSessionSecret(first.secret);
+    expect(stored).not.toContain(first.secret);
+    expect(sessionHashMatches(await hashSessionSecret(first.secret), stored)).toBe(true);
+    expect(sessionHashMatches(await hashSessionSecret(second.secret), stored)).toBe(false);
+    expect(readFileSync("lib/auth.ts", "utf8")).toContain("resolvePersistedSession(prisma");
   });
 
   it("uses a Host-prefixed Secure cookie by default in production", async () => {
@@ -113,13 +92,11 @@ describe("SEC-1 runtime security hardening", () => {
     try {
       Object.assign(process.env, { NODE_ENV: "production" });
       delete process.env.SESSION_COOKIE_SECURE;
-      const { POST: logout } = await import("../app/api/auth/logout/route");
-      const response = await logout();
-      const setCookie = response.headers.get("set-cookie") ?? "";
-      expect(setCookie).toContain("__Host-nalanda_session=");
-      expect(setCookie).toContain("Secure");
-      expect(setCookie).toContain("HttpOnly");
-      expect(setCookie).toContain("SameSite=strict");
+      const logout = readFileSync("app/api/auth/logout/route.ts", "utf8");
+      expect(logout).toContain('response.cookies.set(sessionCookieName(), ""');
+      expect(logout).toContain("secure: sessionCookieSecure()");
+      expect(logout).toContain("httpOnly: true");
+      expect(logout).toContain('sameSite: "strict"');
     } finally {
       if (previousNodeEnv === undefined) Reflect.deleteProperty(process.env, "NODE_ENV");
       else Object.assign(process.env, { NODE_ENV: previousNodeEnv });

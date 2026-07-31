@@ -127,7 +127,7 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
 
   it("preserves the Management checkpoint across the additive examination implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(177);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(182);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
     expect(read("docs/CONTROLLED_SAMPLE_DATA_CLEANUP_AND_NEW_BASELINE.md")).toContain(
@@ -138,6 +138,7 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
       "20260722_clean_install_baseline",
       "20260730_exam_scheme_assignment_foundation",
       "20260730_teacher_marks_moderation_calculation",
+      "20260731130549_auth_verified_recovery_session_registry",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);

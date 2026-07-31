@@ -4,6 +4,7 @@ import { requireApiPermission } from "@/lib/auth";
 import { hashPassword } from "@/lib/password";
 import { validateNewPassword } from "@/lib/user-management";
 import { friendlyStaffError } from "@/lib/staff";
+import { maskAlias, normalizeAliasValue } from "@/lib/auth-identifiers";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireApiPermission("MANAGE_STAFF");
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const { id } = await params; const body = await request.json(); const action = String(body.action ?? "");
     if (!["unlink-user", "link-user", "create-login", "link-timetable"].includes(action)) throw new Error("Unknown staff link action");
     if (action === "create-login" && !["SUPER_ADMIN", "DIRECTOR", "ADMIN"].includes(auth.user.role)) throw new Error("Only Super Admin, Director, or Admin can create teacher logins");
-    const username = action === "link-user" || action === "create-login" ? required(body.username, action === "link-user" ? "Teacher username" : "Username").toLowerCase() : null;
+    const username = action === "link-user" || action === "create-login" ? normalizeAliasValue("USERNAME", required(body.username, action === "link-user" ? "Teacher username" : "Username")) : null;
     const password = action === "create-login" ? String(body.password ?? "") : null;
     if (password !== null) validateNewPassword(password);
     const passwordHash = password === null ? null : await hashPassword(password);
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       } else if (action === "create-login") {
         if (staff.userId) throw new Error("This staff profile already has a linked login");
         const user = await tx.user.create({ data: { name: staff.displayName ?? staff.fullName, username: username!, email: staff.email, role: "TEACHER", passwordHash: passwordHash!, isActive: true } });
+        await tx.authLoginAlias.create({ data: { id: `auth2b_username_${user.id}`, userId: user.id, type: "USERNAME", normalizedValue: username!, displayMasked: maskAlias("USERNAME", username!), status: "VERIFIED", isSchoolGoverned: true, verifiedAt: new Date() } });
         await tx.staffMember.update({ where: { id }, data: { userId: user.id } });
       } else {
         const timetableTeacherId = String(body.timetableTeacherId ?? "").trim() || null;

@@ -1,5 +1,3 @@
-import type { Role } from "@/lib/permissions";
-
 export function sessionCookieSecure(environment: NodeJS.ProcessEnv = process.env) {
   if (environment.SESSION_COOKIE_SECURE === "false") return false;
   return environment.SESSION_COOKIE_SECURE === "true" || environment.NODE_ENV === "production";
@@ -12,127 +10,52 @@ export function sessionCookieName(environment: NodeJS.ProcessEnv = process.env) 
 export const SESSION_COOKIE = sessionCookieName();
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 12;
 
-export type SessionPayload = {
-  userId: string;
-  name: string;
-  role: Role;
-  credentialTag: string;
-  sid: string;
-  iat: number;
-  exp: number;
-};
+export type SessionCookieReference = { sessionId: string; secret: string };
 
-export async function createSessionToken(payload: Omit<SessionPayload, "sid" | "iat" | "exp">) {
-  const now = Math.floor(Date.now() / 1000);
-  const complete: SessionPayload = {
-    ...payload,
-    sid: crypto.randomUUID(),
-    iat: now,
-    exp: now + SESSION_MAX_AGE_SECONDS
-  };
-  const encoded = base64UrlEncode(JSON.stringify(complete));
-  const signature = await sign(encoded);
-  return `${encoded}.${signature}`;
+export async function createSessionCookieValue() {
+  const sessionId = crypto.randomUUID();
+  const secret = base64UrlEncodeBytes(crypto.getRandomValues(new Uint8Array(32)));
+  const envelope = `v1.${sessionId}.${secret}`;
+  return { sessionId, secret, cookieValue: `${envelope}.${await sign(envelope)}` };
 }
 
-export async function verifySessionToken(token?: string | null): Promise<SessionPayload | null> {
-  if (!token) return null;
-  const [encoded, signature] = token.split(".");
-  if (!encoded || !signature) return null;
+// Middleware validates the signed opaque envelope. The database-backed hash,
+// expiry, revocation and credential-version checks happen in lib/auth.ts.
+export async function verifySessionToken(token?: string | null): Promise<SessionCookieReference | null> {
+  if (!token || token.length > 220) return null;
+  const [version, sessionId, secret, signature, extra] = token.split(".");
+  if (version !== "v1" || extra || !/^[0-9a-f-]{36}$/i.test(sessionId ?? "") || !/^[A-Za-z0-9_-]{43}$/.test(secret ?? "") || !/^[A-Za-z0-9_-]{43}$/.test(signature ?? "")) {
+    return null;
+  }
   let expected: string;
-  try {
-    expected = await sign(encoded);
-  } catch {
-    return null;
-  }
-  if (!constantTimeEqual(signature, expected)) return null;
-  try {
-    const payload = JSON.parse(base64UrlDecode(encoded)) as SessionPayload;
-    if (
-      !payload.userId ||
-      !payload.role ||
-      !payload.credentialTag ||
-      !payload.sid ||
-      !Number.isInteger(payload.iat) ||
-      !Number.isInteger(payload.exp) ||
-      payload.exp <= Math.floor(Date.now() / 1000)
-    ) return null;
-    return payload;
-  } catch {
-    return null;
-  }
+  try { expected = await sign(`v1.${sessionId}.${secret}`); } catch { return null; }
+  if (!sessionHashMatches(signature, expected)) return null;
+  return { sessionId, secret };
 }
 
-export async function createSessionCredentialTag(userId: string, passwordHash: string) {
-  return sign(`credential-state:${userId}:${passwordHash}`);
+export async function hashSessionSecret(secret: string) {
+  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`nalanda-session-v1:${secret}`));
+  return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export async function sessionCredentialTagMatches(
-  payload: Pick<SessionPayload, "userId" | "credentialTag">,
-  passwordHash: string
-) {
-  try {
-    return constantTimeEqual(payload.credentialTag, await createSessionCredentialTag(payload.userId, passwordHash));
-  } catch {
-    return false;
-  }
-}
-
-export function sessionRoleMatches(
-  payload: Pick<SessionPayload, "role">,
-  currentRole: Role
-) {
-  return payload.role === currentRole;
-}
-
-export async function sessionAccountStateMatches(
-  payload: Pick<SessionPayload, "userId" | "role" | "credentialTag">,
-  user: { isActive: boolean; role: Role; passwordHash: string }
-) {
-  return user.isActive &&
-    sessionRoleMatches(payload, user.role) &&
-    await sessionCredentialTagMatches(payload, user.passwordHash);
-}
-
-async function sign(value: string) {
-  const secret = process.env.AUTH_SECRET || process.env.SESSION_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error("AUTH_SECRET or SESSION_SECRET must be configured with at least 32 characters");
-  }
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const bytes = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(value));
-  return base64UrlEncodeBytes(new Uint8Array(bytes));
-}
-
-function constantTimeEqual(left: string, right: string) {
-  if (left.length !== right.length) return false;
+export function sessionHashMatches(actualHash: string, expectedHash: string) {
+  if (actualHash.length !== expectedHash.length) return false;
   let mismatch = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    mismatch |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  for (let index = 0; index < actualHash.length; index += 1) {
+    mismatch |= actualHash.charCodeAt(index) ^ expectedHash.charCodeAt(index);
   }
   return mismatch === 0;
 }
 
-function base64UrlEncode(value: string) {
-  return base64UrlEncodeBytes(new TextEncoder().encode(value));
-}
-
 function base64UrlEncodeBytes(bytes: Uint8Array) {
   let binary = "";
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte);
-  });
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function base64UrlDecode(value: string) {
-  const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(value.length / 4) * 4, "=");
-  const binary = atob(padded);
-  return new TextDecoder().decode(Uint8Array.from(binary, (character) => character.charCodeAt(0)));
+async function sign(value: string) {
+  const secret = process.env.AUTH_SECRET || process.env.SESSION_SECRET;
+  if (!secret || secret.length < 32) throw new Error("AUTH_SECRET or SESSION_SECRET must be configured with at least 32 characters");
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return base64UrlEncodeBytes(new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(value))));
 }

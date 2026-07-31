@@ -1,5 +1,23 @@
 # Nalanda Fee Control — Beginner Operating Guide
 
+## Account Security and password recovery
+
+Open the user menu and choose **Account Security** to see masked verified login
+identifiers and recent devices. A work/personal email or mobile must receive and
+pass its verification code before it can sign in. The school-issued username
+and any admission-number login are school governed. Removing an identifier uses
+an in-app confirmation and never removes its audit history.
+
+Use **Log out other sessions** after using another computer, or **Log out all
+sessions** if access may be unsafe. The all-session action explicitly signs out
+the current device too. Network evidence is deliberately masked.
+
+**Forgot Password** asks for a login identifier and channel type but never shows
+the stored email or number. The response is always generic. Live delivery is
+not configured in AUTH-2B, so do not expect operational email/SMS until its
+separate provider approval. Never send an existing or new password by email,
+SMS, chat, Notion or screenshot.
+
 ## Publishing and downloading report cards
 
 Principals use **Report Cards > Publication and Parent Delivery**. Select only

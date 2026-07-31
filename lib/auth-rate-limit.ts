@@ -90,11 +90,10 @@ async function loginBucketIdentity(input: LoginRateLimitInput) {
     sha256(input.identifier.trim().toLowerCase()),
     sha256(input.source)
   ]);
-  // Without a trusted client address, blocking the shared "direct" bucket would
-  // let one unauthenticated caller deny sign-in to every legitimate user.
-  const blockingKeys = input.source === "direct"
-    ? []
-    : [`account-source:${accountHash}:${sourceHash}`, `source:${sourceHash}`];
+  // The account/source pair prevents one source from repeatedly attacking one
+  // identifier. The source bucket also bounds broad identifier spraying. A
+  // deployment behind a proxy must opt into only sanitized single-hop headers.
+  const blockingKeys = [`account-source:${accountHash}:${sourceHash}`, `source:${sourceHash}`];
   return { accountHash, sourceHash, blockingKeys };
 }
 

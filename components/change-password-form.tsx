@@ -21,7 +21,7 @@ export function ChangePasswordForm() {
       const json = await response.json();
       if (!response.ok) throw new Error(json.error || "Unable to change password");
       form.reset();
-      window.location.replace("/login?passwordChanged=1");
+      window.location.replace("/account-security?passwordChanged=1");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to change password");
     } finally {

@@ -2,6 +2,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 import { hashPassword } from "@/lib/password";
 import { validateNewPassword } from "@/lib/user-management";
 import { GUARDIAN_RELATIONSHIPS, type GuardianRelationship, type GuardianStatus } from "@/lib/guardian-constants";
+import { maskAlias, normalizeAliasValue } from "@/lib/auth-identifiers";
 export type GuardianImportRow = Record<string, unknown>;
 
 export type GuardianImportStudent = {
@@ -78,7 +79,7 @@ export type GuardianImportErrorRow = {
   originalValuesJson: string;
 };
 
-type GuardianClient = Pick<PrismaClient | Prisma.TransactionClient, "guardian" | "student" | "studentGuardian" | "user">;
+type GuardianClient = Pick<PrismaClient | Prisma.TransactionClient, "guardian" | "student" | "studentGuardian" | "user" | "authLoginAlias">;
 
 export function guardianSearchWhere(query: string | null | undefined): Prisma.GuardianWhereInput {
   const q = cleanText(query);
@@ -351,10 +352,9 @@ export async function createParentUserFromGuardian(
   if (guardian.users.some((user) => user.role === "PARENT")) {
     throw new Error("This guardian already has a linked parent login");
   }
-  const username = cleanText(input.username).toLowerCase();
-  if (!username) throw new Error("Username is required");
+  const username = normalizeAliasValue("USERNAME", cleanText(input.username));
   validateNewPassword(input.password);
-  return client.user.create({
+  const created = await client.user.create({
     data: {
       name: guardian.displayName,
       username,
@@ -374,6 +374,19 @@ export async function createParentUserFromGuardian(
       guardianId: true
     }
   });
+  await client.authLoginAlias.create({
+    data: {
+      id: `auth2b_username_${created.id}`,
+      userId: created.id,
+      type: "USERNAME",
+      normalizedValue: username,
+      displayMasked: maskAlias("USERNAME", username),
+      status: "VERIFIED",
+      isSchoolGoverned: true,
+      verifiedAt: new Date()
+    }
+  });
+  return created;
 }
 
 export async function linkExistingParentUser(

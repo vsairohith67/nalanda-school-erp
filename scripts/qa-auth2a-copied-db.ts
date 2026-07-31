@@ -14,10 +14,6 @@ import { fileSha256 } from "./migration-check-utils";
 import { demoUserSeedDecision } from "../lib/demo-user-seed-safety";
 import { ensureSeedUsers } from "../lib/seed-users";
 import { hashPassword, verifyPassword } from "../lib/password";
-import {
-  createSessionCredentialTag,
-  sessionAccountStateMatches
-} from "../lib/session-token";
 import { isRole } from "../lib/permissions";
 import { assertSuperAdminSafetyAllowed } from "../lib/user-management";
 import { getSystemHealth } from "../lib/system-health";
@@ -162,61 +158,58 @@ async function verifySeedSafeguards() {
   }
 }
 
-async function sessionPayloadFor(user: {
+function sessionPayloadFor(user: {
   id: string;
   role: string;
-  passwordHash: string;
+  credentialVersion: number;
+  isActive: boolean;
 }) {
   if (!isRole(user.role)) throw new Error("AUTH2A_TEST_ROLE_INVALID");
   return {
     userId: user.id,
     role: user.role,
-    credentialTag: await createSessionCredentialTag(user.id, user.passwordHash)
+    credentialVersion: user.credentialVersion
   };
+}
+
+function sessionSnapshotMatches(snapshot: { userId: string; role: string; credentialVersion: number }, user: { id: string; role: string; credentialVersion: number; isActive: boolean }) {
+  return user.isActive && snapshot.userId === user.id && snapshot.role === user.role && snapshot.credentialVersion === user.credentialVersion;
 }
 
 async function verifyCredentialInvalidation(client: PrismaClient) {
   const passwordTarget = await client.user.findFirstOrThrow({ where: { role: "VIEWER" } });
-  const passwordPayload = await sessionPayloadFor(passwordTarget);
+  const passwordPayload = sessionPayloadFor(passwordTarget);
   const nextCredential = `AUTH2A-Rotated-${randomBytes(20).toString("hex")}!`;
   const nextHash = await hashPassword(nextCredential);
-  await client.user.update({ where: { id: passwordTarget.id }, data: { passwordHash: nextHash } });
+  await client.user.update({ where: { id: passwordTarget.id }, data: { passwordHash: nextHash, credentialVersion: { increment: 1 } } });
   const passwordChanged = await client.user.findUniqueOrThrow({ where: { id: passwordTarget.id } });
   if (
     !isRole(passwordChanged.role) ||
-    await sessionAccountStateMatches(passwordPayload, {
-      isActive: passwordChanged.isActive,
-      role: passwordChanged.role,
-      passwordHash: passwordChanged.passwordHash
-    }) ||
+    sessionSnapshotMatches(passwordPayload, passwordChanged) ||
     !await verifyPassword(nextCredential, passwordChanged.passwordHash)
   ) {
     throw new Error("AUTH2A_PASSWORD_INVALIDATION_FAILED");
   }
   await client.user.update({
     where: { id: passwordTarget.id },
-    data: { passwordHash: passwordTarget.passwordHash }
+    data: { passwordHash: passwordTarget.passwordHash, credentialVersion: passwordTarget.credentialVersion }
   });
 
   const roleTarget = await client.user.findFirstOrThrow({ where: { role: "ADMIN" } });
-  const rolePayload = await sessionPayloadFor(roleTarget);
-  await client.user.update({ where: { id: roleTarget.id }, data: { role: "VIEWER" } });
+  const rolePayload = sessionPayloadFor(roleTarget);
+  await client.user.update({ where: { id: roleTarget.id }, data: { role: "VIEWER", credentialVersion: { increment: 1 } } });
   const roleChanged = await client.user.findUniqueOrThrow({ where: { id: roleTarget.id } });
   if (
     !isRole(roleChanged.role) ||
-    await sessionAccountStateMatches(rolePayload, {
-      isActive: roleChanged.isActive,
-      role: roleChanged.role,
-      passwordHash: roleChanged.passwordHash
-    })
+    sessionSnapshotMatches(rolePayload, roleChanged)
   ) {
     throw new Error("AUTH2A_ROLE_INVALIDATION_FAILED");
   }
-  await client.user.update({ where: { id: roleTarget.id }, data: { role: roleTarget.role } });
+  await client.user.update({ where: { id: roleTarget.id }, data: { role: roleTarget.role, credentialVersion: roleTarget.credentialVersion } });
 
   const statusTarget = await client.user.findFirstOrThrow({ where: { role: "ACCOUNTANT" } });
-  const statusPayload = await sessionPayloadFor(statusTarget);
-  await client.user.update({ where: { id: statusTarget.id }, data: { isActive: false } });
+  const statusPayload = sessionPayloadFor(statusTarget);
+  await client.user.update({ where: { id: statusTarget.id }, data: { isActive: false, credentialVersion: { increment: 1 } } });
   const statusChanged = await client.user.findUniqueOrThrow({ where: { id: statusTarget.id } });
   const loginCandidate = await client.user.findFirst({
     where: { id: statusTarget.id, isActive: true }
@@ -224,28 +217,24 @@ async function verifyCredentialInvalidation(client: PrismaClient) {
   if (
     loginCandidate ||
     !isRole(statusChanged.role) ||
-    await sessionAccountStateMatches(statusPayload, {
-      isActive: statusChanged.isActive,
-      role: statusChanged.role,
-      passwordHash: statusChanged.passwordHash
-    })
+    sessionSnapshotMatches(statusPayload, statusChanged)
   ) {
     throw new Error("AUTH2A_STATUS_INVALIDATION_FAILED");
   }
-  await client.user.update({ where: { id: statusTarget.id }, data: { isActive: true } });
+  await client.user.update({ where: { id: statusTarget.id }, data: { isActive: true, credentialVersion: statusTarget.credentialVersion } });
 }
 
 async function verifyDisabledSeedPreservationAndIdempotence(client: PrismaClient) {
   const target = await client.user.findFirstOrThrow({ where: { role: "ACCOUNTANT" } });
   await client.user.update({ where: { id: target.id }, data: { isActive: false } });
   const before = await client.user.findMany({
-    select: { id: true, role: true, isActive: true, passwordHash: true },
+    select: { id: true, role: true, isActive: true, passwordHash: true, credentialVersion: true },
     orderBy: { id: "asc" }
   });
   const first = await ensureSeedUsers(client, seedEnvironment(CONTROL_COPY), WORKSPACE_ROOT);
   const second = await ensureSeedUsers(client, seedEnvironment(CONTROL_COPY), WORKSPACE_ROOT);
   const after = await client.user.findMany({
-    select: { id: true, role: true, isActive: true, passwordHash: true },
+    select: { id: true, role: true, isActive: true, passwordHash: true, credentialVersion: true },
     orderBy: { id: "asc" }
   });
   if (
@@ -309,18 +298,18 @@ async function verifyConcurrentSuperAdminProtection(client: PrismaClient) {
 
 async function verifyFutureChangeAndRollback(client: PrismaClient) {
   const before = await client.user.findMany({
-    select: { id: true, role: true, isActive: true, passwordHash: true },
+    select: { id: true, role: true, isActive: true, passwordHash: true, credentialVersion: true },
     orderBy: { id: "asc" }
   });
   const leadership = before.find((row) => row.role === "SUPER_ADMIN" && row.isActive);
   if (!leadership || !isRole(leadership.role)) throw new Error("AUTH2A_ACTIVE_SUPER_ADMIN_MISSING");
-  const stalePayload = await sessionPayloadFor(leadership);
+  const stalePayload = sessionPayloadFor(leadership);
   const rotatedCredential = `AUTH2A-Future-Rotation-${randomBytes(20).toString("hex")}!`;
 
   await client.$transaction(async (transaction) => {
     await transaction.user.update({
       where: { id: leadership.id },
-      data: { passwordHash: await hashPassword(rotatedCredential) }
+      data: { passwordHash: await hashPassword(rotatedCredential), credentialVersion: { increment: 1 } }
     });
     await transaction.user.updateMany({
       where: { role: { in: ["ADMIN", "ACCOUNTANT", "VIEWER"] } },
@@ -336,11 +325,7 @@ async function verifyFutureChangeAndRollback(client: PrismaClient) {
   if (
     activeSuperAdmins < 1 ||
     activeDeferredAccounts !== 0 ||
-    await sessionAccountStateMatches(stalePayload, {
-      isActive: changedLeadership.isActive,
-      role: "SUPER_ADMIN",
-      passwordHash: changedLeadership.passwordHash
-    }) ||
+    sessionSnapshotMatches(stalePayload, changedLeadership) ||
     !await verifyPassword(rotatedCredential, changedLeadership.passwordHash)
   ) {
     throw new Error("AUTH2A_FUTURE_ACCOUNT_SEQUENCE_FAILED");
@@ -352,12 +337,13 @@ async function verifyFutureChangeAndRollback(client: PrismaClient) {
       data: {
         role: row.role,
         isActive: row.isActive,
-        passwordHash: row.passwordHash
+        passwordHash: row.passwordHash,
+        credentialVersion: row.credentialVersion
       }
     }))
   );
   const rolledBack = await client.user.findMany({
-    select: { id: true, role: true, isActive: true, passwordHash: true },
+    select: { id: true, role: true, isActive: true, passwordHash: true, credentialVersion: true },
     orderBy: { id: "asc" }
   });
   if (JSON.stringify(rolledBack) !== JSON.stringify(before)) {

@@ -1,0 +1,33 @@
+flowchart TD
+  Login[Login identifier + password] --> Normalize[Strict type candidates]
+  Normalize --> Alias{Exactly one verified alias?}
+  Alias -->|No or ambiguous| Generic[Generic sign-in failure]
+  Alias -->|Yes| Account{Active user + password?}
+  Account -->|No| Generic
+  Account -->|Yes| Create[Random opaque secret]
+  Create --> Registry[(AuthSession: hash, version, expiry, masked client)]
+  Create --> Cookie[Signed HttpOnly Strict cookie]
+  Cookie --> Request[Authenticated request]
+  Request --> RegistryCheck{Hash + current + expiry + credential version}
+  RegistryCheck -->|No| Deny[Deny / fresh login]
+  RegistryCheck -->|Yes| Authorize[Existing role and object authorization]
+
+  Add[Add work/personal email or mobile] --> Pending[Pending alias]
+  Pending --> Code[HMAC code, expiry, attempts]
+  Code --> Possession{Possession proved?}
+  Possession -->|Yes| Verified[Verified login/recovery alias]
+  Possession -->|No| Pending
+
+  Forgot[Forgot Password: identifier + channel type] --> GenericRecovery[Always generic response]
+  Forgot --> Eligible{Active account + verified selected channel + adapter?}
+  Eligible -->|No| GenericRecovery
+  Eligible -->|Yes| Reset[256-bit reset token; hash only]
+  Reset --> Fragment[Private delivery: URL fragment]
+  Fragment --> NewPassword[Strong new password + old-password rejection]
+  NewPassword --> Credential[Increment credential version]
+  Credential --> Revoke[Revoke every session and reset]
+
+  LocalSink[LOCAL_TEST_SINK] --> CopiedOnly{Ignored copied DB?}
+  CopiedOnly -->|No / operational / release| Refuse[Fail closed]
+  CopiedOnly -->|Yes| Code
+  LiveProvider[Live email/SMS] -. not authorised .-> Refuse

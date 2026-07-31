@@ -36,12 +36,13 @@ export default async function LoginPage() {
           <div className="login-copy">
             <span className="login-kicker">Welcome back</span>
             <h2 id="login-heading">Sign in to Nalanda</h2>
-            <p>Use your school-issued username or email and password.</p>
+            <p>Use your school-issued username or a verified login identifier and password.</p>
           </div>
           <Suspense fallback={<div className="login-form" role="status">Loading secure sign-in…</div>}>
             <LoginForm />
           </Suspense>
           <nav className="login-links" aria-label="Login support links">
+            <Link href="/forgot-password">Forgot Password</Link>
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Use</Link>
             <Link href="/contact">Contact Support</Link>

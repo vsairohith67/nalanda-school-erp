@@ -160,6 +160,7 @@ function fakeGuardianClient() {
     guardians: [] as Array<Record<string, any>>,
     links: [] as Array<Record<string, any>>,
     users: [] as Array<Record<string, any>>
+    ,aliases: [] as Array<Record<string, any>>
   };
   return {
     state,
@@ -218,6 +219,13 @@ function fakeGuardianClient() {
         const user = state.users.find((row) => row.id === where.id);
         Object.assign(user!, data);
         return user;
+      }
+    },
+    authLoginAlias: {
+      create: async ({ data }: { data: Record<string, any> }) => {
+        const alias = { id: data.id ?? `alias-${state.aliases.length + 1}`, ...data };
+        state.aliases.push(alias);
+        return alias;
       }
     }
   };

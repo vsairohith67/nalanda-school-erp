@@ -6,6 +6,7 @@ import { hashPassword } from "@/lib/password";
 import { isRole } from "@/lib/permissions";
 import { assertCanAssignRole, SAFE_USER_SELECT, validateNewPassword } from "@/lib/user-management";
 import { logUserAction } from "@/lib/user-audit";
+import { maskAlias, normalizeAliasValue } from "@/lib/auth-identifiers";
 
 export async function GET() {
   const auth = await requireApiPermission("VIEW_USERS");
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const name = requiredText(body.name, "Name");
-    const username = requiredText(body.username, "Username").toLowerCase();
+    const username = normalizeAliasValue("USERNAME", requiredText(body.username, "Username"));
     const email = optionalText(body.email)?.toLowerCase() ?? null;
     const role = String(body.role ?? "");
     const password = String(body.password ?? "");
@@ -35,6 +36,18 @@ export async function POST(request: NextRequest) {
       const created = await tx.user.create({
         data: { name, username, email, role, passwordHash: await hashPassword(password), isActive: true },
         select: SAFE_USER_SELECT
+      });
+      await tx.authLoginAlias.create({
+        data: {
+          id: `auth2b_username_${created.id}`,
+          userId: created.id,
+          type: "USERNAME",
+          normalizedValue: username,
+          displayMasked: maskAlias("USERNAME", username),
+          status: "VERIFIED",
+          isSchoolGoverned: true,
+          verifiedAt: new Date()
+        }
       });
       await logUserAction(tx, {
         action: "USER_CREATED",

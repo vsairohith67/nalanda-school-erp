@@ -9,6 +9,7 @@ import {
   statSync
 } from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { PrismaClient } from "@prisma/client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
@@ -23,7 +24,6 @@ import {
   documentedSeedPasswordForAudit,
   SEED_USER_DEFINITIONS
 } from "@/lib/seed-users";
-import { createSessionCredentialTag, sessionAccountStateMatches } from "@/lib/session-token";
 import { hashPassword, verifyPassword } from "@/lib/password";
 
 const WORKSPACE = path.resolve(".");
@@ -58,6 +58,8 @@ async function scenario(
   const databasePath = path.join(directory, "recovery-copy.db");
   const rollbackPath = path.join(directory, "rollback-copy.db");
   copyFileSync(OPERATIONAL_DATABASE, databasePath);
+  const migrationPath = path.join(WORKSPACE, "prisma", "migrations", "20260731130549_auth_verified_recovery_session_registry", "migration.sql");
+  execFileSync(process.execPath, ["--experimental-sqlite", "-e", 'const {DatabaseSync}=require("node:sqlite");const fs=require("node:fs");const db=new DatabaseSync(process.argv[1]);try{db.exec(fs.readFileSync(process.argv[2],"utf8"));}finally{db.close();}', databasePath, migrationPath]);
   if (mutate) {
     const client = prismaFor(databasePath);
     try {
@@ -212,16 +214,16 @@ describe("local Super Admin recovery utility", () => {
 
   it("refuses an identifier matching more than one account", async () => {
     const testScenario = await scenario("duplicate-match", async (client) => {
-      await client.user.create({
+      const user = await client.user.create({
         data: {
           name: "QA duplicate match",
           username: `qa-duplicate-${randomUUID()}`,
-          email: "director",
           role: "VIEWER",
           isActive: true,
           passwordHash: await hashPassword(strongPassword("Duplicate"))
         }
       });
+      await client.authLoginAlias.create({ data: { userId: user.id, type: "USERNAME", normalizedValue: "DIRECTOR", displayMasked: "DIRECTOR", status: "VERIFIED", isSchoolGoverned: true, verifiedAt: new Date() } });
     });
     await expectCode(
       executeSuperAdminRecovery(recoveryInput(testScenario)),
@@ -359,8 +361,11 @@ describe("local Super Admin recovery utility", () => {
     }
   });
 
-  it("invalidates stale credential-tag authorization", async () => {
-    const testScenario = await scenario("stale-authorization");
+  it("increments credential version and revokes persisted sessions", async () => {
+    const testScenario = await scenario("stale-authorization", async (client) => {
+      const user = await client.user.findUniqueOrThrow({ where: { username: "director" }, select: { id: true, credentialVersion: true } });
+      await client.authSession.create({ data: { id: randomUUID(), userId: user.id, tokenHash: randomBytes(32).toString("hex"), credentialVersion: user.credentialVersion, expiresAt: new Date(Date.now() + 60_000), deviceSummary: "Desktop", browserSummary: "Test browser", networkEvidenceMasked: "Direct connection" } });
+    });
     const client = prismaFor(testScenario.databasePath);
     const before = await client.user.findUniqueOrThrow({
       where: { username: "director" },
@@ -368,14 +373,10 @@ describe("local Super Admin recovery utility", () => {
         id: true,
         role: true,
         isActive: true,
-        passwordHash: true
+        passwordHash: true,
+        credentialVersion: true
       }
     });
-    const stale = {
-      userId: before.id,
-      role: before.role as "SUPER_ADMIN",
-      credentialTag: await createSessionCredentialTag(before.id, before.passwordHash)
-    };
     await client.$disconnect();
 
     await executeSuperAdminRecovery(recoveryInput(testScenario));
@@ -383,12 +384,10 @@ describe("local Super Admin recovery utility", () => {
     try {
       const after = await afterClient.user.findUniqueOrThrow({
         where: { username: "director" },
-        select: { role: true, isActive: true, passwordHash: true }
+        select: { role: true, isActive: true, passwordHash: true, credentialVersion: true, authSessions: { select: { revokedAt: true, revocationReason: true } } }
       });
-      expect(await sessionAccountStateMatches(stale, {
-        ...after,
-        role: after.role as "SUPER_ADMIN"
-      })).toBe(false);
+      expect(after.credentialVersion).toBe(before.credentialVersion + 1);
+      expect(after.authSessions).toEqual([{ revokedAt: expect.any(Date), revocationReason: "LOCAL_SUPER_ADMIN_RECOVERY" }]);
     } finally {
       await afterClient.$disconnect();
     }

@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { hashPassword } from "@/lib/password";
 import { optionalText, requireText } from "@/lib/validation";
+import { maskAlias, normalizeAliasValue } from "@/lib/auth-identifiers";
 
 type SetupStatusClient = {
   user: {
@@ -11,6 +12,9 @@ type SetupStatusClient = {
 type SetupTransactionClient = SetupStatusClient & {
   user: {
     count(args: { where: { isActive: boolean; role?: string; OR?: Array<{ role: string }> } }): Promise<number>;
+    create(args: { data: Record<string, unknown> }): Promise<unknown>;
+  };
+  authLoginAlias: {
     create(args: { data: Record<string, unknown> }): Promise<unknown>;
   };
   schoolSettings: {
@@ -75,7 +79,7 @@ export async function createFirstRunSetup(
   }
 
   const passwordHash = await hashPassword(input.password);
-  await client.user.create({
+  const user = await client.user.create({
     data: {
       name: input.directorName,
       username: input.username,
@@ -83,6 +87,19 @@ export async function createFirstRunSetup(
       passwordHash,
       role: "DIRECTOR",
       isActive: true
+    }
+  });
+  const username = normalizeAliasValue("USERNAME", input.username);
+  await client.authLoginAlias.create({
+    data: {
+      id: `auth2b_username_${(user as { id: string }).id}`,
+      userId: (user as { id: string }).id,
+      type: "USERNAME",
+      normalizedValue: username,
+      displayMasked: maskAlias("USERNAME", username),
+      status: "VERIFIED",
+      isSchoolGoverned: true,
+      verifiedAt: new Date()
     }
   });
   await client.schoolSettings.upsert({

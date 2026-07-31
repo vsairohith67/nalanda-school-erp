@@ -1,6 +1,7 @@
 import { hashPassword } from "@/lib/password";
 import { demoUserSeedDecision } from "@/lib/demo-user-seed-safety";
 import type { PrismaClient } from "@prisma/client";
+import { maskAlias, normalizeAliasValue } from "@/lib/auth-identifiers";
 
 export const SEED_USER_DEFINITIONS = [
   { name: "Director", username: "director", email: "director@nalanda.local", role: "DIRECTOR", env: "SEED_DIRECTOR_PASSWORD" },
@@ -13,7 +14,7 @@ export function documentedSeedPasswordForAudit(definition: typeof SEED_USER_DEFI
   return ["Nalanda", definition.name.replace(/[^A-Za-z0-9]/g, ""), "@", "2026"].join("");
 }
 
-type SeedClient = Pick<PrismaClient, "user">;
+type SeedClient = Pick<PrismaClient, "user" | "authLoginAlias">;
 
 export async function ensureSeedUsers(
   client: SeedClient,
@@ -89,6 +90,25 @@ export async function ensureSeedUsers(
   if (inserted.count !== rows.length) {
     throw new Error("DEMO_USER_ATOMIC_CREATE_COUNT_MISMATCH");
   }
+  const createdUsers = await client.user.findMany({
+    where: { username: { in: missing.map((definition) => definition.username) } },
+    select: { id: true, username: true }
+  });
+  await client.authLoginAlias.createMany({
+    data: createdUsers.map((user) => {
+      const username = normalizeAliasValue("USERNAME", user.username);
+      return {
+        id: `auth2b_username_${user.id}`,
+        userId: user.id,
+        type: "USERNAME",
+        normalizedValue: username,
+        displayMasked: maskAlias("USERNAME", username),
+        status: "VERIFIED",
+        isSchoolGoverned: true,
+        verifiedAt: new Date()
+      };
+    })
+  });
   return {
     enabled: true as const,
     createdRoles: missing.map((definition) => definition.role),

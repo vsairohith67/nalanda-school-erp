@@ -27,9 +27,9 @@ describe("Git safety scanner", () => {
       'DATABASE_URL="file:./local-example.db"',
       'AUTH_SECRET="<generate-locally-at-least-32-random-characters>"',
       'GMAIL_OAUTH_CLIENT_SECRET="<provider-console-placeholder>"',
+      'AUTH2B_DELIVERY_ADAPTER="DISABLED"',
       'SMS_EMAIL_SMS_LIVE_ENABLED="false"'
     ].join("\n"));
     expect(findings).toEqual([]);
   });
 });
-

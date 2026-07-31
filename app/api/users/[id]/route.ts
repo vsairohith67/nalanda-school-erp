@@ -12,6 +12,8 @@ import {
   SAFE_USER_SELECT
 } from "@/lib/user-management";
 import { logUserAction } from "@/lib/user-audit";
+import { maskAlias, normalizeAliasValue } from "@/lib/auth-identifiers";
+import { logAuthSecurityEvent } from "@/lib/auth-security";
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const auth = await requireApiPermission("MANAGE_USERS");
@@ -57,8 +59,9 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       });
 
       const name = requiredText(body.name ?? existing.name, "Name");
-      const username = requiredText(body.username ?? existing.username, "Username").toLowerCase();
+      const username = normalizeAliasValue("USERNAME", requiredText(body.username ?? existing.username, "Username"));
       const email = optionalText(body.email)?.toLowerCase() ?? null;
+      const accountSecurityChanged = existing.role !== role || existing.isActive !== isActive;
       const changed = await tx.user.updateMany({
         where: {
           id,
@@ -66,9 +69,61 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
           role: existing.role,
           isActive: existing.isActive
         },
-        data: { name, username, email, role, isActive }
+        data: {
+          name,
+          username,
+          email,
+          role,
+          isActive,
+          ...(accountSecurityChanged ? { credentialVersion: { increment: 1 } } : {})
+        }
       });
       if (changed.count !== 1) throw new Error("User record changed; refresh and try again");
+      const usernameAlias = await tx.authLoginAlias.findFirst({ where: { userId: id, type: "USERNAME" } });
+      if (usernameAlias) {
+        if (usernameAlias.normalizedValue !== username) {
+          await tx.authLoginAlias.update({
+            where: { id: usernameAlias.id },
+            data: { normalizedValue: username, displayMasked: maskAlias("USERNAME", username), version: { increment: 1 } }
+          });
+        }
+      } else {
+        await tx.authLoginAlias.create({
+          data: {
+            id: `auth2b_username_${id}`,
+            userId: id,
+            type: "USERNAME",
+            normalizedValue: username,
+            displayMasked: maskAlias("USERNAME", username),
+            status: "VERIFIED",
+            isSchoolGoverned: true,
+            verifiedAt: new Date()
+          }
+        });
+      }
+      if (accountSecurityChanged) {
+        const now = new Date();
+        await tx.authSession.updateMany({
+          where: { userId: id, revokedAt: null },
+          data: { revokedAt: now, revocationReason: existing.isActive !== isActive ? "ACCOUNT_STATUS_CHANGED" : "ROLE_CHANGED" }
+        });
+        await tx.authPasswordResetToken.updateMany({
+          where: { userId: id, usedAt: null, invalidatedAt: null },
+          data: { invalidatedAt: now, invalidationReason: "ACCOUNT_SECURITY_CHANGED" }
+        });
+        await tx.authVerificationChallenge.updateMany({
+          where: { userId: id, usedAt: null, invalidatedAt: null },
+          data: { invalidatedAt: now }
+        });
+        await logAuthSecurityEvent(tx, {
+          eventType: existing.isActive !== isActive ? "ACCOUNT_STATUS_CHANGED" : "ACCOUNT_ROLE_CHANGED",
+          userId: id,
+          actorUserId: auth.user.id,
+          subjectType: "USER",
+          subjectId: id,
+          details: { sessionsRevoked: true }
+        });
+      }
       const result = await tx.user.findUnique({ where: { id }, select: SAFE_USER_SELECT });
       if (!result) throw new Error("User not found");
       if (existing.role !== role) {

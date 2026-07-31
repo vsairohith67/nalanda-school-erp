@@ -93,7 +93,7 @@ export function classifyRiskyPath(filePath: string): SafetyFinding[] {
 function placeholderValue(value: string) {
   const clean = value.trim().replace(/^["'`]|["'`]$/g, "").trim();
   if (!clean) return true;
-  if (/^(?:true|false)$/i.test(clean)) return true;
+  if (/^(?:true|false|disabled)$/i.test(clean)) return true;
   if (/^<[^>]+>$/.test(clean)) return true;
   if (/(?:placeholder|example|sample|mock|local-only|replace|generate-locally|your-)/i.test(clean)) return true;
   if (/^file:\.\/(?:local-|example)/i.test(clean)) return true;

@@ -1,5 +1,18 @@
 # Documentation Index
 
+## AUTH-2B verified login, recovery and central sessions
+
+- [Verified Recovery and Session Registry](AUTH_2B_VERIFIED_RECOVERY_SESSION_REGISTRY.md)
+- [AUTH-2B Architecture Diagram](diagrams/auth-verified-recovery-session-registry.mmd)
+- [Implementation Checkpoint](evidence/AUTH_2B_IMPLEMENTATION_CHECKPOINT.md)
+
+AUTH-2B is implemented on `auth/verified-recovery-session-registry` and is
+ready for independent QA. One additive migration adds governed verified aliases,
+hashed expiring verification/reset records, credential versions, append-only
+security events and persisted revocable sessions. Live email/SMS, account
+activation, named users, permission profiles, role switching, delegated account
+administration, merge and deployment remain unauthorised.
+
 ## EXAM-RC-IMPL-3 report publication, Parent delivery and PDFs
 
 - [Governed Publication, Parent Delivery and PDF Workflow](REPORT_PUBLICATION_PARENT_PDF_WORKFLOW.md)
