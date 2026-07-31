@@ -17,9 +17,11 @@ reports and two workers; expected-version/idempotency checks; failed jobs leave
 no downloadable artifact; monochrome never relies on colour alone; version-37
 backup compatibility.
 
-The feature branch is ready for independent EXAM-RC-IMPL-3-QA. Do not merge,
-tag, deploy or change operational report data until that independent gate is
-cleared. Cloud deployment remains unauthorised.
+EXAM-RC-IMPL-3-QA independently cleared this boundary on 2026-07-31. Preserve
+the retained feature branch and annotated release tag documented in
+`EXAM_REPORT_PUBLICATION_QA_CLOSURE.md`. Cloud deployment remains
+unauthorised, and operational publication still requires separate business
+approval.
 
 ## EXAM-RC-IMPL-1 cleared scheme boundary
 

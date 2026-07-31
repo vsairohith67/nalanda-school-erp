@@ -67,6 +67,8 @@ found and corrected; the authenticated report then measured 362 px inside the
 
 ## Gate
 
-Report publication and PDFs are implemented and ready for independent QA.
-Independent `EXAM-RC-IMPL-3-QA` remains required before merge, tag, release or
-any operational use. No cloud deployment is claimed or authorised.
+At this implementation checkpoint, independent `EXAM-RC-IMPL-3-QA` remained
+required before merge, tag, release or any operational use. That gate was
+subsequently cleared on 2026-07-31; see
+`../EXAM_REPORT_PUBLICATION_QA_CLOSURE.md`. No cloud deployment is claimed or
+authorised.

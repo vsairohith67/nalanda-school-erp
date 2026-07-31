@@ -72,8 +72,8 @@ export default async function ReportPublicationPage() {
         <StatCard label="Withdrawn reports" value={String(history.filter((row) => row.status === "WITHDRAWN").length)} />
       </div>
       <p className="notice">
-        Publication and PDFs are implemented on this feature branch. Independent QA is still required.
-        No cloud deployment or public file path is enabled.
+        Publication and PDFs are governed local capabilities. No cloud deployment or public file
+        path is enabled.
       </p>
       <ReportPublicationWorkspace
         runs={readiness.runs}

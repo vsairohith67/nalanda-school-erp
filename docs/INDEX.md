@@ -4,13 +4,14 @@
 
 - [Governed Publication, Parent Delivery and PDF Workflow](REPORT_PUBLICATION_PARENT_PDF_WORKFLOW.md)
 - [Implementation Checkpoint](evidence/EXAM_RC_IMPL_3_IMPLEMENTATION_CHECKPOINT.md)
+- [Independent Publication and PDF QA Closure](EXAM_REPORT_PUBLICATION_QA_CLOSURE.md)
 
 EXAM-RC-IMPL-3 implements locked-snapshot publication, immutable replacement
 history, issued-only linked-Parent delivery, four governed report families and
 private individual/merged/ZIP colour or printer-safe monochrome PDFs. Approved
 marks, formulas and result snapshots remain unchanged; backup format remains
-37. Independent QA is still required. No merge, tag or cloud deployment is
-claimed by this implementation checkpoint.
+37. Independent QA is cleared for the retained feature branch and fast-forward
+release. Cloud deployment remains unauthorised.
 
 ## EXAM-RC-IMPL-2 marks, moderation and calculation foundation
 

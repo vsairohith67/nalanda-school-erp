@@ -1,5 +1,18 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## EXAM-RC-IMPL-3-QA - Independent publication and PDF QA (2026-07-31)
+
+Independent QA cleared exact locked-snapshot sourcing, governed Principal
+publication, immutable replacement/withdrawal, issued-only linked-Parent
+delivery, private individual/merged/ZIP PDFs, colour and printer-safe
+monochrome output, failure rollback, bounded concurrency, backup version 37 and
+restore-twice idempotence. Fresh ignored `EXAM3QA` copied-database fixtures were
+destroyed and cleanup was inspected twice; the operational business baseline
+remained zero. Browser and print QA passed at 1366x768 and 390x844 in light and
+dark application themes with 44 px actions, zero document overflow, no native
+dialogs, no console/hydration errors and no production stderr. Cloud deployment
+remains unauthorised.
+
 ## EXAM-RC-IMPL-3 — Report Publication, Parent Delivery and PDFs (2026-07-31)
 
 Implemented Principal readiness and exact locked-snapshot preview,
@@ -17,8 +30,9 @@ Ignored EXAM3 copied-database QA covered five Students, all four layouts,
 explicit absent/zero/exempt/N/A states, long content, two linked children, an
 unrelated child, replacement v2, concurrent merged/ZIP generation and injected
 PDF failure. Browser/print inspection covered 1366x768 and 390x844, light/dark
-application themes and independent colour/monochrome output. Implementation is
-ready for independent `EXAM-RC-IMPL-3-QA`; it is not merged or deployed.
+application themes and independent colour/monochrome output. This historical
+implementation checkpoint was subsequently cleared by
+`EXAM-RC-IMPL-3-QA`; no cloud deployment was performed.
 
 ## EXAM-RC-IMPL-1-QA - Independent scheme and assignment QA (2026-07-30)
 
