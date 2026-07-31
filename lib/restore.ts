@@ -11,6 +11,10 @@ import { validateAiAssistantBackupRows } from "@/lib/ai-assistant-backup";
 import { validateFeeRegisterOcrBackupRows } from "@/lib/fee-register-ocr-backup";
 import { validateCloudBackupBackupRows } from "@/lib/cloud-backup-backup";
 import { validatePublicWebsiteBackupRows } from "@/lib/public-website-backup";
+import {
+  validateExamGovernanceBackup,
+  type ExamGovernanceBackup
+} from "@/lib/exam-governance-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 const MAX_ENTITY_ROWS = 100_000;
@@ -44,6 +48,7 @@ const TOP_LEVEL_KEYS = new Set([
   "libraryTitles", "libraryCopies", "libraryCopyEvents", "libraryMembers", "libraryPolicies", "libraryLoans", "libraryReservations", "libraryLoanEvents", "libraryIncidents", "libraryChargeRules", "libraryCharges", "libraryChargeEvents", "libraryStockVerificationSessions", "libraryStockVerificationRecords", "libraryStockVerificationScanEvents", "libraryStockVerificationEvents",
   "homeworkAssignments", "homeworkAssignmentEvents",
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
+  "examGovernance",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
   "studentReportCards", "studentReportCardVersions", "studentReportCardEvents",
   "teacherAnalyticsReviewCycles", "teacherAnalyticsSnapshots", "teacherAnalyticsReviews", "teacherAnalyticsEvents",
@@ -98,6 +103,7 @@ const BACKUP_COUNT_KEYS = new Set([
   "libraryTitles", "libraryCopies", "libraryCopyEvents", "libraryMembers", "libraryPolicies", "libraryLoans", "libraryReservations", "libraryLoanEvents", "libraryIncidents", "libraryChargeRules", "libraryCharges", "libraryChargeEvents", "libraryStockVerificationSessions", "libraryStockVerificationRecords", "libraryStockVerificationScanEvents", "libraryStockVerificationEvents",
   "homeworkAssignments", "homeworkAssignmentEvents",
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
+  "examGovernanceRecords",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
   "studentReportCards", "studentReportCardVersions", "studentReportCardEvents",
   "teacherAnalyticsReviewCycles", "teacherAnalyticsSnapshots", "teacherAnalyticsReviews", "teacherAnalyticsEvents",
@@ -376,6 +382,7 @@ export type ValidatedBackup = {
   examAssessments: RestoreRecord[];
   studentMarks: RestoreRecord[];
   studentMarkEvents: RestoreRecord[];
+  examGovernance: ExamGovernanceBackup;
   gradingSchemes: RestoreRecord[];
   gradeBands: RestoreRecord[];
   reportCardTemplates: RestoreRecord[];
@@ -546,6 +553,7 @@ export type RestoreResult = {
   examAssessments: EntityRestoreResult;
   studentMarks: EntityRestoreResult;
   studentMarkEvents: EntityRestoreResult;
+  examGovernance: EntityRestoreResult;
   gradingSchemes: EntityRestoreResult;
   gradeBands: EntityRestoreResult;
   reportCardTemplates: EntityRestoreResult;
@@ -1218,6 +1226,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   const studentMarks=validateOptionalRows(root.studentMarks,"studentMarks",STUDENT_MARK_KEYS,["id","assessmentId","studentId","academicYear","entryStatus"]);const markIds=new Set<string>(),markKeys=new Set<string>();
   studentMarks.forEach((row,index)=>{const prefix=`studentMarks[${index}]`,id=requireString(row.id,`${prefix}.id`),assessmentId=requireString(row.assessmentId,`${prefix}.assessmentId`),studentId=requireString(row.studentId,`${prefix}.studentId`),status=requireString(row.entryStatus,`${prefix}.entryStatus`),key=`${assessmentId}|${studentId}`,assessment=examAssessments.find((item)=>item.id===assessmentId);if(markIds.has(id)||markKeys.has(key)||!assessment||!studentIds.has(studentId))throw new Error(`${prefix} has a duplicate identity or invalid assessment/Student link`);markIds.add(id);markKeys.add(key);const matchingEnrollment=activeEnrollments.some((enrollment)=>String(enrollment.studentId)===studentId&&String(enrollment.academicYear)===String(assessment.academicYear)&&String(enrollment.className)===String(assessment.className)&&(!String(assessment.section??"")||String(enrollment.section??"")===String(assessment.section??"")));if(String(row.academicYear)!==String(assessment.academicYear)||!matchingEnrollment)throw new Error(`${prefix} is incompatible with active academic-year enrollment`);if(!["PRESENT","ABSENT","EXEMPT","NOT_APPLICABLE"].includes(status))throw new Error(`${prefix}.entryStatus is unsupported`);if(status==="PRESENT"){if(!hasValue(row.marksObtained)||decimal(row.marksObtained,`${prefix}.marksObtained`)>decimal(assessment.maxMarks,`${prefix}.assessment.maxMarks`))throw new Error(`${prefix} present mark is missing or above maximum`);}else if(hasValue(row.marksObtained))throw new Error(`${prefix} non-present status must not carry marks`);});
   const studentMarkEvents=validateOptionalRows(root.studentMarkEvents,"studentMarkEvents",STUDENT_MARK_EVENT_KEYS,["id","assessmentId","eventType","eventDate"]);const markEventIds=new Set<string>();studentMarkEvents.forEach((row,index)=>{const prefix=`studentMarkEvents[${index}]`,id=requireString(row.id,`${prefix}.id`),assessmentId=requireString(row.assessmentId,`${prefix}.assessmentId`),eventType=requireString(row.eventType,`${prefix}.eventType`);if(markEventIds.has(id)||!assessmentIds.has(assessmentId))throw new Error(`${prefix} has duplicate identity or invalid assessment link`);markEventIds.add(id);if(hasValue(row.studentMarkId)&&!markIds.has(String(row.studentMarkId)))throw new Error(`${prefix}.studentMarkId does not match a backup mark`);if(!["MARK_CREATED","MARK_UPDATED","MARK_STATUS_CHANGED","MARKS_SUBMITTED","MARKS_APPROVED","MARKS_LOCKED","CORRECTION_REQUESTED","CORRECTION_APPLIED","ASSESSMENT_CANCELLED"].includes(eventType))throw new Error(`${prefix}.eventType is unsupported`);requireDateString(row.eventDate,`${prefix}.eventDate`);if(["CORRECTION_REQUESTED","CORRECTION_APPLIED"].includes(eventType)&&!hasValue(row.reason))throw new Error(`${prefix}.reason is required for correction`);});
+  const examGovernance = validateExamGovernanceBackup(root.examGovernance);
   const reportCardData = validateReportCardBackupRows(root, { studentIds, examIds, progressionIds: new Set(studentProgressionDecisions.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const teacherAnalyticsData = validateTeacherAnalyticsBackupRows(root, { staffMemberIds: new Set(staffMembers.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const certificateData = validateCertificateBackupRows(root, { studentIds, guardianIds: new Set(guardians.map((row) => String(row.id ?? "")).filter(Boolean)) });
@@ -1332,6 +1341,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     examAssessments,
     studentMarks,
     studentMarkEvents,
+    examGovernance,
     ...reportCardData,
     ...teacherAnalyticsData,
     ...certificateData,

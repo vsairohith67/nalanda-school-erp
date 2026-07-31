@@ -1,4 +1,5 @@
 import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { hashPassword } from "../lib/password";
@@ -8,9 +9,10 @@ import {
   requestMarkCorrection,
   reviewMarkCorrection,
   saveAssignedMarkDraft,
-  submitAssignedMarkSheet
+  submitAssignedMarkSheet,
+  ExamMarksError
 } from "../lib/exam-marks";
-import { requireExactExamMarkAssignment } from "../lib/exam-marks-scope";
+import { ExamMarksScopeError, requireExactExamMarkAssignment } from "../lib/exam-marks-scope";
 import {
   lockExaminationCalculation,
   runExaminationCalculationPreview
@@ -27,8 +29,12 @@ import {
   runPrisma
 } from "./migration-check-utils";
 
-const STATE_PATH = path.join(QA_ROOT, "reports", "EXAM2-browser-state.json");
-const PASSWORD = "EXAM2-local-only-Workflow-2026!";
+const FIXTURE_PREFIX = process.env.EXAM_QA_PREFIX === "EXAM2QA" ? "EXAM2QA" : "EXAM2";
+const FIXTURE_USERNAME_PREFIX = FIXTURE_PREFIX.toLowerCase();
+const FIXTURE_SHORT_PREFIX = FIXTURE_PREFIX === "EXAM2QA" ? "EX2QA" : "EX2";
+const FIXTURE_CLASS_A = `${FIXTURE_PREFIX}A`;
+const FIXTURE_CLASS_B = `${FIXTURE_PREFIX}B`;
+const STATE_PATH = path.join(QA_ROOT, "reports", `${FIXTURE_PREFIX}-browser-state.json`);
 
 type Actor = {
   id: string;
@@ -47,8 +53,14 @@ type QaState = {
   principalUsername: string;
   teacherOneUsername: string;
   teacherTwoUsername: string;
-  password: string;
+  principalPassword: string;
+  teacherOnePassword: string;
+  teacherTwoPassword: string;
 };
+
+function privateQaPassword() {
+  return `${FIXTURE_PREFIX}-${randomBytes(24).toString("base64url")}!aA9`;
+}
 
 function readState() {
   if (!existsSync(STATE_PATH)) throw new Error("EXAM2_QA_STATE_MISSING");
@@ -80,8 +92,8 @@ async function createTeacher(
 ) {
   const user = await client.user.create({
     data: {
-      name: `EXAM2 Teacher ${sequence}`,
-      username: `exam2-teacher-${sequence}`,
+      name: `${FIXTURE_PREFIX} Teacher ${sequence}`,
+      username: `${FIXTURE_USERNAME_PREFIX}-teacher-${sequence}`,
       passwordHash,
       role: "TEACHER",
       isActive: true
@@ -90,8 +102,8 @@ async function createTeacher(
   const timetableTeacher = await client.timetableTeacher.create({
     data: {
       name: user.name,
-      shortName: `EX2-T${sequence}`,
-      department: "EXAM2 Synthetic",
+      shortName: `${FIXTURE_SHORT_PREFIX}-T${sequence}`,
+      department: `${FIXTURE_PREFIX} Synthetic`,
       maxPeriodsPerWeek: 30,
       maxPeriodsPerDay: 8,
       isActive: true
@@ -99,12 +111,12 @@ async function createTeacher(
   });
   const staff = await client.staffMember.create({
     data: {
-      staffCode: `EXAM2-T0${sequence}`,
+      staffCode: `${FIXTURE_PREFIX}-T0${sequence}`,
       fullName: user.name,
       displayName: user.name,
       staffType: "TEACHING",
-      designation: "EXAM2 Synthetic Teacher",
-      department: "EXAM2 Synthetic",
+      designation: `${FIXTURE_PREFIX} Synthetic Teacher`,
+      department: `${FIXTURE_PREFIX} Synthetic`,
       status: "ACTIVE",
       userId: user.id,
       timetableTeacherId: timetableTeacher.id
@@ -120,32 +132,39 @@ async function prepare() {
     removeState();
   }
   const sourceHash = fileSha256(OPERATIONAL_DATABASE);
-  const databasePath = createEmptyIsolatedDatabase("operational-copy", "EXAM2-browser");
+  const databasePath = createEmptyIsolatedDatabase("operational-copy", `${FIXTURE_PREFIX}-browser`);
   copyFileSync(OPERATIONAL_DATABASE, databasePath);
   if (fileSha256(databasePath) !== sourceHash) throw new Error("EXAM2_COPY_HASH_MISMATCH");
   runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"], databasePath);
   const client = new PrismaClient({ datasourceUrl: databaseUrl(databasePath) });
   try {
-    const passwordHash = await hashPassword(PASSWORD);
+    const principalPassword = privateQaPassword();
+    const teacherOnePassword = privateQaPassword();
+    const teacherTwoPassword = privateQaPassword();
+    const [principalPasswordHash, teacherOnePasswordHash, teacherTwoPasswordHash] = await Promise.all([
+      hashPassword(principalPassword),
+      hashPassword(teacherOnePassword),
+      hashPassword(teacherTwoPassword)
+    ]);
     const principal = await client.user.create({
       data: {
-        name: "EXAM2 Principal",
-        username: "exam2-principal",
-        passwordHash,
+        name: `${FIXTURE_PREFIX} Principal`,
+        username: `${FIXTURE_USERNAME_PREFIX}-principal`,
+        passwordHash: principalPasswordHash,
         role: "PRINCIPAL",
         isActive: true
       }
     });
-    const teacherOne = await createTeacher(client, passwordHash, 1);
-    const teacherTwo = await createTeacher(client, passwordHash, 2);
+    const teacherOne = await createTeacher(client, teacherOnePasswordHash, 1);
+    const teacherTwo = await createTeacher(client, teacherTwoPasswordHash, 2);
 
     const classA = await client.timetableClassSection.create({
       data: {
         academicYear: "2026-27",
-        className: "EXAM2A",
+        className: FIXTURE_CLASS_A,
         section: "QA",
-        displayName: "EXAM2A - QA",
-        groupName: "EXAM2 SYNTHETIC",
+        displayName: `${FIXTURE_CLASS_A} - QA`,
+        groupName: `${FIXTURE_PREFIX} SYNTHETIC`,
         isActive: true
       }
     });
@@ -153,26 +172,26 @@ async function prepare() {
       data: [
         {
           academicYear: "2026-27",
-          className: "EXAM2B",
+          className: FIXTURE_CLASS_B,
           section: "QB",
-          displayName: "EXAM2B - QB",
-          groupName: "EXAM2 SYNTHETIC",
+          displayName: `${FIXTURE_CLASS_B} - QB`,
+          groupName: `${FIXTURE_PREFIX} SYNTHETIC`,
           isActive: true
         },
         {
           academicYear: "2025-26",
-          className: "EXAM2A",
+          className: FIXTURE_CLASS_A,
           section: "QA",
-          displayName: "EXAM2A - QA (prior)",
-          groupName: "EXAM2 SYNTHETIC",
+          displayName: `${FIXTURE_CLASS_A} - QA (prior)`,
+          groupName: `${FIXTURE_PREFIX} SYNTHETIC`,
           isActive: true
         }
       ]
     });
     const subjects = await Promise.all([
-      client.timetableSubject.create({ data: { name: "EXAM2 Mathematics", shortName: "EX2-MATH", department: "EXAM2 Synthetic", isActive: true } }),
-      client.timetableSubject.create({ data: { name: "EXAM2 Science", shortName: "EX2-SCI", department: "EXAM2 Synthetic", isActive: true } }),
-      client.timetableSubject.create({ data: { name: "EXAM2 Social", shortName: "EX2-SOC", department: "EXAM2 Synthetic", isActive: true } })
+      client.timetableSubject.create({ data: { name: `${FIXTURE_PREFIX} Mathematics`, shortName: `${FIXTURE_SHORT_PREFIX}-MATH`, department: `${FIXTURE_PREFIX} Synthetic`, isActive: true } }),
+      client.timetableSubject.create({ data: { name: `${FIXTURE_PREFIX} Science`, shortName: `${FIXTURE_SHORT_PREFIX}-SCI`, department: `${FIXTURE_PREFIX} Synthetic`, isActive: true } }),
+      client.timetableSubject.create({ data: { name: `${FIXTURE_PREFIX} Social`, shortName: `${FIXTURE_SHORT_PREFIX}-SOC`, department: `${FIXTURE_PREFIX} Synthetic`, isActive: true } })
     ]);
     const timetableAssignments = new Map<string, string>();
     for (const [subjectIndex, subject] of subjects.entries()) {
@@ -189,7 +208,7 @@ async function prepare() {
             subjectId: subject.id,
             teacherId: owner.id,
             periodsPerWeek: 5,
-            notes: "EXAM2 exact-scope synthetic fixture"
+            notes: `${FIXTURE_PREFIX} exact-scope synthetic fixture`
           }
         });
         timetableAssignments.set(`${subject.id}:${owner.id}`, assignment.id);
@@ -198,14 +217,14 @@ async function prepare() {
 
     const examination = await client.examination.create({
       data: {
-        examCode: "EXAM2",
+        examCode: FIXTURE_PREFIX,
         academicYear: "2026-27",
-        name: "EXAM2 Marks and Moderation",
+        name: `${FIXTURE_PREFIX} Marks and Moderation`,
         examType: "TERM",
         startDate: new Date("2026-09-01T00:00:00.000Z"),
         endDate: new Date("2026-09-12T00:00:00.000Z"),
         status: "ACTIVE",
-        description: "EXAM2 synthetic copied-database fixture only.",
+        description: `${FIXTURE_PREFIX} synthetic copied-database fixture only.`,
         createdByUserId: principal.id,
         activatedByUserId: principal.id,
         activatedAt: new Date("2026-08-15T09:00:00.000Z")
@@ -215,7 +234,7 @@ async function prepare() {
       data: {
         examinationId: examination.id,
         academicYear: "2026-27",
-        className: "EXAM2A",
+        className: FIXTURE_CLASS_A,
         section: "QA",
         timetableClassSectionId: classA.id,
         status: "ACTIVE",
@@ -229,7 +248,7 @@ async function prepare() {
           examinationId: examination.id,
           classScopeId: classScope.id,
           academicYear: "2026-27",
-          className: "EXAM2A",
+          className: FIXTURE_CLASS_A,
           section: "QA",
           timetableSubjectId: subject.id,
           subjectNameSnapshot: subject.name,
@@ -247,7 +266,7 @@ async function prepare() {
         examinationId: examination.id,
         classScopeId: classScope.id,
         academicYear: "2026-27",
-        className: "EXAM2A",
+        className: FIXTURE_CLASS_A,
         section: "QA",
         scopeKey: "BASE",
         versionNumber: 1,
@@ -290,7 +309,7 @@ async function prepare() {
         examinationId: examination.id,
         classScopeId: classScope.id,
         academicYear: "2026-27",
-        className: "EXAM2A",
+        className: FIXTURE_CLASS_A,
         section: "QA",
         scopeKey: `SUBJECT:${papers[1].id}`,
         subjectPaperId: papers[1].id,
@@ -333,7 +352,7 @@ async function prepare() {
         examinationId: examination.id,
         classScopeId: classScope.id,
         academicYear: "2026-27",
-        className: "EXAM2A",
+        className: FIXTURE_CLASS_A,
         section: "QA",
         groupCode: "SCI_SOC",
         groupName: "Science and Social",
@@ -354,9 +373,9 @@ async function prepare() {
         examinationId: examination.id,
         classScopeId: classScope.id,
         academicYear: "2026-27",
-        className: "EXAM2A",
+        className: FIXTURE_CLASS_A,
         section: "QA",
-        name: "EXAM2 Grade Scale",
+        name: `${FIXTURE_PREFIX} Grade Scale`,
         scaleFamily: "PERCENTAGE",
         versionNumber: 1,
         status: "ACTIVE",
@@ -406,14 +425,14 @@ async function prepare() {
           schemeVersionId: row.schemeId,
           componentId: row.component.id,
           academicYear: "2026-27",
-          className: "EXAM2A",
+          className: FIXTURE_CLASS_A,
           section: "QA",
           staffMemberId: row.owner.staff.id,
           timetableTeacherId: row.owner.timetableTeacher.id,
           timetableAssignmentId: timetableAssignments.get(`${row.paper.timetableSubjectId}:${row.owner.timetableTeacher.id}`)!,
           assignmentRole: row.role,
           status: "ACTIVE",
-          assignmentReason: "EXAM2 synthetic exact-scope verification.",
+          assignmentReason: `${FIXTURE_PREFIX} synthetic exact-scope verification.`,
           assignedByUserId: principal.id
         }
       });
@@ -424,22 +443,22 @@ async function prepare() {
       const student = await client.student.create({
         data: {
           academicYear: "2026-27",
-          admissionNo: `EXAM2-${String(index).padStart(3, "0")}`,
-          studentName: `EXAM2 Student ${index}`,
-          fatherName: "EXAM2 Synthetic Parent",
-          className: "EXAM2A",
+          admissionNo: `${FIXTURE_PREFIX}-${String(index).padStart(3, "0")}`,
+          studentName: `${FIXTURE_PREFIX} Student ${index}`,
+          fatherName: `${FIXTURE_PREFIX} Synthetic Parent`,
+          className: FIXTURE_CLASS_A,
           section: "QA",
           rollNo: String(index),
           phone1: "0000000000",
           status: "Active",
-          remarks: "EXAM2 synthetic fixture"
+          remarks: `${FIXTURE_PREFIX} synthetic fixture`
         }
       });
       await client.academicYearEnrollment.create({
         data: {
           studentId: student.id,
           academicYear: "2026-27",
-          className: "EXAM2A",
+          className: FIXTURE_CLASS_A,
           section: "QA",
           rollNo: String(index),
           status: "ACTIVE"
@@ -451,7 +470,7 @@ async function prepare() {
       await client.studentAttendanceSession.create({
         data: {
           attendanceDate: new Date(`${date}T00:00:00.000Z`),
-          className: "EXAM2A",
+          className: FIXTURE_CLASS_A,
           section: "QA",
           academicYear: "2026-27",
           status: "LOCKED",
@@ -460,7 +479,7 @@ async function prepare() {
           lockedByUserId: principal.id,
           submittedAt: activatedAt,
           lockedAt: activatedAt,
-          notes: "EXAM2 locked attendance reference",
+          notes: `${FIXTURE_PREFIX} locked attendance reference`,
           records: {
             create: students.map((student, index) => ({
               studentId: student.id,
@@ -480,10 +499,12 @@ async function prepare() {
       principalUsername: principal.username,
       teacherOneUsername: teacherOne.user.username,
       teacherTwoUsername: teacherTwo.user.username,
-      password: PASSWORD
+      principalPassword,
+      teacherOnePassword,
+      teacherTwoPassword
     };
     writeFileSync(STATE_PATH, `${JSON.stringify(state, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
-    console.log("EXAM2 copied-database fixture prepared: students=4 teachers=2 primaryAssignments=6 contributorAssignments=1.");
+    console.log(`${FIXTURE_PREFIX} copied-database fixture prepared: students=4 teachers=2 primaryAssignments=6 contributorAssignments=1.`);
     console.log("Browser credentials are stored only in the ignored private QA state file.");
   } catch (error) {
     cleanupIsolatedDatabase(databasePath);
@@ -503,7 +524,7 @@ async function exercise() {
       client.user.findUniqueOrThrow({ where: { username: state.principalUsername } }),
       client.user.findUniqueOrThrow({ where: { username: state.teacherOneUsername } }),
       client.user.findUniqueOrThrow({ where: { username: state.teacherTwoUsername } }),
-      client.student.findMany({ where: { admissionNo: { startsWith: "EXAM2-" } }, orderBy: { admissionNo: "asc" } })
+      client.student.findMany({ where: { admissionNo: { startsWith: `${FIXTURE_PREFIX}-` } }, orderBy: { admissionNo: "asc" } })
     ]);
     const principal = actor(principalUser);
     const teacherOne = actor(teacherOneUser);
@@ -539,7 +560,8 @@ async function exercise() {
         expectedSheetVersion: contributorSave.sheetVersion,
         expectedOptimisticVersion: contributorSave.optimisticVersion
       }, teacherTwo);
-    } catch {
+    } catch (error) {
+      if (!(error instanceof ExamMarksScopeError) || error.status !== 403) throw error;
       contributorSubmitDenied = true;
     }
     if (!contributorSubmitDenied) throw new Error("EXAM2_CONTRIBUTOR_SUBMIT_NOT_DENIED");
@@ -549,7 +571,8 @@ async function exercise() {
     if (!socialPrimary) throw new Error("EXAM2_SOCIAL_PRIMARY_MISSING");
     try {
       await requireExactExamMarkAssignment(client, teacherOne, socialPrimary.id);
-    } catch {
+    } catch (error) {
+      if (!(error instanceof ExamMarksScopeError) || error.status !== 404) throw error;
       unauthorizedDenied = true;
     }
     if (!unauthorizedDenied) throw new Error("EXAM2_CROSS_TEACHER_SCOPE_NOT_DENIED");
@@ -567,7 +590,7 @@ async function exercise() {
       const component = current.selectedWorkspace.components.find((row: any) => row.assignment.id === item.assignment.id);
       if (!component) throw new Error(`EXAM2_COMPONENT_WORKSPACE_MISSING:${key}`);
       const isSpecial = key === "MATH:WRITTEN";
-      const saved = await saveAssignedMarkDraft(client, item.assignment.id, {
+      let saved = await saveAssignedMarkDraft(client, item.assignment.id, {
         requestKey: `EXAM2:PRIMARY:SAVE:${key.replace(":", "-")}:0001`,
         expectedSheetVersion: component.sheet?.version,
         expectedVersionNumber: component.sheet?.versionNumber,
@@ -582,6 +605,45 @@ async function exercise() {
         }))
       }, item.actor);
       if (saved.status !== "READY_TO_SUBMIT") throw new Error(`EXAM2_DRAFT_NOT_READY:${key}`);
+      if (isSpecial) {
+        const staleExpected = {
+          sheetVersion: saved.sheetVersion,
+          versionNumber: saved.versionNumber,
+          optimisticVersion: saved.optimisticVersion,
+          rowVersion: saved.entries[0].rowVersion
+        };
+        saved = await saveAssignedMarkDraft(client, item.assignment.id, {
+          requestKey: "EXAM2:PRIMARY:SAVE:MATH-WRITTEN:0002",
+          expectedSheetVersion: staleExpected.sheetVersion,
+          expectedVersionNumber: staleExpected.versionNumber,
+          expectedOptimisticVersion: staleExpected.optimisticVersion,
+          rows: [{
+            ...saved.entries[0],
+            marksObtained: 0,
+            expectedRowVersion: staleExpected.rowVersion
+          }]
+        }, item.actor);
+        let staleConflict = false;
+        try {
+          await saveAssignedMarkDraft(client, item.assignment.id, {
+            requestKey: "EXAM2:STALE:CONFLICT:0001",
+            expectedSheetVersion: staleExpected.sheetVersion,
+            expectedVersionNumber: staleExpected.versionNumber,
+            expectedOptimisticVersion: staleExpected.optimisticVersion,
+            rows: [{
+              ...saved.entries[0],
+              marksObtained: 0,
+              expectedRowVersion: staleExpected.rowVersion
+            }]
+          }, item.actor);
+        } catch (error) {
+          if (!(error instanceof ExamMarksError) || error.status !== 409 || error.code !== "EXPECTED_VERSION_CONFLICT") {
+            throw error;
+          }
+          staleConflict = true;
+        }
+        if (!staleConflict) throw new Error("EXAM2_STALE_CONFLICT_NOT_REJECTED");
+      }
       const submitted = await submitAssignedMarkSheet(client, item.assignment.id, {
         requestKey: `EXAM2:PRIMARY:SUBMIT:${key.replace(":", "-")}:0001`,
         expectedSheetVersion: saved.sheetVersion,
@@ -595,23 +657,6 @@ async function exercise() {
     if (!currentMath.selectedWorkspace) throw new Error("EXAM2_MATH_WORKSPACE_MISSING");
     const currentComponent = currentMath.selectedWorkspace.components.find((row: any) => row.assignment.id === mathWritten.assignment.id);
     if (!currentComponent) throw new Error("EXAM2_MATH_COMPONENT_MISSING");
-    let staleConflict = false;
-    try {
-      await saveAssignedMarkDraft(client, mathWritten.assignment.id, {
-        requestKey: "EXAM2:STALE:CONFLICT:0001",
-        expectedSheetVersion: 1,
-        expectedVersionNumber: 1,
-        expectedOptimisticVersion: 1,
-        rows: [{
-          ...currentComponent.entries[0],
-          expectedRowVersion: currentComponent.entries[0].rowVersion
-        }]
-      }, mathWritten.actor);
-    } catch {
-      staleConflict = true;
-    }
-    if (!staleConflict) throw new Error("EXAM2_STALE_CONFLICT_NOT_REJECTED");
-
     const correction = await requestMarkCorrection(client, mathWritten.assignment.id, {
       requestKey: "EXAM2:CORRECTION:REQUEST:0001",
       reason: "Correct the synthetic zero after governed review."
@@ -660,7 +705,8 @@ async function exercise() {
     const preview = await runExaminationCalculationPreview(client, {
       examinationId: state.examinationId,
       classScopeId: state.classScopeId,
-      requestKey: "EXAM2:CALCULATION:PREVIEW:0001"
+      requestKey: "EXAM2:CALCULATION:PREVIEW:0001",
+      reason: "EXAM2 hand-calculated copied-database preview verification."
     }, principal);
     if (preview.snapshots.length !== 4 || !preview.snapshots.every((row: any) => row.details.groups.length === 1)) {
       throw new Error("EXAM2_CALCULATION_OR_GROUP_FAILED");
@@ -668,7 +714,8 @@ async function exercise() {
     const rerun = await runExaminationCalculationPreview(client, {
       examinationId: state.examinationId,
       classScopeId: state.classScopeId,
-      requestKey: "EXAM2:CALCULATION:PREVIEW:0002"
+      requestKey: "EXAM2:CALCULATION:PREVIEW:0002",
+      reason: "EXAM2 deterministic preview rerun verification."
     }, principal);
     if (!rerun.idempotent || rerun.id !== preview.id) throw new Error("EXAM2_CALCULATION_IDEMPOTENCY_FAILED");
     const locked = await lockExaminationCalculation(client, preview.id, {
@@ -679,7 +726,8 @@ async function exercise() {
     const lockedRerun = await runExaminationCalculationPreview(client, {
       examinationId: state.examinationId,
       classScopeId: state.classScopeId,
-      requestKey: "EXAM2:CALCULATION:PREVIEW:AFTER_LOCK:0001"
+      requestKey: "EXAM2:CALCULATION:PREVIEW:AFTER_LOCK:0001",
+      reason: "EXAM2 deterministic post-lock preview verification."
     }, principal);
     const snapshotCount = await client.studentResultSnapshot.count({
       where: { examinationId: state.examinationId, classScopeId: state.classScopeId }
@@ -700,8 +748,8 @@ async function inspect() {
   try {
     const [baseline, students, enrollments, sheets, snapshots, audits, migrationCount] = await Promise.all([
       businessBaseline(state.databasePath),
-      client.student.count({ where: { admissionNo: { startsWith: "EXAM2-" } } }),
-      client.academicYearEnrollment.count({ where: { student: { admissionNo: { startsWith: "EXAM2-" } } } }),
+      client.student.count({ where: { admissionNo: { startsWith: `${FIXTURE_PREFIX}-` } } }),
+      client.academicYearEnrollment.count({ where: { student: { admissionNo: { startsWith: `${FIXTURE_PREFIX}-` } } } }),
       client.examMarkSheet.findMany({ where: { examinationId: state.examinationId }, include: { entries: true } }),
       client.studentResultSnapshot.findMany({ where: { examinationId: state.examinationId } }),
       client.examinationSchemeAudit.findMany({ where: { examinationId: state.examinationId, eventKey: { not: null } } }),

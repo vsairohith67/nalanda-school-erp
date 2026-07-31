@@ -73,6 +73,7 @@ describe("full backup", () => {
       libraryStockVerificationSessions: 0, libraryStockVerificationRecords: 0, libraryStockVerificationScanEvents: 0, libraryStockVerificationEvents: 0,
       homeworkAssignments: 0, homeworkAssignmentEvents: 0,
       examCycles: 0, examAssessments: 0, studentMarks: 0, studentMarkEvents: 0,
+      examGovernanceRecords: 0,
       gradingSchemes: 0, gradeBands: 0, reportCardTemplates: 0, reportCardBatches: 0,
       reportCardBatchExamSources: 0, studentReportCards: 0, studentReportCardVersions: 0, studentReportCardEvents: 0,
       teacherAnalyticsReviewCycles: 0, teacherAnalyticsSnapshots: 0, teacherAnalyticsReviews: 0, teacherAnalyticsEvents: 0,
@@ -274,4 +275,3 @@ describe("full backup", () => {
     ]);
   });
 });
-

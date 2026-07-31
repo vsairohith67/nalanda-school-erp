@@ -7,6 +7,7 @@ type DashboardData = any;
 type ActionDialog =
   | { kind: "moderate"; component: any }
   | { kind: "correction"; component: any; decision: "reopen" | "reject" }
+  | { kind: "preview" }
   | { kind: "lock"; run: any }
   | null;
 
@@ -43,6 +44,7 @@ export function ExamModerationDashboard({
   const [notice, setNotice] = useState<string | null>(null);
   const [dialog, setDialog] = useState<ActionDialog>(null);
   const [reason, setReason] = useState("");
+  const [interventionReason, setInterventionReason] = useState("");
   const selection = data.selection;
 
   async function responseJson(response: Response, fallback: string) {
@@ -69,7 +71,7 @@ export function ExamModerationDashboard({
   }
 
   async function performAction() {
-    if (!dialog || !reason.trim()) return;
+    if (!dialog || !reason.trim() || (actorRole === "SUPER_ADMIN" && !interventionReason.trim())) return;
     setBusy(true);
     setError(null);
     try {
@@ -81,7 +83,7 @@ export function ExamModerationDashboard({
             requestKey: requestKey("moderate"),
             expectedSheetVersion: dialog.component.sheetVersion,
             reason,
-            interventionReason: actorRole === "SUPER_ADMIN" ? reason : undefined
+            interventionReason: actorRole === "SUPER_ADMIN" ? interventionReason : undefined
           })
         }), "Moderation failed.");
         setNotice("Sheet moderated with append-only evidence.");
@@ -94,10 +96,24 @@ export function ExamModerationDashboard({
             requestKey: requestKey(dialog.decision),
             expectedSheetVersion: dialog.component.sheetVersion,
             reason,
-            interventionReason: actorRole === "SUPER_ADMIN" ? reason : undefined
+            interventionReason: actorRole === "SUPER_ADMIN" ? interventionReason : undefined
           })
         }), "Correction review failed.");
         setNotice(dialog.decision === "reopen" ? "A new editable sheet version was created." : "Correction request rejected.");
+      } else if (dialog.kind === "preview") {
+        if (!selection) return;
+        const result = await responseJson(await fetch("/api/exam-moderation/calculations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            examinationId: selection.examinationId,
+            classScopeId: selection.classScopeId,
+            requestKey: requestKey("calculation"),
+            reason,
+            interventionReason: actorRole === "SUPER_ADMIN" ? interventionReason : undefined
+          })
+        }), "Calculation preview failed.");
+        setNotice(result.idempotent ? "The matching deterministic preview already existed." : "A new immutable calculation preview was created.");
       } else {
         await responseJson(await fetch(`/api/exam-moderation/calculations/${encodeURIComponent(dialog.run.id)}/lock`, {
           method: "POST",
@@ -105,40 +121,17 @@ export function ExamModerationDashboard({
           body: JSON.stringify({
             requestKey: requestKey("lock"),
             reason,
-            interventionReason: actorRole === "SUPER_ADMIN" ? reason : undefined
+            interventionReason: actorRole === "SUPER_ADMIN" ? interventionReason : undefined
           })
         }), "Calculation lock failed.");
         setNotice("Source sheet versions and calculation snapshot were locked. Nothing was published.");
       }
       setDialog(null);
       setReason("");
+      setInterventionReason("");
       await refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Governed action failed.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function calculatePreview() {
-    if (!selection) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/exam-moderation/calculations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          examinationId: selection.examinationId,
-          classScopeId: selection.classScopeId,
-          requestKey: requestKey("calculation")
-        })
-      });
-      const result = await responseJson(response, "Calculation preview failed.");
-      setNotice(result.idempotent ? "The matching deterministic preview already existed." : "A new immutable calculation preview was created.");
-      await refresh();
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Calculation preview failed.");
     } finally {
       setBusy(false);
     }
@@ -205,7 +198,7 @@ export function ExamModerationDashboard({
           <p>{selection.calculationIssues.length ? `${selection.calculationIssues.length} blocking issue(s)` : "All required source sheets are ready."}</p>
         </div>
         {permissions.canCalculate ? (
-          <button className="button" type="button" disabled={busy || selection.calculationIssues.length > 0} onClick={() => void calculatePreview()}>
+          <button className="button" type="button" disabled={busy || selection.calculationIssues.length > 0} onClick={() => setDialog({ kind: "preview" })}>
             Create calculation preview
           </button>
         ) : null}
@@ -226,7 +219,7 @@ export function ExamModerationDashboard({
               <th>Governed actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody key={`${selection.examinationId}:${selection.classScopeId}`}>
             {flatComponents.map((component: any) => (
               <tr key={component.componentId}>
                 <th scope="row">
@@ -313,10 +306,18 @@ export function ExamModerationDashboard({
         <div className="dialog-backdrop" role="presentation">
           <section className="dialog-card moderation-dialog" role="dialog" aria-modal="true" aria-labelledby="moderation-dialog-title">
             <h3 id="moderation-dialog-title">
-              {dialog.kind === "moderate" ? "Moderate sheet" : dialog.kind === "lock" ? "Lock calculation" : `${dialog.decision === "reopen" ? "Reopen" : "Reject"} correction`}
+              {dialog.kind === "moderate"
+                ? "Moderate sheet"
+                : dialog.kind === "preview"
+                  ? "Create calculation preview"
+                  : dialog.kind === "lock"
+                    ? "Lock calculation"
+                    : `${dialog.decision === "reopen" ? "Reopen" : "Reject"} correction`}
             </h3>
             <p>
-              {dialog.kind === "lock"
+              {dialog.kind === "preview"
+                ? "This creates immutable result snapshots from the exact current sheet, cohort, attendance, and scheme versions. It does not publish any report card."
+                : dialog.kind === "lock"
                 ? "This freezes the exact source sheet versions and calculation snapshots. It does not publish any report card."
                 : "This action is append-only and requires a bounded audit reason."}
             </p>
@@ -324,9 +325,20 @@ export function ExamModerationDashboard({
               Audit reason
               <textarea value={reason} maxLength={500} onChange={(event) => setReason(event.target.value)} autoFocus />
             </label>
+            {actorRole === "SUPER_ADMIN" ? (
+              <label>
+                Super Admin intervention reason
+                <textarea value={interventionReason} maxLength={500} onChange={(event) => setInterventionReason(event.target.value)} />
+              </label>
+            ) : null}
             <div className="page-actions">
-              <button type="button" className="button secondary" onClick={() => { setDialog(null); setReason(""); }}>Cancel</button>
-              <button type="button" className="button" disabled={!reason.trim() || busy} onClick={() => void performAction()}>
+              <button type="button" className="button secondary" onClick={() => { setDialog(null); setReason(""); setInterventionReason(""); }}>Cancel</button>
+              <button
+                type="button"
+                className="button"
+                disabled={!reason.trim() || (actorRole === "SUPER_ADMIN" && !interventionReason.trim()) || busy}
+                onClick={() => void performAction()}
+              >
                 {busy ? "Working…" : "Confirm governed action"}
               </button>
             </div>

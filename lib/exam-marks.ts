@@ -752,9 +752,9 @@ export async function reviewMarkCorrection(
         targetId: sheet.id,
         previousStatus: "REOPEN_REQUESTED",
         newStatus: response.sheetStatus,
-        reason: governedReason ?? reason,
+        reason,
         actor,
-        snapshot: response,
+        snapshot: { ...response, interventionReason: governedReason },
         eventDate: now
       });
       return response;
@@ -822,9 +822,9 @@ export async function reviewMarkCorrection(
       targetId: nextVersion.id,
       previousStatus: currentVersion.status,
       newStatus: "REOPENED",
-      reason: governedReason ?? reason,
+      reason,
       actor,
-      snapshot: response,
+      snapshot: { ...response, interventionReason: governedReason },
       eventDate: now
     });
     return response;
@@ -880,9 +880,9 @@ export async function moderateMarkSheet(
       targetId: sheet.id,
       previousStatus: version.status,
       newStatus: "MODERATED",
-      reason: governedReason ?? reason,
+      reason,
       actor,
-      snapshot: response,
+      snapshot: { ...response, interventionReason: governedReason },
       eventDate: now
     });
     return response;

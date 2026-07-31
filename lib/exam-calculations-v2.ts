@@ -135,15 +135,15 @@ async function calculationContext(
         where: {
           classScopeId,
           status: "ACTIVE",
-          assignmentRole: "PRIMARY_SUBMITTER",
-          staffMember: {
-            status: "ACTIVE",
-            user: { isActive: true, role: "TEACHER" },
-            timetableTeacher: { is: { isActive: true } }
-          }
+          assignmentRole: "PRIMARY_SUBMITTER"
         },
         include: {
-          staffMember: { select: { displayName: true, fullName: true } },
+          staffMember: {
+            include: {
+              user: { select: { id: true, role: true, isActive: true } },
+              timetableTeacher: { select: { id: true, isActive: true } }
+            }
+          },
           subjectPaper: true,
           component: true,
           schemeVersion: true
@@ -162,35 +162,119 @@ async function calculationContext(
   return { examination, classScope, sheets, students };
 }
 
+function sourceScopeKey(subjectPaperId: string, componentId: string) {
+  return `${subjectPaperId}|${componentId}`;
+}
+
+function schemeForPaper(context: CalculationContextData, paperId: string) {
+  return context.examination.schemeVersions.find((scheme: any) => scheme.subjectPaperId === paperId)
+    ?? context.examination.schemeVersions.find((scheme: any) => scheme.scopeKey === "BASE" && !scheme.subjectPaperId)
+    ?? null;
+}
+
+function primaryOwnerAvailable(assignment: any) {
+  return assignment?.staffMember?.status === "ACTIVE"
+    && assignment.staffMember.user?.isActive === true
+    && assignment.staffMember.user?.role === "TEACHER"
+    && assignment.staffMember.timetableTeacher?.isActive === true;
+}
+
+function configuredCalculationSources(context: CalculationContextData) {
+  const sheetByScope = new Map<string, any>(
+    context.sheets.map((sheet) => [sourceScopeKey(sheet.subjectPaperId, sheet.componentId), sheet])
+  );
+  return context.examination.subjectPapers.flatMap((paper: any) => {
+    const scheme = schemeForPaper(context, paper.id);
+    if (!scheme) return [{ paper, scheme: null, component: null, assignment: null, sheet: null }];
+    return scheme.components.map((component: any) => ({
+      paper,
+      scheme,
+      component,
+      assignment: context.examination.teacherAssignments.find((row: any) =>
+        row.subjectPaperId === paper.id
+        && row.componentId === component.id
+        && row.schemeVersionId === scheme.id
+      ) ?? null,
+      sheet: sheetByScope.get(sourceScopeKey(paper.id, component.id)) ?? null
+    }));
+  });
+}
+
 function readinessIssues(context: CalculationContextData) {
   const issues: string[] = [];
-  const sheetByComponent = new Map<string, any>(context.sheets.map((sheet) => [sheet.componentId, sheet]));
-  for (const assignment of context.examination.teacherAssignments) {
-    if (!assignment.component.isRequired) continue;
-    const sheet = sheetByComponent.get(assignment.componentId);
-    const version = sheet;
-    if (!sheet) {
-      issues.push(`${assignment.subjectPaper.paperName} / ${assignment.component.name} has not started.`);
+  const eligibleIds = context.students.map((student) => student.studentId).sort();
+  const eligible = new Set(eligibleIds);
+  const sources = configuredCalculationSources(context);
+  for (const paper of context.examination.subjectPapers) {
+    const scheme = schemeForPaper(context, paper.id);
+    if (!scheme) {
+      issues.push(`${paper.paperName} has no active frozen calculation scheme.`);
       continue;
     }
-    if (!["SUBMITTED", "RESUBMITTED", "MODERATED", "LOCKED"].includes(version.status)) {
-      issues.push(`${assignment.subjectPaper.paperName} / ${assignment.component.name} is ${version.status.replaceAll("_", " ").toLowerCase()}.`);
-    }
-    const eligible = new Set(context.students.map((student) => student.studentId));
-    if (version.entries.some((entry: any) => !eligible.has(entry.studentId) || entry.entryState === "NOT_ENTERED")) {
-      issues.push(`${assignment.subjectPaper.paperName} / ${assignment.component.name} has missing or out-of-cohort entries.`);
-    }
-    if (version.schemeVersionId !== assignment.schemeVersionId || sheet.schemeVersionId !== assignment.schemeVersionId) {
-      issues.push(`${assignment.subjectPaper.paperName} / ${assignment.component.name} no longer matches its frozen scheme.`);
+    if (scheme.calculationMode === "WEIGHTED_NORMALIZED") {
+      const totalWeight = scheme.components.reduce(
+        (sum: Prisma.Decimal, component: any) => sum.add(component.contributionWeight ?? 0),
+        new Prisma.Decimal(0)
+      );
+      if (!totalWeight.equals(100)) {
+        issues.push(`${paper.paperName} weighted component weights must total exactly 100%.`);
+      }
     }
   }
-  if (!context.examination.teacherAssignments.length) issues.push("No active primary Teacher component assignments are configured.");
+  for (const source of sources) {
+    const { paper, scheme, component, assignment, sheet } = source;
+    if (!scheme || !component) continue;
+    if (component.maximumMarks.lte(0)) {
+      issues.push(`${paper.paperName} / ${component.name} has an unsafe zero denominator.`);
+    }
+    if (!assignment) {
+      if (component.isRequired) {
+        issues.push(`${paper.paperName} / ${component.name} has no exact active primary Teacher assignment.`);
+      }
+      continue;
+    }
+    if (!primaryOwnerAvailable(assignment)) {
+      issues.push(`${paper.paperName} / ${component.name} primary Teacher is unavailable.`);
+    }
+    if (!sheet) {
+      if (component.isRequired) issues.push(`${paper.paperName} / ${component.name} has not started.`);
+      continue;
+    }
+    if (!["SUBMITTED", "RESUBMITTED", "MODERATED", "LOCKED"].includes(sheet.status)) {
+      issues.push(`${paper.paperName} / ${component.name} is ${sheet.status.replaceAll("_", " ").toLowerCase()}.`);
+    }
+    const sourceIds = sheet.entries.map((entry: any) => entry.studentId).sort();
+    if (
+      sourceIds.length !== eligibleIds.length
+      || sourceIds.some((studentId: string, index: number) => studentId !== eligibleIds[index])
+      || sheet.entries.some((entry: any) => !eligible.has(entry.studentId) || entry.entryState === "NOT_ENTERED")
+    ) {
+      issues.push(`${paper.paperName} / ${component.name} does not exactly match the eligible Student cohort.`);
+    }
+    if (
+      sheet.subjectPaperId !== paper.id
+      || sheet.componentId !== component.id
+      || sheet.schemeVersionId !== scheme.id
+      || assignment.schemeVersionId !== scheme.id
+    ) {
+      issues.push(`${paper.paperName} / ${component.name} no longer matches its frozen scheme and paper scope.`);
+    }
+  }
+  if (!sources.some((source: any) => source.assignment)) {
+    issues.push("No active primary Teacher component assignments are configured.");
+  }
   if (!context.students.length) issues.push("The exact class and section has no active enrolled Students.");
   return [...new Set(issues)];
 }
 
-function sourceMaterial(context: CalculationContextData) {
-  return context.sheets
+function calculationSheets(context: CalculationContextData) {
+  return configuredCalculationSources(context)
+    .filter((source: any) => source.scheme && source.component && source.sheet)
+    .map((source: any) => source.sheet);
+}
+
+function sourceMaterial(sheets: any[]) {
+  return sheets
     .map((sheet) => {
       const version = sheet;
       return {
@@ -369,11 +453,11 @@ type ProvisionalStudentResult = {
   warningCodes: string[];
 };
 
-async function lockedAttendanceReference(
+async function lockedAttendanceMaterial(
   client: ExamClient,
-  context: CalculationContextData,
-  studentId: string
+  context: CalculationContextData
 ) {
+  const studentIds = context.students.map((student) => student.studentId).sort();
   const sessions = await client.studentAttendanceSession.findMany({
     where: {
       academicYear: context.classScope.academicYear,
@@ -382,20 +466,82 @@ async function lockedAttendanceReference(
       status: "LOCKED",
       attendanceDate: { gte: context.examination.startDate, lte: context.examination.endDate }
     },
-    include: { records: { where: { studentId }, select: { status: true } } },
+    include: {
+      records: {
+        where: { studentId: { in: studentIds } },
+        select: { studentId: true, status: true },
+        orderBy: { studentId: "asc" }
+      }
+    },
     orderBy: { attendanceDate: "asc" }
   });
-  const recorded = sessions.filter((session) => session.records[0]);
+  return sessions.map((session: any) => ({
+    id: session.id,
+    attendanceDate: session.attendanceDate.toISOString(),
+    updatedAt: session.updatedAt.toISOString(),
+    records: session.records.map((record: any) => ({
+      studentId: record.studentId,
+      status: record.status
+    }))
+  }));
+}
+
+function lockedAttendanceReference(
+  context: CalculationContextData,
+  material: Array<{
+    id: string;
+    attendanceDate: string;
+    updatedAt: string;
+    records: Array<{ studentId: string; status: string }>;
+  }>,
+  studentId: string
+) {
+  const recorded = material
+    .map((session) => session.records.find((record) => record.studentId === studentId))
+    .filter(Boolean) as Array<{ studentId: string; status: string }>;
   return {
     policy: "LOCKED_EXAMINATION_DATE_RANGE_ONLY",
     periodStart: context.examination.startDate.toISOString(),
     periodEnd: context.examination.endDate.toISOString(),
-    lockedSessionIds: sessions.map((session) => session.id),
-    lockedSessionVersions: sessions.map((session) => ({ id: session.id, updatedAt: session.updatedAt.toISOString() })),
-    totalLockedDays: sessions.length,
+    lockedSessionIds: material.map((session) => session.id),
+    lockedSessionVersions: material.map((session) => ({ id: session.id, updatedAt: session.updatedAt })),
+    totalLockedDays: material.length,
     recordedDays: recorded.length,
-    presentEquivalentDays: recorded.filter((session) => !["ABSENT"].includes(session.records[0].status)).length
+    presentEquivalentDays: recorded.filter((record) => record.status !== "ABSENT").length
   };
+}
+
+async function calculationInputMaterial(client: ExamClient, context: CalculationContextData) {
+  const sheets = calculationSheets(context);
+  const attendance = await lockedAttendanceMaterial(client, context);
+  return {
+    sheets,
+    marks: sourceMaterial(sheets),
+    cohort: context.students
+      .map((student) => ({
+        studentId: student.studentId,
+        admissionNo: student.student.admissionNo,
+        rollNo: student.rollNo ?? null
+      }))
+      .sort((a, b) => a.studentId.localeCompare(b.studentId)),
+    attendance
+  };
+}
+
+function calculationInputFingerprint(
+  examinationId: string,
+  classScopeId: string,
+  input: Awaited<ReturnType<typeof calculationInputMaterial>>
+) {
+  return fingerprint({
+    examinationId,
+    classScopeId,
+    formulaVersion: EXAM_CALCULATION_FORMULA_V1,
+    statePolicy: APPROVED_ENTRY_STATE_POLICY_V1,
+    cohort: input.cohort,
+    attendance: input.attendance,
+    sources: input.marks
+  });
 }
 
 export async function runExaminationCalculationPreview(
@@ -411,19 +557,18 @@ export async function runExaminationCalculationPreview(
   const examinationId = safeId(source.examinationId, "Examination");
   const classScopeId = safeId(source.classScopeId, "Class scope");
   const calculationRequestKey = requestKey(source.requestKey, "calculation");
+  const reason = reasonText(source.reason, "Calculation preview reason");
+  const interventionReason = actor.role === "SUPER_ADMIN"
+    ? reasonText(source.interventionReason, "Super Admin intervention audit reason")
+    : null;
   const context = await calculationContext(client, examinationId, classScopeId);
   const issues = readinessIssues(context);
   if (issues.length) {
     throw new ExamMarksError(`Calculation is blocked: ${issues.join(" ")}`, 409, "CALCULATION_NOT_READY");
   }
-  const material = sourceMaterial(context);
-  const inputFingerprint = fingerprint({
-    examinationId,
-    classScopeId,
-    formulaVersion: EXAM_CALCULATION_FORMULA_V1,
-    statePolicy: APPROVED_ENTRY_STATE_POLICY_V1,
-    sources: material
-  });
+  const inputMaterial = await calculationInputMaterial(client, context);
+  const material = inputMaterial.marks;
+  const inputFingerprint = calculationInputFingerprint(examinationId, classScopeId, inputMaterial);
   const existing = await client.studentResultSnapshot.findMany({
     where: { inputFingerprint },
     orderBy: { studentId: "asc" }
@@ -445,7 +590,7 @@ export async function runExaminationCalculationPreview(
   if (!baseScheme) throw new ExamMarksError("No active frozen base scheme is available.", 409);
   const provisional: ProvisionalStudentResult[] = [];
   for (const enrollment of context.students) {
-    const paperResults = paperIds.map((paperId) => paperResult(context.sheets, paperId, enrollment.studentId));
+    const paperResults = paperIds.map((paperId) => paperResult(inputMaterial.sheets, paperId, enrollment.studentId));
     const included = paperResults.filter((paper) => !paper.excluded);
     if (!included.length) throw new ExamMarksError("A Student has no calculable papers.", 409);
     const totalObtained = roundPolicy(
@@ -458,7 +603,7 @@ export async function runExaminationCalculationPreview(
     const passResult = baseScheme.passFailEnabled && baseScheme.passThresholdPercentage
       ? percentage.gte(baseScheme.passThresholdPercentage) ? "PASS" : "FAIL"
       : null;
-    const attendance = await lockedAttendanceReference(client, context, enrollment.studentId);
+    const attendance = lockedAttendanceReference(context, inputMaterial.attendance, enrollment.studentId);
     const warningCodes = [
       ...(paperResults.some((paper) => paper.components.some((component) =>
         component.state === "PRESENT" && component.obtained?.equals(0)
@@ -624,13 +769,16 @@ export async function runExaminationCalculationPreview(
         targetType: "EXAM_CALCULATION_RUN",
         targetId: calculationRunId,
         newStatus: "PREVIEW",
+        reason,
         actorUserId: actor.id,
         actorRole: actor.role,
         snapshotJson: JSON.stringify({
           inputFingerprint,
           sourceSheetVersionIds: material.map((row) => row.sheetVersionId),
           snapshotCount: provisional.length,
-          warnings
+          warnings,
+          reason,
+          interventionReason
         }),
         eventDate: now
       }
@@ -652,7 +800,9 @@ export async function lockExaminationCalculation(
     : {};
   const lockRequestKey = requestKey(source.requestKey, "calculation lock");
   const reason = reasonText(source.reason, "Calculation lock reason");
-  if (actor.role === "SUPER_ADMIN") reasonText(source.interventionReason, "Super Admin intervention audit reason");
+  const interventionReason = actor.role === "SUPER_ADMIN"
+    ? reasonText(source.interventionReason, "Super Admin intervention audit reason")
+    : null;
   return client.$transaction(async (tx: ExamClient) => {
     const snapshots = await tx.studentResultSnapshot.findMany({
       where: { calculationRunId },
@@ -675,15 +825,34 @@ export async function lockExaminationCalculation(
     if (run.runStatus !== "PREVIEW") {
       throw new ExamMarksError("Only a complete calculation preview can be locked.", 409);
     }
-    const sourceSheetVersionIds = (JSON.parse(run.sourceSheetVersionsJson) as Array<{ sheetVersionId: string }>)
-      .map((row) => row.sheetVersionId);
-    const sourceVersions = await tx.examMarkSheet.findMany({
-      where: { id: { in: sourceSheetVersionIds } },
-      include: { entries: { orderBy: { studentId: "asc" } } }
-    });
-    if (sourceVersions.length !== sourceSheetVersionIds.length) {
-      throw new ExamMarksError("A frozen calculation source is unavailable.", 409);
+    const context = await calculationContext(tx, run.examinationId, run.classScopeId);
+    const issues = readinessIssues(context);
+    if (issues.length) throw new ExamMarksError(issues[0], 409, "CALCULATION_NOT_READY");
+    const currentInput = await calculationInputMaterial(tx, context);
+    const currentFingerprint = calculationInputFingerprint(
+      run.examinationId,
+      run.classScopeId,
+      currentInput
+    );
+    if (currentFingerprint !== run.inputFingerprint) {
+      throw new ExamMarksError(
+        "Calculation sources changed. Run calculation preview again.",
+        409,
+        "EXPECTED_VERSION_CONFLICT"
+      );
     }
+    const sourceSheetVersionIds = (JSON.parse(run.sourceSheetVersionsJson) as Array<{ sheetVersionId: string }>)
+      .map((row) => row.sheetVersionId)
+      .sort();
+    const currentSourceSheetVersionIds = currentInput.sheets.map((row) => row.id).sort();
+    if (JSON.stringify(sourceSheetVersionIds) !== JSON.stringify(currentSourceSheetVersionIds)) {
+      throw new ExamMarksError(
+        "A frozen calculation source is unavailable or has been replaced.",
+        409,
+        "EXPECTED_VERSION_CONFLICT"
+      );
+    }
+    const sourceVersions = currentInput.sheets;
     for (const sourceVersion of sourceVersions) {
       if (sourceVersion.currentKey !== sourceVersion.logicalSheetKey) {
         throw new ExamMarksError("A source sheet has a newer version. Run calculation preview again.", 409);
@@ -713,6 +882,54 @@ export async function lockExaminationCalculation(
         }
       }
     }
+    const priorRuns = await tx.studentResultSnapshot.findMany({
+      where: {
+        examinationId: run.examinationId,
+        classScopeId: run.classScopeId,
+        calculationRunId: { not: calculationRunId }
+      },
+      distinct: ["calculationRunId"],
+      select: { calculationRunId: true }
+    });
+    for (const priorRun of priorRuns) {
+      const priorLock = await tx.examinationSchemeAudit.findFirst({
+        where: {
+          targetType: "EXAM_CALCULATION_RUN",
+          targetId: priorRun.calculationRunId,
+          eventType: "CALCULATION_SNAPSHOT_LOCKED"
+        }
+      });
+      if (!priorLock) continue;
+      const supersededKey = eventKey([
+        "CALCULATION_SUPERSEDED",
+        priorRun.calculationRunId,
+        calculationRunId
+      ]);
+      await tx.examinationSchemeAudit.upsert({
+        where: { eventKey: supersededKey },
+        create: {
+          eventKey: supersededKey,
+          examinationId: run.examinationId,
+          schemeVersionId: run.schemeVersionId,
+          eventType: "CALCULATION_SNAPSHOT_SUPERSEDED",
+          targetType: "EXAM_CALCULATION_RUN",
+          targetId: priorRun.calculationRunId,
+          previousStatus: "LOCKED",
+          newStatus: "SUPERSEDED",
+          reason,
+          actorUserId: actor.id,
+          actorRole: actor.role,
+          snapshotJson: JSON.stringify({
+            supersededByCalculationRunId: calculationRunId,
+            reason,
+            interventionReason,
+            publicationStatus: "NOT_IMPLEMENTED"
+          }),
+          eventDate: now
+        },
+        update: {}
+      });
+    }
     await tx.examinationSchemeAudit.create({
       data: {
         eventKey: key,
@@ -723,13 +940,17 @@ export async function lockExaminationCalculation(
         targetId: calculationRunId,
         previousStatus: "PREVIEW",
         newStatus: "LOCKED",
-        reason: actor.role === "SUPER_ADMIN" ? String(source.interventionReason).trim() : reason,
+        reason,
         actorUserId: actor.id,
         actorRole: actor.role,
         snapshotJson: JSON.stringify({
           inputFingerprint: run.inputFingerprint,
           sourceSheetVersionIds,
+          cohortStudentIds: currentInput.cohort.map((row) => row.studentId),
+          attendanceSessionIds: currentInput.attendance.map((row) => row.id),
           snapshotIds: snapshots.map((row) => row.id),
+          reason,
+          interventionReason,
           publicationStatus: "NOT_IMPLEMENTED"
         }),
         eventDate: now
@@ -843,11 +1064,11 @@ export async function loadMarksModerationDashboard(
     orderBy: [{ runNumber: "desc" }, { studentId: "asc" }]
   });
   const runIds = [...new Set(calculationSnapshots.map((row) => row.calculationRunId))];
-  const locks = await client.examinationSchemeAudit.findMany({
+  const calculationEvents = await client.examinationSchemeAudit.findMany({
     where: {
       targetType: "EXAM_CALCULATION_RUN",
       targetId: { in: runIds },
-      eventType: "CALCULATION_SNAPSHOT_LOCKED"
+      eventType: { in: ["CALCULATION_SNAPSHOT_LOCKED", "CALCULATION_SNAPSHOT_SUPERSEDED"] }
     },
     orderBy: { eventDate: "desc" }
   });
@@ -888,7 +1109,14 @@ export async function loadMarksModerationDashboard(
       publicCalculationRun(
         snapshots,
         false,
-        locks.find((lock) => lock.targetId === snapshots[0].calculationRunId) ?? null
+        calculationEvents.find((event) =>
+          event.targetId === snapshots[0].calculationRunId &&
+          event.eventType === "CALCULATION_SNAPSHOT_LOCKED"
+        ) ?? null,
+        calculationEvents.find((event) =>
+          event.targetId === snapshots[0].calculationRunId &&
+          event.eventType === "CALCULATION_SNAPSHOT_SUPERSEDED"
+        ) ?? null
       )
     )
   };
@@ -932,7 +1160,8 @@ function publicCalculationRun(
     snapshotJson: string;
   }>,
   idempotent: boolean,
-  lockEvent: { eventDate: Date } | null
+  lockEvent: { eventDate: Date } | null,
+  supersededEvent: { eventDate: Date } | null = null
 ) {
   const run = snapshots[0];
   const sourceSheetVersionIds = (JSON.parse(run.sourceSheetVersionsJson) as Array<{ sheetVersionId: string }>)
@@ -940,7 +1169,7 @@ function publicCalculationRun(
   return {
     id: run.calculationRunId,
     runNumber: run.runNumber,
-    status: lockEvent ? "LOCKED" : run.runStatus,
+    status: supersededEvent ? "SUPERSEDED" : lockEvent ? "LOCKED" : run.runStatus,
     inputFingerprint: run.inputFingerprint,
     formulaVersion: run.formulaVersion,
     roundingPolicyVersion: run.roundingPolicyVersion,
@@ -949,6 +1178,7 @@ function publicCalculationRun(
     warnings: JSON.parse(run.warningsJson) as unknown[],
     calculatedAt: run.calculatedAt.toISOString(),
     lockedAt: lockEvent?.eventDate.toISOString() ?? null,
+    supersededAt: supersededEvent?.eventDate.toISOString() ?? null,
     idempotent,
     snapshots: snapshots.map((snapshot) => ({
       id: snapshot.id,

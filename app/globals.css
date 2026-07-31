@@ -4619,6 +4619,14 @@ details summary {
   min-width: 88px;
 }
 
+.moderation-table-wrap summary,
+.calculation-run-card summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
 .calculation-run-card {
   display: grid;
   gap: 14px;

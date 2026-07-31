@@ -631,6 +631,9 @@ Resolved:
 - correction creates an immutable superseding sheet version;
 - calculation fingerprints make reruns deterministic and preserve prior
   Student snapshots;
+- backup version 37 now includes the complete governed examination, assignment,
+  marks, audit and result-snapshot graph with validated restore ordering and
+  repeated-restore idempotence;
 - low-memory typecheck is split into complete sequential shards.
 
 Retained debt:
@@ -642,10 +645,6 @@ Retained debt:
   coverage and schema tests are mandatory until this is safely refactored;
 - `StudentResultSnapshot.runStatus` is creation metadata; the authoritative
   lock is the append-only calculation audit event;
-- backup version 37 remains the existing operational format. The governed
-  EXAM1/EXAM2 graph is not declared portable until a separately approved
-  backup-format and restore-order phase covers the full related graph;
 - no report publication, Parent/Student delivery, PDF, merged PDF, ZIP or
   physical print layout exists in this phase;
-- independent `EXAM-RC-IMPL-2-QA` is required before merge or publication
-  work.
+- report publication work remains gated to `EXAM-RC-IMPL-3`.

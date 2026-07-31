@@ -1210,3 +1210,28 @@ zero-business/protected-account baseline remained unchanged.
 The feature branch is not merged. Independent `EXAM-RC-IMPL-2-QA` is next.
 Publication, delivery, PDFs, merged PDFs, ZIPs and physical layouts remain
 unimplemented; cloud deployment remains unauthorized.
+
+## EXAM-RC-IMPL-2-QA — Independent Marks, Moderation and Calculation QA (2026-07-31)
+
+Independent QA used a fresh ignored EXAM2QA copied database and cleared exact
+Teacher object scope, all six entry states, drafts/autosave, stale and
+concurrent saves, one logical final submission, correction/reopen,
+resubmission, moderation, RAW_SUM, WEIGHTED_NORMALIZED, explicit subject
+groups, grades/pass/rank gates, exact-cohort statistics, locked attendance and
+immutable calculation snapshots.
+
+QA corrected calculation-source/fingerprint/lock invariants, autosave edit
+races, governed calculation reasons, version-37 examination backup/restore,
+migration double-deploy checks, examination-table scope transitions and 44 px
+moderation disclosures. The final matrix passed 174 files and 1,605 tests,
+279 page routes, 400 API routes, the 217-page production build, desktop/mobile
+light/dark Browser checks, clean stderr, restore rehearsal and cleanup twice.
+
+The additive operational migration applied once after byte-identical raw and
+logical rollback protection. Business data and protected account states remain
+exactly unchanged. Release tag:
+`exam-marks-calculation-v37-2026-07-31`.
+
+Result: `EXAM_MARKS_CALCULATION_CLEARED`. No report publication,
+Parent/Student delivery, PDF, ZIP or physical print capability is claimed.
+Next: `EXAM-RC-IMPL-3`.

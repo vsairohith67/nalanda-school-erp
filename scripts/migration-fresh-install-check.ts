@@ -22,6 +22,7 @@ export async function runMigrationFreshInstallCheck() {
   try {
     runPrisma(["generate", "--schema", "prisma/schema.prisma"], databasePath);
     runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"], databasePath);
+    runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"], databasePath);
     const status = runPrisma(["migrate", "status", "--schema", "prisma/schema.prisma"], databasePath);
     if (!/database schema is up to date/i.test(status.combined)) throw new Error("MIGRATION_STATUS_NOT_CLEAN");
     const schema = assertSchemaEquivalent(databasePath);

@@ -11,11 +11,13 @@
 - [Marks Permission Matrix](EXAM_MARKS_PERMISSION_MATRIX.md)
 - [Marks and Moderation Diagram](diagrams/exam-marks-moderation-calculation.mmd)
 - [Implementation Checkpoint](evidence/EXAM_RC_IMPL_2_IMPLEMENTATION_CHECKPOINT.md)
+- [Independent Marks and Calculation QA Closure](EXAM_MARKS_CALCULATION_QA_CLOSURE.md)
 
-EXAM-RC-IMPL-2 is implemented on
-`feature/teacher-marks-moderation-calculation` and awaits independent
-`EXAM-RC-IMPL-2-QA`. Report-card publication, Parent/Student delivery, PDFs,
-merged files, ZIPs and physical print layouts remain unimplemented.
+EXAM-RC-IMPL-2 and its independent QA are complete. The retained branch is
+`feature/teacher-marks-moderation-calculation`; release tag
+`exam-marks-calculation-v37-2026-07-31` identifies the governed release.
+Report-card publication, Parent/Student delivery, PDFs, merged files, ZIPs and
+physical print layouts remain unimplemented. Next: `EXAM-RC-IMPL-3`.
 
 ## EXAM-RC-IMPL-1 examination scheme and assignment foundation
 

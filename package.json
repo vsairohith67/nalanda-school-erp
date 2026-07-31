@@ -32,6 +32,7 @@
     "qa:exam1": "tsx scripts/qa-exam1-copied-db.ts",
     "qa:exam1qa": "tsx scripts/qa-exam1qa-copied-db.ts",
     "qa:exam2": "tsx scripts/qa-exam2-copied-db.ts",
+    "qa:exam2qa": "tsx scripts/qa-exam2qa-independent.ts",
     "auth:recover-super-admin": "tsx scripts/recover-super-admin.ts",
     "data0a:audit": "node scripts/data0a-provenance-audit.mjs",
     "data0a:backup": "tsx scripts/data0a-encrypted-backup.ts",

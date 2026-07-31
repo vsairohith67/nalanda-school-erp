@@ -1207,5 +1207,8 @@ Read `TEACHER_MARKS_ENTRY_WORKFLOW.md`,
 
 Legacy `ExamCycle`, `ExamAssessment`, `StudentMark`, report-card batch and
 issued report-card models remain for compatibility only. Governed snapshots
-must not write them. EXAM-RC-IMPL-3 may consume locked snapshots read-only;
-publication, delivery and PDF generation remain unimplemented.
+must not write them. EXAM-RC-IMPL-2 and independent QA are cleared under tag
+`exam-marks-calculation-v37-2026-07-31`; the additive operational migration is
+applied and clean. EXAM-RC-IMPL-3 may consume locked snapshots read-only;
+publication, delivery and PDF generation remain unimplemented until that
+separate phase clears.

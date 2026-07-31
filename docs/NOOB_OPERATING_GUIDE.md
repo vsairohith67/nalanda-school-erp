@@ -910,3 +910,20 @@ Prompt 21A and its QA are complete, but Prompt 21B is not approved. The approval
 The recommended low-risk choice is structured postal address only and `OMIT_ALL_COORDINATES_FROM_21B`. That recommendation is not permission to collect anything. Continue the current authorised Student workflow; do not ask Parents for new address fields, do not process existing addresses, and do not use a map or geocoder. The draft Parent notice, retention rules, and access/incident matrix must not be presented as approved school policy.
 
 Before any Prompt 21B work, school leadership and the authorised privacy/legal adviser must approve why the address is needed, who may see it, how a Parent corrects it, how long it is kept, and how incidents/deletion are handled. The safe starting choice is structured postal address only. Coordinates remain optional, coarse, manually confirmed, and disabled unless separately approved. Never request a child’s live phone location or use a home location for surveillance or ranking.
+
+## Governed examination marks
+
+Teacher marks entry and Principal moderation are cleared for use only through
+the exact assigned examination/class/section/subject paper shown in the app.
+Teachers may save drafts, but final submission is explicit. After submission,
+use **Request correction**; a Teacher cannot reopen their own sheet. A
+Principal must review the reason and either reject or create a new version.
+
+`PRESENT` zero is a real zero. Never use zero to mean absent or missing; choose
+the explicit entry state. Do not bypass a missing-entry warning, maximum-mark
+error, stale-version conflict or incomplete calculation warning.
+
+Moderation lock freezes the exact source sheet and calculation snapshot. It
+does not publish a report card or send a result to a Parent or Student. PDF,
+bulk PDF, ZIP and physical print work belongs to the separately governed
+EXAM-RC-IMPL-3 phase.

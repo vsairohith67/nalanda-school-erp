@@ -1,5 +1,11 @@
 import type { PrismaClient } from "@prisma/client";
 import packageJson from "../package.json";
+import {
+  examGovernanceRecordCount,
+  loadExamGovernanceBackup,
+  validateExamGovernanceBackup,
+  type ExamGovernanceBackup
+} from "./exam-governance-backup";
 import { getSchoolSettings, type SchoolSettingsValue } from "./school-settings";
 
 const APP_NAME = "Nalanda Fee Control";
@@ -122,6 +128,7 @@ type BackupDocumentInput = {
   examAssessments?: readonly object[];
   studentMarks?: readonly object[];
   studentMarkEvents?: readonly object[];
+  examGovernance?: ExamGovernanceBackup;
   gradingSchemes?: readonly object[];
   gradeBands?: readonly object[];
   reportCardTemplates?: readonly object[];
@@ -286,6 +293,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const examAssessments = sanitizeActorFields(input.examAssessments ?? []);
   const studentMarks = sanitizeActorFields(input.studentMarks ?? []);
   const studentMarkEvents = [...(input.studentMarkEvents ?? [])];
+  const examGovernance = validateExamGovernanceBackup(input.examGovernance);
   const gradingSchemes = sanitizeActorFields(input.gradingSchemes ?? []);
   const gradeBands = [...(input.gradeBands ?? [])];
   const reportCardTemplates = sanitizeActorFields(input.reportCardTemplates ?? []);
@@ -440,6 +448,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
         examAssessments: examAssessments.length,
         studentMarks: studentMarks.length,
         studentMarkEvents: studentMarkEvents.length,
+        examGovernanceRecords: examGovernanceRecordCount(examGovernance),
         gradingSchemes: gradingSchemes.length,
         gradeBands: gradeBands.length,
         reportCardTemplates: reportCardTemplates.length,
@@ -596,6 +605,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     examAssessments,
     studentMarks,
     studentMarkEvents,
+    examGovernance,
     gradingSchemes,
     gradeBands,
     reportCardTemplates,
@@ -859,6 +869,7 @@ export async function generateFullBackup(
     timetableFixedPeriods,
     timetableDrafts,
     timetableEntries,
+    examGovernance,
     settings
   ] = await Promise.all([
     client.student.findMany({ orderBy: { createdAt: "asc" } }),
@@ -1052,6 +1063,7 @@ export async function generateFullBackup(
     client.timetableEntry.findMany({
       orderBy: [{ academicYear: "asc" }, { draftId: "asc" }, { classSectionId: "asc" }, { dayOfWeek: "asc" }, { periodNumber: "asc" }]
     }),
+    loadExamGovernanceBackup(client as PrismaClient),
     getSchoolSettings(client)
   ]);
 
@@ -1119,6 +1131,7 @@ export async function generateFullBackup(
     examAssessments,
     studentMarks,
     studentMarkEvents,
+    examGovernance,
     gradingSchemes,
     gradeBands,
     reportCardTemplates,

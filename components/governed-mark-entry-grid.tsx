@@ -48,6 +48,7 @@ export function GovernedMarkEntryGrid({ initialData }: { initialData: WorkspaceD
   const [dialog, setDialog] = useState<DialogState>(null);
   const [reason, setReason] = useState("");
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editGeneration = useRef<Map<string, number>>(new Map());
   const workspace = data.selectedWorkspace;
 
   const validations = useMemo(() => {
@@ -94,6 +95,8 @@ export function GovernedMarkEntryGrid({ initialData }: { initialData: WorkspaceD
     studentId: string,
     patch: Record<string, unknown>
   ) => {
+    const key = entryKey(componentIndex, studentId);
+    editGeneration.current.set(key, (editGeneration.current.get(key) ?? 0) + 1);
     setData((current: any) => {
       if (!current.selectedWorkspace) return current;
       const next = structuredClone(current);
@@ -103,7 +106,7 @@ export function GovernedMarkEntryGrid({ initialData }: { initialData: WorkspaceD
       Object.assign(entry, patch);
       return next;
     });
-    setDirty((current) => new Set(current).add(entryKey(componentIndex, studentId)));
+    setDirty((current) => new Set(current).add(key));
     setNotice(null);
     setError(null);
   }, []);
@@ -119,6 +122,12 @@ export function GovernedMarkEntryGrid({ initialData }: { initialData: WorkspaceD
           dirty.has(entryKey(componentIndex, entry.studentId))
         );
         if (!dirtyRows.length || !EDITABLE.has(component.sheet?.status ?? "NOT_STARTED")) continue;
+        const savedGenerations = new Map(
+          dirtyRows.map((entry: any) => {
+            const key = entryKey(componentIndex, entry.studentId);
+            return [key, editGeneration.current.get(key) ?? 0] as const;
+          })
+        );
         const response = await fetch(`/api/exam-marks/sheets/${encodeURIComponent(component.assignment.id)}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -151,12 +160,34 @@ export function GovernedMarkEntryGrid({ initialData }: { initialData: WorkspaceD
             savedAt: result.savedAt,
             correctionPending: false
           };
-          target.entries = result.entries;
+          const resultEntries = new Map(
+            result.entries.map((entry: any) => [entry.studentId, entry])
+          );
+          target.entries = target.entries.map((localEntry: any) => {
+            const serverEntry: any = resultEntries.get(localEntry.studentId);
+            if (!serverEntry) return localEntry;
+            const key = entryKey(componentIndex, localEntry.studentId);
+            if (!savedGenerations.has(key)) return serverEntry;
+            if ((editGeneration.current.get(key) ?? 0) === savedGenerations.get(key)) {
+              return serverEntry;
+            }
+            return {
+              ...serverEntry,
+              entryState: localEntry.entryState,
+              marksObtained: localEntry.marksObtained,
+              remarks: localEntry.remarks
+            };
+          });
           return next;
         });
         setDirty((current) => {
           const next = new Set(current);
-          dirtyRows.forEach((entry: any) => next.delete(entryKey(componentIndex, entry.studentId)));
+          dirtyRows.forEach((entry: any) => {
+            const key = entryKey(componentIndex, entry.studentId);
+            if ((editGeneration.current.get(key) ?? 0) === savedGenerations.get(key)) {
+              next.delete(key);
+            }
+          });
           return next;
         });
       }

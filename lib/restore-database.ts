@@ -13,6 +13,7 @@ import { validatePaymentPayload, validateStudentPayload } from "@/lib/validation
 import { restorePublicWebsiteData } from "@/lib/public-website-restore";
 import { assertReceiptStudentMatchInDatabase } from "@/lib/payment-controls";
 import { validateSchoolSettings } from "@/lib/school-settings";
+import { restoreExamGovernanceBackup } from "@/lib/exam-governance-backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -149,6 +150,7 @@ async function restoreIntoDatabase(
     examAssessments: emptyEntityResult(),
     studentMarks: emptyEntityResult(),
     studentMarkEvents: emptyEntityResult(),
+    examGovernance: emptyEntityResult(),
     gradingSchemes: emptyEntityResult(),
     gradeBands: emptyEntityResult(),
     reportCardTemplates: emptyEntityResult(),
@@ -466,6 +468,7 @@ async function restoreIntoDatabase(
   await restoreHomeworkData(client, backup, backupUserToLocalUser, result);
   await restoreExamMarksData(client, backup, backupStudentLocalIds, backupUserToLocalUser, result);
   await restoreReportCardData(client, backup, backupStudentLocalIds, result);
+  result.examGovernance = await restoreExamGovernanceBackup(client, backup.examGovernance, backupStudentLocalIds);
   await restoreCertificateData(client, backup, backupStudentLocalIds, result);
   await restoreClassXPackageData(client, backup, backupStudentLocalIds, result);
   await restoreIdentityCardData(client, backup, backupStudentLocalIds, result);
