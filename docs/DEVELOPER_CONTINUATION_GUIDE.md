@@ -1,5 +1,26 @@
 # Nalanda Fee Control — Developer Continuation Guide
 
+## EXAM-RC-IMPL-3 publication boundary
+
+Use `lib/report-publication.ts` as the only publication lifecycle service,
+`lib/report-parent-delivery.ts` as the Parent ownership boundary and
+`lib/report-pdf-jobs.ts` as the private batch/artifact boundary. Public-facing
+snapshots must pass through `lib/report-publication-types.ts`; never send raw
+Prisma report, Student, calculation or audit objects to the client.
+
+Preserve these invariants: locked/current/complete source only; exact preview
+fingerprint recheck; no recalculation; immutable version rows; replacement from
+a new locked snapshot; no hard deletion; raw Student IDs rejected by Parent
+selectors; current issued version only; POST authorisation before view or
+download; short-lived signed capabilities; no public artifact path; max 60
+reports and two workers; expected-version/idempotency checks; failed jobs leave
+no downloadable artifact; monochrome never relies on colour alone; version-37
+backup compatibility.
+
+The feature branch is ready for independent EXAM-RC-IMPL-3-QA. Do not merge,
+tag, deploy or change operational report data until that independent gate is
+cleared. Cloud deployment remains unauthorised.
+
 ## EXAM-RC-IMPL-1 cleared scheme boundary
 
 Read `EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md` and

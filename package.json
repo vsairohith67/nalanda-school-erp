@@ -33,6 +33,7 @@
     "qa:exam1qa": "tsx scripts/qa-exam1qa-copied-db.ts",
     "qa:exam2": "tsx scripts/qa-exam2-copied-db.ts",
     "qa:exam2qa": "tsx scripts/qa-exam2qa-independent.ts",
+    "qa:exam3": "tsx scripts/qa-exam3-copied-db.ts",
     "auth:recover-super-admin": "tsx scripts/recover-super-admin.ts",
     "data0a:audit": "node scripts/data0a-provenance-audit.mjs",
     "data0a:backup": "tsx scripts/data0a-encrypted-backup.ts",
@@ -74,10 +75,13 @@
     "staging:synthetic-check": "tsx scripts/verify-staging-synthetic.ts"
   },
   "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
     "@prisma/client": "^6.10.1",
+    "fflate": "^0.8.3",
     "lucide-react": "^0.468.0",
     "next": "^15.3.4",
     "next-themes": "^0.4.6",
+    "pdf-lib": "^1.17.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"

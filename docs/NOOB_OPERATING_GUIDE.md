@@ -1,5 +1,33 @@
 # Nalanda Fee Control — Beginner Operating Guide
 
+## Publishing and downloading report cards
+
+Principals use **Report Cards > Publication and Parent Delivery**. Select only
+rows marked **Ready for exact preview**, choose individual, section or class
+scope, and inspect the exact preview before using the in-app publish
+confirmation. A blocked row is not safe to publish. Never use this screen to
+change marks; return to the governed marks-correction process and calculate a
+new locked snapshot first.
+
+Issued reports cannot be edited. Use **Replace from preview** only for an
+approved correction from a new locked snapshot; the prior version remains as
+`REPLACED`. Use **Withdraw** only with the approved reason. Neither action
+deletes history.
+
+Parents use **Parent Portal > Report Cards**, select a linked child, then choose
+**View**, **Colour PDF** or **B&W PDF** for the current issued version. Replaced
+or withdrawn versions show their status but cannot be opened. Never copy the
+temporary download address or PDF file into a public folder.
+
+For batch printing, select issued reports, choose individual, merged PDF or ZIP
+and choose colour or black-and-white. Keep each request within the on-screen
+limit. A failed job publishes no file; use the governed retry summary. Normal
+reports are A4 portrait and configured wide combined reports are landscape.
+Always check A4 margins and grayscale readability before physical printing.
+
+This feature is implemented but still requires independent QA. Cloud
+deployment is not authorised.
+
 ## AUTH-2A operational accounts are secured
 
 The operational Super Admin has a named owner, its password was recovered

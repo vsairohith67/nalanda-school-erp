@@ -1,5 +1,25 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## EXAM-RC-IMPL-3 — Report Publication, Parent Delivery and PDFs (2026-07-31)
+
+Implemented Principal readiness and exact locked-snapshot preview,
+individual/section/class publication, immutable issued versions, governed
+withdrawal/replacement, Parent issued-only linked-child delivery, four frozen
+template families and private colour/B&W individual, merged and ZIP PDFs.
+
+Publication preserves the source calculation run and Student snapshot version;
+it does not recalculate or change approved marks/formulas. Server-side object
+authorisation, origin/CSRF, no-store, expected-version checks, idempotency,
+bounded 60-report jobs, two-worker concurrency, five-minute authenticated
+downloads, append-only audit and failed-package rollback are enforced.
+
+Ignored EXAM3 copied-database QA covered five Students, all four layouts,
+explicit absent/zero/exempt/N/A states, long content, two linked children, an
+unrelated child, replacement v2, concurrent merged/ZIP generation and injected
+PDF failure. Browser/print inspection covered 1366x768 and 390x844, light/dark
+application themes and independent colour/monochrome output. Implementation is
+ready for independent `EXAM-RC-IMPL-3-QA`; it is not merged or deployed.
+
 ## EXAM-RC-IMPL-1-QA - Independent scheme and assignment QA (2026-07-30)
 
 Independently verified the pushed feature commit on the exact retained branch

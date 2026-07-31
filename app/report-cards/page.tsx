@@ -23,7 +23,14 @@ export default async function ReportCardsPage({ searchParams }: { searchParams: 
   });
   const count = (status: string) => batches.filter((batch) => batch.status === status).length;
   return <div className="page report-cards-page">
-    <PageHeader title="Digital Report Cards" description="Mark-based and dedicated LKG/UKG rubric report-card batches with explicit approval, issue, and immutable versions." action={permissionSetCan(permissions, "MANAGE_REPORT_CARD_BATCHES") ? <Link className="button" href="/report-cards/batches/new">Create Batch</Link> : undefined}/>
+    <PageHeader
+      title="Digital Report Cards"
+      description="Governed locked-result publication, Parent delivery, PDFs, and the retained entry/approval workflows."
+      action={<div className="page-actions">
+        {permissionSetCan(permissions, "ISSUE_REPORT_CARDS") ? <Link className="button" href="/report-cards/publication">Publication Workspace</Link> : null}
+        {permissionSetCan(permissions, "MANAGE_REPORT_CARD_BATCHES") ? <Link className="button secondary" href="/report-cards/batches/new">Create Legacy Entry Batch</Link> : null}
+      </div>}
+    />
     {scope.reason ? <p className="notice">{scope.reason}</p> : null}
     <div className="grid four">
       <StatCard label="Draft / Entry" value={String(count("DRAFT") + count("OPEN_FOR_ENTRY"))}/><StatCard label="Submitted" value={String(count("SUBMITTED"))}/><StatCard label="Approved" value={String(count("APPROVED"))}/><StatCard label="Issued" value={String(count("ISSUED"))}/>
