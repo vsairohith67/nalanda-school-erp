@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "plugins": [] },
+  "include": [
+    "tests/a*.ts",
+    "tests/b*.ts",
+    "tests/c*.ts",
+    "tests/d*.ts",
+    "tests/e*.ts",
+    "tests/f*.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

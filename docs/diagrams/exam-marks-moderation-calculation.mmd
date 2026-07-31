@@ -1,0 +1,20 @@
+flowchart LR
+  A["Active Teacher User"] --> B["Active Staff and Timetable Teacher"]
+  B --> C["Exact TeacherExamAssignment"]
+  C --> D["Keyboard marks grid"]
+  D --> E["Draft and optimistic versions"]
+  E --> F["Primary final submission"]
+  F --> G["Principal moderation"]
+  F --> H["Correction request"]
+  H --> I["Reject or create v+1"]
+  I --> D
+  G --> J["Readiness gate"]
+  J --> K["RAW_SUM or WEIGHTED_NORMALIZED"]
+  K --> L["Immutable Student snapshots"]
+  L --> M["Moderation lock"]
+  M --> N["EXAM-RC-IMPL-3 source only"]
+  O["ExaminationSchemeAudit"] -. "append-only evidence" .-> E
+  O -. "append-only evidence" .-> F
+  O -. "append-only evidence" .-> I
+  O -. "append-only evidence" .-> L
+  O -. "append-only evidence" .-> M

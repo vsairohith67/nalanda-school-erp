@@ -277,3 +277,28 @@ Cleanup matches both namespaced fixture IDs and server-generated attendance
 session/record IDs through their QA User, cohort and Student relations.
 Prompt 23C-QA cleared the critical attendance blocker with zero QA residue;
 overall Teacher replacement remains conditional.
+
+## EXAM-RC-IMPL-2 marks and moderation operations
+
+Teachers use `/teacher/marks`; Principals use `/exams/moderation`. Confirm the
+active examination, class/section, paper, component and scheme version before
+entry. Draft autosave never submits. Primary submitters must resolve all
+`NOT_ENTERED` rows before Final submit.
+
+After submission, require a Teacher correction reason and Principal
+reopen/reject reason. Reopen creates a new sheet version. Before calculation,
+the moderation dashboard must show no readiness issues. Review the exact
+formula, warnings and Student preview before lock. Lock prepares snapshots for
+the next phase but does not publish or print anything.
+
+Copied-database QA:
+
+```powershell
+pnpm.cmd qa:exam2 -- prepare
+pnpm.cmd qa:exam2 -- exercise
+pnpm.cmd qa:exam2 -- inspect
+pnpm.cmd qa:exam2 -- cleanup
+```
+
+The harness refuses the operational path and compares the operational source
+hash at every phase. Credentials exist only in the ignored private state file.

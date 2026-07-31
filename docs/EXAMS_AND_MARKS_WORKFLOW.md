@@ -118,3 +118,17 @@ Digital report cards now consume locked Exam/Marks rows as read-only source snap
 ## Prompt 17D analytics consumption
 
 Teacher Analytics reads compatible locked assessments and aggregate mark-status/workflow evidence only. It enforces the minimum cohort, excludes Student identity/raw marks, distinguishes zero/absent/exempt/not-applicable, and never claims Teacher causation. It does not change ExamAssessment or StudentMark data.
+
+## EXAM-RC-IMPL-2 governed successor
+
+The workflow above is the retained legacy `ExamCycle` compatibility surface.
+New versioned examination schemes and exact `TeacherExamAssignment` ownership
+use the governed `/teacher/marks` and `/exams/moderation` paths documented in
+`TEACHER_MARKS_ENTRY_WORKFLOW.md` and
+`EXAM_CALCULATION_SPECIFICATION.md`.
+
+Governed calculations never read historical PDF arithmetic and never write
+legacy `StudentMark` or issued `StudentReportCard` rows. Only frozen
+`ExaminationSchemeVersion` sources, exact current `ExamMarkSheet` versions and
+locked attendance references are accepted. The publication/PDF phase remains
+separate.

@@ -43,6 +43,8 @@ model Student {
   libraryMember           LibraryMember?
   libraryCharges          LibraryCharge[]
   examMarks               StudentMark[]
+  governedExamMarkEntries ExamMarkEntry[]
+  examResultSnapshots     StudentResultSnapshot[]
   reportCards             StudentReportCard[]
   classXDocumentPackages  ClassXDocumentPackage[]
   identityCards           IdentityCard[]
@@ -2083,6 +2085,8 @@ model Examination {
   templateBindings           ExamTemplateFamilyBinding[]
   teacherAssignments         TeacherExamAssignment[]
   schemeAudits               ExaminationSchemeAudit[]
+  markSheets                 ExamMarkSheet[]
+  resultSnapshots            StudentResultSnapshot[]
 
   @@index([academicYear, status])
   @@index([startDate, endDate])
@@ -2108,6 +2112,8 @@ model ExaminationClassScope {
   coScholasticVersions    CoScholasticSchemeVersion[]
   templateBindings        ExamTemplateFamilyBinding[]
   teacherAssignments      TeacherExamAssignment[]
+  markSheets              ExamMarkSheet[]
+  resultSnapshots         StudentResultSnapshot[]
 
   @@unique([examinationId, className, section])
   @@unique([examinationId, timetableClassSectionId])
@@ -2117,39 +2123,49 @@ model ExaminationClassScope {
 }
 
 model ExaminationSchemeVersion {
-  id                    String                     @id @default(cuid())
-  examinationId         String
-  examination           Examination                @relation(fields: [examinationId], references: [id], onDelete: Restrict)
-  classScopeId          String
-  classScope            ExaminationClassScope      @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
-  academicYear          String
-  className             String
-  section               String                     @default("")
-  scopeKey              String                     @default("BASE")
-  subjectPaperId        String?
-  subjectPaper          ExamSubjectPaper?          @relation(fields: [subjectPaperId], references: [id], onDelete: Restrict)
-  versionNumber         Int
-  calculationMode       String
-  roundingPolicyVersion String                     @default("RC05_V1_DECIMAL6_HALF_UP2")
-  status                String                     @default("DRAFT")
-  version               Int                        @default(1)
-  supersedesVersionId   String?
-  supersedesVersion     ExaminationSchemeVersion?  @relation("ExaminationSchemeSupersession", fields: [supersedesVersionId], references: [id], onDelete: Restrict)
-  supersededByVersions  ExaminationSchemeVersion[] @relation("ExaminationSchemeSupersession")
-  createdByUserId       String
-  activatedByUserId     String?
-  archivedByUserId      String?
-  activationReason      String?
-  archiveReason         String?
-  activatedAt           DateTime?
-  frozenAt              DateTime?
-  marksEntryOpenedAt    DateTime?
-  archivedAt            DateTime?
-  createdAt             DateTime                   @default(now())
-  updatedAt             DateTime                   @updatedAt
-  components            ExaminationComponent[]
-  teacherAssignments    TeacherExamAssignment[]
-  schemeAudits          ExaminationSchemeAudit[]
+  id                      String                     @id @default(cuid())
+  examinationId           String
+  examination             Examination                @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  classScopeId            String
+  classScope              ExaminationClassScope      @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
+  academicYear            String
+  className               String
+  section                 String                     @default("")
+  scopeKey                String                     @default("BASE")
+  subjectPaperId          String?
+  subjectPaper            ExamSubjectPaper?          @relation(fields: [subjectPaperId], references: [id], onDelete: Restrict)
+  versionNumber           Int
+  calculationMode         String
+  roundingPolicyVersion   String                     @default("RC05_V1_DECIMAL6_HALF_UP2")
+  markDecimalPlaces       Int                        @default(2)
+  absentTreatment         String                     @default("ZERO")
+  exemptTreatment         String                     @default("EXCLUDE")
+  notApplicableTreatment  String                     @default("EXCLUDE")
+  passFailEnabled         Boolean                    @default(false)
+  passThresholdPercentage Decimal?
+  rankEnabled             Boolean                    @default(false)
+  rankTiePolicy           String                     @default("COMPETITION_SHARED_STABLE_ADMISSION")
+  status                  String                     @default("DRAFT")
+  version                 Int                        @default(1)
+  supersedesVersionId     String?
+  supersedesVersion       ExaminationSchemeVersion?  @relation("ExaminationSchemeSupersession", fields: [supersedesVersionId], references: [id], onDelete: Restrict)
+  supersededByVersions    ExaminationSchemeVersion[] @relation("ExaminationSchemeSupersession")
+  createdByUserId         String
+  activatedByUserId       String?
+  archivedByUserId        String?
+  activationReason        String?
+  archiveReason           String?
+  activatedAt             DateTime?
+  frozenAt                DateTime?
+  marksEntryOpenedAt      DateTime?
+  archivedAt              DateTime?
+  createdAt               DateTime                   @default(now())
+  updatedAt               DateTime                   @updatedAt
+  components              ExaminationComponent[]
+  teacherAssignments      TeacherExamAssignment[]
+  schemeAudits            ExaminationSchemeAudit[]
+  markSheets              ExamMarkSheet[]            @relation("ExamMarkSheetScheme")
+  resultSnapshots         StudentResultSnapshot[]
 
   @@unique([examinationId, classScopeId, scopeKey, versionNumber])
   @@index([examinationId, classScopeId, status])
@@ -2171,6 +2187,7 @@ model ExaminationComponent {
   createdAt          DateTime                 @default(now())
   updatedAt          DateTime                 @updatedAt
   teacherAssignments TeacherExamAssignment[]
+  markSheets         ExamMarkSheet[]
 
   @@unique([schemeVersionId, componentCode])
   @@unique([schemeVersionId, displayOrder])
@@ -2199,6 +2216,7 @@ model ExamSubjectPaper {
   schemeOverrides     ExaminationSchemeVersion[]
   groupMemberships    ExamSubjectGroupMember[]
   teacherAssignments  TeacherExamAssignment[]
+  markSheets          ExamMarkSheet[]
 
   @@unique([examinationId, classScopeId, timetableSubjectId, paperCode])
   @@unique([examinationId, classScopeId, displayOrder])
@@ -2398,6 +2416,7 @@ model TeacherExamAssignment {
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
   schemeAudits            ExaminationSchemeAudit[]
+  primaryMarkSheets       ExamMarkSheet[]          @relation("ExamMarkSheetPrimaryAssignment")
 
   @@unique([examinationId, classScopeId, subjectPaperId, componentId, staffMemberId])
   @@index([academicYear, className, section])
@@ -2409,6 +2428,7 @@ model TeacherExamAssignment {
 
 model ExaminationSchemeAudit {
   id              String                    @id @default(cuid())
+  eventKey        String?                   @unique
   examinationId   String
   examination     Examination               @relation(fields: [examinationId], references: [id], onDelete: Restrict)
   schemeVersionId String?
@@ -2431,6 +2451,122 @@ model ExaminationSchemeAudit {
   @@index([schemeVersionId, eventDate])
   @@index([assignmentId, eventDate])
   @@index([eventType])
+}
+
+model ExamMarkSheet {
+  id                          String                   @id @default(cuid())
+  logicalSheetKey             String
+  currentKey                  String?                  @unique
+  versionNumber               Int
+  supersedesSheetId           String?                  @unique
+  supersedesSheet             ExamMarkSheet?           @relation("ExamMarkSheetSupersession", fields: [supersedesSheetId], references: [id], onDelete: Restrict)
+  supersededBySheet           ExamMarkSheet?           @relation("ExamMarkSheetSupersession")
+  examinationId               String
+  examination                 Examination              @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  classScopeId                String
+  classScope                  ExaminationClassScope    @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
+  subjectPaperId              String
+  subjectPaper                ExamSubjectPaper         @relation(fields: [subjectPaperId], references: [id], onDelete: Restrict)
+  componentId                 String
+  component                   ExaminationComponent     @relation(fields: [componentId], references: [id], onDelete: Restrict)
+  schemeVersionId             String
+  schemeVersion               ExaminationSchemeVersion @relation("ExamMarkSheetScheme", fields: [schemeVersionId], references: [id], onDelete: Restrict)
+  primaryAssignmentId         String
+  primaryAssignment           TeacherExamAssignment    @relation("ExamMarkSheetPrimaryAssignment", fields: [primaryAssignmentId], references: [id], onDelete: Restrict)
+  academicYear                String
+  className                   String
+  section                     String                   @default("")
+  status                      String                   @default("NOT_STARTED")
+  optimisticVersion           Int                      @default(1)
+  assignmentSnapshotJson      String
+  createdByUserId             String
+  submittedByUserId           String?
+  moderatedByUserId           String?
+  lockedByUserId              String?
+  correctionRequestId         String?                  @unique
+  correctionRequestStatus     String?
+  correctionPriorStatus       String?
+  correctionRequestReason     String?
+  correctionRequestedByUserId String?
+  correctionRequestedAt       DateTime?
+  correctionReviewedByUserId  String?
+  correctionReviewReason      String?
+  correctionReviewedAt        DateTime?
+  submittedAt                 DateTime?
+  moderatedAt                 DateTime?
+  lockedAt                    DateTime?
+  createdAt                   DateTime                 @default(now())
+  updatedAt                   DateTime                 @updatedAt
+  entries                     ExamMarkEntry[]
+
+  @@unique([logicalSheetKey, versionNumber])
+  @@index([examinationId, classScopeId, subjectPaperId, componentId, currentKey])
+  @@index([academicYear, className, section, status])
+  @@index([primaryAssignmentId, status])
+  @@index([schemeVersionId])
+  @@index([supersedesSheetId])
+}
+
+model ExamMarkEntry {
+  id              String        @id @default(cuid())
+  sheetId         String
+  sheet           ExamMarkSheet @relation(fields: [sheetId], references: [id], onDelete: Restrict)
+  studentId       String
+  student         Student       @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  entryState      String        @default("NOT_ENTERED")
+  marksObtained   Decimal?
+  remarks         String?
+  rowVersion      Int           @default(1)
+  enteredByUserId String?
+  enteredAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([sheetId, studentId])
+  @@index([studentId])
+  @@index([entryState])
+}
+
+model StudentResultSnapshot {
+  id                       String                   @id @default(cuid())
+  calculationRunId         String
+  inputFingerprint         String
+  runNumber                Int
+  runStatus                String                   @default("PREVIEW")
+  examinationId            String
+  examination              Examination              @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  classScopeId             String
+  classScope               ExaminationClassScope    @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
+  studentId                String
+  student                  Student                  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  schemeVersionId          String
+  schemeVersion            ExaminationSchemeVersion @relation(fields: [schemeVersionId], references: [id], onDelete: Restrict)
+  snapshotVersion          Int
+  totalObtained            Decimal
+  totalMaximum             Decimal
+  percentage               Decimal
+  gradeCode                String?
+  gradePoint               Decimal?
+  passResult               String?
+  rankValue                Int?
+  formulaVersion           String
+  roundingPolicyVersion    String
+  warningsJson             String
+  sourceSheetVersionsJson  String
+  sourceSchemeVersionsJson String
+  snapshotJson             String
+  calculatedByUserId       String
+  calculatedAt             DateTime
+  lockedByUserId           String?
+  lockedAt                 DateTime?
+  createdAt                DateTime                 @default(now())
+
+  @@unique([calculationRunId, studentId])
+  @@unique([examinationId, classScopeId, studentId, snapshotVersion])
+  @@index([inputFingerprint])
+  @@index([calculationRunId])
+  @@index([studentId, calculatedAt])
+  @@index([examinationId, classScopeId])
 }
 
 model GradingScheme {

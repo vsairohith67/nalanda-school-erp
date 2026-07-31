@@ -1180,3 +1180,32 @@ correction audit. Use only ignored copied databases for mutation QA.
 Prompt 23C-QA independently cleared the critical attendance blocker. It did
 not approve full Teacher parity. The next phase is `UX-1A`; remaining Teacher
 workflows and role QA remain separately gated.
+
+## EXAM-RC-IMPL-2 governed marks foundation
+
+Use `lib/exam-marks-scope.ts` for every Teacher read or mutation. Do not reuse
+legacy `marksScopeWhere` for the governed workflow. `ExamMarkSheet` is one
+history version, `ExamMarkEntry` holds Student/component state, and
+`StudentResultSnapshot` is append-only calculation output. Workflow
+idempotency and audit evidence reuse `ExaminationSchemeAudit.eventKey`.
+
+The target migration is
+`20260730_teacher_marks_moderation_calculation`. Never apply it to operational
+data during feature QA. Use `qa:exam2` and the isolated datasource URL.
+
+The application TypeScript graph and all scripts/tests are checked through
+sequential tsconfig shards to keep the normal heap below the local memory
+ceiling. Do not collapse those shards into one process without re-proving
+memory safety.
+
+Read `TEACHER_MARKS_ENTRY_WORKFLOW.md`,
+`EXACT_MARKS_AUTHORIZATION_MODEL.md`,
+`MARKS_SUBMISSION_REOPEN_LIFECYCLE.md`,
+`EXAM_MARKS_MODERATION_WORKFLOW.md`,
+`EXAM_CALCULATION_SPECIFICATION.md`, and
+`STUDENT_RESULT_SNAPSHOT_SPECIFICATION.md`.
+
+Legacy `ExamCycle`, `ExamAssessment`, `StudentMark`, report-card batch and
+issued report-card models remain for compatibility only. Governed snapshots
+must not write them. EXAM-RC-IMPL-3 may consume locked snapshots read-only;
+publication, delivery and PDF generation remain unimplemented.

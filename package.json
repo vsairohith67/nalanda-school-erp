@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "typecheck": "tsc --noEmit && tsc --noEmit --project tsconfig.tools.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit --project tsconfig.tools.json && tsc --noEmit --project tsconfig.tests-a-f.json && tsc --noEmit --project tsconfig.tests-g-l.json && tsc --noEmit --project tsconfig.tests-m-r.json && tsc --noEmit --project tsconfig.tests-s.json && tsc --noEmit --project tsconfig.tests-t-z.json",
     "test": "vitest run",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -31,6 +31,7 @@
     "qa:ux1a": "tsx scripts/qa-ux1a-copied-db.ts",
     "qa:exam1": "tsx scripts/qa-exam1-copied-db.ts",
     "qa:exam1qa": "tsx scripts/qa-exam1qa-copied-db.ts",
+    "qa:exam2": "tsx scripts/qa-exam2-copied-db.ts",
     "auth:recover-super-admin": "tsx scripts/recover-super-admin.ts",
     "data0a:audit": "node scripts/data0a-provenance-audit.mjs",
     "data0a:backup": "tsx scripts/data0a-encrypted-backup.ts",

@@ -170,15 +170,16 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
     expect(combined).toContain("no names, contacts, identifiers, marks, balances, photographs, or transaction values retained");
   });
 
-  it("proves schema, migrations, route counts and backup version stayed at the checkpoint", () => {
+  it("preserves the prior checkpoint and recognizes the additive examination implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(174);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(177);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
     const migrationEntries = readdirSync("prisma/migrations");
     expect(migrationEntries.filter((name) => statSync(join("prisma/migrations", name)).isDirectory()).sort()).toEqual([
       "20260722_clean_install_baseline",
       "20260730_exam_scheme_assignment_foundation",
+      "20260730_teacher_marks_moderation_calculation",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);

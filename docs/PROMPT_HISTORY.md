@@ -1188,3 +1188,25 @@ Result: `UX_SHARED_SHELL_CLEARED`. Release tag:
 `ux-shared-shell-v37-2026-07-30`. No staging or deployment is authorized.
 `AUTH-2B`, `IAM-1A`, `SUPPORT-1A`, and `OBS-1A` remain separate. Next phase:
 `EXAM-RC-IMPL-1`.
+
+## EXAM-RC-IMPL-2 — Teacher Marks, Moderation and Calculation (2026-07-30)
+
+Implemented exact-assignment Teacher marks entry, contributor/primary
+ownership, draft/autosave, explicit final submission, correction request,
+Principal reopen/reject/moderation, deterministic RAW_SUM and
+WEIGHTED_NORMALIZED calculation, explicit subject groups, grade/pass/rank
+feature gates, locked attendance references and immutable Student result
+snapshots.
+
+One additive migration,
+`20260730_teacher_marks_moderation_calculation`, adds three governed models and
+frozen scheme-policy fields while reusing the existing examination audit
+ledger. Fresh and copied migration rehearsals had no drift. EXAM2 copied-DB QA
+proved 4 Students, 2 Teachers, 6 primary assignments, 1 contributor, distinct
+entry states, correction v2, 7 sheet versions, 4 snapshots, 25 keyed audit
+events, calculation idempotency and lock. The operational source hash and
+zero-business/protected-account baseline remained unchanged.
+
+The feature branch is not merged. Independent `EXAM-RC-IMPL-2-QA` is next.
+Publication, delivery, PDFs, merged PDFs, ZIPs and physical layouts remain
+unimplemented; cloud deployment remains unauthorized.

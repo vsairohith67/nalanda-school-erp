@@ -4,6 +4,7 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const DEFAULT_BODY_LIMIT_BYTES = 5 * 1024 * 1024;
 const OCR_PAGE_BODY_LIMIT_BYTES = 26 * 1024 * 1024;
 const STUDENT_ATTENDANCE_BODY_LIMIT_BYTES = 512 * 1024;
+const EXAM_MARKS_BODY_LIMIT_BYTES = 512 * 1024;
 
 export function isUnsafeMethod(method: string) {
   return !SAFE_METHODS.has(method.toUpperCase());
@@ -17,6 +18,9 @@ export function isProviderWebhookPath(pathname: string) {
 export function requestBodyLimitBytes(pathname: string) {
   if (/^\/api\/fee-register-ocr\/batches\/[^/]+\/pages$/.test(pathname)) return OCR_PAGE_BODY_LIMIT_BYTES;
   if (pathname === "/api/attendance/students") return STUDENT_ATTENDANCE_BODY_LIMIT_BYTES;
+  if (pathname.startsWith("/api/exam-marks") || pathname.startsWith("/api/exam-moderation")) {
+    return EXAM_MARKS_BODY_LIMIT_BYTES;
+  }
   return DEFAULT_BODY_LIMIT_BYTES;
 }
 

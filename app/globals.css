@@ -4369,6 +4369,353 @@ details summary {
   .website-dialog .page-actions > * { width: 100%; }
 }
 
+/* EXAM-RC-IMPL-2 governed marks entry and moderation */
+.governed-marks-page,
+.exam-moderation-page {
+  min-width: 0;
+}
+
+.governed-marks-page :is(button, input, select, textarea),
+.exam-moderation-page :is(button, input, select, textarea),
+.governed-marks-dialog :is(button, textarea),
+.moderation-dialog :is(button, textarea) {
+  min-height: 44px;
+}
+
+.marks-command-bar,
+.moderation-command-bar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.1fr) minmax(260px, 1.8fr) minmax(150px, .7fr);
+  gap: 16px;
+  align-items: end;
+}
+
+.marks-command-bar label,
+.moderation-command-bar label,
+.governed-marks-dialog label,
+.moderation-dialog label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.marks-context,
+.marks-save-state,
+.moderation-command-bar > div {
+  display: grid;
+  gap: 5px;
+}
+
+.marks-context span,
+.marks-save-state span,
+.moderation-command-bar span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.marks-save-state {
+  justify-items: end;
+}
+
+.marks-save-state strong {
+  font-size: 25px;
+}
+
+.marks-toolbar,
+.moderation-calculation-readiness {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.segmented-control {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+.segmented-control button {
+  border: 0;
+  border-radius: 9px;
+  padding: 0 14px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.segmented-control button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 5px rgb(15 23 42 / 10%);
+}
+
+.governed-marks-table-wrap,
+.moderation-table-wrap {
+  max-width: 100%;
+  overflow: auto;
+  padding: 0;
+  overscroll-behavior-inline: contain;
+}
+
+.governed-marks-table {
+  min-width: 980px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.governed-marks-table th,
+.governed-marks-table td {
+  min-width: 210px;
+  vertical-align: top;
+  background: var(--surface);
+}
+
+.governed-marks-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  border-bottom: 2px solid var(--border);
+}
+
+.governed-marks-table th span,
+.governed-marks-table th small,
+.governed-marks-table .sticky-reference small,
+.moderation-table-wrap td small {
+  display: block;
+}
+
+.governed-marks-table th small,
+.governed-marks-table .sticky-reference small,
+.moderation-table-wrap td small {
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.governed-marks-table .sticky-student {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  min-width: 190px;
+  max-width: 190px;
+  box-shadow: 1px 0 0 var(--border);
+}
+
+.governed-marks-table thead .sticky-student {
+  z-index: 6;
+}
+
+.governed-marks-table .sticky-reference {
+  position: sticky;
+  left: 190px;
+  z-index: 2;
+  min-width: 118px;
+  max-width: 118px;
+  box-shadow: 1px 0 0 var(--border);
+}
+
+.governed-marks-table thead .sticky-reference {
+  z-index: 5;
+}
+
+.governed-marks-table td select,
+.governed-marks-table td input {
+  width: 100%;
+}
+
+.governed-marks-table td input {
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+}
+
+.governed-marks-table .cell-error {
+  background: color-mix(in srgb, var(--danger) 7%, var(--surface));
+}
+
+.field-error {
+  display: block;
+  margin-top: 5px;
+  color: var(--danger);
+}
+
+.marks-version-footer,
+.calculation-run-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.marks-version-footer > div {
+  display: grid;
+  gap: 9px;
+}
+
+.marks-version-footer span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.governed-marks-dialog,
+.moderation-dialog {
+  width: min(560px, calc(100vw - 24px));
+}
+
+.governed-marks-dialog textarea,
+.moderation-dialog textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.moderation-command-bar {
+  grid-template-columns: repeat(2, minmax(220px, .8fr)) minmax(260px, 1.4fr);
+}
+
+.moderation-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.moderation-metrics > div {
+  display: grid;
+  gap: 8px;
+}
+
+.moderation-metrics span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.moderation-metrics strong {
+  font-size: 26px;
+}
+
+.moderation-calculation-readiness > ul {
+  flex-basis: 100%;
+  margin-block: 0;
+}
+
+.moderation-table-wrap table {
+  min-width: 1120px;
+}
+
+.moderation-table-wrap td,
+.moderation-table-wrap th {
+  vertical-align: top;
+}
+
+.moderation-actions {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.moderation-actions .button {
+  min-width: 88px;
+}
+
+.calculation-run-card {
+  display: grid;
+  gap: 14px;
+}
+
+.calculation-run-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.calculation-run-card dl > div {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--surface-muted);
+}
+
+.calculation-run-card dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.calculation-run-card dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .marks-command-bar,
+  .moderation-command-bar {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .marks-save-state {
+    justify-items: start;
+  }
+
+  .moderation-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .governed-marks-page,
+  .exam-moderation-page {
+    width: 100%;
+    overflow-x: clip;
+  }
+
+  .marks-toolbar {
+    align-items: stretch;
+  }
+
+  .segmented-control {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .marks-toolbar .page-actions,
+  .marks-toolbar .page-actions > *,
+  .moderation-calculation-readiness .button,
+  .governed-marks-dialog .page-actions,
+  .governed-marks-dialog .page-actions > *,
+  .moderation-dialog .page-actions,
+  .moderation-dialog .page-actions > * {
+    width: 100%;
+  }
+
+  .governed-marks-table .sticky-student {
+    min-width: 154px;
+    max-width: 154px;
+  }
+
+  .governed-marks-table .sticky-reference {
+    position: static;
+    min-width: 110px;
+  }
+
+  .moderation-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .moderation-metrics > div {
+    padding: 12px;
+  }
+
+  .calculation-run-card dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* UX-1A: shared login, authenticated shell, and design-system refinements. */
 .sr-only {
   position: absolute !important;

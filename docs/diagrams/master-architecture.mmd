@@ -8,6 +8,10 @@ flowchart LR
   AUTH --> GOV["Separately governed leadership and other-role scopes"]
   TAS --> DATA["Prisma / operational SQLite"]
   EXAM --> DATA
-  EXAM -. "future EXAM-RC-IMPL-2 only" .-> MARKS["Marks entry and calculation"]
+  EXAM --> MARKS["Marks and Moderation\nexact Teacher entry, immutable versions and calculation snapshots"]
+  MARKS --> DATA
+  MARKS --> CALC["Frozen RAW_SUM / WEIGHTED_NORMALIZED engine"]
+  CALC --> SNAP["Immutable Student result snapshots\npublication not implemented"]
+  MARKS --> AUDIT
   GOV --> DATA
   DATA --> AUDIT["Append-only audit and versioned backup"]

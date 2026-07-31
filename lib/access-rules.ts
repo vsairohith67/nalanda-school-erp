@@ -80,6 +80,7 @@ export const NAV_ITEMS = [
   { href: "/homework", label: "Homework", icon: "notices", permission: "VIEW_HOMEWORK", group: "communication" },
   { href: "/exams", label: "Exams", icon: "timetable", permission: "VIEW_EXAMS", group: "communication" },
   { href: "/exams/configuration", label: "Examination Setup", icon: "timetable", permission: "VIEW_EXAM_CONFIGURATION", group: "communication" },
+  { href: "/exams/moderation", label: "Marks Moderation", icon: "collection", permission: "VIEW_EXAM_MODERATION", group: "communication" },
   { href: "/teacher/exam-assignments", label: "My Exam Assignments", icon: "timetable", permission: "VIEW_OWN_EXAM_ASSIGNMENTS", group: "communication", requiredRole: "TEACHER" },
   { href: "/marks", label: "Marks Entry", icon: "attendance", permission: "ENTER_MARKS", group: "communication" },
   { href: "/marks/reports", label: "Exam Reports", icon: "collection", permission: "VIEW_EXAM_REPORTS", group: "communication" },

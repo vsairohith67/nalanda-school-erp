@@ -1,7 +1,26 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { GovernedMarkEntryGrid } from "@/components/governed-mark-entry-grid";
+import { PageHeader } from "@/components/ui";
+import { requireRolePermission } from "@/lib/auth";
+import { loadTeacherMarksWorkspace } from "@/lib/exam-marks";
 import { prisma } from "@/lib/prisma";
-import { marksScopeWhere, resolveMarksScope } from "@/lib/marks-scope";
-export default async function Page() { const user = await requirePermission("VIEW_EXAMS"); if (user.role !== "TEACHER") redirect("/marks"); const scope = await resolveMarksScope(prisma, user); const rows = await prisma.examAssessment.findMany({ where: marksScopeWhere(scope), include: { examCycle: { select: { examCode: true, name: true, status: true } }, marks: { select: { id: true } } }, orderBy: [{ examCycle: { startDate: "desc" } }, { className: "asc" }, { subjectName: "asc" }] }); return <div className="page marks-page"><PageHeader title="My Marks Sheets" description={`Exact timetable scope for ${scope.staffLabel ?? "linked Teacher"}. Shared-subject Teachers can enter only when each has an explicit matching assignment.`} />{scope.reason ? <div className="notice">{scope.reason}</div> : null}<section className="card"><div className="table-wrap"><table><thead><tr><th>Exam</th><th>Class / section</th><th>Subject</th><th>Entered</th><th>Status</th><th>Open</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{row.examCycle.examCode}<br /><small>{row.examCycle.name}</small></td><td>{row.className}-{row.section || "Class-wide"}</td><td>{row.subjectName}{row.componentName ? ` · ${row.componentName}` : ""}</td><td>{row.marks.length}</td><td><StatusBadge status={row.entryStatus} /></td><td><Link href={`/marks/entry/${encodeURIComponent(row.id)}`}>Open Sheet</Link></td></tr>)}{!rows.length ? <tr><td colSpan={6}>No mark sheets are assigned to this exact Teacher timetable scope.</td></tr> : null}</tbody></table></div></section></div>; }
+
+export const dynamic = "force-dynamic";
+
+export default async function TeacherMarksPage({
+  searchParams
+}: {
+  searchParams: Promise<{ assignmentId?: string }>;
+}) {
+  const user = await requireRolePermission("VIEW_OWN_EXAM_MARKS", "TEACHER");
+  const { assignmentId } = await searchParams;
+  const initialData = await loadTeacherMarksWorkspace(prisma, user, assignmentId);
+  return (
+    <div className="page governed-marks-page">
+      <PageHeader
+        title="Marks Entry"
+        description="Exact examination assignments only. Autosave creates drafts; final submission always requires a separate governed action."
+      />
+      <GovernedMarkEntryGrid initialData={initialData} />
+    </div>
+  );
+}

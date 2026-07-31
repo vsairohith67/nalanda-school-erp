@@ -130,6 +130,16 @@ export const PERMISSIONS = [
   "PROPOSE_EXAM_SCHEMES",
   "VIEW_OWN_EXAM_ASSIGNMENTS",
   "INTERVENE_EXAM_SCHEMES",
+  "VIEW_OWN_EXAM_MARKS",
+  "ENTER_ASSIGNED_EXAM_MARKS",
+  "SUBMIT_ASSIGNED_EXAM_MARKS",
+  "REQUEST_EXAM_MARK_CORRECTION",
+  "VIEW_EXAM_MODERATION",
+  "MODERATE_EXAM_MARKS",
+  "REOPEN_EXAM_MARK_SHEETS",
+  "RUN_EXAM_CALCULATIONS",
+  "LOCK_EXAM_CALCULATIONS",
+  "INTERVENE_EXAM_MARKS",
   "VIEW_REPORT_CARDS",
   "MANAGE_REPORT_CARD_TEMPLATES",
   "MANAGE_REPORT_CARD_BATCHES",
@@ -725,7 +735,17 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { permission: "ASSIGN_EXAM_TEACHERS", label: "Assign examination Teachers", description: "Assign exact timetable-backed primary submitters and audited contributors." },
       { permission: "PROPOSE_EXAM_SCHEMES", label: "Propose assigned-subject schemes", description: "Allow a Teacher to submit a non-activating proposal only for an exact assigned subject." },
       { permission: "VIEW_OWN_EXAM_ASSIGNMENTS", label: "View own examination assignments", description: "View only the authenticated Teacher's exact active examination assignments." },
-      { permission: "INTERVENE_EXAM_SCHEMES", label: "Govern Super Admin examination intervention", description: "Permit exceptional Super Admin intervention only with an explicit audit reason." }
+      { permission: "INTERVENE_EXAM_SCHEMES", label: "Govern Super Admin examination intervention", description: "Permit exceptional Super Admin intervention only with an explicit audit reason." },
+      { permission: "VIEW_OWN_EXAM_MARKS", label: "View own governed marks sheets", description: "View Student marks only through an exact active examination assignment." },
+      { permission: "ENTER_ASSIGNED_EXAM_MARKS", label: "Enter assigned governed marks", description: "Save draft marks only for exact assigned examination components." },
+      { permission: "SUBMIT_ASSIGNED_EXAM_MARKS", label: "Submit assigned governed marks", description: "Permit only the exact primary submitter to final-submit a complete component sheet." },
+      { permission: "REQUEST_EXAM_MARK_CORRECTION", label: "Request marks correction", description: "Request a governed reopen after submission without directly reopening a sheet." },
+      { permission: "VIEW_EXAM_MODERATION", label: "View marks moderation", description: "View governed completion, correction, calculation, and version evidence." },
+      { permission: "MODERATE_EXAM_MARKS", label: "Moderate marks sheets", description: "Moderate complete submitted sheets without publishing report cards." },
+      { permission: "REOPEN_EXAM_MARK_SHEETS", label: "Review and reopen marks sheets", description: "Reject or reopen a correction request with an audit reason and a new sheet version." },
+      { permission: "RUN_EXAM_CALCULATIONS", label: "Run examination calculation preview", description: "Create deterministic internal result snapshots from complete governed source sheets." },
+      { permission: "LOCK_EXAM_CALCULATIONS", label: "Lock examination calculation snapshot", description: "Freeze source sheet versions and the selected calculation snapshot without publication." },
+      { permission: "INTERVENE_EXAM_MARKS", label: "Govern Super Admin marks intervention", description: "Permit exceptional marks intervention only with the exact permission and an audit reason." }
     ]
   },
   {
@@ -961,6 +981,7 @@ const principalPermissions = new Set<CanonicalPermission>([
   "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "ARCHIVE_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "EXPORT_HOMEWORK_REPORTS",
   "VIEW_EXAMS", "MANAGE_EXAMS", "CONFIGURE_EXAM_ASSESSMENTS", "ENTER_MARKS", "SUBMIT_MARKS", "APPROVE_MARKS", "LOCK_EXAMS", "CORRECT_APPROVED_MARKS", "VIEW_EXAM_REPORTS", "EXPORT_EXAM_REPORTS",
   "VIEW_EXAM_CONFIGURATION", "MANAGE_EXAM_CONFIGURATION", "ACTIVATE_EXAM_SCHEMES", "ASSIGN_EXAM_TEACHERS",
+  "VIEW_EXAM_MODERATION", "MODERATE_EXAM_MARKS", "REOPEN_EXAM_MARK_SHEETS", "RUN_EXAM_CALCULATIONS", "LOCK_EXAM_CALCULATIONS",
   "VIEW_REPORT_CARDS", "MANAGE_REPORT_CARD_BATCHES", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "APPROVE_REPORT_CARDS", "ISSUE_REPORT_CARDS", "VIEW_REPORT_CARD_REPORTS", "EXPORT_REPORT_CARD_REPORTS",
   "VIEW_CERTIFICATES", "MANAGE_CERTIFICATE_REQUESTS", "CREATE_CERTIFICATES", "REVIEW_CERTIFICATES", "APPROVE_CERTIFICATES", "ISSUE_CERTIFICATES", "CORRECT_ISSUED_CERTIFICATES", "CANCEL_ISSUED_CERTIFICATES", "VIEW_CERTIFICATE_REPORTS", "EXPORT_CERTIFICATE_REPORTS",
   "VIEW_CLASS_X_PACKAGES", "MANAGE_CLASS_X_PACKAGES", "REVIEW_CLASS_X_PACKAGES", "APPROVE_CLASS_X_PACKAGES", "MANAGE_CLASS_X_DOCUMENT_CUSTODY", "HANDOVER_CLASS_X_DOCUMENTS", "VIEW_CLASS_X_PACKAGE_REPORTS", "EXPORT_CLASS_X_PACKAGE_REPORTS",
@@ -1140,7 +1161,7 @@ export const RECOMMENDED_ROLE_PERMISSIONS: Record<Role, ReadonlySet<CanonicalPer
   PRINCIPAL: principalPermissions,
   ADMIN: adminPermissions,
   ACCOUNTANT: accountantPermissions,
-  TEACHER: new Set(["VIEW_TEACHER_PLACEHOLDER", "VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS", "VIEW_STAFF_LEAVE", "APPLY_STAFF_LEAVE", "VIEW_SUBSTITUTES", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_EXAMS", "ENTER_MARKS", "SUBMIT_MARKS", "VIEW_OWN_EXAM_ASSIGNMENTS", "VIEW_REPORT_CARDS", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "VIEW_OWN_TEACHER_ANALYTICS", "VIEW_OWN_STAFF_ID_CARD", "VIEW_OWN_NOTIFICATIONS", "CREATE_SCOPED_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT"]),
+  TEACHER: new Set(["VIEW_TEACHER_PLACEHOLDER", "VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS", "VIEW_STAFF_LEAVE", "APPLY_STAFF_LEAVE", "VIEW_SUBSTITUTES", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_EXAMS", "ENTER_MARKS", "SUBMIT_MARKS", "VIEW_OWN_EXAM_ASSIGNMENTS", "VIEW_OWN_EXAM_MARKS", "ENTER_ASSIGNED_EXAM_MARKS", "SUBMIT_ASSIGNED_EXAM_MARKS", "REQUEST_EXAM_MARK_CORRECTION", "VIEW_REPORT_CARDS", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "VIEW_OWN_TEACHER_ANALYTICS", "VIEW_OWN_STAFF_ID_CARD", "VIEW_OWN_NOTIFICATIONS", "CREATE_SCOPED_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT"]),
   PARENT: new Set(["VIEW_PARENT_PLACEHOLDER", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_OWN_REPORT_CARDS", "REQUEST_OWN_CHILD_CERTIFICATES", "VIEW_OWN_CHILD_CERTIFICATES", "REQUEST_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_STUDENT_ID_CARDS", "VIEW_OWN_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT"]),
   VIEWER: viewerPermissions
 };

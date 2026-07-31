@@ -1,5 +1,22 @@
 # Documentation Index
 
+## EXAM-RC-IMPL-2 marks, moderation and calculation foundation
+
+- [Teacher Marks-Entry Workflow](TEACHER_MARKS_ENTRY_WORKFLOW.md)
+- [Exact Marks Authorization Model](EXACT_MARKS_AUTHORIZATION_MODEL.md)
+- [Submission and Reopen Lifecycle](MARKS_SUBMISSION_REOPEN_LIFECYCLE.md)
+- [Principal Marks Moderation Workflow](EXAM_MARKS_MODERATION_WORKFLOW.md)
+- [Calculation Specification](EXAM_CALCULATION_SPECIFICATION.md)
+- [Student Result Snapshot Specification](STUDENT_RESULT_SNAPSHOT_SPECIFICATION.md)
+- [Marks Permission Matrix](EXAM_MARKS_PERMISSION_MATRIX.md)
+- [Marks and Moderation Diagram](diagrams/exam-marks-moderation-calculation.mmd)
+- [Implementation Checkpoint](evidence/EXAM_RC_IMPL_2_IMPLEMENTATION_CHECKPOINT.md)
+
+EXAM-RC-IMPL-2 is implemented on
+`feature/teacher-marks-moderation-calculation` and awaits independent
+`EXAM-RC-IMPL-2-QA`. Report-card publication, Parent/Student delivery, PDFs,
+merged files, ZIPs and physical print layouts remain unimplemented.
+
 ## EXAM-RC-IMPL-1 examination scheme and assignment foundation
 
 - [Examination Scheme and Assignment Foundation](EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md) - versioned domain, explicit calculation modes, Principal workflow, exact timetable-backed Teacher ownership, permissions, APIs, migration, copied-database QA and operator rules.

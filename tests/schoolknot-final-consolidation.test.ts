@@ -227,9 +227,9 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
     expect(vendor).toContain("no credential requested");
   });
 
-  it("proves the no-implementation checkpoint", () => {
+  it("preserves the Schoolknot checkpoint across the additive examination implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(174);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(177);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
     expect(createHash("sha256").update(readFileSync("prisma/migrations/20260722_clean_install_baseline/migration.sql")).digest("hex").toUpperCase()).toBe(

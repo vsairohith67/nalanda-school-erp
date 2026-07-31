@@ -619,3 +619,33 @@ Remaining:
   require separate schema, policy and security review.
 - Horizontal multi-instance writes remain outside the supported SQLite
   architecture.
+
+## EXAM-RC-IMPL-2 marks/calculation debt and boundaries
+
+Resolved:
+
+- exact Teacher object scope is shared across page, rows, draft, submit and
+  correction;
+- primary and contributor ownership remain distinct;
+- zero, absent, exempt, N/A and not-entered are distinct;
+- correction creates an immutable superseding sheet version;
+- calculation fingerprints make reruns deterministic and preserve prior
+  Student snapshots;
+- low-memory typecheck is split into complete sequential shards.
+
+Retained debt:
+
+- the legacy Exam/Marks and issued report-card models remain for compatibility
+  and must not become governed calculation sources;
+- calculation services use runtime-validated flat Prisma graphs with
+  `@ts-nocheck` to avoid generated relation-type expansion; runtime copied-DB
+  coverage and schema tests are mandatory until this is safely refactored;
+- `StudentResultSnapshot.runStatus` is creation metadata; the authoritative
+  lock is the append-only calculation audit event;
+- backup version 37 remains the existing operational format. The governed
+  EXAM1/EXAM2 graph is not declared portable until a separately approved
+  backup-format and restore-order phase covers the full related graph;
+- no report publication, Parent/Student delivery, PDF, merged PDF, ZIP or
+  physical print layout exists in this phase;
+- independent `EXAM-RC-IMPL-2-QA` is required before merge or publication
+  work.
