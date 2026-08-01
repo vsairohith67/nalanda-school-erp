@@ -1,11 +1,11 @@
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { SmsEmailActionButton, SmsEmailTemplateCreateForm } from "@/components/sms-email-forms";
-import { requirePermission } from "@/lib/auth";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { prisma } from "@/lib/prisma";
 
 export default async function SmsEmailTemplatesPage() {
-  const user = await requirePermission("VIEW_SMS_EMAIL_CENTRE"), permissions = await getEffectivePermissions(prisma, user.role);
+  const user = await requirePermission("VIEW_SMS_EMAIL_CENTRE"), permissions = await getCurrentUserEffectivePermissions();
   const [profiles, mappings] = await Promise.all([
     prisma.smsEmailIntegrationProfile.findMany({ orderBy: { profileCode: "asc" } }),
     prisma.smsEmailTemplateMapping.findMany({ include: { integrationProfile: true }, orderBy: { createdAt: "desc" } })

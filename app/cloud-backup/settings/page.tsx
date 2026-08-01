@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { CloudBackupActionPanel, CloudBackupHealthCheckButton, CloudBackupProfileForm, CloudBackupScheduleForm } from "@/components/cloud-backup-ui";
 
 export default async function CloudBackupSettingsPage() {
   const user = await requirePermission("MANAGE_CLOUD_BACKUP_PROFILES");
   const [profiles, permissions] = await Promise.all([
     prisma.cloudBackupProfile.findMany({ include: { schedules: true, retentionPolicy: true }, orderBy: { profileCode: "asc" } }),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   const active = profiles.find((row) => row.status === "ACTIVE")
     ?? profiles.find((row) => ["MOCK", "LOCAL_FOLDER"].includes(row.providerKind))

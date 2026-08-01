@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { TeacherAnalyticsReviewForm } from "@/components/teacher-analytics-forms";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { publicTeacherAnalyticsSnapshot } from "@/lib/teacher-analytics";
 import { schoolDateKey } from "@/lib/format";
 
@@ -16,7 +16,7 @@ export default async function TeacherSnapshotPage({ params }: { params: Promise<
   const user = await requirePermission("VIEW_TEACHER_ANALYTICS"); const { cycleId, snapshotId } = await params;
   const [row, permissions] = await Promise.all([
     prisma.teacherAnalyticsSnapshot.findFirst({ where: { id: snapshotId, reviewCycleId: cycleId }, include: { reviewCycle: true, review: true, events: { orderBy: { eventDate: "desc" } } } }),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   if (!row) notFound(); const data = publicTeacherAnalyticsSnapshot(row);
   return <div className="page teacher-analytics-page"><PageHeader title={data.teacher?.displayName ?? "Teacher Evidence"} description={`${data.teacher?.staffCode ?? "No staff code"} · ${data.cycle?.title}`}/><p className="notice"><strong>No automatic judgment:</strong> these categories have no composite score, rank, traffic-light grade, allegation, or employment recommendation. Student identities and raw marks are excluded.</p>

@@ -1,5 +1,22 @@
 # Documentation Index
 
+## IAM-1A named users, delegated access and multi-context sessions
+
+- [Named Users, Permission Profiles and Contexts](IAM_NAMED_USERS_PERMISSION_CONTEXTS.md)
+- [Operator Guide and Last-Super-Admin Runbook](IAM_OPERATOR_GUIDE_AND_LAST_SUPER_ADMIN_RUNBOOK.md)
+- [IAM Security Threat Model](IAM_SECURITY_THREAT_MODEL.md)
+- [IAM Phase Diagram](diagrams/iam-delegated-access-contexts.mmd)
+- [Implementation Checkpoint](evidence/IAM_1A_IMPLEMENTATION_CHECKPOINT.md)
+
+IAM-1A is on the retained feature branch
+`iam/named-users-permission-contexts`. It adds one authoritative deny-first
+permission evaluator, versioned profiles/overrides, governed user lifecycle,
+last-Super-Admin protection, opaque server-side role/child contexts, responsive
+administration and version-37 backup/restore coverage. The operational
+database and protected accounts remain unchanged. Independent IAM-1A-QA has
+not started; merge, staging, provider activation and real-user onboarding are
+not authorised.
+
 ## AUTH-2B verified login, recovery and central sessions
 
 - [Verified Recovery and Session Registry](AUTH_2B_VERIFIED_RECOVERY_SESSION_REGISTRY.md)

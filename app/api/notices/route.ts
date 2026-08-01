@@ -1,9 +1,9 @@
 import { safeClientError } from "@/lib/client-errors";
 import { NextRequest, NextResponse } from "next/server";
-import { requireApiPermission } from "@/lib/auth";
+import { requireApiPermission, hasUserPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { staffNoticeWhere, validateNoticeInput } from "@/lib/notices";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 const staffInclude = {
   createdBy: { select: { id: true, name: true } },
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const source = await request.json();
     const input = validateNoticeInput(source);
     const requestedStatus = source.status === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
-    if (requestedStatus === "PUBLISHED" && !(await hasRolePermission(prisma, auth.user.role, "PUBLISH_NOTICES"))) {
+    if (requestedStatus === "PUBLISHED" && !(await hasUserPermission(auth.user, "PUBLISH_NOTICES"))) {
       return NextResponse.json({ error: "You do not have permission to publish notices" }, { status: 403 });
     }
     const effectivePublishDate = requestedStatus === "PUBLISHED" ? input.publishDate ?? new Date() : input.publishDate;

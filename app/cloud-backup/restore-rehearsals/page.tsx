@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions } from "@/lib/role-permissions";
+
 import { CloudBackupActionPanel } from "@/components/cloud-backup-ui";
 
 export default async function CloudBackupRestoreRehearsalsPage() {
@@ -11,7 +11,7 @@ export default async function CloudBackupRestoreRehearsalsPage() {
     prisma.cloudBackupRestoreRehearsal.findMany({ include: { run: { select: { runNumber: true } } }, orderBy: { createdAt: "desc" }, take: 500 }),
     prisma.cloudBackupArtifact.findFirst({ where: { status: "VERIFIED", run: { status: "VERIFIED" } }, orderBy: { verifiedAt: "desc" } }),
     prisma.cloudBackupProfile.findFirst({ where: { status: "ACTIVE" }, include: { retentionPolicy: true } }),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   return <div className="page cloud-backup-page"><PageHeader title="Isolated Restore Rehearsals" description="Recovery proof in a copied temporary database. The operational ERP is never a restore destination." action={<Link className="button secondary" href="/cloud-backup">Backup health</Link>} />
     <div className="notice warning"><strong>Isolation guarantee.</strong><span>This verifies recovery in a temporary database. It does not restore or change the operational ERP.</span></div>

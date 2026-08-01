@@ -31,7 +31,12 @@ export async function POST(request: NextRequest) {
     const rotated = await prisma.$transaction(async (tx) => {
       const changed = await tx.user.updateMany({
         where: { id: user.id, credentialVersion: account.credentialVersion, isActive: true },
-        data: { passwordHash: nextPasswordHash, credentialVersion: { increment: 1 } }
+        data: {
+          passwordHash: nextPasswordHash,
+          credentialVersion: { increment: 1 },
+          mustChangePassword: false,
+          temporaryPasswordExpiresAt: null
+        }
       });
       if (changed.count !== 1) throw new Error("Account security changed; refresh and try again");
       const now = new Date();
@@ -49,7 +54,9 @@ export async function POST(request: NextRequest) {
       });
       const token = await createPersistedSession(tx, {
         id: user.id,
-        credentialVersion: account.credentialVersion + 1
+        role: account.role,
+        credentialVersion: account.credentialVersion + 1,
+        authorizationVersion: account.authorizationVersion
       }, request.headers, now);
       await logUserAction(tx, {
         action: "OWN_PASSWORD_CHANGED",

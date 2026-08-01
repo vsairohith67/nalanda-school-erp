@@ -1,15 +1,15 @@
 import { safeClientError } from "@/lib/client-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { requireApiPermission } from "@/lib/auth";
+import { requireApiPermission, hasUserPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 import { serializeVendor, validateVendorInput, vendorWhere } from "@/lib/vendors";
 
 export async function GET(request: NextRequest) {
   const auth = await requireApiPermission("VIEW_VENDORS");
   if (auth.response) return auth.response;
-  const sensitive = await hasRolePermission(prisma, auth.user.role, "MANAGE_VENDORS");
+  const sensitive = await hasUserPermission(auth.user, "MANAGE_VENDORS");
   const params = request.nextUrl.searchParams;
   const vendors = await prisma.vendor.findMany({
     where: vendorWhere(params.get("search") ?? undefined, params.get("status") ?? undefined, sensitive),

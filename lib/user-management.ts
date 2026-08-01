@@ -18,6 +18,7 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   PRINCIPAL: "Academic, timetable, student, and report access without full finance/system control by default.",
   ADMIN: "Office administration for students, imports, reports, and delegated user work.",
   ACCOUNTANT: "Fee collection, payments, dues, ledgers, receipts, and finance reports.",
+  COMPUTER_OPERATOR: "Admissions data entry with no unrestricted administration or finance authority.",
   TEACHER: "Teacher start page with linked staff basics and permission-gated manual student attendance. Timetable, leave, and staff attendance dashboards are not built yet.",
   PARENT: "Read-only parent portal access for linked children, fees, receipts, and notices.",
   VIEWER: "Viewer / Auditor read-only access for limited reports and audit review."
@@ -35,14 +36,14 @@ export function canManageUser(actorRole: Role, targetRole: Role) {
   if (actorRole === "SUPER_ADMIN") return true;
   if (targetRole === "SUPER_ADMIN") return false;
   if (actorRole === "DIRECTOR") return true;
-  return actorRole === "ADMIN" && (targetRole === "ACCOUNTANT" || targetRole === "TEACHER" || targetRole === "PARENT" || targetRole === "VIEWER");
+  return actorRole === "ADMIN" && (targetRole === "ACCOUNTANT" || targetRole === "COMPUTER_OPERATOR" || targetRole === "TEACHER" || targetRole === "PARENT" || targetRole === "VIEWER");
 }
 
 export function canAssignRole(actorRole: Role, role: Role) {
   if (actorRole === "SUPER_ADMIN") return true;
   if (role === "SUPER_ADMIN") return false;
   if (actorRole === "DIRECTOR") return true;
-  return actorRole === "ADMIN" && (role === "ACCOUNTANT" || role === "TEACHER" || role === "PARENT" || role === "VIEWER");
+  return actorRole === "ADMIN" && (role === "ACCOUNTANT" || role === "COMPUTER_OPERATOR" || role === "TEACHER" || role === "PARENT" || role === "VIEWER");
 }
 
 export function assertCanManageUser(actorRole: Role, targetRole: Role) {
@@ -96,12 +97,12 @@ export function assertSuperAdminSafetyAllowed(input: {
 
 export function assignableRolesFor(actorRole: Role) {
   if (actorRole === "SUPER_ADMIN") return [
-    "SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "ACCOUNTANT", "TEACHER", "PARENT", "VIEWER"
+    "SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "ACCOUNTANT", "COMPUTER_OPERATOR", "TEACHER", "PARENT", "VIEWER"
   ] as Role[];
   if (actorRole === "DIRECTOR") return [
-    "DIRECTOR", "PRINCIPAL", "ADMIN", "ACCOUNTANT", "TEACHER", "PARENT", "VIEWER"
+    "DIRECTOR", "PRINCIPAL", "ADMIN", "ACCOUNTANT", "COMPUTER_OPERATOR", "TEACHER", "PARENT", "VIEWER"
   ] as Role[];
-  if (actorRole === "ADMIN") return ["ACCOUNTANT", "TEACHER", "PARENT", "VIEWER"] as Role[];
+  if (actorRole === "ADMIN") return ["ACCOUNTANT", "COMPUTER_OPERATOR", "TEACHER", "PARENT", "VIEWER"] as Role[];
   return [] as Role[];
 }
 

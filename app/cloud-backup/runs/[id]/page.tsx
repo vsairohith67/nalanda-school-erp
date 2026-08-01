@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions } from "@/lib/role-permissions";
+
 import { CloudBackupActionPanel } from "@/components/cloud-backup-ui";
 
 export default async function CloudBackupRunDetail({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VERIFY_CLOUD_BACKUP");
   const [run, permissions] = await Promise.all([
     prisma.cloudBackupRun.findUnique({ where: { id: (await params).id }, include: { profile: { include: { retentionPolicy: true } }, artifacts: { include: { verifications: { orderBy: { checkedAt: "asc" } } }, orderBy: { createdAt: "asc" } }, events: { orderBy: { eventDate: "asc" } }, restoreRehearsals: true } }),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   if (!run) notFound();
   const artifact = run.artifacts[0];

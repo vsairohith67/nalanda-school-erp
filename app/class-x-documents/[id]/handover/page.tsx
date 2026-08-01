@@ -2,14 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HandoverForm } from "@/components/class-x-package-forms";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { displayDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 export default async function ClassXHandoverPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_CLASS_X_PACKAGES"), id = (await params).id;
-  const [row, canHandover] = await Promise.all([prisma.classXDocumentPackage.findUnique({ where: { id }, include: { student: { select: { studentName: true, admissionNo: true } }, items: { orderBy: { displayOrder: "asc" } }, charge: true, handovers: { orderBy: { handoverDate: "desc" } } } }), hasRolePermission(prisma, user.role, "HANDOVER_CLASS_X_DOCUMENTS")]);
+  const [row, canHandover] = await Promise.all([prisma.classXDocumentPackage.findUnique({ where: { id }, include: { student: { select: { studentName: true, admissionNo: true } }, items: { orderBy: { displayOrder: "asc" } }, charge: true, handovers: { orderBy: { handoverDate: "desc" } } } }), hasUserPermission(user, "HANDOVER_CLASS_X_DOCUMENTS")]);
   if (!row) notFound();
   const ready = row.items.filter((item) => item.status === "READY_FOR_HANDOVER").map((item) => ({ id: item.id, displayName: item.displayName, issuerType: item.issuerType }));
   return <PageShell className="class-x-page"><PageHeader title="Physical Document Handover" description={`${row.packageNumber} · ${row.student.studentName}`} action={<StatusBadge status={row.status} />} />

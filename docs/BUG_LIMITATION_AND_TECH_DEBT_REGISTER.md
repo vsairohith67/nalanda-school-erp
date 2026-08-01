@@ -648,3 +648,32 @@ Retained debt:
 - no report publication, Parent/Student delivery, PDF, merged PDF, ZIP or
   physical print layout exists in this phase;
 - report publication work remains gated to `EXAM-RC-IMPL-3`.
+
+## IAM-1A named-access debt and boundaries
+
+Resolved in the implementation branch:
+
+- role authority is represented by active, validity-bounded assignments;
+- permission decisions use one deny-first server evaluator;
+- profiles, individual overrides and changes preserve append-only history;
+- critical changes revoke sessions through authorization versions;
+- role and child context are server-held and opaque-handle bound;
+- the last active Super Admin is transactionally protected;
+- Computer Operator is a dedicated restricted role rather than an Admin alias;
+- backup version 37 preserves IAM evidence without password, token or active
+  context secrets.
+
+Retained boundaries:
+
+- SQLite remains a single-instance write architecture; distributed locking or
+  horizontal IAM mutation requires a future database/deployment phase;
+- an AUTH-2B governed live delivery adapter is not active, so invitation mode
+  remains safely pending and no real user is onboarded;
+- Parent attendance/examination timetable parity remains Prompt 23D;
+- object-scoped permission labels do not replace the module-specific exact
+  resolvers;
+- the legacy scalar `User.role` remains as a compatibility/default field while
+  active requests use `UserRoleAssignment`; removal requires a separately
+  planned compatibility migration;
+- independent IAM-1A-QA, including broader Browser/concurrency/adversarial
+  verification, remains required before merge.

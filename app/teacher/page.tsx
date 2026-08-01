@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { PageHeader } from "@/components/ui";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { getSchoolSettings } from "@/lib/school-settings";
 import { attendanceDay, localDateText } from "@/lib/student-attendance";
 import { attendanceScopeOptionsForDate, resolveTeacherAttendanceScope } from "@/lib/teacher-attendance-scope";
@@ -13,7 +13,7 @@ export default async function TeacherPage() {
   if (user.role !== "TEACHER") redirect("/unauthorized");
   const [staff, permissions, settings] = await Promise.all([
     prisma.staffMember.findUnique({ where: { userId: user.id }, include: { timetableTeacher: { select: { name: true, shortName: true } } } }),
-    getEffectivePermissions(prisma, user.role),
+    getCurrentUserEffectivePermissions(),
     getSchoolSettings(prisma)
   ]);
   const today = attendanceDay(localDateText());

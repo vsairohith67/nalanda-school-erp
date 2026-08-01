@@ -2,17 +2,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { StudentProgressionForm } from "@/components/student-progression-form";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { displayDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { decisionLabel, progressionInclude } from "@/lib/student-progression";
 
 export default async function ProgressionDecisionPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_STUDENT_PROGRESSION"); const { id } = await params;
   const [decision, permissions, students] = await Promise.all([
     prisma.studentProgressionDecision.findUnique({ where: { id }, include: progressionInclude }),
-    getEffectivePermissions(prisma, user.role),
+    getCurrentUserEffectivePermissions(),
     prisma.student.findMany({ where: { deletedAt: null }, select: { id: true, admissionNo: true, studentName: true, academicYearEnrollments: { orderBy: [{ academicYear: "desc" }], select: { id: true, academicYear: true, className: true, section: true, status: true } } }, orderBy: [{ studentName: "asc" }] })
   ]);
   if (!decision) notFound();

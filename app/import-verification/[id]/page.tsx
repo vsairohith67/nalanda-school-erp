@@ -2,11 +2,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { StoredErrorCsvButton } from "@/components/stored-error-csv-button";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requireUser } from "@/lib/auth";
+import { requireUser, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { money } from "@/lib/format";
 import { parseImportBatchDetails } from "@/lib/import-verification";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function ImportBatchDetailsPage({
   params
@@ -16,7 +16,7 @@ export default async function ImportBatchDetailsPage({
   const user = await requireUser();
   const batch = await prisma.importBatch.findUnique({ where: { id: (await params).id } });
   if (!batch) notFound();
-  const permissions = await getEffectivePermissions(prisma, user.role);
+  const permissions = await getCurrentUserEffectivePermissions();
   const canViewAll = permissionSetCan(permissions, "VIEW_IMPORT_VERIFICATION");
   const canViewPaymentImports = user.role === "ACCOUNTANT" &&
     batch.type !== "STUDENTS" &&

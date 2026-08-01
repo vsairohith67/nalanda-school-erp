@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ensureFeeRegisterOcrFoundation } from "@/lib/fee-register-ocr";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function FeeRegisterOcrPage() {
   const user = await requirePermission("VIEW_FEE_REGISTER_OCR");
   await ensureFeeRegisterOcrFoundation(prisma);
   const [batches, permissions] = await Promise.all([
     prisma.feeRegisterOcrBatch.findMany({ include: { profile: true }, orderBy: { createdAt: "desc" }, take: 200 }),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   const totals = { pages: batches.reduce((sum, row) => sum + row.sourcePageCount, 0), rows: batches.reduce((sum, row) => sum + row.extractedRowCount, 0), verified: batches.reduce((sum, row) => sum + row.verifiedRowCount, 0), posted: batches.reduce((sum, row) => sum + row.postedRowCount, 0) };
   return <div className="page fee-register-ocr-page"><PageHeader title="Handwritten Fee Register OCR" description="Private OCR-assisted staging, human review and controlled zero-write financial preview. OCR confidence never equals approval." action={<div className="page-actions">{permissionSetCan(permissions, "UPLOAD_FEE_REGISTER_PAGES") ? <Link className="button" href="/fee-register-ocr/new">Create batch</Link> : null}{permissionSetCan(permissions, "VIEW_FEE_REGISTER_OCR_REPORTS") ? <Link className="button secondary" href="/fee-register-ocr/reports">Reports</Link> : null}{permissionSetCan(permissions, "MANAGE_FEE_REGISTER_OCR_PROFILES") ? <Link className="button secondary" href="/fee-register-ocr/settings">Settings</Link> : null}</div>} />

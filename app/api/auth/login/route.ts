@@ -59,7 +59,10 @@ export async function POST(request: NextRequest) {
     const user = resolved.kind === "resolved" ? resolved.user : null;
     const passwordMatches = await verifyPassword(password, user?.passwordHash ?? await dummyPasswordHash);
 
-    if (!user || !user.isActive || !isRole(user.role) || !passwordMatches) {
+    if (
+      !user || !user.isActive || user.lifecycleStatus !== "ACTIVE" || !isRole(user.role) || !passwordMatches ||
+      Boolean(user.mustChangePassword && user.temporaryPasswordExpiresAt && user.temporaryPasswordExpiresAt <= new Date())
+    ) {
       const failure = await recordLoginFailure({ identifier, source });
       console.warn(`AUTH_LOGIN_FAILURE account=${failure.accountHash} source=${failure.sourceHash}`);
       if (failure.blocked) return rateLimitResponse(failure.retryAfterSeconds);
@@ -82,7 +85,8 @@ export async function POST(request: NextRequest) {
       return created;
     });
     const response = NextResponse.json({
-      user: { name: user.name, username: user.username, role: user.role }
+      user: { name: user.name, username: user.username, role: user.role },
+      mustChangePassword: user.mustChangePassword
     });
     response.cookies.set(sessionCookieName(), token.cookieValue, {
       httpOnly: true,

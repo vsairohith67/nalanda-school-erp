@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { NotificationWorkflowActions } from "@/components/notification-workflow-actions";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function NotificationCampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("CREATE_NOTIFICATION_CAMPAIGNS");
@@ -20,7 +20,7 @@ export default async function NotificationCampaignDetailPage({ params }: { param
         events: { orderBy: [{ eventDate: "asc" }, { createdAt: "asc" }] }
       }
     }),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   if (!campaign) notFound();
   const actorIds = [...new Set(campaign.events.map((row) => row.recordedByUserId).filter((value): value is string => Boolean(value)))];

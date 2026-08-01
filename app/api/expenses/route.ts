@@ -1,10 +1,10 @@
 import { safeClientError } from "@/lib/client-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { requireApiPermission } from "@/lib/auth";
+import { requireApiPermission, hasUserPermission } from "@/lib/auth";
 import { expenseDetailInclude, localDate, newExpenseNumber, serializeExpense, validateActiveExpenseMasters, validateExpenseInput } from "@/lib/expenses";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 function whereFrom(request: NextRequest): Prisma.ExpenseRecordWhereInput {
   const params = request.nextUrl.searchParams; const where: Prisma.ExpenseRecordWhereInput = {};
@@ -17,7 +17,7 @@ function whereFrom(request: NextRequest): Prisma.ExpenseRecordWhereInput {
 export async function GET(request: NextRequest) {
   const auth = await requireApiPermission("VIEW_EXPENSES"); if (auth.response) return auth.response;
   try {
-    const sensitive = (await Promise.all(["MANAGE_EXPENSES", "APPROVE_EXPENSES", "MARK_EXPENSE_PAID", "CANCEL_EXPENSES"].map((permission) => hasRolePermission(prisma, auth.user.role, permission)))).some(Boolean);
+    const sensitive = (await Promise.all(["MANAGE_EXPENSES", "APPROVE_EXPENSES", "MARK_EXPENSE_PAID", "CANCEL_EXPENSES"].map((permission) => hasUserPermission(auth.user, permission)))).some(Boolean);
     const where = whereFrom(request);
     const [rows, all] = await Promise.all([
       prisma.expenseRecord.findMany({ where, include: expenseDetailInclude, orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }], take: 500 }),

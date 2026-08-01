@@ -16,6 +16,7 @@ import {
   type ExamGovernanceBackup
 } from "@/lib/exam-governance-backup";
 import { validateAuthSecurityBackup, type AuthSecurityBackup } from "@/lib/auth-backup";
+import { validateIamAccessBackup, type IamAccessBackup } from "@/lib/iam/backup";
 
 const APP_NAME = "Nalanda Fee Control";
 const MAX_ENTITY_ROWS = 100_000;
@@ -29,6 +30,7 @@ const TOP_LEVEL_KEYS = new Set([
   "paymentAudits",
   "users",
   "authSecurity",
+  "iamAccess",
   "rolePermissions",
   "guardians",
   "studentGuardians",
@@ -91,6 +93,7 @@ const METADATA_KEYS = new Set([
 const BACKUP_COUNT_KEYS = new Set([
   "schoolSettings",
   "authSecurityRecords",
+  "iamAccessRecords",
   "timetableTeachers", "timetableSubjects", "timetableClassSections",
   "rolePermissions", "guardians", "studentGuardians", "notices", "staffMembers", "timetablePeriodTemplates",
   "studentAttendanceSessions", "studentAttendanceRecords",
@@ -154,7 +157,7 @@ const USER_KEYS = new Set([
   "guardianId", "createdAt", "updatedAt"
 ]);
 const GUARDIAN_KEYS = new Set([
-  "id", "displayName", "primaryMobile", "alternateMobile", "email", "relationship",
+  "id", "iamPublicKey", "displayName", "primaryMobile", "alternateMobile", "email", "relationship",
   "status", "notes", "createdAt", "updatedAt"
 ]);
 const STUDENT_GUARDIAN_KEYS = new Set([
@@ -169,7 +172,7 @@ const NOTICE_KEYS = new Set([
   "publishDate", "expiresAt", "createdById", "updatedById", "createdAt", "updatedAt"
 ]);
 const STAFF_MEMBER_KEYS = new Set([
-  "id", "staffCode", "fullName", "displayName", "staffType", "designation", "department",
+  "id", "iamPublicKey", "staffCode", "fullName", "displayName", "staffType", "designation", "department",
   "primarySubject", "additionalSubjects", "qualification", "experienceYears", "dateOfJoining",
   "mobile", "alternateMobile", "email", "address", "emergencyContactName", "emergencyContactMobile",
   "status", "notes", "userId", "timetableTeacherId", "createdAt", "updatedAt"
@@ -330,6 +333,7 @@ export type ValidatedBackup = {
   paymentAudits: RestoreRecord[];
   users: RestoreRecord[];
   authSecurity: AuthSecurityBackup;
+  iamAccess: IamAccessBackup;
   rolePermissions: RestoreRecord[];
   guardians: RestoreRecord[];
   studentGuardians: RestoreRecord[];
@@ -502,6 +506,7 @@ export type RestoreResult = {
   paymentAudits: EntityRestoreResult;
   users: EntityRestoreResult;
   authSecurity: EntityRestoreResult;
+  iamAccess: EntityRestoreResult;
   rolePermissions: EntityRestoreResult;
   guardians: EntityRestoreResult;
   studentGuardians: EntityRestoreResult;
@@ -1232,6 +1237,10 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     userIds: new Set(users.map((row) => String(row.id ?? "")).filter(Boolean)),
     studentIds
   });
+  const iamAccess = validateIamAccessBackup(
+    root.iamAccess,
+    new Set(users.map((row) => String(row.id ?? "")).filter(Boolean))
+  );
   const studentMarks=validateOptionalRows(root.studentMarks,"studentMarks",STUDENT_MARK_KEYS,["id","assessmentId","studentId","academicYear","entryStatus"]);const markIds=new Set<string>(),markKeys=new Set<string>();
   studentMarks.forEach((row,index)=>{const prefix=`studentMarks[${index}]`,id=requireString(row.id,`${prefix}.id`),assessmentId=requireString(row.assessmentId,`${prefix}.assessmentId`),studentId=requireString(row.studentId,`${prefix}.studentId`),status=requireString(row.entryStatus,`${prefix}.entryStatus`),key=`${assessmentId}|${studentId}`,assessment=examAssessments.find((item)=>item.id===assessmentId);if(markIds.has(id)||markKeys.has(key)||!assessment||!studentIds.has(studentId))throw new Error(`${prefix} has a duplicate identity or invalid assessment/Student link`);markIds.add(id);markKeys.add(key);const matchingEnrollment=activeEnrollments.some((enrollment)=>String(enrollment.studentId)===studentId&&String(enrollment.academicYear)===String(assessment.academicYear)&&String(enrollment.className)===String(assessment.className)&&(!String(assessment.section??"")||String(enrollment.section??"")===String(assessment.section??"")));if(String(row.academicYear)!==String(assessment.academicYear)||!matchingEnrollment)throw new Error(`${prefix} is incompatible with active academic-year enrollment`);if(!["PRESENT","ABSENT","EXEMPT","NOT_APPLICABLE"].includes(status))throw new Error(`${prefix}.entryStatus is unsupported`);if(status==="PRESENT"){if(!hasValue(row.marksObtained)||decimal(row.marksObtained,`${prefix}.marksObtained`)>decimal(assessment.maxMarks,`${prefix}.assessment.maxMarks`))throw new Error(`${prefix} present mark is missing or above maximum`);}else if(hasValue(row.marksObtained))throw new Error(`${prefix} non-present status must not carry marks`);});
   const studentMarkEvents=validateOptionalRows(root.studentMarkEvents,"studentMarkEvents",STUDENT_MARK_EVENT_KEYS,["id","assessmentId","eventType","eventDate"]);const markEventIds=new Set<string>();studentMarkEvents.forEach((row,index)=>{const prefix=`studentMarkEvents[${index}]`,id=requireString(row.id,`${prefix}.id`),assessmentId=requireString(row.assessmentId,`${prefix}.assessmentId`),eventType=requireString(row.eventType,`${prefix}.eventType`);if(markEventIds.has(id)||!assessmentIds.has(assessmentId))throw new Error(`${prefix} has duplicate identity or invalid assessment link`);markEventIds.add(id);if(hasValue(row.studentMarkId)&&!markIds.has(String(row.studentMarkId)))throw new Error(`${prefix}.studentMarkId does not match a backup mark`);if(!["MARK_CREATED","MARK_UPDATED","MARK_STATUS_CHANGED","MARKS_SUBMITTED","MARKS_APPROVED","MARKS_LOCKED","CORRECTION_REQUESTED","CORRECTION_APPLIED","ASSESSMENT_CANCELLED"].includes(eventType))throw new Error(`${prefix}.eventType is unsupported`);requireDateString(row.eventDate,`${prefix}.eventDate`);if(["CORRECTION_REQUESTED","CORRECTION_APPLIED"].includes(eventType)&&!hasValue(row.reason))throw new Error(`${prefix}.reason is required for correction`);});
@@ -1295,6 +1304,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     paymentAudits,
     users,
     authSecurity,
+    iamAccess,
     rolePermissions,
     guardians,
     studentGuardians,

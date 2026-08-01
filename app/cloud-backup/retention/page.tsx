@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { previewCloudBackupRetention } from "@/lib/cloud-backup-retention";
-import { getEffectivePermissions } from "@/lib/role-permissions";
+
 import { CloudBackupActionPanel } from "@/components/cloud-backup-ui";
 
 export default async function CloudBackupRetentionPage() {
   const user = await requirePermission("MANAGE_CLOUD_BACKUP_RETENTION");
   const [profile, permissions] = await Promise.all([
     prisma.cloudBackupProfile.findFirst({ where: { status: "ACTIVE" }, include: { retentionPolicy: true } }),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   const preview = profile ? await previewCloudBackupRetention(prisma, profile.id) : null;
   return <div className="page cloud-backup-page"><PageHeader title="Cloud Backup Retention" description="Dry-run first, exact-object deletion only, latest-good and rehearsal-source protection, and preserved PRUNED metadata." action={<Link className="button secondary" href="/cloud-backup">Backup health</Link>} />

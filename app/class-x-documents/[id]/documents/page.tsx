@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import { DocumentItemActions } from "@/components/class-x-package-forms";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 export default async function ClassXDocumentsCustodyPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_CLASS_X_PACKAGES"), id = (await params).id;
-  const [row, canManage] = await Promise.all([prisma.classXDocumentPackage.findUnique({ where: { id }, include: { student: { select: { studentName: true, admissionNo: true } }, items: { orderBy: { displayOrder: "asc" } } } }), hasRolePermission(prisma, user.role, "MANAGE_CLASS_X_DOCUMENT_CUSTODY")]);
+  const [row, canManage] = await Promise.all([prisma.classXDocumentPackage.findUnique({ where: { id }, include: { student: { select: { studentName: true, admissionNo: true } }, items: { orderBy: { displayOrder: "asc" } } } }), hasUserPermission(user, "MANAGE_CLASS_X_DOCUMENT_CUSTODY")]);
   if (!row) notFound();
   const certificates = await prisma.studentCertificate.findMany({ where: { studentId: row.studentId, status: "ISSUED" }, select: { id: true, certificateType: true, certificateNumber: true, currentVersionNumber: true }, orderBy: { issuedAt: "desc" } });
   return <PageShell className="class-x-page"><PageHeader title="Documents & Custody" description={`${row.packageNumber} · ${row.student.studentName}. Board documents are external physical records only.`} />

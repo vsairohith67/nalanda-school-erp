@@ -1,12 +1,12 @@
 import { PageHeader, PageShell } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { CLASS_X_REPORT_ROW_LIMIT, classXPackageReport } from "@/lib/class-x-package-reports";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 export default async function ClassXReportsPage() {
   const user = await requirePermission("VIEW_CLASS_X_PACKAGE_REPORTS");
-  const [rows, canExport] = await Promise.all([prisma.classXDocumentPackage.findMany({ include: { items: true, charge: { include: { linkedMiscIncomeReceipt: true } } }, orderBy: { createdAt: "desc" }, take: CLASS_X_REPORT_ROW_LIMIT }), hasRolePermission(prisma, user.role, "EXPORT_CLASS_X_PACKAGE_REPORTS")]);
+  const [rows, canExport] = await Promise.all([prisma.classXDocumentPackage.findMany({ include: { items: true, charge: { include: { linkedMiscIncomeReceipt: true } } }, orderBy: { createdAt: "desc" }, take: CLASS_X_REPORT_ROW_LIMIT }), hasUserPermission(user, "EXPORT_CLASS_X_PACKAGE_REPORTS")]);
   const report = classXPackageReport(rows), cards = [["Packages", report.total], ["Parent requests", report.parentRequests], ["Missing school certificates", report.missingSchoolCertificates], ["Board awaiting receipt", report.boardAwaitingReceipt], ["Board awaiting verification", report.boardAwaitingVerification], ["Migration awaiting", report.migrationAwaiting], ["Ready items", report.readyForHandoverItems], ["Partial handovers", report.partialHandovers], ["Payment pending", report.paymentPending], ["Paid", report.paid], ["Waived", report.waived], ["Not required", report.notRequired], ["Mismatch count", report.mismatchCount], ["Average turnaround days", report.averageTurnaroundDays]];
   return <PageShell className="class-x-page"><PageHeader title="Class X Package Reports" description={`Privacy-safe reconciliation for the newest ${CLASS_X_REPORT_ROW_LIMIT} packages. Use operational filters for older records.`} action={canExport ? <a className="button" href="/api/class-x-documents/reports/export">Export Safe CSV</a> : undefined} />
     <div className="stats">{cards.map(([label, value]) => <div className="card stat" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>

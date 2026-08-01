@@ -1,13 +1,13 @@
 import { NoticeManager, type NoticeView } from "@/components/notice-manager";
 import { PageHeader } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { CLASS_NAMES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function NoticesPage() {
   const user = await requirePermission("VIEW_NOTICES");
-  const permissions = await getEffectivePermissions(prisma, user.role);
+  const permissions = await getCurrentUserEffectivePermissions();
   const [notices, studentSections] = await Promise.all([
     prisma.notice.findMany({
       include: {

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { linkedStaffMember, leaveLabel, staffLeaveInclude } from "@/lib/staff-leave";
 import { PageHeader } from "@/components/ui";
 import { StaffLeaveForm } from "@/components/staff-leave-form";
@@ -11,7 +11,7 @@ export default async function StaffLeaveDetailPage({ params }: { params: Promise
   const { id } = await params;
   const [row, permissions, linked] = await Promise.all([
     prisma.staffLeaveRequest.findUnique({ where: { id }, include: staffLeaveInclude }),
-    getEffectivePermissions(prisma, user.role),
+    getCurrentUserEffectivePermissions(),
     linkedStaffMember(prisma, user.id)
   ]);
   if (!row) redirect("/leave/staff");

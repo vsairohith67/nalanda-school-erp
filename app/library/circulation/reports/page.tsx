@@ -1,16 +1,16 @@
 import { LibraryNav } from "@/components/library-nav";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { loadCirculationReports } from "@/lib/library-circulation-reports";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 export default async function LibraryCirculationReportsPage() {
   const user = await requirePermission("VIEW_LIBRARY_CIRCULATION_REPORTS");
   const [report, canExport, canCirculate] = await Promise.all([
     loadCirculationReports(prisma, user.role === "VIEWER"),
-    hasRolePermission(prisma, user.role, "EXPORT_LIBRARY_CIRCULATION_REPORTS"),
-    hasRolePermission(prisma, user.role, "VIEW_LIBRARY_CIRCULATION")
+    hasUserPermission(user, "EXPORT_LIBRARY_CIRCULATION_REPORTS"),
+    hasUserPermission(user, "VIEW_LIBRARY_CIRCULATION")
   ]);
   const cards = [["Active loans", report.summary.activeLoans], ["Overdue (derived)", report.summary.overdue], ["Due today", report.summary.dueToday], ["Due within 7 days", report.summary.dueWithinDays], ["Returns today", report.summary.returnsToday], ["Waiting reservations", report.summary.waitingReservations]];
   const exportTypes = ["active-loans", "overdue-loans", "due-today", "due-soon", "returned-loans", "renewals", "waiting-reservations", "all-reservations", "student-borrowing", "staff-borrowing", "class-wise", "title-wise", "member-limit-usage", "members-open-loans", "copy-availability"];

@@ -61,7 +61,7 @@ describe("parent notices", () => {
     const item = source("app/api/notices/[id]/route.ts");
     expect(collection).toContain('requireApiPermission("VIEW_NOTICES")');
     expect(collection).toContain('requireApiPermission("MANAGE_NOTICES")');
-    expect(collection).toContain('hasRolePermission(prisma, auth.user.role, "PUBLISH_NOTICES")');
+    expect(collection).toContain('hasUserPermission(auth.user, "PUBLISH_NOTICES")');
     expect(item).toContain('action === "publish" || source.status === "PUBLISHED"');
     expect(item).toContain('status: "PUBLISHED"');
     expect(item).toContain('status: "ARCHIVED"');

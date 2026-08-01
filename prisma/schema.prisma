@@ -121,11 +121,19 @@ model ReceiptNote {
 
 model User {
   id                               String                              @id @default(cuid())
+  iamPublicKey                     String?                             @unique
   name                             String
+  designation                      String?
   username                         String                              @unique
   email                            String?                             @unique
   passwordHash                     String
   credentialVersion                Int                                 @default(1)
+  authorizationVersion             Int                                 @default(1)
+  lifecycleStatus                  String                              @default("ACTIVE")
+  mustChangePassword               Boolean                             @default(false)
+  temporaryPasswordExpiresAt       DateTime?
+  suspensionReason                 String?
+  version                          Int                                 @default(1)
   role                             String
   isActive                         Boolean                             @default(true)
   lastLoginAt                      DateTime?
@@ -243,10 +251,15 @@ model User {
   authSessions                     AuthSession[]
   authSecurityEvents               AuthSecurityEvent[]                 @relation("AuthSecurityEventSubject")
   authSecurityEventsActed          AuthSecurityEvent[]                 @relation("AuthSecurityEventActor")
+  iamRoleAssignments               UserRoleAssignment[]
+  iamProfileAssignments            UserPermissionProfileAssignment[]
+  iamPermissionOverrides           UserPermissionOverride[]
 
   @@index([role])
   @@index([isActive])
   @@index([guardianId])
+  @@index([lifecycleStatus])
+  @@index([authorizationVersion])
 }
 
 model AcademicYearEnrollment {
@@ -399,6 +412,7 @@ model StudentAttendanceRecord {
 
 model StaffMember {
   id                        String                     @id @default(cuid())
+  iamPublicKey              String?                    @unique
   staffCode                 String?                    @unique
   fullName                  String
   displayName               String?
@@ -599,6 +613,7 @@ model Notice {
 
 model Guardian {
   id                   String                @id @default(cuid())
+  iamPublicKey         String?               @unique
   displayName          String
   primaryMobile        String
   alternateMobile      String?
@@ -743,23 +758,158 @@ model AuthPasswordResetToken {
 }
 
 model AuthSession {
-  id                    String    @id @default(cuid())
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Restrict)
-  tokenHash             String    @unique
-  credentialVersion     Int
-  createdAt             DateTime  @default(now())
-  lastSeenAt            DateTime  @default(now())
-  expiresAt             DateTime
-  revokedAt             DateTime?
-  revocationReason      String?
-  deviceSummary         String
-  browserSummary        String
-  networkEvidenceMasked String
-  version               Int       @default(1)
+  id                     String    @id @default(cuid())
+  userId                 String
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  tokenHash              String    @unique
+  credentialVersion      Int
+  authorizationVersion   Int       @default(1)
+  activeRoleAssignmentId String?
+  activeChildLinkId      String?
+  contextVersion         Int       @default(1)
+  createdAt              DateTime  @default(now())
+  lastSeenAt             DateTime  @default(now())
+  expiresAt              DateTime
+  revokedAt              DateTime?
+  revocationReason       String?
+  deviceSummary          String
+  browserSummary         String
+  networkEvidenceMasked  String
+  version                Int       @default(1)
 
   @@index([userId, revokedAt, expiresAt])
   @@index([expiresAt])
+}
+
+model UserRoleAssignment {
+  id               String    @id @default(cuid())
+  publicKey        String    @unique @default(uuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role             String
+  status           String    @default("ACTIVE")
+  validFrom        DateTime  @default(now())
+  validUntil       DateTime?
+  reason           String
+  assignedByUserId String?
+  endedByUserId    String?
+  endedAt          DateTime?
+  version          Int       @default(1)
+  contextVersion   Int       @default(1)
+  activeKey        String?   @unique
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([userId, status, validFrom, validUntil])
+  @@index([role, status])
+}
+
+model PermissionProfile {
+  id              String                            @id @default(cuid())
+  publicKey       String                            @unique @default(uuid())
+  name            String
+  normalizedName  String                            @unique
+  description     String?
+  status          String                            @default("ACTIVE")
+  version         Int                               @default(1)
+  createdByUserId String
+  updatedByUserId String
+  archivedAt      DateTime?
+  createdAt       DateTime                          @default(now())
+  updatedAt       DateTime                          @updatedAt
+  entries         PermissionProfileEntry[]
+  versions        PermissionProfileVersion[]
+  assignments     UserPermissionProfileAssignment[]
+
+  @@index([status, name])
+}
+
+model PermissionProfileEntry {
+  id              String            @id @default(cuid())
+  profileId       String
+  profile         PermissionProfile @relation(fields: [profileId], references: [id], onDelete: Restrict)
+  permission      String
+  effect          String
+  status          String            @default("ACTIVE")
+  validFrom       DateTime          @default(now())
+  validUntil      DateTime?
+  reason          String
+  createdByUserId String
+  revokedByUserId String?
+  revokedAt       DateTime?
+  supersedesId    String?
+  version         Int               @default(1)
+  activeKey       String?           @unique
+  createdAt       DateTime          @default(now())
+
+  @@index([profileId, status, permission])
+  @@index([permission, effect, status])
+}
+
+model PermissionProfileVersion {
+  id              String            @id @default(cuid())
+  profileId       String
+  profile         PermissionProfile @relation(fields: [profileId], references: [id], onDelete: Restrict)
+  versionNumber   Int
+  snapshotJson    String
+  reason          String
+  createdByUserId String
+  createdAt       DateTime          @default(now())
+
+  @@unique([profileId, versionNumber])
+  @@index([profileId, createdAt])
+}
+
+model UserPermissionProfileAssignment {
+  id               String            @id @default(cuid())
+  publicKey        String            @unique @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  profileId        String
+  profile          PermissionProfile @relation(fields: [profileId], references: [id], onDelete: Restrict)
+  status           String            @default("ACTIVE")
+  validFrom        DateTime          @default(now())
+  validUntil       DateTime?
+  reason           String
+  assignedByUserId String
+  endedByUserId    String?
+  endedAt          DateTime?
+  version          Int               @default(1)
+  activeKey        String?           @unique
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([userId, status, validFrom, validUntil])
+  @@index([profileId, status])
+}
+
+model UserPermissionOverride {
+  id              String    @id @default(cuid())
+  publicKey       String    @unique @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  permission      String
+  effect          String
+  status          String    @default("ACTIVE")
+  validFrom       DateTime  @default(now())
+  validUntil      DateTime?
+  reason          String
+  createdByUserId String
+  revokedByUserId String?
+  revokedAt       DateTime?
+  supersedesId    String?
+  version         Int       @default(1)
+  activeKey       String?   @unique
+  createdAt       DateTime  @default(now())
+
+  @@index([userId, status, permission])
+  @@index([permission, effect, status])
+}
+
+model IamSafetyLock {
+  key       String   @id
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
 }
 
 model AuthSecurityEvent {

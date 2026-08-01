@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { identityCardReport } from "@/lib/id-card-reports";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function IdentityCardReportsPage() {
-  const user = await requirePermission("VIEW_ID_CARD_REPORTS"), permissions = await getEffectivePermissions(prisma, user.role), { summary: s, groups } = await identityCardReport(prisma);
+  const user = await requirePermission("VIEW_ID_CARD_REPORTS"), permissions = await getCurrentUserEffectivePermissions(), { summary: s, groups } = await identityCardReport(prisma);
   const metrics = [["Total cards", s.total], ["Student cards", s.student], ["Staff cards", s.staff], ["Active", s.active], ["Expired", s.expired], ["Revoked", s.revoked], ["Cancelled", s.cancelled], ["Awaiting review", s.awaitingReview], ["Awaiting approval", s.awaitingApproval], ["Awaiting issue", s.awaitingIssue], ["Superseded versions", s.supersededVersions], ["Replacements", s.replacements], ["Corrections", s.corrections], ["Photo placeholders", s.missingPhotoPlaceholders], ["Expiring in 30 days", s.expiring30], ["Expiring in 60 days", s.expiring60], ["Expiring in 90 days", s.expiring90], ["Active Student covered", s.activeStudentCoverage], ["Active Student missing", s.activeStudentMissing], ["Active Staff covered", s.activeStaffCoverage], ["Active Staff missing", s.activeStaffMissing], ["Batches", s.batches], ["Batch skips", s.batchSkipped], ["Lookup events", s.lookupEvents], ["Templates", s.templates], ["Number series", s.series]];
   return <div className="page identity-card-page"><PageHeader title="ID Card Reports" description="Privacy-safe operational coverage, workflow, expiry, replacement, correction, batch, lookup, template, and series aggregates." action={permissionSetCan(permissions, "EXPORT_ID_CARD_REPORTS") ? <Link className="button" href="/api/id-cards/reports/export">Export Safe CSV</Link> : undefined}/><div className="stats identity-card-report-grid">{metrics.map(([label, value]) => <div className="card stat" key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</div><div className="two-column">{Object.entries(groups).map(([key, rows]) => <section className="card" key={key}><div className="table-wrap"><table><thead><tr><th>{rows[0]?.label ?? key}</th><th>Cards</th></tr></thead><tbody>{rows.length ? rows.map((row) => <tr key={row.value}><td>{row.value}</td><td>{row.count}</td></tr>) : <tr><td colSpan={2}>No cards</td></tr>}</tbody></table></div></section>)}</div><p className="notice">CSV excludes photos, addresses, personal contacts, Aadhaar, sensitive demographics, finance, salary, bank, EPFO/tax data, raw database IDs, and actor IDs.</p></div>;
 }

@@ -1,14 +1,14 @@
 import { PageHeader } from "@/components/ui";
 import { ImportExport } from "@/components/import-export";
-import { requireUser } from "@/lib/auth";
+import { requireUser, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { canOpenImportExportWorkspace } from "@/lib/access-rules";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { redirect } from "next/navigation";
 
 export default async function ImportExportPage() {
   const user = await requireUser();
-  const permissions = await getEffectivePermissions(prisma, user.role);
+  const permissions = await getCurrentUserEffectivePermissions();
   const canOpen = permissionSetCan(permissions, "VIEW_IMPORT_EXPORT");
   const canImportStudents = permissionSetCan(permissions, "IMPORT_STUDENTS");
   const canImportGuardians = permissionSetCan(permissions, "IMPORT_GUARDIANS");

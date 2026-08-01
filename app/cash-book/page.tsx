@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { calculateCashSources } from "@/lib/cash-book";
 import { displayDate, moneyExact, schoolDateKey } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 export default async function CashBookPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const user = await requirePermission("VIEW_CASH_BOOK");
@@ -15,7 +15,7 @@ export default async function CashBookPage({ searchParams }: { searchParams: Pro
     prisma.cashBookDay.findMany({ where: status ? { status } : undefined, orderBy: { cashDate: "desc" }, take: 180 }),
     prisma.cashBookDay.findUnique({ where: { cashDate: todayDate } }),
     prisma.cashBookDay.findFirst({ orderBy: { cashDate: "desc" } }),
-    hasRolePermission(prisma, user.role, "MANAGE_CASH_BOOK")
+    hasUserPermission(user, "MANAGE_CASH_BOOK")
   ]);
   const live = todayRow ? await calculateCashSources(prisma, todayRow.cashDate, todayRow.openingBalance, todayRow.id) : null;
   return <PageShell>

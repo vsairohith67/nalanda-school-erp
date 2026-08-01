@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { reportCardScopeWhere, resolveReportCardScope } from "@/lib/report-card-scope";
 
 export default async function ReportCardsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePermission("VIEW_REPORT_CARDS");
   const q = await searchParams;
-  const [permissions, scope] = await Promise.all([getEffectivePermissions(prisma, user.role), resolveReportCardScope(prisma, user, q.academicYear)]);
+  const [permissions, scope] = await Promise.all([getCurrentUserEffectivePermissions(), resolveReportCardScope(prisma, user, q.academicYear)]);
   const batches = await prisma.reportCardBatch.findMany({
     where: {
       ...(q.academicYear ? { academicYear: q.academicYear } : {}),

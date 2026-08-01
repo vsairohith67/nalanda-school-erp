@@ -2,8 +2,8 @@ import Link from "next/link";
 import { getPendingDues } from "@/lib/data";
 import { money } from "@/lib/format";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { buildDetailedReminder, buildShortReminder, buildWhatsAppLink } from "@/lib/reminders";
 import { ReminderActions } from "@/components/reminder-actions";
 import { prisma } from "@/lib/prisma";
@@ -20,7 +20,7 @@ export default async function PendingDuesPage({
   const [rows, settings, permissions] = await Promise.all([
     getPendingDues(sp),
     getSchoolSettings(prisma),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   const query = new URLSearchParams(Object.entries(sp).filter(([, v]) => Boolean(v)) as string[][]).toString();
   const aggregateRows = user.role === "VIEWER"

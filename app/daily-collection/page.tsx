@@ -1,15 +1,15 @@
 import { PageHeader } from "@/components/ui";
 import { CollectionReport } from "@/components/collection-report";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getSchoolSettings } from "@/lib/school-settings";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function DailyCollectionPage() {
   const user = await requirePermission("VIEW_DAILY_COLLECTION");
   const [settings, permissions] = await Promise.all([
     getSchoolSettings(prisma),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   return (
     <div className="page">

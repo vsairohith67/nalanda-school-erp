@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { PageHeader, StatCard } from "@/components/ui";
 import { ReportPublicationWorkspace } from "@/components/report-publication-workspace";
-import { requirePermission } from "@/lib/auth";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { prisma } from "@/lib/prisma";
 import {
   loadReportPublicationReadiness,
@@ -17,7 +17,7 @@ export default async function ReportPublicationPage() {
   }
   const [readiness, permissions, cards] = await Promise.all([
     loadReportPublicationReadiness(prisma),
-    getEffectivePermissions(prisma, user.role),
+    getCurrentUserEffectivePermissions(),
     prisma.studentReportCard.findMany({
       where: {
         status: { in: ["ISSUED", "WITHDRAWN"] },

@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import { SmsEmailActionButton, SmsEmailBatchWorkflow } from "@/components/sms-email-forms";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { prisma } from "@/lib/prisma";
 
 export default async function SmsEmailBatchPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await requirePermission("VIEW_SMS_EMAIL_CENTRE"), permissions = await getEffectivePermissions(prisma, user.role), id = (await params).id;
+  const user = await requirePermission("VIEW_SMS_EMAIL_CENTRE"), permissions = await getCurrentUserEffectivePermissions(), id = (await params).id;
   const row = await prisma.smsEmailOutboundBatch.findUnique({ where: { id }, include: { integrationProfile: true, templateMapping: true, notificationCampaign: true, deliveries: { orderBy: { createdAt: "asc" } } } });
   if (!row) notFound();
   const canDetails = permissionSetCan(permissions, "VIEW_SMS_EMAIL_DELIVERIES");

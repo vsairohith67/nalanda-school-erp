@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function TeacherAnalyticsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePermission("VIEW_TEACHER_ANALYTICS");
   const q = await searchParams;
   const [permissions, cycles] = await Promise.all([
-    getEffectivePermissions(prisma, user.role),
+    getCurrentUserEffectivePermissions(),
     prisma.teacherAnalyticsReviewCycle.findMany({
       where: { ...(q.academicYear ? { academicYear: q.academicYear } : {}), ...(q.status ? { status: q.status } : {}), ...(q.from ? { periodEnd: { gte: new Date(`${q.from}T00:00:00+05:30`) } } : {}), ...(q.to ? { periodStart: { lte: new Date(`${q.to}T23:59:59+05:30`) } } : {}) },
       include: { _count: { select: { snapshots: true } }, snapshots: { select: { review: { select: { status: true } } } } },

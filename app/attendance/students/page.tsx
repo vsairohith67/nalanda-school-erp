@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/auth";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { getSchoolSettings } from "@/lib/school-settings";
 import { PageHeader } from "@/components/ui";
 import { StudentAttendanceEntry } from "@/components/student-attendance-entry";
@@ -11,7 +11,7 @@ export default async function StudentAttendancePage() {
   const user = await requirePermission("VIEW_STUDENT_ATTENDANCE");
   const [settings, permissions] = await Promise.all([
     getSchoolSettings(prisma),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   const today = attendanceDay(localDateText());
   const resolved = await resolveTeacherAttendanceScope(prisma, user, {

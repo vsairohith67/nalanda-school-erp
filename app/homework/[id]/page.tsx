@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { HomeworkEditor } from "@/components/homework-editor";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { loadAccessibleHomework } from "@/lib/homework-api";
 import { resolveHomeworkScope, scopeOptions } from "@/lib/homework-scope";
 import { serializeHomework } from "@/lib/homework";
@@ -12,7 +12,7 @@ import { displayDate } from "@/lib/format";
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_HOMEWORK"); const id = decodeURIComponent((await params).id);
   const loaded = await loadAccessibleHomework(user, id).catch(() => null); if (!loaded) notFound();
-  const permissions = await getEffectivePermissions(prisma, user.role); const scope = await resolveHomeworkScope(prisma, user, loaded.assignment.academicYear);
+  const permissions = await getCurrentUserEffectivePermissions(); const scope = await resolveHomeworkScope(prisma, user, loaded.assignment.academicYear);
   let options = scopeOptions(scope); if (scope.broad) options = [{ academicYear: loaded.assignment.academicYear, className: loaded.assignment.className, section: loaded.assignment.section, subjectName: loaded.assignment.subjectName }];
   const assignment = serializeHomework(loaded.assignment, { includeInternal: true }) as never;
   return <div className="page homework-editor-page"><PageHeader title={loaded.assignment.title} description={`${loaded.assignment.assignmentNumber} - ${loaded.assignment.className}${loaded.assignment.section ? `-${loaded.assignment.section}` : " / All sections"} - ${loaded.assignment.subjectName}`} action={<StatusBadge status={loaded.assignment.status} />} />

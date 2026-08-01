@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 import { hashPassword } from "@/lib/password";
 import { optionalText, requireText } from "@/lib/validation";
 import { maskAlias, normalizeAliasValue } from "@/lib/auth-identifiers";
@@ -81,12 +81,21 @@ export async function createFirstRunSetup(
   const passwordHash = await hashPassword(input.password);
   const user = await client.user.create({
     data: {
+      iamPublicKey: randomUUID(),
       name: input.directorName,
       username: input.username,
       email: input.email,
       passwordHash,
       role: "DIRECTOR",
-      isActive: true
+      isActive: true,
+      iamRoleAssignments: {
+        create: {
+          publicKey: randomUUID(),
+          role: "DIRECTOR",
+          reason: "First-run governed Director ownership",
+          activeKey: `first-run:${randomUUID()}:DIRECTOR`
+        }
+      }
     }
   });
   const username = normalizeAliasValue("USERNAME", input.username);

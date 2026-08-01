@@ -3,6 +3,11 @@ flowchart LR
   APP --> UX["Shared UX Shell\nlogin, header, navigation, account and responsive tokens"]
   UX --> AUTH
   APP --> AUTH["Session, role and permission gates"]
+  AUTH --> IAM["IAM-1A Named Access\nrole assignments, profiles, grants and denials"]
+  IAM --> CTX["Server-held Context\nopaque role and linked-child handles"]
+  CTX --> SCOPE["Exact Object Scope\nTeacher, Parent, finance and ownership"]
+  IAM --> AUDIT
+  SCOPE --> DATA
   AUTH --> TAS["Teacher Attendance Scope\nexact active timetable or dated substitute"]
   AUTH --> EXAM["Versioned Examination Configuration\nPrincipal setup and exact Teacher assignment"]
   AUTH --> GOV["Separately governed leadership and other-role scopes"]

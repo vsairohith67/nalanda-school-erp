@@ -1,80 +1,22 @@
-import { safeClientError } from "@/lib/client-errors";
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 import { requireApiPermission } from "@/lib/auth";
-import { hashPassword } from "@/lib/password";
-import { isRole } from "@/lib/permissions";
-import { assertCanAssignRole, SAFE_USER_SELECT, validateNewPassword } from "@/lib/user-management";
-import { logUserAction } from "@/lib/user-audit";
-import { maskAlias, normalizeAliasValue } from "@/lib/auth-identifiers";
+import { prisma } from "@/lib/prisma";
+import { listNamedUsers } from "@/lib/iam/users";
 
 export async function GET() {
-  const auth = await requireApiPermission("VIEW_USERS");
+  const auth = await requireApiPermission("VIEW_IAM_ACCESS");
   if (auth.response) return auth.response;
-  const users = await prisma.user.findMany({
-    select: SAFE_USER_SELECT,
-    orderBy: [{ role: "asc" }, { name: "asc" }]
-  });
-  return NextResponse.json(users);
+  return privateJson({ users: await listNamedUsers(prisma, {}) });
 }
 
-export async function POST(request: NextRequest) {
-  const auth = await requireApiPermission("MANAGE_USERS");
+export async function POST() {
+  const auth = await requireApiPermission("MANAGE_IAM_USERS");
   if (auth.response) return auth.response;
-  try {
-    const body = await request.json();
-    const name = requiredText(body.name, "Name");
-    const username = normalizeAliasValue("USERNAME", requiredText(body.username, "Username"));
-    const email = optionalText(body.email)?.toLowerCase() ?? null;
-    const role = String(body.role ?? "");
-    const password = String(body.password ?? "");
-    if (!isRole(role)) throw new Error("A valid role is required");
-    assertCanAssignRole(auth.user.role, role);
-    validateNewPassword(password);
-
-    const user = await prisma.$transaction(async (tx) => {
-      const created = await tx.user.create({
-        data: { name, username, email, role, passwordHash: await hashPassword(password), isActive: true },
-        select: SAFE_USER_SELECT
-      });
-      await tx.authLoginAlias.create({
-        data: {
-          id: `auth2b_username_${created.id}`,
-          userId: created.id,
-          type: "USERNAME",
-          normalizedValue: username,
-          displayMasked: maskAlias("USERNAME", username),
-          status: "VERIFIED",
-          isSchoolGoverned: true,
-          verifiedAt: new Date()
-        }
-      });
-      await logUserAction(tx, {
-        action: "USER_CREATED",
-        actor: auth.user,
-        targetUserId: created.id,
-        details: { username, role }
-      });
-      return created;
-    });
-    return NextResponse.json(user, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: friendlyError(error, "Unable to create user") }, { status: 400 });
-  }
+  return privateJson({ error: "Use the governed Named Users workflow for pending activation, role assignments and access history" }, 410);
 }
 
-function requiredText(value: unknown, label: string) {
-  const result = String(value ?? "").trim();
-  if (!result) throw new Error(`${label} is required`);
-  return result;
-}
-
-function optionalText(value: unknown) {
-  const result = String(value ?? "").trim();
-  return result || null;
-}
-
-function friendlyError(error: unknown, fallback: string) {
-  const message = safeClientError(error, fallback);
-  return message.includes("Unique constraint") ? "Username or email is already in use" : message;
+function privateJson(body: unknown, status = 200) {
+  const response = NextResponse.json(body, { status });
+  response.headers.set("cache-control", "private, no-store");
+  return response;
 }

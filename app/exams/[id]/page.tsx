@@ -3,16 +3,16 @@ import { notFound } from "next/navigation";
 import { ExamForm } from "@/components/exam-form";
 import { ExamWorkflowActions } from "@/components/exam-workflow-actions";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { displayDate } from "@/lib/format";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { marksScopeWhere, resolveMarksScope } from "@/lib/marks-scope";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_EXAMS");
   const id = (await params).id;
-  const [permissions, scope] = await Promise.all([getEffectivePermissions(prisma, user.role), resolveMarksScope(prisma, user)]);
+  const [permissions, scope] = await Promise.all([getCurrentUserEffectivePermissions(), resolveMarksScope(prisma, user)]);
   const assessmentWhere = marksScopeWhere(scope);
   const exam = await prisma.examCycle.findFirst({ where: { id, ...(!scope.broad ? { assessments: { some: assessmentWhere } } : {}) }, include: { assessments: { where: assessmentWhere, orderBy: [{ className: "asc" }, { section: "asc" }, { subjectName: "asc" }] } } });
   if (!exam) notFound();

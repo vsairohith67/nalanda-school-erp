@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { budgetDetailInclude, buildBudgetMetrics } from "@/lib/budgets";
 import { moneyExact } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
 
 export default async function BudgetsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const user = await requirePermission("VIEW_BUDGETS"); const params = await searchParams; const academicYear = typeof params.academicYear === "string" ? params.academicYear : ""; const status = typeof params.status === "string" ? params.status : ""; const canManage = await hasRolePermission(prisma, user.role, "MANAGE_BUDGETS");
+  const user = await requirePermission("VIEW_BUDGETS"); const params = await searchParams; const academicYear = typeof params.academicYear === "string" ? params.academicYear : ""; const status = typeof params.status === "string" ? params.status : ""; const canManage = await hasUserPermission(user, "MANAGE_BUDGETS");
   const plans = await prisma.budgetPlan.findMany({ where: { ...(academicYear ? { academicYear } : {}), ...(status ? { status } : {}) }, include: budgetDetailInclude, orderBy: [{ academicYear: "desc" }, { createdAt: "desc" }] });
   const years = [...new Set(plans.map((plan) => plan.academicYear))]; const expenses = years.length ? await prisma.expenseRecord.findMany({ where: { academicYear: { in: years }, approvalStatus: "APPROVED" }, select: { academicYear: true, categoryId: true, departmentId: true, netAmount: true, payments: { select: { amount: true } } } }) : [];
   const rows = plans.map((plan) => ({ plan, metrics: buildBudgetMetrics(plan, expenses.filter((expense) => expense.academicYear === plan.academicYear)) })); const official = rows.filter(({ plan }) => ["APPROVED", "LOCKED"].includes(plan.status)); const sum = (field: "allocated" | "paid" | "committed" | "available") => official.reduce((total, row) => total.add(row.metrics.totals[field]), new Prisma.Decimal(0));

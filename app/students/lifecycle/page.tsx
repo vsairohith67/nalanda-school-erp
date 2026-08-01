@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { getSchoolSettings } from "@/lib/school-settings";
 import { ACADEMIC_ENROLLMENT_STATUSES, lifecycleOverview } from "@/lib/student-lifecycle";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 export default async function StudentLifecyclePage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePermission("VIEW_STUDENT_LIFECYCLE");
@@ -19,7 +19,7 @@ export default async function StudentLifecyclePage({ searchParams }: { searchPar
       status: ACADEMIC_ENROLLMENT_STATUSES.includes(sp.status as never) ? sp.status : undefined
     }),
     prisma.academicYearEnrollment.findMany({ where: { academicYear }, select: { className: true, section: true }, distinct: ["className", "section"], orderBy: [{ className: "asc" }, { section: "asc" }] }),
-    hasRolePermission(prisma, user.role, "VIEW_STUDENT_PROGRESSION")
+    hasUserPermission(user, "VIEW_STUDENT_PROGRESSION")
   ]);
 
   return <div className="page">

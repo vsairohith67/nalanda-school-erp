@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { money } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 import { vendorWhere } from "@/lib/vendors";
 
 export default async function VendorsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const user = await requirePermission("VIEW_VENDORS"); const params = await searchParams; const manage = await hasRolePermission(prisma, user.role, "MANAGE_VENDORS");
+  const user = await requirePermission("VIEW_VENDORS"); const params = await searchParams; const manage = await hasUserPermission(user, "MANAGE_VENDORS");
   const search = typeof params.search === "string" ? params.search : ""; const status = typeof params.status === "string" ? params.status : "";
   const rows = await prisma.vendor.findMany({ where: vendorWhere(search, status, manage), include: { _count: { select: { expenses: true } }, expenses: { where: { approvalStatus: { not: "CANCELLED" } }, select: { netAmount: true } } }, orderBy: [{ name: "asc" }, { vendorCode: "asc" }] });
   return <PageShell><PageHeader title="Vendors" description="Vendor master records. Full bank account numbers are not stored." action={manage ? <Link className="button" href="/vendors/new">Create Vendor</Link> : undefined} />

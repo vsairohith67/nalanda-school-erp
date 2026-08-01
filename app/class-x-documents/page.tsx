@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function ClassXDocumentsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  const user = await requirePermission("VIEW_CLASS_X_PACKAGES"), q = await searchParams, permissions = await getEffectivePermissions(prisma, user.role);
+  const user = await requirePermission("VIEW_CLASS_X_PACKAGES"), q = await searchParams, permissions = await getCurrentUserEffectivePermissions();
   const where: Prisma.ClassXDocumentPackageWhereInput = {};
   if (q.academicYear) where.academicYear = q.academicYear;
   if (q.status) where.status = q.status;

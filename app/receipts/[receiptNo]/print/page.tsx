@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth";
+import { requireUser, hasUserPermission } from "@/lib/auth";
 import {
   groupReceiptPayments,
   receiptCorrectionDisplay,
@@ -11,7 +11,7 @@ import {
 import { displayDate, money } from "@/lib/format";
 import { PrintButton } from "@/components/print-button";
 import { displayReceiptNumber, getSchoolSettings } from "@/lib/school-settings";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 import { parentCanAccessReceiptRows } from "@/lib/parent-portal";
 
 export default async function ReceiptPrintPage({
@@ -47,7 +47,7 @@ export default async function ReceiptPrintPage({
   if (!rows.length) notFound();
   if (user.role === "PARENT") {
     if (!(await parentCanAccessReceiptRows(user.guardianId, rows))) notFound();
-  } else if (!(await hasRolePermission(prisma, user.role, "PRINT_RECEIPTS"))) {
+  } else if (!(await hasUserPermission(user, "PRINT_RECEIPTS"))) {
     redirect("/unauthorized");
   }
   const grouped = groupReceiptPayments(rows, note);

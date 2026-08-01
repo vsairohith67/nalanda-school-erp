@@ -2,16 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TeacherAnalyticsCycleActions } from "@/components/teacher-analytics-forms";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { teacherAnalyticsReadiness } from "@/lib/teacher-analytics";
 
 export default async function TeacherAnalyticsCyclePage({ params }: { params: Promise<{ cycleId: string }> }) {
   const user = await requirePermission("VIEW_TEACHER_ANALYTICS"); const { cycleId } = await params;
   const [cycle, permissions] = await Promise.all([
     prisma.teacherAnalyticsReviewCycle.findUnique({ where: { id: cycleId }, include: { snapshots: { include: { staffMember: { select: { fullName: true, displayName: true, staffCode: true } }, review: true }, orderBy: { staffMember: { fullName: "asc" } } }, events: { orderBy: { eventDate: "desc" }, take: 50 } } }),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   if (!cycle) notFound();
   const readiness = cycle.status === "DRAFT" || cycle.status === "OPEN" ? await teacherAnalyticsReadiness(prisma, cycle) : null;

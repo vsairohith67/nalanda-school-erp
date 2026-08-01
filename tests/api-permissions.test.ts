@@ -21,13 +21,15 @@ describe("API and direct route permission declarations", () => {
     expect(source("app/api/guardians/route.ts")).toContain('requireApiPermission("MANAGE_GUARDIANS")');
     expect(source("app/api/guardians/[id]/students/route.ts")).toContain('requireApiPermission("MANAGE_GUARDIANS")');
     expect(source("app/api/guardians/[id]/students/route.ts")).toContain("This guardian is already linked to this student");
-    expect(source("app/api/guardians/[id]/parent-user/route.ts")).toContain('requireApiPermission("MANAGE_GUARDIANS")');
+    expect(source("app/api/guardians/[id]/parent-user/route.ts")).toContain('requireApiPermission("MANAGE_IAM_USERS")');
+    expect(source("app/api/guardians/[id]/parent-user/route.ts")).toContain("status: 410");
     expect(source("app/api/import/payments/route.ts")).toContain('requireApiPermission("CREATE_PAYMENTS")');
     expect(source("app/api/backup/route.ts")).toContain('requireApiPermission("RUN_BACKUP")');
     expect(source("app/api/restore/route.ts")).toContain('requireApiPermission("RUN_RESTORE")');
-    expect(source("app/api/users/route.ts")).toContain('requireApiPermission("VIEW_USERS")');
-    expect(source("app/api/users/route.ts")).toContain('requireApiPermission("MANAGE_USERS")');
+    expect(source("app/api/users/route.ts")).toContain('requireApiPermission("VIEW_IAM_ACCESS")');
+    expect(source("app/api/users/route.ts")).toContain('requireApiPermission("MANAGE_IAM_USERS")');
     expect(source("app/api/users/[id]/reset-password/route.ts")).toContain('requireApiPermission("RESET_USER_PASSWORDS")');
+    expect(source("app/api/users/[id]/reset-password/route.ts")).toContain("status: 410");
     expect(source("app/api/timetable/generate/route.ts")).toContain('requireApiPermission("RUN_TIMETABLE_GENERATOR")');
     expect(source("app/api/timetable/entries/route.ts")).toContain('requireApiPermission("MANAGE_TIMETABLE_BUILDER")');
     expect(source("app/api/parent/dashboard/route.ts")).toContain("requireUser()");
@@ -77,7 +79,7 @@ describe("API and direct route permission declarations", () => {
       "app/pending-dues/page.tsx": 'requirePermission("VIEW_PENDING_DUES")',
       "app/daily-collection/page.tsx": 'requirePermission("VIEW_DAILY_COLLECTION")',
       "app/receipt-audit/page.tsx": 'requirePermission("VIEW_RECEIPT_AUDIT")',
-      "app/users/page.tsx": 'requirePermission("VIEW_USERS")',
+      "app/users/page.tsx": 'requirePermission("VIEW_IAM_ACCESS")',
       "app/roles/page.tsx": 'requirePermission("MANAGE_ROLE_PERMISSIONS")',
       "app/guardians/page.tsx": 'requirePermission("VIEW_GUARDIANS")',
       "app/notices/page.tsx": 'requirePermission("VIEW_NOTICES")',
@@ -167,7 +169,7 @@ describe("API and direct route permission declarations", () => {
     expect(parentApi).toContain("getParentDashboardData(user.id, studentId)");
     expect(parentApi).toContain("admissionNo");
     expect(receiptPrint).toContain("parentCanAccessReceiptRows");
-    expect(receiptPrint).toContain("hasRolePermission");
+    expect(receiptPrint).toContain("hasUserPermission");
     expect(receiptPrint).toContain('"PRINT_RECEIPTS"');
     expect(receiptPrint).toContain('user.role === "PARENT" ? "School Office" : receivedBy');
     expect(loginForm).toContain("defaultPathForRole");

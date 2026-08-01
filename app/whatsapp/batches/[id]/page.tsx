@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
 import { WhatsAppBatchWorkflow, WhatsAppActionButton } from "@/components/whatsapp-forms";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { WHATSAPP_COST_WARNING } from "@/lib/whatsapp-costs";
 
 export default async function WhatsAppBatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await requirePermission("VIEW_WHATSAPP_CENTRE"), permissions = await getEffectivePermissions(prisma, user.role), id = (await params).id;
+  const user = await requirePermission("VIEW_WHATSAPP_CENTRE"), permissions = await getCurrentUserEffectivePermissions(), id = (await params).id;
   const row = await prisma.whatsAppOutboundBatch.findUnique({ where: { id }, include: {
     integrationProfile: true, templateMapping: true, notificationCampaign: true,
     deliveries: { include: { attempts: { orderBy: { attemptNumber: "desc" } } }, orderBy: { createdAt: "asc" } }

@@ -2,6 +2,7 @@ import { hashPassword } from "@/lib/password";
 import { demoUserSeedDecision } from "@/lib/demo-user-seed-safety";
 import type { PrismaClient } from "@prisma/client";
 import { maskAlias, normalizeAliasValue } from "@/lib/auth-identifiers";
+import { randomUUID } from "node:crypto";
 
 export const SEED_USER_DEFINITIONS = [
   { name: "Director", username: "director", email: "director@nalanda.local", role: "DIRECTOR", env: "SEED_DIRECTOR_PASSWORD" },
@@ -14,7 +15,9 @@ export function documentedSeedPasswordForAudit(definition: typeof SEED_USER_DEFI
   return ["Nalanda", definition.name.replace(/[^A-Za-z0-9]/g, ""), "@", "2026"].join("");
 }
 
-type SeedClient = Pick<PrismaClient, "user" | "authLoginAlias">;
+type SeedClient = Pick<PrismaClient, "user" | "authLoginAlias"> & {
+  userRoleAssignment?: PrismaClient["userRoleAssignment"];
+};
 
 export async function ensureSeedUsers(
   client: SeedClient,
@@ -83,7 +86,8 @@ export async function ensureSeedUsers(
       email: definition.email,
       role: definition.role,
       passwordHash: await hashPassword(password),
-      isActive: true
+      isActive: true,
+      iamPublicKey: randomUUID()
     };
   }));
   const inserted = await client.user.createMany({ data: rows });
@@ -106,6 +110,18 @@ export async function ensureSeedUsers(
         status: "VERIFIED",
         isSchoolGoverned: true,
         verifiedAt: new Date()
+      };
+    })
+  });
+  await client.userRoleAssignment?.createMany({
+    data: createdUsers.map((user) => {
+      const definition = missing.find((candidate) => candidate.username === user.username)!;
+      return {
+        publicKey: randomUUID(),
+        userId: user.id,
+        role: definition.role,
+        reason: "Explicit isolated demo-user seed",
+        activeKey: `${user.id}:${definition.role}`
       };
     })
   });

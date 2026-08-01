@@ -12,7 +12,7 @@ const AUTH_SECURITY_KEYS = new Set(["aliases", "verificationHistory", "resetHist
 const ALIAS_KEYS = new Set(["id", "userId", "type", "normalizedValue", "displayMasked", "status", "isSchoolGoverned", "admissionStudentId", "verifiedAt", "removedAt", "version", "createdAt", "updatedAt"]);
 const VERIFICATION_KEYS = new Set(["id", "aliasId", "userId", "purpose", "credentialVersion", "attempts", "maxAttempts", "expiresAt", "usedAt", "invalidatedAt", "createdAt"]);
 const RESET_KEYS = new Set(["id", "userId", "aliasId", "channelType", "purpose", "credentialVersion", "attempts", "maxAttempts", "expiresAt", "usedAt", "invalidatedAt", "invalidationReason", "createdAt"]);
-const SESSION_KEYS = new Set(["id", "userId", "credentialVersion", "createdAt", "lastSeenAt", "expiresAt", "revokedAt", "revocationReason", "deviceSummary", "browserSummary", "networkEvidenceMasked", "version"]);
+const SESSION_KEYS = new Set(["id", "userId", "credentialVersion", "authorizationVersion", "contextVersion", "createdAt", "lastSeenAt", "expiresAt", "revokedAt", "revocationReason", "deviceSummary", "browserSummary", "networkEvidenceMasked", "version"]);
 const EVENT_KEYS = new Set(["id", "userId", "actorUserId", "eventType", "subjectType", "subjectId", "detailsJson", "createdAt"]);
 
 export function createAuthSecurityBackup(input?: Partial<Record<keyof AuthSecurityBackup, readonly object[]>>): AuthSecurityBackup {
@@ -58,6 +58,8 @@ export function validateAuthSecurityBackup(
   uniqueRows(sessions, "authSecurity.sessions", (row, prefix) => {
     if (!references.userIds.has(text(row.userId, `${prefix}.userId`))) throw new Error(`${prefix}.userId does not match a backup user`);
     positiveInteger(row.credentialVersion, `${prefix}.credentialVersion`);
+    if (row.authorizationVersion !== undefined) positiveInteger(row.authorizationVersion, `${prefix}.authorizationVersion`);
+    if (row.contextVersion !== undefined) positiveInteger(row.contextVersion, `${prefix}.contextVersion`);
     positiveInteger(row.version, `${prefix}.version`);
   });
   const events = rows(root.events, "authSecurity.events", EVENT_KEYS);

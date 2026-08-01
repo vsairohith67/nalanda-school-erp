@@ -1,0 +1,22 @@
+flowchart TD
+  USER["Named User\ndisplay name and designation"] --> ROLE["Active UserRoleAssignment\nvalidity and context version"]
+  USER --> PROFILE["Active Profile Assignments"]
+  PROFILE --> ENTRY["Versioned Profile ALLOW or DENY"]
+  USER --> OVERRIDE["Individual ALLOW or DENY"]
+  SESSION["AuthSession\ncredential and authorization versions"] --> ROLE
+  ROLE --> EVAL["Authoritative Effective Permission Evaluator"]
+  ENTRY --> EVAL
+  OVERRIDE --> EVAL
+  SYSTEM["Immutable System Restrictions"] --> EVAL
+  EVAL --> SCOPE["Exact Object-Scope Resolver"]
+  SCOPE --> ACTION["Page, API, Export, Batch or Mutation"]
+  ROLE --> ROLEHANDLE["Opaque Role Context Handle"]
+  ROLEHANDLE --> SESSION
+  ROLE -->|"Parent only"| GUARDIAN["Existing Guardian Link"]
+  GUARDIAN --> CHILD["Current StudentGuardian Links"]
+  CHILD --> CHILDHANDLE["Opaque Child Context Handle"]
+  CHILDHANDLE --> SESSION
+  ACTION --> AUDIT["Append-only IAM and Security Audit"]
+  PROFILE --> HISTORY["Immutable Profile Versions"]
+  OVERRIDE --> HISTORY
+  ROLE --> HISTORY

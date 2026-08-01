@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { attendanceDay, localDateText, staffAttendanceReportData } from "@/lib/staff-attendance";
 import { PageHeader } from "@/components/ui";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function StaffAttendanceReportsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePermission("VIEW_STAFF_ATTENDANCE_REPORTS");
-  const permissions = await getEffectivePermissions(prisma, user.role);
+  const permissions = await getCurrentUserEffectivePermissions();
   const canViewEntry = permissionSetCan(permissions, "VIEW_STAFF_ATTENDANCE");
   const sp = await searchParams;
   const today = localDateText();

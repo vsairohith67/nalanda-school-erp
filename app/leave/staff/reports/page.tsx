@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { leaveDate, leaveLabel, localLeaveDateText, staffLeaveReportData, STAFF_LEAVE_TYPES } from "@/lib/staff-leave";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { PageHeader } from "@/components/ui";
 
 export default async function StaffLeaveReportsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePermission("VIEW_STAFF_LEAVE_REPORTS");
-  const [sp, permissions] = await Promise.all([searchParams, getEffectivePermissions(prisma, user.role)]);
+  const [sp, permissions] = await Promise.all([searchParams, getCurrentUserEffectivePermissions()]);
   const canViewRequests = permissionSetCan(permissions, "VIEW_STAFF_LEAVE");
   const today = localLeaveDateText();
   const from = sp.from || `${today.slice(0, 8)}01`;

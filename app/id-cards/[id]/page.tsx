@@ -3,15 +3,15 @@ import { notFound } from "next/navigation";
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { IdentityCardView } from "@/components/identity-card-view";
 import { IdentityCardWorkflowActions } from "@/components/identity-card-forms";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { effectiveIdentityCardStatus, safeIdentityCardPayload } from "@/lib/identity-cards";
-import { getEffectivePermissions } from "@/lib/role-permissions";
+
 import { renderCode39Svg } from "@/lib/library-barcode-svg";
 import { displayDate } from "@/lib/format";
 
 export default async function IdentityCardDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await requirePermission("VIEW_ID_CARDS"), id = (await params).id, permissions = await getEffectivePermissions(prisma, user.role);
+  const user = await requirePermission("VIEW_ID_CARDS"), id = (await params).id, permissions = await getCurrentUserEffectivePermissions();
   const card = await prisma.identityCard.findUnique({ where: { id }, include: { student: { select: { studentName: true, admissionNo: true, status: true } }, staffMember: { select: { fullName: true, staffCode: true, designation: true, status: true } }, template: { select: { name: true, templateCode: true, versionNumber: true, status: true } }, versions: { orderBy: { versionNumber: "desc" } }, events: { orderBy: { eventDate: "desc" }, select: { eventType: true, eventDate: true, previousStatus: true, newStatus: true, reason: true, notes: true } }, replacesCard: { select: { id: true, cardNumber: true, status: true } }, replacedByCard: { select: { id: true, cardNumber: true, status: true } } } });
   if (!card) notFound();
   const version = card.versions.find((row) => row.versionNumber === card.currentVersionNumber);

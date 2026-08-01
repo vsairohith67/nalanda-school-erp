@@ -8,9 +8,12 @@ import { logoutErrorMessage, postLogout } from "@/lib/logout-action-state";
 import { clearNalandaPwaCaches } from "@/lib/pwa-client";
 import { roleDisplayLabel, userInitials } from "@/lib/role-presentation";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ActiveContextSwitcher } from "@/components/iam/active-context-switcher";
 
 export function UserMenu({ user }: { user: AuthUser }) {
-  const designation = roleDisplayLabel(user.role);
+  const roleContext = roleDisplayLabel(user.role);
+  const activeRole = user.role;
+  const designation = user.designation ?? roleContext;
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
   const logoutInFlight = useRef(false);
@@ -49,7 +52,7 @@ export function UserMenu({ user }: { user: AuthUser }) {
 
   return (
     <details className="user-menu">
-      <summary aria-label={`Account menu for ${user.name}, ${designation}`}>
+      <summary aria-label={`Account menu for ${user.name}, ${designation}, ${roleContext} context`}>
         <span className="user-avatar" aria-hidden>{userInitials(user.name)}</span>
         <span className="user-menu-summary-copy">
           <strong>{user.name}</strong>
@@ -62,7 +65,9 @@ export function UserMenu({ user }: { user: AuthUser }) {
           <strong>{user.name}</strong>
           <span>@{user.username}</span>
           <span>{designation}</span>
+          {designation !== roleContext ? <span>{roleContext} context</span> : null}
         </div>
+        <ActiveContextSwitcher activeRole={activeRole} />
         <Link className="button secondary" href="/change-password">
           <KeyRound size={16} aria-hidden />
           Change Password
@@ -70,6 +75,10 @@ export function UserMenu({ user }: { user: AuthUser }) {
         <Link className="button secondary" href="/account-security">
           <ShieldCheck size={16} aria-hidden />
           Account Security
+        </Link>
+        <Link className="button secondary" href="/access-context">
+          <ShieldCheck size={16} aria-hidden />
+          Access Context
         </Link>
         <Link className="button secondary" href="/install-app">
           <Download size={16} aria-hidden />

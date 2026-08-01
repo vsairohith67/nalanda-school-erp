@@ -1,9 +1,9 @@
 import { safeClientError } from "@/lib/client-errors";
 import { NextRequest, NextResponse } from "next/server";
-import { requireApiPermission } from "@/lib/auth";
+import { requireApiPermission, hasUserPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { validateNoticeInput } from "@/lib/notices";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 const staffInclude = {
   createdBy: { select: { id: true, name: true } },
@@ -22,7 +22,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   const existing = await prisma.notice.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Notice not found" }, { status: 404 });
   if (action === "save" && existing.status === "PUBLISHED" &&
-      !(await hasRolePermission(prisma, auth.user.role, "PUBLISH_NOTICES"))) {
+      !(await hasUserPermission(auth.user, "PUBLISH_NOTICES"))) {
     return NextResponse.json({ error: "Publishing permission is required to change a published notice" }, { status: 403 });
   }
 

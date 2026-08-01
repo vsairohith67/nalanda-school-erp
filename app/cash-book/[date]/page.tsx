@@ -1,11 +1,11 @@
 import { CashBookCreateForm, CashBookEditor } from "@/components/cash-book-form";
 import { PageHeader, PageShell } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { cashBookInclude, cashBookView, suggestedOpeningBalance } from "@/lib/cash-book";
 import { localDate } from "@/lib/expenses";
 import { displayDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 import { getSchoolSettings } from "@/lib/school-settings";
 
 export default async function CashBookDetailPage({ params }: { params: Promise<{ date: string }> }) {
@@ -25,11 +25,11 @@ export default async function CashBookDetailPage({ params }: { params: Promise<{
   const [row, settings, manage, submit, approve, lock, cancel] = await Promise.all([
     prisma.cashBookDay.findUnique({ where: { cashDate }, include: cashBookInclude }),
     getSchoolSettings(prisma),
-    hasRolePermission(prisma, user.role, "MANAGE_CASH_BOOK"),
-    hasRolePermission(prisma, user.role, "SUBMIT_CASH_BOOK"),
-    hasRolePermission(prisma, user.role, "APPROVE_CASH_BOOK"),
-    hasRolePermission(prisma, user.role, "LOCK_CASH_BOOK"),
-    hasRolePermission(prisma, user.role, "CANCEL_CASH_BOOK")
+    hasUserPermission(user, "MANAGE_CASH_BOOK"),
+    hasUserPermission(user, "SUBMIT_CASH_BOOK"),
+    hasUserPermission(user, "APPROVE_CASH_BOOK"),
+    hasUserPermission(user, "LOCK_CASH_BOOK"),
+    hasUserPermission(user, "CANCEL_CASH_BOOK")
   ]);
 
   if (!row) {

@@ -1,16 +1,16 @@
 import { ExaminationConfigurationWorkspace } from "@/components/examination-configuration-workspace";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { getExaminationConfiguration, publicExaminationConfiguration } from "@/lib/exam-configurations";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_EXAM_CONFIGURATION");
   const id = (await params).id;
   const [row, permissions, timetableSubjects, teachers, reportCardTemplates] = await Promise.all([
     getExaminationConfiguration(prisma, id),
-    getEffectivePermissions(prisma, user.role),
+    getCurrentUserEffectivePermissions(),
     prisma.timetableSubject.findMany({
       where: { isActive: true },
       select: { id: true, name: true, shortName: true },

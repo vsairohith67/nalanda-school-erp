@@ -1,17 +1,17 @@
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
 import { FeeStructureEditor } from "@/components/settings-fees";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { getSchoolSettings } from "@/lib/school-settings";
 import { SchoolSettingsForm } from "@/components/school-settings-form";
 import { getSystemHealth } from "@/lib/system-health";
 import { getAppInfo } from "@/lib/app-info";
 import { SystemHealthPanel } from "@/components/system-health-panel";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function SettingsPage() {
   const user = await requirePermission("VIEW_SETTINGS");
-  const permissions = await getEffectivePermissions(prisma, user.role);
+  const permissions = await getCurrentUserEffectivePermissions();
   const [rows, settings, health] = await Promise.all([
     prisma.feeStructure.findMany({ where: { active: true }, orderBy: { className: "asc" } }),
     getSchoolSettings(prisma),

@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
 import { ThemeProvider } from "@/components/theme-provider";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getSchoolSettings } from "@/lib/school-settings";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import type { CanonicalPermission } from "@/lib/permissions";
 import { BANNER_HEALTH_CODES, getSystemHealth } from "@/lib/system-health";
 import { getAppInfo } from "@/lib/app-info";
@@ -52,7 +52,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   }
   const [user, settings] = await Promise.all([getCurrentUser(), getSchoolSettings(prisma)]);
   const effectivePermissions = user
-    ? await getEffectivePermissions(prisma, user.role)
+    ? await getCurrentUserEffectivePermissions()
     : new Set<CanonicalPermission>();
   const health = user && permissionSetCan(effectivePermissions, "VIEW_SYSTEM_HEALTH")
     ? await getSystemHealth(prisma)

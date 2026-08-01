@@ -1247,3 +1247,24 @@ must not write them. EXAM-RC-IMPL-2 and independent QA are cleared under tag
 applied and clean. EXAM-RC-IMPL-3 may consume locked snapshots read-only;
 publication, delivery and PDF generation remain unimplemented until that
 separate phase clears.
+
+## IAM-1A named users and multi-context access
+
+Read `IAM_NAMED_USERS_PERMISSION_CONTEXTS.md`,
+`IAM_OPERATOR_GUIDE_AND_LAST_SUPER_ADMIN_RUNBOOK.md`, and
+`IAM_SECURITY_THREAT_MODEL.md` before changing user, role, profile, override,
+session-context, Staff link, Guardian link or navigation authorization.
+
+Use `lib/iam/effective-access.ts` as the feature permission authority and then
+run the existing exact object-scope resolver. Never authorize from a client
+role string, navigation visibility, human designation or legacy scalar
+`User.role`. Active context comes from the current `AuthSession` and an active
+`UserRoleAssignment`; child context is valid only in Parent role context and
+must resolve a current `StudentGuardian` link on every request.
+
+All IAM changes are reasoned, re-authenticated where critical, expected-version
+protected, transactional, append-only audited and authorization-version
+invalidating. Do not hard-delete history, bypass the last-Super-Admin lock,
+restore live session context, or create duplicate Staff/Guardian relationships.
+Run `pnpm.cmd qa:iam1a` only against its ignored copied database. The
+implementation branch is not merged until independent IAM-1A-QA clears.

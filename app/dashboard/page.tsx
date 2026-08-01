@@ -17,10 +17,10 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PageShell, SectionCard } from "@/components/ui";
-import { requireUser } from "@/lib/auth";
+import { requireUser, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getSchoolSettings } from "@/lib/school-settings";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { dashboardAttendanceSummary, getDashboardCommandCenter, type DashboardQuickAction } from "@/lib/dashboard";
 import { displayDate, money, moneyExact, SCHOOL_TIME_ZONE, schoolHour } from "@/lib/format";
 import { getSystemHealth } from "@/lib/system-health";
@@ -45,7 +45,7 @@ export default async function DashboardPage() {
 
   const [settings, permissions] = await Promise.all([
     getSchoolSettings(prisma),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   if (!permissionSetCan(permissions, "VIEW_DASHBOARD")) redirect("/unauthorized");
 

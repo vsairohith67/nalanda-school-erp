@@ -8,6 +8,7 @@ import {
 } from "./exam-governance-backup";
 import { getSchoolSettings, type SchoolSettingsValue } from "./school-settings";
 import { authSecurityRecordCount, createAuthSecurityBackup, type AuthSecurityBackup } from "./auth-backup";
+import { createIamAccessBackup, iamAccessRecordCount, type IamAccessBackup } from "./iam/backup";
 
 const APP_NAME = "Nalanda Fee Control";
 
@@ -63,6 +64,9 @@ type BackupClient = Pick<
   | "publicWebsiteSettings" | "publicWebsitePage" | "publicWebsitePageVersion"
   | "publicWebsitePost" | "publicWebsitePostVersion" | "publicWebsiteNavigationItem" | "publicWebsiteEvent"
   | "authLoginAlias" | "authVerificationChallenge" | "authPasswordResetToken" | "authSession" | "authSecurityEvent"
+  | "userRoleAssignment" | "permissionProfile" | "permissionProfileEntry"
+  | "permissionProfileVersion" | "userPermissionProfileAssignment" | "userPermissionOverride"
+  | "userAudit"
 >;
 
 type BackupDocumentInput = {
@@ -75,6 +79,7 @@ type BackupDocumentInput = {
   paymentAudits: readonly unknown[];
   users: readonly object[];
   authSecurity?: Partial<Record<keyof AuthSecurityBackup, readonly object[]>>;
+  iamAccess?: Partial<Record<keyof IamAccessBackup, readonly object[]>>;
   rolePermissions?: readonly unknown[];
   guardians?: readonly unknown[];
   studentGuardians?: readonly unknown[];
@@ -242,6 +247,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const timetableEntries = [...(input.timetableEntries ?? [])];
   const rolePermissions = [...(input.rolePermissions ?? [])];
   const authSecurity = createAuthSecurityBackup(input.authSecurity);
+  const iamAccess = createIamAccessBackup(input.iamAccess);
   const guardians = [...(input.guardians ?? [])];
   const studentGuardians = [...(input.studentGuardians ?? [])];
   const notices = [...(input.notices ?? [])];
@@ -397,6 +403,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
       counts: {
         schoolSettings: input.schoolSettings ? 1 : 0,
         authSecurityRecords: authSecurityRecordCount(authSecurity),
+        iamAccessRecords: iamAccessRecordCount(iamAccess),
         rolePermissions: rolePermissions.length,
         guardians: guardians.length,
         studentGuardians: studentGuardians.length,
@@ -555,6 +562,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     paymentAudits: [...input.paymentAudits],
     users: sanitizeUsers(input.users),
     authSecurity,
+    iamAccess,
     rolePermissions,
     guardians,
     studentGuardians,
@@ -1083,6 +1091,31 @@ export async function generateFullBackup(
     getSchoolSettings(client)
   ]);
 
+  const [iamUserStates, iamRoleAssignments, iamProfiles, iamProfileEntries, iamProfileVersions, iamProfileAssignments, iamOverrides, iamAudits] = await Promise.all([
+    client.user.findMany({
+      select: {
+        id: true,
+        iamPublicKey: true,
+        designation: true,
+        lifecycleStatus: true,
+        isActive: true,
+        authorizationVersion: true,
+        mustChangePassword: true,
+        temporaryPasswordExpiresAt: true,
+        suspensionReason: true,
+        version: true
+      },
+      orderBy: { createdAt: "asc" }
+    }),
+    (client as any).userRoleAssignment?.findMany ? (client as any).userRoleAssignment.findMany({ orderBy: [{ userId: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
+    (client as any).permissionProfile?.findMany ? (client as any).permissionProfile.findMany({ orderBy: [{ name: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
+    (client as any).permissionProfileEntry?.findMany ? (client as any).permissionProfileEntry.findMany({ orderBy: [{ profileId: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
+    (client as any).permissionProfileVersion?.findMany ? (client as any).permissionProfileVersion.findMany({ orderBy: [{ profileId: "asc" }, { versionNumber: "asc" }] }) : Promise.resolve([]),
+    (client as any).userPermissionProfileAssignment?.findMany ? (client as any).userPermissionProfileAssignment.findMany({ orderBy: [{ userId: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
+    (client as any).userPermissionOverride?.findMany ? (client as any).userPermissionOverride.findMany({ orderBy: [{ userId: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
+    (client as any).userAudit?.findMany ? (client as any).userAudit.findMany({ where: { action: { startsWith: "IAM_" } }, orderBy: { createdAt: "asc" } }) : Promise.resolve([])
+  ]);
+
   return createBackupDocument({
     generatedAt: options.generatedAt ?? new Date(),
     generatedBy: options.generatedBy,
@@ -1097,6 +1130,16 @@ export async function generateFullBackup(
       resetHistory: authResetHistory,
       sessions: authSessions,
       events: authSecurityEvents
+    },
+    iamAccess: {
+      userStates: iamUserStates.map(({ id, ...state }) => ({ userId: id, ...state })),
+      roleAssignments: iamRoleAssignments,
+      profiles: iamProfiles,
+      profileEntries: iamProfileEntries,
+      profileVersions: iamProfileVersions,
+      profileAssignments: iamProfileAssignments,
+      overrides: iamOverrides,
+      audits: iamAudits
     },
     rolePermissions,
     guardians,

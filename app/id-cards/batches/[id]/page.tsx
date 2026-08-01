@@ -2,13 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { IdentityCardBatchActions } from "@/components/identity-card-forms";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions } from "@/lib/role-permissions";
+
 import { displayDate } from "@/lib/format";
 
 export default async function IdentityCardBatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await requirePermission("VIEW_ID_CARDS"), id = (await params).id, permissions = await getEffectivePermissions(prisma, user.role);
+  const user = await requirePermission("VIEW_ID_CARDS"), id = (await params).id, permissions = await getCurrentUserEffectivePermissions();
   const batch = await prisma.identityCardBatch.findUnique({ where: { id }, include: { template: true, cards: { include: { student: { select: { studentName: true } }, staffMember: { select: { fullName: true } } }, orderBy: { cardNumber: "asc" } }, events: { orderBy: { eventDate: "desc" }, select: { eventType: true, eventDate: true, previousStatus: true, newStatus: true, reason: true, notes: true } } } });
   if (!batch) notFound();
   const preview = batch.scopeSnapshotJson ? JSON.parse(batch.scopeSnapshotJson) : [];

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireApiPermission } from "@/lib/auth";
+import { requireApiPermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { friendlyStaffLeaveError, linkedStaffMember, overlappingLeaveWarning, staffLeaveInclude, validateStaffLeaveInput } from "@/lib/staff-leave";
 
-async function access(id: string, user: { id: string; role: Parameters<typeof getEffectivePermissions>[1] }) {
-  const [request, permissions, linked] = await Promise.all([prisma.staffLeaveRequest.findUnique({ where: { id }, include: staffLeaveInclude }), getEffectivePermissions(prisma, user.role), linkedStaffMember(prisma, user.id)]);
+async function access(id: string, user: { id: string; role: string }) {
+  const [request, permissions, linked] = await Promise.all([prisma.staffLeaveRequest.findUnique({ where: { id }, include: staffLeaveInclude }), getCurrentUserEffectivePermissions(), linkedStaffMember(prisma, user.id)]);
   if (!request) return { response: NextResponse.json({ error: "Staff leave request not found" }, { status: 404 }) };
   const canManage = permissionSetCan(permissions, "MANAGE_STAFF_LEAVE");
   const own = linked?.id === request.staffMemberId;

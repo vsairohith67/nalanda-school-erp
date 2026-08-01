@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { PageHeader, StatCard } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildReportCardReport, maskReportCardReportForViewer } from "@/lib/report-card-reports";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function ReportCardReportsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePermission("VIEW_REPORT_CARD_REPORTS");
   const q = await searchParams;
   const [unmaskedReport, permissions] = await Promise.all([
     buildReportCardReport(prisma, { academicYear: q.academicYear, className: q.className, section: q.section, status: q.status }),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   const report = user.role === "VIEWER" ? maskReportCardReportForViewer(unmaskedReport) : unmaskedReport;
   const s = report.summary;

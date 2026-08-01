@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
-import { requireApiPermission } from "@/lib/auth";
+import { requireApiPermission, hasUserPermission } from "@/lib/auth";
 import { getStudentLedgerData } from "@/lib/ledger-data";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 import { prisma } from "@/lib/prisma";
 import {
   ledgerPaymentResponse,
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   const canCommunicate =
     auth.user.role !== "ACCOUNTANT" &&
     auth.user.role !== "VIEWER" &&
-    await hasRolePermission(prisma, auth.user.role, "COMMUNICATE_PARENT");
+    await hasUserPermission(auth.user, "COMMUNICATE_PARENT");
   return privateFinanceJson({
     student: ledgerStudentForRole(student, auth.user.role),
     payments: payments.map((payment, paymentIndex) => ({

@@ -1,13 +1,13 @@
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { IdentityCardConfigurationForms, IdentityCardConfigurationStatusAction } from "@/components/identity-card-forms";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { getSchoolSettings } from "@/lib/school-settings";
 
 export default async function IdentityCardTemplatesPage() {
   const user = await requirePermission("VIEW_ID_CARDS");
-  const permissions = await getEffectivePermissions(prisma, user.role);
+  const permissions = await getCurrentUserEffectivePermissions();
   const settings = await getSchoolSettings(prisma);
   const [templates, series] = await Promise.all([
     prisma.identityCardTemplate.findMany({ orderBy: [{ cardType: "asc" }, { templateCode: "asc" }] }),

@@ -1,11 +1,11 @@
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { WhatsAppProfileActions, WhatsAppProfileCreateForm } from "@/components/whatsapp-forms";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function WhatsAppIntegrationPage() {
-  const user = await requirePermission("VIEW_WHATSAPP_CENTRE"), permissions = await getEffectivePermissions(prisma, user.role);
+  const user = await requirePermission("VIEW_WHATSAPP_CENTRE"), permissions = await getCurrentUserEffectivePermissions();
   const rows = await prisma.whatsAppIntegrationProfile.findMany({ orderBy: { createdAt: "desc" } });
   const manage = permissionSetCan(permissions, "MANAGE_WHATSAPP_INTEGRATION");
   return <div className="page whatsapp-page"><PageHeader title="WhatsApp Integration" description="Non-secret Meta Cloud API metadata and supervised activation. No credential input or display fields exist." />

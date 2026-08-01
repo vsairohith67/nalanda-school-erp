@@ -1,8 +1,8 @@
 import { ClassXConfigurationForms, ClassXConfigurationStatusButton } from "@/components/class-x-package-forms";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { getSchoolSettings } from "@/lib/school-settings";
 
 const DEFAULT_DEFINITION = JSON.stringify({ documents: [
@@ -16,7 +16,7 @@ const DEFAULT_DEFINITION = JSON.stringify({ documents: [
 export default async function ClassXTemplatesPage() {
   const user = await requirePermission("VIEW_CLASS_X_PACKAGES");
   const [permissions, templates, rules, settings] = await Promise.all([
-    getEffectivePermissions(prisma, user.role),
+    getCurrentUserEffectivePermissions(),
     prisma.classXPackageTemplate.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.classXPackageChargeRule.findMany({ orderBy: { createdAt: "desc" } }),
     getSchoolSettings(prisma)

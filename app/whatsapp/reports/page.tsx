@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadWhatsAppReports } from "@/lib/whatsapp-reports";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function WhatsAppReportsPage() {
   const user = await requirePermission("VIEW_WHATSAPP_REPORTS");
-  const [report, permissions] = await Promise.all([loadWhatsAppReports(prisma), getEffectivePermissions(prisma, user.role)]);
+  const [report, permissions] = await Promise.all([loadWhatsAppReports(prisma), getCurrentUserEffectivePermissions()]);
   return <div className="page whatsapp-page">
     <PageHeader title="WhatsApp Aggregate Reports" description="Privacy-safe operational totals only. No contact details, student private data, raw actor IDs, provider payloads, or individual read-surveillance." action={permissionSetCan(permissions, "EXPORT_WHATSAPP_REPORTS") ? <Link className="button" href="/api/whatsapp/reports/export">Export Safe CSV</Link> : undefined} />
     <div className="notice warning">{report.warning}</div>

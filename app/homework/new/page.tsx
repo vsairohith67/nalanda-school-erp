@@ -1,14 +1,14 @@
 import { HomeworkEditor } from "@/components/homework-editor";
 import { PageHeader } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { getSchoolSettings } from "@/lib/school-settings";
 import { resolveHomeworkScope, scopeOptions } from "@/lib/homework-scope";
 
 export default async function Page() {
   const user = await requirePermission("MANAGE_HOMEWORK");
-  const [settings, permissions] = await Promise.all([getSchoolSettings(prisma), getEffectivePermissions(prisma, user.role)]);
+  const [settings, permissions] = await Promise.all([getSchoolSettings(prisma), getCurrentUserEffectivePermissions()]);
   const scope = await resolveHomeworkScope(prisma, user, settings.academicYear);
   let options = scopeOptions(scope);
   if (scope.broad) {

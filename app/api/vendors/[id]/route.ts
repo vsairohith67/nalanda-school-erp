@@ -1,15 +1,15 @@
 import { safeClientError } from "@/lib/client-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { requireApiPermission } from "@/lib/auth";
+import { requireApiPermission, hasUserPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 import { serializeVendor, validateVendorInput } from "@/lib/vendors";
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireApiPermission("VIEW_VENDORS"); if (auth.response) return auth.response;
   const { id } = await params;
-  const sensitive = await hasRolePermission(prisma, auth.user.role, "MANAGE_VENDORS");
+  const sensitive = await hasUserPermission(auth.user, "MANAGE_VENDORS");
   const vendor = await prisma.vendor.findUnique({ where: { id }, include: { _count: { select: { expenses: true } }, expenses: { where: { approvalStatus: { not: "CANCELLED" } }, select: { netAmount: true } } } });
   if (!vendor) return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
   return NextResponse.json({ vendor: serializeVendor({ ...vendor, expenseCount: vendor._count.expenses, expenseTotal: vendor.expenses.reduce((sum, row) => sum.add(row.netAmount), new Prisma.Decimal(0)).toString() }, sensitive), sensitive });

@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/ui";
 import { GuardianDetail } from "@/components/guardian-detail";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function GuardianDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_GUARDIANS");
-  const permissions = await getEffectivePermissions(prisma, user.role);
+  const permissions = await getCurrentUserEffectivePermissions();
   const { id } = await params;
   const guardian = await prisma.guardian.findUnique({
     where: { id },

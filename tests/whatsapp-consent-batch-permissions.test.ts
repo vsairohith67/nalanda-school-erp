@@ -23,7 +23,7 @@ describe("Prompt 19B consent enforcement", () => {
       $transaction: async (callback: any) => callback(tx)
     };
   }
-  const parent = { id: "user-1", name: "Parent", username: "parent", email: null, role: "PARENT" as const, guardianId: "guardian-1" };
+  const parent = { id: "user-1", name: "Parent", username: "parent", email: null, designation: null, role: "PARENT" as const, roleAssignmentId: "parent-role", authorizationVersion: 1, mustChangePassword: false, guardianId: "guardian-1" };
   it("requires explicit opt-in and creates an append-only event", async () => {
     const db = client();
     await expect(recordWhatsAppConsent(db, { subjectType: "GUARDIAN", explicitlyAgreed: false }, parent)).rejects.toThrow(/explicit opt-in/);
@@ -96,7 +96,7 @@ describe("Prompt 19B recommended permissions", () => {
 });
 
 describe("Prompt 19B StaffMember-linked own consent", () => {
-  const accountant = { id: "accountant-user", name: "Accountant", username: "accountant", email: null, role: "ACCOUNTANT" as const, guardianId: null };
+  const accountant = { id: "accountant-user", name: "Accountant", username: "accountant", email: null, designation: "Accountant", role: "ACCOUNTANT" as const, roleAssignmentId: "accountant-role", authorizationVersion: 1, mustChangePassword: false, guardianId: null };
   it("binds a linked Accountant to only their own active StaffMember", async () => {
     const created: any[] = [];
     const db: any = {

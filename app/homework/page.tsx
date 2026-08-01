@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { homeworkAccess, homeworkFilterWhere } from "@/lib/homework-api";
 import { homeworkVisibleWhere } from "@/lib/homework-scope";
 import { homeworkDueGroup } from "@/lib/homework-reports";
@@ -10,7 +10,7 @@ import { displayDate } from "@/lib/format";
 
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePermission("VIEW_HOMEWORK");
-  const [sp, permissions] = await Promise.all([searchParams, getEffectivePermissions(prisma, user.role)]);
+  const [sp, permissions] = await Promise.all([searchParams, getCurrentUserEffectivePermissions()]);
   const params = new URLSearchParams(Object.entries(sp).filter((entry): entry is [string, string] => Boolean(entry[1])));
   const scope = await homeworkAccess(user, sp.academicYear);
   const rows = await prisma.homeworkAssignment.findMany({ where: { AND: [homeworkVisibleWhere(scope, user), homeworkFilterWhere(params)] }, include: { createdBy: { select: { name: true } } }, orderBy: [{ assignedDate: "desc" }, { createdAt: "desc" }] });

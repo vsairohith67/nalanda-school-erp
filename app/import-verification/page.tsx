@@ -2,10 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { GoLiveChecklist } from "@/components/go-live-checklist";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requireUser } from "@/lib/auth";
+import { requireUser, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { defaultGoLiveChecklist, GO_LIVE_CHECKLIST_ITEMS } from "@/lib/go-live-checklist";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import {
   importBatchStatusLabel,
   IMPORT_BATCH_STATUS_EXPLANATIONS,
@@ -20,7 +20,7 @@ export default async function ImportVerificationPage({
   searchParams?: Promise<{ type?: string; status?: string }>;
 }) {
   const user = await requireUser();
-  const permissions = await getEffectivePermissions(prisma, user.role);
+  const permissions = await getCurrentUserEffectivePermissions();
   const canViewAll = permissionSetCan(permissions, "VIEW_IMPORT_VERIFICATION");
   const canViewPaymentImports = user.role === "ACCOUNTANT" && permissionSetCan(permissions, "CREATE_PAYMENTS");
   if (!canViewAll && !canViewPaymentImports) redirect("/unauthorized");

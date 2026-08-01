@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { BookSettlementForm } from "@/components/books-finance-forms";
 import { PageHeader, PageShell } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { bookSettlementInclude, expectedBookCashForDate, serializeBookSettlement } from "@/lib/book-cash-settlement";
 import { localDate } from "@/lib/expenses";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 import { getSchoolSettings } from "@/lib/school-settings";
 
 export default async function BookSettlementDatePage({ params }: { params: Promise<{ date: string }> }) {
@@ -17,9 +17,9 @@ export default async function BookSettlementDatePage({ params }: { params: Promi
     getSchoolSettings(prisma),
     prisma.bookCashSettlement.findUnique({ where: { settlementDate }, include: bookSettlementInclude }),
     expectedBookCashForDate(prisma, settlementDate),
-    hasRolePermission(prisma, user.role, "MANAGE_BOOK_CASH_SETTLEMENT"),
-    hasRolePermission(prisma, user.role, "SUBMIT_BOOK_CASH_SETTLEMENT"),
-    hasRolePermission(prisma, user.role, "APPROVE_BOOK_CASH_SETTLEMENT")
+    hasUserPermission(user, "MANAGE_BOOK_CASH_SETTLEMENT"),
+    hasUserPermission(user, "SUBMIT_BOOK_CASH_SETTLEMENT"),
+    hasUserPermission(user, "APPROVE_BOOK_CASH_SETTLEMENT")
   ]);
   const serialized = settlement ? serializeBookSettlement(settlement, expected.amount, manage) : null;
   return <PageShell>

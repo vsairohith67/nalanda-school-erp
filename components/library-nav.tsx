@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export async function LibraryNav({ current, canImport = false, canCirculate = false, canManagePolicies = false, canCirculationReports = false }: { current: string; canImport?: boolean; canCirculate?: boolean; canManagePolicies?: boolean; canCirculationReports?: boolean }) {
   const user = await getCurrentUser();
-  const permissions = user ? await getEffectivePermissions(prisma, user.role) : new Set();
+  const permissions = user ? await getCurrentUserEffectivePermissions() : new Set();
   const canIncidents = permissionSetCan(permissions as any, "VIEW_LIBRARY_INCIDENTS");
   const canCharges = permissionSetCan(permissions as any, "VIEW_LIBRARY_CHARGES");
   const canChargeReports = permissionSetCan(permissions as any, "VIEW_LIBRARY_CHARGE_REPORTS");

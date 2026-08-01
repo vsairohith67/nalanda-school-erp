@@ -4,6 +4,7 @@ export const ROLES = [
   "PRINCIPAL",
   "ADMIN",
   "ACCOUNTANT",
+  "COMPUTER_OPERATOR",
   "TEACHER",
   "PARENT",
   "VIEWER"
@@ -319,6 +320,14 @@ export const PERMISSIONS = [
   "MANAGE_USERS",
   "RESET_USER_PASSWORDS",
   "MANAGE_ROLE_PERMISSIONS",
+  "VIEW_IAM_ACCESS",
+  "MANAGE_IAM_USERS",
+  "MANAGE_PERMISSION_PROFILES",
+  "ASSIGN_PERMISSION_PROFILES",
+  "MANAGE_USER_PERMISSION_OVERRIDES",
+  "VIEW_IAM_AUDIT",
+  "DELEGATE_IAM_ACCESS",
+  "GRANT_SUPER_ADMIN",
   "VIEW_SETTINGS",
   "MANAGE_SCHOOL_SETTINGS",
   "VIEW_SYSTEM_HEALTH",
@@ -920,7 +929,15 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { permission: "VIEW_USERS", label: "View users", description: "Open the user list." },
       { permission: "MANAGE_USERS", label: "Manage users", description: "Create users and edit account status or role." },
       { permission: "RESET_USER_PASSWORDS", label: "Reset passwords", description: "Set temporary passwords for other users." },
-      { permission: "MANAGE_ROLE_PERMISSIONS", label: "Manage role permissions", description: "Open and save the role permission matrix." }
+      { permission: "MANAGE_ROLE_PERMISSIONS", label: "Manage role permissions", description: "Open and save the role permission matrix." },
+      { permission: "VIEW_IAM_ACCESS", label: "View governed access", description: "Review named users, assignments, profiles, overrides and effective access." },
+      { permission: "MANAGE_IAM_USERS", label: "Manage named users", description: "Create pending named users and govern their lifecycle." },
+      { permission: "MANAGE_PERMISSION_PROFILES", label: "Manage permission profiles", description: "Create and version reusable permission profiles." },
+      { permission: "ASSIGN_PERMISSION_PROFILES", label: "Assign permission profiles", description: "Assign or end reusable profile access for approved users." },
+      { permission: "MANAGE_USER_PERMISSION_OVERRIDES", label: "Manage individual overrides", description: "Create bounded individual grants or explicit denials." },
+      { permission: "VIEW_IAM_AUDIT", label: "View access history", description: "Review privacy-safe append-only IAM change and context history." },
+      { permission: "DELEGATE_IAM_ACCESS", label: "Delegate access", description: "Delegate only authority the actor currently possesses and may delegate." },
+      { permission: "GRANT_SUPER_ADMIN", label: "Grant Super Admin", description: "Governed, re-authenticated Super-Admin assignment; never profile-delegable." }
     ]
   },
   {
@@ -954,7 +971,15 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
 ];
 
 const directorPermissions = new Set<CanonicalPermission>(
-  PERMISSIONS.filter((permission) => permission !== "MANAGE_ROLE_PERMISSIONS")
+  PERMISSIONS.filter((permission) => ![
+    "MANAGE_ROLE_PERMISSIONS",
+    "MANAGE_IAM_USERS",
+    "MANAGE_PERMISSION_PROFILES",
+    "ASSIGN_PERMISSION_PROFILES",
+    "MANAGE_USER_PERMISSION_OVERRIDES",
+    "DELEGATE_IAM_ACCESS",
+    "GRANT_SUPER_ADMIN"
+  ].includes(permission))
 );
 
 const principalPermissions = new Set<CanonicalPermission>([
@@ -1067,6 +1092,7 @@ const adminPermissions = new Set<CanonicalPermission>([
   "PRINT_TIMETABLE",
   "VIEW_USERS",
   "MANAGE_USERS",
+  "VIEW_IAM_ACCESS",
   "RESET_USER_PASSWORDS",
   "VIEW_SETTINGS",
   "MANAGE_SCHOOL_SETTINGS",
@@ -1121,6 +1147,19 @@ const accountantPermissions = new Set<CanonicalPermission>([
   ,"VIEW_FEE_REGISTER_OCR", "VIEW_FEE_REGISTER_OCR_IMAGES", "UPLOAD_FEE_REGISTER_PAGES", "RUN_FEE_REGISTER_OCR", "REVIEW_FEE_REGISTER_OCR_ROWS", "PREVIEW_FEE_REGISTER_OCR_POSTING", "POST_FEE_REGISTER_OCR_PAYMENTS", "RESOLVE_FEE_REGISTER_OCR_DUPLICATES", "VIEW_FEE_REGISTER_OCR_REPORTS", "EXPORT_FEE_REGISTER_OCR_REPORTS"
 ]);
 
+const computerOperatorPermissions = new Set<CanonicalPermission>([
+  "VIEW_DASHBOARD",
+  "VIEW_STUDENTS",
+  "CREATE_STUDENTS",
+  "EDIT_STUDENTS",
+  "VIEW_GUARDIANS",
+  "MANAGE_GUARDIANS",
+  "VIEW_IMPORT_EXPORT",
+  "VIEW_IMPORT_VERIFICATION",
+  "VIEW_OWN_NOTIFICATIONS",
+  "ACKNOWLEDGE_OWN_NOTIFICATIONS"
+]);
+
 const viewerPermissions = new Set<CanonicalPermission>([
   "VIEW_DASHBOARD",
   "VIEW_PENDING_DUES",
@@ -1161,6 +1200,7 @@ export const RECOMMENDED_ROLE_PERMISSIONS: Record<Role, ReadonlySet<CanonicalPer
   PRINCIPAL: principalPermissions,
   ADMIN: adminPermissions,
   ACCOUNTANT: accountantPermissions,
+  COMPUTER_OPERATOR: computerOperatorPermissions,
   TEACHER: new Set(["VIEW_TEACHER_PLACEHOLDER", "VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS", "VIEW_STAFF_LEAVE", "APPLY_STAFF_LEAVE", "VIEW_SUBSTITUTES", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_EXAMS", "ENTER_MARKS", "SUBMIT_MARKS", "VIEW_OWN_EXAM_ASSIGNMENTS", "VIEW_OWN_EXAM_MARKS", "ENTER_ASSIGNED_EXAM_MARKS", "SUBMIT_ASSIGNED_EXAM_MARKS", "REQUEST_EXAM_MARK_CORRECTION", "VIEW_REPORT_CARDS", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "VIEW_OWN_TEACHER_ANALYTICS", "VIEW_OWN_STAFF_ID_CARD", "VIEW_OWN_NOTIFICATIONS", "CREATE_SCOPED_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT"]),
   PARENT: new Set(["VIEW_PARENT_PLACEHOLDER", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_OWN_REPORT_CARDS", "REQUEST_OWN_CHILD_CERTIFICATES", "VIEW_OWN_CHILD_CERTIFICATES", "REQUEST_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_STUDENT_ID_CARDS", "VIEW_OWN_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT"]),
   VIEWER: viewerPermissions

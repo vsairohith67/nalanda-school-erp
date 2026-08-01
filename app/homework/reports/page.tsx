@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { PageHeader, StatCard } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { homeworkAccess } from "@/lib/homework-api";
 import { homeworkVisibleWhere } from "@/lib/homework-scope";
 import { buildHomeworkReports } from "@/lib/homework-reports";
 
 export default async function Page() {
   const user = await requirePermission("VIEW_HOMEWORK_REPORTS");
-  const [scope, permissions] = await Promise.all([homeworkAccess(user), getEffectivePermissions(prisma, user.role)]);
+  const [scope, permissions] = await Promise.all([homeworkAccess(user), getCurrentUserEffectivePermissions()]);
   const rows = await prisma.homeworkAssignment.findMany({ where: homeworkVisibleWhere(scope, user), include: { createdBy: { select: { name: true } }, events: { where: { eventType: "CORRECTED" }, select: { eventType: true } } }, orderBy: [{ assignedDate: "desc" }] });
   const report = buildHomeworkReports(rows, new Date(), user.role === "VIEWER"); const due = Object.fromEntries(report.due.map((item) => [item.label, item.count]));
   return <div className="page homework-reports-page"><PageHeader title="Homework Reports" description="Privacy-safe class, section, subject, workflow, due-date, correction, and cancellation coverage." action={permissionSetCan(permissions, "EXPORT_HOMEWORK_REPORTS") ? <a className="button" href="/api/homework/reports/export">Export CSV</a> : undefined} />

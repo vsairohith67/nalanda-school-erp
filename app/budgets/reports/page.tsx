@@ -1,11 +1,11 @@
 import { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { budgetDetailInclude, getBudgetMetrics } from "@/lib/budgets";
 import { moneyExact } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 type AggregateRow = {
   label: string;
@@ -35,7 +35,7 @@ export default async function BudgetReportsPage({
       include: budgetDetailInclude,
       orderBy: { approvedAt: "desc" }
     }),
-    hasRolePermission(prisma, user.role, "EXPORT_BUDGET_REPORTS")
+    hasUserPermission(user, "EXPORT_BUDGET_REPORTS")
   ]);
   const metrics = selected ? await getBudgetMetrics(prisma, selected) : null;
 

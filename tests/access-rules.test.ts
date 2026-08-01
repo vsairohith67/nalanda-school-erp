@@ -121,7 +121,7 @@ describe("access rules", () => {
       new Set(visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "DIRECTOR")).map((item) => item.href))
     );
     expect(directorGroups.find((group) => group.label === "Administration")?.items.map((item) => item.href))
-      .toEqual(["/udise", "/ai-assistant", "/website-admin", "/library", "/users"]);
+      .toEqual(["/udise", "/ai-assistant", "/website-admin", "/library", "/users", "/permission-profiles", "/access-history"]);
   });
 
   it("keeps grouped navigation safe for Parent, Teacher, and Viewer/Auditor roles", async () => {

@@ -2,9 +2,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { displayDate } from "@/lib/format";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 export default async function StudentLifecycleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_STUDENT_LIFECYCLE");
@@ -18,7 +18,7 @@ export default async function StudentLifecycleDetailPage({ params }: { params: P
     }
   });
   if (!student) notFound();
-  const canViewProgression = await hasRolePermission(prisma, user.role, "VIEW_STUDENT_PROGRESSION");
+  const canViewProgression = await hasUserPermission(user, "VIEW_STUDENT_PROGRESSION");
   return <div className="page">
     <PageHeader title={`${student.studentName} - Lifecycle`} description={`Admission ${student.admissionNo}. History remains read-only; progression changes require an approved decision.`} action={<div className="page-actions"><Link className="button secondary" href="/students/lifecycle">Back to overview</Link>{canViewProgression ? <Link className="button secondary" href="/students/progression">Progression decisions</Link> : null}</div>} />
     <section className="card"><div className="section-title"><h3>Academic-year enrollment history</h3></div><div className="table-wrap"><table><thead><tr><th>Academic year</th><th>Class</th><th>Roll No</th><th>Status</th><th>Enrollment</th><th>Exit</th><th>Reason / notes</th></tr></thead><tbody>

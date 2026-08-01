@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { CLASS_NAMES } from "@/lib/constants";
 import { STUDENT_STATUS_FILTERS, studentStatusWhere } from "@/lib/student-filters";
 
@@ -13,7 +13,7 @@ export default async function StudentsPage({
 }) {
   const sp = await searchParams;
   const user = await requirePermission("VIEW_STUDENTS");
-  const permissions = await getEffectivePermissions(prisma, user.role);
+  const permissions = await getCurrentUserEffectivePermissions();
   const q = sp.q?.trim();
   const students = await prisma.student.findMany({
     where: {

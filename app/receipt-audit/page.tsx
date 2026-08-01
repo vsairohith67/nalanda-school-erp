@@ -1,8 +1,8 @@
 import { PageHeader } from "@/components/ui";
 import { ReceiptAudit } from "@/components/receipt-audit";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { sanitizePaymentAuditJson } from "@/lib/finance-privacy";
 
 export default async function ReceiptAuditPage() {
@@ -21,7 +21,7 @@ export default async function ReceiptAuditPage() {
       orderBy: { createdAt: "desc" },
       take: 100
     }),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   return (
     <div className="page">

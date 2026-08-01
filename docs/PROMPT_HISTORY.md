@@ -1293,3 +1293,30 @@ exactly unchanged. Release tag:
 Result: `EXAM_MARKS_CALCULATION_CLEARED`. No report publication,
 Parent/Student delivery, PDF, ZIP or physical print capability is claimed.
 Next: `EXAM-RC-IMPL-3`.
+
+## IAM-1A — Named Users, Permission Profiles and Multi-Role Context (2026-08-01)
+
+Implemented governed named-user lifecycle, multiple validity-bounded role
+assignments, human designations, reusable versioned permission profiles,
+individual grants and explicit denials, delegated-administration boundaries,
+last-Super-Admin protection, authorization-version session invalidation and
+opaque server-held role/linked-child context switching.
+
+The central evaluator enforces account, session, role-assignment, immutable
+restriction, exact object scope, individual/profile deny, individual/profile
+allow, base-role and default-deny precedence. Computer Operator is a dedicated
+small role and cannot become unrestricted Administrator/finance authority.
+Existing Staff, Guardian, Student, Parent and exact Teacher links are reused.
+
+One additive migration was rehearsed against a copied operational database.
+The 18-user IAM1A synthetic harness passed deny precedence, safe pending
+creation, delegated Director administration, self-escalation refusal,
+multi-role/child context isolation, stale-version concurrency, forced rollback
+and version-37 backup/restore twice. The copy was destroyed and the operational
+database remained byte-identical; no real user/account/business record changed.
+
+The branch remains unmerged. Full sequential verification, production Browser
+QA, external record closure and feature-branch push are required before the
+implementation result. Independent IAM-1A-QA must run only after the exact
+implementation readiness gate. Staging, live providers and real-user
+onboarding remain unauthorised.

@@ -1,8 +1,8 @@
 import { PageHeader } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { certificateReportSummary } from "@/lib/certificate-reports";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 function Breakdown({ title, values }: { title: string; values: Record<string, number> }) {
   return (
@@ -25,7 +25,7 @@ export default async function ReportsPage() {
     prisma.studentCertificate.findMany(),
     prisma.certificateNumberSeries.findMany(),
     prisma.studentCertificateEvent.findMany({ select: { eventType: true } }),
-    hasRolePermission(prisma, user.role, "EXPORT_CERTIFICATE_REPORTS")
+    hasUserPermission(user, "EXPORT_CERTIFICATE_REPORTS")
   ]);
   const summary = certificateReportSummary(requests, certificates, series, events);
   const numericSummary = Object.entries(summary).filter(([, value]) => typeof value === "number");

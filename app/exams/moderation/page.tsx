@@ -1,9 +1,9 @@
 import { ExamModerationDashboard } from "@/components/exam-moderation-dashboard";
 import { PageHeader } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { loadMarksModerationDashboard } from "@/lib/exam-calculations-v2";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +16,10 @@ export default async function ExamModerationPage({
   const selection = await searchParams;
   const [initialData, canModerate, canReopen, canCalculate, canLock] = await Promise.all([
     loadMarksModerationDashboard(prisma, selection),
-    hasRolePermission(prisma, user.role, "MODERATE_EXAM_MARKS"),
-    hasRolePermission(prisma, user.role, "REOPEN_EXAM_MARK_SHEETS"),
-    hasRolePermission(prisma, user.role, "RUN_EXAM_CALCULATIONS"),
-    hasRolePermission(prisma, user.role, "LOCK_EXAM_CALCULATIONS")
+    hasUserPermission(user, "MODERATE_EXAM_MARKS"),
+    hasUserPermission(user, "REOPEN_EXAM_MARK_SHEETS"),
+    hasUserPermission(user, "RUN_EXAM_CALCULATIONS"),
+    hasUserPermission(user, "LOCK_EXAM_CALCULATIONS")
   ]);
   return (
     <div className="page exam-moderation-page">

@@ -37,6 +37,11 @@ export function LoginForm() {
         setError(GENERIC_LOGIN_ERROR);
         return;
       }
+      if (data.mustChangePassword) {
+        router.replace("/change-password");
+        router.refresh();
+        return;
+      }
       const rolePath = defaultPathForRole(data.user?.role ?? "");
       router.replace(rolePath === "/dashboard" ? safeInternalPath(searchParams.get("next")) : rolePath);
       router.refresh();

@@ -1,14 +1,14 @@
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { publicWebsiteReadinessReport } from "@/lib/public-website-reports";
 
 export default async function WebsiteReports() {
   const user = await requirePermission("VIEW_PUBLIC_WEBSITE_REPORTS");
   const [report, permissions] = await Promise.all([
     publicWebsiteReadinessReport(prisma),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   const exportAction = permissionSetCan(permissions, "EXPORT_PUBLIC_WEBSITE_REPORTS")
     ? <a className="button" href="/api/website-admin/reports/export">Export Formula-safe CSV</a>

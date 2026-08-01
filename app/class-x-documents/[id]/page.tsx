@@ -2,15 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PackageWorkflowActions } from "@/components/class-x-package-forms";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { displayDate } from "@/lib/format";
 import { parseClassXSnapshot } from "@/lib/class-x-document-packages";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function ClassXPackageDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_CLASS_X_PACKAGES"), id = (await params).id;
-  const [row, permissions] = await Promise.all([prisma.classXDocumentPackage.findUnique({ where: { id }, include: { student: { select: { studentName: true, admissionNo: true, className: true, section: true, status: true } }, items: { orderBy: { displayOrder: "asc" } }, charge: { include: { linkedMiscIncomeReceipt: { select: { receiptNumber: true, status: true } } } }, handovers: { orderBy: { handoverDate: "desc" } }, events: { orderBy: { eventDate: "desc" } } } }), getEffectivePermissions(prisma, user.role)]);
+  const [row, permissions] = await Promise.all([prisma.classXDocumentPackage.findUnique({ where: { id }, include: { student: { select: { studentName: true, admissionNo: true, className: true, section: true, status: true } }, items: { orderBy: { displayOrder: "asc" } }, charge: { include: { linkedMiscIncomeReceipt: { select: { receiptNumber: true, status: true } } } }, handovers: { orderBy: { handoverDate: "desc" } }, events: { orderBy: { eventDate: "desc" } } } }), getCurrentUserEffectivePermissions()]);
   if (!row) notFound();
   const eligibility = parseClassXSnapshot(row.eligibilitySnapshotJson), template = parseClassXSnapshot(row.templateSnapshotJson);
   const flags = { manage: permissionSetCan(permissions, "MANAGE_CLASS_X_PACKAGES"), review: permissionSetCan(permissions, "REVIEW_CLASS_X_PACKAGES"), approve: permissionSetCan(permissions, "APPROVE_CLASS_X_PACKAGES"), handover: permissionSetCan(permissions, "HANDOVER_CLASS_X_DOCUMENTS") };

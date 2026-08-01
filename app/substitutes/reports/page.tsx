@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { PageHeader } from "@/components/ui";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { localSubstituteDateText, substituteDate, substituteLabel, substituteReportData } from "@/lib/substitutes";
 
 export default async function SubstituteReportsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePermission("VIEW_SUBSTITUTE_REPORTS");
-  const [permissions, sp] = await Promise.all([getEffectivePermissions(prisma, user.role), searchParams]);
+  const [permissions, sp] = await Promise.all([getCurrentUserEffectivePermissions(), searchParams]);
   const today = localSubstituteDateText();
   const fromText = sp.from ?? `${today.slice(0, 8)}01`;
   const toText = sp.to ?? today;

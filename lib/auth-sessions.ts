@@ -11,22 +11,49 @@ import {
 const LAST_SEEN_WRITE_INTERVAL_MS = 5 * 60 * 1000;
 
 type AuthSessionRow = Prisma.AuthSessionGetPayload<{ include: { user: true } }>;
-type SessionClient = Pick<PrismaClient, "authSession">;
+type SessionClient = Pick<PrismaClient | Prisma.TransactionClient, "authSession" | "userRoleAssignment">;
 
 export async function createPersistedSession(
   client: SessionClient,
-  user: { id: string; credentialVersion: number },
+  user: { id: string; role: string; credentialVersion: number; authorizationVersion: number },
   headers: Pick<Headers, "get">,
   now = new Date()
 ) {
   const token = await createSessionCookieValue();
   const summary = clientSummary(headers);
+  const nowAssignment = await client.userRoleAssignment.findFirst({
+    where: {
+      userId: user.id,
+      status: "ACTIVE",
+      validFrom: { lte: now },
+      OR: [{ validUntil: null }, { validUntil: { gt: now } }]
+    },
+    orderBy: [
+      { role: user.role === "SUPER_ADMIN" ? "asc" : "desc" },
+      { createdAt: "asc" }
+    ]
+  });
+  const assignment = nowAssignment?.role === user.role
+    ? nowAssignment
+    : await client.userRoleAssignment.findFirst({
+        where: {
+          userId: user.id,
+          role: user.role,
+          status: "ACTIVE",
+          validFrom: { lte: now },
+          OR: [{ validUntil: null }, { validUntil: { gt: now } }]
+        },
+        orderBy: { createdAt: "asc" }
+      }) ?? nowAssignment;
+  if (!assignment) throw new Error("No active role assignment is available for sign-in");
   await client.authSession.create({
     data: {
       id: token.sessionId,
       userId: user.id,
       tokenHash: await hashSessionSecret(token.secret),
       credentialVersion: user.credentialVersion,
+      authorizationVersion: user.authorizationVersion,
+      activeRoleAssignmentId: assignment.id,
       createdAt: now,
       lastSeenAt: now,
       expiresAt: new Date(now.getTime() + SESSION_MAX_AGE_SECONDS * 1000),
@@ -46,9 +73,21 @@ export async function resolvePersistedSession(client: SessionClient, cookieValue
   const actualHash = await hashSessionSecret(reference.secret);
   if (!sessionHashMatches(actualHash, row.tokenHash)) return null;
   if (
-    row.revokedAt || row.expiresAt <= now || !row.user.isActive ||
-    row.credentialVersion !== row.user.credentialVersion
+    row.revokedAt || row.expiresAt <= now || !row.user.isActive || row.user.lifecycleStatus !== "ACTIVE" ||
+    row.credentialVersion !== row.user.credentialVersion ||
+    row.authorizationVersion !== row.user.authorizationVersion ||
+    !row.activeRoleAssignmentId
   ) return null;
+  const activeRoleAssignment = await client.userRoleAssignment.findFirst({
+    where: {
+      id: row.activeRoleAssignmentId,
+      userId: row.userId,
+      status: "ACTIVE",
+      validFrom: { lte: now },
+      OR: [{ validUntil: null }, { validUntil: { gt: now } }]
+    }
+  });
+  if (!activeRoleAssignment) return null;
   if (now.getTime() - row.lastSeenAt.getTime() >= LAST_SEEN_WRITE_INTERVAL_MS) {
     await client.authSession.updateMany({
       where: {
@@ -60,7 +99,7 @@ export async function resolvePersistedSession(client: SessionClient, cookieValue
     });
     row.lastSeenAt = now;
   }
-  return row;
+  return Object.assign(row, { activeRoleAssignment });
 }
 
 export async function revokeSessions(client: SessionClient, input: {

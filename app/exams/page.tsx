@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { displayDate } from "@/lib/format";
 import { marksScopeWhere, resolveMarksScope } from "@/lib/marks-scope";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function Page({
   searchParams
@@ -14,7 +14,7 @@ export default async function Page({
   const user = await requirePermission("VIEW_EXAMS");
   const params = await searchParams;
   const [permissions, scope] = await Promise.all([
-    getEffectivePermissions(prisma, user.role),
+    getCurrentUserEffectivePermissions(),
     resolveMarksScope(prisma, user, params.academicYear)
   ]);
   const assessmentWhere = marksScopeWhere(scope);

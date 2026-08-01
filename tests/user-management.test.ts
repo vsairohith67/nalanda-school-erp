@@ -104,27 +104,33 @@ describe("user management rules", () => {
   });
 
   it("rechecks privileged-user counts inside the serializable update transaction", () => {
-    const source = readFileSync("app/api/users/[id]/route.ts", "utf8");
-    const transactionStart = source.indexOf("prisma.$transaction");
-    const countStart = source.indexOf("tx.user.count");
+    const module = readFileSync("lib/iam/users.ts", "utf8");
+    const source = module.slice(module.indexOf("async function changeLifecycle"), module.indexOf("async function addRole"));
+    const transactionStart = source.indexOf("client.$transaction");
+    const lockStart = source.indexOf("acquireLastSuperAdminLock(tx)");
+    const countStart = source.indexOf("countActiveSuperAdmins(tx)");
     const updateStart = source.indexOf("tx.user.updateMany");
     expect(transactionStart).toBeGreaterThan(-1);
-    expect(countStart).toBeGreaterThan(transactionStart);
+    expect(lockStart).toBeGreaterThan(transactionStart);
+    expect(countStart).toBeGreaterThan(lockStart);
     expect(updateStart).toBeGreaterThan(countStart);
-    expect(source).toContain("Prisma.TransactionIsolationLevel.Serializable");
-    expect(source).not.toContain("prisma.user.count");
+    const safety = readFileSync("lib/iam/security.ts", "utf8");
+    expect(safety).toContain('key: "LAST_SUPER_ADMIN"');
+    expect(source).not.toContain("client.userRoleAssignment.count");
   });
 
   it("requires an expected user version and an audited deactivation reason", () => {
-    const route = readFileSync("app/api/users/[id]/route.ts", "utf8");
-    const form = readFileSync("components/user-management.tsx", "utf8");
-    expect(route).toContain("requiredExpectedUpdatedAt(body.expectedUpdatedAt)");
-    expect(route).toContain("updatedAt: existing.updatedAt");
-    expect(route).toContain("requiredDeactivationReason(body.reason)");
-    expect(route).toContain("reason: deactivationReason");
-    expect(route).toContain("tx.user.updateMany");
-    expect(form).toContain("expectedUpdatedAt: new Date(user.updatedAt).toISOString()");
-    expect(form).toContain("Deactivation reason");
+    const legacyRoute = readFileSync("app/api/users/[id]/route.ts", "utf8");
+    const governed = readFileSync("lib/iam/users.ts", "utf8");
+    const form = readFileSync("components/iam/named-user-detail.tsx", "utf8");
+    expect(legacyRoute).toContain("status: 410");
+    expect(governed).toContain("expectedVersion(input.expectedVersion)");
+    expect(governed).toContain("reasonText(input.reason)");
+    expect(governed).toContain("where: { id: target.id, version }");
+    expect(governed).toContain("suspensionReason: activate ? null : reason");
+    expect(governed).toContain("tx.user.updateMany");
+    expect(form).toContain("expectedVersion: version");
+    expect(form).toContain("Bounded reason");
     expect(form).not.toContain("window.prompt");
     expect(form).not.toContain("window.confirm");
   });

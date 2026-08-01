@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { BookCatalogManager } from "@/components/books-finance-forms";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { moneyExact } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 import { getSchoolSettings } from "@/lib/school-settings";
 
 export default async function BookCatalogPage() {
@@ -19,8 +19,8 @@ export default async function BookCatalogPage() {
       orderBy: { title: "asc" }
     }),
     prisma.vendor.findMany({ where: { status: "ACTIVE" }, select: { id: true, name: true, vendorCode: true }, orderBy: { name: "asc" } }),
-    hasRolePermission(prisma, user.role, "MANAGE_BOOK_CATALOG"),
-    hasRolePermission(prisma, user.role, "MANAGE_BOOK_RATES")
+    hasUserPermission(user, "MANAGE_BOOK_CATALOG"),
+    hasUserPermission(user, "MANAGE_BOOK_RATES")
   ]);
   const serialized = items.map((item) => ({
     id: item.id,

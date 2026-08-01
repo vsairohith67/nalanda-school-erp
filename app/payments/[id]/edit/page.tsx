@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { requireUser, getCurrentUserEffectivePermissions } from "@/lib/auth";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { PaymentEditForm } from "@/components/payment-edit-form";
 import { receiptVersion } from "@/lib/receipt-integrity";
@@ -9,7 +9,7 @@ import { sanitizePaymentAuditJson } from "@/lib/finance-privacy";
 
 export default async function EditPaymentPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
-  const permissions = await getEffectivePermissions(prisma, user.role);
+  const permissions = await getCurrentUserEffectivePermissions();
   const canRestore = permissionSetCan(permissions, "RESTORE_PAYMENTS");
   const canCancel = permissionSetCan(permissions, "CANCEL_FINAL_RECEIPT");
   const canCorrect = permissionSetCan(permissions, "CORRECT_FINAL_RECEIPT");

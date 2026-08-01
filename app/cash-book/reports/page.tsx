@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { calculateCashSources, effectiveCashSources, hasSourceDrift, missingCashBookDateKeys } from "@/lib/cash-book";
 import { displayDate, moneyExact, schoolDateKey } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 export default async function CashBookReportsPage() {
   const user = await requirePermission("VIEW_CASH_BOOK_REPORTS");
@@ -14,7 +14,7 @@ export default async function CashBookReportsPage() {
     const live = await calculateCashSources(prisma, row.cashDate, row.openingBalance, row.id);
     return { row, sources: effectiveCashSources(row, live), drift: row.status !== "DRAFT" && hasSourceDrift(row.sourceSummarySnapshot, live) };
   }));
-  const canExport = await hasRolePermission(prisma, user.role, "EXPORT_CASH_BOOK_REPORTS");
+  const canExport = await hasUserPermission(user, "EXPORT_CASH_BOOK_REPORTS");
   const active = data.filter(({ row }) => row.status !== "CANCELLED");
   const sum = (field: "feeCash" | "miscIncomeCash" | "bookSalesCash" | "cashExpense" | "bankDeposit" | "directorHandover") => active.reduce((total, row) => total.add(row.sources[field]), new Prisma.Decimal(0));
   const unlocked = active.filter(({ row }) => row.status !== "LOCKED").length;

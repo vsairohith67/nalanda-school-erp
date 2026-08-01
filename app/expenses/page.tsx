@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { localDate } from "@/lib/expenses";
 import { displayDate, money } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 export default async function ExpensesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const user = await requirePermission("VIEW_EXPENSES"); const params = await searchParams; const manage = await hasRolePermission(prisma, user.role, "MANAGE_EXPENSES"); const value = (key: string) => typeof params[key] === "string" ? params[key] as string : "";
+  const user = await requirePermission("VIEW_EXPENSES"); const params = await searchParams; const manage = await hasUserPermission(user, "MANAGE_EXPENSES"); const value = (key: string) => typeof params[key] === "string" ? params[key] as string : "";
   const where: Prisma.ExpenseRecordWhereInput = {}; for (const field of ["approvalStatus", "paymentStatus", "paymentMethod", "vendorId", "categoryId", "departmentId"] as const) if (value(field)) where[field] = value(field); if (value("from") || value("to")) where.expenseDate = { ...(value("from") ? { gte: localDate(value("from")) } : {}), ...(value("to") ? { lt: new Date(localDate(value("to")).getTime() + 86_400_000) } : {}) }; if (value("search")) where.OR = [{ expenseNumber: { contains: value("search") } }, { description: { contains: value("search") } }, { invoiceNumber: { contains: value("search") } }];
   const [rows, vendors, categories, departments] = await Promise.all([prisma.expenseRecord.findMany({ where, include: { vendor: { select: { name: true } }, category: { select: { name: true } }, department: { select: { name: true } } }, orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }], take: 500 }), prisma.vendor.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }), prisma.expenseCategory.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }), prisma.expenseDepartment.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } })]);
   const total = (predicate: (row: (typeof rows)[number]) => boolean) => rows.filter(predicate).reduce((sum, row) => sum + Number(row.netAmount), 0);

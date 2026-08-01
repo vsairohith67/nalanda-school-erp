@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireApiPermission } from "@/lib/auth";
-import { hasRolePermission } from "@/lib/role-permissions";
+import { requireApiPermission, hasUserPermission } from "@/lib/auth";
+
 import { prisma } from "@/lib/prisma";
 import { askAiAssistant } from "@/lib/ai-assistant";
 import { safeAiAssistantError } from "@/lib/ai-assistant-errors";
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const permission = body.mode === "DOCUMENTATION" ? "USE_AI_ASSISTANT_DOCUMENTATION" : "USE_AI_ASSISTANT_AGGREGATES";
-    if (!(await hasRolePermission(prisma, auth.user.role, permission))) return NextResponse.json({ error: "This retrieval mode is not authorised for your role." }, { status: 403 });
+    if (!(await hasUserPermission(auth.user, permission))) return NextResponse.json({ error: "This retrieval mode is not authorised for your role." }, { status: 403 });
     return NextResponse.json(await askAiAssistant(prisma, auth.user, body));
   } catch (error) {
     const safe = safeAiAssistantError(error);

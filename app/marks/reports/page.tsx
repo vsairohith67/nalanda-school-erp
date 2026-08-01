@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildExamReports } from "@/lib/exam-reports";
 import { resolveMarksScope } from "@/lib/marks-scope";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePermission("VIEW_EXAM_REPORTS");
@@ -12,7 +12,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const scope = await resolveMarksScope(prisma, user, params.academicYear);
   const [report, canExport] = await Promise.all([
     buildExamReports(prisma, scope, { academicYear: params.academicYear, examCode: params.examCode }, user.role === "VIEWER"),
-    hasRolePermission(prisma, user.role, "EXPORT_EXAM_REPORTS")
+    hasUserPermission(user, "EXPORT_EXAM_REPORTS")
   ]);
   const query = new URLSearchParams(Object.entries(params).filter((entry): entry is [string, string] => Boolean(entry[1]))).toString();
 

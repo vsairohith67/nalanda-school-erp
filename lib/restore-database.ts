@@ -71,6 +71,8 @@ type RestoreDatabaseClient = Pick<
   | "publicWebsiteSettings" | "publicWebsitePage" | "publicWebsitePageVersion"
   | "publicWebsitePost" | "publicWebsitePostVersion" | "publicWebsiteNavigationItem" | "publicWebsiteEvent"
   | "authLoginAlias" | "authVerificationChallenge" | "authPasswordResetToken" | "authSession" | "authSecurityEvent"
+  | "userRoleAssignment" | "permissionProfile" | "permissionProfileEntry"
+  | "permissionProfileVersion" | "userPermissionProfileAssignment" | "userPermissionOverride" | "userAudit"
 >;
 
 export async function restoreValidatedBackup(
@@ -97,6 +99,7 @@ async function restoreIntoDatabase(
     paymentAudits: emptyEntityResult(),
     users: emptyEntityResult(),
     authSecurity: emptyEntityResult(),
+    iamAccess: emptyEntityResult(),
     rolePermissions: emptyEntityResult(),
     guardians: emptyEntityResult(),
     studentGuardians: emptyEntityResult(),
@@ -324,6 +327,7 @@ async function restoreIntoDatabase(
   const backupGuardianIds = await restoreGuardianData(client, backup, backupStudentLocalIds, result);
   const backupUserToLocalUser = await mapBackupUsersToLocalUsers(client, backup.users);
   await restoreAuthSecurityData(client, backup, backupUserToLocalUser, backupStudentLocalIds, result);
+  await restoreIamAccessData(client, backup, backupUserToLocalUser, result);
   await restoreStaffData(client, backup, backupUserToLocalUser, result);
   const expenseMasterMaps = await restoreExpenseData(client, backup, backupUserToLocalUser, result);
   await restoreBudgetData(client, backup, backupUserToLocalUser, expenseMasterMaps, result);
@@ -1085,7 +1089,7 @@ export async function restoreStaffData(
         if (!(teacher && (!occupied || occupied.id === existing?.id))) timetableTeacherId = existing?.timetableTeacherId ?? null;
       }
       const data = {
-        staffCode, fullName: requiredText(row.fullName, "Staff full name"), displayName: nullableText(row.displayName),
+        iamPublicKey: nullableText(row.iamPublicKey), staffCode, fullName: requiredText(row.fullName, "Staff full name"), displayName: nullableText(row.displayName),
         staffType: requiredText(row.staffType, "Staff type"), designation: requiredText(row.designation, "Designation"),
         department: nullableText(row.department), primarySubject: nullableText(row.primarySubject), additionalSubjects: nullableText(row.additionalSubjects),
         qualification: nullableText(row.qualification), experienceYears: row.experienceYears == null ? null : Number(row.experienceYears),
@@ -2033,6 +2037,7 @@ export async function restoreGuardianData(
     try {
       const backupId = requiredText(row.id, "Guardian ID");
       const data = {
+        iamPublicKey: nullableText(row.iamPublicKey),
         displayName: requiredText(row.displayName, "Guardian name"),
         primaryMobile: requiredText(row.primaryMobile, "Primary mobile"),
         alternateMobile: nullableText(row.alternateMobile),
@@ -3340,6 +3345,209 @@ function smsEmailRestoreData(row: RestoreRecord, dateFields: string[], actorFiel
   return data;
 }
 
+export async function restoreIamAccessData(
+  client: RestoreDatabaseClient,
+  backup: ValidatedBackup,
+  userMap: Map<string, string>,
+  result: Pick<RestoreResult, "iamAccess" | "warnings">
+) {
+  const profileMap = new Map<string, string>();
+  const actor = (value: unknown) => userMap.get(String(value ?? "")) ?? String(value ?? "");
+
+  for (const row of backup.iamAccess.userStates) {
+    const localId = userMap.get(String(row.userId ?? ""));
+    if (!localId) { result.iamAccess.skipped += 1; continue; }
+    const current = await client.user.findUnique({ where: { id: localId } });
+    if (!current) { result.iamAccess.skipped += 1; continue; }
+    const proposedPublicKey = nullableText(row.iamPublicKey);
+    const publicKeyOwner = proposedPublicKey
+      ? await client.user.findUnique({ where: { iamPublicKey: proposedPublicKey }, select: { id: true } })
+      : null;
+    await client.user.update({
+      where: { id: localId },
+      data: {
+        ...(proposedPublicKey && (!publicKeyOwner || publicKeyOwner.id === localId) ? { iamPublicKey: proposedPublicKey } : {}),
+        designation: nullableText(row.designation),
+        authorizationVersion: Math.max(current.authorizationVersion, positiveInteger(row.authorizationVersion, "IAM authorization version")),
+        mustChangePassword: current.mustChangePassword || row.mustChangePassword === true,
+        version: Math.max(current.version, positiveInteger(row.version, "IAM user version"))
+      }
+    });
+    result.iamAccess.updated += 1;
+  }
+
+  for (const [index, row] of backup.iamAccess.profiles.entries()) {
+    try {
+      const backupId = requiredText(row.id, "IAM profile ID");
+      const normalizedName = requiredText(row.normalizedName, "IAM profile normalized name");
+      const existing = await client.permissionProfile.findFirst({ where: { OR: [{ id: backupId }, { normalizedName }] } });
+      if (existing) { profileMap.set(backupId, existing.id); result.iamAccess.skipped += 1; continue; }
+      const created = await client.permissionProfile.create({ data: {
+        id: backupId,
+        publicKey: requiredText(row.publicKey, "IAM profile public key"),
+        name: requiredText(row.name, "IAM profile name"),
+        normalizedName,
+        description: nullableText(row.description),
+        status: requiredText(row.status, "IAM profile status"),
+        version: positiveInteger(row.version, "IAM profile version"),
+        createdByUserId: actor(row.createdByUserId),
+        updatedByUserId: actor(row.updatedByUserId),
+        archivedAt: optionalDate(row.archivedAt, "IAM profile archive date"),
+        createdAt: requiredDate(row.createdAt, "IAM profile created date"),
+        updatedAt: requiredDate(row.updatedAt, "IAM profile updated date")
+      } });
+      profileMap.set(backupId, created.id);
+      result.iamAccess.created += 1;
+    } catch (error) { result.iamAccess.errors.push(rowError("IAM profile", index, error)); }
+  }
+
+  for (const [index, row] of backup.iamAccess.roleAssignments.entries()) {
+    try {
+      const id = requiredText(row.id, "IAM role assignment ID");
+      if (await client.userRoleAssignment.findUnique({ where: { id } })) { result.iamAccess.skipped += 1; continue; }
+      const userId = userMap.get(requiredText(row.userId, "IAM role assignment user"));
+      if (!userId) { result.iamAccess.skipped += 1; continue; }
+      await client.userRoleAssignment.create({ data: {
+        id,
+        publicKey: requiredText(row.publicKey, "IAM role assignment public key"),
+        userId,
+        role: requiredText(row.role, "IAM role"),
+        status: requiredText(row.status, "IAM role assignment status"),
+        validFrom: requiredDate(row.validFrom, "IAM role assignment start"),
+        validUntil: optionalDate(row.validUntil, "IAM role assignment end"),
+        reason: requiredText(row.reason, "IAM role assignment reason"),
+        assignedByUserId: row.assignedByUserId == null ? null : actor(row.assignedByUserId),
+        endedByUserId: row.endedByUserId == null ? null : actor(row.endedByUserId),
+        endedAt: optionalDate(row.endedAt, "IAM role assignment ended date"),
+        version: positiveInteger(row.version, "IAM role assignment version"),
+        contextVersion: positiveInteger(row.contextVersion, "IAM context version"),
+        activeKey: row.activeKey == null ? null : `${userId}:${requiredText(row.role, "IAM role")}`,
+        createdAt: requiredDate(row.createdAt, "IAM role assignment created date"),
+        updatedAt: requiredDate(row.updatedAt, "IAM role assignment updated date")
+      } });
+      result.iamAccess.created += 1;
+    } catch (error) { result.iamAccess.errors.push(rowError("IAM role assignment", index, error)); }
+  }
+
+  for (const [index, row] of backup.iamAccess.profileEntries.entries()) {
+    try {
+      const id = requiredText(row.id, "IAM profile entry ID");
+      if (await client.permissionProfileEntry.findUnique({ where: { id } })) { result.iamAccess.skipped += 1; continue; }
+      const profileId = profileMap.get(requiredText(row.profileId, "IAM profile entry profile"));
+      if (!profileId) { result.iamAccess.skipped += 1; continue; }
+      await client.permissionProfileEntry.create({ data: {
+        id, profileId,
+        permission: requiredText(row.permission, "IAM profile permission"),
+        effect: requiredText(row.effect, "IAM profile effect"),
+        status: requiredText(row.status, "IAM profile entry status"),
+        validFrom: requiredDate(row.validFrom, "IAM profile entry start"),
+        validUntil: optionalDate(row.validUntil, "IAM profile entry end"),
+        reason: requiredText(row.reason, "IAM profile entry reason"),
+        createdByUserId: actor(row.createdByUserId),
+        revokedByUserId: row.revokedByUserId == null ? null : actor(row.revokedByUserId),
+        revokedAt: optionalDate(row.revokedAt, "IAM profile entry revoked date"),
+        supersedesId: nullableText(row.supersedesId),
+        version: positiveInteger(row.version, "IAM profile entry version"),
+        activeKey: row.activeKey == null ? null : `${profileId}:${requiredText(row.permission, "IAM profile permission")}`,
+        createdAt: requiredDate(row.createdAt, "IAM profile entry created date")
+      } });
+      result.iamAccess.created += 1;
+    } catch (error) { result.iamAccess.errors.push(rowError("IAM profile entry", index, error)); }
+  }
+
+  for (const [index, row] of backup.iamAccess.profileVersions.entries()) {
+    try {
+      const id = requiredText(row.id, "IAM profile version ID");
+      if (await client.permissionProfileVersion.findUnique({ where: { id } })) { result.iamAccess.skipped += 1; continue; }
+      const profileId = profileMap.get(requiredText(row.profileId, "IAM profile version profile"));
+      if (!profileId) { result.iamAccess.skipped += 1; continue; }
+      await client.permissionProfileVersion.create({ data: {
+        id, profileId,
+        versionNumber: positiveInteger(row.versionNumber, "IAM profile version number"),
+        snapshotJson: requiredText(row.snapshotJson, "IAM profile snapshot"),
+        reason: requiredText(row.reason, "IAM profile version reason"),
+        createdByUserId: actor(row.createdByUserId),
+        createdAt: requiredDate(row.createdAt, "IAM profile version date")
+      } });
+      result.iamAccess.created += 1;
+    } catch (error) { result.iamAccess.errors.push(rowError("IAM profile version", index, error)); }
+  }
+
+  for (const [index, row] of backup.iamAccess.profileAssignments.entries()) {
+    try {
+      const id = requiredText(row.id, "IAM profile assignment ID");
+      if (await client.userPermissionProfileAssignment.findUnique({ where: { id } })) { result.iamAccess.skipped += 1; continue; }
+      const userId = userMap.get(requiredText(row.userId, "IAM profile assignment user"));
+      const profileId = profileMap.get(requiredText(row.profileId, "IAM profile assignment profile"));
+      if (!userId || !profileId) { result.iamAccess.skipped += 1; continue; }
+      await client.userPermissionProfileAssignment.create({ data: {
+        id,
+        publicKey: requiredText(row.publicKey, "IAM profile assignment public key"),
+        userId, profileId,
+        status: requiredText(row.status, "IAM profile assignment status"),
+        validFrom: requiredDate(row.validFrom, "IAM profile assignment start"),
+        validUntil: optionalDate(row.validUntil, "IAM profile assignment end"),
+        reason: requiredText(row.reason, "IAM profile assignment reason"),
+        assignedByUserId: actor(row.assignedByUserId),
+        endedByUserId: row.endedByUserId == null ? null : actor(row.endedByUserId),
+        endedAt: optionalDate(row.endedAt, "IAM profile assignment ended date"),
+        version: positiveInteger(row.version, "IAM profile assignment version"),
+        activeKey: row.activeKey == null ? null : `${userId}:${profileId}`,
+        createdAt: requiredDate(row.createdAt, "IAM profile assignment created date"),
+        updatedAt: requiredDate(row.updatedAt, "IAM profile assignment updated date")
+      } });
+      result.iamAccess.created += 1;
+    } catch (error) { result.iamAccess.errors.push(rowError("IAM profile assignment", index, error)); }
+  }
+
+  for (const [index, row] of backup.iamAccess.overrides.entries()) {
+    try {
+      const id = requiredText(row.id, "IAM override ID");
+      if (await client.userPermissionOverride.findUnique({ where: { id } })) { result.iamAccess.skipped += 1; continue; }
+      const userId = userMap.get(requiredText(row.userId, "IAM override user"));
+      if (!userId) { result.iamAccess.skipped += 1; continue; }
+      const permission = requiredText(row.permission, "IAM override permission");
+      await client.userPermissionOverride.create({ data: {
+        id,
+        publicKey: requiredText(row.publicKey, "IAM override public key"),
+        userId, permission,
+        effect: requiredText(row.effect, "IAM override effect"),
+        status: requiredText(row.status, "IAM override status"),
+        validFrom: requiredDate(row.validFrom, "IAM override start"),
+        validUntil: optionalDate(row.validUntil, "IAM override end"),
+        reason: requiredText(row.reason, "IAM override reason"),
+        createdByUserId: actor(row.createdByUserId),
+        revokedByUserId: row.revokedByUserId == null ? null : actor(row.revokedByUserId),
+        revokedAt: optionalDate(row.revokedAt, "IAM override revoked date"),
+        supersedesId: nullableText(row.supersedesId),
+        version: positiveInteger(row.version, "IAM override version"),
+        activeKey: row.activeKey == null ? null : `${userId}:${permission}`,
+        createdAt: requiredDate(row.createdAt, "IAM override created date")
+      } });
+      result.iamAccess.created += 1;
+    } catch (error) { result.iamAccess.errors.push(rowError("IAM override", index, error)); }
+  }
+
+  for (const [index, row] of backup.iamAccess.audits.entries()) {
+    try {
+      const id = requiredText(row.id, "IAM audit ID");
+      if (await client.userAudit.findUnique({ where: { id } })) { result.iamAccess.skipped += 1; continue; }
+      await client.userAudit.create({ data: {
+        id,
+        action: requiredText(row.action, "IAM audit action"),
+        actorUserId: actor(row.actorUserId),
+        actorName: requiredText(row.actorName, "IAM audit actor"),
+        targetUserId: row.targetUserId == null ? null : actor(row.targetUserId),
+        detailsJson: nullableText(row.detailsJson),
+        createdAt: requiredDate(row.createdAt, "IAM audit date")
+      } });
+      result.iamAccess.created += 1;
+    } catch (error) { result.iamAccess.errors.push(rowError("IAM audit", index, error)); }
+  }
+
+  result.warnings.push("IAM access metadata was restored only for existing mapped users; password material and active session context were not restored.");
+}
+
 export async function restoreAuthSecurityData(
   client: RestoreDatabaseClient,
   backup: ValidatedBackup,
@@ -3453,6 +3661,10 @@ export async function restoreAuthSecurityData(
         id, userId,
         tokenHash: restoredAuthHash("session", id),
         credentialVersion: positiveInteger(row.credentialVersion, "Auth session credential version"),
+        authorizationVersion: row.authorizationVersion === undefined ? 1 : positiveInteger(row.authorizationVersion, "Auth session authorization version"),
+        contextVersion: row.contextVersion === undefined ? 1 : positiveInteger(row.contextVersion, "Auth session context version"),
+        activeRoleAssignmentId: null,
+        activeChildLinkId: null,
         createdAt: requiredDate(row.createdAt, "Auth session created date"),
         lastSeenAt: requiredDate(row.lastSeenAt, "Auth session last seen date"),
         expiresAt: requiredDate(row.expiresAt, "Auth session expiry"),

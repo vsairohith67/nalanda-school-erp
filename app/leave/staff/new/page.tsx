@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { linkedStaffMember } from "@/lib/staff-leave";
 import { PageHeader } from "@/components/ui";
 import { StaffLeaveForm } from "@/components/staff-leave-form";
@@ -9,7 +9,7 @@ import { StaffLeaveForm } from "@/components/staff-leave-form";
 export default async function NewStaffLeavePage() {
   const user = await requirePermission("VIEW_STAFF_LEAVE");
   const [permissions, linked] = await Promise.all([
-    getEffectivePermissions(prisma, user.role),
+    getCurrentUserEffectivePermissions(),
     linkedStaffMember(prisma, user.id)
   ]);
   const canManage = permissionSetCan(permissions, "MANAGE_STAFF_LEAVE");

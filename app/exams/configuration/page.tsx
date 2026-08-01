@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { examTypeLabel } from "@/lib/exam-configuration-labels";
 import { listExaminationConfigurations } from "@/lib/exam-configurations";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { displayDate } from "@/lib/format";
 
 export default async function Page() {
   const user = await requirePermission("VIEW_EXAM_CONFIGURATION");
   const [rows, permissions] = await Promise.all([
     listExaminationConfigurations(prisma),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   const count = (status: string) => rows.filter((row) => row.status === status).length;
   return (

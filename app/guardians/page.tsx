@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { GuardianCreateForm } from "@/components/guardian-create-form";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { guardianSearchWhere } from "@/lib/guardians";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function GuardiansPage({
   searchParams
@@ -13,7 +13,7 @@ export default async function GuardiansPage({
 }) {
   const sp = await searchParams;
   const user = await requirePermission("VIEW_GUARDIANS");
-  const permissions = await getEffectivePermissions(prisma, user.role);
+  const permissions = await getCurrentUserEffectivePermissions();
   const canManage = permissionSetCan(permissions, "MANAGE_GUARDIANS");
   const q = sp.q;
   const guardians = await prisma.guardian.findMany({

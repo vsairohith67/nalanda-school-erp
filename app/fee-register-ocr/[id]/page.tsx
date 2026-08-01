@@ -2,14 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { OcrBatchActions } from "@/components/fee-register-ocr-ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ocrBatchInclude } from "@/lib/fee-register-ocr";
-import { getEffectivePermissions } from "@/lib/role-permissions";
+
 
 export default async function FeeRegisterOcrBatchPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_FEE_REGISTER_OCR");
-  const [batch, permissions] = await Promise.all([prisma.feeRegisterOcrBatch.findUnique({ where: { id: (await params).id }, include: ocrBatchInclude }), getEffectivePermissions(prisma, user.role)]);
+  const [batch, permissions] = await Promise.all([prisma.feeRegisterOcrBatch.findUnique({ where: { id: (await params).id }, include: ocrBatchInclude }), getCurrentUserEffectivePermissions()]);
   if (!batch) notFound();
   return <div className="page fee-register-ocr-page"><PageHeader title={batch.batchNumber} description={`${batch.registerName} · ${batch.academicYear} · private ${batch.profile.providerKind} staging`} action={<div className="page-actions"><Link className="button secondary" href="/fee-register-ocr">All batches</Link>{permissions.has("EXPORT_FEE_REGISTER_OCR_REPORTS") ? <Link className="button secondary" href={`/api/fee-register-ocr/reports/export?batchId=${encodeURIComponent(batch.id)}`}>Reviewed CSV</Link> : null}</div>} />
     <p className="notice warning">OCR output is untrusted draft evidence. Handwritten references remain separate from ERP receipt numbers. Payment posting is {batch.profile.paymentPostingEnabled ? "enabled by profile" : "disabled"}.</p>

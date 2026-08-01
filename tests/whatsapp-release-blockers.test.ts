@@ -151,7 +151,7 @@ describe("Prompt 19B configurable estimated-cost cap", () => {
     };
     return db;
   }
-  const director = { id: "director", name: "Director", username: "director", email: null, role: "DIRECTOR" as const, guardianId: null };
+  const director = { id: "director", name: "Director", username: "director", email: null, designation: "Director", role: "DIRECTOR" as const, roleAssignmentId: "director-role", authorizationVersion: 1, mustChangePassword: false, guardianId: null };
   it("requires a reason and Director/Super Admin authority, then records one exact idempotent override", async () => {
     const db = costCapClient();
     await expect(overrideWhatsAppCostCap(db, "batch", { ...director, role: "ADMIN" }, "No")).rejects.toThrow(/Director or Super Admin/);

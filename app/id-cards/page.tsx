@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { effectiveIdentityCardStatus } from "@/lib/identity-cards";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { displayDate } from "@/lib/format";
 
 export default async function IdentityCardsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  const user = await requirePermission("VIEW_ID_CARDS"), q = await searchParams, permissions = await getEffectivePermissions(prisma, user.role);
+  const user = await requirePermission("VIEW_ID_CARDS"), q = await searchParams, permissions = await getCurrentUserEffectivePermissions();
   const source = await prisma.identityCard.findMany({ where: { ...(q.type ? { cardType: q.type } : {}), ...(q.academicYear ? { academicYear: q.academicYear } : {}), ...(q.status ? { status: q.status } : {}), ...(q.className || q.section ? { student: { is: { ...(q.className ? { className: q.className } : {}), ...(q.section ? { section: q.section } : {}) } } } : {}), ...(q.designation ? { staffMember: { is: { designation: q.designation } } } : {}) }, include: { student: { select: { studentName: true, admissionNo: true, className: true, section: true } }, staffMember: { select: { fullName: true, staffCode: true, designation: true } } }, orderBy: { createdAt: "desc" } });
   const rows = source.filter((card) => !q.effectiveStatus || effectiveIdentityCardStatus(card) === q.effectiveStatus);
   return <div className="page identity-card-page"><PageHeader title="Virtual Student and Teacher ID Cards" description="Privacy-safe operational school ID cards with immutable issued versions and transaction-safe numbering." action={permissionSetCan(permissions, "CREATE_ID_CARDS") ? <Link className="button" href="/id-cards/new">Create Individual Card</Link> : undefined}/>

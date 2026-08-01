@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { UdiseNav } from "@/components/udise-nav";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { loadUdiseChecklist } from "@/lib/udise-checklist";
 
 export default async function UdisePage() {
   const user = await requirePermission("VIEW_UDISE_CHECKLIST");
-  const [report, permissions] = await Promise.all([loadUdiseChecklist(prisma), getEffectivePermissions(prisma, user.role)]);
+  const [report, permissions] = await Promise.all([loadUdiseChecklist(prisma), getCurrentUserEffectivePermissions()]);
   const cards = [
     ["Active students checked", report.summary.activeStudentsChecked],
     ["Enrollments checked", report.summary.enrollmentsChecked],

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { displayDate, money } from "@/lib/format";
 import { PageHeader } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function PaymentsPage({
   searchParams
@@ -12,7 +12,7 @@ export default async function PaymentsPage({
 }) {
   const sp = await searchParams;
   const user = await requirePermission("VIEW_PAYMENTS");
-  const permissions = await getEffectivePermissions(prisma, user.role);
+  const permissions = await getCurrentUserEffectivePermissions();
   const exportQuery = new URLSearchParams({
     ...(sp.date ? { from: sp.date, to: sp.date } : {}),
     ...(sp.receiptNo ? { receiptNo: sp.receiptNo } : {}),

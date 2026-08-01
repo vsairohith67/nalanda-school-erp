@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { getSchoolSettings } from "@/lib/school-settings";
 import { PROGRESSION_DECISION_TYPES, PROGRESSION_STATUSES, decisionLabel, progressionInclude, progressionWhere } from "@/lib/student-progression";
 import { displayDate } from "@/lib/format";
 
 export default async function StudentProgressionPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePermission("VIEW_STUDENT_PROGRESSION"); const sp = await searchParams;
-  const [settings, permissions] = await Promise.all([getSchoolSettings(prisma), getEffectivePermissions(prisma, user.role)]);
+  const [settings, permissions] = await Promise.all([getSchoolSettings(prisma), getCurrentUserEffectivePermissions()]);
   const academicYear = sp.academicYear?.trim() || settings.academicYear;
   const where = progressionWhere({ academicYear, decisionType: sp.decisionType, status: sp.status, className: sp.className, section: sp.section });
   const [decisions, allForYear] = await Promise.all([

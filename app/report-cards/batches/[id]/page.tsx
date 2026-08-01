@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, StatCard, StatusBadge } from "@/components/ui";
 import { ReportCardBatchWorkflow } from "@/components/report-card-workflow";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { resolveReportCardScope, requireReportCardTarget } from "@/lib/report-card-scope";
 import { parseDraft, reportCardValidationGaps } from "@/lib/report-cards";
 
@@ -26,7 +26,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
         }
       }
     }),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   if (!batch) notFound();
   const scope = await resolveReportCardScope(prisma, user, batch.academicYear);

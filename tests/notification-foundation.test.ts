@@ -121,8 +121,12 @@ describe("Prompt 19A notification foundation", () => {
       name: "Director",
       username: "director",
       email: null,
+      designation: "Director",
       guardianId: null,
-      role: "DIRECTOR"
+      role: "DIRECTOR",
+      roleAssignmentId: "director-role",
+      authorizationVersion: 1,
+      mustChangePassword: false
     });
     expect(createdData.correctionOfCampaignId).toBe("original");
     expect(createdData.expiresAt).toBeNull();

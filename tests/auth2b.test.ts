@@ -64,13 +64,13 @@ describe("AUTH-2B verified identifiers and recovery", () => {
   });
 
   it("replaces governed username aliases append-only and revokes sessions with an exact reason", () => {
-    const route = source("app/api/users/[id]/route.ts");
-    expect(route).toContain('status: "REMOVED"');
-    expect(route).toContain("removedAt: now");
-    expect(route).toContain("id: randomUUID()");
-    expect(route).toContain('eventType: "LOGIN_ALIAS_REPLACED_BY_ADMIN"');
-    expect(route).toContain('"LOGIN_IDENTIFIER_CHANGED"');
-    expect(route).toContain("credentialVersion: { increment: 1 }");
+    const governedUsers = source("lib/iam/users.ts");
+    expect(governedUsers).toContain('status: "REMOVED"');
+    expect(governedUsers).toContain("removedAt: now");
+    expect(governedUsers).toContain("id: randomUUID()");
+    expect(governedUsers).toContain('eventType: "LOGIN_ALIAS_REPLACED_BY_ADMIN"');
+    expect(governedUsers).toContain('"LOGIN_IDENTIFIER_CHANGED"');
+    expect(governedUsers).toContain("credentialVersion: { increment: 1 }");
   });
 
   it("uses one additive migration with database checks and username-only backfill", () => {

@@ -3,18 +3,18 @@ import { notFound } from "next/navigation";
 import { ChargeActions } from "@/components/library-accountability-forms";
 import { LibraryNav } from "@/components/library-nav";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { displayDate } from "@/lib/format";
 import { chargeInclude } from "@/lib/library-accountability-api";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { getSchoolSettings } from "@/lib/school-settings";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_LIBRARY_CHARGES");
   const [row, permissions, settings] = await Promise.all([
     prisma.libraryCharge.findUnique({ where: { id: (await params).id }, include: chargeInclude }),
-    getEffectivePermissions(prisma, user.role),
+    getCurrentUserEffectivePermissions(),
     getSchoolSettings(prisma),
   ]);
   if (!row) notFound();

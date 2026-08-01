@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { AiAssistantChat } from "@/components/ai-assistant-ui";
-import { requirePermission } from "@/lib/auth";
+import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ensureAiAssistantFoundation } from "@/lib/ai-assistant-profiles";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 
 export default async function AiAssistantPage() {
   const user = await requirePermission("VIEW_AI_ASSISTANT");
   await ensureAiAssistantFoundation(prisma);
   const [profile, permissions] = await Promise.all([
     prisma.aiAssistantProfile.findFirst({ where: { status: "ACTIVE" }, orderBy: { createdAt: "asc" } }),
-    getEffectivePermissions(prisma, user.role)
+    getCurrentUserEffectivePermissions()
   ]);
   const modes = [
     ...(permissionSetCan(permissions, "USE_AI_ASSISTANT_DOCUMENTATION") ? ["DOCUMENTATION"] : []),

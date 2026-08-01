@@ -4,7 +4,7 @@ import { isSmsEmailQuietHours } from "@/lib/sms-email-batches";
 import { optOutSmsEmailConsent, recordSmsEmailConsent } from "@/lib/sms-email-consents";
 import { validateSmsEmailProfileInput } from "@/lib/sms-email-profiles";
 
-const director = { id: "director", name: "Director", username: "director", email: null, guardianId: null, role: "DIRECTOR" as const };
+const director = { id: "director", name: "Director", username: "director", email: null, designation: "Director", guardianId: null, role: "DIRECTOR" as const, roleAssignmentId: "director-role", authorizationVersion: 1, mustChangePassword: false };
 
 describe("Prompt 19C consent, controls and role defaults", () => {
   it("keeps final-send and override permissions separated by role", () => {
@@ -64,10 +64,10 @@ describe("Prompt 19C consent, controls and role defaults", () => {
       })
     };
     await expect(optOutSmsEmailConsent(client, "consent", {
-      id: "p2", name: "Other", username: "other", email: null, role: "PARENT", guardianId: "guardian-b"
+      id: "p2", name: "Other", username: "other", email: null, designation: null, role: "PARENT", roleAssignmentId: "parent-b-role", authorizationVersion: 1, mustChangePassword: false, guardianId: "guardian-b"
     })).rejects.toThrow(/only your own/i);
     const result = await optOutSmsEmailConsent(client, "consent", {
-      id: "p1", name: "Parent", username: "parent", email: null, role: "PARENT", guardianId: "guardian-a"
+      id: "p1", name: "Parent", username: "parent", email: null, designation: null, role: "PARENT", roleAssignmentId: "parent-a-role", authorizationVersion: 1, mustChangePassword: false, guardianId: "guardian-a"
     });
     expect(result.status).toBe("OPTED_OUT");
   });

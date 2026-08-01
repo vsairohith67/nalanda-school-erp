@@ -5,14 +5,14 @@ export const PUBLIC_WEBSITE_EXACT_PATHS = new Set([
 ]);
 
 export const PRIVATE_ROBOTS_EXCLUSIONS = [
-  "/api", "/website-admin", "/account-security", "/ai-assistant", "/attendance", "/books", "/budgets",
+  "/api", "/website-admin", "/access-context", "/access-history", "/account-security", "/ai-assistant", "/attendance", "/books", "/budgets",
   "/cash-book", "/certificates", "/change-password", "/class-x-documents",
   "/cloud-backup", "/daily-collection", "/dashboard", "/exams", "/expenses",
   "/fee-register-ocr", "/forgot-password", "/guardians", "/homework", "/id-cards", "/import-export",
   "/import-verification", "/install-app", "/leave", "/ledger", "/library", "/login",
   "/marks", "/misc-income", "/notices", "/notifications", "/offline", "/parent",
   "/payments", "/pending-dues", "/pilot-acceptance", "/receipt-audit", "/receipts",
-  "/report-cards", "/reset-password", "/roles", "/settings", "/setup", "/sms-email", "/staff",
+  "/permission-profiles", "/report-cards", "/reset-password", "/roles", "/settings", "/setup", "/sms-email", "/staff",
   "/students", "/substitutes", "/teacher", "/teacher-analytics", "/timetable",
   "/udise", "/unauthorized", "/users", "/vendors", "/whatsapp"
 ] as const;
