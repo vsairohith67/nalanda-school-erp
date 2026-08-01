@@ -1320,3 +1320,33 @@ QA, external record closure and feature-branch push are required before the
 implementation result. Independent IAM-1A-QA must run only after the exact
 implementation readiness gate. Staging, live providers and real-user
 onboarding remain unauthorised.
+
+## IAM-1A-QA — Independent Named-User, Permission and Multi-Context QA (2026-08-01)
+
+Independent QA used a fresh ignored 23-user `IAM1AQA` copied-database matrix
+and short copied production Browser batches. It cleared all eleven permission
+precedence outcomes, exact Teacher/Parent/object scope, profile lifecycle and
+impact protection, pending/temporary-password user lifecycle, delegated
+administration, last-Super-Admin concurrency, authorization/session
+invalidation, opaque multi-role switching, linked-child family isolation,
+rollback, version-37 restore twice and cleanup twice.
+
+QA corrected legacy base-role-only authorization calls, cross-context
+object-scope grant handling, Teacher-link scope, concurrent last-Super-Admin
+database invariants, raw-role login responses, delegated UI controls,
+reauthentication field clearing and nested audit redaction/humanisation.
+Desktop and exact 390 x 844 mobile Browser QA passed in light and dark with no
+overflow, sub-44 px actions, native dialogs, navigation leakage, console or
+hydration errors, or clean-runtime stderr.
+
+The additive migration applied once after two byte-identical rollback restore
+rehearsals; the second deploy was a no-op. The exact zero-business baseline and
+protected-account digest are unchanged. Final verification passed 288 page
+routes, 423 API routes, 178 files/1,627 tests, the 234-page bounded build,
+backup version 37 and Git safety.
+
+Result: `IAM_DELEGATED_ACCESS_CLEARED`. Release tag:
+`iam-delegated-access-v37-2026-08-01`. The feature branch is retained. No
+staging, deployment, live-provider activation or real-user onboarding is
+authorised. Next governed phase: Prompt 23D — Parent Attendance and
+Examination Timetable.

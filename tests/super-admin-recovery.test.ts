@@ -188,9 +188,27 @@ describe("local Super Admin recovery utility", () => {
 
   it("refuses an inactive account", async () => {
     const testScenario = await scenario("inactive", async (client) => {
+      const [director, secondOwner] = await Promise.all([
+        client.user.findUniqueOrThrow({ where: { username: "director" }, select: { id: true } }),
+        client.user.update({
+          where: { username: "admin" },
+          data: { isActive: true, lifecycleStatus: "ACTIVE" },
+          select: { id: true }
+        })
+      ]);
+      await client.userRoleAssignment.create({
+        data: {
+          publicKey: randomUUID(),
+          userId: secondOwner.id,
+          role: "SUPER_ADMIN",
+          reason: "AUTH recovery inactive-account QA safety peer",
+          assignedByUserId: director.id,
+          activeKey: `${secondOwner.id}:SUPER_ADMIN`
+        }
+      });
       await client.user.update({
         where: { username: "director" },
-        data: { isActive: false }
+        data: { isActive: false, lifecycleStatus: "SUSPENDED" }
       });
     });
     await expectCode(

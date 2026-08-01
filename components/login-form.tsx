@@ -3,7 +3,7 @@
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
-import { defaultPathForRole, safeInternalPath } from "@/lib/navigation";
+import { safeInternalPath } from "@/lib/navigation";
 
 const GENERIC_LOGIN_ERROR = "We couldn’t sign you in with those details.";
 
@@ -42,7 +42,7 @@ export function LoginForm() {
         router.refresh();
         return;
       }
-      const rolePath = defaultPathForRole(data.user?.role ?? "");
+      const rolePath = safeInternalPath(typeof data.homePath === "string" ? data.homePath : null);
       router.replace(rolePath === "/dashboard" ? safeInternalPath(searchParams.get("next")) : rolePath);
       router.refresh();
     } catch {

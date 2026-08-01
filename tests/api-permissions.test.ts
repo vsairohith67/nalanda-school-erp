@@ -172,7 +172,8 @@ describe("API and direct route permission declarations", () => {
     expect(receiptPrint).toContain("hasUserPermission");
     expect(receiptPrint).toContain('"PRINT_RECEIPTS"');
     expect(receiptPrint).toContain('user.role === "PARENT" ? "School Office" : receivedBy');
-    expect(loginForm).toContain("defaultPathForRole");
+    expect(loginForm).toContain("data.homePath");
+    expect(loginForm).not.toContain("defaultPathForRole");
     expect(middleware).toContain('pathname.startsWith("/api/")');
     expect(middleware).toContain('"Authentication required"');
   });

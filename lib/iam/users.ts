@@ -182,7 +182,12 @@ export async function createNamedUser(client: PrismaClient, actor: IamActor, inp
       action: "IAM_NAMED_USER_CREATED",
       actor: actor.user,
       targetUserId: user.id,
-      details: { status: user.lifecycleStatus, roles: roles.map(roleDisplayLabel), designation: designation ?? "Not set", activationMethod: activateWithTemporaryPassword ? "Temporary password with forced change" : "Pending activation", reason }
+      details: {
+        before: { status: "Not created" },
+        after: { status: user.lifecycleStatus, roles: roles.map(roleDisplayLabel), designation: designation ?? "Not set" },
+        activationMethod: activateWithTemporaryPassword ? "Temporary password with forced change" : "Pending activation",
+        reason
+      }
     });
     return { handle: user.iamPublicKey!, name: user.name, username: user.username, designation: user.designation, status: user.lifecycleStatus, version: user.version };
   });
@@ -286,7 +291,12 @@ async function changeLifecycle(client: PrismaClient, actor: IamActor, target: Us
     });
     if (changed.count !== 1) throw new Error("The user changed; refresh and try again");
     await tx.authSession.updateMany({ where: { userId: target.id, revokedAt: null }, data: { revokedAt: new Date(), revocationReason: `IAM_USER_${action}` } });
-    await logUserAction(tx, { action: `IAM_USER_${action === "SUSPEND" ? "SUSPENDED" : "REACTIVATED"}`, actor: actor.user, targetUserId: target.id, details: { reason } });
+    await logUserAction(tx, {
+      action: `IAM_USER_${action === "SUSPEND" ? "SUSPENDED" : "REACTIVATED"}`,
+      actor: actor.user,
+      targetUserId: target.id,
+      details: { before: { status: target.lifecycleStatus }, after: { status: activate ? "ACTIVE" : "SUSPENDED" }, reason }
+    });
     return { success: true, status: activate ? "ACTIVE" : "SUSPENDED", version: version + 1 };
   });
 }
@@ -303,7 +313,7 @@ async function addRole(client: PrismaClient, actor: IamActor, target: UserTarget
     if (await tx.userRoleAssignment.count({ where: { userId: target.id, role, status: "ACTIVE" } })) throw new Error("That base role is already active for this user");
     await tx.userRoleAssignment.create({ data: { publicKey: randomUUID(), userId: target.id, role, reason, assignedByUserId: actor.user.id, validUntil, activeKey: `${target.id}:${role}` } });
     await bumpAuthorizationAndRevokeSessions(tx, target.id, "IAM_ROLE_ASSIGNED");
-    await logUserAction(tx, { action: "IAM_ROLE_ASSIGNED", actor: actor.user, targetUserId: target.id, details: { role: roleDisplayLabel(role), validUntil: validUntil?.toISOString() ?? null, reason } });
+    await logUserAction(tx, { action: "IAM_ROLE_ASSIGNED", actor: actor.user, targetUserId: target.id, details: { before: { status: "Not assigned" }, after: { role: roleDisplayLabel(role), status: "Active", validUntil: validUntil?.toISOString() ?? null }, reason } });
     return { success: true, version: version + 1 };
   });
 }
@@ -324,7 +334,7 @@ async function endRole(client: PrismaClient, actor: IamActor, target: UserTarget
     const now = new Date();
     await tx.userRoleAssignment.update({ where: { id: assignment.id }, data: { status: "ENDED", endedAt: now, endedByUserId: actor.user.id, activeKey: null, reason, version: { increment: 1 }, contextVersion: { increment: 1 } } });
     await bumpAuthorizationAndRevokeSessions(tx, target.id, "IAM_ROLE_ENDED", now);
-    await logUserAction(tx, { action: "IAM_ROLE_ENDED", actor: actor.user, targetUserId: target.id, details: { role: roleDisplayLabel(assignment.role), reason } });
+    await logUserAction(tx, { action: "IAM_ROLE_ENDED", actor: actor.user, targetUserId: target.id, details: { before: { role: roleDisplayLabel(assignment.role), status: "Active" }, after: { role: roleDisplayLabel(assignment.role), status: "Ended" }, reason } });
     return { success: true, version: version + 1 };
   });
 }
@@ -343,7 +353,7 @@ async function assignProfile(client: PrismaClient, actor: IamActor, target: User
     if ((await tx.user.findUniqueOrThrow({ where: { id: target.id }, select: { version: true } })).version !== version) throw new Error("The user changed; refresh and try again");
     await tx.userPermissionProfileAssignment.create({ data: { publicKey: randomUUID(), userId: target.id, profileId: profile.id, reason, assignedByUserId: actor.user.id, validUntil, activeKey: `${target.id}:${profile.id}` } });
     await bumpAuthorizationAndRevokeSessions(tx, target.id, "IAM_PROFILE_ASSIGNED");
-    await logUserAction(tx, { action: "IAM_PROFILE_ASSIGNED", actor: actor.user, targetUserId: target.id, details: { profileName: profile.name, validUntil: validUntil?.toISOString() ?? null, reason } });
+    await logUserAction(tx, { action: "IAM_PROFILE_ASSIGNED", actor: actor.user, targetUserId: target.id, details: { before: { profileName: profile.name, status: "Not assigned" }, after: { profileName: profile.name, status: "Active", validUntil: validUntil?.toISOString() ?? null }, reason } });
     return { success: true, version: version + 1 };
   });
 }
@@ -358,7 +368,7 @@ async function endProfile(client: PrismaClient, actor: IamActor, target: UserTar
     const now = new Date();
     await tx.userPermissionProfileAssignment.update({ where: { id: assignment.id }, data: { status: "ENDED", endedAt: now, endedByUserId: actor.user.id, activeKey: null, reason, version: { increment: 1 } } });
     await bumpAuthorizationAndRevokeSessions(tx, target.id, "IAM_PROFILE_ENDED", now);
-    await logUserAction(tx, { action: "IAM_PROFILE_ENDED", actor: actor.user, targetUserId: target.id, details: { profileName: assignment.profile.name, reason } });
+    await logUserAction(tx, { action: "IAM_PROFILE_ENDED", actor: actor.user, targetUserId: target.id, details: { before: { profileName: assignment.profile.name, status: "Active" }, after: { profileName: assignment.profile.name, status: "Ended" }, reason } });
     return { success: true, version: version + 1 };
   });
 }
@@ -383,7 +393,17 @@ async function setOverride(client: PrismaClient, actor: IamActor, target: UserTa
     if (previous) await tx.userPermissionOverride.update({ where: { id: previous.id }, data: { status: "REVOKED", revokedAt: now, revokedByUserId: actor.user.id, activeKey: null, version: { increment: 1 } } });
     await tx.userPermissionOverride.create({ data: { publicKey: randomUUID(), userId: target.id, permission, effect, reason, createdByUserId: actor.user.id, validUntil, supersedesId: previous?.id ?? null, activeKey: `${target.id}:${permission}` } });
     await bumpAuthorizationAndRevokeSessions(tx, target.id, "IAM_PERMISSION_OVERRIDE_CHANGED", now);
-    await logUserAction(tx, { action: "IAM_PERMISSION_OVERRIDE_SET", actor: actor.user, targetUserId: target.id, details: { permission, effect, validUntil: validUntil?.toISOString() ?? null, source: "Individual override", reason } });
+    await logUserAction(tx, {
+      action: "IAM_PERMISSION_OVERRIDE_SET",
+      actor: actor.user,
+      targetUserId: target.id,
+      details: {
+        before: previous ? { permission: previous.permission, effect: previous.effect, status: "Active" } : { permission, status: "Not set" },
+        after: { permission, effect, status: "Active", validUntil: validUntil?.toISOString() ?? null },
+        source: "Individual override",
+        reason
+      }
+    });
     return { success: true, version: version + 1 };
   });
 }
@@ -398,7 +418,7 @@ async function revokeOverride(client: PrismaClient, actor: IamActor, target: Use
     const now = new Date();
     await tx.userPermissionOverride.update({ where: { id: row.id }, data: { status: "REVOKED", revokedAt: now, revokedByUserId: actor.user.id, activeKey: null, reason, version: { increment: 1 } } });
     await bumpAuthorizationAndRevokeSessions(tx, target.id, "IAM_PERMISSION_OVERRIDE_REVOKED", now);
-    await logUserAction(tx, { action: "IAM_PERMISSION_OVERRIDE_REVOKED", actor: actor.user, targetUserId: target.id, details: { permission: row.permission, effect: row.effect, reason } });
+    await logUserAction(tx, { action: "IAM_PERMISSION_OVERRIDE_REVOKED", actor: actor.user, targetUserId: target.id, details: { before: { permission: row.permission, effect: row.effect, status: "Active" }, after: { permission: row.permission, effect: row.effect, status: "Revoked" }, reason } });
     return { success: true, version: version + 1 };
   });
 }
@@ -434,7 +454,17 @@ async function updateIdentity(client: PrismaClient, actor: IamActor, target: Use
       await tx.authSession.updateMany({ where: { userId: target.id, revokedAt: null }, data: { revokedAt: now, revocationReason: "LOGIN_IDENTIFIER_CHANGED" } });
       await logAuthSecurityEvent(tx, { eventType: "LOGIN_ALIAS_REPLACED_BY_ADMIN", userId: target.id, actorUserId: actor.user.id, subjectType: "USER", subjectId: target.id, details: { aliasType: "USERNAME", sessionsRevoked: true } });
     }
-    await logUserAction(tx, { action: "IAM_USER_IDENTITY_UPDATED", actor: actor.user, targetUserId: target.id, details: { designation: designation ?? "Not set", usernameChanged, reason } });
+    await logUserAction(tx, {
+      action: "IAM_USER_IDENTITY_UPDATED",
+      actor: actor.user,
+      targetUserId: target.id,
+      details: {
+        before: { name: target.name, designation: target.designation ?? "Not set" },
+        after: { name, designation: designation ?? "Not set" },
+        usernameChanged,
+        reason
+      }
+    });
     return { success: true, version: version + 1 };
   });
 }
@@ -493,7 +523,7 @@ function safeAuditDetails(value: string | null) {
   if (!value) return null;
   try {
     const parsed = JSON.parse(value) as Record<string, unknown>;
-    for (const key of Object.keys(parsed)) if (/id|hash|token|password|credential/i.test(key)) delete parsed[key];
+    for (const key of Object.keys(parsed)) if (/(?:^id$|id$|hash|token|password|credential|privateKey|publicKey|handle)/i.test(key)) delete parsed[key];
     return parsed;
   } catch {
     return null;

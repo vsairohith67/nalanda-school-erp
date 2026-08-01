@@ -3,6 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: {
+    cpus: 1,
+    memoryBasedWorkersCount: false,
+    workerThreads: false,
+    parallelServerCompiles: false,
+    parallelServerBuildTraces: false,
+    webpackMemoryOptimizations: true,
     serverActions: {
       bodySizeLimit: "4mb"
     }

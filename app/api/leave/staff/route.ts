@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireApiPermission } from "@/lib/auth";
+import { getCurrentUserEffectivePermissions, requireApiPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { friendlyStaffLeaveError, linkedStaffMember, overlappingLeaveWarning, staffLeaveInclude, staffLeaveWhere, validateStaffLeaveInput } from "@/lib/staff-leave";
 
 export async function GET(request: NextRequest) {
   const auth = await requireApiPermission("VIEW_STAFF_LEAVE");
   if (auth.response) return auth.response;
   try {
-    const permissions = await getEffectivePermissions(prisma, auth.user.role);
+    const permissions = await getCurrentUserEffectivePermissions();
     const manager = permissionSetCan(permissions, "MANAGE_STAFF_LEAVE");
     const linked = manager ? null : await linkedStaffMember(prisma, auth.user.id);
     const sp = request.nextUrl.searchParams;
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   const auth = await requireApiPermission("VIEW_STAFF_LEAVE");
   if (auth.response) return auth.response;
   try {
-    const [source, permissions, linked] = await Promise.all([request.json(), getEffectivePermissions(prisma, auth.user.role), linkedStaffMember(prisma, auth.user.id)]);
+    const [source, permissions, linked] = await Promise.all([request.json(), getCurrentUserEffectivePermissions(), linkedStaffMember(prisma, auth.user.id)]);
     const canManage = permissionSetCan(permissions, "MANAGE_STAFF_LEAVE");
     const canApply = permissionSetCan(permissions, "APPLY_STAFF_LEAVE");
     if (!canManage && !canApply) return NextResponse.json({ error: "You do not have permission to apply for staff leave" }, { status: 403 });

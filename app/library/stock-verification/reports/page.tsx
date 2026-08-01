@@ -1,18 +1,18 @@
 import Link from "next/link";
 import { LibraryNav } from "@/components/library-nav";
 import { PageHeader, PageShell, StatusBadge } from "@/components/ui";
-import { requirePermission } from "@/lib/auth";
+import { hasUserPermission, requirePermission } from "@/lib/auth";
 import { displayDate } from "@/lib/format";
 import { loadLibraryStockReports, stockObservationLabel } from "@/lib/library-stock-reports";
 import { prisma } from "@/lib/prisma";
-import { hasRolePermission } from "@/lib/role-permissions";
+
 
 export default async function StockReportsPage({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}) {
   const user=await requirePermission("VIEW_LIBRARY_STOCK_REPORTS");
   const q=await searchParams;
   const [report,canExport]=await Promise.all([
     loadLibraryStockReports(prisma,{academicYear:q.academicYear,status:q.status},user.role==="VIEWER"),
-    hasRolePermission(prisma,user.role,"EXPORT_LIBRARY_STOCK_REPORTS")
+    hasUserPermission(user,"EXPORT_LIBRARY_STOCK_REPORTS")
   ]);
   const records=report.sessions.flatMap((session)=>session.records.map((record)=>({session,record})));
   const scans=report.sessions.flatMap((session)=>session.scanEvents.map((event)=>({session,event})));

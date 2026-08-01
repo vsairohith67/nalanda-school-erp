@@ -1,7 +1,7 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { PERMISSIONS, isRole, normalizePermission, type CanonicalPermission, type Role } from "@/lib/permissions";
 import { getEffectivePermissions } from "@/lib/role-permissions";
-import { immutablePermissionDenial, OBJECT_SCOPED_PERMISSIONS, permissionDelegability } from "@/lib/iam/permission-governance";
+import { immutablePermissionDenial, OBJECT_SCOPED_PERMISSIONS, permissionDelegability, roleSupportsObjectScopedPermission } from "@/lib/iam/permission-governance";
 
 type IamClient = PrismaClient | Prisma.TransactionClient;
 
@@ -165,6 +165,9 @@ export async function evaluatePermissionFromSnapshot(
   if (!permission) return deny("DEFAULT_DENY", "Unknown permissions always default to deny.");
   const immutableDenial = immutablePermissionDenial(role!, permission);
   if (immutableDenial) return deny("SYSTEM_RESTRICTION", immutableDenial);
+  if (!roleSupportsObjectScopedPermission(role!, permission)) {
+    return deny("SYSTEM_RESTRICTION", "The active role context has no approved exact-scope resolver for this object-scoped permission.");
+  }
   if (OBJECT_SCOPED_PERMISSIONS.has(permission) && objectScopeSatisfied === false) {
     return deny("OBJECT_SCOPE", "The exact object-scope resolver denied this record or relationship.");
   }

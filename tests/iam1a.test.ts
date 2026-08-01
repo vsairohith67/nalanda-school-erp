@@ -40,6 +40,8 @@ describe("IAM-1A authoritative permission precedence", () => {
     expect((await decide("VIEW_STUDENTS", { assignment: { status: "ENDED" } })).source).toBe("ROLE_ASSIGNMENT");
     expect((await decide("GRANT_SUPER_ADMIN", { overrides: [{ permission: "GRANT_SUPER_ADMIN", effect: "ALLOW" }] })).source).toBe("SYSTEM_RESTRICTION");
     expect((await decide("VIEW_PAYMENTS", { overrides: [{ permission: "VIEW_PAYMENTS", effect: "ALLOW" }] }, false)).source).toBe("OBJECT_SCOPE");
+    expect((await decide("VIEW_PAYMENTS", { assignment: { role: "PARENT" }, overrides: [{ permission: "VIEW_PAYMENTS", effect: "ALLOW" }] })).source).toBe("SYSTEM_RESTRICTION");
+    expect((await decide("VIEW_EXAMS", { assignment: { role: "PARENT" }, overrides: [{ permission: "VIEW_EXAMS", effect: "ALLOW" }] })).source).toBe("SYSTEM_RESTRICTION");
     expect((await decide("NOT_A_PERMISSION")).source).toBe("DEFAULT_DENY");
   });
 

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireApiPermission } from "@/lib/auth";
+import { getCurrentUserEffectivePermissions, requireApiPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePermissions, permissionSetCan } from "@/lib/role-permissions";
+import { permissionSetCan } from "@/lib/role-permissions";
 import { linkedStaffMember } from "@/lib/staff-leave";
 import { friendlySubstituteError, substituteInclude, validateSubstituteInput, validateSubstituteLinks } from "@/lib/substitutes";
 
-async function access(id:string,user:{id:string;role:Parameters<typeof getEffectivePermissions>[1]}) { const [assignment,permissions,linked]=await Promise.all([prisma.substituteAssignment.findUnique({where:{id},include:substituteInclude}),getEffectivePermissions(prisma,user.role),linkedStaffMember(prisma,user.id)]); if(!assignment)return {response:NextResponse.json({error:"Substitute assignment not found"},{status:404})}; const manager=permissionSetCan(permissions,"MANAGE_SUBSTITUTES"); if(!manager&&assignment.substituteStaffMemberId!==linked?.id)return {response:NextResponse.json({error:"You can only view your own substitute duties"},{status:403})}; return {assignment,permissions,manager,response:null}; }
+async function access(id:string,user:{id:string}) { const [assignment,permissions,linked]=await Promise.all([prisma.substituteAssignment.findUnique({where:{id},include:substituteInclude}),getCurrentUserEffectivePermissions(),linkedStaffMember(prisma,user.id)]); if(!assignment)return {response:NextResponse.json({error:"Substitute assignment not found"},{status:404})}; const manager=permissionSetCan(permissions,"MANAGE_SUBSTITUTES"); if(!manager&&assignment.substituteStaffMemberId!==linked?.id)return {response:NextResponse.json({error:"You can only view your own substitute duties"},{status:403})}; return {assignment,permissions,manager,response:null}; }
 
 export async function GET(_request:NextRequest,context:{params:Promise<{id:string}>}) { const auth=await requireApiPermission("VIEW_SUBSTITUTES");if(auth.response)return auth.response;const {id}=await context.params;const result=await access(id,auth.user);if(result.response)return result.response;return NextResponse.json({assignment:result.assignment}); }
 

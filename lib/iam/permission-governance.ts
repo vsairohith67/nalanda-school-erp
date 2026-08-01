@@ -1,5 +1,6 @@
 import {
   PERMISSIONS,
+  RECOMMENDED_ROLE_PERMISSIONS,
   normalizePermission,
   type CanonicalPermission,
   type Role
@@ -53,6 +54,7 @@ export const LEADERSHIP_RESTRICTED_PERMISSIONS = new Set<CanonicalPermission>([
 
 export const OBJECT_SCOPED_PERMISSIONS = new Set<CanonicalPermission>([
   ...PERMISSIONS.filter((permission) => permission.includes("_OWN_") || permission.startsWith("VIEW_OWN_")),
+  ...PERMISSIONS.filter((permission) => /STUDENT|GUARDIAN|STAFF|ATTENDANCE|HOMEWORK|EXAM|MARKS|REPORT_CARD|CERTIFICATE|CLASS_X|ID_CARD|PAYMENT|LEDGER|RECEIPT|DAILY_COLLECTION|PENDING_DUES|VENDOR|EXPENSE|BUDGET|MISC_INCOME|CASH_BOOK|BOOKS_FINANCE|LIBRARY|TEACHER_ANALYTICS/.test(permission)),
   "REQUEST_OWN_CHILD_CERTIFICATES",
   "VIEW_OWN_CHILD_CERTIFICATES",
   "REQUEST_OWN_CHILD_CLASS_X_PACKAGE",
@@ -60,11 +62,38 @@ export const OBJECT_SCOPED_PERMISSIONS = new Set<CanonicalPermission>([
   "ENTER_ASSIGNED_EXAM_MARKS",
   "SUBMIT_ASSIGNED_EXAM_MARKS",
   "REQUEST_EXAM_MARK_CORRECTION",
+  "VIEW_EXAMS",
+  "ENTER_MARKS",
+  "SUBMIT_MARKS",
+  "VIEW_EXAM_REPORTS",
+  "EXPORT_EXAM_REPORTS",
+  "VIEW_REPORT_CARDS",
+  "ENTER_REPORT_CARD_DATA",
+  "SUBMIT_REPORT_CARDS",
+  "VIEW_REPORT_CARD_REPORTS",
+  "EXPORT_REPORT_CARD_REPORTS",
+  "VIEW_STUDENT_ATTENDANCE",
   "MANAGE_STUDENT_ATTENDANCE",
   "SUBMIT_STUDENT_ATTENDANCE",
+  "LOCK_STUDENT_ATTENDANCE",
   "VIEW_STUDENT_ATTENDANCE_REPORTS",
+  "VIEW_HOMEWORK",
   "MANAGE_HOMEWORK",
   "PUBLISH_HOMEWORK",
+  "ARCHIVE_HOMEWORK",
+  "VIEW_HOMEWORK_REPORTS",
+  "EXPORT_HOMEWORK_REPORTS",
+  "VIEW_STAFF_LEAVE",
+  "APPLY_STAFF_LEAVE",
+  "MANAGE_STAFF_LEAVE",
+  "APPROVE_STAFF_LEAVE",
+  "VIEW_STAFF_LEAVE_REPORTS",
+  "VIEW_SUBSTITUTES",
+  "MANAGE_SUBSTITUTES",
+  "ASSIGN_SUBSTITUTES",
+  "CONFIRM_SUBSTITUTES",
+  "VIEW_SUBSTITUTE_REPORTS",
+  "CREATE_SCOPED_NOTIFICATIONS",
   "VIEW_PAYMENTS",
   "EDIT_PAYMENTS",
   "CANCEL_PAYMENTS",
@@ -111,6 +140,10 @@ export function immutablePermissionDenial(role: Role, rawPermission: string) {
     return "Computer Operator access cannot be expanded into unrestricted administration or finance authority.";
   }
   return null;
+}
+
+export function roleSupportsObjectScopedPermission(role: Role, permission: CanonicalPermission) {
+  return !OBJECT_SCOPED_PERMISSIONS.has(permission) || RECOMMENDED_ROLE_PERMISSIONS[role].has(permission);
 }
 
 export function permissionCanAppearInProfile(permission: CanonicalPermission) {

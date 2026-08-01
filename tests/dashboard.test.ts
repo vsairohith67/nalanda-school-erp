@@ -129,7 +129,7 @@ describe("dashboard command center", () => {
   it("keeps the dashboard API on the same server-side permission-filtered view", () => {
     const source = readFileSync("app/api/dashboard/route.ts", "utf8");
     expect(source).toContain('requireApiPermission("VIEW_DASHBOARD")');
-    expect(source).toContain("getEffectivePermissions");
+    expect(source).toContain("getCurrentUserEffectivePermissions");
     expect(source).toContain("getDashboardCommandCenter");
     expect(source).not.toContain("NextResponse.json(await getDashboard())");
   });

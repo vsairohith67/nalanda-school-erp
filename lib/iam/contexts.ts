@@ -78,6 +78,7 @@ export async function switchRoleContext(client: PrismaClient, input: {
       opaqueHandle("ROLE", user.id, user.authorizationVersion, candidate.publicKey, candidate.contextVersion)
     ));
     if (!assignment || !isRole(assignment.role)) throw new Error("The selected role context is unavailable");
+    const previousAssignment = assignments.find((candidate) => candidate.id === session.activeRoleAssignmentId);
     let activeChildLinkId: string | null = null;
     if (assignment.role === "PARENT" && user.guardianId) {
       const links = await tx.studentGuardian.findMany({ where: { guardianId: user.guardianId }, select: { id: true }, take: 2 });
@@ -97,7 +98,10 @@ export async function switchRoleContext(client: PrismaClient, input: {
       action: "IAM_ROLE_CONTEXT_SWITCHED",
       actor: { id: user.id, name: user.name },
       targetUserId: user.id,
-      details: { role: roleDisplayLabel(assignment.role), selectedChildContext: Boolean(activeChildLinkId) }
+      details: {
+        before: { role: previousAssignment && isRole(previousAssignment.role) ? roleDisplayLabel(previousAssignment.role) : "Unavailable", childContextSelected: Boolean(session.activeChildLinkId) },
+        after: { role: roleDisplayLabel(assignment.role), childContextSelected: Boolean(activeChildLinkId) }
+      }
     });
     return { role: roleDisplayLabel(assignment.role), contextVersion: input.expectedVersion + 1 };
   });
@@ -175,7 +179,7 @@ export async function switchChildContext(client: PrismaClient, input: {
       action: "IAM_CHILD_CONTEXT_SWITCHED",
       actor: { id: user.id, name: user.name },
       targetUserId: user.id,
-      details: { linkedChildSelected: true }
+      details: { before: { linkedChildSelected: Boolean(session.activeChildLinkId) }, after: { linkedChildSelected: true } }
     });
     return { contextVersion: input.expectedVersion + 1 };
   });

@@ -78,11 +78,16 @@ export async function bumpAuthorizationAndRevokeSessions(
 }
 
 export async function acquireLastSuperAdminLock(tx: Prisma.TransactionClient) {
-  const changed = await tx.iamSafetyLock.updateMany({
+  const lock = await tx.iamSafetyLock.findUnique({
     where: { key: "LAST_SUPER_ADMIN" },
+    select: { version: true }
+  });
+  if (!lock) throw new Error("IAM safety lock is unavailable");
+  const changed = await tx.iamSafetyLock.updateMany({
+    where: { key: "LAST_SUPER_ADMIN", version: lock.version },
     data: { version: { increment: 1 } }
   });
-  if (changed.count !== 1) throw new Error("IAM safety lock is unavailable");
+  if (changed.count !== 1) throw new Error("The Super Admin safety state changed; refresh and try again");
 }
 
 export async function countActiveSuperAdmins(tx: Prisma.TransactionClient, now = new Date()) {

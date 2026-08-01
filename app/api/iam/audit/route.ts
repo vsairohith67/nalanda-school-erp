@@ -21,7 +21,7 @@ function safeDetails(value: string | null) {
   if (!value) return null;
   try {
     const details = JSON.parse(value) as Record<string, unknown>;
-    for (const key of Object.keys(details)) if (/id|token|hash|password|credential/i.test(key)) delete details[key];
+    for (const key of Object.keys(details)) if (/(?:^id$|id$|token|hash|password|credential|privateKey|publicKey|handle)/i.test(key)) delete details[key];
     return details;
   } catch {
     return null;

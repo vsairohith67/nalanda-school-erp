@@ -209,3 +209,81 @@ CREATE TABLE "IamSafetyLock" (
 
 INSERT INTO "IamSafetyLock" ("key", "version", "updatedAt")
 VALUES ('LAST_SUPER_ADMIN', 1, CURRENT_TIMESTAMP);
+
+-- Database-level invariants close the SQLite deferred-transaction race where
+-- two administrators could otherwise each observe two active Super Admins.
+CREATE TRIGGER "iam_prevent_last_super_admin_suspension"
+BEFORE UPDATE OF "isActive", "lifecycleStatus" ON "User"
+WHEN OLD."isActive" = 1
+  AND OLD."lifecycleStatus" = 'ACTIVE'
+  AND (NEW."isActive" <> 1 OR NEW."lifecycleStatus" <> 'ACTIVE')
+  AND EXISTS (
+    SELECT 1 FROM "UserRoleAssignment" assignment
+    WHERE assignment."userId" = OLD."id"
+      AND assignment."role" = 'SUPER_ADMIN'
+      AND assignment."status" = 'ACTIVE'
+  )
+  AND (
+    SELECT COUNT(*)
+    FROM "UserRoleAssignment" assignment
+    JOIN "User" account ON account."id" = assignment."userId"
+    WHERE assignment."role" = 'SUPER_ADMIN'
+      AND assignment."status" = 'ACTIVE'
+      AND account."isActive" = 1
+      AND account."lifecycleStatus" = 'ACTIVE'
+  ) <= 1
+BEGIN
+  SELECT RAISE(ABORT, 'LAST_ACTIVE_SUPER_ADMIN_REQUIRED');
+END;
+
+CREATE TRIGGER "iam_prevent_last_super_admin_role_end"
+BEFORE UPDATE OF "role", "status" ON "UserRoleAssignment"
+WHEN OLD."role" = 'SUPER_ADMIN'
+  AND OLD."status" = 'ACTIVE'
+  AND (NEW."role" <> 'SUPER_ADMIN' OR NEW."status" <> 'ACTIVE')
+  AND EXISTS (
+    SELECT 1 FROM "User" account
+    WHERE account."id" = OLD."userId"
+      AND account."isActive" = 1
+      AND account."lifecycleStatus" = 'ACTIVE'
+  )
+  AND (
+    SELECT COUNT(*)
+    FROM "UserRoleAssignment" assignment
+    JOIN "User" account ON account."id" = assignment."userId"
+    WHERE assignment."role" = 'SUPER_ADMIN'
+      AND assignment."status" = 'ACTIVE'
+      AND account."isActive" = 1
+      AND account."lifecycleStatus" = 'ACTIVE'
+  ) <= 1
+BEGIN
+  SELECT RAISE(ABORT, 'LAST_ACTIVE_SUPER_ADMIN_REQUIRED');
+END;
+
+CREATE TRIGGER "iam_prevent_active_super_admin_role_delete"
+BEFORE DELETE ON "UserRoleAssignment"
+WHEN OLD."role" = 'SUPER_ADMIN'
+  AND OLD."status" = 'ACTIVE'
+  AND EXISTS (
+    SELECT 1 FROM "User" account
+    WHERE account."id" = OLD."userId"
+      AND account."isActive" = 1
+      AND account."lifecycleStatus" = 'ACTIVE'
+  )
+BEGIN
+  SELECT RAISE(ABORT, 'ACTIVE_SUPER_ADMIN_HISTORY_IS_IMMUTABLE');
+END;
+
+CREATE TRIGGER "iam_prevent_expiring_super_admin_role_insert"
+BEFORE INSERT ON "UserRoleAssignment"
+WHEN NEW."role" = 'SUPER_ADMIN' AND NEW."validUntil" IS NOT NULL
+BEGIN
+  SELECT RAISE(ABORT, 'SUPER_ADMIN_ASSIGNMENT_CANNOT_EXPIRE');
+END;
+
+CREATE TRIGGER "iam_prevent_expiring_super_admin_role_update"
+BEFORE UPDATE OF "role", "validUntil" ON "UserRoleAssignment"
+WHEN NEW."role" = 'SUPER_ADMIN' AND NEW."validUntil" IS NOT NULL
+BEGIN
+  SELECT RAISE(ABORT, 'SUPER_ADMIN_ASSIGNMENT_CANNOT_EXPIRE');
+END;

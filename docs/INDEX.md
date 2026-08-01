@@ -349,6 +349,14 @@ The Management audit and corrected Management-only reconciliation are independen
 
 DEVOPS-1B changes only migration history/tooling/documentation. Prompt 21B/21C/21D remain blocked, Prompt 22B remains conditional, and the operational database remains untouched and unbaselined pending separate approval.
 
+# IAM-1A
+
+- [Named Users, Permission Profiles and Contexts](IAM_NAMED_USERS_PERMISSION_CONTEXTS.md) - additive IAM model, role catalogue, deny-first permission precedence, delegability, named-user lifecycle, multi-role and linked-child context workflows.
+- [IAM Operator Guide and Last-Super-Admin Runbook](IAM_OPERATOR_GUIDE_AND_LAST_SUPER_ADMIN_RUNBOOK.md) - governed operations, reauthentication, session invalidation, recovery and last-owner safeguards.
+- [IAM Security Threat Model](IAM_SECURITY_THREAT_MODEL.md) - delegation, stale-session, context-tampering, object-scope, concurrency and privacy-safe audit threats and controls.
+- [IAM-1A Implementation Checkpoint](evidence/IAM_1A_IMPLEMENTATION_CHECKPOINT.md) - implementation matrix, copied production Browser evidence and pre-independent-QA handoff.
+- [IAM-1A-QA Independent Checkpoint](evidence/IAM_1A_QA_CHECKPOINT.md) - 23-user independent copied-DB matrix, Browser/accessibility evidence, QA fixes, cleanup proof and remaining release gates.
+
 ## DEVOPS-1C staging architecture and readiness
 
 - [Current Runtime Inventory](STAGING_CURRENT_RUNTIME_INVENTORY.md) - Node/Next/Prisma/SQLite, filesystem, providers, jobs, security, PWA, memory and runtime classification.

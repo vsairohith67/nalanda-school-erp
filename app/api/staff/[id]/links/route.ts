@@ -18,8 +18,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       if (action === "unlink-user") {
         await tx.staffMember.update({ where: { id }, data: { userId: null } });
       } else if (action === "link-user") {
-        const user = await tx.user.findUnique({ where: { username: username! } });
-        if (!user || user.role !== "TEACHER") throw new Error("Choose an existing Teacher-role user");
+        const now = new Date();
+        const user = await tx.user.findUnique({
+          where: { username: username! },
+          include: {
+            iamRoleAssignments: {
+              where: {
+                role: "TEACHER",
+                status: "ACTIVE",
+                validFrom: { lte: now },
+                OR: [{ validUntil: null }, { validUntil: { gt: now } }]
+              },
+              select: { id: true }
+            }
+          }
+        });
+        if (!user || !user.isActive || user.lifecycleStatus !== "ACTIVE" || user.iamRoleAssignments.length === 0) {
+          throw new Error("Choose an active user with a current Teacher role assignment");
+        }
         const occupied = await tx.staffMember.findUnique({ where: { userId: user.id }, select: { id: true } });
         if (occupied && occupied.id !== id) throw new Error("This Teacher login is already linked to another staff profile");
         await tx.staffMember.update({ where: { id }, data: { userId: user.id } });

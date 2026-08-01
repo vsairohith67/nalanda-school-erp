@@ -64,7 +64,11 @@ export async function createPermissionProfile(client: PrismaClient, actor: IamAc
     await logUserAction(tx, {
       action: "IAM_PERMISSION_PROFILE_CREATED",
       actor: actor.user,
-      details: { profileName: profile.name, version: profile.version, allowCount: entries.filter((entry) => entry.effect === "ALLOW").length, denyCount: entries.filter((entry) => entry.effect === "DENY").length, reason }
+      details: {
+        before: { status: "Not created" },
+        after: { profileName: profile.name, status: "Active", version: profile.version, allowCount: entries.filter((entry) => entry.effect === "ALLOW").length, denyCount: entries.filter((entry) => entry.effect === "DENY").length },
+        reason
+      }
     });
     return serializeProfile(profile, 0);
   });
@@ -152,7 +156,12 @@ export async function updatePermissionProfile(client: PrismaClient, actor: IamAc
     await logUserAction(tx, {
       action: "IAM_PERMISSION_PROFILE_VERSIONED",
       actor: actor.user,
-      details: { profileName: updated.name, version: updated.version, affectedUsers: affectedUserIds.length, reason }
+      details: {
+        before: { profileName: current.name, status: current.status, version: current.version, allowCount: current.entries.filter((entry) => entry.status === "ACTIVE" && !entry.revokedAt && entry.effect === "ALLOW").length, denyCount: current.entries.filter((entry) => entry.status === "ACTIVE" && !entry.revokedAt && entry.effect === "DENY").length },
+        after: { profileName: updated.name, status: updated.status, version: updated.version, allowCount: entries.filter((entry) => entry.effect === "ALLOW").length, denyCount: entries.filter((entry) => entry.effect === "DENY").length },
+        affectedUsers: affectedUserIds.length,
+        reason
+      }
     });
     return serializeProfile(updated, affectedUserIds.length);
   });
@@ -180,7 +189,7 @@ export async function archivePermissionProfile(client: PrismaClient, actor: IamA
     await tx.permissionProfileVersion.create({
       data: { profileId: profile.id, versionNumber: archived.version, snapshotJson: profileSnapshot(archived), reason, createdByUserId: actor.user.id }
     });
-    await logUserAction(tx, { action: "IAM_PERMISSION_PROFILE_ARCHIVED", actor: actor.user, details: { profileName: profile.name, affectedUsers: userIds.length, reason } });
+    await logUserAction(tx, { action: "IAM_PERMISSION_PROFILE_ARCHIVED", actor: actor.user, details: { before: { profileName: profile.name, status: "Active", version: profile.version }, after: { profileName: archived.name, status: "Archived", version: archived.version }, affectedUsers: userIds.length, reason } });
     return serializeProfile(archived, userIds.length);
   });
 }

@@ -11,6 +11,7 @@ import { createPersistedSession } from "@/lib/auth-sessions";
 import { resolveLoginIdentifier } from "@/lib/auth-identifiers";
 import { logAuthSecurityEvent } from "@/lib/auth-security";
 import { isFirstRunRequired } from "@/lib/setup";
+import { defaultPathForRole } from "@/lib/navigation";
 import {
   checkLoginRateLimit,
   clearLoginAccountFailures,
@@ -85,7 +86,8 @@ export async function POST(request: NextRequest) {
       return created;
     });
     const response = NextResponse.json({
-      user: { name: user.name, username: user.username, role: user.role },
+      user: { name: user.name, username: user.username },
+      homePath: defaultPathForRole(user.role),
       mustChangePassword: user.mustChangePassword
     });
     response.cookies.set(sessionCookieName(), token.cookieValue, {
