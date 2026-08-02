@@ -77,6 +77,7 @@ const icons: Record<NavigationIcon, LucideIcon> = {
   ,feeRegisterOcr: FileSearch
   ,cloudBackup: ShieldCheck
   ,website: Sparkles
+  ,calendar: CalendarDays
 };
 
 function ShellBrand({ settings }: { settings: SchoolSettingsValue }) {

@@ -15,6 +15,7 @@ import { assertReceiptStudentMatchInDatabase } from "@/lib/payment-controls";
 import { validateSchoolSettings } from "@/lib/school-settings";
 import { restoreExamGovernanceBackup } from "@/lib/exam-governance-backup";
 import { createHash } from "node:crypto";
+import { restoreAcademicCalendarData } from "@/lib/academic-calendar-restore";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -73,6 +74,8 @@ type RestoreDatabaseClient = Pick<
   | "authLoginAlias" | "authVerificationChallenge" | "authPasswordResetToken" | "authSession" | "authSecurityEvent"
   | "userRoleAssignment" | "permissionProfile" | "permissionProfileEntry"
   | "permissionProfileVersion" | "userPermissionProfileAssignment" | "userPermissionOverride" | "userAudit"
+  | "academicCalendarVersion" | "operationalCalendarDay" | "schoolCalendarEvent"
+  | "schoolCalendarEventVersion" | "academicCalendarAuditEvent"
 >;
 
 export async function restoreValidatedBackup(
@@ -165,6 +168,11 @@ async function restoreIntoDatabase(
     studentReportCards: emptyEntityResult(),
     studentReportCardVersions: emptyEntityResult(),
     studentReportCardEvents: emptyEntityResult(),
+    academicCalendarVersions: emptyEntityResult(),
+    operationalCalendarDays: emptyEntityResult(),
+    schoolCalendarEvents: emptyEntityResult(),
+    schoolCalendarEventVersions: emptyEntityResult(),
+    academicCalendarAuditEvents: emptyEntityResult(),
     teacherAnalyticsReviewCycles: emptyEntityResult(),
     teacherAnalyticsSnapshots: emptyEntityResult(),
     teacherAnalyticsReviews: emptyEntityResult(),
@@ -477,6 +485,7 @@ async function restoreIntoDatabase(
   await restoreExamMarksData(client, backup, backupStudentLocalIds, backupUserToLocalUser, result);
   await restoreReportCardData(client, backup, backupStudentLocalIds, result);
   result.examGovernance = await restoreExamGovernanceBackup(client, backup.examGovernance, backupStudentLocalIds);
+  await restoreAcademicCalendarData(client, backup, restoredBy, result);
   await restoreCertificateData(client, backup, backupStudentLocalIds, result);
   await restoreClassXPackageData(client, backup, backupStudentLocalIds, result);
   await restoreIdentityCardData(client, backup, backupStudentLocalIds, result);
@@ -1013,7 +1022,10 @@ export async function restoreStudentAttendanceData(
         submittedByUserId: mapOptionalUserId(row.submittedByUserId, backupUserToLocalUser),
         lockedByUserId: mapOptionalUserId(row.lockedByUserId, backupUserToLocalUser),
         submittedAt: optionalDate(row.submittedAt, `studentAttendanceSessions[${index}].submittedAt`),
-        lockedAt: optionalDate(row.lockedAt, `studentAttendanceSessions[${index}].lockedAt`)
+        lockedAt: optionalDate(row.lockedAt, `studentAttendanceSessions[${index}].lockedAt`),
+        operationalCalendarVersionKey: nullableText(row.operationalCalendarVersionKey),
+        operationalCalendarDayKey: nullableText(row.operationalCalendarDayKey),
+        calendarBasisSnapshotJson: nullableText(row.calendarBasisSnapshotJson)
       };
       const where = { attendanceDate_className_section_academicYear: { attendanceDate, className, section, academicYear } };
       const existing = await client.studentAttendanceSession.findUnique({ where });
@@ -1785,7 +1797,7 @@ export async function restoreReportCardData(
   for(const [index,row] of backup.studentReportCards.entries())try{const id=requiredText(row.id,"Student report-card ID"),number=requiredText(row.reportCardNumber,"Report-card number"),batchId=batchMap.get(requiredText(row.batchId,"Card batch ID")),studentId=backupStudentLocalIds.get(requiredText(row.studentId,"Card Student ID"));if(!batchId||!studentId){result.studentReportCards.skipped++;continue;}const [byId,byNumber]=await Promise.all([client.studentReportCard.findUnique({where:{id}}),client.studentReportCard.findUnique({where:{reportCardNumber:number}})]);if((byId&&byId.reportCardNumber!==number)||(byNumber&&byNumber.id!==id)){result.studentReportCards.skipped++;result.warnings.push(`Student report card ${number} collided with a different local identity; versions and events were isolated.`);continue;}if(byId){cardMap.set(id,id);result.studentReportCards.skipped++;continue;}const progressionBackupId=nullableText(row.progressionDecisionId);let progressionDecisionId:string|null=null;if(progressionBackupId){const decision=await client.studentProgressionDecision.findUnique({where:{id:progressionBackupId}});if(decision?.studentId===studentId)progressionDecisionId=decision.id;else result.warnings.push(`Report card ${number} restored without its progression reference because no exact safe match exists.`);}await client.studentReportCard.create({data:{id,reportCardNumber:number,batchId,studentId,academicYear:requiredText(row.academicYear,"Card academic year"),className:requiredText(row.className,"Card class"),section:nullableText(row.section),reportType:requiredText(row.reportType,"Card report type"),status:requiredText(row.status,"Card status"),currentVersionNumber:nonNegativeInteger(row.currentVersionNumber,"Current version"),draftDataJson:requiredText(row.draftDataJson,"Card draft data"),teacherOverallComment:nullableText(row.teacherOverallComment),principalComment:nullableText(row.principalComment),directorComment:nullableText(row.directorComment),finalGrade:nullableText(row.finalGrade),progressionDecisionId,promotionDisplayText:nullableText(row.promotionDisplayText),cancellationReason:nullableText(row.cancellationReason),createdByUserId:null,submittedByUserId:null,approvedByUserId:null,issuedByUserId:null,cancelledByUserId:null,submittedAt:optionalDate(row.submittedAt,"Card submitted at"),approvedAt:optionalDate(row.approvedAt,"Card approved at"),issuedAt:optionalDate(row.issuedAt,"Card issued at"),cancelledAt:optionalDate(row.cancelledAt,"Card cancelled at"),...createdAtData(row,index,"studentReportCards")}});cardMap.set(id,id);result.studentReportCards.created++;}catch(error){result.studentReportCards.errors.push(rowError("Student report card",index,error));}
 
   const versionMap=new Map<string,string>();
-  for(const [index,row] of backup.studentReportCardVersions.entries())try{const id=requiredText(row.id,"Report-card version ID"),reportCardId=cardMap.get(requiredText(row.reportCardId,"Version card ID"));if(!reportCardId){result.studentReportCardVersions.skipped++;continue;}const number=positiveInteger(row.versionNumber,"Version number"),byId=await client.studentReportCardVersion.findUnique({where:{id}}),byNumber=await client.studentReportCardVersion.findUnique({where:{reportCardId_versionNumber:{reportCardId,versionNumber:number}}});if((byId&&(byId.reportCardId!==reportCardId||byId.versionNumber!==number))||(byNumber&&byNumber.id!==id)){result.studentReportCardVersions.skipped++;result.warnings.push(`Report-card version ${number} was isolated because its identity differs locally.`);continue;}if(byId){versionMap.set(id,id);result.studentReportCardVersions.skipped++;continue;}const backupSupersedes=nullableText(row.supersedesVersionId),supersedesVersionId=backupSupersedes?versionMap.get(backupSupersedes):null;if(backupSupersedes&&!supersedesVersionId){result.studentReportCardVersions.skipped++;continue;}await client.studentReportCardVersion.create({data:{id,reportCardId,versionNumber:number,versionType:requiredText(row.versionType,"Version type"),snapshotJson:requiredText(row.snapshotJson,"Issued snapshot"),correctionReason:nullableText(row.correctionReason),issuedAt:requiredDate(row.issuedAt,"Version issued at"),issuedByUserId:null,supersedesVersionId:supersedesVersionId??null,...createdAtData(row,index,"studentReportCardVersions")}});versionMap.set(id,id);result.studentReportCardVersions.created++;}catch(error){result.studentReportCardVersions.errors.push(rowError("Student report-card version",index,error));}
+  for(const [index,row] of backup.studentReportCardVersions.entries())try{const id=requiredText(row.id,"Report-card version ID"),reportCardId=cardMap.get(requiredText(row.reportCardId,"Version card ID"));if(!reportCardId){result.studentReportCardVersions.skipped++;continue;}const number=positiveInteger(row.versionNumber,"Version number"),byId=await client.studentReportCardVersion.findUnique({where:{id}}),byNumber=await client.studentReportCardVersion.findUnique({where:{reportCardId_versionNumber:{reportCardId,versionNumber:number}}});if((byId&&(byId.reportCardId!==reportCardId||byId.versionNumber!==number))||(byNumber&&byNumber.id!==id)){result.studentReportCardVersions.skipped++;result.warnings.push(`Report-card version ${number} was isolated because its identity differs locally.`);continue;}if(byId){versionMap.set(id,id);result.studentReportCardVersions.skipped++;continue;}const backupSupersedes=nullableText(row.supersedesVersionId),supersedesVersionId=backupSupersedes?versionMap.get(backupSupersedes):null;if(backupSupersedes&&!supersedesVersionId){result.studentReportCardVersions.skipped++;continue;}await client.studentReportCardVersion.create({data:{id,reportCardId,versionNumber:number,versionType:requiredText(row.versionType,"Version type"),snapshotJson:requiredText(row.snapshotJson,"Issued snapshot"),correctionReason:nullableText(row.correctionReason),issuedAt:requiredDate(row.issuedAt,"Version issued at"),issuedByUserId:null,supersedesVersionId:supersedesVersionId??null,calendarBasisVersionKey:nullableText(row.calendarBasisVersionKey),calendarBasisSnapshotJson:nullableText(row.calendarBasisSnapshotJson),...createdAtData(row,index,"studentReportCardVersions")}});versionMap.set(id,id);result.studentReportCardVersions.created++;}catch(error){result.studentReportCardVersions.errors.push(rowError("Student report-card version",index,error));}
 
   for(const [index,row] of backup.studentReportCardEvents.entries())try{const id=requiredText(row.id,"Report-card event ID"),reportCardId=cardMap.get(requiredText(row.reportCardId,"Event card ID")),backupVersionId=nullableText(row.versionId),versionId=backupVersionId?versionMap.get(backupVersionId):null;if(!reportCardId||(backupVersionId&&!versionId)){result.studentReportCardEvents.skipped++;continue;}if(await client.studentReportCardEvent.findUnique({where:{id}})){result.studentReportCardEvents.skipped++;continue;}await client.studentReportCardEvent.create({data:{id,reportCardId,versionId:versionId??null,eventType:requiredText(row.eventType,"Report-card event type"),eventDate:requiredDate(row.eventDate,"Event date"),previousStatus:nullableText(row.previousStatus),newStatus:nullableText(row.newStatus),reason:nullableText(row.reason),notes:nullableText(row.notes),recordedByUserId:null,actorLabel:nullableText(row.actorLabel),...createdAtData(row,index,"studentReportCardEvents")}});result.studentReportCardEvents.created++;}catch(error){result.studentReportCardEvents.errors.push(rowError("Student report-card event",index,error));}
 }

@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "plugins": [], "incremental": true, "tsBuildInfoFile": "./tsconfig.tools-qa-legacy.tsbuildinfo" },
+  "include": ["scripts/qa-auth*.ts", "scripts/qa-exam*.ts", "scripts/qa-fin*.ts", "scripts/qa-iam*.ts", "scripts/qa-ux*.ts"],
+  "exclude": ["node_modules", ".next"]
+}

@@ -128,7 +128,12 @@ describe("full backup", () => {
       publicWebsitePosts: 0,
       publicWebsitePostVersions: 0,
       publicWebsiteNavigationItems: 0,
-      publicWebsiteEvents: 0
+      publicWebsiteEvents: 0,
+      academicCalendarVersions: 0,
+      operationalCalendarDays: 0,
+      schoolCalendarEvents: 0,
+      schoolCalendarEventVersions: 0,
+      academicCalendarAuditEvents: 0
     });
     expect(backup.students).toHaveLength(1);
     expect(backup.feeStructures).toHaveLength(1);
@@ -201,6 +206,11 @@ describe("full backup", () => {
       timetableFixedPeriod: findMany([{ id: "fixed-1" }]),
       timetableDraft: findMany([{ id: "draft-1" }]),
       timetableEntry: findMany([{ id: "entry-1" }]),
+      academicCalendarVersion: findMany([]),
+      operationalCalendarDay: findMany([]),
+      schoolCalendarEvent: findMany([]),
+      schoolCalendarEventVersion: findMany([]),
+      academicCalendarAuditEvent: findMany([]),
       schoolSettings: {
         findUnique: async () => null
       }

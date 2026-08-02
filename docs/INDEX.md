@@ -1,5 +1,31 @@
 # Documentation Index
 
+## Prompt 23E events, holidays and academic calendar
+
+- [Academic Calendar Model and Lifecycle](ACADEMIC_CALENDAR_MODEL_AND_LIFECYCLE.md)
+- [Working-Day Governance Policy](WORKING_DAY_GOVERNANCE_POLICY.md)
+- [Events Audience and Privacy Matrix](EVENTS_AUDIENCE_PRIVACY_MATRIX.md)
+- [Attendance-Impact Policy](ACADEMIC_CALENDAR_ATTENDANCE_IMPACT_POLICY.md)
+- [Parent Calendar Guide](PARENT_CALENDAR_GUIDE.md)
+- [Teacher Calendar Guide](TEACHER_CALENDAR_GUIDE.md)
+- [Principal Operator Guide](PRINCIPAL_ACADEMIC_CALENDAR_OPERATOR_GUIDE.md)
+- [Emergency Closure Runbook](EMERGENCY_CLOSURE_RUNBOOK.md)
+- [Multi-Role and Multi-Child Workflow](MULTI_ROLE_CHILD_CALENDAR_WORKFLOW.md)
+- [Threat Model](ACADEMIC_CALENDAR_THREAT_MODEL.md)
+- [Developer Guide](ACADEMIC_CALENDAR_DEVELOPER_GUIDE.md)
+- [Calendar Phase Diagram](diagrams/academic-calendar-phase.mmd)
+- [Implementation Checkpoint](evidence/PROMPT_23E_IMPLEMENTATION_CHECKPOINT.md)
+- [Principal Browser Checkpoint](evidence/PROMPT_23E_BROWSER_CHECKPOINT_1_PRINCIPAL.md)
+- [Parent Browser Checkpoint](evidence/PROMPT_23E_BROWSER_CHECKPOINT_2_PARENT.md)
+- [Teacher and Context Browser Checkpoint](evidence/PROMPT_23E_BROWSER_CHECKPOINT_3_TEACHER_CONTEXT.md)
+
+Prompt 23E is implemented on the retained feature branch for independent QA.
+It separates operational working-day classification from informational events,
+preserves published/replaced history, resolves every Parent/Teacher audience
+server-side and leaves posted attendance untouched. It does not authorise main
+merge/tag, staging, deployment, public-site publishing, live messaging or
+real-user onboarding.
+
 ## Prompt 23D Parent attendance and examination timetable
 
 - [Parent Attendance Access Specification](PARENT_ATTENDANCE_ACCESS_SPECIFICATION.md)

@@ -27,7 +27,8 @@ export type NavigationIcon =
   | "aiAssistant"
   | "feeRegisterOcr"
   | "cloudBackup"
-  | "website";
+  | "website"
+  | "calendar";
 
 export type NavigationGroupId =
   | "dashboard"
@@ -81,6 +82,9 @@ export const NAV_ITEMS = [
   { href: "/exams", label: "Exams", icon: "timetable", permission: "VIEW_EXAMS", group: "communication" },
   { href: "/exams/configuration", label: "Examination Setup", icon: "timetable", permission: "VIEW_EXAM_CONFIGURATION", group: "communication" },
   { href: "/exams/timetable", label: "Examination Timetable", icon: "timetable", permission: "VIEW_EXAM_TIMETABLE", group: "communication" },
+  { href: "/calendar", label: "Academic Calendar", icon: "calendar", permission: "VIEW_CALENDAR_MANAGEMENT", group: "communication" },
+  { href: "/teacher/calendar", label: "My Calendar", icon: "calendar", permission: "VIEW_STAFF_CALENDAR", group: "communication", requiredRole: "TEACHER" },
+  { href: "/parent/calendar", label: "School Calendar", icon: "calendar", permission: "VIEW_OWN_CALENDAR", group: "studentsParents", requiredRole: "PARENT" },
   { href: "/exams/moderation", label: "Marks Moderation", icon: "collection", permission: "VIEW_EXAM_MODERATION", group: "communication" },
   { href: "/teacher/exam-assignments", label: "My Exam Assignments", icon: "timetable", permission: "VIEW_OWN_EXAM_ASSIGNMENTS", group: "communication", requiredRole: "TEACHER" },
   { href: "/marks", label: "Marks Entry", icon: "attendance", permission: "ENTER_MARKS", group: "communication" },

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
+import { currentReportCalendarBasis } from "@/lib/academic-calendar";
 import {
   GOVERNED_REPORT_TEMPLATE_FAMILIES,
   REPORT_PUBLICATION_SCHEMA_VERSION,
@@ -242,6 +243,7 @@ export async function publishReportCards(
         }
       });
       for (const report of reports) {
+        const calendarBasis = await currentReportCalendarBasis(tx, { academicYear: report.academicYear, className: report.student.className, section: report.student.section });
         const issuedReport: PublishedReportSnapshot = {
           ...report,
           status: "ISSUED",
@@ -286,7 +288,8 @@ export async function publishReportCards(
             versionType: "ORIGINAL",
             snapshotJson: JSON.stringify(issuedReport),
             issuedAt: now,
-            issuedByUserId: actor.id
+            issuedByUserId: actor.id,
+            ...calendarBasis
           }
         });
         await tx.studentReportCardEvent.createMany({
@@ -547,7 +550,9 @@ export async function replacePublishedReport(
         correctionReason: reason,
         issuedAt: now,
         issuedByUserId: actor.id,
-        supersedesVersionId: current.versions[0].id
+        supersedesVersionId: current.versions[0].id,
+        calendarBasisVersionKey: current.versions[0].calendarBasisVersionKey,
+        calendarBasisSnapshotJson: current.versions[0].calendarBasisSnapshotJson
       }
     });
     await tx.studentReportCardEvent.createMany({

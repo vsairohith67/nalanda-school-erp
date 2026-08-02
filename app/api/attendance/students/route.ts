@@ -20,6 +20,7 @@ import {
   resolveTeacherAttendanceScope
 } from "@/lib/teacher-attendance-scope";
 import { logUserAction } from "@/lib/user-audit";
+import { captureAttendanceCalendarBasis } from "@/lib/academic-calendar";
 
 const PRIVATE_HEADERS = { "Cache-Control": "private, no-store" };
 const ACTIONS = new Set(["create", "save", "clear", "submit", "correct", "lock"]);
@@ -191,13 +192,22 @@ export async function POST(request: NextRequest) {
         : action === "lock"
           ? "LOCKED"
           : existing.status;
+      const calendarBasis = action === "submit" || (action === "lock" && !existing.calendarBasisSnapshotJson)
+        ? await captureAttendanceCalendarBasis(tx, {
+            academicYear: target.academicYear,
+            attendanceDate: target.attendanceDate,
+            className: target.className,
+            section: target.section
+          })
+        : null;
       const changed = await tx.studentAttendanceSession.updateMany({
         where: { id: existing.id, status: existing.status, updatedAt: expected },
         data: {
           status: nextStatus,
           updatedAt: now,
           ...(action === "submit" ? { submittedAt: now, submittedByUserId: auth.user.id } : {}),
-          ...(action === "lock" ? { lockedAt: now, lockedByUserId: auth.user.id } : {})
+          ...(action === "lock" ? { lockedAt: now, lockedByUserId: auth.user.id } : {}),
+          ...(calendarBasis ?? {})
         }
       });
       if (changed.count !== 1) {

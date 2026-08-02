@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "plugins": [], "incremental": true, "tsBuildInfoFile": "./tsconfig.tools-qa-17-20.tsbuildinfo" },
+  "include": ["scripts/qa17*.ts", "scripts/qa18*.ts", "scripts/qa19*.ts", "scripts/qa20*.ts"],
+  "exclude": ["node_modules", ".next"]
+}

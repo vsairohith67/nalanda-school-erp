@@ -1,0 +1,16 @@
+flowchart TD
+  LEAD["Authorised Principal or leadership"] --> CALDRAFT["Operational calendar draft"]
+  CALDRAFT --> IMPACT["Totals, previous-version diff, attendance and exam impact"]
+  IMPACT --> CALPUB["Immutable published operational version"]
+  CALPUB --> BASIS["New attendance/report basis snapshot"]
+  CALPUB --> CALREPL["Reasoned replacement; former version retained"]
+  LEAD --> EVENTDRAFT["Informational event draft"]
+  EVENTDRAFT --> AUDIENCE["Server-resolved audience preview"]
+  AUDIENCE --> EVENTPUB["Immutable published event version"]
+  EVENTPUB --> PARENT["Parent: school-wide plus linked-child cohort"]
+  EVENTPUB --> TEACHER["Teacher: school-wide, Staff and assigned cohort"]
+  EVENTPUB --> LEADVIEW["Leadership management/history"]
+  EVENTPUB --> EXAMREF["Read-only current published examination reference"]
+  EVENTPUB --> NOTICE["Exactly-once in-app notification; no live provider"]
+  CALDRAFT -. "never inferred" .-> EVENTDRAFT
+

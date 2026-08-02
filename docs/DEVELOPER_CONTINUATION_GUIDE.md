@@ -1268,3 +1268,19 @@ invalidating. Do not hard-delete history, bypass the last-Super-Admin lock,
 restore live session context, or create duplicate Staff/Guardian relationships.
 Run `pnpm.cmd qa:iam1a` only against its ignored copied database. The
 implementation branch is not merged until independent IAM-1A-QA clears.
+
+## Prompt 23E governed academic calendar
+
+Read `ACADEMIC_CALENDAR_MODEL_AND_LIFECYCLE.md`,
+`WORKING_DAY_GOVERNANCE_POLICY.md`, `EVENTS_AUDIENCE_PRIVACY_MATRIX.md`,
+`ACADEMIC_CALENDAR_ATTENDANCE_IMPACT_POLICY.md`,
+`MULTI_ROLE_CHILD_CALENDAR_WORKFLOW.md` and
+`ACADEMIC_CALENDAR_THREAT_MODEL.md` before changing calendar behavior.
+
+Use `lib/academic-calendar.ts` for lifecycle and scope policy. Operational days
+are not events; event presence never changes working-day classification.
+Published history is replaced/withdrawn, not edited/deleted. Parent/Teacher
+content must pass active IAM context plus exact Guardian/enrollment or
+Staff/timetable assignment scope. Run `qa:23e` only on its copied database and
+`qa:23e:browser:*` for short copied production Browser batches. Main merge/tag
+remains gated on independent Prompt 23E-QA.

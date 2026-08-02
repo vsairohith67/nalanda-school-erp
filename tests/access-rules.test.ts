@@ -98,10 +98,10 @@ describe("access rules", () => {
     ]);
 
     const teacherNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"));
-    expect(teacherNav.map((item) => item.href)).toEqual(["/attendance/students", "/attendance/students/reports", "/leave/staff", "/substitutes", "/homework/reports", "/homework", "/exams", "/teacher/exam-assignments", "/marks", "/report-cards", "/teacher/analytics"]);
+    expect(teacherNav.map((item) => item.href)).toEqual(["/attendance/students", "/attendance/students/reports", "/leave/staff", "/substitutes", "/homework/reports", "/homework", "/exams", "/teacher/calendar", "/teacher/exam-assignments", "/marks", "/report-cards", "/teacher/analytics"]);
 
     const parentNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"));
-    expect(parentNav.map((item) => item.href)).toEqual(["/parent/class-x-documents"]);
+    expect(parentNav.map((item) => item.href)).toEqual(["/parent/calendar", "/parent/class-x-documents"]);
   });
 
   it("groups privileged navigation without changing permission visibility", async () => {
@@ -127,7 +127,7 @@ describe("access rules", () => {
   it("keeps grouped navigation safe for Parent, Teacher, and Viewer/Auditor roles", async () => {
     const parentGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"));
     expect(parentGroups.map((group) => group.label)).toEqual(["Students & Parents"]);
-    expect(parentGroups[0]?.items.map((item) => item.href)).toEqual(["/parent/class-x-documents"]);
+    expect(parentGroups[0]?.items.map((item) => item.href)).toEqual(["/parent/calendar", "/parent/class-x-documents"]);
 
     const teacherGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"));
     expect(teacherGroups.map((group) => group.label)).toEqual(["Attendance", "Staff & Leave", "Communication"]);
@@ -140,6 +140,7 @@ describe("access rules", () => {
       "/homework/reports",
       "/homework",
       "/exams",
+      "/teacher/calendar",
       "/teacher/exam-assignments",
       "/marks",
       "/report-cards"

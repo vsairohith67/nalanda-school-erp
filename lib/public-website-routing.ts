@@ -6,7 +6,7 @@ export const PUBLIC_WEBSITE_EXACT_PATHS = new Set([
 
 export const PRIVATE_ROBOTS_EXCLUSIONS = [
   "/api", "/website-admin", "/access-context", "/access-history", "/account-security", "/ai-assistant", "/attendance", "/books", "/budgets",
-  "/cash-book", "/certificates", "/change-password", "/class-x-documents",
+  "/calendar", "/cash-book", "/certificates", "/change-password", "/class-x-documents",
   "/cloud-backup", "/daily-collection", "/dashboard", "/exams", "/expenses",
   "/fee-register-ocr", "/forgot-password", "/guardians", "/homework", "/id-cards", "/import-export",
   "/import-verification", "/install-app", "/leave", "/ledger", "/library", "/login",

@@ -18,6 +18,14 @@ flowchart LR
   EXAMTIME --> DATA
   PARENT23D --> ATTENDVIEW["Official Attendance Projection\ncounts only; no inferred percentage"]
   PARENT23D --> EXAMTIME
+  AUTH --> CAL23E["Governed Academic Calendar\noperational days separate from events"]
+  CAL23E --> CALBASIS["Immutable published working-day basis\nand attendance-impact evidence"]
+  CAL23E --> CALEVENT["Versioned internal events\nserver-resolved audience and replacement"]
+  CALEVENT --> PARENT23D
+  CALEVENT --> TAS
+  CALEVENT --> EXAMTIME
+  CALBASIS --> DATA
+  CALEVENT --> DATA
   ATTENDVIEW --> DATA
   EXAM --> MARKS["Marks and Moderation\nexact Teacher entry, immutable versions and calculation snapshots"]
   MARKS --> DATA

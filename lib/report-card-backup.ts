@@ -9,7 +9,7 @@ const keys = {
   reportCardBatches: ["id","batchNumber","academicYear","reportType","templateId","className","section","title","reportingPeriod","status","templateSnapshotJson","cancellationReason","createdByUserId","openedByUserId","submittedByUserId","approvedByUserId","issuedByUserId","archivedByUserId","cancelledByUserId","openedAt","submittedAt","approvedAt","issuedAt","archivedAt","cancelledAt","createdAt","updatedAt"],
   reportCardBatchExamSources: ["id","batchId","examCycleId","weightagePercent","displayOrder","createdAt"],
   studentReportCards: ["id","reportCardNumber","batchId","studentId","academicYear","className","section","reportType","status","currentVersionNumber","draftDataJson","teacherOverallComment","principalComment","directorComment","finalGrade","progressionDecisionId","promotionDisplayText","cancellationReason","createdByUserId","submittedByUserId","approvedByUserId","issuedByUserId","cancelledByUserId","submittedAt","approvedAt","issuedAt","cancelledAt","createdAt","updatedAt"],
-  studentReportCardVersions: ["id","reportCardId","versionNumber","versionType","snapshotJson","correctionReason","issuedAt","issuedByUserId","supersedesVersionId","createdAt"],
+  studentReportCardVersions: ["id","reportCardId","versionNumber","versionType","snapshotJson","correctionReason","issuedAt","issuedByUserId","supersedesVersionId","calendarBasisVersionKey","calendarBasisSnapshotJson","createdAt"],
   studentReportCardEvents: ["id","reportCardId","versionId","eventType","eventDate","previousStatus","newStatus","reason","notes","recordedByUserId","actorLabel","createdAt"]
 } as const;
 

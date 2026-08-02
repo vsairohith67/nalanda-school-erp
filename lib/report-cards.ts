@@ -3,6 +3,7 @@ import { calculateMarkReport } from "@/lib/report-card-calculations";
 import { createEmptyKgDraft, KG_ATTENDANCE_MONTHS, kgValidationGaps, normalizeKgDraft } from "@/lib/kg-report-card";
 import { DEFAULT_KG_TEMPLATE, DEFAULT_MARK_TEMPLATE, normalizeReportCardCode, parseStoredTemplateDefinition, REPORT_CARD_TYPES, safeReportCardText, validateGradeBands, validatePrintSettings, validateTemplateDefinition } from "@/lib/report-card-templates";
 import { ReportCardError } from "@/lib/report-card-scope";
+import { currentReportCalendarBasis } from "@/lib/academic-calendar";
 
 export const BATCH_STATUSES = ["DRAFT", "OPEN_FOR_ENTRY", "SUBMITTED", "APPROVED", "ISSUED", "ARCHIVED", "CANCELLED"] as const;
 export const CARD_STATUSES = ["DRAFT", "READY_FOR_REVIEW", "APPROVED", "ISSUED", "CANCELLED", "SUPERSEDED"] as const;
@@ -158,7 +159,8 @@ export async function transitionReportCardBatch(client: PrismaClient, id: string
     if (action === "issue") {
       for (const card of batch.reportCards) {
         const snapshot = buildIssuedSnapshot(batch, card, parseDraft(card), 1, now);
-        const version = await tx.studentReportCardVersion.create({ data: { reportCardId: card.id, versionNumber: 1, versionType: "ORIGINAL", snapshotJson: JSON.stringify(snapshot), issuedAt: now, issuedByUserId: actor.id } });
+        const calendarBasis = await currentReportCalendarBasis(tx, { academicYear: card.academicYear, className: card.className, section: card.section });
+        const version = await tx.studentReportCardVersion.create({ data: { reportCardId: card.id, versionNumber: 1, versionType: "ORIGINAL", snapshotJson: JSON.stringify(snapshot), issuedAt: now, issuedByUserId: actor.id, ...calendarBasis } });
         await tx.studentReportCard.update({ where: { id: card.id }, data: { status: "ISSUED", currentVersionNumber: 1, issuedAt: now, issuedByUserId: actor.id } });
         await event(tx as any, card.id, "ISSUED", "APPROVED", "ISSUED", actor, now, null, version.id);
       }
@@ -190,7 +192,7 @@ export async function correctIssuedReportCard(client: PrismaClient, id: string, 
     const nextVersion = card.currentVersionNumber + 1; const snapshot = buildIssuedSnapshot(card.batch as any, { ...card, ...corrected }, draft, nextVersion, now);
     const changed = await tx.studentReportCard.updateMany({ where: { id, status: "ISSUED", updatedAt: expected, currentVersionNumber: card.currentVersionNumber }, data: { currentVersionNumber: nextVersion, draftDataJson: JSON.stringify(draft), teacherOverallComment: corrected.teacherOverallComment, principalComment: corrected.principalComment, directorComment: corrected.directorComment, finalGrade: corrected.finalGrade, issuedAt: now, issuedByUserId: actor.id } });
     if (changed.count !== 1) throw new ReportCardError("This report card changed in another session. Reload before correcting.", 409);
-    const version = await tx.studentReportCardVersion.create({ data: { reportCardId: id, versionNumber: nextVersion, versionType: "CORRECTION", snapshotJson: JSON.stringify(snapshot), correctionReason: reason, issuedAt: now, issuedByUserId: actor.id, supersedesVersionId: card.versions[0].id } });
+    const version = await tx.studentReportCardVersion.create({ data: { reportCardId: id, versionNumber: nextVersion, versionType: "CORRECTION", snapshotJson: JSON.stringify(snapshot), correctionReason: reason, issuedAt: now, issuedByUserId: actor.id, supersedesVersionId: card.versions[0].id, calendarBasisVersionKey: card.versions[0].calendarBasisVersionKey, calendarBasisSnapshotJson: card.versions[0].calendarBasisSnapshotJson } });
     await event(tx as any, id, "CORRECTION_ISSUED", "ISSUED", "ISSUED", actor, now, reason, version.id); return { card: await tx.studentReportCard.findUniqueOrThrow({ where: { id } }), version };
   });
 }

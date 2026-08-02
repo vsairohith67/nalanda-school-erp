@@ -9,6 +9,7 @@ import {
 import { getSchoolSettings, type SchoolSettingsValue } from "./school-settings";
 import { authSecurityRecordCount, createAuthSecurityBackup, type AuthSecurityBackup } from "./auth-backup";
 import { createIamAccessBackup, iamAccessRecordCount, type IamAccessBackup } from "./iam/backup";
+import { loadAcademicCalendarBackup } from "./academic-calendar-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 
@@ -67,6 +68,8 @@ type BackupClient = Pick<
   | "userRoleAssignment" | "permissionProfile" | "permissionProfileEntry"
   | "permissionProfileVersion" | "userPermissionProfileAssignment" | "userPermissionOverride"
   | "userAudit"
+  | "academicCalendarVersion" | "operationalCalendarDay" | "schoolCalendarEvent"
+  | "schoolCalendarEventVersion" | "academicCalendarAuditEvent"
 >;
 
 type BackupDocumentInput = {
@@ -145,6 +148,11 @@ type BackupDocumentInput = {
   studentReportCards?: readonly object[];
   studentReportCardVersions?: readonly object[];
   studentReportCardEvents?: readonly object[];
+  academicCalendarVersions?: readonly object[];
+  operationalCalendarDays?: readonly object[];
+  schoolCalendarEvents?: readonly object[];
+  schoolCalendarEventVersions?: readonly object[];
+  academicCalendarAuditEvents?: readonly object[];
   teacherAnalyticsReviewCycles?: readonly object[];
   teacherAnalyticsSnapshots?: readonly object[];
   teacherAnalyticsReviews?: readonly object[];
@@ -312,6 +320,11 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const studentReportCards = sanitizeActorFields(input.studentReportCards ?? []);
   const studentReportCardVersions = sanitizeActorFields(input.studentReportCardVersions ?? []);
   const studentReportCardEvents = sanitizeActorFields(input.studentReportCardEvents ?? []);
+  const academicCalendarVersions = sanitizeActorFields(input.academicCalendarVersions ?? []);
+  const operationalCalendarDays = [...(input.operationalCalendarDays ?? [])];
+  const schoolCalendarEvents = sanitizeActorFields(input.schoolCalendarEvents ?? []);
+  const schoolCalendarEventVersions = sanitizeActorFields(input.schoolCalendarEventVersions ?? []);
+  const academicCalendarAuditEvents = sanitizeActorFields(input.academicCalendarAuditEvents ?? []);
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
   const teacherAnalyticsSnapshots = sanitizeActorFields(input.teacherAnalyticsSnapshots ?? []);
   const teacherAnalyticsReviews = sanitizeActorFields(input.teacherAnalyticsReviews ?? []);
@@ -468,6 +481,11 @@ export function createBackupDocument(input: BackupDocumentInput) {
         reportCardBatchExamSources: reportCardBatchExamSources.length,
         studentReportCards: studentReportCards.length,
         studentReportCardVersions: studentReportCardVersions.length,
+        academicCalendarVersions: academicCalendarVersions.length,
+        operationalCalendarDays: operationalCalendarDays.length,
+        schoolCalendarEvents: schoolCalendarEvents.length,
+        schoolCalendarEventVersions: schoolCalendarEventVersions.length,
+        academicCalendarAuditEvents: academicCalendarAuditEvents.length,
         studentReportCardEvents: studentReportCardEvents.length,
         teacherAnalyticsReviewCycles: teacherAnalyticsReviewCycles.length,
         teacherAnalyticsSnapshots: teacherAnalyticsSnapshots.length,
@@ -628,6 +646,11 @@ export function createBackupDocument(input: BackupDocumentInput) {
     studentReportCards,
     studentReportCardVersions,
     studentReportCardEvents,
+    academicCalendarVersions,
+    operationalCalendarDays,
+    schoolCalendarEvents,
+    schoolCalendarEventVersions,
+    academicCalendarAuditEvents,
     teacherAnalyticsReviewCycles,
     teacherAnalyticsSnapshots,
     teacherAnalyticsReviews,
@@ -720,10 +743,45 @@ export function createBackupDocument(input: BackupDocumentInput) {
   };
 }
 
+async function sqliteSchemaHas(client: BackupClient, table: string, column?: string) {
+  const query = (client as any).$queryRawUnsafe;
+  if (typeof query !== "function") return true;
+  const allowedTables = new Set(["StudentAttendanceSession", "StudentReportCardVersion", "AcademicCalendarVersion"]);
+  if (!allowedTables.has(table)) throw new Error("BACKUP_SCHEMA_PROBE_REFUSED");
+  const rows = await query.call(client, `PRAGMA table_info("${table}")`) as Array<{ name?: string }>;
+  return column ? rows.some((row) => row.name === column) : rows.length > 0;
+}
+
 export async function generateFullBackup(
   client: BackupClient,
   options: { generatedBy: string; generatedAt?: Date; excludeCloudBackupRunId?: string }
 ) {
+  const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable] = await Promise.all([
+    sqliteSchemaHas(client, "StudentAttendanceSession", "operationalCalendarVersionKey"),
+    sqliteSchemaHas(client, "StudentReportCardVersion", "calendarBasisVersionKey"),
+    sqliteSchemaHas(client, "AcademicCalendarVersion")
+  ]);
+  const studentAttendanceSessionArgs = {
+    select: {
+      id: true, attendanceDate: true, className: true, section: true, academicYear: true,
+      status: true, takenByUserId: true, submittedByUserId: true, lockedByUserId: true,
+      submittedAt: true, lockedAt: true, notes: true, createdAt: true, updatedAt: true,
+      ...(attendanceCalendarBasisAvailable ? {
+        operationalCalendarVersionKey: true,
+        operationalCalendarDayKey: true,
+        calendarBasisSnapshotJson: true
+      } : {})
+    },
+    orderBy: [{ attendanceDate: "asc" }, { className: "asc" }, { section: "asc" }]
+  };
+  const studentReportCardVersionArgs = {
+    select: {
+      id: true, reportCardId: true, versionNumber: true, versionType: true, snapshotJson: true,
+      correctionReason: true, issuedAt: true, issuedByUserId: true, supersedesVersionId: true, createdAt: true,
+      ...(reportCalendarBasisAvailable ? { calendarBasisVersionKey: true, calendarBasisSnapshotJson: true } : {})
+    },
+    orderBy: [{ reportCardId: "asc" }, { versionNumber: "asc" }]
+  };
   const [
     students,
     feeStructures,
@@ -915,7 +973,7 @@ export async function generateFullBackup(
     client.studentGuardian.findMany({ orderBy: [{ guardianId: "asc" }, { studentId: "asc" }] }),
     client.notice.findMany({ orderBy: [{ createdAt: "asc" }] }),
     client.staffMember.findMany({ orderBy: [{ fullName: "asc" }] }),
-    client.studentAttendanceSession.findMany({ orderBy: [{ attendanceDate: "asc" }, { className: "asc" }, { section: "asc" }] }),
+    client.studentAttendanceSession.findMany(studentAttendanceSessionArgs as never),
     client.studentAttendanceRecord.findMany({ orderBy: [{ sessionId: "asc" }, { admissionNo: "asc" }] }),
     client.staffAttendanceSession.findMany({ orderBy: [{ attendanceDate: "asc" }] }),
     client.staffAttendanceRecord.findMany({ orderBy: [{ sessionId: "asc" }, { staffCode: "asc" }] }),
@@ -972,7 +1030,7 @@ export async function generateFullBackup(
     (client as any).reportCardBatch?.findMany ? (client as any).reportCardBatch.findMany({ orderBy: [{ academicYear: "asc" }, { batchNumber: "asc" }] }) : Promise.resolve([]),
     (client as any).reportCardBatchExamSource?.findMany ? (client as any).reportCardBatchExamSource.findMany({ orderBy: [{ batchId: "asc" }, { displayOrder: "asc" }] }) : Promise.resolve([]),
     (client as any).studentReportCard?.findMany ? (client as any).studentReportCard.findMany({ orderBy: [{ batchId: "asc" }, { reportCardNumber: "asc" }] }) : Promise.resolve([]),
-    (client as any).studentReportCardVersion?.findMany ? (client as any).studentReportCardVersion.findMany({ orderBy: [{ reportCardId: "asc" }, { versionNumber: "asc" }] }) : Promise.resolve([]),
+    (client as any).studentReportCardVersion?.findMany ? (client as any).studentReportCardVersion.findMany(studentReportCardVersionArgs) : Promise.resolve([]),
     (client as any).studentReportCardEvent?.findMany ? (client as any).studentReportCardEvent.findMany({ orderBy: [{ reportCardId: "asc" }, { eventDate: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
     (client as any).teacherAnalyticsReviewCycle?.findMany ? (client as any).teacherAnalyticsReviewCycle.findMany({ orderBy: [{ periodStart: "asc" }, { cycleCode: "asc" }] }) : Promise.resolve([]),
     (client as any).teacherAnalyticsSnapshot?.findMany ? (client as any).teacherAnalyticsSnapshot.findMany({ orderBy: [{ reviewCycleId: "asc" }, { staffMemberId: "asc" }] }) : Promise.resolve([]),
@@ -1115,6 +1173,9 @@ export async function generateFullBackup(
     (client as any).userPermissionOverride?.findMany ? (client as any).userPermissionOverride.findMany({ orderBy: [{ userId: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
     (client as any).userAudit?.findMany ? (client as any).userAudit.findMany({ where: { action: { startsWith: "IAM_" } }, orderBy: { createdAt: "asc" } }) : Promise.resolve([])
   ]);
+  const academicCalendarBackup = academicCalendarAvailable
+    ? await loadAcademicCalendarBackup(client)
+    : { academicCalendarVersions: [], operationalCalendarDays: [], schoolCalendarEvents: [], schoolCalendarEventVersions: [], academicCalendarAuditEvents: [] };
 
   return createBackupDocument({
     generatedAt: options.generatedAt ?? new Date(),
@@ -1141,6 +1202,7 @@ export async function generateFullBackup(
       overrides: iamOverrides,
       audits: iamAudits
     },
+    ...academicCalendarBackup,
     rolePermissions,
     guardians,
     studentGuardians,

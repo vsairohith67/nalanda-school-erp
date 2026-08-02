@@ -1400,3 +1400,29 @@ Result: `PARENT_ATTENDANCE_TIMETABLE_CLEARED`. Release tag:
 No staging, deployment, live-provider activation or real-user onboarding is
 authorised. Next governed phase: Prompt 23E — Events, Holidays and Academic
 Calendar.
+
+## Prompt 23E — Events, Holidays and Academic Calendar (2026-08-02)
+
+Implemented one additive, versioned internal academic-calendar foundation.
+Operational working-day classifications are governed separately from
+informational events, with totals/diffs, examination conflicts, posted-
+attendance impact evidence and immutable reasoned replacement history. New
+attendance locks and report publications retain their calendar basis; existing
+attendance is never rewritten.
+
+Published events freeze their audience and resolve Parent, Teacher and
+leadership visibility through active IAM context plus exact Guardian/enrollment
+or Staff/timetable assignment scope. Parent/Teacher month, agenda, upcoming and
+authenticated print views expose only authorised published entries. Current
+published examination timetables are referenced read-only and never duplicated.
+Exactly-once in-app notifications are isolated from publication integrity.
+
+The focused 9-test group and `CAL23E` copied-database matrix passed, including
+audience isolation, multi-child context, attendance non-rewrite, notification
+deduplication, replacement history, restore twice and zero operational mutation.
+Full sequential verification and short copied production Browser batches passed;
+the feature branch is pushed and re-fetched with synchronized external governance
+records before the implementation readiness result is issued.
+Independent Prompt 23E-QA is required before main merge/tag. No staging,
+deployment, public-site publishing, live provider or real-user onboarding is
+authorised.

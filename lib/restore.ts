@@ -17,6 +17,7 @@ import {
 } from "@/lib/exam-governance-backup";
 import { validateAuthSecurityBackup, type AuthSecurityBackup } from "@/lib/auth-backup";
 import { validateIamAccessBackup, type IamAccessBackup } from "@/lib/iam/backup";
+import { validateAcademicCalendarBackupRows } from "@/lib/academic-calendar-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 const MAX_ENTITY_ROWS = 100_000;
@@ -55,6 +56,7 @@ const TOP_LEVEL_KEYS = new Set([
   "examGovernance",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
   "studentReportCards", "studentReportCardVersions", "studentReportCardEvents",
+  "academicCalendarVersions", "operationalCalendarDays", "schoolCalendarEvents", "schoolCalendarEventVersions", "academicCalendarAuditEvents",
   "teacherAnalyticsReviewCycles", "teacherAnalyticsSnapshots", "teacherAnalyticsReviews", "teacherAnalyticsEvents",
   "certificateNumberSeries", "certificateTemplates", "studentCertificateRequests", "studentCertificates", "studentCertificateVersions", "studentCertificateEvents",
   "classXPackageTemplates", "classXDocumentPackages", "classXPackageDocumentItems", "classXPackageChargeRules", "classXPackageCharges", "classXPackageHandovers", "classXPackageEvents",
@@ -112,6 +114,7 @@ const BACKUP_COUNT_KEYS = new Set([
   "examGovernanceRecords",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
   "studentReportCards", "studentReportCardVersions", "studentReportCardEvents",
+  "academicCalendarVersions", "operationalCalendarDays", "schoolCalendarEvents", "schoolCalendarEventVersions", "academicCalendarAuditEvents",
   "teacherAnalyticsReviewCycles", "teacherAnalyticsSnapshots", "teacherAnalyticsReviews", "teacherAnalyticsEvents",
   "certificateNumberSeries", "certificateTemplates", "studentCertificateRequests", "studentCertificates", "studentCertificateVersions", "studentCertificateEvents",
   "classXPackageTemplates", "classXDocumentPackages", "classXPackageDocumentItems", "classXPackageChargeRules", "classXPackageCharges", "classXPackageHandovers", "classXPackageEvents",
@@ -179,7 +182,7 @@ const STAFF_MEMBER_KEYS = new Set([
 ]);
 const STUDENT_ATTENDANCE_SESSION_KEYS = new Set([
   "id", "attendanceDate", "className", "section", "academicYear", "status", "takenByUserId",
-  "submittedByUserId", "lockedByUserId", "submittedAt", "lockedAt", "notes", "createdAt", "updatedAt"
+  "submittedByUserId", "lockedByUserId", "submittedAt", "lockedAt", "notes", "operationalCalendarVersionKey", "operationalCalendarDayKey", "calendarBasisSnapshotJson", "createdAt", "updatedAt"
 ]);
 const STUDENT_ATTENDANCE_RECORD_KEYS = new Set([
   "id", "sessionId", "studentId", "admissionNo", "status", "remarks", "createdAt", "updatedAt"
@@ -399,6 +402,11 @@ export type ValidatedBackup = {
   studentReportCards: RestoreRecord[];
   studentReportCardVersions: RestoreRecord[];
   studentReportCardEvents: RestoreRecord[];
+  academicCalendarVersions: RestoreRecord[];
+  operationalCalendarDays: RestoreRecord[];
+  schoolCalendarEvents: RestoreRecord[];
+  schoolCalendarEventVersions: RestoreRecord[];
+  academicCalendarAuditEvents: RestoreRecord[];
   teacherAnalyticsReviewCycles: RestoreRecord[];
   teacherAnalyticsSnapshots: RestoreRecord[];
   teacherAnalyticsReviews: RestoreRecord[];
@@ -572,6 +580,11 @@ export type RestoreResult = {
   studentReportCards: EntityRestoreResult;
   studentReportCardVersions: EntityRestoreResult;
   studentReportCardEvents: EntityRestoreResult;
+  academicCalendarVersions: EntityRestoreResult;
+  operationalCalendarDays: EntityRestoreResult;
+  schoolCalendarEvents: EntityRestoreResult;
+  schoolCalendarEventVersions: EntityRestoreResult;
+  academicCalendarAuditEvents: EntityRestoreResult;
   teacherAnalyticsReviewCycles: EntityRestoreResult;
   teacherAnalyticsSnapshots: EntityRestoreResult;
   teacherAnalyticsReviews: EntityRestoreResult;
@@ -1246,6 +1259,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   const studentMarkEvents=validateOptionalRows(root.studentMarkEvents,"studentMarkEvents",STUDENT_MARK_EVENT_KEYS,["id","assessmentId","eventType","eventDate"]);const markEventIds=new Set<string>();studentMarkEvents.forEach((row,index)=>{const prefix=`studentMarkEvents[${index}]`,id=requireString(row.id,`${prefix}.id`),assessmentId=requireString(row.assessmentId,`${prefix}.assessmentId`),eventType=requireString(row.eventType,`${prefix}.eventType`);if(markEventIds.has(id)||!assessmentIds.has(assessmentId))throw new Error(`${prefix} has duplicate identity or invalid assessment link`);markEventIds.add(id);if(hasValue(row.studentMarkId)&&!markIds.has(String(row.studentMarkId)))throw new Error(`${prefix}.studentMarkId does not match a backup mark`);if(!["MARK_CREATED","MARK_UPDATED","MARK_STATUS_CHANGED","MARKS_SUBMITTED","MARKS_APPROVED","MARKS_LOCKED","CORRECTION_REQUESTED","CORRECTION_APPLIED","ASSESSMENT_CANCELLED"].includes(eventType))throw new Error(`${prefix}.eventType is unsupported`);requireDateString(row.eventDate,`${prefix}.eventDate`);if(["CORRECTION_REQUESTED","CORRECTION_APPLIED"].includes(eventType)&&!hasValue(row.reason))throw new Error(`${prefix}.reason is required for correction`);});
   const examGovernance = validateExamGovernanceBackup(root.examGovernance);
   const reportCardData = validateReportCardBackupRows(root, { studentIds, examIds, progressionIds: new Set(studentProgressionDecisions.map((row) => String(row.id ?? "")).filter(Boolean)) });
+  const academicCalendarData = validateAcademicCalendarBackupRows(root);
   const teacherAnalyticsData = validateTeacherAnalyticsBackupRows(root, { staffMemberIds: new Set(staffMembers.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const certificateData = validateCertificateBackupRows(root, { studentIds, guardianIds: new Set(guardians.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const classXPackageData = validateClassXPackageBackupRows(root, {
@@ -1363,6 +1377,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     studentMarkEvents,
     examGovernance,
     ...reportCardData,
+    ...academicCalendarData,
     ...teacherAnalyticsData,
     ...certificateData,
     ...classXPackageData,

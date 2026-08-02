@@ -704,3 +704,23 @@ Retained boundaries:
   handling, exact lifecycle retries, nested-transaction restore and accessible
   context-selector structure. The remaining boundaries above are deliberate
   future-policy/module work rather than Prompt 23D release blockers.
+
+## Prompt 23E academic calendar debt and boundaries
+
+Resolved on the implementation branch:
+
+- operational working-day classifications and informational events are distinct;
+- published calendar/event versions are immutable and reasoned replacements preserve history;
+- Parent and Teacher audiences reuse exact IAM child and timetable assignment scope;
+- posted attendance is never rewritten and new locked records retain the calendar basis;
+- current published examination timetables are referenced rather than copied;
+- notification retries use deterministic in-app delivery keys;
+- backup version 37 preserves calendar versions, audiences, links and audits.
+
+Retained boundaries:
+
+- SQLite remains a single-instance publication writer; horizontal writers need a future database/deployment phase;
+- public website publishing, ICS/private feeds, attachments/media, registration, payments, appointments, transport and live provider delivery are deferred;
+- attendance reconciliation is deliberately not automated;
+- Teachers never publish from class assignment alone;
+- independent Prompt 23E-QA must clear the feature before main merge/tag.

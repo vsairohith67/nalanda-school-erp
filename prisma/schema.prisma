@@ -368,29 +368,33 @@ model StudentLifecycleEvent {
 }
 
 model StudentAttendanceSession {
-  id                String                    @id @default(cuid())
-  attendanceDate    DateTime
-  className         String
-  section           String                    @default("")
-  academicYear      String                    @default("2026-27")
-  status            String                    @default("DRAFT")
-  takenByUserId     String?
-  takenBy           User?                     @relation("AttendanceTakenBy", fields: [takenByUserId], references: [id], onDelete: SetNull)
-  submittedByUserId String?
-  submittedBy       User?                     @relation("AttendanceSubmittedBy", fields: [submittedByUserId], references: [id], onDelete: SetNull)
-  lockedByUserId    String?
-  lockedBy          User?                     @relation("AttendanceLockedBy", fields: [lockedByUserId], references: [id], onDelete: SetNull)
-  submittedAt       DateTime?
-  lockedAt          DateTime?
-  notes             String?
-  createdAt         DateTime                  @default(now())
-  updatedAt         DateTime                  @updatedAt
-  records           StudentAttendanceRecord[]
+  id                            String                    @id @default(cuid())
+  attendanceDate                DateTime
+  className                     String
+  section                       String                    @default("")
+  academicYear                  String                    @default("2026-27")
+  status                        String                    @default("DRAFT")
+  takenByUserId                 String?
+  takenBy                       User?                     @relation("AttendanceTakenBy", fields: [takenByUserId], references: [id], onDelete: SetNull)
+  submittedByUserId             String?
+  submittedBy                   User?                     @relation("AttendanceSubmittedBy", fields: [submittedByUserId], references: [id], onDelete: SetNull)
+  lockedByUserId                String?
+  lockedBy                      User?                     @relation("AttendanceLockedBy", fields: [lockedByUserId], references: [id], onDelete: SetNull)
+  submittedAt                   DateTime?
+  lockedAt                      DateTime?
+  notes                         String?
+  operationalCalendarVersionKey String?
+  operationalCalendarDayKey     String?
+  calendarBasisSnapshotJson     String?
+  createdAt                     DateTime                  @default(now())
+  updatedAt                     DateTime                  @updatedAt
+  records                       StudentAttendanceRecord[]
 
   @@unique([attendanceDate, className, section, academicYear])
   @@index([attendanceDate])
   @@index([academicYear, className, section])
   @@index([status])
+  @@index([operationalCalendarVersionKey])
 }
 
 model StudentAttendanceRecord {
@@ -2524,6 +2528,7 @@ model ExaminationTimetableVersion {
   updatedAt             DateTime                      @updatedAt
   rows                  ExaminationTimetableRow[]
   events                ExaminationTimetableEvent[]
+  calendarEventVersions SchoolCalendarEventVersion[]
 
   @@unique([examinationId, classScopeId, versionNumber])
   @@index([academicYear, className, section, status])
@@ -3076,21 +3081,184 @@ model StudentReportCard {
 }
 
 model StudentReportCardVersion {
-  id                  String            @id @default(cuid())
-  reportCardId        String
-  reportCard          StudentReportCard @relation(fields: [reportCardId], references: [id], onDelete: Restrict)
-  versionNumber       Int
-  versionType         String
-  snapshotJson        String
-  correctionReason    String?
-  issuedAt            DateTime
-  issuedByUserId      String?
-  supersedesVersionId String?
-  createdAt           DateTime          @default(now())
+  id                        String            @id @default(cuid())
+  reportCardId              String
+  reportCard                StudentReportCard @relation(fields: [reportCardId], references: [id], onDelete: Restrict)
+  versionNumber             Int
+  versionType               String
+  snapshotJson              String
+  calendarBasisVersionKey   String?
+  calendarBasisSnapshotJson String?
+  correctionReason          String?
+  issuedAt                  DateTime
+  issuedByUserId            String?
+  supersedesVersionId       String?
+  createdAt                 DateTime          @default(now())
 
   @@unique([reportCardId, versionNumber])
   @@index([reportCardId, issuedAt])
   @@index([supersedesVersionId])
+}
+
+// Prompt 23E: the operational academic-day calendar and the informational
+// event calendar are deliberately separate. Published versions are immutable;
+// replacements preserve the former version and append audit evidence.
+model AcademicCalendarVersion {
+  id                               String                    @id @default(cuid())
+  publicKey                        String                    @unique @default(uuid())
+  academicYear                     String
+  versionNumber                    Int
+  status                           String                    @default("DRAFT")
+  version                          Int                       @default(1)
+  effectiveScope                   String                    @default("SCHOOL_WIDE")
+  className                        String?
+  section                          String?
+  scopeKey                         String
+  title                            String
+  currentPublicationKey            String?                   @unique
+  idempotencyKey                   String?                   @unique
+  replacesVersionId                String?
+  replacesVersion                  AcademicCalendarVersion?  @relation("AcademicCalendarReplacement", fields: [replacesVersionId], references: [id], onDelete: Restrict)
+  replacementVersions              AcademicCalendarVersion[] @relation("AcademicCalendarReplacement")
+  publicationReason                String?
+  replacementReason                String?
+  withdrawalReason                 String?
+  archiveReason                    String?
+  attendanceReconciliationRequired Boolean                   @default(false)
+  createdByUserId                  String
+  submittedAt                      DateTime?
+  approvedAt                       DateTime?
+  publishedAt                      DateTime?
+  replacedAt                       DateTime?
+  withdrawnAt                      DateTime?
+  archivedAt                       DateTime?
+  createdAt                        DateTime                  @default(now())
+  updatedAt                        DateTime                  @updatedAt
+  days                             OperationalCalendarDay[]
+
+  @@unique([academicYear, scopeKey, versionNumber])
+  @@index([academicYear, status])
+  @@index([academicYear, scopeKey, status])
+  @@index([replacesVersionId])
+}
+
+model OperationalCalendarDay {
+  id                 String                  @id @default(cuid())
+  publicKey          String                  @unique @default(uuid())
+  calendarVersionId  String
+  calendarVersion    AcademicCalendarVersion @relation(fields: [calendarVersionId], references: [id], onDelete: Restrict)
+  dayDate            DateTime
+  dayType            String
+  sourceType         String                  @default("MANUAL")
+  scopeType          String                  @default("SCHOOL_WIDE")
+  className          String?
+  section            String?
+  scopeKey           String
+  title              String
+  halfDaySession     String?
+  publicInstructions String?
+  reason             String?
+  contentHash        String
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  @@unique([calendarVersionId, dayDate, scopeKey])
+  @@index([dayDate, dayType])
+  @@index([calendarVersionId, dayType])
+  @@index([scopeType, className, section, dayDate])
+}
+
+model SchoolCalendarEvent {
+  id                        String                       @id @default(cuid())
+  publicKey                 String                       @unique @default(uuid())
+  eventNumber               String                       @unique
+  academicYear              String
+  status                    String                       @default("DRAFT")
+  version                   Int                          @default(1)
+  currentVersionNumber      Int                          @default(1)
+  currentPublishedVersionId String?
+  createdByUserId           String
+  createdAt                 DateTime                     @default(now())
+  updatedAt                 DateTime                     @updatedAt
+  versions                  SchoolCalendarEventVersion[] @relation("SchoolCalendarEventVersions")
+
+  @@index([academicYear, status])
+  @@index([createdAt])
+}
+
+model SchoolCalendarEventVersion {
+  id                            String                       @id @default(cuid())
+  publicKey                     String                       @unique @default(uuid())
+  eventId                       String
+  event                         SchoolCalendarEvent          @relation("SchoolCalendarEventVersions", fields: [eventId], references: [id], onDelete: Restrict)
+  versionNumber                 Int
+  status                        String                       @default("DRAFT")
+  version                       Int                          @default(1)
+  eventType                     String
+  title                         String
+  description                   String?
+  startsAt                      DateTime
+  endsAt                        DateTime
+  allDay                        Boolean                      @default(true)
+  venue                         String?
+  parentInstructions            String?
+  internalNotes                 String?
+  audienceType                  String
+  roleScope                     String?
+  classSectionId                String?
+  className                     String?
+  section                       String?
+  audienceKey                   String
+  examinationTimetableVersionId String?
+  examinationTimetableVersion   ExaminationTimetableVersion? @relation(fields: [examinationTimetableVersionId], references: [id], onDelete: Restrict)
+  isImportant                   Boolean                      @default(false)
+  contentHash                   String
+  currentPublicationKey         String?                      @unique
+  idempotencyKey                String?                      @unique
+  replacesVersionId             String?
+  replacesVersion               SchoolCalendarEventVersion?  @relation("SchoolCalendarEventReplacement", fields: [replacesVersionId], references: [id], onDelete: Restrict)
+  replacementVersions           SchoolCalendarEventVersion[] @relation("SchoolCalendarEventReplacement")
+  publicationReason             String?
+  replacementReason             String?
+  withdrawalReason              String?
+  archiveReason                 String?
+  createdByUserId               String
+  submittedAt                   DateTime?
+  approvedAt                    DateTime?
+  publishedAt                   DateTime?
+  replacedAt                    DateTime?
+  withdrawnAt                   DateTime?
+  archivedAt                    DateTime?
+  createdAt                     DateTime                     @default(now())
+  updatedAt                     DateTime                     @updatedAt
+
+  @@unique([eventId, versionNumber])
+  @@index([status, startsAt, endsAt])
+  @@index([audienceType, className, section, startsAt])
+  @@index([examinationTimetableVersionId])
+  @@index([replacesVersionId])
+}
+
+model AcademicCalendarAuditEvent {
+  id                String   @id @default(cuid())
+  entityType        String
+  calendarVersionId String?
+  schoolEventId     String?
+  eventVersionId    String?
+  eventType         String
+  previousStatus    String?
+  newStatus         String?
+  reason            String?
+  actorUserId       String
+  actorLabel        String
+  snapshotJson      String
+  eventDate         DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  @@index([calendarVersionId, eventDate])
+  @@index([schoolEventId, eventDate])
+  @@index([eventVersionId, eventDate])
+  @@index([eventType, eventDate])
 }
 
 model StudentReportCardEvent {
