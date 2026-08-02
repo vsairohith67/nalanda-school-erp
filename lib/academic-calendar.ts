@@ -10,6 +10,9 @@ export const OPERATIONAL_DAY_SOURCES = ["MANUAL", "HOLIDAY", "VACATION", "SPECIA
 export const CALENDAR_SCOPES = ["SCHOOL_WIDE", "CLASS", "CLASS_SECTION"] as const;
 export const SCHOOL_EVENT_TYPES = ["SCHOOL_FUNCTION", "PARENT_MEETING", "ACTIVITY", "COMPETITION", "ACADEMIC_DEADLINE", "STAFF_MEETING", "EXAMINATION_REFERENCE", "CLASS_EVENT", "OTHER"] as const;
 export const SCHOOL_EVENT_AUDIENCES = ["SCHOOL_WIDE", "STAFF_ONLY", "PARENTS_ALL", "ROLE_SPECIFIC", "CLASS", "CLASS_SECTION", "LINKED_CHILD_COHORT", "LEADERSHIP_ONLY"] as const;
+const ACADEMIC_CALENDAR_WORKFLOW_ACTIONS = ["ready", "approve", "publish", "create_replacement", "withdraw", "archive"] as const;
+const SCHOOL_EVENT_WORKFLOW_ACTIONS = ["ready", "approve", "publish", "create_replacement", "withdraw", "archive"] as const;
+const CALENDAR_LEADERSHIP_ROLES = ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL"] as const;
 
 export const CALENDAR_TITLE_MAX = 160;
 export const CALENDAR_DESCRIPTION_MAX = 2_000;
@@ -40,6 +43,27 @@ export class AcademicCalendarError extends Error {
     this.status = status;
     this.code = code;
   }
+}
+
+export function normalizeAcademicCalendarWorkflowAction(value: unknown) {
+  const action = String(value ?? "").trim().toLowerCase();
+  return (ACADEMIC_CALENDAR_WORKFLOW_ACTIONS as readonly string[]).includes(action) ? action as (typeof ACADEMIC_CALENDAR_WORKFLOW_ACTIONS)[number] : null;
+}
+
+export function normalizeSchoolEventWorkflowAction(value: unknown) {
+  const action = String(value ?? "").trim().toLowerCase();
+  return (SCHOOL_EVENT_WORKFLOW_ACTIONS as readonly string[]).includes(action) ? action as (typeof SCHOOL_EVENT_WORKFLOW_ACTIONS)[number] : null;
+}
+
+export function assertCalendarLeadershipActor(actor: Pick<CalendarActor, "role">) { assertLeadership(actor as CalendarActor); }
+
+export async function academicCalendarContainsEmergencyClosure(client: CalendarClient, publicKey: string) {
+  const version = await client.academicCalendarVersion.findUnique({
+    where: { publicKey: boundedHandle(publicKey) },
+    select: { days: { where: { OR: [{ dayType: "EMERGENCY_CLOSURE" }, { sourceType: "EMERGENCY_CLOSURE" }] }, select: { id: true }, take: 1 } }
+  });
+  if (!version) throw new AcademicCalendarError("Academic calendar version not found.", 404, "CALENDAR_NOT_FOUND");
+  return version.days.length > 0;
 }
 
 export type NormalizedOperationalDay = {
@@ -279,7 +303,7 @@ export async function saveAcademicCalendarDraft(client: CalendarClient, publicKe
 export async function transitionAcademicCalendar(client: CalendarClient, publicKey: string, input: unknown, actor: CalendarActor) {
   assertLeadership(actor);
   const source = objectInput(input);
-  const action = String(source.action ?? "").trim().toLowerCase();
+  const action = normalizeAcademicCalendarWorkflowAction(source.action);
   if (action === "create_replacement") return createAcademicCalendarReplacement(client, publicKey, source, actor);
   const expectedVersion = expectedCalendarVersion(source.expectedVersion);
   if (action === "ready") return markCalendarReady(client, publicKey, expectedVersion, actor);
@@ -565,7 +589,7 @@ export async function getSchoolCalendarEvent(client: CalendarClient, publicKey: 
 export async function transitionSchoolCalendarEvent(client: CalendarClient, publicKey: string, input: unknown, actor: CalendarActor) {
   assertLeadership(actor);
   const source = objectInput(input);
-  const action = String(source.action ?? "").trim().toLowerCase();
+  const action = normalizeSchoolEventWorkflowAction(source.action);
   if (action === "create_replacement") return createSchoolEventReplacement(client, publicKey, source, actor);
   const expectedVersion = expectedCalendarVersion(source.expectedVersion);
   if (action === "ready") return transitionEventStatus(client, publicKey, expectedVersion, actor, "DRAFT", "READY_FOR_REVIEW", "EVENT_SUBMITTED", null);
@@ -721,37 +745,11 @@ async function archiveSchoolEvent(client: CalendarClient, publicKey: string, exp
 
 export async function previewSchoolCalendarEventAudience(client: CalendarClient, academicYear: string, event: any) {
   const roles: Record<string, number> = {};
-  let parentUsers = 0;
-  let staffUsers = 0;
-  let totalUsers = 0;
-  if (["CLASS", "CLASS_SECTION", "LINKED_CHILD_COHORT"].includes(event.audienceType)) {
-    const enrollments = await client.academicYearEnrollment.findMany({
-      where: { academicYear, className: event.className, status: "ACTIVE", ...(event.audienceType !== "CLASS" ? { section: event.section ?? "" } : {}) },
-      select: { student: { select: { guardians: { select: { guardian: { select: { users: { where: { isActive: true, lifecycleStatus: "ACTIVE" }, select: { id: true, role: true } } } } } } } } },
-      take: 5_000
-    });
-    const parents = new Set<string>();
-    for (const enrollment of enrollments) for (const link of enrollment.student.guardians) for (const user of link.guardian.users) if (user.role === "PARENT") parents.add(user.id);
-    parentUsers = parents.size;
-    const assignments = await client.timetableAssignment.findMany({
-      where: { academicYear, classSection: { className: event.className, isActive: true, ...(event.audienceType !== "CLASS" ? { section: event.section ?? "" } : {}) }, teacher: { isActive: true } },
-      select: { teacher: { select: { staffMember: { select: { userId: true, status: true } } } } },
-      take: 1_000
-    });
-    staffUsers = new Set(assignments.map((row: any) => row.teacher.staffMember).filter((staff: any) => staff?.status === "ACTIVE" && staff.userId).map((staff: any) => staff.userId)).size;
-    totalUsers = parentUsers + staffUsers;
-  } else {
-    const allowedRoles = event.audienceType === "LEADERSHIP_ONLY" ? ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL"]
-      : event.audienceType === "STAFF_ONLY" ? ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "TEACHER"]
-      : event.audienceType === "PARENTS_ALL" ? ["PARENT"]
-      : event.audienceType === "ROLE_SPECIFIC" ? [event.roleScope]
-      : ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "TEACHER", "PARENT", "VIEWER", "ACCOUNTANT", "COMPUTER_OPERATOR"];
-    const users = await client.user.findMany({ where: { isActive: true, lifecycleStatus: "ACTIVE", role: { in: allowedRoles.filter(Boolean) } }, select: { id: true, role: true }, take: 10_000 });
-    for (const user of users) roles[user.role] = (roles[user.role] ?? 0) + 1;
-    parentUsers = roles.PARENT ?? 0;
-    staffUsers = users.length - parentUsers;
-    totalUsers = users.length;
-  }
+  const recipients = await resolveCalendarNotificationUsers(client, academicYear, event);
+  for (const recipient of recipients) roles[recipient.role] = (roles[recipient.role] ?? 0) + 1;
+  const parentUsers = roles.PARENT ?? 0;
+  const staffUsers = recipients.length - parentUsers;
+  const totalUsers = recipients.length;
   if (parentUsers) roles.PARENT = parentUsers;
   if (staffUsers) roles.STAFF_AUTHORISED = staffUsers;
   return { totalUsers, parentUsers, staffUsers, roles, audience: humanCalendarLabel(event.audienceType), className: event.className ?? null, section: event.section ?? null };
@@ -817,7 +815,11 @@ export async function loadPublishedSchoolCalendar(client: CalendarClient, actor:
 }
 
 export async function captureAttendanceCalendarBasis(client: CalendarClient, input: { academicYear: string; attendanceDate: Date; className: string; section: string }) {
-  const versions = await client.academicCalendarVersion.findMany({ where: { academicYear: input.academicYear, status: "PUBLISHED", currentPublicationKey: { not: null } }, include: { days: { where: { dayDate: input.attendanceDate } } }, take: 20 });
+  const versions = await client.academicCalendarVersion.findMany({
+    where: { academicYear: input.academicYear, status: "PUBLISHED", currentPublicationKey: { not: null }, OR: calendarScopeWhere(input.className, input.section) },
+    include: { days: { where: { dayDate: input.attendanceDate, OR: dayScopeWhere(input.className, input.section) } } },
+    orderBy: { versionNumber: "desc" }, take: 3
+  });
   const candidates = versions.flatMap((version: any) => version.days.map((day: any) => ({ version, day }))).filter(({ day }: any) => day.scopeType === "SCHOOL_WIDE" || (day.className === input.className && (day.scopeType === "CLASS" || day.section === input.section)));
   candidates.sort((left: any, right: any) => scopeSpecificity(right.day.scopeType) - scopeSpecificity(left.day.scopeType));
   const selected = candidates[0];
@@ -829,7 +831,8 @@ export async function captureAttendanceCalendarBasis(client: CalendarClient, inp
 }
 
 export async function currentReportCalendarBasis(client: CalendarClient, input: { academicYear: string; className: string; section?: string | null }) {
-  const versions = await client.academicCalendarVersion.findMany({ where: { academicYear: input.academicYear, status: "PUBLISHED", currentPublicationKey: { not: null } }, include: { days: true }, take: 20 });
+  const section = input.section ?? "";
+  const versions = await client.academicCalendarVersion.findMany({ where: { academicYear: input.academicYear, status: "PUBLISHED", currentPublicationKey: { not: null }, OR: calendarScopeWhere(input.className, section) }, include: { days: true }, orderBy: { versionNumber: "desc" }, take: 3 });
   const visible = versions.filter((version: any) => version.effectiveScope === "SCHOOL_WIDE" || (version.className === input.className && (version.effectiveScope === "CLASS" || version.section === (input.section ?? ""))));
   visible.sort((left: any, right: any) => scopeSpecificity(right.effectiveScope) - scopeSpecificity(left.effectiveScope));
   const selected = visible[0];
@@ -940,7 +943,7 @@ async function assertCurrentExamReference(client: CalendarClient, event: any) {
 
 async function currentExamReference(client: CalendarClient, source: any, role: string, child: any, teacherTargets: Array<{ className: string; section: string }>) {
   const current = await client.examinationTimetableVersion.findFirst({
-    where: { examinationId: source.examination.id, classScopeId: source.classScope.id, status: "PUBLISHED", currentPublicationKey: { not: null } },
+    where: { examinationId: source.examination.id, classScopeId: source.classScope.id, status: "PUBLISHED", currentPublicationKey: { not: null }, examination: { status: "ACTIVE" }, classScope: { status: "ACTIVE", timetableClassSection: { isActive: true } } },
     include: { examination: { select: { name: true, examCode: true } }, rows: { orderBy: { displayOrder: "asc" } } }
   });
   if (!current) return null;
@@ -950,28 +953,50 @@ async function currentExamReference(client: CalendarClient, source: any, role: s
 }
 
 async function ensureCalendarEventNotification(client: CalendarClient, base: any, version: any, actor: CalendarActor) {
-  if (!["SCHOOL_WIDE", "PARENTS_ALL", "CLASS", "CLASS_SECTION", "LINKED_CHILD_COHORT"].includes(version.audienceType) && !version.isImportant) return;
   const campaignNumber = `CAL23E-${base.eventNumber}-V${version.versionNumber}`.slice(0, 96);
   const existing = await client.notificationCampaign.findUnique({ where: { campaignNumber }, select: { id: true } });
   if (existing) return;
   const recipients = await resolveCalendarNotificationUsers(client, base.academicYear, version);
   if (!recipients.length) return;
-  await client.$transaction(async (tx: any) => {
-    const campaign = await tx.notificationCampaign.create({ data: { campaignNumber, category: "ACADEMIC", priority: version.isImportant ? "HIGH" : "NORMAL", title: version.title, body: version.description ?? version.parentInstructions ?? `${humanCalendarLabel(version.eventType)} on ${dateKey(version.startsAt)}.`, audienceType: "SPECIFIC_USERS", audienceDefinitionJson: JSON.stringify({ source: "SCHOOL_CALENDAR", audienceType: version.audienceType, academicYear: base.academicYear, className: version.className, section: version.section }), audienceSnapshotJson: JSON.stringify({ sourceVersion: version.versionNumber, resolvedCount: recipients.length }), channel: "IN_APP", status: "PUBLISHED", totalResolvedUsers: recipients.length, totalRecipientRows: recipients.length, createdByUserId: actor.id, approvedByUserId: actor.id, publishedByUserId: actor.id, approvedAt: new Date(), publishedAt: new Date() } });
-    for (const recipient of recipients) await tx.notificationRecipient.create({ data: { campaignId: campaign.id, userId: recipient.userId, recipientRoleSnapshot: recipient.role, contextType: recipient.contextType, recipientContextJson: JSON.stringify(recipient.context), deliveryStatus: "AVAILABLE", availableAt: new Date() } });
-    await tx.notificationEvent.create({ data: { campaignId: campaign.id, eventType: "CALENDAR_EVENT_PUBLISHED", newStatus: "PUBLISHED", recordedByUserId: actor.id, notes: `Resolved ${recipients.length} authorised in-app recipients.` } });
-  }, serializable());
+  try {
+    await client.$transaction(async (tx: any) => {
+      const campaign = await tx.notificationCampaign.create({ data: { campaignNumber, category: "ACADEMIC", priority: version.isImportant ? "HIGH" : "NORMAL", title: version.title, body: version.description ?? version.parentInstructions ?? `${humanCalendarLabel(version.eventType)} on ${dateKey(version.startsAt)}.`, audienceType: "SPECIFIC_USERS", audienceDefinitionJson: JSON.stringify({ source: "SCHOOL_CALENDAR", audienceType: version.audienceType, roleScope: version.roleScope, academicYear: base.academicYear, className: version.className, section: version.section }), audienceSnapshotJson: JSON.stringify({ sourceVersion: version.versionNumber, resolvedCount: recipients.length }), channel: "IN_APP", status: "PUBLISHED", totalResolvedUsers: recipients.length, totalRecipientRows: recipients.length, createdByUserId: actor.id, approvedByUserId: actor.id, publishedByUserId: actor.id, approvedAt: new Date(), publishedAt: new Date() } });
+      for (const recipient of recipients) await tx.notificationRecipient.create({ data: { campaignId: campaign.id, userId: recipient.userId, recipientRoleSnapshot: recipient.role, contextType: recipient.contextType, recipientContextJson: JSON.stringify(recipient.context), deliveryStatus: "AVAILABLE", availableAt: new Date() } });
+      await tx.notificationEvent.create({ data: { campaignId: campaign.id, eventType: "CALENDAR_EVENT_PUBLISHED", newStatus: "PUBLISHED", recordedByUserId: actor.id, notes: `Resolved ${recipients.length} authorised in-app recipients.` } });
+    }, serializable());
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") return;
+    throw error;
+  }
 }
 
 async function resolveCalendarNotificationUsers(client: CalendarClient, academicYear: string, version: any) {
   const recipients = new Map<string, any>();
+  const now = new Date();
+  const add = (userId: string, role: string, contextType: string, context: any) => { if (!recipients.has(userId)) recipients.set(userId, { userId, role, contextType, context }); };
+  const activeAssignmentWhere = { status: "ACTIVE", validFrom: { lte: now }, OR: [{ validUntil: null }, { validUntil: { gt: now } }], user: { isActive: true, lifecycleStatus: "ACTIVE" } };
+  const addRoleAssignments = async (roles: string[], contextType = "GENERAL_USER", context: any = { academicYear }) => {
+    const assignments = await client.userRoleAssignment.findMany({ where: { ...activeAssignmentWhere, role: { in: roles } }, select: { userId: true, role: true }, orderBy: [{ userId: "asc" }, { role: "asc" }], take: 10_000 });
+    for (const assignment of assignments) add(assignment.userId, assignment.role, assignment.role === "PARENT" ? "GUARDIAN" : contextType, context);
+  };
   if (["CLASS", "CLASS_SECTION", "LINKED_CHILD_COHORT"].includes(version.audienceType)) {
-    const enrollments = await client.academicYearEnrollment.findMany({ where: { academicYear, className: version.className, status: "ACTIVE", ...(version.audienceType !== "CLASS" ? { section: version.section ?? "" } : {}) }, select: { student: { select: { guardians: { select: { guardian: { select: { users: { where: { isActive: true, lifecycleStatus: "ACTIVE" }, select: { id: true, role: true } } } } } } } } }, take: 5_000 });
-    for (const enrollment of enrollments) for (const link of enrollment.student.guardians) for (const user of link.guardian.users) if (user.role === "PARENT") recipients.set(user.id, { userId: user.id, role: "PARENT", contextType: "GUARDIAN", context: { academicYear, className: version.className, section: version.section } });
+    const cohortContext = { academicYear, className: version.className, section: version.section };
+    const enrollments = await client.academicYearEnrollment.findMany({ where: { academicYear, className: version.className, status: "ACTIVE", ...(version.audienceType !== "CLASS" ? { section: version.section ?? "" } : {}) }, select: { student: { select: { guardians: { select: { guardian: { select: { status: true, users: { where: { isActive: true, lifecycleStatus: "ACTIVE", iamRoleAssignments: { some: { status: "ACTIVE", role: "PARENT", validFrom: { lte: now }, OR: [{ validUntil: null }, { validUntil: { gt: now } }] } } }, select: { id: true } } } } } } } } }, take: 5_000 });
+    for (const enrollment of enrollments) for (const link of enrollment.student.guardians) if (String(link.guardian.status).toUpperCase() === "ACTIVE") for (const user of link.guardian.users) add(user.id, "PARENT", "GUARDIAN", cohortContext);
+    const assignments = await client.timetableAssignment.findMany({ where: { academicYear, classSection: { className: version.className, isActive: true, ...(version.audienceType !== "CLASS" ? { section: version.section ?? "" } : {}) }, teacher: { isActive: true } }, select: { teacher: { select: { staffMember: { select: { userId: true, status: true } } } } }, take: 1_000 });
+    const teacherUserIds = [...new Set(assignments.map((row: any) => row.teacher.staffMember).filter((staff: any) => staff?.status === "ACTIVE" && staff.userId).map((staff: any) => staff.userId))];
+    if (teacherUserIds.length) {
+      const teachers = await client.userRoleAssignment.findMany({ where: { ...activeAssignmentWhere, role: "TEACHER", userId: { in: teacherUserIds } }, select: { userId: true }, take: 1_000 });
+      for (const teacher of teachers) add(teacher.userId, "TEACHER", "CLASS_SECTION", cohortContext);
+    }
+    await addRoleAssignments([...CALENDAR_LEADERSHIP_ROLES], "LEADERSHIP", cohortContext);
   } else {
-    const roles = version.audienceType === "PARENTS_ALL" ? ["PARENT"] : ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "TEACHER", "PARENT"];
-    const users = await client.user.findMany({ where: { isActive: true, lifecycleStatus: "ACTIVE", role: { in: roles } }, select: { id: true, role: true }, take: 10_000 });
-    for (const user of users) recipients.set(user.id, { userId: user.id, role: user.role, contextType: user.role === "PARENT" ? "GUARDIAN" : "GENERAL_USER", context: { academicYear } });
+    const roles = version.audienceType === "LEADERSHIP_ONLY" ? [...CALENDAR_LEADERSHIP_ROLES]
+      : version.audienceType === "STAFF_ONLY" ? ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "TEACHER"]
+      : version.audienceType === "PARENTS_ALL" ? ["PARENT", ...CALENDAR_LEADERSHIP_ROLES]
+      : version.audienceType === "ROLE_SPECIFIC" ? [...new Set([version.roleScope, ...CALENDAR_LEADERSHIP_ROLES].filter(Boolean))]
+      : ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "TEACHER", "PARENT", "VIEWER", "ACCOUNTANT", "COMPUTER_OPERATOR"];
+    await addRoleAssignments(roles);
   }
   return [...recipients.values()];
 }
@@ -1023,6 +1048,8 @@ export function eventVisible(event: any, role: string, child: any, teacherTarget
 }
 
 function scopeSpecificity(scope: string) { return scope === "CLASS_SECTION" ? 3 : scope === "CLASS" ? 2 : 1; }
+function calendarScopeWhere(className: string, section: string) { return [{ effectiveScope: "SCHOOL_WIDE" }, { effectiveScope: "CLASS", className }, { effectiveScope: "CLASS_SECTION", className, section }]; }
+function dayScopeWhere(className: string, section: string) { return [{ scopeType: "SCHOOL_WIDE" }, { scopeType: "CLASS", className }, { scopeType: "CLASS_SECTION", className, section }]; }
 
 function defaultSource(type: OperationalDayType): OperationalDaySource {
   if (type === "VACATION_DAY") return "VACATION";
@@ -1034,7 +1061,7 @@ function defaultSource(type: OperationalDayType): OperationalDaySource {
 }
 
 function assertLeadership(actor: CalendarActor) {
-  if (!["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL"].includes(actor.role)) throw new AcademicCalendarError("Only authorised leadership may perform this calendar workflow.", 403, "CALENDAR_LEADERSHIP_REQUIRED");
+  if (!(CALENDAR_LEADERSHIP_ROLES as readonly string[]).includes(actor.role)) throw new AcademicCalendarError("Only authorised leadership may perform this calendar workflow.", 403, "CALENDAR_LEADERSHIP_REQUIRED");
 }
 
 function staleCalendarError() { return new AcademicCalendarError("Calendar state changed. Refresh and review the latest version.", 409, "CALENDAR_STALE_VERSION"); }

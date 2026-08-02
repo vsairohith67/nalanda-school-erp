@@ -1,10 +1,10 @@
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { createAcademicCalendarVersion, createSchoolCalendarEvent, saveAcademicCalendarDraft, transitionAcademicCalendar, transitionSchoolCalendarEvent } from "../lib/academic-calendar";
 import { ensureDefaultRolePermissions } from "../lib/role-permissions";
-import { fileSha256 } from "./migration-check-utils";
+import { assertSqliteCopyReady, assertSqliteSnapshotUnchanged, snapshotSqliteArtifacts } from "./sqlite-copy-safety";
 
 const WORKSPACE = path.resolve(".");
 const OPERATIONAL = path.join(WORKSPACE, "prisma", "dev.db");
@@ -32,8 +32,10 @@ async function publishEvent(client: PrismaClient, principal: any, roleAssignment
 }
 
 async function setup() {
-  const before = { hash: fileSha256(OPERATIONAL), size: statSync(OPERATIONAL).size };
+  assertSqliteCopyReady(OPERATIONAL, "CAL23E_BROWSER_OPERATIONAL");
+  const before = snapshotSqliteArtifacts(OPERATIONAL);
   cleanup(false); runScript("qa:23d:browser:setup"); mkdirSync(ROOT, { recursive: true });
+  assertSqliteCopyReady(path.join(SOURCE_ROOT, "parent23d-browser.db"), "CAL23E_BROWSER_SOURCE");
   copyFileSync(path.join(SOURCE_ROOT, "parent23d-browser.db"), DATABASE);
   const sourceCredentials = JSON.parse(readFileSync(path.join(SOURCE_ROOT, "credentials.json"), "utf8"));
   const sourceEnvironment = JSON.parse(readFileSync(path.join(SOURCE_ROOT, "runtime-env.json"), "utf8"));
@@ -75,7 +77,8 @@ async function setup() {
 
     writeFileSync(CREDENTIALS, JSON.stringify({ ...sourceCredentials, teacher: sourceCredentials.teacherParent, calendarPaths: { principal: "/calendar", parent: "/parent/calendar?month=2026-08", teacher: "/teacher/calendar?month=2026-08", correction: correction.publicKey }, roleAssignmentIds: { teacher: teacherAssignment.id } }));
     writeFileSync(RUNTIME_ENV, JSON.stringify({ ...sourceEnvironment, DATABASE_URL: databaseUrl(DATABASE), APP_ORIGIN: `http://127.0.0.1:${PORT}`, NODE_ENV: "production", PORT: String(PORT) }));
-    const after = { hash: fileSha256(OPERATIONAL), size: statSync(OPERATIONAL).size }; if (JSON.stringify(before) !== JSON.stringify(after)) throw new Error("CAL23E_BROWSER_OPERATIONAL_DATABASE_CHANGED");
+    assertSqliteCopyReady(OPERATIONAL, "CAL23E_BROWSER_OPERATIONAL");
+    const after = snapshotSqliteArtifacts(OPERATIONAL); assertSqliteSnapshotUnchanged(before, after, "CAL23E_BROWSER_OPERATIONAL_DATABASE_CHANGED");
     console.log(JSON.stringify({ result: "CAL23E_BROWSER_FIXTURES_READY", copiedDatabase: true, port: PORT, principal: 1, parents: 2, teacherParent: 1, operationalVersions: 2, publishedEventAudiences: 6, examinationReference: true, attendanceImpactDraft: true }));
   } finally { await client.$disconnect(); }
 }

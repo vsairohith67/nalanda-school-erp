@@ -6,6 +6,6 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   const auth = await requireApiPermission("VIEW_OWN_NOTIFICATIONS");
   if (auth.response) return auth.response;
-  const unread = await ownUnreadNotificationCount(prisma, auth.user.id);
+  const unread = await ownUnreadNotificationCount(prisma, auth.user);
   return NextResponse.json({ unread }, { headers: { "cache-control": "private, no-store" } });
 }

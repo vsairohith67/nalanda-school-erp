@@ -1426,3 +1426,32 @@ records before the implementation readiness result is issued.
 Independent Prompt 23E-QA is required before main merge/tag. No staging,
 deployment, public-site publishing, live provider or real-user onboarding is
 authorised.
+
+## Prompt 23E-QA — Independent Events, Holidays and Academic Calendar QA (2026-08-03)
+
+Independent review corrected fail-closed workflow action selection, exact
+emergency-closure permission, published-history database protection, current
+examination-reference scope, live notification audience resolution, active-role
+notification reads, leadership-only bounded export, exact attendance/report
+basis scope and atomic idempotent backup restore.
+
+Fresh `CAL23EQA` copied-database fixtures proved all six operational day types,
+all eight audiences, immutable publication/replacement/withdrawal history,
+posted-attendance non-rewrite, locked report basis, Parent/Teacher isolation,
+multi-role/multi-child switching, current examination reference, notification
+deduplication, concurrency refusal, forced rollback and restore twice. Three
+short production Browser batches passed desktop/mobile light/dark checks with
+44 px actions, semantic structures, visible focus, no overflow, zero console or
+hydration errors and zero production stderr.
+
+The single additive migration applied once and its second deployment was a
+no-op. Protected rollback and restore evidence passed; the exact zero-business
+and protected-account baseline remained unchanged. The final sequential route,
+lifecycle, typecheck, 1,652-test, bounded build, version-37 backup and Git safety
+gates passed. The governed release retains the feature branch and uses annotated
+tag `events-holidays-calendar-v37-2026-08-03`.
+
+Result: `EVENTS_HOLIDAYS_CALENDAR_CLEARED`. Next governed phase: Prompt 23F —
+Classwork, Secure Submissions, Attachments and Feedback. No staging, deployment,
+public-site event publication, live provider activation or real-user onboarding
+is authorised.

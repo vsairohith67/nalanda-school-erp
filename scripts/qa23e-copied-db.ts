@@ -1,9 +1,9 @@
 import { spawnSync } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, rmdirSync, statSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, rmdirSync } from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
-import { fileSha256 } from "./migration-check-utils";
+import { assertSqliteCopyReady, assertSqliteSnapshotUnchanged, snapshotSqliteArtifacts } from "./sqlite-copy-safety";
 import { createAcademicCalendarVersion, createSchoolCalendarEvent, getAcademicCalendarVersion, loadPublishedSchoolCalendar, saveAcademicCalendarDraft, transitionAcademicCalendar, transitionSchoolCalendarEvent } from "../lib/academic-calendar";
 import { listChildContexts } from "../lib/iam/contexts";
 import { generateFullBackup } from "../lib/backup";
@@ -51,7 +51,8 @@ async function publishEvent(client: PrismaClient, principal: any, input: Record<
 
 async function main() {
   cleanup(); mkdirSync(ROOT, { recursive: true });
-  const before = { hash: fileSha256(OPERATIONAL), size: statSync(OPERATIONAL).size };
+  assertSqliteCopyReady(OPERATIONAL, "CAL23E_OPERATIONAL");
+  const before = snapshotSqliteArtifacts(OPERATIONAL);
   copyFileSync(OPERATIONAL, DATABASE); copyFileSync(OPERATIONAL, RESTORE_DATABASE);
   Object.assign(process.env, { DATABASE_URL: url(DATABASE), SESSION_SECRET: secret, AUTH_SECRET: secret, NODE_ENV: "test" });
   stage = "migration"; runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"]); runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"]); invariant(/up to date/i.test(runPrisma(["migrate", "status", "--schema", "prisma/schema.prisma"])), "CAL23E_MIGRATION_DIRTY"); runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"], RESTORE_DATABASE);
@@ -107,7 +108,8 @@ async function main() {
     const campaignsBefore = await client.notificationCampaign.count({ where: { campaignNumber: { startsWith: "CAL23E-" } } }); await transitionSchoolCalendarEvent(client, school.base.publicKey, { action: "publish", expectedVersion: school.version.version - 1, reason: "CAL23E governed publication", idempotencyKey: school.version.idempotencyKey }, actor(principal.user)); const campaignsAfter = await client.notificationCampaign.count({ where: { campaignNumber: { startsWith: "CAL23E-" } } }); invariant(campaignsBefore === campaignsAfter, "CAL23E_NOTIFICATION_DUPLICATED");
     const backup = await generateFullBackup(client, { generatedBy: `${PREFIX} QA` }); const parsed = parseAndValidateBackup(backup); invariant(parsed.academicCalendarVersions.length === 2 && parsed.schoolCalendarEventVersions.length >= 5, "CAL23E_BACKUP_MISSING");
     const restoreClient = new PrismaClient({ datasourceUrl: url(RESTORE_DATABASE) }); try { const restoreActor = await restoreClient.user.findFirst({ where: { role: "SUPER_ADMIN", isActive: true } }); invariant(restoreActor, "CAL23E_RESTORE_ACTOR_MISSING"); const first = await restoreValidatedBackup(restoreClient, parsed, restoreActor); const second = await restoreValidatedBackup(restoreClient, parsed, restoreActor); const errors = [first, second].flatMap((result) => Object.entries(result).flatMap(([key, value]: any) => value?.errors?.length ? [`${key}:${value.errors.join("|")}`] : [])); invariant(!errors.length, `CAL23E_RESTORE_ERRORS:${errors.join(";")}`); invariant(await restoreClient.academicCalendarVersion.count({ where: { academicYear: YEAR } }) === 2, "CAL23E_RESTORE_CALENDAR_MISMATCH"); invariant(await restoreClient.schoolCalendarEventVersion.count({ where: { event: { academicYear: YEAR } } }) >= 5, "CAL23E_RESTORE_EVENT_MISMATCH"); } finally { await restoreClient.$disconnect(); }
-    const after = { hash: fileSha256(OPERATIONAL), size: statSync(OPERATIONAL).size }; invariant(JSON.stringify(before) === JSON.stringify(after), "CAL23E_OPERATIONAL_DATABASE_CHANGED");
+    assertSqliteCopyReady(OPERATIONAL, "CAL23E_OPERATIONAL");
+    const after = snapshotSqliteArtifacts(OPERATIONAL); assertSqliteSnapshotUnchanged(before, after, "CAL23E_OPERATIONAL_DATABASE_CHANGED");
     console.log(JSON.stringify({ result: "CAL23E_COPIED_DATABASE_PASSED", copiedDatabase: true, calendarVersions: 2, operationalDays: 12, eventAudiences: 5, multiChildContexts: manyContexts.children.length, attendanceRewritten: false, notificationsDeduplicated: true, restoreRuns: 2, operationalMutation: false }));
   } finally { await client.$disconnect(); }
 }

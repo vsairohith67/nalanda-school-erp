@@ -18,13 +18,19 @@
 - [Principal Browser Checkpoint](evidence/PROMPT_23E_BROWSER_CHECKPOINT_1_PRINCIPAL.md)
 - [Parent Browser Checkpoint](evidence/PROMPT_23E_BROWSER_CHECKPOINT_2_PARENT.md)
 - [Teacher and Context Browser Checkpoint](evidence/PROMPT_23E_BROWSER_CHECKPOINT_3_TEACHER_CONTEXT.md)
+- [Independent Copied-Database Checkpoint](evidence/PROMPT_23E_QA_COPIED_DATABASE_CHECKPOINT.md)
+- [Independent Principal Browser Checkpoint](evidence/PROMPT_23E_QA_BROWSER_1_PRINCIPAL.md)
+- [Independent Parent Browser Checkpoint](evidence/PROMPT_23E_QA_BROWSER_2_PARENT.md)
+- [Independent Teacher and Context Browser Checkpoint](evidence/PROMPT_23E_QA_BROWSER_3_TEACHER_CONTEXT.md)
+- [Independent QA Release Closure](evidence/PROMPT_23E_QA_RELEASE_CLOSURE.md)
 
-Prompt 23E is implemented on the retained feature branch for independent QA.
-It separates operational working-day classification from informational events,
-preserves published/replaced history, resolves every Parent/Teacher audience
-server-side and leaves posted attendance untouched. It does not authorise main
-merge/tag, staging, deployment, public-site publishing, live messaging or
-real-user onboarding.
+Prompt 23E and independent Prompt 23E-QA are cleared as
+`EVENTS_HOLIDAYS_CALENDAR_CLEARED`. Operational working-day classification is
+separate from informational events; published/replaced history is immutable;
+Parent/Teacher audiences resolve server-side; and posted attendance remains
+untouched. The retained branch and release tag identify the governed release.
+Staging, deployment, public-site publishing, live messaging and real-user
+onboarding remain unauthorised.
 
 ## Prompt 23D Parent attendance and examination timetable
 

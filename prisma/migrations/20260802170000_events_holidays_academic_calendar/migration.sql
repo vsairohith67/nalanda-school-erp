@@ -104,12 +104,15 @@ CREATE TABLE "SchoolCalendarEvent" (
     "createdByUserId" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "SchoolCalendarEvent_currentPublishedVersionId_fkey"
+      FOREIGN KEY ("currentPublishedVersionId") REFERENCES "SchoolCalendarEventVersion" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "SchoolCalendarEvent_status_check"
       CHECK ("status" IN ('DRAFT','READY_FOR_REVIEW','PUBLISHED','REPLACED','WITHDRAWN','ARCHIVED'))
 );
 
 CREATE UNIQUE INDEX "SchoolCalendarEvent_publicKey_key" ON "SchoolCalendarEvent"("publicKey");
 CREATE UNIQUE INDEX "SchoolCalendarEvent_eventNumber_key" ON "SchoolCalendarEvent"("eventNumber");
+CREATE UNIQUE INDEX "SchoolCalendarEvent_currentPublishedVersionId_key" ON "SchoolCalendarEvent"("currentPublishedVersionId");
 CREATE INDEX "SchoolCalendarEvent_academicYear_status_idx" ON "SchoolCalendarEvent"("academicYear","status");
 CREATE INDEX "SchoolCalendarEvent_createdAt_idx" ON "SchoolCalendarEvent"("createdAt");
 
@@ -193,7 +196,13 @@ CREATE TABLE "AcademicCalendarAuditEvent" (
     "actorLabel" TEXT NOT NULL,
     "snapshotJson" TEXT NOT NULL,
     "eventDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "AcademicCalendarAuditEvent_calendarVersionId_fkey"
+      FOREIGN KEY ("calendarVersionId") REFERENCES "AcademicCalendarVersion" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "AcademicCalendarAuditEvent_schoolEventId_fkey"
+      FOREIGN KEY ("schoolEventId") REFERENCES "SchoolCalendarEvent" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "AcademicCalendarAuditEvent_eventVersionId_fkey"
+      FOREIGN KEY ("eventVersionId") REFERENCES "SchoolCalendarEventVersion" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE INDEX "AcademicCalendarAuditEvent_calendarVersionId_eventDate_idx" ON "AcademicCalendarAuditEvent"("calendarVersionId","eventDate");
@@ -277,3 +286,102 @@ BEGIN SELECT RAISE(ABORT, 'Academic calendar audit is append-only'); END;
 CREATE TRIGGER "academic_calendar_audit_append_only_delete"
 BEFORE DELETE ON "AcademicCalendarAuditEvent"
 BEGIN SELECT RAISE(ABORT, 'Academic calendar audit is append-only'); END;
+
+-- Lifecycle transitions are monotonic. Content guards must never be bypassed by
+-- first moving a published row back to DRAFT.
+CREATE TRIGGER "academic_calendar_version_insert_draft_only"
+BEFORE INSERT ON "AcademicCalendarVersion" WHEN NEW."status" <> 'DRAFT'
+BEGIN SELECT RAISE(ABORT, 'Academic calendar versions must begin as drafts'); END;
+
+CREATE TRIGGER "academic_calendar_version_status_transition"
+BEFORE UPDATE OF "status" ON "AcademicCalendarVersion"
+WHEN NOT (
+  NEW."status" = OLD."status" OR
+  (OLD."status" = 'DRAFT' AND NEW."status" = 'READY_FOR_REVIEW' AND NEW."submittedAt" IS NOT NULL) OR
+  (OLD."status" = 'READY_FOR_REVIEW' AND NEW."status" = 'PUBLISHED' AND NEW."approvedAt" IS NOT NULL AND NEW."publishedAt" IS NOT NULL AND NEW."publicationReason" IS NOT NULL AND NEW."currentPublicationKey" IS NOT NULL) OR
+  (OLD."status" = 'PUBLISHED' AND NEW."status" = 'REPLACED' AND NEW."replacedAt" IS NOT NULL AND NEW."currentPublicationKey" IS NULL) OR
+  (OLD."status" = 'PUBLISHED' AND NEW."status" = 'WITHDRAWN' AND NEW."withdrawnAt" IS NOT NULL AND NEW."withdrawalReason" IS NOT NULL AND NEW."currentPublicationKey" IS NULL) OR
+  (OLD."status" IN ('REPLACED','WITHDRAWN') AND NEW."status" = 'ARCHIVED' AND NEW."archivedAt" IS NOT NULL AND NEW."archiveReason" IS NOT NULL)
+)
+BEGIN SELECT RAISE(ABORT, 'Invalid academic calendar lifecycle transition'); END;
+
+CREATE TRIGGER "academic_calendar_version_evidence_set_once"
+BEFORE UPDATE ON "AcademicCalendarVersion"
+WHEN
+  (OLD."submittedAt" IS NOT NULL AND NEW."submittedAt" IS NOT OLD."submittedAt") OR
+  (OLD."approvedAt" IS NOT NULL AND NEW."approvedAt" IS NOT OLD."approvedAt") OR
+  (OLD."publishedAt" IS NOT NULL AND NEW."publishedAt" IS NOT OLD."publishedAt") OR
+  (OLD."replacedAt" IS NOT NULL AND NEW."replacedAt" IS NOT OLD."replacedAt") OR
+  (OLD."withdrawnAt" IS NOT NULL AND NEW."withdrawnAt" IS NOT OLD."withdrawnAt") OR
+  (OLD."archivedAt" IS NOT NULL AND NEW."archivedAt" IS NOT OLD."archivedAt") OR
+  (OLD."publicationReason" IS NOT NULL AND NEW."publicationReason" IS NOT OLD."publicationReason") OR
+  (OLD."replacementReason" IS NOT NULL AND NEW."replacementReason" IS NOT OLD."replacementReason") OR
+  (OLD."withdrawalReason" IS NOT NULL AND NEW."withdrawalReason" IS NOT OLD."withdrawalReason") OR
+  (OLD."archiveReason" IS NOT NULL AND NEW."archiveReason" IS NOT OLD."archiveReason") OR
+  (OLD."idempotencyKey" IS NOT NULL AND NEW."idempotencyKey" IS NOT OLD."idempotencyKey") OR
+  (OLD."replacesVersionId" IS NOT NULL AND NEW."replacesVersionId" IS NOT OLD."replacesVersionId")
+BEGIN SELECT RAISE(ABORT, 'Academic calendar lifecycle evidence is set-once'); END;
+
+CREATE TRIGGER "academic_calendar_replacement_scope_guard"
+BEFORE INSERT ON "AcademicCalendarVersion" WHEN NEW."replacesVersionId" IS NOT NULL AND NOT EXISTS (
+  SELECT 1 FROM "AcademicCalendarVersion" prior WHERE prior."id" = NEW."replacesVersionId" AND prior."academicYear" = NEW."academicYear" AND prior."scopeKey" = NEW."scopeKey" AND prior."versionNumber" < NEW."versionNumber"
+)
+BEGIN SELECT RAISE(ABORT, 'Academic calendar replacement must reference an earlier version in the same scope'); END;
+
+CREATE TRIGGER "school_calendar_event_insert_draft_only"
+BEFORE INSERT ON "SchoolCalendarEvent" WHEN NEW."status" <> 'DRAFT'
+BEGIN SELECT RAISE(ABORT, 'School calendar events must begin as drafts'); END;
+
+CREATE TRIGGER "school_calendar_event_version_insert_draft_only"
+BEFORE INSERT ON "SchoolCalendarEventVersion" WHEN NEW."status" <> 'DRAFT'
+BEGIN SELECT RAISE(ABORT, 'School calendar event versions must begin as drafts'); END;
+
+CREATE TRIGGER "school_calendar_event_version_status_transition"
+BEFORE UPDATE OF "status" ON "SchoolCalendarEventVersion"
+WHEN NOT (
+  NEW."status" = OLD."status" OR
+  (OLD."status" = 'DRAFT' AND NEW."status" = 'READY_FOR_REVIEW' AND NEW."submittedAt" IS NOT NULL) OR
+  (OLD."status" = 'READY_FOR_REVIEW' AND NEW."status" = 'PUBLISHED' AND NEW."approvedAt" IS NOT NULL AND NEW."publishedAt" IS NOT NULL AND NEW."publicationReason" IS NOT NULL AND NEW."currentPublicationKey" IS NOT NULL) OR
+  (OLD."status" = 'PUBLISHED' AND NEW."status" = 'REPLACED' AND NEW."replacedAt" IS NOT NULL AND NEW."currentPublicationKey" IS NULL) OR
+  (OLD."status" = 'PUBLISHED' AND NEW."status" = 'WITHDRAWN' AND NEW."withdrawnAt" IS NOT NULL AND NEW."withdrawalReason" IS NOT NULL AND NEW."currentPublicationKey" IS NULL) OR
+  (OLD."status" IN ('REPLACED','WITHDRAWN') AND NEW."status" = 'ARCHIVED' AND NEW."archivedAt" IS NOT NULL AND NEW."archiveReason" IS NOT NULL)
+)
+BEGIN SELECT RAISE(ABORT, 'Invalid school calendar event lifecycle transition'); END;
+
+CREATE TRIGGER "school_calendar_event_version_evidence_set_once"
+BEFORE UPDATE ON "SchoolCalendarEventVersion"
+WHEN
+  (OLD."submittedAt" IS NOT NULL AND NEW."submittedAt" IS NOT OLD."submittedAt") OR
+  (OLD."approvedAt" IS NOT NULL AND NEW."approvedAt" IS NOT OLD."approvedAt") OR
+  (OLD."publishedAt" IS NOT NULL AND NEW."publishedAt" IS NOT OLD."publishedAt") OR
+  (OLD."replacedAt" IS NOT NULL AND NEW."replacedAt" IS NOT OLD."replacedAt") OR
+  (OLD."withdrawnAt" IS NOT NULL AND NEW."withdrawnAt" IS NOT OLD."withdrawnAt") OR
+  (OLD."archivedAt" IS NOT NULL AND NEW."archivedAt" IS NOT OLD."archivedAt") OR
+  (OLD."publicationReason" IS NOT NULL AND NEW."publicationReason" IS NOT OLD."publicationReason") OR
+  (OLD."replacementReason" IS NOT NULL AND NEW."replacementReason" IS NOT OLD."replacementReason") OR
+  (OLD."withdrawalReason" IS NOT NULL AND NEW."withdrawalReason" IS NOT OLD."withdrawalReason") OR
+  (OLD."archiveReason" IS NOT NULL AND NEW."archiveReason" IS NOT OLD."archiveReason") OR
+  (OLD."idempotencyKey" IS NOT NULL AND NEW."idempotencyKey" IS NOT OLD."idempotencyKey") OR
+  (OLD."replacesVersionId" IS NOT NULL AND NEW."replacesVersionId" IS NOT OLD."replacesVersionId")
+BEGIN SELECT RAISE(ABORT, 'School calendar event lifecycle evidence is set-once'); END;
+
+CREATE TRIGGER "school_calendar_event_replacement_owner_guard"
+BEFORE INSERT ON "SchoolCalendarEventVersion" WHEN NEW."replacesVersionId" IS NOT NULL AND NOT EXISTS (
+  SELECT 1 FROM "SchoolCalendarEventVersion" prior WHERE prior."id" = NEW."replacesVersionId" AND prior."eventId" = NEW."eventId" AND prior."versionNumber" < NEW."versionNumber"
+)
+BEGIN SELECT RAISE(ABORT, 'School calendar event replacement must reference an earlier version of the same event'); END;
+
+CREATE TRIGGER "school_calendar_current_pointer_owner_guard"
+BEFORE UPDATE OF "currentPublishedVersionId" ON "SchoolCalendarEvent"
+WHEN NEW."currentPublishedVersionId" IS NOT NULL AND NOT EXISTS (
+  SELECT 1 FROM "SchoolCalendarEventVersion" currentVersion WHERE currentVersion."id" = NEW."currentPublishedVersionId" AND currentVersion."eventId" = NEW."id" AND currentVersion."status" = 'PUBLISHED' AND currentVersion."currentPublicationKey" IS NOT NULL
+)
+BEGIN SELECT RAISE(ABORT, 'Current event publication must belong to the same event'); END;
+
+CREATE TRIGGER "academic_calendar_audit_target_guard"
+BEFORE INSERT ON "AcademicCalendarAuditEvent"
+WHEN NOT (
+  (NEW."entityType" = 'OPERATIONAL_CALENDAR' AND NEW."calendarVersionId" IS NOT NULL AND NEW."schoolEventId" IS NULL AND NEW."eventVersionId" IS NULL) OR
+  (NEW."entityType" = 'INFORMATIONAL_EVENT' AND NEW."calendarVersionId" IS NULL AND NEW."schoolEventId" IS NOT NULL AND NEW."eventVersionId" IS NOT NULL AND EXISTS (SELECT 1 FROM "SchoolCalendarEventVersion" v WHERE v."id" = NEW."eventVersionId" AND v."eventId" = NEW."schoolEventId"))
+)
+BEGIN SELECT RAISE(ABORT, 'Academic calendar audit target is invalid'); END;

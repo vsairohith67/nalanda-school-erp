@@ -3104,27 +3104,27 @@ model StudentReportCardVersion {
 // event calendar are deliberately separate. Published versions are immutable;
 // replacements preserve the former version and append audit evidence.
 model AcademicCalendarVersion {
-  id                               String                    @id @default(cuid())
-  publicKey                        String                    @unique @default(uuid())
+  id                               String                       @id @default(cuid())
+  publicKey                        String                       @unique @default(uuid())
   academicYear                     String
   versionNumber                    Int
-  status                           String                    @default("DRAFT")
-  version                          Int                       @default(1)
-  effectiveScope                   String                    @default("SCHOOL_WIDE")
+  status                           String                       @default("DRAFT")
+  version                          Int                          @default(1)
+  effectiveScope                   String                       @default("SCHOOL_WIDE")
   className                        String?
   section                          String?
   scopeKey                         String
   title                            String
-  currentPublicationKey            String?                   @unique
-  idempotencyKey                   String?                   @unique
+  currentPublicationKey            String?                      @unique
+  idempotencyKey                   String?                      @unique
   replacesVersionId                String?
-  replacesVersion                  AcademicCalendarVersion?  @relation("AcademicCalendarReplacement", fields: [replacesVersionId], references: [id], onDelete: Restrict)
-  replacementVersions              AcademicCalendarVersion[] @relation("AcademicCalendarReplacement")
+  replacesVersion                  AcademicCalendarVersion?     @relation("AcademicCalendarReplacement", fields: [replacesVersionId], references: [id], onDelete: Restrict)
+  replacementVersions              AcademicCalendarVersion[]    @relation("AcademicCalendarReplacement")
   publicationReason                String?
   replacementReason                String?
   withdrawalReason                 String?
   archiveReason                    String?
-  attendanceReconciliationRequired Boolean                   @default(false)
+  attendanceReconciliationRequired Boolean                      @default(false)
   createdByUserId                  String
   submittedAt                      DateTime?
   approvedAt                       DateTime?
@@ -3132,9 +3132,10 @@ model AcademicCalendarVersion {
   replacedAt                       DateTime?
   withdrawnAt                      DateTime?
   archivedAt                       DateTime?
-  createdAt                        DateTime                  @default(now())
-  updatedAt                        DateTime                  @updatedAt
+  createdAt                        DateTime                     @default(now())
+  updatedAt                        DateTime                     @updatedAt
   days                             OperationalCalendarDay[]
+  auditEvents                      AcademicCalendarAuditEvent[] @relation("AcademicCalendarVersionAudit")
 
   @@unique([academicYear, scopeKey, versionNumber])
   @@index([academicYear, status])
@@ -3176,11 +3177,13 @@ model SchoolCalendarEvent {
   status                    String                       @default("DRAFT")
   version                   Int                          @default(1)
   currentVersionNumber      Int                          @default(1)
-  currentPublishedVersionId String?
+  currentPublishedVersionId String?                      @unique
+  currentPublishedVersion   SchoolCalendarEventVersion?  @relation("SchoolCalendarCurrentPublishedVersion", fields: [currentPublishedVersionId], references: [id], onDelete: Restrict)
   createdByUserId           String
   createdAt                 DateTime                     @default(now())
   updatedAt                 DateTime                     @updatedAt
   versions                  SchoolCalendarEventVersion[] @relation("SchoolCalendarEventVersions")
+  auditEvents               AcademicCalendarAuditEvent[] @relation("SchoolCalendarEventAudit")
 
   @@index([academicYear, status])
   @@index([createdAt])
@@ -3218,6 +3221,8 @@ model SchoolCalendarEventVersion {
   replacesVersionId             String?
   replacesVersion               SchoolCalendarEventVersion?  @relation("SchoolCalendarEventReplacement", fields: [replacesVersionId], references: [id], onDelete: Restrict)
   replacementVersions           SchoolCalendarEventVersion[] @relation("SchoolCalendarEventReplacement")
+  currentForEvent               SchoolCalendarEvent?         @relation("SchoolCalendarCurrentPublishedVersion")
+  auditEvents                   AcademicCalendarAuditEvent[] @relation("SchoolCalendarEventVersionAudit")
   publicationReason             String?
   replacementReason             String?
   withdrawalReason              String?
@@ -3240,11 +3245,14 @@ model SchoolCalendarEventVersion {
 }
 
 model AcademicCalendarAuditEvent {
-  id                String   @id @default(cuid())
+  id                String                      @id @default(cuid())
   entityType        String
   calendarVersionId String?
+  calendarVersion   AcademicCalendarVersion?    @relation("AcademicCalendarVersionAudit", fields: [calendarVersionId], references: [id], onDelete: Restrict)
   schoolEventId     String?
+  schoolEvent       SchoolCalendarEvent?        @relation("SchoolCalendarEventAudit", fields: [schoolEventId], references: [id], onDelete: Restrict)
   eventVersionId    String?
+  eventVersion      SchoolCalendarEventVersion? @relation("SchoolCalendarEventVersionAudit", fields: [eventVersionId], references: [id], onDelete: Restrict)
   eventType         String
   previousStatus    String?
   newStatus         String?
@@ -3252,8 +3260,8 @@ model AcademicCalendarAuditEvent {
   actorUserId       String
   actorLabel        String
   snapshotJson      String
-  eventDate         DateTime @default(now())
-  createdAt         DateTime @default(now())
+  eventDate         DateTime                    @default(now())
+  createdAt         DateTime                    @default(now())
 
   @@index([calendarVersionId, eventDate])
   @@index([schoolEventId, eventDate])
