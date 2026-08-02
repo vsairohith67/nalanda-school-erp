@@ -88,6 +88,18 @@ export function expectedTimetableVersion(value: unknown) {
   return parsed;
 }
 
+export function exactTimetableTransitionRetry(input: {
+  currentVersion: number;
+  expectedVersion: number;
+  storedActorUserId: string | null;
+  actorUserId: string;
+  reasonPairs: ReadonlyArray<readonly [string | null, string | null]>;
+}) {
+  return input.currentVersion === input.expectedVersion + 1
+    && input.storedActorUserId === input.actorUserId
+    && input.reasonPairs.every(([stored, requested]) => stored === requested);
+}
+
 export function validateExaminationTimetableRows(value: unknown) {
   const rows = normalizeRows(value);
   return {
@@ -344,9 +356,24 @@ async function returnToDraft(tx: Prisma.TransactionClient, current: any, expecte
 }
 
 async function publish(tx: Prisma.TransactionClient, current: any, expectedVersion: number, actor: TimetableActor, source: Record<string, unknown>) {
-  if (current.status === "PUBLISHED") return getExaminationTimetable(tx, current.id);
-  if (current.status !== "READY_FOR_PUBLICATION") throw new ExaminationTimetableError("Validate and mark the timetable ready before publication.", 409);
   const publicationReason = governedReason(source.reason, "Publication reason");
+  const requestedReplacementReason = current.replacesVersionId
+    ? governedReason(source.replacementReason, "Replacement reason")
+    : null;
+  if (current.status === "PUBLISHED") {
+    if (!exactTimetableTransitionRetry({
+      currentVersion: current.version,
+      expectedVersion,
+      storedActorUserId: current.publishedByUserId,
+      actorUserId: actor.id,
+      reasonPairs: [
+        [current.publicationReason, publicationReason],
+        [current.replacementReason, requestedReplacementReason]
+      ]
+    })) throw staleVersionError();
+    return getExaminationTimetable(tx, current.id);
+  }
+  if (current.status !== "READY_FOR_PUBLICATION") throw new ExaminationTimetableError("Validate and mark the timetable ready before publication.", 409);
   const issues = await publicationIssues(tx, current);
   if (issues.length) throw validationError(issues);
   const publicationKey = `${current.examinationId}:${current.classScopeId}`;
@@ -363,9 +390,8 @@ async function publish(tx: Prisma.TransactionClient, current: any, expectedVersi
     throw new ExaminationTimetableError("Clone the current published timetable to create a replacement version.", 409, "EXAM_TIMETABLE_REPLACEMENT_REQUIRED");
   }
   const now = new Date();
-  let replacementReason: string | null = null;
+  const replacementReason = requestedReplacementReason;
   if (prior) {
-    replacementReason = governedReason(source.replacementReason, "Replacement reason");
     const retired = await tx.examinationTimetableVersion.updateMany({
       where: { id: prior.id, status: "PUBLISHED", currentPublicationKey: publicationKey, version: prior.version },
       data: { status: "REPLACED", currentPublicationKey: null, replacementReason, replacedAt: now, version: { increment: 1 } }
@@ -399,7 +425,16 @@ async function publish(tx: Prisma.TransactionClient, current: any, expectedVersi
 }
 
 async function withdraw(tx: Prisma.TransactionClient, current: any, expectedVersion: number, actor: TimetableActor, reason: string) {
-  if (current.status === "WITHDRAWN") return getExaminationTimetable(tx, current.id);
+  if (current.status === "WITHDRAWN") {
+    if (!exactTimetableTransitionRetry({
+      currentVersion: current.version,
+      expectedVersion,
+      storedActorUserId: current.withdrawnByUserId,
+      actorUserId: actor.id,
+      reasonPairs: [[current.withdrawalReason, reason]]
+    })) throw staleVersionError();
+    return getExaminationTimetable(tx, current.id);
+  }
   if (current.status !== "PUBLISHED") throw new ExaminationTimetableError("Only the current published timetable can be withdrawn.", 409);
   const now = new Date();
   const changed = await tx.examinationTimetableVersion.updateMany({
@@ -413,7 +448,16 @@ async function withdraw(tx: Prisma.TransactionClient, current: any, expectedVers
 }
 
 async function archive(tx: Prisma.TransactionClient, current: any, expectedVersion: number, actor: TimetableActor, reason: string) {
-  if (current.status === "ARCHIVED") return getExaminationTimetable(tx, current.id);
+  if (current.status === "ARCHIVED") {
+    if (!exactTimetableTransitionRetry({
+      currentVersion: current.version,
+      expectedVersion,
+      storedActorUserId: current.archivedByUserId,
+      actorUserId: actor.id,
+      reasonPairs: [[current.archiveReason, reason]]
+    })) throw staleVersionError();
+    return getExaminationTimetable(tx, current.id);
+  }
   if (current.status === "PUBLISHED") throw new ExaminationTimetableError("Withdraw the published timetable before archiving it.", 409);
   if (!["DRAFT", "READY_FOR_PUBLICATION", "WITHDRAWN", "REPLACED"].includes(current.status)) {
     throw new ExaminationTimetableError("This timetable cannot be archived from its current state.", 409);

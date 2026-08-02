@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type RoleContext = { handle: string; label: string; designation: string | null; active: boolean; validUntil: string | null };
@@ -18,6 +18,8 @@ export function ActiveContextSwitcher({ activeRole }: { activeRole: string }) {
   const [busy, setBusy] = useState(false);
   const roleSelectRef = useRef<HTMLSelectElement>(null);
   const childSelectRef = useRef<HTMLSelectElement>(null);
+  const roleSelectId = useId();
+  const childSelectId = useId();
 
   useEffect(() => {
     void loadRoles();
@@ -76,27 +78,27 @@ export function ActiveContextSwitcher({ activeRole }: { activeRole: string }) {
   return (
     <section className="iam-context-switcher" aria-label="Active access context">
       {roles.length > 1 ? (
-        <label>
-          Active role context
+        <div className="iam-context-field">
+          <label htmlFor={roleSelectId}>Active role context</label>
           <span className="iam-context-control">
-            <select ref={roleSelectRef} value={roleHandle} onChange={(event) => setRoleHandle(event.target.value)} disabled={busy}>
+            <select id={roleSelectId} ref={roleSelectRef} value={roleHandle} onChange={(event) => setRoleHandle(event.target.value)} disabled={busy}>
               {roles.map((context) => <option key={context.handle} value={context.handle}>{context.label}{context.designation ? ` · ${context.designation}` : ""}</option>)}
             </select>
             <button type="button" className="secondary" disabled={busy || !roleHandle} onClick={() => switchContext("/api/auth/context", roleSelectRef.current?.value ?? roleHandle, roleVersion, "Role context changed.")}>Switch</button>
           </span>
-        </label>
+        </div>
       ) : null}
       {activeRole === "PARENT" && children.length > 1 ? (
-        <label>
-          Linked child context
+        <div className="iam-context-field">
+          <label htmlFor={childSelectId}>Linked child context</label>
           <span className="iam-context-control">
-            <select ref={childSelectRef} value={childHandle} onChange={(event) => setChildHandle(event.target.value)} disabled={busy}>
+            <select id={childSelectId} ref={childSelectRef} value={childHandle} onChange={(event) => setChildHandle(event.target.value)} disabled={busy}>
               <option value="">Choose linked child</option>
               {children.map((child) => <option key={child.handle} value={child.handle}>{child.name} · {child.admissionNo} · {child.className}{child.section ? `-${child.section}` : ""}</option>)}
             </select>
             <button type="button" className="secondary" disabled={busy || !childHandle} onClick={() => switchContext("/api/auth/child-context", childSelectRef.current?.value ?? childHandle, childVersion, "Linked child context changed.")}>Choose</button>
           </span>
-        </label>
+        </div>
       ) : null}
       {status ? <span className="iam-context-status" role="status" aria-live="polite">{status}</span> : null}
     </section>

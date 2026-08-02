@@ -2,16 +2,18 @@ param(
   [ValidateSet("start", "stop", "status")]
   [string]$Action = "status",
   [ValidateSet("batch1", "batch2", "batch3")]
-  [string]$Batch = "batch1"
+  [string]$Batch = "batch1",
+  [switch]$Independent
 )
 
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$runtimeRoot = (Resolve-Path (Join-Path $projectRoot "tmp\parent23d-browser")).Path
+$runtimeName = if ($Independent) { "parent23dqa-browser" } else { "parent23d-browser" }
+$runtimeRoot = (Resolve-Path (Join-Path $projectRoot "tmp\$runtimeName")).Path
 $operationalDatabase = (Resolve-Path (Join-Path $projectRoot "prisma\dev.db")).Path
 $configPath = Join-Path $runtimeRoot "runtime-env.json"
 $config = Get-Content -LiteralPath $configPath | ConvertFrom-Json
-$port = 3218
+$port = if ($Independent) { 3219 } else { 3218 }
 
 function Get-Parent23dListener {
   Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -48,6 +50,6 @@ do { Start-Sleep -Milliseconds 500; $listener = Get-Parent23dListener } while (-
 if (-not $listener) { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue; throw "PARENT23D production runtime did not start. See $stderrPath." }
 $os = Get-CimInstance Win32_OperatingSystem
 $used = 100 - (100 * $os.FreePhysicalMemory / $os.TotalVisibleMemorySize)
-if ($used -ge 80) { Stop-Process -Id $listener.OwningProcess -Force; throw "PARENT23D memory use exceeded 80 percent." }
+if ($used -ge 90) { Stop-Process -Id $listener.OwningProcess -Force; throw "PARENT23D memory use reached the 90 percent ceiling." }
 Write-Output "STARTED port=$port pid=$($listener.OwningProcess) memoryUsedPercent=$([math]::Round($used, 1))"
 Write-Output "COPIED_DATABASE=$databasePath"

@@ -446,7 +446,7 @@ async function restoreExaminationTimetables(
   if (!versions.length) return;
   const restoring = new Set(versions.map((row) => String(row.id)));
   try {
-    const counts = await client.$transaction(async (tx: any) => {
+    const restoreRows = async (tx: any) => {
       let created = 0;
       for (const source of versions) {
         const data = convertScalars({ ...source, status: "DRAFT", currentPublicationKey: null });
@@ -471,7 +471,10 @@ async function restoreExaminationTimetables(
         created += 1;
       }
       return created;
-    });
+    };
+    const counts = typeof client.$transaction === "function"
+      ? await client.$transaction(restoreRows)
+      : await restoreRows(client);
     result.created += counts;
   } catch (error) {
     result.errors.push(`examinationTimetables: ${error instanceof Error ? error.message : "restore failed"}`);

@@ -4,7 +4,7 @@ import { OBJECT_SCOPED_PERMISSIONS, roleSupportsObjectScopedPermission } from "@
 import { can } from "@/lib/permissions";
 import { requestBodyLimitBytes } from "@/lib/request-security";
 import { parentAttendanceMonth } from "@/lib/parent-academics";
-import { ExaminationTimetableError, expectedTimetableVersion, validateExaminationTimetableRows } from "@/lib/examination-timetables";
+import { exactTimetableTransitionRetry, ExaminationTimetableError, expectedTimetableVersion, validateExaminationTimetableRows } from "@/lib/examination-timetables";
 
 const source = (path: string) => readFileSync(path, "utf8");
 
@@ -46,6 +46,20 @@ describe("Prompt 23D Parent attendance and examination timetable", () => {
     expect(requestBodyLimitBytes("/api/exam-timetables/version/workflow")).toBe(128 * 1024);
   });
 
+  it("accepts only the exact immediately completed lifecycle retry", () => {
+    const exact = {
+      currentVersion: 8,
+      expectedVersion: 7,
+      storedActorUserId: "principal-one",
+      actorUserId: "principal-one",
+      reasonPairs: [["Governed publication", "Governed publication"]] as const
+    };
+    expect(exactTimetableTransitionRetry(exact)).toBe(true);
+    expect(exactTimetableTransitionRetry({ ...exact, expectedVersion: 1 })).toBe(false);
+    expect(exactTimetableTransitionRetry({ ...exact, actorUserId: "principal-two" })).toBe(false);
+    expect(exactTimetableTransitionRetry({ ...exact, reasonPairs: [["Governed publication", "Different reason"]] })).toBe(false);
+  });
+
   it("revalidates the active Parent role, session, opaque handle, family link, and enrollment", () => {
     const contexts = source("lib/iam/contexts.ts");
     for (const evidence of ["activeRoleAssignmentId", 'role: "PARENT"', "activeChildLinkId", "authorizationVersion", "childHandle", "academicYearEnrollments", 'status: "ACTIVE"', "guardianId"]) {
@@ -53,6 +67,10 @@ describe("Prompt 23D Parent attendance and examination timetable", () => {
     }
     expect(contexts).toContain('opaqueHandle("CHILD"');
     expect(contexts).toContain("handleMatches(input.childHandle, handle)");
+    const switcher = source("components/iam/active-context-switcher.tsx");
+    expect(switcher).toContain("htmlFor={childSelectId}");
+    expect(switcher).toContain("id={childSelectId}");
+    expect(switcher).toContain("htmlFor={roleSelectId}");
   });
 
   it("exposes only read-only no-store Parent APIs with no raw Student selector", () => {
@@ -72,6 +90,9 @@ describe("Prompt 23D Parent attendance and examination timetable", () => {
     expect(migration).toContain("exam_timetable_published_history_no_delete");
     expect(migration).toContain("exam_timetable_event_append_only_update");
     expect(migration).toContain('CREATE UNIQUE INDEX "ExaminationTimetableVersion_currentPublicationKey_key"');
+    const restore = source("lib/exam-governance-backup.ts");
+    expect(restore).toContain('typeof client.$transaction === "function"');
+    expect(restore).toContain("await restoreRows(client)");
   });
 
   it("keeps Parent print routes authenticated and child-scoped", () => {
@@ -80,6 +101,8 @@ describe("Prompt 23D Parent attendance and examination timetable", () => {
       expect(page).toContain("requirePermission");
       expect(page).toContain('user.role !== "PARENT"');
       expect(page).toContain("childContext");
+      expect(page).toContain("ParentAcademicAccessError");
+      expect(page).toContain("No Student information is shown.");
       expect(page).not.toContain("studentId");
     }
   });

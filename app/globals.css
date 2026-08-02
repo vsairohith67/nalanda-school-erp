@@ -6067,10 +6067,11 @@ textarea:focus-visible {
 .iam-entry-list li span { min-width: 0; overflow-wrap: anywhere; }
 .iam-entry-builder { display: grid; grid-template-columns: minmax(0, 1fr) minmax(9rem, .35fr) auto; align-items: end; gap: .75rem; }
 .iam-context-switcher { display: grid; gap: .75rem; border-block: 1px solid var(--border); padding-block: .75rem; }
-.iam-context-control { display: flex; align-items: stretch; gap: .5rem; }
+.iam-context-field { display: grid; gap: .35rem; min-width: 0; }
+.iam-context-control { display: flex; align-items: stretch; gap: .5rem; min-width: 0; }
 .iam-context-control select { min-width: 0; flex: 1; }
 .iam-context-status { color: var(--muted); overflow-wrap: anywhere; }
-.user-menu-popover .iam-context-switcher { width: min(22rem, calc(100vw - 3rem)); }
+.user-menu-popover .iam-context-switcher { width: 100%; min-width: 0; }
 .user-menu-popover .iam-context-control { flex-direction: column; }
 .status-pill { display: inline-flex; min-height: 1.8rem; align-items: center; border-radius: 999px; padding: .2rem .65rem; background: var(--surface-muted); }
 .status-active { color: var(--success); }
