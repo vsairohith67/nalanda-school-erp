@@ -1,6 +1,6 @@
 # Prompt 23D Implementation Checkpoint
 
-Date: 2026-08-01
+Date: 2026-08-02
 Branch: `feature/parent-attendance-exam-timetable`
 Base: `9fe5c2b928c2c84bc2e4c739d5bf377ce1501fc7`
 
@@ -76,4 +76,13 @@ Browser QA, full sequential verification, final backup, Git safety, branch push 
 
 During guard calibration, three compiler/build allocation bursts briefly sampled at 92.0%, 90.1% and 93.4% before termination. No database or application state was mutated by those incomplete processes. The final reproducible path trims idle working sets before each large gate and completed at 88.3%, 77.5% and 84.3% respectively; independent QA must reuse that path and the 89.3% hard stop.
 
-Feature-branch commit/push and external record closure remain pending.
+## Major QA group 8 — feature push and external record closure
+
+- Implementation commit `8cfb397f43ac91de30619b4b5bcdbffc2daedc81` is pushed to the private GitHub origin on retained branch `feature/parent-attendance-exam-timetable`; `main` remains at `9fe5c2b928c2c84bc2e4c739d5bf377ce1501fc7`.
+- GitHub was re-fetched through the connected private repository and confirms the expected private origin, implementation commit and feature branch.
+- The governed Notion Completion Index, Forward Roadmap, Security Hardening, Personal Command Center, Academic Records, Schoolknot Multi-Role Replacement Audit, Staging Release Gates and master architecture record were updated and re-fetched.
+- The master architecture record now carries the Parent authorization/data path and the one-child/multi-child Parent portal phase diagram.
+- Asana task `P0 — Prompt 23D Parent attendance and examination timetable` was updated and re-fetched. It remains incomplete pending independent QA.
+- No pull request, merge, release tag, staging action, deployment, live provider activation or real-user onboarding occurred.
+
+Implementation result: `PARENT_ATTENDANCE_TIMETABLE_READY_FOR_QA`.
