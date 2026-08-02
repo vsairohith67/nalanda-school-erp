@@ -700,4 +700,7 @@ Retained boundaries:
   semantics and was not weakened for implicit publication side effects;
 - SQLite remains a supported single-instance writer. Horizontal/distributed
   publication needs a separate database/deployment phase;
-- independent Prompt 23D-QA is required before merge or release tagging.
+- independent Prompt 23D-QA cleared the release after fixing fail-closed print
+  handling, exact lifecycle retries, nested-transaction restore and accessible
+  context-selector structure. The remaining boundaries above are deliberate
+  future-policy/module work rather than Prompt 23D release blockers.

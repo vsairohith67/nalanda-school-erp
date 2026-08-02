@@ -1375,3 +1375,28 @@ version-37 backup/restore. The operational database remained byte-identical.
 Browser/full regression/build/external closure and independent Prompt 23D-QA
 remain release gates; no merge, tag, deployment, provider or real-user
 onboarding is authorised.
+
+## Prompt 23D-QA — Independent Parent Attendance and Examination Timetable QA (2026-08-02)
+
+Independent QA used a fresh ignored `PARENT23DQA` copied-database matrix and
+three short copied-database production Browser batches. It cleared exact
+one/multi-child and multi-role isolation, official attendance reconciliation,
+published-only exact-cohort timetable delivery, Principal conflict/CAS/
+publication/replacement governance, forced rollback, full version-37 restore
+twice, authenticated print scope, light/dark desktop and exact `390x844`
+accessibility, zero final console/hydration errors and zero production stderr.
+
+QA fixed fail-closed print error handling, explicit IAM selector labelling and
+containment, exact actor/reason/version lifecycle retry matching, and nested-
+transaction-safe timetable restore. An independent 34-receipt security diff
+scan returned zero findings. The final sequence passed 294 page routes, 429
+APIs, lifecycle dry-run, typecheck, 1,636 tests across 179 files, bounded 4 GB
+production build, backup version 37 and Git safety. Migration state is clean,
+the copied fixtures/runtimes were removed and inspected twice, and the exact
+zero-business/protected-account operational baseline remains unchanged.
+
+Result: `PARENT_ATTENDANCE_TIMETABLE_CLEARED`. Release tag:
+`parent-attendance-timetable-v37-2026-08-02`. The feature branch is retained.
+No staging, deployment, live-provider activation or real-user onboarding is
+authorised. Next governed phase: Prompt 23E — Events, Holidays and Academic
+Calendar.

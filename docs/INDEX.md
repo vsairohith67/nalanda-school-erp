@@ -14,13 +14,16 @@
 - [Threat Model](PARENT_ATTENDANCE_TIMETABLE_THREAT_MODEL.md)
 - [Parent Portal Phase Diagram](diagrams/parent-attendance-exam-timetable.mmd)
 - [Implementation Checkpoint](evidence/PARENT_23D_IMPLEMENTATION_CHECKPOINT.md)
+- [Independent QA Release Closure](evidence/PARENT_23D_QA_RELEASE_CLOSURE.md)
 
-Prompt 23D is implemented on the retained feature branch and remains gated on
-its independent Prompt 23D-QA. It adds exact linked-child official attendance,
+Prompt 23D and independent Prompt 23D-QA are cleared as
+`PARENT_ATTENDANCE_TIMETABLE_CLEARED`. Exact linked-child official attendance,
 governed examination-timetable publication/replacement and current-published
-Parent delivery. It does not authorise merge, tag, deployment, real-user
-onboarding, live providers, attendance corrections, classwork, calendar,
-appointments or unrelated modules.
+Parent delivery are released under tag
+`parent-attendance-timetable-v37-2026-08-02`. This does not authorise staging,
+deployment, real-user onboarding, live providers, attendance corrections,
+classwork, calendar, appointments or unrelated modules. The next governed phase
+is Prompt 23E — Events, Holidays and Academic Calendar.
 
 ## IAM-1A named users, delegated access and multi-context sessions
 
