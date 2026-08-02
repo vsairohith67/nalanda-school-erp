@@ -1,5 +1,27 @@
 # Documentation Index
 
+## Prompt 23D Parent attendance and examination timetable
+
+- [Parent Attendance Access Specification](PARENT_ATTENDANCE_ACCESS_SPECIFICATION.md)
+- [Parent Attendance Privacy Matrix](PARENT_ATTENDANCE_PRIVACY_MATRIX.md)
+- [Examination Timetable Lifecycle](EXAMINATION_TIMETABLE_LIFECYCLE.md)
+- [Publication and Replacement Workflow](EXAMINATION_TIMETABLE_PUBLICATION_AND_REPLACEMENT_WORKFLOW.md)
+- [Parent Multi-Child Workflow](PARENT_MULTI_CHILD_WORKFLOW.md)
+- [Multi-Role Parent Context Workflow](MULTI_ROLE_PARENT_CONTEXT_WORKFLOW.md)
+- [Principal Operator Guide](PRINCIPAL_EXAMINATION_TIMETABLE_OPERATOR_GUIDE.md)
+- [Parent User Guide](PARENT_ATTENDANCE_TIMETABLE_USER_GUIDE.md)
+- [Developer Guide](PARENT_ATTENDANCE_TIMETABLE_DEVELOPER_GUIDE.md)
+- [Threat Model](PARENT_ATTENDANCE_TIMETABLE_THREAT_MODEL.md)
+- [Parent Portal Phase Diagram](diagrams/parent-attendance-exam-timetable.mmd)
+- [Implementation Checkpoint](evidence/PARENT_23D_IMPLEMENTATION_CHECKPOINT.md)
+
+Prompt 23D is implemented on the retained feature branch and remains gated on
+its independent Prompt 23D-QA. It adds exact linked-child official attendance,
+governed examination-timetable publication/replacement and current-published
+Parent delivery. It does not authorise merge, tag, deployment, real-user
+onboarding, live providers, attendance corrections, classwork, calendar,
+appointments or unrelated modules.
+
 ## IAM-1A named users, delegated access and multi-context sessions
 
 - [Named Users, Permission Profiles and Contexts](IAM_NAMED_USERS_PERMISSION_CONTEXTS.md)

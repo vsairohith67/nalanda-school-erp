@@ -64,12 +64,14 @@ describe("student attendance foundation", () => {
     expect(api.indexOf('requireApiPermission("VIEW_STUDENT_ATTENDANCE")')).toBeLessThan(api.indexOf("request.json()"));
   });
 
-  it("guards entry, reports, export, and keeps the parent portal untouched", () => {
+  it("guards entry, reports, export, and keeps Parent attendance read-only", () => {
     expect(readFileSync("app/attendance/students/page.tsx", "utf8")).toContain('requirePermission("VIEW_STUDENT_ATTENDANCE")');
     expect(readFileSync("app/attendance/students/reports/page.tsx", "utf8")).toContain('requirePermission("VIEW_STUDENT_ATTENDANCE_REPORTS")');
     expect(readFileSync("app/api/attendance/students/reports/export/route.ts", "utf8")).toContain('requireApiPermission("VIEW_STUDENT_ATTENDANCE_REPORTS")');
     const parent = readFileSync("app/parent/page.tsx", "utf8");
-    expect(parent).not.toContain("attendance");
+    expect(parent).toContain('href="/parent/attendance"');
+    expect(parent).toContain("View posted daily attendance and authoritative counts");
+    expect(parent).not.toMatch(/Mark Attendance|Correct Attendance|Delete Attendance/);
     const entry = readFileSync("components/student-attendance-entry.tsx", "utf8");
     expect(entry).toContain("selectionChanged()");
     expect(entry).toContain("Selection changed. Select Load Attendance");

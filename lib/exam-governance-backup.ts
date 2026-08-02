@@ -4,6 +4,9 @@ export type ExamGovernanceBackup = {
   examinations: Record<string, unknown>[];
   examinationClassScopes: Record<string, unknown>[];
   examSubjectPapers: Record<string, unknown>[];
+  examinationTimetableVersions: Record<string, unknown>[];
+  examinationTimetableRows: Record<string, unknown>[];
+  examinationTimetableEvents: Record<string, unknown>[];
   examinationSchemeVersions: Record<string, unknown>[];
   examinationComponents: Record<string, unknown>[];
   examSubjectGroups: Record<string, unknown>[];
@@ -36,6 +39,9 @@ const KEYS = {
   examinations: ["id", "examCode", "academicYear", "name", "examType", "startDate", "endDate", "status", "description", "version", "createdByUserId", "activatedByUserId", "archivedByUserId", "interventionReason", "archiveReason", "activatedAt", "archivedAt", "createdAt", "updatedAt"],
   examinationClassScopes: ["id", "examinationId", "academicYear", "className", "section", "timetableClassSectionId", "status", "createdByUserId", "createdAt", "updatedAt"],
   examSubjectPapers: ["id", "examinationId", "classScopeId", "academicYear", "className", "section", "timetableSubjectId", "subjectNameSnapshot", "paperCode", "paperName", "displayOrder", "status", "createdByUserId", "createdAt", "updatedAt"],
+  examinationTimetableVersions: ["id", "publicKey", "examinationId", "classScopeId", "academicYear", "className", "section", "versionNumber", "status", "version", "currentPublicationKey", "idempotencyKey", "replacesVersionId", "parentInstructions", "publicationReason", "replacementReason", "withdrawalReason", "archiveReason", "createdByUserId", "publishedByUserId", "withdrawnByUserId", "archivedByUserId", "publishedAt", "withdrawnAt", "replacedAt", "archivedAt", "createdAt", "updatedAt"],
+  examinationTimetableRows: ["id", "timetableVersionId", "subjectPaperId", "subjectNameSnapshot", "paperCodeSnapshot", "paperNameSnapshot", "examDate", "startTime", "endTime", "reportingTime", "venue", "parentInstructions", "displayOrder", "createdAt", "updatedAt"],
+  examinationTimetableEvents: ["id", "timetableVersionId", "examinationId", "classScopeId", "eventType", "previousStatus", "newStatus", "reason", "actorUserId", "actorLabel", "snapshotJson", "eventDate", "createdAt"],
   examinationSchemeVersions: ["id", "examinationId", "classScopeId", "academicYear", "className", "section", "scopeKey", "subjectPaperId", "versionNumber", "calculationMode", "roundingPolicyVersion", "markDecimalPlaces", "absentTreatment", "exemptTreatment", "notApplicableTreatment", "passFailEnabled", "passThresholdPercentage", "rankEnabled", "rankTiePolicy", "status", "version", "supersedesVersionId", "createdByUserId", "activatedByUserId", "archivedByUserId", "activationReason", "archiveReason", "activatedAt", "frozenAt", "marksEntryOpenedAt", "archivedAt", "createdAt", "updatedAt"],
   examinationComponents: ["id", "schemeVersionId", "componentCode", "name", "componentKind", "displayOrder", "maximumMarks", "contributionWeight", "isRequired", "createdAt", "updatedAt"],
   examSubjectGroups: ["id", "examinationId", "classScopeId", "academicYear", "className", "section", "groupCode", "groupName", "calculationMode", "displayOrder", "status", "createdByUserId", "createdAt", "updatedAt"],
@@ -56,6 +62,9 @@ const REQUIRED: Record<keyof ExamGovernanceBackup, string[]> = {
   examinations: ["id", "examCode", "academicYear", "name", "examType", "startDate", "endDate", "status", "createdByUserId"],
   examinationClassScopes: ["id", "examinationId", "academicYear", "className", "timetableClassSectionId", "status", "createdByUserId"],
   examSubjectPapers: ["id", "examinationId", "classScopeId", "academicYear", "className", "timetableSubjectId", "subjectNameSnapshot", "paperCode", "paperName", "status", "createdByUserId"],
+  examinationTimetableVersions: ["id", "publicKey", "examinationId", "classScopeId", "academicYear", "className", "versionNumber", "status", "version", "createdByUserId"],
+  examinationTimetableRows: ["id", "timetableVersionId", "subjectPaperId", "subjectNameSnapshot", "paperCodeSnapshot", "paperNameSnapshot", "examDate", "startTime", "endTime", "displayOrder"],
+  examinationTimetableEvents: ["id", "timetableVersionId", "examinationId", "classScopeId", "eventType", "actorUserId", "actorLabel", "snapshotJson", "eventDate"],
   examinationSchemeVersions: ["id", "examinationId", "classScopeId", "academicYear", "className", "scopeKey", "versionNumber", "calculationMode", "roundingPolicyVersion", "status", "createdByUserId"],
   examinationComponents: ["id", "schemeVersionId", "componentCode", "name", "componentKind", "maximumMarks"],
   examSubjectGroups: ["id", "examinationId", "classScopeId", "academicYear", "className", "groupCode", "groupName", "calculationMode", "createdByUserId"],
@@ -75,6 +84,7 @@ const REQUIRED: Record<keyof ExamGovernanceBackup, string[]> = {
 const DATE_FIELDS = new Set([
   "startDate", "endDate", "activatedAt", "archivedAt", "frozenAt", "marksEntryOpenedAt",
   "createdAt", "updatedAt", "eventDate", "correctionRequestedAt", "correctionReviewedAt",
+  "publishedAt", "withdrawnAt", "replacedAt",
   "submittedAt", "moderatedAt", "lockedAt", "enteredAt", "calculatedAt"
 ]);
 const DECIMAL_FIELDS = new Set([
@@ -91,6 +101,9 @@ export function emptyExamGovernanceBackup(): ExamGovernanceBackup {
     examinations: [],
     examinationClassScopes: [],
     examSubjectPapers: [],
+    examinationTimetableVersions: [],
+    examinationTimetableRows: [],
+    examinationTimetableEvents: [],
     examinationSchemeVersions: [],
     examinationComponents: [],
     examSubjectGroups: [],
@@ -124,7 +137,7 @@ export async function loadExamGovernanceBackup(client: PrismaClient): Promise<Ex
     return emptyExamGovernanceBackup();
   }
   const schemaRows = await source.$queryRawUnsafe(
-    "SELECT m.name AS tableName, p.name AS columnName FROM sqlite_master m LEFT JOIN pragma_table_info(m.name) p WHERE m.type = 'table' AND m.name IN ('ExaminationSchemeVersion', 'ExaminationSchemeAudit', 'ExamMarkSheet', 'ExamMarkEntry', 'StudentResultSnapshot')"
+    "SELECT m.name AS tableName, p.name AS columnName FROM sqlite_master m LEFT JOIN pragma_table_info(m.name) p WHERE m.type = 'table' AND m.name IN ('ExaminationSchemeVersion', 'ExaminationSchemeAudit', 'ExamMarkSheet', 'ExamMarkEntry', 'StudentResultSnapshot', 'ExaminationTimetableVersion', 'ExaminationTimetableRow', 'ExaminationTimetableEvent')"
   ) as Array<{ tableName: string; columnName: string | null }>;
   const tables = new Set(schemaRows.map((row) => row.tableName));
   const schemeHasMarksPolicy = schemaRows.some((row) => row.tableName === "ExaminationSchemeVersion" && row.columnName === "markDecimalPlaces");
@@ -177,6 +190,9 @@ export async function loadExamGovernanceBackup(client: PrismaClient): Promise<Ex
     examinations,
     examinationClassScopes,
     examSubjectPapers,
+    examinationTimetableVersions,
+    examinationTimetableRows,
+    examinationTimetableEvents,
     examinationSchemeVersions,
     examinationComponents,
     examSubjectGroups,
@@ -195,6 +211,15 @@ export async function loadExamGovernanceBackup(client: PrismaClient): Promise<Ex
     source.examination.findMany({ orderBy: [{ startDate: "asc" }, { examCode: "asc" }] }),
     source.examinationClassScope.findMany({ orderBy: [{ examinationId: "asc" }, { className: "asc" }, { section: "asc" }] }),
     source.examSubjectPaper.findMany({ orderBy: [{ examinationId: "asc" }, { classScopeId: "asc" }, { displayOrder: "asc" }] }),
+    tables.has("ExaminationTimetableVersion")
+      ? source.examinationTimetableVersion.findMany({ orderBy: [{ examinationId: "asc" }, { classScopeId: "asc" }, { versionNumber: "asc" }] })
+      : Promise.resolve([]),
+    tables.has("ExaminationTimetableRow")
+      ? source.examinationTimetableRow.findMany({ orderBy: [{ timetableVersionId: "asc" }, { displayOrder: "asc" }] })
+      : Promise.resolve([]),
+    tables.has("ExaminationTimetableEvent")
+      ? source.examinationTimetableEvent.findMany({ orderBy: [{ timetableVersionId: "asc" }, { eventDate: "asc" }, { id: "asc" }] })
+      : Promise.resolve([]),
     source.examinationSchemeVersion.findMany({
       ...(schemeHasMarksPolicy ? {} : { select: legacySchemeSelect }),
       orderBy: [{ examinationId: "asc" }, { classScopeId: "asc" }, { scopeKey: "asc" }, { versionNumber: "asc" }]
@@ -226,6 +251,9 @@ export async function loadExamGovernanceBackup(client: PrismaClient): Promise<Ex
     examinations,
     examinationClassScopes,
     examSubjectPapers,
+    examinationTimetableVersions,
+    examinationTimetableRows,
+    examinationTimetableEvents,
     examinationSchemeVersions,
     examinationComponents,
     examSubjectGroups,
@@ -288,6 +316,7 @@ function validateRelations(data: ExamGovernanceBackup) {
   const examinationIds = ids("examinations");
   const scopeIds = ids("examinationClassScopes");
   const paperIds = ids("examSubjectPapers");
+  const timetableVersionIds = ids("examinationTimetableVersions");
   const schemeIds = ids("examinationSchemeVersions");
   const componentIds = ids("examinationComponents");
   const groupIds = ids("examSubjectGroups");
@@ -302,6 +331,14 @@ function validateRelations(data: ExamGovernanceBackup) {
     }
   };
   requireLink(data.examinationClassScopes, "examinationId", examinationIds, "examinationClassScopes");
+  requireLink(data.examinationTimetableVersions, "examinationId", examinationIds, "examinationTimetableVersions");
+  requireLink(data.examinationTimetableVersions, "classScopeId", scopeIds, "examinationTimetableVersions");
+  requireLink(data.examinationTimetableVersions, "replacesVersionId", timetableVersionIds, "examinationTimetableVersions", true);
+  requireLink(data.examinationTimetableRows, "timetableVersionId", timetableVersionIds, "examinationTimetableRows");
+  requireLink(data.examinationTimetableRows, "subjectPaperId", paperIds, "examinationTimetableRows");
+  requireLink(data.examinationTimetableEvents, "timetableVersionId", timetableVersionIds, "examinationTimetableEvents");
+  requireLink(data.examinationTimetableEvents, "examinationId", examinationIds, "examinationTimetableEvents");
+  requireLink(data.examinationTimetableEvents, "classScopeId", scopeIds, "examinationTimetableEvents");
   for (const key of ["examSubjectPapers", "examinationSchemeVersions", "examSubjectGroups", "gradeScaleVersions", "coScholasticSchemeVersions", "examTemplateFamilyBindings", "teacherExamAssignments", "examMarkSheets", "studentResultSnapshots"] as const) {
     requireLink(data[key], "examinationId", examinationIds, key);
     requireLink(data[key], "classScopeId", scopeIds, key);
@@ -383,7 +420,62 @@ export async function restoreExamGovernanceBackup(
       }
     }
   }
+  await restoreExaminationTimetables(client, backup, result);
   return result;
+}
+
+async function restoreExaminationTimetables(
+  client: any,
+  backup: ExamGovernanceBackup,
+  result: ExamGovernanceRestoreResult
+) {
+  const existingIds = new Set<string>();
+  for (const version of backup.examinationTimetableVersions) {
+    const id = String(version.id);
+    if (await client.examinationTimetableVersion.findUnique({ where: { id } })) existingIds.add(id);
+  }
+  if (existingIds.size) {
+    result.skipped += existingIds.size;
+    result.skipped += backup.examinationTimetableRows.filter((row) => existingIds.has(String(row.timetableVersionId))).length;
+    result.skipped += backup.examinationTimetableEvents.filter((row) => existingIds.has(String(row.timetableVersionId))).length;
+    result.warnings.push("Existing examination timetable versions were left immutable; their rows and audit events were not changed.");
+  }
+  const versions = backup.examinationTimetableVersions
+    .filter((row) => !existingIds.has(String(row.id)))
+    .sort((a, b) => Number(a.versionNumber ?? 0) - Number(b.versionNumber ?? 0));
+  if (!versions.length) return;
+  const restoring = new Set(versions.map((row) => String(row.id)));
+  try {
+    const counts = await client.$transaction(async (tx: any) => {
+      let created = 0;
+      for (const source of versions) {
+        const data = convertScalars({ ...source, status: "DRAFT", currentPublicationKey: null });
+        await tx.examinationTimetableVersion.create({ data });
+        created += 1;
+      }
+      for (const source of backup.examinationTimetableRows.filter((row) => restoring.has(String(row.timetableVersionId)))) {
+        await tx.examinationTimetableRow.create({ data: convertScalars({ ...source }) });
+        created += 1;
+      }
+      for (const source of versions) {
+        await tx.examinationTimetableVersion.update({
+          where: { id: String(source.id) },
+          data: {
+            status: String(source.status),
+            currentPublicationKey: (source.currentPublicationKey ?? null) as string | null
+          }
+        });
+      }
+      for (const source of backup.examinationTimetableEvents.filter((row) => restoring.has(String(row.timetableVersionId)))) {
+        await tx.examinationTimetableEvent.create({ data: convertScalars({ ...source }) });
+        created += 1;
+      }
+      return created;
+    });
+    result.created += counts;
+  } catch (error) {
+    result.errors.push(`examinationTimetables: ${error instanceof Error ? error.message : "restore failed"}`);
+  }
 }
 
 function convertScalars(row: Record<string, unknown>) {

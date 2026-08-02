@@ -5,6 +5,7 @@ const DEFAULT_BODY_LIMIT_BYTES = 5 * 1024 * 1024;
 const OCR_PAGE_BODY_LIMIT_BYTES = 26 * 1024 * 1024;
 const STUDENT_ATTENDANCE_BODY_LIMIT_BYTES = 512 * 1024;
 const EXAM_MARKS_BODY_LIMIT_BYTES = 512 * 1024;
+const EXAM_TIMETABLE_BODY_LIMIT_BYTES = 128 * 1024;
 const AUTH_BODY_LIMIT_BYTES = 16 * 1024;
 const IAM_BODY_LIMIT_BYTES = 64 * 1024;
 
@@ -25,6 +26,7 @@ export function requestBodyLimitBytes(pathname: string) {
   if (pathname.startsWith("/api/exam-marks") || pathname.startsWith("/api/exam-moderation")) {
     return EXAM_MARKS_BODY_LIMIT_BYTES;
   }
+  if (pathname.startsWith("/api/exam-timetables")) return EXAM_TIMETABLE_BODY_LIMIT_BYTES;
   return DEFAULT_BODY_LIMIT_BYTES;
 }
 

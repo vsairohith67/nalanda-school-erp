@@ -1,0 +1,21 @@
+flowchart TD
+  SESSION["Active User and unrevoked session"] --> ROLE["Active Parent role context"]
+  ROLE --> CHILD["Opaque version-bound child handle"]
+  CHILD --> LINK["Active Guardian link and exact active enrollment"]
+  LINK --> ATT["Official submitted or locked attendance projection"]
+  LINK --> PUB["Current published timetable for exact cohort"]
+  PRINCIPAL["Authorised Principal or leadership"] --> DRAFT["Draft timetable version"]
+  DRAFT --> VALIDATE["Paper, scope, time, overlap and version validation"]
+  VALIDATE --> READY["Ready for publication"]
+  READY --> PUBLISHED["Immutable published version"]
+  PUBLISHED --> PUB
+  PUBLISHED --> REPLACEMENT["Cloned replacement with governed reason"]
+  REPLACEMENT --> VALIDATE
+  PUBLISHED --> WITHDRAWN["Withdrawn history"]
+  DRAFT --> AUDIT["Append-only audit"]
+  READY --> AUDIT
+  PUBLISHED --> AUDIT
+  REPLACEMENT --> AUDIT
+  WITHDRAWN --> AUDIT
+  ATT --> PRIVATE["Private no-store Parent pages and print"]
+  PUB --> PRIVATE

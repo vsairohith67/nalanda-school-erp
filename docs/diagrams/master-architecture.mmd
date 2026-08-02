@@ -10,9 +10,15 @@ flowchart LR
   SCOPE --> DATA
   AUTH --> TAS["Teacher Attendance Scope\nexact active timetable or dated substitute"]
   AUTH --> EXAM["Versioned Examination Configuration\nPrincipal setup and exact Teacher assignment"]
+  AUTH --> PARENT23D["Parent Academic Context\nopaque child, Guardian and enrollment proof"]
   AUTH --> GOV["Separately governed leadership and other-role scopes"]
   TAS --> DATA["Prisma / operational SQLite"]
   EXAM --> DATA
+  EXAM --> EXAMTIME["Governed Examination Timetable\ndraft, validation, immutable publication and replacement"]
+  EXAMTIME --> DATA
+  PARENT23D --> ATTENDVIEW["Official Attendance Projection\ncounts only; no inferred percentage"]
+  PARENT23D --> EXAMTIME
+  ATTENDVIEW --> DATA
   EXAM --> MARKS["Marks and Moderation\nexact Teacher entry, immutable versions and calculation snapshots"]
   MARKS --> DATA
   MARKS --> CALC["Frozen RAW_SUM / WEIGHTED_NORMALIZED engine"]

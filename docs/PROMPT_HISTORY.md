@@ -1350,3 +1350,28 @@ Result: `IAM_DELEGATED_ACCESS_CLEARED`. Release tag:
 staging, deployment, live-provider activation or real-user onboarding is
 authorised. Next governed phase: Prompt 23D — Parent Attendance and
 Examination Timetable.
+## Prompt 23D — Parent Attendance and Examination Timetable (2026-08-01)
+
+Implemented a read-only Parent attendance projection that revalidates the IAM
+active Parent role and current opaque child context, active Guardian link and
+exact active academic-year enrollment on every page/API request. Only official
+submitted/locked rows are returned; notes, remarks, Staff identities, raw IDs,
+other Students and audit content are excluded. Existing status counts are
+reused. No percentage or working-day count is inferred because no approved
+policy exists.
+
+Added the smallest examination-timetable version/row/event layer over the
+existing examination, class-scope and subject-paper domain. Principal workflow
+supports draft/clone, conflict inspection, preview, ready, publish, replacement,
+withdrawal and history with expected-version CAS, idempotency, serializable
+publication, immutable published rows and append-only audit. Parent views show
+only the current published exact-cohort version.
+
+The `PARENT23D` copied-database harness passed migration idempotence, exact
+one/multi-child scope, cross-family/stale/removed-link denial, multi-role
+context isolation, exact attendance counts, draft denial, replacement and
+withdrawal visibility, stale-version refusal, forced-failure rollback and
+version-37 backup/restore. The operational database remained byte-identical.
+Browser/full regression/build/external closure and independent Prompt 23D-QA
+remain release gates; no merge, tag, deployment, provider or real-user
+onboarding is authorised.

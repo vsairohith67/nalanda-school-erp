@@ -677,3 +677,27 @@ Retained boundaries:
   planned compatibility migration;
 - independent IAM-1A-QA, including broader Browser/concurrency/adversarial
   verification, remains required before merge.
+## Prompt 23D Parent attendance and examination timetable boundaries
+
+Resolved in the implementation branch:
+
+- Parent attendance and examination timetable require exact active IAM Parent
+  role context plus opaque linked-child, Guardian and enrollment proof;
+- only official attendance and current published exact-cohort timetable data
+  are exposed through minimal private/no-store DTOs;
+- timetable publication is versioned, compare-and-set protected, transaction
+  safe, immutable after publication and append-only audited;
+- backup version 37 preserves and transactionally restores timetable history.
+
+Retained boundaries:
+
+- no governed working-day calendar or attendance-percentage formula exists, so
+  Parent attendance remains authoritative counts-only;
+- no Parent correction/dispute, classwork/submission, holiday/events calendar,
+  appointment, transport, payroll or admissions CRM workflow is included;
+- no SMS, WhatsApp, email or automatic in-app notification is emitted. The
+  existing Notification Centre requires separately governed audience/approval
+  semantics and was not weakened for implicit publication side effects;
+- SQLite remains a supported single-instance writer. Horizontal/distributed
+  publication needs a separate database/deployment phase;
+- independent Prompt 23D-QA is required before merge or release tagging.

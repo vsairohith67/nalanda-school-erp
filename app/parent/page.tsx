@@ -35,6 +35,8 @@ export default async function ParentPortalPage({
       <section className="card card-pad"><h3>Homework and Assignments</h3><p>View published homework only for children linked to this parent account.</p><Link className="button" href="/parent/homework">Open Homework</Link></section>
       <section className="card card-pad"><h3>Issued Report Cards</h3><p>View and print only issued report-card versions for children linked to this parent account.</p><Link className="button" href="/parent/results">Open Report Cards</Link></section>
       <section className="card card-pad"><h3>Student ID Cards</h3><p>View only issued operational ID cards for children linked to this Parent account.</p><Link className="button" href="/parent/id-cards">Open ID Cards</Link></section>
+      <section className="card card-pad"><h3>Official Attendance</h3><p>View posted daily attendance and authoritative counts for the active linked child.</p><Link className="button" href="/parent/attendance">Open Attendance</Link></section>
+      <section className="card card-pad"><h3>Examination Timetable</h3><p>View only the currently published timetable for the active linked child&apos;s exact cohort.</p><Link className="button" href="/parent/exam-timetable">Open Examination Timetable</Link></section>
 
       {!selected ? (
         <section className="card card-pad parent-empty-state">

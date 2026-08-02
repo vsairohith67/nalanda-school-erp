@@ -110,10 +110,10 @@ export async function switchRoleContext(client: PrismaClient, input: {
 export async function listChildContexts(client: ContextClient, input: { userId: string; sessionId: string; now?: Date }) {
   const now = input.now ?? new Date();
   const [user, session] = await Promise.all([
-    client.user.findUnique({ where: { id: input.userId }, select: { guardianId: true, authorizationVersion: true } }),
+    client.user.findUnique({ where: { id: input.userId }, select: { guardianId: true, authorizationVersion: true, isActive: true, lifecycleStatus: true } }),
     client.authSession.findFirst({ where: { id: input.sessionId, userId: input.userId } })
   ]);
-  if (!user?.guardianId || !session || session.revokedAt || session.expiresAt <= now || session.authorizationVersion !== user.authorizationVersion) {
+  if (!user?.guardianId || !user.isActive || user.lifecycleStatus !== "ACTIVE" || !session || session.revokedAt || session.expiresAt <= now || session.authorizationVersion !== user.authorizationVersion) {
     throw new Error("Parent child context is unavailable");
   }
   const assignment = session.activeRoleAssignmentId
@@ -121,7 +121,11 @@ export async function listChildContexts(client: ContextClient, input: { userId: 
     : null;
   if (!assignment) throw new Error("Switch to the Parent context before choosing a child");
   const links = await client.studentGuardian.findMany({
-    where: { guardianId: user.guardianId },
+    where: {
+      guardianId: user.guardianId,
+      guardian: { status: "Active" },
+      student: { deletedAt: null, academicYearEnrollments: { some: { status: "ACTIVE" } } }
+    },
     include: { student: { select: { admissionNo: true, studentName: true, className: true, section: true, status: true } } },
     orderBy: { student: { studentName: "asc" } },
     take: 20
@@ -144,6 +148,111 @@ export async function listChildContexts(client: ContextClient, input: { userId: 
   };
 }
 
+export class ParentChildContextError extends Error {
+  status: number;
+
+  constructor(message = "The linked-child context is unavailable", status = 404) {
+    super(message);
+    this.name = "ParentChildContextError";
+    this.status = status;
+  }
+}
+
+export async function resolveActiveParentChildContext(client: ContextClient, input: {
+  userId: string;
+  sessionId: string;
+  roleAssignmentId?: string | null;
+  academicYear: string;
+  childHandle?: string | null;
+  expectedContextVersion?: number | null;
+  now?: Date;
+}) {
+  const now = input.now ?? new Date();
+  const [user, session] = await Promise.all([
+    client.user.findUnique({
+      where: { id: input.userId },
+      select: { id: true, guardianId: true, authorizationVersion: true, isActive: true, lifecycleStatus: true }
+    }),
+    client.authSession.findFirst({ where: { id: input.sessionId, userId: input.userId } })
+  ]);
+  if (
+    !user?.guardianId || !user.isActive || user.lifecycleStatus !== "ACTIVE" ||
+    !session || session.revokedAt || session.expiresAt <= now ||
+    session.authorizationVersion !== user.authorizationVersion ||
+    (input.expectedContextVersion != null && session.contextVersion !== input.expectedContextVersion)
+  ) throw new ParentChildContextError();
+  if (input.roleAssignmentId && session.activeRoleAssignmentId !== input.roleAssignmentId) {
+    throw new ParentChildContextError();
+  }
+  const assignment = session.activeRoleAssignmentId
+    ? await client.userRoleAssignment.findFirst({
+        where: {
+          id: session.activeRoleAssignmentId,
+          userId: user.id,
+          role: "PARENT",
+          status: "ACTIVE",
+          validFrom: { lte: now },
+          OR: [{ validUntil: null }, { validUntil: { gt: now } }]
+        }
+      })
+    : null;
+  if (!assignment) throw new ParentChildContextError();
+  const where = {
+    guardianId: user.guardianId,
+    guardian: { status: "Active" },
+    student: {
+      deletedAt: null,
+      academicYearEnrollments: { some: { academicYear: input.academicYear, status: "ACTIVE" } }
+    }
+  } as const;
+  const include = {
+    guardian: { select: { id: true, displayName: true, status: true } },
+    student: {
+      select: {
+        id: true,
+        admissionNo: true,
+        studentName: true,
+        status: true,
+        academicYearEnrollments: {
+          where: { academicYear: input.academicYear, status: "ACTIVE" },
+          select: { id: true, academicYear: true, className: true, section: true, rollNo: true, status: true },
+          take: 1
+        }
+      }
+    }
+  } as const;
+  let selected: any = null;
+  if (session.activeChildLinkId) {
+    selected = await client.studentGuardian.findFirst({
+        where: { id: session.activeChildLinkId, ...where },
+        include
+      });
+  } else {
+    const eligible = await client.studentGuardian.findMany({ where, include, take: 2 });
+    selected = eligible.length === 1 ? eligible[0] : null;
+  }
+  const enrollment = selected?.student.academicYearEnrollments[0];
+  if (!selected || !enrollment) throw new ParentChildContextError();
+  const handle = opaqueHandle("CHILD", user.id, user.authorizationVersion, selected.id, session.contextVersion);
+  if (input.childHandle && !handleMatches(input.childHandle, handle)) throw new ParentChildContextError();
+  return {
+    handle,
+    contextVersion: session.contextVersion,
+    linkId: selected.id,
+    guardianId: selected.guardian.id,
+    child: {
+      id: selected.student.id,
+      admissionNo: selected.student.admissionNo,
+      studentName: selected.student.studentName,
+      status: selected.student.status,
+      academicYear: enrollment.academicYear,
+      className: enrollment.className,
+      section: enrollment.section,
+      rollNo: enrollment.rollNo
+    }
+  };
+}
+
 export async function switchChildContext(client: PrismaClient, input: {
   userId: string;
   sessionId: string;
@@ -154,17 +263,25 @@ export async function switchChildContext(client: PrismaClient, input: {
   const now = input.now ?? new Date();
   return client.$transaction(async (tx) => {
     const [user, session] = await Promise.all([
-      tx.user.findUnique({ where: { id: input.userId }, select: { id: true, name: true, guardianId: true, authorizationVersion: true } }),
+      tx.user.findUnique({ where: { id: input.userId }, select: { id: true, name: true, guardianId: true, authorizationVersion: true, isActive: true, lifecycleStatus: true } }),
       tx.authSession.findFirst({ where: { id: input.sessionId, userId: input.userId } })
     ]);
-    if (!user?.guardianId || !session || session.revokedAt || session.expiresAt <= now || session.contextVersion !== input.expectedVersion || session.authorizationVersion !== user.authorizationVersion) {
+    if (!user?.guardianId || !user.isActive || user.lifecycleStatus !== "ACTIVE" || !session || session.revokedAt || session.expiresAt <= now || session.contextVersion !== input.expectedVersion || session.authorizationVersion !== user.authorizationVersion) {
       throw new Error("Parent child context is no longer valid");
     }
     const assignment = session.activeRoleAssignmentId
       ? await tx.userRoleAssignment.findFirst({ where: { id: session.activeRoleAssignmentId, userId: user.id, role: "PARENT", status: "ACTIVE", validFrom: { lte: now }, OR: [{ validUntil: null }, { validUntil: { gt: now } }] } })
       : null;
     if (!assignment) throw new Error("Switch to the Parent context before choosing a child");
-    const links = await tx.studentGuardian.findMany({ where: { guardianId: user.guardianId }, select: { id: true }, take: 20 });
+    const links = await tx.studentGuardian.findMany({
+      where: {
+        guardianId: user.guardianId,
+        guardian: { status: "Active" },
+        student: { deletedAt: null, academicYearEnrollments: { some: { status: "ACTIVE" } } }
+      },
+      select: { id: true },
+      take: 20
+    });
     const selected = links.find((link) => handleMatches(
       input.handle,
       opaqueHandle("CHILD", user.id, user.authorizationVersion, link.id, session.contextVersion)

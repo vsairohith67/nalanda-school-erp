@@ -127,9 +127,10 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
 
   it("preserves the Management checkpoint across the additive examination implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(189);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(192);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
+    expect(schema).toContain("model ExaminationTimetableVersion {");
     expect(read("docs/CONTROLLED_SAMPLE_DATA_CLEANUP_AND_NEW_BASELINE.md")).toContain(
       "baseline is historical rollback/provenance evidence only.",
     );
@@ -140,6 +141,7 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
       "20260730_teacher_marks_moderation_calculation",
       "20260731130549_auth_verified_recovery_session_registry",
       "20260801110000_iam_named_users_permission_contexts",
+      "20260801183000_parent_attendance_exam_timetable",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);

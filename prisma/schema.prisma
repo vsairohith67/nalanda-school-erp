@@ -2319,16 +2319,16 @@ model StudentMarkEvent {
 }
 
 model Examination {
-  id                         String                      @id @default(cuid())
-  examCode                   String                      @unique
+  id                         String                        @id @default(cuid())
+  examCode                   String                        @unique
   academicYear               String
   name                       String
   examType                   String
   startDate                  DateTime
   endDate                    DateTime
-  status                     String                      @default("DRAFT")
+  status                     String                        @default("DRAFT")
   description                String?
-  version                    Int                         @default(1)
+  version                    Int                           @default(1)
   createdByUserId            String
   activatedByUserId          String?
   archivedByUserId           String?
@@ -2336,8 +2336,8 @@ model Examination {
   archiveReason              String?
   activatedAt                DateTime?
   archivedAt                 DateTime?
-  createdAt                  DateTime                    @default(now())
-  updatedAt                  DateTime                    @updatedAt
+  createdAt                  DateTime                      @default(now())
+  updatedAt                  DateTime                      @updatedAt
   classScopes                ExaminationClassScope[]
   schemeVersions             ExaminationSchemeVersion[]
   subjectPapers              ExamSubjectPaper[]
@@ -2349,24 +2349,25 @@ model Examination {
   schemeAudits               ExaminationSchemeAudit[]
   markSheets                 ExamMarkSheet[]
   resultSnapshots            StudentResultSnapshot[]
+  timetableVersions          ExaminationTimetableVersion[]
 
   @@index([academicYear, status])
   @@index([startDate, endDate])
 }
 
 model ExaminationClassScope {
-  id                      String                      @id @default(cuid())
+  id                      String                        @id @default(cuid())
   examinationId           String
-  examination             Examination                 @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  examination             Examination                   @relation(fields: [examinationId], references: [id], onDelete: Restrict)
   academicYear            String
   className               String
-  section                 String                      @default("")
+  section                 String                        @default("")
   timetableClassSectionId String
-  timetableClassSection   TimetableClassSection       @relation(fields: [timetableClassSectionId], references: [id], onDelete: Restrict)
-  status                  String                      @default("ACTIVE")
+  timetableClassSection   TimetableClassSection         @relation(fields: [timetableClassSectionId], references: [id], onDelete: Restrict)
+  status                  String                        @default("ACTIVE")
   createdByUserId         String
-  createdAt               DateTime                    @default(now())
-  updatedAt               DateTime                    @updatedAt
+  createdAt               DateTime                      @default(now())
+  updatedAt               DateTime                      @updatedAt
   schemeVersions          ExaminationSchemeVersion[]
   subjectPapers           ExamSubjectPaper[]
   subjectGroups           ExamSubjectGroup[]
@@ -2376,6 +2377,7 @@ model ExaminationClassScope {
   teacherAssignments      TeacherExamAssignment[]
   markSheets              ExamMarkSheet[]
   resultSnapshots         StudentResultSnapshot[]
+  timetableVersions       ExaminationTimetableVersion[]
 
   @@unique([examinationId, className, section])
   @@unique([examinationId, timetableClassSectionId])
@@ -2479,11 +2481,100 @@ model ExamSubjectPaper {
   groupMemberships    ExamSubjectGroupMember[]
   teacherAssignments  TeacherExamAssignment[]
   markSheets          ExamMarkSheet[]
+  timetableRows       ExaminationTimetableRow[]
 
   @@unique([examinationId, classScopeId, timetableSubjectId, paperCode])
   @@unique([examinationId, classScopeId, displayOrder])
   @@index([timetableSubjectId])
   @@index([status])
+}
+
+model ExaminationTimetableVersion {
+  id                    String                        @id @default(cuid())
+  publicKey             String                        @unique @default(uuid())
+  examinationId         String
+  examination           Examination                   @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  classScopeId          String
+  classScope            ExaminationClassScope         @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
+  academicYear          String
+  className             String
+  section               String                        @default("")
+  versionNumber         Int
+  status                String                        @default("DRAFT")
+  version               Int                           @default(1)
+  currentPublicationKey String?                       @unique
+  idempotencyKey        String?                       @unique
+  replacesVersionId     String?
+  replacesVersion       ExaminationTimetableVersion?  @relation("ExaminationTimetableReplacement", fields: [replacesVersionId], references: [id], onDelete: Restrict)
+  replacementVersions   ExaminationTimetableVersion[] @relation("ExaminationTimetableReplacement")
+  parentInstructions    String?
+  publicationReason     String?
+  replacementReason     String?
+  withdrawalReason      String?
+  archiveReason         String?
+  createdByUserId       String
+  publishedByUserId     String?
+  withdrawnByUserId     String?
+  archivedByUserId      String?
+  publishedAt           DateTime?
+  withdrawnAt           DateTime?
+  replacedAt            DateTime?
+  archivedAt            DateTime?
+  createdAt             DateTime                      @default(now())
+  updatedAt             DateTime                      @updatedAt
+  rows                  ExaminationTimetableRow[]
+  events                ExaminationTimetableEvent[]
+
+  @@unique([examinationId, classScopeId, versionNumber])
+  @@index([academicYear, className, section, status])
+  @@index([examinationId, classScopeId, status])
+  @@index([replacesVersionId])
+}
+
+model ExaminationTimetableRow {
+  id                  String                      @id @default(cuid())
+  timetableVersionId  String
+  timetableVersion    ExaminationTimetableVersion @relation(fields: [timetableVersionId], references: [id], onDelete: Restrict)
+  subjectPaperId      String
+  subjectPaper        ExamSubjectPaper            @relation(fields: [subjectPaperId], references: [id], onDelete: Restrict)
+  subjectNameSnapshot String
+  paperCodeSnapshot   String
+  paperNameSnapshot   String
+  examDate            DateTime
+  startTime           String
+  endTime             String
+  reportingTime       String?
+  venue               String?
+  parentInstructions  String?
+  displayOrder        Int
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+
+  @@unique([timetableVersionId, subjectPaperId])
+  @@unique([timetableVersionId, displayOrder])
+  @@index([examDate, startTime, endTime])
+  @@index([subjectPaperId])
+}
+
+model ExaminationTimetableEvent {
+  id                 String                      @id @default(cuid())
+  timetableVersionId String
+  timetableVersion   ExaminationTimetableVersion @relation(fields: [timetableVersionId], references: [id], onDelete: Restrict)
+  examinationId      String
+  classScopeId       String
+  eventType          String
+  previousStatus     String?
+  newStatus          String?
+  reason             String?
+  actorUserId        String
+  actorLabel         String
+  snapshotJson       String
+  eventDate          DateTime                    @default(now())
+  createdAt          DateTime                    @default(now())
+
+  @@index([timetableVersionId, eventDate])
+  @@index([examinationId, classScopeId, eventDate])
+  @@index([eventType])
 }
 
 model ExamSubjectGroup {

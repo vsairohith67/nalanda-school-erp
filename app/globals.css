@@ -40,6 +40,68 @@
   --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+/* Prompt 23D: Parent attendance and examination timetable */
+.parent-academic-page,
+.exam-timetable-page,
+.exam-timetable-workspace { display: grid; gap: 1rem; }
+.parent-academic-identity h2 { margin: 0 0 .35rem; }
+.parent-academic-identity p { margin: 0 0 .5rem; }
+.parent-month-nav { display: flex; align-items: end; justify-content: space-between; gap: .75rem; }
+.parent-month-nav label { margin: 0; min-width: 12rem; }
+.parent-attendance-list { list-style: none; margin: 0; padding: 0; }
+.parent-attendance-list li { min-height: 56px; display: grid; grid-template-columns: minmax(10rem, 1fr) auto minmax(10rem, 1fr); align-items: center; gap: 1rem; padding: .8rem 1rem; border-top: 1px solid var(--border); }
+.parent-attendance-list li:first-child { border-top: 0; }
+.parent-exam-card footer { padding: .8rem 1rem 1rem; color: var(--muted); }
+.parent-exam-date-groups > section > h3 { padding: .75rem 1rem 0; }
+.parent-exam-card td small { display: block; margin-top: .35rem; }
+.exam-timetable-create { align-items: end; }
+.exam-timetable-row-list { display: grid; gap: 1rem; padding: 1rem; }
+.exam-timetable-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .85rem; border: 1px solid var(--border); }
+.exam-timetable-row legend { padding: 0 .35rem; font-weight: 700; }
+.exam-timetable-row .wide { grid-column: 1 / -1; }
+.exam-conflict-summary.valid { border-inline-start: 4px solid var(--success); }
+.exam-conflict-summary.invalid { border-inline-start: 4px solid var(--warning); }
+.exam-timetable-dialog { width: min(34rem, calc(100vw - 2rem)); }
+.exam-timetable-dialog label { display: grid; gap: .4rem; }
+.exam-timetable-page button,
+.exam-timetable-page .button,
+.parent-academic-page button,
+.parent-academic-page .button,
+.parent-academic-page input,
+.parent-academic-page select { min-height: 44px; }
+.parent-academic-print { color: #111; background: #fff; }
+.parent-academic-print table { width: 100%; border-collapse: collapse; }
+.parent-academic-print th,
+.parent-academic-print td { border: 1px solid #777; padding: .45rem; text-align: left; }
+.parent-academic-print .print-note { margin-top: 1rem; font-size: .9rem; }
+
+@media (max-width: 720px) {
+  .parent-month-nav { align-items: stretch; flex-direction: column; }
+  .parent-month-nav label { min-width: 0; }
+  .parent-attendance-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .parent-attendance-list li { grid-template-columns: 1fr auto; gap: .5rem; }
+  .parent-attendance-list li > span:last-child { grid-column: 1 / -1; }
+  .parent-exam-date-groups .table-wrap { overflow: visible; }
+  .parent-exam-date-groups .parent-exam-table { min-width: 0; width: 100%; }
+  .parent-exam-table thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .parent-exam-table tbody,
+  .parent-exam-table tr,
+  .parent-exam-table td { display: block; width: 100%; }
+  .parent-exam-table tbody { padding: .75rem 1rem 0; }
+  .parent-exam-table tr { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+  .parent-exam-table tr + tr { margin-top: .75rem; }
+  .parent-exam-table td { display: grid; grid-template-columns: minmax(7rem, .8fr) minmax(0, 1.2fr); gap: .75rem; padding: .65rem .75rem; border: 0; border-top: 1px solid var(--border); overflow-wrap: anywhere; }
+  .parent-exam-table td:first-child { border-top: 0; }
+  .parent-exam-table td::before { content: attr(data-label); color: var(--muted); font-weight: 700; }
+  .exam-timetable-row { grid-template-columns: 1fr; }
+  .exam-timetable-row .wide { grid-column: auto; }
+}
+
+@media print {
+  .parent-academic-print { display: block; width: 100%; }
+  .parent-academic-print section { break-inside: avoid; margin-block: 1rem; }
+}
+
 /* Prompt 20D: premium, public-only website surface. */
 .public-website-body {
   --public-ink: #17213b;
@@ -5598,6 +5660,10 @@ textarea:focus-visible {
 .system-state-card h2,
 .system-state-card p {
   margin: 0;
+}
+
+.system-state-card .button {
+  min-height: 44px;
 }
 
 .system-state-code {

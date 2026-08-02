@@ -172,9 +172,10 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
 
   it("preserves the prior checkpoint and recognizes the additive examination implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(189);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(192);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
+    expect(schema).toContain("model ExaminationTimetableVersion {");
     const migrationEntries = readdirSync("prisma/migrations");
     expect(migrationEntries.filter((name) => statSync(join("prisma/migrations", name)).isDirectory()).sort()).toEqual([
       "20260722_clean_install_baseline",
@@ -182,6 +183,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
       "20260730_teacher_marks_moderation_calculation",
       "20260731130549_auth_verified_recovery_session_registry",
       "20260801110000_iam_named_users_permission_contexts",
+      "20260801183000_parent_attendance_exam_timetable",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);
