@@ -139,7 +139,22 @@ describe("full backup", () => {
       academicReportDefinitions: 0,
       academicReportRuns: 0,
       academicReportSourceReferences: 0,
-      academicReportAuditEvents: 0
+      academicReportAuditEvents: 0,
+      admissionCycles: 0,
+      admissionEnquiries: 0,
+      enquiryFollowUps: 0,
+      schoolVisits: 0,
+      admissionApplications: 0,
+      admissionApplicationVersions: 0,
+      applicantChildren: 0,
+      prospectiveGuardians: 0,
+      applicationDocuments: 0,
+      applicationReviews: 0,
+      admissionDecisions: 0,
+      admissionOffers: 0,
+      admissionDuplicateResolutions: 0,
+      admissionConversions: 0,
+      admissionEvents: 0
     });
     expect(backup.students).toHaveLength(1);
     expect(backup.feeStructures).toHaveLength(1);

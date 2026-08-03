@@ -60,6 +60,7 @@ describe("access rules", () => {
       "/students/lifecycle",
       "/students/progression",
       "/udise",
+      "/admission-crm/reports",
       "/staff",
       "/attendance/students/reports",
       "/attendance/staff/reports",
@@ -100,7 +101,7 @@ describe("access rules", () => {
     ]);
 
     const teacherNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"), "TEACHER");
-    expect(teacherNav.map((item) => item.href)).toEqual(["/attendance/students", "/attendance/students/reports", "/leave/staff", "/substitutes", "/homework/reports", "/homework", "/classwork", "/exams", "/teacher/calendar", "/teacher/exam-assignments", "/marks", "/report-cards", "/teacher/analytics"]);
+    expect(teacherNav.map((item) => item.href)).toEqual(["/admission-crm", "/attendance/students", "/attendance/students/reports", "/leave/staff", "/substitutes", "/homework/reports", "/homework", "/classwork", "/exams", "/teacher/calendar", "/teacher/exam-assignments", "/marks", "/report-cards", "/teacher/analytics"]);
 
     const parentNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"), "PARENT");
     expect(parentNav.map((item) => item.href)).toEqual(["/my-classwork", "/parent/calendar", "/parent/class-x-documents"]);
@@ -132,8 +133,9 @@ describe("access rules", () => {
     expect(parentGroups[0]?.items.map((item) => item.href)).toEqual(["/my-classwork", "/parent/calendar", "/parent/class-x-documents"]);
 
     const teacherGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"), "TEACHER");
-    expect(teacherGroups.map((group) => group.label)).toEqual(["Attendance", "Staff & Leave", "Communication"]);
+    expect(teacherGroups.map((group) => group.label)).toEqual(["Students & Parents", "Attendance", "Staff & Leave", "Communication"]);
     expect(teacherGroups.flatMap((group) => group.items.map((item) => item.href))).toEqual([
+      "/admission-crm",
       "/attendance/students",
       "/attendance/students/reports",
       "/leave/staff",
@@ -154,6 +156,7 @@ describe("access rules", () => {
     expect(viewerHrefs).toContain("/attendance/students/reports");
     expect(viewerHrefs).toContain("/students/lifecycle");
     expect(viewerHrefs).toContain("/udise");
+    expect(viewerHrefs).toContain("/admission-crm/reports");
     expect(viewerHrefs).toContain("/attendance/staff/reports");
     expect(viewerHrefs).toContain("/leave/staff/reports");
     expect(viewerHrefs).toContain("/substitutes/reports");

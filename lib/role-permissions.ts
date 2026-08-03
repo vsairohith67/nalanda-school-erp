@@ -21,12 +21,14 @@ const NON_DELEGABLE_ROLE_DENIALS: Partial<Record<Role, ReadonlySet<CanonicalPerm
     "EXPORT_STUDENTS",
     "MANAGE_RECEIPTS",
     "COMMUNICATE_PARENT",
-    "EXPORT_REMINDERS"
+    "EXPORT_REMINDERS",
+    ...PERMISSIONS.filter((permission) => permission.includes("ADMISSION"))
   ]),
   VIEWER: new Set<CanonicalPermission>([
     "VIEW_LEDGER",
     "PRINT_LEDGER",
-    ...PERMISSIONS.filter((permission) => permission.startsWith("EXPORT_"))
+    ...PERMISSIONS.filter((permission) => permission.startsWith("EXPORT_")),
+    ...PERMISSIONS.filter((permission) => permission.includes("ADMISSION") && permission !== "VIEW_ADMISSION_REPORTS")
   ])
 };
 

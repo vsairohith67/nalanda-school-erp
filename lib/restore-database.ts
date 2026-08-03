@@ -16,6 +16,7 @@ import { validateSchoolSettings } from "@/lib/school-settings";
 import { restoreExamGovernanceBackup } from "@/lib/exam-governance-backup";
 import { createHash } from "node:crypto";
 import { restoreAcademicCalendarData } from "@/lib/academic-calendar-restore";
+import { ADMISSIONS_BACKUP_KEYS, restoreAdmissionsBackup, type AdmissionsBackupKey } from "@/lib/admissions-backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -80,6 +81,10 @@ type RestoreDatabaseClient = Pick<
   | "classworkAttachment" | "classworkFeedback" | "classworkAuditEvent"
   | "academicReportDefinition" | "academicReportRun" | "academicReportSourceReference" | "academicReportAuditEvent"
   | "studentResultSnapshot"
+  | "admissionCycle" | "admissionEnquiry" | "enquiryFollowUp" | "schoolVisit"
+  | "admissionApplication" | "admissionApplicationVersion" | "applicantChild" | "prospectiveGuardian"
+  | "applicationDocument" | "applicationReview" | "admissionDecision" | "admissionOffer"
+  | "admissionDuplicateResolution" | "admissionConversion" | "admissionEvent"
 >;
 
 export async function restoreValidatedBackup(
@@ -99,6 +104,7 @@ async function restoreIntoDatabase(
   restoredBy: { id: string; name: string }
 ): Promise<RestoreResult> {
   const result: RestoreResult = {
+    ...(Object.fromEntries(ADMISSIONS_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<AdmissionsBackupKey, ReturnType<typeof emptyEntityResult>>),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
     feeStructures: emptyEntityResult(),
@@ -502,6 +508,12 @@ async function restoreIntoDatabase(
   await restoreReportCardData(client, backup, backupStudentLocalIds, result);
   result.examGovernance = await restoreExamGovernanceBackup(client, backup.examGovernance, backupStudentLocalIds);
   await restoreAcademicReportingData(client, backup, restoredBy, result);
+  const admissionsResult = await restoreAdmissionsBackup(client as unknown as PrismaClient, backup);
+  for (const key of ADMISSIONS_BACKUP_KEYS) {
+    result[key].created = admissionsResult[key].created;
+    result[key].skipped = admissionsResult[key].skipped;
+    result[key].errors.push(...admissionsResult[key].errors);
+  }
   await restoreAcademicCalendarData(client, backup, restoredBy, result);
   await restoreCertificateData(client, backup, backupStudentLocalIds, result);
   await restoreClassXPackageData(client, backup, backupStudentLocalIds, result);

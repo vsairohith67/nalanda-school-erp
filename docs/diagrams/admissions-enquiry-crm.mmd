@@ -1,0 +1,15 @@
+flowchart LR
+  E["Minimal enquiry"] --> F["Follow-up or visit"]
+  F --> I["One-time invitation"]
+  I --> A["Private application"]
+  A --> D["Validated private documents"]
+  D --> R["Assigned review"]
+  R --> Q{"Human decision"}
+  Q --> W["Waitlist"]
+  Q --> O["Offer"]
+  Q --> X["Decline or withdrawal"]
+  W --> O
+  O --> P["Final approval"]
+  P --> C["Exactly-once conversion"]
+  C --> S["Student plus Guardian links plus enrollment"]
+  C -. never .-> N["No payment, address, location or transport"]

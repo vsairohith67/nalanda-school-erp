@@ -20,6 +20,7 @@ import { validateIamAccessBackup, type IamAccessBackup } from "@/lib/iam/backup"
 import { validateAcademicCalendarBackupRows } from "@/lib/academic-calendar-backup";
 import { validateClassworkBackupRows } from "@/lib/classwork-backup";
 import { validateAcademicReportingBackupRows } from "@/lib/academic-reporting-backup";
+import { ADMISSIONS_BACKUP_KEYS, validateAdmissionsBackupRows, type AdmissionsBackup, type AdmissionsBackupKey } from "@/lib/admissions-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 const MAX_ENTITY_ROWS = 100_000;
@@ -56,6 +57,7 @@ const TOP_LEVEL_KEYS = new Set([
   "homeworkAssignments", "homeworkAssignmentEvents",
   "classworkItems", "classworkItemVersions", "classworkSubmissions", "classworkSubmissionVersions", "classworkAttachments", "classworkFeedback", "classworkAuditEvents",
   "academicReportDefinitions", "academicReportRuns", "academicReportSourceReferences", "academicReportAuditEvents",
+  ...ADMISSIONS_BACKUP_KEYS,
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
   "examGovernance",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
@@ -116,6 +118,7 @@ const BACKUP_COUNT_KEYS = new Set([
   "homeworkAssignments", "homeworkAssignmentEvents",
   "classworkItems", "classworkItemVersions", "classworkSubmissions", "classworkSubmissionVersions", "classworkAttachments", "classworkFeedback", "classworkAuditEvents",
   "academicReportDefinitions", "academicReportRuns", "academicReportSourceReferences", "academicReportAuditEvents",
+  ...ADMISSIONS_BACKUP_KEYS,
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
   "examGovernanceRecords",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
@@ -513,7 +516,7 @@ export type ValidatedBackup = {
   timetableFixedPeriods: RestoreRecord[];
   timetableDrafts: RestoreRecord[];
   timetableEntries: RestoreRecord[];
-};
+} & AdmissionsBackup;
 
 export type EntityRestoreResult = {
   created: number;
@@ -703,7 +706,7 @@ export type RestoreResult = {
   timetableDrafts: EntityRestoreResult;
   timetableEntries: EntityRestoreResult;
   warnings: string[];
-};
+} & Record<AdmissionsBackupKey, EntityRestoreResult>;
 
 export function parseAndValidateBackup(input: string | unknown): ValidatedBackup {
   let parsed: unknown = input;
@@ -1293,6 +1296,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     resultSnapshotIds: new Set(examGovernance.studentResultSnapshots.map((row) => String(row.id ?? "")).filter(Boolean)),
     reportCardVersionIds: new Set(reportCardData.studentReportCardVersions.map((row) => String(row.id ?? "")).filter(Boolean))
   });
+  const admissionsData = validateAdmissionsBackupRows(root);
   const teacherAnalyticsData = validateTeacherAnalyticsBackupRows(root, { staffMemberIds: new Set(staffMembers.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const certificateData = validateCertificateBackupRows(root, { studentIds, guardianIds: new Set(guardians.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const classXPackageData = validateClassXPackageBackupRows(root, {
@@ -1413,6 +1417,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     ...academicCalendarData,
     ...classworkData,
     ...academicReportingData,
+    ...admissionsData,
     ...teacherAnalyticsData,
     ...certificateData,
     ...classXPackageData,

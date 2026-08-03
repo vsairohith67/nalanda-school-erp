@@ -143,6 +143,111 @@
   .parent-academic-print section { break-inside: avoid; margin-block: 1rem; }
 }
 
+/* Prompt 23H: privacy-minimised admissions and enquiry CRM */
+.admissions-public-section,
+.admissions-portal,
+.admissions-page,
+.admissions-workspace,
+.admissions-reports { min-width: 0; }
+.admissions-public-form,
+.admissions-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.admissions-public-form label,
+.admissions-form label,
+.admission-token-form label,
+.admission-document-form label { display: grid; align-content: start; gap: .4rem; min-width: 0; font-weight: 700; }
+.admissions-public-form label span,
+.admissions-form label span { color: var(--muted); font-weight: 500; }
+.admissions-public-form :is(input, select, textarea, button),
+.admissions-form :is(input, select, textarea, button),
+.admission-token-form :is(input, button),
+.admission-document-form :is(input, select, button),
+.admissions-public-section a,
+.admissions-portal a,
+.admissions-workspace button,
+.admissions-workspace .button,
+.admissions-reports :is(button, .button) { min-height: 44px; }
+.admissions-public-section a,
+.admissions-portal a { display: inline-flex; align-items: center; }
+.admissions-public-form textarea,
+.admissions-form textarea { min-height: 96px; resize: vertical; }
+.admissions-public-form .wide,
+.admissions-form .wide { grid-column: 1 / -1; }
+.admissions-honeypot { position: absolute !important; left: -10000px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; }
+.admissions-consent,
+.admissions-check { display: flex !important; align-items: flex-start; gap: .75rem; min-height: 44px; }
+.admissions-consent input,
+.admissions-check input { flex: 0 0 1.2rem; width: 1.2rem; height: 1.2rem; margin-top: .15rem; }
+.admissions-live { min-height: 1.5rem; overflow-wrap: anywhere; }
+.admissions-application-link,
+.admission-boundary { margin-top: 1rem; border-left: 4px solid var(--primary); padding: .75rem 1rem; }
+.admission-token-form,
+.admission-document-form { display: grid; gap: 1rem; max-width: 46rem; border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; }
+.admission-action-row { display: flex; flex-wrap: wrap; gap: .75rem; }
+.admission-declarations { border: 1px solid var(--border); border-radius: .8rem; padding: 1rem; }
+.admissions-workspace { display: grid; gap: 1rem; }
+.admissions-queue-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; }
+.admissions-queue-grid article { display: grid; gap: .3rem; padding: 1rem; min-width: 0; }
+.admissions-queue-grid span { color: var(--muted); text-transform: capitalize; }
+.admissions-queue-grid strong { font-size: 1.75rem; }
+.admissions-layout { display: grid; grid-template-columns: minmax(20rem, .8fr) minmax(0, 1.2fr); gap: 1rem; align-items: start; }
+.admissions-intake,
+.admissions-list,
+.admission-detail { padding: 1rem; min-width: 0; }
+.admissions-list > header,
+.admission-detail > header,
+.admission-modal > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.admissions-list ul,
+.admission-detail ul,
+.admission-duplicate-list { display: grid; gap: .65rem; margin: .75rem 0 0; padding: 0; list-style: none; }
+.admissions-list li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-width: 0; border: 1px solid var(--border); border-radius: .75rem; padding: .75rem; }
+.admissions-list li > div,
+.admission-select { display: grid; gap: .25rem; min-width: 0; }
+.admissions-list li span,
+.admissions-list li small { overflow-wrap: anywhere; }
+.admission-row-actions,
+.admission-detail-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.admission-select { width: 100%; min-height: 44px; border: 0; background: transparent; color: inherit; text-align: left; }
+.admission-select[aria-pressed="true"] { outline: 2px solid var(--primary); outline-offset: 3px; }
+.admission-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.admission-detail-grid > div { min-width: 0; border: 1px solid var(--border); border-radius: .75rem; padding: 1rem; }
+.admission-modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 1rem; background: rgb(0 0 0 / .62); }
+.admission-modal { width: min(58rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: 1rem; }
+.admission-duplicate-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem; border: 1px solid var(--border); border-radius: .75rem; padding: .75rem; }
+.admission-duplicate-list pre { max-width: 100%; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.admission-duplicate-list li > div:last-child { display: grid; align-content: start; gap: .5rem; }
+.admission-report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.admission-report-grid section,
+.admission-report-summary { padding: 1rem; min-width: 0; overflow-x: auto; }
+.admission-report-grid table { width: 100%; border-collapse: collapse; }
+.admission-report-grid th,
+.admission-report-grid td { border-bottom: 1px solid var(--border); padding: .65rem; text-align: left; }
+.admission-report-summary strong { display: block; font-size: 2rem; }
+
+@media (max-width: 900px) {
+  .admissions-queue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admissions-layout,
+  .admission-detail-grid,
+  .admission-report-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .admissions-public-form,
+  .admissions-form,
+  .admissions-queue-grid { grid-template-columns: minmax(0, 1fr); }
+  .admissions-public-form .wide,
+  .admissions-form .wide { grid-column: auto; }
+  .admissions-list li,
+  .admissions-list > header,
+  .admission-detail > header,
+  .admission-duplicate-list li { align-items: stretch; grid-template-columns: minmax(0, 1fr); flex-direction: column; }
+  .admission-row-actions,
+  .admission-detail-actions,
+  .admission-action-row { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .admission-row-actions > *,
+  .admission-detail-actions > *,
+  .admission-action-row > * { width: 100%; }
+  .admission-modal { width: calc(100vw - 1rem); max-height: calc(100dvh - 1rem); }
+}
+
 /* Prompt 20D: premium, public-only website surface. */
 .public-website-body {
   --public-ink: #17213b;

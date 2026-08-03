@@ -1,5 +1,24 @@
 # Documentation Index
 
+## Prompt 23H admissions and enquiry CRM
+
+- [Workflow and Privacy Matrix](ADMISSIONS_WORKFLOW_AND_PRIVACY_MATRIX.md)
+- [Retention and Anonymisation Draft](ADMISSIONS_RETENTION_AND_ANONYMISATION_DRAFT.md)
+- [Duplicate and Link Policy](ADMISSIONS_DUPLICATE_AND_LINK_POLICY.md)
+- [Exactly-Once Conversion Specification](ADMISSION_EXACTLY_ONCE_CONVERSION_SPECIFICATION.md)
+- [Operator Guide](ADMISSIONS_OPERATOR_GUIDE.md)
+- [Developer Guide](ADMISSIONS_DEVELOPER_GUIDE.md)
+- [Threat Model](ADMISSIONS_THREAT_MODEL.md)
+- [Workflow Diagram](diagrams/admissions-enquiry-crm.mmd)
+- [Implementation Checkpoint](evidence/PROMPT_23H_IMPLEMENTATION_CHECKPOINT.md)
+
+Prompt 23H adds minimal enquiries, invitation-only applications, secure private
+documents, human duplicate review, governed decisions, exactly-once conversion
+and aggregate reporting. Public `/admissions` remains separate from private
+`/admission-crm`. No deployment, real-user/data onboarding, live provider,
+admission fee, address/location, transport or government submission is
+authorised. Independent QA is required before merge and tag.
+
 ## Prompt 23G consolidated, comparative and board-class reporting
 
 - [Reporting Specification](CONSOLIDATED_ACADEMIC_REPORTING_SPECIFICATION.md)

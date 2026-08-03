@@ -5934,3 +5934,351 @@ model PublicWebsiteEvent {
   @@index([entityType, entityId, eventDate])
   @@index([eventType, eventDate])
 }
+
+// Prompt 23H: privacy-minimised admissions and enquiry CRM. Applicant records
+// remain prospective until one governed, transaction-safe conversion succeeds.
+model AdmissionCycle {
+  id                     String                 @id @default(cuid())
+  publicKey              String                 @unique @default(uuid())
+  cycleCode              String                 @unique
+  name                   String
+  academicYear           String
+  status                 String                 @default("DRAFT")
+  enabledClassesJson     String                 @default("[]")
+  declarationsJson       String                 @default("[]")
+  documentTypesJson      String                 @default("[]")
+  admissionNumberPrefix  String
+  nextAdmissionNumber    Int                    @default(1)
+  admissionNumberPadding Int                    @default(4)
+  applicationExpiryDays  Int                    @default(14)
+  retentionReviewDays    Int                    @default(365)
+  version                Int                    @default(1)
+  opensAt                DateTime?
+  closesAt               DateTime?
+  createdByUserId        String
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  enquiries              AdmissionEnquiry[]
+  applications           AdmissionApplication[]
+
+  @@index([academicYear, status])
+}
+
+model AdmissionEnquiry {
+  id                   String                 @id @default(cuid())
+  publicKey            String                 @unique @default(uuid())
+  enquiryNumber        String                 @unique
+  cycleId              String?
+  cycle                AdmissionCycle?        @relation(fields: [cycleId], references: [id], onDelete: Restrict)
+  guardianName         String
+  contactMethod        String
+  contactValue         String
+  contactHash          String
+  contactVerified      Boolean                @default(false)
+  desiredAcademicYear  String
+  desiredClass         String
+  childName            String?
+  enquirySource        String
+  boundedMessage       String?
+  privacyNoticeVersion String
+  consentVersion       String
+  consentRecordedAt    DateTime
+  intakeChannel        String
+  status               String                 @default("NEW")
+  rowVersion           Int                    @default(1)
+  publicRequestHash    String?                @unique
+  nextFollowUpAt       DateTime?
+  retentionReviewAt    DateTime
+  archivedAt           DateTime?
+  createdByUserId      String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  followUps            EnquiryFollowUp[]
+  visits               SchoolVisit[]
+  applications         AdmissionApplication[]
+
+  @@index([status, nextFollowUpAt])
+  @@index([desiredAcademicYear, desiredClass])
+  @@index([contactHash])
+  @@index([retentionReviewAt])
+}
+
+model EnquiryFollowUp {
+  id               String           @id @default(cuid())
+  publicKey        String           @unique @default(uuid())
+  enquiryId        String
+  enquiry          AdmissionEnquiry @relation(fields: [enquiryId], references: [id], onDelete: Restrict)
+  interactionType  String
+  outcome          String
+  note             String?
+  occurredAt       DateTime
+  nextFollowUpAt   DateTime?
+  recordedByUserId String
+  createdAt        DateTime         @default(now())
+
+  @@index([enquiryId, occurredAt])
+  @@index([nextFollowUpAt])
+}
+
+model SchoolVisit {
+  id               String           @id @default(cuid())
+  publicKey        String           @unique @default(uuid())
+  enquiryId        String
+  enquiry          AdmissionEnquiry @relation(fields: [enquiryId], references: [id], onDelete: Restrict)
+  scheduledAt      DateTime
+  status           String           @default("SCHEDULED")
+  purpose          String
+  note             String?
+  rowVersion       Int              @default(1)
+  recordedByUserId String
+  completedAt      DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([enquiryId, scheduledAt])
+  @@index([status, scheduledAt])
+}
+
+model AdmissionApplication {
+  id                     String                         @id @default(cuid())
+  publicKey              String                         @unique @default(uuid())
+  applicationNumber      String                         @unique
+  cycleId                String
+  cycle                  AdmissionCycle                 @relation(fields: [cycleId], references: [id], onDelete: Restrict)
+  enquiryId              String?
+  enquiry                AdmissionEnquiry?              @relation(fields: [enquiryId], references: [id], onDelete: Restrict)
+  status                 String                         @default("APPLICATION_INVITED")
+  rowVersion             Int                            @default(1)
+  invitationVersion      Int                            @default(0)
+  invitationTokenHash    String?                        @unique
+  invitationExpiresAt    DateTime?
+  invitationUsedAt       DateTime?
+  invitationAttemptCount Int                            @default(0)
+  invitationAttemptLimit Int                            @default(8)
+  invitationResendCount  Int                            @default(0)
+  invitationLastIssuedAt DateTime?
+  declarationVersion     String?
+  declarationAcceptedAt  DateTime?
+  requestedInfo          String?
+  requestedInfoAt        DateTime?
+  submittedAt            DateTime?
+  withdrawnAt            DateTime?
+  retentionReviewAt      DateTime
+  archivedAt             DateTime?
+  createdByUserId        String
+  createdAt              DateTime                       @default(now())
+  updatedAt              DateTime                       @updatedAt
+  child                  ApplicantChild?
+  guardians              ProspectiveGuardian[]
+  versions               AdmissionApplicationVersion[]
+  documents              ApplicationDocument[]
+  reviews                ApplicationReview[]
+  decisions              AdmissionDecision[]
+  offers                 AdmissionOffer[]
+  conversion             AdmissionConversion?
+  duplicateResolutions   AdmissionDuplicateResolution[]
+  events                 AdmissionEvent[]
+
+  @@index([cycleId, status, updatedAt])
+  @@index([enquiryId])
+  @@index([retentionReviewAt])
+}
+
+model AdmissionApplicationVersion {
+  id             String               @id @default(cuid())
+  applicationId  String
+  application    AdmissionApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  versionNumber  Int
+  source         String
+  snapshotJson   String
+  snapshotSha256 String
+  createdAt      DateTime             @default(now())
+
+  @@unique([applicationId, versionNumber])
+  @@index([applicationId, createdAt])
+}
+
+model ApplicantChild {
+  id                  String               @id @default(cuid())
+  publicKey           String               @unique @default(uuid())
+  applicationId       String               @unique
+  application         AdmissionApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  fullName            String
+  dateOfBirth         DateTime?
+  desiredAcademicYear String
+  desiredClass        String
+  previousSchool      String?
+  previousClass       String?
+  version             Int                  @default(1)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@index([fullName, dateOfBirth])
+  @@index([desiredAcademicYear, desiredClass])
+}
+
+model ProspectiveGuardian {
+  id                  String               @id @default(cuid())
+  publicKey           String               @unique @default(uuid())
+  applicationId       String
+  application         AdmissionApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  displayName         String
+  relationshipToChild String
+  contactMethod       String
+  contactValue        String
+  contactHash         String
+  isPrimary           Boolean              @default(false)
+  version             Int                  @default(1)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@index([applicationId, isPrimary])
+  @@index([contactHash])
+}
+
+model ApplicationDocument {
+  id                   String               @id @default(cuid())
+  publicKey            String               @unique @default(uuid())
+  applicationId        String
+  application          AdmissionApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  documentType         String
+  version              Int                  @default(1)
+  status               String               @default("UPLOADED")
+  storageKey           String               @unique
+  safeDisplayName      String
+  mediaType            String
+  extension            String
+  byteSize             Int
+  sha256               String
+  width                Int?
+  height               Int?
+  recoveryStatus       String               @default("PENDING")
+  backupArtifactSha256 String?
+  backupKeyVersion     String?
+  backupVerifiedAt     DateTime?
+  retentionReviewAt    DateTime
+  reviewedByUserId     String?
+  reviewedAt           DateTime?
+  reviewNote           String?
+  createdAt            DateTime             @default(now())
+
+  @@unique([applicationId, documentType, version])
+  @@index([applicationId, status])
+  @@index([sha256])
+  @@index([retentionReviewAt])
+}
+
+model ApplicationReview {
+  id               String               @id @default(cuid())
+  publicKey        String               @unique @default(uuid())
+  applicationId    String
+  application      AdmissionApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  reviewVersion    Int
+  reviewerUserId   String
+  assignmentType   String
+  visibility       String               @default("ADMISSIONS_TEAM")
+  status           String               @default("ASSIGNED")
+  completenessJson String               @default("{}")
+  boundedNote      String?
+  submittedAt      DateTime?
+  createdAt        DateTime             @default(now())
+
+  @@unique([applicationId, reviewVersion])
+  @@index([reviewerUserId, status])
+}
+
+model AdmissionDecision {
+  id              String               @id @default(cuid())
+  publicKey       String               @unique @default(uuid())
+  applicationId   String
+  application     AdmissionApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  decisionVersion Int
+  decisionType    String
+  reasonCode      String
+  reason          String?
+  actorUserId     String
+  decidedAt       DateTime
+  createdAt       DateTime             @default(now())
+
+  @@unique([applicationId, decisionVersion])
+  @@index([decisionType, decidedAt])
+}
+
+model AdmissionOffer {
+  id            String               @id @default(cuid())
+  publicKey     String               @unique @default(uuid())
+  applicationId String
+  application   AdmissionApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  offerVersion  Int
+  status        String               @default("OFFERED")
+  offeredClass  String
+  academicYear  String
+  expiresAt     DateTime
+  reason        String
+  actorUserId   String
+  issuedAt      DateTime
+  createdAt     DateTime             @default(now())
+
+  @@unique([applicationId, offerVersion])
+  @@index([status, expiresAt])
+}
+
+model AdmissionConversion {
+  id                  String               @id @default(cuid())
+  publicKey           String               @unique @default(uuid())
+  applicationId       String               @unique
+  application         AdmissionApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  requestKey          String               @unique
+  studentId           String               @unique
+  enrollmentId        String               @unique
+  admissionNumber     String               @unique
+  guardianIdsJson     String
+  guardianLinkIdsJson String
+  parentUserId        String?
+  actorUserId         String
+  convertedAt         DateTime
+  lineageHash         String
+  createdAt           DateTime             @default(now())
+
+  @@index([convertedAt])
+}
+
+model AdmissionDuplicateResolution {
+  id                       String               @id @default(cuid())
+  publicKey                String               @unique @default(uuid())
+  applicationId            String
+  application              AdmissionApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  candidateType            String
+  candidatePublicReference String
+  evidenceJson             String
+  resolution               String
+  reason                   String
+  actorUserId              String
+  resolvedAt               DateTime
+  createdAt                DateTime             @default(now())
+
+  @@index([applicationId, resolvedAt])
+}
+
+model AdmissionEvent {
+  id               String                @id @default(cuid())
+  applicationId    String?
+  application      AdmissionApplication? @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  enquiryId        String?
+  eventType        String
+  eventDate        DateTime              @default(now())
+  actorUserId      String?
+  actorRole        String?
+  previousStatus   String?
+  newStatus        String?
+  entityVersion    Int?
+  safeReason       String?
+  safeMetadataJson String?
+  requestHash      String?
+  createdAt        DateTime              @default(now())
+
+  @@index([applicationId, eventDate])
+  @@index([enquiryId, eventDate])
+  @@index([eventType, eventDate])
+  @@index([requestHash, eventDate])
+}

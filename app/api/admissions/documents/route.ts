@@ -1,0 +1,5 @@
+import { NextRequest } from "next/server";
+import { admissionsError, admissionsJson, requireAdmissionsAny } from "@/lib/admissions-api";
+import { uploadApplicationDocument } from "@/lib/admissions-files";
+import { prisma } from "@/lib/prisma";
+export async function POST(request: NextRequest) { const auth = await requireAdmissionsAny(["MANAGE_ADMISSION_DOCUMENTS"]); if (auth.response || !auth.user) return auth.response; try { if (!request.headers.get("content-type")?.toLowerCase().startsWith("multipart/form-data")) return admissionsJson({ error: "Use multipart form data." }, 415); const form = await request.formData(); const file = form.get("file"); if (!(file instanceof File)) return admissionsJson({ error: "Choose a document." }, 400); return admissionsJson({ document: await uploadApplicationDocument(prisma, { actor: auth.user, applicationKey: String(form.get("applicationKey") ?? ""), documentType: String(form.get("documentType") ?? ""), file }) }, 201); } catch (error) { return admissionsError(error); } }

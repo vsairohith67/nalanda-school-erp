@@ -17,7 +17,7 @@ const specialFallbacks: Record<string, Array<Record<string, unknown>>> = {
   admissions: [
     { type: "HERO", eyebrow: "Admissions", heading: "A clear, human admissions starting point", body: "Reviewed admissions details will be published here. Contact the school office using verified public details when available.", primaryLabel: "Contact the office", primaryHref: "/contact" },
     { type: "FEATURE_GRID", heading: "What this page will explain", items: ["Entry-stage guidance", "Reviewed document categories", "Approved admissions steps"] },
-    { type: "RICH_TEXT", markdown: "## Safe admissions boundary\n\nThere is no public enquiry form, application upload, admission payment or prospect database in this foundation." }
+    { type: "RICH_TEXT", markdown: "## Safe admissions boundary\n\nThe optional public form collects only minimum contact and demand information. It creates no Student, Guardian, User or enrollment. Detailed applications and approved documents are invitation-only. There is no admission payment, address/location collection or public file upload." }
   ],
   "school-app": [
     { type: "HERO", eyebrow: "School app experience", heading: "Secure school access, designed for the device you already use", body: "The existing installable web app supports secure Parent, Teacher and leadership journeys after login.", primaryLabel: "School Portal Login", primaryHref: "/login" },
@@ -26,7 +26,7 @@ const specialFallbacks: Record<string, Array<Record<string, unknown>>> = {
     { type: "PORTAL_LOGIN", heading: "Use the secure school portal", body: "Public pages and authenticated ERP data remain strictly separated." }
   ],
   privacy: [
-    { type: "HERO", eyebrow: "Privacy", heading: "A public website without visitor tracking by default", body: "This foundation does not add analytics pixels, advertising, enquiry databases, uploads or public AI access.", primaryLabel: "Accessibility", primaryHref: "/accessibility" },
+    { type: "HERO", eyebrow: "Privacy", heading: "A public website without visitor tracking by default", body: "The optional admissions enquiry stores only consented minimum contact and demand information. This website adds no analytics pixels, advertising, public upload or public AI access.", primaryLabel: "Accessibility", primaryHref: "/accessibility" },
     { type: "RICH_TEXT", markdown: "## Public and private separation\n\nPublic pages use only approved public content and registered local assets. Student, Parent, Guardian, Staff, fee, attendance, marks and communication records remain inside authenticated routes.\n\n## Cookies\n\nThe public website does not create a session or set unnecessary cookies. The secure portal uses authentication only after a visitor chooses to sign in." }
   ],
   accessibility: [

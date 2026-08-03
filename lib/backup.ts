@@ -16,6 +16,7 @@ import {
   validateAcademicReportingBackupRows,
   type AcademicReportingBackup
 } from "./academic-reporting-backup";
+import { loadAdmissionsBackup, validateAdmissionsBackupRows, type AdmissionsBackup } from "./admissions-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 
@@ -79,6 +80,10 @@ type BackupClient = Pick<
   | "classworkItem" | "classworkItemVersion" | "classworkSubmission" | "classworkSubmissionVersion"
   | "classworkAttachment" | "classworkFeedback" | "classworkAuditEvent"
   | "academicReportDefinition" | "academicReportRun" | "academicReportSourceReference" | "academicReportAuditEvent"
+  | "admissionCycle" | "admissionEnquiry" | "enquiryFollowUp" | "schoolVisit"
+  | "admissionApplication" | "admissionApplicationVersion" | "applicantChild" | "prospectiveGuardian"
+  | "applicationDocument" | "applicationReview" | "admissionDecision" | "admissionOffer"
+  | "admissionDuplicateResolution" | "admissionConversion" | "admissionEvent"
 >;
 
 type BackupDocumentInput = {
@@ -252,7 +257,7 @@ type BackupDocumentInput = {
   timetableDrafts?: readonly unknown[];
   timetableEntries?: readonly unknown[];
   academicYear?: string;
-} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup>;
+} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
   const timetableTeachers = [...(input.timetableTeachers ?? [])];
@@ -339,6 +344,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     resultSnapshotIds: new Set(examGovernance.studentResultSnapshots.map((row) => String(row.id))),
     reportCardVersionIds: new Set(studentReportCardVersions.map((row) => String((row as Record<string, unknown>).id)))
   });
+  const admissionsBackup = validateAdmissionsBackupRows(input as unknown as Record<string, unknown>);
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
   const teacherAnalyticsSnapshots = sanitizeActorFields(input.teacherAnalyticsSnapshots ?? []);
   const teacherAnalyticsReviews = sanitizeActorFields(input.teacherAnalyticsReviews ?? []);
@@ -494,6 +500,21 @@ export function createBackupDocument(input: BackupDocumentInput) {
         academicReportRuns: academicReportingBackup.academicReportRuns.length,
         academicReportSourceReferences: academicReportingBackup.academicReportSourceReferences.length,
         academicReportAuditEvents: academicReportingBackup.academicReportAuditEvents.length,
+        admissionCycles: admissionsBackup.admissionCycles.length,
+        admissionEnquiries: admissionsBackup.admissionEnquiries.length,
+        enquiryFollowUps: admissionsBackup.enquiryFollowUps.length,
+        schoolVisits: admissionsBackup.schoolVisits.length,
+        admissionApplications: admissionsBackup.admissionApplications.length,
+        admissionApplicationVersions: admissionsBackup.admissionApplicationVersions.length,
+        applicantChildren: admissionsBackup.applicantChildren.length,
+        prospectiveGuardians: admissionsBackup.prospectiveGuardians.length,
+        applicationDocuments: admissionsBackup.applicationDocuments.length,
+        applicationReviews: admissionsBackup.applicationReviews.length,
+        admissionDecisions: admissionsBackup.admissionDecisions.length,
+        admissionOffers: admissionsBackup.admissionOffers.length,
+        admissionDuplicateResolutions: admissionsBackup.admissionDuplicateResolutions.length,
+        admissionConversions: admissionsBackup.admissionConversions.length,
+        admissionEvents: admissionsBackup.admissionEvents.length,
         examCycles: examCycles.length,
         examAssessments: examAssessments.length,
         studentMarks: studentMarks.length,
@@ -660,6 +681,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     homeworkAssignmentEvents,
     ...classworkBackup,
     ...academicReportingBackup,
+    ...admissionsBackup,
     examCycles,
     examAssessments,
     studentMarks,
@@ -773,7 +795,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
 async function sqliteSchemaHas(client: BackupClient, table: string, column?: string) {
   const query = (client as any).$queryRawUnsafe;
   if (typeof query !== "function") return true;
-  const allowedTables = new Set(["StudentAttendanceSession", "StudentReportCardVersion", "AcademicCalendarVersion", "ClassworkItem", "AcademicReportDefinition"]);
+  const allowedTables = new Set(["StudentAttendanceSession", "StudentReportCardVersion", "AcademicCalendarVersion", "ClassworkItem", "AcademicReportDefinition", "AdmissionCycle"]);
   if (!allowedTables.has(table)) throw new Error("BACKUP_SCHEMA_PROBE_REFUSED");
   const rows = await query.call(client, `PRAGMA table_info("${table}")`) as Array<{ name?: string }>;
   return column ? rows.some((row) => row.name === column) : rows.length > 0;
@@ -783,12 +805,13 @@ export async function generateFullBackup(
   client: BackupClient,
   options: { generatedBy: string; generatedAt?: Date; excludeCloudBackupRunId?: string }
 ) {
-  const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable, classworkAvailable, academicReportingAvailable] = await Promise.all([
+  const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable, classworkAvailable, academicReportingAvailable, admissionsAvailable] = await Promise.all([
     sqliteSchemaHas(client, "StudentAttendanceSession", "operationalCalendarVersionKey"),
     sqliteSchemaHas(client, "StudentReportCardVersion", "calendarBasisVersionKey"),
     sqliteSchemaHas(client, "AcademicCalendarVersion"),
     sqliteSchemaHas(client, "ClassworkItem"),
-    sqliteSchemaHas(client, "AcademicReportDefinition")
+    sqliteSchemaHas(client, "AcademicReportDefinition"),
+    sqliteSchemaHas(client, "AdmissionCycle")
   ]);
   const studentAttendanceSessionArgs = {
     select: {
@@ -1211,6 +1234,9 @@ export async function generateFullBackup(
   const academicReportingBackup = academicReportingAvailable && (client as any).academicReportDefinition?.findMany
     ? await loadAcademicReportingBackup(client as PrismaClient)
     : { academicReportDefinitions: [], academicReportRuns: [], academicReportSourceReferences: [], academicReportAuditEvents: [] };
+  const admissionsBackup = admissionsAvailable && (client as any).admissionCycle?.findMany
+    ? await loadAdmissionsBackup(client as PrismaClient)
+    : { admissionCycles: [], admissionEnquiries: [], enquiryFollowUps: [], schoolVisits: [], admissionApplications: [], admissionApplicationVersions: [], applicantChildren: [], prospectiveGuardians: [], applicationDocuments: [], applicationReviews: [], admissionDecisions: [], admissionOffers: [], admissionDuplicateResolutions: [], admissionConversions: [], admissionEvents: [] };
 
   return createBackupDocument({
     generatedAt: options.generatedAt ?? new Date(),
@@ -1240,6 +1266,7 @@ export async function generateFullBackup(
     ...academicCalendarBackup,
     ...classworkBackup,
     ...academicReportingBackup,
+    ...admissionsBackup,
     rolePermissions,
     guardians,
     studentGuardians,

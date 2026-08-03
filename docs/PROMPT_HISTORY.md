@@ -1506,3 +1506,19 @@ branch and annotated tag are `feature/consolidated-board-reporting` and
 Result: `ACADEMIC_REPORTING_CLEARED`. Next governed phase: Prompt 23H -
 Admissions and Enquiry CRM. No deployment, public results, official board
 submission, live provider or real-user/data onboarding is authorised.
+
+## Prompt 23H - Admissions and Enquiry CRM (2026-08-03)
+
+Implemented privacy-minimal public/staff enquiries, follow-ups/visits,
+cryptographic hash-only invitations, versioned private applications, strict
+private documents, exact duplicate suggestions with human resolution,
+append-only decisions/offers, exactly-once Student/Guardian/enrollment
+conversion and suppressed aggregate reporting.
+
+The `ADMIT23H` copied-database matrix proves public idempotence/honeypot,
+invitation expiry/single use, encrypted asset backup with two restores and
+wrong-key refusal, role/object isolation, concurrency, forced rollback and
+version-37 logical restore twice. Operational business data remains zero and
+unchanged. Feature push, external re-fetch and independent Prompt 23H-QA remain
+required before release; deployment, live providers and real applicant/data
+onboarding remain unauthorised.

@@ -1,0 +1,38 @@
+import { spawnSync } from "node:child_process";
+import { copyFileSync, existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { randomBytes, randomUUID } from "node:crypto";
+import { PrismaClient } from "@prisma/client";
+import { hashPassword } from "../lib/password";
+import type { AuthUser } from "../lib/auth";
+import { createAdmissionCycle, createPublicEnquiry, createStaffEnquiry, issueApplicationInvitation, saveInvitedApplication, validatePublicEnquiry } from "../lib/admissions";
+import { fileSha256 } from "./migration-check-utils";
+
+const INDEPENDENT = process.argv.includes("--independent"), SUITE = INDEPENDENT ? "ADMIT23HQA-BROWSER" : "ADMIT23H-BROWSER", ROOT_NAME = INDEPENDENT ? "admit23hqa-browser" : "admit23h-browser";
+const WORKSPACE = path.resolve("."), OPERATIONAL = path.join(WORKSPACE, "prisma", "dev.db"), ROOT = path.join(WORKSPACE, "tmp", ROOT_NAME), DATABASE = path.join(ROOT, `${ROOT_NAME}.db`), CREDENTIALS = path.join(ROOT, "credentials.json"), RUNTIME_ENV = path.join(ROOT, "runtime-env.json"), PORT = INDEPENDENT ? 3232 : 3231;
+const databaseUrl = (file: string) => `file:${file.replaceAll("\\", "/")}`;
+function assertRoot() { const resolved = path.resolve(ROOT); if (resolved !== path.join(path.resolve(WORKSPACE), "tmp", ROOT_NAME)) throw new Error("ADMIT23H_BROWSER_CLEANUP_SCOPE_REFUSED"); return resolved; }
+function migrate(environment: NodeJS.ProcessEnv) { const pnpm = path.join(process.env.APPDATA ?? "", "npm", "node_modules", "pnpm", "bin", "pnpm.mjs"); const result = spawnSync(process.execPath, [pnpm, "exec", "prisma", "migrate", "deploy", "--schema", "prisma/schema.prisma"], { cwd: WORKSPACE, env: environment, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, windowsHide: true }); if (result.error || result.status !== 0) throw new Error(`ADMIT23H_BROWSER_MIGRATION_FAILED:${result.error?.message ?? `${result.stdout}\n${result.stderr}`}`); }
+function authUser(row: any): AuthUser { return { id: row.id, name: row.name, username: row.username, email: null, designation: row.designation, role: row.role, roleAssignmentId: `${row.id}-assignment`, authorizationVersion: 1, mustChangePassword: false, guardianId: null }; }
+async function createUser(client: PrismaClient, role: "PRINCIPAL" | "VIEWER", password: string) { const user = await client.user.create({ data: { iamPublicKey: randomUUID(), name: `${SUITE} ${role}`, designation: `${role} synthetic QA`, username: `${SUITE.toLowerCase()}-${role.toLowerCase()}`, passwordHash: await hashPassword(password), role, isActive: true } }); await client.authLoginAlias.create({ data: { userId: user.id, type: "USERNAME", normalizedValue: user.username, displayMasked: user.username, status: "VERIFIED", isSchoolGoverned: true, verifiedAt: new Date() } }); await client.userRoleAssignment.create({ data: { publicKey: randomUUID(), userId: user.id, role, reason: `${SUITE} synthetic browser fixture`, assignedByUserId: user.id, activeKey: `${user.id}:${role}` } }); return user; }
+function publicBody(index: number) { return { guardianName: `${SUITE} Guardian ${index}`, contactMethod: "PHONE", contactValue: `9000023${String(index).padStart(3, "0")}`, desiredAcademicYear: "2027-28", desiredClass: index % 2 ? "I" : "II", childName: `${SUITE} Child ${index}`, enquirySource: index % 2 ? "WEBSITE" : "REFERRAL", message: "Synthetic browser fixture only.", privacyNoticeVersion: "ADMIT-PRIVACY-DRAFT-1", consentVersion: "ADMIT-CONSENT-DRAFT-1", consent: true, honeypot: "", requestKey: `${SUITE}-REQUEST-${index}-0001` }; }
+
+async function setup() {
+  const operationalBefore = { sha256: fileSha256(OPERATIONAL), size: statSync(OPERATIONAL).size }, root = assertRoot(); if (existsSync(root)) rmSync(root, { recursive: true, force: true }); mkdirSync(root, { recursive: true }); copyFileSync(OPERATIONAL, DATABASE);
+  const secret = randomBytes(48).toString("base64url"), password = `${randomBytes(18).toString("base64url")}Aa1!`, origin = `http://localhost:${PORT}`, environment: NodeJS.ProcessEnv = { ...process.env, NODE_ENV: "production", DATABASE_URL: databaseUrl(DATABASE), SESSION_SECRET: secret, AUTH_SECRET: secret, APP_ORIGIN: origin, PORT: String(PORT), ADMISSIONS_HASH_PEPPER: randomBytes(48).toString("base64url"), ADMISSIONS_PRIVATE_STORAGE_ROOT: path.join(ROOT, "private-documents") };
+  migrate(environment); Object.assign(process.env, environment); const client = new PrismaClient({ datasourceUrl: databaseUrl(DATABASE) });
+  try {
+    const principalRow = await createUser(client, "PRINCIPAL", password), viewerRow = await createUser(client, "VIEWER", password), principal = authUser(principalRow);
+    const cycle = await createAdmissionCycle(client, { cycleCode: `${INDEPENDENT ? "ADMIT23HQA" : "ADMIT23H"}_BROWSER`, name: "2027-28 Admissions", academicYear: "2027-28", status: "OPEN", enabledClasses: ["I", "II"], declarations: ["I confirm these synthetic details are accurate."], documentTypes: [], admissionNumberPrefix: "NPS27-", admissionNumberPadding: 4, applicationExpiryDays: 14, retentionReviewDays: 365 }, principal);
+    for (let index = 1; index <= 5; index++) await createPublicEnquiry(client, validatePublicEnquiry(publicBody(index)), `${SUITE}|browser|${index}`);
+    const staffEnquiry = await createStaffEnquiry(client, { ...publicBody(6), cycleKey: cycle.publicKey, contactVerified: true }, principal);
+    const invitation = await issueApplicationInvitation(client, staffEnquiry.key, {}, principal);
+    const draft = await saveInvitedApplication(client, invitation.invitationToken, { expectedVersion: 2, fullName: `${SUITE} Applicant`, dateOfBirth: "2022-04-12", desiredAcademicYear: "2027-28", desiredClass: "I", previousSchool: "Synthetic nursery", previousClass: "Nursery", guardians: [{ displayName: `${SUITE} Applicant Guardian`, relationshipToChild: "Parent", contactMethod: "PHONE", contactValue: "9000023099", isPrimary: true }], declarationVersion: "ADMIT-DECLARATION-DRAFT-1", declarationAccepted: false }, false);
+    const credentials = { principal: { username: principalRow.username, password, paths: ["/admission-crm", "/admission-crm/reports"] }, viewer: { username: viewerRow.username, password, paths: ["/admission-crm/reports"] }, applicant: { invitationToken: invitation.invitationToken, applicationKey: invitation.applicationKey, path: "/admissions/apply", version: draft.version } };
+    writeFileSync(CREDENTIALS, JSON.stringify(credentials)); writeFileSync(RUNTIME_ENV, JSON.stringify(environment));
+    const operationalAfter = { sha256: fileSha256(OPERATIONAL), size: statSync(OPERATIONAL).size }; if (JSON.stringify(operationalBefore) !== JSON.stringify(operationalAfter)) throw new Error("ADMIT23H_BROWSER_OPERATIONAL_DATABASE_CHANGED");
+    console.log(JSON.stringify({ result: INDEPENDENT ? "ADMIT23HQA_BROWSER_FIXTURES_READY" : "ADMIT23H_BROWSER_FIXTURES_READY", copiedDatabase: true, port: PORT, roles: ["PRINCIPAL", "VIEWER", "APPLICANT"], enquiries: 6, applications: 1 }));
+  } finally { await client.$disconnect(); }
+}
+function cleanup() { const root = assertRoot(); if (existsSync(root)) rmSync(root, { recursive: true, force: true }); console.log(JSON.stringify({ result: "ADMIT23H_BROWSER_FIXTURES_REMOVED", exists: existsSync(root) })); }
+const mode = process.argv.find((value) => value === "setup" || value === "cleanup"); if (mode === "setup") setup().catch((error) => { console.error(error instanceof Error ? error.message : error); process.exitCode = 1; }); else if (mode === "cleanup") cleanup(); else { console.error("Use setup or cleanup"); process.exitCode = 1; }
