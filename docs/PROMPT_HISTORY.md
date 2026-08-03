@@ -1522,3 +1522,32 @@ version-37 logical restore twice. Operational business data remains zero and
 unchanged. Feature push, external re-fetch and independent Prompt 23H-QA remain
 required before release; deployment, live providers and real applicant/data
 onboarding remain unauthorised.
+
+## Prompt 23H-QA - Independent Admissions and Enquiry CRM QA (2026-08-03)
+
+Fresh `ADMIT23HQA` copied-database fixtures independently verified public
+enquiry privacy, hash-only expiring invitations, applicant ownership, configured
+private documents, encrypted asset backup and two restores, human-only duplicate
+resolution, role/object scope, immutable decisions, exactly-once conversion and
+forced rollback. Independent review corrected exact Viewer export gating, Roman-
+numeral presentation, assigned-Teacher review filtering, applicant token/child
+field separation, unauthenticated public admissions API routing and stable
+generic enquiry success handling.
+
+Principal and Viewer aggregate counts were checked by hand. Browser proof at
+1366 x 768 and 390 x 844 covered light/dark staff and public/applicant flows,
+Viewer suppression/intake denial, unchecked consent, no public upload, 44 px
+actions, keyboard-accessible dialogs, mobile containment and zero console error,
+hydration, native-dialog or server-stderr findings. Cleanup was inspected twice.
+
+The sequential 310-page/472-API inventory, zero-change lifecycle run, 3 GB
+typecheck, 11 focused tests, independent matrix, 186-file/1,688-test suite, 4 GB
+build, version-37 backup and Git-safety gates passed. The single approved
+additive migration applied once, the second deployment was a no-op and the exact
+zero-business/protected-account baseline remained unchanged. The retained
+feature branch and annotated tag are `feature/admissions-enquiry-crm` and
+`admissions-crm-v37-2026-08-03`.
+
+Result: `ADMISSIONS_CRM_CLEARED`. Next governed phase: Prompt 23I - Payroll,
+Payslips, Salary History and Employee Self-Service. No deployment, live provider,
+real applicant or real-data onboarding is authorised.

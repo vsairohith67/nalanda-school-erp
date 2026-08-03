@@ -11,13 +11,16 @@
 - [Threat Model](ADMISSIONS_THREAT_MODEL.md)
 - [Workflow Diagram](diagrams/admissions-enquiry-crm.mmd)
 - [Implementation Checkpoint](evidence/PROMPT_23H_IMPLEMENTATION_CHECKPOINT.md)
+- [Independent QA Release Evidence](evidence/PROMPT_23H_QA_RELEASE_EVIDENCE.md)
 
 Prompt 23H adds minimal enquiries, invitation-only applications, secure private
 documents, human duplicate review, governed decisions, exactly-once conversion
 and aggregate reporting. Public `/admissions` remains separate from private
 `/admission-crm`. No deployment, real-user/data onboarding, live provider,
 admission fee, address/location, transport or government submission is
-authorised. Independent QA is required before merge and tag.
+authorised. Independent QA cleared the retained feature branch, approved
+additive migration and version-37 release tag; deployment and real-user/data
+onboarding remain unauthorised.
 
 ## Prompt 23G consolidated, comparative and board-class reporting
 

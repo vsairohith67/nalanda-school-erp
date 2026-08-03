@@ -25,6 +25,13 @@ describe("Prompt 23H admissions CRM governance", () => {
     expect(RECOMMENDED_ROLE_PERMISSIONS.TEACHER.has("REVIEW_ADMISSION_APPLICATIONS")).toBe(true);
   });
 
+  it("uses effective IAM for exports and preserves Roman-numeral class labels", () => {
+    expect(source("app/api/admissions/reports/route.ts")).toContain("canExport: exportDecision.allowed");
+    const reports = source("components/admissions-reports.tsx");
+    expect(reports).toContain("data.canExport ?");
+    expect(reports).toContain("/^[ivx]+$/i");
+  });
+
   it("exports only aggregate, formula-safe cells", () => {
     const csv = admissionReportCsv({ suppressedMinimumGroupSize: 3, classDemand: [{ label: "=I", count: "Suppressed" }], sourceFunnel: [{ label: "+WEBSITE", count: 3 }], enquiryStages: [], applicationStages: [], conversionTotal: 1, averageStageDurationHours: [], staffRanking: null });
     expect(csv).toContain("'=I");
@@ -42,6 +49,7 @@ describe("Prompt 23H admissions CRM governance", () => {
   });
 
   it("uses POST/PATCH for mutations and private no-store responses", () => {
+    expect(source("middleware.ts")).toContain('"/api/public/admissions/"');
     const routes = ["app/api/public/admissions/enquiries/route.ts", "app/api/public/admissions/application/route.ts", "app/api/admissions/applications/[publicKey]/convert/route.ts"];
     for (const route of routes) expect(source(route)).not.toMatch(/export async function (DELETE|PUT)\b/);
     expect(source("lib/admissions-api.ts")).toContain('"Cache-Control": "private, no-store, max-age=0"');

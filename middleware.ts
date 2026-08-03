@@ -25,7 +25,12 @@ const publicPaths = [
   "/api/deployment-health",
   "/api/setup"
 ];
-const publicPathPrefixes = ["/api/whatsapp/webhook/", "/api/sms-email/webhook/", "/icons/"];
+const publicPathPrefixes = [
+  "/api/public/admissions/",
+  "/api/whatsapp/webhook/",
+  "/api/sms-email/webhook/",
+  "/icons/"
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
