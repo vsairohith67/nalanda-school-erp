@@ -79,6 +79,8 @@ export const NAV_ITEMS = [
   { href: "/sms-email/reports", label: "SMS & Email Reports", icon: "collection", permission: "VIEW_SMS_EMAIL_REPORTS", group: "communication" },
   { href: "/homework/reports", label: "Homework Reports", icon: "notices", permission: "VIEW_HOMEWORK_REPORTS", group: "communication" },
   { href: "/homework", label: "Homework", icon: "notices", permission: "VIEW_HOMEWORK", group: "communication" },
+  { href: "/classwork", label: "Classwork & Submissions", icon: "notices", permission: "VIEW_CLASSWORK", group: "communication" },
+  { href: "/my-classwork", label: "My Classwork", icon: "notices", permission: "VIEW_OWN_CLASSWORK", group: "studentsParents" },
   { href: "/exams", label: "Exams", icon: "timetable", permission: "VIEW_EXAMS", group: "communication" },
   { href: "/exams/configuration", label: "Examination Setup", icon: "timetable", permission: "VIEW_EXAM_CONFIGURATION", group: "communication" },
   { href: "/exams/timetable", label: "Examination Timetable", icon: "timetable", permission: "VIEW_EXAM_TIMETABLE", group: "communication" },

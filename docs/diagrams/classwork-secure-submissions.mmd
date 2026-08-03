@@ -1,0 +1,33 @@
+flowchart LR
+  T["Teacher user"] --> TS["Active StaffMember and TimetableTeacher"]
+  TS --> TA["Exact year, class, section and subject assignment"]
+  TA --> I["Classwork item"]
+
+  I --> D["DRAFT"]
+  D --> V1["Instruction version 1"]
+  V1 --> RG{"All attachments recovery-proven?"}
+  RG -- "No" --> PB["Publish blocked"]
+  RG -- "Yes" --> P["PUBLISHED"]
+  P --> V2["Correction appends version 2"]
+  P --> C["CLOSED"]
+  C --> A["ARCHIVED"]
+
+  PA["Parent role plus opaque linked-child context"] --> LC["Eligible learner scope"]
+  ST["Student verified self context"] --> LC
+  LC --> SD["Private text/file draft"]
+  SD --> SG{"All attachments recovery-proven?"}
+  SG -- "No" --> SB["Submit blocked"]
+  SG -- "Yes" --> SU["SUBMITTED or LATE; version locked"]
+  SU --> R["RETURNED with append-only feedback"]
+  R --> RS["New draft version then RESUBMITTED"]
+  RS --> RV["REVIEWED with append-only feedback"]
+
+  I --> AU["Append-only audit"]
+  SU --> AU
+  R --> AU
+  RV --> AU
+  P --> N["Exactly-once in-app notification"]
+  SU --> N
+
+  PR["Permission-gated Principal"] --> AG["Completion and exception aggregates"]
+  VW["Viewer"] --> SP["Suppressed aggregates only"]

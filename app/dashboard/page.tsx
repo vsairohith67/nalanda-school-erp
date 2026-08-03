@@ -41,6 +41,7 @@ const actionIcons: Record<DashboardQuickAction["id"], LucideIcon> = {
 export default async function DashboardPage() {
   const user = await requireUser();
   if (user.role === "PARENT") redirect("/parent");
+  if (user.role === "STUDENT") redirect("/my-classwork");
   if (user.role === "TEACHER") redirect("/teacher");
 
   const [settings, permissions] = await Promise.all([

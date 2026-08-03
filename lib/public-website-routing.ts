@@ -5,6 +5,8 @@ export const PUBLIC_WEBSITE_EXACT_PATHS = new Set([
 ]);
 
 export const PRIVATE_ROBOTS_EXCLUSIONS = [
+  "/classwork",
+  "/my-classwork",
   "/api", "/website-admin", "/access-context", "/access-history", "/account-security", "/ai-assistant", "/attendance", "/books", "/budgets",
   "/calendar", "/cash-book", "/certificates", "/change-password", "/class-x-documents",
   "/cloud-backup", "/daily-collection", "/dashboard", "/exams", "/expenses",

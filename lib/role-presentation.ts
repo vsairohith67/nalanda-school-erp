@@ -9,6 +9,7 @@ const ROLE_LABELS: Record<Role, string> = {
   COMPUTER_OPERATOR: "Computer Operator",
   TEACHER: "Teacher",
   PARENT: "Parent",
+  STUDENT: "Student",
   VIEWER: "Viewer / Auditor"
 };
 
@@ -21,6 +22,7 @@ const DASHBOARD_TITLES: Record<Role, string> = {
   COMPUTER_OPERATOR: "Admissions Operations Dashboard",
   TEACHER: "Teacher Dashboard",
   PARENT: "Parent Dashboard",
+  STUDENT: "Student Dashboard",
   VIEWER: "Review Dashboard"
 };
 

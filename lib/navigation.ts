@@ -10,6 +10,7 @@ export function isExactActiveRoute(pathname: string, href: string) {
 
 export function defaultPathForRole(role: string) {
   if (role === "PARENT") return "/parent";
+  if (role === "STUDENT") return "/my-classwork";
   if (role === "TEACHER") return "/teacher";
   return "/dashboard";
 }

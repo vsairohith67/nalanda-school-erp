@@ -1,5 +1,21 @@
 # Documentation Index
 
+## Prompt 23F governed classwork and secure submissions
+
+- [Classwork and Submission Governance](CLASSWORK_SUBMISSIONS_GOVERNANCE.md)
+- [Classwork Governance Diagram](diagrams/classwork-secure-submissions.mmd)
+- [Implementation Evidence](evidence/CLASSWORK_23F_IMPLEMENTATION_EVIDENCE.md)
+
+Prompt 23F is implemented on the retained feature branch
+`feature/classwork-secure-submissions` and is ready for independent QA. It adds
+versioned scoped classwork, private attachment delivery, linked-child or
+self-scoped submission versions, append-only feedback/audit, exactly-once
+in-app notifications, and encrypted attachment-byte recovery. The operational
+database remains at the exact zero-business-data baseline. The additive
+migration is intentionally not applied to the operational database until
+independent QA approves release; merge, tag, deployment, live providers and
+real-user onboarding remain unauthorised.
+
 ## Prompt 23E events, holidays and academic calendar
 
 - [Academic Calendar Model and Lifecycle](ACADEMIC_CALENDAR_MODEL_AND_LIFECYCLE.md)

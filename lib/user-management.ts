@@ -21,6 +21,7 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   COMPUTER_OPERATOR: "Admissions data entry with no unrestricted administration or finance authority.",
   TEACHER: "Teacher start page with linked staff basics and permission-gated manual student attendance. Timetable, leave, and staff attendance dashboards are not built yet.",
   PARENT: "Read-only parent portal access for linked children, fees, receipts, and notices.",
+  STUDENT: "Self-only Student context bound to one verified admission alias; no raw Student ID grants access.",
   VIEWER: "Viewer / Auditor read-only access for limited reports and audit review."
 };
 
@@ -36,14 +37,14 @@ export function canManageUser(actorRole: Role, targetRole: Role) {
   if (actorRole === "SUPER_ADMIN") return true;
   if (targetRole === "SUPER_ADMIN") return false;
   if (actorRole === "DIRECTOR") return true;
-  return actorRole === "ADMIN" && (targetRole === "ACCOUNTANT" || targetRole === "COMPUTER_OPERATOR" || targetRole === "TEACHER" || targetRole === "PARENT" || targetRole === "VIEWER");
+  return actorRole === "ADMIN" && (targetRole === "ACCOUNTANT" || targetRole === "COMPUTER_OPERATOR" || targetRole === "TEACHER" || targetRole === "PARENT" || targetRole === "STUDENT" || targetRole === "VIEWER");
 }
 
 export function canAssignRole(actorRole: Role, role: Role) {
   if (actorRole === "SUPER_ADMIN") return true;
   if (role === "SUPER_ADMIN") return false;
   if (actorRole === "DIRECTOR") return true;
-  return actorRole === "ADMIN" && (role === "ACCOUNTANT" || role === "COMPUTER_OPERATOR" || role === "TEACHER" || role === "PARENT" || role === "VIEWER");
+  return actorRole === "ADMIN" && (role === "ACCOUNTANT" || role === "COMPUTER_OPERATOR" || role === "TEACHER" || role === "PARENT" || role === "STUDENT" || role === "VIEWER");
 }
 
 export function assertCanManageUser(actorRole: Role, targetRole: Role) {

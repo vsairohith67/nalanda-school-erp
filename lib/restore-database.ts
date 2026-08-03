@@ -76,6 +76,8 @@ type RestoreDatabaseClient = Pick<
   | "permissionProfileVersion" | "userPermissionProfileAssignment" | "userPermissionOverride" | "userAudit"
   | "academicCalendarVersion" | "operationalCalendarDay" | "schoolCalendarEvent"
   | "schoolCalendarEventVersion" | "academicCalendarAuditEvent"
+  | "classworkItem" | "classworkItemVersion" | "classworkSubmission" | "classworkSubmissionVersion"
+  | "classworkAttachment" | "classworkFeedback" | "classworkAuditEvent"
 >;
 
 export async function restoreValidatedBackup(
@@ -155,6 +157,13 @@ async function restoreIntoDatabase(
     libraryStockVerificationEvents: emptyEntityResult(),
     homeworkAssignments: emptyEntityResult(),
     homeworkAssignmentEvents: emptyEntityResult(),
+    classworkItems: emptyEntityResult(),
+    classworkItemVersions: emptyEntityResult(),
+    classworkSubmissions: emptyEntityResult(),
+    classworkSubmissionVersions: emptyEntityResult(),
+    classworkAttachments: emptyEntityResult(),
+    classworkFeedback: emptyEntityResult(),
+    classworkAuditEvents: emptyEntityResult(),
     examCycles: emptyEntityResult(),
     examAssessments: emptyEntityResult(),
     studentMarks: emptyEntityResult(),
@@ -482,6 +491,7 @@ async function restoreIntoDatabase(
   await restoreRolePermissionsData(client, backup, result);
   await restoreTimetableFoundationData(client, backup, result);
   await restoreHomeworkData(client, backup, backupUserToLocalUser, result);
+  await restoreClassworkData(client, backup, backupStudentLocalIds, backupUserToLocalUser, result);
   await restoreExamMarksData(client, backup, backupStudentLocalIds, backupUserToLocalUser, result);
   await restoreReportCardData(client, backup, backupStudentLocalIds, result);
   result.examGovernance = await restoreExamGovernanceBackup(client, backup.examGovernance, backupStudentLocalIds);
@@ -1718,6 +1728,50 @@ export async function restoreHomeworkData(
     await client.homeworkAssignmentEvent.create({ data: { id, assignmentId, eventType: requiredText(row.eventType,"Homework event type"), eventDate: requiredDate(row.eventDate,"Homework event date"), titleSnapshot: nullableText(row.titleSnapshot), instructionsSnapshot: nullableText(row.instructionsSnapshot), dueDateSnapshot: optionalDate(row.dueDateSnapshot,"Homework due-date snapshot"), reason: nullableText(row.reason), notes: nullableText(row.notes), recordedByUserId: mapOptionalUserId(row.recordedByUserId,userMap), ...createdAtData(row,index,"homeworkAssignmentEvents") } });
     result.homeworkAssignmentEvents.created++;
   } catch (error) { result.homeworkAssignmentEvents.errors.push(rowError("Homework event",index,error)); }
+}
+
+export async function restoreClassworkData(
+  client: RestoreDatabaseClient,
+  backup: Pick<ValidatedBackup, "classworkItems" | "classworkItemVersions" | "classworkSubmissions" | "classworkSubmissionVersions" | "classworkAttachments" | "classworkFeedback" | "classworkAuditEvents" | "timetableSubjects">,
+  studentMap: Map<string, string>,
+  userMap: Map<string, string>,
+  result: Pick<RestoreResult, "classworkItems" | "classworkItemVersions" | "classworkSubmissions" | "classworkSubmissionVersions" | "classworkAttachments" | "classworkFeedback" | "classworkAuditEvents" | "warnings">
+) {
+  const itemMap = new Map<string,string>(), itemVersionMap = new Map<string,string>(), submissionMap = new Map<string,string>(), submissionVersionMap = new Map<string,string>();
+  const subjectMap = new Map<string,string>();
+  for (const row of backup.timetableSubjects) {
+    const backupId = nullableText(row.id), shortName = nullableText(row.shortName); if (!backupId || !shortName) continue;
+    const local = await client.timetableSubject.findFirst({ where: { OR: [{ id: backupId }, { shortName }] }, select: { id: true, shortName: true } });
+    if (local?.shortName === shortName) subjectMap.set(backupId, local.id);
+  }
+  const actor = (value: unknown) => { const id = requiredText(value, "Classwork actor ID"); return userMap.get(id) ?? id; };
+  const optionalActor = (value: unknown) => { const id = nullableText(value); return id ? userMap.get(id) ?? id : null; };
+  for (const [index,row] of backup.classworkItems.entries()) try {
+    const id=requiredText(row.id,"Classwork item ID"),publicKey=requiredText(row.publicKey,"Classwork public key"),itemNumber=requiredText(row.itemNumber,"Classwork number"),backupSubjectId=requiredText(row.timetableSubjectId,"Classwork timetable subject"),timetableSubjectId=subjectMap.get(backupSubjectId);
+    if(!timetableSubjectId){result.classworkItems.skipped++;result.warnings.push(`Classwork ${itemNumber} was isolated because its exact timetable subject could not be mapped.`);continue;}
+    const [byId,byKey,byNumber]=await Promise.all([client.classworkItem.findUnique({where:{id}}),client.classworkItem.findUnique({where:{publicKey}}),client.classworkItem.findUnique({where:{itemNumber}})]);
+    if((byId&&(byId.publicKey!==publicKey||byId.itemNumber!==itemNumber))||(byKey&&byKey.id!==id)||(byNumber&&byNumber.id!==id)){result.classworkItems.skipped++;result.warnings.push(`Classwork ${itemNumber} collided with preserved local identity and was isolated.`);continue;}
+    if(byId){itemMap.set(id,id);result.classworkItems.skipped++;continue;}
+    await client.classworkItem.create({data:{id,publicKey,itemNumber,kind:requiredText(row.kind,"Classwork kind"),academicYear:requiredText(row.academicYear,"Classwork academic year"),className:requiredText(row.className,"Classwork class"),section:requiredText(row.section,"Classwork section"),subjectName:requiredText(row.subjectName,"Classwork subject"),timetableSubjectId,status:requiredText(row.status,"Classwork status"),currentVersionNumber:positiveInteger(row.currentVersionNumber,"Classwork current version"),rowVersion:positiveInteger(row.rowVersion,"Classwork row version"),createdByUserId:actor(row.createdByUserId),closedByUserId:optionalActor(row.closedByUserId),archivedByUserId:optionalActor(row.archivedByUserId),publishedAt:optionalDate(row.publishedAt,"Classwork published at"),closedAt:optionalDate(row.closedAt,"Classwork closed at"),archivedAt:optionalDate(row.archivedAt,"Classwork archived at"),...createdAtData(row,index,"classworkItems"),...(hasValue(row.updatedAt)?{updatedAt:requiredDate(row.updatedAt,"Classwork updated at")}:{})}});itemMap.set(id,id);result.classworkItems.created++;
+  }catch(error){result.classworkItems.errors.push(rowError("Classwork item",index,error));}
+  for(const[index,row]of backup.classworkItemVersions.entries())try{
+    const id=requiredText(row.id,"Classwork instruction version ID"),itemId=itemMap.get(requiredText(row.itemId,"Classwork item link"));if(!itemId){result.classworkItemVersions.skipped++;continue;}const publicKey=requiredText(row.publicKey,"Classwork version public key"),existing=await client.classworkItemVersion.findUnique({where:{id}}),byKey=await client.classworkItemVersion.findUnique({where:{publicKey}});if((existing&&existing.publicKey!==publicKey)||(byKey&&byKey.id!==id)){result.classworkItemVersions.skipped++;continue;}if(existing){itemVersionMap.set(id,id);result.classworkItemVersions.skipped++;continue;}await client.classworkItemVersion.create({data:{id,publicKey,itemId,versionNumber:positiveInteger(row.versionNumber,"Instruction version number"),versionStatus:requiredText(row.versionStatus,"Instruction version status"),title:requiredText(row.title,"Instruction title"),instructions:requiredText(row.instructions,"Instructions"),dueAt:optionalDate(row.dueAt,"Instruction due date"),correctionReason:nullableText(row.correctionReason),publishRequestKey:nullableText(row.publishRequestKey),createdByUserId:actor(row.createdByUserId),publishedByUserId:optionalActor(row.publishedByUserId),publishedAt:optionalDate(row.publishedAt,"Instruction published at"),replacedAt:optionalDate(row.replacedAt,"Instruction replaced at"),...createdAtData(row,index,"classworkItemVersions")}});itemVersionMap.set(id,id);result.classworkItemVersions.created++;
+  }catch(error){result.classworkItemVersions.errors.push(rowError("Classwork instruction version",index,error));}
+  for(const[index,row]of backup.classworkSubmissions.entries())try{
+    const id=requiredText(row.id,"Classwork submission ID"),itemId=itemMap.get(requiredText(row.itemId,"Submission item link")),studentId=studentMap.get(requiredText(row.studentId,"Submission Student link"));if(!itemId||!studentId){result.classworkSubmissions.skipped++;continue;}const publicKey=requiredText(row.publicKey,"Submission public key"),existing=await client.classworkSubmission.findUnique({where:{id}}),byKey=await client.classworkSubmission.findUnique({where:{publicKey}});if((existing&&existing.publicKey!==publicKey)||(byKey&&byKey.id!==id)){result.classworkSubmissions.skipped++;continue;}if(existing){submissionMap.set(id,id);result.classworkSubmissions.skipped++;continue;}await client.classworkSubmission.create({data:{id,publicKey,itemId,studentId,status:requiredText(row.status,"Submission status"),currentVersionNumber:positiveInteger(row.currentVersionNumber,"Submission current version"),rowVersion:positiveInteger(row.rowVersion,"Submission row version"),createdByUserId:actor(row.createdByUserId),createdByRole:requiredText(row.createdByRole,"Submission creator role"),lastSubmittedByUserId:optionalActor(row.lastSubmittedByUserId),lastSubmittedByRole:nullableText(row.lastSubmittedByRole),firstSubmittedAt:optionalDate(row.firstSubmittedAt,"First submitted at"),lastSubmittedAt:optionalDate(row.lastSubmittedAt,"Last submitted at"),returnedAt:optionalDate(row.returnedAt,"Returned at"),reviewedAt:optionalDate(row.reviewedAt,"Reviewed at"),...createdAtData(row,index,"classworkSubmissions"),...(hasValue(row.updatedAt)?{updatedAt:requiredDate(row.updatedAt,"Submission updated at")}:{})}});submissionMap.set(id,id);result.classworkSubmissions.created++;
+  }catch(error){result.classworkSubmissions.errors.push(rowError("Classwork submission",index,error));}
+  for(const[index,row]of backup.classworkSubmissionVersions.entries())try{
+    const id=requiredText(row.id,"Submission version ID"),submissionId=submissionMap.get(requiredText(row.submissionId,"Submission link")),itemVersionId=itemVersionMap.get(requiredText(row.itemVersionId,"Instruction version link"));if(!submissionId||!itemVersionId){result.classworkSubmissionVersions.skipped++;continue;}const publicKey=requiredText(row.publicKey,"Submission version public key"),existing=await client.classworkSubmissionVersion.findUnique({where:{id}}),byKey=await client.classworkSubmissionVersion.findUnique({where:{publicKey}});if((existing&&existing.publicKey!==publicKey)||(byKey&&byKey.id!==id)){result.classworkSubmissionVersions.skipped++;continue;}if(existing){submissionVersionMap.set(id,id);result.classworkSubmissionVersions.skipped++;continue;}await client.classworkSubmissionVersion.create({data:{id,publicKey,submissionId,itemVersionId,versionNumber:positiveInteger(row.versionNumber,"Submission version number"),versionStatus:requiredText(row.versionStatus,"Submission version status"),textBody:nullableText(row.textBody),submissionRequestKey:nullableText(row.submissionRequestKey),createdByUserId:actor(row.createdByUserId),createdByRole:requiredText(row.createdByRole,"Submission version creator role"),parentGuardianId:nullableText(row.parentGuardianId),submittedAt:optionalDate(row.submittedAt,"Submission version submitted at"),lockedAt:optionalDate(row.lockedAt,"Submission version locked at"),...createdAtData(row,index,"classworkSubmissionVersions"),...(hasValue(row.updatedAt)?{updatedAt:requiredDate(row.updatedAt,"Submission version updated at")}:{})}});submissionVersionMap.set(id,id);result.classworkSubmissionVersions.created++;
+  }catch(error){result.classworkSubmissionVersions.errors.push(rowError("Classwork submission version",index,error));}
+  for(const[index,row]of backup.classworkAttachments.entries())try{
+    const id=requiredText(row.id,"Classwork attachment ID");if(await client.classworkAttachment.findUnique({where:{id}})){result.classworkAttachments.skipped++;continue;}const backupItemVersionId=nullableText(row.itemVersionId),backupSubmissionVersionId=nullableText(row.submissionVersionId),itemVersionId=backupItemVersionId?itemVersionMap.get(backupItemVersionId):null,submissionVersionId=backupSubmissionVersionId?submissionVersionMap.get(backupSubmissionVersionId):null;if((backupItemVersionId&&!itemVersionId)||(backupSubmissionVersionId&&!submissionVersionId)){result.classworkAttachments.skipped++;continue;}await client.classworkAttachment.create({data:{id,publicKey:requiredText(row.publicKey,"Attachment public key"),itemVersionId:itemVersionId??null,submissionVersionId:submissionVersionId??null,storageKey:requiredText(row.storageKey,"Attachment storage key"),safeDisplayName:requiredText(row.safeDisplayName,"Attachment display name"),mediaType:requiredText(row.mediaType,"Attachment media type"),extension:requiredText(row.extension,"Attachment extension"),byteSize:positiveInteger(row.byteSize,"Attachment byte size"),sha256:requiredText(row.sha256,"Attachment SHA-256"),width:row.width==null?null:positiveInteger(row.width,"Attachment width"),height:row.height==null?null:positiveInteger(row.height,"Attachment height"),recoveryStatus:requiredText(row.recoveryStatus,"Attachment recovery status"),backupArtifactSha256:nullableText(row.backupArtifactSha256),backupKeyVersion:nullableText(row.backupKeyVersion),backupVerifiedAt:optionalDate(row.backupVerifiedAt,"Attachment backup verified at"),createdByUserId:actor(row.createdByUserId),...createdAtData(row,index,"classworkAttachments")}});result.classworkAttachments.created++;
+  }catch(error){result.classworkAttachments.errors.push(rowError("Classwork attachment",index,error));}
+  for(const[index,row]of backup.classworkFeedback.entries())try{
+    const id=requiredText(row.id,"Classwork feedback ID");if(await client.classworkFeedback.findUnique({where:{id}})){result.classworkFeedback.skipped++;continue;}const submissionId=submissionMap.get(requiredText(row.submissionId,"Feedback submission link")),backupVersionId=nullableText(row.submissionVersionId),submissionVersionId=backupVersionId?submissionVersionMap.get(backupVersionId):null;if(!submissionId||(backupVersionId&&!submissionVersionId)){result.classworkFeedback.skipped++;continue;}await client.classworkFeedback.create({data:{id,publicKey:requiredText(row.publicKey,"Feedback public key"),submissionId,submissionVersionId:submissionVersionId??null,sequenceNumber:positiveInteger(row.sequenceNumber,"Feedback sequence"),feedbackType:requiredText(row.feedbackType,"Feedback type"),body:requiredText(row.body,"Feedback body"),createdByUserId:actor(row.createdByUserId),createdByRole:requiredText(row.createdByRole,"Feedback creator role"),...createdAtData(row,index,"classworkFeedback")}});result.classworkFeedback.created++;
+  }catch(error){result.classworkFeedback.errors.push(rowError("Classwork feedback",index,error));}
+  for(const[index,row]of backup.classworkAuditEvents.entries())try{
+    const id=requiredText(row.id,"Classwork audit ID");if(await client.classworkAuditEvent.findUnique({where:{id}})){result.classworkAuditEvents.skipped++;continue;}const backupItemId=nullableText(row.itemId),backupSubmissionId=nullableText(row.submissionId),itemId=backupItemId?itemMap.get(backupItemId):null,submissionId=backupSubmissionId?submissionMap.get(backupSubmissionId):null;if((backupItemId&&!itemId)||(backupSubmissionId&&!submissionId)){result.classworkAuditEvents.skipped++;continue;}await client.classworkAuditEvent.create({data:{id,itemId:itemId??null,submissionId:submissionId??null,eventType:requiredText(row.eventType,"Classwork audit type"),actorUserId:actor(row.actorUserId),actorRole:requiredText(row.actorRole,"Classwork audit actor role"),snapshotJson:requiredText(row.snapshotJson,"Classwork audit snapshot"),occurredAt:requiredDate(row.occurredAt,"Classwork audit occurred at"),...createdAtData(row,index,"classworkAuditEvents")}});result.classworkAuditEvents.created++;
+  }catch(error){result.classworkAuditEvents.errors.push(rowError("Classwork audit event",index,error));}
 }
 
 export async function restoreExamMarksData(

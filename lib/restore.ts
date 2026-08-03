@@ -18,6 +18,7 @@ import {
 import { validateAuthSecurityBackup, type AuthSecurityBackup } from "@/lib/auth-backup";
 import { validateIamAccessBackup, type IamAccessBackup } from "@/lib/iam/backup";
 import { validateAcademicCalendarBackupRows } from "@/lib/academic-calendar-backup";
+import { validateClassworkBackupRows } from "@/lib/classwork-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 const MAX_ENTITY_ROWS = 100_000;
@@ -52,6 +53,7 @@ const TOP_LEVEL_KEYS = new Set([
   "bookCatalogItems", "bookCatalogRates", "bookSaleReceipts", "bookSaleReceiptLines", "bookCashSettlements",
   "libraryTitles", "libraryCopies", "libraryCopyEvents", "libraryMembers", "libraryPolicies", "libraryLoans", "libraryReservations", "libraryLoanEvents", "libraryIncidents", "libraryChargeRules", "libraryCharges", "libraryChargeEvents", "libraryStockVerificationSessions", "libraryStockVerificationRecords", "libraryStockVerificationScanEvents", "libraryStockVerificationEvents",
   "homeworkAssignments", "homeworkAssignmentEvents",
+  "classworkItems", "classworkItemVersions", "classworkSubmissions", "classworkSubmissionVersions", "classworkAttachments", "classworkFeedback", "classworkAuditEvents",
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
   "examGovernance",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
@@ -110,6 +112,7 @@ const BACKUP_COUNT_KEYS = new Set([
   "bookCatalogItems", "bookCatalogRates", "bookSaleReceipts", "bookSaleReceiptLines", "bookCashSettlements",
   "libraryTitles", "libraryCopies", "libraryCopyEvents", "libraryMembers", "libraryPolicies", "libraryLoans", "libraryReservations", "libraryLoanEvents", "libraryIncidents", "libraryChargeRules", "libraryCharges", "libraryChargeEvents", "libraryStockVerificationSessions", "libraryStockVerificationRecords", "libraryStockVerificationScanEvents", "libraryStockVerificationEvents",
   "homeworkAssignments", "homeworkAssignmentEvents",
+  "classworkItems", "classworkItemVersions", "classworkSubmissions", "classworkSubmissionVersions", "classworkAttachments", "classworkFeedback", "classworkAuditEvents",
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
   "examGovernanceRecords",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
@@ -389,6 +392,13 @@ export type ValidatedBackup = {
   libraryStockVerificationEvents: RestoreRecord[];
   homeworkAssignments: RestoreRecord[];
   homeworkAssignmentEvents: RestoreRecord[];
+  classworkItems: RestoreRecord[];
+  classworkItemVersions: RestoreRecord[];
+  classworkSubmissions: RestoreRecord[];
+  classworkSubmissionVersions: RestoreRecord[];
+  classworkAttachments: RestoreRecord[];
+  classworkFeedback: RestoreRecord[];
+  classworkAuditEvents: RestoreRecord[];
   examCycles: RestoreRecord[];
   examAssessments: RestoreRecord[];
   studentMarks: RestoreRecord[];
@@ -567,6 +577,13 @@ export type RestoreResult = {
   libraryStockVerificationEvents: EntityRestoreResult;
   homeworkAssignments: EntityRestoreResult;
   homeworkAssignmentEvents: EntityRestoreResult;
+  classworkItems: EntityRestoreResult;
+  classworkItemVersions: EntityRestoreResult;
+  classworkSubmissions: EntityRestoreResult;
+  classworkSubmissionVersions: EntityRestoreResult;
+  classworkAttachments: EntityRestoreResult;
+  classworkFeedback: EntityRestoreResult;
+  classworkAuditEvents: EntityRestoreResult;
   examCycles: EntityRestoreResult;
   examAssessments: EntityRestoreResult;
   studentMarks: EntityRestoreResult;
@@ -1260,6 +1277,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   const examGovernance = validateExamGovernanceBackup(root.examGovernance);
   const reportCardData = validateReportCardBackupRows(root, { studentIds, examIds, progressionIds: new Set(studentProgressionDecisions.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const academicCalendarData = validateAcademicCalendarBackupRows(root);
+  const classworkData = validateClassworkBackupRows(root);
   const teacherAnalyticsData = validateTeacherAnalyticsBackupRows(root, { staffMemberIds: new Set(staffMembers.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const certificateData = validateCertificateBackupRows(root, { studentIds, guardianIds: new Set(guardians.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const classXPackageData = validateClassXPackageBackupRows(root, {
@@ -1378,6 +1396,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     examGovernance,
     ...reportCardData,
     ...academicCalendarData,
+    ...classworkData,
     ...teacherAnalyticsData,
     ...certificateData,
     ...classXPackageData,

@@ -49,6 +49,7 @@ model Student {
   reportCards             StudentReportCard[]
   classXDocumentPackages  ClassXDocumentPackage[]
   identityCards           IdentityCard[]
+  classworkSubmissions    ClassworkSubmission[]
 
   @@index([academicYear])
   @@index([className, section])
@@ -2142,6 +2143,7 @@ model TimetableSubject {
   fixedPeriods            TimetableFixedPeriod[]
   timetableEntries        TimetableEntry[]
   homeworkAssignments     HomeworkAssignment[]
+  classworkItems          ClassworkItem[]
   examAssessments         ExamAssessment[]
   examSubjectPapers       ExamSubjectPaper[]
 
@@ -2211,6 +2213,186 @@ model HomeworkAssignmentEvent {
   @@index([assignmentId, eventDate])
   @@index([eventType])
   @@index([recordedByUserId])
+}
+
+// Prompt 23F: governed classwork, immutable instruction/submission versions,
+// private attachments, append-only feedback and audit history.
+model ClassworkItem {
+  id                   String                 @id @default(cuid())
+  publicKey            String                 @unique @default(uuid())
+  itemNumber           String                 @unique
+  kind                 String
+  academicYear         String
+  className            String
+  section              String
+  subjectName          String
+  timetableSubjectId   String
+  timetableSubject     TimetableSubject       @relation(fields: [timetableSubjectId], references: [id], onDelete: Restrict)
+  status               String                 @default("DRAFT")
+  currentVersionNumber Int                    @default(1)
+  rowVersion           Int                    @default(1)
+  createdByUserId      String
+  closedByUserId       String?
+  archivedByUserId     String?
+  publishedAt          DateTime?
+  closedAt             DateTime?
+  archivedAt           DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  versions             ClassworkItemVersion[]
+  submissions          ClassworkSubmission[]
+  audits               ClassworkAuditEvent[]
+
+  @@index([academicYear, className, section, subjectName])
+  @@index([timetableSubjectId, academicYear])
+  @@index([status, publishedAt])
+  @@index([createdByUserId, createdAt])
+}
+
+model ClassworkItemVersion {
+  id                 String                       @id @default(cuid())
+  publicKey          String                       @unique @default(uuid())
+  itemId             String
+  item               ClassworkItem                @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  versionNumber      Int
+  versionStatus      String                       @default("DRAFT")
+  title              String
+  instructions       String
+  dueAt              DateTime?
+  correctionReason   String?
+  publishRequestKey  String?                      @unique
+  createdByUserId    String
+  publishedByUserId  String?
+  createdAt          DateTime                     @default(now())
+  publishedAt        DateTime?
+  replacedAt         DateTime?
+  attachments        ClassworkAttachment[]
+  submissionVersions ClassworkSubmissionVersion[]
+
+  @@unique([itemId, versionNumber])
+  @@index([itemId, versionStatus])
+  @@index([publishedAt])
+}
+
+model ClassworkSubmission {
+  id                    String                       @id @default(cuid())
+  publicKey             String                       @unique @default(uuid())
+  itemId                String
+  item                  ClassworkItem                @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  studentId             String
+  student               Student                      @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  status                String                       @default("DRAFT")
+  currentVersionNumber  Int                          @default(1)
+  rowVersion            Int                          @default(1)
+  createdByUserId       String
+  createdByRole         String
+  lastSubmittedByUserId String?
+  lastSubmittedByRole   String?
+  firstSubmittedAt      DateTime?
+  lastSubmittedAt       DateTime?
+  returnedAt            DateTime?
+  reviewedAt            DateTime?
+  createdAt             DateTime                     @default(now())
+  updatedAt             DateTime                     @updatedAt
+  versions              ClassworkSubmissionVersion[]
+  feedback              ClassworkFeedback[]
+  audits                ClassworkAuditEvent[]
+
+  @@unique([itemId, studentId])
+  @@index([itemId, status, lastSubmittedAt])
+  @@index([studentId, status, updatedAt])
+}
+
+model ClassworkSubmissionVersion {
+  id                   String                @id @default(cuid())
+  publicKey            String                @unique @default(uuid())
+  submissionId         String
+  submission           ClassworkSubmission   @relation(fields: [submissionId], references: [id], onDelete: Restrict)
+  itemVersionId        String
+  itemVersion          ClassworkItemVersion  @relation(fields: [itemVersionId], references: [id], onDelete: Restrict)
+  versionNumber        Int
+  versionStatus        String                @default("DRAFT")
+  textBody             String?
+  submissionRequestKey String?               @unique
+  createdByUserId      String
+  createdByRole        String
+  parentGuardianId     String?
+  submittedAt          DateTime?
+  lockedAt             DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  attachments          ClassworkAttachment[]
+  feedback             ClassworkFeedback[]
+
+  @@unique([submissionId, versionNumber])
+  @@index([submissionId, versionStatus])
+  @@index([itemVersionId])
+}
+
+model ClassworkAttachment {
+  id                   String                      @id @default(cuid())
+  publicKey            String                      @unique @default(uuid())
+  itemVersionId        String?
+  itemVersion          ClassworkItemVersion?       @relation(fields: [itemVersionId], references: [id], onDelete: Restrict)
+  submissionVersionId  String?
+  submissionVersion    ClassworkSubmissionVersion? @relation(fields: [submissionVersionId], references: [id], onDelete: Restrict)
+  storageKey           String                      @unique
+  safeDisplayName      String
+  mediaType            String
+  extension            String
+  byteSize             Int
+  sha256               String
+  width                Int?
+  height               Int?
+  recoveryStatus       String                      @default("PENDING")
+  backupArtifactSha256 String?
+  backupKeyVersion     String?
+  backupVerifiedAt     DateTime?
+  createdByUserId      String
+  createdAt            DateTime                    @default(now())
+
+  @@index([itemVersionId, createdAt])
+  @@index([submissionVersionId, createdAt])
+  @@index([recoveryStatus, createdAt])
+  @@index([sha256])
+}
+
+model ClassworkFeedback {
+  id                  String                      @id @default(cuid())
+  publicKey           String                      @unique @default(uuid())
+  submissionId        String
+  submission          ClassworkSubmission         @relation(fields: [submissionId], references: [id], onDelete: Restrict)
+  submissionVersionId String?
+  submissionVersion   ClassworkSubmissionVersion? @relation(fields: [submissionVersionId], references: [id], onDelete: Restrict)
+  sequenceNumber      Int
+  feedbackType        String
+  body                String
+  createdByUserId     String
+  createdByRole       String
+  createdAt           DateTime                    @default(now())
+
+  @@unique([submissionId, sequenceNumber])
+  @@index([submissionId, createdAt])
+  @@index([submissionVersionId])
+}
+
+model ClassworkAuditEvent {
+  id           String               @id @default(cuid())
+  itemId       String?
+  item         ClassworkItem?       @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  submissionId String?
+  submission   ClassworkSubmission? @relation(fields: [submissionId], references: [id], onDelete: Restrict)
+  eventType    String
+  actorUserId  String
+  actorRole    String
+  snapshotJson String
+  occurredAt   DateTime             @default(now())
+  createdAt    DateTime             @default(now())
+
+  @@index([itemId, occurredAt])
+  @@index([submissionId, occurredAt])
+  @@index([eventType, occurredAt])
+  @@index([actorUserId, occurredAt])
 }
 
 model ExamCycle {

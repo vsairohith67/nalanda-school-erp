@@ -74,6 +74,8 @@ describe("full backup", () => {
       libraryIncidents: 0, libraryChargeRules: 0, libraryCharges: 0, libraryChargeEvents: 0,
       libraryStockVerificationSessions: 0, libraryStockVerificationRecords: 0, libraryStockVerificationScanEvents: 0, libraryStockVerificationEvents: 0,
       homeworkAssignments: 0, homeworkAssignmentEvents: 0,
+      classworkItems: 0, classworkItemVersions: 0, classworkSubmissions: 0,
+      classworkSubmissionVersions: 0, classworkAttachments: 0, classworkFeedback: 0, classworkAuditEvents: 0,
       examCycles: 0, examAssessments: 0, studentMarks: 0, studentMarkEvents: 0,
       examGovernanceRecords: 0,
       gradingSchemes: 0, gradeBands: 0, reportCardTemplates: 0, reportCardBatches: 0,

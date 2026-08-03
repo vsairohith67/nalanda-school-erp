@@ -511,10 +511,10 @@ function assertManagementBoundary(actor: IamActor, targetRoles: Role[]) {
   if (actor.user.role === "SUPER_ADMIN") return;
   if (targetRoles.includes("SUPER_ADMIN")) throw new Error("Only a Super Admin may manage another Super Admin");
   const permitted: Partial<Record<Role, Role[]>> = {
-    DIRECTOR: ["PRINCIPAL", "ADMIN", "ACCOUNTANT", "COMPUTER_OPERATOR", "TEACHER", "PARENT", "VIEWER"],
-    PRINCIPAL: ["COMPUTER_OPERATOR", "TEACHER", "PARENT", "VIEWER"],
-    ADMIN: ["ACCOUNTANT", "COMPUTER_OPERATOR", "TEACHER", "PARENT", "VIEWER"],
-    COMPUTER_OPERATOR: ["PARENT", "VIEWER"]
+    DIRECTOR: ["PRINCIPAL", "ADMIN", "ACCOUNTANT", "COMPUTER_OPERATOR", "TEACHER", "PARENT", "STUDENT", "VIEWER"],
+    PRINCIPAL: ["COMPUTER_OPERATOR", "TEACHER", "PARENT", "STUDENT", "VIEWER"],
+    ADMIN: ["ACCOUNTANT", "COMPUTER_OPERATOR", "TEACHER", "PARENT", "STUDENT", "VIEWER"],
+    COMPUTER_OPERATOR: ["PARENT", "STUDENT", "VIEWER"]
   };
   if (targetRoles.some((role) => !(permitted[actor.user.role] ?? []).includes(role))) throw new Error("The target user is outside your delegated administration boundary");
 }
