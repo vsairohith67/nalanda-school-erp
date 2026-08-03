@@ -54,7 +54,7 @@ describe("access rules", () => {
   });
 
   it("keeps Viewer/Auditor reports-only, Teacher operational access scoped, and Parent off internal ERP pages", async () => {
-    const viewerNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "VIEWER"));
+    const viewerNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "VIEWER"), "VIEWER");
     expect(viewerNav.map((item) => item.href)).toEqual([
       "/dashboard",
       "/students/lifecycle",
@@ -75,6 +75,7 @@ describe("access rules", () => {
       "/classwork",
       "/marks/reports",
       "/report-cards/reports",
+      "/academic-reports",
       "/certificates/reports",
       "/class-x-documents/reports",
       "/id-cards/reports",
@@ -98,10 +99,10 @@ describe("access rules", () => {
       "/cash-book/reports"
     ]);
 
-    const teacherNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"));
+    const teacherNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"), "TEACHER");
     expect(teacherNav.map((item) => item.href)).toEqual(["/attendance/students", "/attendance/students/reports", "/leave/staff", "/substitutes", "/homework/reports", "/homework", "/classwork", "/exams", "/teacher/calendar", "/teacher/exam-assignments", "/marks", "/report-cards", "/teacher/analytics"]);
 
-    const parentNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"));
+    const parentNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"), "PARENT");
     expect(parentNav.map((item) => item.href)).toEqual(["/my-classwork", "/parent/calendar", "/parent/class-x-documents"]);
   });
 
@@ -126,11 +127,11 @@ describe("access rules", () => {
   });
 
   it("keeps grouped navigation safe for Parent, Teacher, and Viewer/Auditor roles", async () => {
-    const parentGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"));
+    const parentGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"), "PARENT");
     expect(parentGroups.map((group) => group.label)).toEqual(["Students & Parents"]);
     expect(parentGroups[0]?.items.map((item) => item.href)).toEqual(["/my-classwork", "/parent/calendar", "/parent/class-x-documents"]);
 
-    const teacherGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"));
+    const teacherGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"), "TEACHER");
     expect(teacherGroups.map((group) => group.label)).toEqual(["Attendance", "Staff & Leave", "Communication"]);
     expect(teacherGroups.flatMap((group) => group.items.map((item) => item.href))).toEqual([
       "/attendance/students",
@@ -148,7 +149,7 @@ describe("access rules", () => {
       "/report-cards"
     ]);
 
-    const viewerGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "VIEWER"));
+    const viewerGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "VIEWER"), "VIEWER");
     const viewerHrefs = viewerGroups.flatMap((group) => group.items.map((item) => item.href));
     expect(viewerHrefs).toContain("/attendance/students/reports");
     expect(viewerHrefs).toContain("/students/lifecycle");

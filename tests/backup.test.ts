@@ -135,7 +135,11 @@ describe("full backup", () => {
       operationalCalendarDays: 0,
       schoolCalendarEvents: 0,
       schoolCalendarEventVersions: 0,
-      academicCalendarAuditEvents: 0
+      academicCalendarAuditEvents: 0,
+      academicReportDefinitions: 0,
+      academicReportRuns: 0,
+      academicReportSourceReferences: 0,
+      academicReportAuditEvents: 0
     });
     expect(backup.students).toHaveLength(1);
     expect(backup.feeStructures).toHaveLength(1);

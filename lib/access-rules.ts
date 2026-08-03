@@ -93,6 +93,8 @@ export const NAV_ITEMS = [
   { href: "/marks/reports", label: "Exam Reports", icon: "collection", permission: "VIEW_EXAM_REPORTS", group: "communication" },
   { href: "/report-cards", label: "Report Cards", icon: "timetable", permission: "VIEW_REPORT_CARDS", group: "communication" },
   { href: "/report-cards/reports", label: "Report Card Reports", icon: "collection", permission: "VIEW_REPORT_CARD_REPORTS", group: "communication" },
+  { href: "/academic-reports", label: "Academic Reporting", icon: "collection", permission: "VIEW_REPORT_CARD_REPORTS", group: "communication", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "VIEWER"] as Role[] },
+  { href: "/student/results", label: "Published Progress", icon: "collection", permission: "VIEW_OWN_REPORT_CARDS", group: "studentsParents", requiredRole: "STUDENT" },
   { href: "/certificates", label: "Certificates", icon: "timetable", permission: "VIEW_CERTIFICATES", group: "communication" },
   { href: "/certificates/reports", label: "Certificate Reports", icon: "collection", permission: "VIEW_CERTIFICATE_REPORTS", group: "communication" },
   { href: "/class-x-documents", label: "Class X Documents", icon: "timetable", permission: "VIEW_CLASS_X_PACKAGES", group: "communication" },
@@ -137,7 +139,7 @@ export const NAV_ITEMS = [
   { href: "/import-export", label: "Import / Export", icon: "importExport", permission: "VIEW_IMPORT_EXPORT", group: "system" },
   { href: "/import-verification", label: "Import Verification", icon: "importVerification", permission: "VIEW_IMPORT_VERIFICATION", group: "system" },
   { href: "/pilot-acceptance", label: "Pilot Acceptance", icon: "pilot", permission: "RUN_PILOT_ACCEPTANCE", group: "system" }
-] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role }>;
+] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role; allowedRoles?: Role[] }>;
 
 export type NavigationItem = (typeof NAV_ITEMS)[number];
 
@@ -150,7 +152,8 @@ export function permissionListCan(permissions: Iterable<CanonicalPermission>, pe
 export function visibleNavigationItems(permissions: Iterable<CanonicalPermission>, role?: Role) {
   return NAV_ITEMS.filter((item) =>
     permissionListCan(permissions, item.permission) &&
-    (!("requiredRole" in item) || !item.requiredRole || !role || item.requiredRole === role)
+    (!("requiredRole" in item) || !item.requiredRole || !role || item.requiredRole === role) &&
+    (!("allowedRoles" in item) || !item.allowedRoles || !role || item.allowedRoles.includes(role))
   );
 }
 

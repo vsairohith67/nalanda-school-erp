@@ -229,7 +229,7 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
 
   it("preserves the Schoolknot checkpoint across the additive examination implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(204);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(208);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
     expect(schema).toContain("model ExaminationTimetableVersion {");

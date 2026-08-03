@@ -42,7 +42,7 @@ export async function runMigrationFreshInstallCheck() {
     const students = Number((db.prepare("SELECT COUNT(*) AS value FROM Student").get() as { value: number }).value);
     const migrations = Number((db.prepare("SELECT COUNT(*) AS value FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL").get() as { value: number }).value);
     db.close();
-    if (users !== 4 || aliases !== 4 || students !== 8 || migrations !== 8) throw new Error("SYNTHETIC_BOOTSTRAP_COUNTS_INVALID");
+    if (users !== 4 || aliases !== 4 || students !== 8 || migrations !== 9) throw new Error("SYNTHETIC_BOOTSTRAP_COUNTS_INVALID");
     success = true;
     console.log(`Fresh migration check passed: migrations=${migrations} models=${schema.models} tables=${schema.tables}`);
     console.log(`Synthetic bootstrap passed: users=${users} usernameAliases=${aliases} students=${students}; lifecycle backfill remained dry-run.`);

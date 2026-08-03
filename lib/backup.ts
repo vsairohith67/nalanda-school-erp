@@ -11,6 +11,11 @@ import { authSecurityRecordCount, createAuthSecurityBackup, type AuthSecurityBac
 import { createIamAccessBackup, iamAccessRecordCount, type IamAccessBackup } from "./iam/backup";
 import { loadAcademicCalendarBackup } from "./academic-calendar-backup";
 import { loadClassworkBackup, validateClassworkBackupRows, type ClassworkBackup } from "./classwork-backup";
+import {
+  loadAcademicReportingBackup,
+  validateAcademicReportingBackupRows,
+  type AcademicReportingBackup
+} from "./academic-reporting-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 
@@ -73,6 +78,7 @@ type BackupClient = Pick<
   | "schoolCalendarEventVersion" | "academicCalendarAuditEvent"
   | "classworkItem" | "classworkItemVersion" | "classworkSubmission" | "classworkSubmissionVersion"
   | "classworkAttachment" | "classworkFeedback" | "classworkAuditEvent"
+  | "academicReportDefinition" | "academicReportRun" | "academicReportSourceReference" | "academicReportAuditEvent"
 >;
 
 type BackupDocumentInput = {
@@ -246,7 +252,7 @@ type BackupDocumentInput = {
   timetableDrafts?: readonly unknown[];
   timetableEntries?: readonly unknown[];
   academicYear?: string;
-} & Partial<ClassworkBackup>;
+} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
   const timetableTeachers = [...(input.timetableTeachers ?? [])];
@@ -329,6 +335,10 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const schoolCalendarEventVersions = sanitizeActorFields(input.schoolCalendarEventVersions ?? []);
   const academicCalendarAuditEvents = sanitizeActorFields(input.academicCalendarAuditEvents ?? []);
   const classworkBackup = validateClassworkBackupRows(input as unknown as Record<string, unknown>);
+  const academicReportingBackup = validateAcademicReportingBackupRows(input as unknown as Record<string, unknown>, {
+    resultSnapshotIds: new Set(examGovernance.studentResultSnapshots.map((row) => String(row.id))),
+    reportCardVersionIds: new Set(studentReportCardVersions.map((row) => String((row as Record<string, unknown>).id)))
+  });
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
   const teacherAnalyticsSnapshots = sanitizeActorFields(input.teacherAnalyticsSnapshots ?? []);
   const teacherAnalyticsReviews = sanitizeActorFields(input.teacherAnalyticsReviews ?? []);
@@ -480,6 +490,10 @@ export function createBackupDocument(input: BackupDocumentInput) {
         classworkAttachments: classworkBackup.classworkAttachments.length,
         classworkFeedback: classworkBackup.classworkFeedback.length,
         classworkAuditEvents: classworkBackup.classworkAuditEvents.length,
+        academicReportDefinitions: academicReportingBackup.academicReportDefinitions.length,
+        academicReportRuns: academicReportingBackup.academicReportRuns.length,
+        academicReportSourceReferences: academicReportingBackup.academicReportSourceReferences.length,
+        academicReportAuditEvents: academicReportingBackup.academicReportAuditEvents.length,
         examCycles: examCycles.length,
         examAssessments: examAssessments.length,
         studentMarks: studentMarks.length,
@@ -645,6 +659,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     homeworkAssignments,
     homeworkAssignmentEvents,
     ...classworkBackup,
+    ...academicReportingBackup,
     examCycles,
     examAssessments,
     studentMarks,
@@ -758,7 +773,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
 async function sqliteSchemaHas(client: BackupClient, table: string, column?: string) {
   const query = (client as any).$queryRawUnsafe;
   if (typeof query !== "function") return true;
-  const allowedTables = new Set(["StudentAttendanceSession", "StudentReportCardVersion", "AcademicCalendarVersion", "ClassworkItem"]);
+  const allowedTables = new Set(["StudentAttendanceSession", "StudentReportCardVersion", "AcademicCalendarVersion", "ClassworkItem", "AcademicReportDefinition"]);
   if (!allowedTables.has(table)) throw new Error("BACKUP_SCHEMA_PROBE_REFUSED");
   const rows = await query.call(client, `PRAGMA table_info("${table}")`) as Array<{ name?: string }>;
   return column ? rows.some((row) => row.name === column) : rows.length > 0;
@@ -768,11 +783,12 @@ export async function generateFullBackup(
   client: BackupClient,
   options: { generatedBy: string; generatedAt?: Date; excludeCloudBackupRunId?: string }
 ) {
-  const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable, classworkAvailable] = await Promise.all([
+  const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable, classworkAvailable, academicReportingAvailable] = await Promise.all([
     sqliteSchemaHas(client, "StudentAttendanceSession", "operationalCalendarVersionKey"),
     sqliteSchemaHas(client, "StudentReportCardVersion", "calendarBasisVersionKey"),
     sqliteSchemaHas(client, "AcademicCalendarVersion"),
-    sqliteSchemaHas(client, "ClassworkItem")
+    sqliteSchemaHas(client, "ClassworkItem"),
+    sqliteSchemaHas(client, "AcademicReportDefinition")
   ]);
   const studentAttendanceSessionArgs = {
     select: {
@@ -1192,6 +1208,9 @@ export async function generateFullBackup(
   const classworkBackup = classworkAvailable && (client as any).classworkItem?.findMany
     ? await loadClassworkBackup(client)
     : { classworkItems: [], classworkItemVersions: [], classworkSubmissions: [], classworkSubmissionVersions: [], classworkAttachments: [], classworkFeedback: [], classworkAuditEvents: [] };
+  const academicReportingBackup = academicReportingAvailable && (client as any).academicReportDefinition?.findMany
+    ? await loadAcademicReportingBackup(client as PrismaClient)
+    : { academicReportDefinitions: [], academicReportRuns: [], academicReportSourceReferences: [], academicReportAuditEvents: [] };
 
   return createBackupDocument({
     generatedAt: options.generatedAt ?? new Date(),
@@ -1220,6 +1239,7 @@ export async function generateFullBackup(
     },
     ...academicCalendarBackup,
     ...classworkBackup,
+    ...academicReportingBackup,
     rolePermissions,
     guardians,
     studentGuardians,

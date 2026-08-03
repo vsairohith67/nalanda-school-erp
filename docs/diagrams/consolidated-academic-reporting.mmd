@@ -1,0 +1,16 @@
+flowchart LR
+  A["Locked StudentResultSnapshot"] --> C["Exact source gate"]
+  B["Current issued StudentReportCardVersion"] --> C
+  C --> D{"Active role and object scope"}
+  D -->|"Principal or Director"| E["Governed school or cohort report"]
+  D -->|"Exact Teacher assignment"| F["Assigned subject report"]
+  D -->|"Linked Parent or self Student"| G["Issued longitudinal view"]
+  D -->|"Viewer"| H["Suppressed aggregate"]
+  E --> I["Compatibility and boundary checks"]
+  F --> I
+  G --> I
+  H --> I
+  I --> J["Immutable deterministic report run"]
+  J --> K["Private CSV or colour/monochrome PDF"]
+  J --> L["Append-only audit and supersession"]
+  I -. "incompatible sources remain separate" .-> M["Visible refusal warning"]

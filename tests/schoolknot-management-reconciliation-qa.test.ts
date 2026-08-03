@@ -127,7 +127,7 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
 
   it("preserves the Management checkpoint across the additive examination implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(204);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(208);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
     expect(schema).toContain("model ExaminationTimetableVersion {");
@@ -144,6 +144,7 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
       "20260801183000_parent_attendance_exam_timetable",
       "20260802170000_events_holidays_academic_calendar",
       "20260803123000_classwork_secure_submissions",
+      "20260803143000_academic_reporting",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);

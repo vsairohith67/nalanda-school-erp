@@ -40,6 +40,46 @@
   --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+/* Prompt 23G governed academic reporting */
+.academic-reporting-workspace,.academic-report-output{display:grid;gap:var(--space-4,1rem)}
+.academic-report-filter-grid{align-items:end}
+.academic-exam-selector{border:1px solid var(--border);border-radius:var(--radius-md,10px);display:flex;flex-wrap:wrap;gap:.65rem 1rem;margin:1rem 0;padding:1rem}
+.academic-exam-selector legend{font-weight:700;padding:0 .35rem}
+.academic-exam-selector label,.check-label{align-items:center;display:flex;gap:.55rem;min-height:44px}
+.academic-exam-selector input,.check-label input{inline-size:20px;block-size:20px}
+.approval-box,.comparison-preview{background:var(--surface-muted,var(--muted));border:1px solid var(--border);border-radius:var(--radius-md,10px);margin:1rem 0;padding:1rem}
+.academic-report-heading{align-items:flex-start;display:flex;gap:1rem;justify-content:space-between}
+.academic-report-actions{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:flex-end}
+.academic-report-actions .button,.academic-reporting-workspace button{min-block-size:44px}
+.academic-report-section{break-inside:avoid}
+.pattern-chart{border:1px solid var(--border);border-radius:var(--radius-md,10px);display:grid;gap:.6rem;margin:.75rem 0;padding:1rem}
+.pattern-row{align-items:center;display:grid;gap:.5rem;grid-template-columns:minmax(8rem,1fr) minmax(5rem,2fr) 3rem minmax(7rem,auto);min-height:44px}
+.pattern-bar{border:1px solid currentColor;display:block;height:22px;max-width:100%;min-width:44px}
+.pattern-solid{background:var(--accent)}
+.pattern-diagonal{background:repeating-linear-gradient(135deg,var(--accent) 0 4px,transparent 4px 9px)}
+.pattern-dot{background-image:radial-gradient(var(--accent) 1.5px,transparent 1.5px);background-size:7px 7px}
+.pattern-cross{background:repeating-linear-gradient(45deg,var(--accent) 0 2px,transparent 2px 8px),repeating-linear-gradient(-45deg,var(--accent) 0 2px,transparent 2px 8px)}
+.pattern-horizontal{background:repeating-linear-gradient(0deg,var(--accent) 0 3px,transparent 3px 8px)}
+
+@media (max-width: 700px){
+  .academic-report-heading{display:grid}
+  .academic-report-actions{justify-content:stretch}
+  .academic-report-actions .button{flex:1 1 100%}
+  .pattern-row{grid-template-columns:1fr 3rem}
+  .pattern-row .pattern-bar,.pattern-row small{grid-column:1 / -1}
+  .academic-exam-selector{display:grid}
+}
+
+@media print{
+  .academic-reporting-workspace>section:first-child,.academic-report-actions{display:none!important}
+  .pattern-bar{background-color:transparent!important;color:#000!important}
+  .pattern-solid{background:#000!important}
+  .pattern-diagonal{background:repeating-linear-gradient(135deg,#000 0 2px,transparent 2px 7px)!important}
+  .pattern-dot{background-image:radial-gradient(#000 1px,transparent 1px)!important}
+  .pattern-cross{background:repeating-linear-gradient(45deg,#000 0 1px,transparent 1px 7px),repeating-linear-gradient(-45deg,#000 0 1px,transparent 1px 7px)!important}
+  .pattern-horizontal{background:repeating-linear-gradient(0deg,#000 0 2px,transparent 2px 7px)!important}
+}
+
 /* Prompt 23D: Parent attendance and examination timetable */
 .parent-academic-page,
 .exam-timetable-page,

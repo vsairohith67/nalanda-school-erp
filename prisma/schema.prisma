@@ -3068,19 +3068,19 @@ model ExamMarkEntry {
 }
 
 model StudentResultSnapshot {
-  id                       String                   @id @default(cuid())
+  id                       String                          @id @default(cuid())
   calculationRunId         String
   inputFingerprint         String
   runNumber                Int
-  runStatus                String                   @default("PREVIEW")
+  runStatus                String                          @default("PREVIEW")
   examinationId            String
-  examination              Examination              @relation(fields: [examinationId], references: [id], onDelete: Restrict)
+  examination              Examination                     @relation(fields: [examinationId], references: [id], onDelete: Restrict)
   classScopeId             String
-  classScope               ExaminationClassScope    @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
+  classScope               ExaminationClassScope           @relation(fields: [classScopeId], references: [id], onDelete: Restrict)
   studentId                String
-  student                  Student                  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  student                  Student                         @relation(fields: [studentId], references: [id], onDelete: Restrict)
   schemeVersionId          String
-  schemeVersion            ExaminationSchemeVersion @relation(fields: [schemeVersionId], references: [id], onDelete: Restrict)
+  schemeVersion            ExaminationSchemeVersion        @relation(fields: [schemeVersionId], references: [id], onDelete: Restrict)
   snapshotVersion          Int
   totalObtained            Decimal
   totalMaximum             Decimal
@@ -3099,7 +3099,8 @@ model StudentResultSnapshot {
   calculatedAt             DateTime
   lockedByUserId           String?
   lockedAt                 DateTime?
-  createdAt                DateTime                 @default(now())
+  createdAt                DateTime                        @default(now())
+  academicReportSources    AcademicReportSourceReference[]
 
   @@unique([calculationRunId, studentId])
   @@unique([examinationId, classScopeId, studentId, snapshotVersion])
@@ -3263,9 +3264,9 @@ model StudentReportCard {
 }
 
 model StudentReportCardVersion {
-  id                        String            @id @default(cuid())
+  id                        String                          @id @default(cuid())
   reportCardId              String
-  reportCard                StudentReportCard @relation(fields: [reportCardId], references: [id], onDelete: Restrict)
+  reportCard                StudentReportCard               @relation(fields: [reportCardId], references: [id], onDelete: Restrict)
   versionNumber             Int
   versionType               String
   snapshotJson              String
@@ -3275,11 +3276,107 @@ model StudentReportCardVersion {
   issuedAt                  DateTime
   issuedByUserId            String?
   supersedesVersionId       String?
-  createdAt                 DateTime          @default(now())
+  createdAt                 DateTime                        @default(now())
+  academicReportSources     AcademicReportSourceReference[]
 
   @@unique([reportCardId, versionNumber])
   @@index([reportCardId, issuedAt])
   @@index([supersedesVersionId])
+}
+
+// Prompt 23G: generated academic reports preserve exact locked-result and
+// issued-report inputs. Runs, summaries, source links and audit rows are
+// append-only; corrections create a superseding run instead of mutating one.
+model AcademicReportDefinition {
+  id                  String              @id @default(cuid())
+  publicKey           String              @unique @default(uuid())
+  definitionCode      String              @unique
+  name                String
+  family              String
+  schemaVersion       Int                 @default(1)
+  status              String              @default("ACTIVE")
+  parameterSchemaJson String
+  minimumGroupSize    Int                 @default(5)
+  definitionHash      String
+  createdByUserId     String
+  createdAt           DateTime            @default(now())
+  runs                AcademicReportRun[]
+
+  @@index([family, status])
+}
+
+model AcademicReportRun {
+  id                   String                          @id @default(cuid())
+  publicKey            String                          @unique @default(uuid())
+  definitionId         String
+  definition           AcademicReportDefinition        @relation(fields: [definitionId], references: [id], onDelete: Restrict)
+  requestFingerprint   String                          @unique
+  parameterJson        String
+  accessScopeJson      String
+  normalizationRule    String
+  sourceFingerprint    String
+  status               String                          @default("COMPLETED")
+  immutableSummaryJson String
+  summaryHash          String
+  supersedesRunId      String?
+  supersedesRun        AcademicReportRun?              @relation("AcademicReportRunSupersession", fields: [supersedesRunId], references: [id], onDelete: Restrict)
+  supersedingRuns      AcademicReportRun[]             @relation("AcademicReportRunSupersession")
+  generatedAt          DateTime
+  createdByUserId      String
+  createdByRole        String
+  createdAt            DateTime                        @default(now())
+  sources              AcademicReportSourceReference[]
+  auditEvents          AcademicReportAuditEvent[]
+
+  @@index([definitionId, generatedAt])
+  @@index([supersedesRunId])
+  @@index([createdByUserId, generatedAt])
+}
+
+model AcademicReportSourceReference {
+  id                    String                    @id @default(cuid())
+  reportRunId           String
+  reportRun             AcademicReportRun         @relation(fields: [reportRunId], references: [id], onDelete: Restrict)
+  ordinal               Int
+  sourceKind            String
+  sourceRecordId        String
+  sourceVersion         Int
+  publicReference       String
+  resultSnapshotId      String?
+  resultSnapshot        StudentResultSnapshot?    @relation(fields: [resultSnapshotId], references: [id], onDelete: Restrict)
+  reportCardVersionId   String?
+  reportCardVersion     StudentReportCardVersion? @relation(fields: [reportCardVersionId], references: [id], onDelete: Restrict)
+  formulaVersion        String
+  roundingPolicyVersion String
+  schemeVersionRefsJson String
+  attendanceBasisKey    String?
+  sourceLockedAt        DateTime
+  publishedAt           DateTime
+  sourceHash            String
+  createdAt             DateTime                  @default(now())
+
+  @@unique([reportRunId, ordinal])
+  @@unique([reportRunId, sourceKind, sourceRecordId, sourceVersion])
+  @@index([resultSnapshotId])
+  @@index([reportCardVersionId])
+  @@index([publicReference])
+}
+
+model AcademicReportAuditEvent {
+  id              String            @id @default(cuid())
+  eventKey        String            @unique
+  reportRunId     String
+  reportRun       AcademicReportRun @relation(fields: [reportRunId], references: [id], onDelete: Restrict)
+  eventType       String
+  actorUserId     String
+  actorRole       String
+  safeDetailsJson String
+  occurredAt      DateTime          @default(now())
+  createdAt       DateTime          @default(now())
+
+  @@index([reportRunId, occurredAt])
+  @@index([eventType, occurredAt])
+  @@index([actorUserId, occurredAt])
 }
 
 // Prompt 23E: the operational academic-day calendar and the informational

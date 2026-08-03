@@ -1,5 +1,24 @@
 # Documentation Index
 
+## Prompt 23G consolidated, comparative and board-class reporting
+
+- [Reporting Specification](CONSOLIDATED_ACADEMIC_REPORTING_SPECIFICATION.md)
+- [Comparison Compatibility Rules](ACADEMIC_REPORT_COMPARISON_COMPATIBILITY_RULES.md)
+- [Class IX/X Disclaimer](ACADEMIC_REPORTING_BOARD_CLASS_DISCLAIMER.md)
+- [Privacy Matrix](ACADEMIC_REPORTING_PRIVACY_MATRIX.md)
+- [Operator Guide](ACADEMIC_REPORTING_OPERATOR_GUIDE.md)
+- [Developer Guide](ACADEMIC_REPORTING_DEVELOPER_GUIDE.md)
+- [Governed Reporting Diagram](diagrams/consolidated-academic-reporting.mmd)
+- [Implementation Checkpoint](evidence/PROMPT_23G_IMPLEMENTATION_CHECKPOINT.md)
+
+Prompt 23G is implemented on retained branch
+`feature/consolidated-board-reporting` for independent QA. It reads locked
+result snapshots and current issued report versions only, persists immutable
+deterministic report runs and enforces exact role/object scope and Viewer
+suppression. The additive migration remains unapplied to the operational
+database pending independent QA. Merge, deployment, official-board submission,
+public results, external providers and real-user onboarding are unauthorised.
+
 ## Prompt 23F governed classwork and secure submissions
 
 - [Classwork and Submission Governance](CLASSWORK_SUBMISSIONS_GOVERNANCE.md)

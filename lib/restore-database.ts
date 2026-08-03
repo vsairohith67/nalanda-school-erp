@@ -78,6 +78,8 @@ type RestoreDatabaseClient = Pick<
   | "schoolCalendarEventVersion" | "academicCalendarAuditEvent"
   | "classworkItem" | "classworkItemVersion" | "classworkSubmission" | "classworkSubmissionVersion"
   | "classworkAttachment" | "classworkFeedback" | "classworkAuditEvent"
+  | "academicReportDefinition" | "academicReportRun" | "academicReportSourceReference" | "academicReportAuditEvent"
+  | "studentResultSnapshot"
 >;
 
 export async function restoreValidatedBackup(
@@ -164,6 +166,10 @@ async function restoreIntoDatabase(
     classworkAttachments: emptyEntityResult(),
     classworkFeedback: emptyEntityResult(),
     classworkAuditEvents: emptyEntityResult(),
+    academicReportDefinitions: emptyEntityResult(),
+    academicReportRuns: emptyEntityResult(),
+    academicReportSourceReferences: emptyEntityResult(),
+    academicReportAuditEvents: emptyEntityResult(),
     examCycles: emptyEntityResult(),
     examAssessments: emptyEntityResult(),
     studentMarks: emptyEntityResult(),
@@ -495,6 +501,7 @@ async function restoreIntoDatabase(
   await restoreExamMarksData(client, backup, backupStudentLocalIds, backupUserToLocalUser, result);
   await restoreReportCardData(client, backup, backupStudentLocalIds, result);
   result.examGovernance = await restoreExamGovernanceBackup(client, backup.examGovernance, backupStudentLocalIds);
+  await restoreAcademicReportingData(client, backup, restoredBy, result);
   await restoreAcademicCalendarData(client, backup, restoredBy, result);
   await restoreCertificateData(client, backup, backupStudentLocalIds, result);
   await restoreClassXPackageData(client, backup, backupStudentLocalIds, result);
@@ -1854,6 +1861,131 @@ export async function restoreReportCardData(
   for(const [index,row] of backup.studentReportCardVersions.entries())try{const id=requiredText(row.id,"Report-card version ID"),reportCardId=cardMap.get(requiredText(row.reportCardId,"Version card ID"));if(!reportCardId){result.studentReportCardVersions.skipped++;continue;}const number=positiveInteger(row.versionNumber,"Version number"),byId=await client.studentReportCardVersion.findUnique({where:{id}}),byNumber=await client.studentReportCardVersion.findUnique({where:{reportCardId_versionNumber:{reportCardId,versionNumber:number}}});if((byId&&(byId.reportCardId!==reportCardId||byId.versionNumber!==number))||(byNumber&&byNumber.id!==id)){result.studentReportCardVersions.skipped++;result.warnings.push(`Report-card version ${number} was isolated because its identity differs locally.`);continue;}if(byId){versionMap.set(id,id);result.studentReportCardVersions.skipped++;continue;}const backupSupersedes=nullableText(row.supersedesVersionId),supersedesVersionId=backupSupersedes?versionMap.get(backupSupersedes):null;if(backupSupersedes&&!supersedesVersionId){result.studentReportCardVersions.skipped++;continue;}await client.studentReportCardVersion.create({data:{id,reportCardId,versionNumber:number,versionType:requiredText(row.versionType,"Version type"),snapshotJson:requiredText(row.snapshotJson,"Issued snapshot"),correctionReason:nullableText(row.correctionReason),issuedAt:requiredDate(row.issuedAt,"Version issued at"),issuedByUserId:null,supersedesVersionId:supersedesVersionId??null,calendarBasisVersionKey:nullableText(row.calendarBasisVersionKey),calendarBasisSnapshotJson:nullableText(row.calendarBasisSnapshotJson),...createdAtData(row,index,"studentReportCardVersions")}});versionMap.set(id,id);result.studentReportCardVersions.created++;}catch(error){result.studentReportCardVersions.errors.push(rowError("Student report-card version",index,error));}
 
   for(const [index,row] of backup.studentReportCardEvents.entries())try{const id=requiredText(row.id,"Report-card event ID"),reportCardId=cardMap.get(requiredText(row.reportCardId,"Event card ID")),backupVersionId=nullableText(row.versionId),versionId=backupVersionId?versionMap.get(backupVersionId):null;if(!reportCardId||(backupVersionId&&!versionId)){result.studentReportCardEvents.skipped++;continue;}if(await client.studentReportCardEvent.findUnique({where:{id}})){result.studentReportCardEvents.skipped++;continue;}await client.studentReportCardEvent.create({data:{id,reportCardId,versionId:versionId??null,eventType:requiredText(row.eventType,"Report-card event type"),eventDate:requiredDate(row.eventDate,"Event date"),previousStatus:nullableText(row.previousStatus),newStatus:nullableText(row.newStatus),reason:nullableText(row.reason),notes:nullableText(row.notes),recordedByUserId:null,actorLabel:nullableText(row.actorLabel),...createdAtData(row,index,"studentReportCardEvents")}});result.studentReportCardEvents.created++;}catch(error){result.studentReportCardEvents.errors.push(rowError("Student report-card event",index,error));}
+}
+
+export async function restoreAcademicReportingData(
+  client: RestoreDatabaseClient,
+  backup: Pick<ValidatedBackup, "academicReportDefinitions" | "academicReportRuns" | "academicReportSourceReferences" | "academicReportAuditEvents">,
+  restoredBy: { id: string; name: string },
+  result: Pick<RestoreResult, "academicReportDefinitions" | "academicReportRuns" | "academicReportSourceReferences" | "academicReportAuditEvents" | "warnings">
+) {
+  const definitionMap = new Map<string, string>();
+  for (const [index, row] of backup.academicReportDefinitions.entries()) try {
+    const id = requiredText(row.id, "Academic report definition ID");
+    const publicKey = requiredText(row.publicKey, "Academic report definition public key");
+    const definitionCode = requiredText(row.definitionCode, "Academic report definition code");
+    const [byId, byPublicKey, byCode] = await Promise.all([
+      client.academicReportDefinition.findUnique({ where: { id } }),
+      client.academicReportDefinition.findUnique({ where: { publicKey } }),
+      client.academicReportDefinition.findUnique({ where: { definitionCode } })
+    ]);
+    if ((byId && (byId.publicKey !== publicKey || byId.definitionCode !== definitionCode)) ||
+        (byPublicKey && byPublicKey.id !== id) || (byCode && byCode.id !== id)) {
+      result.academicReportDefinitions.skipped++;
+      result.warnings.push(`Academic report definition ${definitionCode} was isolated because its immutable identity differs locally.`);
+      continue;
+    }
+    if (byId) { definitionMap.set(id, id); result.academicReportDefinitions.skipped++; continue; }
+    await client.academicReportDefinition.create({ data: {
+      id, publicKey, definitionCode,
+      name: requiredText(row.name, "Academic report definition name"),
+      family: requiredText(row.family, "Academic report family"),
+      schemaVersion: positiveInteger(row.schemaVersion, "Academic report schema version"),
+      status: requiredText(row.status, "Academic report definition status"),
+      parameterSchemaJson: requiredText(row.parameterSchemaJson, "Academic report parameter schema"),
+      minimumGroupSize: positiveInteger(row.minimumGroupSize, "Academic report minimum group size"),
+      definitionHash: requiredText(row.definitionHash, "Academic report definition hash"),
+      createdByUserId: restoredBy.id,
+      ...createdAtData(row, index, "academicReportDefinitions")
+    } });
+    definitionMap.set(id, id); result.academicReportDefinitions.created++;
+  } catch (error) { result.academicReportDefinitions.errors.push(rowError("Academic report definition", index, error)); }
+
+  const runMap = new Map<string, string>();
+  for (const [index, row] of backup.academicReportRuns.entries()) try {
+    const id = requiredText(row.id, "Academic report run ID");
+    const publicKey = requiredText(row.publicKey, "Academic report run public key");
+    const requestFingerprint = requiredText(row.requestFingerprint, "Academic report request fingerprint");
+    const definitionId = definitionMap.get(requiredText(row.definitionId, "Academic report run definition ID"));
+    const supersedesBackupId = nullableText(row.supersedesRunId);
+    const supersedesRunId = supersedesBackupId ? runMap.get(supersedesBackupId) : null;
+    if (!definitionId || (supersedesBackupId && !supersedesRunId)) { result.academicReportRuns.skipped++; continue; }
+    const [byId, byPublicKey, byFingerprint] = await Promise.all([
+      client.academicReportRun.findUnique({ where: { id } }),
+      client.academicReportRun.findUnique({ where: { publicKey } }),
+      client.academicReportRun.findUnique({ where: { requestFingerprint } })
+    ]);
+    if ((byId && (byId.publicKey !== publicKey || byId.requestFingerprint !== requestFingerprint)) ||
+        (byPublicKey && byPublicKey.id !== id) || (byFingerprint && byFingerprint.id !== id)) {
+      result.academicReportRuns.skipped++;
+      result.warnings.push(`Academic report run ${publicKey} was isolated because preserved immutable output has a different identity.`);
+      continue;
+    }
+    if (byId) { runMap.set(id, id); result.academicReportRuns.skipped++; continue; }
+    await client.academicReportRun.create({ data: {
+      id, publicKey, definitionId, requestFingerprint,
+      parameterJson: requiredText(row.parameterJson, "Academic report parameters"),
+      accessScopeJson: requiredText(row.accessScopeJson, "Academic report access scope"),
+      normalizationRule: requiredText(row.normalizationRule, "Academic report normalization rule"),
+      sourceFingerprint: requiredText(row.sourceFingerprint, "Academic report source fingerprint"),
+      status: requiredText(row.status, "Academic report run status"),
+      immutableSummaryJson: requiredText(row.immutableSummaryJson, "Academic report immutable summary"),
+      summaryHash: requiredText(row.summaryHash, "Academic report summary hash"),
+      supersedesRunId: supersedesRunId ?? null,
+      generatedAt: requiredDate(row.generatedAt, "Academic report generation time"),
+      createdByUserId: restoredBy.id,
+      createdByRole: requiredText(row.createdByRole, "Academic report creator role"),
+      ...createdAtData(row, index, "academicReportRuns")
+    } });
+    runMap.set(id, id); result.academicReportRuns.created++;
+  } catch (error) { result.academicReportRuns.errors.push(rowError("Academic report run", index, error)); }
+
+  for (const [index, row] of backup.academicReportSourceReferences.entries()) try {
+    const id = requiredText(row.id, "Academic report source ID");
+    const reportRunId = runMap.get(requiredText(row.reportRunId, "Academic report source run ID"));
+    const resultSnapshotId = requiredText(row.resultSnapshotId, "Academic report locked snapshot ID");
+    const reportCardVersionId = requiredText(row.reportCardVersionId, "Academic report issued version ID");
+    if (!reportRunId || !await client.studentResultSnapshot.findUnique({ where: { id: resultSnapshotId } }) ||
+        !await client.studentReportCardVersion.findUnique({ where: { id: reportCardVersionId } })) {
+      result.academicReportSourceReferences.skipped++; continue;
+    }
+    if (await client.academicReportSourceReference.findUnique({ where: { id } })) { result.academicReportSourceReferences.skipped++; continue; }
+    await client.academicReportSourceReference.create({ data: {
+      id, reportRunId,
+      ordinal: positiveInteger(row.ordinal, "Academic report source ordinal"),
+      sourceKind: requiredText(row.sourceKind, "Academic report source kind"),
+      sourceRecordId: requiredText(row.sourceRecordId, "Academic report source record ID"),
+      sourceVersion: positiveInteger(row.sourceVersion, "Academic report source version"),
+      publicReference: requiredText(row.publicReference, "Academic report source public reference"),
+      resultSnapshotId, reportCardVersionId,
+      formulaVersion: requiredText(row.formulaVersion, "Academic report formula version"),
+      roundingPolicyVersion: requiredText(row.roundingPolicyVersion, "Academic report rounding version"),
+      schemeVersionRefsJson: requiredText(row.schemeVersionRefsJson, "Academic report scheme versions"),
+      attendanceBasisKey: nullableText(row.attendanceBasisKey),
+      sourceLockedAt: requiredDate(row.sourceLockedAt, "Academic report source lock time"),
+      publishedAt: requiredDate(row.publishedAt, "Academic report source publication time"),
+      sourceHash: requiredText(row.sourceHash, "Academic report source hash"),
+      ...createdAtData(row, index, "academicReportSourceReferences")
+    } });
+    result.academicReportSourceReferences.created++;
+  } catch (error) { result.academicReportSourceReferences.errors.push(rowError("Academic report source", index, error)); }
+
+  for (const [index, row] of backup.academicReportAuditEvents.entries()) try {
+    const id = requiredText(row.id, "Academic report audit ID");
+    const reportRunId = runMap.get(requiredText(row.reportRunId, "Academic report audit run ID"));
+    if (!reportRunId) { result.academicReportAuditEvents.skipped++; continue; }
+    if (await client.academicReportAuditEvent.findUnique({ where: { id } })) { result.academicReportAuditEvents.skipped++; continue; }
+    await client.academicReportAuditEvent.create({ data: {
+      id, eventKey: requiredText(row.eventKey, "Academic report event key"), reportRunId,
+      eventType: requiredText(row.eventType, "Academic report event type"),
+      actorUserId: restoredBy.id,
+      actorRole: requiredText(row.actorRole, "Academic report actor role"),
+      safeDetailsJson: requiredText(row.safeDetailsJson, "Academic report safe audit details"),
+      occurredAt: requiredDate(row.occurredAt, "Academic report event time"),
+      ...createdAtData(row, index, "academicReportAuditEvents")
+    } });
+    result.academicReportAuditEvents.created++;
+  } catch (error) { result.academicReportAuditEvents.errors.push(rowError("Academic report audit event", index, error)); }
 }
 
 export async function restoreTeacherAnalyticsData(

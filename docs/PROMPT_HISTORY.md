@@ -1455,3 +1455,26 @@ Result: `EVENTS_HOLIDAYS_CALENDAR_CLEARED`. Next governed phase: Prompt 23F —
 Classwork, Secure Submissions, Attachments and Feedback. No staging, deployment,
 public-site event publication, live provider activation or real-user onboarding
 is authorised.
+
+## Prompt 23G - Consolidated, Comparative and Board-Exam Reporting (2026-08-03)
+
+Implemented ten governed report families over exact locked result snapshots and
+current issued report-card versions. Reports retain source/formula/rounding/
+scheme/attendance versions and generation time; identical requests are
+idempotent, while corrections append a superseding immutable run. Compatibility
+rules refuse formula, rounding, component or calculation-mode drift and permit
+explicit published-percentage comparison only when maxima alone differ.
+
+Director/Principal, exact Teacher assignment, linked Parent/self Student and
+suppressed Viewer boundaries are revalidated server-side. CSV/PDF exports are
+private, bounded and deterministic; charts use text labels and patterns; Class
+IX/X output carries a non-board disclaimer. No raw-mark recalculation, Teacher
+ranking, Parent surveillance, public result, board submission, provider transfer
+or external AI is introduced.
+
+The `REPORT23G` copied-database harness passed two migration deployments, raw
+and weighted sources, compatible/incompatible cases, all entry states, groups,
+ties, multiple sections, revision/preboard evidence, role tampering, immutable
+and concurrent runs, forced rollback, backup/restore twice and byte-identical
+operational isolation. Independent Prompt 23G-QA remains required before merge,
+tag or operational migration.
