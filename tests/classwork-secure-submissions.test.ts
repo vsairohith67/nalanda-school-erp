@@ -63,6 +63,17 @@ describe("Prompt 23F governed classwork and secure submissions", () => {
     await expect(validateClassworkUpload(upload("cut.png", "image/png", png.subarray(0, png.length - 12)))).rejects.toThrow(/truncated/);
   });
 
+  it("rejects HTML, office payloads, animated WebP, excessive dimensions and size bypass", async () => {
+    const animatedWebp = Buffer.alloc(30); animatedWebp.write("RIFF", 0); animatedWebp.writeUInt32LE(22, 4); animatedWebp.write("WEBP", 8); animatedWebp.write("VP8X", 12); animatedWebp[20] = 0x02;
+    const wide = await sharp({ create: { width: 8001, height: 1, channels: 4, background: "white" } }).png().toBuffer();
+    await expect(validateClassworkUpload(upload("page.html", "text/html", Buffer.from("<!doctype html><script/></html>")))).rejects.toThrow(/Only PDF/);
+    await expect(validateClassworkUpload(upload("macro.docm", "application/vnd.ms-word.document.macroEnabled.12", Buffer.from("PK\u0003\u0004")))).rejects.toThrow(/Only PDF/);
+    await expect(validateClassworkUpload(upload("animated.webp", "image/webp", animatedWebp))).rejects.toThrow(/Animated/);
+    await expect(validateClassworkUpload(upload("wide.png", "image/png", wide))).rejects.toThrow(/8000/);
+    const oversize = upload("large.png", "image/png", Buffer.from([0x89,0x50,0x4e,0x47]));
+    await expect(validateClassworkUpload({ ...oversize, size: 5 * 1024 * 1024 + 1 })).rejects.toThrow(/5 MB/);
+  });
+
   it("enforces private key grammar and attachment quotas", async () => {
     expect(() => resolveStorageKey("../../public/payload.svg")).toThrow(/invalid/);
     expect(() => resolveStorageKey("aa/bb/not-a-uuid.png")).toThrow(/invalid/);
@@ -92,6 +103,8 @@ describe("Prompt 23F governed classwork and secure submissions", () => {
     expect(route).toContain("requireApiPermission"); expect(route).toContain('"Cache-Control": "private, no-store"'); expect(route).toContain('"Content-Security-Policy": "sandbox; default-src \'none\'"');
     expect(files).toContain('path.join(process.cwd(), "storage", "classwork")'); expect(files).not.toContain("public/"); expect(files).not.toContain("serviceWorker");
     expect(backup).toContain("restoreRoots: [string, string]"); expect(backup).toContain("first.manifestSha256 !== second.manifestSha256"); expect(backup).toContain('row.entry !== row.storageKey');
+    for (const encryptedOwnershipField of ["safeDisplayName", "ownerType", "itemPublicKey", "itemVersionPublicKey", "itemVersionNumber", "submissionPublicKey", "submissionVersionPublicKey", "submissionVersionNumber", "ownershipDigest"]) expect(backup).toContain(encryptedOwnershipField);
+    expect(backup).toContain("A requested classwork attachment is missing from the encrypted backup set.");
   });
 });
 
