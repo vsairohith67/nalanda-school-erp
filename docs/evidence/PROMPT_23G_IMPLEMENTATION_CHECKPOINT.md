@@ -31,3 +31,9 @@ Independent Prompt 23G-QA must use fresh `REPORT23GQA` fixtures and is the only
 phase authorised to apply the additive operational migration, merge main and
 create the governed release tag. Deployment, public results, official board
 submission and real-user/data onboarding remain unauthorised.
+
+Independent QA later identified that report filter controls rendered at 38 px
+despite the implementation proof recording compliant action targets. Prompt
+23G-QA corrected the filters to 44 px and re-ran the complete desktop/mobile,
+light/dark role matrix; the independent evidence supersedes that one
+implementation-stage measurement.

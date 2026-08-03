@@ -2458,7 +2458,6 @@ export async function restoreTimetableFoundationData(
         ? await client.timetableSubject.findUnique({ where: { id: backupId } })
         : null;
       existing ??= await client.timetableSubject.findUnique({ where: { shortName: data.shortName } });
-      existing ??= await client.timetableSubject.findFirst({ where: { name: data.name } });
 
       const subject = existing
         ? sameData(existing, data)

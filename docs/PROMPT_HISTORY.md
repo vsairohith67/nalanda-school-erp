@@ -1478,3 +1478,31 @@ ties, multiple sections, revision/preboard evidence, role tampering, immutable
 and concurrent runs, forced rollback, backup/restore twice and byte-identical
 operational isolation. Independent Prompt 23G-QA remains required before merge,
 tag or operational migration.
+
+## Prompt 23G-QA - Independent Consolidated and Board-Exam Reporting QA (2026-08-03)
+
+Fresh `REPORT23GQA` copied fixtures independently verified two years, Classes IX
+and X, four sections, two Teacher scopes, linked Parent/Student, suppressed
+Viewer and denied-role boundaries. Hand calculations covered deltas,
+normalisation, paper/group/combined values, outcomes, averages, highest, ties and
+completion. Incompatible formula/calculation structures were refused and
+unissued or drifted sources failed closed.
+
+Independent QA corrected same-name timetable-subject restore identity and 44 px
+report-filter targets. Deterministic/concurrent runs, immutable summaries,
+supersession, stale warnings, rollback, append-only audit, safe CSV/private PDF,
+backup generation twice and restore twice all passed. Principal, Teacher, Parent
+and Viewer passed 1366 x 768 and 390 x 844 Browser checks in light/dark with
+visible focus, labelled patterned charts, no overflow/dialogs and zero console,
+hydration or runtime-stderr errors. Cleanup was inspected twice.
+
+The sequential 307-page/457-API route inventory, zero-change lifecycle pass,
+typecheck, 184-file/1,677-test suite, 4 GB build, version-37 backup and Git safety
+gates passed. The approved additive migration applied with clean status and the
+exact zero-business/protected-account baseline unchanged. The retained feature
+branch and annotated tag are `feature/consolidated-board-reporting` and
+`consolidated-academic-reporting-v37-2026-08-03`.
+
+Result: `ACADEMIC_REPORTING_CLEARED`. Next governed phase: Prompt 23H -
+Admissions and Enquiry CRM. No deployment, public results, official board
+submission, live provider or real-user/data onboarding is authorised.

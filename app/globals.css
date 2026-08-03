@@ -43,6 +43,7 @@
 /* Prompt 23G governed academic reporting */
 .academic-reporting-workspace,.academic-report-output{display:grid;gap:var(--space-4,1rem)}
 .academic-report-filter-grid{align-items:end}
+.academic-report-filter-grid input,.academic-report-filter-grid select,.approval-box input{min-block-size:44px}
 .academic-exam-selector{border:1px solid var(--border);border-radius:var(--radius-md,10px);display:flex;flex-wrap:wrap;gap:.65rem 1rem;margin:1rem 0;padding:1rem}
 .academic-exam-selector legend{font-weight:700;padding:0 .35rem}
 .academic-exam-selector label,.check-label{align-items:center;display:flex;gap:.55rem;min-height:44px}

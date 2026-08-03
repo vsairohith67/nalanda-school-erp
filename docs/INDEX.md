@@ -10,14 +10,15 @@
 - [Developer Guide](ACADEMIC_REPORTING_DEVELOPER_GUIDE.md)
 - [Governed Reporting Diagram](diagrams/consolidated-academic-reporting.mmd)
 - [Implementation Checkpoint](evidence/PROMPT_23G_IMPLEMENTATION_CHECKPOINT.md)
+- [Independent QA Evidence](evidence/PROMPT_23GQA_RELEASE_EVIDENCE.md)
 
-Prompt 23G is implemented on retained branch
-`feature/consolidated-board-reporting` for independent QA. It reads locked
+Prompt 23G is independently cleared on retained branch
+`feature/consolidated-board-reporting`. It reads locked
 result snapshots and current issued report versions only, persists immutable
 deterministic report runs and enforces exact role/object scope and Viewer
-suppression. The additive migration remains unapplied to the operational
-database pending independent QA. Merge, deployment, official-board submission,
-public results, external providers and real-user onboarding are unauthorised.
+suppression. The approved additive migration is applied with the exact zero-
+business baseline preserved. Deployment, official-board submission, public
+results, external providers and real-user onboarding remain unauthorised.
 
 ## Prompt 23F governed classwork and secure submissions
 
