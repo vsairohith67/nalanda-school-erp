@@ -77,6 +77,8 @@ export const NAV_ITEMS = [
   { href: "/payroll/reports", label: "Payroll Reports", icon: "collection", permission: "VIEW_PAYROLL_REPORTS", group: "staffLeave" },
   { href: "/payroll/reports", label: "Payroll Aggregates", icon: "collection", permission: "VIEW_PAYROLL_AGGREGATES", group: "staffLeave" },
   { href: "/my-payroll", label: "My Payroll", icon: "rupee", permission: "VIEW_OWN_PAYROLL", group: "staffLeave" },
+  { href: "/payslip-requests", label: "Payslip Requests", icon: "rupee", permission: "VIEW_PAYSLIP_REQUESTS", group: "staffLeave" },
+  { href: "/my-payslip-requests", label: "My Payslip Requests", icon: "rupee", permission: "VIEW_OWN_PAYSLIP_REQUESTS", group: "staffLeave", requiredRole: "TEACHER" },
   { href: "/notices", label: "Parent Notices", icon: "notices", permission: "VIEW_NOTICES", group: "communication" },
   { href: "/notifications/manage", label: "Notification Campaigns", icon: "notices", permission: "CREATE_NOTIFICATION_CAMPAIGNS", group: "communication" },
   { href: "/notifications/reports", label: "Notification Reports", icon: "collection", permission: "VIEW_NOTIFICATION_REPORTS", group: "communication" },

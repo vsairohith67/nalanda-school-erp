@@ -154,6 +154,15 @@ export const PERMISSIONS = [
   "VIEW_PAYROLL_AGGREGATES",
   "VIEW_OWN_PAYROLL",
   "REQUEST_SALARY_ADVANCE",
+  "VIEW_PAYSLIP_REQUESTS",
+  "PREPARE_PAYSLIP_REQUEST",
+  "UPLOAD_PAYSLIP_DOCUMENT",
+  "ISSUE_PAYSLIP_DOCUMENT",
+  "REPLACE_PAYSLIP_DOCUMENT",
+  "VIEW_PAYSLIP_REQUEST_AUDIT",
+  "MANAGE_PAYSLIP_MONTH_AVAILABILITY",
+  "VIEW_OWN_PAYSLIP_REQUESTS",
+  "REQUEST_OWN_PAYSLIP",
   "VIEW_EXAMS",
   "MANAGE_EXAMS",
   "CONFIGURE_EXAM_ASSESSMENTS",
@@ -638,7 +647,16 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { permission: "EXPORT_PAYROLL_REPORTS", label: "Export payroll reports", description: "Download the bounded formula-safe payroll reporting allowlist." },
       { permission: "VIEW_PAYROLL_AGGREGATES", label: "View suppressed payroll aggregates", description: "Separately approved aggregate-only payroll totals with minimum-group suppression." },
       { permission: "VIEW_OWN_PAYROLL", label: "View own payroll", description: "View only the salary history, locked payroll inputs, issued payslips and advances of the exact linked Staff profile." },
-      { permission: "REQUEST_SALARY_ADVANCE", label: "Request own salary advance", description: "Request an advance for the exact linked Staff profile without disbursement." }
+      { permission: "REQUEST_SALARY_ADVANCE", label: "Request own salary advance", description: "Request an advance for the exact linked Staff profile without disbursement." },
+      { permission: "VIEW_PAYSLIP_REQUESTS", label: "View payslip request queue", description: "View Staff payslip requests and protected-document status without receiving document passwords." },
+      { permission: "PREPARE_PAYSLIP_REQUEST", label: "Prepare payslip requests", description: "Accept or assign externally prepared payslip requests without final issue authority." },
+      { permission: "UPLOAD_PAYSLIP_DOCUMENT", label: "Upload payslip documents", description: "Upload validated synthetic or externally prepared PDF source documents for protection and review." },
+      { permission: "ISSUE_PAYSLIP_DOCUMENT", label: "Issue payslip documents", description: "Critically re-authenticate, approve and finally issue a protected Staff payslip document." },
+      { permission: "REPLACE_PAYSLIP_DOCUMENT", label: "Replace payslip documents", description: "Create governed corrected versions without overwriting the former protected document." },
+      { permission: "VIEW_PAYSLIP_REQUEST_AUDIT", label: "View payslip request audit", description: "View request, version, password-reveal, view and download audit history." },
+      { permission: "MANAGE_PAYSLIP_MONTH_AVAILABILITY", label: "Manage payslip month availability", description: "Mark historical record months available without entering or calculating salary data." },
+      { permission: "VIEW_OWN_PAYSLIP_REQUESTS", label: "View own payslip requests", description: "View only requests and protected documents owned by the exact active Staff link in Staff/Teacher context." },
+      { permission: "REQUEST_OWN_PAYSLIP", label: "Request own payslip", description: "Request one or more governed available months for the exact active Staff link in Staff/Teacher context." }
     ]
   },
   {
@@ -1369,7 +1387,7 @@ export const RECOMMENDED_ROLE_PERMISSIONS: Record<Role, ReadonlySet<CanonicalPer
   ADMIN: adminPermissions,
   ACCOUNTANT: accountantPermissions,
   COMPUTER_OPERATOR: computerOperatorPermissions,
-  TEACHER: new Set(["VIEW_TEACHER_PLACEHOLDER", "VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS", "VIEW_STAFF_LEAVE", "APPLY_STAFF_LEAVE", "VIEW_SUBSTITUTES", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_CLASSWORK", "MANAGE_CLASSWORK", "PUBLISH_CLASSWORK", "CLOSE_CLASSWORK", "REVIEW_CLASSWORK_SUBMISSIONS", "VIEW_CLASSWORK_AGGREGATES", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "REVIEW_ADMISSION_APPLICATIONS", "VIEW_EXAMS", "ENTER_MARKS", "SUBMIT_MARKS", "VIEW_OWN_EXAM_ASSIGNMENTS", "VIEW_OWN_EXAM_MARKS", "ENTER_ASSIGNED_EXAM_MARKS", "SUBMIT_ASSIGNED_EXAM_MARKS", "REQUEST_EXAM_MARK_CORRECTION", "VIEW_REPORT_CARDS", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "VIEW_OWN_TEACHER_ANALYTICS", "VIEW_OWN_STAFF_ID_CARD", "VIEW_OWN_NOTIFICATIONS", "CREATE_SCOPED_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT", "VIEW_STAFF_CALENDAR", "VIEW_OWN_PAYROLL", "REQUEST_SALARY_ADVANCE"]),
+  TEACHER: new Set(["VIEW_TEACHER_PLACEHOLDER", "VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS", "VIEW_STAFF_LEAVE", "APPLY_STAFF_LEAVE", "VIEW_SUBSTITUTES", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_CLASSWORK", "MANAGE_CLASSWORK", "PUBLISH_CLASSWORK", "CLOSE_CLASSWORK", "REVIEW_CLASSWORK_SUBMISSIONS", "VIEW_CLASSWORK_AGGREGATES", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "REVIEW_ADMISSION_APPLICATIONS", "VIEW_EXAMS", "ENTER_MARKS", "SUBMIT_MARKS", "VIEW_OWN_EXAM_ASSIGNMENTS", "VIEW_OWN_EXAM_MARKS", "ENTER_ASSIGNED_EXAM_MARKS", "SUBMIT_ASSIGNED_EXAM_MARKS", "REQUEST_EXAM_MARK_CORRECTION", "VIEW_REPORT_CARDS", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "VIEW_OWN_TEACHER_ANALYTICS", "VIEW_OWN_STAFF_ID_CARD", "VIEW_OWN_NOTIFICATIONS", "CREATE_SCOPED_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT", "VIEW_STAFF_CALENDAR", "VIEW_OWN_PAYROLL", "REQUEST_SALARY_ADVANCE", "VIEW_OWN_PAYSLIP_REQUESTS", "REQUEST_OWN_PAYSLIP"]),
   PARENT: new Set(["VIEW_PARENT_PLACEHOLDER", "VIEW_OWN_ATTENDANCE", "VIEW_OWN_EXAM_TIMETABLE", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_OWN_REPORT_CARDS", "VIEW_OWN_CLASSWORK", "SUBMIT_OWN_CLASSWORK", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "REQUEST_OWN_CHILD_CERTIFICATES", "VIEW_OWN_CHILD_CERTIFICATES", "REQUEST_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_STUDENT_ID_CARDS", "VIEW_OWN_FAMILY_RECEIPTS", "VIEW_OWN_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT", "VIEW_OWN_CALENDAR"]),
   STUDENT: new Set(["VIEW_OWN_CLASSWORK", "SUBMIT_OWN_CLASSWORK", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "VIEW_OWN_REPORT_CARDS", "VIEW_OWN_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS"]),
   VIEWER: viewerPermissions

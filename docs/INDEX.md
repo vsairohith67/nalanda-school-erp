@@ -9,6 +9,12 @@
 - [Documentation Reconciliation Report](DOCUMENTATION_RECONCILIATION_REPORT.md)
 - [Preflight and History Evidence](evidence/GOV_RECON_1_PREFLIGHT_AND_HISTORY_EVIDENCE.md)
 - [Staff Payslip Request and Secure Delivery Specification](STAFF_PAYSLIP_REQUEST_AND_SECURE_DELIVERY_SPEC.md)
+- [Staff Payslip Request Guide](STAFF_PAYSLIP_REQUEST_STAFF_GUIDE.md)
+- [Staff Payslip Request Operator Guide](STAFF_PAYSLIP_REQUEST_OPERATOR_GUIDE.md)
+- [Staff Payslip Request Developer Guide](STAFF_PAYSLIP_REQUEST_DEVELOPER_GUIDE.md)
+- [Secure PDF and Password Threat Model](STAFF_PAYSLIP_SECURE_PDF_AND_PASSWORD_THREAT_MODEL.md)
+- [Private Storage, Replacement and Recovery](STAFF_PAYSLIP_PRIVATE_STORAGE_BACKUP_AND_RECOVERY.md)
+- [HR-PAYSLIP-REQ-1 Implementation Checkpoint](evidence/HR_PAYSLIP_REQ_1_IMPLEMENTATION_CHECKPOINT.md)
 - [Family/Multi-Student Mixed-Tender Audit](FINANCE_MULTI_CHILD_SPLIT_TENDER_AUDIT.md)
 - [Family/Multi-Student Mixed-Tender Requirements](FINANCE_MULTI_CHILD_SPLIT_TENDER_REQUIREMENTS.md)
 - [Family/Multi-Student Mixed-Tender Architecture, Guides and Threat Model](FAMILY_MULTI_STUDENT_MIXED_TENDER_COLLECTION.md)
@@ -21,7 +27,7 @@
 - [Safe Staging, Release and Client Update Strategy](SAFE_STAGING_RELEASE_AND_CLIENT_UPDATE_STRATEGY.md)
 - [Basic Memory Cloud Sync Package](BASIC_MEMORY_SYNC_PACKAGE.md)
 
-The 2026-08-08 scope correction is authoritative: full payroll automation is V1.5 even though Prompt 23I is released; V1 retains Staff payslip request/secure delivery, canonical template/physical print, and safe update blockers. `FIN-FAMILY-PAY-1` implements the family-payment blocker locally/private; provider activation, deployment, and real-data onboarding remain outside its release. Historical documents remain accessible and are explicitly superseded where they conflict.
+The 2026-08-08 scope correction is authoritative: full payroll automation is V1.5 even though Prompt 23I is released. `FIN-FAMILY-PAY-1` implements the family-payment blocker locally/private and HR-PAYSLIP-REQ-1 implements the separate V1 request/protected-delivery workflow on its retained branch, both awaiting their applicable release gates. Canonical template/physical print and safe update blockers remain. Provider activation, deployment and real-data onboarding are outside these releases. Historical documents remain accessible and are explicitly superseded where they conflict.
 
 ## Prompt 23I payroll, payslips and employee self-service
 

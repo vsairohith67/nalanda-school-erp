@@ -170,7 +170,14 @@ describe("full backup", () => {
       salaryAdvances: 0,
       advanceRecoverySchedules: 0,
       payslipVersions: 0,
-      payrollEvents: 0
+      payrollEvents: 0,
+      staffPayslipRequests: 0,
+      staffPayslipRequestMonths: 0,
+      staffPayslipRequestEvents: 0,
+      staffPayslipMonthAvailability: 0,
+      staffPayslipDocumentVersions: 0,
+      staffPayslipDocumentMonths: 0,
+      staffPayslipAccessEvents: 0
     });
     expect(backup.students).toHaveLength(1);
     expect(backup.feeStructures).toHaveLength(1);

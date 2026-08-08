@@ -18,6 +18,7 @@ import { createHash } from "node:crypto";
 import { restoreAcademicCalendarData } from "@/lib/academic-calendar-restore";
 import { ADMISSIONS_BACKUP_KEYS, restoreAdmissionsBackup, type AdmissionsBackupKey } from "@/lib/admissions-backup";
 import { PAYROLL_BACKUP_KEYS, restorePayrollBackup, type PayrollBackupKey } from "@/lib/payroll-backup";
+import { PAYSLIP_REQUEST_BACKUP_KEYS, restorePayslipRequestBackup, type PayslipRequestBackupKey } from "@/lib/payslip-request-backup";
 import { FAMILY_COLLECTION_BACKUP_KEYS, type FamilyCollectionBackupKey } from "@/lib/family-collection-backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
@@ -91,6 +92,8 @@ type RestoreDatabaseClient = Pick<
   | "staffCompensationAssignment" | "salaryRevision" | "payrollPeriod" | "payrollRun"
   | "employeePayrollResult" | "payrollComponentResult" | "salaryAdvance"
   | "advanceRecoverySchedule" | "payslipVersion" | "payrollEvent"
+  | "staffPayslipMonthAvailability" | "staffPayslipRequest" | "staffPayslipRequestMonth"
+  | "staffPayslipRequestEvent" | "staffPayslipDocumentVersion" | "staffPayslipDocumentMonth" | "staffPayslipAccessEvent"
 >;
 
 export async function restoreValidatedBackup(
@@ -112,6 +115,7 @@ async function restoreIntoDatabase(
   const result: RestoreResult = {
     ...(Object.fromEntries(ADMISSIONS_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<AdmissionsBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(PAYROLL_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<PayrollBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(PAYSLIP_REQUEST_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<PayslipRequestBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<FamilyCollectionBackupKey, ReturnType<typeof emptyEntityResult>>),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
@@ -540,6 +544,12 @@ async function restoreIntoDatabase(
     result[key].created = payrollResult[key].created;
     result[key].skipped = payrollResult[key].skipped;
     result[key].errors.push(...payrollResult[key].errors);
+  }
+  const payslipRequestResult = await restorePayslipRequestBackup(client as unknown as PrismaClient, backup);
+  for (const key of PAYSLIP_REQUEST_BACKUP_KEYS) {
+    result[key].created = payslipRequestResult[key].created;
+    result[key].skipped = payslipRequestResult[key].skipped;
+    result[key].errors.push(...payslipRequestResult[key].errors);
   }
   await restoreAcademicCalendarData(client, backup, restoredBy, result);
   await restoreCertificateData(client, backup, backupStudentLocalIds, result);

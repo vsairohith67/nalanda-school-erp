@@ -18,6 +18,7 @@ import {
 } from "./academic-reporting-backup";
 import { loadAdmissionsBackup, validateAdmissionsBackupRows, type AdmissionsBackup } from "./admissions-backup";
 import { loadPayrollBackup, PAYROLL_BACKUP_KEYS, validatePayrollBackupRows, type PayrollBackup, type PayrollBackupKey } from "./payroll-backup";
+import { loadPayslipRequestBackup, PAYSLIP_REQUEST_BACKUP_KEYS, validatePayslipRequestBackupRows, type PayslipRequestBackup, type PayslipRequestBackupKey } from "./payslip-request-backup";
 import { emptyFamilyCollectionBackup, familyCollectionSchemaAvailable, FAMILY_COLLECTION_BACKUP_KEYS, loadFamilyCollectionBackup, validateFamilyCollectionBackupRows, type FamilyCollectionBackup } from "./family-collection-backup";
 
 const APP_NAME = "Nalanda Fee Control";
@@ -90,6 +91,8 @@ type BackupClient = Pick<
   | "staffCompensationAssignment" | "salaryRevision" | "payrollPeriod" | "payrollRun"
   | "employeePayrollResult" | "payrollComponentResult" | "salaryAdvance"
   | "advanceRecoverySchedule" | "payslipVersion" | "payrollEvent"
+  | "staffPayslipMonthAvailability" | "staffPayslipRequest" | "staffPayslipRequestMonth"
+  | "staffPayslipRequestEvent" | "staffPayslipDocumentVersion" | "staffPayslipDocumentMonth" | "staffPayslipAccessEvent"
 >;
 
 type BackupDocumentInput = {
@@ -263,7 +266,7 @@ type BackupDocumentInput = {
   timetableDrafts?: readonly unknown[];
   timetableEntries?: readonly unknown[];
   academicYear?: string;
-} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<FamilyCollectionBackup>;
+} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<FamilyCollectionBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
   const timetableTeachers = [...(input.timetableTeachers ?? [])];
@@ -353,6 +356,8 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const admissionsBackup = validateAdmissionsBackupRows(input as unknown as Record<string, unknown>);
   const payrollBackup = validatePayrollBackupRows(input as unknown as Record<string, unknown>);
   const payrollCounts = Object.fromEntries(PAYROLL_BACKUP_KEYS.map((key) => [key, payrollBackup[key].length])) as Record<PayrollBackupKey, number>;
+  const payslipRequestBackup = validatePayslipRequestBackupRows(input as unknown as Record<string, unknown>);
+  const payslipRequestCounts = Object.fromEntries(PAYSLIP_REQUEST_BACKUP_KEYS.map((key) => [key, payslipRequestBackup[key].length])) as Record<PayslipRequestBackupKey, number>;
   const familyCollectionBackup = validateFamilyCollectionBackupRows(input as unknown as Record<string, unknown>);
   const familyCollectionCounts = Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, familyCollectionBackup[key].length]));
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
@@ -526,6 +531,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
         admissionConversions: admissionsBackup.admissionConversions.length,
         admissionEvents: admissionsBackup.admissionEvents.length,
         ...payrollCounts,
+        ...payslipRequestCounts,
         examCycles: examCycles.length,
         examAssessments: examAssessments.length,
         studentMarks: studentMarks.length,
@@ -696,6 +702,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     ...academicReportingBackup,
     ...admissionsBackup,
     ...payrollBackup,
+    ...payslipRequestBackup,
     examCycles,
     examAssessments,
     studentMarks,
@@ -809,7 +816,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
 async function sqliteSchemaHas(client: BackupClient, table: string, column?: string) {
   const query = (client as any).$queryRawUnsafe;
   if (typeof query !== "function") return true;
-  const allowedTables = new Set(["StudentAttendanceSession", "StudentReportCardVersion", "AcademicCalendarVersion", "ClassworkItem", "AcademicReportDefinition", "AdmissionCycle", "PayrollPolicyVersion"]);
+  const allowedTables = new Set(["StudentAttendanceSession", "StudentReportCardVersion", "AcademicCalendarVersion", "ClassworkItem", "AcademicReportDefinition", "AdmissionCycle", "PayrollPolicyVersion", "StaffPayslipRequest"]);
   if (!allowedTables.has(table)) throw new Error("BACKUP_SCHEMA_PROBE_REFUSED");
   const rows = await query.call(client, `PRAGMA table_info("${table}")`) as Array<{ name?: string }>;
   return column ? rows.some((row) => row.name === column) : rows.length > 0;
@@ -819,14 +826,15 @@ export async function generateFullBackup(
   client: BackupClient,
   options: { generatedBy: string; generatedAt?: Date; excludeCloudBackupRunId?: string }
 ) {
-  const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable, classworkAvailable, academicReportingAvailable, admissionsAvailable, payrollAvailable] = await Promise.all([
+  const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable, classworkAvailable, academicReportingAvailable, admissionsAvailable, payrollAvailable, payslipRequestAvailable] = await Promise.all([
     sqliteSchemaHas(client, "StudentAttendanceSession", "operationalCalendarVersionKey"),
     sqliteSchemaHas(client, "StudentReportCardVersion", "calendarBasisVersionKey"),
     sqliteSchemaHas(client, "AcademicCalendarVersion"),
     sqliteSchemaHas(client, "ClassworkItem"),
     sqliteSchemaHas(client, "AcademicReportDefinition"),
     sqliteSchemaHas(client, "AdmissionCycle"),
-    sqliteSchemaHas(client, "PayrollPolicyVersion")
+    sqliteSchemaHas(client, "PayrollPolicyVersion"),
+    sqliteSchemaHas(client, "StaffPayslipRequest")
   ]);
   const studentAttendanceSessionArgs = {
     select: {
@@ -1255,6 +1263,9 @@ export async function generateFullBackup(
   const payrollBackup = payrollAvailable && (client as any).payrollPolicyVersion?.findMany
     ? await loadPayrollBackup(client as PrismaClient)
     : Object.fromEntries(PAYROLL_BACKUP_KEYS.map((key) => [key, []])) as unknown as PayrollBackup;
+  const payslipRequestBackup = payslipRequestAvailable && (client as any).staffPayslipRequest?.findMany
+    ? await loadPayslipRequestBackup(client as PrismaClient)
+    : Object.fromEntries(PAYSLIP_REQUEST_BACKUP_KEYS.map((key) => [key, []])) as unknown as PayslipRequestBackup;
   const familyCollectionBackup = await familyCollectionSchemaAvailable(client)
     ? await loadFamilyCollectionBackup(client as PrismaClient)
     : emptyFamilyCollectionBackup();
@@ -1289,6 +1300,7 @@ export async function generateFullBackup(
     ...academicReportingBackup,
     ...admissionsBackup,
     ...payrollBackup,
+    ...payslipRequestBackup,
     ...familyCollectionBackup,
     rolePermissions,
     guardians,

@@ -182,6 +182,155 @@
   .parent-academic-print section { break-inside: avoid; margin-block: 1rem; }
 }
 
+/* HR-PAYSLIP-REQ-1: governed Staff request and private document delivery */
+.payslip-request-workspace {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.payslip-request-workspace :is(button, .button, input:not([type="checkbox"]):not([type="radio"]), select, textarea, summary) {
+  min-height: 44px;
+}
+
+.payslip-request-workspace textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.payslip-request-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
+}
+
+.payslip-request-grid > article,
+.protected-document,
+.action-stack,
+.protected-upload {
+  min-width: 0;
+}
+
+.card-heading-row {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.card-heading-row :is(h3, p),
+.protected-document :is(h4, p),
+.timeline-list :is(strong, span, p) {
+  overflow-wrap: anywhere;
+}
+
+.month-choice-grid {
+  display: grid;
+  gap: .6rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.choice-control {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  cursor: pointer;
+  display: flex !important;
+  gap: .7rem;
+  min-height: 44px;
+  min-width: 0;
+  padding: .65rem .75rem;
+}
+
+.choice-control input {
+  flex: 0 0 auto;
+  height: 1.15rem;
+  margin: 0;
+  width: 1.15rem;
+}
+
+.choice-control span {
+  display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.choice-control small {
+  color: var(--muted);
+}
+
+.protected-document {
+  border: 1px solid var(--border);
+  border-radius: .8rem;
+  display: grid;
+  gap: .65rem;
+  margin-top: .85rem;
+  padding: .85rem;
+}
+
+.timeline-list {
+  display: grid;
+  gap: .65rem;
+  list-style: none;
+  margin: 1rem 0;
+  padding: 0;
+}
+
+.timeline-list li {
+  border-left: 3px solid var(--primary);
+  display: grid;
+  gap: .2rem;
+  padding: .35rem .7rem;
+}
+
+.timeline-list span {
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.revealed-secret {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  display: grid;
+  gap: .35rem;
+  padding: 1rem;
+}
+
+.revealed-secret span {
+  color: var(--muted);
+}
+
+.revealed-secret strong {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .payslip-request-grid,
+  .month-choice-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card-heading-row,
+  .payslip-request-workspace .action-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .payslip-request-workspace .action-row > *,
+  .payslip-request-workspace .card-heading-row > button {
+    width: 100%;
+  }
+
+  .security-dialog {
+    max-height: calc(100dvh - 1rem);
+    overflow: auto;
+    width: calc(100vw - 1rem);
+  }
+}
+
 /* FIN-FAMILY-PAY-1: guided, exact-paise family collection */
 .family-wizard { display: grid; gap: 1rem; min-width: 0; }
 .family-stepper { display: grid; grid-template-columns: repeat(8, minmax(7.5rem, 1fr)); gap: .45rem; overflow-x: auto; padding: .2rem .1rem .6rem; }

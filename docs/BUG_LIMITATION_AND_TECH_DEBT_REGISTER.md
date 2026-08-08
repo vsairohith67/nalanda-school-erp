@@ -739,3 +739,26 @@ Retained boundaries:
 - attendance reconciliation is deliberately not automated;
 - Teachers never publish from class assignment alone;
 - independent Prompt 23E-QA must clear the feature before main merge/tag.
+
+## HR-PAYSLIP-REQ-1 retained boundaries and debt
+
+Resolved on the implementation branch:
+
+- Staff months are date/eligibility/availability governed and open overlaps fail closed;
+- request, preparation, upload, approval, issue and replacement preserve append-only history;
+- the source PDF is separately encrypted and Staff receives only a qpdf-protected derivative;
+- random opening passwords use version-bound AES-256-GCM envelopes with external versioned keys;
+- Staff ownership, recent password re-authentication, session-bound download authorisation, no-store delivery and access audit are enforced server-side;
+- version-37 metadata plus encrypted private assets restore idempotently and refuse wrong/missing keys and corruption;
+- no payroll calculation, salary generation, finance posting or live delivery provider is introduced.
+
+Retained boundaries:
+
+- the operational database migration is intentionally unapplied until independent QA/release approval;
+- production qpdf packaging/patching and operational secret provisioning require the deployment/security phase; service fails closed without them;
+- final retention duration and any destructive purge require school policy and professional review;
+- SQLite remains a single-instance writer; multi-node issue/replacement needs a future database/deployment design;
+- PDF permission flags are deterrents and must remain described as tamper-evident, never impossible to alter;
+- management has no opening-password reveal path; any future offline/exited-Staff delivery needs a separately approved identity and channel policy;
+- no deployment, live messaging, real Staff onboarding or real salary document is authorised;
+- independent HR-PAYSLIP-REQ-1 QA is required before merge or tag.

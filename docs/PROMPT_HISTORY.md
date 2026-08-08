@@ -1627,3 +1627,36 @@ Result: `PAYROLL_ESS_CLEARED`. Next governed phase: Prompt 23J - Transport
 Routes, Stops, Vehicles and Bus Passes. No deployment, real Staff payroll, bank
 disbursement, statutory filing, EPFO/ESI automation, live provider or real-data
 onboarding is authorised.
+
+## HR-PAYSLIP-REQ-1 - Staff Payslip Request, Protection and Secure Delivery (2026-08-08 to 2026-08-09)
+
+The retained feature branch adds the V1 workflow that Prompt 23I deliberately did
+not supply: governed historical-month availability, own-Staff one/multi-month
+requests, management review/external preparation assignment, PDF-only intake,
+source encryption, qpdf AES-256 protected derivatives, final issue,
+replacement, private notifications, re-authenticated transient password reveal,
+session-bound download and append-only access history. Salary values are neither
+parsed nor calculated; Prompt 23I remains separately permissioned V1.5 scope.
+
+The recovery classified the primary blocker as `TEST_TYPECHECK_OR_BUILD`: clean
+TypeScript partitions exhausted the default approximately 2 GB Node heap before
+diagnostics. The affected partitions pass at a bounded 2.5 GB and the final
+production build retains the authorised 4 GB ceiling. The implementation stays
+additive and the operational migration remains unapplied.
+
+Focused security/governance/qpdf tests and the `PAYSLIPREQ1` copied-database
+matrix prove protection, wrong-key/corrupt-asset refusal, concurrency,
+replacement, audit, exact hashes and metadata/private-asset restore twice.
+Browser verification covers Staff/Parent context isolation, Director workflow,
+Accountant prepare/upload without issue, Staff transient password reveal and
+protected download, denied Principal/Admin/Viewer roles, exact `390x844` and
+`1366x768`, light/dark, keyboard focus, 44 px targets and clean console/runtime
+batches. Independent QA remains required before merge or tag.
+
+The sequential release gate passed at 320 pages / 495 APIs, zero lifecycle
+backfill changes, 194 test files / 1,736 tests, bounded typecheck, the authorised
+4 GB production build, backup version 37 and Git safety. Synthetic QA residue
+was inspected and cleaned twice.
+
+No deployment, live provider, operational migration, real Staff onboarding or
+real salary document is authorised. SUPPORT-1A has not begun.

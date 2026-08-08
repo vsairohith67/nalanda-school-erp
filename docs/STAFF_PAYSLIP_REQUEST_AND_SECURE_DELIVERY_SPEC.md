@@ -1,14 +1,14 @@
 # Staff Payslip Request and Secure Delivery Specification
 
 **Requirement:** `V1-HR-PSR-001`<br>
-**Scope:** V1 workflow specification only; no implementation is authorised by GOV-RECON-1<br>
+**Scope:** V1 implementation on `hr/staff-payslip-request-secure-delivery`; independent QA and operational migration remain gated<br>
 **Decision date:** 2026-08-08
 
 ## Purpose and boundary
 
 Provide a privacy-safe workflow in which a Staff member requests one or more already-recorded payslips and authorised management prepares, uploads and issues the exact documents. This is not a payroll-calculation feature.
 
-The current Prompt 23I release provides immutable calculated payslip snapshots, Staff-owned authenticated download and private/no-store retrieval. It does **not** provide the request queue, uploaded password-protected source document, status notification, separated preparation/upload/issue, download audit, governed replacement workflow or password-delivery controls defined here. Existing code is reusable evidence, not proof that this requirement is complete.
+Prompt 23I remains the separately permissioned V1.5 payroll/ESS implementation. HR-PAYSLIP-REQ-1 reuses Staff identity, IAM/session controls, private storage patterns, notifications and audit conventions, but its request, external preparation, PDF intake, protection, issue and replacement flow is operationally independent from payroll calculation. It never calculates or regenerates salary values.
 
 ## Actors and default authority
 
@@ -65,9 +65,9 @@ Preparation, upload and final issue must be three separately assignable permissi
 11. Describe the document as **tamper-evident**, never impossible to alter.
 12. Replacement preserves the former version, hashes, status and audit history.
 
-## Data model and API requirements for a later implementation
+## Additive implementation model and APIs
 
-The later implementation should add, without overloading calculated payroll tables:
+The implementation adds, without overloading calculated payroll tables:
 
 - a request root with requester Staff link, covered-month set, purpose, private explanation, required-by date, state, version and idempotency key;
 - administrator record-availability configuration;
@@ -81,7 +81,7 @@ All create and transition endpoints require idempotency/concurrency protection. 
 
 ## Exited Staff access and retention decision gate
 
-No retention period or exited-Staff access rule is assumed. Before implementation, school leadership, legal/privacy advisers and operations must approve:
+No statutory retention period is assumed. Before any destructive retention automation or post-exit delivery path is authorised, school leadership, legal/privacy advisers and operations must approve:
 
 - whether an exited Staff member retains portal access, and for how long;
 - an identity-verification and offline retrieval path when portal access is removed;
@@ -108,4 +108,14 @@ Until that decision is recorded, exited Staff retrieval must fail closed and aut
 - Every view/download is audited and Staff history is ownership-filtered.
 - Password, encrypted storage, hash, flattening/permissions and separate-channel controls receive security review.
 - Private/no-store responses, unguessable locators, PWA-cache exclusion and log/backup exclusions are verified.
-- Exited-Staff access and retention decisions are approved before release.
+- Exited Staff portal access fails closed. Retention review, archive and hold metadata are implemented, but final duration and any future purge remain a school-policy/professional-review gate.
+
+## Implemented V1 lifecycle
+
+`SUBMITTED` -> `UNDER_REVIEW` -> `PREPARATION_IN_PROGRESS` -> `READY_TO_ISSUE` -> `PARTIALLY_ISSUED` or `ISSUED`.
+
+Terminal or historical states are `REJECTED`, `CANCELLED`, `SUPERSEDED` and `EXPIRED`. Requests and events are never hard-deleted. An issued version is immutable; a correction uploads and protects a new version, marks the former version `REPLACED`, preserves management history and removes the former version from ordinary Staff download.
+
+Month choices are emitted only when they are on/after verified joining, no later than the last completed salary month, within an approved eligibility end date where one exists, and `AVAILABLE` or already issued. Director-authorised historical availability does not require salary values. Unknown, unavailable, review-required and future months are not normal Staff choices. Open overlapping Staff/month requests fail closed unless the request is explicitly a correction.
+
+The final derivative is **Password-protected, editing-restricted and tamper-evident**. The implementation does not claim that PDF alteration is impossible. The management source is encrypted separately and is never served to Staff.

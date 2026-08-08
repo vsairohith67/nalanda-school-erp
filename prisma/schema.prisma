@@ -595,12 +595,12 @@ model StudentAttendanceRecord {
 }
 
 model StaffMember {
-  id                        String                        @id @default(cuid())
-  iamPublicKey              String?                       @unique
-  staffCode                 String?                       @unique
+  id                        String                          @id @default(cuid())
+  iamPublicKey              String?                         @unique
+  staffCode                 String?                         @unique
   fullName                  String
   displayName               String?
-  staffType                 String                        @default("TEACHING")
+  staffType                 String                          @default("TEACHING")
   designation               String
   department                String?
   primarySubject            String?
@@ -614,18 +614,18 @@ model StaffMember {
   address                   String?
   emergencyContactName      String?
   emergencyContactMobile    String?
-  status                    String                        @default("ACTIVE")
+  status                    String                          @default("ACTIVE")
   notes                     String?
-  userId                    String?                       @unique
-  user                      User?                         @relation(fields: [userId], references: [id], onDelete: SetNull)
-  timetableTeacherId        String?                       @unique
-  timetableTeacher          TimetableTeacher?             @relation(fields: [timetableTeacherId], references: [id], onDelete: SetNull)
-  createdAt                 DateTime                      @default(now())
-  updatedAt                 DateTime                      @updatedAt
+  userId                    String?                         @unique
+  user                      User?                           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  timetableTeacherId        String?                         @unique
+  timetableTeacher          TimetableTeacher?               @relation(fields: [timetableTeacherId], references: [id], onDelete: SetNull)
+  createdAt                 DateTime                        @default(now())
+  updatedAt                 DateTime                        @updatedAt
   attendanceRecords         StaffAttendanceRecord[]
   leaveRequests             StaffLeaveRequest[]
-  substituteAbsences        SubstituteAssignment[]        @relation("SubstituteAbsentStaff")
-  substituteDuties          SubstituteAssignment[]        @relation("SubstituteDutyStaff")
+  substituteAbsences        SubstituteAssignment[]          @relation("SubstituteAbsentStaff")
+  substituteDuties          SubstituteAssignment[]          @relation("SubstituteDutyStaff")
   libraryMember             LibraryMember?
   libraryCharges            LibraryCharge[]
   teacherAnalyticsSnapshots TeacherAnalyticsSnapshot[]
@@ -640,6 +640,9 @@ model StaffMember {
   payrollResults            EmployeePayrollResult[]
   salaryAdvances            SalaryAdvance[]
   payslipVersions           PayslipVersion[]
+  payslipMonthAvailability  StaffPayslipMonthAvailability[]
+  payslipRequests           StaffPayslipRequest[]
+  payslipAccessEvents       StaffPayslipAccessEvent[]
 
   @@index([fullName])
   @@index([staffType])
@@ -6839,4 +6842,177 @@ model PayrollEvent {
   @@index([entityType, entityPublicKey, createdAt])
   @@index([eventType, createdAt])
   @@index([requestKey])
+}
+
+model StaffPayslipMonthAvailability {
+  id                       String      @id @default(cuid())
+  publicKey                String      @unique @default(uuid())
+  staffMemberId            String
+  staffMember              StaffMember @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  salaryMonth              String
+  status                   String      @default("UNKNOWN")
+  sourceType               String      @default("HISTORICAL_RECORD")
+  existingPayslipVersionId String?
+  authorizedByUserId       String
+  authorizationReason      String
+  version                  Int         @default(1)
+  createdAt                DateTime    @default(now())
+  updatedAt                DateTime    @updatedAt
+
+  @@unique([staffMemberId, salaryMonth])
+  @@index([salaryMonth, status])
+  @@index([staffMemberId, status])
+}
+
+model StaffPayslipRequest {
+  id                     String                        @id @default(cuid())
+  publicKey              String                        @unique @default(uuid())
+  requestNumber          String                        @unique
+  submissionKey          String                        @unique
+  staffMemberId          String
+  staffMember            StaffMember                   @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  purpose                String
+  privateExplanation     String?
+  requiredByDate         DateTime?
+  status                 String                        @default("SUBMITTED")
+  correctionOfRequestId  String?
+  correctionOfRequest    StaffPayslipRequest?          @relation("PayslipRequestCorrection", fields: [correctionOfRequestId], references: [id], onDelete: Restrict)
+  correctionRequests     StaffPayslipRequest[]         @relation("PayslipRequestCorrection")
+  assignedPreparerUserId String?
+  submittedAt            DateTime                      @default(now())
+  preparationStartedAt   DateTime?
+  readyToIssueAt         DateTime?
+  issuedAt               DateTime?
+  rejectedAt             DateTime?
+  cancelledAt            DateTime?
+  supersededAt           DateTime?
+  expiredAt              DateTime?
+  retentionReviewDate    DateTime?
+  archiveStatus          String                        @default("ACTIVE")
+  legalPolicyHold        Boolean                       @default(false)
+  version                Int                           @default(1)
+  createdAt              DateTime                      @default(now())
+  updatedAt              DateTime                      @updatedAt
+  months                 StaffPayslipRequestMonth[]
+  events                 StaffPayslipRequestEvent[]
+  documentVersions       StaffPayslipDocumentVersion[]
+  accessEvents           StaffPayslipAccessEvent[]
+
+  @@index([staffMemberId, status, createdAt])
+  @@index([status, requiredByDate])
+  @@index([assignedPreparerUserId, status])
+  @@index([correctionOfRequestId])
+}
+
+model StaffPayslipRequestMonth {
+  id                   String                      @id @default(cuid())
+  requestId            String
+  request              StaffPayslipRequest         @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  salaryMonth          String
+  availabilitySnapshot String
+  issueStatus          String                      @default("PENDING")
+  activeOverlapKey     String?                     @unique
+  createdAt            DateTime                    @default(now())
+  documentMonths       StaffPayslipDocumentMonth[]
+
+  @@unique([requestId, salaryMonth])
+  @@index([salaryMonth, issueStatus])
+}
+
+model StaffPayslipRequestEvent {
+  id               String              @id @default(cuid())
+  publicKey        String              @unique @default(uuid())
+  requestId        String
+  request          StaffPayslipRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  eventType        String
+  actorUserId      String
+  actorRole        String
+  previousStatus   String?
+  newStatus        String?
+  entityVersion    Int
+  safeReason       String?
+  safeMetadataJson String?
+  requestHash      String?
+  occurredAt       DateTime            @default(now())
+  createdAt        DateTime            @default(now())
+
+  @@index([requestId, occurredAt])
+  @@index([eventType, occurredAt])
+  @@index([requestHash])
+}
+
+model StaffPayslipDocumentVersion {
+  id                    String                       @id @default(cuid())
+  publicKey             String                       @unique @default(uuid())
+  requestId             String
+  request               StaffPayslipRequest          @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  versionNumber         Int
+  status                String                       @default("READY_TO_ISSUE")
+  verificationReference String                       @unique
+  sourceStorageKey      String                       @unique
+  sourceKeyVersion      String
+  sourceNonce           String
+  sourceAuthTag         String
+  sourceSha256          String
+  sourceByteSize        Int
+  derivativeStorageKey  String                       @unique
+  derivativeSha256      String
+  derivativeByteSize    Int
+  pageCount             Int
+  passwordKeyVersion    String
+  passwordNonce         String
+  passwordCiphertext    String
+  passwordAuthTag       String
+  uploadedByUserId      String
+  approvedByUserId      String?
+  issuedByUserId        String?
+  issuedAt              DateTime?
+  replacementReason     String?
+  supersedesVersionId   String?                      @unique
+  supersedesVersion     StaffPayslipDocumentVersion? @relation("StaffPayslipDocumentReplacement", fields: [supersedesVersionId], references: [id], onDelete: Restrict)
+  replacementVersion    StaffPayslipDocumentVersion? @relation("StaffPayslipDocumentReplacement")
+  createdAt             DateTime                     @default(now())
+  updatedAt             DateTime                     @updatedAt
+  months                StaffPayslipDocumentMonth[]
+  accessEvents          StaffPayslipAccessEvent[]
+
+  @@unique([requestId, versionNumber])
+  @@index([requestId, status, createdAt])
+  @@index([status, issuedAt])
+}
+
+model StaffPayslipDocumentMonth {
+  id                String                      @id @default(cuid())
+  documentVersionId String
+  documentVersion   StaffPayslipDocumentVersion @relation(fields: [documentVersionId], references: [id], onDelete: Restrict)
+  requestMonthId    String
+  requestMonth      StaffPayslipRequestMonth    @relation(fields: [requestMonthId], references: [id], onDelete: Restrict)
+  salaryMonth       String
+  createdAt         DateTime                    @default(now())
+
+  @@unique([documentVersionId, requestMonthId])
+  @@index([requestMonthId, createdAt])
+  @@index([salaryMonth])
+}
+
+model StaffPayslipAccessEvent {
+  id                String                      @id @default(cuid())
+  publicKey         String                      @unique @default(uuid())
+  requestId         String
+  request           StaffPayslipRequest         @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  documentVersionId String
+  documentVersion   StaffPayslipDocumentVersion @relation(fields: [documentVersionId], references: [id], onDelete: Restrict)
+  staffMemberId     String
+  staffMember       StaffMember                 @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  actorUserId       String
+  sessionId         String
+  eventType         String
+  safeClientJson    String?
+  occurredAt        DateTime                    @default(now())
+  createdAt         DateTime                    @default(now())
+
+  @@index([requestId, occurredAt])
+  @@index([documentVersionId, occurredAt])
+  @@index([staffMemberId, occurredAt])
+  @@index([actorUserId, eventType, occurredAt])
 }
