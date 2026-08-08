@@ -4,7 +4,7 @@
 
 Implemented an additive exact-paise family collection envelope for one or more linked Students and approved instruments. It produces one consolidated/versioned receipt, separate compatibility Payment effects, one-per-instrument Cash Book/bank reporting, immutable provider-allocation intent, and controlled whole-collection correction/reversal. Request fingerprints, normalized reference uniqueness, plan hashes, transactions, and append-only events provide retry, concurrency, stale-balance, and audit controls. Version-37 backup/restore preserves and validates the complete family graph.
 
-Copied-database implementation and independent QA exercised all 17 scenarios, including the hand-checked Rs 40,000 cash-plus-UPI case, Parent/Viewer/staff boundaries, desktop and 390x844 Browser layouts, both themes, consolidated print, two-client exactly-once behavior, forced rollback, migration rehearsals, and restore twice. No provider activation, deployment, or real-data onboarding was authorised.
+Copied-database implementation and independent QA exercised all 17 scenarios, including the hand-checked Rs 40,000 cash-plus-UPI case, Parent/Viewer/staff boundaries, desktop and 390x844 Browser layouts, both themes, consolidated print, two-client exactly-once behavior, forced rollback, migration rehearsals, and restore twice. After protected raw/logical rollback proof, the single additive operational migration applied to the exact zero-business-data baseline; repeat deploy was a no-op and the four protected accounts were unchanged. No provider activation, deployment, or real-data onboarding was authorised.
 
 ## GOV-RECON-1-QA — Independent requirements and scope review (2026-08-08)
 

@@ -12,6 +12,7 @@
 - [Family/Multi-Student Mixed-Tender Audit](FINANCE_MULTI_CHILD_SPLIT_TENDER_AUDIT.md)
 - [Family/Multi-Student Mixed-Tender Requirements](FINANCE_MULTI_CHILD_SPLIT_TENDER_REQUIREMENTS.md)
 - [Family/Multi-Student Mixed-Tender Architecture, Guides and Threat Model](FAMILY_MULTI_STUDENT_MIXED_TENDER_COLLECTION.md)
+- [Family/Multi-Student Mixed-Tender Independent QA and Release Evidence](evidence/FIN_FAMILY_PAY_1_QA_RELEASE_EVIDENCE.md)
 - [Report-Card Template Catalog](REPORT_CARD_TEMPLATE_CATALOG.md)
 - [Privacy-safe Report-Card Source Catalog](NPS_STUDENT_PROGRESS_REPORT_CARD_SOURCE_CATALOG.md)
 - [Privacy-safe Report-Card Source Manifest](student_progress_report_card_source_manifest.csv)

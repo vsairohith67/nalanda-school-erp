@@ -46,9 +46,10 @@ async function main() {
   if (action === "governance") return governance();
   if (action === "inspect") return inspect();
   if (action === "restore") return restoreRehearsal();
+  if (action === "restore-existing") return restoreExistingBackup(String(process.argv[3] ?? ""));
   if (action === "cleanup") return cleanup();
   if (action === "destroy") return destroy();
-  throw new Error("Use prepare, exercise, governance, inspect, restore, cleanup, or destroy");
+  throw new Error("Use prepare, exercise, governance, inspect, restore, restore-existing <backup>, cleanup, or destroy");
 }
 
 async function prepare() {
@@ -245,6 +246,36 @@ async function restoreRehearsal() {
     console.log(JSON.stringify({ status: "FAMPAY1_BACKUP_RESTORE_TWICE_PASSED", backupVersion: validated.metadata.backupVersion, ...beforeSecond, secondRestoreCountStable: true, operationalHash: state.operationalHash }));
   } finally {
     await Promise.all([source.$disconnect(), target.$disconnect()]);
+    cleanupIsolatedDatabase(targetPath);
+  }
+}
+
+async function restoreExistingBackup(backupPathInput: string) {
+  const backupPath = path.resolve(backupPathInput);
+  const backupRoot = `${path.resolve("backups")}${path.sep}`;
+  if (!backupPath.startsWith(backupRoot) || !existsSync(backupPath)) throw new Error("FAMPAY1_EXISTING_BACKUP_PATH_REFUSED");
+  const targetPath = assertIsolatedDatabasePath(RESTORE_PATH);
+  if (existsSync(targetPath)) cleanupIsolatedDatabase(targetPath);
+  writeFileSync(targetPath, "");
+  migrate(targetPath);
+  const target = client(targetPath);
+  try {
+    const validated = parseAndValidateBackup(JSON.parse(readFileSync(backupPath, "utf8")));
+    assert(validated.metadata.backupVersion === 37, "EXISTING_BACKUP_VERSION_CHANGED");
+    await target.user.create({ data: { id: `${PREFIX}restore-actor`, name: `${MARKER} Restore Actor`, username: `${PREFIX}restore-actor`, passwordHash: await hashPassword("FAMPAY1-local-only-restore-actor!Aa9"), role: "DIRECTOR", isActive: true } });
+    const first = await restoreValidatedBackup(target, validated, { id: `${PREFIX}restore-actor`, name: `${MARKER} Restore Actor` });
+    assertNoRestoreErrors(first as unknown as Record<string, unknown>);
+    const afterFirst = await familyCounts(target);
+    const second = await restoreValidatedBackup(target, validated, { id: `${PREFIX}restore-actor`, name: `${MARKER} Restore Actor` });
+    assertNoRestoreErrors(second as unknown as Record<string, unknown>);
+    const afterSecond = await familyCounts(target);
+    assert(JSON.stringify(afterFirst) === JSON.stringify(afterSecond), "EXISTING_BACKUP_SECOND_RESTORE_CHANGED_COUNTS");
+    const integrity = await target.$queryRawUnsafe<Array<{ integrity_check: string }>>("PRAGMA integrity_check");
+    const foreignKeys = await target.$queryRawUnsafe<unknown[]>("PRAGMA foreign_key_check");
+    assert(integrity[0]?.integrity_check === "ok" && foreignKeys.length === 0, "EXISTING_BACKUP_SQLITE_INTEGRITY_FAILED");
+    console.log(JSON.stringify({ status: "FAMPAY1_EXISTING_BACKUP_RESTORE_TWICE_PASSED", backupVersion: validated.metadata.backupVersion, ...afterSecond, sqliteIntegrity: "ok", foreignKeyViolations: 0 }));
+  } finally {
+    await target.$disconnect();
     cleanupIsolatedDatabase(targetPath);
   }
 }
