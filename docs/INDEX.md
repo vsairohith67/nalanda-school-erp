@@ -11,6 +11,7 @@
 - [Staff Payslip Request and Secure Delivery Specification](STAFF_PAYSLIP_REQUEST_AND_SECURE_DELIVERY_SPEC.md)
 - [Family/Multi-Student Mixed-Tender Audit](FINANCE_MULTI_CHILD_SPLIT_TENDER_AUDIT.md)
 - [Family/Multi-Student Mixed-Tender Requirements](FINANCE_MULTI_CHILD_SPLIT_TENDER_REQUIREMENTS.md)
+- [Family/Multi-Student Mixed-Tender Architecture, Guides and Threat Model](FAMILY_MULTI_STUDENT_MIXED_TENDER_COLLECTION.md)
 - [Report-Card Template Catalog](REPORT_CARD_TEMPLATE_CATALOG.md)
 - [Privacy-safe Report-Card Source Catalog](NPS_STUDENT_PROGRESS_REPORT_CARD_SOURCE_CATALOG.md)
 - [Privacy-safe Report-Card Source Manifest](student_progress_report_card_source_manifest.csv)
@@ -19,7 +20,7 @@
 - [Safe Staging, Release and Client Update Strategy](SAFE_STAGING_RELEASE_AND_CLIENT_UPDATE_STRATEGY.md)
 - [Basic Memory Cloud Sync Package](BASIC_MEMORY_SYNC_PACKAGE.md)
 
-The 2026-08-08 scope correction is authoritative: full payroll automation is V1.5 even though Prompt 23I is released; V1 retains Staff payslip request/secure delivery and adds family payment, canonical template/physical print, and safe update blockers. Historical documents remain accessible and are explicitly superseded where they conflict.
+The 2026-08-08 scope correction is authoritative: full payroll automation is V1.5 even though Prompt 23I is released; V1 retains Staff payslip request/secure delivery, canonical template/physical print, and safe update blockers. `FIN-FAMILY-PAY-1` implements the family-payment blocker locally/private; provider activation, deployment, and real-data onboarding remain outside its release. Historical documents remain accessible and are explicitly superseded where they conflict.
 
 ## Prompt 23I payroll, payslips and employee self-service
 

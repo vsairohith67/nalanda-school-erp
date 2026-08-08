@@ -18,6 +18,7 @@ import { createHash } from "node:crypto";
 import { restoreAcademicCalendarData } from "@/lib/academic-calendar-restore";
 import { ADMISSIONS_BACKUP_KEYS, restoreAdmissionsBackup, type AdmissionsBackupKey } from "@/lib/admissions-backup";
 import { PAYROLL_BACKUP_KEYS, restorePayrollBackup, type PayrollBackupKey } from "@/lib/payroll-backup";
+import { FAMILY_COLLECTION_BACKUP_KEYS, type FamilyCollectionBackupKey } from "@/lib/family-collection-backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -111,6 +112,7 @@ async function restoreIntoDatabase(
   const result: RestoreResult = {
     ...(Object.fromEntries(ADMISSIONS_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<AdmissionsBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(PAYROLL_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<PayrollBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<FamilyCollectionBackupKey, ReturnType<typeof emptyEntityResult>>),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
     feeStructures: emptyEntityResult(),
@@ -393,10 +395,12 @@ async function restoreIntoDatabase(
       const payload = validatePaymentPayload({ ...row, admissionNo });
       const student = await client.student.findUnique({ where: { admissionNo } });
       if (!student) throw new Error(`Student ${admissionNo} does not exist`);
-      await assertReceiptStudentMatchInDatabase(client, {
-        receiptNo: payload.receiptNo,
-        admissionNo
-      });
+      if (!validatedFamilyCompatibilityPayment(row, backup)) {
+        await assertReceiptStudentMatchInDatabase(client, {
+          receiptNo: payload.receiptNo,
+          admissionNo
+        });
+      }
 
       const fingerprint = paymentFingerprint({
         receiptNo: row.receiptNo,
@@ -499,6 +503,17 @@ async function restoreIntoDatabase(
     }
   }
 
+  await restoreFamilyCollectionData(
+    client,
+    backup,
+    backupStudentLocalIds,
+    backupGuardianIds,
+    backupUserToLocalUser,
+    backupPaymentToLocalId,
+    restoredBy,
+    result
+  );
+
   await restoreImportVerificationData(
     client,
     backup,
@@ -549,6 +564,215 @@ async function restoreIntoDatabase(
     );
   }
   return result;
+}
+
+async function restoreFamilyCollectionData(
+  client: RestoreDatabaseClient,
+  backup: ValidatedBackup,
+  studentMap: Map<string, string>,
+  guardianMap: Map<string, string>,
+  userMap: Map<string, string>,
+  paymentMap: Map<string, string>,
+  restoredBy: { id: string; name: string },
+  result: RestoreResult
+) {
+  const db = client as any;
+  const collectionMap = new Map<string, string>();
+  const instrumentMap = new Map<string, string>();
+  const allocationMap = new Map<string, string>();
+  const shareMap = new Map<string, string>();
+  const receiptMap = new Map<string, string>();
+
+  for (const [index, row] of backup.familyCollections.entries()) {
+    try {
+      const id = requiredText(row.id, "Family collection ID");
+      const publicReference = requiredText(row.publicReference, "Family collection reference");
+      const [existing, byReference] = await Promise.all([
+        db.familyCollection.findUnique({ where: { id } }),
+        db.familyCollection.findUnique({ where: { publicReference } })
+      ]);
+      if (byReference && byReference.id !== id) {
+        result.familyCollections.skipped += 1;
+        result.warnings.push(`Family collection ${publicReference} was isolated because its identity conflicts with a local record.`);
+        continue;
+      }
+      if (existing) {
+        collectionMap.set(id, existing.id);
+        result.familyCollections.skipped += 1;
+        continue;
+      }
+      const backupGuardianId = nullableText(row.payerGuardianId);
+      const payerGuardianId = backupGuardianId ? guardianMap.get(backupGuardianId) : null;
+      if (backupGuardianId && !payerGuardianId) throw new Error("Payer Guardian link could not be matched");
+      const backupCreatorId = requiredText(row.createdByUserId, "Family collection creator");
+      const createdByUserId = userMap.get(backupCreatorId) ?? restoredBy.id;
+      const backupReversedById = nullableText(row.reversedByUserId);
+      const reversedByUserId = backupReversedById ? userMap.get(backupReversedById) ?? restoredBy.id : null;
+      await db.familyCollection.create({ data: {
+        id,
+        publicReference,
+        receiptReference: nullableText(row.receiptReference),
+        payerType: requiredText(row.payerType, "Family payer type"),
+        payerGuardianId,
+        payerDisplayName: requiredText(row.payerDisplayName, "Family payer display name"),
+        counterpartyReferenceHash: nullableText(row.counterpartyReferenceHash),
+        counterpartyDisplay: nullableText(row.counterpartyDisplay),
+        collectionDate: requiredDate(row.collectionDate, "Family collection date"),
+        status: requiredText(row.status, "Family collection status"),
+        requestKey: requiredText(row.requestKey, "Family request key"),
+        requestFingerprint: requiredText(row.requestFingerprint, "Family request fingerprint"),
+        allocationPlanHash: requiredText(row.allocationPlanHash, "Family plan hash"),
+        allocationPolicyVersion: requiredText(row.allocationPolicyVersion, "Family allocation policy"),
+        totalPaise: positiveInteger(row.totalPaise, "Family collection total"),
+        creditPaise: nonNegativeInteger(row.creditPaise, "Family collection credit"),
+        version: positiveInteger(row.version, "Family collection version"),
+        currentReceiptVersion: nonNegativeInteger(row.currentReceiptVersion, "Family receipt version"),
+        auditReason: nullableText(row.auditReason),
+        createdByUserId,
+        reversedByUserId,
+        reversedAt: optionalDate(row.reversedAt, "Family collection reversed at"),
+        reversalReason: nullableText(row.reversalReason),
+        createdAt: requiredDate(row.createdAt, `familyCollections[${index}].createdAt`),
+        updatedAt: requiredDate(row.updatedAt, `familyCollections[${index}].updatedAt`)
+      } });
+      collectionMap.set(id, id);
+      result.familyCollections.created += 1;
+    } catch (error) {
+      result.familyCollections.errors.push(rowError("Family collection", index, error));
+    }
+  }
+
+  for (const [index, row] of backup.familyCollections.entries()) {
+    const id = nullableText(row.id), replacement = nullableText(row.replacesCollectionId);
+    if (!id || !replacement || !collectionMap.has(id) || !collectionMap.has(replacement)) continue;
+    try {
+      await db.familyCollection.update({ where: { id: collectionMap.get(id) }, data: { replacesCollectionId: collectionMap.get(replacement) } });
+    } catch (error) {
+      result.familyCollections.errors.push(rowError("Family collection replacement", index, error));
+    }
+  }
+
+  for (const [index, row] of backup.familyCollectionInstruments.entries()) try {
+    const id = requiredText(row.id, "Family instrument ID"), collectionId = collectionMap.get(requiredText(row.collectionId, "Family instrument collection"));
+    if (!collectionId) { result.familyCollectionInstruments.skipped += 1; continue; }
+    if (await db.familyCollectionInstrument.findUnique({ where: { id } })) { instrumentMap.set(id, id); result.familyCollectionInstruments.skipped += 1; continue; }
+    await db.familyCollectionInstrument.create({ data: {
+      id, collectionId,
+      ordinal: positiveInteger(row.ordinal, "Family instrument ordinal"),
+      mode: requiredText(row.mode, "Family instrument mode"),
+      amountPaise: positiveInteger(row.amountPaise, "Family instrument amount"),
+      receivedAccount: requiredText(row.receivedAccount, "Family instrument account"),
+      referenceMasked: nullableText(row.referenceMasked),
+      referenceKey: nullableText(row.referenceKey),
+      postingStatus: requiredText(row.postingStatus, "Family instrument posting status"),
+      createdAt: requiredDate(row.createdAt, `familyCollectionInstruments[${index}].createdAt`)
+    } });
+    instrumentMap.set(id, id); result.familyCollectionInstruments.created += 1;
+  } catch (error) { result.familyCollectionInstruments.errors.push(rowError("Family instrument", index, error)); }
+
+  for (const [index, row] of backup.familyStudentAllocations.entries()) try {
+    const id = requiredText(row.id, "Family allocation ID"), collectionId = collectionMap.get(requiredText(row.collectionId, "Family allocation collection"));
+    const studentId = studentMap.get(requiredText(row.studentId, "Family allocation Student"));
+    if (!collectionId || !studentId) { result.familyStudentAllocations.skipped += 1; continue; }
+    if (await db.familyStudentAllocation.findUnique({ where: { id } })) { allocationMap.set(id, id); result.familyStudentAllocations.skipped += 1; continue; }
+    await db.familyStudentAllocation.create({ data: {
+      id, collectionId, studentId,
+      academicYear: requiredText(row.academicYear, "Family allocation academic year"),
+      installment: requiredText(row.installment, "Family allocation installment"),
+      feeHead: requiredText(row.feeHead, "Family allocation fee head"),
+      amountPaise: positiveInteger(row.amountPaise, "Family allocation amount"),
+      orderIndex: nonNegativeInteger(row.orderIndex, "Family allocation order"),
+      allocationPolicy: requiredText(row.allocationPolicy, "Family allocation policy"),
+      dueBeforePaise: positiveInteger(row.dueBeforePaise, "Family allocation due before"),
+      dueAfterPaise: nonNegativeInteger(row.dueAfterPaise, "Family allocation due after"),
+      dueSnapshotHash: requiredText(row.dueSnapshotHash, "Family due snapshot hash"),
+      studentNameSnapshot: requiredText(row.studentNameSnapshot, "Family Student name snapshot"),
+      admissionNoSnapshot: requiredText(row.admissionNoSnapshot, "Family admission snapshot"),
+      classNameSnapshot: requiredText(row.classNameSnapshot, "Family class snapshot"),
+      sectionSnapshot: nullableText(row.sectionSnapshot),
+      createdAt: requiredDate(row.createdAt, `familyStudentAllocations[${index}].createdAt`)
+    } });
+    allocationMap.set(id, id); result.familyStudentAllocations.created += 1;
+  } catch (error) { result.familyStudentAllocations.errors.push(rowError("Family allocation", index, error)); }
+
+  for (const [index, row] of backup.allocationInstrumentShares.entries()) try {
+    const id = requiredText(row.id, "Family share ID"), allocationId = allocationMap.get(requiredText(row.allocationId, "Family share allocation")), instrumentId = instrumentMap.get(requiredText(row.instrumentId, "Family share instrument"));
+    if (!allocationId || !instrumentId) { result.allocationInstrumentShares.skipped += 1; continue; }
+    if (await db.allocationInstrumentShare.findUnique({ where: { id } })) { shareMap.set(id, id); result.allocationInstrumentShares.skipped += 1; continue; }
+    await db.allocationInstrumentShare.create({ data: { id, allocationId, instrumentId, amountPaise: positiveInteger(row.amountPaise, "Family share amount"), createdAt: requiredDate(row.createdAt, `allocationInstrumentShares[${index}].createdAt`) } });
+    shareMap.set(id, id); result.allocationInstrumentShares.created += 1;
+  } catch (error) { result.allocationInstrumentShares.errors.push(rowError("Family allocation share", index, error)); }
+
+  for (const [index, row] of backup.familyReceiptVersions.entries()) try {
+    const id = requiredText(row.id, "Family receipt version ID"), collectionId = collectionMap.get(requiredText(row.collectionId, "Family receipt collection"));
+    if (!collectionId) { result.familyReceiptVersions.skipped += 1; continue; }
+    if (await db.familyReceiptVersion.findUnique({ where: { id } })) { receiptMap.set(id, id); result.familyReceiptVersions.skipped += 1; continue; }
+    const backupIssuerId = requiredText(row.issuedByUserId, "Family receipt issuer");
+    await db.familyReceiptVersion.create({ data: {
+      id, collectionId,
+      versionNumber: positiveInteger(row.versionNumber, "Family receipt version"),
+      publicVersionReference: requiredText(row.publicVersionReference, "Family receipt reference"),
+      status: requiredText(row.status, "Family receipt status"),
+      totalPaise: positiveInteger(row.totalPaise, "Family receipt total"),
+      snapshotJson: requiredText(row.snapshotJson, "Family receipt snapshot"),
+      issuedByUserId: userMap.get(backupIssuerId) ?? restoredBy.id,
+      issuedAt: requiredDate(row.issuedAt, "Family receipt issued at"),
+      createdAt: requiredDate(row.createdAt, `familyReceiptVersions[${index}].createdAt`)
+    } });
+    receiptMap.set(id, id); result.familyReceiptVersions.created += 1;
+  } catch (error) { result.familyReceiptVersions.errors.push(rowError("Family receipt version", index, error)); }
+
+  for (const [index, row] of backup.familyReceiptVersions.entries()) {
+    const id = nullableText(row.id), supersedes = nullableText(row.supersedesVersionId);
+    if (!id || !supersedes || !receiptMap.has(id) || !receiptMap.has(supersedes)) continue;
+    try { await db.familyReceiptVersion.update({ where: { id: receiptMap.get(id) }, data: { supersedesVersionId: receiptMap.get(supersedes) } }); }
+    catch (error) { result.familyReceiptVersions.errors.push(rowError("Family receipt supersession", index, error)); }
+  }
+
+  for (const [index, row] of backup.familyCollectionEvents.entries()) try {
+    const id = requiredText(row.id, "Family event ID"), collectionId = collectionMap.get(requiredText(row.collectionId, "Family event collection"));
+    if (!collectionId) { result.familyCollectionEvents.skipped += 1; continue; }
+    if (await db.familyCollectionEvent.findUnique({ where: { id } })) { result.familyCollectionEvents.skipped += 1; continue; }
+    const backupActorId = requiredText(row.actorUserId, "Family event actor");
+    await db.familyCollectionEvent.create({ data: {
+      id, collectionId,
+      eventType: requiredText(row.eventType, "Family event type"),
+      previousStatus: nullableText(row.previousStatus), newStatus: nullableText(row.newStatus),
+      collectionVersion: positiveInteger(row.collectionVersion, "Family event version"),
+      actorUserId: userMap.get(backupActorId) ?? restoredBy.id,
+      actorName: textOr(row.actorName, restoredBy.name), reason: nullableText(row.reason), detailsJson: nullableText(row.detailsJson),
+      createdAt: requiredDate(row.createdAt, `familyCollectionEvents[${index}].createdAt`)
+    } });
+    result.familyCollectionEvents.created += 1;
+  } catch (error) { result.familyCollectionEvents.errors.push(rowError("Family event", index, error)); }
+
+  for (const [index, row] of backup.familyProviderAllocationPlans.entries()) try {
+    const id = requiredText(row.id, "Family provider plan ID"), collectionId = collectionMap.get(requiredText(row.collectionId, "Family provider collection"));
+    if (!collectionId) { result.familyProviderAllocationPlans.skipped += 1; continue; }
+    if (await db.familyProviderAllocationPlan.findUnique({ where: { id } })) { result.familyProviderAllocationPlans.skipped += 1; continue; }
+    const backupCreatorId = requiredText(row.createdByUserId, "Family provider plan creator");
+    await db.familyProviderAllocationPlan.create({ data: {
+      id, publicKey: requiredText(row.publicKey, "Family provider plan key"), collectionId,
+      planVersion: positiveInteger(row.planVersion, "Family provider plan version"), status: requiredText(row.status, "Family provider plan status"),
+      amountPaise: positiveInteger(row.amountPaise, "Family provider plan amount"), planHash: requiredText(row.planHash, "Family provider plan hash"),
+      snapshotJson: requiredText(row.snapshotJson, "Family provider plan snapshot"), providerOrderKeyHash: nullableText(row.providerOrderKeyHash),
+      createdByUserId: userMap.get(backupCreatorId) ?? restoredBy.id,
+      createdAt: requiredDate(row.createdAt, `familyProviderAllocationPlans[${index}].createdAt`)
+    } });
+    result.familyProviderAllocationPlans.created += 1;
+  } catch (error) { result.familyProviderAllocationPlans.errors.push(rowError("Family provider plan", index, error)); }
+
+  for (const row of backup.payments) {
+    const backupPaymentId = nullableText(row.id), localPaymentId = backupPaymentId ? paymentMap.get(backupPaymentId) : null;
+    if (!localPaymentId) continue;
+    const familyCollectionId = nullableText(row.familyCollectionId), familyInstrumentId = nullableText(row.familyInstrumentId), familyAllocationId = nullableText(row.familyAllocationId), familyShareId = nullableText(row.familyShareId);
+    if (!familyCollectionId && !familyInstrumentId && !familyAllocationId && !familyShareId) continue;
+    if (!familyCollectionId || !familyInstrumentId || !familyAllocationId || !familyShareId || !collectionMap.has(familyCollectionId) || !instrumentMap.has(familyInstrumentId) || !allocationMap.has(familyAllocationId) || !shareMap.has(familyShareId)) {
+      result.warnings.push(`Compatibility payment ${backupPaymentId} kept without family links because its allocation graph was incomplete.`);
+      continue;
+    }
+    await db.payment.update({ where: { id: localPaymentId }, data: { familyCollectionId: collectionMap.get(familyCollectionId), familyInstrumentId: instrumentMap.get(familyInstrumentId), familyAllocationId: allocationMap.get(familyAllocationId), familyShareId: shareMap.get(familyShareId) } });
+  }
 }
 
 export async function restoreCloudBackupData(
@@ -3950,6 +4174,27 @@ function resolveAdmissionNo(row: RestoreRecord, studentIds: Map<string, string>)
   const mapped = studentIds.get(studentId);
   if (!mapped) throw new Error(`Backup student ID ${studentId} could not be matched`);
   return mapped;
+}
+
+function validatedFamilyCompatibilityPayment(row: RestoreRecord, backup: ValidatedBackup) {
+  const linkValues = [row.familyCollectionId, row.familyInstrumentId, row.familyAllocationId, row.familyShareId].map(nullableText);
+  if (linkValues.every((value) => !value)) return false;
+  if (linkValues.some((value) => !value)) throw new Error("Family compatibility payment links must be complete");
+  const [collectionId, instrumentId, allocationId, shareId] = linkValues as [string, string, string, string];
+  const collection = backup.familyCollections.find((item) => item.id === collectionId);
+  const instrument = backup.familyCollectionInstruments.find((item) => item.id === instrumentId);
+  const allocation = backup.familyStudentAllocations.find((item) => item.id === allocationId);
+  const share = backup.allocationInstrumentShares.find((item) => item.id === shareId);
+  if (!collection || !instrument || !allocation || !share) throw new Error("Family compatibility payment graph is incomplete");
+  if (instrument.collectionId !== collectionId || allocation.collectionId !== collectionId || share.instrumentId !== instrumentId || share.allocationId !== allocationId) {
+    throw new Error("Family compatibility payment graph does not reconcile");
+  }
+  if (requiredText(row.receiptNo, "Family compatibility receipt") !== requiredText(collection.publicReference, "Family collection reference") ||
+      requiredText(row.admissionNo, "Family compatibility admission") !== requiredText(allocation.admissionNoSnapshot, "Family allocation admission") ||
+      Math.round(Number(row.amountPaid) * 100) !== Number(share.amountPaise)) {
+    throw new Error("Family compatibility payment identity does not match its immutable allocation share");
+  }
+  return true;
 }
 
 function mapOptionalUserId(value: unknown, mapping: Map<string, string>) {

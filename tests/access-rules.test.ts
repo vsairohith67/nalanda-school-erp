@@ -85,6 +85,7 @@ describe("access rules", () => {
       "/cloud-backup",
       "/cloud-backup/reports",
       "/website-admin",
+      "/family-collections",
       "/pending-dues",
       "/daily-collection",
       "/expenses",
@@ -104,7 +105,7 @@ describe("access rules", () => {
     expect(teacherNav.map((item) => item.href)).toEqual(["/admission-crm", "/attendance/students", "/attendance/students/reports", "/leave/staff", "/substitutes", "/my-payroll", "/homework/reports", "/homework", "/classwork", "/exams", "/teacher/calendar", "/teacher/exam-assignments", "/marks", "/report-cards", "/teacher/analytics"]);
 
     const parentNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"), "PARENT");
-    expect(parentNav.map((item) => item.href)).toEqual(["/my-classwork", "/parent/calendar", "/parent/class-x-documents"]);
+    expect(parentNav.map((item) => item.href)).toEqual(["/my-classwork", "/parent/calendar", "/parent/class-x-documents", "/parent/family-receipts"]);
   });
 
   it("groups privileged navigation without changing permission visibility", async () => {
@@ -130,7 +131,7 @@ describe("access rules", () => {
   it("keeps grouped navigation safe for Parent, Teacher, and Viewer/Auditor roles", async () => {
     const parentGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"), "PARENT");
     expect(parentGroups.map((group) => group.label)).toEqual(["Students & Parents"]);
-    expect(parentGroups[0]?.items.map((item) => item.href)).toEqual(["/my-classwork", "/parent/calendar", "/parent/class-x-documents"]);
+    expect(parentGroups[0]?.items.map((item) => item.href)).toEqual(["/my-classwork", "/parent/calendar", "/parent/class-x-documents", "/parent/family-receipts"]);
 
     const teacherGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"), "TEACHER");
     expect(teacherGroups.map((group) => group.label)).toEqual(["Students & Parents", "Attendance", "Staff & Leave", "Communication"]);
@@ -198,6 +199,8 @@ describe("access rules", () => {
       "/fee-register-ocr/reports",
       "/payments",
       "/payments/new",
+      "/family-collections",
+      "/family-collections/new",
       "/pending-dues",
       "/daily-collection",
       "/ledger",

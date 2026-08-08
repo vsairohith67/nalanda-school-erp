@@ -182,6 +182,67 @@
   .parent-academic-print section { break-inside: avoid; margin-block: 1rem; }
 }
 
+/* FIN-FAMILY-PAY-1: guided, exact-paise family collection */
+.family-wizard { display: grid; gap: 1rem; min-width: 0; }
+.family-stepper { display: grid; grid-template-columns: repeat(8, minmax(7.5rem, 1fr)); gap: .45rem; overflow-x: auto; padding: .2rem .1rem .6rem; }
+.family-stepper button { display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-items: center; gap: .45rem; min-height: 44px; padding: .45rem .6rem; border: 1px solid var(--border); border-radius: .7rem; background: var(--surface); color: var(--text); text-align: left; font-size: .78rem; }
+.family-stepper button span { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 999px; background: var(--surface-muted); font-weight: 800; }
+.family-stepper button.active { border-color: var(--primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 22%, transparent); }
+.family-stepper button.complete span { background: var(--success); color: white; }
+.family-validation-summary { border: 1px solid var(--border); border-left: .35rem solid var(--primary); border-radius: .75rem; padding: .8rem 1rem; background: var(--surface); }
+.family-validation-summary ul { margin: .5rem 0 0; }
+.family-step { display: grid; gap: 1rem; min-width: 0; }
+.family-step h2 { margin: 0; }
+.family-choice, .family-actions { display: flex; flex-wrap: wrap; gap: .65rem; align-items: center; }
+.family-choice button[aria-pressed="true"] { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent); }
+.family-inline { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem; align-items: end; }
+.family-search-results, .family-child-grid, .family-allocation-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: .75rem; }
+.family-search-results > button, .family-child-card { display: flex; align-items: center; gap: .7rem; min-height: 64px; padding: .75rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--surface); color: var(--text); text-align: left; }
+.family-search-results > button { justify-content: space-between; }
+.family-search-results > button[aria-pressed="true"] { border-color: var(--primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 22%, transparent); }
+.family-child-card input { width: 1.25rem; height: 1.25rem; }
+.family-child-card span, .family-search-results > button { min-width: 0; }
+.family-child-card span, .family-allocation-card > div { display: grid; gap: .2rem; }
+.family-child-card small, .family-search-results span, .family-allocation-card span, .family-allocation-card small { overflow-wrap: anywhere; color: var(--muted); }
+.family-instruments { display: grid; gap: .75rem; }
+.family-instrument-row { display: grid; grid-template-columns: repeat(4, minmax(9rem, 1fr)) auto; gap: .65rem; align-items: end; padding: .8rem; border: 1px solid var(--border); border-radius: .75rem; }
+.family-cash-note { align-self: center; color: var(--muted); }
+.family-instrument-total { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem; border-radius: .7rem; background: var(--surface-muted); font-size: 1.05rem; }
+.family-allocation-card { display: grid; gap: .65rem; min-width: 0; padding: .85rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--surface); }
+.family-matrix-wrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: .75rem; }
+.family-matrix { min-width: 44rem; margin: 0; }
+.family-matrix th:first-child { position: sticky; left: 0; z-index: 2; min-width: 13rem; background: var(--surface); box-shadow: 1px 0 0 var(--border); }
+.family-matrix thead th { position: sticky; top: 0; z-index: 1; background: var(--surface-muted); }
+.family-matrix th small { display: block; margin-top: .2rem; color: var(--muted); }
+.family-matrix input { min-width: 7rem; }
+.family-invariant { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; padding: 1rem; border: 2px solid var(--warning); border-radius: .8rem; background: var(--surface-muted); }
+.family-invariant.balanced { border-color: var(--success); }
+.family-invariant strong { margin-left: auto; }
+.family-receipt-result { text-align: center; }
+.family-receipt-result h3 { overflow-wrap: anywhere; font-size: clamp(1.1rem, 4vw, 1.7rem); }
+.family-confirm-dialog { max-width: 42rem; }
+.family-confirm-dialog ul { margin: 0; }
+.family-instrument-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: .75rem; }
+.family-instrument-summary > div { display: grid; gap: .3rem; padding: .75rem; border: 1px solid var(--border); border-radius: .7rem; }
+.family-receipt-print { color: #111; background: #fff; }
+.family-print-child { margin: 1rem 0; break-inside: avoid; }
+.family-print-child h3 { margin-bottom: .2rem; }
+
+@media (max-width: 760px) {
+  .family-stepper { grid-template-columns: repeat(8, 10.5rem); }
+  .family-inline, .family-instrument-row { grid-template-columns: minmax(0, 1fr); }
+  .family-inline button, .family-instrument-row button, .family-actions > * { width: 100%; }
+  .family-invariant { align-items: stretch; flex-direction: column; }
+  .family-invariant strong { margin-left: 0; }
+  .family-child-grid, .family-allocation-cards { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media print {
+  .family-receipt-print { box-shadow: none !important; }
+  .family-receipt-print *, .family-receipt-print { color: #000 !important; border-color: #000 !important; background: #fff !important; }
+  .family-print-child, .family-instrument-summary > div { break-inside: avoid; }
+}
+
 /* Prompt 23H: privacy-minimised admissions and enquiry CRM */
 .admissions-public-section,
 .admissions-portal,

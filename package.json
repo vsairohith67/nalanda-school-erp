@@ -25,6 +25,7 @@
     "qa20c:isolation-check": "tsx scripts/qa20c-isolation-check.ts",
     "qa:fin2a": "tsx scripts/qa-fin2a-copied-db.ts",
     "qa:fin2b": "tsx scripts/qa-fin2b-copied-db.ts",
+    "qa:family-payment": "tsx scripts/qa-fin-family-payment.ts",
     "qa:auth2a": "tsx scripts/qa-auth2a-copied-db.ts",
     "qa:auth2b": "tsx scripts/qa-auth2b-copied-db.ts",
     "qa:auth2b:independent": "tsx scripts/qa-auth2b-independent.ts",

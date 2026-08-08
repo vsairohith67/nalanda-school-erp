@@ -4,7 +4,7 @@
 
 | ID | Disposition | Evidence-backed limitation | Required resolution |
 | --- | --- | --- | --- |
-| FIN-FAMILY-1 | Critical V1 gap | Receipts and payment rows are Student-owned; cross-Student use is refused; family collection/allocation and duplicate UPI-reference refusal are absent | Implement and independently test `FIN-FAMILY-PAY-1` with the exact accounting invariant, idempotency and compatibility |
+| FIN-FAMILY-1 | Resolved locally/private 2026-08-08 | Additive family root/instruments/allocations/shares, exact compatibility Payments, one receipt, reference uniqueness, idempotency, correction/reversal, role isolation, and v37 recovery are implemented and independently exercised | Retain physical-printer acceptance and any real provider/deployment/onboarding as separate governed gates |
 | HR-PAYSLIP-REQ-1 | V1 gap | Prompt 23I own-download/immutable payslip evidence lacks request queue, upload/password controls, status notification, download audit and governed replacement delivery | Implement the separate secure-delivery specification; do not add salary calculation to this V1 phase |
 | RC-TEMPLATE-1 | V1 acceptance gap | Four code-defined render families exist, but original approved Nalanda layouts and physical colour/B/W print evidence are missing | Obtain one privacy-safe sample per distinct family; map/version it; run physical acceptance |
 | DEVOPS-UPDATE-1 | V1 operational gap | Staging/migration plans exist, but complete preview/staging/pilot/monitor/rollback and safe client-update discovery are not released | Implement/rehearse the governed release strategy without using operational data |

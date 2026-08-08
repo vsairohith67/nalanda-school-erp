@@ -94,7 +94,7 @@ export async function getPendingDues(params: {
     });
 }
 
-export function dashboardCollectionMetrics<T extends { date: Date; amountPaid: number; paymentMode: string }>(payments: T[], now = new Date()) {
+export function dashboardCollectionMetrics<T extends { date: Date; amountPaid: number; paymentMode: string; receiptNo?: string }>(payments: T[], now = new Date()) {
   const today = schoolDateKey(now);
   const month = today.slice(0, 7);
   const todayPayments = payments.filter((payment) => schoolDateKey(payment.date) === today);
@@ -104,7 +104,7 @@ export function dashboardCollectionMetrics<T extends { date: Date; amountPaid: n
     today,
     month,
     todayCollection: todayPayments.reduce((sum, payment) => sum + payment.amountPaid, 0),
-    todayPaymentCount: todayPayments.length,
+    todayPaymentCount: new Set(todayPayments.map((payment, index) => payment.receiptNo || `row-${index}`)).size,
     monthCollection: monthPayments.reduce((sum, payment) => sum + payment.amountPaid, 0),
     paymentModeSplit: [...byPaymentMode.entries()]
       .map(([label, amount]) => ({ label, amount }))

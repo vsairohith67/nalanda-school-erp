@@ -21,7 +21,7 @@ This matrix separates presence from completeness. `Complete` requires tested wor
 | Certificates/Class X packages/ID cards | V1 | Complete | Report-card template catalog separate | Prompt 18 evidence |
 | Backup/restore/migrations | V1 | Complete | Every new model must extend it | DEVOPS-1B/1E evidence |
 | Staff Payslip Request and Secure Delivery | V1 | Partial | Prompt 23I lacks request/upload/password/status/download-audit workflow | `HR-PAYSLIP-REQ-1` after finance |
-| Family/Multi-Student Mixed-Tender Fee Collection | V1 | Partial | Same-Student split only; cross-Student receipt is refused | **Next: `FIN-FAMILY-PAY-1`** |
+| Family/Multi-Student Mixed-Tender Fee Collection | V1 | Complete locally/private | Provider activation, deployment, real-data onboarding and physical-printer acceptance remain gated | `FIN-FAMILY-PAY-1` implementation and independent QA |
 | Canonical report-card template library/physical print | V1 | Partial | No original canonical assets or physical print acceptance | Obtain samples; run print protocol |
 | Safe staging/release/client update | V1 | Partial | Plans exist; end-to-end environment/update operation not released | Governed implementation/rehearsal |
 | Parent/Staff support/complaints/feedback | V1 | Missing | No complete role-owned case workflow proven | Specify/implement later V1 phase |
@@ -36,9 +36,8 @@ This matrix separates presence from completeness. `Complete` requires tested wor
 
 ## V1 launch-blocker order
 
-1. `FIN-FAMILY-PAY-1` — family/multi-Student mixed-tender collection.
-2. `HR-PAYSLIP-REQ-1` — Staff payslip request and secure delivery.
-3. Canonical report-card source catalog and physical print acceptance.
-4. Safe staging/release/client update implementation and rehearsal.
-5. Remaining support, observability and governed onboarding gaps.
-6. Final cross-module QA, controlled pilot, reconciliation and cutover.
+1. `HR-PAYSLIP-REQ-1` — Staff payslip request and secure delivery.
+2. Canonical report-card source catalog and physical print acceptance.
+3. Safe staging/release/client update implementation and rehearsal.
+4. Remaining support, observability and governed onboarding gaps.
+5. Final cross-module QA, controlled pilot, reconciliation and cutover.

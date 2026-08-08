@@ -20,6 +20,7 @@ type Report = {
   byStudent: Record<string, number>;
   byTerm: Record<string, number>;
   payments: any[];
+  familyCollections: Array<{ reference: string; totalPaise: number; instruments: any[]; allocations: any[] }>;
 };
 
 export function CollectionReport({
@@ -114,9 +115,13 @@ export function CollectionReport({
             <div className="section-title"><h3>Receipt List</h3></div>
             <div className="card-pad receipt-link-list">
               {report.receipts.length ? report.receipts.map((receipt) =>
-                canPrintReceipt ? <Link key={receipt} href={`/receipts/${encodeURIComponent(receipt)}/print`} target="_blank">{receipt}</Link> : <span key={receipt}>{receipt}</span>
+                canPrintReceipt ? <Link key={receipt} href={receipt.startsWith("FAM-") ? `/family-collections/${encodeURIComponent(receipt)}/print` : `/receipts/${encodeURIComponent(receipt)}/print`} target="_blank">{receipt}</Link> : <span key={receipt}>{receipt}</span>
               ) : "No receipts"}
             </div>
+          </section> : null}
+          {!report.aggregateOnly && report.familyCollections?.length ? <section className="card">
+            <div className="section-title"><h3>Family collection child breakdown</h3></div>
+            <div className="table-wrap"><table><thead><tr><th>Collection</th><th>Child</th><th>Class</th><th>Year / term / head</th><th>Allocated</th></tr></thead><tbody>{report.familyCollections.flatMap((collection) => collection.allocations.map((allocation, index) => <tr key={`${collection.reference}-${index}`}><td>{index === 0 ? <Link href={`/family-collections/${encodeURIComponent(collection.reference)}`}>{collection.reference}</Link> : ""}</td><td>{allocation.studentName}</td><td>{allocation.className}{allocation.section ? `-${allocation.section}` : ""}</td><td>{allocation.academicYear} · {allocation.installment} · {allocation.feeHead}</td><td>{money(allocation.amountPaise / 100)}</td></tr>))}</tbody></table></div>
           </section> : null}
           {!report.aggregateOnly ? <section className="card">
             <div className="section-title"><h3>Student-wise Collection</h3></div>

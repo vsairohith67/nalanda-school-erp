@@ -25,6 +25,7 @@ export default async function ReceiptPrintPage({
   const { receiptNo } = await params;
   const { size } = await searchParams;
   const decodedReceiptNo = decodeURIComponent(receiptNo);
+  if (decodedReceiptNo.startsWith("FAM-")) redirect(`/family-collections/${encodeURIComponent(decodedReceiptNo)}/print`);
   const [rows, settings, note] = await Promise.all([
     prisma.payment.findMany({
       where: { receiptNo: decodedReceiptNo, deletedAt: null },

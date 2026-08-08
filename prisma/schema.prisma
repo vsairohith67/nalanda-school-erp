@@ -34,6 +34,7 @@ model Student {
   createdAt               DateTime                     @default(now())
   updatedAt               DateTime                     @updatedAt
   payments                Payment[]
+  familyAllocations       FamilyStudentAllocation[]
   guardians               StudentGuardian[]
   attendanceRecords       StudentAttendanceRecord[]
   academicYearEnrollments AcademicYearEnrollment[]
@@ -74,12 +75,12 @@ model FeeStructure {
 }
 
 model Payment {
-  id                 String         @id @default(cuid())
+  id                 String                      @id @default(cuid())
   date               DateTime
   receiptNo          String
   admissionNo        String
   studentId          String?
-  student            Student?       @relation(fields: [studentId], references: [id])
+  student            Student?                    @relation(fields: [studentId], references: [id])
   studentName        String
   className          String
   section            String?
@@ -88,19 +89,27 @@ model Payment {
   receivedAccount    String
   transactionRefNo   String?
   feeType            String
-  termHint           String         @default("Auto")
+  termHint           String                      @default("Auto")
   remarks            String?
-  enteredBy          String         @default("Director")
+  enteredBy          String                      @default("Director")
   editedBy           String?
-  isCancelled        Boolean        @default(false)
+  isCancelled        Boolean                     @default(false)
   cancelledAt        DateTime?
   cancelledByUserId  String?
-  cancelledBy        User?          @relation("PaymentCancelledBy", fields: [cancelledByUserId], references: [id])
+  cancelledBy        User?                       @relation("PaymentCancelledBy", fields: [cancelledByUserId], references: [id])
   cancellationReason String?
   deletedAt          DateTime?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  createdAt          DateTime                    @default(now())
+  updatedAt          DateTime                    @updatedAt
   audits             PaymentAudit[]
+  familyCollectionId String?
+  familyCollection   FamilyCollection?           @relation(fields: [familyCollectionId], references: [id], onDelete: Restrict)
+  familyInstrumentId String?
+  familyInstrument   FamilyCollectionInstrument? @relation(fields: [familyInstrumentId], references: [id], onDelete: Restrict)
+  familyAllocationId String?
+  familyAllocation   FamilyStudentAllocation?    @relation(fields: [familyAllocationId], references: [id], onDelete: Restrict)
+  familyShareId      String?                     @unique
+  familyShare        AllocationInstrumentShare?  @relation(fields: [familyShareId], references: [id], onDelete: Restrict)
 
   @@index([date])
   @@index([receiptNo])
@@ -109,6 +118,173 @@ model Payment {
   @@index([paymentMode])
   @@index([receivedAccount])
   @@index([isCancelled])
+  @@index([familyCollectionId])
+  @@index([familyInstrumentId])
+  @@index([familyAllocationId])
+}
+
+model FamilyCollection {
+  id                        String                         @id @default(cuid())
+  publicReference           String                         @unique
+  receiptReference          String?                        @unique
+  payerType                 String
+  payerGuardianId           String?
+  payerGuardian             Guardian?                      @relation(fields: [payerGuardianId], references: [id], onDelete: Restrict)
+  payerDisplayName          String
+  counterpartyReferenceHash String?
+  counterpartyDisplay       String?
+  collectionDate            DateTime
+  status                    String                         @default("DRAFT")
+  requestKey                String                         @unique
+  requestFingerprint        String
+  allocationPlanHash        String
+  allocationPolicyVersion   String                         @default("FAMILY_AUTO_V1")
+  totalPaise                Int
+  creditPaise               Int                            @default(0)
+  version                   Int                            @default(1)
+  currentReceiptVersion     Int                            @default(0)
+  auditReason               String?
+  createdByUserId           String
+  createdBy                 User                           @relation("FamilyCollectionCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  reversedByUserId          String?
+  reversedAt                DateTime?
+  reversalReason            String?
+  replacesCollectionId      String?                        @unique
+  replacesCollection        FamilyCollection?              @relation("FamilyCollectionReplacement", fields: [replacesCollectionId], references: [id], onDelete: Restrict)
+  replacedByCollection      FamilyCollection?              @relation("FamilyCollectionReplacement")
+  createdAt                 DateTime                       @default(now())
+  updatedAt                 DateTime                       @updatedAt
+  instruments               FamilyCollectionInstrument[]
+  allocations               FamilyStudentAllocation[]
+  receiptVersions           FamilyReceiptVersion[]         @relation("FamilyReceiptCollection")
+  events                    FamilyCollectionEvent[]
+  providerPlans             FamilyProviderAllocationPlan[]
+  compatibilityPayments     Payment[]
+
+  @@index([payerGuardianId, collectionDate])
+  @@index([status, collectionDate])
+  @@index([createdByUserId, collectionDate])
+}
+
+model FamilyCollectionInstrument {
+  id                    String                      @id @default(cuid())
+  collectionId          String
+  collection            FamilyCollection            @relation(fields: [collectionId], references: [id], onDelete: Restrict)
+  ordinal               Int
+  mode                  String
+  amountPaise           Int
+  receivedAccount       String
+  referenceMasked       String?
+  referenceKey          String?                     @unique
+  postingStatus         String                      @default("POSTED")
+  createdAt             DateTime                    @default(now())
+  shares                AllocationInstrumentShare[]
+  compatibilityPayments Payment[]
+
+  @@unique([collectionId, ordinal])
+  @@index([collectionId, postingStatus])
+  @@index([mode, postingStatus])
+}
+
+model FamilyStudentAllocation {
+  id                    String                      @id @default(cuid())
+  collectionId          String
+  collection            FamilyCollection            @relation(fields: [collectionId], references: [id], onDelete: Restrict)
+  studentId             String
+  student               Student                     @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  academicYear          String
+  installment           String
+  feeHead               String
+  amountPaise           Int
+  orderIndex            Int
+  allocationPolicy      String
+  dueBeforePaise        Int
+  dueAfterPaise         Int
+  dueSnapshotHash       String
+  studentNameSnapshot   String
+  admissionNoSnapshot   String
+  classNameSnapshot     String
+  sectionSnapshot       String?
+  createdAt             DateTime                    @default(now())
+  shares                AllocationInstrumentShare[]
+  compatibilityPayments Payment[]
+
+  @@unique([collectionId, studentId, academicYear, installment, feeHead])
+  @@index([studentId, academicYear])
+  @@index([collectionId, orderIndex])
+}
+
+model AllocationInstrumentShare {
+  id           String                     @id @default(cuid())
+  allocationId String
+  allocation   FamilyStudentAllocation    @relation(fields: [allocationId], references: [id], onDelete: Restrict)
+  instrumentId String
+  instrument   FamilyCollectionInstrument @relation(fields: [instrumentId], references: [id], onDelete: Restrict)
+  amountPaise  Int
+  createdAt    DateTime                   @default(now())
+  payment      Payment?
+
+  @@unique([allocationId, instrumentId])
+  @@index([instrumentId])
+}
+
+model FamilyReceiptVersion {
+  id                     String                @id @default(cuid())
+  collectionId           String
+  collection             FamilyCollection      @relation("FamilyReceiptCollection", fields: [collectionId], references: [id], onDelete: Restrict)
+  versionNumber          Int
+  publicVersionReference String                @unique
+  status                 String
+  totalPaise             Int
+  snapshotJson           String
+  supersedesVersionId    String?               @unique
+  supersedesVersion      FamilyReceiptVersion? @relation("FamilyReceiptSupersession", fields: [supersedesVersionId], references: [id], onDelete: Restrict)
+  supersededByVersion    FamilyReceiptVersion? @relation("FamilyReceiptSupersession")
+  issuedByUserId         String
+  issuedBy               User                  @relation("FamilyReceiptIssuedBy", fields: [issuedByUserId], references: [id], onDelete: Restrict)
+  issuedAt               DateTime              @default(now())
+  createdAt              DateTime              @default(now())
+
+  @@unique([collectionId, versionNumber])
+  @@index([collectionId, status])
+}
+
+model FamilyCollectionEvent {
+  id                String           @id @default(cuid())
+  collectionId      String
+  collection        FamilyCollection @relation(fields: [collectionId], references: [id], onDelete: Restrict)
+  eventType         String
+  previousStatus    String?
+  newStatus         String?
+  collectionVersion Int
+  actorUserId       String
+  actor             User             @relation("FamilyCollectionEventActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+  actorName         String
+  reason            String?
+  detailsJson       String?
+  createdAt         DateTime         @default(now())
+
+  @@index([collectionId, createdAt])
+  @@index([eventType, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model FamilyProviderAllocationPlan {
+  id                   String           @id @default(cuid())
+  publicKey            String           @unique
+  collectionId         String
+  collection           FamilyCollection @relation(fields: [collectionId], references: [id], onDelete: Restrict)
+  planVersion          Int
+  status               String           @default("PREPARED")
+  amountPaise          Int
+  planHash             String
+  snapshotJson         String
+  providerOrderKeyHash String?
+  createdByUserId      String
+  createdAt            DateTime         @default(now())
+
+  @@unique([collectionId, planVersion])
+  @@index([status, createdAt])
 }
 
 model ReceiptNote {
@@ -142,6 +318,9 @@ model User {
   updatedAt                        DateTime                            @updatedAt
   paymentAudits                    PaymentAudit[]                      @relation("PaymentAuditChangedBy")
   cancelledPayments                Payment[]                           @relation("PaymentCancelledBy")
+  familyCollectionsCreated         FamilyCollection[]                  @relation("FamilyCollectionCreatedBy")
+  familyReceiptVersionsIssued      FamilyReceiptVersion[]              @relation("FamilyReceiptIssuedBy")
+  familyCollectionEvents           FamilyCollectionEvent[]             @relation("FamilyCollectionEventActor")
   importBatches                    ImportBatch[]                       @relation("ImportBatchCreatedBy")
   timetableDrafts                  TimetableDraft[]                    @relation("TimetableDraftCreatedBy")
   noticesCreated                   Notice[]                            @relation("NoticeCreatedBy")
@@ -639,6 +818,7 @@ model Guardian {
   smsEmailConsents     SmsEmailConsent[]
   smsEmailSuppressions SmsEmailSuppression[]
   smsEmailDeliveries   SmsEmailDelivery[]
+  familyCollections    FamilyCollection[]
 
   @@index([displayName])
   @@index([primaryMobile])

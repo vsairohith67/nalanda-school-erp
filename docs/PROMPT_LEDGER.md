@@ -10,6 +10,12 @@ The exact original text of Prompt 1 was not recovered. The Notion Prompt Library
 
 The accessible Git history begins with the consolidated baseline commit `2d1ac63` on 2026-07-22. Earlier commit/file-introduction history is unavailable from Git. Dates marked `source date unavailable` are intentionally not guessed.
 
+## Current governed phase
+
+| Sequence / prompt label | Recoverable subject | Source date | Evidence classification | Implementation/release disposition | Source gap or conflict |
+| --- | --- | --- | --- | --- | --- |
+| FIN-FAMILY-PAY-1 / QA | Family/multi-Student mixed-tender collection | 2026-08-08 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | Complete locally/private with exact-paise graph, compatibility Payments, one receipt, correction/reversal, role isolation, concurrency/rollback, Browser and v37 restore proof | No provider activation, deployment, real-data onboarding, or physical-printer acceptance implied |
+
 ## Legacy reconstructed sequence
 
 | Sequence / prompt label | Recoverable subject | Source date | Evidence classification | Implementation/release disposition | Source gap or conflict |

@@ -1,5 +1,11 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## FIN-FAMILY-PAY-1 / QA — Family mixed-tender collection (2026-08-08)
+
+Implemented an additive exact-paise family collection envelope for one or more linked Students and approved instruments. It produces one consolidated/versioned receipt, separate compatibility Payment effects, one-per-instrument Cash Book/bank reporting, immutable provider-allocation intent, and controlled whole-collection correction/reversal. Request fingerprints, normalized reference uniqueness, plan hashes, transactions, and append-only events provide retry, concurrency, stale-balance, and audit controls. Version-37 backup/restore preserves and validates the complete family graph.
+
+Copied-database implementation and independent QA exercised all 17 scenarios, including the hand-checked Rs 40,000 cash-plus-UPI case, Parent/Viewer/staff boundaries, desktop and 390x844 Browser layouts, both themes, consolidated print, two-client exactly-once behavior, forced rollback, migration rehearsals, and restore twice. No provider activation, deployment, or real-data onboarding was authorised.
+
 ## GOV-RECON-1-QA — Independent requirements and scope review (2026-08-08)
 
 Independent QA revalidated all 32 requirements, the 56 accessible pre-governance commits, 24 tags, merged GitHub PRs #1–#3, external governance records and the canonical Canvs board. It confirmed the finance audit as seven `PARTIALLY_IMPLEMENTED`, nine `MISSING` and one `UNSAFE_OR_AMBIGUOUS`; `FIN-FAMILY-PAY-1` remains the next implementation phase. Full payroll/ESS is technically cleared but remains V1.5 operational scope and does not complete the V1 payslip-request workflow.

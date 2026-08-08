@@ -22,6 +22,7 @@ import { validateClassworkBackupRows } from "@/lib/classwork-backup";
 import { validateAcademicReportingBackupRows } from "@/lib/academic-reporting-backup";
 import { ADMISSIONS_BACKUP_KEYS, validateAdmissionsBackupRows, type AdmissionsBackup, type AdmissionsBackupKey } from "@/lib/admissions-backup";
 import { PAYROLL_BACKUP_KEYS, validatePayrollBackupRows, type PayrollBackup, type PayrollBackupKey } from "@/lib/payroll-backup";
+import { FAMILY_COLLECTION_BACKUP_KEYS, validateFamilyCollectionBackupRows, type FamilyCollectionBackup } from "@/lib/family-collection-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 const MAX_ENTITY_ROWS = 100_000;
@@ -33,6 +34,7 @@ const TOP_LEVEL_KEYS = new Set([
   "feeStructures",
   "payments",
   "paymentAudits",
+  ...FAMILY_COLLECTION_BACKUP_KEYS,
   "users",
   "authSecurity",
   "iamAccess",
@@ -60,6 +62,7 @@ const TOP_LEVEL_KEYS = new Set([
   "academicReportDefinitions", "academicReportRuns", "academicReportSourceReferences", "academicReportAuditEvents",
   ...ADMISSIONS_BACKUP_KEYS,
   ...PAYROLL_BACKUP_KEYS,
+  ...FAMILY_COLLECTION_BACKUP_KEYS,
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
   "examGovernance",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
@@ -122,6 +125,7 @@ const BACKUP_COUNT_KEYS = new Set([
   "academicReportDefinitions", "academicReportRuns", "academicReportSourceReferences", "academicReportAuditEvents",
   ...ADMISSIONS_BACKUP_KEYS,
   ...PAYROLL_BACKUP_KEYS,
+  ...FAMILY_COLLECTION_BACKUP_KEYS,
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
   "examGovernanceRecords",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
@@ -162,6 +166,7 @@ const PAYMENT_KEYS = new Set([
   "amountPaid", "paymentMode", "receivedAccount", "transactionRefNo", "feeType", "termHint",
   "remarks", "enteredBy", "editedBy", "isCancelled", "cancelledAt", "cancelledByUserId",
   "cancellationReason", "deletedAt", "createdAt", "updatedAt"
+  ,"familyCollectionId", "familyInstrumentId", "familyAllocationId", "familyShareId"
 ]);
 const PAYMENT_AUDIT_KEYS = new Set([
   "id", "paymentId", "action", "oldValueJson", "newValueJson", "changedByUserId",
@@ -519,7 +524,7 @@ export type ValidatedBackup = {
   timetableFixedPeriods: RestoreRecord[];
   timetableDrafts: RestoreRecord[];
   timetableEntries: RestoreRecord[];
-} & AdmissionsBackup & PayrollBackup;
+} & AdmissionsBackup & PayrollBackup & FamilyCollectionBackup;
 
 export type EntityRestoreResult = {
   created: number;
@@ -535,6 +540,13 @@ export type RestoreResult = {
   feeStructures: EntityRestoreResult;
   payments: EntityRestoreResult;
   paymentAudits: EntityRestoreResult;
+  familyCollections: EntityRestoreResult;
+  familyCollectionInstruments: EntityRestoreResult;
+  familyStudentAllocations: EntityRestoreResult;
+  allocationInstrumentShares: EntityRestoreResult;
+  familyReceiptVersions: EntityRestoreResult;
+  familyCollectionEvents: EntityRestoreResult;
+  familyProviderAllocationPlans: EntityRestoreResult;
   users: EntityRestoreResult;
   authSecurity: EntityRestoreResult;
   iamAccess: EntityRestoreResult;
@@ -769,6 +781,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     PAYMENT_AUDIT_KEYS,
     ["paymentId", "action"]
   );
+  const familyCollectionBackup = validateFamilyCollectionBackupRows(root);
   const users = validateOptionalRows(root.users, "users", USER_KEYS, ["username"])
     .map(sanitizeRestoreUser);
   const rolePermissions = validateOptionalRows(
@@ -1357,6 +1370,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     feeStructures,
     payments,
     paymentAudits,
+    ...familyCollectionBackup,
     users,
     authSecurity,
     iamAccess,

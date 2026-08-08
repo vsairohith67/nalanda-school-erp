@@ -172,7 +172,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
 
   it("preserves the prior checkpoint and recognizes additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(236);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(243);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
     expect(schema).toContain("model ExaminationTimetableVersion {");
@@ -189,6 +189,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
       "20260803143000_academic_reporting",
       "20260803193000_admissions_enquiry_crm",
       "20260808054148_payroll_payslips_employee_self_service",
+      "20260808143000_family_multi_student_mixed_tender",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);

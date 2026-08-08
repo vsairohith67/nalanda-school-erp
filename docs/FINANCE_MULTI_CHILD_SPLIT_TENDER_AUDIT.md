@@ -1,5 +1,12 @@
 # Finance Multi-Child Split-Tender Audit
 
+> **Superseded implementation finding (2026-08-08):** `FIN-FAMILY-PAY-1` now
+> implements the additive family graph, exact mixed-tender allocation,
+> consolidated/versioned receipt, compatibility Payments, correction/reversal,
+> reference uniqueness, privacy boundaries, and version-37 recovery. The gap
+> matrix below is retained as pre-implementation evidence. See
+> `FAMILY_MULTI_STUDENT_MIXED_TENDER_COLLECTION.md` for the current design.
+
 **Audit ID:** `GOV-RECON-1-FIN`<br>
 **Audit date:** 2026-08-08<br>
 **Baseline:** `main` at `71f671b8b6ee946884e5b79a9786581f237a6437` / `payroll-ess-v37-2026-08-08`<br>

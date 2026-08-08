@@ -17,7 +17,7 @@ function emptySources() { const zero = new Prisma.Decimal(0); return { feeCash: 
 export async function calculateCashSources(client: PrismaClient | Prisma.TransactionClient, cashDate: Date, openingBalance: Prisma.Decimal, dayId?: string) {
   const range = dayRange(cashDate);
   const [fees, misc, books, expensePayments, movements] = await Promise.all([
-    client.payment.findMany({ where: { date: range, deletedAt: null }, select: { id: true, receiptNo: true, amountPaid: true, paymentMode: true, isCancelled: true, deletedAt: true, updatedAt: true } }),
+    client.payment.findMany({ where: { date: range, deletedAt: null }, select: { id: true, receiptNo: true, amountPaid: true, paymentMode: true, familyInstrumentId: true, isCancelled: true, deletedAt: true, updatedAt: true } }),
     client.miscIncomeReceipt.findMany({ where: { receiptDate: range, status: "ACTIVE", paymentMethod: "CASH" }, select: { netAmount: true } }),
     (client as any).bookSaleReceipt?.findMany ? (client as any).bookSaleReceipt.findMany({ where: { receiptDate: range, status: "ACTIVE", paymentMethod: "CASH" }, select: { netAmount: true } }) : Promise.resolve([]),
     client.expensePayment.findMany({ where: { paymentDate: range, expenseRecord: { approvalStatus: "APPROVED" } }, select: { amount: true, paymentMethod: true } }),
@@ -31,7 +31,9 @@ export async function calculateCashSources(client: PrismaClient | Prisma.Transac
   const movementSum = (types: Set<string>) => sumDecimals(movements.filter((row) => types.has(row.movementType)).map((row) => row.amount));
   const manualInflow = movementSum(INFLOWS), manualOutflow = movementSum(MANUAL_OUTFLOWS), bankDeposit = movementSum(new Set(["BANK_DEPOSIT"])), directorHandover = movementSum(new Set(["DIRECTOR_HANDOVER"]));
   const expectedClosing = openingBalance.add(feeCash).add(miscIncomeCash).add(bookSalesCash).add(manualInflow).sub(cashExpense).sub(manualOutflow).sub(bankDeposit).sub(directorHandover);
-  return { feeCash, miscIncomeCash, bookSalesCash, cashExpense, manualInflow, manualOutflow, bankDeposit, directorHandover, expectedClosing, counts: { feePayments: activeFees.filter((row) => row.paymentMode.toUpperCase() === "CASH").length, miscReceipts: misc.length, bookSaleReceipts: (books as unknown[]).length, expensePayments: expensePayments.filter((row) => row.paymentMethod.toUpperCase() === "CASH").length, movements: movements.length } };
+  const activeCash = activeFees.filter((row) => row.paymentMode.toUpperCase() === "CASH");
+  const feePaymentSources = new Set(activeCash.map((row: any) => row.familyInstrumentId ? `family:${row.familyInstrumentId}` : `legacy:${row.id}`));
+  return { feeCash, miscIncomeCash, bookSalesCash, cashExpense, manualInflow, manualOutflow, bankDeposit, directorHandover, expectedClosing, counts: { feePayments: feePaymentSources.size, miscReceipts: misc.length, bookSaleReceipts: (books as unknown[]).length, expensePayments: expensePayments.filter((row) => row.paymentMethod.toUpperCase() === "CASH").length, movements: movements.length } };
 }
 
 export function cashSourceSnapshot(sources: Awaited<ReturnType<typeof calculateCashSources>>) { return JSON.stringify({ feeCash: sources.feeCash.toFixed(2), miscIncomeCash: sources.miscIncomeCash.toFixed(2), bookSalesCash: sources.bookSalesCash.toFixed(2), cashExpense: sources.cashExpense.toFixed(2), manualInflow: sources.manualInflow.toFixed(2), manualOutflow: sources.manualOutflow.toFixed(2), bankDeposit: sources.bankDeposit.toFixed(2), directorHandover: sources.directorHandover.toFixed(2), expectedClosing: sources.expectedClosing.toFixed(2), counts: sources.counts }); }

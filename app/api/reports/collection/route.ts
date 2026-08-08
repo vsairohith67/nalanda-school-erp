@@ -18,12 +18,26 @@ export async function GET(request: NextRequest) {
   if (month && !/^\d{4}-\d{2}$/.test(month)) {
     return privateFinanceJson({ error: "A valid report month is required" }, { status: 400 });
   }
+  const collectionDate = date ? dayRange(date) : month ? monthRange(month) : undefined;
   const where = {
     deletedAt: null,
-    ...(date ? { date: dayRange(date) } : {}),
-    ...(month ? { date: monthRange(month) } : {})
+    ...(collectionDate ? { date: collectionDate } : {})
   };
-  const receiptRows = await prisma.payment.findMany({ where, orderBy: [{ date: "asc" }, { receiptNo: "asc" }], take: 10_000 });
+  const [receiptRows, familyCollections] = await Promise.all([
+    prisma.payment.findMany({ where, orderBy: [{ date: "asc" }, { receiptNo: "asc" }], take: 10_000 }),
+    prisma.familyCollection.findMany({
+      where: { ...(collectionDate ? { collectionDate } : {}), status: "ISSUED" },
+      select: {
+        publicReference: true,
+        collectionDate: true,
+        totalPaise: true,
+        instruments: { select: { ordinal: true, mode: true, amountPaise: true, referenceMasked: true }, orderBy: { ordinal: "asc" } },
+        allocations: { select: { admissionNoSnapshot: true, studentNameSnapshot: true, classNameSnapshot: true, sectionSnapshot: true, academicYear: true, installment: true, feeHead: true, amountPaise: true }, orderBy: { orderIndex: "asc" } }
+      },
+      orderBy: { publicReference: "asc" },
+      take: 500
+    })
+  ]);
   const payments = await effectiveActiveSelectedReceiptPayments(prisma, receiptRows);
   const byAccount = groupTotal(payments, "receivedAccount");
   const byMode = groupTotal(payments, "paymentMode");
@@ -46,7 +60,14 @@ export async function GET(request: NextRequest) {
     byClass,
     byStudent: aggregateOnly ? {} : byStudent,
     byTerm,
-    payments: aggregateOnly ? [] : payments.map((payment) => collectionPaymentResponse(payment))
+    payments: aggregateOnly ? [] : payments.map((payment) => collectionPaymentResponse(payment)),
+    familyCollections: aggregateOnly ? [] : familyCollections.map((collection) => ({
+      reference: collection.publicReference,
+      date: collection.collectionDate,
+      totalPaise: collection.totalPaise,
+      instruments: collection.instruments,
+      allocations: collection.allocations.map((row) => ({ admissionNo: row.admissionNoSnapshot, studentName: row.studentNameSnapshot, className: row.classNameSnapshot, section: row.sectionSnapshot, academicYear: row.academicYear, installment: row.installment, feeHead: row.feeHead, amountPaise: row.amountPaise }))
+    }))
   });
 }
 
