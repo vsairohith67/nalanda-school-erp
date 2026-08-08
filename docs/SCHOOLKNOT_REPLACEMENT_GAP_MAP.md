@@ -1,5 +1,7 @@
 # Schoolknot Replacement Gap Map and Biometric Integration Plan
 
+> **GOV-RECON-1 V1 scope correction (2026-08-08):** replacement/cutover remains not ready. V1 now explicitly includes Staff Payslip Request and Secure Delivery, family/multi-Student mixed-tender collection, canonical report-card template/physical print acceptance, safe staging/release/client updates, support, observability, governed bulk onboarding, final cross-module QA and controlled pilot/cutover. Full payroll automation is V1.5 despite its completed Prompt 23I release; Transport and Cafeteria remain optional V1.5; V2 is the AI lessons/video programme. Earlier comparative findings remain preserved and are not upgraded where the Schoolknot source surface was inaccessible. See `REQUIREMENTS_REGISTER.md` and `FEATURE_COMPLETENESS_MATRIX.md`.
+
 > **RECON-1A scoped supersession:** Prompt 23B and FIN-2B were initiated as parallel workstreams. Their preserved final Git lineage completes Prompt 23B-QA before the two FIN-2B commits. FIN-2B supersedes only earlier Accountant final-receipt cancellation/correction wording: exact narrow permissions now govern immutable audited action, active Directors/Super Admins are notified, and non-mutable days block ordinary action without silently rewriting the stored snapshot. FIN-2A privacy/export/integrity remains complete. No FIN-2C scope is approved. Teacher attendance NO-GO, Parent gaps, Principal least-privilege conclusions, Management evidence and every unrelated Prompt 23B decision remain unchanged.
 
 ## Prompt 23B final multi-role supersession

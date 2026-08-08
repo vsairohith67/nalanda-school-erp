@@ -1,5 +1,23 @@
 # Documentation Index
 
+## GOV-RECON-1 authoritative requirements and scope reconstruction
+
+- [Authoritative Requirements Register](REQUIREMENTS_REGISTER.md)
+- [Prompt Ledger](PROMPT_LEDGER.md)
+- [V1, V1.5 and V2 Scope](V1_V1_5_V2_SCOPE.md)
+- [Feature Completeness Matrix](FEATURE_COMPLETENESS_MATRIX.md)
+- [Documentation Reconciliation Report](DOCUMENTATION_RECONCILIATION_REPORT.md)
+- [Preflight and History Evidence](evidence/GOV_RECON_1_PREFLIGHT_AND_HISTORY_EVIDENCE.md)
+- [Staff Payslip Request and Secure Delivery Specification](STAFF_PAYSLIP_REQUEST_AND_SECURE_DELIVERY_SPEC.md)
+- [Family/Multi-Student Mixed-Tender Audit](FINANCE_MULTI_CHILD_SPLIT_TENDER_AUDIT.md)
+- [Family/Multi-Student Mixed-Tender Requirements](FINANCE_MULTI_CHILD_SPLIT_TENDER_REQUIREMENTS.md)
+- [Report-Card Template Catalog](REPORT_CARD_TEMPLATE_CATALOG.md)
+- [Report-Card Template Gap and Print Acceptance](REPORT_CARD_TEMPLATE_GAP_AND_PRINT_ACCEPTANCE.md)
+- [Safe Staging, Release and Client Update Strategy](SAFE_STAGING_RELEASE_AND_CLIENT_UPDATE_STRATEGY.md)
+- [Basic Memory Cloud Sync Package](BASIC_MEMORY_SYNC_PACKAGE.md)
+
+The 2026-08-08 scope correction is authoritative: full payroll automation is V1.5 even though Prompt 23I is released; V1 retains Staff payslip request/secure delivery and adds family payment, canonical template/physical print, and safe update blockers. Historical documents remain accessible and are explicitly superseded where they conflict.
+
 ## Prompt 23I payroll, payslips and employee self-service
 
 - [Workflow and Lifecycle](PAYROLL_WORKFLOW_AND_LIFECYCLE.md)

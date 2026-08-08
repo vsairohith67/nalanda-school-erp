@@ -1,5 +1,18 @@
 # ERP Feature Status and Gap Map
 
+## GOV-RECON-1 corrected V1 status (2026-08-08)
+
+The authoritative status source is now `REQUIREMENTS_REGISTER.md`, with product scope in `V1_V1_5_V2_SCOPE.md`. A model or route is not sufficient for completion.
+
+- Prompt 23I full payroll/ESS is released but reclassified to V1.5. The completed release remains preserved.
+- V1 Staff Payslip Request and Secure Delivery is `PARTIAL`: current own-download/immutable snapshot evidence does not provide the request/upload/password/status/download-audit workflow.
+- V1 Family/Multi-Student Mixed-Tender Fee Collection is `PARTIAL` and a launch blocker: the current one-Student receipt invariant prevents the exact workflow.
+- V1 canonical report-card templates and physical colour/black-and-white print acceptance are `PARTIAL`: the renderer exists, but approved original template sources and physical acceptance do not.
+- V1 safe staging/release/client update is `PARTIAL`: readiness foundations exist, but the complete governed pipeline and client update UX are not released.
+- Support/complaint/feedback and final corrected-scope cross-module QA are `MISSING`; observability and bulk onboarding are `PARTIAL`; operational cutover is `DEFERRED` pending explicit approval.
+
+Transport and Cafeteria are optional V1.5. V2 remains AI lessons/videos with Teacher approval and no automatic Student publication. Recommended next phase: `FIN-FAMILY-PAY-1`.
+
 ## Prompt 23B final Schoolknot multi-role consolidation
 
 Prompt 23A role evidence is complete for Management, Parent, Principal, Teacher and the supporting Accountant/Employee report. Prompt 23A-E finished the exact 109-item unresolved-evidence classification and the authoritative Notion handoff is `READY_FOR_PROMPT_23B`. Prompt 23B reconciles that evidence against the current repository only; it imports no Schoolknot data and implements no module.

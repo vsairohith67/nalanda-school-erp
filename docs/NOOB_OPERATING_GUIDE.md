@@ -1,5 +1,17 @@
 # Nalanda Fee Control — Beginner Operating Guide
 
+## Current release and corrected launch scope (2026-08-08)
+
+The latest verified local/private release is Prompt 23I, but the project is **not yet approved for production cutover**. Full automatic payroll is classified as a later V1.5 product area even though its code/release exists. V1 still needs:
+
+- a Staff request-and-secure-delivery workflow for existing payslip documents;
+- one family payment across multiple linked Students and cash/UPI instruments;
+- school-approved report-card template samples plus physical colour and black-and-white print acceptance;
+- the safe staging/release/rollback/client-update pipeline;
+- support, monitoring, governed bulk onboarding, final whole-system QA and an approved pilot/cutover.
+
+Do not try to simulate family collection by reusing one receipt across children; the current system intentionally treats a receipt as one Student. Do not email/message payslips or passwords ad hoc. Do not upload real report cards, payslips, payment details or Student data to planning tools. The recommended next build is `FIN-FAMILY-PAY-1` after a separately authorised implementation prompt.
+
 ## Account Security and password recovery
 
 Open the user menu and choose **Account Security** to see masked verified login

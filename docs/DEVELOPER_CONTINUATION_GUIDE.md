@@ -1,5 +1,15 @@
 # Nalanda Fee Control — Developer Continuation Guide
 
+## GOV-RECON-1 continuation boundary (2026-08-08)
+
+Start with `REQUIREMENTS_REGISTER.md`, `PROMPT_LEDGER.md`, `V1_V1_5_V2_SCOPE.md` and `FEATURE_COMPLETENESS_MATRIX.md`. These documents supersede earlier V1 scope statements without deleting historical release evidence.
+
+The next authorised implementation recommendation is `FIN-FAMILY-PAY-1 — Family/Multi-Student Mixed-Tender Fee Collection`. Read both finance audit/requirements documents first. The current engine is one Student per receipt; preserve legacy receipts and Cash Book/ledger/report/backup compatibility. Use additive schema design only in that later authorised phase, rehearse migrations on a copied database, enforce paise equality, full allocation by default, unique normalised UPI references, request idempotency and atomic child-ledger effects.
+
+After finance, `HR-PAYSLIP-REQ-1` implements the separate Staff request-and-secure-delivery workflow. Do not fold V1.5 salary calculation/structures/statutory work into it. Canonical report-card template/print acceptance and safe client update/release remain separate V1 gates.
+
+GOV-RECON-1 itself is documentation-only: it authorises no application source, Prisma schema, migration, provider, deployment, operational-data or real-user changes. Git remains the technical source of truth; Notion is roadmap/decisions, Asana tasks, and Basic Memory a non-sensitive mirror.
+
 ## AUTH-2B security boundary
 
 Read `AUTH_2B_VERIFIED_RECOVERY_SESSION_REGISTRY.md` before modifying login,

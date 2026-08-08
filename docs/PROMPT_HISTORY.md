@@ -1,5 +1,15 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## GOV-RECON-1 — Prompt-history reconstruction and V1 scope correction (2026-08-08)
+
+GOV-RECON-1 reconstructed the earliest available post-hoc Prompt Library evidence through Prompt 23I, all accessible Git commits/tags/branches, GitHub PRs and repository implementation/QA evidence. The accessible Git history begins at the consolidated `2d1ac63` baseline on 2026-07-22. The exact original wording of Phase 2/Prompt 1 and other legacy prompts was not recovered; summaries below are not claimed quotations. See `PROMPT_LEDGER.md` and `REQUIREMENTS_REGISTER.md` for evidence classifications and exact missing-source ranges.
+
+The authoritative 2026-08-08 correction moves full payroll automation from V1 to V1.5 while preserving Prompt 23I as a completed release. V1 retains a distinct Staff Payslip Request and Secure Delivery workflow, family/multi-Student mixed-tender collection, canonical report-card template/physical print acceptance and a safe staging/release/client-update pipeline. Transport and Cafeteria remain optional V1.5. V2 remains the AI lessons/educational-video programme. Earlier conflicting entries are historical evidence and are `SUPERSEDED`, not deleted.
+
+## Prompt 23F / QA — Classwork, Secure Submissions, Attachments and Feedback (2026-08-03)
+
+This additive reconstruction entry corrects an omission in the prior heading sequence. Exact Git evidence is `8440bb9` (implementation), `cc6d3eb` (independent recovery/ownership QA) and annotated tag `classwork-submissions-v37-2026-08-03`. The release introduced governed Classwork and secure private submissions with server-side ownership/scope, private no-store attachment retrieval, append-only feedback/audit and backup/recovery coverage. Original prompt text is unavailable; this paragraph is a repository-derived release summary, not a quotation.
+
 ## AUTH-2B-QA - Independent alias, recovery and session security QA (2026-07-31)
 
 Independent QA cleared all five governed alias types, anti-enumeration,
