@@ -5,7 +5,7 @@
 | ID | Disposition | Evidence-backed limitation | Required resolution |
 | --- | --- | --- | --- |
 | FIN-FAMILY-1 | Resolved locally/private 2026-08-08 | Additive family root/instruments/allocations/shares, exact compatibility Payments, one receipt, reference uniqueness, idempotency, correction/reversal, role isolation, and v37 recovery are implemented and independently exercised | Retain physical-printer acceptance and any real provider/deployment/onboarding as separate governed gates |
-| HR-PAYSLIP-REQ-1 | V1 gap | Prompt 23I own-download/immutable payslip evidence lacks request queue, upload/password controls, status notification, download audit and governed replacement delivery | Implement the separate secure-delivery specification; do not add salary calculation to this V1 phase |
+| HR-PAYSLIP-REQ-1 | Resolved locally/private 2026-08-09 | The separate request queue, external preparation, PDF intake/protection, transient password reveal, private delivery, replacement, notification, audit and recovery workflow is implemented and independently verified | Retain qpdf/keyring deployment setup, real-user onboarding and retention-policy approval as separate governed gates; do not add salary calculation to V1 |
 | RC-TEMPLATE-1 | V1 acceptance gap | Four code-defined render families exist, but original approved Nalanda layouts and physical colour/B/W print evidence are missing | Obtain one privacy-safe sample per distinct family; map/version it; run physical acceptance |
 | DEVOPS-UPDATE-1 | V1 operational gap | Staging/migration plans exist, but complete preview/staging/pilot/monitor/rollback and safe client-update discovery are not released | Implement/rehearse the governed release strategy without using operational data |
 | SUPPORT-1 | Missing V1 workflow | No complete Parent/Staff support, complaint and feedback case workflow is proven | Specify ownership, privacy, attachments, escalation, retention and audit |
@@ -13,7 +13,7 @@
 | IMPORT-1 | Partial V1 workflow | Student/payment imports exist; complete governed Student/Guardian/Staff bulk onboarding is not proven | Define preview, dedupe, exactly-once conversion and reconciliation |
 | FINAL-QA-1 | Missing V1 gate | Historical phase QA does not cover the corrected missing V1 requirements | Run final sequential cross-module security/performance/recovery/device/accessibility QA after blockers close |
 
-The old statement that payroll/payslips were wholly missing is superseded by Prompt 23I release evidence, but full payroll is now V1.5. The separate V1 payslip-request requirement remains partial. Historical rows below are retained for their as-of context.
+The old statement that payroll/payslips were wholly missing is superseded by Prompt 23I release evidence, but full payroll is now V1.5. The separate V1 payslip-request workflow is released locally/private after independent QA. Historical rows below are retained for their as-of context.
 
 ## EXAM-RC-IMPL-1 disposition
 

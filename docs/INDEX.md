@@ -15,6 +15,7 @@
 - [Secure PDF and Password Threat Model](STAFF_PAYSLIP_SECURE_PDF_AND_PASSWORD_THREAT_MODEL.md)
 - [Private Storage, Replacement and Recovery](STAFF_PAYSLIP_PRIVATE_STORAGE_BACKUP_AND_RECOVERY.md)
 - [HR-PAYSLIP-REQ-1 Implementation Checkpoint](evidence/HR_PAYSLIP_REQ_1_IMPLEMENTATION_CHECKPOINT.md)
+- [HR-PAYSLIP-REQ-1 Independent QA and Release Evidence](evidence/HR_PAYSLIP_REQ_1_INDEPENDENT_QA.md)
 - [Family/Multi-Student Mixed-Tender Audit](FINANCE_MULTI_CHILD_SPLIT_TENDER_AUDIT.md)
 - [Family/Multi-Student Mixed-Tender Requirements](FINANCE_MULTI_CHILD_SPLIT_TENDER_REQUIREMENTS.md)
 - [Family/Multi-Student Mixed-Tender Architecture, Guides and Threat Model](FAMILY_MULTI_STUDENT_MIXED_TENDER_COLLECTION.md)
@@ -27,7 +28,7 @@
 - [Safe Staging, Release and Client Update Strategy](SAFE_STAGING_RELEASE_AND_CLIENT_UPDATE_STRATEGY.md)
 - [Basic Memory Cloud Sync Package](BASIC_MEMORY_SYNC_PACKAGE.md)
 
-The 2026-08-08 scope correction is authoritative: full payroll automation is V1.5 even though Prompt 23I is released. `FIN-FAMILY-PAY-1` implements the family-payment blocker locally/private and HR-PAYSLIP-REQ-1 implements the separate V1 request/protected-delivery workflow on its retained branch, both awaiting their applicable release gates. Canonical template/physical print and safe update blockers remain. Provider activation, deployment and real-data onboarding are outside these releases. Historical documents remain accessible and are explicitly superseded where they conflict.
+The 2026-08-08 scope correction is authoritative: full payroll automation is V1.5 even though Prompt 23I is released. `FIN-FAMILY-PAY-1` and the separate `HR-PAYSLIP-REQ-1` request/protected-delivery workflow are released locally/private after independent QA. Canonical template/physical print and safe update blockers remain. Provider activation, deployment and real-data onboarding are outside these releases. Historical documents remain accessible and are explicitly superseded where they conflict.
 
 ## Prompt 23I payroll, payslips and employee self-service
 

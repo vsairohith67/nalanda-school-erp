@@ -70,6 +70,14 @@ describe("HR-PAYSLIP-REQ-1 governed workflow", () => {
     expect(service).toContain("generateDocumentPassword()");
   });
 
+  it("shows management the retained document-version and privacy-safe access audit", () => {
+    const service = source("lib/payslip-request.ts"), management = source("components/payslip-request-management.tsx");
+    expect(service).toContain("accessEvents: options.includeAudit");
+    expect(management).toContain("Document version and access history");
+    expect(management).toContain("document.access?.length");
+    expect(management).toContain("Preview management source version");
+  });
+
   it("never exposes raw workflow event enums to Staff", () => {
     expect(requestEventLabel("DOCUMENT_APPROVED_FOR_ISSUE")).toBe("Document approved for issue");
     expect(requestEventLabel("UNRECOGNISED_EVENT")).toBe("Workflow event");

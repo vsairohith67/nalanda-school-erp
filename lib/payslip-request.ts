@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
+import { evaluateEffectivePermission } from "@/lib/iam/effective-access";
 import { requireCriticalReauthentication } from "@/lib/iam/security";
 import { decryptPayslipSecret, encryptPayslipSecret, generateDocumentPassword, generateOwnerPassword, generateVerificationReference, signPayslipDownload } from "@/lib/payslip-request-crypto";
 import { PdfProtectionAdapter, PayslipPdfError, validatePayslipPdf } from "@/lib/payslip-request-pdf";
@@ -61,6 +62,7 @@ export function requestEventLabel(value: string) {
     PREPARATION_STARTED: "Preparation started",
     REQUEST_REJECTED: "Request rejected",
     REQUEST_EXPIRED: "Request expired",
+    REQUEST_SUPERSEDED: "Request superseded by a corrected request",
     DOCUMENT_UPLOADED_AND_PROTECTED: "Protected document uploaded",
     REPLACEMENT_DOCUMENT_UPLOADED: "Replacement document uploaded",
     DOCUMENT_APPROVED_FOR_ISSUE: "Document approved for issue",
@@ -152,7 +154,7 @@ export async function submitOwnPayslipRequest(client: PrismaClient, raw: Record<
   const allowed = new Map(options.map((month) => [month.month, month]));
   for (const month of requestedMonths) if (!allowed.has(month)) throw new PayslipRequestError("One or more selected months are no longer available.", 409, "MONTH_NOT_AVAILABLE");
   const correctionKey = optionalKey(raw.correctionOfRequestKey);
-  const correction = correctionKey ? await client.staffPayslipRequest.findFirst({ where: { publicKey: correctionKey, staffMemberId: staff.id, status: { in: ["ISSUED", "REJECTED", "CANCELLED"] } } }) : null;
+  const correction = correctionKey ? await client.staffPayslipRequest.findFirst({ where: { publicKey: correctionKey, staffMemberId: staff.id, status: { in: ["REJECTED", "CANCELLED"] } } }) : null;
   if (correctionKey && !correction) throw new PayslipRequestError("The correction request reference is unavailable.");
   const now = new Date();
   const request = await client.$transaction(async (tx) => {
@@ -192,7 +194,7 @@ export async function cancelOwnPayslipRequest(client: PrismaClient, requestKey: 
 }
 
 export async function loadPayslipRequestQueue(client: PrismaClient, options: { includeAudit: boolean }) {
-  const [requests, staff, preparers] = await Promise.all([
+  const [requests, staff, preparerUsers] = await Promise.all([
     client.staffPayslipRequest.findMany({
       include: {
         staffMember: { select: { iamPublicKey: true, fullName: true, displayName: true, designation: true, status: true, userId: true } },
@@ -204,8 +206,15 @@ export async function loadPayslipRequestQueue(client: PrismaClient, options: { i
       take: 500
     }),
     client.staffMember.findMany({ where: { status: { in: ["ACTIVE", "INACTIVE"] } }, select: { iamPublicKey: true, fullName: true, displayName: true, designation: true, status: true, dateOfJoining: true }, orderBy: { fullName: "asc" }, take: 500 }),
-    client.user.findMany({ where: { isActive: true, lifecycleStatus: "ACTIVE", iamPublicKey: { not: null }, iamRoleAssignments: { some: { role: { in: ["SUPER_ADMIN", "DIRECTOR", "ACCOUNTANT"] }, status: "ACTIVE" } } }, select: { iamPublicKey: true, name: true, designation: true, role: true }, orderBy: { name: "asc" }, take: 100 })
+    client.user.findMany({ where: { isActive: true, lifecycleStatus: "ACTIVE", iamPublicKey: { not: null }, iamRoleAssignments: { some: { role: { in: ["SUPER_ADMIN", "DIRECTOR", "ACCOUNTANT"] }, status: "ACTIVE" } } }, select: { id: true, iamPublicKey: true, name: true, designation: true, iamRoleAssignments: { where: { role: { in: ["SUPER_ADMIN", "DIRECTOR", "ACCOUNTANT"] }, status: "ACTIVE" }, select: { id: true, role: true } } }, orderBy: { name: "asc" }, take: 100 })
   ]);
+  const preparers = (await Promise.all(preparerUsers.map(async (row) => {
+    for (const assignment of row.iamRoleAssignments) {
+      const decision = await evaluateEffectivePermission(client, { userId: row.id, roleAssignmentId: assignment.id, permission: "PREPARE_PAYSLIP_REQUEST" });
+      if (decision.allowed) return { key: row.iamPublicKey!, name: row.name, designation: row.designation, role: assignment.role };
+    }
+    return null;
+  }))).filter((row): row is NonNullable<typeof row> => Boolean(row));
   return {
     requests: requests.map((request) => ({
       key: request.publicKey,
@@ -213,7 +222,7 @@ export async function loadPayslipRequestQueue(client: PrismaClient, options: { i
       staff: { key: request.staffMember.iamPublicKey, name: request.staffMember.displayName || request.staffMember.fullName, designation: request.staffMember.designation, status: request.staffMember.status },
       purpose: purposeLabel(request.purpose),
       requiredByDate: dateOnly(request.requiredByDate),
-      overdue: Boolean(request.requiredByDate && request.requiredByDate < startOfToday() && OPEN_STATUSES.includes(request.status)),
+      overdue: Boolean(request.requiredByDate && dateOnly(request.requiredByDate)! < indiaDateOnly() && OPEN_STATUSES.includes(request.status)),
       status: request.status,
       statusLabel: requestStatusLabel(request.status),
       version: request.version,
@@ -223,7 +232,7 @@ export async function loadPayslipRequestQueue(client: PrismaClient, options: { i
       timeline: options.includeAudit && request.events ? request.events.map((event: any) => ({ type: requestEventLabel(event.eventType), status: event.newStatus ? requestStatusLabel(event.newStatus) : null, reason: event.safeReason, at: event.occurredAt.toISOString() })) : undefined
     })),
     staff: staff.map((row) => ({ key: row.iamPublicKey, name: row.displayName || row.fullName, designation: row.designation, status: row.status, joiningDate: dateOnly(row.dateOfJoining) })),
-    preparers: preparers.map((row) => ({ key: row.iamPublicKey, name: row.name, designation: row.designation, role: row.role }))
+    preparers
   };
 }
 
@@ -254,8 +263,10 @@ export async function transitionPayslipRequest(client: PrismaClient, requestKey:
   if (action === "REVIEW" && request.status === "SUBMITTED") { nextStatus = "UNDER_REVIEW"; eventType = "REQUEST_REVIEW_STARTED"; }
   else if (action === "ASSIGN" && ["SUBMITTED", "UNDER_REVIEW"].includes(request.status)) {
     const preparerKey = uuid(raw.preparerKey, "Preparer reference");
-    const preparer = await client.user.findFirst({ where: { iamPublicKey: preparerKey, isActive: true, lifecycleStatus: "ACTIVE" } });
+    const preparer = await client.user.findFirst({ where: { iamPublicKey: preparerKey, isActive: true, lifecycleStatus: "ACTIVE" }, include: { iamRoleAssignments: { where: { status: "ACTIVE" }, select: { id: true } } } });
     if (!preparer) throw new PayslipRequestError("The selected preparer is unavailable.");
+    const decisions = await Promise.all(preparer.iamRoleAssignments.map((assignment) => evaluateEffectivePermission(client, { userId: preparer.id, roleAssignmentId: assignment.id, permission: "PREPARE_PAYSLIP_REQUEST" })));
+    if (!decisions.some((decision) => decision.allowed)) throw new PayslipRequestError("The selected user is not explicitly authorised to prepare payslip requests.", 403, "PREPARER_PERMISSION_REQUIRED");
     assignedPreparerUserId = preparer.id; nextStatus = "PREPARATION_IN_PROGRESS"; eventType = "PREPARATION_ASSIGNED";
   } else if (action === "PREPARE" && ["SUBMITTED", "UNDER_REVIEW"].includes(request.status)) { nextStatus = "PREPARATION_IN_PROGRESS"; eventType = "PREPARATION_STARTED"; assignedPreparerUserId = actor.user.id; }
   else if (action === "REJECT" && ["SUBMITTED", "UNDER_REVIEW", "PREPARATION_IN_PROGRESS", "READY_TO_ISSUE"].includes(request.status)) { nextStatus = "REJECTED"; eventType = "REQUEST_REJECTED"; reason = text(raw.reason, "Rejection reason", 3, 500); }
@@ -267,6 +278,7 @@ export async function transitionPayslipRequest(client: PrismaClient, requestKey:
     if (["REJECTED", "EXPIRED"].includes(nextStatus)) await tx.staffPayslipRequestMonth.updateMany({ where: { requestId: request.id }, data: { activeOverlapKey: null } });
     await createEvent(tx, request.id, actor, { eventType, previousStatus: request.status, newStatus: nextStatus, version: expectedVersion + 1, reason, metadata: action === "ASSIGN" ? { assigned: true } : undefined });
   }, transactionOptions);
+  if (action === "ASSIGN" && assignedPreparerUserId) await publishPayslipRequestNotification(client, { eventKey: `${request.publicKey}:ASSIGNED:${assignedPreparerUserId}`, type: "REQUEST_SUBMITTED", actorUserId: actor.user.id, requestPublicKey: request.publicKey, assignedPreparerUserId, assignedPreparerOnly: true });
   await notifyStaff(client, request, actor.user.id, nextStatus === "REJECTED" ? "REQUEST_REJECTED" : "STATUS_CHANGED", eventType);
   return { key: request.publicKey, status: nextStatus, statusLabel: requestStatusLabel(nextStatus), version: expectedVersion + 1 };
 }
@@ -335,13 +347,15 @@ export async function uploadPayslipDocument(client: PrismaClient, requestKey: st
 
 export async function approvePayslipDocument(client: PrismaClient, requestKey: string, raw: Record<string, unknown>, actor: PayslipActor) {
   const documentKey = safeKey(String(raw.documentKey ?? ""));
-  const document = await client.staffPayslipDocumentVersion.findFirst({ where: { publicKey: documentKey, request: { publicKey: safeKey(requestKey) }, status: "READY_TO_ISSUE" } });
+  const document = await client.staffPayslipDocumentVersion.findFirst({ where: { publicKey: documentKey, request: { publicKey: safeKey(requestKey) }, status: "READY_TO_ISSUE" }, include: { request: { select: { version: true } } } });
   if (!document) throw new PayslipRequestError("The document is unavailable for approval.", 404);
+  const requestVersion = integer(raw.requestVersion, "Request version", 1, 1_000_000);
+  if (document.request.version !== requestVersion) throw new PayslipRequestError("The request changed; refresh and try again.", 409, "EXPECTED_VERSION_CONFLICT");
   if (document.uploadedByUserId === actor.user.id && raw.confirmIndependentReview !== true) throw new PayslipRequestError("An uploader must explicitly confirm independent final review before approval.");
   await requireCriticalReauthentication(client, actor, String(raw.reauthPassword ?? ""));
   const changed = await client.staffPayslipDocumentVersion.updateMany({ where: { id: document.id, status: "READY_TO_ISSUE", approvedByUserId: null }, data: { approvedByUserId: actor.user.id } });
   if (changed.count !== 1) throw new PayslipRequestError("The document changed; refresh and try again.", 409);
-  await createEvent(client, document.requestId, actor, { eventType: "DOCUMENT_APPROVED_FOR_ISSUE", version: integer(raw.requestVersion, "Request version", 1, 1_000_000), metadata: { documentReference: document.publicKey } });
+  await createEvent(client, document.requestId, actor, { eventType: "DOCUMENT_APPROVED_FOR_ISSUE", version: requestVersion, metadata: { documentReference: document.publicKey } });
   return { key: document.publicKey, approved: true };
 }
 
@@ -368,6 +382,13 @@ export async function issuePayslipDocument(client: PrismaClient, requestKey: str
     if (requestChanged.count !== 1) throw new PayslipRequestError("The request changed; refresh and try again.", 409, "EXPECTED_VERSION_CONFLICT");
     if (!pending) await tx.staffPayslipRequestMonth.updateMany({ where: { requestId: request.id }, data: { activeOverlapKey: null } });
     await createEvent(tx, request.id, actor, { eventType: document.supersedesVersionId ? "REPLACEMENT_DOCUMENT_ISSUED" : "DOCUMENT_ISSUED", previousStatus: request.status, newStatus: nextStatus, version: expectedVersion + 1, reason: document.replacementReason, metadata: { documentReference: document.publicKey, months: document.months.map((month) => month.salaryMonth) } });
+    if (!pending && request.correctionOfRequestId) {
+      const corrected = await tx.staffPayslipRequest.findUnique({ where: { id: request.correctionOfRequestId } });
+      if (!corrected || !["REJECTED", "CANCELLED"].includes(corrected.status)) throw new PayslipRequestError("The corrected request is no longer eligible to be superseded.", 409, "CORRECTION_CONFLICT");
+      const superseded = await tx.staffPayslipRequest.updateMany({ where: { id: corrected.id, status: corrected.status, version: corrected.version }, data: { status: "SUPERSEDED", supersededAt: now, version: { increment: 1 } } });
+      if (superseded.count !== 1) throw new PayslipRequestError("The corrected request changed; refresh and try again.", 409, "CORRECTION_CONFLICT");
+      await createEvent(tx, corrected.id, actor, { eventType: "REQUEST_SUPERSEDED", previousStatus: corrected.status, newStatus: "SUPERSEDED", version: corrected.version + 1, metadata: { correctionRequestReference: request.publicKey } });
+    }
   }, transactionOptions);
   await publishPayslipRequestNotification(client, { eventKey: `${document.publicKey}:ISSUED`, type: notification, actorUserId: actor.user.id, requestPublicKey: request.publicKey, staffUserId: request.staffMember.userId });
   return { key: document.publicKey, status: "ACTIVE", requestStatus: nextStatus, requestStatusLabel: requestStatusLabel(nextStatus), requestVersion: expectedVersion + 1 };
@@ -475,15 +496,15 @@ function latestCompletedSalaryMonth(now = new Date()) {
   return `${year}-${String(month).padStart(2, "0")}`;
 }
 
-function monthFromDate(value: Date) { return `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, "0")}`; }
+function monthFromDate(value: Date) { return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit" }).format(value); }
 function monthLabel(value: string) { const [year, month] = value.split("-").map(Number); return new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric", timeZone: "Asia/Kolkata" }).format(new Date(Date.UTC(year, month - 1, 15))); }
 function salaryMonth(value: unknown) { const result = String(value ?? "").trim(); if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(result)) throw new PayslipRequestError("Salary month must use YYYY-MM."); return result; }
 function uniqueMonths(value: unknown, maximum: number) { if (!Array.isArray(value) || !value.length || value.length > maximum) throw new PayslipRequestError(`Select 1 to ${maximum} salary months.`); const result = [...new Set(value.map(salaryMonth))]; if (result.length !== value.length) throw new PayslipRequestError("Salary months must be unique."); return result.sort(); }
 function requestNumber(now: Date) { return `PSR-${now.toISOString().slice(0, 10).replaceAll("-", "")}-${randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase()}`; }
 function text(value: unknown, label: string, min: number, max: number) { const result = String(value ?? "").trim(); if (result.length < min || result.length > max) throw new PayslipRequestError(`${label} must contain ${min} to ${max} characters.`); return result; }
 function optionalText(value: unknown, max: number) { const result = String(value ?? "").trim(); if (!result) return null; if (result.length > max) throw new PayslipRequestError(`Explanation must contain at most ${max} characters.`); return result; }
-function optionalFutureDate(value: unknown) { const raw = String(value ?? "").trim(); if (!raw) return null; if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) throw new PayslipRequestError("Required-by date must use YYYY-MM-DD."); const result = new Date(`${raw}T12:00:00.000Z`); if (Number.isNaN(result.getTime()) || result < startOfToday() || result > new Date(Date.now() + 180 * 86_400_000)) throw new PayslipRequestError("Required-by date must be within the next 180 days."); return result; }
-function startOfToday() { const now = new Date(); return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())); }
+function optionalFutureDate(value: unknown) { const raw = String(value ?? "").trim(); if (!raw) return null; if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) throw new PayslipRequestError("Required-by date must use YYYY-MM-DD."); const result = new Date(`${raw}T12:00:00.000Z`), today = indiaDateOnly(), maximum = new Date(`${today}T12:00:00.000Z`); maximum.setUTCDate(maximum.getUTCDate() + 180); if (Number.isNaN(result.getTime()) || result.toISOString().slice(0, 10) !== raw || raw < today || raw > maximum.toISOString().slice(0, 10)) throw new PayslipRequestError("Required-by date must be within the next 180 days."); return result; }
+function indiaDateOnly(now = new Date()) { return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(now); }
 function dateOnly(value: Date | null | undefined) { return value?.toISOString().slice(0, 10) ?? null; }
 function safeKey(value: string) { const result = String(value ?? "").trim(); if (!/^[A-Za-z0-9_-]{8,100}$/.test(result)) throw new PayslipRequestError("The private reference is invalid.", 404); return result; }
 function optionalKey(value: unknown) { const result = String(value ?? "").trim(); return result ? safeKey(result) : null; }

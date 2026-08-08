@@ -20,7 +20,7 @@ This matrix separates presence from completeness. `Complete` requires tested wor
 | Library | V1 | Complete | Inaccessible Schoolknot screens remain comparison evidence gaps | Prompt 16E-J evidence |
 | Certificates/Class X packages/ID cards | V1 | Complete | Report-card template catalog separate | Prompt 18 evidence |
 | Backup/restore/migrations | V1 | Complete | Every new model must extend it | DEVOPS-1B/1E evidence |
-| Staff Payslip Request and Secure Delivery | V1 | Partial | Prompt 23I lacks request/upload/password/status/download-audit workflow | `HR-PAYSLIP-REQ-1` after finance |
+| Staff Payslip Request and Secure Delivery | V1 | Complete local/private | Governed request/upload/protection/reveal/delivery/replacement/audit workflow independently verified | Deployment prerequisites and approved retention policy remain before real use |
 | Family/Multi-Student Mixed-Tender Fee Collection | V1 | Complete locally/private | Provider activation, deployment, real-data onboarding and physical-printer acceptance remain gated | `FIN-FAMILY-PAY-1` implementation and independent QA |
 | Canonical report-card template library/physical print | V1 | Partial | No original canonical assets or physical print acceptance | Obtain samples; run print protocol |
 | Safe staging/release/client update | V1 | Partial | Plans exist; end-to-end environment/update operation not released | Governed implementation/rehearsal |

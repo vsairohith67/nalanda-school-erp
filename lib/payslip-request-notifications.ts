@@ -9,6 +9,7 @@ export async function publishPayslipRequestNotification(client: any, input: {
   requestPublicKey: string;
   staffUserId?: string | null;
   assignedPreparerUserId?: string | null;
+  assignedPreparerOnly?: boolean;
   now?: Date;
 }) {
   const now = input.now ?? new Date();
@@ -16,7 +17,9 @@ export async function publishPayslipRequestNotification(client: any, input: {
   const campaignNumber = `PAYSLIPREQ1-${input.type}-${fingerprint}`;
   const existing = await client.notificationCampaign.findUnique({ where: { campaignNumber }, select: { totalRecipientRows: true } });
   if (existing) return { campaignNumber, recipients: existing.totalRecipientRows, idempotent: true };
-  const recipients = input.type === "REQUEST_SUBMITTED" || input.type === "PROCESSING_OVERDUE"
+  const recipients = input.assignedPreparerOnly && input.assignedPreparerUserId
+    ? await activeUsers(client, [input.assignedPreparerUserId])
+    : input.type === "REQUEST_SUBMITTED" || input.type === "PROCESSING_OVERDUE"
     ? await managementRecipients(client, input.assignedPreparerUserId)
     : input.staffUserId ? await activeUsers(client, [input.staffUserId]) : [];
   const copy = notificationCopy(input.type);

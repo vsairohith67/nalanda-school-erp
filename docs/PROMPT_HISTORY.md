@@ -1642,7 +1642,7 @@ The recovery classified the primary blocker as `TEST_TYPECHECK_OR_BUILD`: clean
 TypeScript partitions exhausted the default approximately 2 GB Node heap before
 diagnostics. The affected partitions pass at a bounded 2.5 GB and the final
 production build retains the authorised 4 GB ceiling. The implementation stays
-additive and the operational migration remains unapplied.
+additive.
 
 Focused security/governance/qpdf tests and the `PAYSLIPREQ1` copied-database
 matrix prove protection, wrong-key/corrupt-asset refusal, concurrency,
@@ -1651,12 +1651,24 @@ Browser verification covers Staff/Parent context isolation, Director workflow,
 Accountant prepare/upload without issue, Staff transient password reveal and
 protected download, denied Principal/Admin/Viewer roles, exact `390x844` and
 `1366x768`, light/dark, keyboard focus, 44 px targets and clean console/runtime
-batches. Independent QA remains required before merge or tag.
+batches. Independent QA additionally closed compressed-object-stream active-PDF
+evasion, preparer-authorisation filtering, approval concurrency, India-time
+month boundaries, assigned-preparer notification and management audit display.
+All ten lifecycle states, including linked corrected-request `SUPERSEDED` and
+governed `EXPIRED`, have copied-database evidence.
 
 The sequential release gate passed at 320 pages / 495 APIs, zero lifecycle
-backfill changes, 194 test files / 1,736 tests, bounded typecheck, the authorised
-4 GB production build, backup version 37 and Git safety. Synthetic QA residue
-was inspected and cleaned twice.
+backfill changes, 193 passed test files / 1,736 passed tests (plus one file and
+three qpdf tests intentionally environment-gated in the generic run and passed
+separately), bounded typecheck, the authorised 4 GB production build, backup
+version 37 and Git safety. Synthetic QA residue was inspected and cleaned twice.
+The protected pre-migration database hash was
+`1AA6B2A4542F6B3316A1E32B846C1FDD07DC0B14A7335288FAC2529CB374CDE7`.
+After byte-identical rollback/restore proof, the sole additive migration applied
+once and repeat deployment was a no-op. The post-migration hash is
+`78960F7700A9E89CF1D05FA9B1EAE09C7E101886F8F22A6C1D3D88BCD0506F18`;
+all business, Staff, request/document and V1.5 payroll tables remain empty and
+the four protected accounts remain unchanged.
 
-No deployment, live provider, operational migration, real Staff onboarding or
-real salary document is authorised. SUPPORT-1A has not begun.
+No deployment, live provider, real Staff onboarding or real salary document is
+authorised. Full Payroll/ESS remains V1.5. SUPPORT-1A has not begun.

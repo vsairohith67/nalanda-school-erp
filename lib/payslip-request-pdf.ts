@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { lstat, mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { PDFDocument } from "pdf-lib";
@@ -51,7 +51,7 @@ export async function validatePayslipPdf(file: Pick<File, "name" | "type" | "siz
     throw new PayslipPdfError("The PDF is encrypted, malformed, truncated, or unsupported.");
   }
   if (pageCount < 1 || pageCount > PAYSLIP_PDF_MAX_PAGES) throw new PayslipPdfError("PDF files must contain 1 to 50 pages.");
-  await qpdfCheck(bytes);
+  await qpdfCheckAndInspect(bytes);
   return { bytes, byteSize: bytes.length, pageCount, sha256: sha256(bytes) };
 }
 
@@ -101,13 +101,23 @@ export class PdfProtectionAdapter {
   }
 }
 
-async function qpdfCheck(bytes: Buffer) {
+async function qpdfCheckAndInspect(bytes: Buffer) {
   const executable = await validatedQpdfExecutable();
   const temporary = await protectedTemporaryDirectory();
   const source = path.join(temporary, "intake.pdf");
+  const expanded = path.join(temporary, "expanded.pdf");
   try {
     await writeFile(source, bytes, { flag: "wx", mode: 0o600 });
     await runQpdf(executable, ["--check", source]);
+    // Active dictionaries can be hidden inside compressed object streams. Expand
+    // object streams with the reviewed parser, then apply the same fail-closed
+    // deny-list to the parsed representation before the source is accepted.
+    await runQpdf(executable, [source, expanded, "--warning-exit-0", "--object-streams=disable", "--stream-data=preserve"]);
+    const expandedStat = await stat(expanded);
+    if (expandedStat.size < 1 || expandedStat.size > PAYSLIP_PDF_MAX_BYTES + 2 * 1024 * 1024) {
+      throw new PayslipPdfError("The parsed PDF structure exceeds the supported processing limit.", 413, "PDF_STRUCTURE_LIMIT");
+    }
+    rejectUnsafePdfObjects(await readFile(expanded));
   } finally {
     await removeProtectedTemporaryDirectory(temporary);
   }
