@@ -12,6 +12,7 @@
 - [Developer Guide](PAYROLL_DEVELOPER_GUIDE.md)
 - [Threat Model](PAYROLL_THREAT_MODEL.md)
 - [Implementation Evidence](evidence/PROMPT_23I_IMPLEMENTATION_EVIDENCE.md)
+- [Independent QA Release Evidence](evidence/PROMPT_23I_QA_RELEASE_EVIDENCE.md)
 - [Payroll and ESS Diagram](diagrams/payroll-payslips-ess.mmd)
 
 Prompt 23I adds effective-dated compensation, deterministic paise calculations,
@@ -19,6 +20,10 @@ governed approvals, advances, immutable private payslips and exact linked-Staff
 self-service. Finance posting and salary disbursement remain disabled. Real
 Staff payroll, deployment, live providers, statutory formula automation and
 government filing are not authorised.
+
+Independent QA cleared Prompt 23I as `PAYROLL_ESS_CLEARED`. The retained
+feature branch and version-37 release tag are complete; the next governed phase
+is Prompt 23J - Transport Routes, Stops, Vehicles and Bus Passes.
 
 ## Prompt 23H admissions and enquiry CRM
 
@@ -511,18 +516,3 @@ DEVOPS-1B changes only migration history/tooling/documentation. Prompt 21B/21C/2
 - [DEVOPS-1C-QA Independent Report](STAGING_READINESS_QA_REPORT.md) - independent architecture/security/cost review, corrected defects and fresh synthetic rehearsal evidence.
 
 DEVOPS-1B is fully cleared. DEVOPS-1C does not claim a cloud deployment, DNS change, operational database onboarding or paid resource. Physical PWA certification remains pending. Prompt 21B/21C/21D remain blocked, Prompt 22B remains conditional, and Parent/Teacher/Principal Schoolknot audits remain pending.
-
-# Prompt 23I payroll and Employee self-service
-
-- [Payroll Workflow and Calculation Specification](PAYROLL_WORKFLOW_AND_CALCULATION_SPECIFICATION.md) - effective-dated compensation, locked inputs, deterministic calculations and governed run lifecycle.
-- [Payroll Privacy and Permission Matrix](PAYROLL_PRIVACY_AND_PERMISSION_MATRIX.md) - role, context, object-scope, reporting, export, PWA, AI and public-data boundaries.
-- [Salary Advance Policy](SALARY_ADVANCE_POLICY.md) - request, approval, recovery, revision, cancellation and no-disbursement controls.
-- [Payroll Finance Posting Boundary](PAYROLL_FINANCE_POSTING_BOUNDARY.md) - fail-closed accounting preview and prohibition on automatic Payment, receipt, expense, Cash Book or bank movement.
-- [Employee Payroll Self-Service Guide](EMPLOYEE_PAYROLL_SELF_SERVICE_GUIDE.md) - linked-Staff access, context switching, payslips, advances and privacy support.
-- [Payroll Operator Guide](PAYROLL_OPERATOR_GUIDE.md) - preparation, calculation, approval, lock, issue, reversal and exception operations.
-- [Payroll Developer Guide](PAYROLL_DEVELOPER_GUIDE.md) - schema, APIs, concurrency, calculation, PDF, reports, backup and test architecture.
-- [Payroll Threat Model](PAYROLL_THREAT_MODEL.md) - salary confidentiality, IDOR, stale writes, concurrent approval, private download, finance and provider threats.
-- [Prompt 23I Implementation Evidence](evidence/PROMPT_23I_IMPLEMENTATION_EVIDENCE.md) - feature checkpoint, copied-database calculation matrix and pre-QA proof.
-- [Prompt 23I-QA Release Evidence](evidence/PROMPT_23I_QA_RELEASE_EVIDENCE.md) - independent calculations, versioning, advances, privacy, Browser, migration, backup, cleanup and release gates.
-
-Prompt 23I is independently cleared as `PAYROLL_ESS_CLEARED`. Real Staff/payroll onboarding, deployment, disbursement, statutory filing, EPFO/ESI automation and live providers remain unauthorised. The next governed phase is Prompt 23J - Transport Routes, Stops, Vehicles and Bus Passes.
