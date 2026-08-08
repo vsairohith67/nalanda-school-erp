@@ -416,12 +416,12 @@ model StudentAttendanceRecord {
 }
 
 model StaffMember {
-  id                        String                     @id @default(cuid())
-  iamPublicKey              String?                    @unique
-  staffCode                 String?                    @unique
+  id                        String                        @id @default(cuid())
+  iamPublicKey              String?                       @unique
+  staffCode                 String?                       @unique
   fullName                  String
   displayName               String?
-  staffType                 String                     @default("TEACHING")
+  staffType                 String                        @default("TEACHING")
   designation               String
   department                String?
   primarySubject            String?
@@ -435,18 +435,18 @@ model StaffMember {
   address                   String?
   emergencyContactName      String?
   emergencyContactMobile    String?
-  status                    String                     @default("ACTIVE")
+  status                    String                        @default("ACTIVE")
   notes                     String?
-  userId                    String?                    @unique
-  user                      User?                      @relation(fields: [userId], references: [id], onDelete: SetNull)
-  timetableTeacherId        String?                    @unique
-  timetableTeacher          TimetableTeacher?          @relation(fields: [timetableTeacherId], references: [id], onDelete: SetNull)
-  createdAt                 DateTime                   @default(now())
-  updatedAt                 DateTime                   @updatedAt
+  userId                    String?                       @unique
+  user                      User?                         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  timetableTeacherId        String?                       @unique
+  timetableTeacher          TimetableTeacher?             @relation(fields: [timetableTeacherId], references: [id], onDelete: SetNull)
+  createdAt                 DateTime                      @default(now())
+  updatedAt                 DateTime                      @updatedAt
   attendanceRecords         StaffAttendanceRecord[]
   leaveRequests             StaffLeaveRequest[]
-  substituteAbsences        SubstituteAssignment[]     @relation("SubstituteAbsentStaff")
-  substituteDuties          SubstituteAssignment[]     @relation("SubstituteDutyStaff")
+  substituteAbsences        SubstituteAssignment[]        @relation("SubstituteAbsentStaff")
+  substituteDuties          SubstituteAssignment[]        @relation("SubstituteDutyStaff")
   libraryMember             LibraryMember?
   libraryCharges            LibraryCharge[]
   teacherAnalyticsSnapshots TeacherAnalyticsSnapshot[]
@@ -456,6 +456,11 @@ model StaffMember {
   smsEmailSuppressions      SmsEmailSuppression[]
   smsEmailDeliveries        SmsEmailDelivery[]
   examAssignments           TeacherExamAssignment[]
+  payrollAssignments        StaffCompensationAssignment[]
+  salaryRevisions           SalaryRevision[]
+  payrollResults            EmployeePayrollResult[]
+  salaryAdvances            SalaryAdvance[]
+  payslipVersions           PayslipVersion[]
 
   @@index([fullName])
   @@index([staffType])
@@ -6281,4 +6286,377 @@ model AdmissionEvent {
   @@index([enquiryId, eventDate])
   @@index([eventType, eventDate])
   @@index([requestHash, eventDate])
+}
+
+model PayrollPolicyVersion {
+  id                     String                   @id @default(cuid())
+  publicKey              String                   @unique @default(uuid())
+  policyCode             String
+  versionNumber          Int
+  name                   String
+  status                 String                   @default("DRAFT")
+  effectiveFrom          DateTime
+  effectiveTo            DateTime?
+  prorationBasis         String                   @default("CALENDAR_DAYS")
+  unpaidLeaveRule        String                   @default("APPROVED_UNPAID_LEAVE_ONLY")
+  halfDayRule            String                   @default("NOT_CONFIGURED")
+  defaultRoundingRule    String                   @default("NEAREST_PAISE")
+  requiredAttendanceRule String                   @default("EXPLICIT_REQUIRED_DATES")
+  approvalReference      String?
+  approvedByUserId       String?
+  approvedAt             DateTime?
+  lockedAt               DateTime?
+  version                Int                      @default(1)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  salaryStructures       SalaryStructureVersion[]
+  payrollRuns            PayrollRun[]
+
+  @@unique([policyCode, versionNumber])
+  @@index([status, effectiveFrom, effectiveTo])
+}
+
+model SalaryStructureVersion {
+  id                      String                        @id @default(cuid())
+  publicKey               String                        @unique @default(uuid())
+  structureCode           String
+  versionNumber           Int
+  name                    String
+  description             String?
+  status                  String                        @default("DRAFT")
+  policyVersionId         String
+  policyVersion           PayrollPolicyVersion          @relation(fields: [policyVersionId], references: [id], onDelete: Restrict)
+  effectiveFrom           DateTime
+  effectiveTo             DateTime?
+  approvalReference       String?
+  approvedByUserId        String?
+  approvedAt              DateTime?
+  lockedAt                DateTime?
+  estimatedGrossPaise     Int                           @default(0)
+  version                 Int                           @default(1)
+  createdAt               DateTime                      @default(now())
+  updatedAt               DateTime                      @updatedAt
+  components              SalaryComponentDefinition[]
+  compensationAssignments StaffCompensationAssignment[]
+
+  @@unique([structureCode, versionNumber])
+  @@index([status, effectiveFrom, effectiveTo])
+  @@index([policyVersionId])
+}
+
+model SalaryComponentDefinition {
+  id                      String                   @id @default(cuid())
+  publicKey               String                   @unique @default(uuid())
+  structureVersionId      String
+  structureVersion        SalaryStructureVersion   @relation(fields: [structureVersionId], references: [id], onDelete: Restrict)
+  componentCode           String
+  name                    String
+  classification          String
+  calculationMode         String
+  calculationRule         String                   @default("STANDARD")
+  defaultAmountPaise      Int?
+  percentageBasisPoints   Int?
+  percentageBaseCode      String?
+  prorationRule           String                   @default("FULL_PERIOD")
+  roundingRule            String                   @default("NEAREST_PAISE")
+  statutoryTreatment      String                   @default("NOT_STATUTORY")
+  payslipVisible          Boolean                  @default(true)
+  accountingBehavior      String                   @default("PREVIEW_ONLY")
+  exportBehavior          String                   @default("ALLOWLISTED_SUMMARY")
+  displayOrder            Int                      @default(0)
+  effectiveFrom           DateTime
+  effectiveTo             DateTime?
+  versionNumber           Int                      @default(1)
+  createdAt               DateTime                 @default(now())
+  payrollComponentResults PayrollComponentResult[]
+
+  @@unique([structureVersionId, componentCode])
+  @@index([classification, calculationMode])
+  @@index([effectiveFrom, effectiveTo])
+}
+
+model StaffCompensationAssignment {
+  id                  String                  @id @default(cuid())
+  publicKey           String                  @unique @default(uuid())
+  staffMemberId       String
+  staffMember         StaffMember             @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  structureVersionId  String
+  structureVersion    SalaryStructureVersion  @relation(fields: [structureVersionId], references: [id], onDelete: Restrict)
+  effectiveFrom       DateTime
+  effectiveTo         DateTime?
+  payrollEligibleFrom DateTime
+  payrollEligibleTo   DateTime?
+  status              String                  @default("ACTIVE")
+  reason              String
+  approvedByUserId    String
+  approvedAt          DateTime
+  endReason           String?
+  version             Int                     @default(1)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  previousRevisions   SalaryRevision[]        @relation("SalaryRevisionPreviousAssignment")
+  revisedAssignments  SalaryRevision[]        @relation("SalaryRevisionNewAssignment")
+  payrollResults      EmployeePayrollResult[]
+
+  @@index([staffMemberId, effectiveFrom, effectiveTo])
+  @@index([status, payrollEligibleFrom, payrollEligibleTo])
+}
+
+model SalaryRevision {
+  id                   String                       @id @default(cuid())
+  publicKey            String                       @unique @default(uuid())
+  staffMemberId        String
+  staffMember          StaffMember                  @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  previousAssignmentId String?
+  previousAssignment   StaffCompensationAssignment? @relation("SalaryRevisionPreviousAssignment", fields: [previousAssignmentId], references: [id], onDelete: Restrict)
+  newAssignmentId      String
+  newAssignment        StaffCompensationAssignment  @relation("SalaryRevisionNewAssignment", fields: [newAssignmentId], references: [id], onDelete: Restrict)
+  effectiveDate        DateTime
+  status               String                       @default("SCHEDULED")
+  oldGrossPaise        Int
+  newGrossPaise        Int
+  reason               String
+  approverUserId       String
+  approvedAt           DateTime
+  cancellationReason   String?
+  cancelledAt          DateTime?
+  version              Int                          @default(1)
+  createdAt            DateTime                     @default(now())
+  payrollResults       EmployeePayrollResult[]
+
+  @@index([staffMemberId, effectiveDate])
+  @@index([status, effectiveDate])
+}
+
+model PayrollPeriod {
+  id                          String                    @id @default(cuid())
+  publicKey                   String                    @unique @default(uuid())
+  periodCode                  String                    @unique
+  payrollMonth                String
+  startDate                   DateTime
+  endDate                     DateTime
+  status                      String                    @default("DRAFT")
+  requiredAttendanceDatesJson String                    @default("[]")
+  inputApprovalReference      String?
+  inputsLockedByUserId        String?
+  inputsLockedAt              DateTime?
+  sourceVersion               Int                       @default(1)
+  version                     Int                       @default(1)
+  createdAt                   DateTime                  @default(now())
+  updatedAt                   DateTime                  @updatedAt
+  payrollRuns                 PayrollRun[]
+  advanceRecoverySchedules    AdvanceRecoverySchedule[]
+
+  @@index([status, startDate, endDate])
+}
+
+model PayrollRun {
+  id                        String                  @id @default(cuid())
+  publicKey                 String                  @unique @default(uuid())
+  runNumber                 String                  @unique
+  requestKey                String                  @unique
+  periodId                  String
+  period                    PayrollPeriod           @relation(fields: [periodId], references: [id], onDelete: Restrict)
+  policyVersionId           String
+  policyVersion             PayrollPolicyVersion    @relation(fields: [policyVersionId], references: [id], onDelete: Restrict)
+  runType                   String                  @default("REGULAR")
+  sequenceNumber            Int                     @default(1)
+  status                    String                  @default("DRAFT")
+  activeKey                 String?                 @unique
+  sourceRunId               String?
+  sourceRun                 PayrollRun?             @relation("PayrollRunCorrections", fields: [sourceRunId], references: [id], onDelete: Restrict)
+  correctionRuns            PayrollRun[]            @relation("PayrollRunCorrections")
+  manualAdjustmentsJson     String                  @default("[]")
+  inputSnapshotJson         String                  @default("{}")
+  exceptionsJson            String                  @default("[]")
+  formulaPreviewJson        String                  @default("{}")
+  financePostingStatus      String                  @default("DISABLED")
+  financePostingPreviewJson String                  @default("{}")
+  totalGrossPaise           Int                     @default(0)
+  totalDeductionPaise       Int                     @default(0)
+  totalReimbursementPaise   Int                     @default(0)
+  totalNetPaise             Int                     @default(0)
+  employeeCount             Int                     @default(0)
+  exceptionCount            Int                     @default(0)
+  preparedByUserId          String
+  submittedByUserId         String?
+  approvedByUserId          String?
+  lockedByUserId            String?
+  payslipsIssuedByUserId    String?
+  submittedAt               DateTime?
+  approvedAt                DateTime?
+  lockedAt                  DateTime?
+  payslipsIssuedAt          DateTime?
+  reason                    String?
+  version                   Int                     @default(1)
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+  employeeResults           EmployeePayrollResult[]
+  events                    PayrollEvent[]
+
+  @@unique([periodId, sequenceNumber])
+  @@index([periodId, status])
+  @@index([status, createdAt])
+  @@index([sourceRunId])
+}
+
+model EmployeePayrollResult {
+  id                       String                      @id @default(cuid())
+  publicKey                String                      @unique @default(uuid())
+  payrollRunId             String
+  payrollRun               PayrollRun                  @relation(fields: [payrollRunId], references: [id], onDelete: Restrict)
+  staffMemberId            String
+  staffMember              StaffMember                 @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  compensationAssignmentId String
+  compensationAssignment   StaffCompensationAssignment @relation(fields: [compensationAssignmentId], references: [id], onDelete: Restrict)
+  salaryRevisionId         String?
+  salaryRevision           SalaryRevision?             @relation(fields: [salaryRevisionId], references: [id], onDelete: Restrict)
+  status                   String                      @default("READY")
+  eligibleDays             Int
+  periodDays               Int
+  unpaidLeaveUnits         Int                         @default(0)
+  halfDayUnits             Int                         @default(0)
+  attendanceSummaryJson    String                      @default("{}")
+  sourceVersionsJson       String                      @default("{}")
+  formulaSnapshotJson      String                      @default("{}")
+  grossPaise               Int                         @default(0)
+  deductionPaise           Int                         @default(0)
+  reimbursementPaise       Int                         @default(0)
+  netPaise                 Int                         @default(0)
+  version                  Int                         @default(1)
+  createdAt                DateTime                    @default(now())
+  componentResults         PayrollComponentResult[]
+  advanceRecoveries        AdvanceRecoverySchedule[]
+  payslips                 PayslipVersion[]
+
+  @@unique([payrollRunId, staffMemberId])
+  @@index([staffMemberId, createdAt])
+  @@index([status])
+}
+
+model PayrollComponentResult {
+  id                      String                     @id @default(cuid())
+  employeePayrollResultId String
+  employeePayrollResult   EmployeePayrollResult      @relation(fields: [employeePayrollResultId], references: [id], onDelete: Restrict)
+  componentDefinitionId   String?
+  componentDefinition     SalaryComponentDefinition? @relation(fields: [componentDefinitionId], references: [id], onDelete: Restrict)
+  componentCode           String
+  componentName           String
+  classification          String
+  amountPaise             Int
+  baseAmountPaise         Int?
+  percentageBasisPoints   Int?
+  roundingRule            String
+  formulaText             String
+  sourceVersionReference  String
+  payslipVisible          Boolean                    @default(true)
+  displayOrder            Int                        @default(0)
+  createdAt               DateTime                   @default(now())
+
+  @@unique([employeePayrollResultId, componentCode])
+  @@index([componentCode, classification])
+}
+
+model SalaryAdvance {
+  id                    String                    @id @default(cuid())
+  publicKey             String                    @unique @default(uuid())
+  advanceNumber         String                    @unique
+  staffMemberId         String
+  staffMember           StaffMember               @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  requestSource         String                    @default("STAFF_REQUEST")
+  requestedAmountPaise  Int
+  requestedReason       String
+  status                String                    @default("REQUESTED")
+  approvedAmountPaise   Int?
+  remainingBalancePaise Int                       @default(0)
+  approvalReason        String?
+  approvedByUserId      String?
+  approvedAt            DateTime?
+  rejectedByUserId      String?
+  rejectedAt            DateTime?
+  rejectionReason       String?
+  cancelledByUserId     String?
+  cancelledAt           DateTime?
+  cancellationReason    String?
+  version               Int                       @default(1)
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+  recoverySchedule      AdvanceRecoverySchedule[]
+
+  @@index([staffMemberId, status])
+  @@index([status, createdAt])
+}
+
+model AdvanceRecoverySchedule {
+  id                      String                 @id @default(cuid())
+  publicKey               String                 @unique @default(uuid())
+  salaryAdvanceId         String
+  salaryAdvance           SalaryAdvance          @relation(fields: [salaryAdvanceId], references: [id], onDelete: Restrict)
+  sequenceNumber          Int
+  payrollPeriodId         String?
+  payrollPeriod           PayrollPeriod?         @relation(fields: [payrollPeriodId], references: [id], onDelete: Restrict)
+  scheduledAmountPaise    Int
+  recoveredAmountPaise    Int                    @default(0)
+  status                  String                 @default("SCHEDULED")
+  revisionReason          String?
+  employeePayrollResultId String?
+  employeePayrollResult   EmployeePayrollResult? @relation(fields: [employeePayrollResultId], references: [id], onDelete: Restrict)
+  recoveredAt             DateTime?
+  reversedAt              DateTime?
+  version                 Int                    @default(1)
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+
+  @@unique([salaryAdvanceId, sequenceNumber])
+  @@index([payrollPeriodId, status])
+  @@index([employeePayrollResultId])
+}
+
+model PayslipVersion {
+  id                      String                @id @default(cuid())
+  publicKey               String                @unique @default(uuid())
+  employeePayrollResultId String
+  employeePayrollResult   EmployeePayrollResult @relation(fields: [employeePayrollResultId], references: [id], onDelete: Restrict)
+  staffMemberId           String
+  staffMember             StaffMember           @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  versionNumber           Int
+  reference               String                @unique
+  status                  String                @default("ISSUED")
+  snapshotJson            String
+  snapshotSha256          String
+  issueDate               DateTime
+  issuedByUserId          String
+  supersedesPayslipId     String?
+  supersedesPayslip       PayslipVersion?       @relation("PayslipSupersession", fields: [supersedesPayslipId], references: [id], onDelete: Restrict)
+  replacementPayslips     PayslipVersion[]      @relation("PayslipSupersession")
+  correctionReason        String?
+  createdAt               DateTime              @default(now())
+
+  @@unique([employeePayrollResultId, versionNumber])
+  @@index([staffMemberId, issueDate])
+  @@index([status])
+}
+
+model PayrollEvent {
+  id               String      @id @default(cuid())
+  publicKey        String      @unique @default(uuid())
+  payrollRunId     String?
+  payrollRun       PayrollRun? @relation(fields: [payrollRunId], references: [id], onDelete: Restrict)
+  entityType       String
+  entityPublicKey  String
+  eventType        String
+  previousStatus   String?
+  newStatus        String?
+  entityVersion    Int?
+  actorUserId      String?
+  actorRole        String?
+  reason           String?
+  safeSnapshotJson String?
+  requestKey       String?
+  createdAt        DateTime    @default(now())
+
+  @@index([payrollRunId, createdAt])
+  @@index([entityType, entityPublicKey, createdAt])
+  @@index([eventType, createdAt])
+  @@index([requestKey])
 }

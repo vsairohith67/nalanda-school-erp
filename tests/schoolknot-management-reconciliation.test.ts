@@ -170,9 +170,9 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
     expect(combined).toContain("no names, contacts, identifiers, marks, balances, photographs, or transaction values retained");
   });
 
-  it("preserves the prior checkpoint and recognizes the additive examination implementation", () => {
+  it("preserves the prior checkpoint and recognizes additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(223);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(236);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
     expect(schema).toContain("model ExaminationTimetableVersion {");
@@ -188,6 +188,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
       "20260803123000_classwork_secure_submissions",
       "20260803143000_academic_reporting",
       "20260803193000_admissions_enquiry_crm",
+      "20260808054148_payroll_payslips_employee_self_service",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);
@@ -199,11 +200,9 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
     expect(read("lib/backup.ts")).toContain("backupVersion: 37");
   });
 
-  it("adds no provisional business-domain models", () => {
+  it("adds no still-provisional business-domain models", () => {
     const schema = read("prisma/schema.prisma");
     for (const model of [
-      "PayrollRun",
-      "PayslipVersion",
       "TransportRoute",
       "StudentRouteAssignment",
       "AssignmentSubmission",
@@ -212,5 +211,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
     ]) {
       expect(schema).not.toContain(`model ${model} {`);
     }
+    expect(schema).toContain("model PayrollRun {");
+    expect(schema).toContain("model PayslipVersion {");
   });
 });

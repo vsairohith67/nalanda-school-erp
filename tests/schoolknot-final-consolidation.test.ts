@@ -227,9 +227,9 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
     expect(vendor).toContain("no credential requested");
   });
 
-  it("preserves the Schoolknot checkpoint across the additive examination implementation", () => {
+  it("preserves the Schoolknot checkpoint across additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(223);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(236);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
     expect(schema).toContain("model ExaminationTimetableVersion {");
@@ -250,7 +250,9 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
     expect(permissionTokens.has("CORRECT_FINAL_RECEIPT")).toBe(true);
     expect(permissionTokens.has("ACTIVATE_EXAM_SCHEMES")).toBe(true);
     expect(permissionTokens.has("ASSIGN_EXAM_TEACHERS")).toBe(true);
-    for (const model of ["PayrollRun", "TransportRoute", "DisciplineIncident", "CafeteriaPlan"]) {
+    expect(schema).toContain("model PayrollRun {");
+    expect(schema).toContain("model PayslipVersion {");
+    for (const model of ["TransportRoute", "DisciplineIncident", "CafeteriaPlan"]) {
       expect(schema).not.toContain(`model ${model} {`);
     }
   });

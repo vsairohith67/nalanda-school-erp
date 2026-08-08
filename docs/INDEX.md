@@ -1,5 +1,25 @@
 # Documentation Index
 
+## Prompt 23I payroll, payslips and employee self-service
+
+- [Workflow and Lifecycle](PAYROLL_WORKFLOW_AND_LIFECYCLE.md)
+- [Calculation Specification](PAYROLL_CALCULATION_SPECIFICATION.md)
+- [Privacy and Access Matrix](PAYROLL_PRIVACY_AND_ACCESS_MATRIX.md)
+- [Salary Advance and Recovery Policy](SALARY_ADVANCE_AND_RECOVERY_POLICY.md)
+- [Finance Posting Boundary](PAYROLL_FINANCE_POSTING_BOUNDARY.md)
+- [Employee Self-Service Guide](EMPLOYEE_PAYROLL_SELF_SERVICE_GUIDE.md)
+- [Operator Guide](PAYROLL_OPERATOR_GUIDE.md)
+- [Developer Guide](PAYROLL_DEVELOPER_GUIDE.md)
+- [Threat Model](PAYROLL_THREAT_MODEL.md)
+- [Implementation Evidence](evidence/PROMPT_23I_IMPLEMENTATION_EVIDENCE.md)
+- [Payroll and ESS Diagram](diagrams/payroll-payslips-ess.mmd)
+
+Prompt 23I adds effective-dated compensation, deterministic paise calculations,
+governed approvals, advances, immutable private payslips and exact linked-Staff
+self-service. Finance posting and salary disbursement remain disabled. Real
+Staff payroll, deployment, live providers, statutory formula automation and
+government filing are not authorised.
+
 ## Prompt 23H admissions and enquiry CRM
 
 - [Workflow and Privacy Matrix](ADMISSIONS_WORKFLOW_AND_PRIVACY_MATRIX.md)

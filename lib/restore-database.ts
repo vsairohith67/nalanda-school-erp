@@ -17,6 +17,7 @@ import { restoreExamGovernanceBackup } from "@/lib/exam-governance-backup";
 import { createHash } from "node:crypto";
 import { restoreAcademicCalendarData } from "@/lib/academic-calendar-restore";
 import { ADMISSIONS_BACKUP_KEYS, restoreAdmissionsBackup, type AdmissionsBackupKey } from "@/lib/admissions-backup";
+import { PAYROLL_BACKUP_KEYS, restorePayrollBackup, type PayrollBackupKey } from "@/lib/payroll-backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -85,6 +86,10 @@ type RestoreDatabaseClient = Pick<
   | "admissionApplication" | "admissionApplicationVersion" | "applicantChild" | "prospectiveGuardian"
   | "applicationDocument" | "applicationReview" | "admissionDecision" | "admissionOffer"
   | "admissionDuplicateResolution" | "admissionConversion" | "admissionEvent"
+  | "payrollPolicyVersion" | "salaryStructureVersion" | "salaryComponentDefinition"
+  | "staffCompensationAssignment" | "salaryRevision" | "payrollPeriod" | "payrollRun"
+  | "employeePayrollResult" | "payrollComponentResult" | "salaryAdvance"
+  | "advanceRecoverySchedule" | "payslipVersion" | "payrollEvent"
 >;
 
 export async function restoreValidatedBackup(
@@ -105,6 +110,7 @@ async function restoreIntoDatabase(
 ): Promise<RestoreResult> {
   const result: RestoreResult = {
     ...(Object.fromEntries(ADMISSIONS_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<AdmissionsBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(PAYROLL_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<PayrollBackupKey, ReturnType<typeof emptyEntityResult>>),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
     feeStructures: emptyEntityResult(),
@@ -513,6 +519,12 @@ async function restoreIntoDatabase(
     result[key].created = admissionsResult[key].created;
     result[key].skipped = admissionsResult[key].skipped;
     result[key].errors.push(...admissionsResult[key].errors);
+  }
+  const payrollResult = await restorePayrollBackup(client as unknown as PrismaClient, backup);
+  for (const key of PAYROLL_BACKUP_KEYS) {
+    result[key].created = payrollResult[key].created;
+    result[key].skipped = payrollResult[key].skipped;
+    result[key].errors.push(...payrollResult[key].errors);
   }
   await restoreAcademicCalendarData(client, backup, restoredBy, result);
   await restoreCertificateData(client, backup, backupStudentLocalIds, result);

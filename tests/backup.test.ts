@@ -154,7 +154,20 @@ describe("full backup", () => {
       admissionOffers: 0,
       admissionDuplicateResolutions: 0,
       admissionConversions: 0,
-      admissionEvents: 0
+      admissionEvents: 0,
+      payrollPolicyVersions: 0,
+      salaryStructureVersions: 0,
+      salaryComponentDefinitions: 0,
+      staffCompensationAssignments: 0,
+      salaryRevisions: 0,
+      payrollPeriods: 0,
+      payrollRuns: 0,
+      employeePayrollResults: 0,
+      payrollComponentResults: 0,
+      salaryAdvances: 0,
+      advanceRecoverySchedules: 0,
+      payslipVersions: 0,
+      payrollEvents: 0
     });
     expect(backup.students).toHaveLength(1);
     expect(backup.feeStructures).toHaveLength(1);

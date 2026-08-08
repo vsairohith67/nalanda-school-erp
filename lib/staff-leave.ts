@@ -1,6 +1,6 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 
-export const STAFF_LEAVE_TYPES = ["CASUAL", "SICK", "EMERGENCY", "PERMISSION", "HALF_DAY", "OTHER"] as const;
+export const STAFF_LEAVE_TYPES = ["CASUAL", "SICK", "EMERGENCY", "PERMISSION", "HALF_DAY", "UNPAID", "OTHER"] as const;
 export const STAFF_LEAVE_STATUSES = ["DRAFT", "PENDING", "APPROVED", "REJECTED", "CANCELLED"] as const;
 export const HALF_DAY_SESSIONS = ["FORENOON", "AFTERNOON"] as const;
 export type StaffLeaveType = (typeof STAFF_LEAVE_TYPES)[number];

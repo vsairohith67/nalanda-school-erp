@@ -21,6 +21,7 @@ import { validateAcademicCalendarBackupRows } from "@/lib/academic-calendar-back
 import { validateClassworkBackupRows } from "@/lib/classwork-backup";
 import { validateAcademicReportingBackupRows } from "@/lib/academic-reporting-backup";
 import { ADMISSIONS_BACKUP_KEYS, validateAdmissionsBackupRows, type AdmissionsBackup, type AdmissionsBackupKey } from "@/lib/admissions-backup";
+import { PAYROLL_BACKUP_KEYS, validatePayrollBackupRows, type PayrollBackup, type PayrollBackupKey } from "@/lib/payroll-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 const MAX_ENTITY_ROWS = 100_000;
@@ -58,6 +59,7 @@ const TOP_LEVEL_KEYS = new Set([
   "classworkItems", "classworkItemVersions", "classworkSubmissions", "classworkSubmissionVersions", "classworkAttachments", "classworkFeedback", "classworkAuditEvents",
   "academicReportDefinitions", "academicReportRuns", "academicReportSourceReferences", "academicReportAuditEvents",
   ...ADMISSIONS_BACKUP_KEYS,
+  ...PAYROLL_BACKUP_KEYS,
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
   "examGovernance",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
@@ -119,6 +121,7 @@ const BACKUP_COUNT_KEYS = new Set([
   "classworkItems", "classworkItemVersions", "classworkSubmissions", "classworkSubmissionVersions", "classworkAttachments", "classworkFeedback", "classworkAuditEvents",
   "academicReportDefinitions", "academicReportRuns", "academicReportSourceReferences", "academicReportAuditEvents",
   ...ADMISSIONS_BACKUP_KEYS,
+  ...PAYROLL_BACKUP_KEYS,
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
   "examGovernanceRecords",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
@@ -516,7 +519,7 @@ export type ValidatedBackup = {
   timetableFixedPeriods: RestoreRecord[];
   timetableDrafts: RestoreRecord[];
   timetableEntries: RestoreRecord[];
-} & AdmissionsBackup;
+} & AdmissionsBackup & PayrollBackup;
 
 export type EntityRestoreResult = {
   created: number;
@@ -706,7 +709,7 @@ export type RestoreResult = {
   timetableDrafts: EntityRestoreResult;
   timetableEntries: EntityRestoreResult;
   warnings: string[];
-} & Record<AdmissionsBackupKey, EntityRestoreResult>;
+} & Record<AdmissionsBackupKey | PayrollBackupKey, EntityRestoreResult>;
 
 export function parseAndValidateBackup(input: string | unknown): ValidatedBackup {
   let parsed: unknown = input;
@@ -828,7 +831,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   });
   const staffLeaveRequests = validateOptionalRows(root.staffLeaveRequests, "staffLeaveRequests", STAFF_LEAVE_REQUEST_KEYS, ["id", "staffMemberId", "leaveType", "startDate", "endDate", "totalDays", "status"]);
   staffLeaveRequests.forEach((row, index) => {
-    if (!["CASUAL", "SICK", "EMERGENCY", "PERMISSION", "HALF_DAY", "OTHER"].includes(requireString(row.leaveType, `staffLeaveRequests[${index}].leaveType`))) throw new Error(`staffLeaveRequests[${index}].leaveType is not supported`);
+    if (!["CASUAL", "SICK", "EMERGENCY", "PERMISSION", "HALF_DAY", "UNPAID", "OTHER"].includes(requireString(row.leaveType, `staffLeaveRequests[${index}].leaveType`))) throw new Error(`staffLeaveRequests[${index}].leaveType is not supported`);
     if (!["DRAFT", "PENDING", "APPROVED", "REJECTED", "CANCELLED"].includes(requireString(row.status, `staffLeaveRequests[${index}].status`))) throw new Error(`staffLeaveRequests[${index}].status is not supported`);
     if (row.status !== "DRAFT" && !hasValue(row.reason)) throw new Error(`staffLeaveRequests[${index}].reason is required for submitted leave`);
     requireDateString(row.startDate, `staffLeaveRequests[${index}].startDate`);
@@ -1297,6 +1300,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     reportCardVersionIds: new Set(reportCardData.studentReportCardVersions.map((row) => String(row.id ?? "")).filter(Boolean))
   });
   const admissionsData = validateAdmissionsBackupRows(root);
+  const payrollData = validatePayrollBackupRows(root);
   const teacherAnalyticsData = validateTeacherAnalyticsBackupRows(root, { staffMemberIds: new Set(staffMembers.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const certificateData = validateCertificateBackupRows(root, { studentIds, guardianIds: new Set(guardians.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const classXPackageData = validateClassXPackageBackupRows(root, {
@@ -1418,6 +1422,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     ...classworkData,
     ...academicReportingData,
     ...admissionsData,
+    ...payrollData,
     ...teacherAnalyticsData,
     ...certificateData,
     ...classXPackageData,

@@ -137,6 +137,23 @@ export const PERMISSIONS = [
   "VIEW_ADMISSION_REPORTS",
   "EXPORT_ADMISSION_REPORTS",
   "MANAGE_ADMISSION_RETENTION",
+  "VIEW_PAYROLL",
+  "MANAGE_SALARY_STRUCTURES",
+  "ASSIGN_COMPENSATION",
+  "MANAGE_PAYROLL_INPUTS",
+  "CALCULATE_PAYROLL",
+  "SUBMIT_PAYROLL",
+  "APPROVE_PAYROLL",
+  "LOCK_PAYROLL",
+  "ISSUE_PAYSLIPS",
+  "REVERSE_PAYROLL",
+  "MANAGE_SALARY_ADVANCES",
+  "APPROVE_SALARY_ADVANCES",
+  "VIEW_PAYROLL_REPORTS",
+  "EXPORT_PAYROLL_REPORTS",
+  "VIEW_PAYROLL_AGGREGATES",
+  "VIEW_OWN_PAYROLL",
+  "REQUEST_SALARY_ADVANCE",
   "VIEW_EXAMS",
   "MANAGE_EXAMS",
   "CONFIGURE_EXAM_ASSESSMENTS",
@@ -585,6 +602,29 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { permission: "CANCEL_EXPENSES", label: "Cancel expenses", description: "Cancel preserved expense records with a required reason." },
       { permission: "VIEW_EXPENSE_REPORTS", label: "View expense reports", description: "Open read-only expense summaries without budget analysis." },
       { permission: "EXPORT_EXPENSE_REPORTS", label: "Export expense reports", description: "Download formula-safe expense report CSV files." }
+    ]
+  },
+  {
+    id: "payroll",
+    title: "Payroll, Payslips and Employee Self-Service",
+    permissions: [
+      { permission: "VIEW_PAYROLL", label: "View payroll", description: "View authorised salary structures, assignments, runs, exceptions, advances and private payslip history." },
+      { permission: "MANAGE_SALARY_STRUCTURES", label: "Manage salary structure versions", description: "Create effective-dated approved salary-policy, component and structure versions; statutory-looking rules remain manual." },
+      { permission: "ASSIGN_COMPENSATION", label: "Assign compensation", description: "Assign or revise effective-dated Staff compensation without overwriting earlier periods." },
+      { permission: "MANAGE_PAYROLL_INPUTS", label: "Prepare payroll inputs", description: "Create explicit payroll periods, locked attendance-date requirements and approved manual adjustments." },
+      { permission: "CALCULATE_PAYROLL", label: "Calculate payroll", description: "Run deterministic draft calculation from locked approved sources and exact formula versions." },
+      { permission: "SUBMIT_PAYROLL", label: "Submit payroll", description: "Submit an exception-free calculated run for leadership review." },
+      { permission: "APPROVE_PAYROLL", label: "Approve payroll", description: "Critically re-authenticate and approve an reviewed payroll run without creating payment or disbursement." },
+      { permission: "LOCK_PAYROLL", label: "Lock payroll", description: "Critically re-authenticate and immutably lock an approved payroll run." },
+      { permission: "ISSUE_PAYSLIPS", label: "Issue payslips", description: "Issue each private versioned payslip exactly once after payroll lock." },
+      { permission: "REVERSE_PAYROLL", label: "Reverse payroll", description: "Create a governed compensating reversal version; never rewrite locked payroll." },
+      { permission: "MANAGE_SALARY_ADVANCES", label: "Manage salary advances", description: "Record requests and governed recovery schedules without creating disbursement." },
+      { permission: "APPROVE_SALARY_ADVANCES", label: "Approve salary advances", description: "Critically re-authenticate to approve, reject, revise or cancel advances and recovery schedules." },
+      { permission: "VIEW_PAYROLL_REPORTS", label: "View payroll reports", description: "View authorised run, component, department, exception, recovery and payslip summaries." },
+      { permission: "EXPORT_PAYROLL_REPORTS", label: "Export payroll reports", description: "Download the bounded formula-safe payroll reporting allowlist." },
+      { permission: "VIEW_PAYROLL_AGGREGATES", label: "View suppressed payroll aggregates", description: "Separately approved aggregate-only payroll totals with minimum-group suppression." },
+      { permission: "VIEW_OWN_PAYROLL", label: "View own payroll", description: "View only the salary history, locked payroll inputs, issued payslips and advances of the exact linked Staff profile." },
+      { permission: "REQUEST_SALARY_ADVANCE", label: "Request own salary advance", description: "Request an advance for the exact linked Staff profile without disbursement." }
     ]
   },
   {
@@ -1247,6 +1287,7 @@ const accountantPermissions = new Set<CanonicalPermission>([
   ,"MANAGE_OWN_WHATSAPP_CONSENT"
   ,"MANAGE_OWN_SMS_EMAIL_CONSENT"
   ,"VIEW_FEE_REGISTER_OCR", "VIEW_FEE_REGISTER_OCR_IMAGES", "UPLOAD_FEE_REGISTER_PAGES", "RUN_FEE_REGISTER_OCR", "REVIEW_FEE_REGISTER_OCR_ROWS", "PREVIEW_FEE_REGISTER_OCR_POSTING", "POST_FEE_REGISTER_OCR_PAYMENTS", "RESOLVE_FEE_REGISTER_OCR_DUPLICATES", "VIEW_FEE_REGISTER_OCR_REPORTS", "EXPORT_FEE_REGISTER_OCR_REPORTS"
+  ,"VIEW_PAYROLL", "MANAGE_PAYROLL_INPUTS", "CALCULATE_PAYROLL", "SUBMIT_PAYROLL", "MANAGE_SALARY_ADVANCES", "VIEW_PAYROLL_REPORTS", "EXPORT_PAYROLL_REPORTS", "VIEW_OWN_PAYROLL", "REQUEST_SALARY_ADVANCE"
 ]);
 
 const computerOperatorPermissions = new Set<CanonicalPermission>([
@@ -1307,7 +1348,7 @@ export const RECOMMENDED_ROLE_PERMISSIONS: Record<Role, ReadonlySet<CanonicalPer
   ADMIN: adminPermissions,
   ACCOUNTANT: accountantPermissions,
   COMPUTER_OPERATOR: computerOperatorPermissions,
-  TEACHER: new Set(["VIEW_TEACHER_PLACEHOLDER", "VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS", "VIEW_STAFF_LEAVE", "APPLY_STAFF_LEAVE", "VIEW_SUBSTITUTES", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_CLASSWORK", "MANAGE_CLASSWORK", "PUBLISH_CLASSWORK", "CLOSE_CLASSWORK", "REVIEW_CLASSWORK_SUBMISSIONS", "VIEW_CLASSWORK_AGGREGATES", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "REVIEW_ADMISSION_APPLICATIONS", "VIEW_EXAMS", "ENTER_MARKS", "SUBMIT_MARKS", "VIEW_OWN_EXAM_ASSIGNMENTS", "VIEW_OWN_EXAM_MARKS", "ENTER_ASSIGNED_EXAM_MARKS", "SUBMIT_ASSIGNED_EXAM_MARKS", "REQUEST_EXAM_MARK_CORRECTION", "VIEW_REPORT_CARDS", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "VIEW_OWN_TEACHER_ANALYTICS", "VIEW_OWN_STAFF_ID_CARD", "VIEW_OWN_NOTIFICATIONS", "CREATE_SCOPED_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT", "VIEW_STAFF_CALENDAR"]),
+  TEACHER: new Set(["VIEW_TEACHER_PLACEHOLDER", "VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS", "VIEW_STAFF_LEAVE", "APPLY_STAFF_LEAVE", "VIEW_SUBSTITUTES", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_CLASSWORK", "MANAGE_CLASSWORK", "PUBLISH_CLASSWORK", "CLOSE_CLASSWORK", "REVIEW_CLASSWORK_SUBMISSIONS", "VIEW_CLASSWORK_AGGREGATES", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "REVIEW_ADMISSION_APPLICATIONS", "VIEW_EXAMS", "ENTER_MARKS", "SUBMIT_MARKS", "VIEW_OWN_EXAM_ASSIGNMENTS", "VIEW_OWN_EXAM_MARKS", "ENTER_ASSIGNED_EXAM_MARKS", "SUBMIT_ASSIGNED_EXAM_MARKS", "REQUEST_EXAM_MARK_CORRECTION", "VIEW_REPORT_CARDS", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "VIEW_OWN_TEACHER_ANALYTICS", "VIEW_OWN_STAFF_ID_CARD", "VIEW_OWN_NOTIFICATIONS", "CREATE_SCOPED_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT", "VIEW_STAFF_CALENDAR", "VIEW_OWN_PAYROLL", "REQUEST_SALARY_ADVANCE"]),
   PARENT: new Set(["VIEW_PARENT_PLACEHOLDER", "VIEW_OWN_ATTENDANCE", "VIEW_OWN_EXAM_TIMETABLE", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_OWN_REPORT_CARDS", "VIEW_OWN_CLASSWORK", "SUBMIT_OWN_CLASSWORK", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "REQUEST_OWN_CHILD_CERTIFICATES", "VIEW_OWN_CHILD_CERTIFICATES", "REQUEST_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_STUDENT_ID_CARDS", "VIEW_OWN_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT", "VIEW_OWN_CALENDAR"]),
   STUDENT: new Set(["VIEW_OWN_CLASSWORK", "SUBMIT_OWN_CLASSWORK", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "VIEW_OWN_REPORT_CARDS", "VIEW_OWN_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS"]),
   VIEWER: viewerPermissions

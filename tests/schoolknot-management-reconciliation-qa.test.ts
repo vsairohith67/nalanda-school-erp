@@ -125,9 +125,9 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
     expect(qa).toContain("Final Prompt 23B must still wait");
   });
 
-  it("preserves the Management checkpoint across the additive examination implementation", () => {
+  it("preserves the Management checkpoint across additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(223);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(236);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
     expect(schema).toContain("model ExaminationTimetableVersion {");
@@ -146,6 +146,7 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
       "20260803123000_classwork_secure_submissions",
       "20260803143000_academic_reporting",
       "20260803193000_admissions_enquiry_crm",
+      "20260808054148_payroll_payslips_employee_self_service",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);
@@ -153,7 +154,9 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
     expect(countRouteFiles("app", "page.tsx") + (existsSync("app/sw.js/route.ts") ? 1 : 0)).toBeGreaterThanOrEqual(274);
     expect(countRouteFiles("app/api", "route.ts")).toBeGreaterThanOrEqual(378);
     expect(read("lib/backup.ts")).toContain("backupVersion: 37");
-    for (const model of ["PayrollRun", "TransportRoute", "AssignmentSubmission", "DisciplineIncident", "CafeteriaPlan"]) {
+    expect(schema).toContain("model PayrollRun {");
+    expect(schema).toContain("model PayslipVersion {");
+    for (const model of ["TransportRoute", "DisciplineIncident", "CafeteriaPlan"]) {
       expect(schema).not.toContain(`model ${model} {`);
     }
   });

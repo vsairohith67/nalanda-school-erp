@@ -1,0 +1,12 @@
+flowchart TD
+  A["Effective-dated structure and assignment"] --> B["Locked attendance and approved leave"]
+  C["Approved adjustment and advance schedule"] --> D["Deterministic paise engine"]
+  B --> D
+  A --> D
+  D --> E["Accountant review and submit"]
+  E --> F["Leadership re-auth approval"]
+  F --> G["Immutable payroll lock"]
+  G --> H["Exactly-once private payslip"]
+  H --> I["Exact linked Staff self-service"]
+  G -. "No automatic posting" .-> J["Fail-closed accounting preview"]
+  G --> K["Versioned reversal or correction"]

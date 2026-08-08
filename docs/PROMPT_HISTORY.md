@@ -1551,3 +1551,20 @@ feature branch and annotated tag are `feature/admissions-enquiry-crm` and
 Result: `ADMISSIONS_CRM_CLEARED`. Next governed phase: Prompt 23I - Payroll,
 Payslips, Salary History and Employee Self-Service. No deployment, live provider,
 real applicant or real-data onboarding is authorised.
+## Prompt 23I - Payroll, Payslips, Salary History and Employee Self-Service (2026-08-08)
+
+Implementation uses additive versioned salary policy, component, structure,
+assignment, revision, period, run, result, advance, payslip and audit models.
+Calculation consumes effective compensation, locked attendance, approved unpaid
+leave, approved manual adjustments and scheduled advance recovery only. It is
+deterministic in paise and embeds exact formula/source versions; statutory-
+looking components remain manual or externally approved.
+
+The private workflow separates Accountant preparation/submission from explicit
+leadership approval/lock/issue. Principal, Admin and Computer Operator are
+denied by default; Staff sees only the exact linked profile and Parent context
+has no payroll access. Finance posting fails closed and never creates salary
+disbursement, Payment, receipt, fee allocation, expense or Cash Book movement.
+The `PAY23I` copied-database matrix covers calculations, concurrency, rollback,
+advance recovery, payslip privacy, backup/restore and operational isolation.
+Independent `PAY23IQA` verification remains required before merge and tag.

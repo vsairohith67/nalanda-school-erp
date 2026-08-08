@@ -40,6 +40,45 @@
   --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+/* Prompt 23I: private payroll administration and employee self-service. */
+.payroll-workspace { display: grid; gap: 1rem; min-width: 0; }
+.payroll-tabs { display: flex; flex-wrap: wrap; gap: .5rem; border-bottom: 1px solid var(--border); padding-bottom: .65rem; }
+.payroll-tabs button { min-height: 44px; padding: .55rem .9rem; border: 1px solid var(--border); border-radius: .7rem; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.payroll-tabs button[aria-selected="true"] { color: var(--primary-contrast, #fff); border-color: var(--primary); background: var(--primary); }
+.payroll-section { display: grid; gap: 1rem; min-width: 0; }
+.payroll-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.payroll-form-grid.compact { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.payroll-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1rem; min-width: 0; }
+.payroll-workspace .card { min-width: 0; overflow-wrap: anywhere; }
+.payroll-workspace .form-stack { display: grid; gap: .8rem; }
+.payroll-workspace label { display: grid; gap: .35rem; font-weight: 650; }
+.payroll-workspace input:not([type="checkbox"]), .payroll-workspace select, .payroll-workspace textarea { width: 100%; min-height: 44px; padding: .65rem .75rem; border: 1px solid var(--border); border-radius: .55rem; background: var(--surface); color: var(--text); font: inherit; }
+.payroll-workspace textarea { min-height: 105px; resize: vertical; }
+.payroll-workspace :is(button,a,input,select,textarea,summary):focus-visible { outline: 3px solid var(--focus, #2f80ed); outline-offset: 2px; }
+.payroll-workspace .button, .payroll-workspace a.button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: .6rem .85rem; text-decoration: none; }
+.component-editor { display: grid; gap: 1rem; }
+.component-editor fieldset { min-width: 0; padding: 1rem; border: 1px solid var(--border); border-radius: .75rem; }
+.component-editor legend { padding: 0 .4rem; font-weight: 750; }
+.checkbox-label { grid-template-columns: auto 1fr; align-items: center; min-height: 44px; }
+.checkbox-label input { width: 22px; height: 22px; }
+.card-title-row, .section-heading, .action-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .65rem; }
+.action-row { justify-content: flex-start; margin-top: .8rem; }
+.status-badge { display: inline-flex; align-items: center; min-height: 28px; padding: .2rem .55rem; border-radius: 999px; background: var(--surface-muted, rgba(127,127,127,.15)); font-size: .82rem; font-weight: 750; }
+.payroll-totals { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: .55rem; }
+.payroll-totals div { padding: .65rem; border-radius: .6rem; background: var(--surface-muted, rgba(127,127,127,.08)); }
+.payroll-totals dt { font-size: .78rem; color: var(--text-muted); }.payroll-totals dd { margin: .2rem 0 0; font-weight: 750; }
+.employee-preview { display: grid; gap: .2rem; padding: .65rem 0; border-bottom: 1px solid var(--border); }.employee-preview small { display: block; }
+.dialog-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 1rem; background: rgba(0,0,0,.58); }
+.dialog-panel { width: min(100%, 560px); max-height: min(90vh, 760px); overflow: auto; padding: 1.25rem; border-radius: .85rem; background: var(--surface); color: var(--text); box-shadow: 0 20px 65px rgba(0,0,0,.35); }
+.table-scroll { max-width: 100%; overflow: auto; border: 1px solid var(--border); border-radius: .7rem; }
+.table-scroll table { width: 100%; min-width: 760px; border-collapse: collapse; }.table-scroll :is(th,td) { padding: .7rem; text-align: left; border-bottom: 1px solid var(--border); }
+.callout { padding: .85rem 1rem; border-left: 4px solid var(--primary); border-radius: .45rem; background: var(--surface-muted, rgba(127,127,127,.08)); }.callout.warning { border-left-color: #b87900; }
+.form-error { padding: .75rem; border: 1px solid #b42318; border-radius: .55rem; color: #b42318; background: rgba(180,35,24,.08); }
+.field-hint { color: var(--text-muted); font-size: .82rem; font-weight: 400; }.metric { font-size: 1.7rem; }
+.compact-form { max-width: 680px; }
+@media (max-width: 760px) { .payroll-form-grid, .payroll-form-grid.compact { grid-template-columns: 1fr; }.payroll-tabs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }.payroll-totals { grid-template-columns: 1fr; }.dialog-panel { padding: 1rem; }.payroll-workspace .card { padding: .85rem; } }
+@media print { .payroll-tabs,.action-row,form { display:none!important; }.payroll-workspace { color:#000;background:#fff; }.payroll-workspace .card { border:1px solid #000;box-shadow:none;break-inside:avoid; } }
+
 /* Prompt 23G governed academic reporting */
 .academic-reporting-workspace,.academic-report-output{display:grid;gap:var(--space-4,1rem)}
 .academic-report-filter-grid{align-items:end}
