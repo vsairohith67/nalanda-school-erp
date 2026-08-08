@@ -1,5 +1,11 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## GOV-RECON-1-QA — Independent requirements and scope review (2026-08-08)
+
+Independent QA revalidated all 32 requirements, the 56 accessible pre-governance commits, 24 tags, merged GitHub PRs #1–#3, external governance records and the canonical Canvs board. It confirmed the finance audit as seven `PARTIALLY_IMPLEMENTED`, nine `MISSING` and one `UNSAFE_OR_AMBIGUOUS`; `FIN-FAMILY-PAY-1` remains the next implementation phase. Full payroll/ESS is technically cleared but remains V1.5 operational scope and does not complete the V1 payslip-request workflow.
+
+The named report-card ZIP and prior safe companion files were unavailable. QA did not import any private source; it reconstructed privacy-safe KG, primary, middle and secondary metadata only, while retaining physical colour/B&W print acceptance as a V1 gate. Fifteen requirements-register rows received explicit evidence-class tokens, and the current index no longer identifies optional Transport as the next phase. No application, schema, migration, operational data, provider or deployment change was made.
+
 ## GOV-RECON-1 — Prompt-history reconstruction and V1 scope correction (2026-08-08)
 
 GOV-RECON-1 reconstructed the earliest available post-hoc Prompt Library evidence through Prompt 23I, all accessible Git commits/tags/branches, GitHub PRs and repository implementation/QA evidence. The accessible Git history begins at the consolidated `2d1ac63` baseline on 2026-07-22. The exact original wording of Phase 2/Prompt 1 and other legacy prompts was not recovered; summaries below are not claimed quotations. See `PROMPT_LEDGER.md` and `REQUIREMENTS_REGISTER.md` for evidence classifications and exact missing-source ranges.

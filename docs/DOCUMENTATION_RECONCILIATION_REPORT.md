@@ -2,7 +2,7 @@
 
 **Phase:** `GOV-RECON-1`<br>
 **As-of:** 2026-08-08<br>
-**Status:** ready for governance review after external sync and closure verification
+**Status:** independent repository QA gates passed; approved for fast-forward governance closure, subject to final external re-fetch
 
 ## Reconstructed coverage
 
@@ -37,7 +37,7 @@ Prompt 23I provides Staff-owned no-store payslip download, immutable snapshots a
 
 ### Report-card templates and print
 
-Four code-defined template families and digital PDF/package QA exist. No original Nalanda report-card PDF/screenshot/template asset or physical colour/black-and-white acceptance evidence was found. The exact privacy-safe upload checklist and print protocol are recorded without fabricating a layout.
+Four code-defined template families and digital PDF/package QA exist. No original Nalanda report-card PDF/screenshot/template asset, `Student Progress Report Card.zip`, or prior named safe catalog/manifest/sync package was found under the project Documents tree. QA reconstructed privacy-safe metadata for distinct KG, primary, middle and secondary families without importing document bytes or Student data. Physical colour/black-and-white acceptance evidence is still missing. The exact upload checklist and print protocol are recorded without fabricating a layout.
 
 ### Safe release and client updates
 
@@ -85,4 +85,13 @@ Basic Memory sync completed and was re-read at the permalink recorded in `BASIC_
 
 ## Before/after safety boundary
 
-Preflight evidence is in `docs/evidence/GOV_RECON_1_PREFLIGHT_AND_HISTORY_EVIDENCE.md`. Closure must re-run Git safety, migration status, operational hash/baseline and document checks, and confirm no runtime, temporary database, merge, tag or deployment.
+Preflight evidence is in `docs/evidence/GOV_RECON_1_PREFLIGHT_AND_HISTORY_EVIDENCE.md`. Independent QA passed `git diff --check`, 227-file relative-link validation, 41 focused tests across six files, Git safety and read-only migration status with 11 migrations current. The operational database remained 6,893,568 bytes with SHA-256 `DD39C1491AB8F604EC3BAD8598F7D80FE95DBBF81F6C2792276948A57DA92F72`; the exact zero-business/four-account baseline was unchanged. No application source, schema, migration, operational data, runtime, temporary database, raw report-card source, private document, deployment or provider was added.
+
+## Independent QA correction record
+
+- Confirmed 56 accessible pre-governance commits, 24 resolvable tags and merged GitHub PRs #1–#3; the governance commit is the 57th currently accessible commit.
+- Confirmed all 32 requirements and unchanged counts: V1 23, V1.5 3, V2 6; Complete 13, Partial 7, Missing 2, Deferred 9 and Superseded 1.
+- Added explicit evidence-class tokens to the 15 register rows that previously relied on prose alone.
+- Recorded that full payroll/ESS is technically cleared yet remains V1.5 operational scope, may stay disabled or permission-restricted in `main`, and does not complete the V1 payslip-request workflow.
+- Reconfirmed the finance matrix as seven `PARTIALLY_IMPLEMENTED`, nine `MISSING` and one `UNSAFE_OR_AMBIGUOUS`; `FIN-FAMILY-PAY-1` remains next.
+- Corrected the current documentation index so optional Transport is not described as the next implementation phase.

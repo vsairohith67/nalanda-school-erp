@@ -2,13 +2,13 @@
 
 **Catalog ID:** `GOV-RECON-1-RC-CATALOG`<br>
 **Audit date:** 2026-08-08<br>
-**Status:** repository inventory complete; canonical school source layouts and physical print approvals are missing
+**Status:** privacy-safe source metadata reconstructed; canonical school source layouts and physical print approvals are missing
 
 ## Source-asset search result
 
-A repository-wide search of tracked documentation, evidence, asset, PDF, screenshot and generated-output paths found **zero original Nalanda report-card PDFs, screenshots or approved template assets**. Historical QA documents state that temporary generated PDFs were cleaned after verification; those files are not canonical design sources and are not present now. No layout is inferred from a missing file.
+A repository-wide search of tracked documentation, evidence, asset, PDF, screenshot and generated-output paths found **zero original Nalanda report-card PDFs, screenshots or approved template assets**. Independent QA also searched `C:\Users\dell\Documents` for `Student Progress Report Card.zip` and the three named privacy-safe companion files; none were present. Historical QA documents state that temporary generated PDFs were cleaned after verification; those files are not canonical design sources and are not present now. No layout is inferred from a missing file.
 
-The current application contains four code-defined template families and a governed renderer. They are implementation evidence, not proof of equivalence to Nalanda's original physical report cards.
+The current application contains four code-defined template families and a governed renderer. They are implementation evidence, not proof of equivalence to Nalanda's original physical report cards. QA reconstructed safe source metadata in `docs/NPS_STUDENT_PROGRESS_REPORT_CARD_SOURCE_CATALOG.md` and `docs/student_progress_report_card_source_manifest.csv`; neither file contains Student data or document bytes.
 
 ## Current code-defined inventory
 
@@ -16,8 +16,8 @@ The current application contains four code-defined template families and a gover
 | --- | --- | --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- | --- |
 | `KG_DEVELOPMENTAL_BOOKLET` definition | LKG/UKG through family matching; QA exact sample LKG | Scheme-driven exam | A4 portrait | Both | Variable | KG developmental booklet | Student/school/exam identity, developmental/rubric areas, attendance/remarks where present; performance bar | Configured signature labels/areas | Issued-only linked-Parent delivery; individual/merged/ZIP jobs | `lib/report-pdf.ts` | Synthetic LKG colour/mono PDF, A4, long-name/page checks | None | Original LKG/UKG approved sample missing; UKG not independently sample-matched |
 | `PRIMARY_10_40_SKILLS` definition | Classes I–V through family matching; QA exact sample III | Scheme-driven exam | A4 portrait | Both | Variable | Primary marks plus skills | Subject/component marks, maxima/result, skills/rubrics, attendance/remarks where present; pattern-capable performance bar | Configured signature labels/areas | Same | `lib/report-pdf.ts` | Synthetic III colour/mono PDF and packaging checks | None | Approved I–V canonical sample and exam-variation decision missing |
-| `SECONDARY_10_40_GROUPED` definition | Classes VI–VIII through family matching; QA exact sample VIII | Scheme-driven exam | A4 portrait | Both | Variable | Grouped secondary marks | Grouped subjects/components, maxima, weightages/result, attendance/remarks where present; pattern-capable performance bar | Configured signature labels/areas | Same | `lib/report-pdf.ts` | Synthetic VIII colour/mono PDF and packaging checks | None | Approved VI–VIII canonical sample and exam-variation decision missing |
-| `RETAINED_MULTI_EXAM_I_X` definition | Classes I–X where configured; QA exact sample X | Multi-examination retained layout | A4 landscape | Both | Variable | Retained multi-exam comparison | Multi-exam subject/component values, variable maxima/result and performance graph | Configured signature labels/areas | Same | `lib/report-pdf.ts` | Synthetic X colour/mono PDF, landscape and package checks | None | Original retained/class IX/X source and approval missing |
+| `SECONDARY_10_40_GROUPED` definition | Classes VI–VIII through family matching; QA exact sample VIII | Scheme-driven exam | A4 portrait | Both | Variable | Middle grouped-marks family (legacy code label retained) | Grouped subjects/components, maxima, weightages/result, attendance/remarks where present; pattern-capable performance bar | Configured signature labels/areas | Same | `lib/report-pdf.ts` | Synthetic VIII colour/mono PDF and packaging checks | None | Approved VI–VIII canonical sample and exam-variation decision missing |
+| `RETAINED_MULTI_EXAM_I_X` definition | Code can match Classes I–X; canonical secondary scope remains IX–X pending approval; QA exact sample X | Multi-examination retained layout | A4 landscape | Both | Variable | Secondary retained multi-exam comparison | Multi-exam subject/component values, variable maxima/result and performance graph | Configured signature labels/areas | Same | `lib/report-pdf.ts` | Synthetic X colour/mono PDF, landscape and package checks | None | Original retained/class IX/X source and approval missing |
 
 ## Capability coverage
 

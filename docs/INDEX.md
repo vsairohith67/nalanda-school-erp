@@ -12,6 +12,9 @@
 - [Family/Multi-Student Mixed-Tender Audit](FINANCE_MULTI_CHILD_SPLIT_TENDER_AUDIT.md)
 - [Family/Multi-Student Mixed-Tender Requirements](FINANCE_MULTI_CHILD_SPLIT_TENDER_REQUIREMENTS.md)
 - [Report-Card Template Catalog](REPORT_CARD_TEMPLATE_CATALOG.md)
+- [Privacy-safe Report-Card Source Catalog](NPS_STUDENT_PROGRESS_REPORT_CARD_SOURCE_CATALOG.md)
+- [Privacy-safe Report-Card Source Manifest](student_progress_report_card_source_manifest.csv)
+- [Report-Card External Sync Package](NPS_REPORT_CARD_EXTERNAL_SYNC_PACKAGE.md)
 - [Report-Card Template Gap and Print Acceptance](REPORT_CARD_TEMPLATE_GAP_AND_PRINT_ACCEPTANCE.md)
 - [Safe Staging, Release and Client Update Strategy](SAFE_STAGING_RELEASE_AND_CLIENT_UPDATE_STRATEGY.md)
 - [Basic Memory Cloud Sync Package](BASIC_MEMORY_SYNC_PACKAGE.md)
@@ -40,8 +43,10 @@ Staff payroll, deployment, live providers, statutory formula automation and
 government filing are not authorised.
 
 Independent QA cleared Prompt 23I as `PAYROLL_ESS_CLEARED`. The retained
-feature branch and version-37 release tag are complete; the next governed phase
-is Prompt 23J - Transport Routes, Stops, Vehicles and Bus Passes.
+feature branch and version-37 release tag are complete. Full payroll/ESS remains
+V1.5 operational scope and is not a V1 launch dependency. Optional Transport
+remains V1.5; the next implementation phase is the V1 blocker
+`FIN-FAMILY-PAY-1`.
 
 ## Prompt 23H admissions and enquiry CRM
 

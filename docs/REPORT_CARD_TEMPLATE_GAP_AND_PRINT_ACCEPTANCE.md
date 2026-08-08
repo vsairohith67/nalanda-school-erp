@@ -9,6 +9,8 @@ Nalanda currently has a versioned report-card engine, four code-defined layout f
 
 ## Required catalog governance
 
+The privacy-safe reconstructed source catalog and manifest are `docs/NPS_STUDENT_PROGRESS_REPORT_CARD_SOURCE_CATALOG.md` and `docs/student_progress_report_card_source_manifest.csv`. They identify KG, primary, middle and secondary source families without claiming access to the missing raw ZIP or original Student documents.
+
 Each canonical template family must have:
 
 - a stable template ID and human-readable name;

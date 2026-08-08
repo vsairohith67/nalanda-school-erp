@@ -22,7 +22,7 @@ Scope is not the same as implementation state. A capability can already exist in
 9. Final cross-module security, performance, recovery, device and accessibility QA.
 10. Controlled staging, pilot, reconciliation and production cutover.
 
-V1 explicitly excludes automatic payroll calculation. The currently released Prompt 23I payroll implementation is preserved as released evidence but its full-payroll product scope is reclassified to V1.5. V1 retains only the separately specified Staff Payslip Request and Secure Delivery workflow.
+V1 explicitly excludes automatic payroll calculation. Full payroll and Employee self-service are technically cleared by Prompt 23I, but their operational product scope is V1.5 and they are not a V1 launch dependency. The released code may remain in `main` while disabled or permission-restricted for rollout. V1 retains only the separately specified Staff Payslip Request and Secure Delivery workflow; automatic payroll or generated payslips do not make that request workflow complete.
 
 ## V1.5 — later operational expansion
 

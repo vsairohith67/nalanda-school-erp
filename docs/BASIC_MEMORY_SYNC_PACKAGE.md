@@ -12,7 +12,7 @@ This package is complete even if the connector is unavailable. The repository re
 
 ### V1/V1.5/V2 decision
 
-V1 requires existing cleared foundations, Staff Payslip Request and Secure Delivery, family/multi-Student mixed-tender fee collection, canonical report-card templates with physical print acceptance, safe staging/release/client updates, support, observability, governed bulk onboarding, final cross-module QA and controlled pilot/cutover. Automatic payroll calculation is excluded. Full payroll automation is V1.5; Transport/Cafeteria are optional V1.5. V2 is AI lessons/videos with Teacher approval, source grounding, privacy/quality/cost controls and no automatic Student publication.
+V1 requires existing cleared foundations, Staff Payslip Request and Secure Delivery, family/multi-Student mixed-tender fee collection, canonical report-card templates with physical print acceptance, safe staging/release/client updates, support, observability, governed bulk onboarding, final cross-module QA and controlled pilot/cutover. Automatic payroll calculation is excluded. Full payroll/ESS is technically cleared but remains V1.5 operational scope and is not a V1 launch dependency; its code may remain disabled or permission-restricted for rollout. Transport/Cafeteria are optional V1.5. V2 is AI lessons/videos with Teacher approval, source grounding, privacy/quality/cost controls and no automatic Student publication.
 
 ### Staff payslip request workflow
 
@@ -24,7 +24,7 @@ V1 blocker. Current released engine supports one Student per receipt and same-St
 
 ### Report-card template library
 
-V1 requires canonical privacy-safe source samples per distinct layout family, immutable mapping/versioning and physical colour and black-and-white print acceptance. Current code has four digital renderer families and publication QA but no original approved layout assets or physical print evidence.
+V1 requires canonical privacy-safe source samples per distinct layout family, immutable mapping/versioning and physical colour and black-and-white print acceptance. Current code has four digital renderer families and publication QA. QA reconstructed privacy-safe metadata for KG, primary, middle and secondary families; the named raw ZIP/original approved layout assets were unavailable and physical print evidence remains missing.
 
 ### Safe update strategy
 
@@ -37,6 +37,8 @@ Git is authoritative technical/versioned record; Notion is executive roadmap/com
 ### Latest verified release checkpoint
 
 Current released `main`: `71f671b8b6ee946884e5b79a9786581f237a6437`, tag `payroll-ess-v37-2026-08-08`. Admissions tag `admissions-crm-v37-2026-08-03` remains reachable. Prompt 23I release history is preserved while full-payroll product scope is reclassified to V1.5.
+
+After GOV-RECON-1-QA fast-forward closure, update this same durable note with the merged commit and annotated tag `requirements-register-v37-2026-08-08`, then re-read it. Do not create a second authority note.
 
 ## Connector result
 
