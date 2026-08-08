@@ -39,8 +39,10 @@ function databasePathFromUrl(databaseUrl: string, workspaceRoot: string) {
 
 function sameFileIdentity(left: string, right: string) {
   if (!existsSync(left) || !existsSync(right)) return false;
-  const leftStat = statSync(left);
-  const rightStat = statSync(right);
+  // Windows file indexes can exceed Number.MAX_SAFE_INTEGER. Keep their exact
+  // identity so unrelated temporary files cannot be mistaken for hard links.
+  const leftStat = statSync(left, { bigint: true });
+  const rightStat = statSync(right, { bigint: true });
   return leftStat.dev === rightStat.dev && leftStat.ino === rightStat.ino;
 }
 

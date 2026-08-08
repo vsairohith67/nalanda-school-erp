@@ -1,8 +1,8 @@
 # Prompt 23I implementation evidence
 
-Date: 2026-08-08  
-Branch: `feature/payroll-payslips-employee-self-service`  
-Base main commit: `0d6cc25e`  
+Date: 2026-08-08
+Branch: `feature/payroll-payslips-employee-self-service`
+Base main commit: `0d6cc25e`
 Decision: ready for independent Prompt 23I-QA; not merged or released
 
 ## Implemented controls

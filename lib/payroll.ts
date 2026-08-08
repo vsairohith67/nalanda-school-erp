@@ -115,7 +115,7 @@ export async function assignCompensation(client: PrismaClient, raw: Record<strin
     const [staff, structure] = await Promise.all([tx.staffMember.findUnique({ where: { iamPublicKey: staffKey } }), tx.salaryStructureVersion.findUnique({ where: { publicKey: structureKey } })]);
     if (!staff || !["ACTIVE", "INACTIVE"].includes(staff.status)) throw new PayrollError("The Staff record is unavailable for payroll.", 404);
     if (!structure || structure.status !== "ACTIVE" || structure.effectiveFrom > effectiveFrom || (structure.effectiveTo && structure.effectiveTo < effectiveFrom)) throw new PayrollError("Choose an active salary structure version effective on the assignment date.");
-    const overlap = await tx.staffCompensationAssignment.count({ where: { staffMemberId: staff.id, status: { in: ["ACTIVE", "FUTURE"] }, effectiveFrom: { lte: effectiveFrom }, OR: [{ effectiveTo: null }, { effectiveTo: { gte: effectiveFrom } }] } });
+    const overlap = await tx.staffCompensationAssignment.count({ where: { staffMemberId: staff.id, status: { in: ["ACTIVE", "FUTURE"] }, OR: [{ effectiveTo: null }, { effectiveTo: { gte: effectiveFrom } }] } });
     if (overlap) throw new PayrollError("An overlapping compensation assignment already exists.", 409, "COMPENSATION_OVERLAP");
     const assignment = await tx.staffCompensationAssignment.create({ data: { staffMemberId: staff.id, structureVersionId: structure.id, effectiveFrom, payrollEligibleFrom, status: effectiveFrom > new Date() ? "FUTURE" : "ACTIVE", reason, approvedByUserId: actor.user.id, approvedAt: new Date() }, include: { staffMember: true, structureVersion: true } });
     await payrollEvent(tx, actor, { entityType: "COMPENSATION_ASSIGNMENT", entityPublicKey: assignment.publicKey, eventType: "COMPENSATION_ASSIGNED", newStatus: assignment.status, entityVersion: assignment.version, reason, safeSnapshot: { staffReference: staff.iamPublicKey, structureReference: structure.publicKey, effectiveFrom: dateText(effectiveFrom) } });
@@ -132,7 +132,7 @@ export async function reviseCompensation(client: PrismaClient, raw: Record<strin
   return client.$transaction(async (tx) => {
     const [previous, structure] = await Promise.all([tx.staffCompensationAssignment.findUnique({ where: { publicKey: assignmentKey }, include: { structureVersion: true, staffMember: true } }), tx.salaryStructureVersion.findUnique({ where: { publicKey: structureKey } })]);
     if (!previous || !["ACTIVE", "FUTURE"].includes(previous.status)) throw new PayrollError("The current compensation assignment is unavailable.", 404);
-    if (!structure || structure.status !== "ACTIVE" || structure.effectiveFrom > effectiveDate) throw new PayrollError("The new salary structure is not effective for this revision.");
+    if (!structure || structure.status !== "ACTIVE" || structure.effectiveFrom > effectiveDate || (structure.effectiveTo && structure.effectiveTo < effectiveDate)) throw new PayrollError("The new salary structure is not effective for this revision.");
     const priorDay = new Date(effectiveDate.getTime() - 86_400_000);
     const changed = await tx.staffCompensationAssignment.updateMany({ where: { id: previous.id, version: expectedVersion(raw.expectedVersion), status: previous.status }, data: { effectiveTo: priorDay, payrollEligibleTo: priorDay, status: "ENDED", endReason: `Superseded by approved revision: ${reason}`, version: { increment: 1 } } });
     if (changed.count !== 1) throw new PayrollError("The compensation assignment changed; refresh and try again.", 409, "EXPECTED_VERSION_CONFLICT");
@@ -386,34 +386,57 @@ export async function payrollReports(client: PrismaClient, options: { aggregateO
   const [runs, componentRows, advances, payslipCount, revisions] = await Promise.all([
     client.payrollRun.findMany({ where: { status: { in: ["APPROVED", "LOCKED", "PAYSLIPS_ISSUED", "REVERSED", "ARCHIVED"] } }, include: { period: true }, orderBy: { createdAt: "desc" }, take: 120 }),
     client.payrollComponentResult.findMany({ where: { employeePayrollResult: { payrollRun: { status: { in: ["APPROVED", "LOCKED", "PAYSLIPS_ISSUED", "ARCHIVED"] } } } }, include: { employeePayrollResult: { include: { staffMember: { select: { department: true } }, payrollRun: { select: { publicKey: true, runNumber: true, status: true } } } } }, take: 10_000 }),
-    client.salaryAdvance.findMany({ select: { status: true, approvedAmountPaise: true, remainingBalancePaise: true }, take: 5_000 }),
+    client.salaryAdvance.findMany({ select: { staffMemberId: true, status: true, approvedAmountPaise: true, remainingBalancePaise: true }, take: 5_000 }),
     client.payslipVersion.count({ where: { status: "ISSUED" } }),
     client.salaryRevision.findMany({ include: { staffMember: { select: { iamPublicKey: true, fullName: true, designation: true, department: true } } }, orderBy: { effectiveDate: "desc" }, take: 500 })
   ]);
-  const byComponent = aggregate(componentRows, (row) => `${row.componentCode}|${row.componentName}|${row.classification}`, (row) => row.amountPaise);
+  const componentKey = (row: typeof componentRows[number]) => JSON.stringify([row.componentCode, row.componentName, row.classification]);
+  const byComponent = aggregate(componentRows, componentKey, (row) => row.amountPaise);
+  const componentCounts = new Map<string, Set<string>>();
+  for (const row of componentRows) {
+    const key = componentKey(row);
+    const set = componentCounts.get(key) ?? new Set<string>();
+    set.add(row.employeePayrollResult.staffMemberId);
+    componentCounts.set(key, set);
+  }
   const byDepartment = aggregate(componentRows, (row) => row.employeePayrollResult.staffMember.department || "Unassigned", (row) => row.classification === "EARNING" ? row.amountPaise : row.classification === "DEDUCTION" ? -row.amountPaise : row.amountPaise);
   const departmentCounts = new Map<string, Set<string>>();
-  for (const row of componentRows) { const key = row.employeePayrollResult.staffMember.department || "Unassigned"; const set = departmentCounts.get(key) ?? new Set(); set.add(row.employeePayrollResultId); departmentCounts.set(key, set); }
+  for (const row of componentRows) { const key = row.employeePayrollResult.staffMember.department || "Unassigned"; const set = departmentCounts.get(key) ?? new Set(); set.add(row.employeePayrollResult.staffMemberId); departmentCounts.set(key, set); }
+  const approvedAdvances = advances.filter((row) => ["APPROVED", "RECOVERY_COMPLETE"].includes(row.status));
+  const advanceContributorCount = new Set(approvedAdvances.map((row) => row.staffMemberId)).size;
   const report = {
     generatedAt: new Date().toISOString(),
     suppressionMinimum: 3,
     runs: runs.map((run) => ({ key: run.publicKey, number: run.runNumber, month: run.period.payrollMonth, status: label(run.status), employeeCount: run.employeeCount, exceptionCount: run.exceptionCount, gross: payrollMoney(run.totalGrossPaise), deductions: payrollMoney(run.totalDeductionPaise), reimbursements: payrollMoney(run.totalReimbursementPaise), net: payrollMoney(run.totalNetPaise), financePosting: run.financePostingStatus })),
-    componentTotals: [...byComponent.entries()].map(([key, amount]) => { const [code, name, classification] = key.split("|"); return { code, name, classification: label(classification), amount: payrollMoney(amount) }; }),
+    componentTotals: [...byComponent.entries()].map(([key, amount]) => { const [code, name, classification] = JSON.parse(key) as string[]; return { code, name, classification: label(classification), employeeCount: componentCounts.get(key)?.size ?? 0, amount: payrollMoney(amount) }; }),
     departmentAggregates: [...byDepartment.entries()].map(([department, amount]) => ({ department: formulaSafe(department), employeeCount: departmentCounts.get(department)?.size ?? 0, netAmount: (departmentCounts.get(department)?.size ?? 0) >= 3 ? payrollMoney(amount) : "Suppressed" })),
-    advanceTotals: { approved: advances.filter((row) => ["APPROVED", "RECOVERY_COMPLETE"].includes(row.status)).length, approvedAmount: payrollMoney(advances.reduce((sum, row) => sum + (row.approvedAmountPaise ?? 0), 0)), remainingBalance: payrollMoney(advances.reduce((sum, row) => sum + row.remainingBalancePaise, 0)) },
+    advanceTotals: { approved: approvedAdvances.length, contributorCount: advanceContributorCount, approvedAmount: payrollMoney(approvedAdvances.reduce((sum, row) => sum + (row.approvedAmountPaise ?? 0), 0)), remainingBalance: payrollMoney(approvedAdvances.reduce((sum, row) => sum + row.remainingBalancePaise, 0)) },
     issuedPayslipCount: payslipCount,
     revisionHistory: options.aggregateOnly ? [] : revisions.map(publicRevision),
     staffRanking: null,
     financeBoundary: financePostingBoundary()
   };
-  if (options.aggregateOnly) return { ...report, runs: report.runs.map(({ key: _key, number: _number, ...row }) => row), componentTotals: report.componentTotals, revisionHistory: [] };
+  if (options.aggregateOnly) return {
+    ...report,
+    runs: report.runs.map(({ key: _key, number: _number, ...row }) => row.employeeCount >= report.suppressionMinimum
+      ? row
+      : { ...row, gross: "Suppressed", deductions: "Suppressed", reimbursements: "Suppressed", net: "Suppressed" }),
+    componentTotals: report.componentTotals.map((row) => ({
+      ...row,
+      amount: row.employeeCount >= report.suppressionMinimum ? row.amount : "Suppressed"
+    })),
+    advanceTotals: report.advanceTotals.contributorCount >= report.suppressionMinimum
+      ? report.advanceTotals
+      : { ...report.advanceTotals, approvedAmount: "Suppressed", remainingBalance: "Suppressed" },
+    revisionHistory: []
+  };
   return report;
 }
 
 export function payrollReportCsv(report: Awaited<ReturnType<typeof payrollReports>>) {
   const rows: string[][] = [["Report", "Label", "Classification", "Count", "Amount", "Status"]];
   for (const row of report.runs) rows.push(["Payroll Run", "number" in row ? String(row.number) : String(row.month), "", String(row.employeeCount), row.net, row.status]);
-  for (const row of report.componentTotals) rows.push(["Component Total", `${row.code} - ${row.name}`, row.classification, "", row.amount, "Approved/locked runs only"]);
+  for (const row of report.componentTotals) rows.push(["Component Total", `${row.code} - ${row.name}`, row.classification, String(row.employeeCount), row.amount, "Approved/locked runs only"]);
   for (const row of report.departmentAggregates) rows.push(["Department Aggregate", row.department, "", String(row.employeeCount), row.netAmount, row.netAmount === "Suppressed" ? "Minimum group not met" : "Released"]);
   rows.push(["Payslips", "Issued count", "", String(report.issuedPayslipCount), "", "Issued"]);
   return rows.map((row) => row.map(csvCell).join(",")).join("\n");
@@ -472,7 +495,7 @@ async function payrollEvent(client: PayrollDb, actor: PayrollActor, input: { pay
 async function linkedPayrollStaff(client: PrismaClient, userId: string) { return client.staffMember.findFirst({ where: { userId, status: { in: ["ACTIVE", "INACTIVE"] } } }); }
 
 function payslipSnapshot(school: Awaited<ReturnType<typeof getSchoolSettings>>, run: any, result: any) {
-  return { schema: "NALANDA_PAYSLIP_V1", school: { name: school.schoolName, address: school.addressLine1, city: school.city, phone: school.showSchoolPhone ? school.phone : null }, staff: { name: result.staffMember.displayName || result.staffMember.fullName, designation: result.staffMember.designation, department: result.staffMember.department }, payrollMonth: run.period.payrollMonth, earnings: result.componentResults.filter((row: any) => row.classification === "EARNING" && row.payslipVisible).map(snapshotComponent), deductions: result.componentResults.filter((row: any) => row.classification === "DEDUCTION" && row.payslipVisible).map(snapshotComponent), reimbursements: result.componentResults.filter((row: any) => row.classification === "REIMBURSEMENT" && row.payslipVisible).map(snapshotComponent), totals: { grossPaise: result.grossPaise, deductionPaise: result.deductionPaise, reimbursementPaise: result.reimbursementPaise, netPaise: result.netPaise }, attendance: jsonObject(result.attendanceSummaryJson), formula: jsonObject(result.formulaSnapshotJson), sourceVersions: jsonObject(result.sourceVersionsJson), issue: { version: 1, issueDate: dateText(new Date()), runReference: run.runNumber } };
+  return { schema: "NALANDA_PAYSLIP_V1", school: { name: school.schoolName, address: school.addressLine1, city: school.city, phone: school.showSchoolPhone ? school.phone : null }, staff: { name: result.staffMember.displayName || result.staffMember.fullName, designation: result.staffMember.designation, department: result.staffMember.department }, payrollMonth: run.period.payrollMonth, earnings: result.componentResults.filter((row: any) => row.classification === "EARNING" && row.payslipVisible).map(snapshotComponent), deductions: result.componentResults.filter((row: any) => row.classification === "DEDUCTION" && row.payslipVisible).map(snapshotComponent), reimbursements: result.componentResults.filter((row: any) => row.classification === "REIMBURSEMENT" && row.payslipVisible).map(snapshotComponent), totals: { grossPaise: result.grossPaise, deductionPaise: result.deductionPaise, reimbursementPaise: result.reimbursementPaise, netPaise: result.netPaise }, attendance: jsonObject(result.attendanceSummaryJson), issue: { version: 1, issueDate: dateText(new Date()), runReference: run.runNumber } };
 }
 function snapshotComponent(row: any) { return { code: row.componentCode, name: row.componentName, amountPaise: row.amountPaise, formula: row.formulaText, sourceVersion: row.sourceVersionReference }; }
 

@@ -1568,3 +1568,40 @@ disbursement, Payment, receipt, fee allocation, expense or Cash Book movement.
 The `PAY23I` copied-database matrix covers calculations, concurrency, rollback,
 advance recovery, payslip privacy, backup/restore and operational isolation.
 Independent `PAY23IQA` verification remains required before merge and tag.
+
+## Prompt 23I-QA - Independent Payroll, Payslip and Employee Self-Service QA (2026-08-08)
+
+Fresh `PAY23IQA` copied fixtures independently verified hand-calculated full and
+partial periods, unpaid leave, configured half-days, fixed/percentage/zero
+components, rounding, arrears, manual adjustment, advance recovery and missing
+or unlocked input refusal. Versioning, future revisions, stale writes,
+concurrent approval, locked immutability, exactly-once payslip issue, reversal
+and forced rollback passed.
+
+QA corrected Viewer monetary suppression and aggregate-only enforcement,
+cancelled-advance totals, future assignment overlap, expired revision targets,
+payslip snapshot minimisation, payroll restore-link validation and exact Windows
+file-identity comparison. Advances passed approval, rejection, revised schedule,
+cancellation, duplicate/over-recovery refusal and history. Finance remained
+fail-closed and created no Payment, receipt, fee allocation, expense, Cash Book
+movement, transfer or disbursement.
+
+Director, Accountant, Staff, Viewer and Teacher + Parent Browser proof passed at
+1366x768 and exact 390x844 in light/dark with role/context isolation, 44 px
+actions, visible focus, accessible dialogs/tables, mobile containment and zero
+console, hydration or runtime-stderr errors. Payslips were private, no-store,
+versioned, exact-total, colour/monochrome A4 and free of prohibited identifiers.
+Cleanup was inspected twice.
+
+The sequential 313-page/480-API inventory, zero-change lifecycle dry-run, 3 GB
+typecheck, 189-file/1,706-test suite, 4 GB build and version-37 backup/restore
+gates passed. The reviewed additive migration applied once, repeat deploy was a
+no-op, status is clean and exact zero-business/zero-payroll baselines remain.
+The retained feature branch and release tag are
+`feature/payroll-payslips-employee-self-service` and
+`payroll-ess-v37-2026-08-08`.
+
+Result: `PAYROLL_ESS_CLEARED`. Next governed phase: Prompt 23J - Transport
+Routes, Stops, Vehicles and Bus Passes. No deployment, real Staff payroll, bank
+disbursement, statutory filing, EPFO/ESI automation, live provider or real-data
+onboarding is authorised.

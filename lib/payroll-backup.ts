@@ -30,14 +30,14 @@ export async function loadPayrollBackup(client: PrismaClient): Promise<PayrollBa
 export function validatePayrollBackupRows(root: Record<string, unknown>): PayrollBackup {
   const result = Object.fromEntries(PAYROLL_BACKUP_KEYS.map(key => [key, rows(root[key], key)])) as PayrollBackup;
   const ids = (key: PayrollBackupKey) => new Set(result[key].map(row => String(row.id ?? "")));
-  const policyIds=ids("payrollPolicyVersions"), structureIds=ids("salaryStructureVersions"), componentIds=ids("salaryComponentDefinitions"), assignmentIds=ids("staffCompensationAssignments"), periodIds=ids("payrollPeriods"), runIds=ids("payrollRuns"), resultIds=ids("employeePayrollResults"), advanceIds=ids("salaryAdvances");
+  const policyIds=ids("payrollPolicyVersions"), structureIds=ids("salaryStructureVersions"), componentIds=ids("salaryComponentDefinitions"), assignmentIds=ids("staffCompensationAssignments"), revisionIds=ids("salaryRevisions"), periodIds=ids("payrollPeriods"), runIds=ids("payrollRuns"), resultIds=ids("employeePayrollResults"), advanceIds=ids("salaryAdvances"), payslipIds=ids("payslipVersions");
   links(result.salaryStructureVersions,"policyVersionId",policyIds); links(result.salaryComponentDefinitions,"structureVersionId",structureIds);
-  links(result.staffCompensationAssignments,"structureVersionId",structureIds); links(result.salaryRevisions,"previousAssignmentId",assignmentIds); links(result.salaryRevisions,"newAssignmentId",assignmentIds);
+  links(result.staffCompensationAssignments,"structureVersionId",structureIds); links(result.salaryRevisions,"previousAssignmentId",assignmentIds,true); links(result.salaryRevisions,"newAssignmentId",assignmentIds);
   links(result.payrollRuns,"periodId",periodIds); links(result.payrollRuns,"policyVersionId",policyIds); links(result.payrollRuns,"sourceRunId",runIds,true);
-  links(result.employeePayrollResults,"payrollRunId",runIds); links(result.employeePayrollResults,"compensationAssignmentId",assignmentIds);
+  links(result.employeePayrollResults,"payrollRunId",runIds); links(result.employeePayrollResults,"compensationAssignmentId",assignmentIds); links(result.employeePayrollResults,"salaryRevisionId",revisionIds,true);
   links(result.payrollComponentResults,"employeePayrollResultId",resultIds); links(result.payrollComponentResults,"componentDefinitionId",componentIds,true);
-  links(result.advanceRecoverySchedules,"salaryAdvanceId",advanceIds); links(result.advanceRecoverySchedules,"payrollPeriodId",periodIds); links(result.advanceRecoverySchedules,"recoveredPayrollResultId",resultIds,true);
-  links(result.payslipVersions,"employeePayrollResultId",resultIds); links(result.payrollEvents,"payrollRunId",runIds,true);
+  links(result.advanceRecoverySchedules,"salaryAdvanceId",advanceIds); links(result.advanceRecoverySchedules,"payrollPeriodId",periodIds,true); links(result.advanceRecoverySchedules,"employeePayrollResultId",resultIds,true);
+  links(result.payslipVersions,"employeePayrollResultId",resultIds); links(result.payslipVersions,"supersedesPayslipId",payslipIds,true); links(result.payrollEvents,"payrollRunId",runIds,true);
   for (const component of result.salaryComponentDefinitions) if (/EPF|ESI|TDS|PENSION|PROFESSIONAL[_ -]?TAX/i.test(String(component.componentCode ?? "")) && (component.statutoryTreatment !== "MANUAL_OR_EXTERNALLY_APPROVED" || component.calculationMode !== "MANUAL")) throw new Error("Payroll backup contains an executable unapproved statutory-looking component.");
   const serialized = JSON.stringify(result).toLowerCase();
   for (const forbidden of ["passwordhash", "aadhaar", "pannumber", "uannumber", "bankaccount", "accountnumber", "ifsc"]) if (serialized.includes(forbidden)) throw new Error("Payroll backup contains prohibited credential or identity data.");
