@@ -445,17 +445,18 @@ export async function upsertConditionAlert(client: DatabaseClient, input: { chec
       return tx.operationalAlert.findUnique({ where: { id: current.id } });
     });
   }
-  const alert = await client.$transaction(async (tx) => {
-    const alert = current
-      ? await tx.operationalAlert.update({ where: { id: current.id }, data: { severity: severityValue(input.severity), status: current.status === "CLOSED" ? "OPEN" : current.status, titleSafe: safeSummary(input.titleSafe, 160), evidenceSummarySafe: safeSummary(input.evidenceSummarySafe, 500), runbookPath: safeRunbook(input.runbookPath), lastSeenAt: now, occurrenceCount: { increment: 1 }, version: { increment: 1 }, resolvedAt: null, resolutionSummarySafe: null, closedAt: null, closedByUserId: null } })
+  const outcome = await client.$transaction(async (tx) => {
+    const before = await tx.operationalAlert.findUnique({ where: { fingerprint } });
+    const alert = before
+      ? await tx.operationalAlert.update({ where: { id: before.id }, data: { severity: severityValue(input.severity), status: ["CLOSED", "RESOLVED"].includes(before.status) ? "OPEN" : before.status, titleSafe: safeSummary(input.titleSafe, 160), evidenceSummarySafe: safeSummary(input.evidenceSummarySafe, 500), runbookPath: safeRunbook(input.runbookPath), lastSeenAt: now, occurrenceCount: { increment: 1 }, version: { increment: 1 }, resolvedAt: null, resolutionSummarySafe: null, closedAt: null, closedByUserId: null } })
       : await tx.operationalAlert.create({ data: { fingerprint, checkKey: input.checkKey, domain: input.domain, severity: severityValue(input.severity), titleSafe: safeSummary(input.titleSafe, 160), evidenceSummarySafe: safeSummary(input.evidenceSummarySafe, 500), runbookPath: safeRunbook(input.runbookPath), firstSeenAt: now, lastSeenAt: now } });
-    await tx.operationalAlertEvent.create({ data: { alertId: alert.id, eventType: current ? "OCCURRENCE_RECORDED" : "OPENED", previousStatus: current?.status ?? null, newStatus: alert.status, occurrence: alert.occurrenceCount, occurredAt: now } });
-    return alert;
+    await tx.operationalAlertEvent.create({ data: { alertId: alert.id, eventType: before ? "OCCURRENCE_RECORDED" : "OPENED", previousStatus: before?.status ?? null, newStatus: alert.status, occurrence: alert.occurrenceCount, occurredAt: now } });
+    return { alert, notify: !before || ["RESOLVED", "CLOSED"].includes(before.status) };
   });
-  if (alert && input.severity === "CRITICAL" && (!current || ["RESOLVED", "CLOSED"].includes(current.status))) {
-    await publishCriticalOperationalAlertNotification(client, alert, now);
+  if (input.severity === "CRITICAL" && outcome.notify) {
+    await publishCriticalOperationalAlertNotification(client, outcome.alert, now);
   }
-  return alert;
+  return outcome.alert;
 }
 
 async function businessInvariantCounts(client: DatabaseClient) {
@@ -465,7 +466,10 @@ async function businessInvariantCounts(client: DatabaseClient) {
     { key: "family_total", query: "SELECT COUNT(*) AS count FROM FamilyCollection c WHERE c.totalPaise <> COALESCE((SELECT SUM(i.amountPaise) FROM FamilyCollectionInstrument i WHERE i.collectionId=c.id),0)" },
     { key: "duplicate_report_publication", query: "SELECT COUNT(*) AS count FROM (SELECT studentId,academicYear,COUNT(*) n FROM StudentReportCard WHERE status='ISSUED' GROUP BY studentId,academicYear HAVING n>1)" },
     { key: "duplicate_active_payroll", query: "SELECT COUNT(*) AS count FROM (SELECT periodId,COUNT(*) n FROM PayrollRun WHERE status IN ('APPROVED','LOCKED','PAYSLIPS_ISSUED') GROUP BY periodId HAVING n>1)" },
-    { key: "parent_context_without_relationship", query: "SELECT COUNT(*) AS count FROM AuthSession s LEFT JOIN StudentGuardian g ON g.id=s.activeChildLinkId WHERE s.activeChildLinkId IS NOT NULL AND g.id IS NULL" }
+    { key: "parent_context_without_relationship", query: "SELECT COUNT(*) AS count FROM AuthSession s LEFT JOIN StudentGuardian g ON g.id=s.activeChildLinkId WHERE s.activeChildLinkId IS NOT NULL AND g.id IS NULL" },
+    { key: "broken_private_asset", query: "SELECT SUM(total) AS count FROM (SELECT COUNT(*) total FROM ApplicationDocument WHERE LENGTH(sha256)<>64 OR recoveryStatus IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM ClassworkAttachment WHERE LENGTH(sha256)<>64 OR recoveryStatus IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM SupportRequestAttachment WHERE LENGTH(sha256)<>64 OR recoveryStatus IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM StaffPayslipDocumentVersion WHERE LENGTH(sourceSha256)<>64 OR LENGTH(derivativeSha256)<>64)" },
+    { key: "safe_exit_release_without_evidence", query: "SELECT COUNT(*) AS count FROM StudentDepartureRequest r WHERE r.status IN ('CHECKED_OUT','RETURN_EXPECTED','RETURNED_TO_CAMPUS','CLOSED') AND (r.checkedOutAt IS NULL OR NOT EXISTS (SELECT 1 FROM StudentDepartureHandover h WHERE h.requestId=r.id) OR NOT EXISTS (SELECT 1 FROM StudentGatePass p WHERE p.requestId=r.id AND p.status='USED' AND p.consumedAt IS NOT NULL) OR NOT EXISTS (SELECT 1 FROM StudentCampusPresenceEvent c WHERE c.requestId=r.id AND c.eventType='EARLY_DEPARTURE'))" },
+    { key: "migration_backup_mismatch", query: "SELECT COUNT(*) AS count FROM ReleaseManifest WHERE isCurrent=1 AND (backupVersion<>40 OR migrationVersion<>'20260810100000_technical_operations_observability')" }
   ];
   const result: Array<{ checkKey: string; affectedCount: number }> = [];
   for (const row of queries) {

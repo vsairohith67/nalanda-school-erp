@@ -4,6 +4,8 @@ import { createMaintenanceWindow, OperationalWorkflowError, transitionOperationa
 import { createSafeOperationalLogEntry, safeErrorFingerprint, stringifySafeOperationalLog } from "../lib/safe-logging";
 import { emptyTechnicalOperationsBackup, restoreTechnicalOperationsBackup, validateTechnicalOperationsBackup } from "../lib/technical-operations-backup";
 import { OPERATIONAL_DOMAINS, worstOperationalStatus } from "../lib/technical-operations-types";
+import { enforceDeepCheckRateLimit } from "../lib/technical-operations-api";
+import { RECOMMENDED_ROLE_PERMISSIONS } from "../lib/permissions";
 import { stableOperationalFingerprint, technicalOperationsPrivateHeaders } from "../lib/technical-operations";
 
 describe("OBS-1A technical operations contracts", () => {
@@ -12,6 +14,29 @@ describe("OBS-1A technical operations contracts", () => {
     expect(new Set(OPERATIONAL_DOMAINS).size).toBe(13);
     expect(worstOperationalStatus(["HEALTHY", "NOT_CONFIGURED"])).toBe("HEALTHY");
     expect(worstOperationalStatus(["HEALTHY", "WARNING", "DEGRADED"])).toBe("WARNING");
+    expect(worstOperationalStatus(["HEALTHY", "DEGRADED"])).toBe("DEGRADED");
+    expect(worstOperationalStatus(["HEALTHY", "CRITICAL"])).toBe("CRITICAL");
+    expect(worstOperationalStatus(["UNKNOWN", "NOT_CONFIGURED"])).toBe("UNKNOWN");
+    expect(worstOperationalStatus(["HEALTHY", "MAINTENANCE"])).toBe("MAINTENANCE");
+  });
+
+  it("defaults full evidence to Super Admin, summary to Director, and denies every other role", () => {
+    expect(RECOMMENDED_ROLE_PERMISSIONS.SUPER_ADMIN).toEqual(expect.objectContaining({ has: expect.any(Function) }));
+    expect(RECOMMENDED_ROLE_PERMISSIONS.SUPER_ADMIN.has("VIEW_TECHNICAL_OPERATIONS")).toBe(true);
+    expect(RECOMMENDED_ROLE_PERMISSIONS.DIRECTOR.has("VIEW_TECHNICAL_OPERATIONS_SUMMARY")).toBe(true);
+    expect(RECOMMENDED_ROLE_PERMISSIONS.DIRECTOR.has("VIEW_TECHNICAL_OPERATIONS")).toBe(false);
+    for (const role of ["PRINCIPAL", "ADMIN", "ACCOUNTANT", "TEACHER", "PARENT", "VIEWER"] as const) {
+      expect(RECOMMENDED_ROLE_PERMISSIONS[role].has("VIEW_TECHNICAL_OPERATIONS_SUMMARY")).toBe(false);
+      expect(RECOMMENDED_ROLE_PERMISSIONS[role].has("VIEW_TECHNICAL_OPERATIONS")).toBe(false);
+    }
+  });
+
+  it("rate limits repeated deep checks per actor without sharing identity data", () => {
+    const actor = `OBS1AQA-rate-${Date.now()}`;
+    enforceDeepCheckRateLimit(actor, 1_000);
+    enforceDeepCheckRateLimit(actor, 2_000);
+    expect(() => enforceDeepCheckRateLimit(actor, 3_000)).toThrow("TECHNICAL_CHECK_RATE_LIMITED");
+    expect(() => enforceDeepCheckRateLimit(`${actor}-other`, 3_000)).not.toThrow();
   });
 
   it("emits private no-store headers and stable deduplication fingerprints", () => {
