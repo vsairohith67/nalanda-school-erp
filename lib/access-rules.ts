@@ -152,6 +152,7 @@ export const NAV_ITEMS = [
   { href: "/timetable", label: "Timetable", icon: "timetable", permission: "VIEW_TIMETABLE", group: "timetable" },
   { href: "/settings", label: "School / Fee Settings", icon: "settings", permission: "VIEW_SETTINGS", group: "system" },
   { href: "/settings/pwa", label: "PWA Diagnostics", icon: "settings", permission: "VIEW_SYSTEM_HEALTH", group: "system" },
+  { href: "/technical-operations", label: "Technical Operations", icon: "settings", permission: "VIEW_TECHNICAL_OPERATIONS_SUMMARY", group: "system", allowedRoles: ["SUPER_ADMIN", "DIRECTOR"] as Role[] },
   { href: "/users", label: "Named Users", icon: "users", permission: "VIEW_IAM_ACCESS", group: "administration" },
   { href: "/permission-profiles", label: "Permission Profiles", icon: "roles", permission: "VIEW_IAM_ACCESS", group: "administration" },
   { href: "/access-history", label: "Access History", icon: "audit", permission: "VIEW_IAM_AUDIT", group: "administration" },

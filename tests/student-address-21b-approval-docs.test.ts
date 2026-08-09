@@ -99,7 +99,7 @@ describe("Prompt 21B address approval governance", () => {
     expect(combined).toContain("No real Student data appears");
   });
 
-  it("makes no implementation claim and preserves backup version 39", () => {
+  it("makes no implementation claim and preserves backup version 40", () => {
     for (const path of paths) {
       const document = read(path);
       expect(document).toMatch(/No schema or runtime implementation was performed|Schema or runtime implementation: none/);
@@ -107,6 +107,6 @@ describe("Prompt 21B address approval governance", () => {
       expect(document).not.toContain("Final gate decision: SAFE_TO_BEGIN_PROMPT_21B");
     }
     expect(approval).toContain("| Backup version | 37 |");
-    expect(read("lib/backup.ts")).toContain("backupVersion: 39");
+    expect(read("lib/backup.ts")).toContain("backupVersion: 40");
   });
 });

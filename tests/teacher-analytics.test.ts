@@ -83,7 +83,7 @@ describe("Teacher Performance Analytics foundation", () => {
   });
 
   it("backs up version 26, preserves immutable analytics arrays, and excludes actor IDs and passwords", () => {
-    const backup = analyticsBackup(); expect(backup.metadata.backupVersion).toBe(39);
+    const backup = analyticsBackup(); expect(backup.metadata.backupVersion).toBe(40);
     expect(backup.teacherAnalyticsReviewCycles).toHaveLength(1); expect(backup.teacherAnalyticsSnapshots).toHaveLength(1); expect(backup.teacherAnalyticsReviews).toHaveLength(1); expect(backup.teacherAnalyticsEvents).toHaveLength(1);
     expect(JSON.stringify(backup)).not.toContain("passwordHash"); expect(backup.teacherAnalyticsSnapshots[0]).not.toHaveProperty("createdByUserId"); expect(backup.teacherAnalyticsEvents[0]).not.toHaveProperty("recordedByUserId");
     const parsed = parseAndValidateBackup(backup); expect(parsed.teacherAnalyticsSnapshots[0].snapshotHash).toBe("a".repeat(64));

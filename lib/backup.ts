@@ -22,6 +22,7 @@ import { loadPayslipRequestBackup, PAYSLIP_REQUEST_BACKUP_KEYS, validatePayslipR
 import { loadSupportBackup, SUPPORT_BACKUP_KEYS, validateSupportBackupRows, type SupportBackup, type SupportBackupKey } from "./support-backup";
 import { loadSafeExitBackup, SAFE_EXIT_BACKUP_KEYS, validateSafeExitBackupRows, type SafeExitBackup, type SafeExitBackupKey } from "./safe-exit-backup";
 import { emptyFamilyCollectionBackup, familyCollectionSchemaAvailable, FAMILY_COLLECTION_BACKUP_KEYS, loadFamilyCollectionBackup, validateFamilyCollectionBackupRows, type FamilyCollectionBackup } from "./family-collection-backup";
+import { emptyTechnicalOperationsBackup, loadTechnicalOperationsBackup, technicalOperationsRecordCount, technicalOperationsSchemaAvailable, validateTechnicalOperationsBackup, type TechnicalOperationsBackup } from "./technical-operations-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 
@@ -271,6 +272,7 @@ type BackupDocumentInput = {
   timetableDrafts?: readonly unknown[];
   timetableEntries?: readonly unknown[];
   academicYear?: string;
+  technicalOperations?: TechnicalOperationsBackup;
 } & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
@@ -369,6 +371,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const safeExitCounts = Object.fromEntries(SAFE_EXIT_BACKUP_KEYS.map((key) => [key, safeExitBackup[key].length])) as Record<SafeExitBackupKey, number>;
   const familyCollectionBackup = validateFamilyCollectionBackupRows(input as unknown as Record<string, unknown>);
   const familyCollectionCounts = Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, familyCollectionBackup[key].length]));
+  const technicalOperations = validateTechnicalOperationsBackup(input.technicalOperations);
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
   const teacherAnalyticsSnapshots = sanitizeActorFields(input.teacherAnalyticsSnapshots ?? []);
   const teacherAnalyticsReviews = sanitizeActorFields(input.teacherAnalyticsReviews ?? []);
@@ -456,11 +459,12 @@ export function createBackupDocument(input: BackupDocumentInput) {
       generatedAt: input.generatedAt.toISOString(),
       generatedBy: input.generatedBy,
       appVersion: packageJson.version,
-      backupVersion: 39,
+      backupVersion: 40,
       counts: {
         schoolSettings: input.schoolSettings ? 1 : 0,
         authSecurityRecords: authSecurityRecordCount(authSecurity),
         iamAccessRecords: iamAccessRecordCount(iamAccess),
+        technicalOperationsRecords: technicalOperationsRecordCount(technicalOperations),
         rolePermissions: rolePermissions.length,
         guardians: guardians.length,
         studentGuardians: studentGuardians.length,
@@ -716,6 +720,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     ...payslipRequestBackup,
     ...supportBackup,
     ...safeExitBackup,
+    technicalOperations,
     examCycles,
     examAssessments,
     studentMarks,
@@ -1290,6 +1295,9 @@ export async function generateFullBackup(
   const familyCollectionBackup = await familyCollectionSchemaAvailable(client)
     ? await loadFamilyCollectionBackup(client as PrismaClient)
     : emptyFamilyCollectionBackup();
+  const technicalOperations = await technicalOperationsSchemaAvailable(client as unknown as PrismaClient)
+    ? await loadTechnicalOperationsBackup(client as unknown as PrismaClient)
+    : emptyTechnicalOperationsBackup();
 
   return createBackupDocument({
     generatedAt: options.generatedAt ?? new Date(),
@@ -1325,6 +1333,7 @@ export async function generateFullBackup(
     ...supportBackup,
     ...safeExitBackup,
     ...familyCollectionBackup,
+    technicalOperations,
     rolePermissions,
     guardians,
     studentGuardians,

@@ -48,12 +48,12 @@ describe("SAFE-EXIT-1A governed security foundation",()=>{
     await expect(parseSafeExitJson(new NextRequest("https://school.example/api/student-departures",{method:"POST",headers:{origin:"https://school.example","content-type":"application/json"},body:"[]"}))).rejects.toMatchObject({code:"INVALID_JSON"});
   });
 
-  it("backs up all governed records at v39 and restores backward-compatible empty sections",()=>{
+  it("backs up all governed records at v40 and restores backward-compatible empty sections",()=>{
     const empty=validateSafeExitBackupRows({});for(const key of SAFE_EXIT_BACKUP_KEYS)expect(empty[key]).toEqual([]);
     const request={id:"request-1",publicKey:"request-public",requestNumber:"EXIT-QA-1",submissionKey:"submission-1",source:"PARENT_AUTHENTICATED",studentId:"student-1",academicYear:"2026-27",reasonCategory:"FAMILY_REQUEST",calendarBasisJson:"{\"basis\":\"UNCLASSIFIED\"}",intendedHandoverMethod:"LINKED_GUARDIAN",intendedDepartureAt:new Date("2026-08-09T07:00:00Z"),status:"READY_FOR_HANDOVER",consentState:"VERIFIED",version:3,emergencyOverride:false,restricted:false,requestedByUserId:"user-1",requestedByRole:"PARENT",submittedAt:new Date(),createdAt:new Date(),updatedAt:new Date()};
     const pass={id:"pass-1",publicKey:"pass-public",requestId:"request-1",tokenHash:"a".repeat(64),manualCodeHash:"b".repeat(64),manualCodeLastTwo:"A1",status:"ACTIVE",approvedSnapshotHash:gateApprovalSnapshotHash({request:"request-public"}),issuedByUserId:"principal-1",issuedByRole:"PRINCIPAL",issuedAt:new Date(),expiresAt:new Date(Date.now()+60_000),createdAt:new Date(),updatedAt:new Date()};
     const backup=createBackupDocument({generatedAt:new Date(),generatedBy:"SAFEEXIT1",students:[{id:"student-1",admissionNo:"SAFEEXIT1-001"}],feeStructures:[],payments:[],paymentAudits:[],users:[],studentDepartureRequests:[request],studentGatePasses:[pass]});
-    expect(backup.metadata.backupVersion).toBe(39);expect(backup.studentDepartureRequests).toHaveLength(1);expect(backup.studentGatePasses).toHaveLength(1);expect(JSON.stringify(backup)).not.toContain("signingKey");expect(backup).not.toHaveProperty("appPushSubscriptions");
+    expect(backup.metadata.backupVersion).toBe(40);expect(backup.studentDepartureRequests).toHaveLength(1);expect(backup.studentGatePasses).toHaveLength(1);expect(JSON.stringify(backup)).not.toContain("signingKey");expect(backup).not.toHaveProperty("appPushSubscriptions");
     const parsed=parseAndValidateBackup(backup);expect(parsed.studentDepartureRequests).toHaveLength(1);expect(parsed.studentGatePasses).toHaveLength(1);
   });
 

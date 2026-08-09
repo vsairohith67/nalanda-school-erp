@@ -7726,3 +7726,260 @@ model AppPushSubscription {
 
   @@index([userId, status])
 }
+
+// OBS-1A: provider-neutral technical operations. These records intentionally
+// contain only privacy-safe technical summaries and aggregate measurements.
+model OperationalCheckDefinition {
+  id                String                      @id @default(cuid())
+  checkKey          String                      @unique
+  name              String
+  domain            String
+  checkType         String
+  cadence           String
+  enabled           Boolean                     @default(true)
+  protectedCritical Boolean                     @default(false)
+  severityOnFailure String
+  descriptionSafe   String
+  runbookPath       String
+  retentionDays     Int                         @default(90)
+  createdAt         DateTime                    @default(now())
+  updatedAt         DateTime                    @updatedAt
+  runs              OperationalCheckRun[]
+  metricSnapshots   OperationalMetricSnapshot[]
+
+  @@index([domain, enabled])
+  @@index([checkType, enabled])
+}
+
+model OperationalCheckRun {
+  id                  String                     @id @default(cuid())
+  runKey              String                     @unique
+  definitionId        String
+  definition          OperationalCheckDefinition @relation(fields: [definitionId], references: [id], onDelete: Restrict)
+  status              String
+  triggerType         String
+  summarySafe         String
+  evidenceSummaryJson String?
+  errorFingerprint    String?
+  durationMs          Int?
+  actorUserId         String?
+  startedAt           DateTime                   @default(now())
+  completedAt         DateTime?
+  expiresAt           DateTime
+  createdAt           DateTime                   @default(now())
+
+  @@index([definitionId, startedAt])
+  @@index([status, startedAt])
+  @@index([expiresAt])
+}
+
+model OperationalMetricSnapshot {
+  id               String                      @id @default(cuid())
+  definitionId     String?
+  definition       OperationalCheckDefinition? @relation(fields: [definitionId], references: [id], onDelete: Restrict)
+  domain           String
+  metricKey        String
+  metricValue      Float
+  unit             String
+  status           String
+  bucketStart      DateTime
+  metadataSafeJson String?
+  expiresAt        DateTime
+  createdAt        DateTime                    @default(now())
+
+  @@unique([metricKey, bucketStart])
+  @@index([domain, bucketStart])
+  @@index([expiresAt])
+}
+
+model OperationalAlert {
+  id                    String                  @id @default(cuid())
+  publicKey             String                  @unique @default(uuid())
+  fingerprint           String                  @unique
+  checkKey              String?
+  domain                String
+  severity              String
+  status                String                  @default("OPEN")
+  titleSafe             String
+  evidenceSummarySafe   String
+  runbookPath           String
+  firstSeenAt           DateTime                @default(now())
+  lastSeenAt            DateTime                @default(now())
+  occurrenceCount       Int                     @default(1)
+  acknowledgedByUserId  String?
+  acknowledgedAt        DateTime?
+  silencedByUserId      String?
+  silencedAt            DateTime?
+  silencedUntil         DateTime?
+  silenceReasonSafe     String?
+  resolvedByUserId      String?
+  resolvedAt            DateTime?
+  resolutionSummarySafe String?
+  closedByUserId        String?
+  closedAt              DateTime?
+  version               Int                     @default(1)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  events                OperationalAlertEvent[]
+  incidents             OperationalIncident[]
+
+  @@index([status, severity, lastSeenAt])
+  @@index([domain, status])
+  @@index([silencedUntil])
+}
+
+model OperationalAlertEvent {
+  id             String           @id @default(cuid())
+  alertId        String
+  alert          OperationalAlert @relation(fields: [alertId], references: [id], onDelete: Restrict)
+  eventType      String
+  previousStatus String?
+  newStatus      String?
+  notesSafe      String?
+  actorUserId    String?
+  occurrence     Int
+  occurredAt     DateTime         @default(now())
+  createdAt      DateTime         @default(now())
+
+  @@index([alertId, occurredAt])
+  @@index([eventType, occurredAt])
+}
+
+model OperationalIncident {
+  id                      String                     @id @default(cuid())
+  publicKey               String                     @unique @default(uuid())
+  incidentNumber          String                     @unique
+  alertId                 String?
+  alert                   OperationalAlert?          @relation(fields: [alertId], references: [id], onDelete: Restrict)
+  domain                  String
+  severity                String
+  status                  String                     @default("OPEN")
+  titleSafe               String
+  summarySafe             String
+  ownerUserId             String?
+  runbookPath             String
+  mitigationSafe          String?
+  resolutionSummarySafe   String?
+  postIncidentSummarySafe String?
+  version                 Int                        @default(1)
+  resolvedAt              DateTime?
+  closedAt                DateTime?
+  createdByUserId         String
+  createdAt               DateTime                   @default(now())
+  updatedAt               DateTime                   @updatedAt
+  events                  OperationalIncidentEvent[]
+
+  @@index([status, severity, createdAt])
+  @@index([domain, status])
+  @@index([alertId])
+}
+
+model OperationalIncidentEvent {
+  id             String              @id @default(cuid())
+  incidentId     String
+  incident       OperationalIncident @relation(fields: [incidentId], references: [id], onDelete: Restrict)
+  eventType      String
+  previousStatus String?
+  newStatus      String?
+  notesSafe      String?
+  actorUserId    String
+  version        Int
+  occurredAt     DateTime            @default(now())
+  createdAt      DateTime            @default(now())
+
+  @@index([incidentId, occurredAt])
+  @@index([eventType, occurredAt])
+}
+
+model MaintenanceWindow {
+  id                 String                   @id @default(cuid())
+  publicKey          String                   @unique @default(uuid())
+  domain             String
+  checkKeysJson      String
+  status             String                   @default("PLANNED")
+  reasonSafe         String
+  expectedImpactSafe String
+  ownerUserId        String
+  plannedStartAt     DateTime
+  plannedEndAt       DateTime
+  actualStartAt      DateTime?
+  actualEndAt        DateTime?
+  version            Int                      @default(1)
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  events             MaintenanceWindowEvent[]
+
+  @@index([status, plannedStartAt, plannedEndAt])
+  @@index([domain, status])
+}
+
+model MaintenanceWindowEvent {
+  id                  String            @id @default(cuid())
+  maintenanceWindowId String
+  maintenanceWindow   MaintenanceWindow @relation(fields: [maintenanceWindowId], references: [id], onDelete: Restrict)
+  eventType           String
+  notesSafe           String?
+  actorUserId         String
+  version             Int
+  occurredAt          DateTime          @default(now())
+  createdAt           DateTime          @default(now())
+
+  @@index([maintenanceWindowId, occurredAt])
+}
+
+model ReleaseManifest {
+  id                  String   @id @default(cuid())
+  releaseVersion      String   @unique
+  environment         String
+  gitCommit           String
+  buildId             String
+  migrationVersion    String
+  backupVersion       Int
+  pwaBuildId          String
+  applicationSchemaId String
+  isCurrent           Boolean  @default(false)
+  createdByUserId     String?
+  createdAt           DateTime @default(now())
+
+  @@index([environment, isCurrent])
+  @@index([createdAt])
+}
+
+model ClientVersionPolicy {
+  id                      String   @id @default(cuid())
+  environment             String   @unique
+  currentVersion          String
+  minimumSupportedVersion String
+  updateAvailableVersion  String?
+  updateMessageSafe       String?
+  enforcementMode         String   @default("ADVISORY")
+  version                 Int      @default(1)
+  updatedByUserId         String
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([enforcementMode, updatedAt])
+}
+
+model BackgroundJobRun {
+  id                   String    @id @default(cuid())
+  publicKey            String    @unique @default(uuid())
+  idempotencyKey       String    @unique
+  jobType              String
+  component            String
+  status               String    @default("QUEUED")
+  attemptCount         Int       @default(0)
+  safeErrorFingerprint String?
+  summarySafe          String
+  queuedAt             DateTime  @default(now())
+  startedAt            DateTime?
+  completedAt          DateTime?
+  nextAttemptAt        DateTime?
+  expiresAt            DateTime
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([jobType, status, queuedAt])
+  @@index([status, nextAttemptAt])
+  @@index([expiresAt])
+}

@@ -26,12 +26,14 @@ import { PAYSLIP_REQUEST_BACKUP_KEYS, validatePayslipRequestBackupRows, type Pay
 import { SUPPORT_BACKUP_KEYS, validateSupportBackupRows, type SupportBackup, type SupportBackupKey } from "@/lib/support-backup";
 import { SAFE_EXIT_BACKUP_KEYS, validateSafeExitBackupRows, type SafeExitBackup, type SafeExitBackupKey } from "@/lib/safe-exit-backup";
 import { FAMILY_COLLECTION_BACKUP_KEYS, validateFamilyCollectionBackupRows, type FamilyCollectionBackup } from "@/lib/family-collection-backup";
+import { validateTechnicalOperationsBackup, type TechnicalOperationsBackup } from "@/lib/technical-operations-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 const MAX_ENTITY_ROWS = 100_000;
 
 const TOP_LEVEL_KEYS = new Set([
   "metadata",
+  "technicalOperations",
   "schoolSettings",
   "students",
   "feeStructures",
@@ -111,6 +113,7 @@ const METADATA_KEYS = new Set([
 ]);
 const BACKUP_COUNT_KEYS = new Set([
   "schoolSettings",
+  "technicalOperationsRecords",
   "authSecurityRecords",
   "iamAccessRecords",
   "timetableTeachers", "timetableSubjects", "timetableClassSections",
@@ -533,6 +536,7 @@ export type ValidatedBackup = {
   timetableFixedPeriods: RestoreRecord[];
   timetableDrafts: RestoreRecord[];
   timetableEntries: RestoreRecord[];
+  technicalOperations: TechnicalOperationsBackup;
 } & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup;
 
 export type EntityRestoreResult = {
@@ -544,6 +548,7 @@ export type EntityRestoreResult = {
 };
 
 export type RestoreResult = {
+  technicalOperations: EntityRestoreResult;
   schoolSettings: EntityRestoreResult;
   students: EntityRestoreResult;
   feeStructures: EntityRestoreResult;
@@ -755,7 +760,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     metadata.backupVersion !== undefined &&
     (!Number.isInteger(metadata.backupVersion) ||
       Number(metadata.backupVersion) < 1 ||
-      Number(metadata.backupVersion) > 39)
+      Number(metadata.backupVersion) > 40)
   ) {
     throw new Error("metadata.backupVersion is unsupported");
   }
@@ -1366,6 +1371,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   });
   const cloudBackupData = validateCloudBackupBackupRows(root);
   const publicWebsiteData = validatePublicWebsiteBackupRows(root);
+  const technicalOperations = validateTechnicalOperationsBackup(root.technicalOperations);
   const counts = validateOptionalBackupCounts(metadata.counts);
 
   return {
@@ -1386,6 +1392,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     payments,
     paymentAudits,
     ...familyCollectionBackup,
+    technicalOperations,
     users,
     authSecurity,
     iamAccess,

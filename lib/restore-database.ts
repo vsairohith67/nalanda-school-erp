@@ -22,6 +22,7 @@ import { PAYSLIP_REQUEST_BACKUP_KEYS, restorePayslipRequestBackup, type PayslipR
 import { SUPPORT_BACKUP_KEYS, restoreSupportBackup, type SupportBackupKey } from "@/lib/support-backup";
 import { SAFE_EXIT_BACKUP_KEYS, restoreSafeExitBackup, type SafeExitBackupKey } from "@/lib/safe-exit-backup";
 import { FAMILY_COLLECTION_BACKUP_KEYS, type FamilyCollectionBackupKey } from "@/lib/family-collection-backup";
+import { restoreTechnicalOperationsBackup } from "@/lib/technical-operations-backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -121,6 +122,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(SUPPORT_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<SupportBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(SAFE_EXIT_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<SafeExitBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<FamilyCollectionBackupKey, ReturnType<typeof emptyEntityResult>>),
+    technicalOperations: emptyEntityResult(),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
     feeStructures: emptyEntityResult(),
@@ -567,6 +569,8 @@ async function restoreIntoDatabase(
     result[key].skipped = safeExitResult[key].skipped;
     result[key].errors.push(...safeExitResult[key].errors);
   }
+  const technicalOperationsResult = await restoreTechnicalOperationsBackup(client as unknown as PrismaClient, backup.technicalOperations);
+  result.technicalOperations = { ...technicalOperationsResult, warnings: [] };
   await restoreAcademicCalendarData(client, backup, restoredBy, result);
   await restoreCertificateData(client, backup, backupStudentLocalIds, result);
   await restoreClassXPackageData(client, backup, backupStudentLocalIds, result);

@@ -417,6 +417,14 @@ export const PERMISSIONS = [
   "VIEW_SETTINGS",
   "MANAGE_SCHOOL_SETTINGS",
   "VIEW_SYSTEM_HEALTH",
+  "VIEW_TECHNICAL_OPERATIONS",
+  "VIEW_TECHNICAL_OPERATIONS_SUMMARY",
+  "VIEW_TECHNICAL_EVIDENCE",
+  "RUN_TECHNICAL_HEALTH_CHECKS",
+  "MANAGE_OPERATIONAL_ALERTS",
+  "MANAGE_OPERATIONAL_INCIDENTS",
+  "MANAGE_MAINTENANCE_WINDOWS",
+  "MANAGE_CLIENT_VERSION_POLICY",
   "RUN_BACKUP",
   "RUN_RESTORE",
   "VIEW_AI_ASSISTANT",
@@ -1213,6 +1221,14 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { permission: "VIEW_SETTINGS", label: "View settings", description: "Open settings and system information." },
       { permission: "MANAGE_SCHOOL_SETTINGS", label: "Manage school settings", description: "Edit school profile and receipt settings." },
       { permission: "VIEW_SYSTEM_HEALTH", label: "View system health", description: "See readiness and production warnings." },
+      { permission: "VIEW_TECHNICAL_OPERATIONS", label: "View technical operations", description: "Open the restricted technical-operations dashboard." },
+      { permission: "VIEW_TECHNICAL_OPERATIONS_SUMMARY", label: "View operational summary", description: "See the concise leadership health, backup, release and incident summary." },
+      { permission: "VIEW_TECHNICAL_EVIDENCE", label: "View technical evidence", description: "Inspect privacy-safe check, alert and incident evidence." },
+      { permission: "RUN_TECHNICAL_HEALTH_CHECKS", label: "Run technical checks", description: "Run governed manual and deep technical checks." },
+      { permission: "MANAGE_OPERATIONAL_ALERTS", label: "Manage operational alerts", description: "Acknowledge, investigate, silence, resolve and close operational alerts." },
+      { permission: "MANAGE_OPERATIONAL_INCIDENTS", label: "Manage operational incidents", description: "Create and maintain privacy-safe infrastructure incidents." },
+      { permission: "MANAGE_MAINTENANCE_WINDOWS", label: "Manage maintenance windows", description: "Plan and record exact-domain maintenance windows." },
+      { permission: "MANAGE_CLIENT_VERSION_POLICY", label: "Manage client version policy", description: "Maintain advisory minimum-supported client versions." },
       { permission: "RUN_BACKUP", label: "Run backup", description: "Download or create full backups." },
       { permission: "RUN_RESTORE", label: "Run restore", description: "Validate and restore full backups." },
       { permission: "FIRST_RUN_SETUP", label: "First-run setup", description: "Complete first-run Director setup." }
@@ -1228,7 +1244,14 @@ const directorPermissions = new Set<CanonicalPermission>(
     "ASSIGN_PERMISSION_PROFILES",
     "MANAGE_USER_PERMISSION_OVERRIDES",
     "DELEGATE_IAM_ACCESS",
-    "GRANT_SUPER_ADMIN"
+    "GRANT_SUPER_ADMIN",
+    "VIEW_TECHNICAL_OPERATIONS",
+    "VIEW_TECHNICAL_EVIDENCE",
+    "RUN_TECHNICAL_HEALTH_CHECKS",
+    "MANAGE_OPERATIONAL_ALERTS",
+    "MANAGE_OPERATIONAL_INCIDENTS",
+    "MANAGE_MAINTENANCE_WINDOWS",
+    "MANAGE_CLIENT_VERSION_POLICY"
   ].includes(permission))
 );
 

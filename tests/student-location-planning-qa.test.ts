@@ -141,7 +141,7 @@ describe("Prompt 21A-QA planning completeness", () => {
     const schema = read("prisma/schema.prisma");
     const student = schema.slice(schema.indexOf("model Student {"), schema.indexOf("\nmodel ", schema.indexOf("model Student {") + 1));
     expect(student).not.toMatch(/\b(latitude|longitude|locationPoint|geocodeProvider)\b/);
-    expect(read("lib/backup.ts")).toContain("backupVersion: 39");
+    expect(read("lib/backup.ts")).toContain("backupVersion: 40");
     expect(existsSync("app/student-locations")).toBe(false);
     expect(existsSync("app/api/student-locations")).toBe(false);
     expect(existsSync("app/api/geocoding")).toBe(false);

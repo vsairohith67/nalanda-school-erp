@@ -47,11 +47,12 @@ describe("full backup", () => {
       generatedBy: "Director"
     });
     expect(backup.metadata.appVersion).toBeTruthy();
-    expect(backup.metadata.backupVersion).toBe(39);
+    expect(backup.metadata.backupVersion).toBe(40);
     expect(backup.metadata.counts).toEqual({
       schoolSettings: 0,
       authSecurityRecords: 0,
       iamAccessRecords: 0,
+      technicalOperationsRecords: 0,
       rolePermissions: 1,
       guardians: 1,
       studentGuardians: 1,

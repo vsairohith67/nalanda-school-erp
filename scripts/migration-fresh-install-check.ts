@@ -41,13 +41,14 @@ export async function runMigrationFreshInstallCheck() {
     const aliases = Number((db.prepare("SELECT COUNT(*) AS value FROM AuthLoginAlias WHERE type = 'USERNAME' AND status = 'VERIFIED'").get() as { value: number }).value);
     const students = Number((db.prepare("SELECT COUNT(*) AS value FROM Student").get() as { value: number }).value);
     const migrations = Number((db.prepare("SELECT COUNT(*) AS value FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL").get() as { value: number }).value);
+    const operationalChecks = Number((db.prepare("SELECT COUNT(*) AS value FROM OperationalCheckDefinition").get() as { value: number }).value);
     db.close();
-    if (users !== 4 || aliases !== 4 || students !== 8 || migrations !== 16) throw new Error("SYNTHETIC_BOOTSTRAP_COUNTS_INVALID");
+    if (users !== 4 || aliases !== 4 || students !== 8 || migrations !== 17 || operationalChecks !== 13) throw new Error("SYNTHETIC_BOOTSTRAP_COUNTS_INVALID");
     success = true;
     console.log(`Fresh migration check passed: migrations=${migrations} models=${schema.models} tables=${schema.tables}`);
-    console.log(`Synthetic bootstrap passed: users=${users} usernameAliases=${aliases} students=${students}; lifecycle backfill remained dry-run.`);
+    console.log(`Synthetic bootstrap passed: users=${users} usernameAliases=${aliases} students=${students} operationalChecks=${operationalChecks}; lifecycle backfill remained dry-run.`);
     console.log(`Canonical schema fingerprint: ${schema.fingerprint}`);
-    return { databasePath, schema, users, aliases, students, migrations };
+    return { databasePath, schema, users, aliases, students, migrations, operationalChecks };
   } finally {
     if (success) cleanupIsolatedDatabase(databasePath);
   }

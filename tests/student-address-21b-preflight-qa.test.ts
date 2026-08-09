@@ -142,7 +142,7 @@ describe("Prompt 21B-Preflight-QA approval gate", () => {
     expect(existsSync("app/student-locations")).toBe(false);
     expect(existsSync("app/api/geocoding")).toBe(false);
     expect(read("package.json")).not.toMatch(/mapbox|maplibre|leaflet|google-maps|nominatim|geocod/i);
-    expect(read("lib/backup.ts")).toContain("backupVersion: 39");
+    expect(read("lib/backup.ts")).toContain("backupVersion: 40");
   });
 
   it("publishes an evidence-based QA report with the required blocked release decision", () => {

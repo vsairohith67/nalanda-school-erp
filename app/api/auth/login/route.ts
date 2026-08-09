@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
     const before = await checkLoginRateLimit({ identifier, source });
     if (!before.allowed) {
       console.warn(`AUTH_LOGIN_RATE_LIMIT account=${before.accountHash} source=${before.sourceHash}`);
+      await recordLoginSecurityEvent("LOGIN_RATE_LIMITED", null, before.accountHash, { blocked: true });
       return rateLimitResponse(before.retryAfterSeconds);
     }
 
@@ -66,6 +67,12 @@ export async function POST(request: NextRequest) {
     ) {
       const failure = await recordLoginFailure({ identifier, source });
       console.warn(`AUTH_LOGIN_FAILURE account=${failure.accountHash} source=${failure.sourceHash}`);
+      await recordLoginSecurityEvent(
+        user && (!user.isActive || user.lifecycleStatus !== "ACTIVE") ? "DISABLED_ACCOUNT_LOGIN_ATTEMPT" : failure.blocked ? "LOGIN_RATE_LIMITED" : "LOGIN_FAILED",
+        user?.id ?? null,
+        failure.accountHash,
+        { blocked: failure.blocked }
+      );
       if (failure.blocked) return rateLimitResponse(failure.retryAfterSeconds);
       return privateJson({ error: GENERIC_LOGIN_ERROR }, 401);
     }
@@ -102,6 +109,14 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     void error;
     return privateJson({ error: GENERIC_LOGIN_ERROR }, 500);
+  }
+}
+
+async function recordLoginSecurityEvent(eventType: string, userId: string | null, accountFingerprint: string, details: Record<string, boolean>) {
+  try {
+    await logAuthSecurityEvent(prisma, { eventType, userId, subjectType: "LOGIN_ACCOUNT_FINGERPRINT", subjectId: accountFingerprint, details });
+  } catch {
+    // Authentication remains fail-closed even if private audit persistence is unavailable.
   }
 }
 

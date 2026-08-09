@@ -183,7 +183,7 @@ describe("Prompt 20D copied-database website restore", () => {
         generatedAt: new Date("2026-07-20T05:00:00.000Z"), generatedBy: "QA20D copied-database rehearsal",
         students: [], feeStructures: [], payments: [], paymentAudits: [], users: [], ...sourceRows
       });
-      expect(backup.metadata.backupVersion).toBe(39);
+      expect(backup.metadata.backupVersion).toBe(40);
       for (const key of websiteKeys) expect(backup.metadata.counts[key]).toBe(sourceRows[key].length);
       const parsed = parseAndValidateBackup(backup);
 

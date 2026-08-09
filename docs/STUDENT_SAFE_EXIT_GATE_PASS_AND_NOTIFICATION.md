@@ -64,4 +64,4 @@ Use emergency override only for a bounded safeguarding/emergency category when P
 
 Primary threats are cross-family or cross-child access, stale Guardian links, forged/replayed/expired passes, duplicate or concurrent checkout, an approval mistaken for release, a notification mistaken for consent, ordinary-role emergency escalation, silent attendance rewriting, mutable release history, sensitive notification/log content and provider failure inside the release transaction. Controls are server-side object revalidation, version-bound opaque handles, HMAC-signed random passes with one-use compare-and-set, exact permissions and re-authentication, immutable events/corrections, a separate attendance flag, privacy-minimal outbox content, local test sinks and transaction-independent retry/fallback.
 
-Browser and release evidence is recorded separately in `docs/evidence/SAFE_EXIT_1A_QA_RELEASE.md`. Next governed phase after independent clearance is `OBS-1A`.
+Browser and release evidence is recorded separately in [SAFE_EXIT_1A_QA_RELEASE.md](evidence/SAFE_EXIT_1A_QA_RELEASE.md). Next governed phase after independent clearance is `OBS-1A`.

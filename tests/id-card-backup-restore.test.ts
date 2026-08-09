@@ -21,7 +21,7 @@ function backup() {
 
 describe("Prompt 18C backup version 29", () => {
   it("includes all six arrays and excludes actors/password hashes", () => {
-    const value = backup(); expect(value.metadata.backupVersion).toBe(39);
+    const value = backup(); expect(value.metadata.backupVersion).toBe(40);
     for (const key of Object.keys(rows())) expect((value as any)[key]).toHaveLength(1);
     expect(JSON.stringify(value)).not.toContain("passwordHash"); expect(JSON.stringify(value)).not.toContain("createdByUserId");
   });

@@ -232,7 +232,7 @@ async function restoreRehearsal() {
     const serialized = serializeBackup(backup);
     assert(!serialized.includes(QA_AUTH_VERIFICATION_VALUE) && backup.users.every((row) => !("passwordHash" in row)), "BACKUP_SECRET_LEAK");
     const validated = parseAndValidateBackup(JSON.parse(serialized));
-    assert(validated.metadata.backupVersion === 39, "BACKUP_VERSION_CHANGED");
+    assert(validated.metadata.backupVersion === 40, "BACKUP_VERSION_CHANGED");
     await target.user.create({ data: { id: `${PREFIX}restore-actor`, name: `${MARKER} Restore Actor`, username: `${PREFIX}restore-actor`, passwordHash: await hashPassword("FAMPAY1-local-only-restore-actor!Aa9"), role: "DIRECTOR", isActive: true } });
     const first = await restoreValidatedBackup(target, validated, { id: `${PREFIX}restore-actor`, name: `${MARKER} Restore Actor` });
     assertNoRestoreErrors(first as unknown as Record<string, unknown>);
@@ -261,7 +261,7 @@ async function restoreExistingBackup(backupPathInput: string) {
   const target = client(targetPath);
   try {
     const validated = parseAndValidateBackup(JSON.parse(readFileSync(backupPath, "utf8")));
-    assert(validated.metadata.backupVersion === 39, "EXISTING_BACKUP_VERSION_CHANGED");
+    assert(validated.metadata.backupVersion === 40, "EXISTING_BACKUP_VERSION_CHANGED");
     await target.user.create({ data: { id: `${PREFIX}restore-actor`, name: `${MARKER} Restore Actor`, username: `${PREFIX}restore-actor`, passwordHash: await hashPassword("FAMPAY1-local-only-restore-actor!Aa9"), role: "DIRECTOR", isActive: true } });
     const first = await restoreValidatedBackup(target, validated, { id: `${PREFIX}restore-actor`, name: `${MARKER} Restore Actor` });
     assertNoRestoreErrors(first as unknown as Record<string, unknown>);

@@ -1,5 +1,27 @@
 # Documentation Index
 
+## OBS-1A technical operations and safe observability
+
+- [Architecture](OBSERVABILITY_OPERATIONS_ARCHITECTURE.md)
+- [Health Domain Specification](OBS_HEALTH_DOMAIN_SPECIFICATION.md)
+- [Safe Logging and Redaction Contract](OBS_SAFE_LOGGING_AND_REDACTION_CONTRACT.md)
+- [Alert, Incident and Maintenance Lifecycle](OBS_ALERT_INCIDENT_MAINTENANCE_LIFECYCLE.md)
+- [Provider Status Policy](OBS_PROVIDER_STATUS_POLICY.md)
+- [Release and Client Version Specification](OBS_CLIENT_RELEASE_VERSION_SPECIFICATION.md)
+- [Privacy Matrix](OBS_PRIVACY_MATRIX.md)
+- [Super Admin Guide](OBS_SUPER_ADMIN_OPERATOR_GUIDE.md)
+- [Director Summary Guide](OBS_DIRECTOR_SUMMARY_GUIDE.md)
+- [Developer Guide](OBS_DEVELOPER_GUIDE.md)
+- [Threat Model](OBS_THREAT_MODEL.md)
+- [Existing Operations Audit](evidence/OBS_1A_EXISTING_OPERATIONS_AUDIT.md)
+- [Core/Database Runbook](runbooks/OBS_CORE_DATABASE_RUNBOOK.md)
+- [Backup/Restore Runbook](runbooks/OBS_BACKUP_RESTORE_RUNBOOK.md)
+- [Low Storage Runbook](runbooks/OBS_LOW_STORAGE_RUNBOOK.md)
+- [Job/Outbox Runbook](runbooks/OBS_JOB_OUTBOX_RUNBOOK.md)
+- [Incident Response Runbook](runbooks/OBS_INCIDENT_RESPONSE_RUNBOOK.md)
+
+OBS-1A is local/private and provider-neutral. Implementation is additive and remains pending independent QA; deployment, live provider activation, external telemetry, and real-user/data onboarding are not authorised.
+
 ## GOV-RECON-1 authoritative requirements and scope reconstruction
 
 - [Authoritative Requirements Register](REQUIREMENTS_REGISTER.md)
@@ -577,3 +599,22 @@ consent or governed emergency authority, school approval, verified handover,
 single-use Gate pass, separate campus checkout, Parent notification and
 append-only audit are mandatory. No real departure, deployment, transport
 service or live WhatsApp provider is included. Next governed phase: `OBS-1A`.
+
+# OBS-1A
+
+- [Observability and operations architecture](OBSERVABILITY_OPERATIONS_ARCHITECTURE.md)
+- [Health-domain specification](OBS_HEALTH_DOMAIN_SPECIFICATION.md)
+- [Safe logging and redaction contract](OBS_SAFE_LOGGING_AND_REDACTION_CONTRACT.md)
+- [Alert, incident and maintenance lifecycle](OBS_ALERT_INCIDENT_MAINTENANCE_LIFECYCLE.md)
+- [Provider-status policy](OBS_PROVIDER_STATUS_POLICY.md)
+- [Client/release version specification](OBS_CLIENT_RELEASE_VERSION_SPECIFICATION.md)
+- [Privacy matrix](OBS_PRIVACY_MATRIX.md)
+- [Super Admin operator guide](OBS_SUPER_ADMIN_OPERATOR_GUIDE.md)
+- [Director summary guide](OBS_DIRECTOR_SUMMARY_GUIDE.md)
+- [Developer guide](OBS_DEVELOPER_GUIDE.md)
+- [Threat model](OBS_THREAT_MODEL.md)
+- [Technical debt register](TECHNICAL_DEBT_REGISTER.md)
+- [Existing operations audit](evidence/OBS_1A_EXISTING_OPERATIONS_AUDIT.md)
+- [Implementation checkpoint](evidence/OBS_1A_IMPLEMENTATION_CHECKPOINT.md)
+
+OBS-1A is ready for independent QA on its retained feature branch. The operational database has not yet received the additive migration; deployment, provider activation, telemetry transmission and real-user onboarding remain unauthorised.
