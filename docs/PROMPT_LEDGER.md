@@ -99,6 +99,7 @@ The accessible Git history begins with the consolidated baseline commit `2d1ac63
 | 2026-08-08 | Prompt 23I / QA; GitHub PR #3 | `368c8b0`, `faf0279`, `71f671b`; `payroll-ess-v37-2026-08-08` | `EXACT_SOURCE`, `QA_RELEASE_EVIDENCE`, `CONFLICTING_RECORD` | Released implementation preserved; full-payroll product scope reclassified from V1 to V1.5 |
 | 2026-08-08 | GOV-RECON-1 | Current authoritative user requirement and this branch | `EXACT_SOURCE` | Documentation/evidence/reconciliation phase; no application implementation |
 | 2026-08-08 to 2026-08-09 | HR-PAYSLIP-REQ-1 / recovery / independent QA | Current authoritative user requirement, retained `hr/staff-payslip-request-secure-delivery` and `payslip-request-delivery-v37-2026-08-09` | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | Released local/private after synthetic copied-DB, qpdf, Browser, migration, recovery and full-suite proof; no deployment, real Staff document or live provider |
+| 2026-08-09 | SUPPORT-1A / SUPPORT-1A-QA | Current authoritative user requirement and `support/parent-staff-complaints-feedback` | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE` | Additive implementation copied-fixture verified; independent QA and release gates pending at checkpoint |
 
 ## Exact missing source ranges
 

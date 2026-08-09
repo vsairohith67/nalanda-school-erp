@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "plugins": [], "incremental": true, "tsBuildInfoFile": "./tsconfig.tools-qa-23g.tsbuildinfo" },
+  "include": ["scripts/qa23g*.ts"],
+  "exclude": ["node_modules", ".next"]
+}

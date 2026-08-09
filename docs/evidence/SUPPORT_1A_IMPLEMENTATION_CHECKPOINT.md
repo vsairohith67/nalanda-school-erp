@@ -1,0 +1,13 @@
+# SUPPORT-1A implementation checkpoint
+
+Branch: `support/parent-staff-complaints-feedback`. Baseline was synchronized private `main` at `1f03bf4e51183e659bf15a3de3b833037e7419b2`; the retained payslip branch and annotated tag were identical to that commit. Operational DB SHA-256 before implementation: `78960F7700A9E89CF1D05FA9B1EAE09C7E101886F8F22A6C1D3D88BCD0506F18` with zero Students, Guardians, Staff, payments, payroll and support requests; four protected accounts.
+
+Implementation is one additive migration and reuses IAM contexts, Parent/Guardian/Student and Staff identity, in-app Notification Centre, private attachment patterns, qpdf validation, encrypted asset containers, Academic Calendar and version-37 logical backup. Dedicated payslip delivery remains separate.
+
+Focused unit evidence: 3 files / 8 tests passed. Copied-database evidence token: `SUPPORT1A_COPIED_DATABASE_VERIFIED`, two deploys, 13 role/context fixtures, public neutral behavior, multi-child/removal checks, internal-note isolation, safeguarding scope, assignment concurrency, overdue idempotency, logical restore twice, asset restore twice, operational mutation false.
+
+Implementation verification passed `routes:list` (324 page routes and 515 API routes), lifecycle backfill (zero rows), partitioned typecheck, the full suite (196 files passed, 1 skipped; 1,744 tests passed and 3 skipped), clean installation (14 migrations, 264 schema models and 264 installed tables), the production build with a bounded 4 GB Node heap, logical backup version 37 and Git safety. The operational database hash and zero-business/four-protected-account baseline remained exact.
+
+In-app Browser evidence used three short copied-database production-runtime batches at 1366x768 and exact 390x844 in light and dark themes. Public generic intake, Parent multi-child scope and attachment, Staff own-request isolation, in-person restricted complaint recording, immutable statement, triage, assignment, requester-visible response/internal-note separation, resolution, Director oversight, delegated Accountant/Computer Operator queues and Viewer suppression passed. Visible controls were at least 44 px, focus was visible, page-level horizontal overflow was zero, and all three production-runtime stderr logs were empty. Only synthetic `SUPPORT1ABROWSER` data was used.
+
+Implementation result: `SUPPORT_COMPLAINTS_READY_FOR_QA`. Independent `SUPPORT-1A-QA`, the narrowly additive operational migration, merge/tag and external closure remain release gates. Legal/privacy text remains `DRAFT_PENDING_APPROVAL`; no real case, live provider, deployment or real-user onboarding is authorised.

@@ -177,7 +177,21 @@ describe("full backup", () => {
       staffPayslipMonthAvailability: 0,
       staffPayslipDocumentVersions: 0,
       staffPayslipDocumentMonths: 0,
-      staffPayslipAccessEvents: 0
+      staffPayslipAccessEvents: 0,
+      supportQueues: 0,
+      supportCategoryPolicies: 0,
+      supportRequests: 0,
+      supportRequestParticipants: 0,
+      supportRequestLinkedChildren: 0,
+      supportRequestEvents: 0,
+      supportRequestMessages: 0,
+      supportRequestAttachments: 0,
+      supportAssignments: 0,
+      supportEscalations: 0,
+      supportSlaSnapshots: 0,
+      supportResolutions: 0,
+      supportSatisfactionResponses: 0,
+      supportAccessEvents: 0
     });
     expect(backup.students).toHaveLength(1);
     expect(backup.feeStructures).toHaveLength(1);

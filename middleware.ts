@@ -27,6 +27,7 @@ const publicPaths = [
 ];
 const publicPathPrefixes = [
   "/api/public/admissions/",
+  "/api/public/support/",
   "/api/whatsapp/webhook/",
   "/api/sms-email/webhook/",
   "/icons/"

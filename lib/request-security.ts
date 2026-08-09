@@ -9,6 +9,8 @@ const EXAM_TIMETABLE_BODY_LIMIT_BYTES = 128 * 1024;
 const AUTH_BODY_LIMIT_BYTES = 16 * 1024;
 const IAM_BODY_LIMIT_BYTES = 64 * 1024;
 const PAYSLIP_PDF_BODY_LIMIT_BYTES = 12 * 1024 * 1024;
+const PUBLIC_SUPPORT_BODY_LIMIT_BYTES = 3 * 1024 * 1024;
+const SUPPORT_ATTACHMENT_BODY_LIMIT_BYTES = 6 * 1024 * 1024;
 
 export function isUnsafeMethod(method: string) {
   return !SAFE_METHODS.has(method.toUpperCase());
@@ -22,6 +24,8 @@ export function isProviderWebhookPath(pathname: string) {
 export function requestBodyLimitBytes(pathname: string) {
   if (pathname.startsWith("/api/auth/")) return AUTH_BODY_LIMIT_BYTES;
   if (pathname.startsWith("/api/iam/")) return IAM_BODY_LIMIT_BYTES;
+  if (pathname.startsWith("/api/public/support/")) return PUBLIC_SUPPORT_BODY_LIMIT_BYTES;
+  if (/^\/api\/(?:my-support|parent\/support|support)\/[^/]+\/attachments$/.test(pathname)) return SUPPORT_ATTACHMENT_BODY_LIMIT_BYTES;
   if (/^\/api\/payslip-requests\/[^/]+\/documents$/.test(pathname)) return PAYSLIP_PDF_BODY_LIMIT_BYTES;
   if (/^\/api\/fee-register-ocr\/batches\/[^/]+\/pages$/.test(pathname)) return OCR_PAGE_BODY_LIMIT_BYTES;
   if (pathname === "/api/attendance/students") return STUDENT_ATTENDANCE_BODY_LIMIT_BYTES;

@@ -448,6 +448,28 @@ export const PERMISSIONS = [
   "PREVIEW_PUBLIC_WEBSITE_DRAFTS",
   "VIEW_PUBLIC_WEBSITE_REPORTS",
   "EXPORT_PUBLIC_WEBSITE_REPORTS",
+  "VIEW_SUPPORT_REQUESTS",
+  "MANAGE_SUPPORT_CONFIGURATION",
+  "TRIAGE_SUPPORT_REQUESTS",
+  "ASSIGN_SUPPORT_REQUESTS",
+  "RESPOND_SUPPORT_REQUESTS",
+  "ADD_SUPPORT_INTERNAL_NOTES",
+  "VIEW_RESTRICTED_SUPPORT",
+  "VIEW_SAFEGUARDING_SUPPORT",
+  "VIEW_LEADERSHIP_ONLY_SUPPORT",
+  "RESOLVE_SUPPORT_REQUESTS",
+  "RECORD_IN_PERSON_SUPPORT",
+  "VIEW_SUPPORT_REPORTS",
+  "EXPORT_SUPPORT_REPORTS",
+  "EXPORT_SUPPORT_CASES",
+  "VIEW_OWN_SUPPORT",
+  "CREATE_OWN_SUPPORT",
+  "REPLY_OWN_SUPPORT",
+  "REOPEN_OWN_SUPPORT",
+  "SUBMIT_SUPPORT_SATISFACTION",
+  "UPLOAD_SUPPORT_ATTACHMENTS",
+  "DOWNLOAD_SUPPORT_ATTACHMENTS",
+  "MANAGE_SUPPORT_RECOVERY",
   "FIRST_RUN_SETUP"
 ] as const;
 
@@ -657,6 +679,34 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { permission: "MANAGE_PAYSLIP_MONTH_AVAILABILITY", label: "Manage payslip month availability", description: "Mark historical record months available without entering or calculating salary data." },
       { permission: "VIEW_OWN_PAYSLIP_REQUESTS", label: "View own payslip requests", description: "View only requests and protected documents owned by the exact active Staff link in Staff/Teacher context." },
       { permission: "REQUEST_OWN_PAYSLIP", label: "Request own payslip", description: "Request one or more governed available months for the exact active Staff link in Staff/Teacher context." }
+    ]
+  },
+  {
+    id: "support",
+    title: "Support, Complaints and Feedback",
+    permissions: [
+      { permission: "VIEW_SUPPORT_REQUESTS", label: "View authorised support requests", description: "View only support queues, assignments and confidentiality levels allowed by exact role and object scope." },
+      { permission: "MANAGE_SUPPORT_CONFIGURATION", label: "Manage support policy", description: "Version school-owned categories, routing, confidentiality and service targets; targets are not legal promises." },
+      { permission: "TRIAGE_SUPPORT_REQUESTS", label: "Triage support requests", description: "Acknowledge and validate category, priority and confidentiality without gaining hidden access." },
+      { permission: "ASSIGN_SUPPORT_REQUESTS", label: "Assign support requests", description: "Assign only active authorised users with preserved history and conflict protections." },
+      { permission: "RESPOND_SUPPORT_REQUESTS", label: "Respond to support requests", description: "Send clearly requester-visible responses to authorised cases." },
+      { permission: "ADD_SUPPORT_INTERNAL_NOTES", label: "Add internal support notes", description: "Add unmistakably internal notes that are never exposed to requesters." },
+      { permission: "VIEW_RESTRICTED_SUPPORT", label: "View restricted support", description: "View restricted complaints only within an authorised queue or assignment." },
+      { permission: "VIEW_SAFEGUARDING_SUPPORT", label: "View safeguarding support", description: "View safety and safeguarding cases only as a member of the explicit restricted group." },
+      { permission: "VIEW_LEADERSHIP_ONLY_SUPPORT", label: "View leadership-only support", description: "View leadership-only complaints and privacy cases." },
+      { permission: "RESOLVE_SUPPORT_REQUESTS", label: "Resolve support requests", description: "Record preserved requester and internal resolution evidence with optimistic concurrency." },
+      { permission: "RECORD_IN_PERSON_SUPPORT", label: "Record in-person complaints", description: "Transcribe an office complaint without falsely verifying supplied identity or rewriting the original statement." },
+      { permission: "VIEW_SUPPORT_REPORTS", label: "View support reports", description: "View privacy-safe service aggregates with restricted-category and low-count suppression." },
+      { permission: "EXPORT_SUPPORT_REPORTS", label: "Export support reports", description: "Export bounded formula-safe aggregate support reports." },
+      { permission: "EXPORT_SUPPORT_CASES", label: "Export support cases", description: "Export an authorised bounded case summary without raw IDs, storage paths or internal notes by default." },
+      { permission: "VIEW_OWN_SUPPORT", label: "View own support", description: "View only the authenticated Parent or linked Staff requester history in the active role context." },
+      { permission: "CREATE_OWN_SUPPORT", label: "Create own support", description: "Create a governed Parent or Staff request without mutating finance, academic, identity or payroll data." },
+      { permission: "REPLY_OWN_SUPPORT", label: "Reply to own support", description: "Reply only to an authorised own request using requester-visible messages." },
+      { permission: "REOPEN_OWN_SUPPORT", label: "Reopen own support", description: "Reopen a resolved request with a bounded reason under the configured policy." },
+      { permission: "SUBMIT_SUPPORT_SATISFACTION", label: "Submit support satisfaction", description: "Submit or decline one response for the current resolved version." },
+      { permission: "UPLOAD_SUPPORT_ATTACHMENTS", label: "Upload support attachments", description: "Upload bounded validated files to opaque private storage." },
+      { permission: "DOWNLOAD_SUPPORT_ATTACHMENTS", label: "Download support attachments", description: "Retrieve only exact authorised private no-store attachments." },
+      { permission: "MANAGE_SUPPORT_RECOVERY", label: "Manage support recovery", description: "Create encrypted asset backups and verify isolated restore evidence." }
     ]
   },
   {
@@ -1211,6 +1261,7 @@ const principalPermissions = new Set<CanonicalPermission>([
   ,"VIEW_FEE_REGISTER_OCR", "VIEW_FEE_REGISTER_OCR_IMAGES", "REVIEW_FEE_REGISTER_OCR_ROWS", "APPROVE_FEE_REGISTER_OCR_BATCHES", "VIEW_FEE_REGISTER_OCR_REPORTS"
   ,"VIEW_CLOUD_BACKUP", "VERIFY_CLOUD_BACKUP", "RUN_CLOUD_BACKUP_RESTORE_REHEARSAL", "VIEW_CLOUD_BACKUP_REPORTS", "EXPORT_CLOUD_BACKUP_REPORTS"
   ,"VIEW_PUBLIC_WEBSITE_ADMIN", "MANAGE_PUBLIC_WEBSITE_SETTINGS", "MANAGE_PUBLIC_WEBSITE_PAGES", "MANAGE_PUBLIC_WEBSITE_POSTS", "REVIEW_PUBLIC_WEBSITE_CONTENT", "PUBLISH_PUBLIC_WEBSITE_CONTENT", "MANAGE_PUBLIC_WEBSITE_NAVIGATION", "PREVIEW_PUBLIC_WEBSITE_DRAFTS", "VIEW_PUBLIC_WEBSITE_REPORTS", "EXPORT_PUBLIC_WEBSITE_REPORTS"
+  ,"VIEW_SUPPORT_REQUESTS", "TRIAGE_SUPPORT_REQUESTS", "ASSIGN_SUPPORT_REQUESTS", "RESPOND_SUPPORT_REQUESTS", "ADD_SUPPORT_INTERNAL_NOTES", "VIEW_RESTRICTED_SUPPORT", "VIEW_SAFEGUARDING_SUPPORT", "RESOLVE_SUPPORT_REQUESTS", "RECORD_IN_PERSON_SUPPORT", "VIEW_SUPPORT_REPORTS", "EXPORT_SUPPORT_REPORTS", "EXPORT_SUPPORT_CASES", "VIEW_OWN_SUPPORT", "CREATE_OWN_SUPPORT", "REPLY_OWN_SUPPORT", "REOPEN_OWN_SUPPORT", "SUBMIT_SUPPORT_SATISFACTION", "UPLOAD_SUPPORT_ATTACHMENTS", "DOWNLOAD_SUPPORT_ATTACHMENTS"
 ]);
 
 const adminPermissions = new Set<CanonicalPermission>([
@@ -1290,6 +1341,7 @@ const adminPermissions = new Set<CanonicalPermission>([
   ,"VIEW_CLOUD_BACKUP", "MANAGE_CLOUD_BACKUP_PROFILES", "MANAGE_CLOUD_BACKUP_SCHEDULES", "RUN_CLOUD_BACKUP", "VERIFY_CLOUD_BACKUP", "VIEW_CLOUD_BACKUP_REPORTS", "EXPORT_CLOUD_BACKUP_REPORTS"
   ,"VIEW_PUBLIC_WEBSITE_ADMIN", "MANAGE_PUBLIC_WEBSITE_SETTINGS", "MANAGE_PUBLIC_WEBSITE_PAGES", "MANAGE_PUBLIC_WEBSITE_POSTS", "MANAGE_PUBLIC_WEBSITE_NAVIGATION", "PREVIEW_PUBLIC_WEBSITE_DRAFTS", "VIEW_PUBLIC_WEBSITE_REPORTS", "EXPORT_PUBLIC_WEBSITE_REPORTS"
   ,"VIEW_CALENDAR_MANAGEMENT"
+  ,"VIEW_SUPPORT_REQUESTS", "TRIAGE_SUPPORT_REQUESTS", "ASSIGN_SUPPORT_REQUESTS", "RESPOND_SUPPORT_REQUESTS", "ADD_SUPPORT_INTERNAL_NOTES", "RESOLVE_SUPPORT_REQUESTS", "RECORD_IN_PERSON_SUPPORT", "VIEW_SUPPORT_REPORTS", "EXPORT_SUPPORT_REPORTS", "EXPORT_SUPPORT_CASES", "VIEW_OWN_SUPPORT", "CREATE_OWN_SUPPORT", "REPLY_OWN_SUPPORT", "REOPEN_OWN_SUPPORT", "SUBMIT_SUPPORT_SATISFACTION", "UPLOAD_SUPPORT_ATTACHMENTS", "DOWNLOAD_SUPPORT_ATTACHMENTS"
 ]);
 
 const accountantPermissions = new Set<CanonicalPermission>([
@@ -1326,6 +1378,7 @@ const accountantPermissions = new Set<CanonicalPermission>([
   ,"MANAGE_OWN_SMS_EMAIL_CONSENT"
   ,"VIEW_FEE_REGISTER_OCR", "VIEW_FEE_REGISTER_OCR_IMAGES", "UPLOAD_FEE_REGISTER_PAGES", "RUN_FEE_REGISTER_OCR", "REVIEW_FEE_REGISTER_OCR_ROWS", "PREVIEW_FEE_REGISTER_OCR_POSTING", "POST_FEE_REGISTER_OCR_PAYMENTS", "RESOLVE_FEE_REGISTER_OCR_DUPLICATES", "VIEW_FEE_REGISTER_OCR_REPORTS", "EXPORT_FEE_REGISTER_OCR_REPORTS"
   ,"VIEW_PAYROLL", "MANAGE_PAYROLL_INPUTS", "CALCULATE_PAYROLL", "SUBMIT_PAYROLL", "MANAGE_SALARY_ADVANCES", "VIEW_PAYROLL_REPORTS", "EXPORT_PAYROLL_REPORTS", "VIEW_OWN_PAYROLL", "REQUEST_SALARY_ADVANCE"
+  ,"VIEW_SUPPORT_REQUESTS", "RESPOND_SUPPORT_REQUESTS", "ADD_SUPPORT_INTERNAL_NOTES", "RESOLVE_SUPPORT_REQUESTS", "VIEW_OWN_SUPPORT", "CREATE_OWN_SUPPORT", "REPLY_OWN_SUPPORT", "REOPEN_OWN_SUPPORT", "SUBMIT_SUPPORT_SATISFACTION", "UPLOAD_SUPPORT_ATTACHMENTS", "DOWNLOAD_SUPPORT_ATTACHMENTS"
 ]);
 
 const computerOperatorPermissions = new Set<CanonicalPermission>([
@@ -1340,7 +1393,8 @@ const computerOperatorPermissions = new Set<CanonicalPermission>([
   "VIEW_ADMISSIONS",
   "MANAGE_ADMISSION_ENQUIRIES",
   "VIEW_OWN_NOTIFICATIONS",
-  "ACKNOWLEDGE_OWN_NOTIFICATIONS"
+  "ACKNOWLEDGE_OWN_NOTIFICATIONS",
+  "VIEW_SUPPORT_REQUESTS", "RESPOND_SUPPORT_REQUESTS", "ADD_SUPPORT_INTERNAL_NOTES", "RECORD_IN_PERSON_SUPPORT", "VIEW_OWN_SUPPORT", "CREATE_OWN_SUPPORT", "REPLY_OWN_SUPPORT", "REOPEN_OWN_SUPPORT", "SUBMIT_SUPPORT_SATISFACTION", "UPLOAD_SUPPORT_ATTACHMENTS", "DOWNLOAD_SUPPORT_ATTACHMENTS"
 ]);
 
 const viewerPermissions = new Set<CanonicalPermission>([
@@ -1378,6 +1432,7 @@ const viewerPermissions = new Set<CanonicalPermission>([
   ,"VIEW_FEE_REGISTER_OCR_REPORTS"
   ,"VIEW_CLOUD_BACKUP", "VIEW_CLOUD_BACKUP_REPORTS"
   ,"VIEW_PUBLIC_WEBSITE_ADMIN", "VIEW_PUBLIC_WEBSITE_REPORTS"
+  ,"VIEW_SUPPORT_REPORTS"
 ]);
 
 export const RECOMMENDED_ROLE_PERMISSIONS: Record<Role, ReadonlySet<CanonicalPermission>> = {
@@ -1387,8 +1442,8 @@ export const RECOMMENDED_ROLE_PERMISSIONS: Record<Role, ReadonlySet<CanonicalPer
   ADMIN: adminPermissions,
   ACCOUNTANT: accountantPermissions,
   COMPUTER_OPERATOR: computerOperatorPermissions,
-  TEACHER: new Set(["VIEW_TEACHER_PLACEHOLDER", "VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS", "VIEW_STAFF_LEAVE", "APPLY_STAFF_LEAVE", "VIEW_SUBSTITUTES", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_CLASSWORK", "MANAGE_CLASSWORK", "PUBLISH_CLASSWORK", "CLOSE_CLASSWORK", "REVIEW_CLASSWORK_SUBMISSIONS", "VIEW_CLASSWORK_AGGREGATES", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "REVIEW_ADMISSION_APPLICATIONS", "VIEW_EXAMS", "ENTER_MARKS", "SUBMIT_MARKS", "VIEW_OWN_EXAM_ASSIGNMENTS", "VIEW_OWN_EXAM_MARKS", "ENTER_ASSIGNED_EXAM_MARKS", "SUBMIT_ASSIGNED_EXAM_MARKS", "REQUEST_EXAM_MARK_CORRECTION", "VIEW_REPORT_CARDS", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "VIEW_OWN_TEACHER_ANALYTICS", "VIEW_OWN_STAFF_ID_CARD", "VIEW_OWN_NOTIFICATIONS", "CREATE_SCOPED_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT", "VIEW_STAFF_CALENDAR", "VIEW_OWN_PAYROLL", "REQUEST_SALARY_ADVANCE", "VIEW_OWN_PAYSLIP_REQUESTS", "REQUEST_OWN_PAYSLIP"]),
-  PARENT: new Set(["VIEW_PARENT_PLACEHOLDER", "VIEW_OWN_ATTENDANCE", "VIEW_OWN_EXAM_TIMETABLE", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_OWN_REPORT_CARDS", "VIEW_OWN_CLASSWORK", "SUBMIT_OWN_CLASSWORK", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "REQUEST_OWN_CHILD_CERTIFICATES", "VIEW_OWN_CHILD_CERTIFICATES", "REQUEST_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_STUDENT_ID_CARDS", "VIEW_OWN_FAMILY_RECEIPTS", "VIEW_OWN_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT", "VIEW_OWN_CALENDAR"]),
+  TEACHER: new Set(["VIEW_TEACHER_PLACEHOLDER", "VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS", "VIEW_STAFF_LEAVE", "APPLY_STAFF_LEAVE", "VIEW_SUBSTITUTES", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_HOMEWORK", "MANAGE_HOMEWORK", "PUBLISH_HOMEWORK", "VIEW_HOMEWORK_REPORTS", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_CLASSWORK", "MANAGE_CLASSWORK", "PUBLISH_CLASSWORK", "CLOSE_CLASSWORK", "REVIEW_CLASSWORK_SUBMISSIONS", "VIEW_CLASSWORK_AGGREGATES", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "REVIEW_ADMISSION_APPLICATIONS", "VIEW_EXAMS", "ENTER_MARKS", "SUBMIT_MARKS", "VIEW_OWN_EXAM_ASSIGNMENTS", "VIEW_OWN_EXAM_MARKS", "ENTER_ASSIGNED_EXAM_MARKS", "SUBMIT_ASSIGNED_EXAM_MARKS", "REQUEST_EXAM_MARK_CORRECTION", "VIEW_REPORT_CARDS", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS", "VIEW_OWN_TEACHER_ANALYTICS", "VIEW_OWN_STAFF_ID_CARD", "VIEW_OWN_NOTIFICATIONS", "CREATE_SCOPED_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT", "VIEW_STAFF_CALENDAR", "VIEW_OWN_PAYROLL", "REQUEST_SALARY_ADVANCE", "VIEW_OWN_PAYSLIP_REQUESTS", "REQUEST_OWN_PAYSLIP", "VIEW_OWN_SUPPORT", "CREATE_OWN_SUPPORT", "REPLY_OWN_SUPPORT", "REOPEN_OWN_SUPPORT", "SUBMIT_SUPPORT_SATISFACTION", "UPLOAD_SUPPORT_ATTACHMENTS", "DOWNLOAD_SUPPORT_ATTACHMENTS"]),
+  PARENT: new Set(["VIEW_PARENT_PLACEHOLDER", "VIEW_OWN_ATTENDANCE", "VIEW_OWN_EXAM_TIMETABLE", "VIEW_OWN_LIBRARY_PORTAL", "VIEW_OWN_HOMEWORK_PORTAL", "VIEW_OWN_REPORT_CARDS", "VIEW_OWN_CLASSWORK", "SUBMIT_OWN_CLASSWORK", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "REQUEST_OWN_CHILD_CERTIFICATES", "VIEW_OWN_CHILD_CERTIFICATES", "REQUEST_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_CHILD_CLASS_X_PACKAGE", "VIEW_OWN_STUDENT_ID_CARDS", "VIEW_OWN_FAMILY_RECEIPTS", "VIEW_OWN_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS", "MANAGE_OWN_WHATSAPP_CONSENT", "MANAGE_OWN_SMS_EMAIL_CONSENT", "VIEW_OWN_CALENDAR", "VIEW_OWN_SUPPORT", "CREATE_OWN_SUPPORT", "REPLY_OWN_SUPPORT", "REOPEN_OWN_SUPPORT", "SUBMIT_SUPPORT_SATISFACTION", "UPLOAD_SUPPORT_ATTACHMENTS", "DOWNLOAD_SUPPORT_ATTACHMENTS"]),
   STUDENT: new Set(["VIEW_OWN_CLASSWORK", "SUBMIT_OWN_CLASSWORK", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "VIEW_OWN_REPORT_CARDS", "VIEW_OWN_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS"]),
   VIEWER: viewerPermissions
 };

@@ -548,3 +548,18 @@ DEVOPS-1B changes only migration history/tooling/documentation. Prompt 21B/21C/2
 - [DEVOPS-1C-QA Independent Report](STAGING_READINESS_QA_REPORT.md) - independent architecture/security/cost review, corrected defects and fresh synthetic rehearsal evidence.
 
 DEVOPS-1B is fully cleared. DEVOPS-1C does not claim a cloud deployment, DNS change, operational database onboarding or paid resource. Physical PWA certification remains pending. Prompt 21B/21C/21D remain blocked, Prompt 22B remains conditional, and Parent/Teacher/Principal Schoolknot audits remain pending.
+
+# SUPPORT-1A
+
+- [Support lifecycle and routing policy](SUPPORT_LIFECYCLE_AND_ROUTING_POLICY.md)
+- [Support role and privacy matrix](SUPPORT_ROLE_PRIVACY_MATRIX.md)
+- [Public login-support anti-enumeration](PUBLIC_LOGIN_SUPPORT_ANTI_ENUMERATION.md)
+- [Parent support guide](PARENT_SUPPORT_GUIDE.md) and [Staff support guide](STAFF_SUPPORT_GUIDE.md)
+- [In-person complaint operating guide](IN_PERSON_COMPLAINT_OPERATING_GUIDE.md)
+- [Restricted/safeguarding runbook](RESTRICTED_SAFEGUARDING_SUPPORT_RUNBOOK.md)
+- [Attachment security](SUPPORT_ATTACHMENT_SECURITY_SPEC.md), [SLA policy](SUPPORT_SLA_POLICY.md), [resolution/reopening](SUPPORT_RESOLUTION_REOPENING_POLICY.md) and [notification policy](SUPPORT_NOTIFICATION_POLICY.md)
+- [Retention/privacy draft](SUPPORT_RETENTION_PRIVACY_DRAFT.md) - `DRAFT_PENDING_APPROVAL`
+- [Support threat model](SUPPORT_THREAT_MODEL.md), [operator/developer guide](SUPPORT_OPERATOR_DEVELOPER_GUIDE.md) and [technical debt](TECHNICAL_DEBT_REGISTER.md)
+- [SUPPORT-1A implementation checkpoint](evidence/SUPPORT_1A_IMPLEMENTATION_CHECKPOINT.md)
+
+SUPPORT-1A is additive, in-app only and implementation-verified with copied fixtures, Browser production-runtime evidence and the full verification sequence. It reached `SUPPORT_COMPLAINTS_READY_FOR_QA`; independent QA and release remain gates. No real complaint, Parent, Student, Staff, private attachment, live provider, deployment or real-user onboarding is authorised.

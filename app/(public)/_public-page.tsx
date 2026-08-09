@@ -27,7 +27,7 @@ const specialFallbacks: Record<string, Array<Record<string, unknown>>> = {
   ],
   privacy: [
     { type: "HERO", eyebrow: "Privacy", heading: "A public website without visitor tracking by default", body: "The optional admissions enquiry stores only consented minimum contact and demand information. This website adds no analytics pixels, advertising, public upload or public AI access.", primaryLabel: "Accessibility", primaryHref: "/accessibility" },
-    { type: "RICH_TEXT", markdown: "## Public and private separation\n\nPublic pages use only approved public content and registered local assets. Student, Parent, Guardian, Staff, fee, attendance, marks and communication records remain inside authenticated routes.\n\n## Cookies\n\nThe public website does not create a session or set unnecessary cookies. The secure portal uses authentication only after a visitor chooses to sign in." }
+    { type: "RICH_TEXT", markdown: "## Public and private separation\n\nPublic pages use only approved public content and registered local assets. Student, Parent, Guardian, Staff, fee, attendance, marks and communication records remain inside authenticated routes. The limited Contact Support form stores minimum consented contact and support information, treats all identifiers as unverified, and never reveals whether an account or Student exists. Support privacy and retention wording is DRAFT_PENDING_APPROVAL.\n\n## Cookies\n\nThe public website does not create a session or set unnecessary cookies. The secure portal uses authentication only after a visitor chooses to sign in." }
   ],
   accessibility: [
     { type: "HERO", eyebrow: "Accessibility", heading: "Designed toward WCAG 2.2 AA", body: "The public experience targets keyboard access, visible focus, semantic landmarks, reduced motion, meaningful links and responsive use from 320 pixels upward.", primaryLabel: "Contact", primaryHref: "/contact" },
@@ -35,7 +35,7 @@ const specialFallbacks: Record<string, Array<Record<string, unknown>>> = {
   ],
   terms: [
     { type: "HERO", eyebrow: "Terms", heading: "Public information with a controlled publication history", body: "Published corrections create new immutable versions; earlier public versions remain preserved for accountability.", primaryLabel: "Privacy", primaryHref: "/privacy" },
-    { type: "RICH_TEXT", markdown: "## Information status\n\nSchool information remains subject to leadership review and correction. Content marked as awaiting approval is intentionally not a factual claim.\n\n## Secure services\n\nPortal use is governed by authentication, permissions and the existing ERP security controls." }
+    { type: "RICH_TEXT", markdown: "## Information status\n\nSchool information remains subject to leadership review and correction. Content marked as awaiting approval is intentionally not a factual claim. Support privacy, retention and reopening wording remains DRAFT_PENDING_APPROVAL until qualified review.\n\n## Secure services\n\nPortal use is governed by authentication, permissions and the existing ERP security controls. Support service targets are school policy targets, not legal guarantees, and the support form does not replace emergency response." }
   ],
   contact: [
     { type: "HERO", eyebrow: "Contact", heading: "Reach the school through verified public details", body: "Only leadership-approved office contact information is displayed.", primaryLabel: "Admissions guidance", primaryHref: "/admissions" },

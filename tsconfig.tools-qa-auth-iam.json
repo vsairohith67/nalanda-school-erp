@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "plugins": [], "incremental": true, "tsBuildInfoFile": "./tsconfig.tools-qa-auth-iam.tsbuildinfo" },
+  "include": ["scripts/qa-auth*.ts", "scripts/qa-iam*.ts"],
+  "exclude": ["node_modules", ".next"]
+}

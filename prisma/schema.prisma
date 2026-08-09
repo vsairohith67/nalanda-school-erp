@@ -7016,3 +7016,356 @@ model StaffPayslipAccessEvent {
   @@index([staffMemberId, occurredAt])
   @@index([actorUserId, eventType, occurredAt])
 }
+
+// SUPPORT-1A: governed Parent/Staff support, complaints, feedback and resolution.
+// Submitted case content is never hard-deleted; corrections and workflow actions append evidence.
+model SupportQueue {
+  id                       String                  @id @default(cuid())
+  publicKey                String                  @unique @default(uuid())
+  queueCode                String                  @unique
+  name                     String
+  description              String?
+  status                   String                  @default("ACTIVE")
+  allowedAssigneeRolesJson String                  @default("[]")
+  confidentialityJson      String                  @default("[\"STANDARD\"]")
+  version                  Int                     @default(1)
+  createdByUserId          String?
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  categoryPolicies         SupportCategoryPolicy[]
+  requests                 SupportRequest[]
+  assignments              SupportAssignment[]
+
+  @@index([status, queueCode])
+}
+
+model SupportCategoryPolicy {
+  id                          String               @id @default(cuid())
+  publicKey                   String               @unique @default(uuid())
+  categoryCode                String               @unique
+  label                       String
+  status                      String               @default("ACTIVE")
+  queueId                     String
+  queue                       SupportQueue         @relation(fields: [queueId], references: [id], onDelete: Restrict)
+  permittedAssigneeRolesJson  String               @default("[]")
+  defaultPriority             String               @default("NORMAL")
+  defaultConfidentiality      String               @default("STANDARD")
+  acknowledgmentTargetMinutes Int                  @default(480)
+  firstResponseTargetMinutes  Int                  @default(1440)
+  resolutionTargetMinutes     Int                  @default(4320)
+  escalationTargetMinutes     Int                  @default(1440)
+  workingHoursPolicyJson      String               @default("{\"basis\":\"ELAPSED\"}")
+  attachmentsAllowed          Boolean              @default(true)
+  linkedChildRequired         Boolean              @default(false)
+  version                     Int                  @default(1)
+  effectiveFrom               DateTime             @default(now())
+  effectiveTo                 DateTime?
+  createdByUserId             String?
+  createdAt                   DateTime             @default(now())
+  updatedAt                   DateTime             @updatedAt
+  requests                    SupportRequest[]
+  slaSnapshots                SupportSlaSnapshot[]
+
+  @@index([queueId, status])
+  @@index([effectiveFrom, effectiveTo])
+}
+
+model SupportRequest {
+  id                              String                        @id @default(cuid())
+  publicKey                       String                        @unique @default(uuid())
+  reference                       String                        @unique
+  submissionKey                   String?                       @unique
+  source                          String
+  requesterUserId                 String?
+  requesterRole                   String?
+  requesterStaffMemberId          String?
+  requesterGuardianId             String?
+  requesterName                   String
+  requesterType                   String
+  requesterIdentifier             String?
+  requesterContactChannel         String?
+  requesterContactValue           String?
+  identityVerified                Boolean                       @default(false)
+  recordedByUserId                String?
+  receivedAt                      DateTime                      @default(now())
+  signedPaperReference            String?
+  categoryPolicyId                String
+  categoryPolicy                  SupportCategoryPolicy         @relation(fields: [categoryPolicyId], references: [id], onDelete: Restrict)
+  queueId                         String
+  queue                           SupportQueue                  @relation(fields: [queueId], references: [id], onDelete: Restrict)
+  priority                        String                        @default("NORMAL")
+  confidentiality                 String                        @default("STANDARD")
+  subject                         String
+  originalStatement               String
+  status                          String                        @default("DRAFT")
+  version                         Int                           @default(1)
+  acknowledgedAt                  DateTime?
+  firstResponseAt                 DateTime?
+  resolvedAt                      DateTime?
+  closedAt                        DateTime?
+  reopenedCount                   Int                           @default(0)
+  complainedAboutUserId           String?
+  linkedReceiptReference          String?
+  linkedCorrectiveActionType      String?
+  linkedCorrectiveActionReference String?
+  privacyNoticeVersion            String
+  consentRecordedAt               DateTime?
+  duplicateFingerprint            String?
+  retentionReviewAt               DateTime
+  legalHold                       Boolean                       @default(false)
+  archivedAt                      DateTime?
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+  participants                    SupportRequestParticipant[]
+  linkedChildren                  SupportRequestLinkedChild[]
+  events                          SupportRequestEvent[]
+  messages                        SupportRequestMessage[]
+  attachments                     SupportRequestAttachment[]
+  assignments                     SupportAssignment[]
+  escalations                     SupportEscalation[]
+  slaSnapshots                    SupportSlaSnapshot[]
+  resolutions                     SupportResolution[]
+  satisfactionResponses           SupportSatisfactionResponse[]
+  accessEvents                    SupportAccessEvent[]
+
+  @@index([requesterUserId, createdAt])
+  @@index([requesterGuardianId, createdAt])
+  @@index([requesterStaffMemberId, createdAt])
+  @@index([queueId, status, priority])
+  @@index([confidentiality, status])
+  @@index([retentionReviewAt, archivedAt])
+  @@index([duplicateFingerprint, createdAt])
+}
+
+model SupportRequestParticipant {
+  id              String         @id @default(cuid())
+  requestId       String
+  request         SupportRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  participantType String
+  userId          String?
+  guardianId      String?
+  staffMemberId   String?
+  displayLabel    String
+  visibilityScope String         @default("REQUESTER_VISIBLE")
+  status          String         @default("ACTIVE")
+  addedByUserId   String?
+  endedAt         DateTime?
+  createdAt       DateTime       @default(now())
+
+  @@index([requestId, status])
+  @@index([userId, status])
+}
+
+model SupportRequestLinkedChild {
+  id                           String         @id @default(cuid())
+  requestId                    String
+  request                      SupportRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  studentId                    String
+  admissionReferenceMasked     String
+  childDisplaySnapshot         String
+  classSnapshot                String?
+  guardianLinkVerified         Boolean        @default(false)
+  guardianLinkVerifiedAt       DateTime?
+  guardianLinkVerifiedByUserId String?
+  createdAt                    DateTime       @default(now())
+
+  @@unique([requestId, studentId])
+  @@index([studentId, requestId])
+}
+
+model SupportRequestEvent {
+  id               String         @id @default(cuid())
+  publicKey        String         @unique @default(uuid())
+  requestId        String
+  request          SupportRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  eventType        String
+  actorUserId      String?
+  actorRole        String?
+  previousStatus   String?
+  newStatus        String?
+  entityVersion    Int
+  reason           String?
+  safeMetadataJson String?
+  idempotencyKey   String?        @unique
+  occurredAt       DateTime       @default(now())
+  createdAt        DateTime       @default(now())
+
+  @@index([requestId, occurredAt])
+  @@index([eventType, occurredAt])
+}
+
+model SupportRequestMessage {
+  id                String                     @id @default(cuid())
+  publicKey         String                     @unique @default(uuid())
+  requestId         String
+  request           SupportRequest             @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  messageType       String
+  body              String
+  authorUserId      String?
+  authorRole        String?
+  authorLabel       String
+  restricted        Boolean                    @default(false)
+  correctsMessageId String?
+  correctsMessage   SupportRequestMessage?     @relation("SupportMessageCorrection", fields: [correctsMessageId], references: [id], onDelete: Restrict)
+  corrections       SupportRequestMessage[]    @relation("SupportMessageCorrection")
+  createdAt         DateTime                   @default(now())
+  attachments       SupportRequestAttachment[]
+
+  @@index([requestId, messageType, createdAt])
+  @@index([correctsMessageId])
+}
+
+model SupportRequestAttachment {
+  id                   String                 @id @default(cuid())
+  publicKey            String                 @unique @default(uuid())
+  requestId            String
+  request              SupportRequest         @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  messageId            String?
+  message              SupportRequestMessage? @relation(fields: [messageId], references: [id], onDelete: Restrict)
+  storageKey           String                 @unique
+  safeDisplayName      String
+  mediaType            String
+  extension            String
+  byteSize             Int
+  sha256               String
+  width                Int?
+  height               Int?
+  pageCount            Int?
+  visibility           String                 @default("REQUESTER_VISIBLE")
+  intakeScope          String
+  recoveryStatus       String                 @default("PENDING")
+  backupArtifactSha256 String?
+  backupKeyVersion     String?
+  backupVerifiedAt     DateTime?
+  retentionReviewAt    DateTime
+  createdByUserId      String?
+  createdAt            DateTime               @default(now())
+
+  @@index([requestId, visibility, createdAt])
+  @@index([messageId])
+  @@index([sha256])
+}
+
+model SupportAssignment {
+  id               String         @id @default(cuid())
+  publicKey        String         @unique @default(uuid())
+  requestId        String
+  request          SupportRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  queueId          String
+  queue            SupportQueue   @relation(fields: [queueId], references: [id], onDelete: Restrict)
+  assigneeUserId   String
+  assignedByUserId String
+  reason           String
+  status           String         @default("ACTIVE")
+  activeKey        String?        @unique
+  assignedAt       DateTime       @default(now())
+  endedAt          DateTime?
+  createdAt        DateTime       @default(now())
+
+  @@index([requestId, assignedAt])
+  @@index([assigneeUserId, status])
+}
+
+model SupportEscalation {
+  id                String         @id @default(cuid())
+  publicKey         String         @unique @default(uuid())
+  requestId         String
+  request           SupportRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  escalationLevel   Int
+  reasonCode        String
+  reason            String
+  fromQueueId       String?
+  toQueueId         String?
+  status            String         @default("ACTIVE")
+  idempotencyKey    String         @unique
+  escalatedByUserId String?
+  escalatedAt       DateTime       @default(now())
+  resolvedAt        DateTime?
+  createdAt         DateTime       @default(now())
+
+  @@index([requestId, status, escalatedAt])
+}
+
+model SupportSlaSnapshot {
+  id                     String                @id @default(cuid())
+  publicKey              String                @unique @default(uuid())
+  requestId              String
+  request                SupportRequest        @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  categoryPolicyId       String
+  categoryPolicy         SupportCategoryPolicy @relation(fields: [categoryPolicyId], references: [id], onDelete: Restrict)
+  policyVersion          Int
+  acknowledgmentTargetAt DateTime
+  firstResponseTargetAt  DateTime
+  resolutionTargetAt     DateTime
+  escalationTargetAt     DateTime
+  workingHoursPolicyJson String
+  pausedAt               DateTime?
+  totalPausedSeconds     Int                   @default(0)
+  pauseState             String?
+  createdAt              DateTime              @default(now())
+
+  @@index([requestId, createdAt])
+  @@index([acknowledgmentTargetAt])
+  @@index([firstResponseTargetAt])
+  @@index([resolutionTargetAt])
+}
+
+model SupportResolution {
+  id                      String                       @id @default(cuid())
+  publicKey               String                       @unique @default(uuid())
+  requestId               String
+  request                 SupportRequest               @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  resolutionVersion       Int
+  resolutionCategory      String
+  requesterVisibleSummary String
+  internalActionSummary   String
+  linkedActionType        String?
+  linkedActionReference   String?
+  resolvedByUserId        String
+  resolvedAt              DateTime                     @default(now())
+  supersededAt            DateTime?
+  createdAt               DateTime                     @default(now())
+  satisfactionResponse    SupportSatisfactionResponse?
+
+  @@unique([requestId, resolutionVersion])
+  @@index([requestId, resolvedAt])
+}
+
+model SupportSatisfactionResponse {
+  id                String            @id @default(cuid())
+  publicKey         String            @unique @default(uuid())
+  requestId         String
+  request           SupportRequest    @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  resolutionId      String            @unique
+  resolution        SupportResolution @relation(fields: [resolutionId], references: [id], onDelete: Restrict)
+  issueUnderstood   Boolean?
+  responseClear     Boolean?
+  issueResolved     Boolean?
+  rating            Int?
+  comment           String?
+  declined          Boolean           @default(false)
+  submittedByUserId String?
+  createdAt         DateTime          @default(now())
+
+  @@index([requestId, createdAt])
+}
+
+model SupportAccessEvent {
+  id               String          @id @default(cuid())
+  publicKey        String          @unique @default(uuid())
+  requestId        String?
+  request          SupportRequest? @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  actorUserId      String?
+  sourceHash       String?
+  identifierHash   String?
+  eventType        String
+  outcome          String
+  safeMetadataJson String?
+  occurredAt       DateTime        @default(now())
+  createdAt        DateTime        @default(now())
+
+  @@index([requestId, occurredAt])
+  @@index([actorUserId, occurredAt])
+  @@index([sourceHash, occurredAt])
+  @@index([identifierHash, occurredAt])
+}

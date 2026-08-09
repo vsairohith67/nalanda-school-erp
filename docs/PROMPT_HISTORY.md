@@ -1671,4 +1671,26 @@ all business, Staff, request/document and V1.5 payroll tables remain empty and
 the four protected accounts remain unchanged.
 
 No deployment, live provider, real Staff onboarding or real salary document is
-authorised. Full Payroll/ESS remains V1.5. SUPPORT-1A has not begun.
+authorised. Full Payroll/ESS remains V1.5.
+
+## SUPPORT-1A - Parent and Staff Support, Complaints, Feedback and Resolution (2026-08-09)
+
+The governed additive implementation introduces limited generic pre-login intake,
+authenticated Parent and Staff portals, in-person recording, versioned category
+and queue policy, exact role/object scope, restricted/safeguarding visibility,
+requester-visible messages versus internal notes, assignment/escalation, school
+service targets, resolution/reopening, aggregate feedback and private recovery.
+It reuses IAM contexts, Notification Centre, Academic Calendar, qpdf/local file
+checks, encrypted asset backup and logical backup version 37. Payslips remain in
+the dedicated cleared module.
+
+At the implementation checkpoint, eight focused tests, the `SUPPORT1A`
+copied-database matrix, Browser production-runtime evidence and the full
+verification sequence passed. Evidence includes two migration deploys, thirteen
+synthetic role/context fixtures, concurrency, anti-enumeration, child/link
+isolation, restricted access, restore twice, 324 page routes, 515 API routes,
+1,744 passing tests, a clean bounded-heap build and unchanged operational hash.
+The implementation reached `SUPPORT_COMPLAINTS_READY_FOR_QA`; independent QA,
+the narrowly additive operational migration and release remain required before
+clearance. Legal/privacy and retention text is
+`DRAFT_PENDING_APPROVAL`; no real case, live provider or deployment is authorised.

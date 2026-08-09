@@ -19,6 +19,7 @@ import { restoreAcademicCalendarData } from "@/lib/academic-calendar-restore";
 import { ADMISSIONS_BACKUP_KEYS, restoreAdmissionsBackup, type AdmissionsBackupKey } from "@/lib/admissions-backup";
 import { PAYROLL_BACKUP_KEYS, restorePayrollBackup, type PayrollBackupKey } from "@/lib/payroll-backup";
 import { PAYSLIP_REQUEST_BACKUP_KEYS, restorePayslipRequestBackup, type PayslipRequestBackupKey } from "@/lib/payslip-request-backup";
+import { SUPPORT_BACKUP_KEYS, restoreSupportBackup, type SupportBackupKey } from "@/lib/support-backup";
 import { FAMILY_COLLECTION_BACKUP_KEYS, type FamilyCollectionBackupKey } from "@/lib/family-collection-backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
@@ -116,6 +117,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(ADMISSIONS_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<AdmissionsBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(PAYROLL_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<PayrollBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(PAYSLIP_REQUEST_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<PayslipRequestBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(SUPPORT_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<SupportBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<FamilyCollectionBackupKey, ReturnType<typeof emptyEntityResult>>),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
@@ -550,6 +552,12 @@ async function restoreIntoDatabase(
     result[key].created = payslipRequestResult[key].created;
     result[key].skipped = payslipRequestResult[key].skipped;
     result[key].errors.push(...payslipRequestResult[key].errors);
+  }
+  const supportResult = await restoreSupportBackup(client as unknown as PrismaClient, backup);
+  for (const key of SUPPORT_BACKUP_KEYS) {
+    result[key].created = supportResult[key].created;
+    result[key].skipped = supportResult[key].skipped;
+    result[key].errors.push(...supportResult[key].errors);
   }
   await restoreAcademicCalendarData(client, backup, restoredBy, result);
   await restoreCertificateData(client, backup, backupStudentLocalIds, result);

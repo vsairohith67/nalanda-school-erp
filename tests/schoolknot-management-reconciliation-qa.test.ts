@@ -127,7 +127,7 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
 
   it("preserves the Management checkpoint across additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(250);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(264);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
     expect(schema).toContain("model ExaminationTimetableVersion {");
@@ -149,6 +149,7 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
       "20260808054148_payroll_payslips_employee_self_service",
       "20260808143000_family_multi_student_mixed_tender",
       "20260808213000_staff_payslip_request_secure_delivery",
+      "20260809034243_support_parent_staff_complaints_feedback",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);
