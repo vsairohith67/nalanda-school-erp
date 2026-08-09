@@ -39,18 +39,19 @@ export async function queueSafeExitNotifications(client: any, input: { eventKey:
 }
 
 export async function processSafeExitNotificationOutbox(client: any, options: { limit?: number; now?: Date } = {}) {
-  const now = options.now ?? new Date(), limit = Math.max(1, Math.min(100, options.limit ?? 25));
-  const candidates = await client.studentDepartureNotificationOutbox.findMany({ where: { channel: { in: ["PUSH", "WHATSAPP"] }, status: { in: ["QUEUED", "RETRY_PENDING"] }, OR: [{ nextAttemptAt: null }, { nextAttemptAt: { lte: now } }] }, orderBy: [{ nextAttemptAt: "asc" }, { queuedAt: "asc" }], take: limit });
+  const now = options.now ?? new Date(), limit = Math.max(1, Math.min(100, options.limit ?? 25)), staleClaimAt = new Date(now.getTime()-5*60_000);
+  const candidates = await client.studentDepartureNotificationOutbox.findMany({ where: { channel: { in: ["PUSH", "WHATSAPP"] }, OR: [{ status: { in: ["QUEUED", "RETRY_PENDING"] }, OR: [{ nextAttemptAt: null }, { nextAttemptAt: { lte: now } }] }, { status: "SENDING", claimedAt: { lte: staleClaimAt } }] }, orderBy: [{ nextAttemptAt: "asc" }, { queuedAt: "asc" }], take: limit });
   const summary = { claimed: 0, delivered: 0, retryPending: 0, failed: 0 };
   for (const candidate of candidates) {
     const claim = await client.studentDepartureNotificationOutbox.updateMany({ where: { id: candidate.id, status: candidate.status }, data: { status: "SENDING", claimedAt: now } });
     if (claim.count !== 1) continue;
     summary.claimed++;
-    const outcome = candidate.channel === "PUSH" ? await deliverPush(client, candidate) : await deliverWhatsApp(client, candidate);
+    let outcome:{delivered:boolean;retryable:boolean;code:string|null;reference:string|null};try{outcome = candidate.channel === "PUSH" ? await deliverPush(client, candidate) : await deliverWhatsApp(client, candidate);}catch{outcome={delivered:false,retryable:true,code:"PROVIDER_TIMEOUT_OR_ERROR",reference:null};}
     const retryCount = candidate.retryCount + 1, retryable = outcome.retryable && retryCount < 3;
     if (outcome.delivered) {
       await client.studentDepartureNotificationOutbox.update({ where: { id: candidate.id }, data: { status: "DELIVERED", retryCount, sentAt: now, deliveredAt: now, claimedAt: null, providerReferenceSafe: outcome.reference, failureCode: null } }); summary.delivered++;
     } else if (retryable) {
+      if (CRITICAL.has(candidate.eventType as SafeExitMaterialEvent)) await ensureFallbackTask(client, candidate.requestId, candidate.eventKey, outcome.code ?? "DELIVERY_FAILED");
       await client.studentDepartureNotificationOutbox.update({ where: { id: candidate.id }, data: { status: "RETRY_PENDING", retryCount, nextAttemptAt: new Date(now.getTime()+retryCount*60_000), claimedAt: null, failureCode: outcome.code } }); summary.retryPending++;
     } else {
       await client.studentDepartureNotificationOutbox.update({ where: { id: candidate.id }, data: { status: "FAILED", retryCount, failedAt: now, claimedAt: null, nextAttemptAt: null, failureCode: outcome.code } }); summary.failed++;

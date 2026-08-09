@@ -1,12 +1,15 @@
 import { afterEach,describe,expect,it } from "vitest";
+import { NextRequest } from "next/server";
 import { createGatePassMaterial,gateApprovalSnapshotHash,manualGatePassCodeHash,verifySignedGatePassToken } from "@/lib/safe-exit-gate-pass";
 import { RECOMMENDED_ROLE_PERMISSIONS } from "@/lib/permissions";
 import { createBackupDocument } from "@/lib/backup";
 import { parseAndValidateBackup } from "@/lib/restore";
 import { SAFE_EXIT_BACKUP_KEYS,validateSafeExitBackupRows } from "@/lib/safe-exit-backup";
+import { parseSafeExitJson } from "@/lib/safe-exit-api";
 
 const previousSecret=process.env.SAFE_EXIT_GATE_PASS_SECRET;
-afterEach(()=>{if(previousSecret===undefined)delete process.env.SAFE_EXIT_GATE_PASS_SECRET;else process.env.SAFE_EXIT_GATE_PASS_SECRET=previousSecret;});
+const previousOrigin=process.env.APP_ORIGIN;
+afterEach(()=>{if(previousSecret===undefined)delete process.env.SAFE_EXIT_GATE_PASS_SECRET;else process.env.SAFE_EXIT_GATE_PASS_SECRET=previousSecret;if(previousOrigin===undefined)delete process.env.APP_ORIGIN;else process.env.APP_ORIGIN=previousOrigin;});
 
 describe("SAFE-EXIT-1A governed security foundation",()=>{
   it("creates an opaque signed short-lived token and rejects tampering, expiry and malformed manual codes",()=>{
@@ -27,6 +30,13 @@ describe("SAFE-EXIT-1A governed security foundation",()=>{
     expect(teacher.has("REQUEST_STUDENT_DEPARTURE")).toBe(true);expect(teacher.has("APPROVE_STUDENT_DEPARTURE")).toBe(false);
     expect(parent.has("REQUEST_STUDENT_DEPARTURE")).toBe(true);expect(parent.has("RECORD_PARENT_CONSENT")).toBe(true);expect(parent.has("APPROVE_STUDENT_DEPARTURE")).toBe(false);
     for(const role of ["ACCOUNTANT","VIEWER"]as const)for(const permission of ["REQUEST_STUDENT_DEPARTURE","VERIFY_GATE_PASS","VIEW_LIVE_CAMPUS_ROSTER"]as const)expect(RECOMMENDED_ROLE_PERMISSIONS[role].has(permission)).toBe(false);
+  });
+
+  it("rejects cross-origin, oversized and non-object state-changing JSON",async()=>{
+    process.env.APP_ORIGIN="https://school.example";
+    await expect(parseSafeExitJson(new NextRequest("https://school.example/api/student-departures",{method:"POST",headers:{origin:"https://evil.example","content-type":"application/json"},body:"{}"}))).rejects.toMatchObject({code:"ORIGIN_DENIED"});
+    await expect(parseSafeExitJson(new NextRequest("https://school.example/api/student-departures",{method:"POST",headers:{origin:"https://school.example","content-type":"application/json","content-length":String(65*1024)},body:"{}"}))).rejects.toMatchObject({code:"PAYLOAD_TOO_LARGE"});
+    await expect(parseSafeExitJson(new NextRequest("https://school.example/api/student-departures",{method:"POST",headers:{origin:"https://school.example","content-type":"application/json"},body:"[]"}))).rejects.toMatchObject({code:"INVALID_JSON"});
   });
 
   it("backs up all governed records at v38 and restores backward-compatible empty sections",()=>{

@@ -7,6 +7,8 @@ describe("app shell responsive navigation source contract", () => {
 
     expect(source).toContain("groupedVisibleNavigationItems(permissions, user.role)");
     expect(source).toContain('href="/parent/class-x-documents"');
+    expect(source).toContain('href="/parent/student-departures"');
+    expect(source).toContain('permissions.includes("REQUEST_STUDENT_DEPARTURE")');
     expect(source).not.toContain('user.role !== "TEACHER" && (permissions.includes("MANAGE_OWN_WHATSAPP_CONSENT")');
     expect(source).toContain("mobileNavOpen");
     expect(source).toContain('aria-label="Open navigation menu"');

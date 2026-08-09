@@ -13,6 +13,14 @@ remains active; Admin, Accountant and Viewer are inactive. Do not reactivate
 one of those accounts until a named owner has a current operational need.
 Never share credentials or disable the last active Super Admin.
 
+SAFE-EXIT-1A adds only the governed early-departure schema to this zero-business
+baseline. After its protected version-38 migration, all Safe Exit request, pass,
+presence, incident and notification tables are empty. Normal release is blocked
+without current Guardian consent, school approval, verified handover, a valid
+single-use pass and Gate checkout. Emergency override remains Principal/Director
+policy authority with recent re-authentication; it is not a Parent-unreachable
+shortcut. No live WhatsApp provider or real departure is authorised.
+
 DEVOPS-1E registered the already-present clean schema as the applied Prisma
 baseline by adding only `_prisma_migrations` metadata. No application data,
 configuration, account, role, permission, or schema changed. The protected

@@ -566,3 +566,14 @@ DEVOPS-1B is fully cleared. DEVOPS-1C does not claim a cloud deployment, DNS cha
 - [SUPPORT-1A independent QA clearance](evidence/SUPPORT_1A_QA_CLEARANCE.md)
 
 SUPPORT-1A is additive, in-app only and cleared with fresh copied fixtures, Browser production-runtime evidence, the full verification sequence, protected rollback and unchanged operational business/account fingerprints. No real complaint, Parent, Student, Staff, private attachment, live provider, deployment or real-user onboarding is authorised.
+
+# SAFE-EXIT-1A
+
+- [Student Safe Exit implementation checkpoint](evidence/SAFE_EXIT_1A_IMPLEMENTATION_CHECKPOINT.md)
+- [Student Safe Exit independent QA release](evidence/SAFE_EXIT_1A_QA_RELEASE.md)
+
+SAFE-EXIT-1A is an additive, locally cleared V1 requirement. Current Guardian
+consent or governed emergency authority, school approval, verified handover,
+single-use Gate pass, separate campus checkout, Parent notification and
+append-only audit are mandatory. No real departure, deployment, transport
+service or live WhatsApp provider is included. Next governed phase: `OBS-1A`.
