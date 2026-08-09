@@ -1,8 +1,11 @@
 # SUPPORT-1A independent QA clearance
 
-Date: 2026-08-09  
-Implementation commit: `6f8ff5a3e9a42eba811877fcc52dd643b9b6dcf7`  
-Release branch: `support/parent-staff-complaints-feedback`  
+Date: 2026-08-09
+
+Implementation commit: `6f8ff5a3e9a42eba811877fcc52dd643b9b6dcf7`
+
+Release branch: `support/parent-staff-complaints-feedback`
+
 Release tag: `support-complaints-v37-2026-08-09`
 
 The independent `SUPPORT1AQA` copied-database matrix passed without operational mutation. It used only synthetic users, relationships, requests and attachment bytes. Two additive migration deploys, public anti-enumeration, Parent/child and Staff object scope, internal-note isolation, restricted visibility, concurrent assignment, overdue escalation idempotence, logical restore twice and encrypted-asset restore twice all passed.
