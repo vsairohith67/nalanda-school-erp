@@ -54,6 +54,8 @@ export const PERMISSIONS = [
   "RECORD_UNAUTHORISED_EXIT",
   "VIEW_LIVE_CAMPUS_ROSTER",
   "VIEW_DEPARTURE_AUDIT",
+  "MANAGE_STANDING_EXIT_PERMISSION",
+  "CORRECT_STUDENT_EXIT_RECORD",
   "VIEW_STAFF_ATTENDANCE",
   "MANAGE_STAFF_ATTENDANCE",
   "SUBMIT_STAFF_ATTENDANCE",
@@ -603,6 +605,8 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { permission: "RECORD_UNAUTHORISED_EXIT", label: "Record unauthorised exit", description: "Create and update a restricted Student safety incident without disciplinary inference." },
       { permission: "VIEW_LIVE_CAMPUS_ROSTER", label: "View live campus roster", description: "View the authorised emergency-accountability campus-presence roster." },
       { permission: "VIEW_DEPARTURE_AUDIT", label: "View departure audit", description: "View governed departure, handover, notification and restricted incident history." }
+      ,{ permission: "MANAGE_STANDING_EXIT_PERMISSION", label: "Approve standing exit permission", description: "Principal or Director review of a Guardian-created, Student-specific standing departure version." }
+      ,{ permission: "CORRECT_STUDENT_EXIT_RECORD", label: "Correct Student exit metadata", description: "Append a bounded correction without rewriting immutable release or return history." }
     ]
   },
   {
@@ -1272,7 +1276,7 @@ const principalPermissions = new Set<CanonicalPermission>([
   "RUN_TIMETABLE_GENERATOR",
   "PRINT_TIMETABLE"
   ,"VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "LOCK_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS"
-  ,"REQUEST_STUDENT_DEPARTURE", "RECORD_PARENT_CONSENT", "APPROVE_STUDENT_DEPARTURE", "EMERGENCY_OVERRIDE_STUDENT_DEPARTURE", "VERIFY_GATE_PASS", "COMPLETE_STUDENT_CHECKOUT", "RECORD_STUDENT_RETURN", "RECORD_UNAUTHORISED_EXIT", "VIEW_LIVE_CAMPUS_ROSTER", "VIEW_DEPARTURE_AUDIT"
+  ,"REQUEST_STUDENT_DEPARTURE", "RECORD_PARENT_CONSENT", "APPROVE_STUDENT_DEPARTURE", "EMERGENCY_OVERRIDE_STUDENT_DEPARTURE", "VERIFY_GATE_PASS", "COMPLETE_STUDENT_CHECKOUT", "RECORD_STUDENT_RETURN", "RECORD_UNAUTHORISED_EXIT", "VIEW_LIVE_CAMPUS_ROSTER", "VIEW_DEPARTURE_AUDIT", "MANAGE_STANDING_EXIT_PERMISSION", "CORRECT_STUDENT_EXIT_RECORD"
   ,"VIEW_STAFF_ATTENDANCE", "MANAGE_STAFF_ATTENDANCE", "SUBMIT_STAFF_ATTENDANCE", "LOCK_STAFF_ATTENDANCE", "VIEW_STAFF_ATTENDANCE_REPORTS"
   ,"VIEW_STAFF_LEAVE", "APPLY_STAFF_LEAVE", "MANAGE_STAFF_LEAVE", "APPROVE_STAFF_LEAVE", "VIEW_STAFF_LEAVE_REPORTS"
   ,"VIEW_SUBSTITUTES", "MANAGE_SUBSTITUTES", "ASSIGN_SUBSTITUTES", "CONFIRM_SUBSTITUTES", "VIEW_SUBSTITUTE_REPORTS"

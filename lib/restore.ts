@@ -755,7 +755,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     metadata.backupVersion !== undefined &&
     (!Number.isInteger(metadata.backupVersion) ||
       Number(metadata.backupVersion) < 1 ||
-      Number(metadata.backupVersion) > 38)
+      Number(metadata.backupVersion) > 39)
   ) {
     throw new Error("metadata.backupVersion is unsupported");
   }

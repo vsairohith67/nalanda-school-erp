@@ -11,7 +11,7 @@ const expected = {
   schemaHash: "B1135F63C2E5579F320A5FFD01BDB3A167520B42D479D3906F7BB611FC82FC00",
   migrationHash: "E6D467206CFA536487C8C63882D13BA489C0235BE74E9E076423323A511C3025",
   baseline: { students: 8, activeEnrollments: 8, payments: 19, collected: 99_100 },
-  backupVersion: 38
+  backupVersion: 39
 } as const;
 
 function sha256(file: string) {

@@ -456,7 +456,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
       generatedAt: input.generatedAt.toISOString(),
       generatedBy: input.generatedBy,
       appVersion: packageJson.version,
-      backupVersion: 38,
+      backupVersion: 39,
       counts: {
         schoolSettings: input.schoolSettings ? 1 : 0,
         authSecurityRecords: authSecurityRecordCount(authSecurity),

@@ -1,11 +1,13 @@
 import { afterEach,describe,expect,it } from "vitest";
 import { NextRequest } from "next/server";
+import { readFileSync } from "node:fs";
 import { createGatePassMaterial,gateApprovalSnapshotHash,manualGatePassCodeHash,verifySignedGatePassToken } from "@/lib/safe-exit-gate-pass";
 import { RECOMMENDED_ROLE_PERMISSIONS } from "@/lib/permissions";
 import { createBackupDocument } from "@/lib/backup";
 import { parseAndValidateBackup } from "@/lib/restore";
 import { SAFE_EXIT_BACKUP_KEYS,validateSafeExitBackupRows } from "@/lib/safe-exit-backup";
 import { parseSafeExitJson } from "@/lib/safe-exit-api";
+import { SAFE_EXIT_TYPES } from "@/lib/safe-exit";
 
 const previousSecret=process.env.SAFE_EXIT_GATE_PASS_SECRET;
 const previousOrigin=process.env.APP_ORIGIN;
@@ -29,7 +31,14 @@ describe("SAFE-EXIT-1A governed security foundation",()=>{
     expect([...gate].sort()).toEqual(["ACKNOWLEDGE_OWN_NOTIFICATIONS","COMPLETE_STUDENT_CHECKOUT","RECORD_STUDENT_RETURN","VERIFY_GATE_PASS","VIEW_DASHBOARD","VIEW_LIVE_CAMPUS_ROSTER","VIEW_OWN_NOTIFICATIONS"].sort());
     expect(teacher.has("REQUEST_STUDENT_DEPARTURE")).toBe(true);expect(teacher.has("APPROVE_STUDENT_DEPARTURE")).toBe(false);
     expect(parent.has("REQUEST_STUDENT_DEPARTURE")).toBe(true);expect(parent.has("RECORD_PARENT_CONSENT")).toBe(true);expect(parent.has("APPROVE_STUDENT_DEPARTURE")).toBe(false);
+    expect(RECOMMENDED_ROLE_PERMISSIONS.PRINCIPAL.has("MANAGE_STANDING_EXIT_PERMISSION")).toBe(true);expect(RECOMMENDED_ROLE_PERMISSIONS.PRINCIPAL.has("CORRECT_STUDENT_EXIT_RECORD")).toBe(true);
     for(const role of ["ACCOUNTANT","VIEWER"]as const)for(const permission of ["REQUEST_STUDENT_DEPARTURE","VERIFY_GATE_PASS","VIEW_LIVE_CAMPUS_ROSTER"]as const)expect(RECOMMENDED_ROLE_PERMISSIONS[role].has(permission)).toBe(false);
+  });
+
+  it("defines every governed departure type and the additive return/correction database boundaries",()=>{
+    expect(SAFE_EXIT_TYPES).toEqual(["EARLY_DEPARTURE","ILLNESS_OR_MEDICAL","FAMILY_REQUEST","APPOINTMENT","AUTHORISED_PICKUP","SELF_DEPARTURE_WITH_STANDING_PERMISSION","TEMPORARY_EXIT_WITH_RETURN","EMERGENCY_TRANSFER","OTHER_WITH_REASON"]);
+    const migration=readFileSync("prisma/migrations/20260809224500_student_exit_return_standing_corrections/migration.sql","utf8"),source=readFileSync("lib/safe-exit.ts","utf8"),ui=readFileSync("components/safe-exit-workspace.tsx","utf8");
+    expect(migration).toContain('CREATE TRIGGER "safe_exit_correction_no_update"');expect(migration).toContain("Temporary exit return time is missing or inconsistent");expect(source).toContain('status:"PENDING_SCHOOL_APPROVAL"');expect(source).toContain('eventType:"OVERDUE_RETURN"');expect(source).toContain('eventType:"CORRECTION"');expect(ui).toContain("Expected return (temporary exit only)");expect(ui).toContain("Guardian approval alone is not active authority");
   });
 
   it("rejects cross-origin, oversized and non-object state-changing JSON",async()=>{
@@ -39,12 +48,12 @@ describe("SAFE-EXIT-1A governed security foundation",()=>{
     await expect(parseSafeExitJson(new NextRequest("https://school.example/api/student-departures",{method:"POST",headers:{origin:"https://school.example","content-type":"application/json"},body:"[]"}))).rejects.toMatchObject({code:"INVALID_JSON"});
   });
 
-  it("backs up all governed records at v38 and restores backward-compatible empty sections",()=>{
+  it("backs up all governed records at v39 and restores backward-compatible empty sections",()=>{
     const empty=validateSafeExitBackupRows({});for(const key of SAFE_EXIT_BACKUP_KEYS)expect(empty[key]).toEqual([]);
     const request={id:"request-1",publicKey:"request-public",requestNumber:"EXIT-QA-1",submissionKey:"submission-1",source:"PARENT_AUTHENTICATED",studentId:"student-1",academicYear:"2026-27",reasonCategory:"FAMILY_REQUEST",calendarBasisJson:"{\"basis\":\"UNCLASSIFIED\"}",intendedHandoverMethod:"LINKED_GUARDIAN",intendedDepartureAt:new Date("2026-08-09T07:00:00Z"),status:"READY_FOR_HANDOVER",consentState:"VERIFIED",version:3,emergencyOverride:false,restricted:false,requestedByUserId:"user-1",requestedByRole:"PARENT",submittedAt:new Date(),createdAt:new Date(),updatedAt:new Date()};
     const pass={id:"pass-1",publicKey:"pass-public",requestId:"request-1",tokenHash:"a".repeat(64),manualCodeHash:"b".repeat(64),manualCodeLastTwo:"A1",status:"ACTIVE",approvedSnapshotHash:gateApprovalSnapshotHash({request:"request-public"}),issuedByUserId:"principal-1",issuedByRole:"PRINCIPAL",issuedAt:new Date(),expiresAt:new Date(Date.now()+60_000),createdAt:new Date(),updatedAt:new Date()};
     const backup=createBackupDocument({generatedAt:new Date(),generatedBy:"SAFEEXIT1",students:[{id:"student-1",admissionNo:"SAFEEXIT1-001"}],feeStructures:[],payments:[],paymentAudits:[],users:[],studentDepartureRequests:[request],studentGatePasses:[pass]});
-    expect(backup.metadata.backupVersion).toBe(38);expect(backup.studentDepartureRequests).toHaveLength(1);expect(backup.studentGatePasses).toHaveLength(1);expect(JSON.stringify(backup)).not.toContain("signingKey");expect(backup).not.toHaveProperty("appPushSubscriptions");
+    expect(backup.metadata.backupVersion).toBe(39);expect(backup.studentDepartureRequests).toHaveLength(1);expect(backup.studentGatePasses).toHaveLength(1);expect(JSON.stringify(backup)).not.toContain("signingKey");expect(backup).not.toHaveProperty("appPushSubscriptions");
     const parsed=parseAndValidateBackup(backup);expect(parsed.studentDepartureRequests).toHaveLength(1);expect(parsed.studentGatePasses).toHaveLength(1);
   });
 

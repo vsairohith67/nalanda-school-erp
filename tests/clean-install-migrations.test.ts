@@ -55,7 +55,8 @@ describe("DEVOPS-1B clean-install migration repair", () => {
       "20260808143000_family_multi_student_mixed_tender",
       "20260808213000_staff_payslip_request_secure_delivery",
       "20260809034243_support_parent_staff_complaints_feedback",
-      "20260809140000_student_safe_exit_gate_pass"
+      "20260809140000_student_safe_exit_gate_pass",
+      "20260809224500_student_exit_return_standing_corrections"
     ]);
     expect(readFileSync(path.join(ACTIVE_MIGRATION_ROOT, BASELINE_MIGRATION, "migration.sql"), "utf8"))
       .toContain('CREATE TABLE "Payment"');
@@ -86,7 +87,7 @@ describe("DEVOPS-1B clean-install migration repair", () => {
 
   it("deploys from empty, reports clean status, matches the schema, and bootstraps synthetic data", async () => {
     const output = pnpm(["migration:fresh-check"]);
-    expect(output).toContain("Fresh migration check passed: migrations=15 models=276 tables=276");
+    expect(output).toContain("Fresh migration check passed: migrations=16 models=277 tables=277");
     expect(output).toContain("Synthetic bootstrap passed");
   }, 180_000);
 
@@ -98,7 +99,7 @@ describe("DEVOPS-1B clean-install migration repair", () => {
 
   it("keeps version-37 restore idempotent and preserves local ownership collisions", async () => {
     const output = pnpm(["migration:restore-check"]);
-    expect(output).toContain("Backup/restore passed: version=37 arrays=241");
+    expect(output).toContain("Backup/restore passed: version=37 arrays=242");
     expect(output).toContain("local login ownership and Student collision mapping were preserved");
   }, 300_000);
 

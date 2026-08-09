@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import { createWhatsAppProvider } from "@/lib/whatsapp-provider";
 import { normalizeWhatsAppPhone } from "@/lib/whatsapp-phone";
 
-export type SafeExitMaterialEvent = "AWAITING_CONSENT"|"CONSENT_RECORDED"|"APPROVED"|"REJECTED"|"CHECKED_OUT"|"EMERGENCY_OVERRIDE"|"UNAUTHORISED_EXIT"|"RETURNED_TO_CAMPUS"|"CANCELLED";
-const CRITICAL = new Set<SafeExitMaterialEvent>(["EMERGENCY_OVERRIDE", "UNAUTHORISED_EXIT"]);
+export type SafeExitMaterialEvent = "AWAITING_CONSENT"|"CONSENT_RECORDED"|"APPROVED"|"REJECTED"|"CHECKED_OUT"|"EMERGENCY_OVERRIDE"|"UNAUTHORISED_EXIT"|"RETURNED_TO_CAMPUS"|"OVERDUE_RETURN"|"CORRECTION"|"CANCELLED";
+const CRITICAL = new Set<SafeExitMaterialEvent>(["EMERGENCY_OVERRIDE", "UNAUTHORISED_EXIT", "OVERDUE_RETURN"]);
 
 export async function queueSafeExitNotifications(client: any, input: { eventKey: string; eventType: SafeExitMaterialEvent; requestId: string; requestPublicKey: string; actorUserId: string; guardianId?: string | null; parentUserIds?: string[]; leadershipUserIds?: string[]; now?: Date }) {
   const now = input.now ?? new Date();
@@ -81,8 +81,10 @@ function notificationCopy(type:SafeExitMaterialEvent){
   if(type==="APPROVED")return{title:"Student departure approved",body:"A governed Student departure was approved. Details are available after sign-in.",...parent};
   if(type==="REJECTED")return{title:"Student departure not approved",body:"A Student departure request was not approved. Details are available after sign-in.",...parent};
   if(type==="CHECKED_OUT")return{title:"Student checkout completed",body:"A governed campus checkout was completed. Details are available after sign-in.",...parent};
-  if(type==="EMERGENCY_OVERRIDE")return{title:"Urgent Student safety update",body:"An urgent Student safety update requires your attention. Sign in for authorised details.",...parent};
+  if(type==="EMERGENCY_OVERRIDE")return{title:"Urgent school-authorised Student release",body:"The school authorised an emergency release because Parent confirmation was unavailable. Sign in for permitted details.",...parent};
   if(type==="UNAUTHORISED_EXIT")return{title:"Urgent Student safety alert",body:"An urgent Student safety alert requires your attention. Sign in for authorised details.",...parent};
   if(type==="RETURNED_TO_CAMPUS")return{title:"Student returned to campus",body:"A return-to-campus update was recorded. Details are available after sign-in.",...parent};
+  if(type==="OVERDUE_RETURN")return{title:"Temporary Student return overdue",body:"An expected return has not yet been recorded. The school is following up; sign in for permitted details.",...parent};
+  if(type==="CORRECTION")return{title:"Student release record corrected",body:"A governed correction was appended to a Student release record. The original history remains unchanged.",...parent};
   return{title:"Student departure request cancelled",body:"A Student departure request was cancelled. Details are available after sign-in.",...parent};
 }

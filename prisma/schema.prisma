@@ -7379,61 +7379,71 @@ model SupportAccessEvent {
 // SAFE-EXIT-1A: governed Student early departure, single-use gate pass,
 // campus-presence ledger and restricted unauthorised-exit incident workflow.
 model StudentDepartureRequest {
-  id                          String                               @id @default(cuid())
-  publicKey                   String                               @unique @default(uuid())
-  requestNumber               String                               @unique
-  submissionKey               String                               @unique
-  source                      String
-  studentId                   String
-  student                     Student                              @relation(fields: [studentId], references: [id], onDelete: Restrict)
-  academicYear                String
-  reasonCategory              String
-  reasonDetails               String?
-  calendarBasisJson           String
-  intendedHandoverMethod      String
-  intendedDepartureAt         DateTime
-  status                      String                               @default("REQUESTED")
-  consentState                String                               @default("PENDING")
-  version                     Int                                  @default(1)
-  approvedHandoverMethod      String?
-  approvedRecipientName       String?
-  approvedRelationship        String?
-  approvedContactMasked       String?
-  parentAuthorisationEvidence String?
-  verificationReference       String?
-  approvedDepartureAt         DateTime?
-  approvalExpiresAt           DateTime?
-  activeCheckoutKey           String?                              @unique
-  emergencyOverride           Boolean                              @default(false)
-  restricted                  Boolean                              @default(false)
-  requestedByUserId           String
-  requestedByRole             String
-  approvedByUserId            String?
-  rejectedByUserId            String?
-  cancelledByUserId           String?
-  checkedOutByUserId          String?
-  returnedByUserId            String?
-  submittedAt                 DateTime                             @default(now())
-  approvedAt                  DateTime?
-  rejectedAt                  DateTime?
-  cancelledAt                 DateTime?
-  checkedOutAt                DateTime?
-  returnedAt                  DateTime?
-  closedAt                    DateTime?
-  expiresAt                   DateTime?
-  createdAt                   DateTime                             @default(now())
-  updatedAt                   DateTime                             @updatedAt
-  consentEvidence             StudentDepartureConsentEvidence[]
-  gatePasses                  StudentGatePass[]
-  handovers                   StudentDepartureHandover[]
-  events                      StudentDepartureEvent[]
-  campusPresenceEvents        StudentCampusPresenceEvent[]
-  incidents                   StudentDepartureIncident[]
-  notificationOutbox          StudentDepartureNotificationOutbox[]
-  fallbackTasks               StudentDepartureFallbackTask[]
+  id                               String                               @id @default(cuid())
+  publicKey                        String                               @unique @default(uuid())
+  requestNumber                    String                               @unique
+  submissionKey                    String                               @unique
+  source                           String
+  studentId                        String
+  student                          Student                              @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  academicYear                     String
+  reasonCategory                   String
+  reasonDetails                    String?
+  departureType                    String                               @default("EARLY_DEPARTURE")
+  calendarBasisJson                String
+  attendancePolicySnapshotJson     String                               @default("{\"policy\":\"GOVERNED_ATTENDANCE_CORRECTION_REQUIRED\",\"version\":\"SAFE_EXIT_1A\"}")
+  attendanceReconciliationRequired Boolean                              @default(true)
+  attendanceReconciliationStatus   String                               @default("PENDING")
+  intendedHandoverMethod           String
+  intendedDepartureAt              DateTime
+  temporaryReturnRequired          Boolean                              @default(false)
+  expectedReturnAt                 DateTime?
+  returnNotificationRequired       Boolean                              @default(true)
+  overdueEscalatedAt               DateTime?
+  status                           String                               @default("REQUESTED")
+  consentState                     String                               @default("PENDING")
+  version                          Int                                  @default(1)
+  approvedHandoverMethod           String?
+  approvedRecipientName            String?
+  approvedRelationship             String?
+  approvedContactMasked            String?
+  parentAuthorisationEvidence      String?
+  verificationReference            String?
+  approvedDepartureAt              DateTime?
+  approvalExpiresAt                DateTime?
+  activeCheckoutKey                String?                              @unique
+  emergencyOverride                Boolean                              @default(false)
+  restricted                       Boolean                              @default(false)
+  requestedByUserId                String
+  requestedByRole                  String
+  approvedByUserId                 String?
+  rejectedByUserId                 String?
+  cancelledByUserId                String?
+  checkedOutByUserId               String?
+  returnedByUserId                 String?
+  submittedAt                      DateTime                             @default(now())
+  approvedAt                       DateTime?
+  rejectedAt                       DateTime?
+  cancelledAt                      DateTime?
+  checkedOutAt                     DateTime?
+  returnedAt                       DateTime?
+  closedAt                         DateTime?
+  expiresAt                        DateTime?
+  createdAt                        DateTime                             @default(now())
+  updatedAt                        DateTime                             @updatedAt
+  consentEvidence                  StudentDepartureConsentEvidence[]
+  gatePasses                       StudentGatePass[]
+  handovers                        StudentDepartureHandover[]
+  events                           StudentDepartureEvent[]
+  corrections                      StudentDepartureCorrectionEvent[]
+  campusPresenceEvents             StudentCampusPresenceEvent[]
+  incidents                        StudentDepartureIncident[]
+  notificationOutbox               StudentDepartureNotificationOutbox[]
+  fallbackTasks                    StudentDepartureFallbackTask[]
 
   @@index([studentId, submittedAt])
   @@index([status, intendedDepartureAt])
+  @@index([temporaryReturnRequired, status, expectedReturnAt])
   @@index([academicYear, status])
   @@index([requestedByUserId, submittedAt])
 }
@@ -7465,16 +7475,16 @@ model StudentDepartureConsentEvidence {
 }
 
 model StudentStandingDepartureAuthorization {
-  id                     String   @id @default(cuid())
-  publicKey              String   @unique @default(uuid())
+  id                     String    @id @default(cuid())
+  publicKey              String    @unique @default(uuid())
   seriesKey              String
   versionNumber          Int
   studentId              String
-  student                Student  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  student                Student   @relation(fields: [studentId], references: [id], onDelete: Restrict)
   guardianId             String
-  guardian               Guardian @relation(fields: [guardianId], references: [id], onDelete: Restrict)
+  guardian               Guardian  @relation(fields: [guardianId], references: [id], onDelete: Restrict)
   status                 String
-  allowsSelfDeparture    Boolean  @default(false)
+  allowsSelfDeparture    Boolean   @default(false)
   eligibleClassSnapshot  String
   allowedDaysJson        String
   allowedStartMinute     Int
@@ -7482,13 +7492,18 @@ model StudentStandingDepartureAuthorization {
   effectiveFrom          DateTime
   effectiveUntil         DateTime
   conditions             String?
+  departurePattern       String    @default("POLICY_DEFINED_SELF_DEPARTURE")
+  emergencyContactMasked String    @default("masked")
   guardianApprovalMethod String
   guardianApprovedAt     DateTime
+  approvedByUserId       String?
+  approvedByRole         String?
+  approvedAt             DateTime?
   supersedesPublicKey    String?
   revocationReason       String?
   createdByUserId        String
   createdByRole          String
-  createdAt              DateTime @default(now())
+  createdAt              DateTime  @default(now())
 
   @@unique([seriesKey, versionNumber])
   @@index([studentId, createdAt])
@@ -7558,6 +7573,26 @@ model StudentDepartureEvent {
 
   @@index([requestId, occurredAt])
   @@index([eventType, occurredAt])
+}
+
+model StudentDepartureCorrectionEvent {
+  id                     String                  @id @default(cuid())
+  publicKey              String                  @unique @default(uuid())
+  requestId              String
+  request                StudentDepartureRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  correctedFieldCode     String
+  priorValueSafe         String?
+  correctedValueSafe     String
+  reason                 String
+  recordedByUserId       String
+  recordedByRole         String
+  expectedRequestVersion Int
+  idempotencyKey         String                  @unique
+  occurredAt             DateTime                @default(now())
+  createdAt              DateTime                @default(now())
+
+  @@index([requestId, occurredAt])
+  @@index([correctedFieldCode, occurredAt])
 }
 
 model StudentCampusPresenceEvent {

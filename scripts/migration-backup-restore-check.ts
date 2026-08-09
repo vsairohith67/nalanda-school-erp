@@ -84,7 +84,7 @@ export async function runMigrationBackupRestoreCheck() {
     const serialized = serializeBackup(generated);
     writeFileSync(backupPath, serialized, "utf8");
     const validated = parseAndValidateBackup(JSON.parse(serialized));
-    if (validated.metadata.backupVersion !== 38) throw new Error("BACKUP_VERSION_CHANGED");
+    if (validated.metadata.backupVersion !== 39) throw new Error("BACKUP_VERSION_CHANGED");
     if (/passwordHash|DEVOPS1B-local-only-(?:Director|Admin|Accountant|Viewer|Restore)/.test(serialized)) {
       throw new Error("BACKUP_SECRET_OR_PASSWORD_HASH_DETECTED");
     }

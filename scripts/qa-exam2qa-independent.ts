@@ -1062,7 +1062,7 @@ async function backupRestore() {
     invariant(!/"(?:passwordHash|password|token|secret|credential|apiKey)"\s*:/i.test(serialized), "EXAM2QA_BACKUP_CREDENTIAL_FIELD");
     writeFileSync(backupPath, serialized, { flag: "wx", encoding: "utf8", mode: 0o600 });
     const validated = parseAndValidateBackup(JSON.parse(serialized));
-    invariant(validated.metadata.backupVersion === 38, "EXAM2QA_BACKUP_VERSION_CHANGED");
+    invariant(validated.metadata.backupVersion === 39, "EXAM2QA_BACKUP_VERSION_CHANGED");
     const expectedGovernanceCount = Object.values(validated.examGovernance).reduce((sum, rows) => sum + rows.length, 0);
     invariant(expectedGovernanceCount > 0, "EXAM2QA_BACKUP_GOVERNANCE_EMPTY");
     invariant(validated.metadata.counts?.examGovernanceRecords === expectedGovernanceCount, "EXAM2QA_BACKUP_GOVERNANCE_COUNT");
