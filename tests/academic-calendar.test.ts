@@ -84,7 +84,7 @@ describe("Prompt 23E governed academic calendar", () => {
     const rows = calendarBackupRows();
     expect(() => validateAcademicCalendarBackupRows(rows)).not.toThrow();
     const backup = createBackupDocument({ generatedAt: new Date("2026-08-02T12:00:00Z"), generatedBy: "CAL23E", students: [], feeStructures: [], payments: [], paymentAudits: [], users: [], ...rows });
-    expect(backup.metadata.backupVersion).toBe(37);
+    expect(backup.metadata.backupVersion).toBe(38);
     expect(backup.metadata.counts.academicCalendarVersions).toBe(1);
     expect(JSON.stringify(backup)).not.toContain("CAL23E-ACTOR-ID");
     const parsed = parseAndValidateBackup(backup);

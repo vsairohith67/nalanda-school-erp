@@ -501,7 +501,7 @@ async function backupRestore() {
   }
   await target.$disconnect();
   if (
-    validated.metadata.backupVersion !== 37
+    validated.metadata.backupVersion !== 38
     || Object.values(firstBusiness).some((count) => count !== 0)
     || JSON.stringify(firstBusiness) !== JSON.stringify(secondBusiness)
     || JSON.stringify(firstCounts) !== JSON.stringify(state.retainedConfiguration)

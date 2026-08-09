@@ -356,7 +356,7 @@ async function main() {
 
     stage = "backup validation";
     const backup = await generateFullBackup(client, { generatedBy: "PARENT23D copied-database QA" });
-    invariant(backup.metadata.backupVersion === 37, "PARENT23D_BACKUP_VERSION_CHANGED");
+    invariant(backup.metadata.backupVersion === 38, "PARENT23D_BACKUP_VERSION_CHANGED");
     invariant(backup.examGovernance.examinationTimetableVersions.length === 3, "PARENT23D_BACKUP_TIMETABLE_VERSIONS_MISSING");
     invariant(backup.examGovernance.examinationTimetableRows.length === 4, "PARENT23D_BACKUP_TIMETABLE_ROWS_MISSING");
     invariant(backup.examGovernance.examinationTimetableEvents.length >= 8, "PARENT23D_BACKUP_TIMETABLE_EVENTS_MISSING");

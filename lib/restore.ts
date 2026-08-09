@@ -24,6 +24,7 @@ import { ADMISSIONS_BACKUP_KEYS, validateAdmissionsBackupRows, type AdmissionsBa
 import { PAYROLL_BACKUP_KEYS, validatePayrollBackupRows, type PayrollBackup, type PayrollBackupKey } from "@/lib/payroll-backup";
 import { PAYSLIP_REQUEST_BACKUP_KEYS, validatePayslipRequestBackupRows, type PayslipRequestBackup, type PayslipRequestBackupKey } from "@/lib/payslip-request-backup";
 import { SUPPORT_BACKUP_KEYS, validateSupportBackupRows, type SupportBackup, type SupportBackupKey } from "@/lib/support-backup";
+import { SAFE_EXIT_BACKUP_KEYS, validateSafeExitBackupRows, type SafeExitBackup, type SafeExitBackupKey } from "@/lib/safe-exit-backup";
 import { FAMILY_COLLECTION_BACKUP_KEYS, validateFamilyCollectionBackupRows, type FamilyCollectionBackup } from "@/lib/family-collection-backup";
 
 const APP_NAME = "Nalanda Fee Control";
@@ -66,6 +67,7 @@ const TOP_LEVEL_KEYS = new Set([
   ...PAYROLL_BACKUP_KEYS,
   ...PAYSLIP_REQUEST_BACKUP_KEYS,
   ...SUPPORT_BACKUP_KEYS,
+  ...SAFE_EXIT_BACKUP_KEYS,
   ...FAMILY_COLLECTION_BACKUP_KEYS,
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
   "examGovernance",
@@ -131,6 +133,7 @@ const BACKUP_COUNT_KEYS = new Set([
   ...PAYROLL_BACKUP_KEYS,
   ...PAYSLIP_REQUEST_BACKUP_KEYS,
   ...SUPPORT_BACKUP_KEYS,
+  ...SAFE_EXIT_BACKUP_KEYS,
   ...FAMILY_COLLECTION_BACKUP_KEYS,
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
   "examGovernanceRecords",
@@ -530,7 +533,7 @@ export type ValidatedBackup = {
   timetableFixedPeriods: RestoreRecord[];
   timetableDrafts: RestoreRecord[];
   timetableEntries: RestoreRecord[];
-} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & FamilyCollectionBackup;
+} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup;
 
 export type EntityRestoreResult = {
   created: number;
@@ -727,7 +730,7 @@ export type RestoreResult = {
   timetableDrafts: EntityRestoreResult;
   timetableEntries: EntityRestoreResult;
   warnings: string[];
-} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey, EntityRestoreResult>;
+} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey, EntityRestoreResult>;
 
 export function parseAndValidateBackup(input: string | unknown): ValidatedBackup {
   let parsed: unknown = input;
@@ -752,7 +755,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     metadata.backupVersion !== undefined &&
     (!Number.isInteger(metadata.backupVersion) ||
       Number(metadata.backupVersion) < 1 ||
-      Number(metadata.backupVersion) > 37)
+      Number(metadata.backupVersion) > 38)
   ) {
     throw new Error("metadata.backupVersion is unsupported");
   }
@@ -1322,6 +1325,10 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   const payrollData = validatePayrollBackupRows(root);
   const payslipRequestData = validatePayslipRequestBackupRows(root);
   const supportData = validateSupportBackupRows(root);
+  const safeExitData = validateSafeExitBackupRows(root, {
+    studentIds,
+    guardianIds: new Set(guardians.map((row) => String(row.id ?? "")).filter(Boolean))
+  });
   const teacherAnalyticsData = validateTeacherAnalyticsBackupRows(root, { staffMemberIds: new Set(staffMembers.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const certificateData = validateCertificateBackupRows(root, { studentIds, guardianIds: new Set(guardians.map((row) => String(row.id ?? "")).filter(Boolean)) });
   const classXPackageData = validateClassXPackageBackupRows(root, {
@@ -1447,6 +1454,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     ...payrollData,
     ...payslipRequestData,
     ...supportData,
+    ...safeExitData,
     ...teacherAnalyticsData,
     ...certificateData,
     ...classXPackageData,

@@ -20,6 +20,7 @@ import { ADMISSIONS_BACKUP_KEYS, restoreAdmissionsBackup, type AdmissionsBackupK
 import { PAYROLL_BACKUP_KEYS, restorePayrollBackup, type PayrollBackupKey } from "@/lib/payroll-backup";
 import { PAYSLIP_REQUEST_BACKUP_KEYS, restorePayslipRequestBackup, type PayslipRequestBackupKey } from "@/lib/payslip-request-backup";
 import { SUPPORT_BACKUP_KEYS, restoreSupportBackup, type SupportBackupKey } from "@/lib/support-backup";
+import { SAFE_EXIT_BACKUP_KEYS, restoreSafeExitBackup, type SafeExitBackupKey } from "@/lib/safe-exit-backup";
 import { FAMILY_COLLECTION_BACKUP_KEYS, type FamilyCollectionBackupKey } from "@/lib/family-collection-backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
@@ -118,6 +119,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(PAYROLL_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<PayrollBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(PAYSLIP_REQUEST_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<PayslipRequestBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(SUPPORT_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<SupportBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(SAFE_EXIT_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<SafeExitBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<FamilyCollectionBackupKey, ReturnType<typeof emptyEntityResult>>),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
@@ -558,6 +560,12 @@ async function restoreIntoDatabase(
     result[key].created = supportResult[key].created;
     result[key].skipped = supportResult[key].skipped;
     result[key].errors.push(...supportResult[key].errors);
+  }
+  const safeExitResult = await restoreSafeExitBackup(client as unknown as PrismaClient, backup);
+  for (const key of SAFE_EXIT_BACKUP_KEYS) {
+    result[key].created = safeExitResult[key].created;
+    result[key].skipped = safeExitResult[key].skipped;
+    result[key].errors.push(...safeExitResult[key].errors);
   }
   await restoreAcademicCalendarData(client, backup, restoredBy, result);
   await restoreCertificateData(client, backup, backupStudentLocalIds, result);

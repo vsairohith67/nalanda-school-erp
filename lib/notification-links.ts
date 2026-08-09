@@ -9,6 +9,7 @@ export const NOTIFICATION_INTERNAL_PATHS = {
     "/parent/id-cards",
     "/parent/library",
     "/parent/notifications"
+    ,"/parent/student-departures"
   ],
   TEACHER: [
     "/teacher/homework",
@@ -26,6 +27,7 @@ export const NOTIFICATION_INTERNAL_PATHS = {
     "/homework",
     "/notifications",
     "/receipt-audit"
+    ,"/student-departures"
   ]
 } as const;
 

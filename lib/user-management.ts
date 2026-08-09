@@ -19,6 +19,7 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   ADMIN: "Office administration for students, imports, reports, and delegated user work.",
   ACCOUNTANT: "Fee collection, payments, dues, ledgers, receipts, and finance reports.",
   COMPUTER_OPERATOR: "Admissions data entry with no unrestricted administration or finance authority.",
+  GATE_STAFF: "Gate verification, single-use checkout, return recording, and live campus roster only.",
   TEACHER: "Teacher start page with linked staff basics and permission-gated manual student attendance. Timetable, leave, and staff attendance dashboards are not built yet.",
   PARENT: "Read-only parent portal access for linked children, fees, receipts, and notices.",
   STUDENT: "Self-only Student context bound to one verified admission alias; no raw Student ID grants access.",

@@ -216,7 +216,7 @@ describe("Prompt 20D public website foundation", () => {
     }
   });
 
-  it("backs up seven website arrays at v37 and accepts v36 without them", () => {
+  it("backs up seven website arrays at v38 and accepts v36 without them", () => {
     const backup = createBackupDocument({
       generatedAt: new Date("2026-07-20T00:00:00.000Z"),
       generatedBy: "Prompt20D",
@@ -227,7 +227,7 @@ describe("Prompt 20D public website foundation", () => {
       "publicWebsitePosts", "publicWebsitePostVersions", "publicWebsiteNavigationItems",
       "publicWebsiteEvents"
     ] as const;
-    expect(backup.metadata.backupVersion).toBe(37);
+    expect(backup.metadata.backupVersion).toBe(38);
     for (const key of keys) expect(backup[key]).toEqual([]);
 
     const old = structuredClone(backup) as Record<string, any>;

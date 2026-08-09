@@ -8,7 +8,8 @@ const SECURITY_SECRET_NAMES = [
   "SMS_EMAIL_MOCK_WEBHOOK_SECRET",
   "WHATSAPP_PHONE_HASH_PEPPER",
   "SMS_EMAIL_CONTACT_HASH_PEPPER",
-  "AI_ASSISTANT_AUDIT_HASH_PEPPER"
+  "AI_ASSISTANT_AUDIT_HASH_PEPPER",
+  "SAFE_EXIT_GATE_PASS_SECRET"
 ] as const;
 
 type SecuritySecretName = typeof SECURITY_SECRET_NAMES[number];
@@ -46,4 +47,3 @@ export function webhookEventKey(value: unknown) {
 export function assertWebhookEventCount(events: readonly unknown[]) {
   if (events.length > 100) throw new Error("Webhook event count exceeds the supported maximum.");
 }
-

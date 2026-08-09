@@ -8,9 +8,9 @@ datasource db {
 }
 
 model Student {
-  id                      String                       @id @default(cuid())
-  academicYear            String                       @default("2026-27")
-  admissionNo             String                       @unique
+  id                      String                                  @id @default(cuid())
+  academicYear            String                                  @default("2026-27")
+  admissionNo             String                                  @unique
   studentName             String
   fatherName              String
   motherName              String?
@@ -24,15 +24,15 @@ model Student {
   dateOfBirth             DateTime?
   aadhaarNo               String?
   tcStatus                String?
-  status                  String                       @default("Active")
-  studentType             String                       @default("Normal")
-  discountPercent         Float                        @default(0)
-  startMonth              String                       @default("June")
+  status                  String                                  @default("Active")
+  studentType             String                                  @default("Normal")
+  discountPercent         Float                                   @default(0)
+  startMonth              String                                  @default("June")
   remarks                 String?
   deletedAt               DateTime?
   authLoginAliases        AuthLoginAlias[]
-  createdAt               DateTime                     @default(now())
-  updatedAt               DateTime                     @updatedAt
+  createdAt               DateTime                                @default(now())
+  updatedAt               DateTime                                @updatedAt
   payments                Payment[]
   familyAllocations       FamilyStudentAllocation[]
   guardians               StudentGuardian[]
@@ -51,6 +51,10 @@ model Student {
   classXDocumentPackages  ClassXDocumentPackage[]
   identityCards           IdentityCard[]
   classworkSubmissions    ClassworkSubmission[]
+  departureRequests       StudentDepartureRequest[]
+  departureStandingAuth   StudentStandingDepartureAuthorization[]
+  campusPresenceEvents    StudentCampusPresenceEvent[]
+  departureIncidents      StudentDepartureIncident[]
 
   @@index([academicYear])
   @@index([className, section])
@@ -804,24 +808,26 @@ model Notice {
 }
 
 model Guardian {
-  id                   String                @id @default(cuid())
-  iamPublicKey         String?               @unique
-  displayName          String
-  primaryMobile        String
-  alternateMobile      String?
-  email                String?
-  relationship         String                @default("Parent")
-  status               String                @default("Active")
-  notes                String?
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  students             StudentGuardian[]
-  users                User[]
-  whatsappConsents     WhatsAppConsent[]
-  smsEmailConsents     SmsEmailConsent[]
-  smsEmailSuppressions SmsEmailSuppression[]
-  smsEmailDeliveries   SmsEmailDelivery[]
-  familyCollections    FamilyCollection[]
+  id                    String                                  @id @default(cuid())
+  iamPublicKey          String?                                 @unique
+  displayName           String
+  primaryMobile         String
+  alternateMobile       String?
+  email                 String?
+  relationship          String                                  @default("Parent")
+  status                String                                  @default("Active")
+  notes                 String?
+  createdAt             DateTime                                @default(now())
+  updatedAt             DateTime                                @updatedAt
+  students              StudentGuardian[]
+  users                 User[]
+  whatsappConsents      WhatsAppConsent[]
+  smsEmailConsents      SmsEmailConsent[]
+  smsEmailSuppressions  SmsEmailSuppression[]
+  smsEmailDeliveries    SmsEmailDelivery[]
+  familyCollections     FamilyCollection[]
+  departureConsents     StudentDepartureConsentEvidence[]
+  departureStandingAuth StudentStandingDepartureAuthorization[]
 
   @@index([displayName])
   @@index([primaryMobile])
@@ -7368,4 +7374,320 @@ model SupportAccessEvent {
   @@index([actorUserId, occurredAt])
   @@index([sourceHash, occurredAt])
   @@index([identifierHash, occurredAt])
+}
+
+// SAFE-EXIT-1A: governed Student early departure, single-use gate pass,
+// campus-presence ledger and restricted unauthorised-exit incident workflow.
+model StudentDepartureRequest {
+  id                          String                               @id @default(cuid())
+  publicKey                   String                               @unique @default(uuid())
+  requestNumber               String                               @unique
+  submissionKey               String                               @unique
+  source                      String
+  studentId                   String
+  student                     Student                              @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  academicYear                String
+  reasonCategory              String
+  reasonDetails               String?
+  calendarBasisJson           String
+  intendedHandoverMethod      String
+  intendedDepartureAt         DateTime
+  status                      String                               @default("REQUESTED")
+  consentState                String                               @default("PENDING")
+  version                     Int                                  @default(1)
+  approvedHandoverMethod      String?
+  approvedRecipientName       String?
+  approvedRelationship        String?
+  approvedContactMasked       String?
+  parentAuthorisationEvidence String?
+  verificationReference       String?
+  approvedDepartureAt         DateTime?
+  approvalExpiresAt           DateTime?
+  activeCheckoutKey           String?                              @unique
+  emergencyOverride           Boolean                              @default(false)
+  restricted                  Boolean                              @default(false)
+  requestedByUserId           String
+  requestedByRole             String
+  approvedByUserId            String?
+  rejectedByUserId            String?
+  cancelledByUserId           String?
+  checkedOutByUserId          String?
+  returnedByUserId            String?
+  submittedAt                 DateTime                             @default(now())
+  approvedAt                  DateTime?
+  rejectedAt                  DateTime?
+  cancelledAt                 DateTime?
+  checkedOutAt                DateTime?
+  returnedAt                  DateTime?
+  closedAt                    DateTime?
+  expiresAt                   DateTime?
+  createdAt                   DateTime                             @default(now())
+  updatedAt                   DateTime                             @updatedAt
+  consentEvidence             StudentDepartureConsentEvidence[]
+  gatePasses                  StudentGatePass[]
+  handovers                   StudentDepartureHandover[]
+  events                      StudentDepartureEvent[]
+  campusPresenceEvents        StudentCampusPresenceEvent[]
+  incidents                   StudentDepartureIncident[]
+  notificationOutbox          StudentDepartureNotificationOutbox[]
+  fallbackTasks               StudentDepartureFallbackTask[]
+
+  @@index([studentId, submittedAt])
+  @@index([status, intendedDepartureAt])
+  @@index([academicYear, status])
+  @@index([requestedByUserId, submittedAt])
+}
+
+model StudentDepartureConsentEvidence {
+  id                       String                  @id @default(cuid())
+  publicKey                String                  @unique @default(uuid())
+  requestId                String
+  request                  StudentDepartureRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  outcome                  String
+  method                   String
+  guardianId               String?
+  guardian                 Guardian?               @relation(fields: [guardianId], references: [id], onDelete: Restrict)
+  guardianLinkSnapshotHash String?
+  contactMasked            String?
+  telephoneAttemptSummary  String?
+  witnessUserId            String?
+  supervisorUserId         String?
+  privateDocumentReference String?
+  standingAuthorizationKey String?
+  recordedByUserId         String
+  recordedByRole           String
+  notes                    String?
+  recordedAt               DateTime                @default(now())
+  createdAt                DateTime                @default(now())
+
+  @@index([requestId, recordedAt])
+  @@index([guardianId, recordedAt])
+}
+
+model StudentStandingDepartureAuthorization {
+  id                     String   @id @default(cuid())
+  publicKey              String   @unique @default(uuid())
+  seriesKey              String
+  versionNumber          Int
+  studentId              String
+  student                Student  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  guardianId             String
+  guardian               Guardian @relation(fields: [guardianId], references: [id], onDelete: Restrict)
+  status                 String
+  allowsSelfDeparture    Boolean  @default(false)
+  eligibleClassSnapshot  String
+  allowedDaysJson        String
+  allowedStartMinute     Int
+  allowedEndMinute       Int
+  effectiveFrom          DateTime
+  effectiveUntil         DateTime
+  conditions             String?
+  guardianApprovalMethod String
+  guardianApprovedAt     DateTime
+  supersedesPublicKey    String?
+  revocationReason       String?
+  createdByUserId        String
+  createdByRole          String
+  createdAt              DateTime @default(now())
+
+  @@unique([seriesKey, versionNumber])
+  @@index([studentId, createdAt])
+  @@index([guardianId, createdAt])
+  @@index([seriesKey, versionNumber])
+}
+
+model StudentGatePass {
+  id                   String                  @id @default(cuid())
+  publicKey            String                  @unique @default(uuid())
+  requestId            String
+  request              StudentDepartureRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  tokenHash            String                  @unique
+  manualCodeHash       String                  @unique
+  manualCodeLastTwo    String
+  status               String                  @default("ACTIVE")
+  approvedSnapshotHash String
+  issuedByUserId       String
+  issuedByRole         String
+  issuedAt             DateTime                @default(now())
+  expiresAt            DateTime
+  consumedAt           DateTime?
+  consumedByUserId     String?
+  cancelledAt          DateTime?
+  cancelReason         String?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+
+  @@index([requestId, issuedAt])
+  @@index([status, expiresAt])
+}
+
+model StudentDepartureHandover {
+  id                          String                  @id @default(cuid())
+  publicKey                   String                  @unique @default(uuid())
+  requestId                   String
+  request                     StudentDepartureRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  handoverMethod              String
+  recipientName               String
+  relationship                String
+  contactMasked               String?
+  parentAuthorisationEvidence String
+  verificationReference       String?
+  verifiedByUserId            String
+  verifiedAt                  DateTime                @default(now())
+  createdAt                   DateTime                @default(now())
+
+  @@index([requestId, verifiedAt])
+}
+
+model StudentDepartureEvent {
+  id               String                  @id @default(cuid())
+  publicKey        String                  @unique @default(uuid())
+  requestId        String
+  request          StudentDepartureRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  eventType        String
+  actorUserId      String
+  actorRole        String
+  previousStatus   String?
+  newStatus        String?
+  entityVersion    Int
+  reason           String?
+  safeMetadataJson String?
+  idempotencyKey   String                  @unique
+  occurredAt       DateTime                @default(now())
+  createdAt        DateTime                @default(now())
+
+  @@index([requestId, occurredAt])
+  @@index([eventType, occurredAt])
+}
+
+model StudentCampusPresenceEvent {
+  id               String                   @id @default(cuid())
+  publicKey        String                   @unique @default(uuid())
+  studentId        String
+  student          Student                  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  requestId        String?
+  request          StudentDepartureRequest? @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  eventType        String
+  schoolDateKey    String
+  locationLabel    String?
+  handoverMethod   String?
+  recordedByUserId String
+  source           String
+  idempotencyKey   String                   @unique
+  occurredAt       DateTime                 @default(now())
+  createdAt        DateTime                 @default(now())
+
+  @@index([studentId, occurredAt])
+  @@index([schoolDateKey, eventType])
+  @@index([requestId, occurredAt])
+}
+
+model StudentDepartureIncident {
+  id                      String                           @id @default(cuid())
+  publicKey               String                           @unique @default(uuid())
+  incidentNumber          String                           @unique
+  studentId               String
+  student                 Student                          @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  requestId               String?
+  request                 StudentDepartureRequest?         @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  status                  String
+  version                 Int                              @default(1)
+  lastConfirmedLocation   String?
+  lastConfirmedAt         DateTime?
+  locatedAt               DateTime?
+  restricted              Boolean                          @default(true)
+  linkedSupportRequestKey String?
+  reportedByUserId        String
+  confirmedByUserId       String?
+  closedByUserId          String?
+  reportedAt              DateTime                         @default(now())
+  confirmedAt             DateTime?
+  closedAt                DateTime?
+  createdAt               DateTime                         @default(now())
+  updatedAt               DateTime                         @updatedAt
+  actions                 StudentDepartureIncidentAction[]
+
+  @@index([studentId, reportedAt])
+  @@index([status, reportedAt])
+}
+
+model StudentDepartureIncidentAction {
+  id               String                   @id @default(cuid())
+  publicKey        String                   @unique @default(uuid())
+  incidentId       String
+  incident         StudentDepartureIncident @relation(fields: [incidentId], references: [id], onDelete: Restrict)
+  actionType       String
+  summary          String
+  outcome          String?
+  recordedByUserId String
+  recordedByRole   String
+  idempotencyKey   String                   @unique
+  occurredAt       DateTime                 @default(now())
+  createdAt        DateTime                 @default(now())
+
+  @@index([incidentId, occurredAt])
+}
+
+model StudentDepartureNotificationOutbox {
+  id                    String                  @id @default(cuid())
+  publicKey             String                  @unique @default(uuid())
+  requestId             String
+  request               StudentDepartureRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  eventKey              String
+  eventType             String
+  recipientUserId       String
+  recipientGuardianId   String?
+  channel               String
+  status                String                  @default("QUEUED")
+  minimalMessageCode    String
+  retryCount            Int                     @default(0)
+  nextAttemptAt         DateTime?
+  claimedAt             DateTime?
+  queuedAt              DateTime                @default(now())
+  sentAt                DateTime?
+  deliveredAt           DateTime?
+  failedAt              DateTime?
+  providerReferenceSafe String?
+  failureCode           String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  @@unique([eventKey, recipientUserId, channel])
+  @@index([status, nextAttemptAt])
+  @@index([requestId, queuedAt])
+}
+
+model StudentDepartureFallbackTask {
+  id                String                  @id @default(cuid())
+  publicKey         String                  @unique @default(uuid())
+  requestId         String
+  request           StudentDepartureRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  eventKey          String
+  taskType          String
+  status            String                  @default("OPEN")
+  reasonCode        String
+  assignedRole      String
+  createdAt         DateTime                @default(now())
+  completedAt       DateTime?
+  completedByUserId String?
+
+  @@unique([eventKey, taskType])
+  @@index([status, createdAt])
+  @@index([requestId, createdAt])
+}
+
+model AppPushSubscription {
+  id           String    @id @default(cuid())
+  publicKey    String    @unique @default(uuid())
+  userId       String
+  endpointHash String    @unique
+  providerMode String    @default("TEST_SINK")
+  status       String    @default("ACTIVE")
+  verifiedAt   DateTime?
+  failureCount Int       @default(0)
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId, status])
 }

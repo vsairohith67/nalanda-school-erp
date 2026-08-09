@@ -211,7 +211,7 @@ describe("test data cleanup", () => {
     });
 
     expect(backup.payments.map((row: any) => row.receiptNo)).not.toContain("QA10C-0056");
-    expect(backup.metadata.backupVersion).toBe(37);
+    expect(backup.metadata.backupVersion).toBe(38);
     expect(backup.users).toEqual([]);
   });
 });

@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "plugins": [], "incremental": true, "tsBuildInfoFile": "./tsconfig.tools-qa-safe-exit.tsbuildinfo" },
+  "include": ["scripts/qa-safeexit*.ts"],
+  "exclude": ["node_modules", ".next"]
+}

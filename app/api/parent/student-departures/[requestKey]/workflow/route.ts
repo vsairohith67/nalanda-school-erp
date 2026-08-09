@@ -1,0 +1,5 @@
+import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { cancelSafeExitRequest, recordSafeExitConsent } from "@/lib/safe-exit";
+import { parseSafeExitJson, safeExitApiActor, safeExitApiError, safeExitJson } from "@/lib/safe-exit-api";
+export async function POST(request:NextRequest,context:{params:Promise<{requestKey:string}>}){const auth=await safeExitApiActor(["REQUEST_STUDENT_DEPARTURE","RECORD_PARENT_CONSENT"]);if(auth.response||!auth.actor||auth.actor.user.role!=="PARENT")return auth.response??safeExitJson({error:"Parent context is required."},403);try{const body=await parseSafeExitJson(request),key=(await context.params).requestKey;if(body.action==="consent")return safeExitJson({request:await recordSafeExitConsent(prisma,auth.actor,key,{...body,method:"AUTHENTICATED_PARENT"})});if(body.action==="cancel")return safeExitJson({request:await cancelSafeExitRequest(prisma,auth.actor,key,body)});return safeExitJson({error:"Unsupported Parent safe-exit action."},400);}catch(error){return safeExitApiError(error);}}

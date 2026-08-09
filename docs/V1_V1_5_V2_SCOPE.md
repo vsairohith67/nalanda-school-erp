@@ -21,6 +21,7 @@ Scope is not the same as implementation state. A capability can already exist in
 8. Bulk Student/Guardian/Staff import and governed onboarding.
 9. Final cross-module security, performance, recovery, device and accessibility QA.
 10. Controlled staging, pilot, reconciliation and production cutover.
+11. Student Safe Exit, single-use gate pass, Guardian consent and Parent notification.
 
 V1 explicitly excludes automatic payroll calculation. Full payroll and Employee self-service are technically cleared by Prompt 23I, but their operational product scope is V1.5 and they are not a V1 launch dependency. The released code may remain in `main` while disabled or permission-restricted for rollout. V1 retains only the separately specified Staff Payslip Request and Secure Delivery workflow; automatic payroll or generated payslips do not make that request workflow complete.
 

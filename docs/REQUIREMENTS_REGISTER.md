@@ -1,8 +1,8 @@
 # Authoritative Requirements Register
 
 **Register ID:** `GOV-RECON-1-REGISTER`<br>
-**As-of:** 2026-08-08<br>
-**Baseline:** current released `main` `71f671b8b6ee946884e5b79a9786581f237a6437`<br>
+**As-of:** 2026-08-09<br>
+**Baseline:** synchronized released `main` `53a2e92c7320c05e9dd9ff56c69a19ad44480614` (`support-complaints-v37-2026-08-09`)<br>
 **Decision source:** `docs/V1_V1_5_V2_SCOPE.md`
 
 ## Status and evidence rules
@@ -51,13 +51,14 @@ A route, model or document by itself cannot produce `COMPLETE`. Evidence classes
 | V2-AI-030 | Curriculum/source grounding | Authoritative GOV-RECON-1 | 2026-08-08 | Keep generated material tied to approved sources | V2 | DEFERRED | Prompt 20A planning is only partial architectural evidence | None | None | `2d1ac63` baseline summary | Allowlisted sources; provenance; no invented authority | Prompt 20A does not complete V2 | Specify with V2 programme | High |
 | V2-AI-031 | AI quality, privacy and cost controls | Authoritative GOV-RECON-1 | 2026-08-08 | Bound hallucination, exposure and spend | V2 | DEFERRED | Prompt 20A mock/read-only controls are reusable | Prompt 20A local planning tests only | None | `2d1ac63` baseline summary | Aggregate/allowlisted inputs; budget and review gates | No live provider activated | Future threat model and pilot | High |
 | V2-AI-032 | No automatic Student publication | Authoritative GOV-RECON-1 | 2026-08-08 | Prevent unreviewed AI content reaching Students | V2 | DEFERRED | No automatic publication exists | None | None | None | Fail closed; explicit Teacher approval and governed issue | Mandatory V2 invariant | Preserve in every V2 design | High |
+| V1-SAFE-033 | Student early departure, gate pass, Guardian consent and Parent notification | SAFE-EXIT-1A (`EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`) | 2026-08-09 | Prevent unsafe or unauthorised early campus release while preserving live accountability | V1 | READY_FOR_INDEPENDENT_QA | Additive request/consent/standing authority/pass/handover/event/presence/incident/outbox/fallback models; exact role/object scope; Parent, Staff, leadership, Gate and roster UI; backup v38 | `SAFEEXIT1` copied-database lifecycle/concurrency/notification/restore-twice matrix; Browser role/mobile/theme/accessibility batch; 1,748-test full suite; production build | `STUDENT_SAFE_EXIT_READY_FOR_QA` | `safety/student-early-departure-gate-pass`; commit pushed before independent QA; tag pending | Normal release requires current consent, approval, verified handover, single-use pass, checkout, notification and append-only audit; emergency override restricted and re-authenticated | No transport service; no live WhatsApp, deployment, real departure or real-data onboarding | Run SAFE-EXIT-1A-QA, then proceed to `OBS-1A` only if cleared | High |
 
 ## Counts
 
 | Dimension | Count |
 | --- | ---: |
-| Total requirements | 32 |
-| V1 | 23 |
+| Total requirements | 33 |
+| V1 | 24 |
 | V1.5 | 3 |
 | V2 | 6 |
 | COMPLETE | 13 |
@@ -65,7 +66,8 @@ A route, model or document by itself cannot produce `COMPLETE`. Evidence classes
 | MISSING | 2 |
 | DEFERRED | 9 |
 | SUPERSEDED | 1 |
+| READY_FOR_INDEPENDENT_QA | 1 |
 
 ## Critical V1 gaps
 
-The finance family-payment and Staff payslip request/delivery requirements now have local/private implementations on retained feature branches. The corrected V1 still cannot be declared complete until independent QA/release gates for those branches and the canonical report templates/physical print acceptance, safe release/update pipeline, support workflow, observability, governed bulk onboarding, final cross-module QA and controlled cutover gates are resolved.
+The finance family-payment, Staff payslip request/delivery and Support requirements are cleared locally/private. Student Safe Exit is additive and awaiting independent QA. The corrected V1 still cannot be declared complete until that gate and the canonical report templates/physical print acceptance, safe release/update pipeline, observability, governed bulk onboarding, final cross-module QA and controlled cutover gates are resolved.

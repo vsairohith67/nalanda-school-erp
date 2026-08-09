@@ -1,0 +1,8 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { PageHeader } from "@/components/ui";
+import { SafeExitWorkspace } from "@/components/safe-exit-workspace";
+import { getCurrentAuthContext, getCurrentUserEffectivePermissions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { listSafeExitRequests, safeExitStudentOptions } from "@/lib/safe-exit";
+export default async function Page(){const context=await getCurrentAuthContext();if(!context)redirect("/login");const permissions=await getCurrentUserEffectivePermissions();if(!["REQUEST_STUDENT_DEPARTURE","RECORD_PARENT_CONSENT","APPROVE_STUDENT_DEPARTURE","EMERGENCY_OVERRIDE_STUDENT_DEPARTURE","VIEW_DEPARTURE_AUDIT"].some((permission)=>permissions.has(permission as any)))redirect("/unauthorized");const actor={user:context.user,sessionId:context.sessionId,permissions};const[students,requests]=await Promise.all([safeExitStudentOptions(prisma,actor),listSafeExitRequests(prisma,actor)]);return <div className="page"><PageHeader title="Student Safe Exit" description="Consent, school approval, governed handover, single-use gate pass, checkout, notifications and append-only safety history." action={<div className="page-actions"><Link className="button secondary" href="/student-departures/gate">Gate verification</Link><Link className="button secondary" href="/student-departures/roster">Live campus roster</Link></div>}/><SafeExitWorkspace mode="STAFF" permissions={[...permissions]} students={students} initialRequests={requests}/></div>}

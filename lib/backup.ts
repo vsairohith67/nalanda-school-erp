@@ -20,6 +20,7 @@ import { loadAdmissionsBackup, validateAdmissionsBackupRows, type AdmissionsBack
 import { loadPayrollBackup, PAYROLL_BACKUP_KEYS, validatePayrollBackupRows, type PayrollBackup, type PayrollBackupKey } from "./payroll-backup";
 import { loadPayslipRequestBackup, PAYSLIP_REQUEST_BACKUP_KEYS, validatePayslipRequestBackupRows, type PayslipRequestBackup, type PayslipRequestBackupKey } from "./payslip-request-backup";
 import { loadSupportBackup, SUPPORT_BACKUP_KEYS, validateSupportBackupRows, type SupportBackup, type SupportBackupKey } from "./support-backup";
+import { loadSafeExitBackup, SAFE_EXIT_BACKUP_KEYS, validateSafeExitBackupRows, type SafeExitBackup, type SafeExitBackupKey } from "./safe-exit-backup";
 import { emptyFamilyCollectionBackup, familyCollectionSchemaAvailable, FAMILY_COLLECTION_BACKUP_KEYS, loadFamilyCollectionBackup, validateFamilyCollectionBackupRows, type FamilyCollectionBackup } from "./family-collection-backup";
 
 const APP_NAME = "Nalanda Fee Control";
@@ -94,6 +95,9 @@ type BackupClient = Pick<
   | "advanceRecoverySchedule" | "payslipVersion" | "payrollEvent"
   | "staffPayslipMonthAvailability" | "staffPayslipRequest" | "staffPayslipRequestMonth"
   | "staffPayslipRequestEvent" | "staffPayslipDocumentVersion" | "staffPayslipDocumentMonth" | "staffPayslipAccessEvent"
+  | "studentDepartureRequest" | "studentDepartureConsentEvidence" | "studentStandingDepartureAuthorization"
+  | "studentGatePass" | "studentDepartureHandover" | "studentDepartureEvent" | "studentCampusPresenceEvent"
+  | "studentDepartureIncident" | "studentDepartureIncidentAction" | "studentDepartureNotificationOutbox" | "studentDepartureFallbackTask"
 >;
 
 type BackupDocumentInput = {
@@ -267,7 +271,7 @@ type BackupDocumentInput = {
   timetableDrafts?: readonly unknown[];
   timetableEntries?: readonly unknown[];
   academicYear?: string;
-} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<FamilyCollectionBackup>;
+} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
   const timetableTeachers = [...(input.timetableTeachers ?? [])];
@@ -361,6 +365,8 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const payslipRequestCounts = Object.fromEntries(PAYSLIP_REQUEST_BACKUP_KEYS.map((key) => [key, payslipRequestBackup[key].length])) as Record<PayslipRequestBackupKey, number>;
   const supportBackup = validateSupportBackupRows(input as unknown as Record<string, unknown>);
   const supportCounts = Object.fromEntries(SUPPORT_BACKUP_KEYS.map((key) => [key, supportBackup[key].length])) as Record<SupportBackupKey, number>;
+  const safeExitBackup = validateSafeExitBackupRows(input as unknown as Record<string, unknown>);
+  const safeExitCounts = Object.fromEntries(SAFE_EXIT_BACKUP_KEYS.map((key) => [key, safeExitBackup[key].length])) as Record<SafeExitBackupKey, number>;
   const familyCollectionBackup = validateFamilyCollectionBackupRows(input as unknown as Record<string, unknown>);
   const familyCollectionCounts = Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, familyCollectionBackup[key].length]));
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
@@ -450,7 +456,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
       generatedAt: input.generatedAt.toISOString(),
       generatedBy: input.generatedBy,
       appVersion: packageJson.version,
-      backupVersion: 37,
+      backupVersion: 38,
       counts: {
         schoolSettings: input.schoolSettings ? 1 : 0,
         authSecurityRecords: authSecurityRecordCount(authSecurity),
@@ -536,6 +542,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
         ...payrollCounts,
         ...payslipRequestCounts,
         ...supportCounts,
+        ...safeExitCounts,
         examCycles: examCycles.length,
         examAssessments: examAssessments.length,
         studentMarks: studentMarks.length,
@@ -708,6 +715,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     ...payrollBackup,
     ...payslipRequestBackup,
     ...supportBackup,
+    ...safeExitBackup,
     examCycles,
     examAssessments,
     studentMarks,
@@ -821,7 +829,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
 async function sqliteSchemaHas(client: BackupClient, table: string, column?: string) {
   const query = (client as any).$queryRawUnsafe;
   if (typeof query !== "function") return true;
-  const allowedTables = new Set(["StudentAttendanceSession", "StudentReportCardVersion", "AcademicCalendarVersion", "ClassworkItem", "AcademicReportDefinition", "AdmissionCycle", "PayrollPolicyVersion", "StaffPayslipRequest", "SupportRequest"]);
+  const allowedTables = new Set(["StudentAttendanceSession", "StudentReportCardVersion", "AcademicCalendarVersion", "ClassworkItem", "AcademicReportDefinition", "AdmissionCycle", "PayrollPolicyVersion", "StaffPayslipRequest", "SupportRequest", "StudentDepartureRequest"]);
   if (!allowedTables.has(table)) throw new Error("BACKUP_SCHEMA_PROBE_REFUSED");
   const rows = await query.call(client, `PRAGMA table_info("${table}")`) as Array<{ name?: string }>;
   return column ? rows.some((row) => row.name === column) : rows.length > 0;
@@ -831,7 +839,7 @@ export async function generateFullBackup(
   client: BackupClient,
   options: { generatedBy: string; generatedAt?: Date; excludeCloudBackupRunId?: string }
 ) {
-  const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable, classworkAvailable, academicReportingAvailable, admissionsAvailable, payrollAvailable, payslipRequestAvailable, supportAvailable] = await Promise.all([
+  const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable, classworkAvailable, academicReportingAvailable, admissionsAvailable, payrollAvailable, payslipRequestAvailable, supportAvailable, safeExitAvailable] = await Promise.all([
     sqliteSchemaHas(client, "StudentAttendanceSession", "operationalCalendarVersionKey"),
     sqliteSchemaHas(client, "StudentReportCardVersion", "calendarBasisVersionKey"),
     sqliteSchemaHas(client, "AcademicCalendarVersion"),
@@ -840,7 +848,8 @@ export async function generateFullBackup(
     sqliteSchemaHas(client, "AdmissionCycle"),
     sqliteSchemaHas(client, "PayrollPolicyVersion"),
     sqliteSchemaHas(client, "StaffPayslipRequest"),
-    sqliteSchemaHas(client, "SupportRequest")
+    sqliteSchemaHas(client, "SupportRequest"),
+    sqliteSchemaHas(client, "StudentDepartureRequest")
   ]);
   const studentAttendanceSessionArgs = {
     select: {
@@ -1275,6 +1284,9 @@ export async function generateFullBackup(
   const supportBackup = supportAvailable && (client as any).supportRequest?.findMany
     ? await loadSupportBackup(client as unknown as PrismaClient)
     : Object.fromEntries(SUPPORT_BACKUP_KEYS.map((key) => [key, []])) as unknown as SupportBackup;
+  const safeExitBackup = safeExitAvailable && (client as any).studentDepartureRequest?.findMany
+    ? await loadSafeExitBackup(client as unknown as PrismaClient)
+    : Object.fromEntries(SAFE_EXIT_BACKUP_KEYS.map((key) => [key, []])) as unknown as SafeExitBackup;
   const familyCollectionBackup = await familyCollectionSchemaAvailable(client)
     ? await loadFamilyCollectionBackup(client as PrismaClient)
     : emptyFamilyCollectionBackup();
@@ -1311,6 +1323,7 @@ export async function generateFullBackup(
     ...payrollBackup,
     ...payslipRequestBackup,
     ...supportBackup,
+    ...safeExitBackup,
     ...familyCollectionBackup,
     rolePermissions,
     guardians,

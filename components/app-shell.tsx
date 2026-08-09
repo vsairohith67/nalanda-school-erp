@@ -355,7 +355,7 @@ export function AppShell({
         href={item.href}
         className={active ? "active" : ""}
         aria-current={active ? "page" : undefined}
-        key={item.href}
+        key={`${item.href}-${item.permission}`}
         onClick={() => setMobileNavOpen(false)}
       >
         <Icon size={17} aria-hidden />
