@@ -561,5 +561,6 @@ DEVOPS-1B is fully cleared. DEVOPS-1C does not claim a cloud deployment, DNS cha
 - [Retention/privacy draft](SUPPORT_RETENTION_PRIVACY_DRAFT.md) - `DRAFT_PENDING_APPROVAL`
 - [Support threat model](SUPPORT_THREAT_MODEL.md), [operator/developer guide](SUPPORT_OPERATOR_DEVELOPER_GUIDE.md) and [technical debt](TECHNICAL_DEBT_REGISTER.md)
 - [SUPPORT-1A implementation checkpoint](evidence/SUPPORT_1A_IMPLEMENTATION_CHECKPOINT.md)
+- [SUPPORT-1A independent QA clearance](evidence/SUPPORT_1A_QA_CLEARANCE.md)
 
-SUPPORT-1A is additive, in-app only and implementation-verified with copied fixtures, Browser production-runtime evidence and the full verification sequence. It reached `SUPPORT_COMPLAINTS_READY_FOR_QA`; independent QA and release remain gates. No real complaint, Parent, Student, Staff, private attachment, live provider, deployment or real-user onboarding is authorised.
+SUPPORT-1A is additive, in-app only and cleared with fresh copied fixtures, Browser production-runtime evidence, the full verification sequence, protected rollback and unchanged operational business/account fingerprints. No real complaint, Parent, Student, Staff, private attachment, live provider, deployment or real-user onboarding is authorised.

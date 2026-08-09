@@ -1690,7 +1690,12 @@ verification sequence passed. Evidence includes two migration deploys, thirteen
 synthetic role/context fixtures, concurrency, anti-enumeration, child/link
 isolation, restricted access, restore twice, 324 page routes, 515 API routes,
 1,744 passing tests, a clean bounded-heap build and unchanged operational hash.
-The implementation reached `SUPPORT_COMPLAINTS_READY_FOR_QA`; independent QA,
-the narrowly additive operational migration and release remain required before
-clearance. Legal/privacy and retention text is
-`DRAFT_PENDING_APPROVAL`; no real case, live provider or deployment is authorised.
+The implementation reached `SUPPORT_COMPLAINTS_READY_FOR_QA`. Independent
+`SUPPORT1AQA` copied-database verification then passed, followed by the complete
+serialized verification sequence and the narrowly additive operational
+migration. The byte-identical rollback matched the pre-migration database;
+business and protected-account fingerprints remained unchanged, and operational
+support data remained empty. The retained feature branch, synchronized `main`
+and annotated version-37 release tag close with `SUPPORT_COMPLAINTS_CLEARED`.
+Legal/privacy and retention text is `DRAFT_PENDING_APPROVAL`; no real case, live
+provider, deployment or real-user onboarding is authorised. Next phase: `OBS-1A`.
