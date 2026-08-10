@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { createBackupDocument } from "../lib/backup";
 import { createMaintenanceWindow, OperationalWorkflowError, transitionOperationalAlert } from "../lib/operational-workflows";
 import { createSafeOperationalLogEntry, safeErrorFingerprint, stringifySafeOperationalLog } from "../lib/safe-logging";
@@ -106,5 +107,13 @@ describe("OBS-1A technical operations contracts", () => {
     expect(first).toMatchObject({ created: 1, skipped: 0, errors: [] });
     expect(second).toMatchObject({ created: 0, skipped: 1, errors: [] });
     expect(rows.size).toBe(1);
+  });
+
+  it("serves allowlisted operational runbooks through the authenticated app", () => {
+    const viewer = readFileSync("app/docs/[...path]/page.tsx", "utf8");
+    expect(viewer).toContain('requirePermission("VIEW_TECHNICAL_OPERATIONS_SUMMARY")');
+    expect(viewer).toContain('"runbooks/OBS_LOW_STORAGE_RUNBOOK.md"');
+    expect(viewer).not.toContain("OBS_LOW_DISK_RUNBOOK");
+    expect(readFileSync("lib/technical-operations.ts", "utf8")).not.toContain("OBS_LOW_DISK_RUNBOOK");
   });
 });

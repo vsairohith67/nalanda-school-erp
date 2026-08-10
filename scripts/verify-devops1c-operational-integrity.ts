@@ -4,7 +4,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { businessBaseline } from "./migration-check-utils";
 
-const expected = { baseline: { students: 0, activeEnrollments: 0, payments: 0, collected: 0 }, users: 4, roleAssignments: 4, activeSuperAdmins: 1, backupVersion: 40 } as const;
+const expected = { baseline: { students: 0, activeEnrollments: 0, payments: 0, collected: 0 }, users: 4, roleAssignments: 4, activeSuperAdmins: 1, backupVersion: 40, operationalCheckDefinitions: 13 } as const;
 
 function sha256(file: string) {
   return createHash("sha256").update(readFileSync(file)).digest("hex").toUpperCase();
@@ -29,6 +29,7 @@ function main() {
   let users = 0;
   let roleAssignments = 0;
   let activeSuperAdmins = 0;
+  let operationalCheckDefinitions = 0;
   try {
     migrationCount = Number((database.prepare("SELECT COUNT(*) AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL").get() as { count: number }).count);
     quickCheck = String(Object.values(database.prepare("PRAGMA quick_check").get() as Record<string, unknown>)[0] ?? "failed");
@@ -36,6 +37,7 @@ function main() {
     users = Number((database.prepare("SELECT COUNT(*) AS count FROM User").get() as { count: number }).count);
     roleAssignments = Number((database.prepare("SELECT COUNT(*) AS count FROM UserRoleAssignment").get() as { count: number }).count);
     activeSuperAdmins = Number((database.prepare("SELECT COUNT(*) AS count FROM User WHERE role='SUPER_ADMIN' AND isActive=1 AND lifecycleStatus='ACTIVE'").get() as { count: number }).count);
+    operationalCheckDefinitions = Number((database.prepare("SELECT COUNT(*) AS count FROM OperationalCheckDefinition").get() as { count: number }).count);
   } finally {
     database.close();
   }
@@ -49,11 +51,12 @@ function main() {
     activeSuperAdmins !== expected.activeSuperAdmins && "activeSuperAdmins",
     quickCheck !== "ok" && "quickCheck",
     foreignKeyViolations !== 0 && "foreignKeyViolations",
-    migrationCount < 16 && "migrationLedger",
+    migrationCount < 17 && "migrationLedger",
+    operationalCheckDefinitions !== expected.operationalCheckDefinitions && "operationalCheckDefinitions",
     backupVersion !== expected.backupVersion && "backupVersion"
   ].filter(Boolean);
   if (failures.length) {
-    console.error(JSON.stringify({ result: "DEVOPS1C_OPERATIONAL_INTEGRITY_MISMATCH", failures, ...actual, migrationCount, quickCheck, foreignKeyViolations, users, roleAssignments, activeSuperAdmins, backupVersion }));
+    console.error(JSON.stringify({ result: "DEVOPS1C_OPERATIONAL_INTEGRITY_MISMATCH", failures, ...actual, migrationCount, quickCheck, foreignKeyViolations, users, roleAssignments, activeSuperAdmins, operationalCheckDefinitions, backupVersion }));
     process.exitCode = 1;
     return;
   }
@@ -67,6 +70,7 @@ function main() {
     users,
     roleAssignments,
     activeSuperAdmins,
+    operationalCheckDefinitions,
     backupVersion
   }));
 }

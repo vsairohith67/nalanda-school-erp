@@ -198,7 +198,7 @@ async function storageHealth(now: Date) {
     return { card: domainCard("STORAGE_CAPACITY_HEALTH", status, now,
       "Capacity and approved-directory aggregates are reported without filenames or owners.",
       status === "HEALTHY" ? "No storage action is required." : "Follow the low-disk runbook; do not delete private data from this dashboard.",
-      "/docs/runbooks/OBS_LOW_DISK_RUNBOOK.md",
+      "/docs/runbooks/OBS_LOW_STORAGE_RUNBOOK.md",
       [
         { label: "Used", value: `${usedPercent}%`, status },
         { label: "Available", value: formatBytes(available) },
@@ -206,7 +206,7 @@ async function storageHealth(now: Date) {
         { label: "Stale temporary artifacts", value: approved.reduce((sum, row) => sum + row.staleFiles, 0), status: approved.some((row) => row.staleFiles) ? "WARNING" : "HEALTHY" }
       ]) };
   } catch {
-    return { card: domainCard("STORAGE_CAPACITY_HEALTH", "UNKNOWN", now, "Storage capacity could not be measured safely.", "Use the local low-disk runbook.", "/docs/runbooks/OBS_LOW_DISK_RUNBOOK.md", []) };
+    return { card: domainCard("STORAGE_CAPACITY_HEALTH", "UNKNOWN", now, "Storage capacity could not be measured safely.", "Use the local low-storage runbook.", "/docs/runbooks/OBS_LOW_STORAGE_RUNBOOK.md", []) };
   }
 }
 
