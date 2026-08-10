@@ -1,7 +1,16 @@
 # Names and safe placeholders only. Never commit a completed copy.
 NODE_ENV=production
-NALANDA_ENVIRONMENT=staging
+NALANDA_ENVIRONMENT=STAGING
 NALANDA_DEPLOYMENT_ID=staging-<utc>-<commit>
+NALANDA_RELEASE_ID=staging-<utc>-<commit>
+NALANDA_RELEASE_CHANNEL=STAGING
+NALANDA_BUILD_ID=staging-<utc>-<commit>
+NALANDA_RELEASE_DATE=<iso-8601-release-date>
+NALANDA_MINIMUM_WEB_CLIENT=<minimum-supported-client-version>
+NALANDA_CLIENT_UPDATE_SEVERITY=AVAILABLE
+NALANDA_STAGING_BANNER=true
+NALANDA_MAINTENANCE_MODE=false
+LIVE_PROVIDERS_ENABLED=false
 NALANDA_LOCAL_REHEARSAL=false
 APP_ORIGIN=https://staging.nalandaps.com
 PUBLIC_WEBSITE_URL=https://staging.nalandaps.com
@@ -13,6 +22,7 @@ TRUST_PROXY_HEADERS=true
 NALANDA_TRUSTED_PROXY_MODE=single-hop-sanitized
 STAGING_DATA_DIR=/srv/nalanda-staging/data
 DATABASE_URL=file:/srv/nalanda-staging/data/database/staging.db
+PRIVATE_STORAGE_ROOT=/srv/nalanda-staging/data/private
 FEE_REGISTER_OCR_STORAGE_DIR=/srv/nalanda-staging/data/private/fee-register-ocr
 BACKUP_DIRECTORY=/srv/nalanda-staging/data/backups/json
 CLOUD_BACKUP_LOCAL_FOLDER=/srv/nalanda-staging/data/backups/encrypted

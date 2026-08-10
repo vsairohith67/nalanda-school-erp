@@ -237,6 +237,22 @@
   .parent-academic-print section { break-inside: avoid; margin-block: 1rem; }
 }
 
+.staging-environment-banner { position: sticky; top: 0; z-index: 1000; width: 100%; padding: .5rem 1rem; background: #7c2d12; color: #fff; text-align: center; font-weight: 800; letter-spacing: .03em; }
+.maintenance-page { min-height: 100dvh; display: grid; place-items: center; padding: 1rem; background: var(--background); }
+.maintenance-page > section { width: min(42rem, 100%); text-align: center; }
+.maintenance-page h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: .04em; }
+.maintenance-page .button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+.release-operations-page { min-width: 0; overflow-x: clip; }
+.release-ops-live { min-height: 1.5rem; color: var(--muted); }
+.release-ops-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.release-ops-summary article { display: grid; gap: .55rem; min-width: 0; }
+.release-ops-summary strong { overflow-wrap: anywhere; }
+.release-operations-page :is(button, .button, input, select) { min-height: 44px; }
+.release-history { display: grid; gap: .75rem; padding: 0; list-style: none; }
+.release-history li { display: grid; grid-template-columns: minmax(10rem, .3fr) minmax(0, 1fr); gap: .35rem 1rem; border-left: 3px solid var(--primary); padding: .65rem .8rem; }
+.release-history p { grid-column: 1 / -1; margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 760px) { .release-ops-summary { grid-template-columns: minmax(0, 1fr); } .release-history li { grid-template-columns: minmax(0, 1fr); } }
+
 /* SUPPORT-1A: governed Parent and Staff support */
 .support-page,
 .support-portal-workspace,

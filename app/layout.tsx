@@ -43,10 +43,18 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const requestHeaders = await headers();
+  const staging = process.env.NALANDA_ENVIRONMENT?.toUpperCase() === "STAGING";
+  if (requestHeaders.get("x-nalanda-maintenance-page") === "1") {
+    return (
+      <html lang="en" suppressHydrationWarning>
+        <body>{staging ? <div className="staging-environment-banner" role="status">STAGING | Synthetic data only | No live providers</div> : null}{children}</body>
+      </html>
+    );
+  }
   if (requestHeaders.get("x-nalanda-public-website") === "1") {
     return (
       <html lang="en" suppressHydrationWarning>
-        <body className="public-website-body">{children}</body>
+        <body className="public-website-body">{staging ? <div className="staging-environment-banner" role="status">STAGING · Synthetic data only · No live providers</div> : null}{children}</body>
       </html>
     );
   }
@@ -60,6 +68,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        {staging ? <div className="staging-environment-banner" role="status">STAGING · Synthetic data only · No live providers</div> : null}
         <ThemeProvider>
           <ModalAccessibilityGuard />
           <SecurityDialogProvider>

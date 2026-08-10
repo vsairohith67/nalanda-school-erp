@@ -77,7 +77,7 @@ export function validateDeploymentEnvironment(
   const issues: DeploymentEnvironmentIssue[] = [];
   const paths: Record<string, string> = {};
   const add = (code: string, variable: string, message: string) => issues.push({ code, variable, message });
-  const deploymentEnvironment = value(environment, "NALANDA_ENVIRONMENT");
+  const deploymentEnvironment = value(environment, "NALANDA_ENVIRONMENT").toLowerCase();
 
   if (deploymentEnvironment !== "staging") {
     add("ENVIRONMENT_NOT_STAGING", "NALANDA_ENVIRONMENT", "Must be exactly staging.");
@@ -290,6 +290,106 @@ export function validateDeploymentEnvironment(
     issues,
     paths
   };
+}
+
+export type ReleaseSettingClass =
+  | "REQUIRED_SECRET"
+  | "REQUIRED_NON_SECRET"
+  | "OPTIONAL_DISABLED_PROVIDER"
+  | "BUILD_TIME_PUBLIC"
+  | "RUNTIME_PRIVATE"
+  | "STAGING_ONLY"
+  | "PRODUCTION_ONLY";
+
+export const RELEASE_ENVIRONMENT_CONTRACT = [
+  { name: "NALANDA_ENVIRONMENT", classification: "REQUIRED_NON_SECRET" },
+  { name: "NALANDA_RELEASE_ID", classification: "REQUIRED_NON_SECRET" },
+  { name: "NALANDA_RELEASE_CHANNEL", classification: "REQUIRED_NON_SECRET" },
+  { name: "APP_ORIGIN", classification: "REQUIRED_NON_SECRET" },
+  { name: "DATABASE_URL", classification: "RUNTIME_PRIVATE" },
+  { name: "PRIVATE_STORAGE_ROOT", classification: "RUNTIME_PRIVATE" },
+  { name: "BACKUP_DIRECTORY", classification: "RUNTIME_PRIVATE" },
+  { name: "AUTH_SECRET", classification: "REQUIRED_SECRET" },
+  { name: "CLOUD_BACKUP_ENCRYPTION_KEY_V1", classification: "REQUIRED_SECRET" },
+  { name: "NEXT_PUBLIC_PWA_BUILD_VERSION", classification: "BUILD_TIME_PUBLIC" },
+  { name: "NALANDA_STAGING_BANNER", classification: "STAGING_ONLY" },
+  { name: "NALANDA_PRODUCTION_APPROVAL_ID", classification: "PRODUCTION_ONLY" },
+  { name: "LIVE_PROVIDERS_ENABLED", classification: "OPTIONAL_DISABLED_PROVIDER" }
+] as const satisfies ReadonlyArray<{ name: string; classification: ReleaseSettingClass }>;
+
+export type ReleaseEnvironmentContractResult = {
+  ok: boolean;
+  environment: "DEVELOPMENT" | "TEST" | "PREVIEW" | "STAGING" | "PRODUCTION" | "UNKNOWN";
+  issues: DeploymentEnvironmentIssue[];
+  classifications: typeof RELEASE_ENVIRONMENT_CONTRACT;
+};
+
+export function validateReleaseEnvironmentContract(environment: NodeJS.ProcessEnv, workspaceRoot = process.cwd()): ReleaseEnvironmentContractResult {
+  const issues: DeploymentEnvironmentIssue[] = [];
+  const add = (code: string, variable: string, message: string) => issues.push({ code, variable, message });
+  const rawEnvironment = value(environment, "NALANDA_ENVIRONMENT").toUpperCase();
+  const allowed = ["DEVELOPMENT", "TEST", "PREVIEW", "STAGING", "PRODUCTION"] as const;
+  const releaseEnvironment = (allowed as readonly string[]).includes(rawEnvironment) ? rawEnvironment as typeof allowed[number] : "UNKNOWN";
+  if (releaseEnvironment === "UNKNOWN") add("RELEASE_ENVIRONMENT_INVALID", "NALANDA_ENVIRONMENT", "Use DEVELOPMENT, TEST, PREVIEW, STAGING or PRODUCTION.");
+
+  const releaseId = value(environment, "NALANDA_RELEASE_ID");
+  const releaseChannel = value(environment, "NALANDA_RELEASE_CHANNEL");
+  const pwaBuild = value(environment, "NEXT_PUBLIC_PWA_BUILD_VERSION");
+  for (const [name, configured] of [["NALANDA_RELEASE_ID", releaseId], ["NALANDA_RELEASE_CHANNEL", releaseChannel], ["NEXT_PUBLIC_PWA_BUILD_VERSION", pwaBuild]] as const) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]{2,119}$/.test(configured)) add("RELEASE_IDENTIFIER_INVALID", name, "Use a bounded non-secret release identifier.");
+    if (PLACEHOLDER.test(configured)) add("PLACEHOLDER_REJECTED", name, "Placeholder release metadata is not allowed.");
+  }
+  if (releaseId && pwaBuild && releaseId !== pwaBuild) add("MIXED_RELEASE_IDENTIFIERS", "NEXT_PUBLIC_PWA_BUILD_VERSION", "Release and PWA build identifiers must match.");
+
+  const productionShaped = releaseEnvironment === "STAGING" || releaseEnvironment === "PRODUCTION";
+  const origin = value(environment, "APP_ORIGIN");
+  try {
+    const parsed = new URL(origin);
+    if (productionShaped && parsed.protocol !== "https:") add("RELEASE_ORIGIN_NOT_HTTPS", "APP_ORIGIN", "Staging and production require HTTPS.");
+    if (releaseEnvironment === "STAGING" && !/(^|[.-])staging([.-]|$)/i.test(parsed.hostname) && !/^localhost$|^127\.0\.0\.1$/.test(parsed.hostname)) add("STAGING_ORIGIN_AMBIGUOUS", "APP_ORIGIN", "Staging must use an unmistakable staging or loopback host.");
+  } catch {
+    add("RELEASE_ORIGIN_INVALID", "APP_ORIGIN", "APP_ORIGIN must be an absolute URL.");
+  }
+
+  if (productionShaped && value(environment, "SESSION_COOKIE_SECURE") !== "true") add("INSECURE_COOKIE_REJECTED", "SESSION_COOKIE_SECURE", "Secure cookies are mandatory.");
+  if (value(environment, "DEBUG") === "true" || value(environment, "NEXT_PUBLIC_DEBUG") === "true") add("DEBUG_MODE_REJECTED", "DEBUG", "Debug mode is prohibited in release-shaped environments.");
+  if (value(environment, "LIVE_PROVIDERS_ENABLED") !== "false") add("LIVE_PROVIDER_MODE_REJECTED", "LIVE_PROVIDERS_ENABLED", "Provider mode must remain explicitly disabled until separately approved.");
+
+  const database = value(environment, "DATABASE_URL");
+  if (!database.startsWith("file:") || database.includes("?")) add("RELEASE_DATABASE_URL_INVALID", "DATABASE_URL", "Use a query-free SQLite file URL.");
+  if (productionShaped && /(?:^|[\\/])(?:prisma[\\/])?dev\.db$/i.test(database.slice(5))) add("OPERATIONAL_DEV_DB_REJECTED", "DATABASE_URL", "Operational dev.db cannot be used for staging or production.");
+  const roots = ["PRIVATE_STORAGE_ROOT", "BACKUP_DIRECTORY"].map((name) => [name, value(environment, name)] as const);
+  for (const [name, configured] of roots) {
+    if (!configured || !path.isAbsolute(configured)) add("RELEASE_PATH_NOT_ABSOLUTE", name, "Use an absolute environment-specific path.");
+    else {
+      const relative = path.relative(path.resolve(workspaceRoot), path.resolve(configured));
+      if (productionShaped && (relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative)))) add("RELEASE_PATH_INSIDE_SOURCE", name, "Runtime data must be outside the release source tree.");
+    }
+  }
+  const stagingDatabase = value(environment, "NALANDA_STAGING_DATABASE_URL");
+  const productionDatabase = value(environment, "NALANDA_PRODUCTION_DATABASE_URL");
+  if (stagingDatabase && productionDatabase && path.resolve(stagingDatabase.replace(/^file:/, "")) === path.resolve(productionDatabase.replace(/^file:/, ""))) add("ENVIRONMENT_DATABASE_SHARED", "DATABASE_URL", "Staging and production must not share a database.");
+  const stagingStorage = value(environment, "NALANDA_STAGING_STORAGE_ROOT");
+  const productionStorage = value(environment, "NALANDA_PRODUCTION_STORAGE_ROOT");
+  if (stagingStorage && productionStorage && path.resolve(stagingStorage) === path.resolve(productionStorage)) add("ENVIRONMENT_STORAGE_SHARED", "PRIVATE_STORAGE_ROOT", "Staging and production must not share private storage.");
+
+  if (productionShaped) {
+    for (const name of ["AUTH_SECRET", "CLOUD_BACKUP_ENCRYPTION_KEY_V1"] as const) {
+      const configured = value(environment, name);
+      if (configured.length < 32 || PLACEHOLDER.test(configured) || DEVELOPMENT_SECRET.test(configured)) add("RELEASE_SECRET_INVALID", name, "A unique non-placeholder runtime secret is required.");
+    }
+  }
+  if (releaseEnvironment === "STAGING" && value(environment, "NALANDA_STAGING_BANNER") !== "true") add("STAGING_BANNER_REQUIRED", "NALANDA_STAGING_BANNER", "Staging must display the staging banner.");
+  if (releaseEnvironment === "STAGING" && value(environment, "PUBLIC_WEBSITE_INDEXING_ENABLED") !== "false") add("STAGING_INDEXING_REJECTED", "PUBLIC_WEBSITE_INDEXING_ENABLED", "Staging must refuse crawlers and indexing.");
+
+  const providerGroups = [WHATSAPP_LIVE_VALUES, EMAIL_LIVE_VALUES];
+  for (const group of providerGroups) {
+    const configured = group.filter((name) => Boolean(value(environment, name)));
+    if (configured.length && configured.length !== group.length) add("PARTIAL_PROVIDER_CONFIGURATION", configured[0], "Partial provider configuration is prohibited.");
+    if (configured.length && value(environment, "LIVE_PROVIDERS_ENABLED") !== "true") add("DISABLED_PROVIDER_SECRET_REJECTED", configured[0], "Do not inject live provider credentials while providers are disabled.");
+  }
+
+  return { ok: issues.length === 0, environment: releaseEnvironment, issues, classifications: RELEASE_ENVIRONMENT_CONTRACT };
 }
 
 export function formatDeploymentEnvironmentResult(result: DeploymentEnvironmentResult) {

@@ -2,7 +2,7 @@
 
 **Requirement:** `V1-DEVOPS-UPDATE-001`<br>
 **Decision date:** 2026-08-08<br>
-**Status:** governed V1 strategy; no deployment or provider activation is authorised
+**Status:** RELEASE-OPS-1A implementation checkpoint; independent QA required; no deployment or provider activation is authorised
 
 ## Release principle
 
@@ -94,4 +94,4 @@ Every release record must contain branch/commit/tag, change summary, migrations,
 
 ## Current disposition
 
-Repository staging-readiness and migration/backup foundations provide partial evidence. A complete separate staging environment, production pilot/cutover, cross-device acceptance, monitored release operation and version-discovery UI are not yet released. This V1 requirement remains `PARTIAL`.
+RELEASE-OPS-1A now provides local/private manifest, package, environment, flag, lock/audit, phased runner, maintenance, client-version/PWA and restricted Release Operations machinery by reusing DEVOPS/OBS foundations. Its implementation gate passed focused/full tests, typecheck, production build, migration/restore/package/failure rehearsal, route inventory, operational-integrity preservation and Git safety; it is `READY_FOR_QA`, not released. Independent Browser/accessibility and release audit, branch push, external re-fetch and governed merge/tag remain. A cloud staging environment, provider/budget decision, DNS, production pilot/cutover, real users/data and native apps remain unauthorised.

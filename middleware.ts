@@ -15,6 +15,7 @@ const publicPaths = [
   "/reset-password",
   "/setup",
   "/offline",
+  "/maintenance",
   "/manifest.webmanifest",
   "/sw.js",
   "/nalanda-logo.jpg",
@@ -23,6 +24,7 @@ const publicPaths = [
   "/api/auth/recovery/request",
   "/api/auth/recovery/reset",
   "/api/deployment-health",
+  "/api/release/client-version",
   "/api/setup"
 ];
 const publicPathPrefixes = [
@@ -74,9 +76,24 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(response);
   }
 
+  const maintenanceActive = process.env.NALANDA_MAINTENANCE_MODE === "true";
+  const maintenanceAllowed = pathname === "/maintenance" || pathname === "/api/health" || pathname === "/api/deployment-health" || pathname === "/api/release/client-version" || pathname.startsWith("/technical-operations") || pathname === "/api/technical-operations" || pathname.startsWith("/api/technical-operations/") || pathname.startsWith("/_next/") || pathname.startsWith("/icons/") || pathname === "/manifest.webmanifest" || pathname === "/sw.js";
+  if (maintenanceActive && !maintenanceAllowed) {
+    if (pathname.startsWith("/api/") || !["GET", "HEAD", "OPTIONS"].includes(request.method)) {
+      const response = NextResponse.json({ error: "Nalanda ERP is in a governed maintenance window. Save work and retry after maintenance." }, { status: 503 });
+      response.headers.set("cache-control", "private, no-store");
+      response.headers.set("retry-after", "300");
+      return applySecurityHeaders(response);
+    }
+    const response = NextResponse.redirect(new URL("/maintenance", applicationOrigin(request)));
+    response.headers.set("cache-control", "no-store");
+    return applySecurityHeaders(response);
+  }
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   if (isPublicWebsite) requestHeaders.set("x-nalanda-public-website", "1");
+  if (pathname === "/maintenance") requestHeaders.set("x-nalanda-maintenance-page", "1");
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   if (isPublicWebsite) {
     response.headers.set("cache-control", "public, max-age=0, must-revalidate");

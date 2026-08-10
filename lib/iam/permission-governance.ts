@@ -20,6 +20,10 @@ export const SUPER_ADMIN_ONLY_PERMISSIONS = new Set<CanonicalPermission>([
   "ACTIVATE_LIVE_CLOUD_BACKUP",
   "CHANGE_CLOUD_BACKUP_KEY_VERSION",
   "PURGE_CLOUD_BACKUPS"
+  ,"VIEW_RELEASE_OPERATIONS"
+  ,"EXECUTE_RELEASE"
+  ,"ROLLBACK_RELEASE"
+  ,"MANAGE_RELEASE_FEATURE_FLAGS"
 ]);
 
 export const CRITICAL_SUPER_ADMIN_PERMISSIONS = new Set<CanonicalPermission>([
@@ -72,6 +76,13 @@ export const LEADERSHIP_RESTRICTED_PERMISSIONS = new Set<CanonicalPermission>([
   ,"VIEW_DEPARTURE_AUDIT"
   ,"MANAGE_STANDING_EXIT_PERMISSION"
   ,"CORRECT_STUDENT_EXIT_RECORD"
+  ,"VIEW_RELEASE_OPERATIONS_SUMMARY"
+  ,"APPROVE_RELEASE_CANDIDATE"
+]);
+
+export const RELEASE_OPERATIONS_PERMISSIONS = new Set<CanonicalPermission>([
+  "VIEW_RELEASE_OPERATIONS_SUMMARY", "VIEW_RELEASE_OPERATIONS", "APPROVE_RELEASE_CANDIDATE",
+  "EXECUTE_RELEASE", "ROLLBACK_RELEASE", "MANAGE_RELEASE_FEATURE_FLAGS"
 ]);
 
 export const OBJECT_SCOPED_PERMISSIONS = new Set<CanonicalPermission>([
@@ -158,6 +169,9 @@ export function immutablePermissionDenial(role: Role, rawPermission: string) {
   if (!permission) return "Unknown permissions always default to deny.";
   if (role !== "SUPER_ADMIN" && SUPER_ADMIN_ONLY_PERMISSIONS.has(permission)) {
     return "This security invariant is reserved to the Super Admin context and cannot be delegated.";
+  }
+  if (!(["SUPER_ADMIN", "DIRECTOR"] as Role[]).includes(role) && RELEASE_OPERATIONS_PERMISSIONS.has(permission)) {
+    return "Release Operations access is restricted to governed Super Admin and Director contexts and cannot be delegated.";
   }
   if (role === "VIEWER" && VIEWER_IMMUTABLE_DENIALS.has(permission)) {
     return "Viewer access is permanently restricted for this permission.";

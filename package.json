@@ -137,7 +137,14 @@
     "deployment:env-check": "tsx scripts/validate-deployment-environment.ts",
     "deployment:integrity-check": "tsx scripts/verify-devops1c-operational-integrity.ts",
     "staging:synthetic-seed": "tsx scripts/seed-staging-synthetic.ts",
-    "staging:synthetic-check": "tsx scripts/verify-staging-synthetic.ts"
+    "staging:synthetic-check": "tsx scripts/verify-staging-synthetic.ts",
+    "release:ops": "tsx scripts/release-ops.ts",
+    "release:inspect": "tsx scripts/release-ops.ts inspect",
+    "release:prepare": "tsx scripts/release-ops.ts prepare",
+    "release:package": "tsx scripts/release-ops.ts package",
+    "release:verify-artifact": "tsx scripts/release-ops.ts verify-artifact",
+    "release:env-check": "tsx scripts/validate-release-environment.ts",
+    "qa:releaseops1a": "tsx scripts/qa-releaseops1a.ts"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",

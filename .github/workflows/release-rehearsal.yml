@@ -1,0 +1,62 @@
+name: Private release validation (manual only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_private_synthetic_only:
+        description: "Type PRIVATE_SYNTHETIC_ONLY; this workflow does not deploy or upload artifacts"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: private-release-validation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: ${{ inputs.confirm_private_synthetic_only == 'PRIVATE_SYNTHETIC_ONLY' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DATABASE_URL: file:./tmp/release-ci/synthetic.db
+      NALANDA_ENVIRONMENT: TEST
+      NALANDA_RELEASE_ID: release-ci-${{ github.run_id }}
+      NALANDA_RELEASE_CHANNEL: TEST
+      NEXT_PUBLIC_PWA_BUILD_VERSION: release-ci-${{ github.run_id }}
+      NALANDA_MINIMUM_WEB_CLIENT: release-ci-${{ github.run_id }}
+      NALANDA_CLIENT_UPDATE_SEVERITY: AVAILABLE
+      NALANDA_RELEASE_DATE: "2026-08-10T00:00:00.000Z"
+      NALANDA_STANDALONE_BUILD: "true"
+      APP_ORIGIN: http://127.0.0.1:3000
+      PRIVATE_STORAGE_ROOT: /tmp/nalanda-release-ci/private
+      BACKUP_DIRECTORY: /tmp/nalanda-release-ci/backups
+      LIVE_PROVIDERS_ENABLED: "false"
+      PUBLIC_WEBSITE_INDEXING_ENABLED: "false"
+      NALANDA_STAGING_BANNER: "true"
+    steps:
+      # Version tags are deliberately review-gated in this manual-only workflow.
+      # No provider credentials, deployment permissions, schedules or artifact upload are present.
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Enable repository package manager
+        run: corepack enable
+      - name: Install exactly from lockfile
+        run: pnpm install --frozen-lockfile
+      - name: Generate isolated Prisma client
+        run: pnpm db:generate
+      - name: Git and private-artifact safety
+        run: pnpm git:safety-check
+      - name: Release Operations focused tests
+        run: pnpm exec vitest run tests/release-operations.test.ts tests/release-operations-ui.test.ts
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Build standalone release runtime
+        run: pnpm build

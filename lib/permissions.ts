@@ -434,6 +434,12 @@ export const PERMISSIONS = [
   "MANAGE_OPERATIONAL_INCIDENTS",
   "MANAGE_MAINTENANCE_WINDOWS",
   "MANAGE_CLIENT_VERSION_POLICY",
+  "VIEW_RELEASE_OPERATIONS_SUMMARY",
+  "VIEW_RELEASE_OPERATIONS",
+  "APPROVE_RELEASE_CANDIDATE",
+  "EXECUTE_RELEASE",
+  "ROLLBACK_RELEASE",
+  "MANAGE_RELEASE_FEATURE_FLAGS",
   "RUN_BACKUP",
   "RUN_RESTORE",
   "VIEW_AI_ASSISTANT",
@@ -1247,6 +1253,12 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { permission: "MANAGE_OPERATIONAL_INCIDENTS", label: "Manage operational incidents", description: "Create and maintain privacy-safe infrastructure incidents." },
       { permission: "MANAGE_MAINTENANCE_WINDOWS", label: "Manage maintenance windows", description: "Plan and record exact-domain maintenance windows." },
       { permission: "MANAGE_CLIENT_VERSION_POLICY", label: "Manage client version policy", description: "Maintain advisory minimum-supported client versions." },
+      { permission: "VIEW_RELEASE_OPERATIONS_SUMMARY", label: "View release summary", description: "See concise release gates, maintenance impact and rollback readiness." },
+      { permission: "VIEW_RELEASE_OPERATIONS", label: "View release operations", description: "Inspect the restricted release candidate, gates, staging and audit evidence." },
+      { permission: "APPROVE_RELEASE_CANDIDATE", label: "Approve release candidate", description: "Record a named release approval after all required evidence." },
+      { permission: "EXECUTE_RELEASE", label: "Execute release", description: "Run the governed release switch after re-authentication." },
+      { permission: "ROLLBACK_RELEASE", label: "Roll back release", description: "Run the governed release rollback after re-authentication." },
+      { permission: "MANAGE_RELEASE_FEATURE_FLAGS", label: "Manage release feature flags", description: "Maintain server-side fail-closed release flags." },
       { permission: "RUN_BACKUP", label: "Run backup", description: "Download or create full backups." },
       { permission: "RUN_RESTORE", label: "Run restore", description: "Validate and restore full backups." },
       { permission: "FIRST_RUN_SETUP", label: "First-run setup", description: "Complete first-run Director setup." }
@@ -1269,7 +1281,11 @@ const directorPermissions = new Set<CanonicalPermission>(
     "MANAGE_OPERATIONAL_ALERTS",
     "MANAGE_OPERATIONAL_INCIDENTS",
     "MANAGE_MAINTENANCE_WINDOWS",
-    "MANAGE_CLIENT_VERSION_POLICY"
+    "MANAGE_CLIENT_VERSION_POLICY",
+    "VIEW_RELEASE_OPERATIONS",
+    "EXECUTE_RELEASE",
+    "ROLLBACK_RELEASE",
+    "MANAGE_RELEASE_FEATURE_FLAGS"
   ].includes(permission))
 );
 

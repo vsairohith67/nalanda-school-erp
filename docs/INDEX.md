@@ -1,5 +1,20 @@
 # Documentation Index
 
+## RELEASE-OPS-1A safe release, client update and rollback
+
+- [Existing Release-Asset Audit](RELEASE_OPERATIONS_EXISTING_ASSET_AUDIT.md)
+- [Release Operations Architecture](RELEASE_OPERATIONS_ARCHITECTURE.md)
+- [Environment and Secret Matrix](RELEASE_ENVIRONMENT_AND_SECRET_MATRIX.md)
+- [Release and Rollback Runbook](RELEASE_AND_ROLLBACK_RUNBOOK.md)
+- [Web/PWA and Native Compatibility](RELEASE_CLIENT_PWA_NATIVE_COMPATIBILITY.md)
+- [Feature-Flag Policy](RELEASE_FEATURE_FLAG_POLICY.md)
+- [Release Notes Template](RELEASE_NOTES_TEMPLATE.md)
+- [Director and Super Admin Approval Guide](RELEASE_OPERATIONS_APPROVAL_GUIDE.md)
+- [Threat Model and Technical Debt](RELEASE_OPERATIONS_THREAT_MODEL_AND_TECH_DEBT.md)
+- [Original Governed Strategy](SAFE_STAGING_RELEASE_AND_CLIENT_UPDATE_STRATEGY.md)
+
+RELEASE-OPS-1A consolidates the existing DEVOPS/OBS/PWA/recovery foundations into a provider-neutral manifest, explicitly selected standalone/framework package, five-environment contract, fail-closed flags, durable release lock/audit, safe maintenance/client update behavior and restricted Release Operations view. This is an implementation checkpoint only; independent QA, merge/tag and any actual staging/public deployment remain separate gates.
+
 ## IMPORT-1A governed bulk onboarding
 
 - [Architecture, Data Dictionary and Governance](GOVERNED_BULK_ONBOARDING.md)

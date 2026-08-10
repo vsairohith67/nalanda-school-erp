@@ -15,6 +15,11 @@ type RolePermissionClient = Pick<PrismaClient | Prisma.TransactionClient, "roleP
 
 export type RolePermissionMatrix = Record<Role, Record<CanonicalPermission, boolean>>;
 
+const RELEASE_OPERATIONS_PERMISSIONS = new Set<CanonicalPermission>([
+  "VIEW_RELEASE_OPERATIONS_SUMMARY", "VIEW_RELEASE_OPERATIONS", "APPROVE_RELEASE_CANDIDATE",
+  "EXECUTE_RELEASE", "ROLLBACK_RELEASE", "MANAGE_RELEASE_FEATURE_FLAGS"
+]);
+
 const NON_DELEGABLE_ROLE_DENIALS: Partial<Record<Role, ReadonlySet<CanonicalPermission>>> = {
   ACCOUNTANT: new Set<CanonicalPermission>([
     "VIEW_STUDENTS",
@@ -33,6 +38,8 @@ const NON_DELEGABLE_ROLE_DENIALS: Partial<Record<Role, ReadonlySet<CanonicalPerm
 };
 
 function rolePermissionIsHardDenied(role: Role, permission: CanonicalPermission) {
+  if (!(["SUPER_ADMIN", "DIRECTOR"] as Role[]).includes(role) && RELEASE_OPERATIONS_PERMISSIONS.has(permission)) return true;
+  if (role === "DIRECTOR" && ["VIEW_RELEASE_OPERATIONS", "EXECUTE_RELEASE", "ROLLBACK_RELEASE", "MANAGE_RELEASE_FEATURE_FLAGS"].includes(permission)) return true;
   return NON_DELEGABLE_ROLE_DENIALS[role]?.has(permission) ?? false;
 }
 
@@ -99,9 +106,7 @@ export async function getEffectivePermissions(client: RolePermissionClient, role
     if (row.enabled) permissions.add(permission);
     else permissions.delete(permission);
   }
-  for (const permission of NON_DELEGABLE_ROLE_DENIALS[role] ?? []) {
-    permissions.delete(permission);
-  }
+  for (const permission of PERMISSIONS) if (rolePermissionIsHardDenied(role, permission)) permissions.delete(permission);
   return permissions;
 }
 

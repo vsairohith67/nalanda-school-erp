@@ -1,4 +1,5 @@
 import path from "node:path";
+import { readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import {
   formatDeploymentEnvironmentResult,
@@ -29,9 +30,13 @@ function main() {
       "SELECT (SELECT COUNT(*) FROM Student WHERE admissionNo LIKE 'STG-%') AS students, (SELECT COUNT(*) FROM User WHERE username LIKE 'stg-%') AS users"
     ).get() as { students: number; users: number };
 
-    if (migration?.name !== "20260722_clean_install_baseline") {
+    const expectedMigrations = readdirSync(path.resolve("prisma", "migrations"), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
+    const activeMigration = migration?.name;
+    if (!activeMigration || activeMigration !== expectedMigrations.at(-1)) {
       throw new Error("STAGING_ACTIVE_MIGRATION_MISMATCH");
     }
+    const migrationCount = Number((database.prepare("SELECT COUNT(*) AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL").get() as { count: number }).count);
+    if (migrationCount !== expectedMigrations.length) throw new Error("STAGING_MIGRATION_COUNT_MISMATCH");
     if (
       baseline.students !== 1 ||
       baseline.activeEnrollments !== 1 ||
@@ -44,7 +49,7 @@ function main() {
     }
 
     console.log(
-      `Synthetic staging check passed: migration=${migration.name} students=1 activeEnrollments=1 payments=0 collected=0`
+      `Synthetic staging check passed: migration=${activeMigration} migrations=${migrationCount} students=1 activeEnrollments=1 payments=0 collected=0`
     );
   } finally {
     database.close();

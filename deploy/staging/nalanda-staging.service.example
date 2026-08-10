@@ -9,7 +9,7 @@ User=nalanda-staging
 Group=nalanda-staging
 WorkingDirectory=/srv/nalanda-staging/current
 EnvironmentFile=/etc/nalanda-staging/environment
-ExecStart=/usr/bin/node /srv/nalanda-staging/current/node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3000
+ExecStart=/usr/bin/node /srv/nalanda-staging/current/runtime/server.js
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=60
@@ -24,7 +24,7 @@ ProtectControlGroups=true
 LockPersonality=true
 RestrictSUIDSGID=true
 ReadOnlyPaths=/srv/nalanda-staging/releases
-ReadWritePaths=/srv/nalanda-staging/data /srv/nalanda-staging/locks
+ReadWritePaths=/srv/nalanda-staging/data /srv/nalanda-staging/locks /srv/nalanda-staging/release-state
 UMask=0077
 LimitNOFILE=16384
 

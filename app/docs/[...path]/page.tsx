@@ -13,7 +13,10 @@ const DOCUMENTS = new Map<string, { file: string; title: string }>([
   ["runbooks/OBS_INCIDENT_RESPONSE_RUNBOOK.md", { file: "runbooks/OBS_INCIDENT_RESPONSE_RUNBOOK.md", title: "Incident Response Runbook" }],
   ["runbooks/OBS_JOB_OUTBOX_RUNBOOK.md", { file: "runbooks/OBS_JOB_OUTBOX_RUNBOOK.md", title: "Job and Outbox Runbook" }],
   ["OBS_CLIENT_RELEASE_VERSION_SPECIFICATION.md", { file: "OBS_CLIENT_RELEASE_VERSION_SPECIFICATION.md", title: "Client Release and Version Specification" }],
-  ["OBS_PROVIDER_STATUS_POLICY.md", { file: "OBS_PROVIDER_STATUS_POLICY.md", title: "Provider Status Policy" }]
+  ["OBS_PROVIDER_STATUS_POLICY.md", { file: "OBS_PROVIDER_STATUS_POLICY.md", title: "Provider Status Policy" }],
+  ["RELEASE_AND_ROLLBACK_RUNBOOK.md", { file: "RELEASE_AND_ROLLBACK_RUNBOOK.md", title: "Release and Rollback Runbook" }],
+  ["RELEASE_ENVIRONMENT_AND_SECRET_MATRIX.md", { file: "RELEASE_ENVIRONMENT_AND_SECRET_MATRIX.md", title: "Release Environment and Secret Matrix" }],
+  ["RELEASE_CLIENT_PWA_NATIVE_COMPATIBILITY.md", { file: "RELEASE_CLIENT_PWA_NATIVE_COMPATIBILITY.md", title: "Client Compatibility Contract" }]
 ]);
 
 export const dynamic = "force-dynamic";

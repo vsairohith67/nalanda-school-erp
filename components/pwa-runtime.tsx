@@ -11,6 +11,8 @@ import {
 } from "react";
 import { isStandaloneDisplay, safeRegistrationError } from "@/lib/pwa-client";
 import { PWA_BUILD_VERSION } from "@/lib/pwa-version";
+import { evaluateClientUpdate, type PublicClientVersionContract } from "@/lib/release-client-version";
+import { hasUnsafeClientWork, PWA_UNSAFE_ACTIVITY_EVENTS, safeUpdateDeferralKey } from "@/lib/pwa-update-safety";
 
 export type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -52,6 +54,8 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
   const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [updateDeferred, setUpdateDeferred] = useState(false);
   const [confirmingUpdate, setConfirmingUpdate] = useState(false);
+  const [serverVersion, setServerVersion] = useState<PublicClientVersionContract | null>(null);
+  const [unsafeActivity, setUnsafeActivity] = useState(false);
   const updateRequested = useRef(false);
   const reloaded = useRef(false);
   const wasOffline = useRef(false);
@@ -132,6 +136,10 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
       reloaded.current = true;
       window.location.reload();
     };
+    const handleUnsafeActivity = (event: Event) => {
+      const detail = (event as CustomEvent<{ active?: boolean }>).detail;
+      setUnsafeActivity(detail?.active !== false);
+    };
 
     displayQuery.addEventListener("change", handleDisplayChange);
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
@@ -139,6 +147,7 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
     navigator.serviceWorker?.addEventListener("controllerchange", handleControllerChange);
+    for (const eventName of PWA_UNSAFE_ACTIVITY_EVENTS) window.addEventListener(eventName, handleUnsafeActivity);
     void registerServiceWorker();
 
     return () => {
@@ -148,8 +157,27 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
       navigator.serviceWorker?.removeEventListener("controllerchange", handleControllerChange);
+      for (const eventName of PWA_UNSAFE_ACTIVITY_EVENTS) window.removeEventListener(eventName, handleUnsafeActivity);
     };
   }, [registerServiceWorker]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function refreshVersion() {
+      try {
+        const response = await fetch("/api/release/client-version", { cache: "no-store", credentials: "same-origin" });
+        if (!response.ok) return;
+        const next = await response.json() as PublicClientVersionContract;
+        if (!cancelled) {
+          setServerVersion(next);
+          setUpdateDeferred(window.localStorage.getItem(safeUpdateDeferralKey(next.releaseId)) === "true");
+        }
+      } catch { /* Update discovery is advisory and fails closed to UNKNOWN. */ }
+    }
+    void refreshVersion();
+    const timer = window.setInterval(() => void refreshVersion(), 5 * 60_000);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, []);
 
   useEffect(() => {
     if (!showReconnected) return;
@@ -172,12 +200,26 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
     }
   }
 
-  function activateWaitingWorker() {
-    if (!waitingWorker) return;
+  async function activateWaitingWorker() {
+    const blocked = unsafeActivity || hasUnsafeClientWork();
+    if (blocked) {
+      setUpdateDeferred(true);
+      setConfirmingUpdate(false);
+      if (serverVersion) window.localStorage.setItem(safeUpdateDeferralKey(serverVersion.releaseId), "true");
+      return;
+    }
     updateRequested.current = true;
-    waitingWorker.postMessage({ type: "SKIP_WAITING" });
+    if (serverVersion) window.localStorage.removeItem(safeUpdateDeferralKey(serverVersion.releaseId));
+    if (waitingWorker) waitingWorker.postMessage({ type: "SKIP_WAITING" });
+    else {
+      await checkForUpdate();
+      window.location.reload();
+    }
     setConfirmingUpdate(false);
   }
+
+  const clientUpdateState = serverVersion ? evaluateClientUpdate({ clientBuildId: PWA_BUILD_VERSION, serverBuildId: serverVersion.clientBuildId, minimumSupportedClientVersion: serverVersion.minimumSupportedClientVersion, severity: serverVersion.updateSeverity }) : "UNKNOWN";
+  const updateAvailable = Boolean(waitingWorker) || ["UPDATE_AVAILABLE", "UPDATE_RECOMMENDED", "UPDATE_REQUIRED", "INCOMPATIBLE"].includes(clientUpdateState);
 
   const value = useMemo<PwaContextValue>(() => ({
     supported: typeof navigator !== "undefined" && "serviceWorker" in navigator,
@@ -220,12 +262,12 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
           Connection restored. No form was resubmitted.
         </aside>
       ) : null}
-      {waitingWorker && !updateDeferred ? (
+      {updateAvailable && !updateDeferred ? (
         <aside className="pwa-update-banner" role="status" aria-live="polite">
-          <span><strong>A new version of Nalanda ERP is available.</strong> Update only when your current work is saved.</span>
+          <span><strong>{clientUpdateState === "UPDATE_REQUIRED" || clientUpdateState === "INCOMPATIBLE" ? "A required Nalanda ERP update is ready." : "A new version of Nalanda ERP is available."}</strong> Update only when your current work is saved.</span>
           <div className="page-actions">
             <button type="button" onClick={() => setConfirmingUpdate(true)}>Update Now</button>
-            <button type="button" className="secondary" onClick={() => setUpdateDeferred(true)}>Later</button>
+            <button type="button" className="secondary" onClick={() => { setUpdateDeferred(true); if (serverVersion) window.localStorage.setItem(safeUpdateDeferralKey(serverVersion.releaseId), "true"); }}>Update after saving</button>
           </div>
         </aside>
       ) : null}
@@ -246,7 +288,7 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
               <button type="button" className="secondary" autoFocus onClick={() => setConfirmingUpdate(false)}>
                 Go Back
               </button>
-              <button type="button" onClick={activateWaitingWorker}>Confirm Update Now</button>
+              <button type="button" onClick={() => void activateWaitingWorker()}>{unsafeActivity ? "Update after saving" : "Confirm Update Now"}</button>
             </div>
           </section>
         </div>

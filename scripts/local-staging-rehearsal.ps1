@@ -48,14 +48,24 @@ $databasePath = Join-Path $dataRoot "database\staging.db"
 if (-not (Test-Path -LiteralPath $databasePath)) { throw "LOCAL_REHEARSAL_DATABASE_MISSING" }
 
 $env:NODE_ENV = "production"
-$env:NALANDA_ENVIRONMENT = "staging"
+$env:NALANDA_ENVIRONMENT = "STAGING"
 $env:NALANDA_DEPLOYMENT_ID = "staging-devops1c-local"
+$env:NALANDA_RELEASE_ID = "staging-devops1c-local"
+$env:NALANDA_RELEASE_CHANNEL = "STAGING"
+$env:NALANDA_BUILD_ID = "staging-devops1c-local"
+$env:NALANDA_RELEASE_DATE = "2026-08-10T00:00:00.000Z"
+$env:NALANDA_MINIMUM_WEB_CLIENT = "0.1.0"
+$env:NALANDA_CLIENT_UPDATE_SEVERITY = "AVAILABLE"
+$env:NALANDA_STAGING_BANNER = "true"
+$env:NALANDA_MAINTENANCE_MODE = "false"
+$env:LIVE_PROVIDERS_ENABLED = "false"
 $env:NALANDA_LOCAL_REHEARSAL = "true"
 $env:QA20C_ISOLATED_DATABASE = "true"
 $env:QA20C_ISOLATED_ROOT = $dataRoot
 $env:QA20C_OPERATIONAL_DATABASE_PATH = (Resolve-Path -LiteralPath (Join-Path $workspace "prisma\dev.db")).Path
 $env:STAGING_DATA_DIR = $dataRoot
 $env:DATABASE_URL = "file:$($databasePath.Replace('\', '/'))"
+$env:PRIVATE_STORAGE_ROOT = Join-Path $dataRoot "private"
 $env:APP_ORIGIN = "https://staging.localhost"
 $env:PUBLIC_WEBSITE_URL = $env:APP_ORIGIN
 $env:PUBLIC_WEBSITE_INDEXING_ENABLED = "false"
@@ -155,6 +165,8 @@ try {
   try {
     & pnpm.cmd deployment:env-check
     Assert-Exit "deployment environment check"
+    & pnpm.cmd release:env-check
+    Assert-Exit "release environment check"
     & pnpm.cmd staging:synthetic-seed
     Assert-Exit "synthetic seed"
     & pnpm.cmd staging:synthetic-check

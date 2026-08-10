@@ -22,6 +22,12 @@ The authoritative 2026-08-08 correction moves full payroll automation from V1 to
 
 This additive reconstruction entry corrects an omission in the prior heading sequence. Exact Git evidence is `8440bb9` (implementation), `cc6d3eb` (independent recovery/ownership QA) and annotated tag `classwork-submissions-v37-2026-08-03`. The release introduced governed Classwork and secure private submissions with server-side ownership/scope, private no-store attachment retrieval, append-only feedback/audit and backup/recovery coverage. Original prompt text is unavailable; this paragraph is a repository-derived release summary, not a quotation.
 
+## RELEASE-OPS-1A — Safe staging, release packaging, client updates and rollback (2026-08-10)
+
+Started from synchronized `main` at the cleared Bulk Onboarding checkpoint and created retained branch `release/safe-staging-client-updates`. The implementation reuses DEVOPS-1A-E, OBS-1A, backup/private-asset and PWA foundations. It adds a machine-readable release manifest and deterministic explicitly selected standalone/framework package inventory, generic fail-closed environment/secret contract, server-governed default-off feature flags, durable exclusive lock and hash-chained private audit, phased resumable CLI, minimal client-version endpoint, dirty-work update deferral, maintenance refusal/page, exact release permissions and a Super Admin/Director-bounded Release Operations UI.
+
+The implementation gate passed 14 focused release/security/UI tests, full typecheck, 1,791 tests across 203 passing files, a 333-page/547-API production framework build, fresh and copied migration rehearsal, restore twice, deterministic package verification, lock/low-space/audit failure injection, operational baseline preservation and Git safety. Independent RELEASE-OPS-1A-QA, Browser evidence, branch push and external closure remain required before merge/tag. No cloud resource, hosting purchase, DNS change, provider activation, operational-data upload, public exposure, real-user onboarding or native app release is authorised or performed.
+
 ## AUTH-2B-QA - Independent alias, recovery and session security QA (2026-07-31)
 
 Independent QA cleared all five governed alias types, anti-enumeration,
