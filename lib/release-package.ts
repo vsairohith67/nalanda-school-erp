@@ -81,6 +81,7 @@ export function buildReleasePackage(input: {
   previousKnownGoodRelease: string;
   backupFormatVersion: number;
   runtimeMode?: "standalone" | "framework";
+  sourceDateEpoch?: string;
 }) {
   const files = new Map<string, Buffer>();
   const runtimeMode = input.runtimeMode ?? "standalone";
@@ -108,7 +109,7 @@ export function buildReleasePackage(input: {
   }
   const payloadInventory = inventory(files);
   const artifactPayloadSha256 = payloadDigest(payloadInventory);
-  const manifest = createReleaseManifest({ ...input, artifactSha256: artifactPayloadSha256 });
+  const manifest = createReleaseManifest({ ...input, artifactSha256: artifactPayloadSha256, sourceDateEpoch: input.sourceDateEpoch });
   files.set("release/release-manifest.json", Buffer.from(stableManifestJson(manifest)));
   files.set("release/artifact-inventory.json", Buffer.from(`${JSON.stringify({ contractVersion: 1, payloadSha256: artifactPayloadSha256, files: payloadInventory }, null, 2)}\n`));
   const totalBytes = [...files.values()].reduce((sum, bytes) => sum + bytes.length, 0);

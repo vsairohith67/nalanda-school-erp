@@ -12,8 +12,9 @@
 - [Director and Super Admin Approval Guide](RELEASE_OPERATIONS_APPROVAL_GUIDE.md)
 - [Threat Model and Technical Debt](RELEASE_OPERATIONS_THREAT_MODEL_AND_TECH_DEBT.md)
 - [Original Governed Strategy](SAFE_STAGING_RELEASE_AND_CLIENT_UPDATE_STRATEGY.md)
+- [Independent QA and Release Clearance](evidence/RELEASE_OPS_1A_QA_CLEARANCE.md)
 
-RELEASE-OPS-1A consolidates the existing DEVOPS/OBS/PWA/recovery foundations into a provider-neutral manifest, explicitly selected standalone/framework package, five-environment contract, fail-closed flags, durable release lock/audit, safe maintenance/client update behavior and restricted Release Operations view. This is an implementation checkpoint only; independent QA, merge/tag and any actual staging/public deployment remain separate gates.
+RELEASE-OPS-1A is cleared locally/private after independent package, migration, recovery, role, Browser, responsive, client-update and full-regression QA. It consolidates DEVOPS/OBS/PWA/recovery foundations into a provider-neutral manifest, explicit standalone/framework package, five-environment contract, fail-closed flags, durable lock/audit, safe maintenance/client update behavior and restricted Release Operations view. Actual staging/public deployment remains a separate provider/budget/approval gate.
 
 ## IMPORT-1A governed bulk onboarding
 

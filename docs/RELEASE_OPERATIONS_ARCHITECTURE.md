@@ -1,7 +1,7 @@
 # Release Operations Architecture
 
 **Requirement:** `V1-REL-OPS-021`  
-**Status:** implementation checkpoint; independent RELEASE-OPS-1A-QA required  
+**Status:** independently cleared locally/private on 2026-08-10
 **Deployment status:** not authorised
 
 ## Trust and environment boundary
@@ -12,7 +12,7 @@ The application remains one writable Node process over persistent local-SSD SQLi
 
 ## Release manifest and package
 
-`lib/release-manifest.ts` produces the authoritative machine-readable contract. It records release/application/channel identity, commit/tag, build ID/time, Node and package-manager versions, lockfile/schema hashes, ordered migration hashes, schema fingerprint, backup format, public assets, PWA build, private-asset schema, compatibility/minimum-client versions, flag snapshot, environment, payload hash and previous known good release. Missing metadata fails closed; no value is invented from the backup version.
+`lib/release-manifest.ts` produces the authoritative machine-readable contract. It records release/application/channel identity, commit/tag, build ID/time, Node and package-manager versions, lockfile/schema hashes, ordered migration hashes, schema fingerprint, backup format, public assets, PWA build, private-asset schema, compatibility/minimum-client versions, flag snapshot, environment, payload hash and previous known good release. Missing metadata fails closed; build time must come from the reviewed source epoch and no value is invented from the backup version.
 
 `lib/release-package.ts` packages one explicitly selected runtime: `standalone` for a symlink-capable Linux release runner, or `framework` for a Windows/local portability rehearsal using allowlisted compiled `.next/server`, static and manifest files. Staging deployment uses `standalone`; `framework` requires an exact lockfile production install and is not silently substituted. Both modes include versioned public assets, active Prisma schema/migrations, provider-neutral staging templates and package/lock metadata. The canonical payload inventory is deterministically hashed; the ZIP receives a separate SHA-256. Symlinks, traversal, secret-like content, `.env*`, databases/sidecars, backups, private uploads/assets, reports, payslips, logs, QA residue, coverage, IDE/Git files and development caches are refused.
 
@@ -26,13 +26,13 @@ Size meanings:
 
 ## Candidate, lock and audit
 
-The local/private state root defaults to ignored `.release-ops/` and may be placed at an absolute environment-specific location. `candidate.json` is atomically replaceable restart state. `release.lock.json` is created exclusively and names bounded owner/session/environment/release/expiry values without secrets. A second operator is refused; stale recovery requires an explicit reason. `audit.jsonl` is append-only and hash-chained.
+The local/private state root defaults to ignored `.codex/release-ops/` and may be placed at an absolute environment-specific location. `candidate.json` is atomically replaceable restart state. `release.lock.json` is created exclusively and names bounded owner/session/environment/release/expiry values without secrets. A second operator is refused; stale recovery requires an explicit reason. `audit.jsonl` is append-only and hash-chained.
 
 The CLI exposes `inspect`, `prepare`, `package`, `verify-artifact`, `rehearse`, `enter-maintenance`, `backup`, `migrate`, `switch-release`, `health-check`, `smoke-test`, `complete`, `rollback`, and `inspect-cleanup`. Each invocation requires environment/current/target identity and the same lock owner/session. Production mutation phases require a separate runtime authorization plus approval reference; this repository phase sets neither. There is no one-command public deployment.
 
 ## Gates and migration policy
 
-All required gates begin `PENDING` and accept bounded privacy-safe evidence. A destructive/incompatible migration blocks ordinary release. Staging/production uses `prisma migrate deploy`, never `db push`; deploy is rehearsed on fresh and byte-identical copied databases and executed twice to prove no-op. Backfills are separate/idempotent. Rollback never runs an automatic down migration. An old-schema rollback uses the verified pre-migration database plus matching asset checkpoint.
+All required gates begin `PENDING` and accept bounded privacy-safe evidence. Maintenance cannot begin until prerequisite gates and a current rollback owner/deadline exist; backup, migration, switch, health, smoke and completion then follow in order. A destructive/incompatible migration blocks ordinary release. Staging/production uses `prisma migrate deploy`, never `db push`; deploy is rehearsed on fresh and byte-identical copied databases and executed twice to prove no-op. Backfills are separate/idempotent. Rollback never runs an automatic down migration. An old-schema rollback uses the verified pre-migration database plus matching asset checkpoint, and post-write restore requires explicit reconciliation approval.
 
 For additive changes use expand → compatible code → verify → later contract. Code-only release is `NONE`; data backfill and code-dependent additions are declared explicitly.
 

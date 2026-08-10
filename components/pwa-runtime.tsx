@@ -140,6 +140,16 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
       const detail = (event as CustomEvent<{ active?: boolean }>).detail;
       setUnsafeActivity(detail?.active !== false);
     };
+    const markEditedFormDirty = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const form = target.closest("form");
+      if (form && form.dataset.updateSafe !== "true") form.dataset.dirty = "true";
+    };
+    const clearEditedFormDirty = (event: Event) => {
+      const target = event.target;
+      if (target instanceof HTMLFormElement) delete target.dataset.dirty;
+    };
 
     displayQuery.addEventListener("change", handleDisplayChange);
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
@@ -148,6 +158,9 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
     window.addEventListener("online", handleOnline);
     navigator.serviceWorker?.addEventListener("controllerchange", handleControllerChange);
     for (const eventName of PWA_UNSAFE_ACTIVITY_EVENTS) window.addEventListener(eventName, handleUnsafeActivity);
+    document.addEventListener("input", markEditedFormDirty, true);
+    document.addEventListener("change", markEditedFormDirty, true);
+    document.addEventListener("reset", clearEditedFormDirty, true);
     void registerServiceWorker();
 
     return () => {
@@ -158,6 +171,9 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
       window.removeEventListener("online", handleOnline);
       navigator.serviceWorker?.removeEventListener("controllerchange", handleControllerChange);
       for (const eventName of PWA_UNSAFE_ACTIVITY_EVENTS) window.removeEventListener(eventName, handleUnsafeActivity);
+      document.removeEventListener("input", markEditedFormDirty, true);
+      document.removeEventListener("change", markEditedFormDirty, true);
+      document.removeEventListener("reset", clearEditedFormDirty, true);
     };
   }, [registerServiceWorker]);
 

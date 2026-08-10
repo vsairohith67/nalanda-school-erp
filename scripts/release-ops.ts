@@ -54,7 +54,9 @@ function assertLock(root: string, args: Arguments) {
 
 function productionMutationAllowed(args: Arguments, releaseEnvironment: ReleaseEnvironment) {
   if (releaseEnvironment !== "PRODUCTION") return true;
-  return process.env.NALANDA_PRODUCTION_RELEASE_AUTHORIZED === "true" && typeof args["approval-id"] === "string" && args["approval-id"].length >= 8;
+  const supplied = typeof args["approval-id"] === "string" ? args["approval-id"].trim() : "";
+  const governed = process.env.NALANDA_PRODUCTION_APPROVAL_ID?.trim() || "";
+  return process.env.NALANDA_PRODUCTION_RELEASE_AUTHORIZED === "true" && /^[A-Za-z0-9][A-Za-z0-9._-]{7,119}$/.test(supplied) && supplied === governed;
 }
 
 function markGate(state: ReleaseCandidateState, key: string, status: string, evidenceSafe: string) {
@@ -121,7 +123,9 @@ function packagePhase(args: Arguments) {
   const outputRoot = path.resolve(root, "artifacts", state.releaseId);
   const runtimeMode = required(args, "runtime-mode");
   if (runtimeMode !== "standalone" && runtimeMode !== "framework") throw new Error("RELEASE_RUNTIME_MODE_INVALID");
-  const result = buildReleasePackage({ workspaceRoot, outputRoot, releaseId: state.releaseId, releaseChannel: required(args, "release-channel"), environment: state.environment, gitCommitSha: git("rev-parse", "HEAD"), gitTag: typeof args.tag === "string" ? args.tag : null, previousKnownGoodRelease: state.previousKnownGoodRelease, backupFormatVersion: Number(required(args, "backup-version")), runtimeMode });
+  const sourceDateEpoch = required(args, "source-date-epoch");
+  if (!/^\d{1,14}$/.test(sourceDateEpoch)) throw new Error("RELEASE_SOURCE_DATE_EPOCH_INVALID");
+  const result = buildReleasePackage({ workspaceRoot, outputRoot, releaseId: state.releaseId, releaseChannel: required(args, "release-channel"), environment: state.environment, gitCommitSha: git("rev-parse", "HEAD"), gitTag: typeof args.tag === "string" ? args.tag : null, previousKnownGoodRelease: state.previousKnownGoodRelease, backupFormatVersion: Number(required(args, "backup-version")), runtimeMode, sourceDateEpoch });
   state.phase = "package"; writeReleaseCandidate(root, state);
   appendReleaseAudit(root, { releaseId: state.releaseId, environment: state.environment, phase: "package", eventType: "PACKAGE_CREATED", actor: lock.owner, summarySafe: "Private deployable package and bounded inventory created." });
   return { phase: "package", artifact: path.basename(result.archivePath), manifest: result.manifest, size: deploymentSizeExplanation(result.report) };
@@ -146,6 +150,13 @@ function record(args: Arguments, phase: ReleasePhase) {
   if (["enter-maintenance", "backup", "migrate", "switch-release", "health-check", "smoke-test", "complete", "rollback"].includes(phase) && !productionMutationAllowed(args, state.environment)) throw new Error("RELEASE_PRODUCTION_EXECUTION_NOT_AUTHORIZED");
   if (state.migrationClassification === "DESTRUCTIVE_OR_INCOMPATIBLE" && ["migrate", "switch-release"].includes(phase)) throw new Error("RELEASE_DESTRUCTIVE_MIGRATION_BLOCKED");
   if (typeof args.gate === "string") markGate(state, args.gate, String(args["gate-status"] || "PASSED").toUpperCase(), required(args, "evidence"));
+  if (args["rollback-owner"] !== undefined || args["rollback-deadline"] !== undefined) {
+    const owner = required(args, "rollback-owner"), deadline = required(args, "rollback-deadline");
+    if (!/^[A-Za-z0-9][A-Za-z0-9._@-]{2,119}$/.test(owner)) throw new Error("RELEASE_ROLLBACK_OWNER_INVALID");
+    const deadlineValue = new Date(deadline).valueOf();
+    if (!Number.isFinite(deadlineValue) || deadlineValue <= Date.now()) throw new Error("RELEASE_ROLLBACK_DEADLINE_INVALID");
+    state.rollback = { ...state.rollback, ready: true, owner, deadline: new Date(deadlineValue).toISOString() };
+  }
   if (phase === "rollback" && typeof args.failure === "string") {
     state.rollback.recommendation = rollbackRecommendation(args.failure as ReleaseFailure);
     if (state.dataWriteBoundaryCrossed && args["database-restore-approved"] !== true) throw new Error("RELEASE_POST_WRITE_DATABASE_RESTORE_REQUIRES_RECONCILIATION");

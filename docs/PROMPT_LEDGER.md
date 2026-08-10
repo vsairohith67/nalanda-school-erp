@@ -14,7 +14,7 @@ The accessible Git history begins with the consolidated baseline commit `2d1ac63
 
 | Sequence / prompt label | Recoverable subject | Source date | Evidence classification | Implementation/release disposition | Source gap or conflict |
 | --- | --- | --- | --- | --- | --- |
-| RELEASE-OPS-1A | Safe staging, reproducible package, release gates, Web/PWA update and rollback machinery | 2026-08-10 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE` | Implementation checkpoint on retained feature branch; independent QA, merge/tag and external closure pending | No deployment/provider/DNS/real-data authority; QA continuation only after readiness |
+| RELEASE-OPS-1A / QA | Safe staging, reproducible package, release gates, Web/PWA update and rollback machinery | 2026-08-10 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | Cleared locally/private after independent package reproducibility, migration/restore, Browser/role/mobile/update-safety and full-regression QA; retained branch and annotated v41 tag | No deployment/provider/DNS/real-data authority; actual staging requires separate provider/budget approval |
 | FIN-FAMILY-PAY-1 / QA | Family/multi-Student mixed-tender collection | 2026-08-08 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | Complete locally/private with exact-paise graph, compatibility Payments, one receipt, correction/reversal, role isolation, concurrency/rollback, Browser and v37 restore proof | No provider activation, deployment, real-data onboarding, or physical-printer acceptance implied |
 
 ## Legacy reconstructed sequence

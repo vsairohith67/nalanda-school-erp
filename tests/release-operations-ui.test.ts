@@ -37,6 +37,8 @@ describe("Release Operations authorization and interface", () => {
     expect(css).toMatch(/\.maintenance-page h1[^}]*Georgia[^}]*font-weight:\s*700/s);
     expect(pwa).toContain("Update after saving");
     expect(pwa).toContain("hasUnsafeClientWork");
+    expect(pwa).toContain('document.addEventListener("input", markEditedFormDirty, true)');
+    expect(pwa).toContain('form.dataset.dirty = "true"');
     expect(serviceWorker).toContain('url.pathname.startsWith("/api/")');
     expect(serviceWorker).not.toContain('caches.open("private")');
   });

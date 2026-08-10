@@ -2,7 +2,7 @@
 
 **Requirement:** `V1-DEVOPS-UPDATE-001`<br>
 **Decision date:** 2026-08-08<br>
-**Status:** RELEASE-OPS-1A implementation checkpoint; independent QA required; no deployment or provider activation is authorised
+**Status:** RELEASE-OPS-1A cleared locally/private; no deployment or provider activation is authorised
 
 ## Release principle
 

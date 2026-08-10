@@ -1,6 +1,6 @@
 # RELEASE-OPS-1A Existing Release-Asset Audit
 
-**Checkpoint:** implementation on `release/safe-staging-client-updates`  
+**Checkpoint:** independently cleared on `release/safe-staging-client-updates`
 **Boundary:** local/private machinery only; no deployment, DNS, provider, real-user or real-data action
 
 ## Classification

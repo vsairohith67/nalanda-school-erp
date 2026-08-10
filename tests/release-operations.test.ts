@@ -7,7 +7,7 @@ import { evaluateClientUpdate, publicClientVersionContract } from "@/lib/release
 import { evaluateReleaseFeatureFlag, releaseFeatureFlags } from "@/lib/release-feature-flags";
 import { activeMigrationManifest, createReleaseManifest, verifyReleaseManifest } from "@/lib/release-manifest";
 import { buildReleasePackage, verifyReleasePackage } from "@/lib/release-package";
-import { acquireReleaseLock, appendReleaseAudit, createReleaseCandidate, readReleaseCandidate, releaseDiskProbe, releaseLock, verifyReleaseAudit, writeReleaseCandidate } from "@/lib/release-state";
+import { acquireReleaseLock, appendReleaseAudit, assertReleasePhaseAllowed, createReleaseCandidate, readReleaseCandidate, releaseDiskProbe, releaseLock, verifyReleaseAudit, writeReleaseCandidate } from "@/lib/release-state";
 
 const roots: string[] = [];
 function temporaryRoot(label: string) { const root = mkdtempSync(path.join(os.tmpdir(), `RELEASEOPS1A-${label}-`)); roots.push(root); return root; }
@@ -32,9 +32,7 @@ function sourceFixture() {
 describe("release manifest and package", () => {
   it("creates a bounded authoritative manifest with migration and public-asset checksums", () => {
     const root = sourceFixture();
-    const previous = process.env.SOURCE_DATE_EPOCH; process.env.SOURCE_DATE_EPOCH = "1786320000";
-    const manifest = createReleaseManifest({ workspaceRoot: root, releaseId: "release-test-1", releaseChannel: "TEST", environment: "TEST", gitCommitSha: "a".repeat(40), previousKnownGoodRelease: "known-good-1", backupFormatVersion: 41 });
-    if (previous === undefined) delete process.env.SOURCE_DATE_EPOCH; else process.env.SOURCE_DATE_EPOCH = previous;
+    const manifest = createReleaseManifest({ workspaceRoot: root, releaseId: "release-test-1", releaseChannel: "TEST", environment: "TEST", gitCommitSha: "a".repeat(40), previousKnownGoodRelease: "known-good-1", backupFormatVersion: 41, sourceDateEpoch: "1786320000" });
     expect(verifyReleaseManifest(manifest)).toEqual(manifest);
     expect(manifest.appliedMigrations).toEqual(activeMigrationManifest(root));
     expect(manifest.publicStaticAssets).toHaveLength(1);
@@ -43,28 +41,36 @@ describe("release manifest and package", () => {
 
   it("packages standalone output reproducibly and rejects package tampering", () => {
     const root = sourceFixture(), output = temporaryRoot("artifact");
-    const previous = process.env.SOURCE_DATE_EPOCH; process.env.SOURCE_DATE_EPOCH = "1786320000";
-    const first = buildReleasePackage({ workspaceRoot: root, outputRoot: output, releaseId: "release-test-2", releaseChannel: "TEST", environment: "TEST", gitCommitSha: "b".repeat(40), previousKnownGoodRelease: "known-good-1", backupFormatVersion: 41 });
+    const first = buildReleasePackage({ workspaceRoot: root, outputRoot: output, releaseId: "release-test-2", releaseChannel: "TEST", environment: "TEST", gitCommitSha: "b".repeat(40), previousKnownGoodRelease: "known-good-1", backupFormatVersion: 41, sourceDateEpoch: "1786320000" });
+    const second = buildReleasePackage({ workspaceRoot: root, outputRoot: temporaryRoot("artifact-repeat"), releaseId: "release-test-2", releaseChannel: "TEST", environment: "TEST", gitCommitSha: "b".repeat(40), previousKnownGoodRelease: "known-good-1", backupFormatVersion: 41, sourceDateEpoch: "1786320000" });
+    expect(second.report.archiveSha256).toBe(first.report.archiveSha256);
     const verified = verifyReleasePackage({ archiveBytes: readFileSync(first.archivePath), expectedArchiveSha256: first.report.archiveSha256 });
     expect(verified.valid).toBe(true);
     expect(verified.manifest.releaseArtifactSha256).toBe(first.report.payloadSha256);
     const corrupted = Buffer.from(readFileSync(first.archivePath)); corrupted[Math.floor(corrupted.length / 2)] ^= 0xff;
     expect(() => verifyReleasePackage({ archiveBytes: corrupted, expectedArchiveSha256: first.report.archiveSha256 })).toThrow("RELEASE_ARCHIVE_HASH_MISMATCH");
-    if (previous === undefined) delete process.env.SOURCE_DATE_EPOCH; else process.env.SOURCE_DATE_EPOCH = previous;
+    const previousEpoch = process.env.SOURCE_DATE_EPOCH;
+    delete process.env.SOURCE_DATE_EPOCH;
+    try {
+      expect(() => createReleaseManifest({ workspaceRoot: root, releaseId: "release-test-missing-time", releaseChannel: "TEST", environment: "TEST", gitCommitSha: "b".repeat(40), previousKnownGoodRelease: "known-good-1", backupFormatVersion: 41 })).toThrow("RELEASE_SOURCE_DATE_EPOCH_REQUIRED");
+    } finally {
+      if (previousEpoch === undefined) delete process.env.SOURCE_DATE_EPOCH;
+      else process.env.SOURCE_DATE_EPOCH = previousEpoch;
+    }
   });
 
   it("refuses secret-like and private paths inside the standalone package", () => {
     const root = sourceFixture(); file(root, ".next/standalone/.env.production", "AUTH_SECRET=should-not-ship\n");
-    expect(() => buildReleasePackage({ workspaceRoot: root, outputRoot: temporaryRoot("blocked"), releaseId: "release-test-3", releaseChannel: "TEST", environment: "TEST", gitCommitSha: "c".repeat(40), previousKnownGoodRelease: "known-good-1", backupFormatVersion: 41 })).toThrow("RELEASE_PACKAGE_PRIVATE_PATH_REFUSED");
+    expect(() => buildReleasePackage({ workspaceRoot: root, outputRoot: temporaryRoot("blocked"), releaseId: "release-test-3", releaseChannel: "TEST", environment: "TEST", gitCommitSha: "c".repeat(40), previousKnownGoodRelease: "known-good-1", backupFormatVersion: 41, sourceDateEpoch: "1786320000" })).toThrow("RELEASE_PACKAGE_PRIVATE_PATH_REFUSED");
   });
 
   it("distinguishes the compiled backup API route from forbidden backup artifacts", () => {
     const allowed = sourceFixture();
     file(allowed, ".next/standalone/.next/server/app/api/backup/route/app-build-manifest.json", "{}\n");
-    expect(() => buildReleasePackage({ workspaceRoot: allowed, outputRoot: temporaryRoot("backup-route"), releaseId: "release-test-4", releaseChannel: "TEST", environment: "TEST", gitCommitSha: "e".repeat(40), previousKnownGoodRelease: "known-good-1", backupFormatVersion: 41 })).not.toThrow();
+    expect(() => buildReleasePackage({ workspaceRoot: allowed, outputRoot: temporaryRoot("backup-route"), releaseId: "release-test-4", releaseChannel: "TEST", environment: "TEST", gitCommitSha: "e".repeat(40), previousKnownGoodRelease: "known-good-1", backupFormatVersion: 41, sourceDateEpoch: "1786320000" })).not.toThrow();
     const blocked = sourceFixture();
     file(blocked, ".next/standalone/backups/operational.backup", "private backup bytes\n");
-    expect(() => buildReleasePackage({ workspaceRoot: blocked, outputRoot: temporaryRoot("backup-blocked"), releaseId: "release-test-5", releaseChannel: "TEST", environment: "TEST", gitCommitSha: "f".repeat(40), previousKnownGoodRelease: "known-good-1", backupFormatVersion: 41 })).toThrow("RELEASE_PACKAGE_PRIVATE_PATH_REFUSED");
+    expect(() => buildReleasePackage({ workspaceRoot: blocked, outputRoot: temporaryRoot("backup-blocked"), releaseId: "release-test-5", releaseChannel: "TEST", environment: "TEST", gitCommitSha: "f".repeat(40), previousKnownGoodRelease: "known-good-1", backupFormatVersion: 41, sourceDateEpoch: "1786320000" })).toThrow("RELEASE_PACKAGE_PRIVATE_PATH_REFUSED");
   });
 });
 
@@ -91,6 +97,21 @@ describe("release environment and feature gates", () => {
 });
 
 describe("release lock, audit, candidate and client contract", () => {
+  it("blocks release transitions until every prerequisite gate is resolved", () => {
+    const candidate = createReleaseCandidate({ releaseId: "release-gates-1", environment: "STAGING", expectedCurrentRelease: "known-good-1", expectedTargetRelease: "release-gates-1", previousKnownGoodRelease: "known-good-1", migrationClassification: "NONE" });
+    expect(() => assertReleasePhaseAllowed(candidate, "enter-maintenance")).toThrow("RELEASE_REQUIRED_GATES_INCOMPLETE");
+    for (const gate of candidate.gates) { gate.status = "PASSED"; gate.evidenceSafe = "Synthetic governed QA evidence."; gate.checkedAt = new Date(0).toISOString(); }
+    expect(() => assertReleasePhaseAllowed(candidate, "enter-maintenance")).toThrow("RELEASE_ROLLBACK_OWNER_REQUIRED");
+    candidate.rollback = { ...candidate.rollback, ready: true, owner: "operator-one", deadline: "2099-01-01T00:00:00.000Z" };
+    expect(() => assertReleasePhaseAllowed(candidate, "enter-maintenance")).not.toThrow();
+    candidate.maintenance.active = true;
+    expect(() => assertReleasePhaseAllowed(candidate, "complete")).toThrow("RELEASE_PHASE_SEQUENCE_INVALID");
+    candidate.phase = "smoke-test";
+    expect(() => assertReleasePhaseAllowed(candidate, "complete")).toThrow("RELEASE_SWITCH_NOT_RECORDED");
+    candidate.pointOfNoReturnReached = true;
+    expect(() => assertReleasePhaseAllowed(candidate, "complete")).not.toThrow();
+  });
+
   it("enforces one durable owner and verifies the append-only hash chain", () => {
     const root = temporaryRoot("state");
     acquireReleaseLock({ root, owner: "operator-one", session: "session-one", environment: "STAGING", releaseId: "release-lock-1" });

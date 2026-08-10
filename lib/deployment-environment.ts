@@ -357,7 +357,7 @@ export function validateReleaseEnvironmentContract(environment: NodeJS.ProcessEn
 
   const database = value(environment, "DATABASE_URL");
   if (!database.startsWith("file:") || database.includes("?")) add("RELEASE_DATABASE_URL_INVALID", "DATABASE_URL", "Use a query-free SQLite file URL.");
-  if (productionShaped && /(?:^|[\\/])(?:prisma[\\/])?dev\.db$/i.test(database.slice(5))) add("OPERATIONAL_DEV_DB_REJECTED", "DATABASE_URL", "Operational dev.db cannot be used for staging or production.");
+  if (/(?:^|[\\/])(?:prisma[\\/])?dev\.db$/i.test(database.slice(5))) add("OPERATIONAL_DEV_DB_REJECTED", "DATABASE_URL", "Operational dev.db cannot be used by any release environment.");
   const roots = ["PRIVATE_STORAGE_ROOT", "BACKUP_DIRECTORY"].map((name) => [name, value(environment, name)] as const);
   for (const [name, configured] of roots) {
     if (!configured || !path.isAbsolute(configured)) add("RELEASE_PATH_NOT_ABSOLUTE", name, "Use an absolute environment-specific path.");

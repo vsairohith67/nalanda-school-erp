@@ -16,7 +16,8 @@ const DOCUMENTS = new Map<string, { file: string; title: string }>([
   ["OBS_PROVIDER_STATUS_POLICY.md", { file: "OBS_PROVIDER_STATUS_POLICY.md", title: "Provider Status Policy" }],
   ["RELEASE_AND_ROLLBACK_RUNBOOK.md", { file: "RELEASE_AND_ROLLBACK_RUNBOOK.md", title: "Release and Rollback Runbook" }],
   ["RELEASE_ENVIRONMENT_AND_SECRET_MATRIX.md", { file: "RELEASE_ENVIRONMENT_AND_SECRET_MATRIX.md", title: "Release Environment and Secret Matrix" }],
-  ["RELEASE_CLIENT_PWA_NATIVE_COMPATIBILITY.md", { file: "RELEASE_CLIENT_PWA_NATIVE_COMPATIBILITY.md", title: "Client Compatibility Contract" }]
+  ["RELEASE_CLIENT_PWA_NATIVE_COMPATIBILITY.md", { file: "RELEASE_CLIENT_PWA_NATIVE_COMPATIBILITY.md", title: "Client Compatibility Contract" }],
+  ["evidence/RELEASE_OPS_1A_QA_CLEARANCE.md", { file: "evidence/RELEASE_OPS_1A_QA_CLEARANCE.md", title: "Release Operations QA Clearance" }]
 ]);
 
 export const dynamic = "force-dynamic";

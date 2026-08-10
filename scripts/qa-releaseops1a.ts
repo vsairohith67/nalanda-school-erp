@@ -42,7 +42,7 @@ async function main() {
   invariant(restored.version === 37 && restored.firstCounts.users === 1, "RELEASEOPS1A_RESTORE_PROOF_INVALID");
 
   const outputRoot = path.join(ROOT, "artifacts");
-  const packaged = buildReleasePackage({ workspaceRoot: WORKSPACE_ROOT, outputRoot, releaseId, releaseChannel: "STAGING", environment: "STAGING", gitCommitSha: "d".repeat(40), previousKnownGoodRelease: "bulk-onboarding-v41-2026-08-10", backupFormatVersion: 41, runtimeMode: "framework" });
+  const packaged = buildReleasePackage({ workspaceRoot: WORKSPACE_ROOT, outputRoot, releaseId, releaseChannel: "STAGING", environment: "STAGING", gitCommitSha: "d".repeat(40), previousKnownGoodRelease: "bulk-onboarding-v41-2026-08-10", backupFormatVersion: 41, runtimeMode: "framework", sourceDateEpoch: "1786320000" });
   const verified = verifyReleasePackage({ archiveBytes: readFileSync(packaged.archivePath), expectedArchiveSha256: packaged.report.archiveSha256 });
   invariant(verified.valid && verified.fileCount > 0, "RELEASEOPS1A_ARTIFACT_VERIFY_FAILED");
   invariant(releaseDiskProbe(ROOT, 900 * 1024 ** 2).status === "CRITICAL" && releaseDiskProbe(ROOT, 2 * 1024 ** 3).status === "WARNING", "RELEASEOPS1A_LOW_SPACE_PROBE_FAILED");

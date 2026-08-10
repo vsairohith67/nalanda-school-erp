@@ -50,10 +50,12 @@ export function activeMigrationManifest(workspaceRoot: string): ReleaseMigration
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function stableTimestamp() {
-  const epoch = process.env.SOURCE_DATE_EPOCH?.trim();
-  if (epoch && /^\d{1,14}$/.test(epoch)) return new Date(Number(epoch) * 1000).toISOString();
-  return new Date().toISOString();
+function stableTimestamp(explicitEpoch?: string) {
+  const epoch = explicitEpoch?.trim() || process.env.SOURCE_DATE_EPOCH?.trim();
+  if (!epoch || !/^\d{1,14}$/.test(epoch)) throw new Error("RELEASE_SOURCE_DATE_EPOCH_REQUIRED");
+  const timestamp = new Date(Number(epoch) * 1000);
+  if (!Number.isFinite(timestamp.valueOf())) throw new Error("RELEASE_SOURCE_DATE_EPOCH_INVALID");
+  return timestamp.toISOString();
 }
 
 function safeVersion(value: string, label: string) {
@@ -73,6 +75,7 @@ export function createReleaseManifest(input: {
   backupFormatVersion: number;
   artifactSha256?: string | null;
   featureFlagSnapshotSha256?: string;
+  sourceDateEpoch?: string;
 }): ReleaseManifestDocument {
   const lockfile = path.join(input.workspaceRoot, "pnpm-lock.yaml");
   const schema = path.join(input.workspaceRoot, "prisma", "schema.prisma");
@@ -95,7 +98,7 @@ export function createReleaseManifest(input: {
     gitCommitSha: input.gitCommitSha.toLowerCase(),
     gitTag: input.gitTag ? safeVersion(input.gitTag, "TAG") : null,
     buildId,
-    buildTimestamp: stableTimestamp(),
+    buildTimestamp: stableTimestamp(input.sourceDateEpoch),
     nodeVersion: process.version,
     packageManagerVersion: packageManager,
     lockfileSha256: sha256File(lockfile),

@@ -5,12 +5,13 @@
 1. Confirm synchronized retained branch, clean tree, expected commit/tag and Git safety.
 2. Capture dynamic routes/APIs, tests, migrations, backup format and the private operational fingerprint/baselines.
 3. Run `release:inspect` with explicit environment/current/target/previous release, owner and session.
-4. Run environment validation, focused/full tests, build and package/verification gates sequentially. Set `NALANDA_STANDALONE_BUILD=true` only on a symlink-capable Linux release runner and pass `--runtime-mode standalone`; Windows/local portability rehearsal uses `--runtime-mode framework`. Never let the runner choose implicitly.
-5. Rehearse fresh/copy migration twice, synthetic staging, backup/restore, health, smoke and PWA update/rollback.
-6. Name approver and rollback owner. Production also requires separately authorised provider/budget/cutover and maintenance window.
-7. Enter maintenance and drain the writer before backup/migration/switch. Record the point of no return.
-8. Verify startup, OBS-1A health and role-specific smoke. Complete only after all required gates pass.
-9. Release the lock through `inspect-cleanup`; retain privacy-safe append-only history.
+4. Run environment validation, focused/full tests, build and package/verification gates sequentially. Set `NALANDA_STANDALONE_BUILD=true` only on a symlink-capable Linux release runner and pass `--runtime-mode standalone`; Windows/local portability rehearsal uses `--runtime-mode framework`. Pass the reviewed commit time as `--source-date-epoch`; packaging refuses to invent a timestamp. Restart state defaults to the ignored `.codex/release-ops/` root. Never let the runner choose implicitly.
+5. Before maintenance, record a safe rollback owner and future deadline using `--rollback-owner` and `--rollback-deadline`. The phase engine refuses maintenance, migration, switching and completion until prerequisite gates and rollback ownership are present.
+6. Rehearse fresh/copy migration twice, synthetic staging, backup/restore, health, smoke and PWA update/rollback.
+7. Name approver and rollback owner. Production also requires separately authorised provider/budget/cutover and maintenance window.
+8. Enter maintenance and drain the writer before backup/migration/switch. Record the point of no return.
+9. Verify startup, OBS-1A health and role-specific smoke. Complete only after all required gates pass.
+10. Release the lock through `inspect-cleanup`; retain privacy-safe append-only history.
 
 Production execution is deliberately fail-closed unless the runtime supplies a separately governed authorization and a bounded approval reference. RELEASE-OPS-1A supplies neither and performs no deployment.
 

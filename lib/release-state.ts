@@ -17,7 +17,7 @@ const SAFE_TOKEN = /^[A-Za-z0-9][A-Za-z0-9._@-]{2,119}$/;
 const PRIVATE_TEXT = /(?:password|secret|token|cookie|[A-Za-z]:\\|\/home\/|database.*hash|backup.*path)/i;
 
 export function releaseStateRoot(workspaceRoot: string, configured?: string) {
-  const root = path.resolve(configured?.trim() || path.join(workspaceRoot, ".release-ops"));
+  const root = path.resolve(configured?.trim() || path.join(workspaceRoot, ".codex", "release-ops"));
   const relative = path.relative(path.resolve(workspaceRoot), root);
   if (configured && !path.isAbsolute(configured)) throw new Error("RELEASE_STATE_ROOT_NOT_ABSOLUTE");
   if (relative === ".." || relative.startsWith(`..${path.sep}`)) {
@@ -158,13 +158,63 @@ export function writeReleaseCandidate(root: string, state: ReleaseCandidateState
   renameSync(temp, file);
 }
 
+const PRE_MAINTENANCE_GATES = [
+  "clean-git-tree", "expected-branch", "reviewed-commit", "git-safety", "lock-integrity",
+  "typecheck", "focused-tests", "full-tests", "production-build", "route-api-inventory",
+  "migration-validation", "fresh-install", "copied-database", "synthetic-staging",
+  "security-scan", "release-notes", "rollback-package", "named-approver", "maintenance-window"
+] as const;
+
+function unresolvedGates(state: ReleaseCandidateState, keys: readonly string[]) {
+  return keys.filter((key) => {
+    const gate = state.gates.find((row) => row.key === key);
+    return !gate || (gate.status !== "PASSED" && gate.status !== "WAIVED");
+  });
+}
+
+export function assertReleasePhaseAllowed(state: ReleaseCandidateState, phase: ReleasePhase) {
+  let required: readonly string[] = [];
+  if (phase === "enter-maintenance") required = PRE_MAINTENANCE_GATES;
+  if (phase === "backup") required = [...PRE_MAINTENANCE_GATES, "maintenance-window"];
+  if (phase === "migrate") required = [...PRE_MAINTENANCE_GATES, "backup-created", "restore-rehearsed"];
+  if (phase === "switch-release") required = [...PRE_MAINTENANCE_GATES, "backup-created", "restore-rehearsed"];
+  if (phase === "complete") required = state.gates.map((gate) => gate.key);
+  const missing = unresolvedGates(state, required);
+  if (missing.length) throw new Error(`RELEASE_REQUIRED_GATES_INCOMPLETE:${missing.join(",")}`);
+  if (["enter-maintenance", "backup", "migrate", "switch-release", "health-check", "smoke-test", "complete"].includes(phase)) {
+    const rollbackDeadline = state.rollback.deadline ? new Date(state.rollback.deadline).valueOf() : Number.NaN;
+    if (!state.rollback.ready || !state.rollback.owner || !Number.isFinite(rollbackDeadline) || rollbackDeadline <= Date.now()) {
+      throw new Error("RELEASE_ROLLBACK_OWNER_REQUIRED");
+    }
+  }
+  if (["backup", "migrate", "switch-release", "health-check", "smoke-test", "complete"].includes(phase) && !state.maintenance.active) {
+    throw new Error("RELEASE_MAINTENANCE_REQUIRED");
+  }
+  const allowedPrevious: Partial<Record<ReleasePhase, ReleasePhase[]>> = {
+    backup: ["enter-maintenance", "backup"],
+    migrate: ["backup", "migrate"],
+    "switch-release": state.migrationClassification === "NONE" ? ["backup", "switch-release"] : ["migrate", "switch-release"],
+    "health-check": ["switch-release", "health-check"],
+    "smoke-test": ["health-check", "smoke-test"],
+    complete: ["smoke-test", "complete"]
+  };
+  if (allowedPrevious[phase] && !allowedPrevious[phase]!.includes(state.phase)) throw new Error("RELEASE_PHASE_SEQUENCE_INVALID");
+  if (phase === "complete" && !state.pointOfNoReturnReached) throw new Error("RELEASE_SWITCH_NOT_RECORDED");
+}
+
 export function updateReleasePhase(root: string, input: { phase: ReleasePhase; actor: string; summarySafe: string }) {
   const state = readReleaseCandidate(root);
   if (!state) throw new Error("RELEASE_CANDIDATE_MISSING");
+  assertReleasePhaseAllowed(state, input.phase);
   state.phase = input.phase;
   if (["enter-maintenance", "backup", "migrate", "switch-release", "health-check", "smoke-test", "complete"].includes(input.phase)) state.status = "RELEASING";
+  if (input.phase === "enter-maintenance") state.maintenance = { ...state.maintenance, active: true, startsAt: state.maintenance.startsAt ?? new Date().toISOString(), endsAt: null };
+  if (input.phase === "migrate") state.dataWriteBoundaryCrossed = true;
   if (input.phase === "switch-release") state.pointOfNoReturnReached = true;
-  if (input.phase === "complete") state.status = "RELEASED";
+  if (input.phase === "complete") {
+    state.status = "RELEASED";
+    state.maintenance = { ...state.maintenance, active: false, endsAt: new Date().toISOString() };
+  }
   if (input.phase === "rollback") state.status = "ROLLED_BACK";
   writeReleaseCandidate(root, state);
   appendReleaseAudit(root, { releaseId: state.releaseId, environment: state.environment, phase: input.phase, eventType: "PHASE_RECORDED", actor: input.actor, summarySafe: input.summarySafe });
