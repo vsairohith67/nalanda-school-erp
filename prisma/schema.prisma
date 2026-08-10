@@ -2276,6 +2276,95 @@ model ImportBatch {
   @@index([importedByUserId])
 }
 
+// IMPORT-1A: governed workbook onboarding. Domain records continue to use the
+// canonical Student, Guardian, StudentGuardian, AcademicYearEnrollment,
+// StaffMember and IAM models above; these tables only preserve workflow,
+// lineage and append-only audit evidence.
+model OnboardingBatch {
+  id                      String                 @id @default(cuid())
+  publicKey               String                 @unique @default(uuid())
+  bundleType              String
+  mode                    String                 @default("CREATE_AND_LINK")
+  status                  String                 @default("UPLOADED")
+  version                 Int                    @default(1)
+  uploadedByUserId        String
+  originalFileNameHash    String
+  storageKey              String                 @unique
+  workbookSha256          String
+  mimeType                String
+  byteSize                Int
+  templateVersion         String
+  schemaVersion           String
+  referenceVersionHash    String?
+  targetVersionHash       String?
+  planHash                String?
+  planVersion             Int                    @default(0)
+  planSummaryJson         String?
+  planExpiresAt           DateTime?
+  approvedByUserId        String?
+  approvalReason          String?
+  approvedAt              DateTime?
+  executionIdempotencyKey String?                @unique
+  executionPayloadHash    String?
+  executedByUserId        String?
+  executedAt              DateTime?
+  executionResultJson     String?
+  rollbackPreviewJson     String?
+  rolledBackByUserId      String?
+  rollbackReason          String?
+  rolledBackAt            DateTime?
+  purgeAfter              DateTime
+  purgedAt                DateTime?
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  rowOutcomes             OnboardingRowOutcome[]
+  auditEvents             OnboardingAuditEvent[]
+
+  @@unique([uploadedByUserId, workbookSha256, bundleType])
+  @@index([status, createdAt])
+  @@index([uploadedByUserId, createdAt])
+  @@index([purgeAfter, purgedAt])
+}
+
+model OnboardingRowOutcome {
+  id              String          @id @default(cuid())
+  batchId         String
+  batch           OnboardingBatch @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  entityType      String
+  sheetName       String
+  sourceRowNumber Int
+  importRowKey    String
+  action          String
+  status          String
+  targetRecordId  String?
+  beforeHash      String?
+  afterHash       String?
+  issueCodesJson  String          @default("[]")
+  createdAt       DateTime        @default(now())
+
+  @@unique([batchId, entityType, importRowKey])
+  @@index([batchId, sheetName, sourceRowNumber])
+  @@index([targetRecordId])
+}
+
+model OnboardingAuditEvent {
+  id             String          @id @default(cuid())
+  batchId        String
+  batch          OnboardingBatch @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  sequence       Int
+  eventType      String
+  previousStatus String?
+  newStatus      String?
+  actorUserId    String
+  reasonSafe     String?
+  evidenceHash   String?
+  occurredAt     DateTime        @default(now())
+
+  @@unique([batchId, sequence])
+  @@index([batchId, occurredAt])
+  @@index([eventType, occurredAt])
+}
+
 model GoLiveChecklist {
   id                      String   @id @default("go-live")
   backupTaken             Boolean  @default(false)

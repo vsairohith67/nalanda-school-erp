@@ -153,7 +153,7 @@ describe("Prompt 22A-QA planning completeness", () => {
     const staffStart = schema.indexOf("model StaffMember {");
     const staff = schema.slice(staffStart, schema.indexOf("\nmodel ", staffStart + 1));
     expect(staff).not.toMatch(/\b(dateOfBirth|dobSource|dobVerificationStatus|epfoCoverageStatus|epsMembershipStatus|uanLast4)\b/);
-    expect(read("lib/backup.ts")).toContain("backupVersion: 40");
+    expect(read("lib/backup.ts")).toContain("backupVersion: 41");
     expect(existsSync("app/staff-epfo")).toBe(false);
     expect(existsSync("app/api/staff-epfo")).toBe(false);
     expect(existsSync("app/epfo-age58")).toBe(false);

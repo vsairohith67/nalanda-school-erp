@@ -1,0 +1,152 @@
+import { PrismaClient } from "@prisma/client";
+import * as XLSX from "xlsx";
+import { hashPassword } from "../lib/password";
+import { generateOnboardingTemplate } from "../lib/onboarding-workbooks";
+import { sha256, storeOnboardingWorkbook } from "../lib/onboarding-storage";
+import { approveOnboardingBatch, executeOnboardingBatch, rollbackOnboardingBatch, validateStoredBatch } from "../lib/onboarding";
+import { generateFullBackup } from "../lib/backup";
+import { parseAndValidateBackup } from "../lib/restore";
+import { restoreValidatedBackup } from "../lib/restore-database";
+import type { IamActor } from "../lib/iam/security";
+
+const RESTORE_URL = process.env.IMPORT1A_RESTORE_DATABASE_URL;
+const QA_PASSWORD = process.env.IMPORT1A_QA_PASSWORD || "Import1a-QA-Only!2026";
+const PREFIX = `IMPORT1A-${Date.now()}`;
+if (!RESTORE_URL) throw new Error("IMPORT1A_RESTORE_DATABASE_URL_REQUIRED");
+
+function invariant(value: unknown, code: string): asserts value {
+  if (!value) throw new Error(code);
+}
+
+async function main() {
+  const source = new PrismaClient();
+  const target = new PrismaClient({ datasourceUrl: RESTORE_URL });
+  try {
+    invariant(await source.student.count() === 0, "IMPORT1A_SOURCE_MUST_START_WITH_ZERO_STUDENTS");
+    invariant(await source.payment.count() === 0, "IMPORT1A_SOURCE_MUST_START_WITH_ZERO_PAYMENTS");
+    const protectedUsers = await source.user.count();
+    const protectedAssignments = await source.userRoleAssignment.count();
+    const actors = await createActors(source);
+    await source.timetableClassSection.upsert({ where: { academicYear_className_section: { academicYear: "2026-27", className: "I", section: "A" } }, create: { academicYear: "2026-27", className: "I", section: "A", displayName: "Class I A", groupName: "PRIMARY", isActive: true }, update: { isActive: true } });
+    await source.staffMember.create({ data: { staffCode: `${PREFIX}-REF`, fullName: `${PREFIX} Reference Staff`, staffType: "TEACHING", designation: "Teacher", department: "Academics", status: "ACTIVE" } });
+
+    const usersBefore = await source.user.count();
+    const first = await createBatch(source, actors.director.user.id, "COMBINED", false);
+    const firstPlan = await validateStoredBatch(source, first.publicKey, actors.director.user.id);
+    invariant(firstPlan.status === "APPROVAL_REQUIRED" && firstPlan.plan?.blockingErrorCount === 0, "IMPORT1A_FIRST_PLAN_NOT_APPROVABLE");
+
+    let principalScopeRefused = false;
+    try {
+      await approveOnboardingBatch(source, first.publicKey, actors.principal, approvalInput(firstPlan));
+    } catch (error) {
+      principalScopeRefused = error instanceof Error && error.message.includes("Principal approval is limited");
+    }
+    invariant(principalScopeRefused, "IMPORT1A_PRINCIPAL_STAFF_SCOPE_NOT_REFUSED");
+
+    const approved = await approveOnboardingBatch(source, first.publicKey, actors.director, approvalInput(firstPlan));
+    const executionInput = { reason: "Copied database synthetic execution proof", reauthPassword: QA_PASSWORD, planHash: String(approved.planHash), workbookHash: approved.workbookHash, idempotencyKey: `${PREFIX.replaceAll("-", "")}EXECUTION001` };
+    const executed = await executeOnboardingBatch(source, first.publicKey, actors.director, executionInput);
+    invariant(executed.status === "COMPLETED", "IMPORT1A_FIRST_EXECUTION_NOT_COMPLETED");
+    const afterExecution = await businessCounts(source);
+    invariant(afterExecution.students === 1 && afterExecution.guardians === 1 && afterExecution.links === 1 && afterExecution.enrollments === 1 && afterExecution.staff === 2, "IMPORT1A_EXECUTION_COUNTS_INVALID");
+    invariant(await source.user.count() === usersBefore, "IMPORT1A_ACCOUNT_PROPOSAL_ACTIVATED_USER");
+    invariant(await source.onboardingRowOutcome.count({ where: { batchId: first.id, entityType: "ACCOUNT_PROPOSAL", status: "PENDING_ACTIVATION" } }) === 2, "IMPORT1A_PENDING_ACCOUNT_PROPOSALS_MISSING");
+
+    const replay = await executeOnboardingBatch(source, first.publicKey, actors.director, executionInput);
+    invariant(replay.status === "COMPLETED" && JSON.stringify(await businessCounts(source)) === JSON.stringify(afterExecution), "IMPORT1A_IDEMPOTENT_REPLAY_CHANGED_COUNTS");
+
+    const atomic = await createBatch(source, actors.director.user.id, "STUDENT_GUARDIAN", true);
+    const atomicPlan = await validateStoredBatch(source, atomic.publicKey, actors.director.user.id, {
+      "STU-ATOMIC": { decision: "LINK_EXISTING", reason: "Exact admission number links to the synthetic Student" }
+    });
+    invariant(atomicPlan.status === "APPROVAL_REQUIRED", "IMPORT1A_ATOMIC_PLAN_NOT_APPROVABLE");
+    const atomicApproved = await approveOnboardingBatch(source, atomic.publicKey, actors.principal, approvalInput(atomicPlan));
+    const beforeAtomic = await businessCounts(source);
+    let atomicFailure = false;
+    try {
+      await executeOnboardingBatch(source, atomic.publicKey, actors.director, { reason: "Copied database atomic rollback proof", reauthPassword: QA_PASSWORD, planHash: String(atomicApproved.planHash), workbookHash: atomicApproved.workbookHash, idempotencyKey: `${PREFIX.replaceAll("-", "")}ATOMICFAIL001` });
+    } catch (error) {
+      atomicFailure = error instanceof Error && error.message.includes("enrollment already exists");
+    }
+    invariant(atomicFailure, "IMPORT1A_EXPECTED_ATOMIC_FAILURE_MISSING");
+    invariant(JSON.stringify(await businessCounts(source)) === JSON.stringify(beforeAtomic), "IMPORT1A_FAILED_EXECUTION_LEFT_PARTIAL_ROWS");
+    invariant(await source.onboardingRowOutcome.count({ where: { batchId: atomic.id } }) === 0, "IMPORT1A_FAILED_EXECUTION_LEFT_LINEAGE");
+
+    const preview = await rollbackOnboardingBatch(source, first.publicKey, actors.director, { reason: "Copied database rollback dependency preview", reauthPassword: QA_PASSWORD, execute: false }) as { eligible: boolean };
+    invariant(preview.eligible === true, "IMPORT1A_ROLLBACK_PREVIEW_NOT_ELIGIBLE");
+    const rolled = await rollbackOnboardingBatch(source, first.publicKey, actors.director, { reason: "Copied database exact rollback execution", reauthPassword: QA_PASSWORD, execute: true }) as { status: string };
+    invariant(rolled.status === "ROLLED_BACK", "IMPORT1A_ROLLBACK_NOT_COMPLETED");
+    const afterRollback = await businessCounts(source);
+    invariant(afterRollback.students === 0 && afterRollback.guardians === 0 && afterRollback.links === 0 && afterRollback.enrollments === 0 && afterRollback.staff === 1, "IMPORT1A_ROLLBACK_COUNTS_INVALID");
+
+    const backup = parseAndValidateBackup(await generateFullBackup(source as never, { generatedBy: "IMPORT1A copied database QA" }));
+    const serialized = JSON.stringify(backup);
+    invariant(backup.metadata.backupVersion === 41 && backup.onboardingBatches.length === 2, "IMPORT1A_BACKUP_METADATA_MISSING");
+    invariant(!serialized.includes("private-workbook") && !serialized.includes(QA_PASSWORD) && !serialized.includes("Copied database synthetic execution proof"), "IMPORT1A_BACKUP_PRIVATE_VALUE_LEAK");
+
+    const targetActor = await target.user.findFirst({ where: { role: "SUPER_ADMIN", isActive: true, lifecycleStatus: "ACTIVE" }, select: { id: true, name: true } });
+    invariant(targetActor, "IMPORT1A_RESTORE_ACTOR_REQUIRED");
+    const firstRestore = await restoreValidatedBackup(target, backup, targetActor);
+    const restoredOnce = await onboardingCounts(target);
+    const secondRestore = await restoreValidatedBackup(target, backup, targetActor);
+    const restoredTwice = await onboardingCounts(target);
+    invariant(firstRestore.onboardingBatches.errors.length === 0 && secondRestore.onboardingBatches.errors.length === 0, "IMPORT1A_RESTORE_ERRORS");
+    invariant(JSON.stringify(restoredOnce) === JSON.stringify(restoredTwice), "IMPORT1A_RESTORE_NOT_IDEMPOTENT");
+    invariant(restoredTwice.batches === 2 && restoredTwice.recoveryRequired === 2, "IMPORT1A_RESTORE_RECOVERY_STATE_INVALID");
+    const integrity = await target.$queryRawUnsafe<Array<Record<string, string>>>("PRAGMA quick_check");
+    const foreignKeys = await target.$queryRawUnsafe<unknown[]>("PRAGMA foreign_key_check");
+    invariant(integrity.every((row) => Object.values(row).includes("ok")) && foreignKeys.length === 0, "IMPORT1A_RESTORE_INTEGRITY_FAILED");
+
+    invariant(await source.user.count() === protectedUsers + 2 && await source.userRoleAssignment.count() === protectedAssignments + 2, "IMPORT1A_PROTECTED_ACCOUNT_BASELINE_CHANGED");
+    console.log(JSON.stringify({ status: "IMPORT1A_COPIED_DATABASE_PASSED", principalScopeRefused, atomicRollback: true, idempotentReplay: true, exactRollback: true, activeAccountsCreatedByImport: 0, restored: restoredTwice, backupVersion: backup.metadata.backupVersion, privacySafe: true }));
+  } finally {
+    await Promise.all([source.$disconnect(), target.$disconnect()]);
+  }
+}
+
+async function createActors(client: PrismaClient) {
+  const passwordHash = await hashPassword(QA_PASSWORD);
+  const result: Record<string, IamActor> = {};
+  for (const role of ["DIRECTOR", "PRINCIPAL"] as const) {
+    const id = `${PREFIX}-${role.toLowerCase()}`;
+    const user = await client.user.create({ data: { id, name: `${PREFIX} ${role}`, username: id.toLowerCase(), passwordHash, role, isActive: true, lifecycleStatus: "ACTIVE", designation: role } });
+    const assignment = await client.userRoleAssignment.create({ data: { id: `${id}-assignment`, publicKey: `${PREFIX}-${role.toLowerCase()}-assignment`, userId: user.id, role, status: "ACTIVE", reason: "IMPORT1A copied-database synthetic actor", assignedByUserId: user.id, activeKey: `${user.id}:${role}` } });
+    result[role.toLowerCase()] = { sessionId: `${id}-session`, user: { id: user.id, name: user.name, username: user.username, email: user.email, designation: user.designation, role, roleAssignmentId: assignment.id, authorizationVersion: user.authorizationVersion, mustChangePassword: user.mustChangePassword, guardianId: null } };
+  }
+  return result as { director: IamActor; principal: IamActor };
+}
+
+async function createBatch(client: PrismaClient, actorUserId: string, bundle: "COMBINED" | "STUDENT_GUARDIAN", conflict: boolean) {
+  const bytes = populatedWorkbook(bundle, conflict);
+  const stored = await storeOnboardingWorkbook(bytes);
+  return client.onboardingBatch.create({ data: { bundleType: bundle, uploadedByUserId: actorUserId, originalFileNameHash: sha256(`${PREFIX}-${bundle}-${conflict}`), storageKey: stored.storageKey, workbookSha256: stored.sha256, mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", byteSize: bytes.length, templateVersion: "1.0", schemaVersion: "IMPORT-1A-2026-08-10", purgeAfter: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), auditEvents: { create: { sequence: 1, eventType: "UPLOADED", newStatus: "UPLOADED", actorUserId, evidenceHash: stored.sha256 } } } });
+}
+
+function populatedWorkbook(bundle: "COMBINED" | "STUDENT_GUARDIAN", conflict: boolean) {
+  const generated = generateOnboardingTemplate({ bundle, generatedAt: new Date("2026-08-10T12:00:00.000Z"), academicYears: ["2026-27"], classes: [{ academicYear: "2026-27", className: "I", section: "A" }], departments: ["Academics"], designations: ["Teacher"] });
+  const wb = XLSX.read(generated, { type: "buffer" });
+  const studentKey = conflict ? "STU-ATOMIC" : "STU-001";
+  XLSX.utils.sheet_add_aoa(wb.Sheets.Students, [[studentKey, `${PREFIX}-ADM-001`, `${PREFIX} विद्यार्थी`, `${PREFIX} Guardian`, `${PREFIX} والدہ`, "9876543210", "", "2016-01-31", "2026-27", "I", "A", "1", "ACTIVE", "Synthetic copied database only", "NO"]], { origin: "A2" });
+  const guardianKey = conflict ? "GUA-ATOMIC" : "GUA-001";
+  XLSX.utils.sheet_add_aoa(wb.Sheets.Guardians, [[guardianKey, `${PREFIX} Guardian ${conflict ? "Atomic" : "One"}`, "Father", conflict ? "9876543212" : "9876543211", "", "", "MOBILE", conflict ? "NO" : "YES", "NO"]], { origin: "A2" });
+  XLSX.utils.sheet_add_aoa(wb.Sheets["Student-Guardian Links"], [[conflict ? "LNK-ATOMIC" : "LNK-001", studentKey, guardianKey, "Father", "YES", "YES", "YES", "NO"]], { origin: "A2" });
+  XLSX.utils.sheet_add_aoa(wb.Sheets.Enrollments, [[conflict ? "ENR-ATOMIC" : "ENR-001", studentKey, "2026-27", "I", "A", "1", "2026-06-01", "ACTIVE", "NO"]], { origin: "A2" });
+  if (bundle === "COMBINED") XLSX.utils.sheet_add_aoa(wb.Sheets.Staff, [["STF-001", `${PREFIX}-EMP-001`, `${PREFIX} Teacher`, "TEACHING", "Teacher", "Academics", "2026-06-01", "", "", "9876543213", "TEACHER", "YES", "ACTIVE", "Synthetic copied database only", "NO"]], { origin: "A2" });
+  return Buffer.from(XLSX.write(wb, { type: "buffer", bookType: "xlsx", compression: true }));
+}
+
+function approvalInput(batch: any) {
+  return { reason: "Copied database synthetic approval proof", reauthPassword: QA_PASSWORD, planHash: String(batch.planHash), workbookHash: String(batch.workbookHash) };
+}
+
+async function businessCounts(client: PrismaClient) {
+  const [students, guardians, links, enrollments, staff] = await Promise.all([client.student.count(), client.guardian.count(), client.studentGuardian.count(), client.academicYearEnrollment.count(), client.staffMember.count()]);
+  return { students, guardians, links, enrollments, staff };
+}
+
+async function onboardingCounts(client: PrismaClient) {
+  const [batches, recoveryRequired, outcomes, audits] = await Promise.all([client.onboardingBatch.count(), client.onboardingBatch.count({ where: { status: "RECOVERY_REQUIRED" } }), client.onboardingRowOutcome.count(), client.onboardingAuditEvent.count()]);
+  return { batches, recoveryRequired, outcomes, audits };
+}
+
+main().catch((error) => { console.error(error instanceof Error ? error.message : "IMPORT1A_COPIED_DATABASE_FAILED"); process.exitCode = 1; });

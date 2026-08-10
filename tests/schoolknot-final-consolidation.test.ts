@@ -229,7 +229,7 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
 
   it("preserves the Schoolknot checkpoint across additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(289);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(292);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
     expect(schema).toContain("model ExaminationTimetableVersion {");
@@ -243,7 +243,7 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
     );
     expect(countRouteFiles("app", "page.tsx") + Number(existsSync("app/sw.js/route.ts"))).toBeGreaterThanOrEqual(274);
     expect(countRouteFiles("app/api", "route.ts")).toBeGreaterThanOrEqual(378);
-    expect(read("lib/backup.ts")).toContain("backupVersion: 40");
+    expect(read("lib/backup.ts")).toContain("backupVersion: 41");
     const permissionTokens = new Set([...read("lib/permissions.ts").matchAll(/permission:\s*"([A-Z0-9_]+)"/g)].map((match) => match[1]));
     expect(permissionTokens.size).toBeGreaterThanOrEqual(339);
     expect(permissionTokens.has("CANCEL_FINAL_RECEIPT")).toBe(true);

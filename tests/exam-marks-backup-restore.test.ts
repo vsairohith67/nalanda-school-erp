@@ -50,7 +50,7 @@ function restoreClient(collision = false) {
 }
 
 describe("exam marks backup and restore validation", () => {
-  it("uses version 37 and includes all four exam arrays", () => { const backup = fixture(); expect(backup.metadata.backupVersion).toBe(40); expect(backup.examCycles).toHaveLength(1); expect(backup.examAssessments).toHaveLength(1); expect(backup.studentMarks).toHaveLength(1); expect(backup.studentMarkEvents).toHaveLength(1); });
+  it("uses version 37 and includes all four exam arrays", () => { const backup = fixture(); expect(backup.metadata.backupVersion).toBe(41); expect(backup.examCycles).toHaveLength(1); expect(backup.examAssessments).toHaveLength(1); expect(backup.studentMarks).toHaveLength(1); expect(backup.studentMarkEvents).toHaveLength(1); });
   it("excludes passwords and raw actor IDs while preserving safe actor labels", () => { const text = JSON.stringify(fixture()); expect(text).not.toContain("must-not-export"); expect(text).not.toContain("raw-actor"); expect(text).toContain("QA Staff"); });
   it("validates links, zero marks, and append-only events", () => { const parsed = parseAndValidateBackup(fixture()); expect(parsed.studentMarks[0]).toMatchObject({ marksObtained: "0", entryStatus: "PRESENT" }); expect(parsed.studentMarkEvents[0].eventType).toBe("MARK_CREATED"); });
   it("keeps version 23 backups compatible without exam arrays", () => { const old: any = fixture(); old.metadata.backupVersion = 23; for (const key of ["examCycles", "examAssessments", "studentMarks", "studentMarkEvents"]) { delete old[key]; delete old.metadata.counts[key]; } const parsed = parseAndValidateBackup(old); expect(parsed.examCycles).toEqual([]); expect(parsed.studentMarks).toEqual([]); });

@@ -23,7 +23,7 @@ const refs = { guardianIds: new Set(["guardian"]), staffMemberIds: new Set(["sta
 describe("Prompt 19B recovery backup version 33", () => {
   it("includes all ten arrays and strips actor IDs", () => {
     const backup = createBackupDocument({ generatedAt: new Date(), generatedBy: "QA19B", students: [], feeStructures: [], payments: [], paymentAudits: [], users: [], ...rows(), whatsAppConsents: [{ ...rows().whatsAppConsents[0], collectedByUserId: "actor" }] });
-    expect(backup.metadata.backupVersion).toBe(40);
+    expect(backup.metadata.backupVersion).toBe(41);
     for (const key of Object.keys(rows())) expect((backup as any)[key]).toHaveLength(1);
     expect(JSON.stringify(backup)).not.toContain("collectedByUserId");
     expect(JSON.stringify(backup)).not.toContain("accessToken");

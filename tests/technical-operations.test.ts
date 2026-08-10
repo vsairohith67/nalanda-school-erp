@@ -71,7 +71,7 @@ describe("OBS-1A technical operations contracts", () => {
     const technicalOperations = emptyTechnicalOperationsBackup();
     technicalOperations.operationalCheckDefinitions.push({ id: "check-1", checkKey: "database.integrity", name: "Database integrity", domain: "DATABASE_HEALTH", checkType: "DEEP", cadence: "MANUAL", enabled: true, protectedCritical: true, severityOnFailure: "CRITICAL", descriptionSafe: "Bounded integrity check", runbookPath: "/docs/runbooks/OBS_CORE_DATABASE_RUNBOOK.md", retentionDays: 90, createdAt: new Date(), updatedAt: new Date() });
     const backup = createBackupDocument({ generatedAt: new Date("2026-08-10T00:00:00.000Z"), generatedBy: "OBS1A", students: [], feeStructures: [], payments: [], paymentAudits: [], users: [], technicalOperations });
-    expect(backup.metadata.backupVersion).toBe(40);
+    expect(backup.metadata.backupVersion).toBe(41);
     expect(backup.metadata.counts.technicalOperationsRecords).toBe(1);
     expect(backup.technicalOperations.operationalCheckDefinitions).toHaveLength(1);
     expect(backup).not.toHaveProperty("operationalCheckRuns");

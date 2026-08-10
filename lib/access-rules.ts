@@ -158,6 +158,7 @@ export const NAV_ITEMS = [
   { href: "/access-history", label: "Access History", icon: "audit", permission: "VIEW_IAM_AUDIT", group: "administration" },
   { href: "/roles", label: "Role Permissions", icon: "roles", permission: "MANAGE_ROLE_PERMISSIONS", group: "administration" },
   { href: "/import-export", label: "Import / Export", icon: "importExport", permission: "VIEW_IMPORT_EXPORT", group: "system" },
+  { href: "/onboarding", label: "Bulk Onboarding", icon: "importExport", permission: "DOWNLOAD_ONBOARDING_TEMPLATE", group: "system", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "COMPUTER_OPERATOR"] as Role[] },
   { href: "/import-verification", label: "Import Verification", icon: "importVerification", permission: "VIEW_IMPORT_VERIFICATION", group: "system" },
   { href: "/pilot-acceptance", label: "Pilot Acceptance", icon: "pilot", permission: "RUN_PILOT_ACCEPTANCE", group: "system" }
 ] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role; allowedRoles?: Role[] }>;

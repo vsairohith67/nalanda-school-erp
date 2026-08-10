@@ -172,7 +172,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
 
   it("preserves the prior checkpoint and recognizes additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(289);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(292);
     expect(schema).toContain("model ExaminationSchemeVersion {");
     expect(schema).toContain("model TeacherExamAssignment {");
     expect(schema).toContain("model ExaminationTimetableVersion {");
@@ -195,6 +195,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
       "20260809140000_student_safe_exit_gate_pass",
       "20260809224500_student_exit_return_standing_corrections",
       "20260810100000_technical_operations_observability",
+      "20260810184500_governed_bulk_onboarding",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);
@@ -203,7 +204,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
     expect(existsSync("app/sw.js/route.ts")).toBe(true);
     expect(countRouteFiles("app", "page.tsx") + 1).toBeGreaterThanOrEqual(274);
     expect(countRouteFiles("app/api", "route.ts")).toBeGreaterThanOrEqual(378);
-    expect(read("lib/backup.ts")).toContain("backupVersion: 40");
+    expect(read("lib/backup.ts")).toContain("backupVersion: 41");
   });
 
   it("adds no still-provisional business-domain models", () => {

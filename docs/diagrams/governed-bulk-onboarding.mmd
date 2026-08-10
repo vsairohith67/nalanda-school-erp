@@ -1,0 +1,16 @@
+flowchart LR
+  A["Controlled XLSX template"] --> B["Private no-store upload"]
+  B --> C["Bounded OOXML parser"]
+  C --> D["Field, relationship, reference and duplicate validation"]
+  D --> E["Hashed expiring dry-run plan"]
+  E --> F["Re-authenticated approval"]
+  F --> G["Plan, reference and target recheck"]
+  G --> H["Exactly-once all-or-nothing execution"]
+  H --> I["Row lineage and reconciliation"]
+  I --> J{"Later dependent activity?"}
+  J -->|"No"| K["Re-authenticated exact rollback"]
+  J -->|"Yes"| L["Manual compensating reconciliation"]
+  B -. "private metadata only" .-> M["Backup v41"]
+  M --> N["Recovery required until encrypted asset is restored"]
+  C -. "aggregate safe status" .-> O["OBS-1A"]
+  H -. "aggregate safe status" .-> O

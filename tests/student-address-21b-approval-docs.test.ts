@@ -107,6 +107,6 @@ describe("Prompt 21B address approval governance", () => {
       expect(document).not.toContain("Final gate decision: SAFE_TO_BEGIN_PROMPT_21B");
     }
     expect(approval).toContain("| Backup version | 37 |");
-    expect(read("lib/backup.ts")).toContain("backupVersion: 40");
+    expect(read("lib/backup.ts")).toContain("backupVersion: 41");
   });
 });

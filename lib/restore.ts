@@ -96,6 +96,9 @@ const TOP_LEVEL_KEYS = new Set([
   "publicWebsitePostVersions", "publicWebsiteNavigationItems", "publicWebsiteEvents",
   "receiptNotes",
   "importBatches",
+  "onboardingBatches",
+  "onboardingRowOutcomes",
+  "onboardingAuditEvents",
   "goLiveChecklist",
   "timetableTeachers",
   "timetableSubjects",
@@ -161,6 +164,7 @@ const BACKUP_COUNT_KEYS = new Set([
   "cloudBackupArtifacts", "cloudBackupVerifications", "cloudBackupRestoreRehearsals", "cloudBackupEvents",
   "publicWebsiteSettings", "publicWebsitePages", "publicWebsitePageVersions", "publicWebsitePosts",
   "publicWebsitePostVersions", "publicWebsiteNavigationItems", "publicWebsiteEvents",
+  "onboardingRecords",
   "timetableAssignments", "timetableDrafts", "timetableEntries"
 ]);
 const STUDENT_KEYS = new Set([
@@ -291,6 +295,21 @@ const IMPORT_BATCH_KEYS = new Set([
   "id", "type", "fileName", "importedByUserId", "importedByName", "importedAt", "mode",
   "totalRows", "createdCount", "updatedCount", "skippedCount", "errorCount", "warningCount",
   "status", "notes", "detailsJson"
+]);
+const ONBOARDING_BATCH_KEYS = new Set([
+  "id", "publicKey", "bundleType", "mode", "status", "version", "originalFileNameHash",
+  "storageKey", "workbookSha256", "mimeType", "byteSize", "templateVersion", "schemaVersion",
+  "referenceVersionHash", "targetVersionHash", "planHash", "planVersion", "planSummaryJson",
+  "planExpiresAt", "approvedAt", "executionIdempotencyKey", "executionPayloadHash", "executedAt",
+  "executionResultJson", "rollbackPreviewJson", "rolledBackAt", "purgeAfter", "purgedAt",
+  "createdAt", "updatedAt"
+]);
+const ONBOARDING_ROW_OUTCOME_KEYS = new Set([
+  "id", "batchId", "entityType", "sheetName", "sourceRowNumber", "importRowKey", "action",
+  "status", "targetRecordId", "beforeHash", "afterHash", "issueCodesJson", "createdAt"
+]);
+const ONBOARDING_AUDIT_EVENT_KEYS = new Set([
+  "id", "batchId", "sequence", "eventType", "previousStatus", "newStatus", "evidenceHash", "occurredAt"
 ]);
 const GO_LIVE_CHECKLIST_KEYS = new Set([
   "id", "backupTaken", "schoolSettingsVerified", "realUsersCreated", "defaultPasswordsChanged",
@@ -526,6 +545,9 @@ export type ValidatedBackup = {
   publicWebsiteEvents: RestoreRecord[];
   receiptNotes: RestoreRecord[];
   importBatches: RestoreRecord[];
+  onboardingBatches: RestoreRecord[];
+  onboardingRowOutcomes: RestoreRecord[];
+  onboardingAuditEvents: RestoreRecord[];
   goLiveChecklist: RestoreRecord[];
   timetableTeachers: RestoreRecord[];
   timetableSubjects: RestoreRecord[];
@@ -724,6 +746,9 @@ export type RestoreResult = {
   publicWebsiteEvents: EntityRestoreResult;
   receiptNotes: EntityRestoreResult;
   importBatches: EntityRestoreResult;
+  onboardingBatches: EntityRestoreResult;
+  onboardingRowOutcomes: EntityRestoreResult;
+  onboardingAuditEvents: EntityRestoreResult;
   goLiveChecklist: EntityRestoreResult;
   timetableTeachers: EntityRestoreResult;
   timetableSubjects: EntityRestoreResult;
@@ -760,7 +785,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     metadata.backupVersion !== undefined &&
     (!Number.isInteger(metadata.backupVersion) ||
       Number(metadata.backupVersion) < 1 ||
-      Number(metadata.backupVersion) > 40)
+      Number(metadata.backupVersion) > 41)
   ) {
     throw new Error("metadata.backupVersion is unsupported");
   }
@@ -1199,6 +1224,39 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     ["id", "type", "fileName", "importedAt", "mode", "totalRows", "status"]
   );
   importBatches.forEach((batch, index) => validateImportBatch(batch, index));
+  const onboardingBatches = validateOptionalRows(
+    root.onboardingBatches,
+    "onboardingBatches",
+    ONBOARDING_BATCH_KEYS,
+    ["id", "publicKey", "bundleType", "mode", "status", "version", "originalFileNameHash", "workbookSha256", "mimeType", "byteSize", "templateVersion", "schemaVersion", "purgeAfter", "createdAt", "updatedAt"]
+  );
+  onboardingBatches.forEach((row, index) => {
+    requirePositiveInteger(row.version, `onboardingBatches[${index}].version`);
+    requireNonNegativeInteger(row.byteSize, `onboardingBatches[${index}].byteSize`);
+    requireDateString(row.purgeAfter, `onboardingBatches[${index}].purgeAfter`);
+    requireDateString(row.createdAt, `onboardingBatches[${index}].createdAt`);
+    requireDateString(row.updatedAt, `onboardingBatches[${index}].updatedAt`);
+  });
+  const onboardingRowOutcomes = validateOptionalRows(
+    root.onboardingRowOutcomes,
+    "onboardingRowOutcomes",
+    ONBOARDING_ROW_OUTCOME_KEYS,
+    ["id", "batchId", "entityType", "sheetName", "sourceRowNumber", "importRowKey", "action", "status", "createdAt"]
+  );
+  onboardingRowOutcomes.forEach((row, index) => {
+    requirePositiveInteger(row.sourceRowNumber, `onboardingRowOutcomes[${index}].sourceRowNumber`);
+    requireDateString(row.createdAt, `onboardingRowOutcomes[${index}].createdAt`);
+  });
+  const onboardingAuditEvents = validateOptionalRows(
+    root.onboardingAuditEvents,
+    "onboardingAuditEvents",
+    ONBOARDING_AUDIT_EVENT_KEYS,
+    ["id", "batchId", "sequence", "eventType", "occurredAt"]
+  );
+  onboardingAuditEvents.forEach((row, index) => {
+    requirePositiveInteger(row.sequence, `onboardingAuditEvents[${index}].sequence`);
+    requireDateString(row.occurredAt, `onboardingAuditEvents[${index}].occurredAt`);
+  });
   const goLiveChecklist = validateOptionalChecklist(root.goLiveChecklist);
   const timetableTeachers = validateOptionalRows(
     root.timetableTeachers,
@@ -1475,6 +1533,9 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     ...publicWebsiteData,
     receiptNotes,
     importBatches,
+    onboardingBatches,
+    onboardingRowOutcomes,
+    onboardingAuditEvents,
     goLiveChecklist,
     timetableTeachers,
     timetableSubjects,

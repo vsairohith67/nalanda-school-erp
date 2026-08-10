@@ -10,7 +10,7 @@ import { calculateCashSources } from "@/lib/cash-book";
 import { attendanceScopeWhere, resolveTeacherAttendanceScope } from "@/lib/teacher-attendance-scope";
 
 export type DashboardQuickAction = {
-  id: "payment" | "student" | "studentAttendance" | "staffAttendance" | "leave" | "substitute" | "notice" | "importExport" | "backup";
+  id: "payment" | "student" | "studentAttendance" | "staffAttendance" | "leave" | "substitute" | "notice" | "importExport" | "bulkOnboarding" | "backup";
   label: string;
   href: string;
 };
@@ -98,6 +98,7 @@ const ACTIONS: Array<DashboardQuickAction & { permissions: CanonicalPermission[]
   { id: "substitute", label: "Substitute Planner", href: "/substitutes/planner", permissions: ["MANAGE_SUBSTITUTES"] },
   { id: "notice", label: "Create Notice", href: "/notices", permissions: ["MANAGE_NOTICES"] },
   { id: "importExport", label: "Import / Export", href: "/import-export", permissions: ["VIEW_IMPORT_EXPORT"] },
+  { id: "bulkOnboarding", label: "Bulk Onboarding", href: "/onboarding", permissions: ["DOWNLOAD_ONBOARDING_TEMPLATE"] },
   { id: "backup", label: "Backup", href: "/import-export#backup", permissions: ["RUN_BACKUP", "VIEW_IMPORT_EXPORT"], every: true }
 ];
 

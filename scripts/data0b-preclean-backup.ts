@@ -131,7 +131,7 @@ async function main() {
     const serialized = serializeBackup(backup);
     const raw = JSON.parse(serialized) as unknown;
     const validated = parseAndValidateBackup(raw);
-    if (validated.metadata.backupVersion !== 40) throw new Error("DATA0B_PRECLEAN_BACKUP_VERSION_CHANGED");
+    if (validated.metadata.backupVersion !== 41) throw new Error("DATA0B_PRECLEAN_BACKUP_VERSION_CHANGED");
     const sensitiveKeys = sensitiveObjectKeys(raw);
     if (sensitiveKeys.length) throw new Error("DATA0B_PRECLEAN_BACKUP_SENSITIVE_KEYS_PRESENT");
     if (/Nalanda(?:Director|Admin|Accountant|Viewer)@2026/i.test(serialized)) {
@@ -214,7 +214,7 @@ async function main() {
         path: logicalPath,
         sha256: fileSha256(logicalPath),
         bytes: statSync(logicalPath).size,
-        backupVersion: 40,
+        backupVersion: 41,
         sensitiveKeys: 0
       },
       rollbackCopy: {

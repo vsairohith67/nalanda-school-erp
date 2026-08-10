@@ -29,7 +29,7 @@ const PRIVATE_HEADERS = {
   Vary: "Cookie"
 } as const;
 const STATUS_OPEN = ["OPEN", "ACKNOWLEDGED", "INVESTIGATING", "SILENCED"];
-const BACKUP_VERSION = 40;
+const BACKUP_VERSION = 41;
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 
@@ -255,19 +255,36 @@ async function securityHealth(client: DatabaseClient, now: Date) {
 }
 
 async function backgroundHealth(client: DatabaseClient, now: Date) {
-  const [whatsapp, smsEmail, safeExit, cloud, generic] = await Promise.all([
+  const [whatsapp, smsEmail, safeExit, cloud, generic, onboardingBatches, onboardingAudits, onboardingJobs] = await Promise.all([
     statusCounts(client, "WhatsAppDelivery"),
     statusCounts(client, "SmsEmailDelivery"),
     statusCounts(client, "StudentDepartureNotificationOutbox"),
     statusCounts(client, "CloudBackupRun"),
-    statusCounts(client, "BackgroundJobRun")
+    statusCounts(client, "BackgroundJobRun"),
+    statusCounts(client, "OnboardingBatch"),
+    statusCounts(client, "OnboardingAuditEvent", "eventType"),
+    onboardingJobMetrics(client)
   ]);
   const combined = mergeStatusCounts(whatsapp, smsEmail, safeExit, cloud, generic);
   const queued = sumStatuses(combined, ["QUEUED", "PENDING", "SCHEDULED"]);
   const retrying = sumStatuses(combined, ["RETRYING", "RETRY_SCHEDULED"]);
   const failed = sumStatuses(combined, ["FAILED", "DEAD_LETTER", "ATTENTION_REQUIRED"]);
   const status: OperationalStatus = failed ? "WARNING" : retrying ? "DEGRADED" : "HEALTHY";
-  const metrics = [{ label: "Queued", value: queued }, { label: "Retrying", value: retrying }, { label: "Failed / attention", value: failed, status: failed ? "WARNING" as const : "HEALTHY" as const }];
+  const metrics = [
+    { label: "Queued", value: queued },
+    { label: "Retrying", value: retrying },
+    { label: "Failed / attention", value: failed, status: failed ? "WARNING" as const : "HEALTHY" as const },
+    { label: "Onboarding awaiting validation", value: (onboardingBatches.UPLOADED ?? 0) + (onboardingBatches.VALIDATED ?? 0) },
+    { label: "Onboarding awaiting approval", value: onboardingBatches.APPROVAL_REQUIRED ?? 0 },
+    { label: "Onboarding awaiting execution", value: onboardingBatches.APPROVED ?? 0 },
+    { label: "Onboarding recovery required", value: onboardingBatches.RECOVERY_REQUIRED ?? 0, status: onboardingBatches.RECOVERY_REQUIRED ? "WARNING" as const : "HEALTHY" as const },
+    { label: "Onboarding validations passed", value: onboardingJobs.validationCompleted },
+    { label: "Onboarding validations refused", value: onboardingJobs.validationFailed, status: onboardingJobs.validationFailed ? "WARNING" as const : "HEALTHY" as const },
+    { label: "Onboarding executions passed", value: onboardingJobs.executionCompleted },
+    { label: "Onboarding executions failed", value: onboardingJobs.executionFailed, status: onboardingJobs.executionFailed ? "WARNING" as const : "HEALTHY" as const },
+    { label: "Onboarding duplicate/replay suppressions", value: onboardingJobs.replayCount },
+    { label: "Onboarding rollback blocks", value: onboardingAudits.ROLLBACK_PREVIEW_BLOCKED ?? 0, status: onboardingAudits.ROLLBACK_PREVIEW_BLOCKED ? "WARNING" as const : "HEALTHY" as const }
+  ];
   return {
     backgroundCard: domainCard("BACKGROUND_WORK_HEALTH", status, now, "Existing jobs and outboxes are aggregated without recipient, document, payment or message data.", status === "HEALTHY" ? "No action is required." : "Inspect privacy-safe failure fingerprints and follow the job/outbox runbook.", "/docs/runbooks/OBS_JOB_OUTBOX_RUNBOOK.md", metrics),
     notificationCard: domainCard("NOTIFICATION_DELIVERY_HEALTH", status, now, "In-app and optional delivery queues remain separate from provider activation.", status === "HEALTHY" ? "No delivery backlog requires attention." : "Inspect the affected queue without exposing recipients or payloads.", "/docs/runbooks/OBS_JOB_OUTBOX_RUNBOOK.md", metrics)
@@ -469,7 +486,7 @@ async function businessInvariantCounts(client: DatabaseClient) {
     { key: "parent_context_without_relationship", query: "SELECT COUNT(*) AS count FROM AuthSession s LEFT JOIN StudentGuardian g ON g.id=s.activeChildLinkId WHERE s.activeChildLinkId IS NOT NULL AND g.id IS NULL" },
     { key: "broken_private_asset", query: "SELECT SUM(total) AS count FROM (SELECT COUNT(*) total FROM ApplicationDocument WHERE LENGTH(sha256)<>64 OR recoveryStatus IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM ClassworkAttachment WHERE LENGTH(sha256)<>64 OR recoveryStatus IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM SupportRequestAttachment WHERE LENGTH(sha256)<>64 OR recoveryStatus IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM StaffPayslipDocumentVersion WHERE LENGTH(sourceSha256)<>64 OR LENGTH(derivativeSha256)<>64)" },
     { key: "safe_exit_release_without_evidence", query: "SELECT COUNT(*) AS count FROM StudentDepartureRequest r WHERE r.status IN ('CHECKED_OUT','RETURN_EXPECTED','RETURNED_TO_CAMPUS','CLOSED') AND (r.checkedOutAt IS NULL OR NOT EXISTS (SELECT 1 FROM StudentDepartureHandover h WHERE h.requestId=r.id) OR NOT EXISTS (SELECT 1 FROM StudentGatePass p WHERE p.requestId=r.id AND p.status='USED' AND p.consumedAt IS NOT NULL) OR NOT EXISTS (SELECT 1 FROM StudentCampusPresenceEvent c WHERE c.requestId=r.id AND c.eventType='EARLY_DEPARTURE'))" },
-    { key: "migration_backup_mismatch", query: "SELECT COUNT(*) AS count FROM ReleaseManifest WHERE isCurrent=1 AND (backupVersion<>40 OR migrationVersion<>'20260810100000_technical_operations_observability')" }
+    { key: "migration_backup_mismatch", query: "SELECT COUNT(*) AS count FROM ReleaseManifest WHERE isCurrent=1 AND (backupVersion<>41 OR migrationVersion<>'20260810184500_governed_bulk_onboarding')" }
   ];
   const result: Array<{ checkKey: string; affectedCount: number }> = [];
   for (const row of queries) {
@@ -510,9 +527,9 @@ function fixedProvider(category: string, state: ProviderHealthItem["state"], ena
   return { category, environment: runtimeEnvironment(), state, enabled, configurationComplete: state !== "NOT_CONFIGURED", lastHealthAt: null, lastSuccessAt: null, failureCount: state === "FAILED" ? 1 : 0, explanation: state === "NOT_CONFIGURED" ? "Intentionally not configured." : state === "DISABLED" ? "Configured feature is disabled." : "Local/test configuration only." };
 }
 
-type StatusTable = "WhatsAppDelivery" | "SmsEmailDelivery" | "StudentDepartureNotificationOutbox" | "CloudBackupRun" | "BackgroundJobRun" | "FeeRegisterOcrBatch" | "ReportCardBatch" | "StaffPayslipDocumentVersion" | "ApplicationDocument" | "ClassworkAttachment";
+type StatusTable = "WhatsAppDelivery" | "SmsEmailDelivery" | "StudentDepartureNotificationOutbox" | "CloudBackupRun" | "BackgroundJobRun" | "OnboardingBatch" | "OnboardingAuditEvent" | "FeeRegisterOcrBatch" | "ReportCardBatch" | "StaffPayslipDocumentVersion" | "ApplicationDocument" | "ClassworkAttachment";
 
-async function statusCounts(client: DatabaseClient, table: StatusTable, column: "status" | "recoveryStatus" = "status") {
+async function statusCounts(client: DatabaseClient, table: StatusTable, column: "status" | "recoveryStatus" | "eventType" = "status") {
   try {
     // Both identifiers are closed, compile-time allowlists; no request input reaches this query.
     const rows = await client.$queryRawUnsafe<Array<{ status: string; total: bigint | number }>>(
@@ -521,6 +538,24 @@ async function statusCounts(client: DatabaseClient, table: StatusTable, column: 
     return Object.fromEntries(rows.map((row) => [String(row.status), Number(row.total ?? 0)]));
   } catch {
     return {};
+  }
+}
+
+async function onboardingJobMetrics(client: DatabaseClient) {
+  try {
+    const rows = await client.$queryRawUnsafe<Array<{ jobType: string; status: string; total: bigint | number; attempts: bigint | number }>>(
+      "SELECT jobType, status, COUNT(*) AS total, SUM(attemptCount) AS attempts FROM BackgroundJobRun WHERE component = 'GOVERNED_BULK_ONBOARDING' GROUP BY jobType, status"
+    );
+    const count = (types: string[], status: string) => rows.filter((row) => types.includes(row.jobType) && row.status === status).reduce((sum, row) => sum + Number(row.total ?? 0), 0);
+    return {
+      validationCompleted: count(["ONBOARDING_WORKBOOK_PARSE", "ONBOARDING_VALIDATION"], "COMPLETED"),
+      validationFailed: count(["ONBOARDING_WORKBOOK_PARSE", "ONBOARDING_VALIDATION"], "FAILED"),
+      executionCompleted: count(["ONBOARDING_EXECUTION"], "COMPLETED"),
+      executionFailed: count(["ONBOARDING_EXECUTION"], "FAILED"),
+      replayCount: rows.reduce((sum, row) => sum + Math.max(0, Number(row.attempts ?? 0) - Number(row.total ?? 0)), 0)
+    };
+  } catch {
+    return { validationCompleted: 0, validationFailed: 0, executionCompleted: 0, executionFailed: 0, replayCount: 0 };
   }
 }
 
@@ -548,6 +583,7 @@ function approvedStorageRoots() {
     ["Operational database", path.dirname(operationalDatabasePath())],
     ["Backups", path.resolve(process.env.BACKUP_DIRECTORY?.trim() || path.join(root, "backups"))],
     ["Private uploads", path.resolve(process.env.ADMISSIONS_PRIVATE_STORAGE_ROOT?.trim() || path.join(root, "data", "private"))],
+    ["Governed onboarding private workbooks", path.resolve(process.env.ONBOARDING_STORAGE_ROOT?.trim() || path.join(root, "storage", "onboarding"))],
     ["Generated documents", path.resolve(process.env.PAYSLIP_PRIVATE_STORAGE_ROOT?.trim() || path.join(root, "data", "generated"))],
     ["Temporary processing", path.resolve(process.env.CLOUD_BACKUP_TEMP_DIR?.trim() || path.join(root, "tmp"))],
     ["Application cache", path.join(root, ".next")]

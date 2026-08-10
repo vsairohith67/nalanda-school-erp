@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "plugins": [], "incremental": true, "tsBuildInfoFile": "./tsconfig.tools-qa-import1a.tsbuildinfo" },
+  "include": ["scripts/qa-import1a-copied-db.ts", "scripts/qa-import1a-browser-fixtures.ts"],
+  "exclude": ["node_modules", ".next"]
+}

@@ -35,6 +35,7 @@ const actionIcons: Record<DashboardQuickAction["id"], LucideIcon> = {
   substitute: UsersRound,
   notice: Megaphone,
   importExport: Download,
+  bulkOnboarding: Download,
   backup: DatabaseBackup
 };
 

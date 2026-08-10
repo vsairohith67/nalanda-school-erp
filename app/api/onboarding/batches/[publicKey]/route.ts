@@ -1,0 +1,6 @@
+import { requireApiPermission } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { onboardingError, onboardingJson } from "@/lib/onboarding-api";
+import { OnboardingError, presentBatch } from "@/lib/onboarding";
+export const dynamic = "force-dynamic";
+export async function GET(_request: Request, context: { params: Promise<{ publicKey: string }> }) { const auth = await requireApiPermission("VIEW_ONBOARDING_AUDIT"); if (auth.response) return auth.response; try { const { publicKey } = await context.params; const batch = await prisma.onboardingBatch.findUnique({ where: { publicKey }, include: { rowOutcomes: { orderBy: [{ sheetName: "asc" }, { sourceRowNumber: "asc" }] }, auditEvents: { orderBy: { sequence: "asc" } } } }); if (!batch) throw new OnboardingError("The onboarding batch is unavailable.", 404, "BATCH_NOT_FOUND"); return onboardingJson({ batch: presentBatch(batch), rowOutcomes: batch.rowOutcomes.map((r) => ({ entityType: r.entityType, sheet: r.sheetName, row: r.sourceRowNumber, rowKey: r.importRowKey, action: r.action, status: r.status })), audit: batch.auditEvents.map((r) => ({ sequence: r.sequence, eventType: r.eventType, previousStatus: r.previousStatus, newStatus: r.newStatus, occurredAt: r.occurredAt })) }); } catch (error) { return onboardingError(error); } }

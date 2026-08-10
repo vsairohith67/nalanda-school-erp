@@ -1,5 +1,22 @@
 # Documentation Index
 
+## IMPORT-1A governed bulk onboarding
+
+- [Architecture, Data Dictionary and Governance](GOVERNED_BULK_ONBOARDING.md)
+- [Operator Guide](IMPORT_1A_OPERATOR_GUIDE.md)
+- [Developer Guide](IMPORT_1A_DEVELOPER_GUIDE.md)
+- [Threat Model](IMPORT_1A_THREAT_MODEL.md)
+- [Failure and Recovery Runbook](runbooks/IMPORT_1A_FAILURE_RECOVERY_RUNBOOK.md)
+- [Workflow Diagram](diagrams/governed-bulk-onboarding.mmd)
+- [Implementation Checkpoint](evidence/IMPORT_1A_IMPLEMENTATION_CHECKPOINT.md)
+
+IMPORT-1A adds private template generation, bounded workbook validation,
+duplicate decisions, expiring dry-run approval, atomic exactly-once execution,
+lineage/reconciliation, dependency-aware rollback, OBS-1A aggregates and backup
+version 41 recovery semantics. It is implementation work pending independent
+QA. No operational migration, real-data onboarding, merge/tag, deployment or
+live provider is authorised.
+
 ## OBS-1A technical operations and safe observability
 
 - [Architecture](OBSERVABILITY_OPERATIONS_ARCHITECTURE.md)

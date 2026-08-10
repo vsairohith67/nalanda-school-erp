@@ -83,7 +83,7 @@ describe("Prompt 21A Student-location planning boundary", () => {
   });
 
   it("keeps backup format at version 37 and links all three documents", () => {
-    expect(read("lib/backup.ts")).toContain("backupVersion: 40");
+    expect(read("lib/backup.ts")).toContain("backupVersion: 41");
     const index = read("docs/INDEX.md");
     for (const filename of [
       "STUDENT_LOCATION_MAPPING_PRIVACY_COST_AND_FEASIBILITY.md",

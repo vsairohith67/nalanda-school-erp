@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { createHash } from "node:crypto";
 import packageJson from "../package.json";
 import {
   examGovernanceRecordCount,
@@ -261,6 +262,9 @@ type BackupDocumentInput = {
   publicWebsiteEvents?: readonly object[];
   receiptNotes?: readonly unknown[];
   importBatches?: readonly unknown[];
+  onboardingBatches?: readonly unknown[];
+  onboardingRowOutcomes?: readonly unknown[];
+  onboardingAuditEvents?: readonly unknown[];
   goLiveChecklist?: readonly unknown[];
   timetableTeachers?: readonly unknown[];
   timetableSubjects?: readonly unknown[];
@@ -276,6 +280,9 @@ type BackupDocumentInput = {
 } & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
+  const onboardingBatches = sanitizeOnboardingBatches(input.onboardingBatches ?? []);
+  const onboardingRowOutcomes = sanitizeOnboardingRows(input.onboardingRowOutcomes ?? []);
+  const onboardingAuditEvents = sanitizeOnboardingAudits(input.onboardingAuditEvents ?? []);
   const timetableTeachers = [...(input.timetableTeachers ?? [])];
   const timetableSubjects = [...(input.timetableSubjects ?? [])];
   const timetableClassSections = [...(input.timetableClassSections ?? [])];
@@ -459,12 +466,13 @@ export function createBackupDocument(input: BackupDocumentInput) {
       generatedAt: input.generatedAt.toISOString(),
       generatedBy: input.generatedBy,
       appVersion: packageJson.version,
-      backupVersion: 40,
+      backupVersion: 41,
       counts: {
         schoolSettings: input.schoolSettings ? 1 : 0,
         authSecurityRecords: authSecurityRecordCount(authSecurity),
         iamAccessRecords: iamAccessRecordCount(iamAccess),
         technicalOperationsRecords: technicalOperationsRecordCount(technicalOperations),
+        onboardingRecords: onboardingBatches.length + onboardingRowOutcomes.length + onboardingAuditEvents.length,
         rolePermissions: rolePermissions.length,
         guardians: guardians.length,
         studentGuardians: studentGuardians.length,
@@ -818,6 +826,9 @@ export function createBackupDocument(input: BackupDocumentInput) {
     publicWebsiteEvents,
     receiptNotes: [...(input.receiptNotes ?? [])],
     importBatches: [...(input.importBatches ?? [])],
+    onboardingBatches,
+    onboardingRowOutcomes,
+    onboardingAuditEvents,
     goLiveChecklist: [...(input.goLiveChecklist ?? [])],
     timetableTeachers,
     timetableSubjects,
@@ -834,7 +845,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
 async function sqliteSchemaHas(client: BackupClient, table: string, column?: string) {
   const query = (client as any).$queryRawUnsafe;
   if (typeof query !== "function") return true;
-  const allowedTables = new Set(["StudentAttendanceSession", "StudentReportCardVersion", "AcademicCalendarVersion", "ClassworkItem", "AcademicReportDefinition", "AdmissionCycle", "PayrollPolicyVersion", "StaffPayslipRequest", "SupportRequest", "StudentDepartureRequest"]);
+  const allowedTables = new Set(["StudentAttendanceSession", "StudentReportCardVersion", "AcademicCalendarVersion", "ClassworkItem", "AcademicReportDefinition", "AdmissionCycle", "PayrollPolicyVersion", "StaffPayslipRequest", "SupportRequest", "StudentDepartureRequest", "OnboardingBatch", "OnboardingRowOutcome", "OnboardingAuditEvent"]);
   if (!allowedTables.has(table)) throw new Error("BACKUP_SCHEMA_PROBE_REFUSED");
   const rows = await query.call(client, `PRAGMA table_info("${table}")`) as Array<{ name?: string }>;
   return column ? rows.some((row) => row.name === column) : rows.length > 0;
@@ -844,7 +855,7 @@ export async function generateFullBackup(
   client: BackupClient,
   options: { generatedBy: string; generatedAt?: Date; excludeCloudBackupRunId?: string }
 ) {
-  const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable, classworkAvailable, academicReportingAvailable, admissionsAvailable, payrollAvailable, payslipRequestAvailable, supportAvailable, safeExitAvailable] = await Promise.all([
+  const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable, classworkAvailable, academicReportingAvailable, admissionsAvailable, payrollAvailable, payslipRequestAvailable, supportAvailable, safeExitAvailable, onboardingBatchesAvailable, onboardingRowsAvailable, onboardingAuditsAvailable] = await Promise.all([
     sqliteSchemaHas(client, "StudentAttendanceSession", "operationalCalendarVersionKey"),
     sqliteSchemaHas(client, "StudentReportCardVersion", "calendarBasisVersionKey"),
     sqliteSchemaHas(client, "AcademicCalendarVersion"),
@@ -854,7 +865,10 @@ export async function generateFullBackup(
     sqliteSchemaHas(client, "PayrollPolicyVersion"),
     sqliteSchemaHas(client, "StaffPayslipRequest"),
     sqliteSchemaHas(client, "SupportRequest"),
-    sqliteSchemaHas(client, "StudentDepartureRequest")
+    sqliteSchemaHas(client, "StudentDepartureRequest"),
+    sqliteSchemaHas(client, "OnboardingBatch"),
+    sqliteSchemaHas(client, "OnboardingRowOutcome"),
+    sqliteSchemaHas(client, "OnboardingAuditEvent")
   ]);
   const studentAttendanceSessionArgs = {
     select: {
@@ -1026,6 +1040,9 @@ export async function generateFullBackup(
     publicWebsiteEvents,
     receiptNotes,
     importBatches,
+    onboardingBatches,
+    onboardingRowOutcomes,
+    onboardingAuditEvents,
     goLiveChecklist,
     timetableTeachers,
     timetableSubjects,
@@ -1206,6 +1223,9 @@ export async function generateFullBackup(
     (client as any).publicWebsiteEvent?.findMany ? (client as any).publicWebsiteEvent.findMany({ orderBy: [{ eventDate: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
     client.receiptNote.findMany({ orderBy: { createdAt: "asc" } }),
     client.importBatch.findMany({ orderBy: { importedAt: "asc" } }),
+    onboardingBatchesAvailable && (client as any).onboardingBatch?.findMany ? (client as any).onboardingBatch.findMany({ orderBy: { createdAt: "asc" } }) : Promise.resolve([]),
+    onboardingRowsAvailable && (client as any).onboardingRowOutcome?.findMany ? (client as any).onboardingRowOutcome.findMany({ orderBy: [{ batchId: "asc" }, { sheetName: "asc" }, { sourceRowNumber: "asc" }] }) : Promise.resolve([]),
+    onboardingAuditsAvailable && (client as any).onboardingAuditEvent?.findMany ? (client as any).onboardingAuditEvent.findMany({ orderBy: [{ batchId: "asc" }, { sequence: "asc" }] }) : Promise.resolve([]),
     client.goLiveChecklist.findMany({ orderBy: { createdAt: "asc" } }),
     client.timetableTeacher.findMany({ orderBy: [{ name: "asc" }, { shortName: "asc" }] }),
     client.timetableSubject.findMany({ orderBy: [{ name: "asc" }, { shortName: "asc" }] }),
@@ -1478,6 +1498,9 @@ export async function generateFullBackup(
     publicWebsiteEvents,
     receiptNotes,
     importBatches,
+    onboardingBatches,
+    onboardingRowOutcomes,
+    onboardingAuditEvents,
     goLiveChecklist,
     timetableTeachers,
     timetableSubjects,
@@ -1534,3 +1557,38 @@ function sanitizeActorFields(rows: readonly object[]) {
     && key !== "verifiedByUserId"
   )));
 }
+
+function sanitizeOnboardingBatches(rows: readonly unknown[]) {
+  return rows.map((value) => {
+    const row = value as Record<string, unknown>;
+    let planSummaryJson: string | null = null;
+    let executionResultJson: string | null = null;
+    try {
+      const parsed = row.planSummaryJson ? JSON.parse(String(row.planSummaryJson)) : null;
+      if (parsed) {
+        const { issues: rawIssues, resolutions: rawResolutions, ...summary } = parsed;
+        const issues = Array.isArray(rawIssues) ? rawIssues.map((issue: any) => ({ code: String(issue.code ?? ""), severity: String(issue.severity ?? ""), sheet: String(issue.sheet ?? ""), row: Number(issue.row ?? 0), column: String(issue.column ?? "") })) : [];
+        const resolutions = rawResolutions && typeof rawResolutions === "object" ? Object.entries(rawResolutions as Record<string, any>).map(([rowKey, resolution]) => ({ rowKeyHash: privateHash(rowKey), decision: String(resolution?.decision ?? ""), reasonHash: privateHash(String(resolution?.reason ?? "")) })) : [];
+        planSummaryJson = JSON.stringify({ ...summary, issues, resolutions });
+      }
+    } catch { planSummaryJson = null; }
+    try {
+      const parsed = row.executionResultJson ? JSON.parse(String(row.executionResultJson)) : null;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const { reason: _reason, ...safeResult } = parsed as Record<string, unknown>;
+        executionResultJson = JSON.stringify(safeResult);
+      }
+    } catch { executionResultJson = null; }
+    return Object.fromEntries(Object.entries({ ...row, planSummaryJson, executionResultJson, storageKey: null }).filter(([key]) => !["uploadedByUserId", "approvedByUserId", "executedByUserId", "rolledBackByUserId", "approvalReason", "rollbackReason"].includes(key)));
+  });
+}
+
+function sanitizeOnboardingRows(rows: readonly unknown[]) {
+  return rows.map((value) => { const row = value as Record<string, unknown>; return { ...row, importRowKey: privateHash(String(row.importRowKey ?? "")), targetRecordId: row.targetRecordId ? privateHash(String(row.targetRecordId)) : null }; });
+}
+
+function sanitizeOnboardingAudits(rows: readonly unknown[]) {
+  return rows.map((value) => Object.fromEntries(Object.entries(value as Record<string, unknown>).filter(([key]) => !["actorUserId", "reasonSafe"].includes(key))));
+}
+
+function privateHash(value: string) { return createHash("sha256").update(value).digest("hex"); }

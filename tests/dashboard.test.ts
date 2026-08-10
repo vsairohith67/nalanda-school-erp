@@ -71,7 +71,7 @@ describe("dashboard command center", () => {
   it("computes role-aware quick actions from effective permissions", () => {
     const director = dashboardQuickActions(RECOMMENDED_ROLE_PERMISSIONS.DIRECTOR, "DIRECTOR");
     expect(director.map((action) => action.id)).toEqual([
-      "payment", "student", "studentAttendance", "staffAttendance", "leave", "substitute", "notice", "importExport", "backup"
+      "payment", "student", "studentAttendance", "staffAttendance", "leave", "substitute", "notice", "importExport", "bulkOnboarding", "backup"
     ]);
     const accountant = dashboardQuickActions(RECOMMENDED_ROLE_PERMISSIONS.ACCOUNTANT, "ACCOUNTANT");
     expect(accountant.map((action) => action.id)).toEqual(["payment", "importExport"]);

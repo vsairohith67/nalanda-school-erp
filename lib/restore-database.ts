@@ -31,6 +31,7 @@ type RestoreDatabaseClient = Pick<
   "student" | "feeStructure" | "payment" | "paymentAudit" | "user" | "receiptNote"
   | "schoolSettings"
   | "importBatch" | "goLiveChecklist" | "timetableTeacher" | "timetableSubject"
+  | "onboardingBatch" | "onboardingRowOutcome" | "onboardingAuditEvent"
   | "timetableClassSection" | "timetablePeriodTemplate" | "timetableAssignment"
   | "timetableTeacherUnavailability" | "timetableFixedPeriod" | "timetableDraft"
   | "timetableEntry" | "rolePermission" | "guardian" | "studentGuardian"
@@ -291,6 +292,9 @@ async function restoreIntoDatabase(
     publicWebsiteEvents: emptyEntityResult(),
     receiptNotes: emptyEntityResult(),
     importBatches: emptyEntityResult(),
+    onboardingBatches: emptyEntityResult(),
+    onboardingRowOutcomes: emptyEntityResult(),
+    onboardingAuditEvents: emptyEntityResult(),
     goLiveChecklist: emptyEntityResult(),
     timetableTeachers: emptyEntityResult(),
     timetableSubjects: emptyEntityResult(),
@@ -531,6 +535,7 @@ async function restoreIntoDatabase(
     backupUserToLocalUser,
     result
   );
+  await restoreOnboardingData(client, backup, restoredBy, result);
   await restoreRolePermissionsData(client, backup, result);
   await restoreTimetableFoundationData(client, backup, result);
   await restoreHomeworkData(client, backup, backupUserToLocalUser, result);
@@ -3128,6 +3133,152 @@ export async function restoreTimetableFoundationData(
     } catch (error) {
       result.timetableEntries.errors.push(rowError("Timetable entry", index, error));
     }
+  }
+}
+
+export async function restoreOnboardingData(
+  client: Pick<RestoreDatabaseClient, "onboardingBatch" | "onboardingRowOutcome" | "onboardingAuditEvent">,
+  backup: Pick<ValidatedBackup, "onboardingBatches" | "onboardingRowOutcomes" | "onboardingAuditEvents">,
+  restoredBy: { id: string; name: string },
+  result: Pick<RestoreResult, "onboardingBatches" | "onboardingRowOutcomes" | "onboardingAuditEvents" | "warnings">
+) {
+  const batchIdMap = new Map<string, string>();
+
+  for (const [index, row] of backup.onboardingBatches.entries()) {
+    try {
+      const sourceId = requiredText(row.id, "Onboarding batch ID");
+      const publicKey = requiredText(row.publicKey, "Onboarding batch public key");
+      const existing = await client.onboardingBatch.findFirst({
+        where: { OR: [{ id: sourceId }, { publicKey }] }
+      });
+      if (existing) {
+        batchIdMap.set(sourceId, existing.id);
+        result.onboardingBatches.skipped += 1;
+        continue;
+      }
+
+      const sourceStatus = requiredText(row.status, "Onboarding batch status");
+      await client.onboardingBatch.create({
+        data: {
+          id: sourceId,
+          publicKey,
+          bundleType: requiredText(row.bundleType, "Onboarding bundle type"),
+          mode: requiredText(row.mode, "Onboarding mode"),
+          status: "RECOVERY_REQUIRED",
+          version: positiveInteger(row.version, "Onboarding batch version"),
+          uploadedByUserId: restoredBy.id,
+          originalFileNameHash: requiredText(row.originalFileNameHash, "Onboarding filename hash"),
+          storageKey: `recovery/${publicKey}.private-workbook-required`,
+          workbookSha256: requiredText(row.workbookSha256, "Onboarding workbook hash"),
+          mimeType: requiredText(row.mimeType, "Onboarding MIME type"),
+          byteSize: nonNegativeInteger(row.byteSize, "Onboarding byte size"),
+          templateVersion: requiredText(row.templateVersion, "Onboarding template version"),
+          schemaVersion: requiredText(row.schemaVersion, "Onboarding schema version"),
+          referenceVersionHash: nullableText(row.referenceVersionHash),
+          targetVersionHash: nullableText(row.targetVersionHash),
+          planHash: nullableText(row.planHash),
+          planVersion: nonNegativeInteger(row.planVersion, "Onboarding plan version"),
+          planSummaryJson: nullableText(row.planSummaryJson),
+          planExpiresAt: optionalDate(row.planExpiresAt, `onboardingBatches[${index}].planExpiresAt`),
+          approvedAt: optionalDate(row.approvedAt, `onboardingBatches[${index}].approvedAt`),
+          executionIdempotencyKey: null,
+          executionPayloadHash: nullableText(row.executionPayloadHash),
+          executedAt: optionalDate(row.executedAt, `onboardingBatches[${index}].executedAt`),
+          executionResultJson: nullableText(row.executionResultJson),
+          rollbackPreviewJson: nullableText(row.rollbackPreviewJson),
+          rolledBackAt: optionalDate(row.rolledBackAt, `onboardingBatches[${index}].rolledBackAt`),
+          purgeAfter: requiredDate(row.purgeAfter, `onboardingBatches[${index}].purgeAfter`),
+          purgedAt: optionalDate(row.purgedAt, `onboardingBatches[${index}].purgedAt`),
+          createdAt: requiredDate(row.createdAt, `onboardingBatches[${index}].createdAt`),
+          updatedAt: requiredDate(row.updatedAt, `onboardingBatches[${index}].updatedAt`)
+        }
+      });
+      batchIdMap.set(sourceId, sourceId);
+      result.onboardingBatches.created += 1;
+      result.onboardingBatches.warnings.push(
+        `Batch ${publicKey} was restored from ${sourceStatus} as RECOVERY_REQUIRED because ordinary JSON backups do not contain private workbook bytes.`
+      );
+    } catch (error) {
+      result.onboardingBatches.errors.push(rowError("Onboarding batch", index, error));
+    }
+  }
+
+  for (const [index, row] of backup.onboardingRowOutcomes.entries()) {
+    try {
+      const sourceBatchId = requiredText(row.batchId, "Onboarding outcome batch ID");
+      const batchId = batchIdMap.get(sourceBatchId);
+      if (!batchId) throw new Error("Referenced onboarding batch was not restored");
+      const id = requiredText(row.id, "Onboarding outcome ID");
+      const entityType = requiredText(row.entityType, "Onboarding outcome entity type");
+      const importRowKey = requiredText(row.importRowKey, "Onboarding import row key");
+      const existing = await client.onboardingRowOutcome.findFirst({
+        where: { OR: [{ id }, { batchId, entityType, importRowKey }] }
+      });
+      if (existing) {
+        result.onboardingRowOutcomes.skipped += 1;
+        continue;
+      }
+      await client.onboardingRowOutcome.create({
+        data: {
+          id,
+          batchId,
+          entityType,
+          sheetName: requiredText(row.sheetName, "Onboarding sheet name"),
+          sourceRowNumber: positiveInteger(row.sourceRowNumber, "Onboarding source row number"),
+          importRowKey,
+          action: requiredText(row.action, "Onboarding action"),
+          status: requiredText(row.status, "Onboarding outcome status"),
+          targetRecordId: null,
+          beforeHash: nullableText(row.beforeHash),
+          afterHash: nullableText(row.afterHash),
+          issueCodesJson: textOr(row.issueCodesJson, "[]"),
+          createdAt: requiredDate(row.createdAt, `onboardingRowOutcomes[${index}].createdAt`)
+        }
+      });
+      result.onboardingRowOutcomes.created += 1;
+    } catch (error) {
+      result.onboardingRowOutcomes.errors.push(rowError("Onboarding row outcome", index, error));
+    }
+  }
+
+  for (const [index, row] of backup.onboardingAuditEvents.entries()) {
+    try {
+      const sourceBatchId = requiredText(row.batchId, "Onboarding audit batch ID");
+      const batchId = batchIdMap.get(sourceBatchId);
+      if (!batchId) throw new Error("Referenced onboarding batch was not restored");
+      const id = requiredText(row.id, "Onboarding audit ID");
+      const sequence = positiveInteger(row.sequence, "Onboarding audit sequence");
+      const existing = await client.onboardingAuditEvent.findFirst({
+        where: { OR: [{ id }, { batchId, sequence }] }
+      });
+      if (existing) {
+        result.onboardingAuditEvents.skipped += 1;
+        continue;
+      }
+      await client.onboardingAuditEvent.create({
+        data: {
+          id,
+          batchId,
+          sequence,
+          eventType: requiredText(row.eventType, "Onboarding event type"),
+          previousStatus: nullableText(row.previousStatus),
+          newStatus: nullableText(row.newStatus),
+          actorUserId: restoredBy.id,
+          reasonSafe: "Restored privacy-safe onboarding audit metadata",
+          evidenceHash: nullableText(row.evidenceHash),
+          occurredAt: requiredDate(row.occurredAt, `onboardingAuditEvents[${index}].occurredAt`)
+        }
+      });
+      result.onboardingAuditEvents.created += 1;
+    } catch (error) {
+      result.onboardingAuditEvents.errors.push(rowError("Onboarding audit event", index, error));
+    }
+  }
+
+  if (backup.onboardingBatches.length > 0) {
+    result.warnings.push(
+      "Governed onboarding workbook contents are intentionally excluded from ordinary JSON backup. Recover those files only from the encrypted private recovery source, then revalidate before approval or execution."
+    );
   }
 }
 

@@ -516,7 +516,7 @@ async function verifyBackupRestore(client: PrismaClient, state: QaState) {
     throw new Error("EXAM3QA_BACKUP_INCLUDED_CREDENTIALS");
   }
   const validated = parseAndValidateBackup(JSON.parse(serialized));
-  if (validated.metadata.backupVersion !== 40) throw new Error("EXAM3QA_BACKUP_VERSION_CHANGED");
+  if (validated.metadata.backupVersion !== 41) throw new Error("EXAM3QA_BACKUP_VERSION_CHANGED");
   const pdfFilesBefore = existsSync(PDF_ROOT)
     ? readdirSync(PDF_ROOT).filter((name) => name.includes("EXAM3QA")).sort()
     : [];

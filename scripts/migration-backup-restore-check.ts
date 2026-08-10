@@ -27,7 +27,8 @@ const SYNTHETIC_ENV = {
 const actor = { id: "devops1b-restore-actor", name: "DEVOPS1B Restore Actor" };
 const LEGACY_COUNT_OMISSIONS = new Set([
   "students", "feeStructures", "payments", "paymentAudits", "users", "receiptNotes",
-  "importBatches", "goLiveChecklist", "timetableTeacherUnavailability", "timetableFixedPeriods"
+  "importBatches", "onboardingBatches", "onboardingRowOutcomes", "onboardingAuditEvents",
+  "goLiveChecklist", "timetableTeacherUnavailability", "timetableFixedPeriods"
 ]);
 
 function prismaFor(databasePath: string) {
@@ -84,7 +85,7 @@ export async function runMigrationBackupRestoreCheck() {
     const serialized = serializeBackup(generated);
     writeFileSync(backupPath, serialized, "utf8");
     const validated = parseAndValidateBackup(JSON.parse(serialized));
-    if (validated.metadata.backupVersion !== 40) throw new Error("BACKUP_VERSION_CHANGED");
+    if (validated.metadata.backupVersion !== 41) throw new Error("BACKUP_VERSION_CHANGED");
     if (/passwordHash|DEVOPS1B-local-only-(?:Director|Admin|Accountant|Viewer|Restore)/.test(serialized)) {
       throw new Error("BACKUP_SECRET_OR_PASSWORD_HASH_DETECTED");
     }
@@ -99,6 +100,8 @@ export async function runMigrationBackupRestoreCheck() {
     for (const key of LEGACY_COUNT_OMISSIONS) {
       if (!arrayEntries.some(([arrayKey]) => arrayKey === key)) throw new Error(`BACKUP_REQUIRED_ARRAY_MISSING: ${key}`);
     }
+    const onboardingTotal = validated.onboardingBatches.length + validated.onboardingRowOutcomes.length + validated.onboardingAuditEvents.length;
+    if (metadataCounts.onboardingRecords !== onboardingTotal) throw new Error("BACKUP_ONBOARDING_COUNT_MISMATCH");
 
     const target = prismaFor(targetPath);
     await createActor(target);

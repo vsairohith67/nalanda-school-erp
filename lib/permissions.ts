@@ -395,6 +395,15 @@ export const PERMISSIONS = [
   "VIEW_IMPORT_EXPORT",
   "RUN_IMPORTS",
   "VIEW_IMPORT_VERIFICATION",
+  "DOWNLOAD_ONBOARDING_TEMPLATE",
+  "UPLOAD_ONBOARDING_WORKBOOK",
+  "VALIDATE_ONBOARDING_BATCH",
+  "RESOLVE_ONBOARDING_CONFLICT",
+  "APPROVE_ONBOARDING_BATCH",
+  "EXECUTE_ONBOARDING_BATCH",
+  "VIEW_ONBOARDING_AUDIT",
+  "ROLLBACK_ONBOARDING_BATCH",
+  "MANAGE_IMPORT_REFERENCE_EXPORT",
   "RUN_PILOT_ACCEPTANCE",
   "VIEW_TIMETABLE",
   "MANAGE_TIMETABLE_MASTER",
@@ -1165,6 +1174,15 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { permission: "VIEW_IMPORT_EXPORT", label: "View import/export", description: "Open the import/export workspace." },
       { permission: "RUN_IMPORTS", label: "Run imports", description: "Run supported import actions." },
       { permission: "VIEW_IMPORT_VERIFICATION", label: "View import verification", description: "Open saved import checks and go-live checklist." },
+      { permission: "DOWNLOAD_ONBOARDING_TEMPLATE", label: "Download onboarding templates", description: "Download controlled Student, Guardian and Staff XLSX templates." },
+      { permission: "UPLOAD_ONBOARDING_WORKBOOK", label: "Upload onboarding workbooks", description: "Upload private governed onboarding workbooks without executing them." },
+      { permission: "VALIDATE_ONBOARDING_BATCH", label: "Validate onboarding batches", description: "Run bounded workbook, row, relationship and reference validation." },
+      { permission: "RESOLVE_ONBOARDING_CONFLICT", label: "Resolve onboarding conflicts", description: "Record explicit duplicate and conflict decisions with reasons." },
+      { permission: "APPROVE_ONBOARDING_BATCH", label: "Approve onboarding batches", description: "Approve a current dry-run plan after review and re-authentication." },
+      { permission: "EXECUTE_ONBOARDING_BATCH", label: "Execute onboarding batches", description: "Execute an approved all-or-nothing onboarding plan exactly once." },
+      { permission: "VIEW_ONBOARDING_AUDIT", label: "View onboarding audit", description: "View private batch history, issues, reconciliation and lineage." },
+      { permission: "ROLLBACK_ONBOARDING_BATCH", label: "Roll back onboarding batches", description: "Preview or execute a safe batch-owned rollback after re-authentication." },
+      { permission: "MANAGE_IMPORT_REFERENCE_EXPORT", label: "Manage import references", description: "Download and inspect approved display-code reference lists without creating master data." },
       { permission: "RUN_PILOT_ACCEPTANCE", label: "Run pilot acceptance", description: "Open pilot acceptance and reconciliation checks." }
     ]
   },
@@ -1298,6 +1316,7 @@ const principalPermissions = new Set<CanonicalPermission>([
   "MANAGE_TIMETABLE_BUILDER",
   "RUN_TIMETABLE_GENERATOR",
   "PRINT_TIMETABLE"
+  ,"DOWNLOAD_ONBOARDING_TEMPLATE", "UPLOAD_ONBOARDING_WORKBOOK", "VALIDATE_ONBOARDING_BATCH", "RESOLVE_ONBOARDING_CONFLICT", "APPROVE_ONBOARDING_BATCH", "VIEW_ONBOARDING_AUDIT", "MANAGE_IMPORT_REFERENCE_EXPORT"
   ,"VIEW_STUDENT_ATTENDANCE", "MANAGE_STUDENT_ATTENDANCE", "SUBMIT_STUDENT_ATTENDANCE", "LOCK_STUDENT_ATTENDANCE", "VIEW_STUDENT_ATTENDANCE_REPORTS"
   ,"REQUEST_STUDENT_DEPARTURE", "RECORD_PARENT_CONSENT", "APPROVE_STUDENT_DEPARTURE", "EMERGENCY_OVERRIDE_STUDENT_DEPARTURE", "VERIFY_GATE_PASS", "COMPLETE_STUDENT_CHECKOUT", "RECORD_STUDENT_RETURN", "RECORD_UNAUTHORISED_EXIT", "VIEW_LIVE_CAMPUS_ROSTER", "VIEW_DEPARTURE_AUDIT", "MANAGE_STANDING_EXIT_PERMISSION", "CORRECT_STUDENT_EXIT_RECORD"
   ,"VIEW_STAFF_ATTENDANCE", "MANAGE_STAFF_ATTENDANCE", "SUBMIT_STAFF_ATTENDANCE", "LOCK_STAFF_ATTENDANCE", "VIEW_STAFF_ATTENDANCE_REPORTS"
@@ -1367,6 +1386,7 @@ const adminPermissions = new Set<CanonicalPermission>([
   "RUN_IMPORTS",
   "VIEW_IMPORT_VERIFICATION",
   "RUN_PILOT_ACCEPTANCE",
+  "DOWNLOAD_ONBOARDING_TEMPLATE", "UPLOAD_ONBOARDING_WORKBOOK", "VALIDATE_ONBOARDING_BATCH", "RESOLVE_ONBOARDING_CONFLICT", "VIEW_ONBOARDING_AUDIT", "MANAGE_IMPORT_REFERENCE_EXPORT",
   "VIEW_TIMETABLE",
   "PRINT_TIMETABLE",
   "VIEW_USERS",
@@ -1446,6 +1466,7 @@ const computerOperatorPermissions = new Set<CanonicalPermission>([
   "MANAGE_GUARDIANS",
   "VIEW_IMPORT_EXPORT",
   "VIEW_IMPORT_VERIFICATION",
+  "DOWNLOAD_ONBOARDING_TEMPLATE", "UPLOAD_ONBOARDING_WORKBOOK", "VALIDATE_ONBOARDING_BATCH", "VIEW_ONBOARDING_AUDIT",
   "VIEW_ADMISSIONS",
   "MANAGE_ADMISSION_ENQUIRIES",
   "REQUEST_STUDENT_DEPARTURE",

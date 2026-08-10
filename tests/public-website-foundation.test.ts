@@ -227,7 +227,7 @@ describe("Prompt 20D public website foundation", () => {
       "publicWebsitePosts", "publicWebsitePostVersions", "publicWebsiteNavigationItems",
       "publicWebsiteEvents"
     ] as const;
-    expect(backup.metadata.backupVersion).toBe(40);
+    expect(backup.metadata.backupVersion).toBe(41);
     for (const key of keys) expect(backup[key]).toEqual([]);
 
     const old = structuredClone(backup) as Record<string, any>;
