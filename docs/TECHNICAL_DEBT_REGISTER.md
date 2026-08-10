@@ -11,3 +11,6 @@
 | OBS-TD-02 | Release manifests depend on governed release metadata injection | Keep the state `UNKNOWN` when commit/build metadata is absent; add it only in an authorised release pipeline |
 | OBS-TD-03 | Restore-rehearsal freshness is unknown until a durable rehearsal record exists | Backup existence is never recovery proof; retain the warning until isolated restore evidence is recorded |
 | OBS-TD-04 | Client-version policy is advisory only | Forced reload, lockout and deployment cutover remain unauthorised in OBS-1A |
+| IMPORT-TD-01 | Real school onboarding has not been rehearsed or authorised | Require a separate approved maintenance/import phase with fresh backups, named operators, reconciliation and rollback gates |
+| IMPORT-TD-02 | Structural OOXML refusal is local and does not include a third-party malware engine | Evaluate an approved private scanner before production if policy requires it; never transmit workbooks externally without approval |
+| IMPORT-TD-03 | Partial-import and bulk update modes are intentionally absent | Keep V1 all-or-nothing create/link; require a separately authorised correction template and compensating-change model |

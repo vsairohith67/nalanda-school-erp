@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import * as XLSX from "xlsx";
 import { strToU8, unzipSync, zipSync } from "fflate";
 import { generateOnboardingTemplate, parseOnboardingWorkbook } from "@/lib/onboarding-workbooks";
@@ -81,5 +82,37 @@ describe("governed onboarding workbooks", () => {
     oversized.Sheets.Students.A5002 = { t: "s", v: "x" };
     oversized.Sheets.Students["!ref"] = "A1:BL5002";
     expect(() => parseOnboardingWorkbook(Buffer.from(XLSX.write(oversized, { type: "buffer", bookType: "xlsx" })), "COMBINED")).toThrow(/TOO_MANY_ROWS|TOO_MANY_COLUMNS/);
+  });
+
+  it("rejects executable, encrypted, traversal, malformed and high-expansion containers", () => {
+    const cases: Array<[string, (files: Record<string, Uint8Array>) => void, RegExp]> = [
+      ["macro", (files) => { files["xl/vbaProject.bin"] = strToU8("synthetic"); }, /EXECUTABLE_OR_EXTERNAL_CONTENT/],
+      ["embedded object", (files) => { files["xl/embeddings/object1.bin"] = strToU8("synthetic"); }, /EXECUTABLE_OR_EXTERNAL_CONTENT/],
+      ["encrypted", (files) => { files.EncryptionInfo = strToU8("synthetic"); }, /PASSWORD_PROTECTED/],
+      ["traversal", (files) => { files["../synthetic.xml"] = strToU8("synthetic"); }, /TRAVERSAL/]
+    ];
+    for (const [, mutate, expected] of cases) {
+      const files = unzipSync(combinedTemplate());
+      mutate(files);
+      expect(() => parseOnboardingWorkbook(zipSync(files), "COMBINED")).toThrow(expected);
+    }
+    expect(() => parseOnboardingWorkbook(Buffer.from("MZ synthetic executable"), "COMBINED")).toThrow(/SIGNATURE/);
+    expect(() => parseOnboardingWorkbook(Uint8Array.from([0x50, 0x4b, 0x03, 0x04]), "COMBINED")).toThrow(/ENTRY_COUNT/);
+    const bomb = unzipSync(combinedTemplate());
+    bomb["xl/synthetic-high-expansion.xml"] = new Uint8Array(2 * 1024 * 1024);
+    expect(() => parseOnboardingWorkbook(zipSync(bomb, { level: 9 }), "COMBINED")).toThrow(/ZIP_BOMB|EXPANSION/);
+  });
+
+  it("keeps extension, MIME, size, residue and symlink controls at the upload boundary", () => {
+    const route = readFileSync("app/api/onboarding/batches/route.ts", "utf8");
+    const storage = readFileSync("lib/onboarding-storage.ts", "utf8");
+    expect(route).toContain('endsWith(".xlsx")');
+    expect(route).toContain("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    expect(route).toContain("MAX_ONBOARDING_WORKBOOK_BYTES");
+    expect(route.indexOf("parseOnboardingWorkbook(bytes, bundle)")).toBeLessThan(route.indexOf("storeOnboardingWorkbook(bytes)"));
+    expect(route).toContain("if (storageKey) await removeOnboardingWorkbook(storageKey)");
+    expect(storage).toContain("isSymbolicLink()");
+    expect(storage).toContain("PRIVATE_STORAGE_KEY_INVALID");
+    expect(storage).toContain('open(target, "wx", 0o600)');
   });
 });

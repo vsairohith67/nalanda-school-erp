@@ -97,8 +97,19 @@ async function main() {
     const foreignKeys = await target.$queryRawUnsafe<unknown[]>("PRAGMA foreign_key_check");
     invariant(integrity.every((row) => Object.values(row).includes("ok")) && foreignKeys.length === 0, "IMPORT1A_RESTORE_INTEGRITY_FAILED");
 
+    const editedBatch = await createBatch(source, actors.director.user.id, "COMBINED", false, "EDIT");
+    const editedPlan = await validateStoredBatch(source, editedBatch.publicKey, actors.director.user.id);
+    const editedApproved = await approveOnboardingBatch(source, editedBatch.publicKey, actors.director, approvalInput(editedPlan));
+    await executeOnboardingBatch(source, editedBatch.publicKey, actors.director, { reason: "Copied database manual edit rollback blocker", reauthPassword: QA_PASSWORD, planHash: String(editedApproved.planHash), workbookHash: editedApproved.workbookHash, idempotencyKey: `${PREFIX.replaceAll("-", "")}EDITBLOCK001` });
+    const editedStaffOutcome = await source.onboardingRowOutcome.findFirstOrThrow({ where: { batchId: editedBatch.id, entityType: "STAFF", action: "CREATE" } });
+    await source.staffMember.update({ where: { id: editedStaffOutcome.targetRecordId! }, data: { notes: "Later manual edit blocks automatic rollback" } });
+    const editedPreview = await rollbackOnboardingBatch(source, editedBatch.publicKey, actors.director, { reason: "Copied database manual edit dependency preview", reauthPassword: QA_PASSWORD, execute: false }) as { eligible: boolean; dependencies: string[] };
+    invariant(!editedPreview.eligible && editedPreview.dependencies.includes("MANUAL_EDIT_OR_MISSING:STAFF"), "IMPORT1A_MANUAL_EDIT_ROLLBACK_NOT_BLOCKED");
+    invariant(await source.staffMember.count({ where: { id: editedStaffOutcome.targetRecordId! } }) === 1, "IMPORT1A_BLOCKED_ROLLBACK_DELETED_STAFF");
+
     invariant(await source.user.count() === protectedUsers + 2 && await source.userRoleAssignment.count() === protectedAssignments + 2, "IMPORT1A_PROTECTED_ACCOUNT_BASELINE_CHANGED");
-    console.log(JSON.stringify({ status: "IMPORT1A_COPIED_DATABASE_PASSED", principalScopeRefused, atomicRollback: true, idempotentReplay: true, exactRollback: true, activeAccountsCreatedByImport: 0, restored: restoredTwice, backupVersion: backup.metadata.backupVersion, privacySafe: true }));
+    const stress = process.env.IMPORT1A_STRESS === "true" ? await runStressBatch(source, actors.director) : null;
+    console.log(JSON.stringify({ status: "IMPORT1A_COPIED_DATABASE_PASSED", principalScopeRefused, atomicRollback: true, idempotentReplay: true, exactRollback: true, manualEditBlocked: true, activeAccountsCreatedByImport: 0, restored: restoredTwice, backupVersion: backup.metadata.backupVersion, privacySafe: true, stress }));
   } finally {
     await Promise.all([source.$disconnect(), target.$disconnect()]);
   }
@@ -116,14 +127,14 @@ async function createActors(client: PrismaClient) {
   return result as { director: IamActor; principal: IamActor };
 }
 
-async function createBatch(client: PrismaClient, actorUserId: string, bundle: "COMBINED" | "STUDENT_GUARDIAN", conflict: boolean) {
-  const bytes = populatedWorkbook(bundle, conflict);
+async function createBatch(client: PrismaClient, actorUserId: string, bundle: "COMBINED" | "STUDENT_GUARDIAN", conflict: boolean, variant = "BASE") {
+  const bytes = populatedWorkbook(bundle, conflict, variant);
   const stored = await storeOnboardingWorkbook(bytes);
-  return client.onboardingBatch.create({ data: { bundleType: bundle, uploadedByUserId: actorUserId, originalFileNameHash: sha256(`${PREFIX}-${bundle}-${conflict}`), storageKey: stored.storageKey, workbookSha256: stored.sha256, mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", byteSize: bytes.length, templateVersion: "1.0", schemaVersion: "IMPORT-1A-2026-08-10", purgeAfter: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), auditEvents: { create: { sequence: 1, eventType: "UPLOADED", newStatus: "UPLOADED", actorUserId, evidenceHash: stored.sha256 } } } });
+  return client.onboardingBatch.create({ data: { bundleType: bundle, uploadedByUserId: actorUserId, originalFileNameHash: sha256(`${PREFIX}-${bundle}-${conflict}-${variant}`), storageKey: stored.storageKey, workbookSha256: stored.sha256, mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", byteSize: bytes.length, templateVersion: "1.0", schemaVersion: "IMPORT-1A-2026-08-10", purgeAfter: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), auditEvents: { create: { sequence: 1, eventType: "UPLOADED", newStatus: "UPLOADED", actorUserId, evidenceHash: stored.sha256 } } } });
 }
 
-function populatedWorkbook(bundle: "COMBINED" | "STUDENT_GUARDIAN", conflict: boolean) {
-  const generated = generateOnboardingTemplate({ bundle, generatedAt: new Date("2026-08-10T12:00:00.000Z"), academicYears: ["2026-27"], classes: [{ academicYear: "2026-27", className: "I", section: "A" }], departments: ["Academics"], designations: ["Teacher"] });
+function populatedWorkbook(bundle: "COMBINED" | "STUDENT_GUARDIAN", conflict: boolean, variant = "BASE") {
+  const generated = generateOnboardingTemplate({ bundle, generatedAt: new Date(variant === "BASE" ? "2026-08-10T12:00:00.000Z" : "2026-08-10T12:00:01.000Z"), academicYears: ["2026-27"], classes: [{ academicYear: "2026-27", className: "I", section: "A" }], departments: ["Academics"], designations: ["Teacher"] });
   const wb = XLSX.read(generated, { type: "buffer" });
   const studentKey = conflict ? "STU-ATOMIC" : "STU-001";
   XLSX.utils.sheet_add_aoa(wb.Sheets.Students, [[studentKey, `${PREFIX}-ADM-001`, `${PREFIX} विद्यार्थी`, `${PREFIX} Guardian`, `${PREFIX} والدہ`, "9876543210", "", "2016-01-31", "2026-27", "I", "A", "1", "ACTIVE", "Synthetic copied database only", "NO"]], { origin: "A2" });
@@ -147,6 +158,46 @@ async function businessCounts(client: PrismaClient) {
 async function onboardingCounts(client: PrismaClient) {
   const [batches, recoveryRequired, outcomes, audits] = await Promise.all([client.onboardingBatch.count(), client.onboardingBatch.count({ where: { status: "RECOVERY_REQUIRED" } }), client.onboardingRowOutcome.count(), client.onboardingAuditEvent.count()]);
   return { batches, recoveryRequired, outcomes, audits };
+}
+
+async function runStressBatch(client: PrismaClient, actor: IamActor) {
+  const before = await businessCounts(client);
+  const bytes = stressWorkbook();
+  const stored = await storeOnboardingWorkbook(bytes);
+  const batch = await client.onboardingBatch.create({ data: { bundleType: "COMBINED", uploadedByUserId: actor.user.id, originalFileNameHash: sha256(`${PREFIX}-STRESS`), storageKey: stored.storageKey, workbookSha256: stored.sha256, mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", byteSize: bytes.length, templateVersion: "1.0", schemaVersion: "IMPORT-1A-2026-08-10", purgeAfter: new Date(Date.now() + 24 * 60 * 60 * 1000), auditEvents: { create: { sequence: 1, eventType: "UPLOADED", newStatus: "UPLOADED", actorUserId: actor.user.id, evidenceHash: stored.sha256 } } } });
+  const planned = await validateStoredBatch(client, batch.publicKey, actor.user.id);
+  invariant(planned.status === "APPROVAL_REQUIRED" && planned.plan?.estimatedExecutionSize === 4600 && planned.plan?.blockingErrorCount === 0, "IMPORT1A_STRESS_PLAN_INVALID");
+  const approved = await approveOnboardingBatch(client, batch.publicKey, actor, approvalInput(planned));
+  const input = { reason: "Copied database specified scale execution proof", reauthPassword: QA_PASSWORD, planHash: String(approved.planHash), workbookHash: approved.workbookHash, idempotencyKey: `${PREFIX.replaceAll("-", "")}STRESS001` };
+  const startedAt = Date.now();
+  const executed = await executeOnboardingBatch(client, batch.publicKey, actor, input);
+  invariant(executed.result?.students === 1000 && executed.result?.guardians === 1500 && executed.result?.staff === 100 && executed.result?.links === 1000 && executed.result?.enrollments === 1000, "IMPORT1A_STRESS_EXECUTION_COUNTS_INVALID");
+  const outcomes = await client.onboardingRowOutcome.count({ where: { batchId: batch.id, status: "COMPLETED" } });
+  invariant(outcomes === 4600, "IMPORT1A_STRESS_LINEAGE_COUNT_INVALID");
+  const after = await businessCounts(client);
+  await executeOnboardingBatch(client, batch.publicKey, actor, input);
+  invariant(JSON.stringify(await businessCounts(client)) === JSON.stringify(after), "IMPORT1A_STRESS_REPLAY_CHANGED_COUNTS");
+  const preview = await rollbackOnboardingBatch(client, batch.publicKey, actor, { reason: "Copied database specified scale rollback preview", reauthPassword: QA_PASSWORD, execute: false }) as { eligible: boolean };
+  invariant(preview.eligible, "IMPORT1A_STRESS_ROLLBACK_PREVIEW_BLOCKED");
+  await rollbackOnboardingBatch(client, batch.publicKey, actor, { reason: "Copied database specified scale exact rollback", reauthPassword: QA_PASSWORD, execute: true });
+  invariant(JSON.stringify(await businessCounts(client)) === JSON.stringify(before), "IMPORT1A_STRESS_ROLLBACK_NOT_EXACT");
+  return { students: 1000, guardians: 1500, staff: 100, links: 1000, enrollments: 1000, outcomes, replay: "IDEMPOTENT", rollback: "EXACT", elapsedMs: Date.now() - startedAt };
+}
+
+function stressWorkbook() {
+  const generated = generateOnboardingTemplate({ bundle: "COMBINED", generatedAt: new Date("2026-08-10T13:00:00.000Z"), academicYears: ["2026-27"], classes: [{ academicYear: "2026-27", className: "I", section: "A" }], departments: ["Academics"], designations: ["Teacher"] });
+  const wb = XLSX.read(generated, { type: "buffer" });
+  const students = Array.from({ length: 1000 }, (_, i) => [`STRESS-STU-${i}`, `${PREFIX}-STRESS-ADM-${i}`, `${PREFIX} Stress Student ${i}`, `${PREFIX} Father ${i}`, `${PREFIX} Mother ${i}`, String(9100000000 + i), "", "2016-01-31", "2026-27", "I", "A", String(i + 1), "ACTIVE", "Synthetic scale QA only", "NO"]);
+  const guardians = Array.from({ length: 1500 }, (_, i) => [`STRESS-GUA-${i}`, `${PREFIX} Stress Guardian ${i}`, "Guardian", String(9000000000 + i), "", "", "MOBILE", "NO", "NO"]);
+  const links = Array.from({ length: 1000 }, (_, i) => [`STRESS-LNK-${i}`, `STRESS-STU-${i}`, `STRESS-GUA-${i}`, "Guardian", "YES", "YES", "YES", "NO"]);
+  const enrollments = Array.from({ length: 1000 }, (_, i) => [`STRESS-ENR-${i}`, `STRESS-STU-${i}`, "2026-27", "I", "A", String(i + 1), "2026-06-01", "ACTIVE", "NO"]);
+  const staff = Array.from({ length: 100 }, (_, i) => [`STRESS-STF-${i}`, `${PREFIX}-STRESS-EMP-${i}`, `${PREFIX} Stress Staff ${i}`, "TEACHING", "Teacher", "Academics", "2026-06-01", "", "", String(9200000000 + i), "TEACHER", "NO", "ACTIVE", "Synthetic scale QA only", "NO"]);
+  XLSX.utils.sheet_add_aoa(wb.Sheets.Students, students, { origin: "A2" });
+  XLSX.utils.sheet_add_aoa(wb.Sheets.Guardians, guardians, { origin: "A2" });
+  XLSX.utils.sheet_add_aoa(wb.Sheets["Student-Guardian Links"], links, { origin: "A2" });
+  XLSX.utils.sheet_add_aoa(wb.Sheets.Enrollments, enrollments, { origin: "A2" });
+  XLSX.utils.sheet_add_aoa(wb.Sheets.Staff, staff, { origin: "A2" });
+  return Buffer.from(XLSX.write(wb, { type: "buffer", bookType: "xlsx", compression: true }));
 }
 
 main().catch((error) => { console.error(error instanceof Error ? error.message : "IMPORT1A_COPIED_DATABASE_FAILED"); process.exitCode = 1; });

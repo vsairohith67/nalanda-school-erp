@@ -53,6 +53,8 @@
 .onboarding-action { margin: .75rem 0; }
 .onboarding-stats { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
 .decision-cell { display: grid; gap: .5rem; min-width: 13rem; }
+.onboarding-page :is(button, .button, input:not([type="checkbox"]):not([type="radio"]), select, textarea) { min-height: 44px; }
+.onboarding-page :is(button, a, input, select, textarea):focus-visible { outline: 3px solid var(--focus, #2f80ed); outline-offset: 2px; }
 .onboarding-json { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 22rem; overflow: auto; }
 @media (max-width: 520px) { .onboarding-steps { grid-template-columns: 1fr; } .onboarding-page .page-actions { align-items: stretch; } .onboarding-page .page-actions > * { width: 100%; } }
 

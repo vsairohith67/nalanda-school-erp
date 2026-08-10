@@ -26,7 +26,7 @@ This matrix separates presence from completeness. `Complete` requires tested wor
 | Safe staging/release/client update | V1 | Partial | Plans exist; end-to-end environment/update operation not released | Governed implementation/rehearsal |
 | Parent/Staff support/complaints/feedback | V1 | Missing | No complete role-owned case workflow proven | Specify/implement later V1 phase |
 | Observability and operational health | V1 | Partial | Local health exists; production monitoring/alerts absent | Stage metrics/alerts/runbooks |
-| Bulk Student/Guardian/Staff onboarding | V1 | Ready for QA | IMPORT-1A implements controlled templates, private upload, bounded validation, duplicate decisions, dry-run approval, atomic execution, lineage/reconciliation, safe rollback, OBS-1A metrics and backup v41 recovery; independent QA remains | Run IMPORT-1A-QA before merge/tag or any real-data approval |
+| Bulk Student/Guardian/Staff onboarding | V1 | Complete locally/private | IMPORT-1A and independent QA prove controlled templates, private upload, bounded validation, explicit duplicate decisions, expiring dry-run approval, atomic/idempotent execution, lineage/reconciliation, dependency-safe rollback, OBS-1A metrics, backup v41 recovery and exact operational migration preservation | Real onboarding requires a separately approved maintenance/import phase; deployment and account activation remain gated |
 | Final cross-module QA | V1 | Missing | Earlier tests cannot cover corrected missing V1 requirements | Run after implementation blockers |
 | Staging/pilot/reconciliation/cutover | V1 | Deferred | Explicit operational approval not granted | Final release gate |
 | Full payroll automation/salary ESS | V1.5 | Complete | Product scope moved from V1; statutory integrations remain gated | Prompt 23I release preserved |
@@ -39,5 +39,4 @@ This matrix separates presence from completeness. `Complete` requires tested wor
 1. `HR-PAYSLIP-REQ-1` — Staff payslip request and secure delivery.
 2. Canonical report-card source catalog and physical print acceptance.
 3. Safe staging/release/client update implementation and rehearsal.
-4. Independent IMPORT-1A-QA for the governed onboarding implementation.
-5. Final cross-module QA, controlled pilot, reconciliation and cutover.
+4. Final cross-module QA, controlled pilot, reconciliation and cutover.

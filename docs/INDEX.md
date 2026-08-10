@@ -9,13 +9,14 @@
 - [Failure and Recovery Runbook](runbooks/IMPORT_1A_FAILURE_RECOVERY_RUNBOOK.md)
 - [Workflow Diagram](diagrams/governed-bulk-onboarding.mmd)
 - [Implementation Checkpoint](evidence/IMPORT_1A_IMPLEMENTATION_CHECKPOINT.md)
+- [Independent QA and Release Evidence](evidence/IMPORT_1A_QA_RELEASE.md)
 
 IMPORT-1A adds private template generation, bounded workbook validation,
 duplicate decisions, expiring dry-run approval, atomic exactly-once execution,
 lineage/reconciliation, dependency-aware rollback, OBS-1A aggregates and backup
-version 41 recovery semantics. It is implementation work pending independent
-QA. No operational migration, real-data onboarding, merge/tag, deployment or
-live provider is authorised.
+version 41 recovery semantics. Independent QA cleared the local/private release.
+No real-data onboarding, deployment, live provider or account activation is
+authorised.
 
 ## OBS-1A technical operations and safe observability
 

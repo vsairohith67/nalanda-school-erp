@@ -1714,3 +1714,26 @@ Implementation adds a provider-neutral, no-store technical control plane over ex
 Independent `OBS-1A-QA` added concurrency-safe alert deduplication/reopen/auto-resolution, count-only business-integrity signals, a permission-gated allowlisted runbook viewer and stronger copied-database invariants. Fresh QA proved 13 domains and four conclusions, five concurrent alert occurrences without duplicates, critical private in-app notification, incident and maintenance lifecycles, optional-provider neutrality, client policy, backup v40 restore twice, exact Super Admin/Director/Viewer boundaries, desktop/light/dark and exact 390x844 Browser behavior with zero final console errors. The serialized release gate passed 330 page routes / 537 APIs, full typecheck, 198 files / 1,760 tests, production build, logical backup and Git safety. The additive operational migration applied once after byte-identical rollback proof and the repeat deploy was a no-op; zero business data, four protected accounts and one active Super Admin remain unchanged. Released locally/private as `observability-operations-v40-2026-08-10` with `OBSERVABILITY_OPERATIONS_CLEARED`; no deployment, live provider, telemetry transmission or real-user/data onboarding is authorised.
 
 `STUDENT-EXIT-1A` re-audited that release against a stricter child-safety specification and closed four material gaps without duplicating the existing `V1-SAFE-033` requirement: temporary out-pass expected return/overdue escalation, separate leadership approval for standing self-departure, append-only release correction, and attendance-reconciliation policy evidence. One additive migration and backup v39 were verified with fresh copied databases, role/concurrency/notification/restore matrices and production Browser QA at desktop, exact 390 x 844 and tablet viewports. The final sequence passed 328 pages / 528 APIs, dry lifecycle, typecheck, 1,750 tests, bounded 4 GB build, backup/restore twice and Git safety; operational business/exit rows remain zero and protected accounts are unchanged. The retained branch, `main` and `student-early-exit-v39-2026-08-10` close with `STUDENT_EARLY_EXIT_CLEARED`. Notification delivery is not consent, attendance stays separately governed, and no real Student/Guardian, live provider, deployment or onboarding was used. Next phase: `OBS-1A`.
+
+## IMPORT-1A — Governed Bulk Student, Guardian and Staff Onboarding (2026-08-10)
+
+Implementation introduced three protected/versioned XLSX template families,
+private bounded OOXML intake, deterministic validation and reference mapping,
+explicit duplicate decisions, expiring dry-run plans, narrow permissions,
+re-authenticated approval, atomic/idempotent execution, row lineage,
+reconciliation, dependency-safe exact rollback, OBS-1A aggregates and logical
+backup version 41. No real workbook or business data was used.
+
+Independent IMPORT-1A-QA corrected copied-database harness routing,
+after-hash/manual-edit rollback checks, later Support/Payroll/account blockers,
+possible-match create/link semantics, ambiguous-link refusal, duplicate Guardian
+contact/roll checks and 44 px/focus styling. Parser security, 19 focused tests,
+a 4,600-outcome stress batch, exact replay/rollback, Browser role/theme checks at
+1366 x 768 and 390 x 844, the complete partitioned typecheck, 201 files and
+1,777 tests, production build, backup/restore and Git safety passed. A fresh
+logical backup and byte-identical raw rollback copy preceded the single additive
+operational migration; zero business/onboarding rows and all protected accounts
+remain unchanged. The retained branch, `main` and
+`bulk-onboarding-v41-2026-08-10` close with `BULK_ONBOARDING_CLEARED`. Real
+onboarding, deployment, live providers and real-user activation remain
+unauthorised. Next phase: `RELEASE-OPS-1A`.
