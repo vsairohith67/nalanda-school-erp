@@ -40,12 +40,13 @@ const PREFIX = "EXAM3";
 const STATE_PATH = path.join(QA_ROOT, "reports", "EXAM3-browser-state.json");
 const PDF_ROOT = path.join(process.cwd(), "tmp", "report-publication");
 const RENDER_ROOT = path.join(QA_ROOT, "reports", "rendered");
-const FIXED_NOW = new Date("2026-07-31T10:00:00.000Z");
+const FIXED_NOW = new Date();
 
 type QaState = {
   databasePath: string;
   sourceHash: string;
   principal: { id: string; username: string; password: string };
+  browserAdmin: { id: string; username: string; password: string };
   parent: { id: string; username: string; password: string };
   unrelatedParent: { id: string; username: string; password: string };
   students: Record<string, { id: string; admissionNo: string }>;
@@ -87,7 +88,17 @@ function safeRemoveStateArtifacts(state: QaState) {
     }
   }
   if (existsSync(PDF_ROOT)) {
-    for (const jobKey of state.jobKeys ?? []) {
+    const ownedJobKeys = new Set(state.jobKeys ?? []);
+    for (const name of readdirSync(PDF_ROOT)) {
+      if (!name.endsWith(".job.json")) continue;
+      try {
+        const manifest = JSON.parse(readFileSync(path.join(PDF_ROOT, name), "utf8"));
+        if (manifest.actorLabel === "EXAM3 Principal" && String(manifest.jobKey ?? "").startsWith("RPJ-")) {
+          ownedJobKeys.add(manifest.jobKey);
+        }
+      } catch {}
+    }
+    for (const jobKey of ownedJobKeys) {
       for (const name of readdirSync(PDF_ROOT)) {
         if (name.startsWith(`${jobKey}-`) || name === `${jobKey}.job.json`) {
           rmSync(path.join(PDF_ROOT, name), { force: true });
@@ -116,10 +127,12 @@ async function prepare() {
     const principalPassword = privatePassword();
     const parentPassword = privatePassword();
     const unrelatedPassword = privatePassword();
-    const [principalHash, parentHash, unrelatedHash] = await Promise.all([
+    const browserAdminPassword = privatePassword();
+    const [principalHash, parentHash, unrelatedHash, browserAdminHash] = await Promise.all([
       hashPassword(principalPassword),
       hashPassword(parentPassword),
-      hashPassword(unrelatedPassword)
+      hashPassword(unrelatedPassword),
+      hashPassword(browserAdminPassword)
     ]);
     const principal = await client.user.create({
       data: {
@@ -132,6 +145,7 @@ async function prepare() {
     });
     for (const permission of [
       "VIEW_REPORT_CARDS",
+      "MANAGE_REPORT_CARD_TEMPLATES",
       "ISSUE_REPORT_CARDS",
       "CORRECT_ISSUED_REPORT_CARDS",
       "EXPORT_REPORT_CARD_REPORTS"
@@ -176,6 +190,38 @@ async function prepare() {
         isActive: true
       }
     });
+    const browserAdmin = await client.user.create({
+      data: {
+        name: "EXAM3 Synthetic Browser Admin",
+        username: "exam3-browser-admin",
+        passwordHash: browserAdminHash,
+        role: "SUPER_ADMIN",
+        isActive: true
+      }
+    });
+    for (const user of [principal, parent, unrelatedParent, browserAdmin]) {
+      await client.authLoginAlias.create({
+        data: {
+          userId: user.id,
+          type: "USERNAME",
+          normalizedValue: user.username,
+          displayMasked: user.username,
+          status: "VERIFIED",
+          isSchoolGoverned: true,
+          verifiedAt: new Date("2026-07-31T08:00:00.000Z")
+        }
+      });
+      await client.userRoleAssignment.create({
+        data: {
+          userId: user.id,
+          role: user.role,
+          status: "ACTIVE",
+          reason: "EXAM3 isolated copied-database Browser fixture",
+          assignedByUserId: user.id,
+          activeKey: `${user.id}:${user.role}`
+        }
+      });
+    }
     await client.schoolSettings.upsert({
       where: { id: "school" },
       update: {
@@ -235,6 +281,7 @@ async function prepare() {
       databasePath,
       sourceHash,
       principal: { id: principal.id, username: principal.username, password: principalPassword },
+      browserAdmin: { id: browserAdmin.id, username: browserAdmin.username, password: browserAdminPassword },
       parent: { id: parent.id, username: parent.username, password: parentPassword },
       unrelatedParent: { id: unrelatedParent.id, username: unrelatedParent.username, password: unrelatedPassword },
       students: Object.fromEntries(Object.entries(students).map(([key, value]) => [key, { id: value.id, admissionNo: value.admissionNo }])),

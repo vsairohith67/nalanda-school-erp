@@ -29,6 +29,10 @@ describe("EXAM-RC-IMPL-3 publication security and PDF contract", () => {
 
     expect(GOVERNED_REPORT_TEMPLATE_FAMILIES).toEqual([
       "KG_DEVELOPMENTAL_BOOKLET",
+      "LOWER_PRIMARY_I_II",
+      "UPPER_PRIMARY_III_V",
+      "MIDDLE_VI_VIII_GROUPED",
+      "SECONDARY_IX_X",
       "PRIMARY_10_40_SKILLS",
       "SECONDARY_10_40_GROUPED",
       "RETAINED_MULTI_EXAM_I_X"

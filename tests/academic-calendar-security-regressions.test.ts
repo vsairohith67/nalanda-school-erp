@@ -86,6 +86,10 @@ describe("Prompt 23E-QA security regressions", () => {
     expect(() => validateReportCardBackupRows(rows as any, { studentIds: new Set(["student"]), examIds: new Set(["exam"]), progressionIds: new Set() })).not.toThrow();
     const missingSnapshot = structuredClone(rows); delete missingSnapshot.studentReportCardVersions[0].calendarBasisSnapshotJson;
     expect(() => validateReportCardBackupRows(missingSnapshot as any, { studentIds: new Set(["student"]), examIds: new Set(["exam"]), progressionIds: new Set() })).toThrow(/both version key and snapshot/);
+    const unclassified = structuredClone(rows);
+    unclassified.studentReportCardVersions[0].calendarBasisVersionKey = null;
+    unclassified.studentReportCardVersions[0].calendarBasisSnapshotJson = JSON.stringify({ basis: "UNCLASSIFIED", inferred: false });
+    expect(() => validateReportCardBackupRows(unclassified as any, { studentIds: new Set(["student"]), examIds: new Set(["exam"]), progressionIds: new Set() })).not.toThrow();
     const correction = structuredClone(rows);
     correction.studentReportCards[0].currentVersionNumber = 2;
     correction.studentReportCardVersions.push({ ...correction.studentReportCardVersions[0], id: "version-2", versionNumber: 2, versionType: "CORRECTION", correctionReason: "Corrected", supersedesVersionId: "version-1", calendarBasisVersionKey: "different", snapshotJson: JSON.stringify({ status: "ISSUED", versionNumber: 2, reportType: "MARK_BASED", reportCardNumber: "CARD-1" }) });

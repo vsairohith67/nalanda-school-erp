@@ -1,6 +1,13 @@
 import { Prisma } from "@prisma/client";
 import { KG_ATTENDANCE_MONTHS, KG_CRITERIA, KG_EVALUATIONS, KG_GROWTH_PERIODS, KG_PERSONALITY_CODES, KG_PERSONALITY_TRAITS, KG_RESPONSE_SETS, KG_SUMMARY_AREAS } from "@/lib/kg-report-card";
 import { safeReportCardText } from "@/lib/report-card-templates-shared";
+import {
+  CANONICAL_LAYOUT_VARIANTS,
+  CANONICAL_REPORT_TEMPLATE_FAMILIES,
+  canonicalFamilyFromDefinition,
+  canonicalTemplateDefinition,
+  type CanonicalReportTemplateFamily
+} from "@/lib/report-card-canonical-templates";
 
 export { safeReportCardText } from "@/lib/report-card-templates-shared";
 export const REPORT_CARD_TYPES = ["MARK_BASED", "KG_RUBRIC"] as const;
@@ -22,6 +29,37 @@ export const DEFAULT_KG_TEMPLATE = {
   approvalRoles: ["CLASS_TEACHER", "PRINCIPAL"], directorApprovalRequired: false,
   printPages: ["COVER", "PROFILE", "INSTRUCTIONS", "SUMMARY", "RUBRICS_1", "RUBRICS_2", "RUBRICS_3", "PERSONALITY_ATTENDANCE_GROWTH", "COMMENTS_PROMOTION", "BACK_COVER"]
 } as const;
+
+export function buildCanonicalReportCardTemplate(
+  family: CanonicalReportTemplateFamily,
+  layoutVariant: unknown,
+  options: Parameters<typeof canonicalTemplateDefinition>[2] = {}
+) {
+  return canonicalTemplateDefinition(family, layoutVariant, {
+    ...options,
+    ...(family === "KG_DEVELOPMENTAL_BOOKLET"
+      ? {
+          kg: {
+            evaluationPeriods: [...KG_EVALUATIONS],
+            summaryAreas: [...KG_SUMMARY_AREAS],
+            responseSets: Object.fromEntries(
+              Object.entries(KG_RESPONSE_SETS).map(([key, values]) => [key, [...values]])
+            ),
+            criteria: KG_CRITERIA.map(([key, section, label, responseSet]) => ({
+              key, section, label, responseSet
+            })),
+            personalityCodes: [...KG_PERSONALITY_CODES],
+            personalityTraits: [...KG_PERSONALITY_TRAITS],
+            attendanceMonths: [...KG_ATTENDANCE_MONTHS],
+            growthPeriods: [...KG_GROWTH_PERIODS],
+            approvalRoles: ["CLASS_TEACHER", "PRINCIPAL", "DIRECTOR"],
+            directorApprovalRequired: true,
+            printPages: [...DEFAULT_KG_TEMPLATE.printPages]
+          }
+        }
+      : {})
+  });
+}
 
 export function normalizeReportCardCode(value: unknown, label = "Code") {
   const code = String(value ?? "").trim().toUpperCase().replace(/\s+/g, "-");
@@ -61,8 +99,11 @@ export function validateTemplateDefinition(reportTypeValue: unknown, input: unkn
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Template definition must be an object.");
   rejectExecutableJson(input);
   const definition = input as Record<string, any>;
-  if (Number(definition.schemaVersion) !== 1 || definition.type !== reportType) throw new Error("Template schema version or type is invalid.");
-  if (reportType === "MARK_BASED") {
+  const schemaVersion = Number(definition.schemaVersion);
+  if (![1, 2].includes(schemaVersion) || definition.type !== reportType) throw new Error("Template schema version or type is invalid.");
+  if (schemaVersion === 2) {
+    validateCanonicalTemplate(definition, reportType);
+  } else if (reportType === "MARK_BASED") {
     if (definition.denominatorPolicy !== "PRESENT_AND_ABSENT") throw new Error("Mark templates must use the documented Present-and-Absent denominator policy.");
     const allowedSections = new Set(DEFAULT_MARK_TEMPLATE.sections);
     if (!Array.isArray(definition.sections) || !definition.sections.length || definition.sections.some((value: unknown) => !allowedSections.has(String(value) as any))) throw new Error("Mark template sections are invalid.");
@@ -72,6 +113,43 @@ export function validateTemplateDefinition(reportTypeValue: unknown, input: unkn
   return structuredClone(definition);
 }
 
+function validateCanonicalTemplate(definition: Record<string, any>, reportType: string) {
+  const family = canonicalFamilyFromDefinition(definition);
+  if (!family) throw new Error("Choose a supported canonical template family.");
+  if ((family === "KG_DEVELOPMENTAL_BOOKLET") !== (reportType === "KG_RUBRIC")) {
+    throw new Error("The canonical family does not match the report type.");
+  }
+  const variants = CANONICAL_LAYOUT_VARIANTS[family] as readonly string[];
+  if (!variants.includes(String(definition.layoutVariant ?? ""))) {
+    throw new Error("The canonical layout variant is invalid for this family.");
+  }
+  if (definition.denominatorPolicy !== "FROZEN_RESULT_SNAPSHOT") {
+    throw new Error("Canonical templates must render the frozen result snapshot without recalculation.");
+  }
+  if (!Array.isArray(definition.sections) || !definition.sections.length || new Set(definition.sections).size !== definition.sections.length) {
+    throw new Error("Canonical template sections must be a unique ordered list.");
+  }
+  if (!definition.identity || !["INCLUSIVE_GUARDIAN", "FATHER_NAME_COMPATIBILITY"].includes(definition.identity.parentGuardianMode)) {
+    throw new Error("Canonical Student identity labels are invalid.");
+  }
+  ["studentLabel", "admissionLabel", "classSectionLabel", "rollLabel", "parentGuardianLabel"].forEach((key) => {
+    safeReportCardText(definition.identity[key], `Canonical identity ${key}`, 160);
+  });
+  if (!definition.chart || definition.chart.directNumericLabels !== true ||
+    JSON.stringify(definition.chart.series) !== JSON.stringify(["STUDENT_MARKS", "CLASS_AVERAGE", "HIGH_SCORE"])) {
+    throw new Error("Canonical charts must preserve the three labelled print-safe series.");
+  }
+  const combined = String(definition.layoutVariant) === "COMBINED";
+  if (Boolean(definition.combinedResult?.enabled) !== combined) {
+    throw new Error("Combined-result capability must match the selected layout variant.");
+  }
+  if (!Array.isArray(definition.signatureLabels) || !definition.signatureLabels.length || definition.signatureLabels.length > 6) {
+    throw new Error("Configure one to six signature labels.");
+  }
+  definition.signatureLabels.forEach((value: unknown) => safeReportCardText(value, "Signature label", 80));
+  if (family === "KG_DEVELOPMENTAL_BOOKLET") validateKgTemplate(definition);
+}
+
 export function parseStoredTemplateDefinition(json: string) { try { const value = JSON.parse(json); return validateTemplateDefinition((value as any).type, value); } catch (error) { if (error instanceof SyntaxError) throw new Error("Stored template JSON is invalid."); throw error; } }
 
 export function validatePrintSettings(input: unknown) {
@@ -79,9 +157,24 @@ export function validatePrintSettings(input: unknown) {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Print settings must be an object.");
   rejectExecutableJson(input);
   const row = input as Record<string, unknown>;
+  const pageSize = String(row.pageSize ?? "A4").toUpperCase();
+  if (pageSize !== "A4") throw new Error("Report-card print settings require exact A4 page boxes.");
+  const scalePercent = boundedNumber(row.scalePercent ?? 100, "Print scale", 100, 100);
   const mode = String(row.mode ?? "COLOUR").toUpperCase();
   if (!["COLOUR", "BLACK_AND_WHITE"].includes(mode)) throw new Error("Print mode must be Colour or Black and White.");
-  return { mode, booklet: Boolean(row.booklet) };
+  const orientation = String(row.orientation ?? "PORTRAIT").toUpperCase();
+  if (!["PORTRAIT", "LANDSCAPE"].includes(orientation)) throw new Error("Print orientation must be portrait or landscape.");
+  const minimumFontSizePt = boundedNumber(row.minimumFontSizePt ?? 9, "Minimum font size", 8.5, 11);
+  const marginMm = boundedNumber(row.marginMm ?? 10, "Print margin", 8, 20);
+  return {
+    mode,
+    booklet: Boolean(row.booklet),
+    pageSize: pageSize as "A4",
+    orientation,
+    minimumFontSizePt,
+    marginMm,
+    scalePercent: scalePercent as 100
+  };
 }
 
 function validateKgTemplate(definition: Record<string, any>) {
@@ -113,3 +206,4 @@ function rejectExecutableJson(value: unknown, path = "template") {
   if (value && typeof value === "object") { for (const [key, item] of Object.entries(value)) { if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(key)) throw new Error(`${path} contains an unsafe key.`); rejectExecutableJson(item, `${path}.${key}`); } }
 }
 function percentage(value: unknown, label: string) { const raw = String(value ?? "").trim(); if (!/^\d{1,3}(\.\d{1,4})?$/.test(raw)) throw new Error(`${label} must be from 0 to 100.`); const result = new Prisma.Decimal(raw); if (result.lt(0) || result.gt(100)) throw new Error(`${label} must be from 0 to 100.`); return result; }
+function boundedNumber(value: unknown, label: string, minimum: number, maximum: number) { const number = Number(value); if (!Number.isFinite(number) || number < minimum || number > maximum) throw new Error(`${label} must be from ${minimum} to ${maximum}.`); return number; }

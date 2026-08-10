@@ -1,14 +1,11 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
+import { BINDABLE_REPORT_TEMPLATE_FAMILIES } from "@/lib/report-publication-types";
+import { canonicalFamilyForClassName, canonicalFamilyFromDefinition } from "@/lib/report-card-canonical-templates";
 
 export const EXAM_CALCULATION_MODES = ["RAW_SUM", "WEIGHTED_NORMALIZED"] as const;
 export const EXAM_COMPONENT_KINDS = ["INTERNAL", "WRITTEN", "PRACTICAL", "ORAL", "PROJECT", "OTHER_APPROVED"] as const;
-export const EXAM_TEMPLATE_FAMILIES = [
-  "KG_DEVELOPMENTAL_BOOKLET",
-  "PRIMARY_10_40_SKILLS",
-  "SECONDARY_10_40_GROUPED",
-  "RETAINED_MULTI_EXAM_I_X"
-] as const;
+export const EXAM_TEMPLATE_FAMILIES = BINDABLE_REPORT_TEMPLATE_FAMILIES;
 export const EXAM_ROUNDING_POLICY_V1 = "RC05_V1_DECIMAL6_HALF_UP2";
 
 type ExamClient = PrismaClient | Prisma.TransactionClient;
@@ -591,10 +588,19 @@ export async function createTemplateFamilyBinding(client: PrismaClient, examinat
   return client.$transaction(async (tx) => {
     const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId, source.expectedExaminationVersion);
     const templateFamily = enumText(source.templateFamily, EXAM_TEMPLATE_FAMILIES, "Template family");
-    const reportCardTemplateId = optionalId(source.reportCardTemplateId);
-    if (reportCardTemplateId) {
-      const template = await tx.reportCardTemplate.findFirst({ where: { id: reportCardTemplateId, status: { in: ["DRAFT", "ACTIVE"] } } });
-      if (!template) throw new ExamConfigurationError("The selected report-card template is unavailable.");
+    const reportCardTemplateId = requiredId(source.reportCardTemplateId, "Report-card template");
+    const template = await tx.reportCardTemplate.findFirst({ where: { id: reportCardTemplateId, status: "ACTIVE" } });
+    if (!template) throw new ExamConfigurationError("Choose an active canonical report-card template.");
+    const definition = parseConfigurationJson(template.templateDefinitionJson, "Report-card template definition");
+    if (canonicalFamilyFromDefinition(definition) !== templateFamily) {
+      throw new ExamConfigurationError("The selected template does not match the canonical family.");
+    }
+    const expectedFamily = canonicalFamilyForClassName(classScope.className);
+    if (expectedFamily && expectedFamily !== templateFamily) {
+      throw new ExamConfigurationError("The canonical family does not match the configured class scope.");
+    }
+    if ((templateFamily === "KG_DEVELOPMENTAL_BOOKLET") !== (template.reportType === "KG_RUBRIC")) {
+      throw new ExamConfigurationError("The canonical family does not match the template report type.");
     }
     const latest = await tx.examTemplateFamilyBinding.findFirst({ where: { examinationId, classScopeId: classScope.id }, orderBy: { versionNumber: "desc" } });
     const created = await tx.examTemplateFamilyBinding.create({
@@ -606,7 +612,7 @@ export async function createTemplateFamilyBinding(client: PrismaClient, examinat
         section: classScope.section,
         templateFamily,
         reportCardTemplateId,
-        evidenceStatus: templateFamily === "RETAINED_MULTI_EXAM_I_X" ? "REQUIRES_SOURCE_APPROVAL" : "DIRECTLY_EVIDENCED",
+        evidenceStatus: "DIRECTLY_EVIDENCED",
         versionNumber: (latest?.versionNumber ?? 0) + 1,
         createdByUserId: actor.id
       }
@@ -1166,6 +1172,16 @@ async function appendAudit(
 function objectInput(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new ExamConfigurationError("Request data must be an object.");
   return value as Record<string, unknown>;
+}
+
+function parseConfigurationJson(value: string, label: string) {
+  try {
+    const parsed = JSON.parse(value);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid");
+    return parsed as Record<string, unknown>;
+  } catch {
+    throw new ExamConfigurationError(`${label} is invalid.`, 409);
+  }
 }
 
 function academicYearText(value: unknown) {

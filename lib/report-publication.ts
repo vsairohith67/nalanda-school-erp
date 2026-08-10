@@ -11,6 +11,7 @@ import {
   reportTypeForFamily,
   safePublishedReportSnapshot
 } from "@/lib/report-publication-types";
+import { isCombinedVariant } from "@/lib/report-card-canonical-templates";
 
 type PublicationClient = PrismaClient | any;
 type PublicationActor = Pick<AuthUser, "id" | "name" | "role">;
@@ -38,6 +39,7 @@ type PreviewInput = {
 
 type ResolvedSource = {
   snapshots: any[];
+  cohortPaperStats: Map<string, { average: string; highest: string }>;
   bindings: Map<string, any>;
   lockEvents: Map<string, any>;
   examination: any;
@@ -430,7 +432,14 @@ export async function replacePublishedReport(
   const current = await client.studentReportCard.findUnique({
     where: { reportCardNumber },
     include: {
-      student: true,
+      student: {
+        include: {
+          guardians: {
+            include: { guardian: true },
+            orderBy: [{ isPrimaryContact: "desc" }, { createdAt: "asc" }]
+          }
+        }
+      },
       versions: { orderBy: { versionNumber: "desc" }, take: 1 }
     }
   });
@@ -661,7 +670,15 @@ async function resolvePublicationSource(
           }
         }
       },
-      classScope: true,
+      classScope: {
+        include: {
+          gradeScaleVersions: {
+            include: { bands: { orderBy: { displayOrder: "asc" } } },
+            orderBy: { versionNumber: "desc" }
+          },
+          coScholasticVersions: { orderBy: { versionNumber: "desc" } }
+        }
+      },
       schemeVersion: true
     },
     orderBy: [
@@ -673,6 +690,7 @@ async function resolvePublicationSource(
   if (!snapshots.length) {
     throw new ReportPublicationError("No result snapshots matched the requested calculation run.", 404);
   }
+  const cohortPaperStats = lockedPaperCohortStats(snapshots);
   const returnedRuns = new Set(snapshots.map((row: any) => row.calculationRunId));
   if (input.calculationRunIds.some((runId) => !returnedRuns.has(runId))) {
     throw new ReportPublicationError("A selected calculation run was not found.", 404);
@@ -769,6 +787,7 @@ async function resolvePublicationSource(
   if (!school) throw new ReportPublicationError("School identity settings are unavailable.", 409);
   return {
     snapshots,
+    cohortPaperStats,
     bindings,
     lockEvents,
     examination: snapshots[0].examination,
@@ -789,7 +808,13 @@ async function buildPublicationBundles(
     const binding = resolved.bindings.get(snapshotRow.classScopeId);
     const template = binding.reportCardTemplate;
     const family = binding.templateFamily as GovernedReportTemplateFamily;
-    const content = publishedContent(source, snapshotRow.examination, family);
+    const content = publishedContent(
+      source,
+      snapshotRow.examination,
+      family,
+      resolved.cohortPaperStats,
+      snapshotRow.calculationRunId
+    );
     const contentBlockers = familyContentBlockers(family, content, template);
     if (contentBlockers.length) {
       throw new ReportPublicationError(
@@ -823,9 +848,24 @@ async function buildPublicationBundles(
         : {},
       family
     );
-    const legends = template?.gradingScheme?.bands?.map((band: any) => ({
+    const frozenGradeScale = snapshotRow.classScope.gradeScaleVersions.find(
+      (row: any) => row.status === "ACTIVE" && row.frozenAt
+    ) ?? null;
+    const frozenCoScholastic = snapshotRow.classScope.coScholasticVersions.find(
+      (row: any) => row.status === "ACTIVE" && row.frozenAt
+    ) ?? null;
+    const legends = frozenGradeScale?.bands?.map((band: any) => ({
       code: band.gradeCode,
-      label: band.label
+      label: band.label,
+      minimumPercentage: String(band.minimumPercentage),
+      maximumPercentage: String(band.maximumPercentage),
+      gradePoint: band.gradePoint == null ? null : String(band.gradePoint)
+    })) ?? template?.gradingScheme?.bands?.map((band: any) => ({
+      code: band.gradeCode,
+      label: band.label,
+      minimumPercentage: String(band.minimumPercentage),
+      maximumPercentage: band.maximumPercentage == null ? "100" : String(band.maximumPercentage),
+      gradePoint: null
     })) ?? source.legends ?? [];
     const report: PublishedReportSnapshot = {
       schemaVersion: REPORT_PUBLICATION_SCHEMA_VERSION,
@@ -846,7 +886,10 @@ async function buildPublicationBundles(
         address: resolved.school.addressLine1,
         city: resolved.school.city,
         phone: resolved.school.showSchoolPhone ? resolved.school.phone : null,
-        logoPath: resolved.school.logoPath || null
+        logoPath: reportLogoPath(resolved.school.logoPath),
+        affiliationWording: optionalText(definition.schoolIdentity?.affiliationWording, 160),
+        recognitionWording: optionalText(definition.schoolIdentity?.recognitionWording, 160),
+        establishmentYear: optionalText(definition.schoolIdentity?.establishmentYear, 4)
       },
       student: {
         name: snapshotRow.student.studentName,
@@ -856,7 +899,9 @@ async function buildPublicationBundles(
         section: snapshotRow.classScope.section || null,
         dateOfBirth: snapshotRow.student.dateOfBirth
           ? isoDate(snapshotRow.student.dateOfBirth)
-          : null
+          : null,
+        gender: nullableString(snapshotRow.student.gender),
+        parentGuardians: governedParentGuardianRows(snapshotRow.student, definition)
       },
       examination: {
         code: snapshotRow.examination.examCode,
@@ -883,6 +928,13 @@ async function buildPublicationBundles(
         templateFrozenAt: binding.frozenAt.toISOString(),
         previewFingerprint: "",
         publishedByLabel: actor?.name ?? null,
+        schemeVersionReferences: safeSchemeVersionReferences(snapshotRow.sourceSchemeVersionsJson),
+        gradeScaleVersion: frozenGradeScale?.versionNumber ?? null,
+        skillsPersonalitySchemeVersion: frozenCoScholastic?.versionNumber ?? null,
+        attendanceBasisVersion: `ATT-${hashText(JSON.stringify(content.attendance)).slice(0, 12)}`,
+        reportTemplateVersion: template?.versionNumber ?? 1,
+        signatureConfigurationVersion: `SIG-${hashText(JSON.stringify(governedSignatures(definition))).slice(0, 12)}`,
+        publicationVersion: 1,
         internal: {
           resultSnapshotId: snapshotRow.id,
           calculationRunId: snapshotRow.calculationRunId,
@@ -903,13 +955,16 @@ async function buildPublicationBundles(
 function publishedContent(
   source: any,
   examination: any,
-  family: GovernedReportTemplateFamily
+  family: GovernedReportTemplateFamily,
+  cohortPaperStats: Map<string, { average: string; highest: string }>,
+  calculationRunId: string
 ) {
   const paperMap = new Map(
     examination.subjectPapers.map((paper: any) => [paper.id, paper])
   );
   const papers = (Array.isArray(source.papers) ? source.papers : []).map((paper: any) => {
     const configured = paperMap.get(paper.paperId) as any;
+    const cohort = cohortPaperStats.get(`${calculationRunId}|${paper.paperId}`);
     return {
       code: configured?.paperCode ?? "PAPER",
       subjectName: configured?.subjectNameSnapshot ?? configured?.paperName ?? "Subject",
@@ -929,7 +984,9 @@ function publishedContent(
       obtained: String(paper.obtained ?? ""),
       maximum: String(paper.maximum ?? ""),
       percentage: String(paper.percentage ?? ""),
-      excluded: paper.excluded === true
+      excluded: paper.excluded === true,
+      cohortAverage: cohort?.average ?? null,
+      cohortHighest: cohort?.highest ?? null
     };
   });
   const attendance = source.attendanceReference ?? {};
@@ -956,7 +1013,8 @@ function publishedContent(
       periodEnd: String(attendance.periodEnd ?? ""),
       totalLockedDays: nonNegativeNumber(attendance.totalLockedDays),
       recordedDays: nonNegativeNumber(attendance.recordedDays),
-      presentEquivalentDays: nonNegativeNumber(attendance.presentEquivalentDays)
+      presentEquivalentDays: nonNegativeNumber(attendance.presentEquivalentDays),
+      ...optionalAttendanceMonths(source.attendanceMonthly)
     },
     skills: boundedRatingRows(source.skills),
     personality: boundedRatingRows(source.personality),
@@ -970,9 +1028,18 @@ function publishedContent(
     legends: Array.isArray(source.legends)
       ? source.legends.slice(0, 30).map((row: any) => ({
           code: String(row.code ?? "").slice(0, 30),
-          label: String(row.label ?? "").slice(0, 120)
+          label: String(row.label ?? "").slice(0, 120),
+          minimumPercentage: nullableString(row.minimumPercentage),
+          maximumPercentage: nullableString(row.maximumPercentage),
+          gradePoint: nullableString(row.gradePoint)
         }))
       : [],
+    growth: boundedGrowth(source.growth),
+    evaluationComments: boundedEvaluationComments(source.evaluationComments),
+    kgRubricEvaluations: boundedEvaluationRatingMaps(source.rubrics),
+    kgSummaryEvaluations: boundedEvaluationRatingMaps(source.summaryGrades),
+    kgPersonalityEvaluations: boundedEvaluationRatingMaps(source.personality),
+    promotion: boundedPromotion(source.promotion),
     warnings: Array.isArray(source.warnings)
       ? source.warnings.slice(0, 50).map((value: unknown) => String(value).slice(0, 160))
       : [],
@@ -1019,7 +1086,7 @@ function familyContentBlockers(
   template: any
 ) {
   const blockers: string[] = [];
-  if (!content.papers.length) blockers.push("No paper results are present.");
+  if (family !== "KG_DEVELOPMENTAL_BOOKLET" && !content.papers.length) blockers.push("No paper results are present.");
   if (
     content.papers.some(
       (paper: { components: Array<{ state: string }> }) =>
@@ -1031,7 +1098,7 @@ function familyContentBlockers(
   ) {
     blockers.push("A paper component is incomplete.");
   }
-  if (!content.totalMaximum || Number(content.totalMaximum) <= 0) {
+  if (family !== "KG_DEVELOPMENTAL_BOOKLET" && (!content.totalMaximum || Number(content.totalMaximum) <= 0)) {
     blockers.push("The frozen result total has an unsafe denominator.");
   }
   if (!content.attendance.periodStart || !content.attendance.periodEnd) {
@@ -1040,16 +1107,16 @@ function familyContentBlockers(
   if (family === "KG_DEVELOPMENTAL_BOOKLET" && !content.developmentalSections.length) {
     blockers.push("KG developmental sections are missing.");
   }
-  if (family === "PRIMARY_10_40_SKILLS" && !content.skills.length) {
+  if (["LOWER_PRIMARY_I_II", "UPPER_PRIMARY_III_V", "PRIMARY_10_40_SKILLS"].includes(family) && !content.skills.length) {
     blockers.push("Primary skills ratings are missing.");
   }
-  if (family === "SECONDARY_10_40_GROUPED" && !content.personality.length) {
+  if (["MIDDLE_VI_VIII_GROUPED", "SECONDARY_IX_X", "SECONDARY_10_40_GROUPED"].includes(family) && !content.personality.length) {
     blockers.push("Secondary personality ratings are missing.");
   }
-  if (family === "RETAINED_MULTI_EXAM_I_X") {
-    const definition = template?.templateDefinitionJson
+  const definition = template?.templateDefinitionJson
       ? parseJson(template.templateDefinitionJson, "Combined report template")
       : {};
+  if (family === "RETAINED_MULTI_EXAM_I_X" || isCombinedVariant(definition)) {
     if (
       definition?.combinedResult?.enabled !== true ||
       !definition?.combinedResult?.sourceApprovalReference
@@ -1118,11 +1185,11 @@ function uniqueAdmissionNumbers(value: unknown, maximum: number) {
 function governedPrintSettings(value: any, family: GovernedReportTemplateFamily) {
   const requested = String(value?.orientation ?? "").toUpperCase();
   const orientation: "PORTRAIT" | "LANDSCAPE" =
-    family === "RETAINED_MULTI_EXAM_I_X" && requested === "LANDSCAPE"
+    family !== "KG_DEVELOPMENTAL_BOOKLET" && requested === "LANDSCAPE"
       ? "LANDSCAPE"
       : "PORTRAIT";
   const rawMargin = Number(value?.marginMm ?? 12);
-  const marginMm = Number.isFinite(rawMargin) ? Math.min(20, Math.max(10, rawMargin)) : 12;
+  const marginMm = Number.isFinite(rawMargin) ? Math.min(20, Math.max(8, rawMargin)) : 10;
   const rawFont = Number(value?.minimumFontSizePt ?? 9);
   const minimumFontSizePt = Number.isFinite(rawFont)
     ? Math.min(11, Math.max(8.5, rawFont))
@@ -1171,6 +1238,121 @@ function boundedCombinedResults(value: unknown) {
     percentage: String(row?.percentage ?? "").trim().slice(0, 40),
     configuredWeight: nullableString(row?.configuredWeight)
   })).filter((row) => row.label && row.obtained && row.maximum && row.percentage);
+}
+
+function lockedPaperCohortStats(snapshots: any[]) {
+  const buckets = new Map<string, number[]>();
+  for (const row of snapshots) {
+    const source = parseJson(row.snapshotJson, "Result snapshot");
+    for (const paper of Array.isArray(source.papers) ? source.papers : []) {
+      const percentage = Number(paper?.percentage);
+      if (!paper?.paperId || paper?.excluded === true || !Number.isFinite(percentage)) continue;
+      const key = `${row.calculationRunId}|${paper.paperId}`;
+      const values = buckets.get(key) ?? [];
+      values.push(percentage);
+      buckets.set(key, values);
+    }
+  }
+  return new Map([...buckets.entries()].map(([key, values]) => {
+    const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+    return [key, { average: average.toFixed(2), highest: Math.max(...values).toFixed(2) }];
+  }));
+}
+
+function boundedAttendanceMonths(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 12).map((row: any) => ({
+    month: String(row?.month ?? "").trim().toUpperCase().slice(0, 20),
+    workingDays: nullableNonNegativeNumber(row?.workingDays),
+    daysPresent: nullableNonNegativeNumber(row?.daysPresent)
+  })).filter((row) => row.month);
+}
+
+function optionalAttendanceMonths(value: unknown) {
+  const monthly = boundedAttendanceMonths(value);
+  return monthly.length ? { monthly } : {};
+}
+
+function boundedGrowth(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+  return Object.entries(value as Record<string, any>).slice(0, 10).map(([evaluation, row]) => ({
+    evaluation: evaluation.slice(0, 20),
+    heightCm: nullableString(row?.heightCm),
+    weightKg: nullableString(row?.weightKg)
+  }));
+}
+
+function boundedEvaluationComments(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+  return Object.entries(value as Record<string, any>).slice(0, 10).map(([evaluation, row]) => ({
+    evaluation: evaluation.slice(0, 20),
+    comment: optionalText(row?.comment ?? row, 2_000)
+  }));
+}
+
+function boundedEvaluationRatingMaps(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+  return Object.entries(value as Record<string, unknown>).slice(0, 10).map(([evaluation, ratings]) => ({
+    evaluation: evaluation.slice(0, 20),
+    ratings: ratings && typeof ratings === "object" && !Array.isArray(ratings)
+      ? Object.entries(ratings as Record<string, unknown>).slice(0, 200).map(([area, rating]) => ({
+          area: area.slice(0, 160),
+          rating: String(rating ?? "").slice(0, 80)
+        })).filter((row) => row.area && row.rating)
+      : []
+  })).filter((row) => row.evaluation && row.ratings.length);
+}
+
+function boundedPromotion(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const row = value as Record<string, unknown>;
+  return {
+    nextClass: optionalText(row.nextClass, 80),
+    nextSessionStartDate: optionalText(row.nextSessionStartDate, 20),
+    displayText: optionalText(row.displayText, 500)
+  };
+}
+
+function reportLogoPath(value: unknown) {
+  const configured = String(value ?? "").trim();
+  if (/^\/nalanda-logo\.(jpg|jpeg|png)$/i.test(configured)) return "/nalanda-logo-transparent.png";
+  return configured || null;
+}
+
+function governedParentGuardianRows(student: any, definition: any) {
+  const label = optionalText(definition?.identity?.parentGuardianLabel, 160) ?? "Parent / Guardian";
+  if (definition?.identity?.parentGuardianMode === "FATHER_NAME_COMPATIBILITY") {
+    return student.fatherName ? [{ label, value: String(student.fatherName).slice(0, 160) }] : [];
+  }
+  const linked = (Array.isArray(student.guardians) ? student.guardians : [])
+    .filter((row: any) => row?.guardian?.status === "Active" || row?.guardian?.status === "ACTIVE")
+    .map((row: any) => ({
+      label: String(row.relationshipToStudent || row.guardian.relationship || label).slice(0, 80),
+      value: String(row.guardian.displayName ?? "").trim().slice(0, 160)
+    }))
+    .filter((row: { value: string }) => row.value)
+    .slice(0, 2);
+  if (linked.length) return linked;
+  return [
+    student.fatherName ? { label: "Parent / Guardian", value: String(student.fatherName).slice(0, 160) } : null,
+    student.motherName ? { label: "Parent / Guardian", value: String(student.motherName).slice(0, 160) } : null
+  ].filter(Boolean) as Array<{ label: string; value: string }>;
+}
+
+function safeSchemeVersionReferences(value: unknown) {
+  try {
+    const parsed = JSON.parse(String(value ?? "[]"));
+    if (!Array.isArray(parsed)) return [];
+    return parsed.slice(0, 100).map((item) => `SCHEME-${hashText(String(item)).slice(0, 12)}`);
+  } catch {
+    return [];
+  }
+}
+
+function nullableNonNegativeNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
 }
 
 function deterministicReportCardNumber(snapshot: any, bindingVersion: number) {

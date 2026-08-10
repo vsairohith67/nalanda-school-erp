@@ -1,7 +1,8 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { calculateMarkReport } from "@/lib/report-card-calculations";
 import { createEmptyKgDraft, KG_ATTENDANCE_MONTHS, kgValidationGaps, normalizeKgDraft } from "@/lib/kg-report-card";
-import { DEFAULT_KG_TEMPLATE, DEFAULT_MARK_TEMPLATE, normalizeReportCardCode, parseStoredTemplateDefinition, REPORT_CARD_TYPES, safeReportCardText, validateGradeBands, validatePrintSettings, validateTemplateDefinition } from "@/lib/report-card-templates";
+import { buildCanonicalReportCardTemplate, DEFAULT_KG_TEMPLATE, DEFAULT_MARK_TEMPLATE, normalizeReportCardCode, parseStoredTemplateDefinition, REPORT_CARD_TYPES, safeReportCardText, validateGradeBands, validatePrintSettings, validateTemplateDefinition } from "@/lib/report-card-templates";
+import { CANONICAL_REPORT_TEMPLATE_FAMILIES, canonicalFamilyFromDefinition, isCombinedVariant, type CanonicalReportTemplateFamily } from "@/lib/report-card-canonical-templates";
 import { ReportCardError } from "@/lib/report-card-scope";
 import { currentReportCalendarBasis } from "@/lib/academic-calendar";
 
@@ -20,7 +21,27 @@ export async function createGradingScheme(client: PrismaClient, input: unknown, 
 
 export async function createReportCardTemplate(client: PrismaClient, input: unknown, actorUserId: string) {
   const row = object(input, "Template details"); const reportType = reportTypeValue(row.reportType);
-  const definition = validateTemplateDefinition(reportType, row.definition ?? (reportType === "KG_RUBRIC" ? DEFAULT_KG_TEMPLATE : DEFAULT_MARK_TEMPLATE));
+  const canonicalFamilyValue = String(row.canonicalFamily ?? "").trim().toUpperCase();
+  if (canonicalFamilyValue && !(CANONICAL_REPORT_TEMPLATE_FAMILIES as readonly string[]).includes(canonicalFamilyValue)) {
+    throw new ReportCardError("Choose a supported canonical template family.");
+  }
+  const definitionInput = canonicalFamilyValue
+    ? buildCanonicalReportCardTemplate(
+        canonicalFamilyValue as CanonicalReportTemplateFamily,
+        row.layoutVariant,
+        {
+          parentGuardianMode: row.parentGuardianMode,
+          parentGuardianLabel: row.parentGuardianLabel,
+          signatureLabels: row.signatureLabels,
+          affiliationWording: row.affiliationWording,
+          recognitionWording: row.recognitionWording,
+          establishmentYear: row.establishmentYear,
+          chartEnabled: row.chartEnabled,
+          combinedSourceApprovalReference: row.combinedSourceApprovalReference
+        }
+      )
+    : row.definition ?? (reportType === "KG_RUBRIC" ? DEFAULT_KG_TEMPLATE : DEFAULT_MARK_TEMPLATE);
+  const definition = validateTemplateDefinition(reportType, definitionInput);
   const printSettings = validatePrintSettings(row.printSettings);
   if (row.gradingSchemeId) {
     const scheme = await client.gradingScheme.findFirst({ where: { id: String(row.gradingSchemeId), reportType, status: "ACTIVE" } });
@@ -32,6 +53,21 @@ export async function createReportCardTemplate(client: PrismaClient, input: unkn
 export async function setTemplateStatus(client: PrismaClient, id: string, statusValue: unknown, actorUserId: string, expectedValue: unknown) {
   const status = String(statusValue ?? "").toUpperCase(); if (!["ACTIVE", "INACTIVE"].includes(status)) throw new ReportCardError("Choose Activate or Inactivate.");
   const expected = expectedDate(expectedValue, "template");
+  if (status === "ACTIVE") {
+    const template = await client.reportCardTemplate.findUnique({ where: { id } });
+    if (!template) throw new ReportCardError("The report-card template was not found.", 404);
+    const definition = parseStoredTemplateDefinition(template.templateDefinitionJson) as Record<string, any>;
+    if (!canonicalFamilyFromDefinition(definition)) {
+      throw new ReportCardError("Only a versioned canonical template can be activated for new report publication.");
+    }
+    if (isCombinedVariant(definition) && !String(definition.combinedResult?.sourceApprovalReference ?? "").trim()) {
+      throw new ReportCardError("A combined-result template requires an explicit approved-layout reference before activation.");
+    }
+    const printSettings = template.printSettingsJson ? JSON.parse(template.printSettingsJson) : null;
+    if (!printSettings || printSettings.pageSize !== "A4" || Number(printSettings.scalePercent) !== 100) {
+      throw new ReportCardError("Canonical templates require governed A4 Actual Size print settings.");
+    }
+  }
   const changed = await client.reportCardTemplate.updateMany({ where: { id, updatedAt: expected }, data: { status, ...(status === "ACTIVE" ? { activatedByUserId: actorUserId } : {}) } });
   if (changed.count !== 1) throw new ReportCardError("This template changed in another session. Reload and try again.", 409);
   return client.reportCardTemplate.findUniqueOrThrow({ where: { id } });

@@ -1,11 +1,17 @@
+import {
+  CANONICAL_FAMILY_LABELS,
+  CANONICAL_REPORT_TEMPLATE_FAMILIES,
+  LEGACY_REPORT_TEMPLATE_FAMILIES
+} from "@/lib/report-card-canonical-templates";
+
 export const REPORT_PUBLICATION_SCHEMA_VERSION = 3 as const;
 
 export const GOVERNED_REPORT_TEMPLATE_FAMILIES = [
-  "KG_DEVELOPMENTAL_BOOKLET",
-  "PRIMARY_10_40_SKILLS",
-  "SECONDARY_10_40_GROUPED",
-  "RETAINED_MULTI_EXAM_I_X"
+  ...CANONICAL_REPORT_TEMPLATE_FAMILIES,
+  ...LEGACY_REPORT_TEMPLATE_FAMILIES
 ] as const;
+
+export const BINDABLE_REPORT_TEMPLATE_FAMILIES = CANONICAL_REPORT_TEMPLATE_FAMILIES;
 
 export type GovernedReportTemplateFamily =
   (typeof GOVERNED_REPORT_TEMPLATE_FAMILIES)[number];
@@ -31,6 +37,9 @@ export type PublishedReportSnapshot = {
     city: string;
     phone: string | null;
     logoPath: string | null;
+    affiliationWording?: string | null;
+    recognitionWording?: string | null;
+    establishmentYear?: string | null;
   };
   student: {
     name: string;
@@ -39,6 +48,8 @@ export type PublishedReportSnapshot = {
     className: string;
     section: string | null;
     dateOfBirth: string | null;
+    gender?: string | null;
+    parentGuardians?: Array<{ label: string; value: string }>;
   };
   examination: {
     code: string;
@@ -65,6 +76,8 @@ export type PublishedReportSnapshot = {
       maximum: string;
       percentage: string;
       excluded: boolean;
+      cohortAverage?: string | null;
+      cohortHighest?: string | null;
     }>;
     groups: Array<Record<string, unknown>>;
     totalObtained: string;
@@ -82,6 +95,7 @@ export type PublishedReportSnapshot = {
       totalLockedDays: number;
       recordedDays: number;
       presentEquivalentDays: number;
+      monthly?: Array<{ month: string; workingDays: number | null; daysPresent: number | null }>;
     };
     skills: Array<{ area: string; rating: string; remarks: string | null }>;
     personality: Array<{ area: string; rating: string; remarks: string | null }>;
@@ -101,7 +115,32 @@ export type PublishedReportSnapshot = {
       principal: string | null;
       general: string | null;
     };
-    legends: Array<{ code: string; label: string }>;
+    legends: Array<{
+      code: string;
+      label: string;
+      minimumPercentage?: string | null;
+      maximumPercentage?: string | null;
+      gradePoint?: string | null;
+    }>;
+    growth?: Array<{
+      evaluation: string;
+      heightCm: string | null;
+      weightKg: string | null;
+    }>;
+    evaluationComments?: Array<{ evaluation: string; comment: string | null }>;
+    kgRubricEvaluations?: Array<{
+      evaluation: string;
+      ratings: Array<{ area: string; rating: string }>;
+    }>;
+    kgSummaryEvaluations?: Array<{
+      evaluation: string;
+      ratings: Array<{ area: string; rating: string }>;
+    }>;
+    kgPersonalityEvaluations?: Array<{
+      evaluation: string;
+      ratings: Array<{ area: string; rating: string }>;
+    }>;
+    promotion?: { nextClass: string | null; nextSessionStartDate: string | null; displayText: string | null };
     warnings: string[];
   };
   signatures: Array<{ role: string; label: string }>;
@@ -127,6 +166,13 @@ export type PublishedReportSnapshot = {
     templateFrozenAt: string;
     previewFingerprint: string;
     publishedByLabel: string | null;
+    schemeVersionReferences?: string[];
+    gradeScaleVersion?: number | null;
+    skillsPersonalitySchemeVersion?: number | null;
+    attendanceBasisVersion?: string;
+    reportTemplateVersion?: number;
+    signatureConfigurationVersion?: string;
+    publicationVersion?: number;
     internal: {
       resultSnapshotId: string;
       calculationRunId: string;
@@ -154,7 +200,7 @@ export function reportTypeForFamily(
 
 export function reportTemplateFamilyLabel(family: GovernedReportTemplateFamily) {
   const labels: Record<GovernedReportTemplateFamily, string> = {
-    KG_DEVELOPMENTAL_BOOKLET: "KG developmental booklet",
+    ...CANONICAL_FAMILY_LABELS,
     PRIMARY_10_40_SKILLS: "Primary mark and skills report",
     SECONDARY_10_40_GROUPED: "Secondary grouped-subject and personality report",
     RETAINED_MULTI_EXAM_I_X: "Configured combined-result report"

@@ -1,37 +1,54 @@
 # NPS Student Progress Report-Card Source Catalog
 
-**Catalog ID:** `GOV-RECON-1-QA-RC-SOURCE-CATALOG`<br>
-**Review date:** 2026-08-08<br>
-**Privacy status:** safe metadata only; contains no Student record, mark, attendance, photograph, signature or document byte<br>
-**Evidence status:** `INFERRED_FROM_REPOSITORY`, `IMPLEMENTED_CODE_EVIDENCE`, `MISSING_OR_UNAVAILABLE_SOURCE`
+**Catalog ID:** `REPORT-PRINT-ACCEPT-1A-SOURCE-CATALOG`
 
-## Source search result
+**Calibration date:** 2026-08-11
 
-The independent QA search did not locate `Student Progress Report Card.zip`, a prior `NPS_STUDENT_PROGRESS_REPORT_CARD_SOURCE_CATALOG.md`, `student_progress_report_card_source_manifest.csv`, or `NPS_REPORT_CARD_EXTERNAL_SYNC_PACKAGE.md` under `C:\Users\dell\Documents`. No ZIP, original Student PDF, rendered Student page or other private artifact was imported or committed.
+**Privacy status:** safe metadata only; no Student identity, mark, attendance, photograph, remark, signature, or source document byte is stored here
 
-This catalog is therefore a privacy-safe reconstruction from the four governed code families. It identifies the distinct source families the school must supply; it is not a claim that the missing original layouts were inspected or approved.
+**Raw-source status:** restricted local inspection completed; originals and rendered pages remain Git-ignored and private
 
-## Distinct source-family register
+## Restricted-source handling
 
-| Source family ID | Governance family | Current code family | Intended class coverage | Current digital evidence | Canonical source status | Physical print status |
-| --- | --- | --- | --- | --- | --- | --- |
-| `NPS-RC-KG-001` | KG | `KG_DEVELOPMENTAL_BOOKLET` | LKG/UKG; one source only if both layouts are identical | Portrait A4, colour/mono renderer and synthetic LKG QA | `MISSING_OR_UNAVAILABLE_SOURCE`; UKG exact mapping unapproved | Colour and B/W both missing |
-| `NPS-RC-PRI-001` | Primary | `PRIMARY_10_40_SKILLS` | Classes I–V; one source only where class/exam layouts are identical | Portrait A4, marks/skills rendering and synthetic Class III QA | `MISSING_OR_UNAVAILABLE_SOURCE` | Colour and B/W both missing |
-| `NPS-RC-MID-001` | Middle | `SECONDARY_10_40_GROUPED` (legacy code label) | Classes VI–VIII | Portrait A4, grouped marks/personality rendering and synthetic Class VIII QA | `MISSING_OR_UNAVAILABLE_SOURCE` | Colour and B/W both missing |
-| `NPS-RC-SEC-001` | Secondary | `RETAINED_MULTI_EXAM_I_X` | Classes IX–X when source-approved; broader code matching is not canonical approval | Configurable multi-exam rendering, landscape option and synthetic Class X QA | `MISSING_OR_UNAVAILABLE_SOURCE`; exact IX/X and exam mapping unapproved | Colour and B/W both missing |
+Three locally available historical PDFs were copied to the ignored `.codex/report-print-accept-1a/source-private` directory using neutral names. Inspection and rendered-page comparison occurred locally only. No raw PDF, rendered source page, overlay, source filename, or Student-shaped value is tracked, staged, uploaded, or synchronized.
 
-## Canonical-source acceptance fields
+| Private reference | SHA-256 | Pages | Source page box | Privacy-safe layout finding |
+| --- | --- | ---: | --- | --- |
+| `source-01` | `6C16C7AE346C24B8AFE2275CFBFC54AF509AA60CF1EB396111D814B571D74585` | 2 | 595 x 841 pt | One secondary grouped-subject CT page and one upper-primary CT page |
+| `source-02` | `2DB870CF8C781FDF757DBA8BECA20EB08F0764C24F2AA8C91B223C3C8648` | 10 | 595 x 696 pt cropped pages | Complete KG developmental booklet in logical page order |
+| `source-03` | `BF903EF6F215A4B6581DCE1C9A678EBD3CEE55AEE91F0441F8F8F7B97DCE5BCD` | 10 | 2268 x 4032 pt scan pages | Higher-resolution duplicate evidence for the KG booklet structure |
 
-For each genuinely distinct family, the privacy-safe source record must capture:
+The historical page boxes are measurement evidence, not output policy. Canonical ERP output uses exact A4 media boxes at Actual Size / 100%.
 
-- blank/redacted source reference and SHA-256;
-- class range and exact examinations covered;
-- page count/order, A4 orientation, margins, single/duplex expectation and scaling rule;
-- required identity, academic, attendance, remark, grade, graph and signature fields;
-- variable internal/external maxima and weightage presentation;
-- approved colours/fonts/logo and monochrome pattern/contrast requirements;
-- renderer mapping and immutable template version;
-- approval owner, approval date and supersession reference;
-- digital acceptance plus physical colour and black-and-white acceptance references.
+## Source-family register
 
-Do not upload duplicate samples where one approved blank source covers several examinations. Do not store original Student report cards or any Student data in Git, Notion, Asana, Basic Memory or Canvs.
+| Source family ID | Canonical code family | Class coverage | Direct restricted source evidence | Calibrated variants | Physical status |
+| --- | --- | --- | --- | --- | --- |
+| `NPS-RC-KG-001` | `KG_DEVELOPMENTAL_BOOKLET` | KG/LKG/UKG where authorised | Complete ten-page sequence in `source-02` and `source-03` | Five-evaluation developmental booklet only | Pending physical colour and monochrome acceptance |
+| `NPS-RC-LP-001` | `LOWER_PRIMARY_I_II` | Classes I-II | No direct page in this restricted package | CT, Session, Combined; requirement-driven calibration | Pending physical acceptance and school source confirmation |
+| `NPS-RC-UP-001` | `UPPER_PRIMARY_III_V` | Classes III-V | Upper-primary CT structure in `source-01` page 2 | CT, Session, Combined; separate Science/Social and skills | Pending physical acceptance; Session/Combined source confirmation remains |
+| `NPS-RC-MID-001` | `MIDDLE_VI_VIII_GROUPED` | Classes VI-VIII | No direct page; grouping requirement is governed configuration, not copied arithmetic | CT, Session, Combined; English and social/science group structures | Pending physical acceptance and school source confirmation |
+| `NPS-RC-SEC-001` | `SECONDARY_IX_X` | Classes IX-X | Secondary grouped-subject CT structure in `source-01` page 1 | CT, Session, Revision, Preboard, configured Combined | Pending physical acceptance; non-CT source confirmation remains |
+
+## KG source page sequence
+
+1. Cover.
+2. Student profile and Parent/Guardian identity area.
+3. Parent guidance and grade/rating legend.
+4. Intellectual-skills summary across five evaluations.
+5. Detailed English oral and written development.
+6. Hindi development and Number Work oral section.
+7. Number Work written, EVS, Rhymes, and Story sections.
+8. Personality development, June-April attendance, height, and weight.
+9. Five evaluation comments/signatures and promotion area.
+10. Back cover.
+
+This sequence is the layout reference. Extracted text or arithmetic anomalies are not authoritative policy. The canonical ten-page version must not be condensed without a later explicit decision.
+
+## Source-fidelity boundary
+
+- Section order, proportions, table grouping, headings, chart area, margins, grade legend, signature space, and page count inform calibration.
+- Component maxima, weights, grade scales, rank/pass visibility, attendance basis, identity wording, and signatures come only from the frozen authorised configuration.
+- Historical arithmetic or incomplete values are recorded as source anomalies, never universal formulas.
+- Template availability does not activate a template. Only an authorised versioned family binding may do so.
+- Raw source remains restricted even after physical acceptance.

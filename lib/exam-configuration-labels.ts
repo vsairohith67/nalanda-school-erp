@@ -13,10 +13,11 @@ const COMPONENT_KINDS: Record<string, string> = {
 };
 
 const TEMPLATE_FAMILIES: Record<string, string> = {
-  KG_DEVELOPMENTAL_BOOKLET: "Kindergarten developmental booklet",
-  PRIMARY_10_40_SKILLS: "Primary skills report family",
-  SECONDARY_10_40_GROUPED: "Secondary grouped report family",
-  RETAINED_MULTI_EXAM_I_X: "Retained multi-examination report family"
+  KG_DEVELOPMENTAL_BOOKLET: "KG ten-page developmental booklet",
+  LOWER_PRIMARY_I_II: "Classes I-II marks and skills",
+  UPPER_PRIMARY_III_V: "Classes III-V marks and skills",
+  MIDDLE_VI_VIII_GROUPED: "Classes VI-VIII grouped subjects",
+  SECONDARY_IX_X: "Classes IX-X secondary"
 };
 
 const SCALE_FAMILIES: Record<string, string> = {

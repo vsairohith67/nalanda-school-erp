@@ -15,6 +15,7 @@ import type {
   ReportColourMode,
   SafePublishedReportSnapshot
 } from "@/lib/report-publication-types";
+import { reportTemplateFamilyLabel } from "@/lib/report-publication-types";
 
 type RenderableReport = PublishedReportSnapshot | SafePublishedReportSnapshot;
 
@@ -22,6 +23,7 @@ const POINTS_PER_MM = 72 / 25.4;
 const A4_PORTRAIT: [number, number] = [595.28, 841.89];
 const FONT_REGULAR_CANDIDATES = ["arial.ttf", "segoeui.ttf", "calibri.ttf"];
 const FONT_BOLD_CANDIDATES = ["arialbd.ttf", "segoeuib.ttf", "calibrib.ttf"];
+const SCHOOL_BOLD_CANDIDATES = ["georgiab.ttf", "Georgia Bold.ttf"];
 
 export async function renderReportPdf(
   report: RenderableReport,
@@ -110,7 +112,7 @@ export function deterministicBatchPackageName(
   return `${parts.join("_")}.${format === "ZIP" ? "zip" : "pdf"}`.slice(0, 220);
 }
 
-type PdfFonts = { regular: PDFFont; bold: PDFFont; embedded: boolean };
+type PdfFonts = { regular: PDFFont; bold: PDFFont; schoolBold: PDFFont; embedded: boolean };
 
 class PdfLayout {
   readonly pageSize: [number, number];
@@ -147,43 +149,69 @@ class PdfLayout {
     this.pages.push(this.page);
     this.pageNumber += 1;
     this.y = this.pageSize[1] - this.margin;
-    this.drawPageHeader();
+    if (this.pageNumber === 1) this.y -= 58;
   }
 
-  private drawPageHeader() {
-    const headerHeight = 42;
-    if (this.logo) {
-      const ratio = this.logo.width / this.logo.height;
-      const height = 28;
-      this.page.drawImage(this.logo, {
-        x: this.margin,
-        y: this.y - height,
-        width: height * ratio,
-        height
-      });
-    }
-    this.page.drawText(this.report.school.name, {
-      x: this.margin + (this.logo ? 42 : 0),
-      y: this.y - 13,
-      size: 12,
-      font: this.fonts.bold,
+  pageBreak() {
+    this.newPage();
+  }
+
+  private drawPageHeader(page: PDFPage) {
+    const topY = this.pageSize[1] - this.margin;
+    const nameX = this.margin + (this.logo ? 48 : 0);
+    const schoolName = printable(this.report.school.name).toUpperCase();
+    const schoolSize = 15;
+    page.drawText(fitText(schoolName, this.fonts.schoolBold, schoolSize, this.contentWidth - (this.logo ? 170 : 120)), {
+      x: nameX,
+      y: topY - 15,
+      size: schoolSize,
+      font: this.fonts.schoolBold,
       color: this.palette.ink
     });
-    this.page.drawText(this.report.publicationReference, {
-      x: this.pageSize[0] - this.margin -
-        this.fonts.regular.widthOfTextAtSize(this.report.publicationReference, 7.5),
-      y: this.y - 12,
+    const identityLine = [
+      this.report.school.affiliationWording,
+      this.report.school.recognitionWording,
+      this.report.school.establishmentYear ? `Established ${this.report.school.establishmentYear}` : null
+    ].filter(Boolean).join(" | ");
+    if (identityLine) page.drawText(fitText(identityLine, this.fonts.regular, 7.5, this.contentWidth - (this.logo ? 50 : 0)), {
+      x: nameX,
+      y: topY - 28,
       size: 7.5,
       font: this.fonts.regular,
       color: this.palette.muted
     });
-    this.page.drawLine({
-      start: { x: this.margin, y: this.y - 34 },
-      end: { x: this.pageSize[0] - this.margin, y: this.y - 34 },
+    const addressLine = [this.report.school.address, this.report.school.city].filter(Boolean).join(", ");
+    page.drawText(fitText(addressLine, this.fonts.regular, 7.5, this.contentWidth - (this.logo ? 50 : 0)), {
+      x: nameX,
+      y: topY - 40,
+      size: 7.5,
+      font: this.fonts.regular,
+      color: this.palette.muted
+    });
+    page.drawText(this.report.publicationReference, {
+      x: this.pageSize[0] - this.margin -
+        this.fonts.regular.widthOfTextAtSize(this.report.publicationReference, 7.5),
+      y: topY - 13,
+      size: 7.5,
+      font: this.fonts.regular,
+      color: this.palette.muted
+    });
+    page.drawLine({
+      start: { x: this.margin, y: topY - 50 },
+      end: { x: this.pageSize[0] - this.margin, y: topY - 50 },
       thickness: 0.8,
       color: this.palette.border
     });
-    this.y -= headerHeight;
+    if (this.logo) {
+      const ratio = this.logo.width / this.logo.height;
+      const height = 34;
+      page.drawImage(this.logo, {
+        x: this.margin,
+        y: topY - height,
+        width: height * ratio,
+        height
+      });
+    }
   }
 
   ensure(height: number, options: { keepHeading?: boolean } = {}) {
@@ -274,7 +302,8 @@ class PdfLayout {
   table(
     headers: string[],
     rows: string[][],
-    widths?: number[]
+    widths?: number[],
+    options: { compact?: boolean } = {}
   ) {
     const normalizedWidths = normalizeWidths(widths, headers.length, this.contentWidth);
     const headerSize = Math.max(this.minimumFontSize, 8.5);
@@ -284,7 +313,7 @@ class PdfLayout {
         wrapText(printable(header), this.fonts.bold, headerSize, normalizedWidths[index] - 8)
       );
       const height = Math.max(...headerLines.map((lines) => lines.length)) *
-        headerSize * 1.2 + 10;
+        headerSize * (options.compact ? 1.05 : 1.2) + (options.compact ? 6 : 10);
       this.ensure(height);
       this.drawTableCells(
         headerLines,
@@ -306,7 +335,10 @@ class PdfLayout {
         )
       );
       const maximumLines = Math.max(...lines.map((value) => value.length));
-      const height = Math.max(24, maximumLines * bodySize * 1.2 + 9);
+      const height = Math.max(
+        options.compact ? 18 : 24,
+        maximumLines * bodySize * (options.compact ? 1.05 : 1.2) + (options.compact ? 5 : 9)
+      );
       if (this.y - height < this.margin + 34) {
         this.newPage();
         drawHeader();
@@ -403,6 +435,113 @@ class PdfLayout {
     this.y -= height + 10;
   }
 
+  performanceChart(papers: RenderableReport["content"]["papers"]) {
+    const rows = papers
+      .filter((paper) => !paper.excluded && Number.isFinite(Number(paper.percentage)))
+      .slice(0, 12);
+    if (!rows.length) return;
+    const height = 205;
+    this.ensure(height + 24);
+    const chartTop = this.y - 30;
+    const chartBottom = this.y - height + 34;
+    const chartHeight = chartTop - chartBottom;
+    const labelReserve = 31;
+    const graphWidth = this.contentWidth;
+    const groupWidth = graphWidth / rows.length;
+    const barWidth = Math.max(3.5, Math.min(9, (groupWidth - 5) / 3));
+    const series = [
+      { key: "student" as const, label: "Student Marks", color: this.palette.seriesStudent, pattern: "SOLID" },
+      { key: "average" as const, label: "Class Average", color: this.palette.seriesAverage, pattern: "DIAGONAL" },
+      { key: "highest" as const, label: "High Score", color: this.palette.seriesHighest, pattern: "HORIZONTAL" }
+    ];
+    series.forEach((item, index) => {
+      const x = this.margin + index * 112;
+      this.patternBox(x, this.y - 11, 12, 8, item.color, item.pattern);
+      this.page.drawText(item.label, {
+        x: x + 17,
+        y: this.y - 10,
+        size: 7.5,
+        font: this.fonts.bold,
+        color: this.palette.ink
+      });
+    });
+    for (let tick = 0; tick <= 100; tick += 20) {
+      const y = chartBottom + (tick / 100) * chartHeight;
+      this.page.drawLine({
+        start: { x: this.margin, y },
+        end: { x: this.margin + graphWidth, y },
+        thickness: tick === 0 ? 0.8 : 0.35,
+        color: this.palette.border
+      });
+      this.page.drawText(String(tick), {
+        x: this.margin,
+        y: y + 2,
+        size: 6.5,
+        font: this.fonts.regular,
+        color: this.palette.muted
+      });
+    }
+    rows.forEach((paper, rowIndex) => {
+      const values = {
+        student: boundedPercentage(paper.percentage),
+        average: boundedPercentage(paper.cohortAverage),
+        highest: boundedPercentage(paper.cohortHighest)
+      };
+      const groupX = this.margin + rowIndex * groupWidth;
+      series.forEach((item, seriesIndex) => {
+        const value = values[item.key];
+        const barHeight = (value / 100) * chartHeight;
+        const x = groupX + 4 + seriesIndex * (barWidth + 1.5);
+        this.patternBox(x, chartBottom, barWidth, barHeight, item.color, item.pattern);
+        const label = value.toFixed(value % 1 === 0 ? 0 : 1);
+        this.page.drawText(label, {
+          x,
+          y: chartBottom + barHeight + 2,
+          size: 5.8,
+          font: this.fonts.bold,
+          color: this.palette.ink
+        });
+      });
+      const label = paper.paperName && paper.paperName !== paper.subjectName
+        ? `${paper.subjectName} ${paper.paperName}`
+        : paper.subjectName;
+      const lines = wrapText(printable(label), this.fonts.regular, 5.8, Math.max(22, groupWidth - 3)).slice(0, 3);
+      lines.forEach((line, index) => this.page.drawText(line, {
+        x: groupX + 2,
+        y: chartBottom - 9 - index * 6.3,
+        size: 5.8,
+        font: this.fonts.regular,
+        color: this.palette.ink
+      }));
+    });
+    this.y -= height + labelReserve - 25;
+  }
+
+  private patternBox(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color: ReturnType<typeof rgb>,
+    pattern: string
+  ) {
+    if (width <= 0 || height <= 0) return;
+    this.page.drawRectangle({ x, y, width, height, color, borderColor: this.palette.ink, borderWidth: 0.45 });
+    if (pattern === "DIAGONAL") {
+      for (let offset = 2; offset < width + height; offset += 4) {
+        const startX = x + Math.max(0, offset - height);
+        const startY = y + Math.min(height, offset);
+        const endX = x + Math.min(width, offset);
+        const endY = y + Math.max(0, offset - width);
+        this.page.drawLine({ start: { x: startX, y: startY }, end: { x: endX, y: endY }, thickness: 0.35, color: this.palette.ink });
+      }
+    } else if (pattern === "HORIZONTAL") {
+      for (let offset = 3; offset < height; offset += 4) {
+        this.page.drawLine({ start: { x, y: y + offset }, end: { x: x + width, y: y + offset }, thickness: 0.35, color: this.palette.ink });
+      }
+    }
+  }
+
   signatures(signatures: RenderableReport["signatures"]) {
     this.ensure(70);
     const width = this.contentWidth / Math.max(1, signatures.length);
@@ -429,6 +568,7 @@ class PdfLayout {
 
   finish() {
     this.pages.forEach((page, index) => {
+      if (index === 0) this.drawPageHeader(page);
       const footer = [
         `${this.report.status === "ISSUED" ? "Issued" : "Preview"} version ${this.report.versionNumber}`,
         this.report.publicationReference,
@@ -453,30 +593,15 @@ class PdfLayout {
 }
 
 function renderAcademicReport(layout: PdfLayout, report: RenderableReport) {
-  layout.heading(report.title, 1);
+  const definition = report.template.definition as Record<string, any>;
+  const variant = String(definition.layoutVariant ?? report.examination.name).replaceAll("_", " ");
+  layout.heading(`${reportTemplateFamilyLabel(report.templateFamily)} - ${variant}`, 1);
   layout.paragraph(
     `${report.examination.code} | ${report.examination.name} | ${report.reportingPeriod}`,
     { bold: true }
   );
   layout.keyValues(profileRows(report));
-  layout.heading("Academic result", 2);
-  const componentRows = report.content.papers.flatMap((paper) =>
-    paper.components.map((component, index) => [
-      index === 0 ? paper.subjectName : "",
-      index === 0 ? paper.paperName : "",
-      component.name,
-      humanState(component.state),
-      component.state === "PRESENT" ? component.obtained ?? "0.00" : humanState(component.state),
-      component.maximum,
-      component.contribution ?? "-"
-    ])
-  );
-  layout.table(
-    ["Subject", "Paper", "Component", "State", "Obtained", "Maximum", "Contribution"],
-    componentRows,
-    [0.18, 0.14, 0.18, 0.12, 0.12, 0.12, 0.14]
-  );
-  layout.performanceBar(report.content.percentage);
+  renderAcademicMarks(layout, report);
   layout.keyValues([
     ["Total", `${report.content.totalObtained} / ${report.content.totalMaximum}`],
     ["Grade", report.content.grade ? `${report.content.grade.code} - ${report.content.grade.label}` : "Not enabled"],
@@ -498,7 +623,7 @@ function renderAcademicReport(layout: PdfLayout, report: RenderableReport) {
       ])
     );
   }
-  if (report.templateFamily === "RETAINED_MULTI_EXAM_I_X") {
+  if (definition.combinedResult?.enabled === true || report.templateFamily === "RETAINED_MULTI_EXAM_I_X") {
     layout.heading("Configured combined result", 2);
     layout.table(
       ["Examination / term", "Obtained", "Maximum", "Percentage", "Configured weight"],
@@ -511,6 +636,10 @@ function renderAcademicReport(layout: PdfLayout, report: RenderableReport) {
       ]),
       [0.32, 0.17, 0.17, 0.17, 0.17]
     );
+  }
+  if (definition.chart?.enabled !== false) {
+    layout.heading("Student Marks / Class Average / High Score", 2);
+    layout.performanceChart(report.content.papers);
   }
   if (report.content.skills.length) {
     layout.heading("Skills and co-scholastic development", 2);
@@ -535,42 +664,230 @@ function renderAcademicReport(layout: PdfLayout, report: RenderableReport) {
   layout.signatures(report.signatures);
 }
 
+function renderAcademicMarks(layout: PdfLayout, report: RenderableReport) {
+  layout.heading("Academic result", 2);
+  const componentOrder: Array<{ code: string; name: string }> = [];
+  for (const paper of report.content.papers) for (const component of paper.components) {
+    if (!componentOrder.some((row) => row.code === component.code)) {
+      componentOrder.push({ code: component.code, name: component.name });
+    }
+  }
+  if (componentOrder.length <= 4) {
+    const headers = ["Subject / Paper", ...componentOrder.map((row) => row.name), "Total", "%"];
+    const rows = report.content.papers.map((paper) => [
+      paper.paperName && paper.paperName !== paper.subjectName
+        ? `${paper.subjectName} - ${paper.paperName}`
+        : paper.subjectName,
+      ...componentOrder.map((column) => {
+        const component = paper.components.find((row) => row.code === column.code);
+        return component ? displayComponentValue(component) : "N/A";
+      }),
+      `${paper.obtained} / ${paper.maximum}`,
+      paper.percentage
+    ]);
+    layout.table(headers, rows, [0.27, ...componentOrder.map(() => 0.14), 0.12, 0.09]);
+  } else {
+    layout.table(
+      ["Subject", "Paper", "Component", "State", "Value / Maximum", "Weighted contribution"],
+      report.content.papers.flatMap((paper) => paper.components.map((component, index) => [
+        index === 0 ? paper.subjectName : "",
+        index === 0 ? paper.paperName : "",
+        component.name,
+        humanState(component.state),
+        displayComponentValue(component),
+        component.contribution ?? "N/A"
+      ])),
+      [0.2, 0.14, 0.2, 0.14, 0.17, 0.15]
+    );
+  }
+}
+
+function displayComponentValue(component: RenderableReport["content"]["papers"][number]["components"][number]) {
+  if (component.state === "PRESENT") return `${component.obtained ?? "0"} / ${component.maximum}`;
+  const labels: Record<string, string> = {
+    ABSENT: "ABSENT",
+    NOT_ENTERED: "NOT ENTERED",
+    EXEMPT: "EXEMPT",
+    NOT_APPLICABLE: "N/A"
+  };
+  return `${labels[component.state] ?? humanState(component.state)} / ${component.maximum}`;
+}
+
 function renderKgBooklet(layout: PdfLayout, report: RenderableReport) {
-  layout.heading("Developmental progress booklet", 1);
-  layout.paragraph(`${report.examination.name} | ${report.academicYear}`, { bold: true });
+  const definition = report.template.definition as Record<string, any>;
+  const evaluations = Array.isArray(definition.evaluationPeriods)
+    ? definition.evaluationPeriods.map(String).slice(0, 5)
+    : ["I", "II", "III", "IV", "V"];
+
+  // Page 1 - canonical cover.
+  layout.heading("PROGRESS REPORT", 1);
+  layout.paragraph("KG ten-page developmental booklet", { bold: true, size: 12 });
+  layout.paragraph(`${report.academicYear} | ${report.examination.name}`);
+  layout.keyValues([
+    ["Student Name", report.student.name],
+    ["Class / Section", `${report.student.className}${report.student.section ? ` / ${report.student.section}` : ""}`],
+    ["Roll Number", report.student.rollNumber ?? "-"]
+  ]);
+  layout.paragraph("Synthetic or issued version details appear in the footer. Ordinary A4 page order is canonical; booklet imposition is separate.");
+
+  // Page 2 - profile.
+  layout.pageBreak();
+  layout.heading("STUDENT PROFILE", 1);
   layout.keyValues(profileRows(report));
-  layout.paragraph(
-    "This issued booklet records configured developmental observations. It does not infer weights or ranking rules."
+  layout.paragraph("Only identity labels explicitly selected in the frozen template are displayed. Internal record IDs and contact details are omitted.");
+  layout.heading("Parent / Guardian acknowledgment", 2);
+  layout.paragraph("I have reviewed the developmental progress recorded in this booklet.");
+  layout.signatures([{ role: "PARENT_GUARDIAN", label: "Parent / Guardian" }]);
+
+  // Page 3 - instructions and configured legend.
+  layout.pageBreak();
+  layout.heading("GUIDANCE FOR PARENTS / GUARDIANS", 1);
+  [
+    "This booklet records scholastic and developmental observations across five configured evaluations.",
+    "Ratings must be read with the frozen scheme and legend printed in this version; no historical formula is implied.",
+    "Attendance, growth and comments are recorded from their approved frozen bases and remain distinct from marks.",
+    "Please discuss questions with the authorised Class Teacher or school leadership and sign only in the areas provided."
+  ].forEach((text) => layout.paragraph(text));
+  if (report.content.legends.length) {
+    layout.heading("Configured grade legend", 2);
+    layout.table(["Code", "Description"], report.content.legends.map((row) => [row.code, row.label]), [0.2, 0.8]);
+  }
+
+  // Page 4 - compact intellectual-skills summary.
+  layout.pageBreak();
+  layout.heading("INTELLECTUAL SKILLS", 1);
+  const summaryAreas = Array.isArray(definition.summaryAreas)
+    ? definition.summaryAreas.map(String)
+    : report.content.developmentalSections.flatMap((section) => section.items.map((item) => item.area));
+  renderKgEvaluationMatrix(layout, "Skill / learning area", summaryAreas, evaluations, report.content.kgSummaryEvaluations ?? []);
+
+  const criteria = Array.isArray(definition.criteria) ? definition.criteria : [];
+  const englishCriteria = criteria.filter((row: any) => String(row.section).toLowerCase().startsWith("english"));
+  const hindiCriteria = criteria.filter((row: any) => String(row.section).toLowerCase().startsWith("hindi"));
+  const numberCriteria = criteria.filter((row: any) => String(row.section).toLowerCase().startsWith("number"));
+  const otherCriteria = criteria.filter((row: any) => String(row.section).toLowerCase() === "other");
+
+  // Page 5 - detailed English.
+  layout.pageBreak();
+  layout.heading("INTELLECTUAL DEVELOPMENT - ENGLISH", 1);
+  renderKgEvaluationMatrix(layout, "English development", englishCriteria, evaluations, report.content.kgRubricEvaluations ?? []);
+
+  // Page 6 - Hindi and first Number Work structure.
+  layout.pageBreak();
+  layout.heading("INTELLECTUAL DEVELOPMENT - HINDI / NUMBER WORK", 1);
+  renderKgEvaluationMatrix(layout, "Hindi development", hindiCriteria, evaluations, report.content.kgRubricEvaluations ?? []);
+  renderKgEvaluationMatrix(layout, "Number work - oral", numberCriteria.slice(0, 3), evaluations, report.content.kgRubricEvaluations ?? []);
+
+  // Page 7 - remaining Number Work, EVS, Rhymes and Story.
+  layout.pageBreak();
+  layout.heading("NUMBER WORK / EVS / RHYMES / STORY", 1);
+  renderKgEvaluationMatrix(layout, "Number work - written", numberCriteria.slice(3), evaluations, report.content.kgRubricEvaluations ?? []);
+  renderKgEvaluationMatrix(layout, "EVS / Rhymes / Story", otherCriteria, evaluations, report.content.kgRubricEvaluations ?? []);
+
+  // Page 8 - personality, monthly attendance and physical growth.
+  layout.pageBreak();
+  layout.heading("PERSONALITY DEVELOPMENT", 1);
+  const personalityAreas = Array.isArray(definition.personalityTraits)
+    ? definition.personalityTraits.map(String)
+    : report.content.personality.map((row) => row.area);
+  renderKgEvaluationMatrix(layout, "Personal and social trait", personalityAreas, evaluations, report.content.kgPersonalityEvaluations ?? []);
+  renderKgMonthlyAttendance(layout, report);
+  renderKgGrowth(layout, report);
+
+  // Page 9 - evaluation comments, signatures and promotion.
+  layout.pageBreak();
+  layout.heading("COMMENTS / COMPLIMENTS", 1);
+  layout.table(
+    ["Evaluation", "Approved comment / compliment"],
+    evaluations.map((evaluation) => [
+      evaluation,
+      report.content.evaluationComments?.find((row) => row.evaluation === evaluation)?.comment ?? "No approved comment recorded."
+    ]),
+    [0.18, 0.82]
   );
-  for (const section of report.content.developmentalSections) {
-    layout.heading(section.title, 2);
-    layout.table(
-      ["Development area", "Rating", "Remarks"],
-      section.items.map((item) => [item.area, item.rating, item.remarks ?? "-"]),
-      [0.45, 0.2, 0.35]
-    );
-  }
-  if (report.content.papers.length) {
-    layout.heading("Academic observations", 2);
-    layout.table(
-      ["Area", "Component", "State", "Observation / mark", "Maximum"],
-      report.content.papers.flatMap((paper) =>
-        paper.components.map((component) => [
-          paper.subjectName,
-          component.name,
-          humanState(component.state),
-          component.state === "PRESENT" ? component.obtained ?? "0.00" : humanState(component.state),
-          component.maximum
-        ])
-      ),
-      [0.24, 0.25, 0.16, 0.2, 0.15]
-    );
-  }
-  renderAttendance(layout, report);
-  renderRemarksAndLegends(layout, report);
-  layout.keepTogether(100);
-  layout.heading("Required signatures", 2);
+  layout.heading("Promotion", 2);
+  layout.paragraph(report.content.promotion?.displayText ?? "Promotion decision is not included in this frozen report version.");
+  if (report.content.promotion?.nextClass) layout.paragraph(`Next class: ${report.content.promotion.nextClass}`);
+  if (report.content.promotion?.nextSessionStartDate) layout.paragraph(`Next session begins: ${report.content.promotion.nextSessionStartDate}`);
   layout.signatures(report.signatures);
+
+  // Page 10 - canonical back cover.
+  layout.pageBreak();
+  layout.heading("A LITTLE PROGRESS EVERY DAY ADDS UP TO BIG RESULTS", 1);
+  layout.paragraph("This is the final page of the canonical ten-page KG developmental booklet.", { bold: true });
+  layout.keyValues([
+    ["Report reference", report.publicationReference],
+    ["Template", `${report.template.code} v${report.template.version}`],
+    ["Publication version", String(report.governance.publicationVersion ?? report.versionNumber)],
+    ["Colour mode", layout.palette.monochrome ? "Monochrome / pattern-safe" : "Colour / accessible"],
+    ["Page order", "1 through 10 ordinary A4 pages"],
+    ["Student data", report.status === "ISSUED" ? "Issued frozen snapshot" : "Preview / synthetic specimen"]
+  ]);
+}
+
+function renderKgEvaluationMatrix(
+  layout: PdfLayout,
+  firstHeader: string,
+  items: Array<string | Record<string, any>>,
+  evaluations: string[],
+  sources: NonNullable<RenderableReport["content"]["kgRubricEvaluations"]>
+) {
+  if (!items.length) return;
+  const rows = items.map((item) => {
+    const key = typeof item === "string" ? item : String(item.key ?? item.label ?? "");
+    const label = typeof item === "string" ? humanState(item) : String(item.label ?? humanState(key));
+    return [
+      label,
+      ...evaluations.map((evaluation) => sourceRating(sources, evaluation, key))
+    ];
+  });
+  layout.table(
+    [firstHeader, ...evaluations.map((evaluation) => `Evaluation ${evaluation}`)],
+    rows,
+    [0.4, ...evaluations.map(() => 0.12)],
+    { compact: true }
+  );
+}
+
+function sourceRating(
+  sources: NonNullable<RenderableReport["content"]["kgRubricEvaluations"]>,
+  evaluation: string,
+  area: string
+) {
+  return sources.find((row) => row.evaluation === evaluation)?.ratings.find((row) => row.area === area)?.rating
+    ?.replaceAll("_", " ") ?? "NOT ENTERED";
+}
+
+function renderKgMonthlyAttendance(layout: PdfLayout, report: RenderableReport) {
+  const months = report.content.attendance.monthly ?? [];
+  if (!months.length) return;
+  layout.heading("Monthly attendance", 2);
+  const totalWorking = months.reduce((sum, row) => sum + (row.workingDays ?? 0), 0);
+  const totalPresent = months.reduce((sum, row) => sum + (row.daysPresent ?? 0), 0);
+  layout.table(
+    ["Attendance", ...months.map((row) => row.month.slice(0, 3)), "Total"],
+    [
+      ["Working days", ...months.map((row) => row.workingDays == null ? "-" : String(row.workingDays)), String(totalWorking)],
+      ["Days present", ...months.map((row) => row.daysPresent == null ? "-" : String(row.daysPresent)), String(totalPresent)]
+    ],
+    [0.16, ...months.map(() => 0.065), 0.125],
+    { compact: true }
+  );
+}
+
+function renderKgGrowth(layout: PdfLayout, report: RenderableReport) {
+  const growth = report.content.growth ?? [];
+  if (!growth.length) return;
+  layout.heading("Physical development", 2);
+  layout.table(
+    ["Measure", ...growth.map((row) => `Evaluation ${row.evaluation}`)],
+    [
+      ["Height (cm)", ...growth.map((row) => row.heightCm ?? "-")],
+      ["Weight (kg)", ...growth.map((row) => row.weightKg ?? "-")]
+    ],
+    [0.28, ...growth.map(() => 0.72 / growth.length)],
+    { compact: true }
+  );
 }
 
 function renderAttendance(layout: PdfLayout, report: RenderableReport) {
@@ -596,21 +913,31 @@ function renderRemarksAndLegends(layout: PdfLayout, report: RenderableReport) {
   if (report.content.legends.length) {
     layout.heading("Legend", 2);
     layout.table(
-      ["Code", "Meaning"],
-      report.content.legends.map((row) => [row.code, row.label]),
-      [0.2, 0.8]
+      ["Code", "Meaning", "Configured range", "Grade point"],
+      report.content.legends.map((row) => [
+        row.code,
+        row.label,
+        row.minimumPercentage == null && row.maximumPercentage == null
+          ? "Configured scale"
+          : `${row.minimumPercentage ?? "-"} to ${row.maximumPercentage ?? "-"}`,
+        row.gradePoint ?? "Not enabled"
+      ]),
+      [0.14, 0.36, 0.3, 0.2]
     );
   }
 }
 
 function profileRows(report: RenderableReport): Array<[string, string]> {
+  const identity = report.template.definition.identity as Record<string, unknown> | undefined;
   return [
-    ["Student", report.student.name],
-    ["Admission number", report.student.admissionNumber],
-    ["Class / section", `${report.student.className}${report.student.section ? ` - ${report.student.section}` : ""}`],
-    ["Roll number", report.student.rollNumber ?? "-"],
+    [String(identity?.studentLabel ?? "Student Name"), report.student.name],
+    [String(identity?.admissionLabel ?? "Admission Number"), report.student.admissionNumber],
+    [String(identity?.classSectionLabel ?? "Class / Section"), `${report.student.className}${report.student.section ? ` - ${report.student.section}` : ""}`],
+    [String(identity?.rollLabel ?? "Roll Number"), report.student.rollNumber ?? "-"],
     ["Academic year", report.academicYear],
-    ["Date of birth", report.student.dateOfBirth ?? "-"]
+    ["Date of birth", report.student.dateOfBirth ?? "-"],
+    ...(report.student.gender ? [["Gender", report.student.gender] as [string, string]] : []),
+    ...(report.student.parentGuardians ?? []).map((row) => [row.label, row.value] as [string, string])
   ];
 }
 
@@ -620,17 +947,24 @@ async function embeddedFonts(document: PDFDocument): Promise<PdfFonts> {
     .find((candidate) => existsSync(candidate));
   const boldPath = FONT_BOLD_CANDIDATES.map((name) => path.join(fontRoot, name))
     .find((candidate) => existsSync(candidate));
+  const schoolBoldPath = SCHOOL_BOLD_CANDIDATES.map((name) => path.join(fontRoot, name))
+    .find((candidate) => existsSync(candidate));
   if (regularPath && boldPath) {
     document.registerFontkit(fontkit);
+    const bold = await document.embedFont(readFileSync(boldPath), { subset: true });
     return {
       regular: await document.embedFont(readFileSync(regularPath), { subset: true }),
-      bold: await document.embedFont(readFileSync(boldPath), { subset: true }),
+      bold,
+      schoolBold: schoolBoldPath
+        ? await document.embedFont(readFileSync(schoolBoldPath), { subset: true })
+        : bold,
       embedded: true
     };
   }
   return {
     regular: await document.embedFont(StandardFonts.Helvetica),
     bold: await document.embedFont(StandardFonts.HelveticaBold),
+    schoolBold: await document.embedFont(StandardFonts.TimesRomanBold),
     embedded: false
   };
 }
@@ -662,7 +996,10 @@ function paletteFor(mode: ReportColourMode) {
       border: rgb(0.18, 0.18, 0.18),
       headerFill: rgb(0.88, 0.88, 0.88),
       rowAlt: rgb(0.96, 0.96, 0.96),
-      accent: rgb(0.72, 0.72, 0.72)
+      accent: rgb(0.72, 0.72, 0.72),
+      seriesStudent: rgb(0.16, 0.16, 0.16),
+      seriesAverage: rgb(0.68, 0.68, 0.68),
+      seriesHighest: rgb(0.94, 0.94, 0.94)
     };
   }
   return {
@@ -673,7 +1010,10 @@ function paletteFor(mode: ReportColourMode) {
     border: rgb(0.55, 0.68, 0.78),
     headerFill: rgb(0.89, 0.95, 0.98),
     rowAlt: rgb(0.97, 0.99, 1),
-    accent: rgb(0.35, 0.72, 0.84)
+    accent: rgb(0.35, 0.72, 0.84),
+    seriesStudent: rgb(0.08, 0.36, 0.56),
+    seriesAverage: rgb(0.93, 0.55, 0.22),
+    seriesHighest: rgb(0.42, 0.72, 0.42)
   };
 }
 
@@ -746,6 +1086,11 @@ function printable(value: unknown) {
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
     .replace(/\u2011/g, "-")
     .replace(/\u00A0/g, " ");
+}
+
+function boundedPercentage(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 0;
 }
 
 function humanState(value: string) {
