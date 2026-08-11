@@ -3,7 +3,7 @@
 **Prompt:** `REPORT-PRINT-ACCEPT-1A`
 **Branch:** `reporting/canonical-template-print-acceptance`
 **Starting release:** commit `6693f8d3e4c975be748e8d7f103cd72f2ee36cfc`, tag `release-operations-v41-2026-08-10`, backup version 41
-**Status:** prior technical rendering checkpoint preserved; physical printing paused for source-fidelity visual-direction approval
+**Status:** R3 refined source lock ready for user review; physical printing remains paused
 
 ## Privacy and baseline
 
@@ -44,6 +44,8 @@ No real source value is used in generated evidence.
 - Prior technical rendering integrity: complete and preserved at `1620cbbcf67448f6d6e783568b384307413fae39`.
 - Source-layout fidelity: confirmed insufficient before printing; pre-print recalibration in progress.
 - Old physical packs: retained as technical evidence and `SUPERSEDED_FOR_VISUAL_APPROVAL`.
-- Small `LEGACY_EXACT` / `LEGACY_REFINED` visual-direction gate: current gate.
+- `LEGACY_REFINED` selected and source-locked as the single production direction through `NALANDA_LEGACY_REFINED_COLOUR` and `NALANDA_LEGACY_REFINED_MONOCHROME`.
+- `LEGACY_EXACT`: ignored historical comparison evidence only; not an ordinary-user template choice.
+- R3 visual-direction and separate edge-case packs: regenerated for user review with frozen synthetic reconciliation.
 - Full synthetic print-pack regeneration: not yet approved.
 - Physical colour/monochrome/photocopy acceptance: paused; no physical printing has occurred.

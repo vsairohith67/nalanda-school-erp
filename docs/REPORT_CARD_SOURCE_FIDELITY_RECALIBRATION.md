@@ -1,8 +1,8 @@
 # Report-Card Source-Fidelity Recalibration
 
-**Prompts:** `REPORT-PRINT-ACCEPT-1A-R` and `REPORT-PRINT-ACCEPT-1A-R2`  
+**Prompts:** `REPORT-PRINT-ACCEPT-1A-R`, `REPORT-PRINT-ACCEPT-1A-R2`, and `REPORT-PRINT-ACCEPT-1A-R3`
 **Preserved technical checkpoint:** `1620cbbcf67448f6d6e783568b384307413fae39`  
-**Current state:** `SOURCE_FIDELITY_VISUAL_DIRECTION_IN_PROGRESS`  
+**Current state:** `REFINED_SOURCE_LOCK_READY_FOR_USER_REVIEW`
 **Physical printing:** paused and not authorised
 
 ## Classification of the previous result
@@ -30,9 +30,11 @@ The target is `NALANDA_LEGACY_REFINED`:
 
 All maxima, weightages, subject groups, legends, rank/grade-point visibility, attendance basis, signatures, and combined-result availability remain controlled by frozen versioned configuration. Historical formulas and values are not copied.
 
-## Small visual-direction gate
+## R3 refined source lock
 
-The first review pack deliberately contains only eight representative page structures. Each appears as both `LEGACY_EXACT` and `LEGACY_REFINED`:
+The user selected `LEGACY_REFINED`. It is now the only production direction and is exposed solely through the versioned families `NALANDA_LEGACY_REFINED_COLOUR` and `NALANDA_LEGACY_REFINED_MONOCHROME`. `LEGACY_EXACT` is retained only in ignored historical comparison evidence; ordinary users cannot choose between Exact and Refined.
+
+The R3 visual-review pack contains the following source-locked representative pages:
 
 1. KG cover.
 2. KG Student Profile.
@@ -42,7 +44,11 @@ The first review pack deliberately contains only eight representative page struc
 6. Class VI grouped-subject report (also representing the VI-VIII grouping direction).
 7. Class IX Combined Result.
 8. Class X CT/Revision-style report.
+9. Class II monochrome report.
+10. Class IX monochrome report.
 
-The visual-direction pack uses realistic synthetic values. The separately generated edge-case pack uses long names, long subjects, `ABSENT`, `EXEMPT`, `NOT ENTERED`, decimals, and related stress cases; it is not the design-approval pack.
+The visual-direction pack uses realistic internally reconciled synthetic values. Its table totals, overall result, chart Student values, class average and high-score series are all drawn from one frozen synthetic report/class snapshot. A separate edge-case pack covers wrapping, `ABSENT`, `EXEMPT`, `NOT ENTERED`, `N/A`, decimals, and long remarks; it is not the design-approval pack.
 
-Full 47-page regeneration and all physical colour/B&W printing remain blocked by the visual-direction choice. The next decision is normal-language approval of `LEGACY_EXACT`, `LEGACY_REFINED`, or named changes.
+The renderer uses the approved transparent logo, Georgia Bold with a safe serif fallback, and the motto `Knowledge is Power`. School name, address, academic year, and any approved identity wording are resolved from School Settings. The current configured locality is `Nanalnagar`. No approved affiliation, recognition, or establishment-year value is currently configured, so those optional lines are omitted rather than replaced with historical wording.
+
+Full-pack regeneration and all physical colour/B&W printing remain paused. The next gate is the user's normal-language review of the R3 pack; printing does not resume automatically.
