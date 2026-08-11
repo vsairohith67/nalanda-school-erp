@@ -3,7 +3,7 @@
 **Prompt:** `REPORT-PRINT-ACCEPT-1A`
 **Branch:** `reporting/canonical-template-print-acceptance`
 **Starting release:** commit `6693f8d3e4c975be748e8d7f103cd72f2ee36cfc`, tag `release-operations-v41-2026-08-10`, backup version 41
-**Status:** R3 refined source lock ready for user review; physical printing remains paused
+**Status:** R4 final pre-print correctness pass ready for user review; physical printing remains paused
 
 ## Privacy and baseline
 
@@ -47,5 +47,7 @@ No real source value is used in generated evidence.
 - `LEGACY_REFINED` selected and source-locked as the single production direction through `NALANDA_LEGACY_REFINED_COLOUR` and `NALANDA_LEGACY_REFINED_MONOCHROME`.
 - `LEGACY_EXACT`: ignored historical comparison evidence only; not an ordinary-user template choice.
 - R3 visual-direction and separate edge-case packs: regenerated for user review with frozen synthetic reconciliation.
+- R4 targeted corrections: KG two-line cover identity and restored hierarchy; legacy academic-grade suppression; single-scale Class X grading; exact displayed-number reconciliation; leaf-only chart default; compact state codes; minimum readability sizes; synthetic not-for-issue footer.
+- R4 review evidence: ignored eight-page visual pack and separate four-page edge-case pack only.
 - Full synthetic print-pack regeneration: not yet approved.
 - Physical colour/monochrome/photocopy acceptance: paused; no physical printing has occurred.

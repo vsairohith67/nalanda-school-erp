@@ -2,8 +2,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "../lib/prisma";
 import {
-  renderR3EdgePack,
-  renderR3VisualPack,
+  renderR4EdgePack,
+  renderR4VisualPack,
   resolveReportSchoolIdentity
 } from "../lib/report-card-refined-source-lock";
 import { getSchoolSettings } from "../lib/school-settings";
@@ -18,17 +18,17 @@ async function main() {
   });
   const approvedDefinitions = activeTemplates.map((row) => JSON.parse(row.templateDefinitionJson));
   const identity = resolveReportSchoolIdentity(settings, approvedDefinitions);
-  const visualPack = await renderR3VisualPack(identity);
-  const edgePack = await renderR3EdgePack(identity);
+  const visualPack = await renderR4VisualPack(identity);
+  const edgePack = await renderR4EdgePack(identity);
 
   await mkdir(outputRoot, { recursive: true });
   await Promise.all([
-    writeFile(path.join(outputRoot, "VISUAL-DIRECTION-PACK-R3.pdf"), visualPack),
-    writeFile(path.join(outputRoot, "EDGE-CASE-RENDERING-PACK-R3.pdf"), edgePack),
+    writeFile(path.join(outputRoot, "VISUAL-DIRECTION-PACK-R4.pdf"), visualPack),
+    writeFile(path.join(outputRoot, "EDGE-CASE-RENDERING-PACK-R4.pdf"), edgePack),
     writeFile(
-      path.join(outputRoot, "pack-manifest-r3.json"),
+      path.join(outputRoot, "pack-manifest-r4.json"),
       JSON.stringify({
-        status: "REFINED_SOURCE_LOCK_USER_REVIEW_PENDING",
+        status: "R4_FINAL_PRE_PRINT_CORRECTION_USER_REVIEW_PENDING",
         productionFamilies: [
           "NALANDA_LEGACY_REFINED_COLOUR",
           "NALANDA_LEGACY_REFINED_MONOCHROME"
@@ -47,14 +47,14 @@ async function main() {
         },
         packs: [
           {
-            file: "VISUAL-DIRECTION-PACK-R3.pdf",
-            pages: 10,
+            file: "VISUAL-DIRECTION-PACK-R4.pdf",
+            pages: 8,
             syntheticOnly: true,
             physicalPrintingAuthorised: false
           },
           {
-            file: "EDGE-CASE-RENDERING-PACK-R3.pdf",
-            pages: 8,
+            file: "EDGE-CASE-RENDERING-PACK-R4.pdf",
+            pages: 4,
             syntheticOnly: true,
             physicalPrintingAuthorised: false
           }
@@ -65,12 +65,12 @@ async function main() {
       }, null, 2) + "\n"
     ),
     writeFile(
-      path.join(outputRoot, "REVIEW-INSTRUCTIONS-R3.txt"),
+      path.join(outputRoot, "REVIEW-INSTRUCTIONS-R4.txt"),
       [
-        "R3 REFINED SOURCE-LOCK REVIEW - SYNTHETIC DATA ONLY",
+        "R4 FINAL PRE-PRINT CORRECTION REVIEW - SYNTHETIC DATA ONLY",
         "",
-        "VISUAL-DIRECTION-PACK-R3.pdf is the ten-page design review pack.",
-        "EDGE-CASE-RENDERING-PACK-R3.pdf is separate wrapping and state evidence.",
+        "VISUAL-DIRECTION-PACK-R4.pdf is the eight-page design review pack.",
+        "EDGE-CASE-RENDERING-PACK-R4.pdf is separate long-name and AB/EX/NE/NA evidence.",
         "NALANDA_LEGACY_REFINED is the selected structural direction.",
         "LEGACY_EXACT remains historical local comparison evidence only.",
         "Do not print either pack yet.",
@@ -81,8 +81,8 @@ async function main() {
 
   process.stdout.write(JSON.stringify({
     outputRoot,
-    visualPages: 10,
-    edgePages: 8,
+    visualPages: 8,
+    edgePages: 4,
     productionFamilies: [
       "NALANDA_LEGACY_REFINED_COLOUR",
       "NALANDA_LEGACY_REFINED_MONOCHROME"

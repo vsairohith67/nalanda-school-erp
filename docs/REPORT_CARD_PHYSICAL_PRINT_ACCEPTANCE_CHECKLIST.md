@@ -4,6 +4,8 @@
 
 **R3 status:** digital source-lock user review only; do not print either R3 pack. Full-pack regeneration remains paused.
 
+**R4 status:** final pre-print correctness review only; do not print either R4 pack. Physical acceptance remains paused until explicit user approval and later full-pack regeneration.
+
 **Gate:** `REPORT-PRINT-ACCEPT-1A-QA`
 **Evidence rule:** synthetic specimens only; never attach or upload a real Student report
 

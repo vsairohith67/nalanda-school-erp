@@ -1,8 +1,8 @@
 # Report-Card Source-Fidelity Recalibration
 
-**Prompts:** `REPORT-PRINT-ACCEPT-1A-R`, `REPORT-PRINT-ACCEPT-1A-R2`, and `REPORT-PRINT-ACCEPT-1A-R3`
+**Prompts:** `REPORT-PRINT-ACCEPT-1A-R` through `REPORT-PRINT-ACCEPT-1A-R4`
 **Preserved technical checkpoint:** `1620cbbcf67448f6d6e783568b384307413fae39`  
-**Current state:** `REFINED_SOURCE_LOCK_READY_FOR_USER_REVIEW`
+**Current state:** `R4_FINAL_PRE_PRINT_CORRECTION_READY_FOR_USER_REVIEW`
 **Physical printing:** paused and not authorised
 
 ## Classification of the previous result
@@ -51,4 +51,14 @@ The visual-direction pack uses realistic internally reconciled synthetic values.
 
 The renderer uses the approved transparent logo, Georgia Bold with a safe serif fallback, and the motto `Knowledge is Power`. School name, address, academic year, and any approved identity wording are resolved from School Settings. The current configured locality is `Nanalnagar`. No approved affiliation, recognition, or establishment-year value is currently configured, so those optional lines are omitted rather than replaced with historical wording.
 
-Full-pack regeneration and all physical colour/B&W printing remain paused. The next gate is the user's normal-language review of the R3 pack; printing does not resume automatically.
+Full-pack regeneration and all physical colour/B&W printing remain paused. The next gate is the user's normal-language review of the latest targeted pack; printing does not resume automatically.
+
+## R4 final correctness pass
+
+R4 retains `NALANDA_LEGACY_REFINED` and applies only the confirmed pre-print corrections. The KG cover now treats a reduced centred crest and the two-line Georgia Bold `NALANDA` / `PUBLIC SCHOOL` name as one visual group. Hindi and Mathematics retain every separate source row.
+
+The legacy academic pages omit the per-subject academic Grade column by default while retaining the Skills/Personality Grade column. Grade-only subjects use a dedicated grade row. Class IX Combined retains configured academic Grade and Grade Point columns. Class X uses one frozen `A+` through `F` scale for subject grades, overall grade and exact-decimal legend bands, with no pre-grade rounding.
+
+Displayed contributing subject totals are rounded deterministically to two decimals before the displayed overall total is summed. Percentage, grade, rank basis and Student chart values use that same frozen snapshot. The legacy chart policy is `LEGACY_LEAF_SUBJECTS`, so leaf rows and their averages are not shown together. Result states use `AB`, `EX`, `NE` and `NA`, with a printed legend whenever any code appears.
+
+The ignored R4 review pack contains eight requested pages; the separate four-page edge pack covers long identities and all four result-state codes. Both remain digital review evidence only. The full pack and physical printing remain paused.
