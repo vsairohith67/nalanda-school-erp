@@ -1,5 +1,7 @@
 # Report-Card Physical Print Acceptance Checklist
 
+> R4.1 remains a digital micro-review correction. Do not print `VISUAL-DIRECTION-PACK-R4-1.pdf` or `EDGE-CASE-RENDERING-PACK-R4-1.pdf`. Full physical-pack regeneration and printing remain paused pending explicit user approval.
+
 > **PAUSED — DO NOT PRINT THE EXISTING PACK.** The prior packs are `SUPERSEDED_FOR_VISUAL_APPROVAL`. Physical printing may resume only after source-fidelity visual-direction approval and regeneration of the approved synthetic pack.
 
 **R3 status:** digital source-lock user review only; do not print either R3 pack. Full-pack regeneration remains paused.

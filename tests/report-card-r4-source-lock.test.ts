@@ -163,7 +163,7 @@ describe("R4 displayed-number reconciliation", () => {
         ? [Number(subject.total.value)]
         : [])
       .reduce((total, value) => total + value, 0));
-    expect(displayedRowSum).toBe(484.96);
+    expect(displayedRowSum).toBe(484.07);
     expect(report.overall.value).toBe(displayedRowSum);
     expect(report.overall.percentage).toBe(round2(displayedRowSum / report.overall.maximum * 100));
     expect(report.overall.rankBasisPercentage).toBe(report.overall.percentage);

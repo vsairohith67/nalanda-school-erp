@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import fontkit from "@pdf-lib/fontkit";
+import sharp from "sharp";
 import {
   degrees,
   PDFDocument,
@@ -83,9 +84,31 @@ type SubjectBase = {
   label: string;
   includeInOverall: boolean;
   chartIncluded: boolean;
-  classAveragePercentage: number;
-  highScorePercentage: number;
+  classAveragePercentage: number | null;
+  highScorePercentage: number | null;
   aggregateOf: string[];
+};
+
+export type SubjectGroupFormulaSnapshot = {
+  kind: "ARITHMETIC_MEAN" | "WEIGHTED_MEAN";
+  label: "Average" | "Group Result" | "Weighted Group Result";
+  stateHandling: Record<Exclude<MarkState, "PRESENT">, "EXCLUDE" | "INCLUDE_AS_ZERO" | "UNAVAILABLE">;
+  missingMemberHandling: "EXCLUDE" | "UNAVAILABLE";
+  memberWeights?: Record<string, number>;
+};
+
+export type SubjectGroupMemberResult = {
+  key: string;
+  maximum: number;
+  value: number | null;
+  state: MarkState;
+};
+
+export type SubjectGroupCalculation = {
+  value: number | null;
+  maximum: number | null;
+  state: MarkState;
+  includedMemberKeys: string[];
 };
 
 export type StandardMarksSubject = SubjectBase & {
@@ -99,6 +122,7 @@ export type DerivedMarksSubject = SubjectBase & {
   kind: "DERIVED";
   grade: string;
   derivedFrom: string[];
+  groupFormula: SubjectGroupFormulaSnapshot;
   total: { maximum: number; value: number; state: "PRESENT" };
 };
 
@@ -154,6 +178,7 @@ export type CombinedMarksSubject = SubjectBase & {
   kind: "COMBINED";
   grade: string;
   combined: CombinedResultValues;
+  groupFormula: SubjectGroupFormulaSnapshot | null;
   total: { maximum: number; value: number; state: "PRESENT" };
 };
 
@@ -170,6 +195,20 @@ export type ChartPointSnapshot = {
   classAveragePercentage: number;
   highScorePercentage: number;
   classSnapshotId: string;
+};
+
+export type CohortResultRecord = {
+  studentKey: string;
+  subjectKey: string;
+  maximum: number;
+  value: number | null;
+  state: MarkState;
+};
+
+export type CohortStatistics = {
+  classAveragePercentage: number;
+  highScorePercentage: number;
+  validRecordCount: number;
 };
 
 export type AcademicReportSnapshot = {
@@ -212,11 +251,23 @@ export type AcademicReportSnapshot = {
 };
 
 type Fonts = { regular: PDFFont; bold: PDFFont; school: PDFFont };
-type Assets = { fonts: Fonts; logo: PDFImage | null };
+type Assets = { fonts: Fonts; colourLogo: PDFImage | null; monochromeLogo: PDFImage | null };
 type Palette = ReturnType<typeof palette>;
 
 const A4 = { width: 595.28, height: 841.89 } as const;
 const EPSILON = 0.0001;
+export const GROUP_RESULT_NOTE = "Shaded group-result rows are used in the overall total. Individual papers are shown for detailed reference.";
+export const SYNTHETIC_GROUP_FORMULA: SubjectGroupFormulaSnapshot = {
+  kind: "ARITHMETIC_MEAN",
+  label: "Average",
+  stateHandling: {
+    ABSENT: "INCLUDE_AS_ZERO",
+    EXEMPT: "EXCLUDE",
+    NOT_ENTERED: "UNAVAILABLE",
+    NOT_APPLICABLE: "EXCLUDE"
+  },
+  missingMemberHandling: "UNAVAILABLE"
+};
 const DEFAULT_IDENTITY: ReportSchoolIdentitySnapshot = {
   schoolName: "Nalanda Public School",
   addressLine1: "Nanalnagar, Mehdipatnam",
@@ -332,6 +383,73 @@ export function templateFamilyForMode(mode: RefinedColourMode): RefinedTemplateF
     : "NALANDA_LEGACY_REFINED_COLOUR";
 }
 
+export function calculateSubjectGroupResult(
+  formula: SubjectGroupFormulaSnapshot,
+  memberKeys: string[],
+  members: Map<string, SubjectGroupMemberResult>
+): SubjectGroupCalculation {
+  const included: Array<SubjectGroupMemberResult & { weight: number }> = [];
+  for (const key of memberKeys) {
+    const member = members.get(key);
+    if (!member) {
+      if (formula.missingMemberHandling === "UNAVAILABLE") {
+        return { value: null, maximum: null, state: "NOT_ENTERED", includedMemberKeys: [] };
+      }
+      continue;
+    }
+    if (member.state === "PRESENT") {
+      if (member.value == null) {
+        return { value: null, maximum: null, state: "NOT_ENTERED", includedMemberKeys: [] };
+      }
+      included.push({ ...member, weight: formula.memberWeights?.[key] ?? 1 });
+      continue;
+    }
+    const handling = formula.stateHandling[member.state];
+    if (handling === "UNAVAILABLE") {
+      return { value: null, maximum: null, state: member.state, includedMemberKeys: [] };
+    }
+    if (handling === "INCLUDE_AS_ZERO") {
+      included.push({ ...member, value: 0, weight: formula.memberWeights?.[key] ?? 1 });
+    }
+  }
+  if (!included.length) {
+    return { value: null, maximum: null, state: "NOT_APPLICABLE", includedMemberKeys: [] };
+  }
+  const divisor = formula.kind === "WEIGHTED_MEAN"
+    ? sum(included.map((member) => member.weight))
+    : included.length;
+  if (divisor <= 0) throw new Error("Subject-group weights must total more than zero.");
+  const weighted = (member: SubjectGroupMemberResult & { weight: number }, value: number) =>
+    value * (formula.kind === "WEIGHTED_MEAN" ? member.weight : 1);
+  return {
+    value: roundTo(sum(included.map((member) => weighted(member, Number(member.value)))) / divisor, 2),
+    maximum: roundTo(sum(included.map((member) => weighted(member, member.maximum))) / divisor, 2),
+    state: "PRESENT",
+    includedMemberKeys: included.map((member) => member.key)
+  };
+}
+
+export function calculateCohortStatistics(
+  subjectKey: string,
+  records: CohortResultRecord[]
+): CohortStatistics | null {
+  const valid = records.filter((record) =>
+    record.subjectKey === subjectKey &&
+    record.state === "PRESENT" &&
+    record.value != null &&
+    record.maximum > 0 &&
+    record.value >= 0 &&
+    record.value <= record.maximum
+  );
+  if (!valid.length) return null;
+  const percentages = valid.map((record) => Number(record.value) / record.maximum * 100);
+  return {
+    classAveragePercentage: roundTo(average(percentages), 2),
+    highScorePercentage: roundTo(Math.max(...percentages), 2),
+    validRecordCount: valid.length
+  };
+}
+
 export async function renderRefinedSourceLockedPage(
   kind: RefinedPageKind,
   mode: RefinedColourMode,
@@ -417,6 +535,44 @@ export async function renderR4EdgePack(identity: ReportSchoolIdentitySnapshot = 
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
 
+export const R41_VISUAL_PAGES = [
+  { kind: "CLASS_IX_COMBINED", mode: "COLOUR" },
+  { kind: "CLASS_X_CT_REVISION", mode: "COLOUR" },
+  { kind: "CLASS_II_SESSION", mode: "MONOCHROME" },
+  { kind: "CLASS_IX_COMBINED", mode: "MONOCHROME" }
+] as const satisfies ReadonlyArray<{ kind: RefinedPageKind; mode: RefinedColourMode }>;
+
+export async function renderR41VisualPack(identity: ReportSchoolIdentitySnapshot = DEFAULT_IDENTITY) {
+  const document = await PDFDocument.create();
+  const assets = await embedAssets(document, identity);
+  for (const specimen of R41_VISUAL_PAGES) {
+    const page = document.addPage([A4.width, A4.height]);
+    drawPage(page, assets, identity, specimen.kind, specimen.mode, false);
+  }
+  document.setTitle("VISUAL-DIRECTION-PACK-R4-1");
+  document.setSubject("Synthetic-only final numerical and true-monochrome review");
+  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  return Buffer.from(await document.save({ useObjectStreams: false }));
+}
+
+export async function renderR41EdgePack(identity: ReportSchoolIdentitySnapshot = DEFAULT_IDENTITY) {
+  const document = await PDFDocument.create();
+  const assets = await embedAssets(document, identity);
+  for (const specimen of [
+    { kind: "CLASS_IX_COMBINED", mode: "COLOUR" },
+    { kind: "CLASS_X_CT_REVISION", mode: "COLOUR" },
+    { kind: "CLASS_II_SESSION", mode: "MONOCHROME" },
+    { kind: "CLASS_IX_COMBINED", mode: "MONOCHROME" }
+  ] as const) {
+    const page = document.addPage([A4.width, A4.height]);
+    drawPage(page, assets, identity, specimen.kind, specimen.mode, true);
+  }
+  document.setTitle("EDGE-CASE-RENDERING-PACK-R4-1");
+  document.setSubject("Synthetic-only grouped calculation, cohort, state, and wrapping evidence");
+  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  return Buffer.from(await document.save({ useObjectStreams: false }));
+}
+
 export function buildSyntheticAcademicSnapshot(
   kind: Exclude<RefinedPageKind, "KG_COVER" | "KG_PROFILE" | "KG_INTELLECTUAL">,
   edgeCase = false
@@ -459,23 +615,31 @@ export function validateAcademicReportSnapshot(report: AcademicReportSnapshot) {
       }
     }
     if (subject.kind === "DERIVED") {
-      const sources = subject.derivedFrom.map((key) => byKey.get(key));
-      if (sources.some((source) => !source || !hasNumericTotal(source))) {
-        throw new Error("Derived subject source is missing for " + subject.label + ".");
-      }
-      const numericSources = sources.filter(hasNumericTotal);
-      const expectedMaximum = roundTo(average(numericSources.map((source) => source.total.maximum)), 2);
-      const expectedValue = roundTo(average(numericSources.map((source) => Number(source.total.value))), 2);
-      if (!close(subject.total.maximum, expectedMaximum) || !close(subject.total.value, expectedValue)) {
+      const sources = new Map(subject.derivedFrom.flatMap((key) => {
+        const source = byKey.get(key);
+        if (!source || source.kind === "GRADE_ONLY") return [];
+        return [[key, {
+          key,
+          maximum: source.total.maximum,
+          value: source.total.value,
+          state: source.total.state
+        }] as const];
+      }));
+      const expected = calculateSubjectGroupResult(subject.groupFormula, subject.derivedFrom, sources);
+      if (
+        expected.state !== "PRESENT" || expected.maximum == null || expected.value == null ||
+        !close(subject.total.maximum, expected.maximum) || !close(subject.total.value, expected.value)
+      ) {
         throw new Error("Derived subject total does not reconcile for " + subject.label + ".");
       }
-      if (subject.grade !== gradeForScale(expectedValue / expectedMaximum * 100, report.gradeScale)) {
+      if (subject.grade !== gradeForScale(expected.value / expected.maximum * 100, report.gradeScale)) {
         throw new Error("Subject grade does not use the report grade scale for " + subject.label + ".");
       }
     }
     if (subject.kind === "COMBINED") {
       if (!report.combinedScheme) throw new Error("Combined report requires its frozen examination scheme.");
       validateCombinedSubject(subject, report.combinedScheme);
+      if (subject.groupFormula) validateCombinedGroupSubject(subject, byKey);
       if (subject.grade !== gradeForScale(Number(subject.total.value) / subject.total.maximum * 100, report.gradeScale)) {
         throw new Error("Subject grade does not use the report grade scale for " + subject.label + ".");
       }
@@ -522,20 +686,79 @@ export function validateAcademicReportSnapshot(report: AcademicReportSnapshot) {
     }
     if (
       point.classSnapshotId !== report.classSnapshotId ||
+      subject.classAveragePercentage == null ||
+      subject.highScorePercentage == null ||
       !close(point.classAveragePercentage, subject.classAveragePercentage) ||
       !close(point.highScorePercentage, subject.highScorePercentage)
     ) {
       throw new Error("Chart comparison values do not use the frozen class snapshot.");
     }
     if (
+      point.studentPercentage < 0 ||
+      point.studentPercentage > 100 ||
       point.classAveragePercentage < 0 ||
       point.highScorePercentage > 100 ||
-      point.classAveragePercentage > point.highScorePercentage
+      point.classAveragePercentage > point.highScorePercentage ||
+      point.studentPercentage > point.highScorePercentage
     ) {
       throw new Error("Chart class comparison values are invalid.");
     }
   }
   return report;
+}
+
+function validateCombinedGroupSubject(
+  subject: CombinedMarksSubject,
+  byKey: Map<string, AcademicSubjectSnapshot>
+) {
+  if (!subject.groupFormula || subject.aggregateOf.length === 0) {
+    throw new Error("Grouped combined subject requires its frozen group formula and members.");
+  }
+  const members = subject.aggregateOf.map((key) => byKey.get(key));
+  if (members.some((member) => !member || member.kind !== "COMBINED" || member.groupFormula)) {
+    throw new Error("Grouped combined subject source is missing for " + subject.label + ".");
+  }
+  const combinedMembers = members.filter((member): member is CombinedMarksSubject =>
+    Boolean(member && member.kind === "COMBINED" && !member.groupFormula)
+  );
+  const expected = calculateSubjectGroupResult(
+    subject.groupFormula,
+    subject.aggregateOf,
+    new Map(combinedMembers.map((member) => [member.key, {
+      key: member.key,
+      maximum: member.total.maximum,
+      value: member.total.value,
+      state: member.total.state
+    }]))
+  );
+  if (
+    expected.state !== "PRESENT" ||
+    expected.value == null ||
+    expected.maximum == null ||
+    !close(subject.total.value, expected.value) ||
+    !close(subject.total.maximum, expected.maximum)
+  ) {
+    throw new Error("Grouped combined result does not reconcile for " + subject.label + ".");
+  }
+  const fields: Array<keyof CombinedResultValues> = [
+    "ct1", "ia1", "ct2", "ia2", "ct3", "ia3", "ctWeighted",
+    "terminalRaw", "terminalWeighted", "annualRaw", "annualWeighted", "gradePoint"
+  ];
+  for (const field of fields) {
+    const fieldResult = calculateSubjectGroupResult(
+      subject.groupFormula,
+      subject.aggregateOf,
+      new Map(combinedMembers.map((member) => [member.key, {
+        key: member.key,
+        maximum: field === "gradePoint" ? 10 : field.endsWith("Raw") ? 100 : 100,
+        value: member.combined[field],
+        state: "PRESENT" as const
+      }]))
+    );
+    if (fieldResult.value == null || !close(subject.combined[field], fieldResult.value)) {
+      throw new Error("Grouped combined component does not reconcile for " + subject.label + ".");
+    }
+  }
 }
 
 function validateCombinedSubject(subject: CombinedMarksSubject, scheme: CombinedSchemeSnapshot) {
@@ -603,7 +826,7 @@ function drawKgCover(
   page.drawRectangle({ x: 220, y: 42, width: 375, height: 32, color: colors.kgGreenDark });
   page.drawRectangle({ x: 37, y: 151, width: A4.width - 74, height: 455, color: colors.kgCream, opacity: 0.58 });
   page.drawRectangle({ x: 44, y: 158, width: A4.width - 88, height: 441, borderColor: colors.kgPink, borderWidth: 1.5 });
-  if (assets.logo) page.drawImage(assets.logo, { x: (A4.width - 52) / 2, y: 510, width: 52, height: 52 });
+  if (assets.colourLogo) page.drawImage(assets.colourLogo, { x: (A4.width - 52) / 2, y: 510, width: 52, height: 52 });
   centered(page, "NALANDA", assets.fonts.school, 22, 478, colors.kgPinkDark);
   centered(page, "PUBLIC SCHOOL", assets.fonts.school, 22, 452, colors.kgPinkDark);
   centered(page, "PROGRESS REPORT", assets.fonts.bold, 17, 407, colors.kgInk);
@@ -692,7 +915,7 @@ function drawAcademic(
   mode: RefinedColourMode,
   report: AcademicReportSnapshot
 ) {
-  drawAcademicHeader(page, assets, identity, colors);
+  drawAcademicHeader(page, assets, identity, colors, mode);
   const identityBottom = drawIdentity(page, assets.fonts, colors, report);
   centered(page, report.examination, assets.fonts.bold, 13.5, A4.height - identityBottom - 31, colors.ink);
   const tableTop = identityBottom + 42;
@@ -703,6 +926,7 @@ function drawAcademic(
   } else {
     contentBottom = drawStandardTables(page, assets.fonts, colors, report, tableTop);
   }
+  contentBottom = drawGroupResultNote(page, assets.fonts, colors, report, contentBottom);
   contentBottom = drawResultStateLegend(page, assets.fonts, colors, report, contentBottom);
   let top = contentBottom + 8;
   top = drawSummary(page, assets.fonts, colors, report, top) + 9;
@@ -713,6 +937,18 @@ function drawAcademic(
   top = drawChart(page, assets.fonts, colors, report, 37, top, fullWidth, chartHeight, mode) + 9;
   drawGradeLegend(page, assets.fonts, colors, 37, top, fullWidth, report.gradeLegend);
   drawSignatures(page, assets.fonts, colors);
+}
+
+function drawGroupResultNote(
+  page: PDFPage,
+  fonts: Fonts,
+  colors: Palette,
+  report: AcademicReportSnapshot,
+  top: number
+) {
+  return report.subjects.some((subject) => subject.aggregateOf.length > 0)
+    ? drawWrappedBox(page, fonts.regular, colors, 37, top, A4.width - 74, GROUP_RESULT_NOTE, R4_MINIMUM_FONT_SIZES.legend, 18)
+    : top;
 }
 
 function drawResultStateLegend(
@@ -741,8 +977,9 @@ function drawResultStateLegend(
     : top;
 }
 
-function drawAcademicHeader(page: PDFPage, assets: Assets, identity: ReportSchoolIdentitySnapshot, colors: Palette) {
-  if (assets.logo) page.drawImage(assets.logo, { x: 112, y: 748, width: 64, height: 64 });
+function drawAcademicHeader(page: PDFPage, assets: Assets, identity: ReportSchoolIdentitySnapshot, colors: Palette, mode: RefinedColourMode) {
+  const logo = mode === "MONOCHROME" ? assets.monochromeLogo : assets.colourLogo;
+  if (logo) page.drawImage(logo, { x: 112, y: 748, width: 64, height: 64 });
   centered(page, identity.schoolName.toUpperCase(), assets.fonts.school, 21, 786, colors.ink, 45);
   const approvedLines = [
     identity.affiliationWording,
@@ -807,7 +1044,7 @@ function drawStandardTables(page: PDFPage, fonts: Fonts, colors: Palette, report
   ];
   const rows = report.subjects.map((subject) => ({
     cells: standardSubjectCells(subject, report.componentColumns, report),
-    bold: subject.kind === "DERIVED"
+    bold: subject.aggregateOf.length > 0
   }));
   const marksBottom = drawTable(page, fonts, colors, 37, top, widths, headers, rows, {
     headerHeight: dense ? 28 : 32,
@@ -867,7 +1104,7 @@ function drawCombinedTable(page: PDFPage, fonts: Fonts, colors: Palette, report:
   const widths = [subjectWidth, ...columns.map(() => remaining / columns.length)];
   const rows = report.subjects.map((subject) => ({
     cells: combinedSubjectCells(subject),
-    bold: subject.kind === "COMBINED" && subject.label.includes("Average")
+    bold: subject.aggregateOf.length > 0
   }));
   let bottom = drawTable(page, fonts, colors, 37, top, widths, ["Subject", ...columns], rows, {
     headerHeight: 34,
@@ -1215,7 +1452,7 @@ function primaryReport(classSection: "II-A" | "V-A", upper: boolean, edgeCase: b
       ["evs", "Environmental Studies", 19, 71], ["computer", "Computer Applications", 20, 75],
       ["telugu", "Telugu", 16, 70]
     ];
-  const subjects: AcademicSubjectSnapshot[] = values.map(([key, label, internal, written], index) => {
+  const subjects: AcademicSubjectSnapshot[] = values.map(([key, label, internal, written]) => {
     const notEntered = edgeCase && key === "math";
     const absent = edgeCase && key === "hindi";
     return marksSubject(
@@ -1226,8 +1463,6 @@ function primaryReport(classSection: "II-A" | "V-A", upper: boolean, edgeCase: b
       notEntered ? ["PRESENT", "NOT_ENTERED"] : absent ? ["PRESENT", "ABSENT"] : ["PRESENT", "PRESENT"],
       true,
       !notEntered,
-      70 + index * 1.4,
-      94 + index % 3 * 2,
       gradeScale
     );
   });
@@ -1283,7 +1518,7 @@ function groupedReport(classSection: "VI-A" | "X-A", classX: boolean, edgeCase: 
       ["math", "Mathematics", 19, 43], ["physics", "Physics", 19, 58], ["chemistry", "Chemistry", 20, 69],
       ["biology", "Biology", 18, 70], ["computer", "Computers", 18, 48], ["telugu", "Telugu", 19, 63]
     ];
-  const baseRows = raw.map(([key, label, internal, written], index) =>
+  const baseRows = raw.map(([key, label, internal, written]) =>
     marksSubject(
       String(key),
       edgeCase && key === "computer" ? "Computer Applications and Information Technology" : String(label),
@@ -1292,16 +1527,14 @@ function groupedReport(classSection: "VI-A" | "X-A", classX: boolean, edgeCase: 
       edgeCase && key === "math" ? ["PRESENT", "NOT_ENTERED"] : ["PRESENT", "PRESENT"],
       ["hindi", "math", "computer", "telugu"].includes(String(key)),
       !edgeCase || key !== "math",
-      65 + index * 1.6,
-      92 + index % 4 * 2,
       gradeScale
     )
   );
   const byKey = new Map(baseRows.map((row) => [row.key, row]));
   const derived = [
-    derivedSubject("englishAverage", "English Average", ["english1", "english2"], byKey, true, 69, 96, gradeScale),
-    derivedSubject("socialAverage", "Social Average", ["history", "geography"], byKey, true, 72, 98, gradeScale),
-    derivedSubject("scienceAverage", "Science Average", ["physics", "chemistry", "biology"], byKey, true, 70, 97, gradeScale)
+    derivedSubject("englishAverage", "English Average", ["english1", "english2"], byKey, true, gradeScale),
+    derivedSubject("socialAverage", "Social Average", ["history", "geography"], byKey, true, gradeScale),
+    derivedSubject("scienceAverage", "Science Average", ["physics", "chemistry", "biology"], byKey, true, gradeScale)
   ];
   const order: AcademicSubjectSnapshot[] = [
     baseRows[0], baseRows[1], derived[0], baseRows[2], baseRows[3], baseRows[4], derived[1],
@@ -1337,23 +1570,32 @@ function groupedReport(classSection: "VI-A" | "X-A", classX: boolean, edgeCase: 
 function combinedReport(edgeCase: boolean) {
   const scheme = SYNTHETIC_COMBINED_SCHEME;
   const gradeScale = STANDARD_GRADE_SCALE;
-  const labels = [
-    ["english1", "English Paper 1"], ["english2", "English Paper 2"], ["englishAverage", "English Average"],
-    ["hindi", "Hindi"], ["math", "Mathematics"], ["physics", "Physics"], ["biology", "Biology"],
-    ["chemistry", "Chemistry"], ["scienceAverage", "Science Average"], ["geography", "Geography"],
-    ["history", "History"], ["socialAverage", "Social Average"], ["computer", "Computers"]
+  const leafDefinitions: Array<[string, string, number, boolean]> = [
+    ["english1", "English Paper 1", 0, false], ["english2", "English Paper 2", 1, false],
+    ["hindi", "Hindi", 3, true], ["math", "Mathematics", 4, true],
+    ["physics", "Physics", 5, false], ["biology", "Biology", 6, false],
+    ["chemistry", "Chemistry", 7, false], ["geography", "Geography", 9, false],
+    ["history", "History", 10, false], ["computer", "Computers", 12, true]
   ];
-  const subjects = labels.map(([key, label], index) => combinedSubject(
+  const leaves = leafDefinitions.map(([key, label, fixtureIndex, includeInOverall]) => combinedSubject(
     key,
     edgeCase && key === "math" ? "Mathematics with Advanced Applications and Projects" : label,
-    index,
-    ["englishAverage", "hindi", "math", "scienceAverage", "socialAverage", "computer"].includes(key),
+    fixtureIndex,
+    includeInOverall,
     scheme,
-    gradeScale,
-    key === "englishAverage" ? ["english1", "english2"] :
-      key === "scienceAverage" ? ["physics", "chemistry", "biology"] :
-      key === "socialAverage" ? ["geography", "history"] : []
+    gradeScale
   ));
+  const byKey = new Map(leaves.map((subject) => [subject.key, subject]));
+  const englishAverage = combinedGroupSubject("englishAverage", "English Average", ["english1", "english2"], byKey, scheme, gradeScale);
+  const scienceAverage = combinedGroupSubject("scienceAverage", "Science Average", ["physics", "biology", "chemistry"], byKey, scheme, gradeScale);
+  const socialAverage = combinedGroupSubject("socialAverage", "Social Average", ["geography", "history"], byKey, scheme, gradeScale);
+  const subjects: CombinedMarksSubject[] = [
+    byKey.get("english1")!, byKey.get("english2")!, englishAverage,
+    byKey.get("hindi")!, byKey.get("math")!, byKey.get("physics")!, byKey.get("biology")!,
+    byKey.get("chemistry")!, scienceAverage, byKey.get("geography")!, byKey.get("history")!,
+    socialAverage, byKey.get("computer")!
+  ];
+  const includedGradePoint = roundTo(average(subjects.filter((subject) => subject.includeInOverall).map((subject) => subject.combined.gradePoint)), 2);
   return finalizeReport({
     snapshotId: "R4-IX-A-COMBINED",
     classSnapshotId: "R4-IX-A-COMBINED-CLASS",
@@ -1373,7 +1615,7 @@ function combinedReport(edgeCase: boolean) {
     subjects,
     traits: [],
     traitTitle: null,
-    gradePoint: null,
+    gradePoint: includedGradePoint,
     rank: null,
     remarks: edgeCase
       ? "Demonstrates steady improvement across a dense combined reporting structure and uses detailed feedback purposefully."
@@ -1389,8 +1631,6 @@ function marksSubject(
   states: MarkState[],
   includeInOverall: boolean,
   chartIncluded: boolean,
-  classAveragePercentage: number,
-  highScorePercentage: number,
   gradeScale: GradeScaleSnapshot
 ): StandardMarksSubject {
   const components = columns.map((column, index) => ({
@@ -1417,8 +1657,8 @@ function marksSubject(
     grade: complete ? gradeForScale(value! / maximum * 100, gradeScale) : resultStateCode(missingState),
     includeInOverall: includeInOverall && complete,
     chartIncluded: chartIncluded && complete,
-    classAveragePercentage,
-    highScorePercentage,
+    classAveragePercentage: null,
+    highScorePercentage: null,
     aggregateOf: []
   };
 }
@@ -1429,24 +1669,35 @@ function derivedSubject(
   derivedFrom: string[],
   byKey: Map<string, StandardMarksSubject>,
   includeInOverall: boolean,
-  classAveragePercentage: number,
-  highScorePercentage: number,
   gradeScale: GradeScaleSnapshot
 ): DerivedMarksSubject {
-  const sources = derivedFrom.map((sourceKey) => byKey.get(sourceKey)!);
-  const maximum = roundTo(average(sources.map((source) => source.total.maximum)), 2);
-  const value = roundTo(average(sources.map((source) => Number(source.total.value))), 2);
+  const calculation = calculateSubjectGroupResult(
+    SYNTHETIC_GROUP_FORMULA,
+    derivedFrom,
+    new Map([...byKey].map(([sourceKey, source]) => [sourceKey, {
+      key: sourceKey,
+      maximum: source.total.maximum,
+      value: source.total.value,
+      state: source.total.state
+    }]))
+  );
+  if (calculation.state !== "PRESENT" || calculation.value == null || calculation.maximum == null) {
+    throw new Error("Synthetic grouped subject is unavailable for " + label + ".");
+  }
+  const maximum = calculation.maximum;
+  const value = calculation.value;
   return {
     kind: "DERIVED",
     key,
     label,
     derivedFrom,
+    groupFormula: SYNTHETIC_GROUP_FORMULA,
     total: { maximum, value, state: "PRESENT" },
     grade: gradeForScale(value / maximum * 100, gradeScale),
     includeInOverall,
     chartIncluded: true,
-    classAveragePercentage,
-    highScorePercentage,
+    classAveragePercentage: null,
+    highScorePercentage: null,
     aggregateOf: derivedFrom
   };
 }
@@ -1460,8 +1711,8 @@ function gradeOnlySubject(key: string, label: string, grade: string | null, stat
     state,
     includeInOverall: false,
     chartIncluded: false,
-    classAveragePercentage: 0,
-    highScorePercentage: 0,
+    classAveragePercentage: null,
+    highScorePercentage: null,
     aggregateOf: []
   };
 }
@@ -1472,8 +1723,7 @@ function combinedSubject(
   index: number,
   includeInOverall: boolean,
   scheme: CombinedSchemeSnapshot,
-  gradeScale: GradeScaleSnapshot,
-  aggregateOf: string[]
+  gradeScale: GradeScaleSnapshot
 ): CombinedMarksSubject {
   const ct1 = 38 + index % 7;
   const ia1 = 8 + index % 3;
@@ -1502,6 +1752,7 @@ function combinedSubject(
       terminalRaw, terminalWeighted, annualRaw, annualWeighted,
       gradePoint: 7 + index % 3 * 0.5
     },
+    groupFormula: null,
     total: {
       maximum: totalMaximum,
       value: totalValue,
@@ -1510,9 +1761,86 @@ function combinedSubject(
     grade: gradeForScale(totalValue / totalMaximum * 100, gradeScale),
     includeInOverall,
     chartIncluded: true,
-    classAveragePercentage: 68 + index % 8,
-    highScorePercentage: 91 + index % 5,
-    aggregateOf
+    classAveragePercentage: null,
+    highScorePercentage: null,
+    aggregateOf: []
+  };
+}
+
+function combinedGroupSubject(
+  key: string,
+  label: string,
+  memberKeys: string[],
+  byKey: Map<string, CombinedMarksSubject>,
+  scheme: CombinedSchemeSnapshot,
+  gradeScale: GradeScaleSnapshot
+): CombinedMarksSubject {
+  const members = memberKeys.map((memberKey) => byKey.get(memberKey));
+  if (members.some((member) => !member)) throw new Error("Synthetic combined group member is missing for " + label + ".");
+  const validMembers = members.filter((member): member is CombinedMarksSubject => Boolean(member));
+  const calculateField = (field: keyof CombinedResultValues) => {
+    const result = calculateSubjectGroupResult(
+      SYNTHETIC_GROUP_FORMULA,
+      memberKeys,
+      new Map(validMembers.map((member) => [member.key, {
+        key: member.key,
+        maximum: field === "gradePoint" ? 10 : 100,
+        value: member.combined[field],
+        state: "PRESENT" as const
+      }]))
+    );
+    if (result.state !== "PRESENT" || result.value == null) {
+      throw new Error("Synthetic combined group field is unavailable for " + label + ".");
+    }
+    return result.value;
+  };
+  const total = calculateSubjectGroupResult(
+    SYNTHETIC_GROUP_FORMULA,
+    memberKeys,
+    new Map(validMembers.map((member) => [member.key, {
+      key: member.key,
+      maximum: member.total.maximum,
+      value: member.total.value,
+      state: member.total.state
+    }]))
+  );
+  if (total.state !== "PRESENT" || total.value == null || total.maximum == null) {
+    throw new Error("Synthetic combined group result is unavailable for " + label + ".");
+  }
+  const combined: CombinedResultValues = {
+    ct1: calculateField("ct1"),
+    ia1: calculateField("ia1"),
+    ct2: calculateField("ct2"),
+    ia2: calculateField("ia2"),
+    ct3: calculateField("ct3"),
+    ia3: calculateField("ia3"),
+    ctWeighted: calculateField("ctWeighted"),
+    terminalRaw: calculateField("terminalRaw"),
+    terminalWeighted: calculateField("terminalWeighted"),
+    annualRaw: calculateField("annualRaw"),
+    annualWeighted: calculateField("annualWeighted"),
+    gradePoint: calculateField("gradePoint")
+  };
+  const weightedTotal = roundTo(combined.ctWeighted + combined.terminalWeighted + combined.annualWeighted, 2);
+  if (!close(weightedTotal, total.value)) {
+    throw new Error("Synthetic grouped weighted fields do not reconcile for " + label + ".");
+  }
+  if (!close(total.maximum, scheme.ctWeight + scheme.terminalWeight + scheme.annualWeight)) {
+    throw new Error("Synthetic grouped maximum does not reconcile for " + label + ".");
+  }
+  return {
+    kind: "COMBINED",
+    key,
+    label,
+    combined,
+    groupFormula: SYNTHETIC_GROUP_FORMULA,
+    total: { maximum: total.maximum, value: total.value, state: "PRESENT" },
+    grade: gradeForScale(total.value / total.maximum * 100, gradeScale),
+    includeInOverall: true,
+    chartIncluded: true,
+    classAveragePercentage: null,
+    highScorePercentage: null,
+    aggregateOf: memberKeys
   };
 }
 
@@ -1547,14 +1875,8 @@ function finalizeReport(input: {
   const maximum = roundTo(sum(included.map((subject) => subject.total.maximum)), 2);
   const value = roundTo(sum(included.map((subject) => roundTo(Number(subject.total.value), 2))), 2);
   const percentage = maximum ? roundTo(value / maximum * 100, 2) : 0;
-  const chartPoints = selectChartSubjects(input.subjects, input.chartPolicy).map((subject) => ({
-    subjectKey: subject.key,
-    subjectLabel: subject.label,
-    studentPercentage: roundTo(Number(subject.total.value) / subject.total.maximum * 100, 2),
-    classAveragePercentage: subject.classAveragePercentage,
-    highScorePercentage: subject.highScorePercentage,
-    classSnapshotId: input.classSnapshotId
-  }));
+  const cohort = buildSyntheticCohortRecords(input.subjects, input.chartPolicy);
+  const chartPoints = buildChartPointsFromCohort(input.subjects, input.chartPolicy, input.classSnapshotId, cohort);
   return {
     ...base,
     combinedScheme,
@@ -1584,6 +1906,61 @@ export function selectChartSubjects(subjects: AcademicSubjectSnapshot[], policy:
   }
   const aggregateSources = new Set(candidates.flatMap((subject) => subject.aggregateOf));
   return candidates.filter((subject) => subject.aggregateOf.length > 0 || !aggregateSources.has(subject.key));
+}
+
+export function buildSyntheticCohortRecords(
+  subjects: AcademicSubjectSnapshot[],
+  policy: ChartRowPolicy
+): CohortResultRecord[] {
+  return selectChartSubjects(subjects, policy).flatMap((subject, index) => {
+    const maximum = subject.total.maximum;
+    const studentValue = Number(subject.total.value);
+    const studentPercentage = studentValue / maximum * 100;
+    const peerPercentages = [
+      63 + index % 5,
+      72 + index % 7,
+      82 + index % 6,
+      Math.min(100, Math.max(studentPercentage, 94 + index % 7))
+    ];
+    return [
+      { studentKey: "SYNTHETIC-CURRENT", subjectKey: subject.key, maximum, value: studentValue, state: "PRESENT" as const },
+      ...peerPercentages.map((percentage, peerIndex) => ({
+        studentKey: "SYNTHETIC-PEER-" + (peerIndex + 1),
+        subjectKey: subject.key,
+        maximum,
+        value: roundTo(maximum * percentage / 100, 2),
+        state: "PRESENT" as const
+      })),
+      { studentKey: "SYNTHETIC-EXCLUDED-AB", subjectKey: subject.key, maximum, value: null, state: "ABSENT" as const },
+      { studentKey: "SYNTHETIC-EXCLUDED-NE", subjectKey: subject.key, maximum, value: null, state: "NOT_ENTERED" as const }
+    ];
+  });
+}
+
+export function buildChartPointsFromCohort(
+  subjects: AcademicSubjectSnapshot[],
+  policy: ChartRowPolicy,
+  classSnapshotId: string,
+  cohort: CohortResultRecord[]
+) {
+  return selectChartSubjects(subjects, policy).flatMap((subject) => {
+    const statistics = calculateCohortStatistics(subject.key, cohort);
+    if (!statistics) {
+      subject.classAveragePercentage = null;
+      subject.highScorePercentage = null;
+      return [];
+    }
+    subject.classAveragePercentage = statistics.classAveragePercentage;
+    subject.highScorePercentage = statistics.highScorePercentage;
+    return [{
+      subjectKey: subject.key,
+      subjectLabel: subject.label,
+      studentPercentage: roundTo(Number(subject.total.value) / subject.total.maximum * 100, 2),
+      classAveragePercentage: statistics.classAveragePercentage,
+      highScorePercentage: statistics.highScorePercentage,
+      classSnapshotId
+    }];
+  });
 }
 
 function displayComponent(component: MarkComponentSnapshot) {
@@ -1769,7 +2146,7 @@ function palette(mode: RefinedColourMode) {
   return {
     paper: mono ? rgb(1, 1, 1) : rgb(0.995, 0.992, 0.975),
     white: rgb(1, 1, 1),
-    ink: rgb(0.08, 0.1, 0.11),
+    ink: mono ? rgb(0.1, 0.1, 0.1) : rgb(0.08, 0.1, 0.11),
     border: mono ? rgb(0.2, 0.2, 0.2) : rgb(0.35, 0.42, 0.43),
     band: mono ? rgb(0.86, 0.86, 0.86) : rgb(0.86, 0.9, 0.89),
     grid: mono ? rgb(0.65, 0.65, 0.65) : rgb(0.72, 0.76, 0.76),
@@ -1784,7 +2161,7 @@ function palette(mode: RefinedColourMode) {
     kgGreenDark: mono ? rgb(0.52, 0.52, 0.52) : rgb(0.49, 0.69, 0.32),
     kgGreenText: mono ? rgb(0.22, 0.22, 0.22) : rgb(0.16, 0.42, 0.32),
     kgCream: mono ? rgb(0.97, 0.97, 0.97) : rgb(0.95, 0.96, 0.88),
-    kgInk: rgb(0.13, 0.15, 0.14)
+    kgInk: mono ? rgb(0.14, 0.14, 0.14) : rgb(0.13, 0.15, 0.14)
   };
 }
 
@@ -1794,8 +2171,12 @@ async function embedAssets(document: PDFDocument, identity: ReportSchoolIdentity
   const bold = await embedFont(document, ["arialbd.ttf", "Arial Bold.ttf"], StandardFonts.HelveticaBold);
   const school = await embedFont(document, ["georgiab.ttf", "Georgia Bold.ttf"], StandardFonts.TimesRomanBold);
   const logoPath = path.resolve(process.cwd(), "public", identity.logoPath.replace(/^\//, ""));
-  const logo = await readFile(logoPath).then((bytes) => document.embedPng(bytes)).catch(() => null);
-  return { fonts: { regular, bold, school }, logo };
+  const logoBytes = await readFile(logoPath).catch(() => null);
+  const colourLogo = logoBytes ? await document.embedPng(logoBytes) : null;
+  const monochromeLogo = logoBytes
+    ? await sharp(logoBytes).grayscale().png().toBuffer().then((bytes) => document.embedPng(bytes))
+    : null;
+  return { fonts: { regular, bold, school }, colourLogo, monochromeLogo };
 }
 
 async function embedFont(document: PDFDocument, candidates: string[], fallback: StandardFonts) {

@@ -1,8 +1,8 @@
 # Report-Card Source-Fidelity Recalibration
 
-**Prompts:** `REPORT-PRINT-ACCEPT-1A-R` through `REPORT-PRINT-ACCEPT-1A-R4`
+**Prompts:** `REPORT-PRINT-ACCEPT-1A-R` through `REPORT-PRINT-ACCEPT-1A-R4.1`
 **Preserved technical checkpoint:** `1620cbbcf67448f6d6e783568b384307413fae39`  
-**Current state:** `R4_FINAL_PRE_PRINT_CORRECTION_READY_FOR_USER_REVIEW`
+**Current state:** `R4_1_FINAL_PREPRINT_READY_FOR_USER_REVIEW`
 **Physical printing:** paused and not authorised
 
 ## Classification of the previous result
@@ -62,3 +62,15 @@ The legacy academic pages omit the per-subject academic Grade column by default 
 Displayed contributing subject totals are rounded deterministically to two decimals before the displayed overall total is summed. Percentage, grade, rank basis and Student chart values use that same frozen snapshot. The legacy chart policy is `LEGACY_LEAF_SUBJECTS`, so leaf rows and their averages are not shown together. Result states use `AB`, `EX`, `NE` and `NA`, with a printed legend whenever any code appears.
 
 The ignored R4 review pack contains eight requested pages; the separate four-page edge pack covers long identities and all four result-state codes. Both remain digital review evidence only. The full pack and physical printing remain paused.
+
+## R4.1 numerical and true-monochrome correction
+
+R4.1 freezes the approved R4 architecture. It changes only grouped-result arithmetic, cohort comparison invariants, the explanatory group-row note, and the monochrome colour space.
+
+Class IX `English Average`, `Science Average`, and `Social Average` are now derived from their visible configured members through the frozen arithmetic-mean formula. The corrected visible contributing total is `484.07 / 600`; percentage, grade, Grade Point, rank basis, and Student chart values are regenerated from the same two-decimal snapshot. Grouped reports print the plain-language note that shaded group-result rows contribute to the overall total while individual papers remain detailed references.
+
+Class comparison values are generated from one synthetic class/section cohort. Present zero and decimal results remain valid; absent and not-entered records are excluded from comparison statistics. Each chart enforces `0 <= Student <= High Score <= Maximum` and `Class Average <= High Score`; an unavailable cohort suppresses comparison output rather than inventing values.
+
+`NALANDA_LEGACY_REFINED_MONOCHROME` embeds a grayscale derivative of the official transparent logo at the original proportions and uses neutral RGB values for every visual element. Solid, diagonal-hatch, and horizontal-line chart patterns remain unchanged. Raster inspection of every R4.1 monochrome review page requires equal RGB channels within a two-level antialiasing tolerance.
+
+The ignored R4.1 micro-review pack contains Class IX colour, Class X colour, Class II true-monochrome, and Class IX true-monochrome. The separate four-page edge pack covers grouped calculation, cohort high-score invariants, all compact result states, and long wrapping. Neither pack is authorised for physical printing.
