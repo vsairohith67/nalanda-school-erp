@@ -82,11 +82,17 @@ export type MarkComponentSnapshot = {
 type SubjectBase = {
   key: string;
   label: string;
+  chartDisplayLabel: VersionedChartDisplayLabel | null;
   includeInOverall: boolean;
   chartIncluded: boolean;
   classAveragePercentage: number | null;
   highScorePercentage: number | null;
   aggregateOf: string[];
+};
+
+export type VersionedChartDisplayLabel = {
+  value: string;
+  configurationVersion: number;
 };
 
 export type SubjectGroupFormulaSnapshot = {
@@ -191,10 +197,24 @@ export type AcademicSubjectSnapshot =
 export type ChartPointSnapshot = {
   subjectKey: string;
   subjectLabel: string;
+  chartDisplayLabel: VersionedChartDisplayLabel | null;
   studentPercentage: number;
   classAveragePercentage: number;
   highScorePercentage: number;
   classSnapshotId: string;
+};
+
+export type ChartTextBox = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type ChartNumericLabelPlacement = ChartTextBox & {
+  text: string;
+  centerX: number;
+  barTopY: number;
 };
 
 export type CohortResultRecord = {
@@ -573,6 +593,117 @@ export async function renderR41EdgePack(identity: ReportSchoolIdentitySnapshot =
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
 
+export type FinalAcademicPageSpec = {
+  specimenId: string;
+  classFamily: "CLASSES_I_II" | "CLASSES_III_V" | "CLASSES_VI_VIII" | "CLASSES_IX_X";
+  examinationLayout: "CT" | "SESSION" | "GROUPED" | "REVISION" | "PREBOARD" | "COMBINED";
+  baseKind: Exclude<RefinedPageKind, "KG_COVER" | "KG_PROFILE" | "KG_INTELLECTUAL">;
+  classSection: string;
+  examination: string;
+  componentProfile: "CT" | "SESSION" | "COMBINED_STANDARD" | null;
+  distinctReason: string;
+  physicalInclude: boolean;
+};
+
+export const FINAL_KG_PAGE_SPECS = [
+  { specimenId: "KG-01-COVER", title: "Cover", distinctReason: "Decorative booklet cover and identity box" },
+  { specimenId: "KG-02-PROFILE", title: "Student Profile", distinctReason: "Profile fields and photograph space" },
+  { specimenId: "KG-03-INSTRUCTIONS", title: "Instructions", distinctReason: "Booklet instructions and five-evaluation key" },
+  { specimenId: "KG-04-INTELLECTUAL", title: "Intellectual Skills", distinctReason: "Five-evaluation grouped hierarchy" },
+  { specimenId: "KG-05-ENGLISH", title: "English Development", distinctReason: "Detailed English development table" },
+  { specimenId: "KG-06-HINDI-NUMBER", title: "Hindi and Number Work", distinctReason: "Hindi and Number Work development structure" },
+  { specimenId: "KG-07-EVS-CREATIVE", title: "EVS, Rhymes and Story", distinctReason: "EVS, Rhymes, Story and creative development structure" },
+  { specimenId: "KG-08-GROWTH", title: "Personality, Attendance and Growth", distinctReason: "Personality, monthly attendance and physical growth" },
+  { specimenId: "KG-09-PROMOTION", title: "Comments and Promotion", distinctReason: "Comments, promotion and signature areas" },
+  { specimenId: "KG-10-BACK", title: "Back Cover", distinctReason: "Canonical final cover and booklet closure" }
+] as const;
+
+export const FINAL_ACADEMIC_PAGE_SPECS: readonly FinalAcademicPageSpec[] = [
+  { specimenId: "I-II-CT", classFamily: "CLASSES_I_II", examinationLayout: "CT", baseKind: "CLASS_II_SESSION", classSection: "II-A", examination: "COMPREHENSIVE TEST 1", componentProfile: "CT", distinctReason: "Classes I-II CT component maxima", physicalInclude: false },
+  { specimenId: "I-II-SESSION", classFamily: "CLASSES_I_II", examinationLayout: "SESSION", baseKind: "CLASS_II_SESSION", classSection: "II-A", examination: "SESSION END EXAMINATION", componentProfile: "SESSION", distinctReason: "Classes I-II marks with adjacent skills table", physicalInclude: true },
+  { specimenId: "I-II-COMBINED", classFamily: "CLASSES_I_II", examinationLayout: "COMBINED", baseKind: "CLASS_II_SESSION", classSection: "II-A", examination: "COMBINED RESULT", componentProfile: "COMBINED_STANDARD", distinctReason: "Classes I-II configured combined-result columns", physicalInclude: true },
+  { specimenId: "III-V-CT", classFamily: "CLASSES_III_V", examinationLayout: "CT", baseKind: "CLASS_V_SESSION", classSection: "V-A", examination: "COMPREHENSIVE TEST 1", componentProfile: "CT", distinctReason: "Classes III-V CT with separate Science and Social", physicalInclude: false },
+  { specimenId: "III-V-SESSION", classFamily: "CLASSES_III_V", examinationLayout: "SESSION", baseKind: "CLASS_V_SESSION", classSection: "V-A", examination: "SESSION END EXAMINATION", componentProfile: "SESSION", distinctReason: "Classes III-V separate Science and Social with skills", physicalInclude: true },
+  { specimenId: "III-V-COMBINED", classFamily: "CLASSES_III_V", examinationLayout: "COMBINED", baseKind: "CLASS_V_SESSION", classSection: "V-A", examination: "COMBINED RESULT", componentProfile: "COMBINED_STANDARD", distinctReason: "Classes III-V configured combined columns with separate Science and Social", physicalInclude: true },
+  { specimenId: "VI-VIII-CT", classFamily: "CLASSES_VI_VIII", examinationLayout: "CT", baseKind: "CLASS_VI_GROUPED", classSection: "VI-A", examination: "COMPREHENSIVE TEST 1", componentProfile: "CT", distinctReason: "Classes VI-VIII grouped-subject CT columns", physicalInclude: false },
+  { specimenId: "VI-VIII-SESSION", classFamily: "CLASSES_VI_VIII", examinationLayout: "SESSION", baseKind: "CLASS_VI_GROUPED", classSection: "VIII-A", examination: "SESSION END EXAMINATION", componentProfile: "SESSION", distinctReason: "Classes VI-VIII grouped subjects and personality table", physicalInclude: false },
+  { specimenId: "VI-VIII-GROUPED", classFamily: "CLASSES_VI_VIII", examinationLayout: "GROUPED", baseKind: "CLASS_VI_GROUPED", classSection: "VI-A", examination: "GROUPED SUBJECT SESSION REPORT", componentProfile: "SESSION", distinctReason: "English, Social and Science member rows with shaded group results", physicalInclude: true },
+  { specimenId: "VI-VIII-COMBINED", classFamily: "CLASSES_VI_VIII", examinationLayout: "COMBINED", baseKind: "CLASS_VI_GROUPED", classSection: "VIII-A", examination: "COMBINED RESULT", componentProfile: "COMBINED_STANDARD", distinctReason: "Classes VI-VIII grouped combined-result columns", physicalInclude: true },
+  { specimenId: "IX-X-CT", classFamily: "CLASSES_IX_X", examinationLayout: "CT", baseKind: "CLASS_X_CT_REVISION", classSection: "X-A", examination: "COMPREHENSIVE TEST 1", componentProfile: "CT", distinctReason: "Class X CT grouped-subject structure", physicalInclude: false },
+  { specimenId: "IX-X-SESSION", classFamily: "CLASSES_IX_X", examinationLayout: "SESSION", baseKind: "CLASS_X_CT_REVISION", classSection: "X-A", examination: "SESSION END EXAMINATION", componentProfile: "SESSION", distinctReason: "Class X Session component maxima", physicalInclude: false },
+  { specimenId: "IX-X-REVISION", classFamily: "CLASSES_IX_X", examinationLayout: "REVISION", baseKind: "CLASS_X_CT_REVISION", classSection: "X-A", examination: "REVISION EXAMINATION", componentProfile: "CT", distinctReason: "Class X Revision title with one-page grouped structure", physicalInclude: true },
+  { specimenId: "IX-X-PREBOARD", classFamily: "CLASSES_IX_X", examinationLayout: "PREBOARD", baseKind: "CLASS_X_CT_REVISION", classSection: "X-A", examination: "PREBOARD EXAMINATION", componentProfile: "SESSION", distinctReason: "Class X Preboard component maxima", physicalInclude: false },
+  { specimenId: "IX-X-COMBINED", classFamily: "CLASSES_IX_X", examinationLayout: "COMBINED", baseKind: "CLASS_IX_COMBINED", classSection: "IX-A", examination: "COMBINED RESULT", componentProfile: null, distinctReason: "Dense Class IX combined-result columns and grade point", physicalInclude: true }
+] as const;
+
+export async function renderFinalSourceLockedPack(
+  mode: RefinedColourMode,
+  identity: ReportSchoolIdentitySnapshot = DEFAULT_IDENTITY
+) {
+  return renderFinalPageCollection(mode, identity, FINAL_ACADEMIC_PAGE_SPECS, true, "RC-SYN-final-" + mode.toLowerCase());
+}
+
+export async function renderPhysicalAcceptancePack(
+  mode: RefinedColourMode,
+  identity: ReportSchoolIdentitySnapshot = DEFAULT_IDENTITY
+) {
+  return renderFinalPageCollection(
+    mode,
+    identity,
+    FINAL_ACADEMIC_PAGE_SPECS.filter((specimen) => specimen.physicalInclude),
+    true,
+    "PHYSICAL-ACCEPTANCE-" + mode.toLowerCase()
+  );
+}
+
+export async function renderR42EdgePack(identity: ReportSchoolIdentitySnapshot = DEFAULT_IDENTITY) {
+  const document = await PDFDocument.create();
+  const assets = await embedAssets(document, identity);
+  for (const specimen of [
+    { kind: "CLASS_IX_COMBINED", mode: "COLOUR" },
+    { kind: "CLASS_X_CT_REVISION", mode: "COLOUR" },
+    { kind: "CLASS_II_SESSION", mode: "MONOCHROME" },
+    { kind: "CLASS_IX_COMBINED", mode: "MONOCHROME" }
+  ] as const) {
+    const page = document.addPage([A4.width, A4.height]);
+    drawPage(page, assets, identity, specimen.kind, specimen.mode, true);
+  }
+  document.setTitle("EDGE-CASE-RENDERING-PACK-R4-2");
+  document.setSubject("Synthetic-only chart-label, state, decimal, and wrapping evidence");
+  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  setDeterministicPdfDates(document);
+  return Buffer.from(await document.save({ useObjectStreams: false }));
+}
+
+async function renderFinalPageCollection(
+  mode: RefinedColourMode,
+  identity: ReportSchoolIdentitySnapshot,
+  academicSpecimens: readonly FinalAcademicPageSpec[],
+  includeKgBooklet: boolean,
+  title: string
+) {
+  const document = await PDFDocument.create();
+  const assets = await embedAssets(document, identity);
+  if (includeKgBooklet) {
+    FINAL_KG_PAGE_SPECS.forEach((_, index) => {
+      const page = document.addPage([A4.width, A4.height]);
+      drawFinalKgPage(page, assets, identity, palette(mode), mode, index + 1);
+      drawFooter(page, assets.fonts, mode, false);
+    });
+  }
+  for (const specimen of academicSpecimens) {
+    const page = document.addPage([A4.width, A4.height]);
+    page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: palette(mode).paper });
+    drawAcademic(page, assets, identity, palette(mode), mode, buildFinalAcademicSnapshot(specimen));
+    drawFooter(page, assets.fonts, mode, false);
+  }
+  document.setTitle(title);
+  document.setSubject("Synthetic-only NALANDA_LEGACY_REFINED physical acceptance candidate");
+  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  setDeterministicPdfDates(document);
+  return Buffer.from(await document.save({ useObjectStreams: false }));
+}
+
 export function buildSyntheticAcademicSnapshot(
   kind: Exclude<RefinedPageKind, "KG_COVER" | "KG_PROFILE" | "KG_INTELLECTUAL">,
   edgeCase = false
@@ -585,6 +716,104 @@ export function buildSyntheticAcademicSnapshot(
     combinedReport(edgeCase);
   validateAcademicReportSnapshot(report);
   return report;
+}
+
+export function buildFinalAcademicSnapshot(specimen: FinalAcademicPageSpec) {
+  const base = buildSyntheticAcademicSnapshot(specimen.baseKind, false);
+  if (base.layout === "COMBINED" || specimen.componentProfile == null) {
+    const report = structuredClone(base) as AcademicReportSnapshot;
+    report.snapshotId = "R42-" + specimen.specimenId;
+    report.summarySnapshotId = report.snapshotId;
+    report.classSnapshotId = report.snapshotId + "-CLASS";
+    report.classSection = specimen.classSection;
+    report.examination = specimen.examination;
+    report.chartPoints.forEach((point) => { point.classSnapshotId = report.classSnapshotId; });
+    validateAcademicReportSnapshot(report);
+    return report;
+  }
+  const columns = componentColumnsForFinalProfile(specimen.componentProfile);
+  const leafRows = new Map<string, StandardMarksSubject>();
+  base.subjects.forEach((subject, index) => {
+    if (subject.kind !== "MARKS") return;
+    const sourcePercentage = subject.total.value == null
+      ? 70 + index % 7
+      : Number(subject.total.value) / subject.total.maximum * 100;
+    const values = columns.map((column, columnIndex) => {
+      const adjusted = Math.max(0, Math.min(100, sourcePercentage + (columnIndex === 0 ? -2 : 1.5)));
+      return roundTo(column.maximum * adjusted / 100, 2);
+    });
+    const rebuilt = marksSubject(
+      subject.key,
+      subject.label,
+      columns,
+      values,
+      columns.map(() => "PRESENT" as const),
+      subject.includeInOverall,
+      subject.chartIncluded,
+      base.gradeScale
+    );
+    rebuilt.chartDisplayLabel = subject.chartDisplayLabel;
+    leafRows.set(subject.key, rebuilt);
+  });
+  const subjects = base.subjects.map((subject): AcademicSubjectSnapshot => {
+    if (subject.kind === "MARKS") return leafRows.get(subject.key)!;
+    if (subject.kind === "DERIVED") {
+      const rebuilt = derivedSubject(
+        subject.key,
+        subject.label,
+        subject.derivedFrom,
+        leafRows,
+        subject.includeInOverall,
+        base.gradeScale
+      );
+      rebuilt.chartDisplayLabel = subject.chartDisplayLabel;
+      return rebuilt;
+    }
+    return structuredClone(subject);
+  });
+  const report = finalizeReport({
+    snapshotId: "R42-" + specimen.specimenId,
+    classSnapshotId: "R42-" + specimen.specimenId + "-CLASS",
+    classSection: specimen.classSection,
+    examination: specimen.examination,
+    studentName: base.studentName,
+    guardianName: base.guardianName,
+    admissionNumber: base.admissionNumber,
+    rollNumber: base.rollNumber,
+    parentGuardianLabel: base.parentGuardianLabel,
+    layout: "STANDARD",
+    componentColumns: columns,
+    showAcademicSubjectGrade: base.showAcademicSubjectGrade,
+    chartPolicy: base.chartPolicy,
+    gradeScale: base.gradeScale,
+    subjects,
+    traits: base.traits,
+    traitTitle: base.traitTitle,
+    gradePoint: base.overall.gradePoint,
+    rank: base.overall.rank,
+    remarks: base.remarks
+  });
+  validateAcademicReportSnapshot(report);
+  return report;
+}
+
+function componentColumnsForFinalProfile(profile: Exclude<FinalAcademicPageSpec["componentProfile"], null>) {
+  if (profile === "CT") {
+    return [
+      { key: "internalAssessment", label: "Internal Assessment", maximum: 10 },
+      { key: "writtenExamination", label: "Written Examination", maximum: 40 }
+    ];
+  }
+  if (profile === "COMBINED_STANDARD") {
+    return [
+      { key: "comprehensiveTestResult", label: "Comprehensive Test Result", maximum: 50 },
+      { key: "sessionEndResult", label: "Session End Result", maximum: 100 }
+    ];
+  }
+  return [
+    { key: "internalAssessment", label: "Internal Assessment", maximum: 20 },
+    { key: "writtenExamination", label: "Written Examination", maximum: 80 }
+  ];
 }
 
 export function validateAcademicReportSnapshot(report: AcademicReportSnapshot) {
@@ -803,11 +1032,207 @@ function drawPage(
 ) {
   const colors = palette(mode);
   page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: colors.paper });
-  if (kind === "KG_COVER") drawKgCover(page, assets, identity, colors, edgeCase);
+  if (kind === "KG_COVER") drawKgCover(page, assets, identity, colors, mode, edgeCase);
   else if (kind === "KG_PROFILE") drawKgProfile(page, assets, identity, colors, edgeCase);
   else if (kind === "KG_INTELLECTUAL") drawKgIntellectual(page, assets, identity, colors, edgeCase);
   else drawAcademic(page, assets, identity, colors, mode, buildSyntheticAcademicSnapshot(kind, edgeCase));
   drawFooter(page, assets.fonts, mode, edgeCase);
+}
+
+function drawFinalKgPage(
+  page: PDFPage,
+  assets: Assets,
+  identity: ReportSchoolIdentitySnapshot,
+  colors: Palette,
+  mode: RefinedColourMode,
+  pageNumber: number
+) {
+  page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: colors.paper });
+  if (pageNumber === 1) return drawKgCover(page, assets, identity, colors, mode, false);
+  if (pageNumber === 2) return drawKgProfile(page, assets, identity, colors, false);
+  if (pageNumber === 3) return drawKgInstructions(page, assets, identity, colors);
+  if (pageNumber === 4) return drawKgIntellectual(page, assets, identity, colors, false);
+  if (pageNumber === 5) return drawKgDevelopmentPage(page, assets, identity, colors, "ENGLISH DEVELOPMENT", [
+    "Letter recognition", "Phonic awareness", "Picture reading", "Word reading", "Conversation in English",
+    "Recitation", "Written Work", "Dictation", "Home Assignment", "Listening and expression"
+  ]);
+  if (pageNumber === 6) return drawKgDevelopmentPage(page, assets, identity, colors, "HINDI AND NUMBER WORK", [
+    "Hindi - Reading", "Hindi - Recitation", "Hindi - Written Work", "Recognition of Numbers",
+    "Number Operations", "Mathematics - Written Work", "Mathematics - Dictation",
+    "Mathematics - Home Assignment", "Shapes and patterns", "Practical number concepts"
+  ]);
+  if (pageNumber === 7) return drawKgDevelopmentPage(page, assets, identity, colors, "EVS, RHYMES AND STORY", [
+    "Environmental awareness", "Observation and discovery", "General knowledge", "Rhymes - memory and rhythm",
+    "Rhymes - expression", "Story - listening", "Story - narration", "Drawing and Colouring",
+    "Creative activity", "Overall development"
+  ]);
+  if (pageNumber === 8) return drawKgPersonalityAttendanceGrowth(page, assets, identity, colors);
+  if (pageNumber === 9) return drawKgCommentsPromotion(page, assets, identity, colors);
+  return drawKgBackCover(page, assets, identity, colors, mode);
+}
+
+function drawKgPageHeading(
+  page: PDFPage,
+  assets: Assets,
+  identity: ReportSchoolIdentitySnapshot,
+  colors: Palette,
+  title: string
+) {
+  drawKgFrame(page, colors);
+  centered(page, title, assets.fonts.school, 18, 772, colors.kgPinkDark);
+  page.drawText(identity.academicYear, { x: 472, y: 775, size: 7.5, font: assets.fonts.bold, color: colors.kgGreenText });
+}
+
+function drawKgInstructions(
+  page: PDFPage,
+  assets: Assets,
+  identity: ReportSchoolIdentitySnapshot,
+  colors: Palette
+) {
+  drawKgPageHeading(page, assets, identity, colors, "GUIDANCE FOR THE BOOKLET");
+  const introduction = [
+    "This developmental booklet records growth across five evaluation periods.",
+    "Ratings describe observed progress and are not marks, rank or examination percentages.",
+    "Teachers record each configured area using the approved evaluation scheme.",
+    "Parent / Guardian comments and signatures support a continuous school-home dialogue.",
+    "Attendance and physical-growth entries use the frozen reporting-period snapshot.",
+    "Blank or not-applicable areas remain visually distinct and are never inferred."
+  ];
+  let top = 126;
+  introduction.forEach((text, index) => {
+    const lines = wrapText(`${index + 1}. ${text}`, assets.fonts.regular, 10, 430);
+    const height = Math.max(42, 16 + lines.length * 13);
+    rectTop(page, 74, top, 447, height, index % 2 ? colors.kgCream : colors.white, colors.kgGreenText, 0.55);
+    lines.forEach((line, lineIndex) => page.drawText(line, {
+      x: 87,
+      y: A4.height - top - 19 - lineIndex * 13,
+      size: 10,
+      font: assets.fonts.regular,
+      color: colors.kgInk
+    }));
+    top += height + 10;
+  });
+  centered(page, "Evaluation I   Evaluation II   Evaluation III   Evaluation IV   Evaluation V", assets.fonts.bold, 9.2, 96, colors.kgPinkDark);
+}
+
+function drawKgDevelopmentPage(
+  page: PDFPage,
+  assets: Assets,
+  identity: ReportSchoolIdentitySnapshot,
+  colors: Palette,
+  title: string,
+  areas: string[]
+) {
+  drawKgPageHeading(page, assets, identity, colors, title);
+  const headers = ["Development Area", "Evaluation\nI", "Evaluation\nII", "Evaluation\nIII", "Evaluation\nIV", "Evaluation\nV"];
+  const rows = areas.map((area, index) => ({
+    cells: [area, index % 5 === 3 ? "S" : "G", "G", index % 6 === 4 ? "S" : "G", "G", "G"],
+    bold: false
+  }));
+  drawTable(page, assets.fonts, colors, 55, 126, [214, 55, 55, 55, 55, 55], headers, rows, {
+    headerHeight: 46,
+    rowHeight: 42,
+    fontSize: 8.4,
+    firstColumnLeft: true,
+    dynamicRows: true,
+    headerFill: colors.kgPink,
+    headerText: colors.white,
+    sectionFill: colors.kgGreen
+  });
+  centered(page, "G: Good   S: Satisfactory   N: Needs Improvement", assets.fonts.bold, 8.5, 91, colors.kgGreenText);
+}
+
+function drawKgPersonalityAttendanceGrowth(
+  page: PDFPage,
+  assets: Assets,
+  identity: ReportSchoolIdentitySnapshot,
+  colors: Palette
+) {
+  drawKgPageHeading(page, assets, identity, colors, "PERSONALITY, ATTENDANCE AND GROWTH");
+  const personalityRows = ["Confidence", "Courtesy", "Sharing and Caring", "Self-Control", "Regularity", "Participation"]
+    .map((label, index) => ({ cells: [label, index === 4 ? "S" : "G", "G", "G", "G", "G"], bold: false }));
+  let top = drawTable(page, assets.fonts, colors, 55, 117, [214, 55, 55, 55, 55, 55], ["Personality Development", "I", "II", "III", "IV", "V"], personalityRows, {
+    headerHeight: 30,
+    rowHeight: 20,
+    fontSize: 7.8,
+    firstColumnLeft: true,
+    dynamicRows: true,
+    headerFill: colors.kgPink,
+    headerText: colors.white,
+    sectionFill: colors.kgGreen
+  });
+  top += 14;
+  const months = ["June", "July", "August", "September", "October", "November", "December", "January", "February", "March"];
+  top = drawTable(page, assets.fonts, colors, 55, top, [134, ...months.map(() => 36.5)], ["Monthly Attendance", ...months], [
+    { cells: ["Working Days", "20", "22", "21", "20", "19", "21", "18", "21", "20", "22"], bold: false },
+    { cells: ["Days Present", "20", "21", "20", "20", "18", "21", "18", "20", "19", "22"], bold: false }
+  ], {
+    headerHeight: 32,
+    rowHeight: 20,
+    fontSize: 6.8,
+    firstColumnLeft: true,
+    dynamicRows: true,
+    headerFill: colors.kgGreen,
+    headerText: colors.kgInk,
+    sectionFill: colors.kgGreen
+  });
+  top += 14;
+  drawTable(page, assets.fonts, colors, 92, top, [134, 110, 110, 110], ["Physical Growth", "Evaluation I", "Evaluation III", "Evaluation V"], [
+    { cells: ["Height (cm)", "101.0", "104.0", "107.0"], bold: false },
+    { cells: ["Weight (kg)", "15.0", "16.5", "18.0"], bold: false }
+  ], {
+    headerHeight: 30,
+    rowHeight: 22,
+    fontSize: 8,
+    firstColumnLeft: true,
+    dynamicRows: true,
+    headerFill: colors.kgPink,
+    headerText: colors.white,
+    sectionFill: colors.kgGreen
+  });
+}
+
+function drawKgCommentsPromotion(
+  page: PDFPage,
+  assets: Assets,
+  identity: ReportSchoolIdentitySnapshot,
+  colors: Palette
+) {
+  drawKgPageHeading(page, assets, identity, colors, "COMMENTS, PROMOTION AND SIGNATURES");
+  let top = 124;
+  for (const evaluation of ["I", "II", "III", "IV", "V"]) {
+    const comment = `Evaluation ${evaluation}: Synthetic developmental comment recorded for layout and print calibration only.`;
+    top = drawWrappedBox(page, assets.fonts.regular, colors, 69, top, 457, comment, 9, 45) + 8;
+  }
+  rectTop(page, 69, top + 3, 457, 82, colors.kgCream, colors.kgPinkDark, 0.8);
+  page.drawText("Promoted to:", { x: 84, y: A4.height - top - 24, size: 10, font: assets.fonts.bold, color: colors.kgPinkDark });
+  page.drawText("SYNTHETIC NEXT CLASS", { x: 163, y: A4.height - top - 24, size: 10, font: assets.fonts.regular, color: colors.kgInk });
+  page.drawText("Next session begins: 01 April 2100", { x: 84, y: A4.height - top - 49, size: 9.2, font: assets.fonts.regular, color: colors.kgInk });
+  ["Class Teacher", "Principal", "Parent / Guardian", "Director"].forEach((label, index) => {
+    const x = 57 + index * 132;
+    page.drawLine({ start: { x, y: 91 }, end: { x: x + 92, y: 91 }, thickness: 0.55, color: colors.kgGreenText });
+    page.drawText(label, { x: x + 4, y: 76, size: 7.8, font: assets.fonts.bold, color: colors.kgPinkDark });
+  });
+}
+
+function drawKgBackCover(
+  page: PDFPage,
+  assets: Assets,
+  identity: ReportSchoolIdentitySnapshot,
+  colors: Palette,
+  mode: RefinedColourMode
+) {
+  page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: colors.kgGreen });
+  page.drawRectangle({ x: 34, y: 34, width: A4.width - 68, height: A4.height - 68, color: colors.kgCream, borderColor: colors.kgPinkDark, borderWidth: 2 });
+  page.drawRectangle({ x: 49, y: 49, width: A4.width - 98, height: A4.height - 98, borderColor: colors.kgGreenText, borderWidth: 0.8 });
+  const logo = mode === "MONOCHROME" ? assets.monochromeLogo : assets.colourLogo;
+  if (logo) page.drawImage(logo, { x: (A4.width - 74) / 2, y: 492, width: 74, height: 74 });
+  centered(page, "NALANDA", assets.fonts.school, 24, 450, colors.kgPinkDark);
+  centered(page, "PUBLIC SCHOOL", assets.fonts.school, 24, 421, colors.kgPinkDark);
+  centered(page, identity.motto, assets.fonts.regular, 10, 391, colors.kgGreenText);
+  centered(page, "KINDERGARTEN DEVELOPMENTAL BOOKLET", assets.fonts.bold, 12, 329, colors.kgInk);
+  centered(page, identity.addressLine1 + ", " + identity.city, assets.fonts.regular, 9.2, 289, colors.kgInk);
+  centered(page, "Academic Year " + identity.academicYear, assets.fonts.bold, 9.5, 265, colors.kgPinkDark);
 }
 
 function drawKgCover(
@@ -815,6 +1240,7 @@ function drawKgCover(
   assets: Assets,
   identity: ReportSchoolIdentitySnapshot,
   colors: Palette,
+  mode: RefinedColourMode,
   edgeCase: boolean
 ) {
   page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: colors.kgGreen });
@@ -826,7 +1252,8 @@ function drawKgCover(
   page.drawRectangle({ x: 220, y: 42, width: 375, height: 32, color: colors.kgGreenDark });
   page.drawRectangle({ x: 37, y: 151, width: A4.width - 74, height: 455, color: colors.kgCream, opacity: 0.58 });
   page.drawRectangle({ x: 44, y: 158, width: A4.width - 88, height: 441, borderColor: colors.kgPink, borderWidth: 1.5 });
-  if (assets.colourLogo) page.drawImage(assets.colourLogo, { x: (A4.width - 52) / 2, y: 510, width: 52, height: 52 });
+  const logo = mode === "MONOCHROME" ? assets.monochromeLogo : assets.colourLogo;
+  if (logo) page.drawImage(logo, { x: (A4.width - 52) / 2, y: 510, width: 52, height: 52 });
   centered(page, "NALANDA", assets.fonts.school, 22, 478, colors.kgPinkDark);
   centered(page, "PUBLIC SCHOOL", assets.fonts.school, 22, 452, colors.kgPinkDark);
   centered(page, "PROGRESS REPORT", assets.fonts.bold, 17, 407, colors.kgInk);
@@ -1228,10 +1655,10 @@ function drawChart(
   mode: RefinedColourMode
 ) {
   rectTop(page, x, top, width, height, colors.white, colors.border, 0.7);
-  const bottom = A4.height - top - height + 22;
+  const bottom = A4.height - top - height + 29;
   const left = x + 24;
   const chartWidth = width - 36;
-  const chartHeight = height - 52;
+  const chartHeight = height - 61;
   page.drawText("Student Marks (%)", { x: x + 8, y: A4.height - top - 16, size: 9, font: fonts.bold, color: colors.ink });
   const legendX = x + width - 226;
   const series = [
@@ -1249,9 +1676,16 @@ function drawChart(
     page.drawLine({ start: { x: left, y }, end: { x: left + chartWidth, y }, thickness: 0.35, color: colors.grid, dashArray: [2, 2] });
     page.drawText(String(tick), { x: left - 18, y: y - 2, size: R4_MINIMUM_FONT_SIZES.chartLabel, font: fonts.regular, color: colors.ink });
   }
-  const slot = chartWidth / report.chartPoints.length;
-  report.chartPoints.forEach((point, index) => {
+  const categoryLayout = resolveChartCategoryLayout(
+    report.chartPoints,
+    chartWidth,
+    (text) => fonts.regular.widthOfTextAtSize(text, R4_MINIMUM_FONT_SIZES.chartLabel)
+  );
+  const numericInputs: Array<{ text: string; centerX: number; barTopY: number }> = [];
+  categoryLayout.categories.forEach(({ point, lines }, index) => {
+    const slot = categoryLayout.slot;
     const values = [point.studentPercentage, point.classAveragePercentage, point.highScorePercentage];
+    const displayedValues = formatChartNumericValues(values);
     values.forEach((value, seriesIndex) => {
       const barWidth = Math.max(4.5, Math.min(9, slot / 4));
       const barX = left + index * slot + slot / 2 - barWidth * 1.5 + seriesIndex * barWidth;
@@ -1259,20 +1693,51 @@ function drawChart(
       drawPatternedRectangle(page, {
         x: barX, y: bottom, width: barWidth - 0.7, height: barHeight
       }, series[seriesIndex].color, colors.ink, mode === "MONOCHROME" ? series[seriesIndex].pattern : "SOLID");
-      page.drawText(formatNumber(value), {
-        x: barX - 1, y: bottom + barHeight + 2, size: R4_MINIMUM_FONT_SIZES.chartLabel, font: fonts.bold, color: colors.ink
+      numericInputs.push({
+        text: displayedValues[seriesIndex],
+        centerX: barX + (barWidth - 0.7) / 2,
+        barTopY: bottom + barHeight
       });
     });
-    const labelLines = wrapText(chartLabel(point.subjectLabel), fonts.regular, R4_MINIMUM_FONT_SIZES.chartLabel, slot - 2);
-    labelLines.slice(0, 2).forEach((line, lineIndex) => page.drawText(line, {
-      x: left + index * slot + 1,
+    lines.forEach((line, lineIndex) => page.drawText(line, {
+      x: left + index * slot + (slot - fonts.regular.widthOfTextAtSize(line, R4_MINIMUM_FONT_SIZES.chartLabel)) / 2,
       y: bottom - 9 - lineIndex * 7,
       size: R4_MINIMUM_FONT_SIZES.chartLabel,
       font: fonts.regular,
       color: colors.ink
     }));
   });
-  return top + height;
+  const numericLabels = layoutChartNumericLabels(
+    numericInputs,
+    { left, right: left + chartWidth, bottom: bottom + 1, top: bottom + chartHeight - 1 },
+    R4_MINIMUM_FONT_SIZES.chartLabel,
+    (text) => fonts.bold.widthOfTextAtSize(text, R4_MINIMUM_FONT_SIZES.chartLabel)
+  );
+  numericLabels.forEach((label) => page.drawText(label.text, {
+    x: label.x,
+    y: label.y,
+    size: R4_MINIMUM_FONT_SIZES.chartLabel,
+    font: fonts.bold,
+    color: colors.ink
+  }));
+  if (!categoryLayout.categories.length) {
+    centeredInBox(page, ["Chart unavailable: no subject label fits without word loss."], fonts.regular, R4_MINIMUM_FONT_SIZES.legend, {
+      x: left, y: bottom, width: chartWidth, height: chartHeight
+    }, colors.ink);
+  }
+  if (!categoryLayout.omitted.length) return top + height;
+  const omittedNames = categoryLayout.omitted.map((point) => point.subjectLabel).join("; ");
+  return drawWrappedBox(
+    page,
+    fonts.regular,
+    colors,
+    x,
+    top + height,
+    width,
+    "Chart scope: omitted for label legibility - " + omittedNames + ". Complete results remain in the marks table.",
+    R4_MINIMUM_FONT_SIZES.legend,
+    18
+  );
 }
 
 function drawGradeLegend(
@@ -1657,6 +2122,7 @@ function marksSubject(
     grade: complete ? gradeForScale(value! / maximum * 100, gradeScale) : resultStateCode(missingState),
     includeInOverall: includeInOverall && complete,
     chartIncluded: chartIncluded && complete,
+    chartDisplayLabel: null,
     classAveragePercentage: null,
     highScorePercentage: null,
     aggregateOf: []
@@ -1696,6 +2162,7 @@ function derivedSubject(
     grade: gradeForScale(value / maximum * 100, gradeScale),
     includeInOverall,
     chartIncluded: true,
+    chartDisplayLabel: null,
     classAveragePercentage: null,
     highScorePercentage: null,
     aggregateOf: derivedFrom
@@ -1711,6 +2178,7 @@ function gradeOnlySubject(key: string, label: string, grade: string | null, stat
     state,
     includeInOverall: false,
     chartIncluded: false,
+    chartDisplayLabel: null,
     classAveragePercentage: null,
     highScorePercentage: null,
     aggregateOf: []
@@ -1761,6 +2229,7 @@ function combinedSubject(
     grade: gradeForScale(totalValue / totalMaximum * 100, gradeScale),
     includeInOverall,
     chartIncluded: true,
+    chartDisplayLabel: null,
     classAveragePercentage: null,
     highScorePercentage: null,
     aggregateOf: []
@@ -1838,6 +2307,7 @@ function combinedGroupSubject(
     grade: gradeForScale(total.value / total.maximum * 100, gradeScale),
     includeInOverall: true,
     chartIncluded: true,
+    chartDisplayLabel: null,
     classAveragePercentage: null,
     highScorePercentage: null,
     aggregateOf: memberKeys
@@ -1955,6 +2425,7 @@ export function buildChartPointsFromCohort(
     return [{
       subjectKey: subject.key,
       subjectLabel: subject.label,
+      chartDisplayLabel: subject.chartDisplayLabel,
       studentPercentage: roundTo(Number(subject.total.value) / subject.total.maximum * 100, 2),
       classAveragePercentage: statistics.classAveragePercentage,
       highScorePercentage: statistics.highScorePercentage,
@@ -2036,7 +2507,10 @@ function rectTop(page: PDFPage, x: number, top: number, width: number, height: n
 }
 
 function wrapText(value: string, font: PDFFont, size: number, maximumWidth: number) {
-  const paragraphs = String(value).replace(/[^\x20-\x7E\n]/g, "-").split("\n");
+  const paragraphs = String(value)
+    .replace(/\r\n?/g, "\n")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .split("\n");
   const lines: string[] = [];
   for (const paragraph of paragraphs) {
     const words = paragraph.trim().split(/\s+/).filter(Boolean);
@@ -2076,12 +2550,180 @@ function splitLongToken(value: string, font: PDFFont, size: number, maximumWidth
   return chunks;
 }
 
-function chartLabel(value: string) {
-  return value
-    .replace("English Paper 1", "English P1")
-    .replace("English Paper 2", "English P2")
-    .replace("Computer Applications and Information Technology", "Computers")
-    .replace("Computer Applications and Digital Learning Foundations", "Computers");
+export const CHART_LABEL_CONTRACT_VERSION = 1;
+
+export function resolveChartDisplayText(point: Pick<ChartPointSnapshot, "subjectLabel" | "chartDisplayLabel">) {
+  const configured = point.chartDisplayLabel;
+  if (configured) {
+    if (!Number.isInteger(configured.configurationVersion) || configured.configurationVersion < 1) {
+      throw new Error("Configured chart label requires a positive version.");
+    }
+    const value = configured.value.trim().replace(/\s+/g, " ");
+    if (!value) throw new Error("Configured chart label cannot be empty.");
+    requireNoChartEllipsis(value);
+    return value;
+  }
+  const value = point.subjectLabel.trim().replace(/\s+/g, " ");
+  if (!value) throw new Error("Official subject label cannot be empty.");
+  requireNoChartEllipsis(value);
+  return value;
+}
+
+export function wrapCompleteChartLabel(
+  value: string,
+  maximumWidth: number,
+  measure: (text: string) => number,
+  maximumLines = 3
+) {
+  const sourceText = String(value).trim().replace(/\s+/g, " ");
+  requireNoChartEllipsis(sourceText);
+  if (!sourceText || maximumWidth <= 0 || maximumLines < 1) {
+    return { sourceText, lines: [] as string[], complete: false };
+  }
+  const lines: string[] = [];
+  let current = "";
+  const pushLine = () => {
+    if (!current) return true;
+    lines.push(current);
+    current = "";
+    return lines.length <= maximumLines;
+  };
+  for (const word of sourceText.split(" ")) {
+    const chunks = splitMeasuredToken(word, maximumWidth, measure);
+    for (const chunk of chunks) {
+      const candidate = current ? current + " " + chunk : chunk;
+      if (!current || measure(candidate) <= maximumWidth) {
+        current = candidate;
+      } else {
+        if (!pushLine()) return { sourceText, lines: [], complete: false };
+        current = chunk;
+      }
+    }
+  }
+  if (!pushLine() || lines.length > maximumLines) {
+    return { sourceText, lines: [], complete: false };
+  }
+  return { sourceText, lines, complete: true };
+}
+
+export function resolveChartCategoryLayout(
+  points: ChartPointSnapshot[],
+  chartWidth: number,
+  measure: (text: string) => number,
+  maximumLines = 3
+) {
+  let visible = [...points];
+  const omitted = new Map<string, ChartPointSnapshot>();
+  let resolved: Array<{ point: ChartPointSnapshot; displayText: string; lines: string[] }> = [];
+  while (visible.length) {
+    const slot = chartWidth / visible.length;
+    const next: typeof resolved = [];
+    let changed = false;
+    for (const point of visible) {
+      const displayText = resolveChartDisplayText(point);
+      const wrapped = wrapCompleteChartLabel(displayText, Math.max(1, slot - 2), measure, maximumLines);
+      if (!wrapped.complete) {
+        omitted.set(point.subjectKey, point);
+        changed = true;
+      } else next.push({ point, displayText, lines: wrapped.lines });
+    }
+    resolved = next;
+    if (!changed) break;
+    visible = next.map((item) => item.point);
+  }
+  return {
+    categories: resolved,
+    omitted: [...omitted.values()],
+    slot: resolved.length ? chartWidth / resolved.length : chartWidth
+  };
+}
+
+export function formatChartNumericValues(values: number[]) {
+  const oneDecimal = values.map((value) => Number.isInteger(value) ? String(value) : trimFixed(value, 1));
+  return values.map((value, index) => {
+    if (Number.isInteger(value)) return String(value);
+    const one = oneDecimal[index];
+    const requiresTwoDecimals = values.some((candidate, candidateIndex) =>
+      candidateIndex !== index &&
+      oneDecimal[candidateIndex] === one &&
+      roundTo(Math.abs(candidate - value), 2) >= 0.01
+    );
+    return requiresTwoDecimals ? trimFixed(value, 2) : one;
+  });
+}
+
+export function layoutChartNumericLabels(
+  inputs: Array<{ text: string; centerX: number; barTopY: number }>,
+  bounds: { left: number; right: number; bottom: number; top: number },
+  fontSize: number,
+  measure: (text: string) => number
+): ChartNumericLabelPlacement[] {
+  const placements: ChartNumericLabelPlacement[] = [];
+  const step = fontSize + 1.25;
+  const verticalOffsets = [0];
+  for (let level = 1; level <= 12; level += 1) verticalOffsets.push(level * step, -level * step);
+  for (const input of inputs) {
+    const width = measure(input.text);
+    const preferredY = Math.min(bounds.top - fontSize, Math.max(bounds.bottom, input.barTopY + 2));
+    const horizontalOffsets = [0, -Math.min(4, width * 0.3), Math.min(4, width * 0.3)];
+    let selected: ChartNumericLabelPlacement | null = null;
+    for (const verticalOffset of verticalOffsets) {
+      for (const horizontalOffset of horizontalOffsets) {
+        const x = Math.min(bounds.right - width, Math.max(bounds.left, input.centerX - width / 2 + horizontalOffset));
+        const y = Math.min(bounds.top - fontSize, Math.max(bounds.bottom, preferredY + verticalOffset));
+        const candidate: ChartNumericLabelPlacement = {
+          ...input,
+          x,
+          y,
+          width,
+          height: fontSize
+        };
+        if (!placements.some((placed) => chartTextBoxesOverlap(candidate, placed))) {
+          selected = candidate;
+          break;
+        }
+      }
+      if (selected) break;
+    }
+    if (!selected) throw new Error("Chart numeric labels cannot be placed without collision.");
+    placements.push(selected);
+  }
+  return placements;
+}
+
+export function chartTextBoxesOverlap(left: ChartTextBox, right: ChartTextBox, clearance = 1.5) {
+  return left.x < right.x + right.width + clearance &&
+    left.x + left.width + clearance > right.x &&
+    left.y < right.y + right.height + clearance &&
+    left.y + left.height + clearance > right.y;
+}
+
+function splitMeasuredToken(value: string, maximumWidth: number, measure: (text: string) => number) {
+  if (measure(value) <= maximumWidth) return [value];
+  const chunks: string[] = [];
+  let current = "";
+  for (const character of Array.from(value)) {
+    if (current && measure(current + character) > maximumWidth) {
+      chunks.push(current);
+      current = character;
+    } else current += character;
+  }
+  if (current) chunks.push(current);
+  return chunks;
+}
+
+function requireNoChartEllipsis(value: string) {
+  if (/\.\.\.|…/.test(value)) throw new Error("Final report chart labels cannot contain ellipses.");
+}
+
+function trimFixed(value: number, decimals: number) {
+  return Number(value.toFixed(decimals)).toString();
+}
+
+function setDeterministicPdfDates(document: PDFDocument) {
+  const fixed = new Date("2026-08-11T00:00:00.000Z");
+  document.setCreationDate(fixed);
+  document.setModificationDate(fixed);
 }
 
 function formatNumber(value: number) {
