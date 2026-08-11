@@ -100,6 +100,7 @@
     "qa:exam3": "tsx scripts/qa-exam3-copied-db.ts",
     "qa:exam3qa": "tsx scripts/qa-exam3qa-independent.ts",
     "qa:report-print-accept1a": "tsx scripts/generate-report-print-accept1a-pack.ts",
+    "qa:report-visual-direction": "tsx scripts/generate-report-card-visual-direction-pack.ts",
     "auth:recover-super-admin": "tsx scripts/recover-super-admin.ts",
     "data0a:audit": "node scripts/data0a-provenance-audit.mjs",
     "data0a:backup": "tsx scripts/data0a-encrypted-backup.ts",

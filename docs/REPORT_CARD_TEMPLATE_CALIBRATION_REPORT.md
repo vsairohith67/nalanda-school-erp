@@ -3,7 +3,7 @@
 **Prompt:** `REPORT-PRINT-ACCEPT-1A`
 **Branch:** `reporting/canonical-template-print-acceptance`
 **Starting release:** commit `6693f8d3e4c975be748e8d7f103cd72f2ee36cfc`, tag `release-operations-v41-2026-08-10`, backup version 41
-**Status:** implementation and digital proof pack complete; full verification, external synchronization, and physical acceptance are recorded as separate gates
+**Status:** prior technical rendering checkpoint preserved; physical printing paused for source-fidelity visual-direction approval
 
 ## Privacy and baseline
 
@@ -41,9 +41,9 @@ No real source value is used in generated evidence.
 
 ## Acceptance status
 
-- Restricted source inspection: complete and private.
-- Canonical renderer calibration: complete.
-- Synthetic deterministic PDF/ZIP pack: complete.
-- Focused automated tests: complete.
-- Full sequential verification and Browser QA: pending at this report checkpoint.
-- Physical colour/monochrome/photocopy acceptance: pending unavoidable user-operated gate.
+- Prior technical rendering integrity: complete and preserved at `1620cbbcf67448f6d6e783568b384307413fae39`.
+- Source-layout fidelity: confirmed insufficient before printing; pre-print recalibration in progress.
+- Old physical packs: retained as technical evidence and `SUPERSEDED_FOR_VISUAL_APPROVAL`.
+- Small `LEGACY_EXACT` / `LEGACY_REFINED` visual-direction gate: current gate.
+- Full synthetic print-pack regeneration: not yet approved.
+- Physical colour/monochrome/photocopy acceptance: paused; no physical printing has occurred.

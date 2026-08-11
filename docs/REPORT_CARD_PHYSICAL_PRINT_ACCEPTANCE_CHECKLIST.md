@@ -1,5 +1,7 @@
 # Report-Card Physical Print Acceptance Checklist
 
+> **PAUSED — DO NOT PRINT THE EXISTING PACK.** The prior packs are `SUPERSEDED_FOR_VISUAL_APPROVAL`. Physical printing may resume only after source-fidelity visual-direction approval and regeneration of the approved synthetic pack.
+
 **Gate:** `REPORT-PRINT-ACCEPT-1A-QA`
 **Evidence rule:** synthetic specimens only; never attach or upload a real Student report
 
