@@ -4,6 +4,7 @@
 **Date:** 2026-08-12<br>
 **Branch:** `reporting/canonical-template-print-acceptance`<br>
 **Starting feature commit:** `e33314374e8381f29b9d34c454cecc12dc776274`<br>
+**R5 implementation commit:** `d767ac26fc305e0c3ff77803a8226c225869169f`<br>
 **Synchronized release baseline:** `main` and `origin/main` at `6693f8d3e4c975be748e8d7f103cd72f2ee36cfc`; reachable tag `release-operations-v41-2026-08-10`
 
 ## Scope and gate
