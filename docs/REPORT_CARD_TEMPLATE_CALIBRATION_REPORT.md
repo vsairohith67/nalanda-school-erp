@@ -3,13 +3,13 @@
 **Prompt:** `REPORT-PRINT-ACCEPT-1A`
 **Branch:** `reporting/canonical-template-print-acceptance`
 **Starting release:** commit `6693f8d3e4c975be748e8d7f103cd72f2ee36cfc`, tag `release-operations-v41-2026-08-10`, backup version 41
-**Status:** V1 narrowed to Classes I-X; KG foundation deferred to V1.5; user is still supplying Classes I-X corrections and physical printing remains paused
+**Status:** V1 narrowed to Classes I-X; R5 consolidated corrections complete for digital review; KG foundation deferred to V1.5; physical printing remains paused
 
 ## 2026-08-12 scope amendment
 
 Classes I-X remain the V1 report-card release requirement with status `IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING`. LKG/UKG and the ten-page developmental booklet move to V1.5 with status `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`. This is a governance and availability change only: KG renderers, tests, migrations, historical commits and ignored evidence remain preserved. New KG operational creation, activation, binding and publication are default-off through the existing release-feature-flag framework; immutable issued/historical reports remain readable.
 
-The R4.2 full and physical packs are preserved locally and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`. They must not be printed, and no replacement pack is generated in this phase. The confirmed-but-incomplete Classes I-X correction register is frozen in `docs/REPORT_CARD_V1_SCOPE_AMENDMENT.md`.
+The R4.2 full and physical packs are preserved locally and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`. They must not be printed. The now-complete Classes I-X correction register is implemented in R5, which generates only ignored digital-review packs; no replacement physical pack is generated.
 
 ## Privacy and baseline
 
@@ -39,9 +39,11 @@ Rendered pages, not text extraction, were the layout reference. Source extractio
 - Monochrome charts combine solid, diagonal hatch, horizontal pattern, outlines, and direct values.
 - KG page 8 uses a compact table that retains the configured 8.5-point minimum while keeping the canonical booklet at ten pages.
 
-## Synthetic proof pack
+## R5 synthetic digital-review pack
 
-R4.2 previously generated ignored restart-safe full and physical packs with deterministic colour/monochrome output, ZIP, manifest and printer instructions. Those artifacts remain technical evidence, but their status is now `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`. This amendment does not run the generator. A later authorised R5 phase must generate a new Classes I-X-only pack after the correction register is complete.
+R5 generates an ignored ten-page Classes I-X visual-direction pack and a separate six-page edge-case pack. The visual pack covers I-II Session/Combined, III-V Session, VI-VIII grouped, IX Combined and X CT/Revision in approved colour/true-monochrome combinations. The edge pack covers long names and subjects, AB/EX/NE/NA, close chart values, one-decimal reconciliation, conditional school status and grade boundaries. KG is excluded. The generator verifies deterministic bytes, A4 boxes, stable page counts, pure-white background samples and true grayscale before writing.
+
+R4.2 full and physical artifacts remain preserved technical evidence under `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`; R5 does not regenerate or authorise them.
 
 No real source value is used in generated evidence.
 
@@ -58,7 +60,8 @@ No real source value is used in generated evidence.
 - R4.1 targeted correction: configured group averages, corrected `484.07 / 600` Class IX total, one-cohort chart invariants, conditional group-row note, grayscale official-logo derivative, and rendered RGB-channel validation.
 - R4.1 review evidence: ignored four-page visual micro-pack and separate four-page edge-case pack only; no complete pack regenerated.
 - R4.2 full source-locked packs: generated and digitally verified at `4c0eb0b79e7b7a3b8b0c9bf5864ecf483c6178c1`, then superseded for V1 because they include KG and predate the complete Classes I-X correction register.
-- Classes I-X correction register: confirmed items frozen; user is still supplying additions before R5.
-- Replacement Classes I-X-only pack: not authorised yet and not generated.
+- Classes I-X R5 correction register: confirmed complete and implemented for user digital review.
+- R5 digital evidence: ignored ten-page visual pack and six-page edge-case pack; synthetic-only and not for physical acceptance.
+- Replacement Classes I-X-only physical pack: not authorised yet and not generated.
 - Physical colour/monochrome/photocopy acceptance: paused; no physical printing has occurred.
 - KG operational activation and physical acceptance: V1.5 only; not V1-cleared or production-ready.

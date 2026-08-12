@@ -46,7 +46,7 @@ describe("REPORT-PRINT-ACCEPT-1A V1 scope amendment", () => {
     expect(kgTests).toContain("KG report-card");
   });
 
-  it("records one non-duplicated scope split and freezes all 29 pending corrections", () => {
+  it("records one non-duplicated scope split and preserves all 29 R5 corrections", () => {
     const register = source("docs/REQUIREMENTS_REGISTER.md");
     const amendment = source("docs/REPORT_CARD_V1_SCOPE_AMENDMENT.md");
     const requirementRows = [...register.matchAll(/^\| (V(?:1(?:\.5)?|2)-[A-Z][A-Z-]*-\d{3}) \|/gm)].map((match) => match[1]);
@@ -67,7 +67,8 @@ describe("REPORT-PRINT-ACCEPT-1A V1 scope amendment", () => {
     for (let correction = 1; correction <= 29; correction += 1) {
       expect(amendment.match(new RegExp(`^${correction}\\. `, "gm"))).toHaveLength(1);
     }
-    expect(amendment).toContain("not implemented");
+    expect(amendment).toContain("implemented in both approved Classes I-X variants");
+    expect(amendment).toContain("user visual review");
     expect(amendment).toContain("SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS");
   });
 

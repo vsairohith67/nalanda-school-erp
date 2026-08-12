@@ -1,5 +1,11 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## REPORT-PRINT-ACCEPT-1A-R5 — consolidated Classes I-X correction (2026-08-12)
+
+The user confirmed the 29-item Classes I-X correction register complete. R5 applies the correction consistently to `NALANDA_LEGACY_REFINED_COLOUR` and `NALANDA_LEGACY_REFINED_MONOCHROME`: explicit white A4 canvas, conditional School Settings status line, exact identity labels, balanced academic/co-scholastic regions, full-width G/S/N legend, deterministic one-decimal display reconciliation, exact threshold-derived grade bands, collision-safe charts, and four equal signature areas with approximately 18 mm of clear signing height.
+
+Only ignored synthetic digital-review evidence is generated: a ten-page Classes I-X visual pack and a separate six-page edge-case pack. KG remains preserved, default-off and deferred to V1.5. Superseded physical packs remain untouched; no printing, merge, tag, deployment, publication or real Student data is authorised.
+
 ## REPORT-PRINT-ACCEPT-1A scope amendment — Classes I-X V1 / KG V1.5 (2026-08-12)
 
 The user narrowed V1 report-card acceptance to Classes I-X and deferred LKG/UKG, the ten-page developmental booklet, KG operational activation and KG physical acceptance to V1.5. Completed KG implementation, tests, migrations, commits and ignored evidence remain preserved under `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`; the existing default-off release-feature-flag system removes new KG operational creation, binding and publication controls from V1 without changing issued historical snapshots.

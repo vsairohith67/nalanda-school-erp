@@ -106,7 +106,7 @@ describe("R4 NALANDA_LEGACY_REFINED source lock", () => {
 
   it("uses only the synthetic not-for-issue footer", async () => {
     const source = await readFile(path.resolve(process.cwd(), "lib", "report-card-refined-source-lock.ts"), "utf8");
-    expect(source).toContain("SYNTHETIC SAMPLE - NOT FOR ISSUE");
+    expect(source).toContain("SYNTHETIC SAMPLE — NOT FOR ISSUE");
     expect(source).not.toContain("VISUAL REVIEW - SYNTHETIC DATA ONLY");
     expect(source).not.toContain("EDGE-CASE QA - SYNTHETIC DATA ONLY");
   });

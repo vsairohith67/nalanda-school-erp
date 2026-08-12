@@ -31,6 +31,29 @@ export const R4_MINIMUM_FONT_SIZES = {
   legend: 6.5
 } as const;
 
+export const R5_COSCHOLASTIC_LEGEND = "G — Good     S — Satisfactory     N — Needs Improvement";
+export const R5_IDENTITY_LABELS = [
+  "Student Name",
+  "Parent / Guardian",
+  "Admission No. #",
+  "Class / Section",
+  "Roll Number"
+] as const;
+export const R5_CHART_SERIES = [
+  { label: "Student Marks", monochromePattern: "SOLID" },
+  { label: "Class Average", monochromePattern: "DIAGONAL" },
+  { label: "High Score", monochromePattern: "CROSS_HATCH" }
+] as const;
+export const R5_SIGNATURE_GEOMETRY = {
+  lineY: 65,
+  labelY: 48,
+  clearSigningHeightPt: 51.02,
+  left: 37,
+  width: 595.28 - 74,
+  footerY: 11
+} as const;
+export const R5_MAX_PARENT_FACING_DECIMALS = 1;
+
 export type RefinedPageKind =
   | "KG_COVER"
   | "KG_PROFILE"
@@ -397,6 +420,14 @@ export function resolveReportSchoolIdentity(
   };
 }
 
+export function approvedSchoolStatusLine(identity: ReportSchoolIdentitySnapshot) {
+  return [
+    identity.affiliationWording,
+    identity.recognitionWording,
+    identity.establishmentYear ? "Established " + identity.establishmentYear : null
+  ].filter((value): value is string => Boolean(value)).join("  •  ") || null;
+}
+
 export function templateFamilyForMode(mode: RefinedColourMode): RefinedTemplateFamily {
   return mode === "MONOCHROME"
     ? "NALANDA_LEGACY_REFINED_MONOCHROME"
@@ -547,7 +578,9 @@ export async function renderR4EdgePack(identity: ReportSchoolIdentitySnapshot = 
   const assets = await embedAssets(document, identity);
   for (const kind of ["CLASS_II_SESSION", "CLASS_VI_GROUPED", "CLASS_IX_COMBINED", "CLASS_X_CT_REVISION"] as const) {
     const page = document.addPage([A4.width, A4.height]);
-    drawPage(page, assets, identity, kind, "COLOUR", true);
+    // The primary specimen carries all four compact state codes. Keep the
+    // grouped page representative instead of duplicating the same stress load.
+    drawPage(page, assets, identity, kind, "COLOUR", kind !== "CLASS_VI_GROUPED" && kind !== "CLASS_X_CT_REVISION");
   }
   document.setTitle("EDGE-CASE-RENDERING-PACK-R4");
   document.setSubject("Synthetic-only long-name and AB/EX/NE/NA rendering evidence");
@@ -585,7 +618,7 @@ export async function renderR41EdgePack(identity: ReportSchoolIdentitySnapshot =
     { kind: "CLASS_IX_COMBINED", mode: "MONOCHROME" }
   ] as const) {
     const page = document.addPage([A4.width, A4.height]);
-    drawPage(page, assets, identity, specimen.kind, specimen.mode, true);
+    drawPage(page, assets, identity, specimen.kind, specimen.mode, specimen.kind !== "CLASS_X_CT_REVISION");
   }
   document.setTitle("EDGE-CASE-RENDERING-PACK-R4-1");
   document.setSubject("Synthetic-only grouped calculation, cohort, state, and wrapping evidence");
@@ -675,6 +708,87 @@ export async function renderR42EdgePack(identity: ReportSchoolIdentitySnapshot =
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
 
+export const R5_VISUAL_PAGES = [
+  { specimenId: "I-II-SESSION", mode: "COLOUR" },
+  { specimenId: "I-II-COMBINED", mode: "COLOUR" },
+  { specimenId: "III-V-SESSION", mode: "COLOUR" },
+  { specimenId: "VI-VIII-GROUPED", mode: "COLOUR" },
+  { specimenId: "IX-X-COMBINED", mode: "COLOUR" },
+  { specimenId: "IX-X-REVISION", mode: "COLOUR" },
+  { specimenId: "I-II-SESSION", mode: "MONOCHROME" },
+  { specimenId: "VI-VIII-GROUPED", mode: "MONOCHROME" },
+  { specimenId: "IX-X-COMBINED", mode: "MONOCHROME" },
+  { specimenId: "IX-X-REVISION", mode: "MONOCHROME" }
+] as const satisfies ReadonlyArray<{ specimenId: string; mode: RefinedColourMode }>;
+
+export async function renderR5VisualPack(identity: ReportSchoolIdentitySnapshot = DEFAULT_IDENTITY) {
+  const document = await PDFDocument.create();
+  const assets = await embedAssets(document, identity);
+  for (const requested of R5_VISUAL_PAGES) {
+    const specimen = finalAcademicSpecimen(requested.specimenId);
+    const page = document.addPage([A4.width, A4.height]);
+    drawR5AcademicPage(page, assets, identity, requested.mode, buildFinalAcademicSnapshot(specimen));
+  }
+  document.setTitle("VISUAL-DIRECTION-PACK-R5");
+  document.setSubject("Synthetic-only Classes I-X consolidated colour and monochrome digital review");
+  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  setDeterministicPdfDates(document);
+  return Buffer.from(await document.save({ useObjectStreams: false }));
+}
+
+export async function renderR5EdgePack(identity: ReportSchoolIdentitySnapshot = DEFAULT_IDENTITY) {
+  const document = await PDFDocument.create();
+  const configuredIdentity: ReportSchoolIdentitySnapshot = {
+    ...identity,
+    recognitionWording: "School Status — Synthetic Configuration Example"
+  };
+  const assets = await embedAssets(document, identity);
+  const pages: Array<{
+    kind: Exclude<RefinedPageKind, "KG_COVER" | "KG_PROFILE" | "KG_INTELLECTUAL">;
+    mode: RefinedColourMode;
+    identity: ReportSchoolIdentitySnapshot;
+    closeChart: boolean;
+    edgeCase: boolean;
+  }> = [
+    { kind: "CLASS_II_SESSION", mode: "COLOUR", identity: { ...identity, affiliationWording: null, recognitionWording: null, establishmentYear: null }, closeChart: false, edgeCase: true },
+    { kind: "CLASS_II_SESSION", mode: "COLOUR", identity: configuredIdentity, closeChart: false, edgeCase: true },
+    { kind: "CLASS_VI_GROUPED", mode: "COLOUR", identity, closeChart: true, edgeCase: false },
+    { kind: "CLASS_IX_COMBINED", mode: "COLOUR", identity, closeChart: true, edgeCase: false },
+    { kind: "CLASS_X_CT_REVISION", mode: "MONOCHROME", identity, closeChart: true, edgeCase: false },
+    { kind: "CLASS_IX_COMBINED", mode: "MONOCHROME", identity, closeChart: true, edgeCase: false }
+  ];
+  for (const requested of pages) {
+    const page = document.addPage([A4.width, A4.height]);
+    const report = buildSyntheticAcademicSnapshot(requested.kind, requested.edgeCase);
+    if (requested.closeChart) applyCloseChartEdgeCase(report);
+    drawR5AcademicPage(page, assets, requested.identity, requested.mode, report);
+  }
+  document.setTitle("EDGE-CASE-RENDERING-PACK-R5");
+  document.setSubject("Synthetic-only long identity, result state, rounding, chart collision, conditional status, and grade-band evidence");
+  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  setDeterministicPdfDates(document);
+  return Buffer.from(await document.save({ useObjectStreams: false }));
+}
+
+function finalAcademicSpecimen(specimenId: string) {
+  const specimen = FINAL_ACADEMIC_PAGE_SPECS.find((candidate) => candidate.specimenId === specimenId);
+  if (!specimen) throw new Error("Unknown final academic specimen: " + specimenId);
+  return specimen;
+}
+
+function applyCloseChartEdgeCase(report: AcademicReportSnapshot) {
+  const point = report.chartPoints[0];
+  if (!point) return;
+  point.classAveragePercentage = roundTo(Math.max(0, point.studentPercentage - 0.04), 2);
+  point.highScorePercentage = point.studentPercentage;
+  const subject = report.subjects.find((candidate) => candidate.key === point.subjectKey);
+  if (subject) {
+    subject.classAveragePercentage = point.classAveragePercentage;
+    subject.highScorePercentage = point.highScorePercentage;
+  }
+  validateAcademicReportSnapshot(report);
+}
+
 async function renderFinalPageCollection(
   mode: RefinedColourMode,
   identity: ReportSchoolIdentitySnapshot,
@@ -693,7 +807,7 @@ async function renderFinalPageCollection(
   }
   for (const specimen of academicSpecimens) {
     const page = document.addPage([A4.width, A4.height]);
-    page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: palette(mode).paper });
+    page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: palette(mode).white });
     drawAcademic(page, assets, identity, palette(mode), mode, buildFinalAcademicSnapshot(specimen));
     drawFooter(page, assets.fonts, mode, false);
   }
@@ -893,7 +1007,7 @@ export function validateAcademicReportSnapshot(report: AcademicReportSnapshot) {
   if (!close(report.overall.rankBasisPercentage, expectedPercentage)) {
     throw new Error("Rank basis does not use the displayed frozen percentage.");
   }
-  const expectedLegend = report.gradeScale.bands.map((band) => ({ range: band.displayRange, grade: band.label }));
+  const expectedLegend = gradeLegendForScale(report.gradeScale);
   if (JSON.stringify(report.gradeLegend) !== JSON.stringify(expectedLegend)) {
     throw new Error("Grade legend does not use the report grade scale.");
   }
@@ -933,7 +1047,7 @@ export function validateAcademicReportSnapshot(report: AcademicReportSnapshot) {
       throw new Error("Chart class comparison values are invalid.");
     }
   }
-  return report;
+  return validateDisplayedReportReconciliation(report);
 }
 
 function validateCombinedGroupSubject(
@@ -1031,12 +1145,31 @@ function drawPage(
   edgeCase: boolean
 ) {
   const colors = palette(mode);
-  page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: colors.paper });
+  page.drawRectangle({
+    x: 0,
+    y: 0,
+    width: A4.width,
+    height: A4.height,
+    color: kind.startsWith("KG_") ? colors.paper : colors.white
+  });
   if (kind === "KG_COVER") drawKgCover(page, assets, identity, colors, mode, edgeCase);
   else if (kind === "KG_PROFILE") drawKgProfile(page, assets, identity, colors, edgeCase);
   else if (kind === "KG_INTELLECTUAL") drawKgIntellectual(page, assets, identity, colors, edgeCase);
   else drawAcademic(page, assets, identity, colors, mode, buildSyntheticAcademicSnapshot(kind, edgeCase));
   drawFooter(page, assets.fonts, mode, edgeCase);
+}
+
+function drawR5AcademicPage(
+  page: PDFPage,
+  assets: Assets,
+  identity: ReportSchoolIdentitySnapshot,
+  mode: RefinedColourMode,
+  report: AcademicReportSnapshot
+) {
+  const colors = palette(mode);
+  page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: colors.white });
+  drawAcademic(page, assets, identity, colors, mode, report);
+  drawFooter(page, assets.fonts, mode, false);
 }
 
 function drawFinalKgPage(
@@ -1359,10 +1492,16 @@ function drawAcademic(
   top = drawSummary(page, assets.fonts, colors, report, top) + 9;
   top = drawAttendance(page, assets.fonts, colors, report, top) + 9;
   top = drawRemarks(page, assets.fonts, colors, report.remarks, top) + 10;
-  const reserved = 116;
-  const chartHeight = Math.max(88, Math.min(report.layout === "COMBINED" ? 110 : 145, A4.height - top - reserved));
+  const signatureContentLimit = A4.height - (R5_SIGNATURE_GEOMETRY.lineY + R5_SIGNATURE_GEOMETRY.clearSigningHeightPt);
+  const gradeLegendHeight = 30;
+  const chartHeightAvailable = signatureContentLimit - top - gradeLegendHeight - 9;
+  const chartHeight = Math.min(report.layout === "COMBINED" ? 105 : 120, chartHeightAvailable);
+  if (chartHeight < 76) throw new Error(`Academic layout cannot preserve the approved chart and signature geometry on one A4 page (${report.classSection}, available ${chartHeightAvailable.toFixed(1)} pt).`);
   top = drawChart(page, assets.fonts, colors, report, 37, top, fullWidth, chartHeight, mode) + 9;
-  drawGradeLegend(page, assets.fonts, colors, 37, top, fullWidth, report.gradeLegend);
+  const gradeLegendBottom = drawGradeLegend(page, assets.fonts, colors, 37, top, fullWidth, report.gradeLegend);
+  if (gradeLegendBottom > signatureContentLimit + EPSILON) {
+    throw new Error("Grade legend intrudes into the approved physical signing area.");
+  }
   drawSignatures(page, assets.fonts, colors);
 }
 
@@ -1408,24 +1547,16 @@ function drawAcademicHeader(page: PDFPage, assets: Assets, identity: ReportSchoo
   const logo = mode === "MONOCHROME" ? assets.monochromeLogo : assets.colourLogo;
   if (logo) page.drawImage(logo, { x: 112, y: 748, width: 64, height: 64 });
   centered(page, identity.schoolName.toUpperCase(), assets.fonts.school, 21, 786, colors.ink, 45);
-  const approvedLines = [
-    identity.affiliationWording,
-    identity.recognitionWording,
-    identity.establishmentYear ? "Established " + identity.establishmentYear : null
-  ].filter((value): value is string => Boolean(value));
-  let y = 763;
-  for (const line of approvedLines) {
-    centered(page, line, assets.fonts.school, 9.5, y, colors.ink, 70);
-    y -= 15;
-  }
-  centered(page, identity.addressLine1 + ", " + identity.city, assets.fonts.school, 10.5, approvedLines.length ? y : 749, colors.ink, 70);
+  const statusLine = approvedSchoolStatusLine(identity);
+  if (statusLine) centered(page, statusLine, assets.fonts.school, 9.5, 763, colors.ink, 70);
+  centered(page, identity.addressLine1 + ", " + identity.city, assets.fonts.school, 10.5, statusLine ? 748 : 755, colors.ink, 70);
 }
 
 function drawIdentity(page: PDFPage, fonts: Fonts, colors: Palette, report: AcademicReportSnapshot) {
   const rows = [
-    { cells: ["Student Name", report.studentName], bold: false },
-    { cells: [report.parentGuardianLabel, report.guardianName], bold: false },
-    { cells: ["Admission Number", report.admissionNumber], bold: false }
+    { cells: [R5_IDENTITY_LABELS[0], report.studentName], bold: false },
+    { cells: [R5_IDENTITY_LABELS[1], report.guardianName], bold: false },
+    { cells: [R5_IDENTITY_LABELS[2], report.admissionNumber], bold: false }
   ];
   const identityBottom = drawTable(page, fonts, colors, 39, 108, [235, 285], [], rows, {
     headerHeight: 0,
@@ -1433,17 +1564,19 @@ function drawIdentity(page: PDFPage, fonts: Fonts, colors: Palette, report: Acad
     fontSize: Math.max(7.8, R4_MINIMUM_FONT_SIZES.identityValue),
     firstColumnLeft: false,
     identity: true,
-    dynamicRows: true
+    dynamicRows: true,
+    maximumLines: 2
   });
   return drawTable(page, fonts, colors, 39, identityBottom, [120, 140, 120, 140], [], [
-    { cells: ["Class / Section", report.classSection, "Roll Number", report.rollNumber], bold: false }
+    { cells: [R5_IDENTITY_LABELS[3], report.classSection, R5_IDENTITY_LABELS[4], report.rollNumber], bold: false }
   ], {
     headerHeight: 0,
     rowHeight: 16,
     fontSize: Math.max(7.8, R4_MINIMUM_FONT_SIZES.identityValue),
     firstColumnLeft: false,
     identity: true,
-    dynamicRows: true
+    dynamicRows: true,
+    maximumLines: 2
   });
 }
 
@@ -1473,39 +1606,98 @@ function drawStandardTables(page: PDFPage, fonts: Fonts, colors: Palette, report
     cells: standardSubjectCells(subject, report.componentColumns, report),
     bold: subject.aggregateOf.length > 0
   }));
+  const traitRows = report.traits.map((trait, index) => ({
+    cells: [trait, index % 7 === 4 ? "S" : "G"],
+    bold: false
+  }));
+  const marksFontSize = dense ? 6.7 : 7.4;
+  const traitFontSize = dense ? 6.7 : 7.2;
+  const minimumRowHeight = dense ? 12 : 18;
+  const balanced = report.traitTitle
+    ? balancedTableRowHeights(
+      fonts,
+      rows,
+      widths,
+      marksFontSize,
+      minimumRowHeight,
+      traitRows,
+      [traitWidth - 48, 48],
+      traitFontSize,
+      minimumRowHeight
+    )
+    : { left: rows.map(() => minimumRowHeight), right: [] as number[] };
   const marksBottom = drawTable(page, fonts, colors, 37, top, widths, headers, rows, {
-    headerHeight: dense ? 28 : 32,
-    rowHeight: dense ? 15 : 18,
-    fontSize: dense ? 6.7 : 7.4,
+    headerHeight: dense ? 26 : 32,
+    rowHeight: minimumRowHeight,
+    rowHeights: balanced.left,
+    fontSize: marksFontSize,
     firstColumnLeft: true,
     dynamicRows: true,
     sectionFill: colors.band
   });
   let traitBottom = top;
   if (report.traitTitle) {
-    const traitRows = report.traits.map((trait, index) => ({
-      cells: [trait, index % 7 === 4 ? "S" : "G"],
-      bold: false
-    }));
     traitBottom = drawTable(page, fonts, colors, 37 + marksWidth, top, [traitWidth - 48, 48], [report.traitTitle, "Grade"], traitRows, {
-      headerHeight: dense ? 28 : 32,
-      rowHeight: dense ? 15 : 18,
-      fontSize: dense ? 6.7 : 7.2,
-      firstColumnLeft: false,
-      dynamicRows: true
-    });
-    traitBottom = drawTable(page, fonts, colors, 37 + marksWidth, traitBottom, [52, (traitWidth - 52) / 2, (traitWidth - 52) / 2], [], [
-      { cells: ["Grading", "G : Good", "S : Satisfactory"], bold: false },
-      { cells: ["", "N : Needs Improvement", ""], bold: false }
-    ], {
-      headerHeight: 0,
-      rowHeight: dense ? 12 : 14,
-      fontSize: R4_MINIMUM_FONT_SIZES.legend,
+      headerHeight: dense ? 26 : 32,
+      rowHeight: minimumRowHeight,
+      rowHeights: balanced.right,
+      fontSize: traitFontSize,
       firstColumnLeft: false,
       dynamicRows: true
     });
   }
-  return Math.max(marksBottom, traitBottom);
+  const tablesBottom = Math.max(marksBottom, traitBottom);
+  return report.traitTitle
+    ? drawCoscholasticLegend(page, fonts, colors, tablesBottom)
+    : tablesBottom;
+}
+
+export function balanceRowHeightTotals(leftNatural: number[], rightNatural: number[]) {
+  const leftTotal = sum(leftNatural);
+  const rightTotal = sum(rightNatural);
+  const target = Math.max(leftTotal, rightTotal);
+  const pad = (values: number[], total: number) => values.length
+    ? values.map((value) => value + (target - total) / values.length)
+    : values;
+  return { left: pad(leftNatural, leftTotal), right: pad(rightNatural, rightTotal), target };
+}
+
+function balancedTableRowHeights(
+  fonts: Fonts,
+  leftRows: Array<{ cells: string[]; bold: boolean }>,
+  leftWidths: number[],
+  leftFontSize: number,
+  leftMinimum: number,
+  rightRows: Array<{ cells: string[]; bold: boolean }>,
+  rightWidths: number[],
+  rightFontSize: number,
+  rightMinimum: number
+) {
+  const heights = (rows: Array<{ cells: string[]; bold: boolean }>, widths: number[], size: number, minimum: number) => rows.map((row) => {
+    const font = row.bold ? fonts.bold : fonts.regular;
+    const lines = row.cells.map((value, index) => wrapText(String(value), font, size, widths[index] - 6).length);
+    return Math.max(minimum, 4 + Math.max(...lines) * (size + 1));
+  });
+  return balanceRowHeightTotals(
+    heights(leftRows, leftWidths, leftFontSize, leftMinimum),
+    heights(rightRows, rightWidths, rightFontSize, rightMinimum)
+  );
+}
+
+function drawCoscholasticLegend(page: PDFPage, fonts: Fonts, colors: Palette, top: number) {
+  const width = A4.width - 74;
+  const height = 19;
+  rectTop(page, 37, top, width, height, colors.white, colors.border, 0.55);
+  const size = 7.2;
+  const textWidth = fonts.bold.widthOfTextAtSize(R5_COSCHOLASTIC_LEGEND, size);
+  page.drawText(R5_COSCHOLASTIC_LEGEND, {
+    x: 37 + (width - textWidth) / 2,
+    y: A4.height - top - 13,
+    size,
+    font: fonts.bold,
+    color: colors.ink
+  });
+  return top + height;
 }
 
 function drawCombinedTable(page: PDFPage, fonts: Fonts, colors: Palette, report: AcademicReportSnapshot, top: number) {
@@ -1534,8 +1726,8 @@ function drawCombinedTable(page: PDFPage, fonts: Fonts, colors: Palette, report:
     bold: subject.aggregateOf.length > 0
   }));
   let bottom = drawTable(page, fonts, colors, 37, top, widths, ["Subject", ...columns], rows, {
-    headerHeight: 34,
-    rowHeight: 18,
+    headerHeight: 32,
+    rowHeight: 14,
     fontSize: Math.max(6.4, R4_MINIMUM_FONT_SIZES.denseClassIxTable),
     firstColumnLeft: true,
     dynamicRows: true,
@@ -1562,7 +1754,7 @@ function standardSubjectCells(
     const cells = [
       subject.label,
       ...columns.map((column) => formatDerivedComponentForReport(report, subject, column.key)),
-      formatNumber(subject.total.value)
+      formatParentFacingNumber(displayedSubjectTotalValue(subject, report) ?? subject.total.value)
     ];
     if (report.showAcademicSubjectGrade) cells.push(subject.grade);
     return cells;
@@ -1573,7 +1765,9 @@ function standardSubjectCells(
       const component = subject.components.find((candidate) => candidate.key === column.key);
       return component ? displayComponent(component) : "N/A";
     }),
-    displayTotal(subject.total)
+    subject.total.state === "PRESENT"
+      ? formatParentFacingNumber(displayedSubjectTotalValue(subject, report) ?? Number(subject.total.value))
+      : resultStateCode(subject.total.state)
   ];
   if (report.showAcademicSubjectGrade) cells.push(subject.grade);
   return cells;
@@ -1589,20 +1783,20 @@ function combinedSubjectCells(subject: AcademicSubjectSnapshot) {
   const value = subject.combined;
   return [
     subject.label,
-    formatNumber(value.ct1), formatNumber(value.ia1), formatNumber(value.ct2), formatNumber(value.ia2),
-    formatNumber(value.ct3), formatNumber(value.ia3), formatNumber(value.ctWeighted),
-    formatNumber(value.terminalRaw), formatNumber(value.terminalWeighted), formatNumber(value.annualRaw),
-    formatNumber(value.annualWeighted), formatNumber(subject.total.value), subject.grade,
-    formatNumber(value.gradePoint)
+    formatParentFacingNumber(value.ct1), formatParentFacingNumber(value.ia1), formatParentFacingNumber(value.ct2), formatParentFacingNumber(value.ia2),
+    formatParentFacingNumber(value.ct3), formatParentFacingNumber(value.ia3), formatParentFacingNumber(value.ctWeighted),
+    formatParentFacingNumber(value.terminalRaw), formatParentFacingNumber(value.terminalWeighted), formatParentFacingNumber(value.annualRaw),
+    formatParentFacingNumber(value.annualWeighted), formatParentFacingNumber(displayedSubjectTotalValue(subject) ?? subject.total.value), subject.grade,
+    formatParentFacingNumber(value.gradePoint)
   ];
 }
 
 function drawSummary(page: PDFPage, fonts: Fonts, colors: Palette, report: AcademicReportSnapshot, top: number) {
   const values = [
-    "Total: " + formatNumber(report.overall.value) + " / " + formatNumber(report.overall.maximum),
-    "Percentage: " + formatNumber(report.overall.percentage) + "%",
+    "Total: " + formatParentFacingNumber(displayedOverallTotal(report)) + " / " + formatParentFacingNumber(report.overall.maximum),
+    "Percentage: " + formatParentFacingNumber(displayedOverallPercentage(report)) + "%",
     "Grade: " + report.overall.grade,
-    ...(report.overall.gradePoint == null ? [] : ["Grade Point: " + formatNumber(report.overall.gradePoint)]),
+    ...(report.overall.gradePoint == null ? [] : ["Grade Point: " + formatParentFacingNumber(report.overall.gradePoint)]),
     ...(report.overall.rank == null ? [] : ["Rank: " + report.overall.rank])
   ];
   return drawTable(page, fonts, colors, 37, top, values.map(() => (A4.width - 74) / values.length), [], [
@@ -1622,7 +1816,7 @@ function drawAttendance(page: PDFPage, fonts: Fonts, colors: Palette, report: Ac
     { cells: [
       String(report.attendance.workingDays),
       String(report.attendance.daysPresent),
-      formatNumber(report.attendance.percentage) + "%"
+      formatParentFacingNumber(report.attendance.percentage) + "%"
     ], bold: false }
   ], {
     headerHeight: 16,
@@ -1662,14 +1856,14 @@ function drawChart(
   page.drawText("Student Marks (%)", { x: x + 8, y: A4.height - top - 16, size: 9, font: fonts.bold, color: colors.ink });
   const legendX = x + width - 226;
   const series = [
-    { label: "Student Marks", color: colors.student, pattern: "SOLID" as const },
-    { label: "Class Average", color: colors.average, pattern: "DIAGONAL" as const },
-    { label: "High Score", color: colors.high, pattern: "HORIZONTAL" as const }
+    { ...R5_CHART_SERIES[0], color: colors.student, pattern: R5_CHART_SERIES[0].monochromePattern },
+    { ...R5_CHART_SERIES[1], color: colors.average, pattern: R5_CHART_SERIES[1].monochromePattern },
+    { ...R5_CHART_SERIES[2], color: colors.high, pattern: R5_CHART_SERIES[2].monochromePattern }
   ];
   series.forEach((item, index) => {
-    const box = { x: legendX + index * 76, y: A4.height - top - 18, width: 8, height: 8 };
+    const box = { x: legendX + index * 76, y: A4.height - top - 19, width: 10, height: 9 };
     drawPatternedRectangle(page, box, item.color, colors.ink, mode === "MONOCHROME" ? item.pattern : "SOLID");
-    page.drawText(item.label, { x: box.x + 11, y: A4.height - top - 17, size: 6.1, font: fonts.bold, color: colors.ink });
+    page.drawText(item.label, { x: box.x + 13, y: A4.height - top - 17, size: 6.5, font: fonts.bold, color: colors.ink });
   });
   for (let tick = 0; tick <= 100; tick += 20) {
     const y = bottom + chartHeight * tick / 100;
@@ -1763,10 +1957,26 @@ function drawGradeLegend(
 }
 
 function drawSignatures(page: PDFPage, fonts: Fonts, colors: Palette) {
-  ["Class Teacher", "Principal", "Parent / Guardian", "Director"].forEach((label, index) => {
-    const x = 66 + index * 137;
-    page.drawLine({ start: { x, y: 53 }, end: { x: x + 92, y: 53 }, thickness: 0.45, color: colors.border });
-    page.drawText(label, { x: x + 8, y: 38, size: 7.8, font: fonts.bold, color: colors.ink });
+  const labels = ["Class Teacher", "Principal", "Parent / Guardian", "Director"];
+  const columnWidth = R5_SIGNATURE_GEOMETRY.width / labels.length;
+  labels.forEach((label, index) => {
+    const columnX = R5_SIGNATURE_GEOMETRY.left + index * columnWidth;
+    const linePadding = 13;
+    page.drawLine({
+      start: { x: columnX + linePadding, y: R5_SIGNATURE_GEOMETRY.lineY },
+      end: { x: columnX + columnWidth - linePadding, y: R5_SIGNATURE_GEOMETRY.lineY },
+      thickness: 0.55,
+      color: colors.border
+    });
+    const size = 7.8;
+    const labelWidth = fonts.bold.widthOfTextAtSize(label, size);
+    page.drawText(label, {
+      x: columnX + (columnWidth - labelWidth) / 2,
+      y: R5_SIGNATURE_GEOMETRY.labelY,
+      size,
+      font: fonts.bold,
+      color: colors.ink
+    });
   });
 }
 
@@ -1789,6 +1999,8 @@ function drawTable(
     headerText?: RGB;
     sectionFill?: RGB;
     identity?: boolean;
+    rowHeights?: number[];
+    maximumLines?: number;
   }
 ) {
   let cursorTop = top;
@@ -1802,14 +2014,15 @@ function drawTable(
       identity: options.identity
     });
   }
-  for (const row of rows) {
-    cursorTop += drawTableRow(page, fonts, colors, x, cursorTop, widths, row.cells, options.rowHeight, options.fontSize, {
+  for (const [rowIndex, row] of rows.entries()) {
+    cursorTop += drawTableRow(page, fonts, colors, x, cursorTop, widths, row.cells, options.rowHeights?.[rowIndex] ?? options.rowHeight, options.fontSize, {
       bold: row.bold,
       firstColumnLeft: options.firstColumnLeft,
       fill: row.bold && options.sectionFill ? options.sectionFill : row.bold ? colors.band : colors.white,
       textColor: colors.ink,
       dynamic: options.dynamicRows,
-      identity: options.identity
+      identity: options.identity,
+      maximumLines: options.maximumLines
     });
   }
   return cursorTop;
@@ -1832,10 +2045,14 @@ function drawTableRow(
     textColor: RGB;
     dynamic?: boolean;
     identity?: boolean;
+    maximumLines?: number;
   }
 ) {
   const font = options.bold ? fonts.bold : fonts.regular;
   const wrapped = values.map((value, index) => wrapText(String(value), font, fontSize, widths[index] - 6));
+  if (options.maximumLines && wrapped.some((lines) => lines.length > options.maximumLines!)) {
+    throw new Error("Identity value exceeds the approved two-line wrapping contract.");
+  }
   const required = Math.max(...wrapped.map((lines) => 6 + lines.length * (fontSize + 1)));
   const height = options.dynamic ? Math.max(minimumHeight, required) : minimumHeight;
   let cursor = x;
@@ -1881,15 +2098,24 @@ function drawPatternedRectangle(
   box: { x: number; y: number; width: number; height: number },
   fill: RGB,
   ink: RGB,
-  pattern: "SOLID" | "DIAGONAL" | "HORIZONTAL"
+  pattern: "SOLID" | "DIAGONAL" | "HORIZONTAL" | "CROSS_HATCH"
 ) {
-  page.drawRectangle({ ...box, color: fill, borderColor: ink, borderWidth: 0.35 });
-  if (pattern === "DIAGONAL") {
+  page.drawRectangle({ ...box, color: fill, borderColor: ink, borderWidth: 0.65 });
+  if (pattern === "DIAGONAL" || pattern === "CROSS_HATCH") {
     for (let offset = -box.height; offset < box.width; offset += 4) {
       const x1 = Math.max(box.x, box.x + offset);
       const y1 = box.y + Math.max(0, -offset);
       const x2 = Math.min(box.x + box.width, box.x + offset + box.height);
       const y2 = box.y + Math.min(box.height, box.height + offset);
+      if (x2 > x1) page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: 0.3, color: ink });
+    }
+  }
+  if (pattern === "CROSS_HATCH") {
+    for (let offset = 0; offset < box.width + box.height; offset += 4) {
+      const x1 = Math.max(box.x, box.x + offset - box.height);
+      const y1 = box.y + Math.max(0, box.height - offset);
+      const x2 = Math.min(box.x + box.width, box.x + offset);
+      const y2 = box.y + Math.min(box.height, box.width + box.height - offset);
       if (x2 > x1) page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: 0.3, color: ink });
     }
   }
@@ -2050,6 +2276,12 @@ function combinedReport(edgeCase: boolean) {
     scheme,
     gradeScale
   ));
+  if (edgeCase) {
+    const longMathematics = leaves.find((subject) => subject.key === "math");
+    if (longMathematics) {
+      longMathematics.chartDisplayLabel = { configurationVersion: 1, value: "Advanced Mathematics" };
+    }
+  }
   const byKey = new Map(leaves.map((subject) => [subject.key, subject]));
   const englishAverage = combinedGroupSubject("englishAverage", "English Average", ["english1", "english2"], byKey, scheme, gradeScale);
   const scienceAverage = combinedGroupSubject("scienceAverage", "Science Average", ["physics", "biology", "chemistry"], byKey, scheme, gradeScale);
@@ -2435,12 +2667,86 @@ export function buildChartPointsFromCohort(
 }
 
 function displayComponent(component: MarkComponentSnapshot) {
-  if (component.state === "PRESENT") return formatNumber(Number(component.value));
+  if (component.state === "PRESENT") return formatParentFacingNumber(Number(component.value));
   return resultStateCode(component.state);
 }
 
-function displayTotal(total: StandardMarksSubject["total"]) {
-  return total.state === "PRESENT" ? formatNumber(Number(total.value)) : resultStateCode(total.state);
+export function formatParentFacingNumber(value: number) {
+  return trimFixed(roundTo(value, R5_MAX_PARENT_FACING_DECIMALS), R5_MAX_PARENT_FACING_DECIMALS);
+}
+
+export function displayedSubjectTotalValue(subject: AcademicSubjectSnapshot, report?: AcademicReportSnapshot) {
+  if (subject.kind === "GRADE_ONLY") return null;
+  if (subject.kind === "MARKS") {
+    if (subject.total.state !== "PRESENT" || subject.total.value == null) return null;
+    return roundTo(sum(subject.components.map((component) =>
+      component.state === "PRESENT" && component.value != null ? roundTo(component.value, 1) : 0
+    )), 1);
+  }
+  if (subject.kind === "COMBINED") {
+    return roundTo(sum([
+      roundTo(subject.combined.ctWeighted, 1),
+      roundTo(subject.combined.terminalWeighted, 1),
+      roundTo(subject.combined.annualWeighted, 1)
+    ]), 1);
+  }
+  if (report) {
+    const displayedComponents = report.componentColumns.map((column) =>
+      displayedDerivedComponentValue(report, subject, column.key)
+    );
+    if (displayedComponents.every((value): value is number => value != null)) {
+      return roundTo(sum(displayedComponents), 1);
+    }
+  }
+  return roundTo(subject.total.value, 1);
+}
+
+export function displayedOverallTotal(report: AcademicReportSnapshot) {
+  const contributing = report.subjects.flatMap((subject) => {
+    if (!subject.includeInOverall || subject.kind === "GRADE_ONLY") return [];
+    const value = displayedSubjectTotalValue(subject, report);
+    return value == null ? [] : [value];
+  });
+  return roundTo(sum(contributing), 1);
+}
+
+export function displayedOverallPercentage(report: AcademicReportSnapshot) {
+  return report.overall.maximum
+    ? roundTo(displayedOverallTotal(report) / report.overall.maximum * 100, 1)
+    : 0;
+}
+
+export function validateDisplayedReportReconciliation(report: AcademicReportSnapshot) {
+  for (const subject of report.subjects) {
+    if (subject.kind === "MARKS" && subject.total.state === "PRESENT") {
+      const components = roundTo(sum(subject.components.map((component) => roundTo(Number(component.value), 1))), 1);
+      if (!close(displayedSubjectTotalValue(subject, report) ?? Number.NaN, components)) {
+        throw new Error("Displayed components do not reconcile for " + subject.label + ".");
+      }
+    }
+    if (subject.kind === "COMBINED") {
+      const contributions = roundTo(sum([
+        roundTo(subject.combined.ctWeighted, 1),
+        roundTo(subject.combined.terminalWeighted, 1),
+        roundTo(subject.combined.annualWeighted, 1)
+      ]), 1);
+      if (!close(displayedSubjectTotalValue(subject, report) ?? Number.NaN, contributions)) {
+        throw new Error("Displayed weighted contributions do not reconcile for " + subject.label + ".");
+      }
+    }
+  }
+  const subjects = roundTo(sum(report.subjects.flatMap((subject) => {
+    if (!subject.includeInOverall || subject.kind === "GRADE_ONLY") return [];
+    const value = displayedSubjectTotalValue(subject, report);
+    return value == null ? [] : [value];
+  })), 1);
+  if (!close(displayedOverallTotal(report), subjects)) {
+    throw new Error("Displayed subject totals do not reconcile to the displayed overall total.");
+  }
+  if (!close(displayedOverallPercentage(report), roundTo(subjects / report.overall.maximum * 100, 1))) {
+    throw new Error("Displayed overall total does not reconcile to the displayed percentage.");
+  }
+  return report;
 }
 
 export function resultStateCode(state: MarkState) {
@@ -2456,8 +2762,15 @@ export function gradeForScale(value: number, scale: GradeScaleSnapshot) {
   return band.label;
 }
 
-function gradeLegendForScale(scale: GradeScaleSnapshot) {
-  return scale.bands.map((band) => ({ range: band.displayRange, grade: band.label }));
+export function gradeLegendForScale(scale: GradeScaleSnapshot) {
+  return scale.bands.map((band, index) => {
+    const nextHigher = index === 0 ? null : scale.bands[index - 1];
+    const lower = formatParentFacingNumber(band.minimumInclusive);
+    const range = index === 0
+      ? `${lower}–${formatParentFacingNumber(band.maximumInclusive)}`
+      : `${lower}–<${formatParentFacingNumber(nextHigher!.minimumInclusive)}`;
+    return { range, grade: band.label };
+  });
 }
 
 function drawKgFrame(page: PDFPage, colors: Palette) {
@@ -2477,7 +2790,7 @@ function lineField(page: PDFPage, fonts: Fonts, label: string, value: string, x:
 }
 
 function drawFooter(page: PDFPage, fonts: Fonts, _mode: RefinedColourMode, _edgeCase: boolean) {
-  centered(page, "SYNTHETIC SAMPLE - NOT FOR ISSUE", fonts.bold, R4_MINIMUM_FONT_SIZES.legend, 11, rgb(0.42, 0.42, 0.42));
+  centered(page, "SYNTHETIC SAMPLE — NOT FOR ISSUE", fonts.bold, R4_MINIMUM_FONT_SIZES.legend, R5_SIGNATURE_GEOMETRY.footerY, rgb(0.42, 0.42, 0.42));
 }
 
 function centered(page: PDFPage, text: string, font: PDFFont, size: number, y: number, color: RGB, xOffset = 0) {
@@ -2639,17 +2952,7 @@ export function resolveChartCategoryLayout(
 }
 
 export function formatChartNumericValues(values: number[]) {
-  const oneDecimal = values.map((value) => Number.isInteger(value) ? String(value) : trimFixed(value, 1));
-  return values.map((value, index) => {
-    if (Number.isInteger(value)) return String(value);
-    const one = oneDecimal[index];
-    const requiresTwoDecimals = values.some((candidate, candidateIndex) =>
-      candidateIndex !== index &&
-      oneDecimal[candidateIndex] === one &&
-      roundTo(Math.abs(candidate - value), 2) >= 0.01
-    );
-    return requiresTwoDecimals ? trimFixed(value, 2) : one;
-  });
+  return values.map(formatParentFacingNumber);
 }
 
 export function layoutChartNumericLabels(
@@ -2727,10 +3030,19 @@ function setDeterministicPdfDates(document: PDFDocument) {
 }
 
 function formatNumber(value: number) {
-  return Number(value.toFixed(2)).toString();
+  return formatParentFacingNumber(value);
 }
 
 function formatDerivedComponentForReport(
+  report: AcademicReportSnapshot,
+  subject: DerivedMarksSubject,
+  componentKey: string
+) {
+  const value = displayedDerivedComponentValue(report, subject, componentKey);
+  return value == null ? "NE" : formatParentFacingNumber(value);
+}
+
+function displayedDerivedComponentValue(
   report: AcademicReportSnapshot,
   subject: DerivedMarksSubject,
   componentKey: string
@@ -2741,7 +3053,7 @@ function formatDerivedComponentForReport(
     const component = source.components.find((candidate) => candidate.key === componentKey);
     return component?.value == null ? [] : [component.value];
   });
-  return values.length === subject.derivedFrom.length ? formatNumber(roundTo(average(values), 2)) : "NE";
+  return values.length === subject.derivedFrom.length ? roundTo(average(values), 1) : null;
 }
 
 function hasNumericTotal(

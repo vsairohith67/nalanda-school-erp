@@ -2,7 +2,7 @@
 
 ## Current report-card forward-roadmap amendment — 2026-08-12
 
-Classes I-X calibration and physical print acceptance remains a V1 gate. R5 may begin only after the user confirms the complete correction register in `docs/REPORT_CARD_V1_SCOPE_AMENDMENT.md`; only then may a Classes I-X-only replacement pack be generated and printed. KG/LKG/UKG is a preserved, default-off V1.5 foundation and is excluded from V1 release-candidate completeness. The superseded R4.2 packs must not be printed. No merge, tag, deployment or real report publication is authorised by this roadmap amendment.
+Classes I-X calibration and physical print acceptance remains a V1 gate. The user confirmed the correction register complete, and R5 now provides a small Classes I-X-only digital-review pack plus separate edge-case evidence. Physical-pack regeneration and printing remain paused until user visual approval. KG/LKG/UKG is a preserved, default-off V1.5 foundation and is excluded from V1 release-candidate completeness. The superseded R4.2 packs must not be printed. No merge, tag, deployment or real report publication is authorised by this roadmap amendment.
 
 Status: **QA-corrected sequenced proposal; every prompt remains separately gated**
 

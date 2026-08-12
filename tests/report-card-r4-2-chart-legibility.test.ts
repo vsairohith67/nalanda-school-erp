@@ -73,7 +73,7 @@ describe("R4.2 complete chart-label contract", () => {
 describe("R4.2 collision-safe chart values", () => {
   it("uses print-friendly decimals without unnecessary trailing zeroes", () => {
     expect(formatChartNumericValues([94, 76.4, 77.48])).toEqual(["94", "76.4", "77.5"]);
-    expect(formatChartNumericValues([77.43, 77.44, 100])).toEqual(["77.43", "77.44", "100"]);
+    expect(formatChartNumericValues([77.43, 77.44, 100])).toEqual(["77.4", "77.4", "100"]);
   });
 
   it("stagger-places nearly equal, equal-high, decimal, and 100 labels without collisions", () => {

@@ -2,7 +2,7 @@
 
 **Decision:** `REPORT-PRINT-ACCEPT-1A-SCOPE-AMENDMENT-2026-08-12`<br>
 **Branch:** `reporting/canonical-template-print-acceptance`<br>
-**Status:** Classes I-X corrections are still being consolidated; physical printing is paused
+**Status:** R5 consolidated Classes I-X corrections complete for digital review; physical printing remains paused
 
 ## Product-scope split
 
@@ -17,9 +17,9 @@ This is a deferral, not a rejection, deletion or rollback. Existing issued and h
 
 The approved `NALANDA_LEGACY_REFINED_COLOUR` and `NALANDA_LEGACY_REFINED_MONOCHROME` base remains frozen. This amendment does not redesign the one-page architecture, logo/header, Georgia Bold school name, dynamic components/maxima, grade-scale versioning, immutable publication snapshots, zero/AB/EX/NE/NA states, group calculations, cohort statistics, private Parent delivery or true-monochrome rendering.
 
-## Frozen pending correction register
+## R5 consolidated correction register
 
-The following items are confirmed but intentionally **not implemented** until the user confirms the list is complete.
+The user confirmed this 29-item register complete for R5. The items below are implemented in both approved Classes I-X variants and covered by focused synthetic rendering tests. This does not authorise a physical pack, printing, merge, tag, deployment or report publication.
 
 ### Header and identity
 
@@ -69,17 +69,17 @@ The following items are confirmed but intentionally **not implemented** until th
 
 27. Replace unnecessary two-decimal grade-band wording with an approved readable version.
 28. Do not silently change underlying grade-scale boundaries.
-29. Keep the final displayed boundary format pending user confirmation.
+29. Derive concise exact non-overlapping boundary wording from the frozen grade-scale thresholds.
 
-The user will supply additional Classes I-X corrections before R5. No final V1 replacement pack may be generated until that register is explicitly complete.
+R5 produces only ignored synthetic digital-review evidence: a ten-page representative visual pack and a separate six-page edge-case pack. Neither pack is a physical-acceptance pack. The next gate is user visual review; any newly identified defect must be handled as a narrow R6 before Classes I-X-only physical-pack regeneration.
 
 ## Superseded local packs
 
-The existing ignored `PHYSICAL-ACCEPTANCE-COLOUR.pdf`, `PHYSICAL-ACCEPTANCE-MONOCHROME.pdf`, `RC-SYN-final-colour.pdf` and `RC-SYN-final-monochrome.pdf` are preserved as technical evidence and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`. They must not be printed or used for V1 acceptance. The future replacement pack will contain only genuinely distinct Classes I-X layouts.
+The existing ignored `PHYSICAL-ACCEPTANCE-COLOUR.pdf`, `PHYSICAL-ACCEPTANCE-MONOCHROME.pdf`, `RC-SYN-final-colour.pdf` and `RC-SYN-final-monochrome.pdf` are preserved as technical evidence and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`. They must not be printed or used for V1 acceptance. R5 did not regenerate them. A future replacement pack will contain only genuinely distinct Classes I-X layouts after user approval of the R5 digital review.
 
 ## Release boundary
 
-- No PDF regeneration or physical printing in this amendment.
+- Only the ignored synthetic R5 digital-review PDFs are generated; no physical pack or printing.
 - No merge, release tag, deployment or real report publication.
 - No operational database, issued snapshot, historical data or approved calculation change.
 - No restricted source or Student data in Git or external planning systems.

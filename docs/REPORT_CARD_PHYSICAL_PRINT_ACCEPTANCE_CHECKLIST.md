@@ -1,6 +1,6 @@
 # Report-Card Physical Print Acceptance Checklist
 
-> **V1 SCOPE AMENDMENT — DO NOT PRINT.** The R4.2 physical and full packs are `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS` because they include KG pages and predate the complete Classes I-X correction register. KG/LKG/UKG physical acceptance is deferred to V1.5. A replacement V1 pack must contain only genuinely distinct Classes I-X layouts, but it must not be generated until the user confirms the correction list is complete.
+> **R5 DIGITAL REVIEW — DO NOT PRINT.** The R4.2 physical and full packs remain `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`. R5 generated only a Classes I-X visual-review pack and a separate technical edge-case pack. Neither is authorised for physical acceptance. KG/LKG/UKG physical acceptance is deferred to V1.5. A replacement V1 physical pack must contain only genuinely distinct Classes I-X layouts and may be generated only after R5 visual approval.
 
 > R4.1 remains a digital micro-review correction. Do not print `VISUAL-DIRECTION-PACK-R4-1.pdf` or `EDGE-CASE-RENDERING-PACK-R4-1.pdf`. Full physical-pack regeneration and printing remain paused pending explicit user approval.
 
@@ -29,8 +29,10 @@
 
 ## Required print set
 
-- [ ] Replacement Classes I-X-only colour pack generated after the confirmed R5 correction pass
-- [ ] Replacement Classes I-X-only true-monochrome pack generated after the confirmed R5 correction pass
+- [x] R5 Classes I-X digital review pack generated and validated locally (not for printing)
+- [ ] R5 visual direction approved by the user
+- [ ] Replacement Classes I-X-only colour pack generated after R5 visual approval
+- [ ] Replacement Classes I-X-only true-monochrome pack generated after R5 visual approval
 - [ ] Every genuinely distinct Classes I-X colour specimen printed
 - [ ] Every genuinely distinct Classes I-X monochrome specimen printed
 - [ ] One approved Classes I-X monochrome page photocopied once
