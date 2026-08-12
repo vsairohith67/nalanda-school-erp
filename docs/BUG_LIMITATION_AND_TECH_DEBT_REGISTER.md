@@ -396,6 +396,14 @@ Physical USB scanner hardware has not been certified by code alone. Keyboard-inp
 - Report cards display finalized progression only and never mutate Student progression.
 - Teacher performance analytics and scoring remain out of scope for Prompt 17D.
 
+## REPORT-PRINT-ACCEPT-1A scope-amendment boundaries
+
+- Classes I-X remain V1 and are not physically accepted; the user is still supplying corrections before R5.
+- KG/LKG/UKG is `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`, not V1-cleared or production-ready.
+- The default-off `kg-report-cards-v1-5` release flag blocks new KG operational scheme/template creation, activation, class binding, batch work and publication while preserving immutable issued/historical reads.
+- R4.2 packs are retained but `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`; they must not be printed.
+- Parent-facing one-decimal reconciliation and grade-band wording remain pending decisions; internal frozen-snapshot precision and scale boundaries must not be changed silently.
+
 ## Prompt 17D limitations
 
 - Prompt 17D implements contextual analytics but keeps composite scoring and ranking out of scope.

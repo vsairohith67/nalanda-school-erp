@@ -1,5 +1,11 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## REPORT-PRINT-ACCEPT-1A scope amendment — Classes I-X V1 / KG V1.5 (2026-08-12)
+
+The user narrowed V1 report-card acceptance to Classes I-X and deferred LKG/UKG, the ten-page developmental booklet, KG operational activation and KG physical acceptance to V1.5. Completed KG implementation, tests, migrations, commits and ignored evidence remain preserved under `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`; the existing default-off release-feature-flag system removes new KG operational creation, binding and publication controls from V1 without changing issued historical snapshots.
+
+Classes I-X remain `IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING`. The approved `NALANDA_LEGACY_REFINED` colour/true-monochrome base remains frozen, while 29 confirmed corrections are recorded but intentionally not implemented because the user is still supplying additions before R5. R4.2 packs are preserved and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`; no PDF was regenerated or printed, and no merge or tag was authorised.
+
 ## FIN-FAMILY-PAY-1 / QA — Family mixed-tender collection (2026-08-08)
 
 Implemented an additive exact-paise family collection envelope for one or more linked Students and approved instruments. It produces one consolidated/versioned receipt, separate compatibility Payment effects, one-per-instrument Cash Book/bank reporting, immutable provider-allocation intent, and controlled whole-collection correction/reversal. Request fingerprints, normalized reference uniqueness, plan hashes, transactions, and append-only events provide retry, concurrency, stale-balance, and audit controls. Version-37 backup/restore preserves and validates the complete family graph.
@@ -8,7 +14,7 @@ Copied-database implementation and independent QA exercised all 17 scenarios, in
 
 ## GOV-RECON-1-QA — Independent requirements and scope review (2026-08-08)
 
-Independent QA revalidated all 32 requirements, the 56 accessible pre-governance commits, 24 tags, merged GitHub PRs #1–#3, external governance records and the canonical Canvs board. It confirmed the finance audit as seven `PARTIALLY_IMPLEMENTED`, nine `MISSING` and one `UNSAFE_OR_AMBIGUOUS`; `FIN-FAMILY-PAY-1` remains the next implementation phase. Full payroll/ESS is technically cleared but remains V1.5 operational scope and does not complete the V1 payslip-request workflow.
+Independent QA revalidated the then-current 32 requirements, the 56 accessible pre-governance commits, 24 tags, merged GitHub PRs #1–#3, external governance records and the canonical Canvs board. It confirmed the finance audit as seven `PARTIALLY_IMPLEMENTED`, nine `MISSING` and one `UNSAFE_OR_AMBIGUOUS`; `FIN-FAMILY-PAY-1` remained the next implementation phase at that historical checkpoint. Full payroll/ESS is technically cleared but remains V1.5 operational scope and does not complete the V1 payslip-request workflow.
 
 The named report-card ZIP and prior safe companion files were unavailable. QA did not import any private source; it reconstructed privacy-safe KG, primary, middle and secondary metadata only, while retaining physical colour/B&W print acceptance as a V1 gate. Fifteen requirements-register rows received explicit evidence-class tokens, and the current index no longer identifies optional Transport as the next phase. No application, schema, migration, operational data, provider or deployment change was made.
 

@@ -4,10 +4,12 @@ import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/aut
 import { getExaminationConfiguration, publicExaminationConfiguration } from "@/lib/exam-configurations";
 import { prisma } from "@/lib/prisma";
 import { permissionSetCan } from "@/lib/role-permissions";
+import { isKgReportCardOperationallyAvailable } from "@/lib/report-card-release-policy";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_EXAM_CONFIGURATION");
   const id = (await params).id;
+  const kgOperational = isKgReportCardOperationallyAvailable();
   const [row, permissions, timetableSubjects, teachers, reportCardTemplates] = await Promise.all([
     getExaminationConfiguration(prisma, id),
     getCurrentUserEffectivePermissions(),
@@ -26,7 +28,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       orderBy: { fullName: "asc" }
     }),
     prisma.reportCardTemplate.findMany({
-      where: { status: { in: ["DRAFT", "ACTIVE"] } },
+      where: { status: { in: ["DRAFT", "ACTIVE"] }, ...(!kgOperational ? { reportType: "MARK_BASED" } : {}) },
       select: { id: true, templateCode: true, name: true, versionNumber: true },
       orderBy: { name: "asc" }
     })
@@ -48,6 +50,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         canActivate={permissionSetCan(permissions, "ACTIVATE_EXAM_SCHEMES")}
         canAssign={permissionSetCan(permissions, "ASSIGN_EXAM_TEACHERS")}
         requiresInterventionReason={user.role === "SUPER_ADMIN"}
+        kgOperational={kgOperational}
+        showKgDeferredNotice={user.role === "SUPER_ADMIN"}
       />
     </div>
   );

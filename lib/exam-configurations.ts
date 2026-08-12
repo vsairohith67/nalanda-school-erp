@@ -2,6 +2,7 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
 import { BINDABLE_REPORT_TEMPLATE_FAMILIES } from "@/lib/report-publication-types";
 import { canonicalFamilyForClassName, canonicalFamilyFromDefinition } from "@/lib/report-card-canonical-templates";
+import { isKgReportCardOperationallyAvailable, KG_REPORT_CARD_DEFERRED_MESSAGE } from "@/lib/report-card-release-policy";
 
 export const EXAM_CALCULATION_MODES = ["RAW_SUM", "WEIGHTED_NORMALIZED"] as const;
 export const EXAM_COMPONENT_KINDS = ["INTERNAL", "WRITTEN", "PRACTICAL", "ORAL", "PROJECT", "OTHER_APPROVED"] as const;
@@ -588,6 +589,7 @@ export async function createTemplateFamilyBinding(client: PrismaClient, examinat
   return client.$transaction(async (tx) => {
     const { examination, classScope } = await mutableScope(tx, examinationId, source.classScopeId, source.expectedExaminationVersion);
     const templateFamily = enumText(source.templateFamily, EXAM_TEMPLATE_FAMILIES, "Template family");
+    if (templateFamily === "KG_DEVELOPMENTAL_BOOKLET" && !isKgReportCardOperationallyAvailable()) throw new ExamConfigurationError(KG_REPORT_CARD_DEFERRED_MESSAGE);
     const reportCardTemplateId = requiredId(source.reportCardTemplateId, "Report-card template");
     const template = await tx.reportCardTemplate.findFirst({ where: { id: reportCardTemplateId, status: "ACTIVE" } });
     if (!template) throw new ExamConfigurationError("Choose an active canonical report-card template.");

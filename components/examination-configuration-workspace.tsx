@@ -154,7 +154,9 @@ export function ExaminationConfigurationWorkspace({
   canManage,
   canActivate,
   canAssign,
-  requiresInterventionReason
+  requiresInterventionReason,
+  kgOperational,
+  showKgDeferredNotice
 }: {
   examination: Examination;
   timetableSubjects: Option[];
@@ -164,6 +166,8 @@ export function ExaminationConfigurationWorkspace({
   canActivate: boolean;
   canAssign: boolean;
   requiresInterventionReason: boolean;
+  kgOperational: boolean;
+  showKgDeferredNotice: boolean;
 }) {
   const router = useRouter();
   const [scopeId, setScopeId] = useState(examination.classScopes[0]?.id ?? "");
@@ -326,7 +330,7 @@ export function ExaminationConfigurationWorkspace({
           <SubjectGroupForm examinationId={examination.id} scope={scope} busy={busy} mutate={mutate} />
           <GradeScaleForm examinationId={examination.id} scope={scope} busy={busy} mutate={mutate} />
           <CoScholasticForm examinationId={examination.id} scope={scope} busy={busy} mutate={mutate} />
-          <TemplateBindingForm examinationId={examination.id} scope={scope} reportCardTemplates={reportCardTemplates} busy={busy} mutate={mutate} />
+          <TemplateBindingForm examinationId={examination.id} scope={scope} reportCardTemplates={reportCardTemplates} busy={busy} mutate={mutate} kgOperational={kgOperational} showKgDeferredNotice={showKgDeferredNotice} />
         </>
       ) : null}
 
@@ -497,8 +501,9 @@ function CoScholasticForm({ examinationId, scope, busy, mutate }: { examinationI
   return <section className="card card-pad"><h2>5. Co-scholastic scheme version</h2><form className="form-grid" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); void mutate(`/api/exam-configurations/${examinationId}/co-scholastic`, { classScopeId: scope.id, name: form.get("name"), schemeFamily: form.get("schemeFamily"), ratingScale: String(form.get("ratingScale") ?? "").split(",").map((value) => value.trim()).filter(Boolean), items: String(form.get("items") ?? "").split(/\r?\n/).map((value) => value.trim()).filter(Boolean) }, "Co-scholastic version created"); }}><label>Name<input name="name" required maxLength={120} /></label><label>Scheme family<select name="schemeFamily" required defaultValue=""><option value="" disabled>Select family</option>{["KG_DEVELOPMENTAL", "PRIMARY_SKILLS", "SECONDARY_PERSONALITY"].map((value) => <option key={value} value={value}>{coScholasticFamilyLabel(value)}</option>)}</select></label><label className="full">Rating scale, comma separated<input name="ratingScale" required placeholder="G, S, N" /></label><label className="full">Ordered items, one per line<textarea name="items" required rows={5} /></label><div className="full page-actions"><button disabled={busy !== ""} type="submit">Create Co-scholastic Version</button></div></form></section>;
 }
 
-function TemplateBindingForm({ examinationId, scope, reportCardTemplates, busy, mutate }: { examinationId: string; scope: Scope; reportCardTemplates: Option[]; busy: string; mutate: Mutate }) {
-  return <section className="card card-pad"><h2>6. Report-template family</h2><form className="form-grid" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); void mutate(`/api/exam-configurations/${examinationId}/template-bindings`, { classScopeId: scope.id, templateFamily: form.get("templateFamily"), reportCardTemplateId: form.get("reportCardTemplateId") }, "Template family version created"); }}><label>Approved family<select name="templateFamily" required defaultValue=""><option value="" disabled>Select family</option>{BINDABLE_REPORT_TEMPLATE_FAMILIES.map((value) => <option key={value} value={value}>{templateFamilyLabel(value)}</option>)}</select></label><label>Active versioned report-card template<select name="reportCardTemplateId" required defaultValue=""><option value="" disabled>Select active template</option>{reportCardTemplates.map((option) => <option value={option.id} key={option.id}>{option.label}</option>)}</select></label><div className="full notice">A family is only a renderer capability. This binding creates a new governed version and never seeds maxima, weightages, grade scales, or automatic activation.</div><div className="full page-actions"><button disabled={busy !== "" || !reportCardTemplates.length} type="submit">Create Template Binding Version</button></div></form></section>;
+function TemplateBindingForm({ examinationId, scope, reportCardTemplates, busy, mutate, kgOperational, showKgDeferredNotice }: { examinationId: string; scope: Scope; reportCardTemplates: Option[]; busy: string; mutate: Mutate; kgOperational: boolean; showKgDeferredNotice: boolean }) {
+  const families=kgOperational?BINDABLE_REPORT_TEMPLATE_FAMILIES:BINDABLE_REPORT_TEMPLATE_FAMILIES.filter((value)=>value!=="KG_DEVELOPMENTAL_BOOKLET");
+  return <section className="card card-pad"><h2>6. Report-template family</h2>{showKgDeferredNotice&&!kgOperational?<p className="notice"><strong>KG report-card family — planned for V1.5.</strong> Existing implementation is preserved, but no new KG operational binding is available in V1.</p>:null}<form className="form-grid" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); void mutate(`/api/exam-configurations/${examinationId}/template-bindings`, { classScopeId: scope.id, templateFamily: form.get("templateFamily"), reportCardTemplateId: form.get("reportCardTemplateId") }, "Template family version created"); }}><label>Approved family<select name="templateFamily" required defaultValue=""><option value="" disabled>Select family</option>{families.map((value) => <option key={value} value={value}>{templateFamilyLabel(value)}</option>)}</select></label><label>Active versioned report-card template<select name="reportCardTemplateId" required defaultValue=""><option value="" disabled>Select active template</option>{reportCardTemplates.map((option) => <option value={option.id} key={option.id}>{option.label}</option>)}</select></label><div className="full notice">A family is only a renderer capability. This binding creates a new governed version and never seeds maxima, weightages, grade scales, or automatic activation.</div><div className="full page-actions"><button disabled={busy !== "" || !reportCardTemplates.length} type="submit">Create Template Binding Version</button></div></form></section>;
 }
 
 function AssignmentForm({ examinationId, scope, teachers, draftComponents, busy, mutate }: { examinationId: string; scope: Scope; teachers: Option[]; draftComponents: Array<ComponentRow & { schemeId: string; schemeVersion: number; schemeSubjectPaperId: string | null }>; busy: string; mutate: Mutate }) {

@@ -2,7 +2,9 @@
 
 **Requirement:** `V1-EXAM-RC-TEMPLATE-001`
 
-**Status:** digital calibration in progress; physical colour/monochrome/photocopy gate remains mandatory
+**Status:** V1 narrowed to Classes I-X; correction list remains open; physical colour/monochrome/photocopy gate is paused
+
+The 2026-08-12 scope amendment preserves KG implementation but moves LKG/UKG operational activation and physical acceptance to V1.5 as `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`. Classes I-X remain V1 with status `IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING`. R4.2 packs are `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS` and must not be printed. See `docs/REPORT_CARD_V1_SCOPE_AMENDMENT.md`.
 
 ## Closed digital gaps
 
@@ -18,12 +20,13 @@
 
 ## Remaining gates
 
-1. Complete sequential full tests/build/backup/Git safety and Browser QA on a copied synthetic database.
-2. Push the feature branch without merge or tag.
-3. Print every distinct colour and monochrome specimen, both full KG booklets, and one photocopy of a monochrome page.
-4. Record printer, scale, clipping, readability, alignment, logo, chart, signature space, reference readability, page order, and pass/fail.
-5. Correct and reprint only failed structures.
-6. After independent digital and physical acceptance, fast-forward main and create the governed acceptance tag.
+1. Receive the user's complete Classes I-X correction list and explicit register confirmation.
+2. Apply the bounded R5 corrections without redesigning the approved family.
+3. Generate a replacement pack containing only genuinely distinct Classes I-X colour and true-monochrome layouts.
+4. Print every distinct Classes I-X specimen and photocopy one approved monochrome page.
+5. Record printer, scale, clipping, readability, alignment, logo, chart, signature space, reference readability, page order, and pass/fail.
+6. Correct and reprint only failed Classes I-X structures.
+7. After independent digital and physical acceptance, run final release gates before any authorised merge/tag.
 
 ## Physical acceptance rule
 

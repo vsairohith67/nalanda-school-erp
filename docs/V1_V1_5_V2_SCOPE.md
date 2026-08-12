@@ -1,7 +1,7 @@
 # Nalanda ERP V1, V1.5 and V2 Scope
 
 **Decision ID:** `GOV-RECON-1-SCOPE`<br>
-**Authoritative date:** 2026-08-08<br>
+**Authoritative date:** 2026-08-12 (amends the preserved 2026-08-08 decision)<br>
 **Status:** authoritative planning correction; historical records remain preserved and are explicitly superseded where they conflict<br>
 **Technical source of truth:** this Git repository
 
@@ -14,7 +14,7 @@ Scope is not the same as implementation state. A capability can already exist in
 1. Existing cleared ERP foundations.
 2. Staff Payslip Request and Secure Delivery.
 3. Family/Multi-Student Mixed-Tender Fee Collection.
-4. Canonical Report-Card Template Library and physical print acceptance.
+4. Classes I-X canonical Report-Card Template Library and digital/physical print acceptance, including configured CT, Session, Revision, Preboard and Combined layouts, colour/true-monochrome output, individual/class/section/merged/ZIP delivery, private Parent access and correction/replacement versions.
 5. Safe staging, release, rollback and client-update pipeline.
 6. Parent/Staff support, complaint and feedback workflow.
 7. Technical observability and operational health.
@@ -24,6 +24,8 @@ Scope is not the same as implementation state. A capability can already exist in
 11. Student Safe Exit, single-use gate pass, Guardian consent and Parent notification.
 
 V1 explicitly excludes automatic payroll calculation. Full payroll and Employee self-service are technically cleared by Prompt 23I, but their operational product scope is V1.5 and they are not a V1 launch dependency. The released code may remain in `main` while disabled or permission-restricted for rollout. V1 retains only the separately specified Staff Payslip Request and Secure Delivery workflow; automatic payroll or generated payslips do not make that request workflow complete.
+
+V1 also excludes KG/LKG/UKG report-card operational activation and physical acceptance. Classes I-X remain `IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING`; physical printing is paused while the user supplies additional consolidated corrections. The approved Classes I-X `NALANDA_LEGACY_REFINED` base is preserved without redesign.
 
 ## V1.5 — later operational expansion
 
@@ -42,8 +44,16 @@ V1 explicitly excludes automatic payroll calculation. Full payroll and Employee 
    - statutory integrations only after professional validation.
 2. Optional Transport.
 3. Optional Cafeteria.
+4. LKG/UKG developmental report cards:
+   - preserved ten-page developmental booklet implementation;
+   - LKG/UKG policy and operational activation;
+   - colour and true-monochrome physical acceptance;
+   - booklet printing/imposition decision;
+   - status `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5` until a separately authorised phase.
 
 Transport and Cafeteria are optional because the school currently provides neither service. Full payroll is not V2.
+
+The KG deferral is not deletion or rejection. Existing renderers, tests, migrations, commits and ignored evidence remain intact. The existing release-feature-flag framework keeps new KG template activation, binding, batch generation and publication default-off in V1. Existing issued/historical snapshots remain readable and immutable.
 
 ## V2 — AI educational programme
 
@@ -65,6 +75,7 @@ V2 does not include full payroll.
 | Payslip capability treated only as part of payroll automation | V1 requires a distinct request-and-secure-delivery workflow | Use `docs/STAFF_PAYSLIP_REQUEST_AND_SECURE_DELIVERY_SPEC.md`. |
 | Transport/Cafeteria ambiguously placed in launch scope | Optional V1.5 | Do not treat either as a launch blocker. |
 | AI programme mixed with operational automation | V2 is limited to the educational programme above | Teacher approval and no automatic Student publication are mandatory boundaries. |
+| KG and Classes I-X combined in the report-card V1 requirement | Classes I-X remain V1; LKG/UKG moves to the child requirement `V1.5-RC-034` | Preserve the completed KG foundation and historical evidence; do not count it as V1-cleared or production-ready. |
 
 ## Source-of-truth hierarchy
 

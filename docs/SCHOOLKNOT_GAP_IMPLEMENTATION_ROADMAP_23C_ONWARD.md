@@ -1,5 +1,9 @@
 # Schoolknot Gap Implementation Roadmap: Prompt 23C Onward
 
+## Current report-card forward-roadmap amendment — 2026-08-12
+
+Classes I-X calibration and physical print acceptance remains a V1 gate. R5 may begin only after the user confirms the complete correction register in `docs/REPORT_CARD_V1_SCOPE_AMENDMENT.md`; only then may a Classes I-X-only replacement pack be generated and printed. KG/LKG/UKG is a preserved, default-off V1.5 foundation and is excluded from V1 release-candidate completeness. The superseded R4.2 packs must not be printed. No merge, tag, deployment or real report publication is authorised by this roadmap amendment.
+
 Status: **QA-corrected sequenced proposal; every prompt remains separately gated**
 
 No prompt below is authorised merely by appearing in this roadmap. Prompt 23B-QA cleared the corrected documentation consolidation; Prompt 23C may start only from the merged/tagged QA baseline and remains separately QA-gated.

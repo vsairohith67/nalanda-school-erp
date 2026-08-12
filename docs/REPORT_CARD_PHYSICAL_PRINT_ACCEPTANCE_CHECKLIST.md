@@ -1,5 +1,7 @@
 # Report-Card Physical Print Acceptance Checklist
 
+> **V1 SCOPE AMENDMENT — DO NOT PRINT.** The R4.2 physical and full packs are `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS` because they include KG pages and predate the complete Classes I-X correction register. KG/LKG/UKG physical acceptance is deferred to V1.5. A replacement V1 pack must contain only genuinely distinct Classes I-X layouts, but it must not be generated until the user confirms the correction list is complete.
+
 > R4.1 remains a digital micro-review correction. Do not print `VISUAL-DIRECTION-PACK-R4-1.pdf` or `EDGE-CASE-RENDERING-PACK-R4-1.pdf`. Full physical-pack regeneration and printing remain paused pending explicit user approval.
 
 > **PAUSED — DO NOT PRINT THE EXISTING PACK.** The prior packs are `SUPERSEDED_FOR_VISUAL_APPROVAL`. Physical printing may resume only after source-fidelity visual-direction approval and regeneration of the approved synthetic pack.
@@ -27,13 +29,13 @@
 
 ## Required print set
 
-- [ ] Every distinct colour specimen in the ignored manifest
-- [ ] Every distinct monochrome specimen in the ignored manifest
-- [ ] Full ten-page KG colour booklet, ordinary A4 page order
-- [ ] Full ten-page KG monochrome booklet, ordinary A4 page order
-- [ ] One monochrome page photocopied once
+- [ ] Replacement Classes I-X-only colour pack generated after the confirmed R5 correction pass
+- [ ] Replacement Classes I-X-only true-monochrome pack generated after the confirmed R5 correction pass
+- [ ] Every genuinely distinct Classes I-X colour specimen printed
+- [ ] Every genuinely distinct Classes I-X monochrome specimen printed
+- [ ] One approved Classes I-X monochrome page photocopied once
 
-Do not use booklet imposition for canonical acceptance. Optional imposition is a separate later decision.
+The KG ten-page booklet, KG colour/monochrome printing and booklet-imposition decision are V1.5 gates and must not be included in V1 acceptance.
 
 ## Per-specimen record
 
@@ -62,8 +64,7 @@ Copy this block for each specimen ID.
 
 - [ ] All colour structures pass
 - [ ] All monochrome structures pass
-- [ ] KG colour pages 1-10 pass in order
-- [ ] KG monochrome pages 1-10 pass in order
+- [ ] Classes I-X-only specimen manifest is complete and contains no KG page
 - [ ] Photocopied monochrome page remains interpretable
 - [ ] No real Student material was printed, scanned, or uploaded for this QA
 - Decision/observations:

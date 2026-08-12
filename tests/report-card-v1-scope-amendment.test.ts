@@ -1,0 +1,83 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { describe, expect, it } from "vitest";
+import { releaseFeatureFlags } from "@/lib/release-feature-flags";
+import {
+  KG_REPORT_CARD_DEFERRED_MESSAGE,
+  KG_REPORT_CARD_DEFERRED_STATUS,
+  isKgReportCardOperationallyAvailable,
+  isV1OperationalReportType
+} from "@/lib/report-card-release-policy";
+
+const root = process.cwd();
+const source = (relative: string) => readFileSync(path.join(root, relative), "utf8");
+
+describe("REPORT-PRINT-ACCEPT-1A V1 scope amendment", () => {
+  it("preserves KG as a default-off V1.5 foundation in the existing release-policy system", () => {
+    const flag = releaseFeatureFlags().find((row) => row.key === "kg-report-cards-v1-5");
+    expect(flag).toMatchObject({
+      environment: "PRODUCTION",
+      defaultState: false,
+      allowedRoles: ["SUPER_ADMIN"],
+      rolloutPercentage: 0,
+      version: 1
+    });
+    expect(KG_REPORT_CARD_DEFERRED_STATUS).toBe("IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5");
+    expect(KG_REPORT_CARD_DEFERRED_MESSAGE).toContain("planned for V1.5");
+    expect(isKgReportCardOperationallyAvailable()).toBe(false);
+    expect(isV1OperationalReportType("KG_RUBRIC")).toBe(false);
+    expect(isV1OperationalReportType("MARK_BASED")).toBe(true);
+  });
+
+  it("blocks new KG operational work while keeping historical views and implementation evidence", () => {
+    const service = source("lib/report-cards.ts");
+    const publication = source("lib/report-publication.ts");
+    const examConfiguration = source("lib/exam-configurations.ts");
+    const historyPage = source("app/report-cards/[id]/page.tsx");
+    const kgRenderer = source("lib/report-card-refined-source-lock.ts");
+    const kgTests = source("tests/kg-report-card.test.ts");
+
+    expect(service.match(/requireV1OperationalReportType/g)?.length).toBeGreaterThanOrEqual(8);
+    expect(publication).toContain("KG_REPORT_CARD_DEFERRED_MESSAGE");
+    expect(examConfiguration).toContain('templateFamily === "KG_DEVELOPMENTAL_BOOKLET"');
+    expect(historyPage).toContain("This historical record remains readable");
+    expect(historyPage).toContain("Print Preview");
+    expect(kgRenderer).toContain("FINAL_KG_PAGE_SPECS");
+    expect(kgTests).toContain("KG report-card");
+  });
+
+  it("records one non-duplicated scope split and freezes all 29 pending corrections", () => {
+    const register = source("docs/REQUIREMENTS_REGISTER.md");
+    const amendment = source("docs/REPORT_CARD_V1_SCOPE_AMENDMENT.md");
+    const requirementRows = [...register.matchAll(/^\| (V(?:1(?:\.5)?|2)-[A-Z][A-Z-]*-\d{3}) \|/gm)].map((match) => match[1]);
+
+    expect(requirementRows).toHaveLength(34);
+    expect(new Set(requirementRows).size).toBe(requirementRows.length);
+    expect(requirementRows.filter((id) => id === "V1-RC-016")).toHaveLength(1);
+    expect(requirementRows.filter((id) => id === "V1.5-RC-034")).toHaveLength(1);
+    expect(register).toContain("| Total requirements | 34 |");
+    expect(register).toContain("| V1 | 24 |");
+    expect(register).toContain("| V1.5 | 4 |");
+    expect(register).toContain("| V2 | 6 |");
+    expect(register).toContain("| COMPLETE_LOCAL_PRIVATE | 2 |");
+    expect(register).toContain("| PARTIAL | 1 |");
+    expect(register).toContain("| MISSING | 1 |");
+    expect(register).toContain("IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING");
+    expect(register).toContain("IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5");
+    for (let correction = 1; correction <= 29; correction += 1) {
+      expect(amendment.match(new RegExp(`^${correction}\\. `, "gm"))).toHaveLength(1);
+    }
+    expect(amendment).toContain("not implemented");
+    expect(amendment).toContain("SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS");
+  });
+
+  it("keeps the V1 release candidate Classes I-X-only and physical printing paused", () => {
+    const checklist = source("docs/RELEASE_CANDIDATE_CHECKLIST.md");
+    const printChecklist = source("docs/REPORT_CARD_PHYSICAL_PRINT_ACCEPTANCE_CHECKLIST.md");
+    expect(checklist).toContain("KG/LKG/UKG excluded from V1 release-candidate completeness");
+    expect(checklist).toContain("Physical printing remains paused");
+    expect(printChecklist).toContain("SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS");
+    expect(printChecklist).toContain("Do not print");
+    expect(printChecklist).toContain("Classes I-X-only");
+  });
+});

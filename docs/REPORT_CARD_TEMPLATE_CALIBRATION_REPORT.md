@@ -3,7 +3,13 @@
 **Prompt:** `REPORT-PRINT-ACCEPT-1A`
 **Branch:** `reporting/canonical-template-print-acceptance`
 **Starting release:** commit `6693f8d3e4c975be748e8d7f103cd72f2ee36cfc`, tag `release-operations-v41-2026-08-10`, backup version 41
-**Status:** R4.1 final numerical and true-monochrome correction ready for user review; physical printing remains paused
+**Status:** V1 narrowed to Classes I-X; KG foundation deferred to V1.5; user is still supplying Classes I-X corrections and physical printing remains paused
+
+## 2026-08-12 scope amendment
+
+Classes I-X remain the V1 report-card release requirement with status `IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING`. LKG/UKG and the ten-page developmental booklet move to V1.5 with status `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`. This is a governance and availability change only: KG renderers, tests, migrations, historical commits and ignored evidence remain preserved. New KG operational creation, activation, binding and publication are default-off through the existing release-feature-flag framework; immutable issued/historical reports remain readable.
+
+The R4.2 full and physical packs are preserved locally and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`. They must not be printed, and no replacement pack is generated in this phase. The confirmed-but-incomplete Classes I-X correction register is frozen in `docs/REPORT_CARD_V1_SCOPE_AMENDMENT.md`.
 
 ## Privacy and baseline
 
@@ -13,7 +19,7 @@ The restricted source PDFs were inspected only from neutral, ignored local copie
 
 | Source family | Source pages | Current renderer | Matched sections | Missing/direct-source gaps | Visual differences | Policy differences | Calibration required | Physical specimen |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| KG | `source-02/03` pages 1-10 | Ten-page KG path in `lib/report-pdf.ts` | Cover, profile, instructions/legend, intellectual summary, detailed English/Hindi/Number/EVS/Rhymes/Story, personality, monthly attendance, growth, comments, signatures, promotion, back cover | No missing page structure | Canonical output expands cropped scans into exact A4 with the approved school header on page 1, stable reference/page footers, and privacy-safe identity labels | Frozen schemes and settings replace historical values/wording | Preserve ten pages and logical order; prevent page 8 overflow | `RC-SYN-01-C/M`, 10 pages each |
+| KG | `source-02/03` pages 1-10 | Ten-page KG path in `lib/report-pdf.ts` | Cover, profile, instructions/legend, intellectual summary, detailed English/Hindi/Number/EVS/Rhymes/Story, personality, monthly attendance, growth, comments, signatures, promotion, back cover | No missing page structure | Canonical output expands cropped scans into exact A4 with the approved school header on page 1, stable reference/page footers, and privacy-safe identity labels | Frozen schemes and settings replace historical values/wording | Preserve foundation; defer activation and acceptance to V1.5 | Historical ignored evidence retained; excluded from V1 pack |
 | Classes I-II | No direct restricted page | Academic variable-component path | Identity, components, totals, chart, skills, attendance, remarks, legends, signatures | Historical source page unavailable | Requirement-driven distinct family | All maxima/weights/visibility/configuration frozen | CT, Session, Combined variants | `RC-SYN-02` to `04`, colour/mono |
 | Classes III-V | `source-01` page 2 for CT | Academic variable-component path | Separate Science/Social, skills, totals, chart, legend, remarks, signatures | Session/Combined direct pages unavailable | Governed first-page header, stable reference/page footers, and dynamic rows replace fixed scan artefacts | Historical arithmetic anomaly is not copied | CT, Session, Combined variants | `RC-SYN-05` to `07`, colour/mono |
 | Classes VI-VIII | No direct restricted page | Grouped academic path | English papers, social/science groups, personality, chart, legends, signatures | Historical source page unavailable | Requirement-driven grouping | Frozen paper/group configuration controls presence and calculation | CT, Session, Combined variants | `RC-SYN-08` to `10`, colour/mono |
@@ -35,7 +41,7 @@ Rendered pages, not text extraction, were the layout reference. Source extractio
 
 ## Synthetic proof pack
 
-`pnpm.cmd qa:report-print-accept1a` creates an ignored restart-safe pack with 26 individual PDFs, colour/monochrome merged PDFs, deterministic ZIP output, fixed metadata, hashes, manifest, and printer instructions. Every PDF is rendered twice and byte-compared. The generator verifies valid A4 page sizes and exact ten-page KG output. The data covers long identities and subjects, multiple papers/groups, zero, absent, exempt, N/A, not-entered preview, maxima, decimals, multiple legends, rank on/off, long remarks, attendance extremes, multilingual-compatible text, and signature combinations.
+R4.2 previously generated ignored restart-safe full and physical packs with deterministic colour/monochrome output, ZIP, manifest and printer instructions. Those artifacts remain technical evidence, but their status is now `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`. This amendment does not run the generator. A later authorised R5 phase must generate a new Classes I-X-only pack after the correction register is complete.
 
 No real source value is used in generated evidence.
 
@@ -51,5 +57,8 @@ No real source value is used in generated evidence.
 - R4 review evidence: ignored eight-page visual pack and separate four-page edge-case pack only.
 - R4.1 targeted correction: configured group averages, corrected `484.07 / 600` Class IX total, one-cohort chart invariants, conditional group-row note, grayscale official-logo derivative, and rendered RGB-channel validation.
 - R4.1 review evidence: ignored four-page visual micro-pack and separate four-page edge-case pack only; no complete pack regenerated.
-- Full synthetic print-pack regeneration: not yet approved.
+- R4.2 full source-locked packs: generated and digitally verified at `4c0eb0b79e7b7a3b8b0c9bf5864ecf483c6178c1`, then superseded for V1 because they include KG and predate the complete Classes I-X correction register.
+- Classes I-X correction register: confirmed items frozen; user is still supplying additions before R5.
+- Replacement Classes I-X-only pack: not authorised yet and not generated.
 - Physical colour/monochrome/photocopy acceptance: paused; no physical printing has occurred.
+- KG operational activation and physical acceptance: V1.5 only; not V1-cleared or production-ready.

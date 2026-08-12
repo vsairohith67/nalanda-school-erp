@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { permissionSetCan } from "@/lib/role-permissions";
 import { resolveReportCardScope, requireReportCardTarget } from "@/lib/report-card-scope";
 import { parseDraft, reportCardValidationGaps } from "@/lib/report-cards";
+import { isKgReportCardOperationallyAvailable } from "@/lib/report-card-release-policy";
 
 export default async function BatchPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("VIEW_REPORT_CARDS");
@@ -36,9 +37,11 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   });
   const gapCount = cards.reduce((total, card) => total + reportCardValidationGaps(card, parseDraft(card)).length, 0);
   const ready = cards.filter((card) => card.status === "READY_FOR_REVIEW").length;
+  const operational = batch.reportType !== "KG_RUBRIC" || isKgReportCardOperationallyAvailable();
   return <div className="page report-cards-page">
     <PageHeader title={batch.title} description={`${batch.batchNumber} · ${batch.academicYear} · ${batch.className}${batch.section ? `-${batch.section}` : ""}`} action={<StatusBadge status={batch.status} />} />
     {scope.reason ? <p className="notice">{scope.reason}</p> : null}
+    {!operational && user.role === "SUPER_ADMIN" ? <p className="notice"><strong>KG report-card family — planned for V1.5.</strong> Historical records remain readable; operational workflow controls are disabled in V1.</p> : null}
     <div className="grid four">
       <StatCard label="Student Cards" value={String(cards.length)} />
       <StatCard label="Ready for Review" value={String(ready)} />
@@ -52,10 +55,10 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
       <div><dt>Locked source</dt><dd>{batch.examSources[0] ? `${batch.examSources[0].examCycle.examCode} - ${batch.examSources[0].examCycle.name} (${batch.examSources[0].examCycle.status})` : "Dedicated KG rubric"}</dd></div>
     </dl></section>
     <ReportCardBatchWorkflow id={batch.id} status={batch.status} updatedAt={batch.updatedAt.toISOString()} qaRecord={batch.batchNumber.startsWith("QA17C")} permissions={{
-      manage: permissionSetCan(permissions, "MANAGE_REPORT_CARD_BATCHES"),
-      submit: permissionSetCan(permissions, "SUBMIT_REPORT_CARDS"),
-      approve: permissionSetCan(permissions, "APPROVE_REPORT_CARDS"),
-      issue: permissionSetCan(permissions, "ISSUE_REPORT_CARDS")
+      manage: operational && permissionSetCan(permissions, "MANAGE_REPORT_CARD_BATCHES"),
+      submit: operational && permissionSetCan(permissions, "SUBMIT_REPORT_CARDS"),
+      approve: operational && permissionSetCan(permissions, "APPROVE_REPORT_CARDS"),
+      issue: operational && permissionSetCan(permissions, "ISSUE_REPORT_CARDS")
     }} />
     <section className="card"><div className="section-title"><div><h3>Included Students</h3><p>Cards must be complete and individually submitted before batch submission.</p></div></div><div className="table-wrap"><table><thead><tr><th>Admission</th><th>Student</th><th>Status</th><th>Gaps</th><th>Versions</th><th>Open</th></tr></thead><tbody>
       {cards.map((card) => { const gaps = reportCardValidationGaps(card, parseDraft(card)); return <tr key={card.id}><td>{card.student.admissionNo}</td><td>{card.student.studentName}</td><td><StatusBadge status={card.status} /></td><td>{gaps.length ? `${gaps.length} gap(s)` : "Complete"}</td><td>{card._count.versions}</td><td><Link href={`/report-cards/${card.id}`}>View Card</Link></td></tr>; })}

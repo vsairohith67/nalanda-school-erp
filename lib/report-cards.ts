@@ -5,12 +5,14 @@ import { buildCanonicalReportCardTemplate, DEFAULT_KG_TEMPLATE, DEFAULT_MARK_TEM
 import { CANONICAL_REPORT_TEMPLATE_FAMILIES, canonicalFamilyFromDefinition, isCombinedVariant, type CanonicalReportTemplateFamily } from "@/lib/report-card-canonical-templates";
 import { ReportCardError } from "@/lib/report-card-scope";
 import { currentReportCalendarBasis } from "@/lib/academic-calendar";
+import { isV1OperationalReportType, KG_REPORT_CARD_DEFERRED_MESSAGE } from "@/lib/report-card-release-policy";
 
 export const BATCH_STATUSES = ["DRAFT", "OPEN_FOR_ENTRY", "SUBMITTED", "APPROVED", "ISSUED", "ARCHIVED", "CANCELLED"] as const;
 export const CARD_STATUSES = ["DRAFT", "READY_FOR_REVIEW", "APPROVED", "ISSUED", "CANCELLED", "SUPERSEDED"] as const;
 
 export async function createGradingScheme(client: PrismaClient, input: unknown, actorUserId: string) {
   const row = object(input, "Grading scheme details"); const reportType = reportTypeValue(row.reportType);
+  requireV1OperationalReportType(reportType);
   const bands = validateGradeBands(row.bands);
   return client.$transaction(async (tx) => {
     const scheme = await tx.gradingScheme.create({ data: { schemeCode: normalizeReportCardCode(row.schemeCode, "Scheme code"), name: safeReportCardText(row.name, "Scheme name", 120)!, academicYear: academicYearValue(row.academicYear, false), reportType, status: "ACTIVE", description: safeReportCardText(row.description, "Scheme description", 1000, false), createdByUserId: actorUserId } });
@@ -21,6 +23,7 @@ export async function createGradingScheme(client: PrismaClient, input: unknown, 
 
 export async function createReportCardTemplate(client: PrismaClient, input: unknown, actorUserId: string) {
   const row = object(input, "Template details"); const reportType = reportTypeValue(row.reportType);
+  requireV1OperationalReportType(reportType);
   const canonicalFamilyValue = String(row.canonicalFamily ?? "").trim().toUpperCase();
   if (canonicalFamilyValue && !(CANONICAL_REPORT_TEMPLATE_FAMILIES as readonly string[]).includes(canonicalFamilyValue)) {
     throw new ReportCardError("Choose a supported canonical template family.");
@@ -56,6 +59,7 @@ export async function setTemplateStatus(client: PrismaClient, id: string, status
   if (status === "ACTIVE") {
     const template = await client.reportCardTemplate.findUnique({ where: { id } });
     if (!template) throw new ReportCardError("The report-card template was not found.", 404);
+    requireV1OperationalReportType(template.reportType);
     const definition = parseStoredTemplateDefinition(template.templateDefinitionJson) as Record<string, any>;
     if (!canonicalFamilyFromDefinition(definition)) {
       throw new ReportCardError("Only a versioned canonical template can be activated for new report publication.");
@@ -113,6 +117,7 @@ export async function updateReportCardDraft(client: PrismaClient, id: string, in
   const row = object(input, "Report-card entry"); const expected = expectedDate(expectedValue, "report card");
   return client.$transaction(async (tx) => {
     const card = await tx.studentReportCard.findUnique({ where: { id } }); if (!card) throw new ReportCardError("Report card was not found.", 404);
+    requireV1OperationalReportType(card.reportType);
     if (card.status !== "DRAFT") throw new ReportCardError("Only a draft report card can be edited.", 409);
     const current = parseDraft(card); let draft: any = current;
     if (card.reportType === "KG_RUBRIC") {
@@ -150,6 +155,7 @@ export async function submitStudentReportCard(client: PrismaClient, id: string, 
   const expected = expectedDate(expectedValue, "report card");
   return client.$transaction(async (tx) => {
     const card = await tx.studentReportCard.findUnique({ where: { id }, include: { batch: true } }); if (!card) throw new ReportCardError("Report card was not found.", 404);
+    requireV1OperationalReportType(card.reportType);
     if (card.status === "READY_FOR_REVIEW") return card;
     if (card.status !== "DRAFT" || card.batch.status !== "OPEN_FOR_ENTRY") throw new ReportCardError("Only a draft card in an open batch can be submitted.", 409);
     const gaps = reportCardValidationGaps(card, parseDraft(card)); if (gaps.length) throw new ReportCardError(`Complete the report card before submission: ${gaps.slice(0, 8).join("; ")}${gaps.length > 8 ? `; and ${gaps.length - 8} more` : ""}.`);
@@ -164,6 +170,7 @@ export async function transitionReportCardBatch(client: PrismaClient, id: string
   return client.$transaction(async (tx) => {
     const batch = await tx.reportCardBatch.findUnique({ where: { id }, include: { reportCards: { include: { student: true, versions: { orderBy: { versionNumber: "desc" }, take: 1 } } }, template: true, examSources: { include: { examCycle: true } } } });
     if (!batch) throw new ReportCardError("Report-card batch was not found.", 404);
+    if (!["archive", "cancel"].includes(action)) requireV1OperationalReportType(batch.reportType);
     const target = action === "open" ? "OPEN_FOR_ENTRY" : action === "submit" ? "SUBMITTED" : action === "approve" ? "APPROVED" : action === "issue" ? "ISSUED" : action === "archive" ? "ARCHIVED" : "CANCELLED";
     if (batch.status === target) return batch;
     const expectedFrom = { open: "DRAFT", submit: "OPEN_FOR_ENTRY", approve: "SUBMITTED", issue: "APPROVED", archive: "ISSUED", cancel: batch.status }[action];
@@ -219,6 +226,7 @@ export async function correctIssuedReportCard(client: PrismaClient, id: string, 
   return client.$transaction(async (tx) => {
     const card = await tx.studentReportCard.findUnique({ where: { id }, include: { student: true, batch: { include: { template: true } }, versions: { orderBy: { versionNumber: "desc" }, take: 1 } } });
     if (!card || card.status !== "ISSUED" || !card.versions[0]) throw new ReportCardError("Only an issued report card can receive a correction.", 409);
+    requireV1OperationalReportType(card.reportType);
     const prior = JSON.parse(card.versions[0].snapshotJson); let draft = row.draftData ?? prior.data;
     if (card.reportType === "MARK_BASED") {
       if (JSON.stringify(draft?.calculation) !== JSON.stringify(prior.data?.calculation)) throw new ReportCardError("Corrections cannot alter snapshotted raw-mark calculations.", 403);
@@ -246,6 +254,7 @@ export function publicBand(row: any) { return { gradeCode: row.gradeCode, label:
 
 async function validateBatchInput(client: PrismaClient, input: unknown) {
   const row = object(input, "Batch details"); const reportType = reportTypeValue(row.reportType); const academicYear = academicYearValue(row.academicYear, true)!; const className = safeReportCardText(row.className, "Class", 40)!; const section = safeReportCardText(row.section, "Section", 20, false)?.toUpperCase() ?? null;
+  requireV1OperationalReportType(reportType);
   const template = await client.reportCardTemplate.findFirst({ where: { id: String(row.templateId ?? ""), status: "ACTIVE", reportType }, include: { gradingScheme: { include: { bands: { orderBy: { displayOrder: "asc" } } } } } });
   if (!template) throw new ReportCardError("Choose an active template matching the report type.");
   if (template.academicYear && template.academicYear !== academicYear) throw new ReportCardError("Template academic year does not match the batch.");
@@ -280,6 +289,7 @@ function buildIssuedSnapshot(batch: any, card: any, draft: any, versionNumber: n
 async function event(tx: any, reportCardId: string, eventType: string, previousStatus: string | null, newStatus: string | null, actor: { id: string; name: string }, eventDate: Date, reason: string | null = null, versionId: string | null = null) { await tx.studentReportCardEvent.create({ data: { reportCardId, versionId, eventType, eventDate, previousStatus, newStatus, reason, recordedByUserId: actor.id, actorLabel: actor.name } }); }
 function object(input: unknown, label: string) { if (!input || typeof input !== "object" || Array.isArray(input)) throw new ReportCardError(`${label} must be an object.`); return input as Record<string, any>; }
 function reportTypeValue(value: unknown) { const reportType = String(value ?? "").toUpperCase(); if (!(REPORT_CARD_TYPES as readonly string[]).includes(reportType)) throw new ReportCardError("Choose Mark Based or KG Rubric."); return reportType; }
+function requireV1OperationalReportType(reportType: string) { if (!isV1OperationalReportType(reportType)) throw new ReportCardError(KG_REPORT_CARD_DEFERRED_MESSAGE, 409); }
 function academicYearValue(value: unknown, required: boolean) { const text = String(value ?? "").trim(); if (!text && !required) return null; if (!/^\d{4}-\d{2}$/.test(text)) throw new ReportCardError("Academic year must use YYYY-YY."); return text; }
 function expectedDate(value: unknown, label: string) { const date = new Date(String(value ?? "")); if (Number.isNaN(date.getTime())) throw new ReportCardError(`Reload the ${label} before continuing.`, 409); return date; }
 function reportCardNumber(batchNumber: string, admissionNo: string) { return `${batchNumber}-${String(admissionNo).trim().toUpperCase().replace(/[^A-Z0-9-]/g, "-")}`.slice(0, 100); }

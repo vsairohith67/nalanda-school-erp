@@ -12,6 +12,7 @@ import {
   safePublishedReportSnapshot
 } from "@/lib/report-publication-types";
 import { isCombinedVariant } from "@/lib/report-card-canonical-templates";
+import { isKgReportCardOperationallyAvailable, KG_REPORT_CARD_DEFERRED_MESSAGE } from "@/lib/report-card-release-policy";
 
 type PublicationClient = PrismaClient | any;
 type PublicationActor = Pick<AuthUser, "id" | "name" | "role">;
@@ -1055,6 +1056,9 @@ function runBlockers(rows: any[], lock: any, superseded: any, binding: any) {
   if (!binding) blockers.push("No active frozen report-template family is bound to this class scope.");
   if (binding && !GOVERNED_REPORT_TEMPLATE_FAMILIES.includes(binding.templateFamily)) {
     blockers.push("The frozen template family is unsupported.");
+  }
+  if (binding?.templateFamily === "KG_DEVELOPMENTAL_BOOKLET" && !isKgReportCardOperationallyAvailable()) {
+    blockers.push(KG_REPORT_CARD_DEFERRED_MESSAGE);
   }
   if (binding && !binding.reportCardTemplateId) {
     blockers.push("The frozen template family is not linked to an approved report-card template.");

@@ -1,5 +1,15 @@
 # Documentation Index
 
+## REPORT-PRINT-ACCEPT-1A V1 scope amendment
+
+- [V1 Classes I-X / V1.5 KG Scope Amendment and Frozen Correction Register](REPORT_CARD_V1_SCOPE_AMENDMENT.md)
+- [Report-Card Template Catalog](REPORT_CARD_TEMPLATE_CATALOG.md)
+- [Report-Card Calibration Report](REPORT_CARD_TEMPLATE_CALIBRATION_REPORT.md)
+- [Physical Print Acceptance Checklist](REPORT_CARD_PHYSICAL_PRINT_ACCEPTANCE_CHECKLIST.md)
+- [Release-Candidate Checklist](RELEASE_CANDIDATE_CHECKLIST.md)
+
+Classes I-X remain a V1 requirement awaiting the complete correction register and physical acceptance. The preserved KG/LKG/UKG foundation is default-off and deferred to V1.5. R4.2 packs must not be printed; no replacement pack exists yet.
+
 ## RELEASE-OPS-1A safe release, client update and rollback
 
 - [Existing Release-Asset Audit](RELEASE_OPERATIONS_EXISTING_ASSET_AUDIT.md)

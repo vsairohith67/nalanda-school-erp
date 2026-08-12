@@ -1,8 +1,8 @@
 # Prompt Ledger — Earliest Recoverable Evidence to Present
 
 **Ledger ID:** `GOV-RECON-1-LEDGER`<br>
-**Reconstructed:** 2026-08-08<br>
-**Coverage:** earliest post-hoc Prompt Library evidence (created 2026-06-19) through Prompt 23I release (2026-08-08), plus this governance phase
+**Reconstructed:** 2026-08-12<br>
+**Coverage:** earliest post-hoc Prompt Library evidence (created 2026-06-19) through the current REPORT-PRINT-ACCEPT-1A scope amendment
 
 ## Source limitation
 
@@ -14,6 +14,7 @@ The accessible Git history begins with the consolidated baseline commit `2d1ac63
 
 | Sequence / prompt label | Recoverable subject | Source date | Evidence classification | Implementation/release disposition | Source gap or conflict |
 | --- | --- | --- | --- | --- | --- |
+| REPORT-PRINT-ACCEPT-1A scope amendment | Narrow V1 report-card acceptance to Classes I-X; preserve and default-off KG for V1.5; freeze incomplete Classes I-X correction register | 2026-08-12 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `DEFERRED` | Classes I-X are `IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING`; KG is `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`; no PDF regeneration, printing, merge or tag | R4.2 packs are superseded for V1; additional Classes I-X corrections remain pending before R5 |
 | RELEASE-OPS-1A / QA | Safe staging, reproducible package, release gates, Web/PWA update and rollback machinery | 2026-08-10 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | Cleared locally/private after independent package reproducibility, migration/restore, Browser/role/mobile/update-safety and full-regression QA; retained branch and annotated v41 tag | No deployment/provider/DNS/real-data authority; actual staging requires separate provider/budget approval |
 | FIN-FAMILY-PAY-1 / QA | Family/multi-Student mixed-tender collection | 2026-08-08 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | Complete locally/private with exact-paise graph, compatibility Payments, one receipt, correction/reversal, role isolation, concurrency/rollback, Browser and v37 restore proof | No provider activation, deployment, real-data onboarding, or physical-printer acceptance implied |
 
