@@ -7,6 +7,7 @@ import {
   FINAL_ACADEMIC_PAGE_SPECS,
   R4_MINIMUM_FONT_SIZES,
   R5_CHART_SERIES,
+  R5_CHART_NUMERIC_LABEL_FONT_SIZE,
   R5_COSCHOLASTIC_LEGEND,
   R5_IDENTITY_LABELS,
   R5_MAX_PARENT_FACING_DECIMALS,
@@ -40,7 +41,7 @@ const identity = resolveReportSchoolIdentity({
   addressLine1: "Nanalnagar, Mehdipatnam",
   city: "Hyderabad",
   academicYear: "2026-27"
-});
+}, [{ schoolIdentity: { affiliationWording: "(Affiliated to CISCE, New Delhi, Estd. 1972)" } }]);
 
 describe("R5 Classes I-X scope and structural parity", () => {
   it("contains only the ten approved academic review specimens and no KG page", () => {
@@ -89,8 +90,8 @@ describe("R5 Classes I-X scope and structural parity", () => {
 });
 
 describe("R5 header, identity, legend, and font contracts", () => {
-  it("omits an absent school-status line and combines only configured approved wording", () => {
-    expect(approvedSchoolStatusLine(identity)).toBeNull();
+  it("uses the exact approved synthetic status line and combines only configured approved wording", () => {
+    expect(approvedSchoolStatusLine(identity)).toBe("(Affiliated to CISCE, New Delhi, Estd. 1972)");
     const configured = resolveReportSchoolIdentity({
       schoolName: "Nalanda Public School",
       addressLine1: "Nanalnagar, Mehdipatnam",
@@ -184,11 +185,11 @@ describe("R5 exact grade legend and chart legibility", () => {
     expect(gradeForScale(91, STANDARD_GRADE_SCALE)).toBe("A1");
   });
 
-  it("uses solid, diagonal, and cross-hatch monochrome series", () => {
+  it("uses diagonal, cross-hatch, and dotted monochrome series", () => {
     expect(R5_CHART_SERIES).toEqual([
-      { label: "Student Marks", monochromePattern: "SOLID" },
-      { label: "Class Average", monochromePattern: "DIAGONAL" },
-      { label: "High Score", monochromePattern: "CROSS_HATCH" }
+      { label: "Student Marks", monochromePattern: "DIAGONAL" },
+      { label: "Class Average", monochromePattern: "CROSS_HATCH" },
+      { label: "High Score", monochromePattern: "DOTS" }
     ]);
   });
 
@@ -199,7 +200,7 @@ describe("R5 exact grade legend and chart legibility", () => {
       const placements = layoutChartNumericLabels(
         text.map((value, index) => ({ text: value, centerX: 40 + index * 6, barTopY: 90 + index * 0.1 })),
         { left: 0, right: 100, bottom: 20, top: 120 },
-        6,
+        R5_CHART_NUMERIC_LABEL_FONT_SIZE,
         (value) => value.length * 3.1
       );
       expect(pairwiseOverlapCount(placements), mode).toBe(0);

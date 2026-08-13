@@ -3,7 +3,7 @@
 **Prompt:** `REPORT-PRINT-ACCEPT-1A`
 **Branch:** `reporting/canonical-template-print-acceptance`
 **Starting release:** commit `6693f8d3e4c975be748e8d7f103cd72f2ee36cfc`, tag `release-operations-v41-2026-08-10`, backup version 41
-**Status:** V1 narrowed to Classes I-X; R5 consolidated corrections complete for digital review; KG foundation deferred to V1.5; physical printing remains paused
+**Status:** V1 narrowed to Classes I-X; R5-A1 amendment complete for digital review; KG foundation deferred to V1.5; physical printing remains paused
 
 ## 2026-08-12 scope amendment
 
@@ -36,12 +36,12 @@ Rendered pages, not text extraction, were the layout reference. Source extractio
 - The PDF uses the approved transparent logo and Georgia Bold when available, with a safe bold fallback.
 - Academic tables derive columns from frozen components and omit unused cells dynamically.
 - All five mark states remain textually distinct; zero is a numeric Present value.
-- Monochrome charts combine solid, diagonal hatch, horizontal pattern, outlines, and direct values.
+- R5-A1 monochrome charts use white-base diagonal slash, cross-hatch and dot patterns with strong black outlines, matching large legend swatches and direct values; colour charts retain the approved three colours.
 - KG page 8 uses a compact table that retains the configured 8.5-point minimum while keeping the canonical booklet at ten pages.
 
-## R5 synthetic digital-review pack
+## R5-A1 synthetic digital-review pack
 
-R5 generates an ignored ten-page Classes I-X visual-direction pack and a separate six-page edge-case pack. The visual pack covers I-II Session/Combined, III-V Session, VI-VIII grouped, IX Combined and X CT/Revision in approved colour/true-monochrome combinations. The edge pack covers long names and subjects, AB/EX/NE/NA, close chart values, one-decimal reconciliation, conditional school status and grade boundaries. KG is excluded. The generator verifies deterministic bytes, A4 boxes, stable page counts, pure-white background samples and true grayscale before writing.
+R5-A1 generates an ignored ten-page Classes I-X visual-direction pack, seven-page enlarged detail-check pack and six-page edge-case pack. The exact synthetic header fixture is `NALANDA PUBLIC SCHOOL`, the approved configured status line and `Nanalnagar, Mehdipatnam, Hyderabad`; the renderer contains no hard-coded affiliation claim. The identity table uses one fixed four-column grid and one continuous centre divider. Chart values use at least 7-point bold text, white knockout backing, bounding-box collision checks and short leaders when staggered. Monochrome bars and legend use single diagonal slash, cross-hatch and dots on white with black outlines. Rendered pattern crops remain distinct after moderate blur and threshold simulation. KG is excluded.
 
 R4.2 full and physical artifacts remain preserved technical evidence under `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`; R5 does not regenerate or authorise them.
 
@@ -61,7 +61,7 @@ No real source value is used in generated evidence.
 - R4.1 review evidence: ignored four-page visual micro-pack and separate four-page edge-case pack only; no complete pack regenerated.
 - R4.2 full source-locked packs: generated and digitally verified at `4c0eb0b79e7b7a3b8b0c9bf5864ecf483c6178c1`, then superseded for V1 because they include KG and predate the complete Classes I-X correction register.
 - Classes I-X R5 correction register: confirmed complete and implemented for user digital review.
-- R5 digital evidence: ignored ten-page visual pack and six-page edge-case pack; synthetic-only and not for physical acceptance.
+- R5-A1 digital evidence: ignored ten-page visual pack, seven-page detail-check pack and six-page edge-case pack; synthetic-only and not for physical acceptance. Pre-A1 R5 packs are preserved as `SUPERSEDED_BY_R5_A1`.
 - Replacement Classes I-X-only physical pack: not authorised yet and not generated.
 - Physical colour/monochrome/photocopy acceptance: paused; no physical printing has occurred.
 - KG operational activation and physical acceptance: V1.5 only; not V1-cleared or production-ready.

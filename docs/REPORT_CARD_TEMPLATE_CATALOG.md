@@ -2,7 +2,7 @@
 
 **Catalog ID:** `REPORT-PRINT-ACCEPT-1A-TEMPLATE-CATALOG`
 
-**Calibration date:** 2026-08-12
+**Calibration date:** 2026-08-13
 
 **Status:** four Classes I-X families remain V1; R5 corrections are ready for digital review and physical acceptance remains pending; the KG foundation is preserved and operationally deferred to V1.5
 
@@ -37,10 +37,10 @@ No template definition contains universal component maxima, weightages, or grade
 | Zero / Absent / Not Entered / Exempt / N/A distinctions | Covered synthetically |
 | Long names and subjects, multiple papers, grouped subjects, decimals, legends, remarks, attendance extremes, signatures | Covered synthetically |
 | Colour and monochrome | Both generated for every distinct structure |
-| Three-series chart | Student Marks solid, Class Average diagonal hatch, High Score horizontal pattern, all with numeric labels |
+| Three-series chart | Colour uses three approved distinct colours. True monochrome uses Student Marks diagonal slash, Class Average cross-hatch and High Score dots, with matching 14 mm by 5 mm legend swatches and collision-safe direct labels of at least 7 pt |
 | Individual PDF, merged PDF, ZIP | Deterministic generated artifacts in ignored pack |
 | Class/section jobs and Parent issued-only delivery | Existing immutable publication pipeline retained; full independent QA pending |
-| Classes I-X R5 digital review | Ten representative colour/true-monochrome pages plus a separate six-page edge pack generated locally and ignored; user review pending |
+| Classes I-X R5-A1 digital review | Ten representative colour/true-monochrome pages, seven enlarged detail checks and a separate six-page edge pack generated locally and ignored; user review pending |
 | Classes I-X physical colour, grayscale, and photocopy acceptance | Paused until R5 user approval and later regeneration of a Classes I-X-only physical pack |
 | KG physical acceptance | Deferred to V1.5; not part of the V1 release-candidate gate |
 

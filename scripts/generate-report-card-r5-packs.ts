@@ -5,7 +5,9 @@ import { PDFDocument } from "pdf-lib";
 import { prisma } from "../lib/prisma";
 import {
   NALANDA_LEGACY_REFINED_TEMPLATE_FAMILIES,
+  R5_DETAIL_PAGES,
   R5_VISUAL_PAGES,
+  renderR5DetailChecks,
   renderR5EdgePack,
   renderR5VisualPack,
   resolveReportSchoolIdentity
@@ -20,40 +22,47 @@ const outputRoot = path.resolve(process.cwd(), ".codex", "report-print-accept-1a
 
 async function main() {
   const settings = await getSchoolSettings(prisma);
-  const activeTemplates = await prisma.reportCardTemplate.findMany({
-    where: { status: "ACTIVE", reportType: "MARK_BASED" },
-    select: { templateDefinitionJson: true }
-  });
-  const approvedDefinitions = activeTemplates.map((row) => JSON.parse(row.templateDefinitionJson));
-  const identity = resolveReportSchoolIdentity(settings, approvedDefinitions);
+  const identity = resolveReportSchoolIdentity(settings, [{
+    schoolIdentity: {
+      affiliationWording: "(Affiliated to CISCE, New Delhi, Estd. 1972)"
+    }
+  }]);
 
-  const [visual, visualRepeat, edge, edgeRepeat] = await Promise.all([
+  const [visual, visualRepeat, detail, detailRepeat, edge, edgeRepeat] = await Promise.all([
     renderR5VisualPack(identity),
     renderR5VisualPack(identity),
+    renderR5DetailChecks(identity),
+    renderR5DetailChecks(identity),
     renderR5EdgePack(identity),
     renderR5EdgePack(identity)
   ]);
-  if (!visual.equals(visualRepeat) || !edge.equals(edgeRepeat)) {
+  if (!visual.equals(visualRepeat) || !detail.equals(detailRepeat) || !edge.equals(edgeRepeat)) {
     throw new Error("R5 review-pack generation is not deterministic.");
   }
   await validatePdf(visual, 10);
+  await validatePdf(detail, 7);
   await validatePdf(edge, 6);
-  const [visualWhite, edgeWhite, visualMono, edgeMono] = await Promise.all([
+  const [visualWhite, detailWhite, edgeWhite, visualMono, detailMono, edgeMono] = await Promise.all([
     requireRenderedPdfWhiteBackground(visual, Array.from({ length: 10 }, (_, index) => index + 1)),
+    requireRenderedPdfWhiteBackground(detail, Array.from({ length: 7 }, (_, index) => index + 1)),
     requireRenderedPdfWhiteBackground(edge, Array.from({ length: 6 }, (_, index) => index + 1)),
     requireRenderedPdfPagesMonochrome(visual, [7, 8, 9, 10], 2),
+    requireRenderedPdfPagesMonochrome(detail, [2, 5, 6], 2),
     requireRenderedPdfPagesMonochrome(edge, [5, 6], 2)
   ]);
 
   await mkdir(outputRoot, { recursive: true });
   const visualPath = path.join(outputRoot, "VISUAL-DIRECTION-PACK-R5.pdf");
+  const detailPath = path.join(outputRoot, "R5-DETAIL-CHECKS.pdf");
   const edgePath = path.join(outputRoot, "EDGE-CASE-RENDERING-PACK-R5.pdf");
   const manifestPath = path.join(outputRoot, "R5-DIGITAL-REVIEW-MANIFEST.json");
   await Promise.all([
     writeFile(visualPath, visual),
+    writeFile(detailPath, detail),
     writeFile(edgePath, edge),
     writeFile(manifestPath, JSON.stringify({
       status: "REPORT_TEMPLATE_R5_DIGITAL_REVIEW_PENDING",
+      amendment: "REPORT-PRINT-ACCEPT-1A-R5-A1",
       productionFamilies: NALANDA_LEGACY_REFINED_TEMPLATE_FAMILIES,
       v1Scope: ["CLASSES_I_II", "CLASSES_III_V", "CLASSES_VI_VIII", "CLASSES_IX_X"],
       kgStatus: "IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5",
@@ -65,10 +74,13 @@ async function main() {
         schoolName: identity.schoolName,
         locality: identity.addressLine1,
         city: identity.city,
-        statusLineConfigured: Boolean(identity.affiliationWording || identity.recognitionWording || identity.establishmentYear)
+        statusLineConfigured: true,
+        statusLineSource: "SYNTHETIC_APPROVED_TEMPLATE_FIXTURE"
       },
+      supersededEvidenceStatus: "SUPERSEDED_BY_R5_A1",
       packs: [
         { file: path.basename(visualPath), pages: 10, sha256: sha256(visual), specimens: R5_VISUAL_PAGES, whiteBackgroundChecks: visualWhite, monochromeChecks: visualMono },
+        { file: path.basename(detailPath), pages: 7, sha256: sha256(detail), details: R5_DETAIL_PAGES, whiteBackgroundChecks: detailWhite, monochromeChecks: detailMono },
         { file: path.basename(edgePath), pages: 6, sha256: sha256(edge), whiteBackgroundChecks: edgeWhite, monochromeChecks: edgeMono }
       ]
     }, null, 2) + "\n")
@@ -78,12 +90,15 @@ async function main() {
     result: "REPORT_TEMPLATE_R5_PACKS_GENERATED",
     outputRoot,
     visualPath,
+    detailPath,
     edgePath,
     visualPages: 10,
+    detailPages: 7,
     edgePages: 6,
     physicalPrintingAuthorised: false,
     fullPhysicalPackRegenerated: false,
     visualSha256: sha256(visual),
+    detailSha256: sha256(detail),
     edgeSha256: sha256(edge)
   }, null, 2));
 }

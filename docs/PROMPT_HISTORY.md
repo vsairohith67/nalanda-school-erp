@@ -1,5 +1,11 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## REPORT-PRINT-ACCEPT-1A-R5-A1 — exact header, grid and chart amendment (2026-08-13)
+
+This amendment remains part of R5. Classes I-X now use the approved three-line academic header geometry, with the exact review wording supplied only through the synthetic approved configuration fixture; missing operational wording produces a safe preview warning and blocks final publication. The identity table uses four fixed 25% columns with one continuous 50% divider. Chart values have individual anchors, at least 7-point bold text, white knockout backing, 2.5-point bounding-box clearance and leaders where staggering changes association. True monochrome uses single diagonal slash, cross-hatch and dots in both bars and 14 mm by 5 mm legend swatches, with rendered blur/threshold photocopy simulation.
+
+The pre-amendment R5 PDFs are retained as ignored evidence under `SUPERSEDED_BY_R5_A1`. The current ignored review evidence is a ten-page visual pack, seven-page detail-check pack and six-page edge-case pack. Physical-pack generation, printing, merge, tag, deployment and report issue remain paused; KG remains V1.5.
+
 ## REPORT-PRINT-ACCEPT-1A-R5 — consolidated Classes I-X correction (2026-08-12)
 
 The user confirmed the 29-item Classes I-X correction register complete. R5 applies the correction consistently to `NALANDA_LEGACY_REFINED_COLOUR` and `NALANDA_LEGACY_REFINED_MONOCHROME`: explicit white A4 canvas, conditional School Settings status line, exact identity labels, balanced academic/co-scholastic regions, full-width G/S/N legend, deterministic one-decimal display reconciliation, exact threshold-derived grade bands, collision-safe charts, and four equal signature areas with approximately 18 mm of clear signing height.

@@ -10,6 +10,7 @@ import {
   deterministicReportPdfName,
   renderReportPdf
 } from "../lib/report-pdf";
+import { requireRenderedPdfPagesMonochrome } from "../lib/report-card-monochrome-validation";
 import {
   GOVERNED_REPORT_TEMPLATE_FAMILIES,
   safePublishedReportSnapshot,
@@ -99,6 +100,30 @@ describe("EXAM-RC-IMPL-3 publication security and PDF contract", () => {
     expect(fileName).not.toContain("..");
     const zip = createReportZip([{ name: "../../unsafe report.pdf", bytes: monochrome }]);
     expect(zip.subarray(0, 2).toString("hex")).toBe("504b");
+  }, 30_000);
+
+  it("applies the R5-A1 academic header, identity grid, and true-monochrome contract to canonical V1 output", async () => {
+    const canonical = reportFixture();
+    canonical.templateFamily = "LOWER_PRIMARY_I_II";
+    canonical.school.affiliationWording = "(Approved synthetic school status, Estd. 1972)";
+    canonical.student.parentGuardians = [{
+      label: "Parent / Guardian",
+      value: "Synthetic Parent Guardian With A Wrapping Name"
+    }];
+    const [colour, monochrome] = await Promise.all([
+      renderReportPdf(canonical, "COLOUR"),
+      renderReportPdf(canonical, "MONOCHROME")
+    ]);
+    const [colourDocument, monochromeDocument] = await Promise.all([
+      PDFDocument.load(colour),
+      PDFDocument.load(monochrome)
+    ]);
+    expect(colourDocument.getPage(0).getSize()).toEqual(monochromeDocument.getPage(0).getSize());
+    await expect(requireRenderedPdfPagesMonochrome(
+      monochrome,
+      Array.from({ length: monochromeDocument.getPageCount() }, (_, index) => index + 1),
+      2
+    )).resolves.toHaveLength(monochromeDocument.getPageCount());
   }, 30_000);
 
   it("preserves backup version 40 and the isolated EXAM3 harness contract", () => {

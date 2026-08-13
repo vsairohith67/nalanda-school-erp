@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import fontkit from "@pdf-lib/fontkit";
+import sharp from "sharp";
 import {
   PDFDocument,
   type PDFImage,
@@ -16,8 +17,23 @@ import type {
   SafePublishedReportSnapshot
 } from "@/lib/report-publication-types";
 import { reportTemplateFamilyLabel } from "@/lib/report-publication-types";
+import {
+  R5_CHART_LABEL_CLEARANCE_PT,
+  R5_CHART_LEGEND_GEOMETRY,
+  R5_CHART_NUMERIC_LABEL_FONT_SIZE,
+  layoutChartNumericLabels
+} from "@/lib/report-card-refined-source-lock";
 
 type RenderableReport = PublishedReportSnapshot | SafePublishedReportSnapshot;
+
+function isCanonicalV1AcademicReport(report: RenderableReport) {
+  return [
+    "LOWER_PRIMARY_I_II",
+    "UPPER_PRIMARY_III_V",
+    "MIDDLE_VI_VIII_GROUPED",
+    "SECONDARY_IX_X"
+  ].includes(report.templateFamily);
+}
 
 const POINTS_PER_MM = 72 / 25.4;
 const A4_PORTRAIT: [number, number] = [595.28, 841.89];
@@ -38,7 +54,12 @@ export async function renderReportPdf(
   document.setCreationDate(new Date("2000-01-01T00:00:00.000Z"));
   document.setModificationDate(new Date("2000-01-01T00:00:00.000Z"));
   const fonts = await embeddedFonts(document);
-  const logo = await embeddedLogo(document, report.school.logoPath);
+  const logo = await embeddedLogo(
+    document,
+    report.school.logoPath,
+    mode,
+    isCanonicalV1AcademicReport(report)
+  );
   const layout = new PdfLayout(document, report, mode, fonts, logo);
   if (report.templateFamily === "KG_DEVELOPMENTAL_BOOKLET") {
     renderKgBooklet(layout, report);
@@ -146,6 +167,9 @@ class PdfLayout {
 
   private newPage() {
     this.page = this.document.addPage(this.pageSize);
+    if (this.isR5Academic()) {
+      this.page.drawRectangle({ x: 0, y: 0, width: this.pageSize[0], height: this.pageSize[1], color: rgb(1, 1, 1) });
+    }
     this.pages.push(this.page);
     this.pageNumber += 1;
     this.y = this.pageSize[1] - this.margin;
@@ -157,6 +181,72 @@ class PdfLayout {
   }
 
   private drawPageHeader(page: PDFPage) {
+    if (!this.isR5Academic()) return this.drawLegacyPageHeader(page);
+    const topY = this.pageSize[1] - this.margin;
+    const schoolName = printable(this.report.school.name).toUpperCase();
+    const unitWidth = Math.min(this.contentWidth, 410);
+    const unitLeft = (this.pageSize[0] - unitWidth) / 2;
+    const logoWidth = this.logo ? 44 : 0;
+    const gap = this.logo ? 10 : 0;
+    const textLeft = unitLeft + logoWidth + gap;
+    const textWidth = unitWidth - logoWidth - gap;
+    const schoolSize = 17;
+    const schoolWidth = this.fonts.schoolBold.widthOfTextAtSize(schoolName, schoolSize);
+    if (schoolWidth > textWidth) throw new Error("Configured school name does not fit the approved academic-report header.");
+    page.drawText(schoolName, {
+      x: textLeft + (textWidth - schoolWidth) / 2,
+      y: topY - 14,
+      size: schoolSize,
+      font: this.fonts.schoolBold,
+      color: this.palette.ink
+    });
+    const identityLine = [
+      this.report.school.affiliationWording,
+      this.report.school.recognitionWording,
+      this.report.school.establishmentYear ? `Established ${this.report.school.establishmentYear}` : null
+    ].filter(Boolean).join("  •  ") || "CONFIGURATION REQUIRED — approved report-card status line is missing";
+    const statusSize = 7.5;
+    const statusWidth = this.fonts.regular.widthOfTextAtSize(identityLine, statusSize);
+    if (statusWidth > textWidth) throw new Error("Configured report-card status line does not fit the approved academic-report header.");
+    page.drawText(identityLine, {
+      x: textLeft + (textWidth - statusWidth) / 2,
+      y: topY - 28,
+      size: statusSize,
+      font: this.fonts.regular,
+      color: this.palette.ink
+    });
+    const addressLine = [this.report.school.address, this.report.school.city].filter(Boolean).join(", ");
+    const addressSize = 8.5;
+    const addressWidth = this.fonts.regular.widthOfTextAtSize(addressLine, addressSize);
+    if (addressWidth > textWidth) throw new Error("Configured school address does not fit the approved academic-report header.");
+    page.drawText(addressLine, {
+      x: textLeft + (textWidth - addressWidth) / 2,
+      y: topY - 40,
+      size: addressSize,
+      font: this.fonts.regular,
+      color: this.palette.ink
+    });
+    page.drawLine({
+      start: { x: this.margin, y: topY - 50 },
+      end: { x: this.pageSize[0] - this.margin, y: topY - 50 },
+      thickness: 0.8,
+      color: this.palette.border
+    });
+    if (this.logo) {
+      const ratio = this.logo.width / this.logo.height;
+      const requestedHeight = 42;
+      const width = Math.min(logoWidth, requestedHeight * ratio);
+      const height = width / ratio;
+      page.drawImage(this.logo, {
+        x: unitLeft + (logoWidth - width) / 2,
+        y: topY - 43 + (requestedHeight - height) / 2,
+        width,
+        height
+      });
+    }
+  }
+
+  private drawLegacyPageHeader(page: PDFPage) {
     const topY = this.pageSize[1] - this.margin;
     const nameX = this.margin + (this.logo ? 48 : 0);
     const schoolName = printable(this.report.school.name).toUpperCase();
@@ -189,8 +279,7 @@ class PdfLayout {
       color: this.palette.muted
     });
     page.drawText(this.report.publicationReference, {
-      x: this.pageSize[0] - this.margin -
-        this.fonts.regular.widthOfTextAtSize(this.report.publicationReference, 7.5),
+      x: this.pageSize[0] - this.margin - this.fonts.regular.widthOfTextAtSize(this.report.publicationReference, 7.5),
       y: topY - 13,
       size: 7.5,
       font: this.fonts.regular,
@@ -205,13 +294,12 @@ class PdfLayout {
     if (this.logo) {
       const ratio = this.logo.width / this.logo.height;
       const height = 34;
-      page.drawImage(this.logo, {
-        x: this.margin,
-        y: topY - height,
-        width: height * ratio,
-        height
-      });
+      page.drawImage(this.logo, { x: this.margin, y: topY - height, width: height * ratio, height });
     }
+  }
+
+  private isR5Academic() {
+    return isCanonicalV1AcademicReport(this.report);
   }
 
   ensure(height: number, options: { keepHeading?: boolean } = {}) {
@@ -297,6 +385,90 @@ class PdfLayout {
       this.y -= rowHeight;
     }
     this.y -= 4;
+  }
+
+  academicIdentityGrid() {
+    if (!this.isR5Academic()) {
+      this.keyValues(profileRows(this.report));
+      return;
+    }
+    const guardian = this.report.student.parentGuardians?.[0]?.value ?? "-";
+    const classSection = `${this.report.student.className}${this.report.student.section ? ` / ${this.report.student.section}` : ""}`;
+    const rows: Array<{ cells: string[]; spans: number[] }> = [
+      { cells: ["Student Name", this.report.student.name], spans: [2, 2] },
+      { cells: ["Parent / Guardian", guardian], spans: [2, 2] },
+      { cells: ["Admission No. #", this.report.student.admissionNumber], spans: [2, 2] },
+      { cells: ["Class / Section", classSection, "Roll Number", this.report.student.rollNumber ?? "-"], spans: [1, 1, 1, 1] }
+    ];
+    const fontSize = Math.max(7, this.minimumFontSize);
+    const columnWidth = this.contentWidth / 4;
+    const rowHeights = rows.map((row) => {
+      const lineCounts = row.cells.map((value, index) => {
+        const span = row.spans[index];
+        const font = index % 2 === 0 ? this.fonts.bold : this.fonts.regular;
+        const lines = wrapText(printable(value), font, fontSize, columnWidth * span - 8);
+        if (lines.length > 2) throw new Error("Academic identity value exceeds the approved two-line grid contract.");
+        return lines.length;
+      });
+      return Math.max(18, 6 + Math.max(...lineCounts) * (fontSize + 1));
+    });
+    const totalHeight = rowHeights.reduce((total, height) => total + height, 0);
+    this.ensure(totalHeight + 4);
+    const topY = this.y;
+    const bottomY = topY - totalHeight;
+    this.page.drawRectangle({
+      x: this.margin,
+      y: bottomY,
+      width: this.contentWidth,
+      height: totalHeight,
+      color: rgb(1, 1, 1),
+      borderColor: this.palette.ink,
+      borderWidth: 0.75
+    });
+    let rowTopY = topY;
+    rows.forEach((row, rowIndex) => {
+      const height = rowHeights[rowIndex];
+      let column = 0;
+      row.cells.forEach((value, cellIndex) => {
+        const span = row.spans[cellIndex];
+        const x = this.margin + column * columnWidth;
+        const width = span * columnWidth;
+        const font = cellIndex % 2 === 0 ? this.fonts.bold : this.fonts.regular;
+        const lines = wrapText(printable(value), font, fontSize, width - 8);
+        const lineHeight = fontSize + 1;
+        const blockHeight = lines.length * lineHeight;
+        lines.forEach((line, lineIndex) => this.page.drawText(line, {
+          x: x + Math.max(4, (width - font.widthOfTextAtSize(line, fontSize)) / 2),
+          y: rowTopY - (height - blockHeight) / 2 - fontSize - lineIndex * lineHeight,
+          size: fontSize,
+          font,
+          color: this.palette.ink
+        }));
+        column += span;
+      });
+      rowTopY -= height;
+      if (rowIndex < rows.length - 1) this.page.drawLine({
+        start: { x: this.margin, y: rowTopY },
+        end: { x: this.margin + this.contentWidth, y: rowTopY },
+        thickness: 0.75,
+        color: this.palette.ink
+      });
+    });
+    const centreX = this.margin + this.contentWidth / 2;
+    this.page.drawLine({
+      start: { x: centreX, y: bottomY },
+      end: { x: centreX, y: topY },
+      thickness: 0.75,
+      color: this.palette.ink
+    });
+    const finalRowTop = bottomY + rowHeights.at(-1)!;
+    for (const x of [this.margin + columnWidth, this.margin + columnWidth * 3]) this.page.drawLine({
+      start: { x, y: bottomY },
+      end: { x, y: finalRowTop },
+      thickness: 0.75,
+      color: this.palette.ink
+    });
+    this.y = bottomY - 4;
   }
 
   table(
@@ -436,6 +608,137 @@ class PdfLayout {
   }
 
   performanceChart(papers: RenderableReport["content"]["papers"]) {
+    if (!this.isR5Academic()) return this.legacyPerformanceChart(papers);
+    const eligible = papers.filter((paper) => !paper.excluded && Number.isFinite(Number(paper.percentage)));
+    let rows = eligible.slice(0, 10);
+    const omitted = [...eligible.slice(10)];
+    while (rows.length) {
+      const groupWidth = this.contentWidth / rows.length;
+      const next = rows.filter((paper) => {
+        const label = paper.paperName && paper.paperName !== paper.subjectName
+          ? `${paper.subjectName} ${paper.paperName}`
+          : paper.subjectName;
+        const fits = wrapText(printable(label), this.fonts.regular, 6.5, Math.max(22, groupWidth - 3)).length <= 3;
+        if (!fits) omitted.push(paper);
+        return fits;
+      });
+      if (next.length === rows.length) break;
+      rows = next;
+    }
+    if (!rows.length) return;
+    const height = 205;
+    this.ensure(height + 24);
+    const chartTop = this.y - 31;
+    const chartBottom = this.y - height + 34;
+    const chartHeight = chartTop - chartBottom;
+    const plotHeight = chartHeight - 24;
+    const labelReserve = 31;
+    const graphWidth = this.contentWidth;
+    const groupWidth = graphWidth / rows.length;
+    const barWidth = Math.max(4.8, Math.min(8.5, (groupWidth - 7) / 3));
+    const series = [
+      { key: "student" as const, label: "Student Marks", color: this.palette.seriesStudent, pattern: this.palette.monochrome ? "DIAGONAL" : "SOLID" },
+      { key: "average" as const, label: "Class Average", color: this.palette.seriesAverage, pattern: this.palette.monochrome ? "CROSS_HATCH" : "SOLID" },
+      { key: "highest" as const, label: "High Score", color: this.palette.seriesHighest, pattern: this.palette.monochrome ? "DOTS" : "SOLID" }
+    ];
+    series.forEach((item, index) => {
+      const itemWidth = this.contentWidth / 3;
+      const x = this.margin + index * itemWidth;
+      this.patternBox(x, this.y - 16, R5_CHART_LEGEND_GEOMETRY.swatchWidthPt, R5_CHART_LEGEND_GEOMETRY.swatchHeightPt, item.color, item.pattern);
+      this.page.drawText(item.label, {
+        x: x + R5_CHART_LEGEND_GEOMETRY.swatchWidthPt + 5,
+        y: this.y - 12,
+        size: R5_CHART_LEGEND_GEOMETRY.labelFontSizePt,
+        font: this.fonts.bold,
+        color: this.palette.ink
+      });
+    });
+    for (let tick = 0; tick <= 100; tick += 20) {
+      const y = chartBottom + (tick / 100) * plotHeight;
+      this.page.drawLine({
+        start: { x: this.margin, y },
+        end: { x: this.margin + graphWidth, y },
+        thickness: tick === 0 ? 0.8 : 0.35,
+        color: this.palette.border
+      });
+      this.page.drawText(String(tick), {
+        x: this.margin,
+        y: y + 2,
+        size: 6.5,
+        font: this.fonts.regular,
+        color: this.palette.muted
+      });
+    }
+    const numericInputs: Array<{ text: string; centerX: number; barTopY: number; staggerLevel: number }> = [];
+    rows.forEach((paper, rowIndex) => {
+      const values = {
+        student: boundedPercentage(paper.percentage),
+        average: boundedPercentage(paper.cohortAverage),
+        highest: boundedPercentage(paper.cohortHighest)
+      };
+      const groupX = this.margin + rowIndex * groupWidth;
+      series.forEach((item, seriesIndex) => {
+        const value = values[item.key];
+        const barHeight = (value / 100) * plotHeight;
+        const clusterWidth = barWidth * 3 + 3;
+        const x = groupX + (groupWidth - clusterWidth) / 2 + seriesIndex * (barWidth + 1.5);
+        this.patternBox(x, chartBottom, barWidth, barHeight, item.color, item.pattern);
+        numericInputs.push({
+          text: Number(value.toFixed(1)).toString(),
+          centerX: x + barWidth / 2,
+          barTopY: chartBottom + barHeight,
+          staggerLevel: seriesIndex === 1 ? 1 : 0
+        });
+      });
+      const label = paper.paperName && paper.paperName !== paper.subjectName
+        ? `${paper.subjectName} ${paper.paperName}`
+        : paper.subjectName;
+      const lines = wrapText(printable(label), this.fonts.regular, 6.5, Math.max(22, groupWidth - 3));
+      lines.forEach((line, index) => this.page.drawText(line, {
+        x: groupX + (groupWidth - this.fonts.regular.widthOfTextAtSize(line, 6.5)) / 2,
+        y: chartBottom - 9 - index * 7,
+        size: 6.5,
+        font: this.fonts.regular,
+        color: this.palette.ink
+      }));
+    });
+    const placements = layoutChartNumericLabels(
+      numericInputs,
+      { left: this.margin, right: this.margin + graphWidth, bottom: chartBottom + 1, top: chartTop },
+      R5_CHART_NUMERIC_LABEL_FONT_SIZE,
+      (text) => this.fonts.bold.widthOfTextAtSize(text, R5_CHART_NUMERIC_LABEL_FONT_SIZE)
+    );
+    placements.forEach((label) => {
+      if (label.leaderLine) this.page.drawLine({
+        start: { x: label.anchorX, y: label.anchorY + 0.8 },
+        end: { x: label.x + label.width / 2, y: label.y - 0.8 },
+        thickness: 0.35,
+        color: this.palette.ink
+      });
+      this.page.drawRectangle({
+        x: label.x - 1.1,
+        y: label.y - 0.8,
+        width: label.width + 2.2,
+        height: label.height + 1.6,
+        color: rgb(1, 1, 1),
+        opacity: 0.96
+      });
+      this.page.drawText(label.text, {
+        x: label.x,
+        y: label.y,
+        size: R5_CHART_NUMERIC_LABEL_FONT_SIZE,
+        font: this.fonts.bold,
+        color: this.palette.ink
+      });
+    });
+    this.y -= height + labelReserve - 25;
+    if (omitted.length) this.paragraph(
+      `Chart scope: ${omitted.map((paper) => paper.subjectName).join("; ")} omitted for label legibility. Complete results remain in the marks table.`,
+      { size: 7 }
+    );
+  }
+
+  private legacyPerformanceChart(papers: RenderableReport["content"]["papers"]) {
     const rows = papers
       .filter((paper) => !paper.excluded && Number.isFinite(Number(paper.percentage)))
       .slice(0, 12);
@@ -456,14 +759,8 @@ class PdfLayout {
     ];
     series.forEach((item, index) => {
       const x = this.margin + index * 112;
-      this.patternBox(x, this.y - 11, 12, 8, item.color, item.pattern);
-      this.page.drawText(item.label, {
-        x: x + 17,
-        y: this.y - 10,
-        size: 7.5,
-        font: this.fonts.bold,
-        color: this.palette.ink
-      });
+      this.legacyPatternBox(x, this.y - 11, 12, 8, item.color, item.pattern);
+      this.page.drawText(item.label, { x: x + 17, y: this.y - 10, size: 7.5, font: this.fonts.bold, color: this.palette.ink });
     });
     for (let tick = 0; tick <= 100; tick += 20) {
       const y = chartBottom + (tick / 100) * chartHeight;
@@ -473,13 +770,7 @@ class PdfLayout {
         thickness: tick === 0 ? 0.8 : 0.35,
         color: this.palette.border
       });
-      this.page.drawText(String(tick), {
-        x: this.margin,
-        y: y + 2,
-        size: 6.5,
-        font: this.fonts.regular,
-        color: this.palette.muted
-      });
+      this.page.drawText(String(tick), { x: this.margin, y: y + 2, size: 6.5, font: this.fonts.regular, color: this.palette.muted });
     }
     rows.forEach((paper, rowIndex) => {
       const values = {
@@ -492,32 +783,26 @@ class PdfLayout {
         const value = values[item.key];
         const barHeight = (value / 100) * chartHeight;
         const x = groupX + 4 + seriesIndex * (barWidth + 1.5);
-        this.patternBox(x, chartBottom, barWidth, barHeight, item.color, item.pattern);
+        this.legacyPatternBox(x, chartBottom, barWidth, barHeight, item.color, item.pattern);
         const label = value.toFixed(value % 1 === 0 ? 0 : 1);
-        this.page.drawText(label, {
-          x,
-          y: chartBottom + barHeight + 2,
-          size: 5.8,
-          font: this.fonts.bold,
-          color: this.palette.ink
-        });
+        this.page.drawText(label, { x, y: chartBottom + barHeight + 2, size: 5.8, font: this.fonts.bold, color: this.palette.ink });
       });
       const label = paper.paperName && paper.paperName !== paper.subjectName
         ? `${paper.subjectName} ${paper.paperName}`
         : paper.subjectName;
-      const lines = wrapText(printable(label), this.fonts.regular, 5.8, Math.max(22, groupWidth - 3)).slice(0, 3);
-      lines.forEach((line, index) => this.page.drawText(line, {
-        x: groupX + 2,
-        y: chartBottom - 9 - index * 6.3,
-        size: 5.8,
-        font: this.fonts.regular,
-        color: this.palette.ink
-      }));
+      wrapText(printable(label), this.fonts.regular, 5.8, Math.max(22, groupWidth - 3)).slice(0, 3)
+        .forEach((line, index) => this.page.drawText(line, {
+          x: groupX + 2,
+          y: chartBottom - 9 - index * 6.3,
+          size: 5.8,
+          font: this.fonts.regular,
+          color: this.palette.ink
+        }));
     });
     this.y -= height + labelReserve - 25;
   }
 
-  private patternBox(
+  private legacyPatternBox(
     x: number,
     y: number,
     width: number,
@@ -538,6 +823,55 @@ class PdfLayout {
     } else if (pattern === "HORIZONTAL") {
       for (let offset = 3; offset < height; offset += 4) {
         this.page.drawLine({ start: { x, y: y + offset }, end: { x: x + width, y: y + offset }, thickness: 0.35, color: this.palette.ink });
+      }
+    }
+  }
+
+  private patternBox(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color: ReturnType<typeof rgb>,
+    pattern: string
+  ) {
+    if (width <= 0 || height <= 0) return;
+    this.page.drawRectangle({
+      x,
+      y,
+      width,
+      height,
+      color: pattern === "SOLID" ? color : rgb(1, 1, 1),
+      borderColor: this.palette.ink,
+      borderWidth: pattern === "SOLID" ? 0.75 : 0.95
+    });
+    if (pattern === "DIAGONAL" || pattern === "CROSS_HATCH") {
+      for (let offset = 2; offset < width + height; offset += 4) {
+        const startX = x + Math.max(0, offset - height);
+        const startY = y + Math.min(height, offset);
+        const endX = x + Math.min(width, offset);
+        const endY = y + Math.max(0, offset - width);
+        this.page.drawLine({ start: { x: startX, y: startY }, end: { x: endX, y: endY }, thickness: 0.35, color: this.palette.ink });
+      }
+    }
+    if (pattern === "CROSS_HATCH") {
+      for (let offset = 0; offset < width + height; offset += 5) {
+        const points: Array<{ x: number; y: number }> = [];
+        if (offset <= width) points.push({ x: x + offset, y });
+        if (offset >= width && offset - width <= height) points.push({ x: x + width, y: y + offset - width });
+        if (offset >= height && offset - height <= width) points.push({ x: x + offset - height, y: y + height });
+        if (offset <= height) points.push({ x, y: y + offset });
+        const unique = points.filter((point, index) => points.findIndex((candidate) =>
+          Math.abs(candidate.x - point.x) < 0.0001 && Math.abs(candidate.y - point.y) < 0.0001
+        ) === index);
+        if (unique.length >= 2) this.page.drawLine({ start: unique[0], end: unique[1], thickness: 0.45, color: this.palette.ink });
+      }
+    }
+    if (pattern === "DOTS") {
+      for (let dotY = y + 2.5; dotY <= y + height - 2.5; dotY += 5) {
+        for (let dotX = x + 2.5; dotX <= x + width - 2.5; dotX += 5) {
+          this.page.drawCircle({ x: dotX, y: dotY, size: 0.9, color: this.palette.ink });
+        }
       }
     }
   }
@@ -600,7 +934,7 @@ function renderAcademicReport(layout: PdfLayout, report: RenderableReport) {
     `${report.examination.code} | ${report.examination.name} | ${report.reportingPeriod}`,
     { bold: true }
   );
-  layout.keyValues(profileRows(report));
+  layout.academicIdentityGrid();
   renderAcademicMarks(layout, report);
   layout.keyValues([
     ["Total", `${report.content.totalObtained} / ${report.content.totalMaximum}`],
@@ -969,7 +1303,12 @@ async function embeddedFonts(document: PDFDocument): Promise<PdfFonts> {
   };
 }
 
-async function embeddedLogo(document: PDFDocument, logoPath: string | null) {
+async function embeddedLogo(
+  document: PDFDocument,
+  logoPath: string | null,
+  mode: ReportColourMode,
+  useR5AcademicTreatment: boolean
+) {
   if (!logoPath || !logoPath.startsWith("/") || logoPath.startsWith("//")) return null;
   const publicRoot = path.resolve(process.cwd(), "public");
   const candidate = path.resolve(publicRoot, logoPath.replace(/^\/+/, ""));
@@ -978,6 +1317,9 @@ async function embeddedLogo(document: PDFDocument, logoPath: string | null) {
   const bytes = readFileSync(candidate);
   const extension = path.extname(candidate).toLowerCase();
   try {
+    if (mode === "MONOCHROME" && useR5AcademicTreatment) {
+      return await document.embedPng(await sharp(bytes).grayscale().png().toBuffer());
+    }
     if (extension === ".png") return await document.embedPng(bytes);
     if (extension === ".jpg" || extension === ".jpeg") return await document.embedJpg(bytes);
   } catch {

@@ -1,6 +1,6 @@
 # Report-Card Physical Print Acceptance Checklist
 
-> **R5 DIGITAL REVIEW — DO NOT PRINT.** The R4.2 physical and full packs remain `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`. R5 generated only a Classes I-X visual-review pack and a separate technical edge-case pack. Neither is authorised for physical acceptance. KG/LKG/UKG physical acceptance is deferred to V1.5. A replacement V1 physical pack must contain only genuinely distinct Classes I-X layouts and may be generated only after R5 visual approval.
+> **R5-A1 DIGITAL REVIEW — DO NOT PRINT.** The R4.2 physical/full packs remain `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`; the pre-amendment R5 review artifacts are `SUPERSEDED_BY_R5_A1`. R5-A1 generated only a Classes I-X visual-review pack, enlarged detail-check pack and technical edge-case pack. None is authorised for physical acceptance. KG/LKG/UKG physical acceptance is deferred to V1.5. A replacement V1 physical pack may be generated only after user visual approval.
 
 > R4.1 remains a digital micro-review correction. Do not print `VISUAL-DIRECTION-PACK-R4-1.pdf` or `EDGE-CASE-RENDERING-PACK-R4-1.pdf`. Full physical-pack regeneration and printing remain paused pending explicit user approval.
 
@@ -29,7 +29,7 @@
 
 ## Required print set
 
-- [x] R5 Classes I-X digital review pack generated and validated locally (not for printing)
+- [x] R5-A1 Classes I-X visual, detail-check and edge-case packs generated and validated locally (not for printing)
 - [ ] R5 visual direction approved by the user
 - [ ] Replacement Classes I-X-only colour pack generated after R5 visual approval
 - [ ] Replacement Classes I-X-only true-monochrome pack generated after R5 visual approval
@@ -52,7 +52,7 @@ Copy this block for each specimen ID.
 - Table/grid alignment: pass/fail and observation
 - Long-name/subject wrapping: pass/fail and observation
 - Logo and school-name sharpness: pass/fail and observation
-- Chart solid/diagonal/horizontal pattern distinction: pass/fail and observation
+- Chart diagonal-slash/cross-hatch/dot pattern distinction: pass/fail and observation
 - Direct numeric chart labels: pass/fail and observation
 - Signature space: pass/fail and observation
 - Publication reference readability: pass/fail and observation

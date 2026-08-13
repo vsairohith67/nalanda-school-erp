@@ -141,6 +141,11 @@ export async function previewReportPublication(
   const resolved = await resolvePublicationSource(client, input);
   const bundles = await buildPublicationBundles(client, resolved, actor ?? null, now);
   const fingerprint = publicationPreviewFingerprint(bundles);
+  const configurationWarnings = bundles.flatMap((report) =>
+    report.templateFamily !== "KG_DEVELOPMENTAL_BOOKLET" && !approvedPublicationStatusLine(report)
+      ? ["Approved report-card status line is missing. Final publication remains blocked until school leadership completes the configuration."]
+      : []
+  );
   return {
     fingerprint,
     scope: input.scope,
@@ -148,6 +153,7 @@ export async function previewReportPublication(
     templateFamily: bundles[0].templateFamily,
     className: bundles[0].student.className,
     sections: [...new Set(bundles.map((bundle) => bundle.student.section ?? ""))],
+    configurationWarnings: [...new Set(configurationWarnings)],
     reports: bundles.map((bundle) =>
       safePublishedReportSnapshot({
         ...bundle,
@@ -178,6 +184,16 @@ export async function publishReportCards(
   const requestKey = boundedRequestKey(row.requestKey);
   const expectedFingerprint = boundedHash(row.previewFingerprint, "Preview fingerprint");
   const preview = await previewReportPublication(client, row, actor, now);
+  const missingStatusLine = preview.internalReports.some((report) =>
+    report.templateFamily !== "KG_DEVELOPMENTAL_BOOKLET" && !approvedPublicationStatusLine(report)
+  );
+  if (missingStatusLine) {
+    throw new ReportPublicationError(
+      "Final report publication is blocked until school leadership configures the approved report-card status line.",
+      409,
+      "REPORT_CARD_STATUS_LINE_REQUIRED"
+    );
+  }
   if (preview.fingerprint !== expectedFingerprint) {
     throw new ReportPublicationError(
       "The exact preview changed. Review the refreshed report before publishing.",
@@ -348,6 +364,14 @@ export async function publishReportCards(
     }
     throw error;
   }
+}
+
+export function approvedPublicationStatusLine(report: PublishedReportSnapshot) {
+  return [
+    report.school.affiliationWording,
+    report.school.recognitionWording,
+    report.school.establishmentYear ? `Established ${report.school.establishmentYear}` : null
+  ].filter((value): value is string => Boolean(String(value ?? "").trim())).join("  •  ") || null;
 }
 
 export async function withdrawPublishedReport(
