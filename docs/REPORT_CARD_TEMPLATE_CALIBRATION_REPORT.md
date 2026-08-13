@@ -3,7 +3,7 @@
 **Prompt:** `REPORT-PRINT-ACCEPT-1A`
 **Branch:** `reporting/canonical-template-print-acceptance`
 **Starting release:** commit `6693f8d3e4c975be748e8d7f103cd72f2ee36cfc`, tag `release-operations-v41-2026-08-10`, backup version 41
-**Status:** V1 narrowed to Classes I-X; R6-A1 review-only correction complete for digital review; KG foundation deferred to V1.5; physical printing remains paused
+**Status:** V1 narrowed to Classes I-X; R7 review-only correction complete for digital review; KG foundation deferred to V1.5; physical printing remains paused
 
 ## 2026-08-12 scope amendment
 
@@ -51,6 +51,10 @@ No real source value is used in generated evidence.
 
 R6 generates only an ignored eight-page Classes I-X visual pack and twelve-page enlarged detail pack. The configured status/address lines use bold print-safe 9.2/9.8 point text. `DENSE_ACADEMIC_CHART` uses a compact shared legend, increased plotting space and a deterministic two-row fallback for ten categories, while preserving grade content and the frozen 18 mm signing clearance. The controlling A1 treatment is solid neutral grey, diagonal slash and diamond/cross-lattice. All monochrome pages are true grayscale, all canvases are white, and the three swatches remain distinct after moderate blur/threshold photocopy simulation. See `docs/REPORT_CARD_R6_DIGITAL_REVIEW_EVIDENCE.md`.
 
+## R7 synthetic digital-review packs
+
+R7 generates only an ignored eight-page Classes I-X visual pack and fourteen-page enlarged detail pack. The configured status/address lines use exact 12/11 point bold text; three/four/five dynamic metric cards replace the sentence strip; attendance and General Remarks share an aligned 45/55 row; and the four-column signature block uses 12 mm clear signing height. The final monochrome treatment is solid 55% neutral grey, spaced diagonal slashes and a staggered lattice of filled black diamonds. Colour charts and all approved R6 calculation/dense-chart behavior remain unchanged. See `docs/REPORT_CARD_R7_DIGITAL_REVIEW_EVIDENCE.md`.
+
 ## Acceptance status
 
 - Prior technical rendering integrity: complete and preserved at `1620cbbcf67448f6d6e783568b384307413fae39`.
@@ -67,6 +71,7 @@ R6 generates only an ignored eight-page Classes I-X visual pack and twelve-page 
 - Classes I-X R5 correction register: confirmed complete and implemented for user digital review.
 - R5-A1 digital evidence: ignored ten-page visual pack, seven-page detail-check pack and six-page edge-case pack; synthetic-only and not for physical acceptance. Pre-A1 R5 packs are preserved as `SUPERSEDED_BY_R5_A1`.
 - R6-A1 digital evidence: ignored eight-page visual pack and twelve-page detail-check pack; user review pending. Colour output is unchanged; authoritative monochrome is solid-grey/slash/diamond-lattice. No physical pack was generated.
+- R7 digital evidence: ignored eight-page visual pack and fourteen-page detail-check pack; user review pending. Summary cards, balanced signatures and filled-diamond monochrome replace the rejected R6 details. No physical pack was generated.
 - Replacement Classes I-X-only physical pack: not authorised yet and not generated.
 - Physical colour/monochrome/photocopy acceptance: paused; no physical printing has occurred.
 - KG operational activation and physical acceptance: V1.5 only; not V1-cleared or production-ready.

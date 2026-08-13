@@ -1,5 +1,11 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## REPORT-PRINT-ACCEPT-1A-R7 — final summary, signature and monochrome balance correction (2026-08-14)
+
+R7 preserves the approved Classes I-X one-page architecture, frozen identity grid, marks/co-scholastic structures, calculations, colour chart, dense/two-row behavior and private publication controls. It renders the configured status line at exactly 12 pt bold and address at 11 pt bold; replaces the sentence summary with dynamic three/four/five-card rows; aligns attendance and General Remarks below; and reduces signing clearance from the excessive 18 mm baseline to a measured 12 mm block.
+
+The final monochrome chart contract is solid neutral 55% grey, single diagonal slashes on white and staggered filled black diamonds on white, with matching legend/bar geometry and photocopy simulation. Only ignored eight-page visual and fourteen-page detail packs are generated for user review. No physical pack, printing, merge, tag, deployment, report issue or real Student data is authorised. KG remains preserved/default-off for V1.5.
+
 ## REPORT-PRINT-ACCEPT-1A-R6 / R6-A1 — adaptive dense chart and authoritative monochrome amendment (2026-08-13)
 
 R6 is a narrow Classes I-X correction that preserves the approved one-page architecture, identity grid, tables, calculations, colour chart, grade content and 18 mm signature clearance. It strengthens the configured status/address typography, adds governed `DENSE_ACADEMIC_CHART` selection with a 5+5 two-row fallback for ten subjects, and compacts the dense grade legend without shrinking essential text or signing space.

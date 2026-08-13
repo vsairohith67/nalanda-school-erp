@@ -22,9 +22,11 @@ import {
   R5_CHART_NUMERIC_LABEL_FONT_SIZE,
   R6_CHART_LEGEND_GEOMETRY,
   R6_DENSE_CHART_GEOMETRY,
-  R6_HEADER_TYPOGRAPHY,
   R6_MONOCHROME_STUDENT_GREY,
-  R6_PATTERN_GEOMETRY,
+  R7_HEADER_TYPOGRAPHY,
+  R7_PATTERN_GEOMETRY,
+  R7_SIGNATURE_GEOMETRY,
+  R7_SUMMARY_CARD_GEOMETRY,
   layoutChartNumericLabels
 } from "@/lib/report-card-refined-source-lock";
 
@@ -49,6 +51,13 @@ export async function renderReportPdf(
   report: RenderableReport,
   mode: ReportColourMode
 ) {
+  if (
+    isCanonicalV1AcademicReport(report)
+    && report.status === "ISSUED"
+    && ![report.school.affiliationWording, report.school.recognitionWording, report.school.establishmentYear].some((value) => String(value ?? "").trim())
+  ) {
+    throw new Error("Report publication blocked: approved report-card status line is not configured in School Settings.");
+  }
   const document = await PDFDocument.create();
   document.setTitle(`${report.title} - ${report.publicationReference}`);
   document.setAuthor(report.school.name);
@@ -210,7 +219,7 @@ class PdfLayout {
       this.report.school.recognitionWording,
       this.report.school.establishmentYear ? `Established ${this.report.school.establishmentYear}` : null
     ].filter(Boolean).join("  •  ") || "CONFIGURATION REQUIRED — approved report-card status line is missing";
-    const statusSize = identityLine.startsWith("CONFIGURATION REQUIRED") ? 8 : R6_HEADER_TYPOGRAPHY.statusFontSizePt;
+    const statusSize = identityLine.startsWith("CONFIGURATION REQUIRED") ? 8 : R7_HEADER_TYPOGRAPHY.statusFontSizePt;
     const statusLines = wrapText(identityLine, this.fonts.bold, statusSize, textWidth);
     if (statusLines.length > 2) throw new Error("Configured report-card status line does not fit the approved academic-report header.");
     const statusStartY = statusLines.length === 1 ? topY - 28 : topY - 24;
@@ -222,7 +231,7 @@ class PdfLayout {
       color: this.palette.ink
     }));
     const addressLine = [this.report.school.address, this.report.school.city].filter(Boolean).join(", ");
-    const addressSize = R6_HEADER_TYPOGRAPHY.addressFontSizePt;
+    const addressSize = R7_HEADER_TYPOGRAPHY.addressFontSizePt;
     const addressLines = wrapText(addressLine, this.fonts.bold, addressSize, textWidth);
     if (addressLines.length > 2) throw new Error("Configured school address does not fit the approved academic-report header.");
     const addressStartY = addressLines.length === 1 ? topY - 42 : topY - 38;
@@ -806,10 +815,10 @@ class PdfLayout {
       height,
       color: pattern === "SOLID" || pattern === "SOLID_GREY" ? color : rgb(1, 1, 1),
       borderColor: this.palette.ink,
-      borderWidth: pattern === "SOLID" ? 0.75 : R6_PATTERN_GEOMETRY.borderWidthPt
+      borderWidth: pattern === "SOLID" ? 0.75 : R7_PATTERN_GEOMETRY.borderWidthPt
     });
     if (pattern === "DIAGONAL") {
-      for (let intercept = -width; intercept <= height; intercept += R6_PATTERN_GEOMETRY.slashSpacingPt) {
+      for (let intercept = -width; intercept <= height; intercept += R7_PATTERN_GEOMETRY.slashSpacingPt) {
         const startLocal = intercept >= 0
           ? { x: 0, y: intercept }
           : { x: -intercept, y: 0 };
@@ -820,51 +829,116 @@ class PdfLayout {
           this.page.drawLine({
             start: { x: x + startLocal.x, y: y + startLocal.y },
             end: { x: x + endLocal.x, y: y + endLocal.y },
-            thickness: R6_PATTERN_GEOMETRY.slashStrokeWidthPt,
+            thickness: R7_PATTERN_GEOMETRY.slashStrokeWidthPt,
             color: this.palette.ink
           });
         }
       }
     }
     if (pattern === "DIAMOND_LATTICE") {
-      for (let centerY = y + 2.2; centerY <= y + height - 2.2; centerY += R6_PATTERN_GEOMETRY.diamondVerticalSpacingPt) {
-        const rowShift = Math.round((centerY - y) / R6_PATTERN_GEOMETRY.diamondVerticalSpacingPt) % 2 ? R6_PATTERN_GEOMETRY.diamondHorizontalSpacingPt / 2 : 0;
-        for (let centerX = x + 2.2 + rowShift; centerX <= x + width - 2.2; centerX += R6_PATTERN_GEOMETRY.diamondHorizontalSpacingPt) {
-          const left = { x: centerX - R6_PATTERN_GEOMETRY.diamondRadiusXPt, y: centerY };
-          const top = { x: centerX, y: centerY + R6_PATTERN_GEOMETRY.diamondRadiusYPt };
-          const right = { x: centerX + R6_PATTERN_GEOMETRY.diamondRadiusXPt, y: centerY };
-          const bottom = { x: centerX, y: centerY - R6_PATTERN_GEOMETRY.diamondRadiusYPt };
-          this.page.drawLine({ start: left, end: top, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: this.palette.ink });
-          this.page.drawLine({ start: top, end: right, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: this.palette.ink });
-          this.page.drawLine({ start: right, end: bottom, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: this.palette.ink });
-          this.page.drawLine({ start: bottom, end: left, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: this.palette.ink });
+      for (let centerY = y + R7_PATTERN_GEOMETRY.diamondRadiusYPt + 0.7; centerY <= y + height - R7_PATTERN_GEOMETRY.diamondRadiusYPt - 0.7; centerY += R7_PATTERN_GEOMETRY.diamondVerticalSpacingPt) {
+        const rowShift = Math.round((centerY - y) / R7_PATTERN_GEOMETRY.diamondVerticalSpacingPt) % 2 ? R7_PATTERN_GEOMETRY.diamondHorizontalSpacingPt / 2 : 0;
+        for (let centerX = x + R7_PATTERN_GEOMETRY.diamondRadiusXPt + 0.7 + rowShift; centerX <= x + width - R7_PATTERN_GEOMETRY.diamondRadiusXPt - 0.7; centerX += R7_PATTERN_GEOMETRY.diamondHorizontalSpacingPt) {
+          const diameterX = R7_PATTERN_GEOMETRY.diamondRadiusXPt * 2;
+          const diameterY = R7_PATTERN_GEOMETRY.diamondRadiusYPt * 2;
+          this.page.drawSvgPath(`M 0 ${R7_PATTERN_GEOMETRY.diamondRadiusYPt} L ${R7_PATTERN_GEOMETRY.diamondRadiusXPt} 0 L ${diameterX} ${R7_PATTERN_GEOMETRY.diamondRadiusYPt} L ${R7_PATTERN_GEOMETRY.diamondRadiusXPt} ${diameterY} Z`, {
+            x: centerX - R7_PATTERN_GEOMETRY.diamondRadiusXPt,
+            y: centerY - R7_PATTERN_GEOMETRY.diamondRadiusYPt,
+            color: this.palette.ink
+          });
         }
       }
     }
   }
 
+  resultSummaryCards() {
+    const metrics = [
+      { label: "Total", value: `${displayParentNumber(this.report.content.totalObtained)} / ${displayParentNumber(this.report.content.totalMaximum)}` },
+      { label: "Percentage", value: `${displayParentNumber(this.report.content.percentage)}%` },
+      { label: "Grade", value: this.report.content.grade?.code ?? "Not enabled" },
+      ...(this.report.content.grade?.point == null ? [] : [{ label: "Grade Point", value: displayParentNumber(this.report.content.grade.point) }]),
+      ...(this.report.content.rank == null ? [] : [{ label: "Rank", value: String(this.report.content.rank) }])
+    ];
+    if (metrics.length < 3 || metrics.length > 5) throw new Error("Canonical result summary requires three, four or five enabled metrics.");
+    const height = R7_SUMMARY_CARD_GEOMETRY.heightPt;
+    this.ensure(height + 5);
+    const totalWeight = metrics.reduce((sum, metric) => sum + (metric.label === "Total" ? 1.15 : 1), 0);
+    let x = this.margin;
+    metrics.forEach((metric, index) => {
+      const weight = metric.label === "Total" ? 1.15 : 1;
+      const width = index === metrics.length - 1 ? this.margin + this.contentWidth - x : this.contentWidth * weight / totalWeight;
+      this.page.drawRectangle({
+        x,
+        y: this.y - height,
+        width,
+        height,
+        color: this.palette.monochrome ? rgb(0.96, 0.96, 0.96) : this.palette.headerFill,
+        borderColor: this.palette.border,
+        borderWidth: 0.7
+      });
+      drawCenteredText(this.page, printable(metric.label), this.fonts.bold, R7_SUMMARY_CARD_GEOMETRY.labelFontSizePt, x, width, this.y - 12, this.palette.ink);
+      drawCenteredText(this.page, printable(metric.value), this.fonts.bold, R7_SUMMARY_CARD_GEOMETRY.valueFontSizePt, x, width, this.y - 27, this.palette.ink);
+      x += width;
+    });
+    this.y -= height + 5;
+  }
+
+  attendanceAndGeneralRemarksRow() {
+    const height = R7_SUMMARY_CARD_GEOMETRY.attendanceRemarksHeightPt;
+    this.ensure(height + 6);
+    const gap = 6;
+    const attendanceWidth = (this.contentWidth - gap) * R7_SUMMARY_CARD_GEOMETRY.attendanceWidthRatio;
+    const remarksWidth = this.contentWidth - gap - attendanceWidth;
+    const attendanceX = this.margin;
+    const remarksX = attendanceX + attendanceWidth + gap;
+    const headerHeight = 17;
+    const headers = ["Working Days", "Days Present", "Attendance %"];
+    const workingDays = this.report.content.attendance.totalLockedDays;
+    const daysPresent = this.report.content.attendance.presentEquivalentDays;
+    const attendancePercentage = workingDays > 0 ? daysPresent / workingDays * 100 : 0;
+    const values = [String(workingDays), displayParentNumber(daysPresent), `${displayParentNumber(attendancePercentage)}%`];
+    const cellWidth = attendanceWidth / headers.length;
+    headers.forEach((header, index) => {
+      const cellX = attendanceX + index * cellWidth;
+      this.page.drawRectangle({ x: cellX, y: this.y - headerHeight, width: cellWidth, height: headerHeight, color: this.palette.headerFill, borderColor: this.palette.border, borderWidth: 0.7 });
+      this.page.drawRectangle({ x: cellX, y: this.y - height, width: cellWidth, height: height - headerHeight, color: rgb(1, 1, 1), borderColor: this.palette.border, borderWidth: 0.7 });
+      drawCenteredText(this.page, header, this.fonts.bold, 6.8, cellX, cellWidth, this.y - 12, this.palette.ink);
+      drawCenteredText(this.page, values[index], this.fonts.bold, 8, cellX, cellWidth, this.y - 32, this.palette.ink);
+    });
+    this.page.drawRectangle({ x: remarksX, y: this.y - height, width: remarksWidth, height, color: rgb(1, 1, 1), borderColor: this.palette.border, borderWidth: 0.7 });
+    this.page.drawText("General Remarks", { x: remarksX + 5, y: this.y - 12, size: 7.4, font: this.fonts.bold, color: this.palette.ink });
+    const remarks = printable(this.report.content.remarks.general ?? this.report.content.remarks.classTeacher ?? "No approved remark recorded.");
+    const lines = wrapText(remarks, this.fonts.regular, 7, remarksWidth - 10);
+    if (lines.length > 2) throw new Error("General Remarks cannot fit the balanced canonical row without truncation.");
+    lines.forEach((line, index) => this.page.drawText(line, { x: remarksX + 5, y: this.y - 23 - index * 8, size: 7, font: this.fonts.regular, color: this.palette.ink }));
+    this.y -= height + 6;
+  }
+
   signatures(signatures: RenderableReport["signatures"]) {
-    this.ensure(70);
+    const canonical = this.isR5Academic();
+    this.ensure(canonical ? 55 : 70);
     const width = this.contentWidth / Math.max(1, signatures.length);
     signatures.forEach((signature, index) => {
-      const x = this.margin + index * width + 4;
+      const x = this.margin + index * width + (canonical ? 4.5 : 4);
+      const lineY = this.y - (canonical ? R7_SIGNATURE_GEOMETRY.clearSigningHeightPt : 42);
       this.page.drawLine({
-        start: { x, y: this.y - 42 },
-        end: { x: x + width - 18, y: this.y - 42 },
+        start: { x, y: lineY },
+        end: { x: x + width - (canonical ? 4.5 : 18), y: lineY },
         thickness: 0.7,
         color: this.palette.ink
       });
       const label = printable(signature.label);
-      const clipped = fitText(label, this.fonts.regular, 8, width - 18);
+      const clipped = fitText(label, this.fonts.regular, 8, width - (canonical ? 9 : 18));
+      const labelWidth = this.fonts.regular.widthOfTextAtSize(clipped, 8);
       this.page.drawText(clipped, {
-        x,
-        y: this.y - 54,
+        x: canonical ? this.margin + index * width + (width - labelWidth) / 2 : x,
+        y: lineY - (canonical ? 13 : 12),
         size: 8,
         font: this.fonts.regular,
         color: this.palette.ink
       });
     });
-    this.y -= 64;
+    this.y -= canonical ? 52 : 64;
   }
 
   finish() {
@@ -903,14 +977,19 @@ function renderAcademicReport(layout: PdfLayout, report: RenderableReport) {
   );
   layout.academicIdentityGrid();
   renderAcademicMarks(layout, report);
-  layout.keyValues([
-    ["Total", `${report.content.totalObtained} / ${report.content.totalMaximum}`],
-    ["Grade", report.content.grade ? `${report.content.grade.code} - ${report.content.grade.label}` : "Not enabled"],
-    ["Grade point", report.content.grade?.point ?? "Not enabled"],
-    ["Pass / result", report.content.passResult ?? "Not enabled"],
-    ["Rank", report.content.rank == null ? "Not enabled" : String(report.content.rank)],
-    ["Cohort average", report.content.cohortAverage ?? "Not available"]
-  ]);
+  if (isCanonicalV1AcademicReport(report)) {
+    layout.resultSummaryCards();
+    layout.attendanceAndGeneralRemarksRow();
+  } else {
+    layout.keyValues([
+      ["Total", `${report.content.totalObtained} / ${report.content.totalMaximum}`],
+      ["Grade", report.content.grade ? `${report.content.grade.code} - ${report.content.grade.label}` : "Not enabled"],
+      ["Grade point", report.content.grade?.point ?? "Not enabled"],
+      ["Pass / result", report.content.passResult ?? "Not enabled"],
+      ["Rank", report.content.rank == null ? "Not enabled" : String(report.content.rank)],
+      ["Cohort average", report.content.cohortAverage ?? "Not available"]
+    ]);
+  }
   if (report.content.groups.length) {
     layout.heading("Configured subject groups", 2);
     layout.table(
@@ -958,8 +1037,11 @@ function renderAcademicReport(layout: PdfLayout, report: RenderableReport) {
       [0.4, 0.2, 0.4]
     );
   }
-  renderAttendance(layout, report);
-  renderRemarksAndLegends(layout, report);
+  if (isCanonicalV1AcademicReport(report)) renderAcademicLegends(layout, report);
+  else {
+    renderAttendance(layout, report);
+    renderRemarksAndLegends(layout, report);
+  }
   layout.keepTogether(100);
   layout.heading("Required signatures", 2);
   layout.signatures(report.signatures);
@@ -1228,6 +1310,24 @@ function renderRemarksAndLegends(layout: PdfLayout, report: RenderableReport) {
   }
 }
 
+function renderAcademicLegends(layout: PdfLayout, report: RenderableReport) {
+  if (!report.content.legends.length) return;
+  layout.heading("Legend", 2);
+  layout.table(
+    ["Code", "Meaning", "Configured range", "Grade point"],
+    report.content.legends.map((row) => [
+      row.code,
+      row.label,
+      row.minimumPercentage == null && row.maximumPercentage == null
+        ? "Configured scale"
+        : `${row.minimumPercentage ?? "-"} to ${row.maximumPercentage ?? "-"}`,
+      row.gradePoint ?? "Not enabled"
+    ]),
+    [0.14, 0.36, 0.3, 0.2],
+    { compact: true }
+  );
+}
+
 function profileRows(report: RenderableReport): Array<[string, string]> {
   const identity = report.template.definition.identity as Record<string, unknown> | undefined;
   return [
@@ -1324,6 +1424,27 @@ function paletteFor(mode: ReportColourMode) {
     seriesAverage: rgb(0.93, 0.55, 0.22),
     seriesHighest: rgb(0.42, 0.72, 0.42)
   };
+}
+
+function displayParentNumber(value: string | number) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return printable(String(value));
+  return Number(number.toFixed(1)).toString();
+}
+
+function drawCenteredText(
+  page: PDFPage,
+  text: string,
+  font: PDFFont,
+  size: number,
+  x: number,
+  width: number,
+  y: number,
+  color: ReturnType<typeof rgb>
+) {
+  const textWidth = font.widthOfTextAtSize(text, size);
+  if (textWidth > width - 6) throw new Error(`Canonical card value does not fit without shrinking or truncation: ${text}`);
+  page.drawText(text, { x: x + (width - textWidth) / 2, y, size, font, color });
 }
 
 function normalizeWidths(

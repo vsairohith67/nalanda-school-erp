@@ -4,7 +4,7 @@
 
 **Calibration date:** 2026-08-13
 
-**Status:** four Classes I-X families remain V1; R6-A1 review-only correction is ready for digital review and physical acceptance remains pending; the KG foundation is preserved and operationally deferred to V1.5
+**Status:** four Classes I-X families remain V1; R7 review-only correction is ready for digital review and physical acceptance remains pending; the KG foundation is preserved and operationally deferred to V1.5
 
 ## Canonical inventory
 
@@ -42,9 +42,10 @@ No template definition contains universal component maxima, weightages, or grade
 | Class/section jobs and Parent issued-only delivery | Existing immutable publication pipeline retained; full independent QA pending |
 | Classes I-X R5-A1 digital review | Ten representative colour/true-monochrome pages, seven enlarged detail checks and a separate six-page edge pack generated locally and ignored; user review pending |
 | Classes I-X R6-A1 digital review | Eight representative pages and twelve enlarged detail checks generated locally and ignored; configured header emphasis, adaptive dense/two-row charts and authoritative monochrome patterns await user review |
-| Classes I-X physical colour, grayscale, and photocopy acceptance | Paused until R5 user approval and later regeneration of a Classes I-X-only physical pack |
+| Classes I-X R7 digital review | Eight representative pages and fourteen enlarged detail checks generated locally and ignored; exact 12 pt/11 pt secondary header, dynamic summary cards, balanced signatures and filled-diamond monochrome treatment await user review |
+| Classes I-X physical colour, grayscale, and photocopy acceptance | Paused until R7 user approval and later regeneration of a Classes I-X-only physical pack |
 | KG physical acceptance | Deferred to V1.5; not part of the V1 release-candidate gate |
 
 ## Physical specimens
 
-The ignored R4.2 packs are preserved as technical evidence and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`; they must not be printed because they include KG and predate the final Classes I-X correction register. R5 and R6 generated only digital-review evidence, not a physical pack. The future V1 acceptance pack will contain only genuinely distinct Classes I-X structures after the user approves the R6 visuals. See `docs/REPORT_CARD_V1_SCOPE_AMENDMENT.md`.
+The ignored R4.2 packs are preserved as technical evidence and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`; they must not be printed because they include KG and predate the final Classes I-X correction register. R5, R6 and R7 generated only digital-review evidence, not a physical pack. The future V1 acceptance pack will contain only genuinely distinct Classes I-X structures after the user approves the R7 visuals. See `docs/REPORT_CARD_V1_SCOPE_AMENDMENT.md`.

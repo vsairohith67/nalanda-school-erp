@@ -56,6 +56,11 @@ export const R6_HEADER_TYPOGRAPHY = {
   addressFontSizePt: 9.8,
   secondaryFontWeight: "BOLD"
 } as const;
+export const R7_HEADER_TYPOGRAPHY = {
+  statusFontSizePt: 12,
+  addressFontSizePt: 11,
+  secondaryFontWeight: "BOLD"
+} as const;
 export const R6_MONOCHROME_STUDENT_GREY = 0.55;
 export const R6_CHART_SERIES = [
   { label: "Student Marks", monochromePattern: "SOLID_GREY" },
@@ -76,6 +81,16 @@ export const R6_PATTERN_GEOMETRY = {
   diamondRadiusXPt: 1.45,
   diamondRadiusYPt: 1.2,
   diamondStrokeWidthPt: 0.5
+} as const;
+export const R7_PATTERN_GEOMETRY = {
+  borderWidthPt: 0.8,
+  slashAngleDegrees: 45,
+  slashSpacingPt: 7.1,
+  slashStrokeWidthPt: 0.6,
+  diamondHorizontalSpacingPt: 7.1,
+  diamondVerticalSpacingPt: 7.1,
+  diamondRadiusXPt: 1.4,
+  diamondRadiusYPt: 1.4
 } as const;
 export const R6_DENSE_CHART_GEOMETRY = {
   triggerCategoryCount: 8,
@@ -128,6 +143,22 @@ export const R5_SIGNATURE_GEOMETRY = {
   left: 37,
   width: 595.28 - 74,
   footerY: 11
+} as const;
+export const R7_SIGNATURE_GEOMETRY = {
+  lineY: 60,
+  labelY: 47,
+  clearSigningHeightPt: 34.02,
+  linePaddingPt: 4.5,
+  left: 37,
+  width: 595.28 - 74,
+  footerY: 11
+} as const;
+export const R7_SUMMARY_CARD_GEOMETRY = {
+  heightPt: 31,
+  labelFontSizePt: 6.8,
+  valueFontSizePt: 8.8,
+  attendanceRemarksHeightPt: 36,
+  attendanceWidthRatio: 0.45
 } as const;
 export const R5_MAX_PARENT_FACING_DECIMALS = 1;
 
@@ -518,6 +549,12 @@ export function approvedSchoolStatusLine(identity: ReportSchoolIdentitySnapshot)
 
 export function academicHeaderStatusForPreview(identity: ReportSchoolIdentitySnapshot) {
   return approvedSchoolStatusLine(identity) ?? R5_REQUIRED_STATUS_CONFIGURATION_WARNING;
+}
+
+export function assertApprovedReportSchoolStatusForPublication(identity: ReportSchoolIdentitySnapshot) {
+  const statusLine = approvedSchoolStatusLine(identity);
+  if (!statusLine) throw new Error("Report publication blocked: approved report-card status line is not configured in School Settings.");
+  return statusLine;
 }
 
 export function wrapR6HeaderText(
@@ -1096,6 +1133,154 @@ export async function renderR6DetailChecks(identity: ReportSchoolIdentitySnapsho
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
 
+export const R7_VISUAL_PAGES = R6_VISUAL_PAGES;
+
+export const R7_DETAIL_PAGES = [
+  "HEADER_COLOUR_12_11_PT",
+  "HEADER_MONOCHROME_12_11_PT",
+  "FROZEN_IDENTITY_GRID",
+  "SUMMARY_FIVE_CARDS",
+  "SUMMARY_FOUR_CARDS",
+  "SUMMARY_THREE_CARDS",
+  "BALANCED_ATTENDANCE_REMARKS",
+  "COLOUR_PRIMARY_CHART",
+  "MONOCHROME_SIX_SUBJECT_CHART",
+  "MONOCHROME_DENSE_TEN_SUBJECT_CHART",
+  "LEGEND_BAR_FILLED_DIAMOND_EQUIVALENCE",
+  "PHOTOCOPY_SIMULATION",
+  "BALANCED_11_12_MM_SIGNATURE_BLOCK",
+  "R6_R7_SIGNATURE_GAP_BEFORE_AFTER"
+] as const;
+
+export const R7_DETAIL_MONOCHROME_SWATCHES = {
+  page: 11,
+  boxes: [
+    { series: "Student Marks", x: 145, y: 689.89, width: 39.69, height: 14.17 },
+    { series: "Class Average", x: 280.09, y: 689.89, width: 39.69, height: 14.17 },
+    { series: "High Score", x: 415.19, y: 689.89, width: 39.69, height: 14.17 }
+  ]
+} as const;
+
+export async function renderR7VisualPack(identity: ReportSchoolIdentitySnapshot = DEFAULT_IDENTITY) {
+  const document = await PDFDocument.create();
+  const assets = await embedAssets(document, identity);
+  for (const requested of R7_VISUAL_PAGES) {
+    const page = document.addPage([A4.width, A4.height]);
+    drawR7AcademicPage(page, assets, identity, requested.mode, buildFinalAcademicSnapshot(finalAcademicSpecimen(requested.specimenId)));
+  }
+  document.setTitle("VISUAL-DIRECTION-PACK-R7");
+  document.setSubject("Synthetic-only Classes I-X R7 summary, signature and monochrome-pattern digital review");
+  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  setDeterministicPdfDates(document);
+  return Buffer.from(await document.save({ useObjectStreams: false }));
+}
+
+export async function renderR7DetailChecks(identity: ReportSchoolIdentitySnapshot = DEFAULT_IDENTITY) {
+  const document = await PDFDocument.create();
+  const assets = await embedAssets(document, identity);
+  const photocopyImage = await document.embedPng(await createR7PhotocopySimulationPng());
+  const primary = buildFinalAcademicSnapshot(finalAcademicSpecimen("I-II-SESSION"));
+  const secondary = buildFinalAcademicSnapshot(finalAcademicSpecimen("IX-X-COMBINED"));
+  applyCloseChartEdgeCase(primary);
+  applyCloseChartEdgeCase(secondary);
+
+  for (const detail of R7_DETAIL_PAGES) {
+    const page = document.addPage([A4.width, A4.height]);
+    const mode: RefinedColourMode = detail.includes("MONOCHROME") || detail.includes("PHOTOCOPY") || detail.includes("EQUIVALENCE") ? "MONOCHROME" : "COLOUR";
+    const colors = palette(mode);
+    page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: colors.white });
+    if (detail === "HEADER_COLOUR_12_11_PT" || detail === "HEADER_MONOCHROME_12_11_PT") {
+      drawAcademicHeader(page, assets, identity, colors, mode, "R7");
+      centered(page, detail === "HEADER_COLOUR_12_11_PT" ? "R7 SECONDARY HEADER — COLOUR" : "R7 SECONDARY HEADER — MONOCHROME", assets.fonts.bold, 12, 680, colors.ink);
+      centered(page, "Status 12 pt bold | Address 11 pt bold", assets.fonts.regular, 9, 658, colors.ink);
+    } else if (detail === "FROZEN_IDENTITY_GRID") {
+      drawAcademicHeader(page, assets, identity, colors, "COLOUR", "R7");
+      const bottom = drawIdentity(page, assets.fonts, colors, primary);
+      centered(page, "FROZEN — NO CHANGE", assets.fonts.bold, 14, A4.height - bottom - 28, colors.ink);
+      centered(page, "Approved fixed 25% grid and continuous 50% centre divider", assets.fonts.regular, 9, A4.height - bottom - 48, colors.ink);
+    } else if (detail.startsWith("SUMMARY_") || detail === "BALANCED_ATTENDANCE_REMARKS") {
+      const report = cloneAcademicReport(primary);
+      if (detail === "SUMMARY_FOUR_CARDS") report.overall.rank = null;
+      if (detail === "SUMMARY_THREE_CARDS") {
+        report.overall.rank = null;
+        report.overall.gradePoint = null;
+      }
+      centered(page, detail.replaceAll("_", " "), assets.fonts.bold, 13, 782, colors.ink);
+      drawR7SummaryAttendanceRemarks(page, assets.fonts, colors, report, 100, "COLOUR");
+      if (detail === "BALANCED_ATTENDANCE_REMARKS") {
+        centered(page, "Aligned top and bottom edges | 45% attendance / 55% remarks", assets.fonts.regular, 9, 605, colors.ink);
+      }
+    } else if (detail === "COLOUR_PRIMARY_CHART" || detail === "MONOCHROME_SIX_SUBJECT_CHART") {
+      centered(page, detail === "COLOUR_PRIMARY_CHART" ? "CLASSES I–II CHART — COLOUR" : "SIX-SUBJECT CHART — FINAL MONOCHROME", assets.fonts.bold, 12, 792, colors.ink);
+      const normal: R6ChartLayout = { mode: "NORMAL_ACADEMIC_CHART", rows: 1, categoryRows: [[...primary.chartPoints]], compactGradeLegend: false, reason: "R7_DETAIL_NORMAL" };
+      drawR6Chart(page, assets.fonts, colors, primary, 37, 76, A4.width - 74, 500, mode, normal, "R7");
+    } else if (detail === "MONOCHROME_DENSE_TEN_SUBJECT_CHART") {
+      centered(page, "DENSE TEN-SUBJECT CHART — FINAL MONOCHROME", assets.fonts.bold, 12, 792, colors.ink);
+      const layout = resolveR6AcademicChartLayout(secondary.chartPoints, A4.width - 102, (text) => assets.fonts.regular.widthOfTextAtSize(text, 6));
+      drawR6Chart(page, assets.fonts, colors, secondary, 37, 70, A4.width - 74, 610, "MONOCHROME", layout, "R7");
+    } else if (detail === "LEGEND_BAR_FILLED_DIAMOND_EQUIVALENCE") {
+      centered(page, "MONOCHROME LEGEND / BAR PATTERN EQUIVALENCE", assets.fonts.bold, 13, 792, colors.ink);
+      const series = r6ChartSeries(colors, "MONOCHROME");
+      drawR6ChartLegend(page, assets.fonts, colors, 37, 130, A4.width - 74, "MONOCHROME", series, false, "R7");
+      const barXs = [145, 280.09, 415.19];
+      series.forEach((item, index) => {
+        drawR6PatternedRectangle(page, { x: barXs[index], y: 500, width: 39.69, height: 108 }, item.color, colors.ink, item.pattern, "R7");
+        centeredInHorizontalSpan(page, "MATCH", assets.fonts.bold, 7, 484, colors.ink, barXs[index], 39.69);
+      });
+      centered(page, "Uniform grey | Single diagonal slashes | Filled black diamond lattice", assets.fonts.bold, 9, 425, colors.ink);
+      centered(page, "Legend swatches and corresponding bars share the same renderer and geometry.", assets.fonts.regular, 8.5, 402, colors.ink);
+    } else if (detail === "PHOTOCOPY_SIMULATION") {
+      centered(page, "ONE-GENERATION PHOTOCOPY SIMULATION", assets.fonts.bold, 13, 792, colors.ink);
+      page.drawImage(photocopyImage, { x: 50, y: 435, width: 495, height: 116 });
+      centered(page, "Grayscale + moderate blur + contrast reduction + thresholding", assets.fonts.bold, 9, 400, colors.ink);
+      centered(page, "All three series remain visibly distinct and labels remain readable.", assets.fonts.regular, 9, 375, colors.ink);
+    } else if (detail === "BALANCED_11_12_MM_SIGNATURE_BLOCK") {
+      centered(page, "BALANCED SIGNATURE BLOCK — 11–12 MM", assets.fonts.bold, 14, 760, colors.ink);
+      page.drawRectangle({ x: R7_SIGNATURE_GEOMETRY.left, y: R7_SIGNATURE_GEOMETRY.lineY, width: R7_SIGNATURE_GEOMETRY.width, height: R7_SIGNATURE_GEOMETRY.clearSigningHeightPt, borderColor: colors.grid, borderWidth: 0.5, borderDashArray: [3, 2] });
+      drawSignatures(page, assets.fonts, colors, R7_SIGNATURE_GEOMETRY);
+      centered(page, "12.0 mm clear signing height | 4.6 mm line-to-label spacing", assets.fonts.bold, 9, 140, colors.ink);
+    } else {
+      centered(page, "SIGNATURE CLEARANCE — R6 BEFORE / R7 AFTER", assets.fonts.bold, 14, 790, colors.ink);
+      drawSignatureComparison(page, assets.fonts, colors, "R6 — excessive 18 mm clearance", 500, 483, 51.02);
+      drawSignatureComparison(page, assets.fonts, colors, "R7 — balanced 12 mm clearance", 180, 167, R7_SIGNATURE_GEOMETRY.clearSigningHeightPt);
+    }
+    drawFooter(page, assets.fonts, mode, false);
+  }
+  document.setTitle("R7-DETAIL-CHECKS");
+  document.setSubject("Synthetic-only R7 header, summary-card, attendance, signature and monochrome-pattern checks");
+  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  setDeterministicPdfDates(document);
+  return Buffer.from(await document.save({ useObjectStreams: false }));
+}
+
+function drawSignatureComparison(page: PDFPage, fonts: Fonts, colors: Palette, title: string, lineY: number, labelY: number, clearHeight: number) {
+  centered(page, title, fonts.bold, 11, lineY + clearHeight + 35, colors.ink);
+  page.drawRectangle({ x: R7_SIGNATURE_GEOMETRY.left, y: lineY, width: R7_SIGNATURE_GEOMETRY.width, height: clearHeight, borderColor: colors.grid, borderWidth: 0.5, borderDashArray: [3, 2] });
+  drawSignatures(page, fonts, colors, { ...R7_SIGNATURE_GEOMETRY, lineY, labelY });
+  centered(page, `${(clearHeight / 72 * 25.4).toFixed(1)} mm clear handwriting area`, fonts.regular, 8.5, labelY - 32, colors.ink);
+}
+
+async function createR7PhotocopySimulationPng() {
+  const svg = Buffer.from(`<svg width="1200" height="280" viewBox="0 0 1200 280" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="slashes" width="21" height="21" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="21" stroke="#000" stroke-width="2.2"/></pattern>
+      <pattern id="diamonds" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M12 6 L18 12 L12 18 L6 12 Z" fill="#000"/><path d="M0 18 L6 24 L0 30 L-6 24 Z" fill="#000"/></pattern>
+    </defs>
+    <rect width="1200" height="280" fill="#fff"/>
+    <g stroke="#000" stroke-width="4">
+      <rect x="35" y="35" width="330" height="150" fill="#8c8c8c"/>
+      <rect x="435" y="35" width="330" height="150" fill="url(#slashes)"/>
+      <rect x="835" y="35" width="330" height="150" fill="url(#diamonds)"/>
+    </g>
+    <g font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#000" text-anchor="middle">
+      <rect x="68" y="202" width="264" height="43" fill="#fff" stroke="none"/><text x="200" y="235">Student Marks</text>
+      <rect x="468" y="202" width="264" height="43" fill="#fff" stroke="none"/><text x="600" y="235">Class Average</text>
+      <rect x="868" y="202" width="264" height="43" fill="#fff" stroke="none"/><text x="1000" y="235">High Score</text>
+    </g>
+  </svg>`);
+  return sharp(svg).grayscale().blur(0.45).linear(1.08, -8).threshold(168).png().toBuffer();
+}
+
 function cloneAcademicReport(report: AcademicReportSnapshot) {
   return JSON.parse(JSON.stringify(report)) as AcademicReportSnapshot;
 }
@@ -1534,6 +1719,19 @@ function drawR6AcademicPage(
   drawFooter(page, assets.fonts, mode, false);
 }
 
+function drawR7AcademicPage(
+  page: PDFPage,
+  assets: Assets,
+  identity: ReportSchoolIdentitySnapshot,
+  mode: RefinedColourMode,
+  report: AcademicReportSnapshot
+) {
+  const colors = palette(mode);
+  page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: colors.white });
+  drawAcademic(page, assets, identity, colors, mode, report, { r7: true });
+  drawFooter(page, assets.fonts, mode, false);
+}
+
 function drawFinalKgPage(
   page: PDFPage,
   assets: Assets,
@@ -1836,23 +2034,26 @@ function drawAcademic(
   colors: Palette,
   mode: RefinedColourMode,
   report: AcademicReportSnapshot,
-  options: { r6?: boolean } = {}
+  options: { r6?: boolean; r7?: boolean } = {}
 ) {
-  drawAcademicHeader(page, assets, identity, colors, mode, options.r6 ? "R6" : "R5");
+  const governedVersion = options.r7 ? "R7" : options.r6 ? "R6" : "R5";
+  drawAcademicHeader(page, assets, identity, colors, mode, governedVersion);
   const identityBottom = drawIdentity(page, assets.fonts, colors, report);
   centered(page, report.examination, assets.fonts.bold, 13.5, A4.height - identityBottom - 31, colors.ink);
   const tableTop = identityBottom + 42;
   const fullWidth = A4.width - 74;
   let contentBottom: number;
   if (report.layout === "COMBINED") {
-    contentBottom = drawCombinedTable(page, assets.fonts, colors, report, tableTop, Boolean(options.r6));
+    contentBottom = drawCombinedTable(page, assets.fonts, colors, report, tableTop, Boolean(options.r6 || options.r7));
   } else {
-    contentBottom = drawStandardTables(page, assets.fonts, colors, report, tableTop, Boolean(options.r6));
+    contentBottom = drawStandardTables(page, assets.fonts, colors, report, tableTop, Boolean(options.r6 || options.r7));
   }
   contentBottom = drawGroupResultNote(page, assets.fonts, colors, report, contentBottom);
   contentBottom = drawResultStateLegend(page, assets.fonts, colors, report, contentBottom);
   let top: number;
-  if (options.r6) {
+  if (options.r7) {
+    top = drawR7SummaryAttendanceRemarks(page, assets.fonts, colors, report, contentBottom + 4, mode) + 5;
+  } else if (options.r6) {
     top = drawR6SummaryAttendanceRemarks(page, assets.fonts, colors, report, contentBottom + 4) + 5;
   } else {
     top = contentBottom + 8;
@@ -1860,8 +2061,9 @@ function drawAcademic(
     top = drawAttendance(page, assets.fonts, colors, report, top) + 9;
     top = drawRemarks(page, assets.fonts, colors, report.remarks, top) + 10;
   }
-  const signatureContentLimit = A4.height - (R5_SIGNATURE_GEOMETRY.lineY + R5_SIGNATURE_GEOMETRY.clearSigningHeightPt);
-  const r6ChartLayout = options.r6
+  const signatureGeometry = options.r7 ? R7_SIGNATURE_GEOMETRY : R5_SIGNATURE_GEOMETRY;
+  const signatureContentLimit = A4.height - (signatureGeometry.lineY + signatureGeometry.clearSigningHeightPt);
+  const r6ChartLayout = options.r6 || options.r7
     ? resolveR6AcademicChartLayout(
       report.chartPoints,
       fullWidth - 28,
@@ -1874,14 +2076,14 @@ function drawAcademic(
   const chartHeightAvailable = signatureContentLimit - top - gradeLegendHeight - 9;
   const preferredChartHeight = !r6ChartLayout
     ? (report.layout === "COMBINED" ? 105 : 120)
-    : r6ChartLayout.rows === 2 ? 198 : r6ChartLayout.mode === "DENSE_ACADEMIC_CHART" ? 205 : 120;
+    : r6ChartLayout.rows === 2 ? 198 : r6ChartLayout.mode === "DENSE_ACADEMIC_CHART" ? 205 : options.r7 ? 165 : 120;
   const minimumChartHeight = !r6ChartLayout
     ? 76
-    : r6ChartLayout.rows === 2 ? 165 : r6ChartLayout.mode === "DENSE_ACADEMIC_CHART" ? 155 : 76;
-  const chartHeight = Math.min(preferredChartHeight, chartHeightAvailable);
-  if (chartHeight < minimumChartHeight) throw new Error(`Academic layout cannot preserve the approved chart and signature geometry on one A4 page (${report.classSection}, available ${chartHeightAvailable.toFixed(1)} pt).`);
-  top = (options.r6
-    ? drawR6Chart(page, assets.fonts, colors, report, 37, top, fullWidth, chartHeight, mode, r6ChartLayout!)
+    : r6ChartLayout.rows === 2 ? 165 : r6ChartLayout.mode === "DENSE_ACADEMIC_CHART" ? (options.r7 ? 140 : 155) : 76;
+  const chartHeight = options.r7 ? chartHeightAvailable : Math.min(preferredChartHeight, chartHeightAvailable);
+  if (chartHeight < minimumChartHeight) throw new Error(`Academic layout cannot preserve the approved chart and signature geometry on one A4 page (${report.classSection}, ${r6ChartLayout?.rows ?? 1} row, available ${chartHeightAvailable.toFixed(1)} pt, minimum ${minimumChartHeight.toFixed(1)} pt).`);
+  top = (options.r6 || options.r7
+    ? drawR6Chart(page, assets.fonts, colors, report, 37, top, fullWidth, chartHeight, mode, r6ChartLayout!, options.r7 ? "R7" : "R6")
     : drawChart(page, assets.fonts, colors, report, 37, top, fullWidth, chartHeight, mode)) + 9;
   const gradeLegendBottom = drawGradeLegend(
     page,
@@ -1896,7 +2098,7 @@ function drawAcademic(
   if (gradeLegendBottom > signatureContentLimit + EPSILON) {
     throw new Error("Grade legend intrudes into the approved physical signing area.");
   }
-  drawSignatures(page, assets.fonts, colors);
+  drawSignatures(page, assets.fonts, colors, signatureGeometry);
 }
 
 function drawGroupResultNote(
@@ -1943,7 +2145,7 @@ function drawAcademicHeader(
   identity: ReportSchoolIdentitySnapshot,
   colors: Palette,
   mode: RefinedColourMode,
-  version: "R5" | "R6" = "R5"
+  version: "R5" | "R6" | "R7" = "R5"
 ) {
   const logo = mode === "MONOCHROME" ? assets.monochromeLogo : assets.colourLogo;
   if (logo) page.drawImage(logo, {
@@ -1970,7 +2172,8 @@ function drawAcademicHeader(
     centeredInHorizontalSpan(page, identity.addressLine1 + ", " + identity.city, assets.fonts.regular, 10.5, R5_HEADER_GEOMETRY.addressY, colors.ink, R5_HEADER_GEOMETRY.textLeft, R5_HEADER_GEOMETRY.textWidth);
     return;
   }
-  const statusSize = approvedStatus ? R6_HEADER_TYPOGRAPHY.statusFontSizePt : 8;
+  const headerTypography = version === "R7" ? R7_HEADER_TYPOGRAPHY : R6_HEADER_TYPOGRAPHY;
+  const statusSize = approvedStatus ? headerTypography.statusFontSizePt : 8;
   const statusLines = wrapR6HeaderText(
     statusLine,
     R5_HEADER_GEOMETRY.textWidth,
@@ -1980,7 +2183,7 @@ function drawAcademicHeader(
   const addressLines = wrapR6HeaderText(
     address,
     R5_HEADER_GEOMETRY.textWidth,
-    (text) => assets.fonts.bold.widthOfTextAtSize(text, R6_HEADER_TYPOGRAPHY.addressFontSizePt)
+    (text) => assets.fonts.bold.widthOfTextAtSize(text, headerTypography.addressFontSizePt)
   );
   const statusStartY = statusLines.length === 1 ? R5_HEADER_GEOMETRY.statusLineY : R5_HEADER_GEOMETRY.statusLineY + 4.8;
   statusLines.forEach((line, index) => centeredInHorizontalSpan(
@@ -1998,7 +2201,7 @@ function drawAcademicHeader(
     page,
     line,
     assets.fonts.bold,
-    R6_HEADER_TYPOGRAPHY.addressFontSizePt,
+    headerTypography.addressFontSizePt,
     addressStartY - index * 10.8,
     colors.ink,
     R5_HEADER_GEOMETRY.textLeft,
@@ -2419,6 +2622,64 @@ function drawR6SummaryAttendanceRemarks(
   return bandBottom;
 }
 
+export function r7SummaryMetrics(report: AcademicReportSnapshot) {
+  return [
+    { label: "Total", value: `${formatParentFacingNumber(displayedOverallTotal(report))} / ${formatParentFacingNumber(report.overall.maximum)}` },
+    { label: "Percentage", value: `${formatParentFacingNumber(displayedOverallPercentage(report))}%` },
+    { label: "Grade", value: report.overall.grade },
+    ...(report.overall.gradePoint == null ? [] : [{ label: "Grade Point", value: formatParentFacingNumber(report.overall.gradePoint) }]),
+    ...(report.overall.rank == null ? [] : [{ label: "Rank", value: String(report.overall.rank) }])
+  ];
+}
+
+function drawR7SummaryAttendanceRemarks(
+  page: PDFPage,
+  fonts: Fonts,
+  colors: Palette,
+  report: AcademicReportSnapshot,
+  top: number,
+  mode: RefinedColourMode
+) {
+  const totalWidth = A4.width - 74;
+  const x = 37;
+  const metrics = r7SummaryMetrics(report);
+  if (metrics.length < 3 || metrics.length > 5) throw new Error("R7 summary-card grid requires three, four or five configured metrics.");
+  const totalWeight = metrics.reduce((value, metric) => value + (metric.label === "Total" ? 1.15 : 1), 0);
+  let cursorX = x;
+  metrics.forEach((metric, index) => {
+    const weight = metric.label === "Total" ? 1.15 : 1;
+    const width = index === metrics.length - 1 ? x + totalWidth - cursorX : totalWidth * weight / totalWeight;
+    rectTop(page, cursorX, top, width, R7_SUMMARY_CARD_GEOMETRY.heightPt, mode === "MONOCHROME" ? colors.white : colors.band, colors.border, 0.7);
+    centeredInHorizontalSpan(page, metric.label, fonts.bold, R7_SUMMARY_CARD_GEOMETRY.labelFontSizePt, A4.height - top - 12, colors.ink, cursorX, width);
+    centeredInHorizontalSpan(page, metric.value, fonts.bold, R7_SUMMARY_CARD_GEOMETRY.valueFontSizePt, A4.height - top - 27, colors.ink, cursorX, width);
+    cursorX += width;
+  });
+
+  const rowTop = top + R7_SUMMARY_CARD_GEOMETRY.heightPt + 3;
+  const rowHeight = R7_SUMMARY_CARD_GEOMETRY.attendanceRemarksHeightPt;
+  const gap = 6;
+  const attendanceWidth = (totalWidth - gap) * R7_SUMMARY_CARD_GEOMETRY.attendanceWidthRatio;
+  const remarksWidth = totalWidth - gap - attendanceWidth;
+  const remarksX = x + attendanceWidth + gap;
+  const attendanceHeaders = ["Working Days", "Days Present", "Attendance %"];
+  const cellWidth = attendanceWidth / attendanceHeaders.length;
+  attendanceHeaders.forEach((label, index) => {
+    const cellX = x + index * cellWidth;
+    rectTop(page, cellX, rowTop, cellWidth, 17, colors.band, colors.border, 0.7);
+    centeredInHorizontalSpan(page, label, fonts.bold, 6.8, A4.height - rowTop - 12, colors.ink, cellX, cellWidth);
+    rectTop(page, cellX, rowTop + 17, cellWidth, rowHeight - 17, colors.white, colors.border, 0.7);
+  });
+  const attendanceValues = [String(report.attendance.workingDays), String(report.attendance.daysPresent), `${formatParentFacingNumber(report.attendance.percentage)}%`];
+  attendanceValues.forEach((value, index) => centeredInHorizontalSpan(page, value, fonts.bold, 8, A4.height - rowTop - 32, colors.ink, x + index * cellWidth, cellWidth));
+
+  rectTop(page, remarksX, rowTop, remarksWidth, rowHeight, colors.white, colors.border, 0.7);
+  page.drawText("General Remarks", { x: remarksX + 5, y: A4.height - rowTop - 12, size: 7.4, font: fonts.bold, color: colors.ink });
+  const remarkLines = wrapText(report.remarks, fonts.regular, 7, remarksWidth - 10);
+  if (remarkLines.length > 2) throw new Error("R7 General Remarks cannot fit the balanced row without truncation.");
+  remarkLines.forEach((line, index) => page.drawText(line, { x: remarksX + 5, y: A4.height - rowTop - 23 - index * 8, size: 7, font: fonts.regular, color: colors.ink }));
+  return rowTop + rowHeight;
+}
+
 function drawChart(
   page: PDFPage,
   fonts: Fonts,
@@ -2542,7 +2803,8 @@ function drawR6Chart(
   width: number,
   height: number,
   mode: RefinedColourMode,
-  layout: R6ChartLayout
+  layout: R6ChartLayout,
+  version: "R6" | "R7" = "R6"
 ) {
   rectTop(page, x, top, width, height, colors.white, colors.border, 0.7);
   page.drawText("Student Marks (%)", {
@@ -2553,7 +2815,7 @@ function drawR6Chart(
     color: colors.ink
   });
   const series = r6ChartSeries(colors, mode);
-  drawR6ChartLegend(page, fonts, colors, x, top, width, mode, series, layout.mode === "DENSE_ACADEMIC_CHART");
+  drawR6ChartLegend(page, fonts, colors, x, top, width, mode, series, layout.mode === "DENSE_ACADEMIC_CHART", version);
   const outerBottom = A4.height - top - height;
   const headerHeight = layout.mode === "DENSE_ACADEMIC_CHART" ? 28 : 31;
   const contentTop = A4.height - top - headerHeight;
@@ -2610,7 +2872,7 @@ function drawR6Chart(
       values.forEach((value, seriesIndex) => {
         const barX = clusterX + seriesIndex * (barWidth + barGap);
         const barHeight = plotHeight * value / 100;
-        drawR6PatternedRectangle(page, { x: barX, y: barBottom, width: barWidth, height: barHeight }, series[seriesIndex].color, colors.ink, mode === "MONOCHROME" ? series[seriesIndex].pattern : "SOLID");
+        drawR6PatternedRectangle(page, { x: barX, y: barBottom, width: barWidth, height: barHeight }, series[seriesIndex].color, colors.ink, mode === "MONOCHROME" ? series[seriesIndex].pattern : "SOLID", version);
         numericInputs.push({
           text: labels[seriesIndex],
           centerX: barX + barWidth / 2,
@@ -2679,7 +2941,8 @@ function drawR6ChartLegend(
   width: number,
   mode: RefinedColourMode,
   series: ReturnType<typeof r6ChartSeries>,
-  dense: boolean
+  dense: boolean,
+  version: "R6" | "R7" = "R6"
 ) {
   const geometry = dense ? R6_CHART_LEGEND_GEOMETRY.dense : R6_CHART_LEGEND_GEOMETRY.normal;
   const legendLeft = x + (dense ? 98 : 108);
@@ -2687,7 +2950,7 @@ function drawR6ChartLegend(
   const swatchY = A4.height - top - (dense ? 19 : 22);
   series.forEach((item, index) => {
     const box = { x: legendLeft + index * itemWidth, y: swatchY, width: geometry.swatchWidthPt, height: geometry.swatchHeightPt };
-    drawR6PatternedRectangle(page, box, item.color, colors.ink, mode === "MONOCHROME" ? item.pattern : "SOLID");
+    drawR6PatternedRectangle(page, box, item.color, colors.ink, mode === "MONOCHROME" ? item.pattern : "SOLID", version);
     page.drawText(item.label, {
       x: box.x + box.width + geometry.gapPt,
       y: box.y + (box.height - geometry.labelFontSizePt) / 2 + 0.5,
@@ -2703,17 +2966,19 @@ function drawR6PatternedRectangle(
   box: { x: number; y: number; width: number; height: number },
   fill: RGB,
   ink: RGB,
-  pattern: R6ChartPattern
+  pattern: R6ChartPattern,
+  version: "R6" | "R7" = "R6"
 ) {
   if (box.width <= 0 || box.height <= 0) return;
+  const geometry = version === "R7" ? R7_PATTERN_GEOMETRY : R6_PATTERN_GEOMETRY;
   page.drawRectangle({
     ...box,
     color: pattern === "SOLID" || pattern === "SOLID_GREY" ? fill : rgb(1, 1, 1),
     borderColor: ink,
-    borderWidth: R6_PATTERN_GEOMETRY.borderWidthPt
+    borderWidth: geometry.borderWidthPt
   });
   if (pattern === "DIAGONAL") {
-    for (let intercept = -box.width; intercept <= box.height; intercept += R6_PATTERN_GEOMETRY.slashSpacingPt) {
+    for (let intercept = -box.width; intercept <= box.height; intercept += geometry.slashSpacingPt) {
       const startLocal = intercept >= 0
         ? { x: 0, y: intercept }
         : { x: -intercept, y: 0 };
@@ -2724,26 +2989,36 @@ function drawR6PatternedRectangle(
         page.drawLine({
           start: { x: box.x + startLocal.x, y: box.y + startLocal.y },
           end: { x: box.x + endLocal.x, y: box.y + endLocal.y },
-          thickness: R6_PATTERN_GEOMETRY.slashStrokeWidthPt,
+          thickness: geometry.slashStrokeWidthPt,
           color: ink
         });
       }
     }
   }
   if (pattern === "DIAMOND_LATTICE") {
-    for (let centerY = box.y + 2.2; centerY <= box.y + box.height - 2.2; centerY += R6_PATTERN_GEOMETRY.diamondVerticalSpacingPt) {
-      const rowShift = Math.round((centerY - box.y) / R6_PATTERN_GEOMETRY.diamondVerticalSpacingPt) % 2
-        ? R6_PATTERN_GEOMETRY.diamondHorizontalSpacingPt / 2
+    for (let centerY = box.y + geometry.diamondRadiusYPt + 0.7; centerY <= box.y + box.height - geometry.diamondRadiusYPt - 0.7; centerY += geometry.diamondVerticalSpacingPt) {
+      const rowShift = Math.round((centerY - box.y) / geometry.diamondVerticalSpacingPt) % 2
+        ? geometry.diamondHorizontalSpacingPt / 2
         : 0;
-      for (let centerX = box.x + 2.2 + rowShift; centerX <= box.x + box.width - 2.2; centerX += R6_PATTERN_GEOMETRY.diamondHorizontalSpacingPt) {
-        const left = { x: centerX - R6_PATTERN_GEOMETRY.diamondRadiusXPt, y: centerY };
-        const topPoint = { x: centerX, y: centerY + R6_PATTERN_GEOMETRY.diamondRadiusYPt };
-        const right = { x: centerX + R6_PATTERN_GEOMETRY.diamondRadiusXPt, y: centerY };
-        const bottomPoint = { x: centerX, y: centerY - R6_PATTERN_GEOMETRY.diamondRadiusYPt };
-        page.drawLine({ start: left, end: topPoint, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: ink });
-        page.drawLine({ start: topPoint, end: right, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: ink });
-        page.drawLine({ start: right, end: bottomPoint, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: ink });
-        page.drawLine({ start: bottomPoint, end: left, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: ink });
+      for (let centerX = box.x + geometry.diamondRadiusXPt + 0.7 + rowShift; centerX <= box.x + box.width - geometry.diamondRadiusXPt - 0.7; centerX += geometry.diamondHorizontalSpacingPt) {
+        if (version === "R7") {
+          const diameterX = geometry.diamondRadiusXPt * 2;
+          const diameterY = geometry.diamondRadiusYPt * 2;
+          page.drawSvgPath(`M 0 ${geometry.diamondRadiusYPt} L ${geometry.diamondRadiusXPt} 0 L ${diameterX} ${geometry.diamondRadiusYPt} L ${geometry.diamondRadiusXPt} ${diameterY} Z`, {
+            x: centerX - geometry.diamondRadiusXPt,
+            y: centerY - geometry.diamondRadiusYPt,
+            color: ink
+          });
+        } else {
+          const left = { x: centerX - geometry.diamondRadiusXPt, y: centerY };
+          const topPoint = { x: centerX, y: centerY + geometry.diamondRadiusYPt };
+          const right = { x: centerX + geometry.diamondRadiusXPt, y: centerY };
+          const bottomPoint = { x: centerX, y: centerY - geometry.diamondRadiusYPt };
+          page.drawLine({ start: left, end: topPoint, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: ink });
+          page.drawLine({ start: topPoint, end: right, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: ink });
+          page.drawLine({ start: right, end: bottomPoint, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: ink });
+          page.drawLine({ start: bottomPoint, end: left, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: ink });
+        }
       }
     }
   }
@@ -2815,15 +3090,26 @@ function drawGradeLegend(
   });
 }
 
-function drawSignatures(page: PDFPage, fonts: Fonts, colors: Palette) {
+function drawSignatures(
+  page: PDFPage,
+  fonts: Fonts,
+  colors: Palette,
+  geometry: {
+    lineY: number;
+    labelY: number;
+    left: number;
+    width: number;
+    linePaddingPt?: number;
+  } = R5_SIGNATURE_GEOMETRY
+) {
   const labels = ["Class Teacher", "Principal", "Parent / Guardian", "Director"];
-  const columnWidth = R5_SIGNATURE_GEOMETRY.width / labels.length;
+  const columnWidth = geometry.width / labels.length;
   labels.forEach((label, index) => {
-    const columnX = R5_SIGNATURE_GEOMETRY.left + index * columnWidth;
-    const linePadding = 13;
+    const columnX = geometry.left + index * columnWidth;
+    const linePadding = geometry.linePaddingPt ?? 13;
     page.drawLine({
-      start: { x: columnX + linePadding, y: R5_SIGNATURE_GEOMETRY.lineY },
-      end: { x: columnX + columnWidth - linePadding, y: R5_SIGNATURE_GEOMETRY.lineY },
+      start: { x: columnX + linePadding, y: geometry.lineY },
+      end: { x: columnX + columnWidth - linePadding, y: geometry.lineY },
       thickness: 0.55,
       color: colors.border
     });
@@ -2831,7 +3117,7 @@ function drawSignatures(page: PDFPage, fonts: Fonts, colors: Palette) {
     const labelWidth = fonts.bold.widthOfTextAtSize(label, size);
     page.drawText(label, {
       x: columnX + (columnWidth - labelWidth) / 2,
-      y: R5_SIGNATURE_GEOMETRY.labelY,
+      y: geometry.labelY,
       size,
       font: fonts.bold,
       color: colors.ink

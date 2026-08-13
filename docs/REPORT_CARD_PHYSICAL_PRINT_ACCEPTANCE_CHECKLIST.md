@@ -1,6 +1,6 @@
 # Report-Card Physical Print Acceptance Checklist
 
-> **R6-A1 DIGITAL REVIEW — DO NOT PRINT.** R6 generated only an eight-page Classes I-X visual-review pack and a twelve-page enlarged detail-check pack. Neither is authorised for physical acceptance. Existing full/physical packs remain `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS` and must not be printed. KG/LKG/UKG physical acceptance is deferred to V1.5. A replacement V1 physical pack may be generated only after user visual approval. Physical printing remains paused.
+> **R7 DIGITAL REVIEW — DO NOT PRINT.** R7 generated only an eight-page Classes I-X visual-review pack and a fourteen-page enlarged detail-check pack. Neither is authorised for physical acceptance. Existing full/physical packs remain `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS` and must not be printed. KG/LKG/UKG physical acceptance is deferred to V1.5. A replacement V1 physical pack may be generated only after user visual approval. Physical printing remains paused.
 
 > R4.1 remains a digital micro-review correction. Do not print `VISUAL-DIRECTION-PACK-R4-1.pdf` or `EDGE-CASE-RENDERING-PACK-R4-1.pdf`. Full physical-pack regeneration and printing remain paused pending explicit user approval.
 
@@ -31,9 +31,10 @@
 
 - [x] R5-A1 Classes I-X visual, detail-check and edge-case packs generated and validated locally (not for printing)
 - [x] R6-A1 Classes I-X visual and detail-check packs generated and validated locally (not for printing)
-- [ ] R6 visual correction approved by the user
-- [ ] Replacement Classes I-X-only colour pack generated after R6 visual approval
-- [ ] Replacement Classes I-X-only true-monochrome pack generated after R6 visual approval
+- [x] R7 Classes I-X visual and detail-check packs generated and validated locally (not for printing)
+- [ ] R7 visual correction approved by the user
+- [ ] Replacement Classes I-X-only colour pack generated after R7 visual approval
+- [ ] Replacement Classes I-X-only true-monochrome pack generated after R7 visual approval
 - [ ] Every genuinely distinct Classes I-X colour specimen printed
 - [ ] Every genuinely distinct Classes I-X monochrome specimen printed
 - [ ] One approved Classes I-X monochrome page photocopied once

@@ -2,7 +2,7 @@
 
 **Decision:** `REPORT-PRINT-ACCEPT-1A-SCOPE-AMENDMENT-2026-08-12`<br>
 **Branch:** `reporting/canonical-template-print-acceptance`<br>
-**Status:** R5 consolidated Classes I-X corrections complete for digital review; physical printing remains paused
+**Status:** R7 narrow Classes I-X correction complete for digital review; physical printing remains paused
 
 ## Product-scope split
 
@@ -71,15 +71,15 @@ The user confirmed this 29-item register complete for R5. The items below are im
 28. Do not silently change underlying grade-scale boundaries.
 29. Derive concise exact non-overlapping boundary wording from the frozen grade-scale thresholds.
 
-R5 produces only ignored synthetic digital-review evidence: a ten-page representative visual pack and a separate six-page edge-case pack. Neither pack is a physical-acceptance pack. The next gate is user visual review; any newly identified defect must be handled as a narrow R6 before Classes I-X-only physical-pack regeneration.
+R5 established the consolidated correction baseline. R6 then preserved the layout while adding adaptive dense-chart handling, and R7 applies only the final secondary-header, summary-card, attendance/remarks, signature-balance and filled-diamond monochrome corrections. R7 produces an ignored eight-page representative visual pack and fourteen-page detail pack. Neither is a physical-acceptance pack. The next gate is user visual review before Classes I-X-only physical-pack regeneration.
 
 ## Superseded local packs
 
-The existing ignored `PHYSICAL-ACCEPTANCE-COLOUR.pdf`, `PHYSICAL-ACCEPTANCE-MONOCHROME.pdf`, `RC-SYN-final-colour.pdf` and `RC-SYN-final-monochrome.pdf` are preserved as technical evidence and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`. They must not be printed or used for V1 acceptance. R5 did not regenerate them. A future replacement pack will contain only genuinely distinct Classes I-X layouts after user approval of the R5 digital review.
+The existing ignored `PHYSICAL-ACCEPTANCE-COLOUR.pdf`, `PHYSICAL-ACCEPTANCE-MONOCHROME.pdf`, `RC-SYN-final-colour.pdf` and `RC-SYN-final-monochrome.pdf` are preserved as technical evidence and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`. They must not be printed or used for V1 acceptance. R5, R6 and R7 did not regenerate them. A future replacement pack will contain only genuinely distinct Classes I-X layouts after user approval of the R7 digital review.
 
 ## Release boundary
 
-- Only the ignored synthetic R5 digital-review PDFs are generated; no physical pack or printing.
+- Only the ignored synthetic R7 digital-review PDFs are generated; no physical pack or printing.
 - No merge, release tag, deployment or real report publication.
 - No operational database, issued snapshot, historical data or approved calculation change.
 - No restricted source or Student data in Git or external planning systems.
