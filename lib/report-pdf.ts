@@ -19,8 +19,12 @@ import type {
 import { reportTemplateFamilyLabel } from "@/lib/report-publication-types";
 import {
   R5_CHART_LABEL_CLEARANCE_PT,
-  R5_CHART_LEGEND_GEOMETRY,
   R5_CHART_NUMERIC_LABEL_FONT_SIZE,
+  R6_CHART_LEGEND_GEOMETRY,
+  R6_DENSE_CHART_GEOMETRY,
+  R6_HEADER_TYPOGRAPHY,
+  R6_MONOCHROME_STUDENT_GREY,
+  R6_PATTERN_GEOMETRY,
   layoutChartNumericLabels
 } from "@/lib/report-card-refined-source-lock";
 
@@ -173,7 +177,8 @@ class PdfLayout {
     this.pages.push(this.page);
     this.pageNumber += 1;
     this.y = this.pageSize[1] - this.margin;
-    if (this.pageNumber === 1) this.y -= 58;
+    if (this.isR5Academic()) this.y -= 68;
+    else if (this.pageNumber === 1) this.y -= 58;
   }
 
   pageBreak() {
@@ -205,30 +210,32 @@ class PdfLayout {
       this.report.school.recognitionWording,
       this.report.school.establishmentYear ? `Established ${this.report.school.establishmentYear}` : null
     ].filter(Boolean).join("  •  ") || "CONFIGURATION REQUIRED — approved report-card status line is missing";
-    const statusSize = 7.5;
-    const statusWidth = this.fonts.regular.widthOfTextAtSize(identityLine, statusSize);
-    if (statusWidth > textWidth) throw new Error("Configured report-card status line does not fit the approved academic-report header.");
-    page.drawText(identityLine, {
-      x: textLeft + (textWidth - statusWidth) / 2,
-      y: topY - 28,
+    const statusSize = identityLine.startsWith("CONFIGURATION REQUIRED") ? 8 : R6_HEADER_TYPOGRAPHY.statusFontSizePt;
+    const statusLines = wrapText(identityLine, this.fonts.bold, statusSize, textWidth);
+    if (statusLines.length > 2) throw new Error("Configured report-card status line does not fit the approved academic-report header.");
+    const statusStartY = statusLines.length === 1 ? topY - 28 : topY - 24;
+    statusLines.forEach((line, index) => page.drawText(line, {
+      x: textLeft + (textWidth - this.fonts.bold.widthOfTextAtSize(line, statusSize)) / 2,
+      y: statusStartY - index * 10.4,
       size: statusSize,
-      font: this.fonts.regular,
+      font: this.fonts.bold,
       color: this.palette.ink
-    });
+    }));
     const addressLine = [this.report.school.address, this.report.school.city].filter(Boolean).join(", ");
-    const addressSize = 8.5;
-    const addressWidth = this.fonts.regular.widthOfTextAtSize(addressLine, addressSize);
-    if (addressWidth > textWidth) throw new Error("Configured school address does not fit the approved academic-report header.");
-    page.drawText(addressLine, {
-      x: textLeft + (textWidth - addressWidth) / 2,
-      y: topY - 40,
+    const addressSize = R6_HEADER_TYPOGRAPHY.addressFontSizePt;
+    const addressLines = wrapText(addressLine, this.fonts.bold, addressSize, textWidth);
+    if (addressLines.length > 2) throw new Error("Configured school address does not fit the approved academic-report header.");
+    const addressStartY = addressLines.length === 1 ? topY - 42 : topY - 38;
+    addressLines.forEach((line, index) => page.drawText(line, {
+      x: textLeft + (textWidth - this.fonts.bold.widthOfTextAtSize(line, addressSize)) / 2,
+      y: addressStartY - index * 10.8,
       size: addressSize,
-      font: this.fonts.regular,
+      font: this.fonts.bold,
       color: this.palette.ink
-    });
+    }));
     page.drawLine({
-      start: { x: this.margin, y: topY - 50 },
-      end: { x: this.pageSize[0] - this.margin, y: topY - 50 },
+      start: { x: this.margin, y: topY - 62 },
+      end: { x: this.pageSize[0] - this.margin, y: topY - 62 },
       thickness: 0.8,
       color: this.palette.border
     });
@@ -610,132 +617,88 @@ class PdfLayout {
   performanceChart(papers: RenderableReport["content"]["papers"]) {
     if (!this.isR5Academic()) return this.legacyPerformanceChart(papers);
     const eligible = papers.filter((paper) => !paper.excluded && Number.isFinite(Number(paper.percentage)));
-    let rows = eligible.slice(0, 10);
-    const omitted = [...eligible.slice(10)];
-    while (rows.length) {
-      const groupWidth = this.contentWidth / rows.length;
-      const next = rows.filter((paper) => {
-        const label = paper.paperName && paper.paperName !== paper.subjectName
-          ? `${paper.subjectName} ${paper.paperName}`
-          : paper.subjectName;
-        const fits = wrapText(printable(label), this.fonts.regular, 6.5, Math.max(22, groupWidth - 3)).length <= 3;
-        if (!fits) omitted.push(paper);
-        return fits;
-      });
-      if (next.length === rows.length) break;
-      rows = next;
-    }
-    if (!rows.length) return;
-    const height = 205;
+    if (!eligible.length) return;
+    const fullWidthPerCategory = this.contentWidth / eligible.length;
+    const hasLongLabel = eligible.some((paper) => wrapText(
+      printable(paper.paperName && paper.paperName !== paper.subjectName ? `${paper.subjectName} ${paper.paperName}` : paper.subjectName),
+      this.fonts.regular,
+      R6_DENSE_CHART_GEOMETRY.subjectLabelFontSizePt,
+      Math.max(22, fullWidthPerCategory - 3)
+    ).length > 2);
+    const dense = eligible.length >= R6_DENSE_CHART_GEOMETRY.triggerCategoryCount
+      || fullWidthPerCategory < R6_DENSE_CHART_GEOMETRY.minimumProjectedCategoryWidthPt
+      || hasLongLabel;
+    const twoRows = dense && eligible.length >= R6_DENSE_CHART_GEOMETRY.twoRowCategoryCount;
+    const splitAt = twoRows ? Math.ceil(eligible.length / 2) : eligible.length;
+    const chartRows = twoRows ? [eligible.slice(0, splitAt), eligible.slice(splitAt)] : [eligible];
+    const height = twoRows ? 280 : dense ? 250 : 205;
     this.ensure(height + 24);
     const chartTop = this.y - 31;
     const chartBottom = this.y - height + 34;
-    const chartHeight = chartTop - chartBottom;
-    const plotHeight = chartHeight - 24;
-    const labelReserve = 31;
     const graphWidth = this.contentWidth;
-    const groupWidth = graphWidth / rows.length;
-    const barWidth = Math.max(4.8, Math.min(8.5, (groupWidth - 7) / 3));
     const series = [
-      { key: "student" as const, label: "Student Marks", color: this.palette.seriesStudent, pattern: this.palette.monochrome ? "DIAGONAL" : "SOLID" },
-      { key: "average" as const, label: "Class Average", color: this.palette.seriesAverage, pattern: this.palette.monochrome ? "CROSS_HATCH" : "SOLID" },
-      { key: "highest" as const, label: "High Score", color: this.palette.seriesHighest, pattern: this.palette.monochrome ? "DOTS" : "SOLID" }
+      { key: "student" as const, label: "Student Marks", color: this.palette.monochrome ? rgb(R6_MONOCHROME_STUDENT_GREY, R6_MONOCHROME_STUDENT_GREY, R6_MONOCHROME_STUDENT_GREY) : this.palette.seriesStudent, pattern: this.palette.monochrome ? "SOLID_GREY" : "SOLID" },
+      { key: "average" as const, label: "Class Average", color: this.palette.seriesAverage, pattern: this.palette.monochrome ? "DIAGONAL" : "SOLID" },
+      { key: "highest" as const, label: "High Score", color: this.palette.seriesHighest, pattern: this.palette.monochrome ? "DIAMOND_LATTICE" : "SOLID" }
     ];
+    const legendGeometry = dense ? R6_CHART_LEGEND_GEOMETRY.dense : R6_CHART_LEGEND_GEOMETRY.normal;
     series.forEach((item, index) => {
       const itemWidth = this.contentWidth / 3;
       const x = this.margin + index * itemWidth;
-      this.patternBox(x, this.y - 16, R5_CHART_LEGEND_GEOMETRY.swatchWidthPt, R5_CHART_LEGEND_GEOMETRY.swatchHeightPt, item.color, item.pattern);
+      this.patternBox(x, this.y - (dense ? 15 : 16), legendGeometry.swatchWidthPt, legendGeometry.swatchHeightPt, item.color, item.pattern);
       this.page.drawText(item.label, {
-        x: x + R5_CHART_LEGEND_GEOMETRY.swatchWidthPt + 5,
+        x: x + legendGeometry.swatchWidthPt + legendGeometry.gapPt,
         y: this.y - 12,
-        size: R5_CHART_LEGEND_GEOMETRY.labelFontSizePt,
+        size: legendGeometry.labelFontSizePt,
         font: this.fonts.bold,
         color: this.palette.ink
       });
     });
-    for (let tick = 0; tick <= 100; tick += 20) {
-      const y = chartBottom + (tick / 100) * plotHeight;
-      this.page.drawLine({
-        start: { x: this.margin, y },
-        end: { x: this.margin + graphWidth, y },
-        thickness: tick === 0 ? 0.8 : 0.35,
-        color: this.palette.border
-      });
-      this.page.drawText(String(tick), {
-        x: this.margin,
-        y: y + 2,
-        size: 6.5,
-        font: this.fonts.regular,
-        color: this.palette.muted
-      });
-    }
-    const numericInputs: Array<{ text: string; centerX: number; barTopY: number; staggerLevel: number }> = [];
-    rows.forEach((paper, rowIndex) => {
-      const values = {
-        student: boundedPercentage(paper.percentage),
-        average: boundedPercentage(paper.cohortAverage),
-        highest: boundedPercentage(paper.cohortHighest)
-      };
-      const groupX = this.margin + rowIndex * groupWidth;
-      series.forEach((item, seriesIndex) => {
-        const value = values[item.key];
-        const barHeight = (value / 100) * plotHeight;
-        const clusterWidth = barWidth * 3 + 3;
-        const x = groupX + (groupWidth - clusterWidth) / 2 + seriesIndex * (barWidth + 1.5);
-        this.patternBox(x, chartBottom, barWidth, barHeight, item.color, item.pattern);
-        numericInputs.push({
-          text: Number(value.toFixed(1)).toString(),
-          centerX: x + barWidth / 2,
-          barTopY: chartBottom + barHeight,
-          staggerLevel: seriesIndex === 1 ? 1 : 0
+    const rowGap = twoRows ? 8 : 0;
+    const rowSlotHeight = (chartTop - chartBottom - rowGap * (chartRows.length - 1)) / chartRows.length;
+    chartRows.forEach((rows, chartRowIndex) => {
+      const rowTop = chartTop - chartRowIndex * (rowSlotHeight + rowGap);
+      const rowBottom = rowTop - rowSlotHeight;
+      const labelReserve = twoRows ? 20 : 31;
+      const numericHeadroom = 14;
+      const plotBottom = rowBottom + labelReserve;
+      const plotHeight = rowSlotHeight - labelReserve - numericHeadroom;
+      if (plotHeight < 42) throw new Error("Dense report chart cannot preserve a readable 0-100 scale.");
+      for (let tick = 0; tick <= 100; tick += 20) {
+        const y = plotBottom + (tick / 100) * plotHeight;
+        this.page.drawLine({ start: { x: this.margin, y }, end: { x: this.margin + graphWidth, y }, thickness: tick === 0 ? 0.8 : 0.35, color: this.palette.border });
+        this.page.drawText(String(tick), { x: this.margin, y: y + 2, size: 6.5, font: this.fonts.regular, color: this.palette.muted });
+      }
+      const groupWidth = graphWidth / rows.length;
+      const barGap = Math.max(1.2, Math.min(1.8, groupWidth / 28));
+      const barWidth = Math.min(8.5, (groupWidth - R6_DENSE_CHART_GEOMETRY.minimumGroupGapPt - barGap * 2) / 3);
+      if (barWidth < 4.5) throw new Error("Dense report chart category spacing is below the print minimum.");
+      const numericInputs: Array<{ text: string; centerX: number; barTopY: number; staggerLevel: number }> = [];
+      rows.forEach((paper, rowIndex) => {
+        const values = { student: boundedPercentage(paper.percentage), average: boundedPercentage(paper.cohortAverage), highest: boundedPercentage(paper.cohortHighest) };
+        const groupX = this.margin + rowIndex * groupWidth;
+        const clusterWidth = barWidth * 3 + barGap * 2;
+        series.forEach((item, seriesIndex) => {
+          const value = values[item.key];
+          const barHeight = (value / 100) * plotHeight;
+          const x = groupX + (groupWidth - clusterWidth) / 2 + seriesIndex * (barWidth + barGap);
+          this.patternBox(x, plotBottom, barWidth, barHeight, item.color, item.pattern);
+          numericInputs.push({ text: Number(value.toFixed(1)).toString(), centerX: x + barWidth / 2, barTopY: plotBottom + barHeight, staggerLevel: seriesIndex === 1 ? 1 : 0 });
         });
+        const label = printable(paper.paperName && paper.paperName !== paper.subjectName ? `${paper.subjectName} ${paper.paperName}` : paper.subjectName);
+        const labelSize = dense ? R6_DENSE_CHART_GEOMETRY.subjectLabelFontSizePt : 6.5;
+        const lines = wrapText(label, this.fonts.regular, labelSize, Math.max(22, groupWidth - 3));
+        if (lines.length > 3) throw new Error(`Configured chart label cannot fit without word loss: ${label}`);
+        lines.forEach((line, index) => this.page.drawText(line, { x: groupX + (groupWidth - this.fonts.regular.widthOfTextAtSize(line, labelSize)) / 2, y: plotBottom - 9 - index * (labelSize + 1), size: labelSize, font: this.fonts.regular, color: this.palette.ink }));
       });
-      const label = paper.paperName && paper.paperName !== paper.subjectName
-        ? `${paper.subjectName} ${paper.paperName}`
-        : paper.subjectName;
-      const lines = wrapText(printable(label), this.fonts.regular, 6.5, Math.max(22, groupWidth - 3));
-      lines.forEach((line, index) => this.page.drawText(line, {
-        x: groupX + (groupWidth - this.fonts.regular.widthOfTextAtSize(line, 6.5)) / 2,
-        y: chartBottom - 9 - index * 7,
-        size: 6.5,
-        font: this.fonts.regular,
-        color: this.palette.ink
-      }));
-    });
-    const placements = layoutChartNumericLabels(
-      numericInputs,
-      { left: this.margin, right: this.margin + graphWidth, bottom: chartBottom + 1, top: chartTop },
-      R5_CHART_NUMERIC_LABEL_FONT_SIZE,
-      (text) => this.fonts.bold.widthOfTextAtSize(text, R5_CHART_NUMERIC_LABEL_FONT_SIZE)
-    );
-    placements.forEach((label) => {
-      if (label.leaderLine) this.page.drawLine({
-        start: { x: label.anchorX, y: label.anchorY + 0.8 },
-        end: { x: label.x + label.width / 2, y: label.y - 0.8 },
-        thickness: 0.35,
-        color: this.palette.ink
-      });
-      this.page.drawRectangle({
-        x: label.x - 1.1,
-        y: label.y - 0.8,
-        width: label.width + 2.2,
-        height: label.height + 1.6,
-        color: rgb(1, 1, 1),
-        opacity: 0.96
-      });
-      this.page.drawText(label.text, {
-        x: label.x,
-        y: label.y,
-        size: R5_CHART_NUMERIC_LABEL_FONT_SIZE,
-        font: this.fonts.bold,
-        color: this.palette.ink
+      const placements = layoutChartNumericLabels(numericInputs, { left: this.margin, right: this.margin + graphWidth, bottom: plotBottom + 1, top: rowTop }, R5_CHART_NUMERIC_LABEL_FONT_SIZE, (text) => this.fonts.bold.widthOfTextAtSize(text, R5_CHART_NUMERIC_LABEL_FONT_SIZE));
+      placements.forEach((label) => {
+        if (label.leaderLine) this.page.drawLine({ start: { x: label.anchorX, y: label.anchorY + 0.8 }, end: { x: label.x + label.width / 2, y: label.y - 0.8 }, thickness: 0.35, color: this.palette.ink });
+        this.page.drawRectangle({ x: label.x - 1.1, y: label.y - 0.8, width: label.width + 2.2, height: label.height + 1.6, color: rgb(1, 1, 1), opacity: 0.97 });
+        this.page.drawText(label.text, { x: label.x, y: label.y, size: R5_CHART_NUMERIC_LABEL_FONT_SIZE, font: this.fonts.bold, color: this.palette.ink });
       });
     });
-    this.y -= height + labelReserve - 25;
-    if (omitted.length) this.paragraph(
-      `Chart scope: ${omitted.map((paper) => paper.subjectName).join("; ")} omitted for label legibility. Complete results remain in the marks table.`,
-      { size: 7 }
-    );
+    this.y -= height + 6;
   }
 
   private legacyPerformanceChart(papers: RenderableReport["content"]["papers"]) {
@@ -841,36 +804,40 @@ class PdfLayout {
       y,
       width,
       height,
-      color: pattern === "SOLID" ? color : rgb(1, 1, 1),
+      color: pattern === "SOLID" || pattern === "SOLID_GREY" ? color : rgb(1, 1, 1),
       borderColor: this.palette.ink,
-      borderWidth: pattern === "SOLID" ? 0.75 : 0.95
+      borderWidth: pattern === "SOLID" ? 0.75 : R6_PATTERN_GEOMETRY.borderWidthPt
     });
-    if (pattern === "DIAGONAL" || pattern === "CROSS_HATCH") {
-      for (let offset = 2; offset < width + height; offset += 4) {
-        const startX = x + Math.max(0, offset - height);
-        const startY = y + Math.min(height, offset);
-        const endX = x + Math.min(width, offset);
-        const endY = y + Math.max(0, offset - width);
-        this.page.drawLine({ start: { x: startX, y: startY }, end: { x: endX, y: endY }, thickness: 0.35, color: this.palette.ink });
+    if (pattern === "DIAGONAL") {
+      for (let intercept = -width; intercept <= height; intercept += R6_PATTERN_GEOMETRY.slashSpacingPt) {
+        const startLocal = intercept >= 0
+          ? { x: 0, y: intercept }
+          : { x: -intercept, y: 0 };
+        const endLocal = width + intercept <= height
+          ? { x: width, y: width + intercept }
+          : { x: height - intercept, y: height };
+        if (endLocal.x > startLocal.x + 0.0001) {
+          this.page.drawLine({
+            start: { x: x + startLocal.x, y: y + startLocal.y },
+            end: { x: x + endLocal.x, y: y + endLocal.y },
+            thickness: R6_PATTERN_GEOMETRY.slashStrokeWidthPt,
+            color: this.palette.ink
+          });
+        }
       }
     }
-    if (pattern === "CROSS_HATCH") {
-      for (let offset = 0; offset < width + height; offset += 5) {
-        const points: Array<{ x: number; y: number }> = [];
-        if (offset <= width) points.push({ x: x + offset, y });
-        if (offset >= width && offset - width <= height) points.push({ x: x + width, y: y + offset - width });
-        if (offset >= height && offset - height <= width) points.push({ x: x + offset - height, y: y + height });
-        if (offset <= height) points.push({ x, y: y + offset });
-        const unique = points.filter((point, index) => points.findIndex((candidate) =>
-          Math.abs(candidate.x - point.x) < 0.0001 && Math.abs(candidate.y - point.y) < 0.0001
-        ) === index);
-        if (unique.length >= 2) this.page.drawLine({ start: unique[0], end: unique[1], thickness: 0.45, color: this.palette.ink });
-      }
-    }
-    if (pattern === "DOTS") {
-      for (let dotY = y + 2.5; dotY <= y + height - 2.5; dotY += 5) {
-        for (let dotX = x + 2.5; dotX <= x + width - 2.5; dotX += 5) {
-          this.page.drawCircle({ x: dotX, y: dotY, size: 0.9, color: this.palette.ink });
+    if (pattern === "DIAMOND_LATTICE") {
+      for (let centerY = y + 2.2; centerY <= y + height - 2.2; centerY += R6_PATTERN_GEOMETRY.diamondVerticalSpacingPt) {
+        const rowShift = Math.round((centerY - y) / R6_PATTERN_GEOMETRY.diamondVerticalSpacingPt) % 2 ? R6_PATTERN_GEOMETRY.diamondHorizontalSpacingPt / 2 : 0;
+        for (let centerX = x + 2.2 + rowShift; centerX <= x + width - 2.2; centerX += R6_PATTERN_GEOMETRY.diamondHorizontalSpacingPt) {
+          const left = { x: centerX - R6_PATTERN_GEOMETRY.diamondRadiusXPt, y: centerY };
+          const top = { x: centerX, y: centerY + R6_PATTERN_GEOMETRY.diamondRadiusYPt };
+          const right = { x: centerX + R6_PATTERN_GEOMETRY.diamondRadiusXPt, y: centerY };
+          const bottom = { x: centerX, y: centerY - R6_PATTERN_GEOMETRY.diamondRadiusYPt };
+          this.page.drawLine({ start: left, end: top, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: this.palette.ink });
+          this.page.drawLine({ start: top, end: right, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: this.palette.ink });
+          this.page.drawLine({ start: right, end: bottom, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: this.palette.ink });
+          this.page.drawLine({ start: bottom, end: left, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: this.palette.ink });
         }
       }
     }

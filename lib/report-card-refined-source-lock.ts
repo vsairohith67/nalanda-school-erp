@@ -51,6 +51,53 @@ export const R5_CHART_LEGEND_GEOMETRY = {
   swatchHeightPt: 14.17,
   labelFontSizePt: 7
 } as const;
+export const R6_HEADER_TYPOGRAPHY = {
+  statusFontSizePt: 9.2,
+  addressFontSizePt: 9.8,
+  secondaryFontWeight: "BOLD"
+} as const;
+export const R6_MONOCHROME_STUDENT_GREY = 0.55;
+export const R6_CHART_SERIES = [
+  { label: "Student Marks", monochromePattern: "SOLID_GREY" },
+  { label: "Class Average", monochromePattern: "DIAGONAL" },
+  { label: "High Score", monochromePattern: "DIAMOND_LATTICE" }
+] as const;
+export const R6_CHART_LEGEND_GEOMETRY = {
+  normal: { swatchWidthPt: 39.69, swatchHeightPt: 14.17, labelFontSizePt: 7, gapPt: 5 },
+  dense: { swatchWidthPt: 34.02, swatchHeightPt: 12.76, labelFontSizePt: 6.5, gapPt: 4 }
+} as const;
+export const R6_PATTERN_GEOMETRY = {
+  borderWidthPt: 1,
+  slashAngleDegrees: 45,
+  slashSpacingPt: 6,
+  slashStrokeWidthPt: 0.55,
+  diamondHorizontalSpacingPt: 7,
+  diamondVerticalSpacingPt: 6,
+  diamondRadiusXPt: 1.45,
+  diamondRadiusYPt: 1.2,
+  diamondStrokeWidthPt: 0.5
+} as const;
+export const R6_DENSE_CHART_GEOMETRY = {
+  triggerCategoryCount: 8,
+  twoRowCategoryCount: 10,
+  minimumProjectedCategoryWidthPt: 49,
+  normalPlotHeightPt: 139,
+  twoRowPlotHeightPt: 65,
+  subjectLabelFontSizePt: 6,
+  numericLabelFontSizePt: 7,
+  minimumGroupGapPt: 5.67,
+  compactGradeLegendRowHeightPt: 12.5,
+  compactGradeLegendFontSizePt: 6.2
+} as const;
+export type R6AcademicChartMode = "NORMAL_ACADEMIC_CHART" | "DENSE_ACADEMIC_CHART";
+export type R6ChartPattern = "SOLID" | "SOLID_GREY" | "DIAGONAL" | "DIAMOND_LATTICE";
+export type R6ChartLayout = {
+  mode: R6AcademicChartMode;
+  rows: 1 | 2;
+  categoryRows: ChartPointSnapshot[][];
+  compactGradeLegend: boolean;
+  reason: string;
+};
 export const R5_HEADER_GEOMETRY = {
   unitLeft: 92,
   unitWidth: 411.28,
@@ -471,6 +518,32 @@ export function approvedSchoolStatusLine(identity: ReportSchoolIdentitySnapshot)
 
 export function academicHeaderStatusForPreview(identity: ReportSchoolIdentitySnapshot) {
   return approvedSchoolStatusLine(identity) ?? R5_REQUIRED_STATUS_CONFIGURATION_WARNING;
+}
+
+export function wrapR6HeaderText(
+  value: string,
+  maximumWidth: number,
+  measure: (text: string) => number,
+  maximumLines = 2
+) {
+  const source = String(value).trim().replace(/\s+/g, " ");
+  if (!source) return [];
+  const lines: string[] = [];
+  let current = "";
+  for (const word of source.split(" ")) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (!current || measure(candidate) <= maximumWidth) {
+      current = candidate;
+      continue;
+    }
+    lines.push(current);
+    current = word;
+  }
+  if (current) lines.push(current);
+  if (lines.length > maximumLines || lines.some((line) => measure(line) > maximumWidth + EPSILON)) {
+    throw new Error("Approved academic header text cannot fit without clipping or truncation.");
+  }
+  return lines;
 }
 
 export function requireApprovedAcademicStatusLine(identity: ReportSchoolIdentitySnapshot) {
@@ -894,6 +967,158 @@ export async function renderR5DetailChecks(identity: ReportSchoolIdentitySnapsho
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
 
+export const R6_VISUAL_PAGES = [
+  { specimenId: "I-II-SESSION", mode: "COLOUR" },
+  { specimenId: "VI-VIII-GROUPED", mode: "COLOUR" },
+  { specimenId: "IX-X-COMBINED", mode: "COLOUR" },
+  { specimenId: "IX-X-REVISION", mode: "COLOUR" },
+  { specimenId: "I-II-SESSION", mode: "MONOCHROME" },
+  { specimenId: "VI-VIII-GROUPED", mode: "MONOCHROME" },
+  { specimenId: "IX-X-COMBINED", mode: "MONOCHROME" },
+  { specimenId: "IX-X-REVISION", mode: "MONOCHROME" }
+] as const satisfies ReadonlyArray<{ specimenId: string; mode: RefinedColourMode }>;
+
+export const R6_DETAIL_PAGES = [
+  "HEADER_COLOUR_EMPHASIS",
+  "HEADER_MONOCHROME_EMPHASIS",
+  "FROZEN_IDENTITY_GRID",
+  "NORMAL_SIX_SUBJECT_COLOUR_CHART",
+  "NORMAL_SIX_SUBJECT_MONOCHROME_CHART",
+  "AUTHORITATIVE_MONOCHROME_LEGEND_AND_PHOTOCOPY",
+  "CLASS_VI_DENSE_BEFORE_AFTER",
+  "CLASS_IX_DENSE_BEFORE_AFTER",
+  "DENSE_ONE_ROW_CHART",
+  "DENSE_TWO_ROW_FALLBACK",
+  "COMPACT_GRADE_LEGEND",
+  "FROZEN_SIGNATURE_CLEARANCE"
+] as const;
+
+export const R6_DETAIL_MONOCHROME_SWATCHES = {
+  page: 6,
+  boxes: [
+    { series: "Student Marks", x: 145, y: 689.89, width: 39.69, height: 14.17 },
+    { series: "Class Average", x: 280.09, y: 689.89, width: 39.69, height: 14.17 },
+    { series: "High Score", x: 415.19, y: 689.89, width: 39.69, height: 14.17 }
+  ]
+} as const;
+
+export async function renderR6VisualPack(identity: ReportSchoolIdentitySnapshot = DEFAULT_IDENTITY) {
+  const document = await PDFDocument.create();
+  const assets = await embedAssets(document, identity);
+  for (const requested of R6_VISUAL_PAGES) {
+    const page = document.addPage([A4.width, A4.height]);
+    drawR6AcademicPage(page, assets, identity, requested.mode, buildFinalAcademicSnapshot(finalAcademicSpecimen(requested.specimenId)));
+  }
+  document.setTitle("VISUAL-DIRECTION-PACK-R6");
+  document.setSubject("Synthetic-only Classes I-X R6 header and adaptive-chart digital review");
+  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  setDeterministicPdfDates(document);
+  return Buffer.from(await document.save({ useObjectStreams: false }));
+}
+
+export async function renderR6DetailChecks(identity: ReportSchoolIdentitySnapshot = DEFAULT_IDENTITY) {
+  const document = await PDFDocument.create();
+  const assets = await embedAssets(document, identity);
+  const photocopyPng = await createR6PhotocopySimulationPng();
+  const photocopyImage = await document.embedPng(photocopyPng);
+  const primary = buildFinalAcademicSnapshot(finalAcademicSpecimen("I-II-SESSION"));
+  const middle = buildFinalAcademicSnapshot(finalAcademicSpecimen("VI-VIII-GROUPED"));
+  const secondary = buildFinalAcademicSnapshot(finalAcademicSpecimen("IX-X-COMBINED"));
+  applyCloseChartEdgeCase(primary);
+  applyCloseChartEdgeCase(middle);
+  applyCloseChartEdgeCase(secondary);
+
+  for (const detail of R6_DETAIL_PAGES) {
+    const page = document.addPage([A4.width, A4.height]);
+    const mode: RefinedColourMode = detail.includes("MONOCHROME") || detail.includes("AUTHORITATIVE") ? "MONOCHROME" : "COLOUR";
+    const colors = palette(mode);
+    page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: colors.white });
+    if (detail === "HEADER_COLOUR_EMPHASIS" || detail === "HEADER_MONOCHROME_EMPHASIS") {
+      drawAcademicHeader(page, assets, identity, colors, mode, "R6");
+      centered(page, detail === "HEADER_COLOUR_EMPHASIS" ? "R6 EMPHASISED SECONDARY HEADER \u2014 COLOUR" : "R6 EMPHASISED SECONDARY HEADER \u2014 MONOCHROME", assets.fonts.bold, 12, 680, colors.ink);
+      centered(page, `Status ${R6_HEADER_TYPOGRAPHY.statusFontSizePt} pt bold | Address ${R6_HEADER_TYPOGRAPHY.addressFontSizePt} pt bold`, assets.fonts.regular, 9, 658, colors.ink);
+    } else if (detail === "FROZEN_IDENTITY_GRID") {
+      drawAcademicHeader(page, assets, identity, colors, "COLOUR", "R6");
+      const bottom = drawIdentity(page, assets.fonts, colors, primary);
+      centered(page, "FROZEN \u2014 NO CHANGE", assets.fonts.bold, 14, A4.height - bottom - 28, colors.ink);
+      centered(page, "Approved fixed 25% grid and continuous 50% centre divider", assets.fonts.regular, 9, A4.height - bottom - 48, colors.ink);
+    } else if (detail === "NORMAL_SIX_SUBJECT_COLOUR_CHART" || detail === "NORMAL_SIX_SUBJECT_MONOCHROME_CHART") {
+      centered(page, detail === "NORMAL_SIX_SUBJECT_COLOUR_CHART" ? "ORDINARY SIX-SUBJECT CHART \u2014 COLOUR" : "ORDINARY SIX-SUBJECT CHART \u2014 AUTHORITATIVE MONOCHROME", assets.fonts.bold, 12, 792, colors.ink);
+      const normal = { ...resolveR6AcademicChartLayout(primary.chartPoints, A4.width - 102, (text) => assets.fonts.regular.widthOfTextAtSize(text, 6)), mode: "NORMAL_ACADEMIC_CHART" as const, rows: 1 as const, categoryRows: [[...primary.chartPoints]], compactGradeLegend: false, reason: "DETAIL_NORMAL" };
+      drawR6Chart(page, assets.fonts, colors, primary, 37, 76, A4.width - 74, 500, mode, normal);
+    } else if (detail === "AUTHORITATIVE_MONOCHROME_LEGEND_AND_PHOTOCOPY") {
+      centered(page, "AUTHORITATIVE MONOCHROME LEGEND / BAR EQUIVALENCE", assets.fonts.bold, 13, 792, colors.ink);
+      drawR6ChartLegend(page, assets.fonts, colors, 37, 130, A4.width - 74, "MONOCHROME", r6ChartSeries(colors, "MONOCHROME"), false);
+      const barXs = [145, 280.09, 415.19];
+      const r6Series = r6ChartSeries(colors, "MONOCHROME");
+      r6Series.forEach((seriesItem, index) => {
+        drawR6PatternedRectangle(page, { x: barXs[index], y: 500, width: 39.69, height: 108 }, seriesItem.color, colors.ink, seriesItem.pattern);
+        centeredInHorizontalSpan(page, "IDENTICAL", assets.fonts.bold, 6.5, 486, colors.ink, barXs[index] - 4, 47.69);
+      });
+      page.drawImage(photocopyImage, { x: 75, y: 226, width: 445, height: 104 });
+      centered(page, "Rendered grayscale + moderate blur/contrast photocopy simulation", assets.fonts.bold, 9, 204, colors.ink);
+      centered(page, "Solid medium-grey | Diagonal slashes | Diamond / cross lattice", assets.fonts.regular, 9, 178, colors.ink);
+    } else if (detail === "CLASS_VI_DENSE_BEFORE_AFTER" || detail === "CLASS_IX_DENSE_BEFORE_AFTER") {
+      const report = detail === "CLASS_VI_DENSE_BEFORE_AFTER" ? middle : secondary;
+      centered(page, detail === "CLASS_VI_DENSE_BEFORE_AFTER" ? "CLASSES VI\u2013VIII DENSE CHART \u2014 BEFORE / AFTER" : "CLASSES IX\u2013X DENSE CHART \u2014 BEFORE / AFTER", assets.fonts.bold, 12, 810, colors.ink);
+      centered(page, "R5 fixed-height baseline", assets.fonts.bold, 8, 782, colors.ink);
+      drawChart(page, assets.fonts, colors, report, 37, 68, A4.width - 74, 240, "COLOUR");
+      centered(page, "R6 adaptive dense layout", assets.fonts.bold, 8, 484, colors.ink);
+      const layout = resolveR6AcademicChartLayout(report.chartPoints, A4.width - 102, (text) => assets.fonts.regular.widthOfTextAtSize(text, 6));
+      drawR6Chart(page, assets.fonts, colors, report, 37, 372, A4.width - 74, 300, "COLOUR", layout);
+    } else if (detail === "DENSE_ONE_ROW_CHART") {
+      const report = cloneAcademicReport(secondary);
+      report.chartPoints = report.chartPoints.slice(0, 8);
+      const layout: R6ChartLayout = { mode: "DENSE_ACADEMIC_CHART", rows: 1, categoryRows: [[...report.chartPoints]], compactGradeLegend: true, reason: "DETAIL_FORCED_ONE_ROW" };
+      centered(page, "DENSE_ACADEMIC_CHART \u2014 ONE ROW / EIGHT CATEGORIES", assets.fonts.bold, 12, 792, colors.ink);
+      drawR6Chart(page, assets.fonts, colors, report, 37, 70, A4.width - 74, 610, "COLOUR", layout);
+    } else if (detail === "DENSE_TWO_ROW_FALLBACK") {
+      const layout = resolveR6AcademicChartLayout(secondary.chartPoints, A4.width - 102, (text) => assets.fonts.regular.widthOfTextAtSize(text, 6));
+      centered(page, "DENSE_ACADEMIC_CHART \u2014 TWO-ROW FALLBACK", assets.fonts.bold, 12, 792, colors.ink);
+      drawR6Chart(page, assets.fonts, colors, secondary, 37, 70, A4.width - 74, 610, "COLOUR", layout);
+      centered(page, "Shared legend | common 0\u2013100 scale | original subject order", assets.fonts.regular, 9, 128, colors.ink);
+    } else if (detail === "COMPACT_GRADE_LEGEND") {
+      centered(page, "COMPACT TWO-ROW GRADE LEGEND \u2014 DENSE REPORT MODE", assets.fonts.bold, 12, 760, colors.ink);
+      drawGradeLegend(page, assets.fonts, colors, 37, 120, A4.width - 74, secondary.gradeLegend, true);
+      centered(page, "Content unchanged; padding reclaimed for the dense plotting area", assets.fonts.regular, 9, 630, colors.ink);
+    } else {
+      centered(page, "FROZEN 18 MM PHYSICAL SIGNATURE CLEARANCE", assets.fonts.bold, 14, 760, colors.ink);
+      page.drawRectangle({ x: R5_SIGNATURE_GEOMETRY.left, y: R5_SIGNATURE_GEOMETRY.lineY, width: R5_SIGNATURE_GEOMETRY.width, height: R5_SIGNATURE_GEOMETRY.clearSigningHeightPt, borderColor: colors.grid, borderWidth: 0.5, borderDashArray: [3, 2] });
+      drawSignatures(page, assets.fonts, colors);
+      centered(page, "FROZEN \u2014 NO CHANGE", assets.fonts.bold, 11, 145, colors.ink);
+    }
+    drawFooter(page, assets.fonts, mode, false);
+  }
+  document.setTitle("R6-DETAIL-CHECKS");
+  document.setSubject("Synthetic-only R6 header emphasis, authoritative monochrome patterns, dense charts and frozen geometry");
+  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  setDeterministicPdfDates(document);
+  return Buffer.from(await document.save({ useObjectStreams: false }));
+}
+
+function cloneAcademicReport(report: AcademicReportSnapshot) {
+  return JSON.parse(JSON.stringify(report)) as AcademicReportSnapshot;
+}
+
+async function createR6PhotocopySimulationPng() {
+  const svg = Buffer.from(`<svg width="1200" height="280" viewBox="0 0 1200 280" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="slashes" width="18" height="18" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="18" stroke="#000" stroke-width="2.2"/></pattern>
+      <pattern id="diamonds" width="28" height="24" patternUnits="userSpaceOnUse"><path d="M14 6 L20 12 L14 18 L8 12 Z" fill="none" stroke="#000" stroke-width="2"/></pattern>
+    </defs>
+    <rect width="1200" height="280" fill="#fff"/>
+    <g stroke="#000" stroke-width="4">
+      <rect x="35" y="35" width="330" height="150" fill="#8c8c8c"/>
+      <rect x="435" y="35" width="330" height="150" fill="url(#slashes)"/>
+      <rect x="835" y="35" width="330" height="150" fill="url(#diamonds)"/>
+    </g>
+    <g font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#000" text-anchor="middle">
+      <text x="200" y="235">Student Marks</text><text x="600" y="235">Class Average</text><text x="1000" y="235">High Score</text>
+    </g>
+  </svg>`);
+  return sharp(svg).grayscale().blur(0.45).linear(1.08, -8).png().toBuffer();
+}
+
 function finalAcademicSpecimen(specimenId: string) {
   const specimen = FINAL_ACADEMIC_PAGE_SPECS.find((candidate) => candidate.specimenId === specimenId);
   if (!specimen) throw new Error("Unknown final academic specimen: " + specimenId);
@@ -1296,6 +1521,19 @@ function drawR5AcademicPage(
   drawFooter(page, assets.fonts, mode, false);
 }
 
+function drawR6AcademicPage(
+  page: PDFPage,
+  assets: Assets,
+  identity: ReportSchoolIdentitySnapshot,
+  mode: RefinedColourMode,
+  report: AcademicReportSnapshot
+) {
+  const colors = palette(mode);
+  page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: colors.white });
+  drawAcademic(page, assets, identity, colors, mode, report, { r6: true });
+  drawFooter(page, assets.fonts, mode, false);
+}
+
 function drawFinalKgPage(
   page: PDFPage,
   assets: Assets,
@@ -1597,32 +1835,64 @@ function drawAcademic(
   identity: ReportSchoolIdentitySnapshot,
   colors: Palette,
   mode: RefinedColourMode,
-  report: AcademicReportSnapshot
+  report: AcademicReportSnapshot,
+  options: { r6?: boolean } = {}
 ) {
-  drawAcademicHeader(page, assets, identity, colors, mode);
+  drawAcademicHeader(page, assets, identity, colors, mode, options.r6 ? "R6" : "R5");
   const identityBottom = drawIdentity(page, assets.fonts, colors, report);
   centered(page, report.examination, assets.fonts.bold, 13.5, A4.height - identityBottom - 31, colors.ink);
   const tableTop = identityBottom + 42;
   const fullWidth = A4.width - 74;
   let contentBottom: number;
   if (report.layout === "COMBINED") {
-    contentBottom = drawCombinedTable(page, assets.fonts, colors, report, tableTop);
+    contentBottom = drawCombinedTable(page, assets.fonts, colors, report, tableTop, Boolean(options.r6));
   } else {
-    contentBottom = drawStandardTables(page, assets.fonts, colors, report, tableTop);
+    contentBottom = drawStandardTables(page, assets.fonts, colors, report, tableTop, Boolean(options.r6));
   }
   contentBottom = drawGroupResultNote(page, assets.fonts, colors, report, contentBottom);
   contentBottom = drawResultStateLegend(page, assets.fonts, colors, report, contentBottom);
-  let top = contentBottom + 8;
-  top = drawSummary(page, assets.fonts, colors, report, top) + 9;
-  top = drawAttendance(page, assets.fonts, colors, report, top) + 9;
-  top = drawRemarks(page, assets.fonts, colors, report.remarks, top) + 10;
+  let top: number;
+  if (options.r6) {
+    top = drawR6SummaryAttendanceRemarks(page, assets.fonts, colors, report, contentBottom + 4) + 5;
+  } else {
+    top = contentBottom + 8;
+    top = drawSummary(page, assets.fonts, colors, report, top) + 9;
+    top = drawAttendance(page, assets.fonts, colors, report, top) + 9;
+    top = drawRemarks(page, assets.fonts, colors, report.remarks, top) + 10;
+  }
   const signatureContentLimit = A4.height - (R5_SIGNATURE_GEOMETRY.lineY + R5_SIGNATURE_GEOMETRY.clearSigningHeightPt);
-  const gradeLegendHeight = 30;
+  const r6ChartLayout = options.r6
+    ? resolveR6AcademicChartLayout(
+      report.chartPoints,
+      fullWidth - 28,
+      (text) => assets.fonts.regular.widthOfTextAtSize(text, R6_DENSE_CHART_GEOMETRY.subjectLabelFontSizePt)
+    )
+    : null;
+  const gradeLegendHeight = r6ChartLayout?.compactGradeLegend
+    ? R6_DENSE_CHART_GEOMETRY.compactGradeLegendRowHeightPt * 2
+    : 30;
   const chartHeightAvailable = signatureContentLimit - top - gradeLegendHeight - 9;
-  const chartHeight = Math.min(report.layout === "COMBINED" ? 105 : 120, chartHeightAvailable);
-  if (chartHeight < 76) throw new Error(`Academic layout cannot preserve the approved chart and signature geometry on one A4 page (${report.classSection}, available ${chartHeightAvailable.toFixed(1)} pt).`);
-  top = drawChart(page, assets.fonts, colors, report, 37, top, fullWidth, chartHeight, mode) + 9;
-  const gradeLegendBottom = drawGradeLegend(page, assets.fonts, colors, 37, top, fullWidth, report.gradeLegend);
+  const preferredChartHeight = !r6ChartLayout
+    ? (report.layout === "COMBINED" ? 105 : 120)
+    : r6ChartLayout.rows === 2 ? 198 : r6ChartLayout.mode === "DENSE_ACADEMIC_CHART" ? 205 : 120;
+  const minimumChartHeight = !r6ChartLayout
+    ? 76
+    : r6ChartLayout.rows === 2 ? 165 : r6ChartLayout.mode === "DENSE_ACADEMIC_CHART" ? 155 : 76;
+  const chartHeight = Math.min(preferredChartHeight, chartHeightAvailable);
+  if (chartHeight < minimumChartHeight) throw new Error(`Academic layout cannot preserve the approved chart and signature geometry on one A4 page (${report.classSection}, available ${chartHeightAvailable.toFixed(1)} pt).`);
+  top = (options.r6
+    ? drawR6Chart(page, assets.fonts, colors, report, 37, top, fullWidth, chartHeight, mode, r6ChartLayout!)
+    : drawChart(page, assets.fonts, colors, report, 37, top, fullWidth, chartHeight, mode)) + 9;
+  const gradeLegendBottom = drawGradeLegend(
+    page,
+    assets.fonts,
+    colors,
+    37,
+    top,
+    fullWidth,
+    report.gradeLegend,
+    Boolean(r6ChartLayout?.compactGradeLegend)
+  );
   if (gradeLegendBottom > signatureContentLimit + EPSILON) {
     throw new Error("Grade legend intrudes into the approved physical signing area.");
   }
@@ -1667,7 +1937,14 @@ function drawResultStateLegend(
     : top;
 }
 
-function drawAcademicHeader(page: PDFPage, assets: Assets, identity: ReportSchoolIdentitySnapshot, colors: Palette, mode: RefinedColourMode) {
+function drawAcademicHeader(
+  page: PDFPage,
+  assets: Assets,
+  identity: ReportSchoolIdentitySnapshot,
+  colors: Palette,
+  mode: RefinedColourMode,
+  version: "R5" | "R6" = "R5"
+) {
   const logo = mode === "MONOCHROME" ? assets.monochromeLogo : assets.colourLogo;
   if (logo) page.drawImage(logo, {
     x: R5_HEADER_GEOMETRY.logoX,
@@ -1686,27 +1963,47 @@ function drawAcademicHeader(page: PDFPage, assets: Assets, identity: ReportSchoo
     R5_HEADER_GEOMETRY.textWidth
   );
   const statusLine = academicHeaderStatusForPreview(identity);
-  const statusFont = approvedSchoolStatusLine(identity) ? assets.fonts.regular : assets.fonts.bold;
-  centeredInHorizontalSpan(
-    page,
+  const approvedStatus = approvedSchoolStatusLine(identity);
+  if (version === "R5") {
+    const statusFont = approvedStatus ? assets.fonts.regular : assets.fonts.bold;
+    centeredInHorizontalSpan(page, statusLine, statusFont, approvedStatus ? 9.5 : 8, R5_HEADER_GEOMETRY.statusLineY, colors.ink, R5_HEADER_GEOMETRY.textLeft, R5_HEADER_GEOMETRY.textWidth);
+    centeredInHorizontalSpan(page, identity.addressLine1 + ", " + identity.city, assets.fonts.regular, 10.5, R5_HEADER_GEOMETRY.addressY, colors.ink, R5_HEADER_GEOMETRY.textLeft, R5_HEADER_GEOMETRY.textWidth);
+    return;
+  }
+  const statusSize = approvedStatus ? R6_HEADER_TYPOGRAPHY.statusFontSizePt : 8;
+  const statusLines = wrapR6HeaderText(
     statusLine,
-    statusFont,
-    approvedSchoolStatusLine(identity) ? 9.5 : 8,
-    R5_HEADER_GEOMETRY.statusLineY,
-    colors.ink,
-    R5_HEADER_GEOMETRY.textLeft,
-    R5_HEADER_GEOMETRY.textWidth
+    R5_HEADER_GEOMETRY.textWidth,
+    (text) => assets.fonts.bold.widthOfTextAtSize(text, statusSize)
   );
-  centeredInHorizontalSpan(
+  const address = identity.addressLine1 + ", " + identity.city;
+  const addressLines = wrapR6HeaderText(
+    address,
+    R5_HEADER_GEOMETRY.textWidth,
+    (text) => assets.fonts.bold.widthOfTextAtSize(text, R6_HEADER_TYPOGRAPHY.addressFontSizePt)
+  );
+  const statusStartY = statusLines.length === 1 ? R5_HEADER_GEOMETRY.statusLineY : R5_HEADER_GEOMETRY.statusLineY + 4.8;
+  statusLines.forEach((line, index) => centeredInHorizontalSpan(
     page,
-    identity.addressLine1 + ", " + identity.city,
-    assets.fonts.regular,
-    10.5,
-    R5_HEADER_GEOMETRY.addressY,
+    line,
+    assets.fonts.bold,
+    statusSize,
+    statusStartY - index * 10.4,
     colors.ink,
     R5_HEADER_GEOMETRY.textLeft,
     R5_HEADER_GEOMETRY.textWidth
-  );
+  ));
+  const addressStartY = addressLines.length === 1 ? R5_HEADER_GEOMETRY.addressY : R5_HEADER_GEOMETRY.addressY + 4.8;
+  addressLines.forEach((line, index) => centeredInHorizontalSpan(
+    page,
+    line,
+    assets.fonts.bold,
+    R6_HEADER_TYPOGRAPHY.addressFontSizePt,
+    addressStartY - index * 10.8,
+    colors.ink,
+    R5_HEADER_GEOMETRY.textLeft,
+    R5_HEADER_GEOMETRY.textWidth
+  ));
 }
 
 function drawIdentity(page: PDFPage, fonts: Fonts, colors: Palette, report: AcademicReportSnapshot) {
@@ -1819,7 +2116,7 @@ function drawIdentityCellText(
   }));
 }
 
-function drawStandardTables(page: PDFPage, fonts: Fonts, colors: Palette, report: AcademicReportSnapshot, top: number) {
+function drawStandardTables(page: PDFPage, fonts: Fonts, colors: Palette, report: AcademicReportSnapshot, top: number, r6 = false) {
   const dense = report.subjects.length > 10;
   const marksWidth = 332;
   const traitWidth = A4.width - 74 - marksWidth;
@@ -1851,7 +2148,7 @@ function drawStandardTables(page: PDFPage, fonts: Fonts, colors: Palette, report
   }));
   const marksFontSize = dense ? 6.7 : 7.4;
   const traitFontSize = dense ? 6.7 : 7.2;
-  const minimumRowHeight = dense ? 12 : 18;
+  const minimumRowHeight = r6 && dense ? 10.5 : dense ? 12 : 18;
   const balanced = report.traitTitle
     ? balancedTableRowHeights(
       fonts,
@@ -1862,27 +2159,30 @@ function drawStandardTables(page: PDFPage, fonts: Fonts, colors: Palette, report
       traitRows,
       [traitWidth - 48, 48],
       traitFontSize,
-      minimumRowHeight
+      minimumRowHeight,
+      r6 && dense ? 2 : 4
     )
     : { left: rows.map(() => minimumRowHeight), right: [] as number[] };
   const marksBottom = drawTable(page, fonts, colors, 37, top, widths, headers, rows, {
-    headerHeight: dense ? 26 : 32,
+    headerHeight: r6 && dense ? 22 : dense ? 26 : 32,
     rowHeight: minimumRowHeight,
     rowHeights: balanced.left,
     fontSize: marksFontSize,
     firstColumnLeft: true,
     dynamicRows: true,
-    sectionFill: colors.band
+    sectionFill: colors.band,
+    verticalPadding: r6 && dense ? 2 : undefined
   });
   let traitBottom = top;
   if (report.traitTitle) {
     traitBottom = drawTable(page, fonts, colors, 37 + marksWidth, top, [traitWidth - 48, 48], [report.traitTitle, "Grade"], traitRows, {
-      headerHeight: dense ? 26 : 32,
+      headerHeight: r6 && dense ? 22 : dense ? 26 : 32,
       rowHeight: minimumRowHeight,
       rowHeights: balanced.right,
       fontSize: traitFontSize,
       firstColumnLeft: false,
-      dynamicRows: true
+      dynamicRows: true,
+      verticalPadding: r6 && dense ? 2 : undefined
     });
   }
   const tablesBottom = Math.max(marksBottom, traitBottom);
@@ -1910,12 +2210,13 @@ function balancedTableRowHeights(
   rightRows: Array<{ cells: string[]; bold: boolean }>,
   rightWidths: number[],
   rightFontSize: number,
-  rightMinimum: number
+  rightMinimum: number,
+  verticalPadding = 4
 ) {
   const heights = (rows: Array<{ cells: string[]; bold: boolean }>, widths: number[], size: number, minimum: number) => rows.map((row) => {
     const font = row.bold ? fonts.bold : fonts.regular;
     const lines = row.cells.map((value, index) => wrapText(String(value), font, size, widths[index] - 6).length);
-    return Math.max(minimum, 4 + Math.max(...lines) * (size + 1));
+    return Math.max(minimum, verticalPadding + Math.max(...lines) * (size + 1));
   });
   return balanceRowHeightTotals(
     heights(leftRows, leftWidths, leftFontSize, leftMinimum),
@@ -1939,7 +2240,7 @@ function drawCoscholasticLegend(page: PDFPage, fonts: Fonts, colors: Palette, to
   return top + height;
 }
 
-function drawCombinedTable(page: PDFPage, fonts: Fonts, colors: Palette, report: AcademicReportSnapshot, top: number) {
+function drawCombinedTable(page: PDFPage, fonts: Fonts, colors: Palette, report: AcademicReportSnapshot, top: number, r6 = false) {
   const scheme = report.combinedScheme;
   if (!scheme) throw new Error("Combined report requires its frozen examination scheme.");
   const totalMaximum = scheme.ctWeight + scheme.terminalWeight + scheme.annualWeight;
@@ -1965,12 +2266,13 @@ function drawCombinedTable(page: PDFPage, fonts: Fonts, colors: Palette, report:
     bold: subject.aggregateOf.length > 0
   }));
   let bottom = drawTable(page, fonts, colors, 37, top, widths, ["Subject", ...columns], rows, {
-    headerHeight: 32,
-    rowHeight: 14,
+    headerHeight: r6 ? 24 : 32,
+    rowHeight: r6 ? 10.5 : 14,
     fontSize: Math.max(6.4, R4_MINIMUM_FONT_SIZES.denseClassIxTable),
     firstColumnLeft: true,
     dynamicRows: true,
-    sectionFill: colors.band
+    sectionFill: colors.band,
+    verticalPadding: r6 ? 2 : undefined
   });
   const legend = `${scheme.ctLabel} = ${scheme.ctFullLabel};   I.A. = ${scheme.internalAssessmentLabel};   Wt. = weighted contribution;   ${scheme.terminalLabel} = ${scheme.terminalFullLabel};   G.P. = Grade Point`;
   bottom = drawWrappedBox(page, fonts.regular, colors, 37, bottom, A4.width - 74, legend, 6.8, 18);
@@ -2074,6 +2376,47 @@ function drawRemarks(page: PDFPage, fonts: Fonts, colors: Palette, remarks: stri
     x: 126, y: A4.height - top - 14 - index * 9, size: 7.5, font: fonts.regular, color: colors.ink
   }));
   return top + height;
+}
+
+function drawR6SummaryAttendanceRemarks(
+  page: PDFPage,
+  fonts: Fonts,
+  colors: Palette,
+  report: AcademicReportSnapshot,
+  top: number
+) {
+  const gap = 6;
+  const totalWidth = A4.width - 74;
+  const leftWidth = 282;
+  const rightWidth = totalWidth - leftWidth - gap;
+  const leftX = 37;
+  const rightX = leftX + leftWidth + gap;
+  const summaryValues = [
+    "Total: " + formatParentFacingNumber(displayedOverallTotal(report)) + " / " + formatParentFacingNumber(report.overall.maximum),
+    "Percentage: " + formatParentFacingNumber(displayedOverallPercentage(report)) + "%",
+    "Grade: " + report.overall.grade,
+    ...(report.overall.gradePoint == null ? [] : ["Grade Point: " + formatParentFacingNumber(report.overall.gradePoint)]),
+    ...(report.overall.rank == null ? [] : ["Rank: " + report.overall.rank])
+  ];
+  const summaryBottom = drawWrappedBox(page, fonts.bold, colors, leftX, top, leftWidth, summaryValues.join("    "), 7.2, 22);
+  const attendanceBottom = drawTable(page, fonts, colors, leftX, summaryBottom + 3, [leftWidth / 3, leftWidth / 3, leftWidth / 3], ["Working Days", "Days Present", "Attendance %"], [{
+    cells: [String(report.attendance.workingDays), String(report.attendance.daysPresent), formatParentFacingNumber(report.attendance.percentage) + "%"],
+    bold: false
+  }], {
+    headerHeight: 14,
+    rowHeight: 13,
+    fontSize: 6.8,
+    firstColumnLeft: false
+  });
+  const bandBottom = attendanceBottom;
+  const bandHeight = bandBottom - top;
+  rectTop(page, rightX, top, rightWidth, bandHeight, colors.white, colors.border, 0.7);
+  page.drawText("General Remarks:", { x: rightX + 5, y: A4.height - top - 13, size: 7.6, font: fonts.bold, color: colors.ink });
+  const remarkLines = wrapText(report.remarks, fonts.regular, 7, rightWidth - 10);
+  const availableLines = Math.floor((bandHeight - 20) / 8);
+  if (remarkLines.length > availableLines) throw new Error("R6 remarks cannot fit without shrinking or truncation.");
+  remarkLines.forEach((line, index) => page.drawText(line, { x: rightX + 5, y: A4.height - top - 24 - index * 8, size: 7, font: fonts.regular, color: colors.ink }));
+  return bandBottom;
 }
 
 function drawChart(
@@ -2189,6 +2532,223 @@ function drawChart(
   );
 }
 
+function drawR6Chart(
+  page: PDFPage,
+  fonts: Fonts,
+  colors: Palette,
+  report: AcademicReportSnapshot,
+  x: number,
+  top: number,
+  width: number,
+  height: number,
+  mode: RefinedColourMode,
+  layout: R6ChartLayout
+) {
+  rectTop(page, x, top, width, height, colors.white, colors.border, 0.7);
+  page.drawText("Student Marks (%)", {
+    x: x + 8,
+    y: A4.height - top - 16,
+    size: 9,
+    font: fonts.bold,
+    color: colors.ink
+  });
+  const series = r6ChartSeries(colors, mode);
+  drawR6ChartLegend(page, fonts, colors, x, top, width, mode, series, layout.mode === "DENSE_ACADEMIC_CHART");
+  const outerBottom = A4.height - top - height;
+  const headerHeight = layout.mode === "DENSE_ACADEMIC_CHART" ? 28 : 31;
+  const contentTop = A4.height - top - headerHeight;
+  const contentBottom = outerBottom + 4;
+  const rowGap = layout.rows === 2 ? 8 : 0;
+  const rowSlotHeight = (contentTop - contentBottom - rowGap * (layout.rows - 1)) / layout.rows;
+  const subjectLabelReserve = layout.rows === 2 ? 18 : 22;
+  const numericHeadroom = 14;
+  const chartLeft = x + 20;
+  const chartWidth = width - 28;
+  const numericFontSize = R6_DENSE_CHART_GEOMETRY.numericLabelFontSizePt;
+  const subjectFontSize = layout.mode === "DENSE_ACADEMIC_CHART"
+    ? R6_DENSE_CHART_GEOMETRY.subjectLabelFontSizePt
+    : R4_MINIMUM_FONT_SIZES.chartLabel;
+
+  layout.categoryRows.forEach((points, rowIndex) => {
+    if (!points.length) return;
+    const rowTop = contentTop - rowIndex * (rowSlotHeight + rowGap);
+    const rowBottom = rowTop - rowSlotHeight;
+    const barBottom = rowBottom + subjectLabelReserve;
+    const plotHeight = rowSlotHeight - subjectLabelReserve - numericHeadroom;
+    if (plotHeight < 42) throw new Error("R6 dense chart cannot preserve a readable common 0-100 scale.");
+    for (let tick = 0; tick <= 100; tick += 20) {
+      const y = barBottom + plotHeight * tick / 100;
+      page.drawLine({
+        start: { x: chartLeft, y },
+        end: { x: chartLeft + chartWidth, y },
+        thickness: tick === 0 ? 0.7 : 0.35,
+        color: colors.grid,
+        dashArray: tick === 0 ? undefined : [2, 2]
+      });
+      page.drawText(String(tick), {
+        x: chartLeft - 18,
+        y: y - 2,
+        size: R4_MINIMUM_FONT_SIZES.chartLabel,
+        font: fonts.regular,
+        color: colors.ink
+      });
+    }
+    const slot = chartWidth / points.length;
+    const barGap = Math.max(1.2, Math.min(1.8, slot / 28));
+    const maximumClusterWidth = slot - R6_DENSE_CHART_GEOMETRY.minimumGroupGapPt;
+    const barWidth = Math.min(8.5, (maximumClusterWidth - barGap * 2) / 3);
+    if (barWidth < 4.5) throw new Error("R6 chart category spacing is below the governed print minimum.");
+    const numericInputs: ChartNumericLabelInput[] = [];
+    points.forEach((point, categoryIndex) => {
+      const displayText = resolveChartDisplayText(point);
+      const wrapped = wrapCompleteChartLabel(displayText, Math.max(1, slot - 3), (text) => fonts.regular.widthOfTextAtSize(text, subjectFontSize), 3);
+      if (!wrapped.complete) throw new Error(`R6 chart label cannot fit without word loss: ${displayText}`);
+      const values = [point.studentPercentage, point.classAveragePercentage, point.highScorePercentage];
+      const labels = formatChartNumericValues(values);
+      const clusterWidth = barWidth * 3 + barGap * 2;
+      const clusterX = chartLeft + categoryIndex * slot + (slot - clusterWidth) / 2;
+      values.forEach((value, seriesIndex) => {
+        const barX = clusterX + seriesIndex * (barWidth + barGap);
+        const barHeight = plotHeight * value / 100;
+        drawR6PatternedRectangle(page, { x: barX, y: barBottom, width: barWidth, height: barHeight }, series[seriesIndex].color, colors.ink, mode === "MONOCHROME" ? series[seriesIndex].pattern : "SOLID");
+        numericInputs.push({
+          text: labels[seriesIndex],
+          centerX: barX + barWidth / 2,
+          barTopY: barBottom + barHeight,
+          staggerLevel: seriesIndex === 1 ? 1 : 0,
+          horizontalStaggerPt: 0
+        });
+      });
+      wrapped.lines.forEach((line, lineIndex) => page.drawText(line, {
+        x: chartLeft + categoryIndex * slot + (slot - fonts.regular.widthOfTextAtSize(line, subjectFontSize)) / 2,
+        y: barBottom - 8 - lineIndex * (subjectFontSize + 1),
+        size: subjectFontSize,
+        font: fonts.regular,
+        color: colors.ink
+      }));
+    });
+    const placements = layoutChartNumericLabels(
+      numericInputs,
+      { left: chartLeft, right: chartLeft + chartWidth, bottom: barBottom + 1, top: rowTop - 1 },
+      numericFontSize,
+      (text) => fonts.bold.widthOfTextAtSize(text, numericFontSize)
+    );
+    placements.forEach((label) => drawR6NumericLabel(page, fonts, colors, label, numericFontSize));
+  });
+  return top + height;
+}
+
+function drawR6NumericLabel(
+  page: PDFPage,
+  fonts: Fonts,
+  colors: Palette,
+  label: ChartNumericLabelPlacement,
+  fontSize: number
+) {
+  if (label.leaderLine) page.drawLine({
+    start: { x: label.anchorX, y: label.anchorY + 0.8 },
+    end: { x: label.x + label.width / 2, y: label.y - 0.8 },
+    thickness: 0.35,
+    color: colors.ink
+  });
+  page.drawRectangle({
+    x: label.x - 1.1,
+    y: label.y - 0.8,
+    width: label.width + 2.2,
+    height: label.height + 1.6,
+    color: colors.white,
+    opacity: 0.97
+  });
+  page.drawText(label.text, { x: label.x, y: label.y, size: fontSize, font: fonts.bold, color: colors.ink });
+}
+
+function r6ChartSeries(colors: Palette, mode: RefinedColourMode) {
+  return [
+    { ...R6_CHART_SERIES[0], color: mode === "MONOCHROME" ? rgb(R6_MONOCHROME_STUDENT_GREY, R6_MONOCHROME_STUDENT_GREY, R6_MONOCHROME_STUDENT_GREY) : colors.student, pattern: R6_CHART_SERIES[0].monochromePattern },
+    { ...R6_CHART_SERIES[1], color: colors.average, pattern: R6_CHART_SERIES[1].monochromePattern },
+    { ...R6_CHART_SERIES[2], color: colors.high, pattern: R6_CHART_SERIES[2].monochromePattern }
+  ];
+}
+
+function drawR6ChartLegend(
+  page: PDFPage,
+  fonts: Fonts,
+  colors: Palette,
+  x: number,
+  top: number,
+  width: number,
+  mode: RefinedColourMode,
+  series: ReturnType<typeof r6ChartSeries>,
+  dense: boolean
+) {
+  const geometry = dense ? R6_CHART_LEGEND_GEOMETRY.dense : R6_CHART_LEGEND_GEOMETRY.normal;
+  const legendLeft = x + (dense ? 98 : 108);
+  const itemWidth = (width - (dense ? 104 : 116)) / series.length;
+  const swatchY = A4.height - top - (dense ? 19 : 22);
+  series.forEach((item, index) => {
+    const box = { x: legendLeft + index * itemWidth, y: swatchY, width: geometry.swatchWidthPt, height: geometry.swatchHeightPt };
+    drawR6PatternedRectangle(page, box, item.color, colors.ink, mode === "MONOCHROME" ? item.pattern : "SOLID");
+    page.drawText(item.label, {
+      x: box.x + box.width + geometry.gapPt,
+      y: box.y + (box.height - geometry.labelFontSizePt) / 2 + 0.5,
+      size: geometry.labelFontSizePt,
+      font: fonts.bold,
+      color: colors.ink
+    });
+  });
+}
+
+function drawR6PatternedRectangle(
+  page: PDFPage,
+  box: { x: number; y: number; width: number; height: number },
+  fill: RGB,
+  ink: RGB,
+  pattern: R6ChartPattern
+) {
+  if (box.width <= 0 || box.height <= 0) return;
+  page.drawRectangle({
+    ...box,
+    color: pattern === "SOLID" || pattern === "SOLID_GREY" ? fill : rgb(1, 1, 1),
+    borderColor: ink,
+    borderWidth: R6_PATTERN_GEOMETRY.borderWidthPt
+  });
+  if (pattern === "DIAGONAL") {
+    for (let intercept = -box.width; intercept <= box.height; intercept += R6_PATTERN_GEOMETRY.slashSpacingPt) {
+      const startLocal = intercept >= 0
+        ? { x: 0, y: intercept }
+        : { x: -intercept, y: 0 };
+      const endLocal = box.width + intercept <= box.height
+        ? { x: box.width, y: box.width + intercept }
+        : { x: box.height - intercept, y: box.height };
+      if (endLocal.x > startLocal.x + EPSILON) {
+        page.drawLine({
+          start: { x: box.x + startLocal.x, y: box.y + startLocal.y },
+          end: { x: box.x + endLocal.x, y: box.y + endLocal.y },
+          thickness: R6_PATTERN_GEOMETRY.slashStrokeWidthPt,
+          color: ink
+        });
+      }
+    }
+  }
+  if (pattern === "DIAMOND_LATTICE") {
+    for (let centerY = box.y + 2.2; centerY <= box.y + box.height - 2.2; centerY += R6_PATTERN_GEOMETRY.diamondVerticalSpacingPt) {
+      const rowShift = Math.round((centerY - box.y) / R6_PATTERN_GEOMETRY.diamondVerticalSpacingPt) % 2
+        ? R6_PATTERN_GEOMETRY.diamondHorizontalSpacingPt / 2
+        : 0;
+      for (let centerX = box.x + 2.2 + rowShift; centerX <= box.x + box.width - 2.2; centerX += R6_PATTERN_GEOMETRY.diamondHorizontalSpacingPt) {
+        const left = { x: centerX - R6_PATTERN_GEOMETRY.diamondRadiusXPt, y: centerY };
+        const topPoint = { x: centerX, y: centerY + R6_PATTERN_GEOMETRY.diamondRadiusYPt };
+        const right = { x: centerX + R6_PATTERN_GEOMETRY.diamondRadiusXPt, y: centerY };
+        const bottomPoint = { x: centerX, y: centerY - R6_PATTERN_GEOMETRY.diamondRadiusYPt };
+        page.drawLine({ start: left, end: topPoint, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: ink });
+        page.drawLine({ start: topPoint, end: right, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: ink });
+        page.drawLine({ start: right, end: bottomPoint, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: ink });
+        page.drawLine({ start: bottomPoint, end: left, thickness: R6_PATTERN_GEOMETRY.diamondStrokeWidthPt, color: ink });
+      }
+    }
+  }
+}
+
 function chartSeries(colors: Palette) {
   return [
     { ...R5_CHART_SERIES[0], color: colors.student, pattern: R5_CHART_SERIES[0].monochromePattern },
@@ -2239,17 +2799,18 @@ function drawGradeLegend(
   x: number,
   top: number,
   width: number,
-  legend: AcademicReportSnapshot["gradeLegend"]
+  legend: AcademicReportSnapshot["gradeLegend"],
+  compact = false
 ) {
   const widths = [126, ...legend.map(() => (width - 126) / legend.length)];
-  page.drawText("Grade Legend", { x: x + width / 2 - 28, y: A4.height - top + 3, size: 8, font: fonts.regular, color: colors.legendTitle });
+  if (!compact) page.drawText("Grade Legend", { x: x + width / 2 - 28, y: A4.height - top + 3, size: 8, font: fonts.regular, color: colors.legendTitle });
   return drawTable(page, fonts, colors, x, top, widths, [], [
-    { cells: ["School % Ratings", ...legend.map((item) => item.range)], bold: false },
+    { cells: [compact ? "Grade Legend \u2014 School % Ratings" : "School % Ratings", ...legend.map((item) => item.range)], bold: false },
     { cells: ["Grade", ...legend.map((item) => item.grade)], bold: false }
   ], {
     headerHeight: 0,
-    rowHeight: 15,
-    fontSize: 7,
+    rowHeight: compact ? R6_DENSE_CHART_GEOMETRY.compactGradeLegendRowHeightPt : 15,
+    fontSize: compact ? R6_DENSE_CHART_GEOMETRY.compactGradeLegendFontSizePt : 7,
     firstColumnLeft: false
   });
 }
@@ -2299,6 +2860,7 @@ function drawTable(
     identity?: boolean;
     rowHeights?: number[];
     maximumLines?: number;
+    verticalPadding?: number;
   }
 ) {
   let cursorTop = top;
@@ -2320,7 +2882,8 @@ function drawTable(
       textColor: colors.ink,
       dynamic: options.dynamicRows,
       identity: options.identity,
-      maximumLines: options.maximumLines
+      maximumLines: options.maximumLines,
+      verticalPadding: options.verticalPadding
     });
   }
   return cursorTop;
@@ -2344,6 +2907,7 @@ function drawTableRow(
     dynamic?: boolean;
     identity?: boolean;
     maximumLines?: number;
+    verticalPadding?: number;
   }
 ) {
   const font = options.bold ? fonts.bold : fonts.regular;
@@ -2351,7 +2915,7 @@ function drawTableRow(
   if (options.maximumLines && wrapped.some((lines) => lines.length > options.maximumLines!)) {
     throw new Error("Identity value exceeds the approved two-line wrapping contract.");
   }
-  const required = Math.max(...wrapped.map((lines) => 6 + lines.length * (fontSize + 1)));
+  const required = Math.max(...wrapped.map((lines) => (options.verticalPadding ?? 6) + lines.length * (fontSize + 1)));
   const height = options.dynamic ? Math.max(minimumHeight, required) : minimumHeight;
   let cursor = x;
   values.forEach((_, index) => {
@@ -3277,6 +3841,50 @@ export function resolveChartCategoryLayout(
     categories: resolved,
     omitted: [...omitted.values()],
     slot: resolved.length ? chartWidth / resolved.length : chartWidth
+  };
+}
+
+export function resolveR6AcademicChartLayout(
+  points: ChartPointSnapshot[],
+  chartWidth: number,
+  measure: (text: string) => number
+): R6ChartLayout {
+  const categoryCount = points.length;
+  const projectedWidth = categoryCount ? chartWidth / categoryCount : chartWidth;
+  const hasLongLabels = points.some((point) => {
+    const wrapped = wrapCompleteChartLabel(
+      resolveChartDisplayText(point),
+      Math.max(1, projectedWidth - 3),
+      measure,
+      2
+    );
+    return !wrapped.complete;
+  });
+  const dense = categoryCount >= R6_DENSE_CHART_GEOMETRY.triggerCategoryCount
+    || projectedWidth < R6_DENSE_CHART_GEOMETRY.minimumProjectedCategoryWidthPt
+    || hasLongLabels;
+  const twoRows = dense && (
+    categoryCount >= R6_DENSE_CHART_GEOMETRY.twoRowCategoryCount
+    || (categoryCount >= R6_DENSE_CHART_GEOMETRY.triggerCategoryCount && projectedWidth < 42)
+  );
+  if (!twoRows) {
+    return {
+      mode: dense ? "DENSE_ACADEMIC_CHART" : "NORMAL_ACADEMIC_CHART",
+      rows: 1,
+      categoryRows: [[...points]],
+      compactGradeLegend: dense,
+      reason: dense
+        ? (hasLongLabels ? "LONG_LABEL_OR_PROJECTED_COLLISION" : "CATEGORY_DENSITY")
+        : "NORMAL_CAPACITY"
+    };
+  }
+  const firstRowCount = Math.ceil(categoryCount / 2);
+  return {
+    mode: "DENSE_ACADEMIC_CHART",
+    rows: 2,
+    categoryRows: [points.slice(0, firstRowCount), points.slice(firstRowCount)],
+    compactGradeLegend: true,
+    reason: "TWO_ROW_COLLISION_FALLBACK"
   };
 }
 

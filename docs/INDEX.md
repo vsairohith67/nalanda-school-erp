@@ -1,6 +1,6 @@
 # Documentation Index
 
-## REPORT-PRINT-ACCEPT-1A R5-A1 digital review
+## REPORT-PRINT-ACCEPT-1A R6-A1 digital review
 
 - [V1 Classes I-X / V1.5 KG Scope Amendment and Frozen Correction Register](REPORT_CARD_V1_SCOPE_AMENDMENT.md)
 - [Report-Card Template Catalog](REPORT_CARD_TEMPLATE_CATALOG.md)
@@ -8,8 +8,9 @@
 - [Physical Print Acceptance Checklist](REPORT_CARD_PHYSICAL_PRINT_ACCEPTANCE_CHECKLIST.md)
 - [Release-Candidate Checklist](RELEASE_CANDIDATE_CHECKLIST.md)
 - [R5 Digital Review Evidence](REPORT_CARD_R5_DIGITAL_REVIEW_EVIDENCE.md)
+- [R6 Digital Review Evidence](REPORT_CARD_R6_DIGITAL_REVIEW_EVIDENCE.md)
 
-Classes I-X remain a V1 requirement. The R5-A1 exact-header, aligned-grid and chart-legibility amendment is ready for user digital review; physical-pack regeneration and printing remain paused. The preserved KG/LKG/UKG foundation is default-off and deferred to V1.5. R4.2 and pre-A1 R5 packs must not be printed.
+Classes I-X remain a V1 requirement. R6 preserves the approved layout while emphasizing the configured secondary header, adapting dense charts and applying the controlling R6-A1 solid-grey/slash/diamond-lattice monochrome contract. The two review-only packs are ready for user digital review; physical-pack regeneration and printing remain paused. The preserved KG/LKG/UKG foundation is default-off and deferred to V1.5.
 
 ## RELEASE-OPS-1A safe release, client update and rollback
 

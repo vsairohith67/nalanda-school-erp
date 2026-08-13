@@ -1,5 +1,11 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## REPORT-PRINT-ACCEPT-1A-R6 / R6-A1 — adaptive dense chart and authoritative monochrome amendment (2026-08-13)
+
+R6 is a narrow Classes I-X correction that preserves the approved one-page architecture, identity grid, tables, calculations, colour chart, grade content and 18 mm signature clearance. It strengthens the configured status/address typography, adds governed `DENSE_ACADEMIC_CHART` selection with a 5+5 two-row fallback for ten subjects, and compacts the dense grade legend without shrinking essential text or signing space.
+
+R6-A1 controls the monochrome treatment: Student Marks use solid 55% neutral grey, Class Average uses a black 45-degree single slash on white, and High Score uses a sparse black diamond/cross-lattice on white. The legend uses the same operations as the bars. Eight-page visual and twelve-page detail PDFs were generated locally from synthetic data, including raster and photocopy-simulation checks. Digital user review is pending; no physical pack, print, merge, tag, deployment or report issue is authorised. KG remains preserved/default-off for V1.5.
+
 ## REPORT-PRINT-ACCEPT-1A-R5-A1 — exact header, grid and chart amendment (2026-08-13)
 
 This amendment remains part of R5. Classes I-X now use the approved three-line academic header geometry, with the exact review wording supplied only through the synthetic approved configuration fixture; missing operational wording produces a safe preview warning and blocks final publication. The identity table uses four fixed 25% columns with one continuous 50% divider. Chart values have individual anchors, at least 7-point bold text, white knockout backing, 2.5-point bounding-box clearance and leaders where staggering changes association. True monochrome uses single diagonal slash, cross-hatch and dots in both bars and 14 mm by 5 mm legend swatches, with rendered blur/threshold photocopy simulation.

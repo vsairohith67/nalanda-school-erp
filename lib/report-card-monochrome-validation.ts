@@ -29,6 +29,7 @@ export type PatternSwatchRobustness = {
   blurSigma: number;
   threshold: number;
   maximumPairSimilarity: number;
+  darkPixelRatios: Array<{ series: string; ratio: number }>;
   pairs: Array<{ left: string; right: string; similarity: number }>;
 };
 
@@ -202,6 +203,10 @@ export async function inspectRenderedPatternSwatchRobustness(
       masks.push({ series: box.series, data: rendered });
     }
     const pairs: PatternSwatchRobustness["pairs"] = [];
+    const darkPixelRatios = masks.map((mask) => ({
+      series: mask.series,
+      ratio: [...mask.data].filter((value) => value < 128).length / mask.data.length
+    }));
     masks.forEach((left, leftIndex) => masks.slice(leftIndex + 1).forEach((right) => {
       let intersection = 0;
       let union = 0;
@@ -222,7 +227,7 @@ export async function inspectRenderedPatternSwatchRobustness(
     if (maximumPairSimilarity >= approvedVisualConfusionThreshold) {
       throw new Error(`Rendered monochrome patterns exceed the approved visual-confusion threshold (${maximumPairSimilarity.toFixed(3)} >= ${approvedVisualConfusionThreshold.toFixed(3)}).`);
     }
-    return { page, blurSigma, threshold, maximumPairSimilarity, pairs };
+    return { page, blurSigma, threshold, maximumPairSimilarity, darkPixelRatios, pairs };
   } finally {
     await rm(temporaryRoot, { recursive: true, force: true });
   }

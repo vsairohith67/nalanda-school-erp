@@ -2,7 +2,7 @@
 
 **Ledger ID:** `GOV-RECON-1-LEDGER`<br>
 **Reconstructed:** 2026-08-12<br>
-**Coverage:** earliest post-hoc Prompt Library evidence (created 2026-06-19) through REPORT-PRINT-ACCEPT-1A-R5-A1
+**Coverage:** earliest post-hoc Prompt Library evidence (created 2026-06-19) through REPORT-PRINT-ACCEPT-1A-R6-A1
 
 ## Source limitation
 
@@ -14,6 +14,7 @@ The accessible Git history begins with the consolidated baseline commit `2d1ac63
 
 | Sequence / prompt label | Recoverable subject | Source date | Evidence classification | Implementation/release disposition | Source gap or conflict |
 | --- | --- | --- | --- | --- | --- |
+| REPORT-PRINT-ACCEPT-1A-R6 / R6-A1 | Emphasized configured secondary header, adaptive dense chart/two-row fallback and authoritative solid-grey/slash/diamond-lattice monochrome charts | 2026-08-13 exact attached prompts and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | Two synthetic review-only PDFs generated and digitally validated; user review pending; physical printing paused | R6-A1 replaces conflicting R6 monochrome wording; no physical pack, print, merge, tag, deployment or publication; KG stays V1.5 |
 | REPORT-PRINT-ACCEPT-1A-R5-A1 | R5 amendment for exact configured header, fixed identity grid, chart-value visibility and simple photocopy-safe monochrome patterns | 2026-08-13 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | Review-only implementation and synthetic digital QA complete; user visual review pending; physical packs remain paused | Amendment is part of R5, not R6; KG remains preserved/default-off for V1.5; no print, merge, tag, deployment or publication |
 | REPORT-PRINT-ACCEPT-1A-R5 | Consolidated Classes I-X colour/true-monochrome layout correction and small digital-review packs | 2026-08-12 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | R5 implementation and synthetic digital QA complete; user visual review pending; physical packs remain paused | KG remains preserved/default-off for V1.5; no print, merge, tag, deployment or publication |
 | REPORT-PRINT-ACCEPT-1A scope amendment | Narrow V1 report-card acceptance to Classes I-X; preserve and default-off KG for V1.5; freeze incomplete Classes I-X correction register | 2026-08-12 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `DEFERRED` | Classes I-X are `IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING`; KG is `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`; no PDF regeneration, printing, merge or tag | R4.2 packs are superseded for V1; additional Classes I-X corrections remain pending before R5 |
