@@ -1,7 +1,9 @@
 # Report-Card Template Versioned Maintenance Policy
 
-**Applies to:** approved Classes I-X `NALANDA_LEGACY_REFINED` colour and monochrome templates  
-**Effective gate:** `REPORT_PRINT_ACCEPTANCE_CLEARED`  
+**Applies to:** approved Classes I-X `NALANDA_LEGACY_REFINED` colour and monochrome templates
+
+**Effective gate:** `REPORT_PRINT_ACCEPTANCE_CLEARED`
+
 **KG boundary:** KG/LKG/UKG remains a separate, default-off V1.5 foundation
 
 ## Version contract
@@ -24,4 +26,3 @@
 - Draft, approval, activation, replacement and rollback events remain versioned and auditable.
 - Evidence uses synthetic data only. Restricted historical sources, real Student/Parent identities, marks, photographs and generated private reports must not be committed or uploaded.
 - Release metadata records the approved template version and retains the previous approved template as the known-good rollback reference.
-

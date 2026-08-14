@@ -1,8 +1,10 @@
 # Classes I-X Report-Card Print Acceptance and Release Closure
 
-**Prompt:** `REPORT-PRINT-ACCEPT-1A-P2`  
-**Date:** 2026-08-14  
-**Result:** `REPORT_PRINT_ACCEPTANCE_CLEARED`  
+**Prompt:** `REPORT-PRINT-ACCEPT-1A-P2`
+
+**Date:** 2026-08-14
+
+**Result:** `REPORT_PRINT_ACCEPTANCE_CLEARED`
 **Scope:** Classes I-X V1 only; KG/LKG/UKG remains `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`
 
 ## Physical evidence received
@@ -51,4 +53,3 @@ The V1 Classes I-X family is frozen as:
 The approved physical conditions are A4 office paper, Actual Size / 100% governed instructions, single-sided initial acceptance, and native colour plus native B/W/grayscale output. Canon imageCLASS MF244dw physical output and the required one-generation dense monochrome photocopy were accepted.
 
 The release is local/private source control only. No deployment, public exposure, real Student data, real report issuance or KG operational activation occurred. The next governed phase is `V1-FINAL-1A`.
-
