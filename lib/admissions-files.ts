@@ -5,13 +5,14 @@ import type { PrismaClient } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
 import { validateClassworkUpload, type ValidatedClassworkFile } from "@/lib/classwork-files";
 import { ADMISSION_DOCUMENT_TYPES, AdmissionError, safeKey } from "@/lib/admissions";
+import { validatedPrivateStorageRoot } from "@/lib/private-storage-root";
 
 const STORAGE_KEY = /^[a-f0-9]{2}\/[a-f0-9]{2}\/[a-f0-9-]{36}\.(?:pdf|png|jpg|webp)$/;
 const MAX_DOCUMENTS = 12;
 const MAX_TOTAL_BYTES = 30 * 1024 * 1024;
 
 export function admissionsStorageRoot() {
-  return path.resolve(process.env.ADMISSIONS_PRIVATE_STORAGE_ROOT?.trim() || path.join(process.cwd(), "storage", "admissions"));
+  return validatedPrivateStorageRoot(process.env.ADMISSIONS_PRIVATE_STORAGE_ROOT?.trim() || path.join(process.cwd(), "storage", "admissions"), "Admission private storage");
 }
 
 export async function uploadApplicationDocument(client: PrismaClient, input: { applicationKey?: string; invitationToken?: string; documentType: string; file: File; actor?: AuthUser }) {

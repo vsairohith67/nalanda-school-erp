@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import sharp from "sharp";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFName } from "pdf-lib";
 import { validateClassworkBackupRows } from "@/lib/classwork-backup";
 import { validateClassworkDraftInput, validateExpectedVersion, validateRequestKey } from "@/lib/classwork";
 import { assertAttachmentQuota, resolveStorageKey, validateClassworkUpload } from "@/lib/classwork-files";
@@ -29,8 +29,12 @@ describe("Prompt 23F governed classwork and secure submissions", () => {
 
   it("binds Teacher, Parent and Student access to active server-side identities", () => {
     const access = source("lib/classwork-access.ts");
+    const workspacePage = source("components/classwork-workspace-page.tsx");
     for (const evidence of ["staffMember.findUnique", "timetableTeacher", "assignments", "requireClassworkTeacherTarget", "resolveActiveParentChildContext", "roleAssignmentId", "expectedContextVersion", 'type: "ADMISSION_NUMBER"', 'status: "VERIFIED"', "admissionStudentId"]) expect(access).toContain(evidence);
     expect(access).not.toContain("permissionSetCan");
+    expect(workspacePage).toContain('error instanceof ClassworkAccessError');
+    expect(workspacePage).toContain('"TEACHER_SCOPE_MISSING", "TEACHER_SCOPE_EMPTY"');
+    expect(workspacePage).toContain("Permission alone never reveals another cohort.");
   });
 
   it("validates bounded plain-text drafts, expected versions and idempotency keys", () => {
@@ -60,6 +64,14 @@ describe("Prompt 23F governed classwork and secure submissions", () => {
     await expect(validateClassworkUpload(upload("payload.exe", "application/octet-stream", Buffer.from("MZpayload")))).rejects.toThrow(/Only PDF/);
     const active = Buffer.from("%PDF-1.4\n1 0 obj<</OpenAction 2 0 R>>endobj\n%%EOF\n");
     await expect(validateClassworkUpload(upload("active.pdf", "application/pdf", active))).rejects.toThrow(/active or embedded/);
+    const compressed = await PDFDocument.create(); compressed.addPage([20, 20]);
+    compressed.catalog.set(PDFName.of("OpenAction"), compressed.context.register(compressed.context.obj({ S: PDFName.of("JavaScript"), JS: "synthetic" })));
+    const compressedBytes = Buffer.from(await compressed.save({ useObjectStreams: true }));
+    expect(compressedBytes.includes(Buffer.from("/OpenAction"))).toBe(false);
+    await expect(validateClassworkUpload(upload("compressed-active.pdf", "application/pdf", compressedBytes))).rejects.toThrow(/active or embedded/);
+    const plain = Buffer.from(await compressed.save({ useObjectStreams: false }));
+    const escaped = Buffer.from(plain.toString("latin1").replaceAll("/OpenAction", "/Open#41ction"), "latin1");
+    await expect(validateClassworkUpload(upload("escaped-active.pdf", "application/pdf", escaped))).rejects.toThrow(/active or embedded/);
     await expect(validateClassworkUpload(upload("cut.png", "image/png", png.subarray(0, png.length - 12)))).rejects.toThrow(/truncated/);
   });
 

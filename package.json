@@ -88,6 +88,7 @@
     "qa:safeexit1:browser:setup": "tsx scripts/qa-safeexit1-copied-db.ts --prefix=SAFEEXIT1BROWSER --keep",
     "qa:safeexit1:browser:cleanup": "tsx scripts/qa-safeexit1-copied-db.ts --prefix=SAFEEXIT1BROWSER cleanup",
     "qa:import1a": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-import1a-copied-db.ps1",
+    "qa:v1-final:scale": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-import1a-copied-db.ps1 -V1FinalScale",
     "qa:import1a:browser:setup": "tsx scripts/qa-import1a-browser-fixtures.ts setup",
     "qa:import1a:browser:cleanup": "tsx scripts/qa-import1a-browser-fixtures.ts cleanup",
     "qa:23dqa:browser:setup": "tsx scripts/qa23d-browser-fixtures.ts setup --independent",

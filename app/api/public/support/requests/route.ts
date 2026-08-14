@@ -1,15 +1,17 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createPublicSupportRequest, validatePublicSupportInput } from "@/lib/support";
+import { createPublicSupportRequest, publicSupportIntakeAvailable, validatePublicSupportInput } from "@/lib/support";
 import { rollbackStoredSupportFile, storeSupportFile, validateSupportUpload } from "@/lib/support-files";
 import { supportJson } from "@/lib/support-api";
+import { loginRequestSource } from "@/lib/auth-rate-limit";
 
 const MESSAGE = "Your support request has been received. Keep the reference shown on this page.";
 
 export async function POST(request: NextRequest) {
   let storedKey: string | null = null;
   try {
+    if (!await publicSupportIntakeAvailable(prisma)) return supportJson({ accepted: true, reference: `NPS-SUP-${randomUUID().slice(0, 8).toUpperCase()}${randomBytes(2).toString("hex").toUpperCase()}`, message: MESSAGE }, 202);
     const form = await request.formData();
     const input = validatePublicSupportInput({
       requesterName: form.get("requesterName"), requesterType: form.get("requesterType"), requesterIdentifier: form.get("requesterIdentifier"),
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
       storedKey = await storeSupportFile(validated);
       attachment = { ...validated, storageKey: storedKey };
     }
-    const sourceEvidence = [request.headers.get("x-forwarded-for")?.split(",", 1)[0]?.trim() ?? "local", request.headers.get("user-agent")?.slice(0, 120) ?? "unknown"].join("|");
+    const sourceEvidence = loginRequestSource(request.headers);
     const result = await createPublicSupportRequest(prisma, input, sourceEvidence, attachment);
     if (result.neutralized && storedKey) { await rollbackStoredSupportFile(storedKey); storedKey = null; }
     return supportJson({ accepted: true, reference: result.reference, message: MESSAGE }, 202);

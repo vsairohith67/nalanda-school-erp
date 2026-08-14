@@ -52,6 +52,10 @@ export function validateAuthenticatedSupportInput(value: unknown) {
   };
 }
 
+export async function publicSupportIntakeAvailable(client: any, now = new Date()) {
+  return await client.supportAccessEvent.count({ where: { eventType: "PUBLIC_INTAKE", occurredAt: { gte: new Date(now.getTime() - 60 * 60 * 1000) } } }) < 100;
+}
+
 export function validateManualSupportInput(value: unknown) {
   const row = object(value);
   return {
@@ -74,11 +78,12 @@ export function validateManualSupportInput(value: unknown) {
 export async function createPublicSupportRequest(client: any, input: ReturnType<typeof validatePublicSupportInput>, sourceEvidence: string, attachment?: StoredFile | null, now = new Date()) {
   const sourceHash = privateHash(`source|${sourceEvidence}`), identifierHash = input.requesterIdentifier ? privateHash(`identifier|${input.requesterIdentifier.toLowerCase()}`) : privateHash(`contact|${input.contactValue.toLowerCase()}`);
   const since = new Date(now.getTime() - 60 * 60 * 1000);
-  const [sourceAttempts, identifierAttempts] = await Promise.all([
+  const [sourceAttempts, identifierAttempts, globalAttempts] = await Promise.all([
     client.supportAccessEvent.count({ where: { sourceHash, occurredAt: { gte: since } } }),
-    client.supportAccessEvent.count({ where: { identifierHash, occurredAt: { gte: since } } })
+    client.supportAccessEvent.count({ where: { identifierHash, occurredAt: { gte: since } } }),
+    client.supportAccessEvent.count({ where: { eventType: "PUBLIC_INTAKE", occurredAt: { gte: since } } })
   ]);
-  const neutralized = Boolean(input.honeypot) || !input.consent || sourceAttempts >= 6 || identifierAttempts >= 4;
+  const neutralized = Boolean(input.honeypot) || !input.consent || sourceAttempts >= 6 || identifierAttempts >= 4 || globalAttempts >= 100;
   if (neutralized) {
     await client.supportAccessEvent.create({ data: { sourceHash, identifierHash, eventType: "PUBLIC_INTAKE", outcome: "NEUTRALISED", safeMetadataJson: JSON.stringify({ reason: input.honeypot ? "BOT_CONTROL" : !input.consent ? "CONSENT_MISSING" : "RATE_LIMIT" }), occurredAt: now } });
     return { accepted: true, reference: opaqueNeutralReference(input.submissionKey), neutralized: true };

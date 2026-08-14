@@ -1,8 +1,9 @@
 import { createHash, randomUUID } from "node:crypto";
 import { lstat, mkdir, open, readFile, realpath, rm } from "node:fs/promises";
 import path from "node:path";
-import { PDFDocument } from "pdf-lib";
+import { PDFArray, PDFDict, PDFDocument, PDFName, PDFRef, PDFStream, type PDFObject } from "pdf-lib";
 import sharp from "sharp";
+import { validatedPrivateStorageRoot } from "@/lib/private-storage-root";
 
 export const CLASSWORK_MAX_FILE_BYTES = 5 * 1024 * 1024;
 export const CLASSWORK_MAX_IMAGE_DIMENSION = 8_000;
@@ -45,7 +46,7 @@ export async function validateClassworkUpload(file: Pick<File, "name" | "type" |
   const extension = rawExtension as ValidatedClassworkFile["extension"];
   const expectedMime = TYPES[extension];
   if (file.type.toLowerCase() !== expectedMime) throw new ClassworkFileError("The file extension and browser MIME type do not match.");
-  const bytes = Buffer.from(await file.arrayBuffer());
+  let bytes = Buffer.from(await file.arrayBuffer());
   if (bytes.length !== file.size || bytes.length > CLASSWORK_MAX_FILE_BYTES) throw new ClassworkFileError("The uploaded file is truncated or exceeds the size limit.");
   const magicMime = detectMagic(bytes);
   if (magicMime !== expectedMime) throw new ClassworkFileError("The file contents do not match the allowed file type.");
@@ -58,6 +59,14 @@ export async function validateClassworkUpload(file: Pick<File, "name" | "type" |
       const pdf = await PDFDocument.load(bytes, { ignoreEncryption: false, updateMetadata: false });
       const pages = pdf.getPageCount();
       if (pages < 1 || pages > CLASSWORK_MAX_PDF_PAGES) throw new ClassworkFileError("PDF files must contain 1 to 100 pages.");
+      assertPassivePdfGraph(pdf);
+      // Persist a fresh, non-object-stream serialization instead of the
+      // attacker-supplied container. This normalizes escaped names and removes
+      // unparsed trailing/container bytes from the accepted artifact.
+      bytes = Buffer.from(await pdf.save({ useObjectStreams: false, addDefaultPage: false, updateFieldAppearances: false }));
+      const verification = await PDFDocument.load(bytes, { ignoreEncryption: false, updateMetadata: false });
+      assertPassivePdfGraph(verification);
+      rejectActivePdfContent(bytes);
     } catch (error) {
       if (error instanceof ClassworkFileError) throw error;
       throw new ClassworkFileError("The PDF is encrypted, malformed, or unsupported.");
@@ -93,7 +102,7 @@ export async function validateClassworkUpload(file: Pick<File, "name" | "type" |
 }
 
 export function classworkStorageRoot() {
-  return path.resolve(process.env.CLASSWORK_PRIVATE_STORAGE_ROOT?.trim() || path.join(process.cwd(), "storage", "classwork"));
+  return validatedPrivateStorageRoot(process.env.CLASSWORK_PRIVATE_STORAGE_ROOT?.trim() || path.join(process.cwd(), "storage", "classwork"), "Classwork private storage");
 }
 
 export async function storeClassworkFile(file: ValidatedClassworkFile) {
@@ -158,7 +167,32 @@ function detectMagic(bytes: Buffer) {
 function rejectActivePdfContent(bytes: Buffer) {
   const text = bytes.toString("latin1");
   if (!/%%EOF[\s\u0000]*$/.test(text)) throw new ClassworkFileError("The PDF is truncated or malformed.");
-  if (/\/(?:JavaScript|JS|OpenAction|AA|Launch|EmbeddedFile|RichMedia|XFA)\b/i.test(text)) throw new ClassworkFileError("PDF files with active or embedded content are not allowed.");
+  if (/\/(?:JavaScript|JS|OpenAction|AA|Launch|EmbeddedFile|EmbeddedFiles|Filespec|RichMedia|XFA|AcroForm|SubmitForm|ImportData|GoToR|URI|Annots|Names)\b/i.test(text)) throw new ClassworkFileError("PDF files with active or embedded content are not allowed.");
+}
+
+const UNSAFE_PDF_NAMES = new Set(["JavaScript","JS","OpenAction","AA","Launch","EmbeddedFile","EmbeddedFiles","Filespec","RichMedia","XFA","AcroForm","SubmitForm","ImportData","GoToR","URI","Annots","Names"]);
+
+function assertPassivePdfGraph(pdf: PDFDocument) {
+  const seen = new Set<PDFObject>();
+  const inspect = (object: PDFObject | undefined) => {
+    if (!object || seen.has(object)) return;
+    seen.add(object);
+    if (object instanceof PDFRef) { inspect(pdf.context.lookup(object)); return; }
+    if (object instanceof PDFName) {
+      if (UNSAFE_PDF_NAMES.has(object.decodeText())) throw new ClassworkFileError("PDF files with active or embedded content are not allowed.");
+      return;
+    }
+    if (object instanceof PDFStream) { inspect(object.dict); return; }
+    if (object instanceof PDFDict) {
+      for (const [key, value] of object.entries()) {
+        if (UNSAFE_PDF_NAMES.has(key.decodeText())) throw new ClassworkFileError("PDF files with active or embedded content are not allowed.");
+        inspect(value);
+      }
+      return;
+    }
+    if (object instanceof PDFArray) for (const value of object.asArray()) inspect(value);
+  };
+  for (const [, object] of pdf.context.enumerateIndirectObjects()) inspect(object);
 }
 
 function assertImageContainerComplete(bytes: Buffer, mime: string) {

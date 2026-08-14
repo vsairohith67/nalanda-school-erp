@@ -1,5 +1,7 @@
 # Report-Card R8 Digital Approval and Physical Print Gate
 
+> **Gate closure — 2026-08-14:** This pre-print approval record is preserved unchanged below. The later physical run passed for colour, native monochrome and the required one-generation photocopy, and the governed release closed as `REPORT_PRINT_ACCEPTANCE_CLEARED`. See `docs/REPORT_CARD_PRINT_ACCEPTANCE_RELEASE_CLOSURE.md`. The former `PHYSICAL_PRINT_GATE_PENDING` statement is historical.
+
 **Status:** `R8_DIGITAL_DESIGN_APPROVED`
 
 **Scope:** Classes I-X V1 only; KG/LKG/UKG remains preserved/default-off and deferred to V1.5

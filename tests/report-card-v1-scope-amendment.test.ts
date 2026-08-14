@@ -59,10 +59,13 @@ describe("REPORT-PRINT-ACCEPT-1A V1 scope amendment", () => {
     expect(register).toContain("| V1 | 24 |");
     expect(register).toContain("| V1.5 | 4 |");
     expect(register).toContain("| V2 | 6 |");
-    expect(register).toContain("| COMPLETE_LOCAL_PRIVATE | 2 |");
-    expect(register).toContain("| PARTIAL | 1 |");
-    expect(register).toContain("| MISSING | 1 |");
-    expect(register).toContain("IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING");
+    expect(register).toContain("| CLEARED | 19 |");
+    expect(register).toContain("| CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING | 4 |");
+    expect(register).toContain("| COMPLETE | 1 |");
+    expect(register).not.toContain("| COMPLETE_LOCAL_PRIVATE |");
+    expect(register).not.toContain("| PARTIAL |");
+    expect(register).not.toContain("| MISSING |");
+    expect(register).not.toContain("IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING");
     expect(register).toContain("IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5");
     for (let correction = 1; correction <= 29; correction += 1) {
       expect(amendment.match(new RegExp(`^${correction}\\. `, "gm"))).toHaveLength(1);

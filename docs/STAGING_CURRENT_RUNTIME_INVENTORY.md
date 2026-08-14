@@ -1,5 +1,7 @@
 # Staging Current Runtime Inventory
 
+> **Historical snapshot notice — 2026-08-14:** Counts and environment observations below remain evidence for the dated rehearsal that produced them. The current protected operational baseline is the DATA-0B zero-business-data state with four protected accounts/assignments and one active Super Admin; V1 final work uses copied/synthetic databases only. See `docs/V1_RELEASE_CANDIDATE_MANIFEST.md` for the current candidate fingerprint. No staging or deployment is authorized by this document.
+
 Status: `DEVOPS-1C planning and local readiness only`
 Inventory date: 2026-07-23
 Source revision: `a0f84455705bf9fbe8d57150f92db580501744ce` on the base of `devops/staging-readiness-plan`

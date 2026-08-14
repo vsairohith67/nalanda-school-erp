@@ -10,7 +10,7 @@ Staff APIs live under `/api/my-payslip-requests`; management APIs live under `/a
 
 ## PDF and secret configuration
 
-Set an absolute, validated `QPDF_EXECUTABLE_PATH`. The adapter invokes qpdf without a shell and supplies both opening and owner passwords through standard input using qpdf's `@-` argument-file mode. It enforces a timeout and private processing directory, validates the derivative and refuses service when capabilities are missing.
+Set an absolute `QPDF_EXECUTABLE_PATH` and its independently verified lowercase SHA-256 as `QPDF_EXECUTABLE_SHA256`. The adapter verifies that pinned binary identity before invoking qpdf without a shell, supplies both opening and owner passwords through standard input using qpdf's `@-` argument-file mode, enforces a timeout and private processing directory, validates the derivative, and refuses service when either capability or identity evidence is missing.
 
 `PAYSLIP_REQUEST_KEYRING_JSON` supplies versioned external AES-256 keys. No key belongs in Git, SQLite, backup JSON or planning systems. `PAYSLIP_REQUEST_STORAGE_ROOT` and `PAYSLIP_REQUEST_TEMP_ROOT` must resolve to private, non-public directories. Development and QA use only synthetic copied-database keys.
 

@@ -8,7 +8,7 @@ import { PdfProtectionAdapter, validatePayslipPdf } from "@/lib/payslip-request-
 import { generateDocumentPassword, generateOwnerPassword } from "@/lib/payslip-request-crypto";
 
 const executable = process.env.QPDF_EXECUTABLE_PATH;
-const enabled = Boolean(executable);
+const enabled = Boolean(executable && process.env.QPDF_EXECUTABLE_SHA256);
 let root = "";
 
 beforeAll(async () => { if (enabled) root = await mkdtemp(path.join(os.tmpdir(), "payslipreq1-qpdf-")); });

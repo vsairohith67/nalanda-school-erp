@@ -81,7 +81,7 @@ export async function storeRegisterImage(image: ValidatedRegisterImage) {
   return storageKey;
 }
 
-export async function readRegisterImage(storageKey: string) {
+export async function readRegisterImage(storageKey: string, expectedSha256?: string, expectedByteSize?: number) {
   const root = await ensureStorageRoot();
   validateStorageKey(storageKey);
   const target = safeChild(root, storageKey);
@@ -89,7 +89,10 @@ export async function readRegisterImage(storageKey: string) {
   if (!stat?.isFile() || stat.isSymbolicLink()) throw new Error("OCR source image is unavailable");
   const resolved = await realpath(target);
   assertWithin(root, resolved);
-  return readFile(resolved);
+  const bytes = await readFile(resolved);
+  if (expectedByteSize !== undefined && bytes.length !== expectedByteSize) throw new Error("OCR source image failed size verification");
+  if (expectedSha256 !== undefined && createHash("sha256").update(bytes).digest("hex") !== expectedSha256.toLowerCase()) throw new Error("OCR source image failed SHA-256 verification");
+  return bytes;
 }
 
 export async function registerImageExists(storageKey: string) {

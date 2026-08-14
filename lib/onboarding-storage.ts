@@ -1,12 +1,13 @@
 import { createHash, randomUUID } from "node:crypto";
 import { lstat, mkdir, open, readFile, rm } from "node:fs/promises";
 import path from "node:path";
+import { validatedPrivateStorageRoot } from "@/lib/private-storage-root";
 
 const STORAGE_KEY = /^(?:source|error)\/[a-f0-9]{2}\/[a-f0-9]{2}\/[a-f0-9-]{36}\.xlsx$/;
 export const MAX_ONBOARDING_WORKBOOK_BYTES = 10 * 1024 * 1024;
 
 export function onboardingStorageRoot() {
-  return path.resolve(process.env.ONBOARDING_STORAGE_ROOT?.trim() || path.join(process.cwd(), "storage", "onboarding"));
+  return validatedPrivateStorageRoot(process.env.ONBOARDING_STORAGE_ROOT?.trim() || path.join(process.cwd(), "storage", "onboarding"), "Onboarding private storage");
 }
 
 export async function storeOnboardingWorkbook(bytes: Buffer, kind: "source" | "error" = "source") {

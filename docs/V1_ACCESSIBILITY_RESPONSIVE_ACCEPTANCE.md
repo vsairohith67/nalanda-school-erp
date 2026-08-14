@@ -1,0 +1,7 @@
+# V1 Accessibility and Responsive Acceptance
+
+V1 acceptance retains the existing semantic labels, keyboard/focus guards, accessible modal behavior, reduced layout overflow and private error handling. Representative final in-app Browser evidence covered desktop and exact `390x844`, light/dark themes, login, the Super Admin dashboard, release-readiness, Parent linked-child/read-only context, Teacher exact-scope behavior, and Parent/Viewer privileged-route denial.
+
+The first Teacher `/teacher/classwork` probe exposed a production Server Component error when permission existed but no active timetable scope was linked. The page now catches only the expected `TEACHER_SCOPE_MISSING` and `TEACHER_SCOPE_EMPTY` access codes and renders a labelled fail-closed empty state; API and mutation authorization remain unchanged. The rebuilt production runtime passed the same path at desktop and exact `390x844` with no horizontal overflow.
+
+Automated/source checks and the final Browser batch confirmed accessible naming, a visible two-pixel keyboard focus outline, contained mobile cards/tables, no native dialog dependency, no final hydration/console warning or error, and zero page-level horizontal overflow. The production runtime was stopped, the viewport override reset, all tabs closed, and the copied database/credentials removed twice. Browser evidence is synthetic and local only; assistive-technology certification and public-device fleet support remain separate operational validation.

@@ -89,7 +89,7 @@ The planning audit is complete, but the school must **not switch everyone from S
 
 - Management, Parent, Principal and Accountant can be considered only for small, supervised pilots that use features Nalanda already has.
 - Teachers must not be cut over yet. The current attendance page can be permission-enabled without limiting the Teacher to the exact class and section assigned in the timetable.
-- The first future build is Prompt 23C, after a separate QA review, to fix only that Teacher attendance scope.
+- **Dated update — 2026-08-14:** Prompt 23C and its independent QA later cleared the Teacher attendance scope. The original “first future build” note is superseded; use the current Requirements Register and V1 final checklists for release status.
 - Keep live hosting, DNS, payment, external backup and monitoring off until the separate paid/provider deployment gates are approved.
 - FIN-2A finance privacy/export/receipt integrity and FIN-2B Accountant final-receipt governance are cleared. An Accountant needs the exact permission, every successful cancellation/correction is audited and notifies active Directors/Super Admins, financial correction cancels/reissues instead of overwriting, and a locked day cannot be silently rewritten. Payroll, refunds, live payment gateway, transport/GPS and Schoolknot migration are not approved by this document. No FIN-2C scope is currently approved.
 
@@ -945,7 +945,7 @@ Prompt 21B/21C/21D are still blocked. Do not add Student addresses, coordinates,
 
 ## Schoolknot Management audit operator note
 
-The Management audit and its independent reconciliation QA are complete, with result `MANAGEMENT_RECONCILIATION_CLEARED` for Management only. The full Schoolknot replacement audit is not complete: Parent, Teacher and Principal checks are still pending. No new Admissions, payroll, transport, events, submission, discipline or cafeteria module was added. Continue using the current authorised Nalanda workflows and the approved interim Schoolknot/manual process for any missing operation.
+The Management audit and its independent reconciliation QA were completed with result `MANAGEMENT_RECONCILIATION_CLEARED`. **Dated update — 2026-08-14:** later governed role audits and Prompts 23C–23I supersede the historical “Parent, Teacher and Principal pending” statement. Use the current Requirements Register for role/workflow status. Transport and cafeteria remain later scope, and deployment/live operation remains separately gated.
 
 Do not download Schoolknot exports, copy personal values, enter credentials into documents, switch on a live provider, or make bulk changes for this planning phase. Management/developer reconciliation details are in `SCHOOLKNOT_MANAGEMENT_REPLACEMENT_MATRIX.md` and `SCHOOLKNOT_MANAGEMENT_RECONCILIATION_QA_REPORT.md`; operators do not need to duplicate that backlog here. Prompt 21B/21C/21D remain blocked, and Prompt 22B must not be started.
 

@@ -1,5 +1,7 @@
 # Schoolknot Gap Implementation Roadmap: Prompt 23C Onward
 
+> **Current-state supersession — 2026-08-14:** This roadmap is retained as historical planning evidence. Prompts 23C through 23I, the corrected Classes I-X report-card acceptance, Support, Safe Exit, Observability, governed bulk onboarding and Release Operations are locally/private cleared in later governed release evidence. The former Teacher `NO_GO` and “23C next” statements below no longer describe the current product state. See `docs/REQUIREMENTS_REGISTER.md` and `docs/V1_FINAL_REQUIREMENTS_CLOSURE_LEDGER.md`; deployment and real-operation gates remain closed.
+
 ## Current report-card forward-roadmap amendment — 2026-08-12
 
 Classes I-X calibration and physical print acceptance remains a V1 gate. The user confirmed the correction register complete, and R5 now provides a small Classes I-X-only digital-review pack plus separate edge-case evidence. Physical-pack regeneration and printing remain paused until user visual approval. KG/LKG/UKG is a preserved, default-off V1.5 foundation and is excluded from V1 release-candidate completeness. The superseded R4.2 packs must not be printed. No merge, tag, deployment or real report publication is authorised by this roadmap amendment.

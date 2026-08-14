@@ -1,5 +1,23 @@
 # Documentation Index
 
+## V1-FINAL-1A final integration and release-candidate preparation
+
+- [Final Requirements Closure Ledger](V1_FINAL_REQUIREMENTS_CLOSURE_LEDGER.md)
+- [Cross-Module Integration Report](V1_CROSS_MODULE_INTEGRATION_REPORT.md)
+- [Role, Permission and Object-Scope Matrix](V1_ROLE_PERMISSION_OBJECT_SCOPE_MATRIX.md)
+- [Security Acceptance Report](V1_SECURITY_ACCEPTANCE_REPORT.md)
+- [Performance and Capacity Report](V1_PERFORMANCE_CAPACITY_REPORT.md)
+- [Accessibility and Responsive Acceptance](V1_ACCESSIBILITY_RESPONSIVE_ACCEPTANCE.md)
+- [Backup, Restore and Migration Acceptance](V1_BACKUP_RESTORE_MIGRATION_ACCEPTANCE.md)
+- [Release-Candidate Manifest](V1_RELEASE_CANDIDATE_MANIFEST.md)
+- [Known Limitations and Deferrals](V1_KNOWN_LIMITATIONS_AND_DEFERRALS.md)
+- [Staging Entry Checklist](V1_STAGING_ENTRY_CHECKLIST.md)
+- [Real-Data Onboarding Checklist](V1_REAL_DATA_ONBOARDING_CHECKLIST.md)
+- [Training and Pilot Plan](V1_TRAINING_AND_PILOT_PLAN.md)
+- [Production Cutover Gate](V1_PRODUCTION_CUTOVER_GATE.md)
+
+This local/private acceptance reconciles the corrected V1 ledger, closes cross-module and security gaps, adds an exact representative-scale copied-data profile, and preserves all deployment, provider, real-data and real-user activation gates. Independent `V1-FINAL-1A-QA` remains required before merge/tag and does not authorize staging or production.
+
 ## REPORT-PRINT-ACCEPT-1A Classes I-X print acceptance and release closure
 
 - [V1 Classes I-X / V1.5 KG Scope Amendment and Frozen Correction Register](REPORT_CARD_V1_SCOPE_AMENDMENT.md)

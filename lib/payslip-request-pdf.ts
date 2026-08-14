@@ -133,11 +133,13 @@ function rejectUnsafePdfObjects(bytes: Buffer) {
 
 async function validatedQpdfExecutable() {
   const configured = process.env.QPDF_EXECUTABLE_PATH?.trim();
-  if (!configured || !path.isAbsolute(configured)) throw new PayslipPdfError("The reviewed PDF protection utility is unavailable.", 503, "PDF_PROTECTION_UNAVAILABLE");
+  const expectedSha256 = process.env.QPDF_EXECUTABLE_SHA256?.trim().toLowerCase();
+  if (!configured || !path.isAbsolute(configured) || !expectedSha256 || !/^[a-f0-9]{64}$/.test(expectedSha256)) throw new PayslipPdfError("The reviewed PDF protection utility and pinned SHA-256 identity are unavailable.", 503, "PDF_PROTECTION_UNAVAILABLE");
   const resolved = path.resolve(configured);
   const stat = await lstat(resolved).catch(() => null);
   if (!stat?.isFile() || stat.isSymbolicLink()) throw new PayslipPdfError("The reviewed PDF protection utility is unavailable.", 503, "PDF_PROTECTION_UNAVAILABLE");
   await assertNoSymlinkPath(path.dirname(resolved));
+  if (sha256(await readFile(resolved)) !== expectedSha256) throw new PayslipPdfError("The reviewed PDF protection utility failed SHA-256 identity verification.", 503, "PDF_PROTECTION_UNAVAILABLE");
   const version = await runQpdf(resolved, ["--version"]);
   const match = /qpdf version (\d+)\.(\d+)\.(\d+)/i.exec(version.stdout);
   if (!match || Number(match[1]) < 11 || Number(match[1]) === 11 && Number(match[2]) < 7) {

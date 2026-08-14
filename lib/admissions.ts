@@ -21,6 +21,10 @@ export class AdmissionError extends Error {
 
 export type PublicEnquiryInput = ReturnType<typeof validatePublicEnquiry>;
 
+export async function publicAdmissionIntakeAvailable(client: PrismaClient, now = new Date()) {
+  return await client.admissionEvent.count({ where: { eventType: "PUBLIC_ENQUIRY_ACCEPTED", eventDate: { gte: new Date(now.getTime() - 15 * 60_000) } } }) < 100;
+}
+
 export function validatePublicEnquiry(input: unknown) {
   const body = object(input);
   rejectUnknown(body, ENQUIRY_FIELDS);
@@ -46,8 +50,12 @@ export function validatePublicEnquiry(input: unknown) {
 export async function createPublicEnquiry(client: PrismaClient, input: PublicEnquiryInput, requestEvidence: string) {
   if (input.honeypot || !input.consent) return { accepted: true };
   const requestHash = keyedHash(`public|${requestEvidence}`);
-  const recent = await client.admissionEvent.count({ where: { requestHash, eventType: "PUBLIC_ENQUIRY_ACCEPTED", eventDate: { gte: new Date(Date.now() - 15 * 60_000) } } });
-  if (recent >= 5) return { accepted: true };
+  const since = new Date(Date.now() - 15 * 60_000);
+  const [recent, globalRecent] = await Promise.all([
+    client.admissionEvent.count({ where: { requestHash, eventType: "PUBLIC_ENQUIRY_ACCEPTED", eventDate: { gte: since } } }),
+    client.admissionEvent.count({ where: { eventType: "PUBLIC_ENQUIRY_ACCEPTED", eventDate: { gte: since } } })
+  ]);
+  if (recent >= 5 || globalRecent >= 100) return { accepted: true };
   const publicRequestHash = keyedHash([input.requestKey, input.contactMethod, input.contactValue, input.desiredAcademicYear, input.desiredClass].join("|"));
   const existing = await client.admissionEnquiry.findUnique({ where: { publicRequestHash }, select: { enquiryNumber: true } });
   if (existing) return { accepted: true };

@@ -165,6 +165,13 @@ async function main() {
       client.student.create({ data: { admissionNo: `IAM1AQA-${process.pid}-002`, studentName: "IAM1AQA Linked Child Two", fatherName: "Synthetic", className: "II", phone1: "0000000000" } }),
       client.student.create({ data: { admissionNo: `IAM1AQA-${process.pid}-003`, studentName: "IAM1AQA Unrelated Child", fatherName: "Synthetic", className: "III", phone1: "0000000000" } })
     ]);
+    await client.academicYearEnrollment.createMany({ data: students.map((student) => ({
+      studentId: student.id,
+      academicYear: "2026-27",
+      className: student.className,
+      section: student.section,
+      status: "ACTIVE"
+    })) });
     await client.studentGuardian.createMany({ data: [
       { guardianId: guardians[0].id, studentId: students[0].id, isPrimaryContact: true },
       { guardianId: guardians[1].id, studentId: students[0].id, isPrimaryContact: true },
@@ -316,18 +323,18 @@ async function main() {
     let directorWithoutDelegationDenied = false;
     try { await mutateNamedUser(client, actor(associateDirector), temporary.handle, { action: "SUSPEND", expectedVersion: temporaryRow.version, reason: REASON, reauthPassword: associateDirector.password }); } catch { directorWithoutDelegationDenied = true; }
     invariant(directorWithoutDelegationDenied, "IAM1AQA_DIRECTOR_WITHOUT_DELEGATION_ALLOWED");
-    await client.userPermissionOverride.create({ data: { publicKey: randomUUID(), userId: principal.user.id, permission: "MANAGE_IAM_USERS", effect: "ALLOW", reason: REASON, createdByUserId: superOne.user.id, activeKey: `${principal.user.id}:MANAGE_IAM_USERS` } });
+    await client.userPermissionOverride.create({ data: { publicKey: randomUUID(), userId: principal.user.id, permission: "MANAGE_IAM_USERS", effect: "ALLOW", validFrom: new Date(Date.now() - 1_000), reason: REASON, createdByUserId: superOne.user.id, activeKey: `${principal.user.id}:MANAGE_IAM_USERS` } });
     await mutateNamedUser(client, actor(principal), teacherA.user.iamPublicKey!, { action: "SUSPEND", expectedVersion: teacherA.user.version, reason: REASON, reauthPassword: principal.password });
     const suspendedTeacher = await client.user.findUniqueOrThrow({ where: { id: teacherA.user.id } });
     invariant(suspendedTeacher.lifecycleStatus === "SUSPENDED", "IAM1AQA_PRINCIPAL_BOUNDARY_FAILED");
     await mutateNamedUser(client, actor(superOne), suspendedTeacher.iamPublicKey!, { action: "REACTIVATE", expectedVersion: suspendedTeacher.version, reason: REASON, reauthPassword: superOne.password });
-    await client.userPermissionOverride.create({ data: { publicKey: randomUUID(), userId: computerOperator.user.id, permission: "MANAGE_IAM_USERS", effect: "ALLOW", reason: REASON, createdByUserId: superOne.user.id, activeKey: `${computerOperator.user.id}:MANAGE_IAM_USERS` } });
+    await client.userPermissionOverride.create({ data: { publicKey: randomUUID(), userId: computerOperator.user.id, permission: "MANAGE_IAM_USERS", effect: "ALLOW", validFrom: new Date(Date.now() - 1_000), reason: REASON, createdByUserId: superOne.user.id, activeKey: `${computerOperator.user.id}:MANAGE_IAM_USERS` } });
     let operatorAdminDenied = false;
     try { await createNamedUser(client, actor(computerOperator), { name: "IAM1AQA Operator Admin", username: `iam1aqa-operator-admin-${process.pid}`, roles: ["ADMIN"], activationMethod: "PENDING", reason: REASON, reauthPassword: computerOperator.password }); } catch { operatorAdminDenied = true; }
     invariant(operatorAdminDenied, "IAM1AQA_COMPUTER_OPERATOR_ADMIN_ESCALATION");
     await client.userPermissionOverride.createMany({ data: [
-      { publicKey: randomUUID(), userId: accountant.user.id, permission: "MANAGE_IAM_USERS", effect: "ALLOW", reason: REASON, createdByUserId: superOne.user.id, activeKey: `${accountant.user.id}:MANAGE_IAM_USERS` },
-      { publicKey: randomUUID(), userId: accountant.user.id, permission: "MANAGE_USER_PERMISSION_OVERRIDES", effect: "ALLOW", reason: REASON, createdByUserId: superOne.user.id, activeKey: `${accountant.user.id}:MANAGE_USER_PERMISSION_OVERRIDES` }
+      { publicKey: randomUUID(), userId: accountant.user.id, permission: "MANAGE_IAM_USERS", effect: "ALLOW", validFrom: new Date(Date.now() - 1_000), reason: REASON, createdByUserId: superOne.user.id, activeKey: `${accountant.user.id}:MANAGE_IAM_USERS` },
+      { publicKey: randomUUID(), userId: accountant.user.id, permission: "MANAGE_USER_PERMISSION_OVERRIDES", effect: "ALLOW", validFrom: new Date(Date.now() - 1_000), reason: REASON, createdByUserId: superOne.user.id, activeKey: `${accountant.user.id}:MANAGE_USER_PERMISSION_OVERRIDES` }
     ] });
     let accountantSelfGrantDenied = false;
     try { await mutateNamedUser(client, actor(accountant), accountant.user.iamPublicKey!, { action: "SET_OVERRIDE", permission: "VIEW_PAYMENTS", effect: "ALLOW", expectedVersion: accountant.user.version, reason: REASON, reauthPassword: accountant.password }); } catch { accountantSelfGrantDenied = true; }

@@ -161,19 +161,37 @@ async function onboardingCounts(client: PrismaClient) {
 }
 
 async function runStressBatch(client: PrismaClient, actor: IamActor) {
+  const profile = process.env.IMPORT1A_SCALE_PROFILE === "V1_FINAL"
+    ? { name: "V1_FINAL", students: 800, guardians: 1200, staff: 80, teachers: 45, enrollmentsPerStudent: 2 }
+    : { name: "LEGACY_STRESS", students: 1000, guardians: 1500, staff: 100, teachers: 100, enrollmentsPerStudent: 1 };
+  if (profile.name === "V1_FINAL") {
+    const academicYears = ["2025-26", "2026-27"], classNames = ["I","II","III","IV","V","VI","VII","VIII","IX","X"], sections = ["A","B","C","D"];
+    for (const academicYear of academicYears) for (const className of classNames) for (const section of sections) await client.timetableClassSection.upsert({
+      where: { academicYear_className_section: { academicYear, className, section } },
+      create: { academicYear, className, section, displayName: `${className} ${section} ${academicYear}`, groupName: "V1_FINAL_SYNTHETIC", isActive: true },
+      update: { isActive: true }
+    });
+    await client.staffMember.create({ data: { staffCode: `${PREFIX}-NONTEACHING-REF`, fullName: `${PREFIX} Non-teaching Reference`, staffType: "NON_TEACHING", designation: "Office Assistant", department: "Administration", status: "ACTIVE" } });
+  }
   const before = await businessCounts(client);
-  const bytes = stressWorkbook();
+  const bytes = stressWorkbook(profile);
   const stored = await storeOnboardingWorkbook(bytes);
   const batch = await client.onboardingBatch.create({ data: { bundleType: "COMBINED", uploadedByUserId: actor.user.id, originalFileNameHash: sha256(`${PREFIX}-STRESS`), storageKey: stored.storageKey, workbookSha256: stored.sha256, mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", byteSize: bytes.length, templateVersion: "1.0", schemaVersion: "IMPORT-1A-2026-08-10", purgeAfter: new Date(Date.now() + 24 * 60 * 60 * 1000), auditEvents: { create: { sequence: 1, eventType: "UPLOADED", newStatus: "UPLOADED", actorUserId: actor.user.id, evidenceHash: stored.sha256 } } } });
   const planned = await validateStoredBatch(client, batch.publicKey, actor.user.id);
-  invariant(planned.status === "APPROVAL_REQUIRED" && planned.plan?.estimatedExecutionSize === 4600 && planned.plan?.blockingErrorCount === 0, "IMPORT1A_STRESS_PLAN_INVALID");
+  const expectedOutcomes = profile.students + profile.guardians + profile.staff + profile.students + profile.students * profile.enrollmentsPerStudent;
+  const issueCodes = Object.entries((planned.issues ?? []).reduce((counts: Record<string, number>, issue: any) => ({ ...counts, [issue.code]: (counts[issue.code] ?? 0) + 1 }), {})).sort((a,b) => b[1] - a[1]).slice(0, 8);
+  invariant(planned.status === "APPROVAL_REQUIRED" && planned.plan?.estimatedExecutionSize === expectedOutcomes && planned.plan?.blockingErrorCount === 0, `IMPORT1A_STRESS_PLAN_INVALID:${JSON.stringify({ status: planned.status, estimatedExecutionSize: planned.plan?.estimatedExecutionSize, blockingErrorCount: planned.plan?.blockingErrorCount, expectedOutcomes, issueCodes })}`);
   const approved = await approveOnboardingBatch(client, batch.publicKey, actor, approvalInput(planned));
   const input = { reason: "Copied database specified scale execution proof", reauthPassword: QA_PASSWORD, planHash: String(approved.planHash), workbookHash: approved.workbookHash, idempotencyKey: `${PREFIX.replaceAll("-", "")}STRESS001` };
   const startedAt = Date.now();
   const executed = await executeOnboardingBatch(client, batch.publicKey, actor, input);
-  invariant(executed.result?.students === 1000 && executed.result?.guardians === 1500 && executed.result?.staff === 100 && executed.result?.links === 1000 && executed.result?.enrollments === 1000, "IMPORT1A_STRESS_EXECUTION_COUNTS_INVALID");
+  invariant(executed.result?.students === profile.students && executed.result?.guardians === profile.guardians && executed.result?.staff === profile.staff && executed.result?.links === profile.students && executed.result?.enrollments === profile.students * profile.enrollmentsPerStudent, "IMPORT1A_STRESS_EXECUTION_COUNTS_INVALID");
   const outcomes = await client.onboardingRowOutcome.count({ where: { batchId: batch.id, status: "COMPLETED" } });
-  invariant(outcomes === 4600, "IMPORT1A_STRESS_LINEAGE_COUNT_INVALID");
+  invariant(outcomes === expectedOutcomes, "IMPORT1A_STRESS_LINEAGE_COUNT_INVALID");
+  const cohorts = await client.academicYearEnrollment.findMany({ where: { student: { admissionNo: { startsWith: `${PREFIX}-STRESS-ADM-` } } }, select: { academicYear: true, className: true, section: true }, distinct: ["academicYear", "className", "section"] });
+  const teachers = await client.staffMember.count({ where: { staffCode: { startsWith: `${PREFIX}-STRESS-EMP-` }, staffType: "TEACHING", designation: "Teacher" } });
+  const siblingGroups = (await client.studentGuardian.groupBy({ by: ["guardianId"], where: { student: { admissionNo: { startsWith: `${PREFIX}-STRESS-ADM-` } } }, _count: { studentId: true } })).map((row) => row._count.studentId);
+  if (profile.name === "V1_FINAL") invariant(cohorts.length === 80 && teachers === 45 && [2,3,4].every((count) => siblingGroups.includes(count)), "IMPORT1A_V1_FINAL_SCALE_SHAPE_INVALID");
   const after = await businessCounts(client);
   await executeOnboardingBatch(client, batch.publicKey, actor, input);
   invariant(JSON.stringify(await businessCounts(client)) === JSON.stringify(after), "IMPORT1A_STRESS_REPLAY_CHANGED_COUNTS");
@@ -181,17 +199,21 @@ async function runStressBatch(client: PrismaClient, actor: IamActor) {
   invariant(preview.eligible, "IMPORT1A_STRESS_ROLLBACK_PREVIEW_BLOCKED");
   await rollbackOnboardingBatch(client, batch.publicKey, actor, { reason: "Copied database specified scale exact rollback", reauthPassword: QA_PASSWORD, execute: true });
   invariant(JSON.stringify(await businessCounts(client)) === JSON.stringify(before), "IMPORT1A_STRESS_ROLLBACK_NOT_EXACT");
-  return { students: 1000, guardians: 1500, staff: 100, links: 1000, enrollments: 1000, outcomes, replay: "IDEMPOTENT", rollback: "EXACT", elapsedMs: Date.now() - startedAt };
+  return { profile: profile.name, students: profile.students, guardians: profile.guardians, staff: profile.staff, teachers, links: profile.students, enrollments: profile.students * profile.enrollmentsPerStudent, academicYears: profile.enrollmentsPerStudent, cohorts: cohorts.length, siblingGuardianGroups: [2,3,4], outcomes, replay: "IDEMPOTENT", rollback: "EXACT", elapsedMs: Date.now() - startedAt };
 }
 
-function stressWorkbook() {
-  const generated = generateOnboardingTemplate({ bundle: "COMBINED", generatedAt: new Date("2026-08-10T13:00:00.000Z"), academicYears: ["2026-27"], classes: [{ academicYear: "2026-27", className: "I", section: "A" }], departments: ["Academics"], designations: ["Teacher"] });
+function stressWorkbook(profile: { students: number; guardians: number; staff: number; teachers: number; enrollmentsPerStudent: number }) {
+  const academicYears = profile.enrollmentsPerStudent === 2 ? ["2025-26", "2026-27"] : ["2026-27"];
+  const classNames = ["I","II","III","IV","V","VI","VII","VIII","IX","X"], sections = ["A","B","C","D"];
+  const classes = academicYears.flatMap((academicYear) => classNames.flatMap((className) => sections.map((section) => ({ academicYear, className, section }))));
+  const generated = generateOnboardingTemplate({ bundle: "COMBINED", generatedAt: new Date("2026-08-10T13:00:00.000Z"), academicYears, classes, departments: ["Academics","Administration"], designations: ["Teacher","Office Assistant"] });
   const wb = XLSX.read(generated, { type: "buffer" });
-  const students = Array.from({ length: 1000 }, (_, i) => [`STRESS-STU-${i}`, `${PREFIX}-STRESS-ADM-${i}`, `${PREFIX} Stress Student ${i}`, `${PREFIX} Father ${i}`, `${PREFIX} Mother ${i}`, String(9100000000 + i), "", "2016-01-31", "2026-27", "I", "A", String(i + 1), "ACTIVE", "Synthetic scale QA only", "NO"]);
-  const guardians = Array.from({ length: 1500 }, (_, i) => [`STRESS-GUA-${i}`, `${PREFIX} Stress Guardian ${i}`, "Guardian", String(9000000000 + i), "", "", "MOBILE", "NO", "NO"]);
-  const links = Array.from({ length: 1000 }, (_, i) => [`STRESS-LNK-${i}`, `STRESS-STU-${i}`, `STRESS-GUA-${i}`, "Guardian", "YES", "YES", "YES", "NO"]);
-  const enrollments = Array.from({ length: 1000 }, (_, i) => [`STRESS-ENR-${i}`, `STRESS-STU-${i}`, "2026-27", "I", "A", String(i + 1), "2026-06-01", "ACTIVE", "NO"]);
-  const staff = Array.from({ length: 100 }, (_, i) => [`STRESS-STF-${i}`, `${PREFIX}-STRESS-EMP-${i}`, `${PREFIX} Stress Staff ${i}`, "TEACHING", "Teacher", "Academics", "2026-06-01", "", "", String(9200000000 + i), "TEACHER", "NO", "ACTIVE", "Synthetic scale QA only", "NO"]);
+  const students = Array.from({ length: profile.students }, (_, i) => { const cohort = i % 40, className = classNames[Math.floor(cohort / 4)], section = sections[cohort % 4]; return [`STRESS-STU-${i}`, `${PREFIX}-STRESS-ADM-${i}`, `${PREFIX} Stress Student ${i}`, `${PREFIX} Father ${i}`, `${PREFIX} Mother ${i}`, String(9100000000 + i), "", "2016-01-31", "2026-27", className, section, String(Math.floor(i / 40) + 1), "ACTIVE", "Synthetic scale QA only", "NO"]; });
+  const guardians = Array.from({ length: profile.guardians }, (_, i) => [`STRESS-GUA-${i}`, `${PREFIX} Stress Guardian ${i}`, "Guardian", String(9000000000 + i), "", "", "MOBILE", "NO", "NO"]);
+  const guardianIndex = (studentIndex: number) => studentIndex < 2 ? 0 : studentIndex < 5 ? 1 : studentIndex < 9 ? 2 : studentIndex - 6;
+  const links = Array.from({ length: profile.students }, (_, i) => [`STRESS-LNK-${i}`, `STRESS-STU-${i}`, `STRESS-GUA-${guardianIndex(i)}`, "Guardian", "YES", "YES", "YES", "NO"]);
+  const enrollments = academicYears.flatMap((academicYear, yearIndex) => Array.from({ length: profile.students }, (_, i) => { const cohort = i % 40, className = classNames[Math.floor(cohort / 4)], section = sections[cohort % 4]; return [`STRESS-ENR-${yearIndex}-${i}`, `STRESS-STU-${i}`, academicYear, className, section, String(Math.floor(i / 40) + 1), yearIndex ? "2026-06-01" : "2025-06-01", yearIndex === academicYears.length - 1 ? "ACTIVE" : "INACTIVE", "NO"]; }));
+  const staff = Array.from({ length: profile.staff }, (_, i) => { const teacher = i < profile.teachers; return [`STRESS-STF-${i}`, `${PREFIX}-STRESS-EMP-${i}`, `${PREFIX} Stress Staff ${i}`, teacher ? "TEACHING" : "NON_TEACHING", teacher ? "Teacher" : "Office Assistant", teacher ? "Academics" : "Administration", "2026-06-01", "", "", String(9200000000 + i), teacher ? "TEACHER" : "COMPUTER_OPERATOR", "NO", "ACTIVE", "Synthetic scale QA only", "NO"]; });
   XLSX.utils.sheet_add_aoa(wb.Sheets.Students, students, { origin: "A2" });
   XLSX.utils.sheet_add_aoa(wb.Sheets.Guardians, guardians, { origin: "A2" });
   XLSX.utils.sheet_add_aoa(wb.Sheets["Student-Guardian Links"], links, { origin: "A2" });

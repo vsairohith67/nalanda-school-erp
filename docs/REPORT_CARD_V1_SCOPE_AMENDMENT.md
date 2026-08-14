@@ -1,5 +1,7 @@
 # Report-Card V1 Scope Amendment
 
+> **Acceptance closure — 2026-08-14:** Classes I-X later completed R8 digital and physical colour/native-monochrome/photocopy acceptance under `REPORT_PRINT_ACCEPTANCE_CLEARED`. The pending status and pre-acceptance narrative below are retained as the dated scope-amendment record. KG/LKG/UKG remains preserved, default-off and deferred to V1.5.
+
 **Decision:** `REPORT-PRINT-ACCEPT-1A-SCOPE-AMENDMENT-2026-08-12`<br>
 **Branch:** `reporting/canonical-template-print-acceptance`<br>
 **Status:** R8 final Classes I-X digital review and paused physical candidates generated; physical printing remains paused

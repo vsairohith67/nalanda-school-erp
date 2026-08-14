@@ -41,6 +41,10 @@ async function createUser(client: PrismaClient, username: string, role: string, 
     role,
     isActive
   } });
+  await client.userRoleAssignment.create({ data: {
+    publicKey: randomUUID(), userId: user.id, role, reason: "AUTH2BQA synthetic active role assignment",
+    assignedByUserId: user.id, activeKey: `${user.id}:${role}`, validFrom: new Date(0)
+  } });
   await client.authLoginAlias.create({ data: {
     id: randomUUID(), userId: user.id, type: "USERNAME", normalizedValue: normalized,
     displayMasked: normalized, status: "VERIFIED", isSchoolGoverned: true, verifiedAt: new Date()

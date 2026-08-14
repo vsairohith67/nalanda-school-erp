@@ -3,11 +3,12 @@ import { lstat, mkdir, open, readFile, realpath, rm } from "node:fs/promises";
 import path from "node:path";
 import { decryptPayslipSecret, encryptPayslipSecret, type AuthenticatedEnvelope } from "@/lib/payslip-request-crypto";
 import { PAYSLIP_PDF_MAX_BYTES, PayslipPdfError } from "@/lib/payslip-request-pdf";
+import { validatedPrivateStorageRoot } from "@/lib/private-storage-root";
 
 const STORAGE_KEY = /^(?:source\/[a-f0-9]{2}\/[a-f0-9]{2}\/[a-f0-9-]{36}\.enc|delivery\/[a-f0-9]{2}\/[a-f0-9]{2}\/[a-f0-9-]{36}\.pdf)$/;
 
 export function payslipRequestStorageRoot() {
-  return path.resolve(process.env.PAYSLIP_REQUEST_STORAGE_ROOT?.trim() || path.join(process.cwd(), "storage", "payslip-requests"));
+  return validatedPrivateStorageRoot(process.env.PAYSLIP_REQUEST_STORAGE_ROOT?.trim() || path.join(process.cwd(), "storage", "payslip-requests"), "Payslip-request private storage");
 }
 
 export async function storeEncryptedPayslipSource(bytes: Buffer, documentBinding: string) {

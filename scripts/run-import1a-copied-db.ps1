@@ -1,3 +1,4 @@
+param([switch]$V1FinalScale)
 $ErrorActionPreference = "Stop"
 
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -38,6 +39,10 @@ try {
   $env:DATABASE_URL = "file:$($copyDb.Replace('\','/'))"
   $env:IMPORT1A_RESTORE_DATABASE_URL = "file:$($restoreDb.Replace('\','/'))"
   $env:ONBOARDING_STORAGE_ROOT = $privateRoot
+  if ($V1FinalScale) {
+    $env:IMPORT1A_STRESS = "true"
+    $env:IMPORT1A_SCALE_PROFILE = "V1_FINAL"
+  }
   & (Join-Path $workspace "node_modules\.bin\tsx.cmd") (Join-Path $workspace "scripts\qa-import1a-copied-db.ts")
   if ($LASTEXITCODE -ne 0) { throw "IMPORT1A_COPIED_DATABASE_HARNESS_FAILED" }
 }

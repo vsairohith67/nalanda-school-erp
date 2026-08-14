@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { lstat, mkdir, open, readFile, realpath, rm } from "node:fs/promises";
 import path from "node:path";
+import { validatedPrivateStorageRoot } from "@/lib/private-storage-root";
 import sharp, { type Metadata } from "sharp";
 import { validatePayslipPdf } from "@/lib/payslip-request-pdf";
 
@@ -66,7 +67,7 @@ export async function validateSupportUpload(file: Pick<File, "name" | "type" | "
   return { bytes: output, extension: normalizedExtension, mediaType: expected, safeDisplayName: `Private support attachment${normalizedExtension}`, byteSize: output.length, sha256: digest(output), width: normalizedMetadata.width, height: normalizedMetadata.height, pageCount: null };
 }
 
-export function supportStorageRoot() { return path.resolve(process.env.SUPPORT_PRIVATE_STORAGE_ROOT?.trim() || path.join(process.cwd(), "storage", "support")); }
+export function supportStorageRoot() { return validatedPrivateStorageRoot(process.env.SUPPORT_PRIVATE_STORAGE_ROOT?.trim() || path.join(process.cwd(), "storage", "support"), "Support private storage"); }
 
 export async function storeSupportFile(file: ValidatedSupportFile) {
   const token = randomUUID().toLowerCase();

@@ -60,6 +60,7 @@ describe("SEC-1 runtime security hardening", () => {
     const input = { identifier: "qasec1-victim", source: "direct" };
     for (let index = 0; index < 10; index += 1) await recordLoginFailure(input, index);
     expect((await checkLoginRateLimit(input, 20)).allowed).toBe(false);
+    expect((await checkLoginRateLimit({ identifier: "qasec1-unrelated", source: "direct" }, 20)).allowed).toBe(true);
   });
 
   it("rotates opaque session secrets and stores only a comparable hash", async () => {

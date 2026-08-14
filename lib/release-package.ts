@@ -15,6 +15,9 @@ const FORBIDDEN_DATA_SEGMENT = /(^|\/)(?:backups?|uploads?|private-(?:uploads|as
 const TEXT_SECRET = /(?:-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{20,}|sk_(?:live|test)_[A-Za-z0-9]{16,})/;
 const MAX_FILES = 80_000;
 const MAX_ARTIFACT_BYTES = 1_500_000_000;
+const MAX_ARCHIVE_BYTES = 512 * 1024 * 1024;
+const MAX_ENTRY_BYTES = 256 * 1024 * 1024;
+const MAX_COMPRESSION_RATIO = 250;
 
 export type ReleasePackageInventoryRow = { path: string; bytes: number; sha256: string };
 
@@ -140,9 +143,18 @@ export function buildReleasePackage(input: {
 }
 
 export function verifyReleasePackage(input: { archiveBytes: Buffer; expectedArchiveSha256?: string }) {
+  if (input.archiveBytes.length < 1 || input.archiveBytes.length > MAX_ARCHIVE_BYTES) throw new Error("RELEASE_ARCHIVE_SIZE_LIMIT_EXCEEDED");
   const archiveSha256 = sha256Bytes(input.archiveBytes);
   if (input.expectedArchiveSha256 && archiveSha256 !== input.expectedArchiveSha256.toLowerCase()) throw new Error("RELEASE_ARCHIVE_HASH_MISMATCH");
-  const unzipped = unzipSync(input.archiveBytes);
+  let entryCount = 0, declaredBytes = 0;
+  const unzipped = unzipSync(input.archiveBytes, { filter: (entry) => {
+    entryCount += 1;
+    declaredBytes += entry.originalSize;
+    if (entryCount > MAX_FILES || entry.originalSize < 0 || entry.originalSize > MAX_ENTRY_BYTES || declaredBytes > MAX_ARTIFACT_BYTES) throw new Error("RELEASE_ARCHIVE_EXPANSION_LIMIT_EXCEEDED");
+    if (entry.originalSize > 1_000_000 && entry.size > 0 && entry.originalSize / entry.size > MAX_COMPRESSION_RATIO) throw new Error("RELEASE_ARCHIVE_COMPRESSION_RATIO_REFUSED");
+    safeRelative(entry.name);
+    return true;
+  } });
   const files = new Map<string, Buffer>();
   for (const [name, bytes] of Object.entries(unzipped)) {
     const relative = safeRelative(name); assertAllowed(relative, Buffer.from(bytes)); files.set(relative, Buffer.from(bytes));

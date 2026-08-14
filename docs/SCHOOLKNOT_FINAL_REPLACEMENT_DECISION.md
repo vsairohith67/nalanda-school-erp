@@ -1,5 +1,7 @@
 # Schoolknot Final Replacement Decision
 
+> **Current-state supersession — 2026-08-14:** This decision is retained as the dated Prompt 23B audit conclusion. The Teacher attendance `NO_GO`, “23C first” instruction and other implementation-gap findings below were subsequently addressed through governed Prompts 23C–23I and later release evidence. They are historical findings, not current blockers. Current V1 status is controlled by `docs/REQUIREMENTS_REGISTER.md` and `docs/V1_FINAL_REQUIREMENTS_CLOSURE_LEDGER.md`; operational cutover remains separately gated.
+
 Decision: `REPLACEMENT_BUILD_CONTINUES_CUTOVER_NOT_READY`
 
 Date: **26 July 2026**

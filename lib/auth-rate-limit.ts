@@ -90,10 +90,12 @@ async function loginBucketIdentity(input: LoginRateLimitInput) {
     sha256(input.identifier.trim().toLowerCase()),
     sha256(input.source)
   ]);
-  // The account/source pair prevents one source from repeatedly attacking one
-  // identifier. The source bucket also bounds broad identifier spraying. A
-  // deployment behind a proxy must opt into only sanitized single-hop headers.
-  const blockingKeys = [`account-source:${accountHash}:${sourceHash}`, `source:${sourceHash}`];
+  // Direct mode has no trustworthy client distinction, so a global source
+  // lockout would let one caller deny login to every unrelated account. Keep
+  // the per-account control there; only enforce source-wide spraying limits
+  // when a configured sanitized proxy supplies a distinct source.
+  const blockingKeys = [`account-source:${accountHash}:${sourceHash}`];
+  if (input.source !== "direct") blockingKeys.push(`source:${sourceHash}`);
   return { accountHash, sourceHash, blockingKeys };
 }
 

@@ -108,7 +108,7 @@ async function prepareRequest(client: PrismaClient, plan: FixturePlan, requestKe
 }
 
 async function main() {
-  if (!process.env.QPDF_EXECUTABLE_PATH || !path.isAbsolute(process.env.QPDF_EXECUTABLE_PATH)) throw new Error("PAYSLIPREQ1QA_REQUIRES_FIXED_QPDF_PATH");
+  if (!process.env.QPDF_EXECUTABLE_PATH || !path.isAbsolute(process.env.QPDF_EXECUTABLE_PATH) || !/^[a-f0-9]{64}$/i.test(process.env.QPDF_EXECUTABLE_SHA256 ?? "")) throw new Error("PAYSLIPREQ1QA_REQUIRES_FIXED_QPDF_PATH_AND_SHA256");
   const before = { sha256: fileSha256(operational), size: statSync(operational).size };
   cleanup(); mkdirSync(checkedRoot(), { recursive: true }); copyFileSync(operational, qaDatabase); copyFileSync(operational, restoreDatabase); migrate(qaDatabase); migrate(qaDatabase); migrate(restoreDatabase); migrate(restoreDatabase);
   process.env.PAYSLIP_REQUEST_STORAGE_ROOT = storageRoot;

@@ -8,7 +8,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ pageId
   const page = await prisma.feeRegisterOcrPage.findUnique({ where: { id: (await params).pageId } });
   if (!page || ["PURGED", "MISSING_SOURCE"].includes(page.status)) return NextResponse.json({ error: "OCR source image is unavailable" }, { status: 404, headers: privateHeaders() });
   try {
-    const bytes = await readRegisterImage(page.storageKey);
+    const bytes = await readRegisterImage(page.storageKey, page.sourceSha256, page.byteSize);
     return new NextResponse(bytes, { headers: { ...privateHeaders(), "Content-Type": page.mimeType, "Content-Length": String(bytes.length), "Content-Security-Policy": "default-src 'none'; sandbox" } });
   } catch {
     return NextResponse.json({ error: "OCR source image is unavailable" }, { status: 404, headers: privateHeaders() });

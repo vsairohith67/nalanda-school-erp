@@ -30,8 +30,9 @@ async function setup() {
   cleanup(); mkdirSync(checkedRoot(), { recursive: true }); copyFileSync(operational, database);
   const secret = randomBytes(48).toString("base64url"), qaLoginCredential = `${randomBytes(18).toString("base64url")}Aa1!`, origin = `http://localhost:${port}`;
   const qpdf = process.env.QPDF_EXECUTABLE_PATH;
+  const qpdfSha256 = process.env.QPDF_EXECUTABLE_SHA256;
   if (!qpdf || !path.isAbsolute(qpdf)) throw new Error("PAYSLIPREQ1_BROWSER_REQUIRES_FIXED_QPDF_PATH");
-  const runtimeEnvironment: NodeJS.ProcessEnv = { NODE_ENV: "production", DATABASE_URL: databaseUrl(database), SESSION_SECRET: secret, AUTH_SECRET: secret, APP_ORIGIN: origin, PORT: String(port), QPDF_EXECUTABLE_PATH: qpdf, PAYSLIP_REQUEST_STORAGE_ROOT: path.join(root, "storage"), PAYSLIP_REQUEST_TEMP_ROOT: path.join(root, "processing"), PAYSLIP_REQUEST_KEYRING_JSON: JSON.stringify({ active: "QA_V1", keys: { QA_V1: randomBytes(32).toString("base64") } }) };
+  const runtimeEnvironment: NodeJS.ProcessEnv = { NODE_ENV: "production", DATABASE_URL: databaseUrl(database), SESSION_SECRET: secret, AUTH_SECRET: secret, APP_ORIGIN: origin, PORT: String(port), QPDF_EXECUTABLE_PATH: qpdf, QPDF_EXECUTABLE_SHA256: qpdfSha256, PAYSLIP_REQUEST_STORAGE_ROOT: path.join(root, "storage"), PAYSLIP_REQUEST_TEMP_ROOT: path.join(root, "processing"), PAYSLIP_REQUEST_KEYRING_JSON: JSON.stringify({ active: "QA_V1", keys: { QA_V1: randomBytes(32).toString("base64") } }) };
   const environment: NodeJS.ProcessEnv = { ...process.env, ...runtimeEnvironment };
   migrate(environment);
   const pdf = await PDFDocument.create();
