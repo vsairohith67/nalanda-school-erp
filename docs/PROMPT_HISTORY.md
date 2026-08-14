@@ -1,5 +1,11 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## V1-FINAL-1A-QA — independent V1 release-candidate acceptance (2026-08-14)
+
+Independent QA inspected the complete retained-branch diff, rebuilt a fresh `V1FINALQA` school from all 18 migrations, proved schema equivalence, restore/replay/cleanup and the exact 800-Student profile, then repeated the Auth/IAM, finance, admissions, academic/calendar/reporting, payslip, support, Safe Exit, release-operations and private-file gates. The bounded profile recorded zero errors and zero SQLite busy failures well inside the local 2 s/3 s/5 s budgets.
+
+The production dependency audit was cleared with patched pinned dependencies. The full post-correction suite passes 216 files / 1,916 tests with zero qpdf skips under an independently verified temporary qpdf 12.3.2 runtime; production build, migration, backup/restore, release packaging and Git safety pass. Final in-app Browser QA at exact 390x844 and desktop verified role denials, Parent linked-child switching, Teacher/Parent context separation, light/dark, 44 px targets, visible focus, zero overflow, PWA private-cache boundaries and zero console warnings/errors. The approved result permits only a fast-forward merge and annotated `nalanda-erp-v1-rc1-v41-2026-08-14` tag. No staging deployment, real data, real users, live providers, DNS, training, pilot or production cutover is authorised.
+
 ## V1-FINAL-1A — final cross-module integration and release-candidate preparation (2026-08-14)
 
 The corrected 24-row V1 ledger now contains only `CLEARED`, `CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING` and one preserved `SUPERSEDED` historical row; no V1 product row remains partial, missing, unknown, planned or in progress. Repository-wide Standard security scan `c24f4641-457a-478e-b564-92eeea269413` validated two High and six Medium baseline findings. The retained release branch closes all eight through durable backup-key requirements, pinned qpdf identity, parsed/re-serialized PDF rejection, trusted-source/global public quotas, private-root exclusion, OCR byte/hash verification, ZIP expansion bounds and direct-login account isolation.

@@ -114,18 +114,30 @@ async function setup() {
     ] });
     const teacherParent = await createUser(client, { username: "iam1aqa-browser-teacher-parent", name: "IAM1AQA Browser Teacher Parent", designation: "Teacher and Parent", roles: ["TEACHER", "PARENT"], guardianId: teacherGuardian.id, password });
     await createUser(client, { username: "iam1aqa-browser-parent", name: "IAM1AQA Browser Multi Child Parent", designation: "Parent", roles: ["PARENT"], guardianId: parentGuardian.id, password });
+    const principal = await createUser(client, { username: "iam1aqa-browser-principal", name: "IAM1AQA Browser Principal", designation: "Principal", roles: ["PRINCIPAL"], password });
+    const accountant = await createUser(client, { username: "iam1aqa-browser-accountant", name: "IAM1AQA Browser Accountant", designation: "Accountant", roles: ["ACCOUNTANT"], password });
+    const computerOperator = await createUser(client, { username: "iam1aqa-browser-operator", name: "IAM1AQA Browser Computer Operator", designation: "Computer Operator", roles: ["COMPUTER_OPERATOR"], password });
+    const gate = await createUser(client, { username: "iam1aqa-browser-gate", name: "IAM1AQA Browser Gate Staff", designation: "Gate Staff", roles: ["GATE_STAFF"], password });
+    const student = await createUser(client, { username: "iam1aqa-browser-student", name: "IAM1AQA Browser Student", designation: "Student", roles: ["STUDENT"], password });
+    await client.authLoginAlias.create({ data: { userId: student.user.id, type: "ADMISSION_NUMBER", normalizedValue: students[0].admissionNo.toLowerCase(), displayMasked: "***-001", status: "VERIFIED", isSchoolGoverned: true, admissionStudentId: students[0].id, verifiedAt: new Date() } });
     await client.staffMember.create({ data: { iamPublicKey: randomUUID(), staffCode: "IAM1AQA-BROWSER-TP", fullName: "IAM1AQA Browser Teacher Parent", designation: "Teacher", userId: teacherParent.user.id } });
 
     writeFileSync(CREDENTIALS, JSON.stringify({
       superAdmin: { username: superAdmin.user.username, password },
       director: { username: director.user.username, password },
+      principal: { username: principal.user.username, password },
+      accountant: { username: accountant.user.username, password },
+      computerOperator: { username: computerOperator.user.username, password },
+      gate: { username: gate.user.username, password },
+      student: { username: student.user.username, password },
+      viewer: { username: viewer.user.username, password },
       teacherParent: { username: teacherParent.user.username, password },
       parent: { username: "iam1aqa-browser-parent", password }
     }));
     writeFileSync(RUNTIME_ENV, JSON.stringify({ DATABASE_URL: databaseUrl(DATABASE), SESSION_SECRET: secret, AUTH_SECRET: secret, APP_ORIGIN: "http://127.0.0.1:3217", NODE_ENV: "production", PORT: "3217" }));
     const operationalAfter = { sha256: fileSha256(OPERATIONAL_DATABASE), size: statSync(OPERATIONAL_DATABASE).size };
     if (JSON.stringify(operationalBefore) !== JSON.stringify(operationalAfter)) throw new Error("IAM1AQA_BROWSER_OPERATIONAL_DATABASE_CHANGED");
-    console.log(JSON.stringify({ result: "IAM1AQA_BROWSER_FIXTURES_READY", users: 6, profiles: 1, children: 3, copiedDatabase: true }));
+    console.log(JSON.stringify({ result: "IAM1AQA_BROWSER_FIXTURES_READY", users: 11, profiles: 1, children: 3, copiedDatabase: true }));
   } finally {
     await client.$disconnect();
   }

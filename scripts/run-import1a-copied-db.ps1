@@ -1,4 +1,9 @@
-param([switch]$V1FinalScale)
+param(
+  [switch]$V1FinalScale,
+  [switch]$Fresh,
+  [ValidatePattern('^[A-Z0-9_-]+$')]
+  [string]$FixturePrefix = "IMPORT1A"
+)
 $ErrorActionPreference = "Stop"
 
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -14,9 +19,9 @@ $privateFolder = Join-Path $qaRoot "private-import1a"
 New-Item -ItemType Directory -Force -Path $copyFolder, $restoreFolder, $privateFolder | Out-Null
 
 $stamp = Get-Date -Format "yyyyMMddHHmmssfff"
-$copyDb = [System.IO.Path]::GetFullPath((Join-Path $copyFolder "IMPORT1A-$stamp.db"))
-$restoreDb = [System.IO.Path]::GetFullPath((Join-Path $restoreFolder "IMPORT1A-$stamp.db"))
-$privateRoot = [System.IO.Path]::GetFullPath((Join-Path $privateFolder "IMPORT1A-$stamp"))
+$copyDb = [System.IO.Path]::GetFullPath((Join-Path $copyFolder "$FixturePrefix-$stamp.db"))
+$restoreDb = [System.IO.Path]::GetFullPath((Join-Path $restoreFolder "$FixturePrefix-$stamp.db"))
+$privateRoot = [System.IO.Path]::GetFullPath((Join-Path $privateFolder "$FixturePrefix-$stamp"))
 $targets = @($copyDb, $restoreDb, $privateRoot)
 foreach ($target in $targets) {
   if (-not $target.StartsWith($qaRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -24,8 +29,12 @@ foreach ($target in $targets) {
   }
 }
 
-Copy-Item -LiteralPath $sourceDb -Destination $copyDb
-Copy-Item -LiteralPath $sourceDb -Destination $restoreDb
+if (-not $Fresh) {
+  Copy-Item -LiteralPath $sourceDb -Destination $copyDb
+  Copy-Item -LiteralPath $sourceDb -Destination $restoreDb
+} else {
+  New-Item -ItemType File -Force -Path $copyDb, $restoreDb | Out-Null
+}
 
 try {
   $env:DATABASE_URL = "file:$($copyDb.Replace('\','/'))"
@@ -39,6 +48,7 @@ try {
   $env:DATABASE_URL = "file:$($copyDb.Replace('\','/'))"
   $env:IMPORT1A_RESTORE_DATABASE_URL = "file:$($restoreDb.Replace('\','/'))"
   $env:ONBOARDING_STORAGE_ROOT = $privateRoot
+  $env:IMPORT1A_FIXTURE_PREFIX = $FixturePrefix
   if ($V1FinalScale) {
     $env:IMPORT1A_STRESS = "true"
     $env:IMPORT1A_SCALE_PROFILE = "V1_FINAL"

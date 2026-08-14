@@ -11,7 +11,7 @@ import type { IamActor } from "../lib/iam/security";
 
 const RESTORE_URL = process.env.IMPORT1A_RESTORE_DATABASE_URL;
 const QA_PASSWORD = process.env.IMPORT1A_QA_PASSWORD || "Import1a-QA-Only!2026";
-const PREFIX = `IMPORT1A-${Date.now()}`;
+const PREFIX = `${process.env.IMPORT1A_FIXTURE_PREFIX || "IMPORT1A"}-${Date.now()}`;
 if (!RESTORE_URL) throw new Error("IMPORT1A_RESTORE_DATABASE_URL_REQUIRED");
 
 function invariant(value: unknown, code: string): asserts value {
@@ -84,8 +84,7 @@ async function main() {
     invariant(backup.metadata.backupVersion === 41 && backup.onboardingBatches.length === 2, "IMPORT1A_BACKUP_METADATA_MISSING");
     invariant(!serialized.includes("private-workbook") && !serialized.includes(QA_PASSWORD) && !serialized.includes("Copied database synthetic execution proof"), "IMPORT1A_BACKUP_PRIVATE_VALUE_LEAK");
 
-    const targetActor = await target.user.findFirst({ where: { role: "SUPER_ADMIN", isActive: true, lifecycleStatus: "ACTIVE" }, select: { id: true, name: true } });
-    invariant(targetActor, "IMPORT1A_RESTORE_ACTOR_REQUIRED");
+    const targetActor = await ensureRestoreActor(target);
     const firstRestore = await restoreValidatedBackup(target, backup, targetActor);
     const restoredOnce = await onboardingCounts(target);
     const secondRestore = await restoreValidatedBackup(target, backup, targetActor);
@@ -125,6 +124,25 @@ async function createActors(client: PrismaClient) {
     result[role.toLowerCase()] = { sessionId: `${id}-session`, user: { id: user.id, name: user.name, username: user.username, email: user.email, designation: user.designation, role, roleAssignmentId: assignment.id, authorizationVersion: user.authorizationVersion, mustChangePassword: user.mustChangePassword, guardianId: null } };
   }
   return result as { director: IamActor; principal: IamActor };
+}
+
+async function ensureRestoreActor(client: PrismaClient) {
+  const existing = await client.user.findFirst({ where: { role: "SUPER_ADMIN", isActive: true, lifecycleStatus: "ACTIVE" }, select: { id: true, name: true } });
+  if (existing) return existing;
+  const id = `${PREFIX}-restore-super-admin`;
+  return client.user.create({
+    data: {
+      id,
+      name: `${PREFIX} Restore Super Admin`,
+      username: `${PREFIX.toLowerCase()}-restore-admin`,
+      passwordHash: await hashPassword(QA_PASSWORD),
+      role: "SUPER_ADMIN",
+      isActive: true,
+      lifecycleStatus: "ACTIVE",
+      designation: "SUPER_ADMIN"
+    },
+    select: { id: true, name: true }
+  });
 }
 
 async function createBatch(client: PrismaClient, actorUserId: string, bundle: "COMBINED" | "STUDENT_GUARDIAN", conflict: boolean, variant = "BASE") {
@@ -195,11 +213,55 @@ async function runStressBatch(client: PrismaClient, actor: IamActor) {
   const after = await businessCounts(client);
   await executeOnboardingBatch(client, batch.publicKey, actor, input);
   invariant(JSON.stringify(await businessCounts(client)) === JSON.stringify(after), "IMPORT1A_STRESS_REPLAY_CHANGED_COUNTS");
+  const performance = profile.name === "V1_FINAL" ? await runV1FinalPerformanceProfile(client) : null;
   const preview = await rollbackOnboardingBatch(client, batch.publicKey, actor, { reason: "Copied database specified scale rollback preview", reauthPassword: QA_PASSWORD, execute: false }) as { eligible: boolean };
   invariant(preview.eligible, "IMPORT1A_STRESS_ROLLBACK_PREVIEW_BLOCKED");
   await rollbackOnboardingBatch(client, batch.publicKey, actor, { reason: "Copied database specified scale exact rollback", reauthPassword: QA_PASSWORD, execute: true });
   invariant(JSON.stringify(await businessCounts(client)) === JSON.stringify(before), "IMPORT1A_STRESS_ROLLBACK_NOT_EXACT");
-  return { profile: profile.name, students: profile.students, guardians: profile.guardians, staff: profile.staff, teachers, links: profile.students, enrollments: profile.students * profile.enrollmentsPerStudent, academicYears: profile.enrollmentsPerStudent, cohorts: cohorts.length, siblingGuardianGroups: [2,3,4], outcomes, replay: "IDEMPOTENT", rollback: "EXACT", elapsedMs: Date.now() - startedAt };
+  return { profile: profile.name, students: profile.students, guardians: profile.guardians, staff: profile.staff, teachers, links: profile.students, enrollments: profile.students * profile.enrollmentsPerStudent, academicYears: profile.enrollmentsPerStudent, cohorts: cohorts.length, siblingGuardianGroups: [2,3,4], outcomes, replay: "IDEMPOTENT", rollback: "EXACT", performance, elapsedMs: Date.now() - startedAt };
+}
+
+async function runV1FinalPerformanceProfile(client: PrismaClient) {
+  const reads: number[] = [], writes: number[] = [];
+  const cpuStart = process.cpuUsage(), memoryStart = process.memoryUsage();
+  let errors = 0, sqliteBusy = 0;
+  for (let index = 0; index < 120; index += 1) {
+    const started = performance.now();
+    try {
+      if (index % 2) await client.student.count({ where: { admissionNo: { startsWith: `${PREFIX}-STRESS-ADM-` } } });
+      else await client.academicYearEnrollment.findMany({ where: { student: { admissionNo: { startsWith: `${PREFIX}-STRESS-ADM-` } } }, select: { academicYear: true, className: true, section: true }, take: 50, skip: index % 16 });
+    } catch (error) {
+      errors += 1;
+      if (String(error).includes("SQLITE_BUSY")) sqliteBusy += 1;
+    } finally { reads.push(performance.now() - started); }
+  }
+  for (let index = 0; index < 30; index += 1) {
+    const started = performance.now();
+    try {
+      await client.staffMember.update({ where: { staffCode: `${PREFIX}-NONTEACHING-REF` }, data: { notes: `${PREFIX}-PERF-${index}` } });
+    } catch (error) {
+      errors += 1;
+      if (String(error).includes("SQLITE_BUSY")) sqliteBusy += 1;
+    } finally { writes.push(performance.now() - started); }
+  }
+  await client.staffMember.update({ where: { staffCode: `${PREFIX}-NONTEACHING-REF` }, data: { notes: null } });
+  const cpu = process.cpuUsage(cpuStart), memoryEnd = process.memoryUsage();
+  const read = latencySummary(reads), write = latencySummary(writes), ordinary = latencySummary([...reads, ...writes]);
+  invariant(errors === 0 && sqliteBusy === 0, "IMPORT1A_V1_FINAL_PERFORMANCE_ERRORS");
+  invariant(read.p95 <= 2000 && write.p95 <= 3000 && ordinary.p99 <= 5000, "IMPORT1A_V1_FINAL_PERFORMANCE_BUDGET_EXCEEDED");
+  invariant(memoryEnd.heapUsed - memoryStart.heapUsed < 64 * 1024 * 1024, "IMPORT1A_V1_FINAL_MEMORY_GROWTH_EXCEEDED");
+  return {
+    samples: { reads: reads.length, writes: writes.length }, readMs: read, writeMs: write, ordinaryMs: ordinary,
+    errorRate: errors / (reads.length + writes.length), sqliteBusy,
+    cpuMs: Math.round((cpu.user + cpu.system) / 1000),
+    memory: { rssStartBytes: memoryStart.rss, rssEndBytes: memoryEnd.rss, heapDeltaBytes: memoryEnd.heapUsed - memoryStart.heapUsed }
+  };
+}
+
+function latencySummary(values: number[]) {
+  const sorted = [...values].sort((left, right) => left - right);
+  const percentile = (rank: number) => Number(sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(sorted.length * rank) - 1))].toFixed(2));
+  return { p50: percentile(0.5), p95: percentile(0.95), p99: percentile(0.99), max: Number(sorted[sorted.length - 1].toFixed(2)) };
 }
 
 function stressWorkbook(profile: { students: number; guardians: number; staff: number; teachers: number; enrollmentsPerStudent: number }) {

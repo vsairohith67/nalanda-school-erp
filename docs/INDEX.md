@@ -2,6 +2,7 @@
 
 ## V1-FINAL-1A final integration and release-candidate preparation
 
+- [Independent Release-Candidate QA Clearance](V1_RELEASE_CANDIDATE_QA_CLEARANCE.md)
 - [Final Requirements Closure Ledger](V1_FINAL_REQUIREMENTS_CLOSURE_LEDGER.md)
 - [Cross-Module Integration Report](V1_CROSS_MODULE_INTEGRATION_REPORT.md)
 - [Role, Permission and Object-Scope Matrix](V1_ROLE_PERMISSION_OBJECT_SCOPE_MATRIX.md)
@@ -16,7 +17,7 @@
 - [Training and Pilot Plan](V1_TRAINING_AND_PILOT_PLAN.md)
 - [Production Cutover Gate](V1_PRODUCTION_CUTOVER_GATE.md)
 
-This local/private acceptance reconciles the corrected V1 ledger, closes cross-module and security gaps, adds an exact representative-scale copied-data profile, and preserves all deployment, provider, real-data and real-user activation gates. Independent `V1-FINAL-1A-QA` remains required before merge/tag and does not authorize staging or production.
+This local/private acceptance reconciles the corrected V1 ledger, closes cross-module and security gaps, and preserves all deployment, provider, real-data and real-user activation gates. Independent `V1-FINAL-1A-QA` repeated the scale/recovery, dependency, full-suite and Browser/PWA gates and cleared fast-forward merge plus the annotated RC1 tag; it does not authorize staging or production.
 
 ## REPORT-PRINT-ACCEPT-1A Classes I-X print acceptance and release closure
 

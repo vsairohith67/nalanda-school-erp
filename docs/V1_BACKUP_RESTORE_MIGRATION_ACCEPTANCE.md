@@ -7,6 +7,7 @@
 - Operational SQLite is never a migration rehearsal or restore target.
 - The protected operational file remains SHA-256 `65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA`, 8,409,088 bytes, with zero business rows and four protected accounts.
 - Support recovery status now requires a durable configured key; OCR evidence verifies its stored hash on every served read.
-- The final Release Operations rehearsal reconfirmed 18 migrations, 292 copied-database tables, byte-identical pre-deploy evidence, logical restore twice, a verified 10,955-file artifact payload, one-release locking, injected low-space refusal, zero provider calls and no private data in the artifact.
+- The final Release Operations rehearsal reconfirmed 18 migrations, 292 copied-database tables, byte-identical pre-deploy evidence, logical restore twice, a verified 10,953-file artifact payload, one-release locking, injected low-space refusal, zero provider calls and no private data in the artifact.
+- Independent `V1FINALQA` recreated both source and restore databases from all migrations, supplied a synthetic local restore actor only when the fresh target had none, proved schema equivalence, restored twice, replayed exactly and rolled the scale dataset back to its original empty-business state.
 
 Production restore, real retention purge and external key custody require named operators and separate authorization.
