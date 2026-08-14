@@ -72,13 +72,14 @@ describe("REPORT-PRINT-ACCEPT-1A V1 scope amendment", () => {
     expect(amendment).toContain("SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS");
   });
 
-  it("keeps the V1 release candidate Classes I-X-only and physical printing paused", () => {
+  it("keeps the V1 release candidate Classes I-X-only and physical acceptance pending", () => {
     const checklist = source("docs/RELEASE_CANDIDATE_CHECKLIST.md");
     const printChecklist = source("docs/REPORT_CARD_PHYSICAL_PRINT_ACCEPTANCE_CHECKLIST.md");
     expect(checklist).toContain("KG/LKG/UKG excluded from V1 release-candidate completeness");
-    expect(checklist).toContain("Physical printing remains paused");
+    expect(checklist).toContain("PHYSICAL_PRINT_GATE_PENDING");
+    expect(checklist).toContain("R8_DIGITAL_DESIGN_APPROVED");
     expect(printChecklist).toContain("SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS");
-    expect(printChecklist).toContain("Do not print");
+    expect(printChecklist).toContain("PHYSICAL PRINT GATE OPEN");
     expect(printChecklist).toContain("Classes I-X-only");
   });
 });

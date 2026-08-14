@@ -1,5 +1,11 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## REPORT-PRINT-ACCEPT-1A-P1 — R8 digital approval and physical gate (2026-08-14)
+
+The user reviewed R8 and stated, “I am satisfied and we can proceed.” This is accepted as normal-language final digital approval and recorded as `R8_DIGITAL_DESIGN_APPROVED`. The existing 8-page colour and 8-page true-monochrome Classes I-X packs were verified without regeneration: exact A4, nonblank, matching geometry, synthetic footer on every page, no KG specimen, zero meaningful chromatic pixels in monochrome, consecutive unique manifest entries and verified photocopy target `R8-MONO-03` on page 3.
+
+The physical print gate is open for these synthetic R8 packs only. Physical observations remain pending; no real report was issued, and no merge, tag, deployment or V1-FINAL-1A work occurred. KG remains preserved/default-off for V1.5.
+
 ## REPORT-PRINT-ACCEPT-1A-R8 — table-priority final digital review (2026-08-14)
 
 R8 preserves the approved Classes I-X header, identity, calculations, charts, monochrome patterns and one-page architecture. It replaces R7's stacked metric cards with measured single-line three/four/five-cell summary variants, adds `DENSE_MARKS_TABLE_PRIORITY`, combines VI-X Personality Development/Grade into one column, governs normal/compact/compact-dense chart footprints, compacts attendance/remarks and raises the clear physical signing space to a measured 15 mm.

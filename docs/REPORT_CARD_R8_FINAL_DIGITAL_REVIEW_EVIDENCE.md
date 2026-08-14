@@ -1,6 +1,6 @@
 # Report-Card R8 Final Digital Review Evidence
 
-**Scope:** Classes I-X only; synthetic evidence; digital approval pending; physical printing paused
+**Scope:** Classes I-X only; synthetic evidence; digital design approved; physical acceptance pending
 
 R8 is the final narrow table-priority correction for `NALANDA_LEGACY_REFINED_COLOUR` and `NALANDA_LEGACY_REFINED_MONOCHROME`. It preserves the approved header, identity grid, calculation snapshot, grade scales, result-state codes, chart data, colour palette and true-monochrome patterns.
 
@@ -24,4 +24,4 @@ All 30 generated pages were rasterized at 300 DPI and inspected programmatically
 
 ## Gate
 
-R8 is prepared for final digital approval only. The branch remains unmerged and untagged; no deployment or physical acceptance has occurred. KG/LKG/UKG remains preserved/default-off under `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`.
+R8 received normal-language final digital approval on 14 August 2026 and is recorded as `R8_DIGITAL_DESIGN_APPROVED`. The verified Classes I-X-only packs may proceed to synthetic physical printing under `docs/REPORT_CARD_R8_DIGITAL_APPROVAL_AND_PHYSICAL_GATE.md`. The branch remains unmerged and untagged; no deployment, real report publication or physical acceptance has occurred. KG/LKG/UKG remains preserved/default-off under `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`.

@@ -3,7 +3,7 @@
 **Prompt:** `REPORT-PRINT-ACCEPT-1A`
 **Branch:** `reporting/canonical-template-print-acceptance`
 **Starting release:** commit `6693f8d3e4c975be748e8d7f103cd72f2ee36cfc`, tag `release-operations-v41-2026-08-10`, backup version 41
-**Status:** V1 narrowed to Classes I-X; R8 final digital review and paused physical candidates generated; KG foundation deferred to V1.5; physical printing remains paused
+**Status:** V1 narrowed to Classes I-X; R8 digital design approved; verified physical colour/monochrome gate open; KG foundation deferred to V1.5
 
 ## 2026-08-12 scope amendment
 
@@ -57,7 +57,7 @@ R7 generates only an ignored eight-page Classes I-X visual pack and fourteen-pag
 
 ## R8 final digital-review and paused physical candidates
 
-R8 replaces stacked metric cards with measured one-line cells, prioritises dense academic tables, combines VI-X Personality Development/Grade, uses adaptive normal/compact/compact-dense charts and reserves 15 mm physical signing space. It generates an eight-page final digital review, a six-page detail pack and separate eight-page Classes I-X-only colour/true-monochrome physical candidates. All 30 pages were rendered at 300 DPI and inspected; the physical candidates must not be printed before user digital approval. See `docs/REPORT_CARD_R8_FINAL_DIGITAL_REVIEW_EVIDENCE.md`.
+R8 replaces stacked metric cards with measured one-line cells, prioritises dense academic tables, combines VI-X Personality Development/Grade, uses adaptive normal/compact/compact-dense charts and reserves 15 mm physical signing space. It generated an eight-page final digital review, a six-page detail pack and separate eight-page Classes I-X-only colour/true-monochrome physical candidates. All 30 pages were rendered at 300 DPI and inspected. The user approved the R8 digital design on 14 August 2026; physical colour, monochrome and photocopy acceptance is now the active gate. See `docs/REPORT_CARD_R8_DIGITAL_APPROVAL_AND_PHYSICAL_GATE.md`.
 
 ## Acceptance status
 
@@ -75,7 +75,7 @@ R8 replaces stacked metric cards with measured one-line cells, prioritises dense
 - Classes I-X R5 correction register: confirmed complete and implemented for user digital review.
 - R5-A1 digital evidence: ignored ten-page visual pack, seven-page detail-check pack and six-page edge-case pack; synthetic-only and not for physical acceptance. Pre-A1 R5 packs are preserved as `SUPERSEDED_BY_R5_A1`.
 - R6-A1 digital evidence: ignored eight-page visual pack and twelve-page detail-check pack; user review pending. Colour output is unchanged; authoritative monochrome is solid-grey/slash/diamond-lattice. No physical pack was generated.
-- R8 digital evidence: ignored eight-page final review and six-page detail pack plus paused eight-page colour/true-monochrome Classes I-X-only physical candidates; final digital approval and physical printing remain pending.
+- R8 digital evidence: ignored eight-page final review and six-page detail pack plus verified eight-page colour/true-monochrome Classes I-X-only physical candidates; digital design approved and physical acceptance pending.
 - Replacement Classes I-X-only physical pack: not authorised yet and not generated.
-- Physical colour/monochrome/photocopy acceptance: paused; no physical printing has occurred.
+- Physical colour/monochrome/photocopy acceptance: gate open; printing and physical acceptance have not yet occurred.
 - KG operational activation and physical acceptance: V1.5 only; not V1-cleared or production-ready.

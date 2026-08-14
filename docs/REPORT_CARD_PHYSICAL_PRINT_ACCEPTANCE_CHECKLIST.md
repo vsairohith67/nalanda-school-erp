@@ -1,6 +1,6 @@
 # Report-Card Physical Print Acceptance Checklist
 
-> **R8 FINAL DIGITAL REVIEW — DO NOT PRINT YET.** R8 generated an eight-page Classes I-X final digital review, a six-page detail pack and paused eight-page colour/true-monochrome physical candidates. They are synthetic and exclude KG, but printing is not authorised until user digital approval. Older R4.2 physical/full packs remain `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS` historical evidence. KG/LKG/UKG physical acceptance is deferred to V1.5.
+> **R8 DIGITAL DESIGN APPROVED — PHYSICAL PRINT GATE OPEN.** The user approved R8 in normal language on 14 August 2026. Print only the verified Classes I-X colour and true-monochrome acceptance packs under the governed instructions; physical acceptance is still pending. Older R4.2 physical/full packs remain `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS` historical evidence. KG/LKG/UKG physical acceptance is deferred to V1.5.
 
 > R4.1 remains a digital micro-review correction. Do not print `VISUAL-DIRECTION-PACK-R4-1.pdf` or `EDGE-CASE-RENDERING-PACK-R4-1.pdf`. Full physical-pack regeneration and printing remain paused pending explicit user approval.
 
@@ -32,12 +32,12 @@
 - [x] R5-A1 Classes I-X visual, detail-check and edge-case packs generated and validated locally (not for printing)
 - [x] R6-A1 Classes I-X visual and detail-check packs generated and validated locally (not for printing)
 - [x] R8 final digital review and six-page detail pack generated and validated locally
-- [x] Paused Classes I-X-only colour and true-monochrome candidates generated (not yet authorised for printing)
-- [ ] R8 final digital review approved by the user
-- [ ] User authorised to proceed to physical printing gate
+- [x] Classes I-X-only colour and true-monochrome candidates generated, verified and authorised for synthetic physical testing
+- [x] R8 final digital review approved by the user (`R8_DIGITAL_DESIGN_APPROVED`)
+- [x] User authorised to proceed to the synthetic physical printing gate
 - [ ] Every genuinely distinct Classes I-X colour specimen printed
 - [ ] Every genuinely distinct Classes I-X monochrome specimen printed
-- [ ] One approved Classes I-X monochrome page photocopied once
+- [ ] Manifest specimen `R8-MONO-03` (monochrome page 3) photocopied once
 
 The KG ten-page booklet, KG colour/monochrome printing and booklet-imposition decision are V1.5 gates and must not be included in V1 acceptance.
 
@@ -68,7 +68,7 @@ Copy this block for each specimen ID.
 
 - [ ] All colour structures pass
 - [ ] All monochrome structures pass
-- [ ] Classes I-X-only specimen manifest is complete and contains no KG page
+- [x] Classes I-X-only specimen manifest is complete and contains no KG page
 - [ ] Photocopied monochrome page remains interpretable
 - [ ] No real Student material was printed, scanned, or uploaded for this QA
 - Decision/observations:

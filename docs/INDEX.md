@@ -1,6 +1,6 @@
 # Documentation Index
 
-## REPORT-PRINT-ACCEPT-1A R8 final digital review
+## REPORT-PRINT-ACCEPT-1A R8 digital approval and physical print gate
 
 - [V1 Classes I-X / V1.5 KG Scope Amendment and Frozen Correction Register](REPORT_CARD_V1_SCOPE_AMENDMENT.md)
 - [Report-Card Template Catalog](REPORT_CARD_TEMPLATE_CATALOG.md)
@@ -11,8 +11,9 @@
 - [R6 Digital Review Evidence](REPORT_CARD_R6_DIGITAL_REVIEW_EVIDENCE.md)
 - [R7 Digital Review Evidence](REPORT_CARD_R7_DIGITAL_REVIEW_EVIDENCE.md)
 - [R8 Final Digital Review Evidence](REPORT_CARD_R8_FINAL_DIGITAL_REVIEW_EVIDENCE.md)
+- [R8 Digital Approval and Physical Print Gate](REPORT_CARD_R8_DIGITAL_APPROVAL_AND_PHYSICAL_GATE.md)
 
-Classes I-X remain a V1 requirement. R8 preserves the approved R7 architecture while replacing stacked summary cards with measured single-line cells, prioritising dense academic tables, combining VI-X Personality Development/Grade, adapting chart footprint and enforcing 15 mm signing clearance. The final digital review and Classes I-X-only paused physical candidates are generated locally; they must not be printed before user digital approval. The preserved KG/LKG/UKG foundation is default-off and deferred to V1.5.
+Classes I-X remain a V1 requirement. R8 preserves the approved R7 architecture while replacing stacked summary cards with measured single-line cells, prioritising dense academic tables, combining VI-X Personality Development/Grade, adapting chart footprint and enforcing 15 mm signing clearance. The user approved the R8 digital design; verified Classes I-X-only colour/true-monochrome candidates may now enter physical acceptance. The preserved KG/LKG/UKG foundation is default-off and deferred to V1.5.
 
 ## RELEASE-OPS-1A safe release, client update and rollback
 
