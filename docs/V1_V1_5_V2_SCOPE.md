@@ -25,7 +25,7 @@ Scope is not the same as implementation state. A capability can already exist in
 
 V1 explicitly excludes automatic payroll calculation. Full payroll and Employee self-service are technically cleared by Prompt 23I, but their operational product scope is V1.5 and they are not a V1 launch dependency. The released code may remain in `main` while disabled or permission-restricted for rollout. V1 retains only the separately specified Staff Payslip Request and Secure Delivery workflow; automatic payroll or generated payslips do not make that request workflow complete.
 
-V1 also excludes KG/LKG/UKG report-card operational activation and physical acceptance. Classes I-X remain `IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING`; R5 consolidated colour/true-monochrome corrections are complete for digital user review, while physical-pack regeneration and printing remain paused. The approved Classes I-X `NALANDA_LEGACY_REFINED` base is preserved without redesign.
+V1 also excludes KG/LKG/UKG report-card operational activation and physical acceptance. Classes I-X remain `IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING`; R8 final colour/true-monochrome corrections and paused Classes I-X-only physical candidates are complete for final digital approval, while physical printing remains paused. The approved Classes I-X `NALANDA_LEGACY_REFINED` base is preserved without redesign.
 
 ## V1.5 — later operational expansion
 

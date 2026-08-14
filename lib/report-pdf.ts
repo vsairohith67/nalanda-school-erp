@@ -25,9 +25,10 @@ import {
   R6_MONOCHROME_STUDENT_GREY,
   R7_HEADER_TYPOGRAPHY,
   R7_PATTERN_GEOMETRY,
-  R7_SIGNATURE_GEOMETRY,
-  R7_SUMMARY_CARD_GEOMETRY,
-  layoutChartNumericLabels
+  R8_SIGNATURE_GEOMETRY,
+  R8_SUMMARY_GEOMETRY,
+  layoutChartNumericLabels,
+  resolveR8SummaryWidths
 } from "@/lib/report-card-refined-source-lock";
 
 type RenderableReport = PublishedReportSnapshot | SafePublishedReportSnapshot;
@@ -640,7 +641,7 @@ class PdfLayout {
     const twoRows = dense && eligible.length >= R6_DENSE_CHART_GEOMETRY.twoRowCategoryCount;
     const splitAt = twoRows ? Math.ceil(eligible.length / 2) : eligible.length;
     const chartRows = twoRows ? [eligible.slice(0, splitAt), eligible.slice(splitAt)] : [eligible];
-    const height = twoRows ? 280 : dense ? 250 : 205;
+    const height = twoRows ? 242 : dense ? 215 : 205;
     this.ensure(height + 24);
     const chartTop = this.y - 31;
     const chartBottom = this.y - height + 34;
@@ -860,13 +861,17 @@ class PdfLayout {
       ...(this.report.content.rank == null ? [] : [{ label: "Rank", value: String(this.report.content.rank) }])
     ];
     if (metrics.length < 3 || metrics.length > 5) throw new Error("Canonical result summary requires three, four or five enabled metrics.");
-    const height = R7_SUMMARY_CARD_GEOMETRY.heightPt;
+    const summaryMetrics = metrics.map((metric) => ({ ...metric, text: `${metric.label}: ${metric.value}` }));
+    const height = R8_SUMMARY_GEOMETRY.heightPt;
     this.ensure(height + 5);
-    const totalWeight = metrics.reduce((sum, metric) => sum + (metric.label === "Total" ? 1.15 : 1), 0);
+    const widths = resolveR8SummaryWidths(
+      summaryMetrics,
+      this.contentWidth,
+      (text) => this.fonts.bold.widthOfTextAtSize(printable(text), R8_SUMMARY_GEOMETRY.fontSizePt)
+    );
     let x = this.margin;
-    metrics.forEach((metric, index) => {
-      const weight = metric.label === "Total" ? 1.15 : 1;
-      const width = index === metrics.length - 1 ? this.margin + this.contentWidth - x : this.contentWidth * weight / totalWeight;
+    summaryMetrics.forEach((metric, index) => {
+      const width = widths[index];
       this.page.drawRectangle({
         x,
         y: this.y - height,
@@ -876,22 +881,21 @@ class PdfLayout {
         borderColor: this.palette.border,
         borderWidth: 0.7
       });
-      drawCenteredText(this.page, printable(metric.label), this.fonts.bold, R7_SUMMARY_CARD_GEOMETRY.labelFontSizePt, x, width, this.y - 12, this.palette.ink);
-      drawCenteredText(this.page, printable(metric.value), this.fonts.bold, R7_SUMMARY_CARD_GEOMETRY.valueFontSizePt, x, width, this.y - 27, this.palette.ink);
+      drawCenteredText(this.page, printable(metric.text), this.fonts.bold, R8_SUMMARY_GEOMETRY.fontSizePt, x, width, this.y - 14, this.palette.ink);
       x += width;
     });
     this.y -= height + 5;
   }
 
   attendanceAndGeneralRemarksRow() {
-    const height = R7_SUMMARY_CARD_GEOMETRY.attendanceRemarksHeightPt;
+    const height = R8_SUMMARY_GEOMETRY.attendanceRemarksHeightPt;
     this.ensure(height + 6);
     const gap = 6;
-    const attendanceWidth = (this.contentWidth - gap) * R7_SUMMARY_CARD_GEOMETRY.attendanceWidthRatio;
+    const attendanceWidth = (this.contentWidth - gap) * R8_SUMMARY_GEOMETRY.attendanceWidthRatio;
     const remarksWidth = this.contentWidth - gap - attendanceWidth;
     const attendanceX = this.margin;
     const remarksX = attendanceX + attendanceWidth + gap;
-    const headerHeight = 17;
+    const headerHeight = 15;
     const headers = ["Working Days", "Days Present", "Attendance %"];
     const workingDays = this.report.content.attendance.totalLockedDays;
     const daysPresent = this.report.content.attendance.presentEquivalentDays;
@@ -902,11 +906,11 @@ class PdfLayout {
       const cellX = attendanceX + index * cellWidth;
       this.page.drawRectangle({ x: cellX, y: this.y - headerHeight, width: cellWidth, height: headerHeight, color: this.palette.headerFill, borderColor: this.palette.border, borderWidth: 0.7 });
       this.page.drawRectangle({ x: cellX, y: this.y - height, width: cellWidth, height: height - headerHeight, color: rgb(1, 1, 1), borderColor: this.palette.border, borderWidth: 0.7 });
-      drawCenteredText(this.page, header, this.fonts.bold, 6.8, cellX, cellWidth, this.y - 12, this.palette.ink);
-      drawCenteredText(this.page, values[index], this.fonts.bold, 8, cellX, cellWidth, this.y - 32, this.palette.ink);
+      drawCenteredText(this.page, header, this.fonts.bold, 6.6, cellX, cellWidth, this.y - 11, this.palette.ink);
+      drawCenteredText(this.page, values[index], this.fonts.bold, 7.8, cellX, cellWidth, this.y - 28, this.palette.ink);
     });
     this.page.drawRectangle({ x: remarksX, y: this.y - height, width: remarksWidth, height, color: rgb(1, 1, 1), borderColor: this.palette.border, borderWidth: 0.7 });
-    this.page.drawText("General Remarks", { x: remarksX + 5, y: this.y - 12, size: 7.4, font: this.fonts.bold, color: this.palette.ink });
+    this.page.drawText("General Remarks", { x: remarksX + 5, y: this.y - 11, size: 7.2, font: this.fonts.bold, color: this.palette.ink });
     const remarks = printable(this.report.content.remarks.general ?? this.report.content.remarks.classTeacher ?? "No approved remark recorded.");
     const lines = wrapText(remarks, this.fonts.regular, 7, remarksWidth - 10);
     if (lines.length > 2) throw new Error("General Remarks cannot fit the balanced canonical row without truncation.");
@@ -920,7 +924,7 @@ class PdfLayout {
     const width = this.contentWidth / Math.max(1, signatures.length);
     signatures.forEach((signature, index) => {
       const x = this.margin + index * width + (canonical ? 4.5 : 4);
-      const lineY = this.y - (canonical ? R7_SIGNATURE_GEOMETRY.clearSigningHeightPt : 42);
+      const lineY = this.y - (canonical ? R8_SIGNATURE_GEOMETRY.clearSigningHeightPt : 42);
       this.page.drawLine({
         start: { x, y: lineY },
         end: { x: x + width - (canonical ? 4.5 : 18), y: lineY },
@@ -938,7 +942,7 @@ class PdfLayout {
         color: this.palette.ink
       });
     });
-    this.y -= canonical ? 52 : 64;
+    this.y -= canonical ? 61 : 64;
   }
 
   finish() {

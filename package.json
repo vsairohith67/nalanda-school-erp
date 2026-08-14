@@ -104,6 +104,8 @@
     "qa:report-r5": "tsx scripts/generate-report-card-r5-packs.ts",
     "qa:report-r6": "tsx scripts/generate-report-card-r6-packs.ts",
     "qa:report-r7": "tsx scripts/generate-report-card-r7-packs.ts",
+    "qa:report-r8": "tsx scripts/generate-report-card-r8-packs.ts",
+    "qa:report-r8:inspect": "tsx scripts/inspect-report-card-r8-pages.ts",
     "auth:recover-super-admin": "tsx scripts/recover-super-admin.ts",
     "data0a:audit": "node scripts/data0a-provenance-audit.mjs",
     "data0a:backup": "tsx scripts/data0a-encrypted-backup.ts",

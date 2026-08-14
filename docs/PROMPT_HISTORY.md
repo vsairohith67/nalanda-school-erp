@@ -1,5 +1,11 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## REPORT-PRINT-ACCEPT-1A-R8 — table-priority final digital review (2026-08-14)
+
+R8 preserves the approved Classes I-X header, identity, calculations, charts, monochrome patterns and one-page architecture. It replaces R7's stacked metric cards with measured single-line three/four/five-cell summary variants, adds `DENSE_MARKS_TABLE_PRIORITY`, combines VI-X Personality Development/Grade into one column, governs normal/compact/compact-dense chart footprints, compacts attendance/remarks and raises the clear physical signing space to a measured 15 mm.
+
+The ignored evidence consists of an eight-page final digital review, a six-page detail pack and separate eight-page Classes I-X-only colour and true-monochrome physical candidates. All 30 pages are synthetic, exact A4, locally rendered at 300 DPI and inspected before handoff. The physical candidates remain paused pending user digital approval. No printing, merge, tag, deployment, report issue, historical source page or real Student data is authorised. KG remains preserved/default-off for V1.5.
+
 ## REPORT-PRINT-ACCEPT-1A-R7 — final summary, signature and monochrome balance correction (2026-08-14)
 
 R7 preserves the approved Classes I-X one-page architecture, frozen identity grid, marks/co-scholastic structures, calculations, colour chart, dense/two-row behavior and private publication controls. It renders the configured status line at exactly 12 pt bold and address at 11 pt bold; replaces the sentence summary with dynamic three/four/five-card rows; aligns attendance and General Remarks below; and reduces signing clearance from the excessive 18 mm baseline to a measured 12 mm block.
