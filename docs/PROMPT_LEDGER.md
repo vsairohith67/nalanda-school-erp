@@ -2,7 +2,7 @@
 
 **Ledger ID:** `GOV-RECON-1-LEDGER`<br>
 **Reconstructed:** 2026-08-12<br>
-**Coverage:** earliest post-hoc Prompt Library evidence (created 2026-06-19) through REPORT-PRINT-ACCEPT-1A-P1
+**Coverage:** earliest post-hoc Prompt Library evidence (created 2026-06-19) through REPORT-PRINT-ACCEPT-1A-P2
 
 ## Source limitation
 
@@ -14,6 +14,7 @@ The accessible Git history begins with the consolidated baseline commit `2d1ac63
 
 | Sequence / prompt label | Recoverable subject | Source date | Evidence classification | Implementation/release disposition | Source gap or conflict |
 | --- | --- | --- | --- | --- | --- |
+| REPORT-PRINT-ACCEPT-1A-P2 | Accept the Classes I-X physical colour, native-monochrome and photocopy evidence; freeze, release and close the report-card programme | 2026-08-14 exact attached prompt, user observations and repository evidence | `EXACT_SOURCE`, `QA_RELEASE_EVIDENCE` | `REPORT_PRINT_ACCEPTANCE_CLEARED`; Canon imageCLASS MF244dw/A4 physical output accepted; versioned maintenance policy frozen; retained branch merged and annotated v41 tag created | No deployment, real report issue, Student evidence upload or KG activation; next phase is V1-FINAL-1A |
 | REPORT-PRINT-ACCEPT-1A-P1 | Record R8 digital approval and open the Classes I-X physical print gate | 2026-08-14 exact attached prompt, user approval and repository evidence | `EXACT_SOURCE`, `QA_RELEASE_EVIDENCE` | `R8_DIGITAL_DESIGN_APPROVED`; existing colour/true-monochrome packs verified without regeneration; physical colour/B&W/photocopy observations pending | No physical acceptance, merge, tag, deployment, publication or V1-FINAL-1A; KG stays V1.5 |
 | REPORT-PRINT-ACCEPT-1A-R8 | Final table-priority, measured single-line summary, adaptive chart and 15 mm signature correction | 2026-08-14 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | Eight-page final review, six-page detail pack and paused Classes I-X-only colour/true-monochrome physical candidates generated and inspected at 300 DPI; final digital approval pending | No print, physical acceptance, merge, tag, deployment or publication; KG stays V1.5 |
 | REPORT-PRINT-ACCEPT-1A-R7 | Separate summary-card, 12 mm signature balance and authoritative filled-diamond monochrome correction | 2026-08-14 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | Two synthetic review-only PDFs generated and digitally validated; superseded for final digital approval by R8 | No physical pack, print, merge, tag, deployment or publication; KG stays V1.5 |

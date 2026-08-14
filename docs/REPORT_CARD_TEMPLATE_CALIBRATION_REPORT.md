@@ -3,11 +3,11 @@
 **Prompt:** `REPORT-PRINT-ACCEPT-1A`
 **Branch:** `reporting/canonical-template-print-acceptance`
 **Starting release:** commit `6693f8d3e4c975be748e8d7f103cd72f2ee36cfc`, tag `release-operations-v41-2026-08-10`, backup version 41
-**Status:** V1 narrowed to Classes I-X; R8 digital design approved; verified physical colour/monochrome gate open; KG foundation deferred to V1.5
+**Status:** Classes I-X digitally and physically accepted for V1; KG foundation deferred to V1.5
 
 ## 2026-08-12 scope amendment
 
-Classes I-X remain the V1 report-card release requirement with status `IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING`. LKG/UKG and the ten-page developmental booklet move to V1.5 with status `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`. This is a governance and availability change only: KG renderers, tests, migrations, historical commits and ignored evidence remain preserved. New KG operational creation, activation, binding and publication are default-off through the existing release-feature-flag framework; immutable issued/historical reports remain readable.
+Classes I-X remain the V1 report-card release requirement and are now `REPORT_PRINT_ACCEPTANCE_CLEARED`. LKG/UKG and the ten-page developmental booklet remain in V1.5 with status `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`. This is a governance and availability change only: KG renderers, tests, migrations, historical commits and ignored evidence remain preserved. New KG operational creation, activation, binding and publication are default-off through the existing release-feature-flag framework; immutable issued/historical reports remain readable.
 
 The R4.2 full and physical packs are preserved locally and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`. They must not be printed. The now-complete Classes I-X correction register is implemented in R5, which generates only ignored digital-review packs; no replacement physical pack is generated.
 
@@ -55,9 +55,9 @@ R6 generates only an ignored eight-page Classes I-X visual pack and twelve-page 
 
 R7 generates only an ignored eight-page Classes I-X visual pack and fourteen-page enlarged detail pack. The configured status/address lines use exact 12/11 point bold text; three/four/five dynamic metric cards replace the sentence strip; attendance and General Remarks share an aligned 45/55 row; and the four-column signature block uses 12 mm clear signing height. The final monochrome treatment is solid 55% neutral grey, spaced diagonal slashes and a staggered lattice of filled black diamonds. Colour charts and all approved R6 calculation/dense-chart behavior remain unchanged. See `docs/REPORT_CARD_R7_DIGITAL_REVIEW_EVIDENCE.md`.
 
-## R8 final digital-review and paused physical candidates
+## R8 final digital review and accepted physical candidates
 
-R8 replaces stacked metric cards with measured one-line cells, prioritises dense academic tables, combines VI-X Personality Development/Grade, uses adaptive normal/compact/compact-dense charts and reserves 15 mm physical signing space. It generated an eight-page final digital review, a six-page detail pack and separate eight-page Classes I-X-only colour/true-monochrome physical candidates. All 30 pages were rendered at 300 DPI and inspected. The user approved the R8 digital design on 14 August 2026; physical colour, monochrome and photocopy acceptance is now the active gate. See `docs/REPORT_CARD_R8_DIGITAL_APPROVAL_AND_PHYSICAL_GATE.md`.
+R8 replaces stacked metric cards with measured one-line cells, prioritises dense academic tables, combines VI-X Personality Development/Grade, uses adaptive normal/compact/compact-dense charts and reserves 15 mm physical signing space. It generated an eight-page final digital review, a six-page detail pack and separate eight-page Classes I-X-only colour/true-monochrome physical candidates. All 30 pages were rendered at 300 DPI and inspected. The user approved the digital design and then accepted the complete physical colour, native-monochrome and dense-page photocopy output on Canon imageCLASS MF244dw/A4 with no correction. See `docs/REPORT_CARD_PRINT_ACCEPTANCE_RELEASE_CLOSURE.md`.
 
 ## Acceptance status
 
@@ -75,7 +75,7 @@ R8 replaces stacked metric cards with measured one-line cells, prioritises dense
 - Classes I-X R5 correction register: confirmed complete and implemented for user digital review.
 - R5-A1 digital evidence: ignored ten-page visual pack, seven-page detail-check pack and six-page edge-case pack; synthetic-only and not for physical acceptance. Pre-A1 R5 packs are preserved as `SUPERSEDED_BY_R5_A1`.
 - R6-A1 digital evidence: ignored eight-page visual pack and twelve-page detail-check pack; user review pending. Colour output is unchanged; authoritative monochrome is solid-grey/slash/diamond-lattice. No physical pack was generated.
-- R8 digital evidence: ignored eight-page final review and six-page detail pack plus verified eight-page colour/true-monochrome Classes I-X-only physical candidates; digital design approved and physical acceptance pending.
-- Replacement Classes I-X-only physical pack: not authorised yet and not generated.
-- Physical colour/monochrome/photocopy acceptance: gate open; printing and physical acceptance have not yet occurred.
+- R8 digital evidence: ignored eight-page final review and six-page detail pack plus verified eight-page colour/true-monochrome Classes I-X-only physical candidates; digitally approved and physically accepted.
+- Replacement Classes I-X-only physical pack: generated, verified and accepted; no KG page included.
+- Physical colour/monochrome/photocopy acceptance: passed on Canon imageCLASS MF244dw/A4 with no correction or failed specimen.
 - KG operational activation and physical acceptance: V1.5 only; not V1-cleared or production-ready.

@@ -1,6 +1,6 @@
 # Report-Card Physical Print Acceptance Checklist
 
-> **R8 DIGITAL DESIGN APPROVED — PHYSICAL PRINT GATE OPEN.** The user approved R8 in normal language on 14 August 2026. Print only the verified Classes I-X colour and true-monochrome acceptance packs under the governed instructions; physical acceptance is still pending. Older R4.2 physical/full packs remain `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS` historical evidence. KG/LKG/UKG physical acceptance is deferred to V1.5.
+> **CLASSES I-X PHYSICAL PRINT ACCEPTED.** The user completed the R8 colour, true-monochrome and required one-generation photocopy checks on 14 August 2026 and reported every observation acceptable with no failed page. The historical `PHYSICAL PRINT GATE OPEN` state is closed. Older R4.2 physical/full packs remain `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS` historical evidence. KG/LKG/UKG physical acceptance is deferred to V1.5.
 
 > R4.1 remains a digital micro-review correction. Do not print `VISUAL-DIRECTION-PACK-R4-1.pdf` or `EDGE-CASE-RENDERING-PACK-R4-1.pdf`. Full physical-pack regeneration and printing remain paused pending explicit user approval.
 
@@ -15,16 +15,16 @@
 
 ## Printer record
 
-- Reviewer/date:
-- Printer/model, if known:
+- Reviewer/date: User / 2026-08-14
+- Printer/model, if known: Canon imageCLASS MF244dw
 - Driver or operating-system print dialog:
 - Paper size: A4
 - Paper type:
 - Quality: normal office-printer quality
-- Requested scale: Actual Size / 100%
-- Printer-enforced scale, if any:
-- Colour mode used:
-- Native grayscale/B&W mode used:
+- Requested scale: Actual Size / 100% governed instruction
+- Printer-enforced scale, if any: none reported; overall output accepted
+- Colour mode used: not separately stated; complete colour pack accepted
+- Native grayscale/B&W mode used: not separately stated; complete monochrome pack and patterns accepted
 - Photocopier/model, if known:
 
 ## Required print set
@@ -35,9 +35,9 @@
 - [x] Classes I-X-only colour and true-monochrome candidates generated, verified and authorised for synthetic physical testing
 - [x] R8 final digital review approved by the user (`R8_DIGITAL_DESIGN_APPROVED`)
 - [x] User authorised to proceed to the synthetic physical printing gate
-- [ ] Every genuinely distinct Classes I-X colour specimen printed
-- [ ] Every genuinely distinct Classes I-X monochrome specimen printed
-- [ ] Manifest specimen `R8-MONO-03` (monochrome page 3) photocopied once
+- [x] Every genuinely distinct Classes I-X colour specimen printed
+- [x] Every genuinely distinct Classes I-X monochrome specimen printed
+- [x] Manifest specimen `R8-MONO-03` (monochrome page 3) photocopied once
 
 The KG ten-page booklet, KG colour/monochrome printing and booklet-imposition decision are V1.5 gates and must not be included in V1 acceptance.
 
@@ -66,9 +66,9 @@ Copy this block for each specimen ID.
 
 ## Overall physical decision
 
-- [ ] All colour structures pass
-- [ ] All monochrome structures pass
+- [x] All colour structures pass
+- [x] All monochrome structures pass
 - [x] Classes I-X-only specimen manifest is complete and contains no KG page
-- [ ] Photocopied monochrome page remains interpretable
-- [ ] No real Student material was printed, scanned, or uploaded for this QA
-- Decision/observations:
+- [x] Photocopied monochrome page remains interpretable
+- [x] No real Student material was printed, scanned, or uploaded for this QA
+- Decision/observations: `REPORT_PRINT_ACCEPTANCE_CLEARED`. The user reported the full test successful and all listed colour, monochrome and photocopy observations acceptable. No correction or failed specimen/page was reported. Unstated driver/mode details remain explicitly unrecorded rather than inferred.

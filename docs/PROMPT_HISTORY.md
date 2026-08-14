@@ -1,5 +1,11 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## REPORT-PRINT-ACCEPT-1A-P2 — physical acceptance, release and closure (2026-08-14)
+
+The user reported the complete R8 physical test successful on a Canon imageCLASS MF244dw with A4 paper and stated that all colour, native-monochrome and photocopy observations were acceptable, with no correction or failed page. The blanket normal-language pass covers cropping, table and chart readability, pattern distinction, alignment, white background, logo, signature space, page order and blank-page checks without inventing omitted driver details. No photograph, scan or real Student material was stored.
+
+Final verification preserved the exact operational database and zero-business/four-protected-account baseline, confirmed all 18 migrations current, and passed the focused report-card suite, typecheck, backup version 41 and Git safety. The approved Classes I-X colour/monochrome family is frozen under a versioned maintenance policy; KG remains default-off for V1.5. The retained feature branch was fast-forwarded to `main` and an annotated `report-card-print-acceptance-v41-2026-08-14` tag was created. No deployment or real report publication occurred. Result: `REPORT_PRINT_ACCEPTANCE_CLEARED`. Next governed phase: `V1-FINAL-1A`.
+
 ## REPORT-PRINT-ACCEPT-1A-P1 — R8 digital approval and physical gate (2026-08-14)
 
 The user reviewed R8 and stated, “I am satisfied and we can proceed.” This is accepted as normal-language final digital approval and recorded as `R8_DIGITAL_DESIGN_APPROVED`. The existing 8-page colour and 8-page true-monochrome Classes I-X packs were verified without regeneration: exact A4, nonblank, matching geometry, synthetic footer on every page, no KG specimen, zero meaningful chromatic pixels in monochrome, consecutive unique manifest entries and verified photocopy target `R8-MONO-03` on page 3.

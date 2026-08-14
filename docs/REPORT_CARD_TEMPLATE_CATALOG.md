@@ -4,7 +4,7 @@
 
 **Calibration date:** 2026-08-13
 
-**Status:** four Classes I-X families remain V1; R8 digital design is approved and verified physical candidates await print acceptance; the KG foundation is preserved and operationally deferred to V1.5
+**Status:** four Classes I-X families are digitally and physically accepted for V1; the KG foundation is preserved and operationally deferred to V1.5
 
 ## Canonical inventory
 
@@ -44,9 +44,9 @@ No template definition contains universal component maxima, weightages, or grade
 | Classes I-X R6-A1 digital review | Eight representative pages and twelve enlarged detail checks generated locally and ignored; configured header emphasis, adaptive dense/two-row charts and authoritative monochrome patterns await user review |
 | Classes I-X R7 digital review | Eight representative pages and fourteen enlarged detail checks generated locally and ignored; exact 12 pt/11 pt secondary header, dynamic summary cards, balanced signatures and filled-diamond monochrome treatment await user review |
 | Classes I-X R8 final digital review | `R8_DIGITAL_DESIGN_APPROVED`; eight representative pages and six detail checks verified locally with measured one-line summaries, dense marks priority, combined VI-X trait/grade, adaptive charts and 15 mm signatures |
-| Classes I-X physical colour, grayscale, and photocopy acceptance | Classes I-X-only colour/true-monochrome candidates verified in place; print gate open and physical observations pending |
+| Classes I-X physical colour, grayscale, and photocopy acceptance | `REPORT_PRINT_ACCEPTANCE_CLEARED`; Canon imageCLASS MF244dw/A4 colour, native-monochrome and one-generation dense-page photocopy accepted with no failed specimen |
 | KG physical acceptance | Deferred to V1.5; not part of the V1 release-candidate gate |
 
 ## Physical specimens
 
-The ignored R4.2 packs are preserved as technical evidence and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`; they must not be printed because they include KG and predate the final Classes I-X correction register. R5, R6 and R7 generated digital-review evidence only. R8 generated new Classes I-X-only physical candidates containing eight genuinely distinct layouts; digital approval is recorded and only these R8 candidates may enter physical acceptance. See `docs/REPORT_CARD_R8_DIGITAL_APPROVAL_AND_PHYSICAL_GATE.md`.
+The ignored R4.2 packs are preserved as technical evidence and marked `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`; they must not be used because they include KG and predate the final Classes I-X correction register. R5, R6 and R7 generated digital-review evidence only. The R8 Classes I-X-only candidates containing eight genuinely distinct layouts are the accepted physical reference. See `docs/REPORT_CARD_PRINT_ACCEPTANCE_RELEASE_CLOSURE.md` and the versioned maintenance policy.
