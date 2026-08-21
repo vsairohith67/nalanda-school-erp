@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { requireApiRolePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createContact, createDiaryEntry, createTask, listSuperAdminWork, updateContact, updateDiaryEntry, updateTask } from "@/lib/super-admin-work";
@@ -15,7 +16,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const auth = await requireApiRolePermission("VIEW_DASHBOARD", "SUPER_ADMIN");
   if (auth.response || !auth.user) return auth.response;
   try {
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
   const auth = await requireApiRolePermission("VIEW_DASHBOARD", "SUPER_ADMIN");
   if (auth.response || !auth.user) return auth.response;
   try {

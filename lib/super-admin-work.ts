@@ -82,7 +82,7 @@ export async function createTask(client: PrismaClient, actor: SuperAdminWorkActo
   assertSuperAdminWorkActor(actor);
   const data = taskInput(input);
   return client.$transaction(async (tx) => {
-    const row = await tx.superAdminTask.create({ data: { ownerUserId: actor.id, ...data, completedAt: completedStatus(data.status) ? new Date() : null } });
+    const row = await tx.superAdminTask.create({ data: { ownerUserId: actor.id, ...data, completedAt: data.status === "DONE" ? new Date() : null } });
     await audit(tx, actor.id, "TASK", row.publicKey, "TASK_CREATED", null, row.status, { category: row.category, priority: row.priority, hasReminder: Boolean(row.reminderAt), hasSafeLink: Boolean(row.linkedModule) });
     return taskView(row);
   });
@@ -95,8 +95,8 @@ export async function updateTask(client: PrismaClient, actor: SuperAdminWorkActo
   return client.$transaction(async (tx) => {
     const current = await tx.superAdminTask.findFirst({ where: { publicKey: key, ownerUserId: actor.id } });
     if (!current) throw new SuperAdminWorkError("Task was not found.", 404, "TASK_NOT_FOUND");
-    const row = await tx.superAdminTask.update({ where: { id: current.id }, data: { ...data, completedAt: completedStatus(data.status) ? current.completedAt ?? new Date() : null } });
-    const eventType = current.status !== row.status ? row.status === "DONE" ? "TASK_COMPLETED" : current.status === "DONE" ? "TASK_REOPENED" : "TASK_STATUS_CHANGED" : "TASK_UPDATED";
+    const row = await tx.superAdminTask.update({ where: { id: current.id }, data: { ...data, completedAt: data.status === "DONE" ? current.completedAt ?? new Date() : null } });
+    const eventType = taskEventType(current.status, row.status);
     await audit(tx, actor.id, "TASK", row.publicKey, eventType, current.status, row.status, { category: row.category, priority: row.priority, hasReminder: Boolean(row.reminderAt), hasSafeLink: Boolean(row.linkedModule) });
     return taskView(row);
   });
@@ -157,7 +157,7 @@ function taskInput(input: unknown) {
   const linkedEntityType = optional(value.linkedEntityType, "Linked entity type", 80);
   const linkedEntityReference = optional(value.linkedEntityReference, "Linked entity reference", 160);
   if (!linkedModule && (linkedEntityType || linkedEntityReference)) throw new SuperAdminWorkError("Choose a linked module before adding an entity reference.");
-  if (reminderAt && reminderAt.getTime() > dueDate.getTime() + 24 * 60 * 60 * 1_000) throw new SuperAdminWorkError("Reminder time must be on or before the end of the due date.");
+  if (reminderAt && reminderAt.getTime() >= dueDate.getTime() + 24 * 60 * 60 * 1_000) throw new SuperAdminWorkError("Reminder time must be on or before the end of the due date.");
   return {
     title: bounded(value.title, "Title", 160),
     description: optional(value.description, "Description", 8_000),
@@ -191,9 +191,9 @@ function contactInput(input: unknown) {
     lastContactDate: optionalDateOnly(value.lastContactDate, "Last-contact date"),
     nextFollowUpDate: optionalDateOnly(value.nextFollowUpDate, "Next follow-up date")
   };
-  const secretScan = [data.address, data.notes].filter(Boolean).join(" ");
-  if (/(?:\bOTP\b|\bCVV\b|banking\s+password|account\s+password|card\s+(?:number|details)|\bPIN\b|login\s+credential)/i.test(secretScan)) {
-    throw new SuperAdminWorkError("Do not store card details, passwords, OTPs, PINs or login credentials in the directory.", 400, "CONTACT_SECRET_REFUSED");
+  const secretScan = Object.values(data).filter((value) => typeof value === "string").join(" ");
+  if (/(?:\bOTP\b|\bCVV\b|banking\s+password|account\s+password|card\s+(?:number|details)|\bPIN\b|login\s+credential|\b(?:aadhaar|aadhar)\b|government\s+id|\bPAN\s+(?:number|card)\b)/i.test(secretScan)) {
+    throw new SuperAdminWorkError("Do not store card details, government IDs, passwords, OTPs, PINs or login credentials in the directory.", 400, "CONTACT_SECRET_REFUSED");
   }
   if (!data.phone && !data.email && !data.website && !data.address) throw new SuperAdminWorkError("Add at least one contact method or address.");
   return data;
@@ -317,6 +317,14 @@ function schoolDayRange(key: string) {
 
 function completedStatus(status: string) {
   return status === "DONE" || status === "CANCELLED";
+}
+
+function taskEventType(previousStatus: string, nextStatus: string) {
+  if (previousStatus === nextStatus) return "TASK_UPDATED";
+  if (nextStatus === "DONE") return "TASK_COMPLETED";
+  if (nextStatus === "CANCELLED") return "TASK_CANCELLED";
+  if (previousStatus === "DONE" || previousStatus === "CANCELLED") return "TASK_REOPENED";
+  return "TASK_STATUS_CHANGED";
 }
 
 function iso(value: Date | null) {

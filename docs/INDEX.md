@@ -5,17 +5,18 @@
 - [Scope](SUPER_ADMIN_COMMAND_CENTER_SCOPE.md)
 - [Architecture](SUPER_ADMIN_COMMAND_CENTER_ARCHITECTURE.md)
 - [Personal Work Programme Architecture](SUPER_ADMIN_WORK_PROGRAMME_ARCHITECTURE.md)
+- [Personal Work Programme QA Clearance](evidence/SUPER_ADMIN_WORK_1A_QA_CLEARANCE.md)
 - [V1.5 and Post-RC Roadmap](V1_5_AND_POST_RC_ROADMAP.md)
 - [Pending Feature Reconciliation](PENDING_FEATURE_RECONCILIATION.md)
 - [UDISE 15E Evidence Checklist](UDISE_15E_EVIDENCE_CHECKLIST.md)
 - [Mobile App Roadmap](MOBILE_APP_ROADMAP.md)
 
 The exact `SUPER_ADMIN`-only, private/no-store Command Center foundation is
-independently QA-cleared. `SUPER-ADMIN-WORK-1A` now implements its first private
+independently QA-cleared. `SUPER-ADMIN-WORK-1A` implements its first private
 owner-isolated product layer: Diary, Tasks & Reminders and Contacts & Suppliers
 inside one My Work shell with bounded, failure-isolated Command Center
-summaries. Status: `SUPER_ADMIN_WORK_READY_FOR_QA`. Universal Search remains
-next only after independent acceptance; Smart AI remains downstream of Search.
+summaries. Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search is the next
+governed phase; Smart AI remains downstream of Search.
 
 ## V1-FINAL-1A final integration and release-candidate preparation
 

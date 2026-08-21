@@ -3,7 +3,7 @@
 - **Prompt:** `SUPER-ADMIN-WORK-1A`
 - **Implementation branch:** `feature/super-admin-work-programme-1a`
 - **Starting checkpoint:** `467204394a0ca891fe6e9ac4d55fe59d0814aa17`
-- **Implementation status:** `READY_FOR_INDEPENDENT_QA`
+- **Implementation status:** `CLEARED`
 
 ## Purpose and boundary
 
@@ -123,12 +123,22 @@ status and useful empty states. No native `alert`, `confirm` or `prompt` is
 used. All date formatting is fixed to `Asia/Kolkata` to avoid server/client
 hydration differences.
 
-## Independent QA handoff
+## Independent QA clearance
 
-Focused coverage includes exact-role denial, delegated-profile denial, direct
-API authorization, owner scoping, Diary/Task/Contact lifecycle, date buckets,
-reminders, Command Center summaries, empty/loading/accessibility source
-contracts, privacy-safe audit and absence of provider calls. Independent QA
-must still repeat rendered desktop `1366x768` and exact mobile `390x844`
-checks, light/dark, direct route/API role probes, copied-database migration and
-the requested typecheck/focused suite before any merge, tag or deployment.
+`SUPER-ADMIN-WORK-1A-QA` independently repeated exact-role and delegated-profile
+denial, direct API authorization, two-Super-Admin owner isolation,
+Diary/Task/Contact lifecycle and validation, date/reminder boundaries, bounded
+Command Center summaries, privacy-safe audit, provider-side-effect absence,
+copied and fresh migration/recovery, representative volume, and responsive
+Browser QA. Desktop `1366x768` and exact mobile `390x844` passed in light and
+dark modes with no overflow, hydration error or browser console error.
+
+The final serialized gate passed 335 page routes, 549 API routes, lifecycle dry
+run, typecheck, 217 passing test files with 1 intentional skipped file (1,935
+passing tests and 3 intentional qpdf-runtime skips), production build, backup
+version 41 and Git safety. The operational database remained byte-identical at
+SHA-256 `65f47efa37da321023439303770645f8d656f2be58458c1a03b341408ef9a6fa`.
+The additive migration is source-cleared but remains unapplied to the
+operational database until a separately authorised deployment/onboarding gate.
+No provider was activated and no deployment, real data or real user was used.
+Status: `SUPER_ADMIN_WORK_CLEARED`. Next dependency: `UNIVERSAL-SEARCH-1A`.

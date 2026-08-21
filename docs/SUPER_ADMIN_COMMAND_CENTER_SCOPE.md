@@ -143,3 +143,15 @@ academic-integrity change is included. The required dependency order remains:
 `Diary / Tasks / Contacts -> Universal Search -> Smart AI`.
 
 See the [Personal Work Programme architecture](./SUPER_ADMIN_WORK_PROGRAMME_ARCHITECTURE.md).
+
+## SUPER-ADMIN-WORK-1A-QA clearance (2026-08-21)
+
+Independent QA cleared Diary, Tasks & Reminders, Contacts & Suppliers, the My
+Work shell and bounded Command Center summaries. Exact active `SUPER_ADMIN`
+access and two-owner isolation passed at page, route, API and service layers;
+all released non-Super-Admin roles and delegated profiles were denied. Fresh and
+copied migration/recovery, privacy-safe audit, no-provider side effects,
+representative volume and exact desktop/mobile light/dark Browser QA passed.
+The operational database remained byte-identical and the additive migration was
+not applied operationally. Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search
+is next; Smart AI remains downstream and Whiteboard remains planned.

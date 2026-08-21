@@ -31,7 +31,7 @@ This matrix separates presence from completeness. `Complete` requires tested wor
 | Staging/pilot/reconciliation/cutover | V1 | Deferred | Explicit operational approval not granted | Final release gate |
 | Full payroll automation/salary ESS | V1.5 | Complete | Product scope moved from V1; statutory integrations remain gated | Prompt 23I release preserved |
 | Super Admin Command Center | V1.5 | Complete locally/private | Deployment and real-user operation remain separate | `SUPER_ADMIN_COMMAND_CENTER_CLEARED` |
-| Super Admin Diary / Tasks / Contacts | V1.5 | Ready for independent QA | Exact-owner implementation and focused developer evidence exist; independent role/browser/recovery acceptance is still required | `SUPER-ADMIN-WORK-1A-QA`; then Universal Search |
+| Super Admin Diary / Tasks / Contacts | V1.5 | Complete locally/private | Exact-owner role/API/browser/recovery/security acceptance passed; operational migration and deployment remain separate | `SUPER_ADMIN_WORK_CLEARED`; Universal Search next |
 | Transport | V1.5 | Deferred | School does not provide service | Optional future decision |
 | Cafeteria | V1.5 | Deferred | School does not provide service | Optional future decision |
 | AI educational programme | V2 | Deferred | Planning/mock foundations are not the programme | Future V2 with Teacher approval |

@@ -63,6 +63,8 @@ describe("Super Admin private work programme", () => {
     expect(api.match(/requireApiRolePermission\("VIEW_DASHBOARD", "SUPER_ADMIN"\)/g)).toHaveLength(3);
     expect(api).not.toContain("requireApiPermission(");
     expect(readFileSync("lib/super-admin-work-api.ts", "utf8")).toContain('"Cache-Control": "private, no-store, max-age=0"');
+    expect(readFileSync("lib/super-admin-work-api.ts", "utf8")).toContain("unsafeRequestOriginAllowed(request)");
+    expect(readFileSync("lib/super-admin-work-api.ts", "utf8")).toContain('contentType !== "application/json"');
   });
 
   it("lists only the signed-in owner and keeps every list bounded", async () => {
@@ -114,6 +116,21 @@ describe("Super Admin private work programme", () => {
     expect(client.superAdminWorkAudit.create.mock.calls[1][0].data.eventType).toBe("TASK_REOPENED");
   });
 
+  it("keeps cancellation distinct from completion and rejects a reminder at the next midnight", async () => {
+    const client = transactionClient();
+    const cancelled = await createTask(client as unknown as PrismaClient, actor, { title: "Cancelled work", status: "CANCELLED", priority: "NORMAL", dueDate: "2026-08-21", category: "OTHER" });
+    expect(cancelled.status).toBe("CANCELLED");
+    expect(client.superAdminTask.create.mock.calls[0][0].data.completedAt).toBeNull();
+    expect(client.superAdminWorkAudit.create.mock.calls[0][0].data.eventType).toBe("TASK_CREATED");
+
+    client.superAdminTask.findFirst.mockResolvedValueOnce(taskRow({ status: "TO_DO" }) as never);
+    await updateTask(client as unknown as PrismaClient, actor, "task-public-1", { title: "Cancelled work", status: "CANCELLED", priority: "NORMAL", dueDate: "2026-08-21", category: "OTHER" });
+    expect(client.superAdminWorkAudit.create.mock.calls[1][0].data.eventType).toBe("TASK_CANCELLED");
+    expect(client.superAdminTask.update.mock.calls[0][0].data.completedAt).toBeNull();
+
+    await expect(createTask(client as unknown as PrismaClient, actor, { title: "Late reminder", status: "TO_DO", priority: "NORMAL", dueDate: "2026-08-21", reminderAt: "2026-08-22T00:00", category: "OTHER" })).rejects.toThrow(/end of the due date/i);
+  });
+
   it("fails closed when a public key belongs to another owner", async () => {
     const client = transactionClient();
     client.superAdminTask.findFirst.mockResolvedValueOnce(null as never);
@@ -127,6 +144,8 @@ describe("Super Admin private work programme", () => {
     const contact = await createContact(client as unknown as PrismaClient, actor, { name: "Nalanda Books", category: "BOOK_SUPPLIER", phone: "9876543210", preferred: true, tags: "books, preferred" });
     expect(contact).toMatchObject({ name: "Nalanda Books", preferred: true, tags: ["books", "preferred"] });
     await expect(createContact(client as unknown as PrismaClient, actor, { name: "Unsafe", category: "OTHER", phone: "9876543210", notes: "Banking password: secret" })).rejects.toMatchObject({ code: "CONTACT_SECRET_REFUSED" });
+    await expect(createContact(client as unknown as PrismaClient, actor, { name: "OTP 123456", category: "OTHER", phone: "9876543210" })).rejects.toMatchObject({ code: "CONTACT_SECRET_REFUSED" });
+    await expect(createContact(client as unknown as PrismaClient, actor, { name: "Unsafe ID", category: "OTHER", phone: "9876543210", notes: "Aadhaar 1234 5678 9012" })).rejects.toMatchObject({ code: "CONTACT_SECRET_REFUSED" });
   });
 
   it("updates Contacts inside owner scope and records only safe directory metadata", async () => {

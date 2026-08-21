@@ -1,5 +1,30 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## SUPER-ADMIN-WORK-1A-QA — Independent Personal Work Programme QA (2026-08-21)
+
+Independent QA reviewed the complete feature diff and additive migration from
+the cleared Command Center checkpoint. Copied and fresh databases proved
+idempotent migration, recovery, SQLite integrity and preservation of Student,
+Guardian, Staff, Payment, examination/report and IAM data. Two synthetic Super
+Admins proved Diary, Task, Contact and Command Center owner isolation. Every
+released non-Super-Admin role and a delegated profile were denied at direct
+route, API and service boundaries; origin, media type, malformed ID, mass
+assignment, stale/revoked/inactive session, XSS, pagination and privacy-safe
+audit checks passed with zero unresolved Critical or High findings.
+
+Browser QA passed Command Center and My Work at `1366x768` and exact `390x844`
+in light and dark modes with useful empty/validation states, keyboard focus,
+44 px targets, no overflow, no hydration error and no console error. Synthetic
+volume p95 remained below 50 ms. The serialized release gate passed 335 page
+routes, 549 API routes, lifecycle dry run, typecheck, 217 passing test files
+(1,935 passing tests; 3 intentional qpdf-runtime skips), production build,
+backup version 41 and Git safety. The operational database remained byte-exact
+at SHA-256 `65f47efa37da321023439303770645f8d656f2be58458c1a03b341408ef9a6fa`.
+The source migration remains unapplied operationally. No provider, deployment,
+real data/user, Universal Search, Smart AI, Whiteboard, procurement/payment or
+parallel academic-integrity work was activated or merged. Result:
+`SUPER_ADMIN_WORK_CLEARED`. Next dependency: `UNIVERSAL-SEARCH-1A`.
+
 ## SUPER-ADMIN-WORK-1A — Super Admin Personal Work Programme (2026-08-21)
 
 Starting from cleared Command Center commit

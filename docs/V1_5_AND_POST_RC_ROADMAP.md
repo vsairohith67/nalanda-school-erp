@@ -17,13 +17,13 @@ This roadmap preserves the operational boundaries in the [Requirements Register]
 
 **Recommend exactly one next product gate:**
 
-`SUPER-ADMIN-WORK-1A-QA — Independent Personal Work Programme QA`
+`UNIVERSAL-SEARCH-1A — Permission-Scoped Universal Search`
 
-The Command Center is cleared and its owner-isolated Diary, Tasks & Reminders,
-and Contacts & Suppliers implementation is ready for independent QA. Universal
-Search must not start until that QA gate accepts ownership isolation, lifecycle,
-privacy-safe audit, migration safety and exact mobile/desktop behaviour. Hosting
-and private staging remain a parallel operational track.
+The Command Center and owner-isolated Diary, Tasks & Reminders, and Contacts &
+Suppliers are independently cleared. Universal Search is now the next governed
+product dependency; it must remain permission-scoped, privacy-safe,
+server-authorized and bounded. Smart AI remains downstream. Hosting and private
+staging remain a parallel operational track.
 
 ## Governed phase order
 
@@ -32,7 +32,7 @@ and private staging remain a parallel operational track.
 | 1 | V1 operational | `STAGE-1B — Private Synthetic Staging Decision and Deployment` | Close the provider, budget, region, private-access, backup, and DNS-subdomain decisions; then create synthetic-only HTTPS staging under separate deployment authority. | Frozen RC; MSI ready; explicit provider, budget, payment, and DNS decisions | 2–4 working days after decisions | No | Configuration review, HTTPS/security headers, private access, synthetic-only proof, smoke test, and backup/restore evidence | Approved private synthetic staging evidence, or an explicit no-go record |
 | 2 | V1 operational | `STAGE-QA-1A — Independent Private Staging QA` | Independently verify the deployed RC before device or provider work. | Phase 1 deployed; exact staging revision recorded | 2–3 working days | No | Exact-SHA proof, role-focused smoke checks, log/privacy review, rollback evidence, and no-go report | Independent staging acceptance or a concrete remediation list |
 | 3 | V1.5 product | `SUPER-ADMIN-COMMAND-1A — Super Admin Command Center Foundation` | Exact `SUPER_ADMIN`-only, read-only composition over existing dashboards and operational signals. | Cleared dashboard, OBS-1A, IAM, academic calendar, and existing APIs | Cleared 2026-08-21 | **Complete** | Exact role/API denial, source isolation, responsive/accessibility, p95, privacy, no-write, security scan, and full regression passed | `SUPER_ADMIN_COMMAND_CENTER_CLEARED` |
-| 4 | V1.5 product | `SUPER-ADMIN-WORK-1A — Diary, Tasks, Reminders and Directory` | Exact-owner private Diary, Tasks/Reminders and publisher/vendor/contact directory in one My Work shell, with bounded Command Center summaries. | Phase 3 cleared; exact-owner/no-sharing policy accepted | Implemented 2026-08-21 | Yes — **Ready for independent QA** | Exact-role/API/ownership denial, CRUD/lifecycle/date boundaries, privacy-safe audit, migration/backup proof, no-provider side effects, exact desktop/mobile/light/dark UX | `SUPER_ADMIN_WORK_READY_FOR_QA`; independent clearance still required |
+| 4 | V1.5 product | `SUPER-ADMIN-WORK-1A — Diary, Tasks, Reminders and Directory` | Exact-owner private Diary, Tasks/Reminders and publisher/vendor/contact directory in one My Work shell, with bounded Command Center summaries. | Phase 3 cleared; exact-owner/no-sharing policy accepted | Cleared 2026-08-21 | **Complete** | Exact-role/API/ownership denial, CRUD/lifecycle/date boundaries, privacy-safe audit, migration/backup proof, no-provider side effects, exact desktop/mobile/light/dark UX passed | `SUPER_ADMIN_WORK_CLEARED` |
 | 5 | V1.5 product | `UNIVERSAL-SEARCH-1A — Permission-Scoped Universal Search` | Search only records the signed-in role may already open; establish the retrieval layer required before Smart AI. | Phase 4 directory/record model; existing role policy | 7–10 working days | Yes | Cross-role leakage tests, stale-index handling, result provenance, keyboard/mobile accessibility, performance budget | Permission-scoped universal search accepted for downstream retrieval |
 | 6 | V1.5 evidence/product | `UDISE-15E — Evidence Collection and Governed Extension` | Collect current official evidence, map Student/Teacher/state-specific workflows, then extend the read-only checklist only after the evidence gate passes. | [15E evidence checklist](./UDISE_15E_EVIDENCE_CHECKLIST.md) complete and approved | User-dependent evidence collection; 5–10 working days after unblocking | Yes | Field-to-source traceability, state-specific validation, privacy review, read-only enforcement, human acceptance; no portal automation | Accepted evidence map and governed read-only extension, or continued evidence block |
 | 7 | V2 AI | `SMART-AI-2A — Citation-Grounded Smart AI Pilot` | Extend the cleared cited, read-only mock foundation onto permission-scoped search and governed supplier/ERP sources. | Phases 4–5; approved provider/privacy/cost policy; staging | 10–15 working days | No | Citation completeness, permission inheritance, unsupported-answer refusal, prompt-injection tests, cost/rate limits, human review | Governed citation-based pilot accepted or stopped with measured evidence |

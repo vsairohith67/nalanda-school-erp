@@ -2,7 +2,7 @@
 
 **Register ID:** `GOV-RECON-1-REGISTER`<br>
 **As-of:** 2026-08-21<br>
-**Baseline:** protected released `main` and cleared Command Center checkpoint at `467204394a0ca891fe6e9ac4d55fe59d0814aa17`; Super Admin Work implementation on retained feature branch pending independent QA<br>
+**Baseline:** protected released `main` and cleared Command Center checkpoint at `467204394a0ca891fe6e9ac4d55fe59d0814aa17`; Super Admin Work independently cleared on retained feature branch<br>
 **Decision source:** `docs/V1_V1_5_V2_SCOPE.md`
 
 ## Status and evidence rules
@@ -48,7 +48,7 @@ A route, model or document by itself cannot produce `COMPLETE`. Evidence classes
 | V1.5-TRN-025 | Optional Transport | Authoritative GOV-RECON-1 correction | 2026-08-08 | Optional future transport operations | V1.5 | DEFERRED | None required now | None | None | None | Location/child safety and vendor boundaries before implementation | School currently provides no transport | Reassess only on service decision | High |
 | V1.5-CAF-026 | Optional Cafeteria | Authoritative GOV-RECON-1 correction | 2026-08-08 | Optional future cafeteria operations | V1.5 | DEFERRED | None required now | None | None | None | Student purchase/allergy/payment privacy before implementation | School currently provides no cafeteria | Reassess only on service decision | High |
 | V1.5-RC-034 | LKG/UKG developmental report cards and physical acceptance | 2026-08-12 report-card scope amendment (`EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `DEFERRED`) | 2026-08-12 | Preserve and later operationally accept the ten-page developmental booklet | V1.5 | IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5 | Existing KG renderer, tests, migrations, historical commits and ignored synthetic evidence preserved; `kg-report-cards-v1-5` default-off through existing release policy | Prior digital synthetic QA is retained foundation evidence; no V1.5 operational/physical acceptance | REPORT-PRINT-ACCEPT-1A scope split | historical report-card commits preserved | No ordinary-role KG operational controls in V1; existing issued snapshots remain readable; no source/Student data | Child requirement split from original `V1-RC-016`; not V1-cleared or production-ready | Revisit activation, LKG/UKG policy and physical/imposition acceptance only in an authorised V1.5 phase | High |
-| V1.5-WORK-035 | Super Admin Personal Work Programme | SUPER-ADMIN-WORK-1A exact prompt and repository implementation (`EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`) | 2026-08-21 | Give each exact Super Admin a private Diary, Tasks/Reminders and contact/supplier reference directory behind Command Center | V1.5 | READY_FOR_QA | Additive exact-owner Diary/Task/Contact/Audit models; exact-role page/API; one My Work shell; bounded resilient Command Center summaries; no sharing/provider/procurement/AI/search | Focused role/ownership/CRUD/date/audit/provider tests and copied-database additive migration/integrity/backup proof; independent rendered QA pending | SUPER-ADMIN-WORK-1A implementation handoff | `feature/super-admin-work-programme-1a`; final commit recorded at handoff | Exact active `SUPER_ADMIN`; every query owner-scoped; private/no-store; note bodies/contact PII excluded from audit metadata; no external messages | Universal Search and Smart AI remain downstream; no academic-integrity scope changed | Independent SUPER-ADMIN-WORK-1A-QA only; no merge/tag/deploy | High |
+| V1.5-WORK-035 | Super Admin Personal Work Programme | SUPER-ADMIN-WORK-1A exact prompt, repository implementation and independent QA (`EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE`) | 2026-08-21 | Give each exact Super Admin a private Diary, Tasks/Reminders and contact/supplier reference directory behind Command Center | V1.5 | CLEARED | Additive exact-owner Diary/Task/Contact/Audit models; exact-role page/API; one My Work shell; bounded resilient Command Center summaries; no sharing/provider/procurement/AI/search | Exact role/API/owner denial, lifecycle/date/security/privacy, fresh and copied migration/recovery, bounded volume, 1366x768 and 390x844 light/dark Browser QA, 1,935 tests, production build, backup v41 and Git safety passed | SUPER-ADMIN-WORK-1A-QA clearance | `feature/super-admin-work-programme-1a`; annotated `super-admin-work-v-2026-08-21` checkpoint | Exact active `SUPER_ADMIN`; every query owner-scoped; private/no-store; note bodies/contact PII excluded from audit metadata; no external messages; zero unresolved Critical/High findings | Operational migration remains unapplied; Universal Search next and Smart AI downstream; no academic-integrity scope changed | `UNIVERSAL-SEARCH-1A`; deployment/onboarding remains separately authorised | High |
 | V2-AI-027 | AI-generated lessons | Authoritative GOV-RECON-1 | 2026-08-08 | Assist Teachers with draft lessons | V2 | DEFERRED | Read-only/mock AI planning foundations only | No V2 programme acceptance | None | None | No Student data or automatic publication | Full payroll excluded | Future governed AI phase | High |
 | V2-AI-028 | AI-generated educational videos | Authoritative GOV-RECON-1 | 2026-08-08 | Produce draft educational video content | V2 | DEFERRED | None | None | None | None | Source rights, privacy, cost and safety controls | None | Future governed AI phase | High |
 | V2-AI-029 | Teacher review and approval | Authoritative GOV-RECON-1 | 2026-08-08 | Keep academic responsibility human | V2 | DEFERRED | None | None | None | None | Teacher approval required before any learner access | Mandatory V2 guard | Specify with V2 programme | High |
@@ -65,13 +65,13 @@ A route, model or document by itself cannot produce `COMPLETE`. Evidence classes
 | V1 | 24 |
 | V1.5 | 5 |
 | V2 | 6 |
-| CLEARED | 19 |
+| CLEARED | 20 |
 | CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING | 4 |
 | COMPLETE | 1 |
 | DEFERRED | 8 |
 | SUPERSEDED | 1 |
 | IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5 | 1 |
-| READY_FOR_QA | 1 |
+| READY_FOR_QA | 0 |
 
 ## Critical V1 gaps
 
