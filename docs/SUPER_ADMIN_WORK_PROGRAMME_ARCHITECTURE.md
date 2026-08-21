@@ -142,3 +142,17 @@ The additive migration is source-cleared but remains unapplied to the
 operational database until a separately authorised deployment/onboarding gate.
 No provider was activated and no deployment, real data or real user was used.
 Status: `SUPER_ADMIN_WORK_CLEARED`. Next dependency: `UNIVERSAL-SEARCH-1A`.
+
+## Downstream Universal Search implementation boundary (2026-08-22)
+
+`UNIVERSAL-SEARCH-1A` now consumes Diary, Task and Contact records through
+exact-owner server adapters. The authenticated Super Admin user ID is closed
+over by the composition service; no owner field exists in the request. Diary
+title/category/body, Task title/description/category/status and Contact
+name/person/category/phone/email/tags are searchable. Contact notes remain
+excluded to protect latent secret/private-path content. Search serializes no
+owner or My Work database ID and changes no Work record.
+
+Universal Search is `READY_FOR_INDEPENDENT_QA`, not cleared. The Personal Work
+Programme's prior independent clearance and operational-migration boundary are
+unchanged. See [Universal Search Architecture](./UNIVERSAL_SEARCH_ARCHITECTURE.md).

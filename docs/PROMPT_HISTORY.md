@@ -1930,3 +1930,32 @@ Status: `ACADEMIC-INTEGRITY-1A — CLEARED`. After `SUPER-ADMIN-WORK-1A-QA`
 independently cleared and advanced `main`, its exact My Work changes were
 preserved during release reconciliation and all affected/full gates were rerun.
 No deployment, live provider or real user/data activation was performed.
+
+## UNIVERSAL-SEARCH-1A — Permission-Scoped Super Admin Universal Search (2026-08-21 to 2026-08-22)
+
+The implementation began from fetched private `main` after verifying the
+handoff Super Admin Work tag at `53a805be7ad5299e76e30b2989a052f1b5f935e8`.
+`main` had advanced only through independently cleared Academic Integrity and
+its reconciliation merge at `61aac47f4f8f716a0fa61104124907002a2d36fb`, so
+the permitted Case 2 reconciliation rule was used. Permanent Teacher
+marks-write denial and exact delegated-operator controls were preserved.
+
+One exact-`SUPER_ADMIN` route and POST-only API now compose bounded authorised
+source adapters into a normalized privacy-safe result contract. Priority 1
+Students, Admissions, Guardians, Staff, Diary, Tasks and Contacts are included.
+Safe existing fee/receipt, examination, report-card, support, non-restricted
+Safe Exit, event, IAM metadata, release and observability adapters are included.
+Attendance and unified Audit search explicitly return `UNAVAILABLE`.
+
+Search uses deterministic exact-reference, exact-title, prefix, token and
+contains ranking; per-source timeout/failure isolation; 6 results per source;
+50 default and 60 maximum overall results; private/no-store responses; and no
+query-history write. My Work ownership comes only from the authenticated
+server session. No migration, search index/backfill, vector/embedding store,
+AI prompt/provider call, autonomous action, report/PDF/export source, external
+message or operational write is introduced.
+
+Status: `UNIVERSAL_SEARCH_READY_FOR_QA`. The feature branch may be reviewed only
+under the separate `UNIVERSAL-SEARCH-1A-QA` prompt. No merge, release tag,
+deployment, real-data indexing/import, Search clearance or Smart AI work is
+authorized by this implementation record.

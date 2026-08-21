@@ -155,3 +155,22 @@ representative volume and exact desktop/mobile light/dark Browser QA passed.
 The operational database remained byte-identical and the additive migration was
 not applied operationally. Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search
 is next; Smart AI remains downstream and Whiteboard remains planned.
+
+## UNIVERSAL-SEARCH-1A implementation handoff (2026-08-22)
+
+Universal Search is implemented on `feature/universal-search-1a` and is ready
+for separate independent QA. The exact-role `/super-admin/search` route sends
+one private POST request to a server composition service with bounded,
+failure-isolated source adapters and normalized results. Priority 1 includes
+Students, Admissions, Guardians, Staff and the exact-owner Diary, Tasks and
+Contacts sources. Safe existing Priority 2/3 adapters are included; Attendance
+and unified Audit search report `UNAVAILABLE` instead of fake zero results.
+
+The implementation adds no migration, search-index table, AI, prompt,
+embedding, vector store, external provider, autonomous action or operational
+write. Academic Integrity v1.1 is preserved and search provides no marks-edit
+action. Smart AI remains `BLOCKED UNTIL SEARCH QA CLEARS`. See the
+[Universal Search architecture](./UNIVERSAL_SEARCH_ARCHITECTURE.md).
+
+Status: `UNIVERSAL_SEARCH_READY_FOR_QA`. This is not a clearance, merge,
+release, deployment or Smart AI authorization.

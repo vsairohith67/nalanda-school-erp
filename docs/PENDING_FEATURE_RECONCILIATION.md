@@ -8,7 +8,7 @@
 
 The V1 RC remains cleared and frozen at `26a47632f7c1e9c9b5f2b48de8c9b56d60428aed`. MSI workstation transfer is complete; Dell remains a frozen fallback. No release evidence authorises deployment, live providers, real data, real users, pilot, or cutover. Remaining work divides into V1 operational launch gates, V1.5 product extensions, V2 AI, and mobile work.
 
-The read-only `SUPER-ADMIN-COMMAND-1A — Super Admin Command Center Foundation` is cleared. The next governed product phase is `SUPER-ADMIN-WORK-1A — Diary, Tasks, Reminders and Directory`. Private staging proceeds as a separate operational track.
+The read-only Command Center and exact-owner Personal Work Programme are cleared. `UNIVERSAL-SEARCH-1A` is implemented and ready for separate independent QA; it is not cleared. Smart AI remains blocked until Search QA clears. Private staging proceeds as a separate operational track.
 
 ## Evidence rule
 
@@ -21,11 +21,11 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | # | Work area | Classification | Evidence-based boundary and next disposition |
 |---:|---|---|---|
 | 1 | UDISE+ Prompt 15D and 15E | 15D: `CLEARED`; 15E: `BLOCKED_BY_EVIDENCE`; full operational support: `NOT_IMPLEMENTED` | 15D is a read-only checklist/reference foundation. 15E cannot start until current Student, Teacher, progression, Telangana, DCF, inconsistency, certification, report, register, and role evidence is supplied. No scraping, government-portal submission, or compliance claim. |
-| 2 | Super Admin Command Center | `CLEARED` | Independent QA cleared the exact-Super-Admin, private/no-store read-only composition without schema, provider, or operational-data changes. It reuses OBS-1A, IAM, immutable audit/event sources, and existing module records. The next product phase is `SUPER-ADMIN-WORK-1A`; Universal Search and Smart AI remain downstream. |
-| 3 | Digital Diary | `NOT_IMPLEMENTED` | A working Notion template exists, but no proven ERP Digital Diary code was found. Treat it as part of the future Command Center product, not as a completed ERP feature. |
-| 4 | Tasks, reminders and calendar | `PARTIAL` | The academic calendar/event lifecycle is cleared. General work tasks, reminders, and Life OS orchestration are not implemented as an ERP product. Combine them with Diary and Command Center scope. |
-| 5 | Universal search | `NOT_IMPLEMENTED` | No proven permission-scoped universal ERP search exists. It must follow the directory/record model and precede Smart AI. |
-| 6 | Publishers, book suppliers, vendors and contacts | `PARTIAL` | Vendor records and publisher-bill wrappers over vendor/expense workflows are cleared. A consolidated supplier/contact directory and broader CRM lifecycle are not proven. Supplier records must exist before AI answers supplier questions. |
+| 2 | Super Admin Command Center | `CLEARED` | Independent QA cleared the exact-Super-Admin, private/no-store composition. Its live Universal Search launcher is an implementation update and does not alter the Command Center clearance evidence. |
+| 3 | Digital Diary | `CLEARED` | Exact-owner Diary is independently cleared inside My Work and is an included owner-scoped Universal Search source. |
+| 4 | Tasks, reminders and calendar | My Work Tasks/Reminders: `CLEARED`; calendar: `CLEARED`; broader Life OS: `DEFERRED` | Exact-owner Tasks & Reminders and the existing academic calendar are cleared. Universal Search consumes bounded safe fields without completing tasks or sending reminders. |
+| 5 | Universal search | `READY_FOR_INDEPENDENT_QA` | Exact-`SUPER_ADMIN`, deterministic, private/no-store server composition is implemented without a migration, index table, AI or external provider. Attendance and unified Audit search explicitly report `UNAVAILABLE`. Smart AI stays blocked pending QA clearance. |
+| 6 | Publishers, book suppliers, vendors and contacts | My Work directory: `CLEARED`; broader CRM/procurement: `DEFERRED` | Exact-owner Contacts & Suppliers is cleared and searchable through bounded safe fields. It remains a reference directory, not procurement/payment automation. |
 | 7 | Monitoring and operational dashboard extensions | `PARTIAL` | OBS-1A and its technical/operational foundation are cleared. Hosting-dependent live monitoring, provider health, cost/usage extensions, and unified Command Center presentation remain pending. Extend the existing architecture. |
 | 8 | Infinite whiteboard | `NOT_IMPLEMENTED` | No ERP whiteboard engine is proven. The canonical Canvs architecture board already provides a governed visual surface; integration/reuse should be assessed before building another engine. |
 | 9 | Citation-based Smart AI | `PARTIAL`; advanced scope `DEFERRED_TO_V2` | The read-only assistant foundation validates citations/timestamps using mock data. Universal search, supplier sources, semantic retrieval, attachments, external knowledge, and live providers are not complete. |
@@ -43,8 +43,8 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 
 1. Compose the Super Admin Command Center from existing cleared foundations.
 2. Establish the combined Diary/tasks/reminders/Life OS and directory model.
-3. Build universal permission-scoped search over governed records.
-4. Only then pilot citation-based Smart AI.
+3. Independently QA the implemented permission-scoped Universal Search.
+4. Only after Search clearance may a separate prompt consider citation-based Smart AI.
 
 This order prevents AI from answering over missing supplier records or bypassing role permissions.
 
@@ -54,6 +54,13 @@ Diary, tasks, reminders, contacts, universal search, OBS-1A extensions, Canvs/wh
 
 - KG report cards, optional Transport and Cafeteria modules, and operational rollout of the technically cleared full Payroll/ESS foundation remain `DEFERRED_TO_V1_5`.
 - AI-generated lessons and educational videos remain `DEFERRED_TO_V2`, require Teacher approval, and must not publish automatically to Students.
+
+## UNIVERSAL-SEARCH-1A implementation update (2026-08-22)
+
+The implementation and precise source/deferred-source contract are documented
+in [Universal Search Architecture](./UNIVERSAL_SEARCH_ARCHITECTURE.md). This
+update does not rewrite the historical planning baseline above and does not
+authorize full-suite QA, merge, tag, deployment, real-data indexing or Smart AI.
 
 ## Superseded checkpoints
 

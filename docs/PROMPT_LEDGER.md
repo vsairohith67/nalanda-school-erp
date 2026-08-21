@@ -2,7 +2,7 @@
 
 **Ledger ID:** `GOV-RECON-1-LEDGER`<br>
 **Reconstructed:** 2026-08-12<br>
-**Coverage:** earliest post-hoc Prompt Library evidence (created 2026-06-19) through SUPER-ADMIN-WORK-1A-QA
+**Coverage:** earliest post-hoc Prompt Library evidence (created 2026-06-19) through UNIVERSAL-SEARCH-1A implementation
 
 ## Source limitation
 
@@ -14,6 +14,7 @@ The accessible Git history begins with the consolidated baseline commit `2d1ac63
 
 | Sequence / prompt label | Recoverable subject | Source date | Evidence classification | Implementation/release disposition | Source gap or conflict |
 | --- | --- | --- | --- | --- | --- |
+| UNIVERSAL-SEARCH-1A | Exact-Super-Admin permission-scoped deterministic Universal Search and future-safe retrieval boundary | 2026-08-21/22 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE` | Implemented on `feature/universal-search-1a`; focused role/privacy/owner/ranking/failure/scale/Browser verification prepared for independent QA; status `UNIVERSAL_SEARCH_READY_FOR_QA` | No clearance, merge, tag, deploy, real-data indexing, migration, AI/embedding/vector/provider call, autonomous action or marks-authorization change; Smart AI blocked pending Search QA |
 | ACADEMIC-INTEGRITY-1A | Principal-controlled marks entry and exact delegated non-teaching operator authority | 2026-08-21 exact attached management prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `INDEPENDENT_QA_EVIDENCE` | `ACADEMIC-INTEGRITY-1A — CLEARED`; exact role/scope, linked-child, revocation, Browser, security and full verification passed | V1 Teacher write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`; no V1 RC retag/rewrite, Academic Integrity schema migration, deploy, formula/template/history change; cleared Super Admin Work was preserved during release reconciliation |
 | SUPER-ADMIN-WORK-1A-QA | Independent security, privacy, ownership, migration, responsive, performance and release acceptance for Super Admin My Work | 2026-08-21 exact attached QA prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | `SUPER_ADMIN_WORK_CLEARED`; exact role and two-owner isolation, complete lifecycle/security, copied/fresh migration, bounded volume, exact desktop/mobile light/dark, 1,935 tests, build, backup v41 and Git safety passed; annotated `super-admin-work-v-2026-08-21` checkpoint | No deployment, operational migration, provider activation, real data/user, Universal Search, Smart AI, whiteboard, procurement/payment automation or academic-integrity merge |
 | SUPER-ADMIN-WORK-1A | Exact-owner Super Admin Diary, Tasks/Reminders and Contacts/Suppliers behind cleared Command Center | 2026-08-21 exact attached prompt and repository evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE` | Implemented on `feature/super-admin-work-programme-1a`; focused developer verification and copied-database additive migration proof completed before independent QA | No merge, tag, deploy, Universal Search, Smart AI, whiteboard, provider activation, procurement/payment automation or academic-integrity change at implementation handoff |
