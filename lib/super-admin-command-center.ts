@@ -3,6 +3,7 @@ import { schoolDateKey } from "@/lib/format";
 import { attendanceDay } from "@/lib/student-attendance";
 import { getTechnicalOperationsDashboard } from "@/lib/technical-operations";
 import type { OperationalStatus, TechnicalOperationsDashboard } from "@/lib/technical-operations-types";
+import { summarizeSuperAdminWork } from "@/lib/super-admin-work";
 
 export const COMMAND_CENTER_TIMEOUT_MS = 1_500;
 export const COMMAND_CENTER_ACTIVITY_LIMIT = 12;
@@ -52,8 +53,9 @@ export type SuperAdminCommandCenter = {
     items: CommandCenterHealthItem[];
   }>;
   recentActivity: CommandCenterSource<CommandCenterActivity[]>;
+  workSummary: CommandCenterSource<CommandCenterMetric[]>;
   quickAccess: Array<{ label: string; href: string }>;
-  workProgramme: Array<{ title: string; status: "NEXT PHASE" | "PLANNED" | "BLOCKED BY DEPENDENCY"; detail: string }>;
+  workProgramme: Array<{ title: string; status: "LIVE" | "PLANNED" | "BLOCKED BY DEPENDENCY"; detail: string; href?: string }>;
   udise: Array<{ label: string; status: string }>;
   mobile: Array<{ label: string; status: string }>;
 };
@@ -63,16 +65,18 @@ export type CommandCenterReaders = {
   schoolPulse(): Promise<CommandCenterMetric[]>;
   systemHealth(): Promise<{ generatedAt: string; overall: OperationalStatus; items: CommandCenterHealthItem[] }>;
   recentActivity(): Promise<CommandCenterActivity[]>;
+  workSummary(): Promise<CommandCenterMetric[]>;
 };
 
 export async function getSuperAdminCommandCenter(
   client: PrismaClient,
   academicYear: string,
+  ownerUserId: string,
   options: { now?: Date; timeoutMs?: number } = {}
 ): Promise<SuperAdminCommandCenter> {
   const now = options.now ?? new Date();
   const timeoutMs = options.timeoutMs ?? COMMAND_CENTER_TIMEOUT_MS;
-  return composeSuperAdminCommandCenter(createCommandCenterReaders(client, academicYear, now, timeoutMs), { now, timeoutMs });
+  return composeSuperAdminCommandCenter(createCommandCenterReaders(client, academicYear, ownerUserId, now, timeoutMs), { now, timeoutMs });
 }
 
 export async function composeSuperAdminCommandCenter(
@@ -81,7 +85,7 @@ export async function composeSuperAdminCommandCenter(
 ): Promise<SuperAdminCommandCenter> {
   const now = options.now ?? new Date();
   const timeoutMs = options.timeoutMs ?? COMMAND_CENTER_TIMEOUT_MS;
-  const [today, schoolPulse, systemHealth, recentActivity] = await Promise.all([
+  const [today, schoolPulse, systemHealth, recentActivity, workSummary] = await Promise.all([
     safeSource(() => readers.today(), [], timeoutMs),
     safeSource(() => readers.schoolPulse(), [], timeoutMs),
     safeSource<{ generatedAt: string | null; overall: OperationalStatus | null; items: CommandCenterHealthItem[] }>(
@@ -89,7 +93,8 @@ export async function composeSuperAdminCommandCenter(
       { generatedAt: null, overall: null, items: [] },
       timeoutMs
     ),
-    safeSource(() => readers.recentActivity(), [], timeoutMs)
+    safeSource(() => readers.recentActivity(), [], timeoutMs),
+    safeSource(() => readers.workSummary(), [], timeoutMs)
   ]);
 
   return {
@@ -100,6 +105,7 @@ export async function composeSuperAdminCommandCenter(
     schoolPulse: schoolPulse.data,
     systemHealth,
     recentActivity,
+    workSummary,
     quickAccess: [
       { label: "Students", href: "/students" },
       { label: "Admissions", href: "/admission-crm" },
@@ -115,9 +121,9 @@ export async function composeSuperAdminCommandCenter(
       { label: "Observability", href: "/technical-operations" }
     ],
     workProgramme: [
-      { title: "Diary", status: "NEXT PHASE", detail: "Personal planning foundation; no ERP storage in this phase." },
-      { title: "Tasks & Reminders", status: "NEXT PHASE", detail: "Follows the governed Diary work programme." },
-      { title: "Contacts & Suppliers", status: "NEXT PHASE", detail: "Directory records precede search and AI." },
+      { title: "Diary", status: "LIVE", detail: "Private owner-isolated structured daily notes.", href: "/super-admin/my-work" },
+      { title: "Tasks & Reminders", status: "LIVE", detail: "Private due work and local reminder times.", href: "/super-admin/my-work" },
+      { title: "Contacts & Suppliers", status: "LIVE", detail: "Private contact reference directory; no procurement automation.", href: "/super-admin/my-work" },
       { title: "Universal Search", status: "BLOCKED BY DEPENDENCY", detail: "Starts after Diary, Tasks and Directory." },
       { title: "Smart AI", status: "BLOCKED BY DEPENDENCY", detail: "Starts only after permission-scoped Universal Search." },
       { title: "Whiteboard", status: "PLANNED", detail: "Canvs remains the planning surface; no ERP whiteboard engine yet." }
@@ -148,6 +154,7 @@ export function humanizeCommandCenterValue(value: string) {
 function createCommandCenterReaders(
   client: PrismaClient,
   academicYear: string,
+  ownerUserId: string,
   now: Date,
   timeoutMs: number
 ): CommandCenterReaders {
@@ -156,8 +163,21 @@ function createCommandCenterReaders(
     today: () => loadToday(client, academicYear, now, operationsPromise, timeoutMs),
     schoolPulse: () => loadSchoolPulse(client, academicYear, now, timeoutMs),
     systemHealth: async () => summarizeTechnicalOperations(await operationsPromise),
-    recentActivity: () => loadRecentActivity(client)
+    recentActivity: () => loadRecentActivity(client),
+    workSummary: () => loadWorkProgrammeSummary(client, ownerUserId, now)
   };
+}
+
+async function loadWorkProgrammeSummary(client: PrismaClient, ownerUserId: string, now: Date): Promise<CommandCenterMetric[]> {
+  const summary = await summarizeSuperAdminWork(client, { id: ownerUserId, role: "SUPER_ADMIN" }, now);
+  return [
+    { id: "work-today", label: "Today’s tasks", value: summary.todayTasks, detail: "Private tasks due today", state: summary.todayTasks ? "OK" : "EMPTY", href: "/super-admin/my-work" },
+    { id: "work-overdue", label: "Overdue tasks", value: summary.overdueTasks, detail: "Incomplete private tasks before today", state: summary.overdueTasks ? "OK" : "EMPTY", href: "/super-admin/my-work" },
+    { id: "work-reminders", label: "Upcoming reminders", value: summary.upcomingReminders, detail: "Private reminder times in the next seven days", state: summary.upcomingReminders ? "OK" : "EMPTY", href: "/super-admin/my-work", items: summary.reminderItems.map((row) => ({ label: row.title, meta: row.at })) },
+    { id: "work-diary", label: "Recent diary entries", value: summary.recentDiary.length, detail: "Latest owner-isolated entries", state: summary.recentDiary.length ? "OK" : "EMPTY", href: "/super-admin/my-work", items: summary.recentDiary.map((row) => ({ label: row.title, meta: `${row.date}T00:00:00+05:30` })) },
+    { id: "work-follow-ups", label: "Follow-ups due", value: summary.followUpsDue, detail: "Open diary and active contact follow-ups due", state: summary.followUpsDue ? "OK" : "EMPTY", href: "/super-admin/my-work" },
+    { id: "work-contacts", label: "Active contacts", value: summary.activeContacts, detail: `${summary.preferredContacts} preferred active contact${summary.preferredContacts === 1 ? "" : "s"}`, state: summary.activeContacts ? "OK" : "EMPTY", href: "/super-admin/my-work" }
+  ];
 }
 
 async function loadToday(

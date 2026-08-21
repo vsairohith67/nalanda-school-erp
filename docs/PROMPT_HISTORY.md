@@ -1,5 +1,31 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## SUPER-ADMIN-WORK-1A — Super Admin Personal Work Programme (2026-08-21)
+
+Starting from cleared Command Center commit
+`467204394a0ca891fe6e9ac4d55fe59d0814aa17`, this phase implements one compact
+exact-`SUPER_ADMIN` My Work workspace with Digital Diary, Tasks & Reminders and
+Contacts & Suppliers. Four additive owner-isolated tables preserve future
+multi-Super-Admin safety without adding sharing. The API repeats exact-role
+authorization and every service query includes the signed-in owner identity.
+
+Diary, task and contact create/update/status flows, school-date boundaries,
+local reminder times, bounded lists, privacy-safe audit metadata, private
+no-store responses, Command Center summaries, empty/loading states, keyboard
+focus and one-column mobile CSS are covered. Contact storage refuses common
+card/password/OTP/PIN/credential material. Reminder support has no SMS,
+WhatsApp, email or other provider side effect.
+
+The migration applied successfully to a copied operational database with four
+protected users; SQLite integrity returned `ok`, the original database hash was
+unchanged and a post-migration backup was byte-exact. Focused implementation
+tests pass. Independent QA must still repeat exact-role route/API probes,
+ownership isolation, desktop `1366x768`, exact mobile `390x844`, light/dark,
+typecheck and focused recovery checks. No merge, tag, deploy, Universal Search,
+Smart AI, whiteboard, procurement/payment automation or academic-integrity
+change is authorised. Result at implementation handoff:
+`SUPER_ADMIN_WORK_READY_FOR_QA`.
+
 ## V1-FINAL-1A-QA — independent V1 release-candidate acceptance (2026-08-14)
 
 Independent QA inspected the complete retained-branch diff, rebuilt a fresh `V1FINALQA` school from all 18 migrations, proved schema equivalence, restore/replay/cleanup and the exact 800-Student profile, then repeated the Auth/IAM, finance, admissions, academic/calendar/reporting, payslip, support, Safe Exit, release-operations and private-file gates. The bounded profile recorded zero errors and zero SQLite busy failures well inside the local 2 s/3 s/5 s budgets.

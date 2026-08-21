@@ -429,6 +429,11 @@ model User {
   homeworkAssignmentsCancelled     HomeworkAssignment[]                @relation("HomeworkCancelledBy")
   homeworkEventsRecorded           HomeworkAssignmentEvent[]           @relation("HomeworkEventRecordedBy")
   notificationRecipients           NotificationRecipient[]
+  superAdminDiaryEntries           SuperAdminDiaryEntry[]              @relation("WorkDiaryOwner")
+  superAdminTasks                  SuperAdminTask[]                    @relation("WorkTaskOwner")
+  superAdminContacts               SuperAdminContact[]                 @relation("WorkContactOwner")
+  superAdminWorkAuditsOwned        SuperAdminWorkAudit[]               @relation("WorkAuditOwner")
+  superAdminWorkAuditsActed        SuperAdminWorkAudit[]               @relation("WorkAuditActor")
   authLoginAliases                 AuthLoginAlias[]
   authVerificationChallenges       AuthVerificationChallenge[]
   authPasswordResetTokens          AuthPasswordResetToken[]
@@ -8071,4 +8076,102 @@ model BackgroundJobRun {
   @@index([jobType, status, queuedAt])
   @@index([status, nextAttemptAt])
   @@index([expiresAt])
+}
+
+// SUPER-ADMIN-WORK-1A: owner-isolated private productivity records.
+// These models deliberately do not include sharing or delegated-access fields.
+model SuperAdminDiaryEntry {
+  id               String    @id @default(cuid())
+  publicKey        String    @unique @default(uuid())
+  ownerUserId      String
+  owner            User      @relation("WorkDiaryOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  title            String
+  entryDate        DateTime
+  notesFormat      String    @default("PLAIN_STRUCTURED")
+  notes            String
+  category         String
+  contextModule    String?
+  contextReference String?
+  status           String    @default("OPEN")
+  priority         String    @default("NORMAL")
+  followUpDate     DateTime?
+  closedAt         DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([ownerUserId, entryDate])
+  @@index([ownerUserId, status, followUpDate])
+  @@index([ownerUserId, category, priority])
+}
+
+model SuperAdminTask {
+  id                    String    @id @default(cuid())
+  publicKey             String    @unique @default(uuid())
+  ownerUserId           String
+  owner                 User      @relation("WorkTaskOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  title                 String
+  description           String?
+  status                String    @default("TO_DO")
+  priority              String    @default("NORMAL")
+  dueDate               DateTime
+  dueTime               String?
+  reminderAt            DateTime?
+  category              String
+  linkedModule          String?
+  linkedEntityType      String?
+  linkedEntityReference String?
+  completedAt           DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([ownerUserId, status, dueDate])
+  @@index([ownerUserId, reminderAt])
+  @@index([ownerUserId, category, priority])
+}
+
+model SuperAdminContact {
+  id               String    @id @default(cuid())
+  publicKey        String    @unique @default(uuid())
+  ownerUserId      String
+  owner            User      @relation("WorkContactOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  name             String
+  contactPerson    String?
+  category         String
+  phone            String?
+  alternatePhone   String?
+  email            String?
+  address          String?
+  website          String?
+  notes            String?
+  status           String    @default("ACTIVE")
+  preferred        Boolean   @default(false)
+  tagsJson         String    @default("[]")
+  lastContactDate  DateTime?
+  nextFollowUpDate DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([ownerUserId, status, preferred])
+  @@index([ownerUserId, category, name])
+  @@index([ownerUserId, nextFollowUpDate])
+}
+
+model SuperAdminWorkAudit {
+  id               String   @id @default(cuid())
+  publicKey        String   @unique @default(uuid())
+  ownerUserId      String
+  owner            User     @relation("WorkAuditOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  actorUserId      String
+  actor            User     @relation("WorkAuditActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+  entityType       String
+  entityPublicKey  String
+  eventType        String
+  previousStatus   String?
+  newStatus        String?
+  safeMetadataJson String?
+  occurredAt       DateTime @default(now())
+
+  @@index([ownerUserId, occurredAt])
+  @@index([ownerUserId, entityType, entityPublicKey])
+  @@index([eventType, occurredAt])
 }
