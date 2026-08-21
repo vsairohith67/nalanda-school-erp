@@ -201,7 +201,7 @@ export function roleSupportsObjectScopedPermission(role: Role, permission: Canon
 }
 
 export function permissionCanAppearInProfile(permission: CanonicalPermission) {
-  return !SUPER_ADMIN_ONLY_PERMISSIONS.has(permission);
+  return !SUPER_ADMIN_ONLY_PERMISSIONS.has(permission) && !ACADEMIC_INTEGRITY_MARKS_WRITE_PERMISSIONS.has(permission);
 }
 
 export function permissionCanBeDelegatedByProfile(permission: CanonicalPermission) {

@@ -9,6 +9,7 @@ import {
   type LegacyMarksDelegationScope
 } from "@/lib/academic-integrity";
 import { immutablePermissionDenial } from "@/lib/iam/permission-governance";
+import { permissionCanAppearInProfile } from "@/lib/iam/permission-governance";
 import { RECOMMENDED_ROLE_PERMISSIONS } from "@/lib/permissions";
 
 const exactScope: LegacyMarksDelegationScope = {
@@ -31,7 +32,8 @@ function envelope(scope = exactScope) {
 function delegatedClient(options: { assignments?: any[]; teacherRole?: boolean } = {}) {
   return {
     userRoleAssignment: { findFirst: async () => options.teacherRole ? { id: "teacher-role" } : null },
-    userPermissionProfileAssignment: { findMany: async () => options.assignments ?? [{ id: "grant-1", publicKey: "grant-handle", reason: envelope(), profile: { name: "MARKS_ENTRY_OPERATOR" } }] }
+    userPermissionProfileAssignment: { findMany: async () => options.assignments ?? [{ id: "grant-1", publicKey: "grant-handle", reason: envelope(), profile: { name: "MARKS_ENTRY_OPERATOR" } }] },
+    authSecurityEvent: { create: async (input: unknown) => input }
   } as any;
 }
 
@@ -70,6 +72,17 @@ describe("ACADEMIC-INTEGRITY-1A permanent marks-write policy", () => {
     await expect(resolveMarksWriteAuthority(delegatedClient(), actor, { ...exactScope, assessmentId: "tampered" })).rejects.toThrow(/exact scope/);
   });
 
+  it("records privacy-safe denied exact-scope decisions", async () => {
+    const events: any[] = [];
+    const client = delegatedClient({ assignments: [] });
+    client.authSecurityEvent.create = async (input: any) => events.push(input.data);
+    await expect(resolveMarksWriteAuthority(client, { id: "operator-1", name: "Operator", role: "COMPUTER_OPERATOR" }, { ...exactScope, section: "B" })).rejects.toThrow(/exact scope/);
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ eventType: "MARKS_WRITE_AUTHORITY_DENIED", subjectType: "MARKS_SCOPE" });
+    expect(events[0].detailsJson).toContain('"reasonCode":"NO_EXACT_DELEGATED_SCOPE"');
+    expect(events[0].detailsJson).not.toContain("Mathematics");
+  });
+
   it("denies revoked, expired/stale, and multi-role Teacher-linked operators", async () => {
     const actor = { id: "operator-1", name: "Operator", role: "VIEWER" as const };
     await expect(resolveMarksWriteAuthority(delegatedClient({ assignments: [] }), actor, exactScope)).rejects.toThrow(/No active delegated/);
@@ -90,6 +103,23 @@ describe("ACADEMIC-INTEGRITY-1A permanent marks-write policy", () => {
     const profiles = readFileSync("lib/iam/profiles.ts", "utf8");
     expect(profiles).toContain("MARKS_ENTRY_OPERATOR is managed only in Marks Entry Delegation");
     expect(profiles).toContain("normalizedName: { not: RESERVED_MARKS_OPERATOR_PROFILE }");
+    for (const permission of MARKS_DELEGATION_PERMISSIONS) {
+      if (permission !== "VIEW_OWN_EXAM_MARKS") expect(permissionCanAppearInProfile(permission)).toBe(false);
+    }
+    const users = readFileSync("lib/iam/users.ts", "utf8");
+    expect(users).toContain('profiles.some((profile) => profile.normalizedName === RESERVED_MARKS_OPERATOR_PROFILE)');
+    expect(users).toContain("Marks-write authority requires an exact Marks Entry Delegation scope");
+    const delegationPage = readFileSync("app/marks/delegation/page.tsx", "utf8");
+    expect(delegationPage).toContain('new Set(["PRINCIPAL", "SUPER_ADMIN"])');
+    expect(delegationPage).toContain('redirect("/unauthorized")');
+  });
+
+  it("lets an exact delegated operator open the legacy entry surface without broad VIEW_EXAMS", () => {
+    expect(readFileSync("app/marks/entry/[assessmentId]/page.tsx", "utf8")).toContain('requirePermission("ENTER_MARKS")');
+    const route = readFileSync("app/api/marks/entry/[assessmentId]/route.ts", "utf8");
+    expect(route).toContain('GET(_: NextRequest');
+    expect(route).toContain('requireApiPermission("ENTER_MARKS")');
+    expect(route).toContain('loadScopedAssessment(auth.user, id, "WRITE")');
   });
 
   it("protects every focused mutation surface with server-side academic-integrity enforcement", () => {

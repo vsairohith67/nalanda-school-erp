@@ -1861,3 +1861,18 @@ Management superseded the earlier ordinary Teacher marks-entry policy as an acad
 The implementation reuses current IAM profile assignments, validity, authorisation-version/session revocation and audit ledgers; no schema migration is introduced. Legacy and governed mutation services independently recheck effective authority, exact scope and supported Guardian/Student family conflict before saving. Teacher marks navigation and the direct Teacher entry route are removed/denied while established read-only academic-report access remains. Report-card mutation becomes leadership-only. Examination formulas, report templates, immutable issued reports, calculation snapshots, prior audit evidence and frozen V1 RC1 tags are unchanged.
 
 Implementation status is ready for independent `ACADEMIC-INTEGRITY-1A-QA` after focused verification and approved private branch publication. No merge, tag, deployment, operational-data mutation or history rewrite is authorised. Policy marker: `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`.
+
+## ACADEMIC-INTEGRITY-1A-QA — Independent Security Clearance (2026-08-21)
+
+Independent QA proved permanent Principal/Super Admin authority, absolute
+Teacher denial, exact non-teaching delegation, multi-role Teacher denial,
+linked-child conflict protection, immediate session-revoked grant removal,
+scope/IDOR/import/concurrency controls and historical immutability on copied or
+synthetic data. QA closed one Medium generic-IAM reserved-profile/override bypass,
+one delegated legacy-route permission mismatch and one unsafe unauthorized page
+surface. The final gate passed 336 page routes, 550 API routes, lifecycle dry run,
+typecheck, 1,931 tests with 3 optional qpdf skips, production build, backup
+version 41 and Git safety. Operational database SHA-256 remained
+`65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA`.
+Status: `ACADEMIC-INTEGRITY-1A — CLEARED`. No deployment, live provider, real
+user/data activation or parallel Super Admin Work merge was performed.

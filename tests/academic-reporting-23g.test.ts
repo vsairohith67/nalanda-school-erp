@@ -77,7 +77,7 @@ describe("Prompt 23G governed academic reporting",()=>{
 
   it("keeps Teacher/learner scope server-side and exports only through state-changing POST",()=>{
     const loader=source("lib/academic-reporting-sources.ts"),runRoute=source("app/api/academic-reports/runs/route.ts"),exportRoute=source("app/api/academic-reports/runs/[runKey]/export/route.ts");
-    expect(loader).toContain("listExactTeacherMarkAssignments");expect(loader).toContain("resolveClassworkLearnerContext");expect(loader).toContain("pruneSubjectScope");expect(runRoute).toContain("export async function POST");expect(exportRoute).toContain("export async function POST");expect(exportRoute).not.toContain("export async function GET");
+    expect(loader).toContain("listExactTeacherReportingAssignments");expect(loader).not.toContain("listExactTeacherMarkAssignments");expect(loader).toContain("resolveClassworkLearnerContext");expect(loader).toContain("pruneSubjectScope");expect(runRoute).toContain("export async function POST");expect(exportRoute).toContain("export async function POST");expect(exportRoute).not.toContain("export async function GET");
   });
 
   it("has private/no-store, origin middleware, deterministic files, immutable models and no external AI",()=>{

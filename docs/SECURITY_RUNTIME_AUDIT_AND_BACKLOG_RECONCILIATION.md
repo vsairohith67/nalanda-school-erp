@@ -59,3 +59,16 @@ the independent fresh-copy verification recorded in
 `SEC_1_INDEPENDENT_QA_CLOSURE_REPORT.md`.
 authorized local boundary; deployment-only controls and Prompt 21B/21C/21D
 remain blocked exactly as recorded above.
+
+## Academic Integrity v1.1 authorization closure
+
+`ACADEMIC-INTEGRITY-1A-QA` independently cleared the prospective marks-write
+policy on 2026-08-21. Ordinary Teacher and multi-role Teacher contexts are
+immutable denials; Principal and Super Admin remain permanent governed writers;
+eligible non-teaching users require an exact active reserved-profile grant.
+Generic IAM APIs cannot assign the reserved profile or allow marks-write
+overrides. Guardian-linked-child denial, session-revoked grant removal,
+scope/IDOR/import/concurrency defenses and privacy-safe audit evidence passed on
+copied data. The security diff scan produced zero Critical/High findings and its
+single Medium finding was remediated and regression-tested. See
+`evidence/ACADEMIC_INTEGRITY_1A_QA_CLEARANCE.md`.

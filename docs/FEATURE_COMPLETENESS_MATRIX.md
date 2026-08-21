@@ -13,7 +13,7 @@ This matrix separates presence from completeness. `Complete` requires tested wor
 | Staff/attendance/leave/substitutes | V1 | Complete | Salary-document requests separate | Prompt 12/13 evidence |
 | Timetable | V1 | Complete | Exact Teacher scope must stay server-derived | Teacher-scope release |
 | Examination schemes and marks | V1 | Complete | Historical layouts/formulas are not assumed | EXAM-RC-IMPL-1/2 releases |
-| Principal-controlled marks authority and scoped non-teaching delegation | V1.1 security correction | Ready for independent QA | Implementation removes ordinary Teacher write authority without rewriting V1 history; independent security/Browser QA and release evidence remain required | `ACADEMIC-INTEGRITY-1A-QA`; [v1.1 architecture](ACADEMIC_INTEGRITY_V1_1_PRINCIPAL_MARKS_ENTRY.md) |
+| Principal-controlled marks authority and scoped non-teaching delegation | V1.1 security correction | Complete / independently QA-cleared | Ordinary Teacher write authority is removed prospectively; exact non-teaching delegation, linked-child denial, session revocation and immutable history are independently proved | [ACADEMIC-INTEGRITY-1A-QA clearance](evidence/ACADEMIC_INTEGRITY_1A_QA_CLEARANCE.md); [v1.1 architecture](ACADEMIC_INTEGRITY_V1_1_PRINCIPAL_MARKS_ENTRY.md) |
 | Issued report publication and Parent delivery | V1 | Complete | Canonical visual/print approval separate | EXAM-RC-IMPL-3 release |
 | Admissions CRM | V1 | Complete | Do not reopen; real onboarding unauthorised | Prompt 23H release |
 | Communications | V1 | Partial | Live provider acceptance absent | Future deployment/provider gate |

@@ -1,6 +1,6 @@
 # Nalanda ERP v1.1 — Academic Integrity Release
 
-Status: `ACADEMIC-INTEGRITY-1A` implementation; independent `ACADEMIC-INTEGRITY-1A-QA` is required before release.
+Status: `ACADEMIC-INTEGRITY-1A — CLEARED` by independent `ACADEMIC-INTEGRITY-1A-QA` on 2026-08-21.
 
 Policy marker: `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`
 
@@ -72,6 +72,14 @@ Published report versions, locked calculation snapshots, earlier publications, h
 - `/marks`, `/marks/governed` and `/marks/delegation` — leadership and delegated workspaces.
 - `/api/marks/**`, `/api/exam-marks/**`, `/api/exam-moderation/**`, relevant `/api/exams/**` workflow routes and report-card mutation routes — independent server enforcement.
 
-## Release gate
+## Release clearance
 
-Implementation can be marked ready only after focused security tests, `pnpm.cmd typecheck`, required role/viewport Browser QA, private branch verification and the canonical external records have been updated and re-fetched. Release remains blocked until independent `ACADEMIC-INTEGRITY-1A-QA` returns a terminal approval.
+Independent QA proved the permanent role matrix, exact-scope delegation,
+multi-role Teacher denial, generic-IAM bypass prevention, linked-child denial,
+revocation/session invalidation, copied-database concurrency, audit coverage and
+historical immutability. The final route, lifecycle, typecheck, complete test,
+production build, backup and Git-safety gates passed. See the
+[QA clearance](evidence/ACADEMIC_INTEGRITY_1A_QA_CLEARANCE.md).
+
+This code clearance does not authorise deployment, provider activation,
+real-user activation or real-data onboarding.

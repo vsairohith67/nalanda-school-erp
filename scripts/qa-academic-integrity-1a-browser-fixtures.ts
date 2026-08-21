@@ -20,10 +20,12 @@ type State = {
     superAdminPassword: string;
     operatorUsername: string;
     operatorPassword: string;
+    viewerUsername: string;
+    viewerPassword: string;
   };
 };
 
-async function createRoleUser(client: PrismaClient, input: { username: string; name: string; role: "SUPER_ADMIN" | "COMPUTER_OPERATOR"; password: string; assignedByUserId: string }) {
+async function createRoleUser(client: PrismaClient, input: { username: string; name: string; role: "SUPER_ADMIN" | "COMPUTER_OPERATOR" | "VIEWER"; password: string; assignedByUserId: string }) {
   const user = await client.user.create({
     data: {
       iamPublicKey: randomUUID(),
@@ -74,17 +76,20 @@ async function main() {
     await ensureLoginAlias(client, principal);
     await ensureLoginAlias(client, teacher);
     if (state.academicIntegrity) {
-      const [superAdmin, operator] = await Promise.all([
+      const [superAdmin, operator, viewer] = await Promise.all([
         client.user.findUniqueOrThrow({ where: { username: state.academicIntegrity.superAdminUsername } }),
-        client.user.findUniqueOrThrow({ where: { username: state.academicIntegrity.operatorUsername } })
+        client.user.findUniqueOrThrow({ where: { username: state.academicIntegrity.operatorUsername } }),
+        client.user.findUniqueOrThrow({ where: { username: state.academicIntegrity.viewerUsername } })
       ]);
       await ensureLoginAlias(client, superAdmin);
       await ensureLoginAlias(client, operator);
+      await ensureLoginAlias(client, viewer);
       const passwordChecks = await Promise.all([
         verifyPassword(state.principalPassword, principal.passwordHash),
         verifyPassword(state.teacherOnePassword, teacher.passwordHash),
         verifyPassword(state.academicIntegrity.superAdminPassword, superAdmin.passwordHash),
-        verifyPassword(state.academicIntegrity.operatorPassword, operator.passwordHash)
+        verifyPassword(state.academicIntegrity.operatorPassword, operator.passwordHash),
+        verifyPassword(state.academicIntegrity.viewerPassword, viewer.passwordHash)
       ]);
       if (!passwordChecks.every(Boolean)) throw new Error("ACADEMIC_INTEGRITY_BROWSER_PASSWORD_CHECK_FAILED");
       console.log(JSON.stringify({ result: "ACADEMIC_INTEGRITY_BROWSER_FIXTURES_READY", copiedDatabase: true, delegatedScopes: 1, operationalDataChanged: false }));
@@ -94,9 +99,10 @@ async function main() {
       where: { status: "ACTIVE", examination: { status: "ACTIVE" }, classScope: { status: "ACTIVE" }, subjectPaper: { status: "ACTIVE" }, schemeVersion: { status: "ACTIVE", frozenAt: { not: null } } },
       orderBy: [{ assignmentRole: "desc" }, { createdAt: "asc" }]
     });
-    const sharedPassword = `AI1A-${randomBytes(24).toString("base64url")}!aA9`;
-    const superAdmin = await createRoleUser(client, { username: "ai1a-browser-super", name: "AI1A Browser Super Admin", role: "SUPER_ADMIN", password: sharedPassword, assignedByUserId: principal.id });
-    const operator = await createRoleUser(client, { username: "ai1a-browser-operator", name: "AI1A Browser Delegated Operator", role: "COMPUTER_OPERATOR", password: sharedPassword, assignedByUserId: principal.id });
+    const qaCredential = `AI1A-${randomBytes(24).toString("base64url")}!aA9`;
+    const superAdmin = await createRoleUser(client, { username: "ai1a-browser-super", name: "AI1A Browser Super Admin", role: "SUPER_ADMIN", password: qaCredential, assignedByUserId: principal.id });
+    const operator = await createRoleUser(client, { username: "ai1a-browser-operator", name: "AI1A Browser Delegated Operator", role: "COMPUTER_OPERATOR", password: qaCredential, assignedByUserId: principal.id });
+    const viewer = await createRoleUser(client, { username: "ai1a-browser-viewer", name: "AI1A Browser Undelegated Viewer", role: "VIEWER", password: qaCredential, assignedByUserId: principal.id });
     await grantMarksDelegation(client, { id: principal.id, name: principal.name, role: "PRINCIPAL" }, {
       userHandle: operator.iamPublicKey,
       kind: "GOVERNED_COMPONENT",
@@ -105,9 +111,11 @@ async function main() {
     });
     state.academicIntegrity = {
       superAdminUsername: superAdmin.username,
-      superAdminPassword: sharedPassword,
+      superAdminPassword: qaCredential,
       operatorUsername: operator.username,
-      operatorPassword: sharedPassword
+      operatorPassword: qaCredential,
+      viewerUsername: viewer.username,
+      viewerPassword: qaCredential
     };
     writeFileSync(STATE_PATH, `${JSON.stringify(state, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
     console.log(JSON.stringify({ result: "ACADEMIC_INTEGRITY_BROWSER_FIXTURES_READY", copiedDatabase: true, delegatedScopes: 1, operationalDataChanged: false }));

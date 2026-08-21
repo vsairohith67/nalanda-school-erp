@@ -8,7 +8,7 @@ import { logAuthSecurityEvent } from "@/lib/auth-security";
 import { getEffectivePermissions } from "@/lib/role-permissions";
 import { roleDisplayLabel } from "@/lib/role-presentation";
 import type { CanonicalPermission, Role } from "@/lib/permissions";
-import { CRITICAL_SUPER_ADMIN_PERMISSIONS, SUPER_ADMIN_ONLY_PERMISSIONS } from "@/lib/iam/permission-governance";
+import { ACADEMIC_INTEGRITY_MARKS_WRITE_PERMISSIONS, CRITICAL_SUPER_ADMIN_PERMISSIONS, SUPER_ADMIN_ONLY_PERMISSIONS } from "@/lib/iam/permission-governance";
 import { previewUserEffectiveAccess } from "@/lib/iam/effective-access";
 import {
   acquireLastSuperAdminLock,
@@ -112,8 +112,10 @@ export async function createNamedUser(client: PrismaClient, actor: IamActor, inp
     include: { entries: { where: { status: "ACTIVE", revokedAt: null } } }
   }) : [];
   if (profiles.length !== profileHandles.length) throw new Error("One or more permission profiles are unavailable");
+  if (profiles.some((profile) => profile.normalizedName === RESERVED_MARKS_OPERATOR_PROFILE)) throw new Error("Use Marks Entry Delegation to grant the reserved operator profile");
   const overrides = overridesInput(input.overrides ?? []);
   if (overrides.some((entry) => SUPER_ADMIN_ONLY_PERMISSIONS.has(entry.permission))) throw new Error("Non-delegable permissions cannot be assigned as individual overrides");
+  if (overrides.some((entry) => entry.effect === "ALLOW" && ACADEMIC_INTEGRITY_MARKS_WRITE_PERMISSIONS.has(entry.permission))) throw new Error("Marks-write authority requires an exact Marks Entry Delegation scope");
   if (roles.includes("SUPER_ADMIN") && (
     profiles.some((profile) => profile.entries.some((entry) => entry.effect === "DENY" && CRITICAL_SUPER_ADMIN_PERMISSIONS.has(entry.permission as CanonicalPermission))) ||
     overrides.some((entry) => entry.effect === "DENY" && CRITICAL_SUPER_ADMIN_PERMISSIONS.has(entry.permission))
@@ -381,6 +383,7 @@ async function setOverride(client: PrismaClient, actor: IamActor, target: UserTa
   const effect = String(input.effect ?? "");
   if (!["ALLOW", "DENY"].includes(effect)) throw new Error("Override effect is invalid");
   if (SUPER_ADMIN_ONLY_PERMISSIONS.has(permission)) throw new Error(`${permission} cannot be changed by an individual override`);
+  if (effect === "ALLOW" && ACADEMIC_INTEGRITY_MARKS_WRITE_PERMISSIONS.has(permission)) throw new Error("Marks-write authority requires an exact Marks Entry Delegation scope");
   if (
     effect === "DENY" &&
     target.iamRoleAssignments.some((assignment) => assignment.role === "SUPER_ADMIN") &&

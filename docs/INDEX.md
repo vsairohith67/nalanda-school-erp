@@ -4,11 +4,12 @@
 
 - [Principal-Controlled Marks Entry and Delegation Architecture](ACADEMIC_INTEGRITY_V1_1_PRINCIPAL_MARKS_ENTRY.md)
 - [ACADEMIC-INTEGRITY-1A Implementation Checkpoint](evidence/ACADEMIC_INTEGRITY_1A_IMPLEMENTATION_CHECKPOINT.md)
+- [ACADEMIC-INTEGRITY-1A Independent QA Clearance](evidence/ACADEMIC_INTEGRITY_1A_QA_CLEARANCE.md)
 - [Exams and Marks Workflow](EXAMS_AND_MARKS_WORKFLOW.md)
 - [Examination Marks Permission Matrix](EXAM_MARKS_PERMISSION_MATRIX.md)
 - [Digital Report Cards and KG Rubric Workflow](DIGITAL_REPORT_CARDS_AND_KG_RUBRIC_WORKFLOW.md)
 
-The V1 Teacher marks-write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`. Independent `ACADEMIC-INTEGRITY-1A-QA` is required before merge, tag or release.
+The V1 Teacher marks-write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`. `ACADEMIC-INTEGRITY-1A-QA` independently cleared the v1.1 release on 2026-08-21; deployment and live-data activation remain separate gates.
 
 ## SUPER-ADMIN-COMMAND-1A Command Center foundation
 

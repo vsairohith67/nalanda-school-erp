@@ -180,6 +180,39 @@ async function hasActiveTeacherRole(client: AcademicIntegrityClient, userId: str
   }));
 }
 
+async function recordMarksAuthorityDenial(
+  client: AcademicIntegrityClient,
+  actor: MarksActor,
+  permission: CanonicalPermission,
+  reasonCode: string,
+  target?: Partial<MarksDelegationScope>
+) {
+  const scopeFingerprint = target
+    ? createHash("sha256").update(JSON.stringify(canonicalScope(target as MarksDelegationScope))).digest("hex").slice(0, 24).toUpperCase()
+    : null;
+  try {
+    await client.authSecurityEvent.create({
+      data: {
+        eventType: "MARKS_WRITE_AUTHORITY_DENIED",
+        userId: actor.id,
+        actorUserId: actor.id,
+        subjectType: "MARKS_SCOPE",
+        subjectId: scopeFingerprint,
+        detailsJson: JSON.stringify({
+          policy: "ACADEMIC_INTEGRITY_V1_1",
+          permission,
+          actorRole: actor.role,
+          scopeKind: target?.kind ?? null,
+          reasonCode,
+          result: "DENIED"
+        })
+      }
+    });
+  } catch {
+    // Authorization remains fail-closed if audit persistence is unavailable.
+  }
+}
+
 export async function resolveMarksWriteAuthority(
   client: AcademicIntegrityClient,
   actor: MarksActor,
@@ -188,15 +221,18 @@ export async function resolveMarksWriteAuthority(
   now = new Date()
 ): Promise<MarksAuthority> {
   if (actor.role === "TEACHER") {
+    await recordMarksAuthorityDenial(client, actor, permission, "TEACHER_ROLE_DENIED", target);
     throw new AcademicIntegrityError("Teacher accounts cannot enter or submit marks under Academic Integrity v1.1.");
   }
   if (actor.role === "SUPER_ADMIN" || actor.role === "PRINCIPAL") {
     return { mode: "LEADERSHIP", profileName: null, assignmentId: null, assignmentHandle: null, scope: null, grantSource: actor.role };
   }
   if (!MARKS_DELEGATION_ELIGIBLE_ROLES.has(actor.role)) {
+    await recordMarksAuthorityDenial(client, actor, permission, "BASE_ROLE_DENIED", target);
     throw new AcademicIntegrityError("This role has no marks-write authority by default.");
   }
   if (await hasActiveTeacherRole(client, actor.id, now)) {
+    await recordMarksAuthorityDenial(client, actor, permission, "ACTIVE_TEACHER_ROLE_DENIED", target);
     throw new AcademicIntegrityError("A user with an active Teacher role cannot receive delegated marks-entry authority.");
   }
   const assignments = await client.userPermissionProfileAssignment.findMany({
@@ -226,6 +262,7 @@ export async function resolveMarksWriteAuthority(
       grantSource: `PROFILE:${assignment.profile.name}`
     };
   }
+  await recordMarksAuthorityDenial(client, actor, permission, "NO_EXACT_DELEGATED_SCOPE", target);
   throw new AcademicIntegrityError("No active delegated marks-entry grant matches this exact scope.");
 }
 

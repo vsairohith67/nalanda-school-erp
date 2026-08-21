@@ -10,7 +10,7 @@ import { displayDate } from "@/lib/format";
 import { resolveMarksWriteAuthority } from "@/lib/academic-integrity";
 
 export default async function Page({ params }: { params: Promise<{ assessmentId: string }> }) {
-  const user = await requirePermission("VIEW_EXAMS");
+  const user = await requirePermission("ENTER_MARKS");
   const id = (await params).assessmentId;
   let scoped;
   try { scoped = await loadScopedAssessment(user, id, "WRITE"); } catch { notFound(); }

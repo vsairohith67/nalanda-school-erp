@@ -15,7 +15,7 @@ This roadmap preserves the operational boundaries in the [Requirements Register]
 
 ## v1.1 academic-integrity intervention
 
-`ACADEMIC-INTEGRITY-1A` is a management-directed prospective security correction on a separate release line: **Nalanda ERP v1.1 — Academic Integrity Release**. The ordinary Teacher marks-write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`; the frozen V1 RC1 commit/tag and historical evidence remain unchanged. The implementation introduces Principal/Super Admin direct entry and exact non-teaching `MARKS_ENTRY_OPERATOR` delegation by reusing current IAM. Independent `ACADEMIC-INTEGRITY-1A-QA` must complete before this feature can merge, tag or release. This intervention neither authorises deployment nor merges the parallel Super Admin Work feature.
+`ACADEMIC-INTEGRITY-1A` is a management-directed prospective security correction on a separate release line: **Nalanda ERP v1.1 — Academic Integrity Release**. The ordinary Teacher marks-write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`; the frozen V1 RC1 commit/tag and historical evidence remain unchanged. Principal/Super Admin direct entry and exact non-teaching `MARKS_ENTRY_OPERATOR` delegation reuse current IAM. Independent `ACADEMIC-INTEGRITY-1A-QA` cleared the release on 2026-08-21. This clearance neither authorises deployment nor merges the parallel Super Admin Work feature. If that programme is still uncleared, its independent QA remains next; when both programmes are cleared, `UNIVERSAL-SEARCH-1A` may precede Smart AI.
 
 ## One immediate product recommendation
 
