@@ -29,6 +29,10 @@ Frozen historical tag: `super-admin-command-center-v41-2026-08-21` (unchanged)
 - Browser findings: no page-level horizontal overflow, no console/hydration errors, visible 2 px focus, important controls at least 44 px, useful Teacher policy denial, Teacher Academic Reports retained, one-scope operator selector and no operator delegation-management action.
 - Browser fixtures used an ignored copy of the operational SQLite database. The source operational database was not mutated; the copied fixture and private credentials are cleanup-bound.
 
+## Parallel development isolation
+
+The concurrent `SUPER-ADMIN-WORK-1A` branch overlapped these shared files: `app/globals.css`, `docs/FEATURE_COMPLETENESS_MATRIX.md`, `docs/INDEX.md`, `docs/PROMPT_HISTORY.md`, `docs/PROMPT_LEDGER.md`, `docs/REQUIREMENTS_REGISTER.md`, `docs/V1_5_AND_POST_RC_ROADMAP.md`, and `lib/access-rules.ts`. This implementation was transferred to and committed from an isolated worktree based directly on checkpoint `467204394a0ca891fe6e9ac4d55fe59d0814aa17`; no Diary, Tasks, Contacts, Super Admin Work, schema, or migration change was included.
+
 Independent QA must re-run its own copied/synthetic database probes and must not treat this implementation checkpoint as acceptance.
 
 Policy marker: `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`
