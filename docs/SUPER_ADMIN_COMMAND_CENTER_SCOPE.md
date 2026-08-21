@@ -1,7 +1,7 @@
 # Super Admin Command Center Scope
 
 - **Recommended prompt:** `SUPER-ADMIN-COMMAND-1A — Super Admin Command Center Foundation`
-- **Classification:** `IMPLEMENTATION_READY_FOR_QA`
+- **Classification:** `CLEARED`
 - **Target lane:** V1.5 product work
 
 ## Product decision
@@ -107,5 +107,22 @@ timeout-aware, partial-result capable, and read-only. No schema, migration,
 provider, AI, search, Diary, task, directory, or whiteboard persistence was
 added. See the [Command Center architecture](./SUPER_ADMIN_COMMAND_CENTER_ARCHITECTURE.md).
 
-Status: `SUPER_ADMIN_COMMAND_CENTER_READY_FOR_QA`. Independent QA remains the
-gate before merge, tag, or clearance.
+Status at implementation handoff: `SUPER_ADMIN_COMMAND_CENTER_READY_FOR_QA`.
+
+## SUPER-ADMIN-COMMAND-1A-QA clearance (2026-08-21)
+
+Independent QA cleared the exact-role page and API boundary, read-only source
+composition, partial-result behavior, privacy filtering, OBS-1A reuse, and
+responsive/accessibility contract. Director route and tampered API attempts
+were denied, the operational database remained byte-identical at SHA-256
+`65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA`, and a
+complete security diff scan returned no findings. Browser checks passed at
+1366 x 768 and exact 390 x 844 in light and dark modes. Twenty warm synthetic
+loads measured p95 1,729 ms.
+
+The sequential release gate passed 334 page routes, 548 APIs, lifecycle dry
+run, typecheck, 1,921 tests with 3 intentional skips, production build, backup
+version 41, and Git safety. No schema, migration, operational write, provider,
+AI, search, Diary, task, directory, or whiteboard scope was added. Status:
+`SUPER_ADMIN_COMMAND_CENTER_CLEARED`. The next governed product phase is
+`SUPER-ADMIN-WORK-1A`.

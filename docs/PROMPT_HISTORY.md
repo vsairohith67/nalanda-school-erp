@@ -1826,3 +1826,30 @@ Universal Search, Diary, task/reminder, directory, or whiteboard functionality
 was added. Focused tests and the partitioned typecheck are implementation gates;
 independent `SUPER-ADMIN-COMMAND-1A-QA` remains required before merge, tag, or
 clearance. Status: `SUPER_ADMIN_COMMAND_CENTER_READY_FOR_QA`.
+
+## SUPER-ADMIN-COMMAND-1A-QA - Independent Command Center Foundation QA (2026-08-21)
+
+Independent QA reviewed the complete feature diff and proved exact
+`SUPER_ADMIN` authorization at navigation, route, and API boundaries. A Director
+was denied the direct route and a role-tampered API request returned 403. The
+composition remained read-only and partial-result safe, reused OBS-1A and
+approved audit/event sources, bounded activity to 12 records, exposed no private
+payloads, and made no provider, PDF, AI, or external call. Security scan
+`3707f275-d229-4cd5-ab47-069e32260df8` returned no findings.
+
+Browser QA passed 1366 x 768 and exact 390 x 844 in light and dark modes with
+44 px targets, keyboard focus, useful loading/empty/degraded states, no overflow,
+no native dialogs, and zero console, hydration, or clean-runtime stderr errors.
+Twenty warm local synthetic loads measured p95 1,729 ms. The operational
+database remained byte-identical at SHA-256
+`65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA`; copied IAM
+fixtures and the temporary QA runtime harness were inspected and removed.
+
+The sequential release gate passed 334 page routes, 548 APIs, lifecycle dry run,
+typecheck, 216 passing test files with one intentionally skipped file (1,921
+passing tests and 3 intentional skips), production build, backup version 41,
+and Git safety. No schema or migration changed. Basic Memory was attempted once
+and recorded as `BASIC_MEMORY_SYNC_SKIPPED_SUBSCRIPTION_EXPIRED`. The retained
+feature branch is released by guarded fast-forward with no deployment or tag
+change to the frozen V1 RC. Result: `SUPER_ADMIN_COMMAND_CENTER_CLEARED`. Next
+governed product phase: `SUPER-ADMIN-WORK-1A`.

@@ -135,3 +135,25 @@ Mobile status records that responsive web and the PWA foundation are cleared,
 physical-device certification waits for staging, and native Android and Apple
 apps are not implemented. No Android Studio, Java, Xcode, or native toolchain is
 installed by this phase.
+
+## Independent QA clearance
+
+`SUPER-ADMIN-COMMAND-1A-QA` independently verified the full feature diff and
+cleared the foundation on 2026-08-21. The exact Super Admin UI/API boundary,
+tamper resistance, source isolation, bounded activity, private/no-store headers,
+privacy-safe labels, no-write behavior, and OBS-1A reuse passed focused and full
+regression tests. Security scan `3707f275-d229-4cd5-ab47-069e32260df8` covered
+all changed runtime source files and returned no findings.
+
+Browser QA passed 1366 x 768 and exact 390 x 844 in light and dark modes with
+no horizontal overflow, native dialogs, console errors, hydration errors, or
+clean-runtime stderr. Twenty warm local synthetic API loads measured p95 1,729
+ms. The operational database stayed byte-identical at SHA-256
+`65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA`.
+
+The final sequential gate passed 334 page routes, 548 APIs, lifecycle dry run,
+typecheck, 216 passing test files with one intentionally skipped file (1,921
+passing tests and 3 intentional skips), production build, logical backup version
+41, and Git safety. Basic Memory was attempted once and unavailable:
+`BASIC_MEMORY_SYNC_SKIPPED_SUBSCRIPTION_EXPIRED`. No deployment or provider
+activation occurred. Result: `SUPER_ADMIN_COMMAND_CENTER_CLEARED`.

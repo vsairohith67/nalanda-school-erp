@@ -10,11 +10,11 @@
 - [Mobile App Roadmap](MOBILE_APP_ROADMAP.md)
 
 The exact `SUPER_ADMIN`-only, private/no-store Command Center foundation is
-implemented as a bounded, read-only composition over IAM, OBS-1A, approved
-audit/event sources, and existing module records. It adds no schema, provider,
-AI, search, Diary, task, directory, or whiteboard functionality. Status:
-`SUPER_ADMIN_COMMAND_CENTER_READY_FOR_QA`; independent QA remains required
-before merge or tag.
+independently QA-cleared as a bounded, read-only composition over IAM, OBS-1A,
+approved audit/event sources, and existing module records. It adds no schema,
+provider, AI, search, Diary, task, directory, or whiteboard functionality.
+Status: `SUPER_ADMIN_COMMAND_CENTER_CLEARED`. The next governed product phase is
+`SUPER-ADMIN-WORK-1A`.
 
 ## V1-FINAL-1A final integration and release-candidate preparation
 

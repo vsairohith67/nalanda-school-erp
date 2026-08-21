@@ -8,7 +8,7 @@
 
 The V1 RC remains cleared and frozen at `26a47632f7c1e9c9b5f2b48de8c9b56d60428aed`. MSI workstation transfer is complete; Dell remains a frozen fallback. No release evidence authorises deployment, live providers, real data, real users, pilot, or cutover. Remaining work divides into V1 operational launch gates, V1.5 product extensions, V2 AI, and mobile work.
 
-The only recommended immediate product phase is `SUPER-ADMIN-COMMAND-1A — Super Admin Command Center Foundation`. Private staging proceeds as a separate operational track.
+The read-only `SUPER-ADMIN-COMMAND-1A — Super Admin Command Center Foundation` is cleared. The next governed product phase is `SUPER-ADMIN-WORK-1A — Diary, Tasks, Reminders and Directory`. Private staging proceeds as a separate operational track.
 
 ## Evidence rule
 
@@ -21,7 +21,7 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | # | Work area | Classification | Evidence-based boundary and next disposition |
 |---:|---|---|---|
 | 1 | UDISE+ Prompt 15D and 15E | 15D: `CLEARED`; 15E: `BLOCKED_BY_EVIDENCE`; full operational support: `NOT_IMPLEMENTED` | 15D is a read-only checklist/reference foundation. 15E cannot start until current Student, Teacher, progression, Telangana, DCF, inconsistency, certification, report, register, and role evidence is supplied. No scraping, government-portal submission, or compliance claim. |
-| 2 | Super Admin Command Center | `IMPLEMENTATION_READY_FOR_QA` | The exact-Super-Admin, private/no-store read-only composition is implemented without schema or provider changes. It reuses OBS-1A, IAM, immutable audit/event sources, and existing module records. Independent security, read-only, responsive, performance, and full-regression QA remains required before clearance. |
+| 2 | Super Admin Command Center | `CLEARED` | Independent QA cleared the exact-Super-Admin, private/no-store read-only composition without schema, provider, or operational-data changes. It reuses OBS-1A, IAM, immutable audit/event sources, and existing module records. The next product phase is `SUPER-ADMIN-WORK-1A`; Universal Search and Smart AI remain downstream. |
 | 3 | Digital Diary | `NOT_IMPLEMENTED` | A working Notion template exists, but no proven ERP Digital Diary code was found. Treat it as part of the future Command Center product, not as a completed ERP feature. |
 | 4 | Tasks, reminders and calendar | `PARTIAL` | The academic calendar/event lifecycle is cleared. General work tasks, reminders, and Life OS orchestration are not implemented as an ERP product. Combine them with Diary and Command Center scope. |
 | 5 | Universal search | `NOT_IMPLEMENTED` | No proven permission-scoped universal ERP search exists. It must follow the directory/record model and precede Smart AI. |
