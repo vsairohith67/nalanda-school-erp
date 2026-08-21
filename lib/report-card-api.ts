@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resolveReportCardScope, requireReportCardTarget, ReportCardError } from "@/lib/report-card-scope";
 import type { AuthUser } from "@/lib/auth";
+import { AcademicIntegrityError } from "@/lib/academic-integrity";
 
 export function reportCardApiError(error: unknown) {
+  if (error instanceof AcademicIntegrityError) return NextResponse.json({ error: error.message, code: error.code }, { status: error.status });
   if (error instanceof ReportCardError) return NextResponse.json({ error: error.message }, { status: error.status });
   if (error && typeof error === "object" && "code" in error && error.code === "P2002") return NextResponse.json({ error: "That code or number is already in use." }, { status: 409 });
   return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to complete the report-card action." }, { status: 400 });

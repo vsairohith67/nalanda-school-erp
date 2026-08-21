@@ -1,5 +1,7 @@
 # Principal Marks Moderation Workflow
 
+Academic Integrity v1.1 preserves this leadership moderation/calculation architecture while removing ordinary Teacher marks-write authority. Principal and Super Admin may enter directly; an exact-scope `MARKS_ENTRY_OPERATOR` may save/submit only within its grant. Teacher assignment records remain structural historical/configuration evidence and never confer write authority. Prior Teacher-write wording is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`.
+
 `/exams/moderation` is the governed Principal workspace. It reports completion
 by exact examination/class/section/paper/component with the primary Teacher,
 contributors, lifecycle status, submission time, missing entries,

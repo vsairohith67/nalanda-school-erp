@@ -1,5 +1,11 @@
 # IAM-1A Named Users, Permission Profiles and Contexts
 
+## Academic Integrity v1.1 reuse
+
+`ACADEMIC-INTEGRITY-1A` reuses the existing reusable profile infrastructure for the reserved `MARKS_ENTRY_OPERATOR` profile. It adds no schema or parallel authorisation framework. Principal or Super Admin grants a named eligible non-teaching user an exact assessment or examination-component scope through a `UserPermissionProfileAssignment`. Grant/revoke replaces the active assignment, increments authorisation state, revokes sessions and preserves audit history. The base Viewer and Computer Operator roles remain unchanged and read-only/denied by default.
+
+Teacher marks-write permissions are immutable denials. A Teacher role, assignment, profile, override or multi-role context cannot acquire marks-write authority. The prior policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`; read-only academic reporting remains governed separately. See [Academic Integrity v1.1](ACADEMIC_INTEGRITY_V1_1_PRINCIPAL_MARKS_ENTRY.md).
+
 ## Scope and status
 
 IAM-1A adds governed named-user administration without creating or activating

@@ -32,6 +32,7 @@ import {
 } from "@/lib/iam/validation";
 
 const MAX_TEMPORARY_PASSWORD_DAYS = 7;
+const RESERVED_MARKS_OPERATOR_PROFILE = "marks_entry_operator";
 
 export async function listNamedUsers(client: PrismaClient, input: { query?: string; status?: string; role?: string }) {
   const query = input.query?.trim().slice(0, 80) ?? "";
@@ -344,6 +345,7 @@ async function assignProfile(client: PrismaClient, actor: IamActor, target: User
   const handle = boundedText(input.profileHandle, "Permission profile", 10, 80);
   const profile = await client.permissionProfile.findUnique({ where: { publicKey: handle }, include: { entries: { where: { status: "ACTIVE", revokedAt: null } } } });
   if (!profile || profile.status !== "ACTIVE") throw new Error("Active permission profile not found");
+  if (profile.normalizedName === RESERVED_MARKS_OPERATOR_PROFILE) throw new Error("Use Marks Entry Delegation to grant the reserved operator profile");
   if (target.iamRoleAssignments.some((assignment) => assignment.role === "SUPER_ADMIN") && profile.entries.some((entry) => entry.effect === "DENY" && CRITICAL_SUPER_ADMIN_PERMISSIONS.has(entry.permission as CanonicalPermission))) {
     throw new Error("A profile cannot deny critical access to a Super Admin");
   }

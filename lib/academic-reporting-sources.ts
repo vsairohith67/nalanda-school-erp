@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
 import { resolveClassworkLearnerContext } from "@/lib/classwork-access";
-import { listExactTeacherMarkAssignments } from "@/lib/exam-marks-scope";
+import { listExactTeacherReportingAssignments } from "@/lib/exam-marks-scope";
 import { parsePublishedSnapshot } from "@/lib/report-publication";
 import { AcademicReportingError } from "@/lib/academic-reporting";
 import { ACADEMIC_REPORT_MAX_SOURCES, type AcademicEntryState, type AcademicReportAudience, type AcademicReportInput, type AcademicReportSource } from "@/lib/academic-reporting-types";
@@ -75,7 +75,7 @@ export async function listAcademicReportFilterOptions(client: Client, actor: Act
   }
   if (["SUPER_ADMIN","DIRECTOR","PRINCIPAL","VIEWER"].includes(actor.role)) return uniqueOptions(options);
   if (actor.role === "TEACHER") {
-    const assignments = await listExactTeacherMarkAssignments(client, actor);
+    const assignments = await listExactTeacherReportingAssignments(client, actor);
     const allowed = new Set(assignments.map((row: any) => `${row.academicYear}|${row.examination.examCode}|${row.className}|${row.section}`));
     return uniqueOptions(options.filter((row) => allowed.has(`${row.academicYear}|${row.examinationCode}|${row.className}|${row.section}`)));
   }
@@ -99,7 +99,7 @@ async function resolveScope(client: Client, input: AcademicReportInput, actor: A
   if (["SUPER_ADMIN","DIRECTOR","PRINCIPAL"].includes(actor.role)) return { audience: "LEADERSHIP", studentId: null, allowedPapers: null, allowedTargets: null, publicScope: { role: actor.role, academicYear: input.academicYear, className: input.className, section: input.section } };
   if (actor.role === "VIEWER") return { audience: "VIEWER", studentId: null, allowedPapers: null, allowedTargets: null, publicScope: { role: "VIEWER", academicYear: input.academicYear, className: input.className, section: input.section, suppression: true } };
   if (actor.role === "TEACHER") {
-    const assignments = await listExactTeacherMarkAssignments(client, actor, input.academicYear);
+    const assignments = await listExactTeacherReportingAssignments(client, actor, input.academicYear);
     const allowedTargets = new Set<string>(), allowedPapers = new Map<string,Set<string>>();
     for (const row of assignments) {
       const target = `${row.examination.examCode.toUpperCase()}|${row.className}|${row.section}`;

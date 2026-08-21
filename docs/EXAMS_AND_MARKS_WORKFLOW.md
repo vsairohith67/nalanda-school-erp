@@ -1,5 +1,7 @@
 # Exams and Marks Foundation
 
+> **v1.1 authoritative policy:** The Teacher marks-entry policy described as historical V1 behavior in this document is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`. Ordinary Teacher accounts cannot enter, import, submit, correct, reopen, moderate, calculate or lock marks, regardless of class, subject, timetable, class-teacher or examination assignment. Principal and Super Admin have permanent authority. Eligible non-teaching users require an explicit exact-scope `MARKS_ENTRY_OPERATOR` grant. See [Academic Integrity v1.1](ACADEMIC_INTEGRITY_V1_1_PRINCIPAL_MARKS_ENTRY.md). Existing formulas, published history and audit evidence are unchanged.
+
 > The legacy raw-marks workflow below predates the independently cleared
 > versioned examination-scheme foundation. New configuration uses
 > `EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md`; it does not open marks entry

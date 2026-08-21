@@ -5924,6 +5924,9 @@ textarea:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+.governed-marks-page .page-header .button {
+  min-height: 44px;
+}
 
 .user-avatar {
   width: 34px;

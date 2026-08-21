@@ -18,6 +18,10 @@
 | Oversized or racy mutation | request bounds, list caps, expected versions and transactions | forced-failure rollback and batch-boundary tests |
 | Private identifiers in audit/error | opaque public handles, generic errors, filtered audit details | no password, hash, token, private key or raw Student ID in output/logs |
 | External disclosure | no AI/provider transmission and no live adapter activation | staging/live providers remain unauthorised |
+| Teacher or multi-role account acquires marks-write authority | immutable Teacher denial plus marks-service authority resolver | timetable/class/subject/exam assignment, profile and override never grant Teacher writes |
+| Delegated operator changes scope parameters | server reloads the target and matches exact active profile scope | exam/year/class/section/subject/component mismatch returns deny |
+| Revoked delegation survives in a stale session | assignment replacement, authorisation-version bump and session revocation | direct API replay after revoke/expiry fails closed |
+| Delegated operator edits a linked child | approved Guardian/Student link lookup before mutation and privacy-bounded denial audit | no heuristic is used when an approved link cannot be resolved |
 
 ## Trust boundaries
 

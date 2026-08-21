@@ -2,18 +2,20 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
 import { requireMarksTarget, resolveMarksScope } from "@/lib/marks-scope";
+import { AcademicIntegrityError } from "@/lib/academic-integrity";
 
 export class MarksApiError extends Error { constructor(message: string, public status = 400) { super(message); } }
 
-export async function loadScopedAssessment(user: AuthUser, assessmentId: string) {
+export async function loadScopedAssessment(user: AuthUser, assessmentId: string, purpose: "READ" | "WRITE" = "READ") {
   const assessment = await prisma.examAssessment.findUnique({ where: { id: assessmentId }, include: { examCycle: true } });
   if (!assessment) throw new MarksApiError("Assessment was not found.", 404);
-  const scope = await resolveMarksScope(prisma, user, assessment.academicYear);
+  const scope = await resolveMarksScope(prisma, user, assessment.academicYear, purpose);
   try { requireMarksTarget(scope, assessment); } catch (error) { throw new MarksApiError(error instanceof Error ? error.message : "Assessment is outside your scope.", 403); }
   return assessment;
 }
 
 export function marksError(error: unknown) {
+  if (error instanceof AcademicIntegrityError) return { message: error.message, status: error.status };
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === "P2002") return { message: "A record with the same unique details already exists.", status: 409 };
     return { message: "Unable to process exam marks safely.", status: 400 };

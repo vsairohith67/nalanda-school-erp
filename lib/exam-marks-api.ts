@@ -3,6 +3,8 @@ import { requireApiPermission } from "@/lib/auth";
 import { ExamMarksError } from "@/lib/exam-marks";
 import { ExamMarksScopeError } from "@/lib/exam-marks-scope";
 import type { Permission } from "@/lib/permissions";
+import { AcademicIntegrityError, resolveMarksWriteAuthority } from "@/lib/academic-integrity";
+import { prisma } from "@/lib/prisma";
 
 export const EXAM_PRIVATE_HEADERS = {
   "Cache-Control": "private, no-store",
@@ -17,6 +19,9 @@ export function examPrivateJson(body: unknown, init?: { status?: number }) {
 }
 
 export function examMarksApiError(error: unknown) {
+  if (error instanceof AcademicIntegrityError) {
+    return examPrivateJson({ error: error.message, code: error.code }, { status: error.status });
+  }
   if (error instanceof ExamMarksScopeError) {
     return examPrivateJson({ error: "The requested examination marks scope is unavailable." }, { status: error.status });
   }
@@ -32,6 +37,13 @@ export function examMarksApiError(error: unknown) {
 export async function requireExamModerationMutation(permission: Permission) {
   const auth = await requireApiPermission(permission);
   if (auth.response || !auth.user) return auth;
+  try {
+    const authority = await resolveMarksWriteAuthority(prisma, auth.user, undefined, permission as import("@/lib/permissions").CanonicalPermission);
+    if (authority.mode !== "LEADERSHIP") throw new AcademicIntegrityError("Only the Principal or Super Admin may moderate marks.");
+  } catch (error) {
+    const denied = error instanceof AcademicIntegrityError ? error : new AcademicIntegrityError("Only the Principal or Super Admin may moderate marks.");
+    return { response: examPrivateJson({ error: denied.message, code: denied.code }, { status: denied.status }), user: null };
+  }
   if (auth.user.role !== "SUPER_ADMIN") return auth;
   const intervention = await requireApiPermission("INTERVENE_EXAM_MARKS");
   if (intervention.response || !intervention.user) return intervention;

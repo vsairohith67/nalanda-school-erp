@@ -109,6 +109,8 @@ export const NAV_ITEMS = [
   { href: "/exams/moderation", label: "Marks Moderation", icon: "collection", permission: "VIEW_EXAM_MODERATION", group: "communication" },
   { href: "/teacher/exam-assignments", label: "My Exam Assignments", icon: "timetable", permission: "VIEW_OWN_EXAM_ASSIGNMENTS", group: "communication", requiredRole: "TEACHER" },
   { href: "/marks", label: "Marks Entry", icon: "attendance", permission: "ENTER_MARKS", group: "communication" },
+  { href: "/marks/governed", label: "Governed Marks", icon: "attendance", permission: "ENTER_ASSIGNED_EXAM_MARKS", group: "communication" },
+  { href: "/marks/delegation", label: "Marks Delegation", icon: "roles", permission: "ENTER_MARKS", group: "administration", allowedRoles: ["SUPER_ADMIN", "PRINCIPAL"] as Role[] },
   { href: "/marks/reports", label: "Exam Reports", icon: "collection", permission: "VIEW_EXAM_REPORTS", group: "communication" },
   { href: "/report-cards", label: "Report Cards", icon: "timetable", permission: "VIEW_REPORT_CARDS", group: "communication" },
   { href: "/report-cards/reports", label: "Report Card Reports", icon: "collection", permission: "VIEW_REPORT_CARD_REPORTS", group: "communication" },

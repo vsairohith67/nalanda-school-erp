@@ -1,5 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
+import { listActorMarksDelegationScopes, marksDelegationScopeKey, resolveMarksWriteAuthority, type GovernedMarksDelegationScope, type MarksDelegationScope } from "@/lib/academic-integrity";
+import type { CanonicalPermission } from "@/lib/permissions";
 
 type ExamMarksClient = any;
 type ExamMarksActor = Pick<AuthUser, "id" | "role" | "name">;
@@ -35,11 +37,10 @@ function canonicalSection(value: unknown) {
   return text === String(value ?? "") ? text : null;
 }
 
-function activeExactAssignment(row: any, actor: ExamMarksActor) {
+function activeExactAssignment(row: any) {
   const className = canonicalClass(row.className);
   const section = canonicalSection(row.section);
   return Boolean(
-    actor.role === "TEACHER" &&
     row.status === "ACTIVE" &&
     row.examination.status === "ACTIVE" &&
     row.classScope.status === "ACTIVE" &&
@@ -63,7 +64,6 @@ function activeExactAssignment(row: any, actor: ExamMarksActor) {
     row.timetableClassSection.className === row.className &&
     row.timetableClassSection.section === row.section &&
     row.timetableClassSection.isActive &&
-    row.staffMember.userId === actor.id &&
     row.staffMember.status === "ACTIVE" &&
     row.staffMember.user?.isActive &&
     row.staffMember.user.role === "TEACHER" &&
@@ -99,15 +99,25 @@ export async function requireExactExamMarkAssignment(
   client: ExamMarksClient,
   actor: ExamMarksActor,
   assignmentId: string,
-  options: { requirePrimary?: boolean } = {}
+  options: { requirePrimary?: boolean; permission?: CanonicalPermission } = {}
 ) {
   if (!assignmentId || assignmentId.length > 200) throw new ExamMarksScopeError();
   const row = await loadAssignment(client, assignmentId);
-  if (!row || !activeExactAssignment(row, actor)) throw new ExamMarksScopeError();
+  if (!row || !activeExactAssignment(row)) throw new ExamMarksScopeError();
+  const authority = await resolveMarksWriteAuthority(client, actor, {
+    kind: "GOVERNED_COMPONENT",
+    academicYear: row.academicYear,
+    examinationId: row.examinationId,
+    classScopeId: row.classScopeId,
+    subjectPaperId: row.subjectPaperId,
+    componentId: row.componentId,
+    className: row.className,
+    section: row.section
+  }, options.permission ?? "ENTER_ASSIGNED_EXAM_MARKS");
   if (options.requirePrimary && row.assignmentRole !== "PRIMARY_SUBMITTER") {
     throw new ExamMarksScopeError("Only the exact primary submitter can complete this action.", 403);
   }
-  return row;
+  return Object.assign(row, { _marksAuthority: authority });
 }
 
 export async function listExactTeacherMarkAssignments(
@@ -115,7 +125,9 @@ export async function listExactTeacherMarkAssignments(
   actor: ExamMarksActor,
   academicYear?: string
 ): Promise<any[]> {
-  if (actor.role !== "TEACHER") throw new ExamMarksScopeError("Teacher access is required.", 403);
+  if (actor.role === "TEACHER") throw new ExamMarksScopeError("Teacher marks-entry access is denied by Academic Integrity v1.1.", 403);
+  const delegatedScopes = await listActorMarksDelegationScopes(client, actor);
+  const delegatedKeys = delegatedScopes === null ? null : new Set(delegatedScopes.filter((scope: MarksDelegationScope): scope is GovernedMarksDelegationScope => scope.kind === "GOVERNED_COMPONENT").map(marksDelegationScopeKey));
   const rows = await client.teacherExamAssignment.findMany({
     where: {
       ...(academicYear ? { academicYear } : {}),
@@ -124,12 +136,7 @@ export async function listExactTeacherMarkAssignments(
       classScope: { status: "ACTIVE" },
       subjectPaper: { status: "ACTIVE" },
       schemeVersion: { status: "ACTIVE", frozenAt: { not: null } },
-      staffMember: {
-        userId: actor.id,
-        status: "ACTIVE",
-        user: { isActive: true, role: "TEACHER" },
-        timetableTeacher: { is: { isActive: true } }
-      }
+      staffMember: { status: "ACTIVE", user: { isActive: true, role: "TEACHER" }, timetableTeacher: { is: { isActive: true } } }
     },
     include: assignmentInclude,
     orderBy: [
@@ -141,7 +148,47 @@ export async function listExactTeacherMarkAssignments(
       { assignmentRole: "desc" }
     ]
   });
-  return rows.filter((row: any) => activeExactAssignment(row, actor));
+  const authorised = rows.filter((row: any) => {
+    if (!activeExactAssignment(row)) return false;
+    if (delegatedKeys === null) return true;
+    const scope: GovernedMarksDelegationScope = { kind: "GOVERNED_COMPONENT", academicYear: row.academicYear, examinationId: row.examinationId, examCode: row.examination.examCode, classScopeId: row.classScopeId, subjectPaperId: row.subjectPaperId, componentId: row.componentId, className: row.className, section: row.section, subjectName: row.subjectPaper.subjectNameSnapshot, componentName: row.component.name };
+    return delegatedKeys.has(marksDelegationScopeKey(scope));
+  });
+  const deduplicated = new Map<string, any>();
+  for (const row of authorised) {
+    const key = `${row.examinationId}|${row.classScopeId}|${row.subjectPaperId}|${row.componentId}`;
+    const current = deduplicated.get(key);
+    if (!current || row.assignmentRole === "PRIMARY_SUBMITTER") deduplicated.set(key, row);
+  }
+  return [...deduplicated.values()];
+}
+
+export async function listExactTeacherReportingAssignments(
+  client: ExamMarksClient,
+  actor: ExamMarksActor,
+  academicYear?: string
+): Promise<any[]> {
+  if (actor.role !== "TEACHER") throw new ExamMarksScopeError("Teacher reporting access is required.", 403);
+  const rows = await client.teacherExamAssignment.findMany({
+    where: {
+      ...(academicYear ? { academicYear } : {}),
+      status: "ACTIVE",
+      examination: { status: "ACTIVE" },
+      classScope: { status: "ACTIVE" },
+      subjectPaper: { status: "ACTIVE" },
+      schemeVersion: { status: "ACTIVE", frozenAt: { not: null } },
+      staffMember: { status: "ACTIVE", user: { id: actor.id, isActive: true, role: "TEACHER" }, timetableTeacher: { is: { isActive: true } } }
+    },
+    include: assignmentInclude,
+    orderBy: [
+      { examination: { startDate: "desc" } },
+      { className: "asc" },
+      { section: "asc" },
+      { subjectPaper: { displayOrder: "asc" } },
+      { component: { displayOrder: "asc" } }
+    ]
+  });
+  return rows.filter((row: any) => activeExactAssignment(row) && row.staffMember.userId === actor.id);
 }
 
 export async function exactEligibleStudents(

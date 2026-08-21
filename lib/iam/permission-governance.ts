@@ -138,6 +138,13 @@ export const OBJECT_SCOPED_PERMISSIONS = new Set<CanonicalPermission>([
   "VIEW_LEDGER"
 ]);
 
+export const ACADEMIC_INTEGRITY_MARKS_WRITE_PERMISSIONS = new Set<CanonicalPermission>([
+  "ENTER_MARKS", "SUBMIT_MARKS", "APPROVE_MARKS", "LOCK_EXAMS", "CORRECT_APPROVED_MARKS",
+  "ENTER_ASSIGNED_EXAM_MARKS", "SUBMIT_ASSIGNED_EXAM_MARKS", "REQUEST_EXAM_MARK_CORRECTION",
+  "MODERATE_EXAM_MARKS", "REOPEN_EXAM_MARK_SHEETS", "RUN_EXAM_CALCULATIONS",
+  "LOCK_EXAM_CALCULATIONS", "INTERVENE_EXAM_MARKS", "ENTER_REPORT_CARD_DATA", "SUBMIT_REPORT_CARDS"
+]);
+
 const VIEWER_IMMUTABLE_DENIALS = new Set<CanonicalPermission>([
   "VIEW_LIBRARY_STOCK_VERIFICATION",
   "VIEW_LEDGER",
@@ -167,6 +174,9 @@ export function permissionDelegability(permission: CanonicalPermission): Permiss
 export function immutablePermissionDenial(role: Role, rawPermission: string) {
   const permission = normalizePermission(rawPermission);
   if (!permission) return "Unknown permissions always default to deny.";
+  if (role === "TEACHER" && ACADEMIC_INTEGRITY_MARKS_WRITE_PERMISSIONS.has(permission)) {
+    return "Academic Integrity v1.1 permanently denies marks-write authority to every Teacher role context.";
+  }
   if (role !== "SUPER_ADMIN" && SUPER_ADMIN_ONLY_PERMISSIONS.has(permission)) {
     return "This security invariant is reserved to the Super Admin context and cannot be delegated.";
   }
@@ -183,6 +193,10 @@ export function immutablePermissionDenial(role: Role, rawPermission: string) {
 }
 
 export function roleSupportsObjectScopedPermission(role: Role, permission: CanonicalPermission) {
+  if (
+    ["ENTER_MARKS", "SUBMIT_MARKS", "VIEW_EXAM_REPORTS", "VIEW_OWN_EXAM_MARKS", "ENTER_ASSIGNED_EXAM_MARKS", "SUBMIT_ASSIGNED_EXAM_MARKS", "REQUEST_EXAM_MARK_CORRECTION"].includes(permission) &&
+    ["ADMIN", "ACCOUNTANT", "COMPUTER_OPERATOR", "VIEWER"].includes(role)
+  ) return true;
   return !OBJECT_SCOPED_PERMISSIONS.has(permission) || RECOMMENDED_ROLE_PERMISSIONS[role].has(permission);
 }
 

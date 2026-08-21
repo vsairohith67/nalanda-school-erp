@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { reportCardApiError } from "@/lib/report-card-api";
 import { requireReportCardTarget, resolveReportCardScope, ReportCardError } from "@/lib/report-card-scope";
 import { transitionReportCardBatch } from "@/lib/report-cards";
+import { AcademicIntegrityError, resolveMarksWriteAuthority } from "@/lib/academic-integrity";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const body = await request.json();
@@ -13,6 +14,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const auth = await requireApiPermission(permission);
   if (auth.response) return auth.response;
   try {
+    if (action === "open" || action === "submit") {
+      const authority = await resolveMarksWriteAuthority(prisma, auth.user, undefined, action === "submit" ? "SUBMIT_REPORT_CARDS" : "ENTER_REPORT_CARD_DATA");
+      if (authority.mode !== "LEADERSHIP") throw new AcademicIntegrityError("Only the Principal or Super Admin may open or submit report-card entry.");
+    }
     const id = (await params).id;
     const batch = await prisma.reportCardBatch.findUnique({ where: { id }, select: { academicYear: true, className: true, section: true } });
     if (!batch) throw new ReportCardError("Report-card batch was not found.", 404);

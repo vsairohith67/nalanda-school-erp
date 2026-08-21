@@ -46,7 +46,7 @@ describe("EXAM-RC-IMPL-2 governance contract", () => {
       "MODERATED",
       "LOCKED"
     ]);
-    expect(can("TEACHER", "ENTER_ASSIGNED_EXAM_MARKS")).toBe(true);
+    expect(can("TEACHER", "ENTER_ASSIGNED_EXAM_MARKS")).toBe(false);
     expect(can("TEACHER", "MODERATE_EXAM_MARKS")).toBe(false);
     expect(can("PRINCIPAL", "MODERATE_EXAM_MARKS")).toBe(true);
     expect(can("PRINCIPAL", "LOCK_EXAM_CALCULATIONS")).toBe(true);
@@ -67,12 +67,13 @@ describe("EXAM-RC-IMPL-2 governance contract", () => {
     expect(migration).not.toMatch(/\bDROP TABLE\b/i);
   });
 
-  it("gates Teacher and Principal endpoints and never uses native dialogs", () => {
+  it("supersedes the Teacher entry route, gates Principal moderation, and never uses native dialogs", () => {
     const teacherPage = source("app/teacher/marks/page.tsx");
     const principalPage = source("app/exams/moderation/page.tsx");
     const teacherUi = source("components/governed-mark-entry-grid.tsx");
     const principalUi = source("components/exam-moderation-dashboard.tsx");
-    expect(teacherPage).toContain('requireRolePermission("VIEW_OWN_EXAM_MARKS", "TEACHER")');
+    expect(teacherPage).toContain('redirect("/unauthorized?policy=academic-integrity")');
+    expect(teacherPage).not.toContain("GovernedMarkEntryGrid");
     expect(principalPage).toContain('requirePermission("VIEW_EXAM_MODERATION")');
     for (const ui of [teacherUi, principalUi]) {
       expect(ui).not.toMatch(/\b(?:alert|confirm|prompt)\s*\(/);

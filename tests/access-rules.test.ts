@@ -103,7 +103,7 @@ describe("access rules", () => {
     ]);
 
     const teacherNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"), "TEACHER");
-    expect(teacherNav.map((item) => item.href)).toEqual(["/admission-crm", "/attendance/students", "/attendance/students/reports", "/student-departures", "/leave/staff", "/substitutes", "/my-payroll", "/my-payslip-requests", "/my-support", "/homework/reports", "/homework", "/classwork", "/exams", "/teacher/calendar", "/teacher/exam-assignments", "/marks", "/report-cards", "/teacher/analytics"]);
+    expect(teacherNav.map((item) => item.href)).toEqual(["/admission-crm", "/attendance/students", "/attendance/students/reports", "/student-departures", "/leave/staff", "/substitutes", "/my-payroll", "/my-payslip-requests", "/my-support", "/homework/reports", "/homework", "/classwork", "/exams", "/teacher/calendar", "/teacher/exam-assignments", "/report-cards", "/teacher/analytics"]);
 
     const parentNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"), "PARENT");
     expect(parentNav.map((item) => item.href)).toEqual(["/parent/support", "/parent/student-departures", "/my-classwork", "/parent/calendar", "/parent/class-x-documents", "/parent/family-receipts"]);
@@ -153,7 +153,6 @@ describe("access rules", () => {
       "/exams",
       "/teacher/calendar",
       "/teacher/exam-assignments",
-      "/marks",
       "/report-cards"
     ]);
 

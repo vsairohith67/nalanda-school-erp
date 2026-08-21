@@ -1,5 +1,7 @@
 # Digital Report Cards and KG Rubric Assessments
 
+> **Academic Integrity v1.1:** The earlier Teacher entry/submission policy below is historical and is now `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`. From v1.1, only Principal and Super Admin have permanent marks/report-card write authority. Ordinary Teacher accounts remain read-only where existing academic-report policy permits. Exact non-teaching operators may enter marks only through an explicit `MARKS_ENTRY_OPERATOR` grant; they do not receive report-card editing or publication authority. Existing issued versions remain immutable. See [Academic Integrity v1.1](ACADEMIC_INTEGRITY_V1_1_PRINCIPAL_MARKS_ENTRY.md).
+
 Prompt 17C adds issued, versioned report cards without changing raw exam marks or Student progression decisions. Mark-based cards read one locked Exam Cycle. LKG/UKG cards use a dedicated five-evaluation rubric and a ten-page print structure.
 
 ## Roles and permissions

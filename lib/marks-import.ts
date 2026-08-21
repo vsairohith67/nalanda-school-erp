@@ -4,6 +4,7 @@ import { csvCell } from "@/lib/expenses";
 import { normalizeExamCode } from "@/lib/exams";
 import { resolveMarksScope, requireMarksTarget } from "@/lib/marks-scope";
 import { validateMarkRow } from "@/lib/marks";
+import { assertNoDelegatedFamilyConflict, marksAuthorityAuditContext, resolveMarksWriteAuthority } from "@/lib/academic-integrity";
 
 export const MARKS_IMPORT_COLUMNS = ["examCode", "className", "section", "subjectName", "componentName", "admissionNumber", "marksObtained", "entryStatus", "remarks"] as const;
 type ParsedRow = Record<(typeof MARKS_IMPORT_COLUMNS)[number], string> & { rowNumber: number };
@@ -40,7 +41,7 @@ async function resolveRows(client: PrismaClient | Prisma.TransactionClient, user
       if (!exam) throw new Error("Exact exam code was not found.");
       const assessment = await client.examAssessment.findUnique({ where: { examCycleId_className_section_subjectName_componentName: { examCycleId: exam.id, className: row.className, section, subjectName: row.subjectName, componentName } }, include: { examCycle: true } });
       if (!assessment) throw new Error("Exact class, section, subject, and component assessment was not found.");
-      const scope = await resolveMarksScope(client, user, assessment.academicYear); requireMarksTarget(scope, assessment);
+      const scope = await resolveMarksScope(client, user, assessment.academicYear, "WRITE"); requireMarksTarget(scope, assessment);
       if (assessment.entryStatus !== "OPEN" || assessment.examCycle.status !== "OPEN_FOR_ENTRY") throw new Error("Assessment is not open for import or is locked.");
       const enrollment = await client.academicYearEnrollment.findFirst({ where: { academicYear: assessment.academicYear, className: assessment.className, ...(assessment.section ? { section: assessment.section } : {}), status: "ACTIVE", student: { admissionNo: row.admissionNumber, deletedAt: null, status: "Active" } }, select: { student: { select: { id: true, admissionNo: true, studentName: true } } } });
       if (!enrollment) throw new Error("Exact active Student enrollment was not found for this assessment.");
@@ -59,6 +60,21 @@ export async function previewMarksImport(prisma: PrismaClient, user: AuthUser, t
 
 export async function applyMarksImport(prisma: PrismaClient, user: AuthUser, text: unknown, actor: { id: string; name: string }, now = new Date()) {
   const parsed = parseMarksCsv(text);
+  const preflight = await resolveRows(prisma, user, parsed);
+  if (preflight.errors.length) throw new Error(`Import blocked: ${preflight.errors.length} row(s) failed preview validation.`);
+  const byAssessment = new Map<string, typeof preflight.output>();
+  const authorityAuditByAssessment = new Map<string, string>();
+  for (const item of preflight.output) byAssessment.set(item.assessment.id, [...(byAssessment.get(item.assessment.id) ?? []), item]);
+  for (const items of byAssessment.values()) {
+    const assessment = items[0].assessment;
+    const authority = await resolveMarksWriteAuthority(prisma, user, {
+      kind: "LEGACY_ASSESSMENT", assessmentId: assessment.id, examId: assessment.examCycleId,
+      academicYear: assessment.academicYear, className: assessment.className, section: assessment.section,
+      subjectId: assessment.timetableSubjectId, subjectName: assessment.subjectName, componentName: assessment.componentName
+    }, "ENTER_MARKS");
+    authorityAuditByAssessment.set(assessment.id, marksAuthorityAuditContext(authority));
+    await assertNoDelegatedFamilyConflict(prisma, user, items.map((item) => item.student.id), authority, `legacy-import:${assessment.id}`);
+  }
   return prisma.$transaction(async (tx) => {
     const resolved = await resolveRows(tx, user, parsed);
     if (resolved.errors.length) throw new Error(`Import blocked: ${resolved.errors.length} row(s) failed preview validation.`);
@@ -68,7 +84,7 @@ export async function applyMarksImport(prisma: PrismaClient, user: AuthUser, tex
       const sameMarks = before ? (before.marksObtained === null ? item.marksObtained === null : item.marksObtained !== null && before.marksObtained.equals(item.marksObtained)) : false;
       if (before && before.entryStatus === item.entryStatus && sameMarks && (before.remarks ?? null) === item.remarks) { unchanged += 1; continue; }
       const mark = await tx.studentMark.upsert({ where: { assessmentId_studentId: { assessmentId: item.assessment.id, studentId: item.student.id } }, update: { marksObtained: item.marksObtained, entryStatus: item.entryStatus, remarks: item.remarks, enteredByUserId: actor.id, enteredAt: now }, create: { assessmentId: item.assessment.id, studentId: item.student.id, academicYear: item.assessment.academicYear, marksObtained: item.marksObtained, entryStatus: item.entryStatus, remarks: item.remarks, enteredByUserId: actor.id, enteredAt: now } });
-      await tx.studentMarkEvent.create({ data: { assessmentId: item.assessment.id, studentMarkId: mark.id, eventType: before ? (before.entryStatus === item.entryStatus ? "MARK_UPDATED" : "MARK_STATUS_CHANGED") : "MARK_CREATED", previousMarks: before?.marksObtained ?? null, newMarks: item.marksObtained, previousEntryStatus: before?.entryStatus ?? null, newEntryStatus: item.entryStatus, notes: "Preview-confirmed CSV import", actorLabel: actor.name, eventDate: now } });
+      await tx.studentMarkEvent.create({ data: { assessmentId: item.assessment.id, studentMarkId: mark.id, eventType: before ? (before.entryStatus === item.entryStatus ? "MARK_UPDATED" : "MARK_STATUS_CHANGED") : "MARK_CREATED", previousMarks: before?.marksObtained ?? null, newMarks: item.marksObtained, previousEntryStatus: before?.entryStatus ?? null, newEntryStatus: item.entryStatus, notes: `Preview-confirmed CSV import | ${authorityAuditByAssessment.get(item.assessment.id)}`, actorLabel: actor.name, eventDate: now } });
       if (before) updated += 1; else created += 1;
     }
     return { created, updated, unchanged, total: resolved.output.length };

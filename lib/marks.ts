@@ -41,7 +41,9 @@ export async function loadMarkEntry(prisma: PrismaClient, assessmentId: string) 
   };
 }
 
-export async function saveMarkDraft(prisma: PrismaClient, assessmentId: string, rowsValue: unknown, expectedValue: unknown, actor: { id: string; name: string }, now = new Date()) {
+type MarksMutationActor = { id: string; name: string; auditContext?: string };
+
+export async function saveMarkDraft(prisma: PrismaClient, assessmentId: string, rowsValue: unknown, expectedValue: unknown, actor: MarksMutationActor, now = new Date()) {
   if (!Array.isArray(rowsValue)) throw new Error("Mark rows are required.");
   const expectedUpdatedAt = parseExpectedVersion(expectedValue, "mark sheet");
   return prisma.$transaction(async (tx) => {
@@ -67,14 +69,14 @@ export async function saveMarkDraft(prisma: PrismaClient, assessmentId: string, 
         update: { marksObtained: row.marksObtained, entryStatus: row.entryStatus, remarks: row.remarks, enteredByUserId: actor.id, enteredAt: now },
         create: { assessmentId, studentId, academicYear: assessment.academicYear, marksObtained: row.marksObtained, entryStatus: row.entryStatus, remarks: row.remarks, enteredByUserId: actor.id, enteredAt: now }
       });
-      await tx.studentMarkEvent.create({ data: { assessmentId, studentMarkId: mark.id, eventType: before ? (before.entryStatus === row.entryStatus ? "MARK_UPDATED" : "MARK_STATUS_CHANGED") : "MARK_CREATED", previousMarks: before?.marksObtained ?? null, newMarks: row.marksObtained, previousEntryStatus: before?.entryStatus ?? null, newEntryStatus: row.entryStatus, actorLabel: actor.name, eventDate: now } });
+      await tx.studentMarkEvent.create({ data: { assessmentId, studentMarkId: mark.id, eventType: before ? (before.entryStatus === row.entryStatus ? "MARK_UPDATED" : "MARK_STATUS_CHANGED") : "MARK_CREATED", previousMarks: before?.marksObtained ?? null, newMarks: row.marksObtained, previousEntryStatus: before?.entryStatus ?? null, newEntryStatus: row.entryStatus, notes: actor.auditContext ?? null, actorLabel: actor.name, eventDate: now } });
       if (before) updated += 1; else created += 1;
     }
     return { created, updated, unchanged, updatedAt: now.toISOString() };
   });
 }
 
-export async function transitionAssessment(prisma: PrismaClient, assessmentId: string, action: "submit" | "approve" | "lock" | "cancel", expectedValue: unknown, actor: { id: string; name: string }, reasonValue?: unknown, now = new Date()) {
+export async function transitionAssessment(prisma: PrismaClient, assessmentId: string, action: "submit" | "approve" | "lock" | "cancel", expectedValue: unknown, actor: MarksMutationActor, reasonValue?: unknown, now = new Date()) {
   const expectedUpdatedAt = parseExpectedVersion(expectedValue, "mark sheet");
   return prisma.$transaction(async (tx) => {
     const assessment = await tx.examAssessment.findUnique({ where: { id: assessmentId }, include: { examCycle: true, marks: true } });
@@ -97,12 +99,12 @@ export async function transitionAssessment(prisma: PrismaClient, assessmentId: s
     const changed = await tx.examAssessment.updateMany({ where: { id: assessmentId, entryStatus: assessment.entryStatus, updatedAt: expectedUpdatedAt }, data });
     if (changed.count !== 1) throw new Error("This mark sheet changed in another session. Reload it before continuing.");
     if (action === "approve") await tx.studentMark.updateMany({ where: { assessmentId }, data: { verifiedByUserId: actor.id, verifiedAt: now } });
-    await tx.studentMarkEvent.create({ data: { assessmentId, eventType: action === "submit" ? "MARKS_SUBMITTED" : action === "approve" ? "MARKS_APPROVED" : action === "lock" ? "MARKS_LOCKED" : "ASSESSMENT_CANCELLED", reason, actorLabel: actor.name, eventDate: now } });
+    await tx.studentMarkEvent.create({ data: { assessmentId, eventType: action === "submit" ? "MARKS_SUBMITTED" : action === "approve" ? "MARKS_APPROVED" : action === "lock" ? "MARKS_LOCKED" : "ASSESSMENT_CANCELLED", reason, notes: actor.auditContext ?? null, actorLabel: actor.name, eventDate: now } });
     return tx.examAssessment.findUniqueOrThrow({ where: { id: assessmentId } });
   });
 }
 
-export async function applyApprovedCorrection(prisma: PrismaClient, assessmentId: string, input: unknown, expectedValue: unknown, reasonValue: unknown, actor: { id: string; name: string }, now = new Date()) {
+export async function applyApprovedCorrection(prisma: PrismaClient, assessmentId: string, input: unknown, expectedValue: unknown, reasonValue: unknown, actor: MarksMutationActor, now = new Date()) {
   const expectedUpdatedAt = parseExpectedVersion(expectedValue, "approved mark sheet");
   const reason = safeExamText(reasonValue, "Correction reason", 1_000)!;
   return prisma.$transaction(async (tx) => {
@@ -116,9 +118,9 @@ export async function applyApprovedCorrection(prisma: PrismaClient, assessmentId
     if (!before) throw new Error("Only an existing approved mark can be corrected.");
     const bumped = await tx.examAssessment.updateMany({ where: { id: assessmentId, entryStatus: "APPROVED", updatedAt: expectedUpdatedAt }, data: { updatedAt: now } });
     if (bumped.count !== 1) throw new Error("This approved sheet changed in another session. Reload it before correcting.");
-    await tx.studentMarkEvent.create({ data: { assessmentId, studentMarkId: before.id, eventType: "CORRECTION_REQUESTED", previousMarks: before.marksObtained, previousEntryStatus: before.entryStatus, reason, actorLabel: actor.name, eventDate: now } });
+    await tx.studentMarkEvent.create({ data: { assessmentId, studentMarkId: before.id, eventType: "CORRECTION_REQUESTED", previousMarks: before.marksObtained, previousEntryStatus: before.entryStatus, reason, notes: actor.auditContext ?? null, actorLabel: actor.name, eventDate: now } });
     const mark = await tx.studentMark.update({ where: { id: before.id }, data: { marksObtained: row.marksObtained, entryStatus: row.entryStatus, remarks: row.remarks, verifiedByUserId: actor.id, verifiedAt: now } });
-    await tx.studentMarkEvent.create({ data: { assessmentId, studentMarkId: mark.id, eventType: "CORRECTION_APPLIED", previousMarks: before.marksObtained, newMarks: row.marksObtained, previousEntryStatus: before.entryStatus, newEntryStatus: row.entryStatus, reason, actorLabel: actor.name, eventDate: now } });
+    await tx.studentMarkEvent.create({ data: { assessmentId, studentMarkId: mark.id, eventType: "CORRECTION_APPLIED", previousMarks: before.marksObtained, newMarks: row.marksObtained, previousEntryStatus: before.entryStatus, newEntryStatus: row.entryStatus, reason, notes: actor.auditContext ?? null, actorLabel: actor.name, eventDate: now } });
     return { updatedAt: now.toISOString() };
   });
 }

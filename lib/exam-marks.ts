@@ -2,6 +2,7 @@
 import { createHash } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
+import { assertNoDelegatedFamilyConflict } from "@/lib/academic-integrity";
 import {
   ExamMarksScopeError,
   exactEligibleStudents,
@@ -196,7 +197,13 @@ function assignmentSnapshot(assignment: Awaited<ReturnType<typeof requireExactEx
     section: assignment.section,
     staffMemberId: assignment.staffMemberId,
     timetableTeacherId: assignment.timetableTeacherId,
-    timetableAssignmentId: assignment.timetableAssignmentId
+    timetableAssignmentId: assignment.timetableAssignmentId,
+    effectiveAuthority: assignment._marksAuthority ? {
+      mode: assignment._marksAuthority.mode,
+      profileName: assignment._marksAuthority.profileName,
+      assignmentHandle: assignment._marksAuthority.assignmentHandle,
+      grantSource: assignment._marksAuthority.grantSource
+    } : null
   });
 }
 
@@ -377,7 +384,8 @@ export async function loadTeacherMarksWorkspace(
         };
       })
     },
-    staffLabel: selected.staffMember.displayName ?? selected.staffMember.fullName,
+    authority: selected._marksAuthority ?? (await requireExactExamMarkAssignment(client, actor, selected.id))._marksAuthority,
+    staffLabel: actor.name,
     reason: null
   };
 }
@@ -395,9 +403,11 @@ export async function saveAssignedMarkDraft(
   if (!Array.isArray(rowsValue) || rowsValue.length < 1 || rowsValue.length > 200) {
     throw new ExamMarksError("A save requires between 1 and 200 Student rows.");
   }
-  await requireExactExamMarkAssignment(client, actor, assignmentId);
+  const preflightAssignment = await requireExactExamMarkAssignment(client, actor, assignmentId, { permission: "ENTER_ASSIGNED_EXAM_MARKS" });
+  const preflightRows = rowsValue.map((row) => parseMarkRow(row, preflightAssignment.component.maximumMarks, preflightAssignment.schemeVersion.markDecimalPlaces));
+  await assertNoDelegatedFamilyConflict(client, actor, preflightRows.map((row) => row.studentId), preflightAssignment._marksAuthority, `governed:${preflightAssignment.examinationId}:${preflightAssignment.componentId}`);
   return client.$transaction(async (tx: ExamMarksClient) => {
-    const assignment = await requireExactExamMarkAssignment(tx, actor, assignmentId);
+    const assignment = await requireExactExamMarkAssignment(tx, actor, assignmentId, { permission: "ENTER_ASSIGNED_EXAM_MARKS" });
     const parsedRows = rowsValue.map((row) =>
       parseMarkRow(row, assignment.component.maximumMarks, assignment.schemeVersion.markDecimalPlaces)
     );
@@ -493,9 +503,11 @@ export async function submitAssignedMarkSheet(
 ) {
   const source = objectInput(input);
   const submissionRequestKey = requestKey(source.requestKey, "submission");
-  await requireExactExamMarkAssignment(client, actor, assignmentId, { requirePrimary: true });
+  const preflightAssignment = await requireExactExamMarkAssignment(client, actor, assignmentId, { requirePrimary: true, permission: "SUBMIT_ASSIGNED_EXAM_MARKS" });
+  const preflightStudents = await exactEligibleStudents(client, preflightAssignment);
+  await assertNoDelegatedFamilyConflict(client, actor, preflightStudents.map((row) => row.studentId), preflightAssignment._marksAuthority, `governed-submit:${preflightAssignment.examinationId}:${preflightAssignment.componentId}`);
   return client.$transaction(async (tx: ExamMarksClient) => {
-    const assignment = await requireExactExamMarkAssignment(tx, actor, assignmentId, { requirePrimary: true });
+    const assignment = await requireExactExamMarkAssignment(tx, actor, assignmentId, { requirePrimary: true, permission: "SUBMIT_ASSIGNED_EXAM_MARKS" });
     const sheet = await ensureSheet(tx, assignment, actor);
     if (sheet.primaryAssignmentId !== assignment.id) {
       throw new ExamMarksError("Only the frozen primary assignment can submit this sheet.", 403);
@@ -614,9 +626,11 @@ export async function requestMarkCorrection(
   const source = objectInput(input);
   const reason = boundedText(source.reason, "Correction reason", 500)!;
   const correctionRequestKey = requestKey(source.requestKey, "correction");
-  await requireExactExamMarkAssignment(client, actor, assignmentId);
+  const preflightAssignment = await requireExactExamMarkAssignment(client, actor, assignmentId, { permission: "REQUEST_EXAM_MARK_CORRECTION" });
+  const preflightStudents = await exactEligibleStudents(client, preflightAssignment);
+  await assertNoDelegatedFamilyConflict(client, actor, preflightStudents.map((row) => row.studentId), preflightAssignment._marksAuthority, `governed-correction:${preflightAssignment.examinationId}:${preflightAssignment.componentId}`);
   return client.$transaction(async (tx: ExamMarksClient) => {
-    const assignment = await requireExactExamMarkAssignment(tx, actor, assignmentId);
+    const assignment = await requireExactExamMarkAssignment(tx, actor, assignmentId, { permission: "REQUEST_EXAM_MARK_CORRECTION" });
     const logicalSheetKey = eventKey([
       "MARK_SHEET",
       assignment.examinationId,

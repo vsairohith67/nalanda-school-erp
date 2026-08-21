@@ -13,6 +13,10 @@
 
 This roadmap preserves the operational boundaries in the [Requirements Register](./REQUIREMENTS_REGISTER.md), [staging inventory](./STAGING_CURRENT_RUNTIME_INVENTORY.md), [real-data onboarding checklist](./V1_REAL_DATA_ONBOARDING_CHECKLIST.md), [training and pilot plan](./V1_TRAINING_AND_PILOT_PLAN.md), and [production cutover gate](./V1_PRODUCTION_CUTOVER_GATE.md).
 
+## v1.1 academic-integrity intervention
+
+`ACADEMIC-INTEGRITY-1A` is a management-directed prospective security correction on a separate release line: **Nalanda ERP v1.1 — Academic Integrity Release**. The ordinary Teacher marks-write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`; the frozen V1 RC1 commit/tag and historical evidence remain unchanged. The implementation introduces Principal/Super Admin direct entry and exact non-teaching `MARKS_ENTRY_OPERATOR` delegation by reusing current IAM. Independent `ACADEMIC-INTEGRITY-1A-QA` must complete before this feature can merge, tag or release. This intervention neither authorises deployment nor merges the parallel Super Admin Work feature.
+
 ## One immediate product recommendation
 
 **Recommend exactly one next implementation phase:**

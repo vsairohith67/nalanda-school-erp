@@ -215,7 +215,7 @@ export function GovernedMarkEntryGrid({ initialData }: { initialData: WorkspaceD
     }
     setSaving(true);
     try {
-      const response = await fetch(`/api/exam-marks/teacher?assignmentId=${encodeURIComponent(assignmentId)}`, {
+      const response = await fetch(`/api/exam-marks/workspace?assignmentId=${encodeURIComponent(assignmentId)}`, {
         cache: "no-store"
       });
       const result = await response.json();
@@ -479,7 +479,7 @@ export function GovernedMarkEntryGrid({ initialData }: { initialData: WorkspaceD
           <section className="dialog-card governed-marks-dialog" role="dialog" aria-modal="true" aria-labelledby="marks-dialog-title">
             <h3 id="marks-dialog-title">{dialog.kind === "submit" ? "Final submission" : "Request correction"}</h3>
             {dialog.kind === "submit" ? (
-              <p>This freezes Teacher editing for the selected primary sheets. It does not publish a report card.</p>
+              <p>This freezes delegated operator editing for the selected primary sheets. It does not publish a report card.</p>
             ) : (
               <label>
                 Correction reason

@@ -1853,3 +1853,11 @@ and recorded as `BASIC_MEMORY_SYNC_SKIPPED_SUBSCRIPTION_EXPIRED`. The retained
 feature branch is released by guarded fast-forward with no deployment or tag
 change to the frozen V1 RC. Result: `SUPER_ADMIN_COMMAND_CENTER_CLEARED`. Next
 governed product phase: `SUPER-ADMIN-WORK-1A`.
+
+## ACADEMIC-INTEGRITY-1A — Principal-Controlled Marks Entry (2026-08-21)
+
+Management superseded the earlier ordinary Teacher marks-entry policy as an academic-integrity and conflict-of-interest correction. The new prospective v1.1 policy permanently denies marks-write authority to Teacher role contexts, including assignment-derived, profile, override and multi-role attempts. Principal and Super Admin retain direct governed authority. Eligible named non-teaching users may receive only the reserved `MARKS_ENTRY_OPERATOR` profile with an exact server-derived assessment or examination-component scope.
+
+The implementation reuses current IAM profile assignments, validity, authorisation-version/session revocation and audit ledgers; no schema migration is introduced. Legacy and governed mutation services independently recheck effective authority, exact scope and supported Guardian/Student family conflict before saving. Teacher marks navigation and the direct Teacher entry route are removed/denied while established read-only academic-report access remains. Report-card mutation becomes leadership-only. Examination formulas, report templates, immutable issued reports, calculation snapshots, prior audit evidence and frozen V1 RC1 tags are unchanged.
+
+Implementation status is ready for independent `ACADEMIC-INTEGRITY-1A-QA` after focused verification and approved private branch publication. No merge, tag, deployment, operational-data mutation or history rewrite is authorised. Policy marker: `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`.

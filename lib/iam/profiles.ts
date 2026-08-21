@@ -19,10 +19,13 @@ import {
   reasonText
 } from "@/lib/iam/validation";
 
+const RESERVED_MARKS_OPERATOR_PROFILE = "marks_entry_operator";
+
 export async function createPermissionProfile(client: PrismaClient, actor: IamActor, input: Record<string, unknown>) {
   await assertActorPermission(client, actor, "MANAGE_PERMISSION_PROFILES");
   await requireCriticalReauthentication(client, actor, String(input.reauthPassword ?? ""));
   const name = boundedText(input.name, "Profile name", 3, 80);
+  if (normalizedProfileName(name) === RESERVED_MARKS_OPERATOR_PROFILE) throw new Error("MARKS_ENTRY_OPERATOR is managed only in Marks Entry Delegation");
   const description = optionalBoundedText(input.description, "Description", 300);
   const reason = reasonText(input.reason);
   const entries = profileEntriesInput(input.entries);
@@ -92,6 +95,7 @@ export async function updatePermissionProfile(client: PrismaClient, actor: IamAc
   await requireCriticalReauthentication(client, actor, String(input.reauthPassword ?? ""));
   const nextVersion = expectedVersion(input.expectedVersion);
   const name = boundedText(input.name, "Profile name", 3, 80);
+  if (normalizedProfileName(name) === RESERVED_MARKS_OPERATOR_PROFILE) throw new Error("MARKS_ENTRY_OPERATOR is managed only in Marks Entry Delegation");
   const description = optionalBoundedText(input.description, "Description", 300);
   const reason = reasonText(input.reason);
   const entries = profileEntriesInput(input.entries);
@@ -102,6 +106,7 @@ export async function updatePermissionProfile(client: PrismaClient, actor: IamAc
   return client.$transaction(async (tx) => {
     const current = await tx.permissionProfile.findUnique({ where: { publicKey: profileKey }, include: { entries: true } });
     if (!current || current.status !== "ACTIVE") throw new Error("Active permission profile not found");
+    if (current.normalizedName === RESERVED_MARKS_OPERATOR_PROFILE) throw new Error("MARKS_ENTRY_OPERATOR is managed only in Marks Entry Delegation");
     if (current.version !== nextVersion) throw new Error("The profile changed; refresh and review affected users");
     const affectedAssignments = await tx.userPermissionProfileAssignment.findMany({
       where: { profileId: current.id, status: "ACTIVE" },
@@ -175,6 +180,7 @@ export async function archivePermissionProfile(client: PrismaClient, actor: IamA
   return client.$transaction(async (tx) => {
     const profile = await tx.permissionProfile.findUnique({ where: { publicKey: profileKey } });
     if (!profile || profile.status !== "ACTIVE") throw new Error("Active permission profile not found");
+    if (profile.normalizedName === RESERVED_MARKS_OPERATOR_PROFILE) throw new Error("MARKS_ENTRY_OPERATOR is managed only in Marks Entry Delegation");
     const assignments = await tx.userPermissionProfileAssignment.findMany({ where: { profileId: profile.id, status: "ACTIVE" }, select: { userId: true } });
     const userIds = [...new Set(assignments.map((assignment) => assignment.userId))];
     if (userIds.length && input.impactAcknowledged !== true) throw new Error(`${userIds.length} user(s) are affected; acknowledge the archive impact`);
@@ -196,6 +202,7 @@ export async function archivePermissionProfile(client: PrismaClient, actor: IamA
 
 export async function listPermissionProfiles(client: PrismaClient) {
   const profiles = await client.permissionProfile.findMany({
+    where: { normalizedName: { not: RESERVED_MARKS_OPERATOR_PROFILE } },
     include: {
       entries: { where: { status: "ACTIVE", revokedAt: null }, orderBy: { permission: "asc" } },
       _count: { select: { assignments: { where: { status: "ACTIVE" } } } }

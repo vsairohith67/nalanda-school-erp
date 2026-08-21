@@ -4,4 +4,39 @@ import { requirePermission, getCurrentUserEffectivePermissions } from "@/lib/aut
 import { prisma } from "@/lib/prisma";
 import { marksScopeWhere, resolveMarksScope } from "@/lib/marks-scope";
 import { permissionSetCan } from "@/lib/role-permissions";
-export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) { const user = await requirePermission("VIEW_EXAMS"); const params = await searchParams; const [scope, permissions] = await Promise.all([resolveMarksScope(prisma, user, params.academicYear), getCurrentUserEffectivePermissions()]); const rows = await prisma.examAssessment.findMany({ where: { ...marksScopeWhere(scope), ...(params.status ? { entryStatus: params.status } : {}), ...(params.examCode ? { examCycle: { examCode: params.examCode.trim().toUpperCase() } } : {}) }, include: { examCycle: { select: { examCode: true, name: true, status: true } }, marks: { select: { id: true } } }, orderBy: [{ examCycle: { startDate: "desc" } }, { className: "asc" }, { section: "asc" }, { subjectName: "asc" }] }); const count = (status: string) => rows.filter((row) => row.entryStatus === status).length; return <div className="page marks-page"><PageHeader title="Marks Entry" description="Raw marks only. Blanks, zero, absent, exempt, and not applicable remain distinct." action={<div className="page-actions">{permissionSetCan(permissions, "ENTER_MARKS") ? <Link className="button secondary" href="/marks/import">Import CSV</Link> : null}{permissionSetCan(permissions, "VIEW_EXAM_REPORTS") ? <Link className="button" href="/marks/reports">Reports</Link> : null}</div>} />{scope.reason ? <div className="notice">{scope.reason}</div> : null}<div className="grid three"><StatCard label="Open" value={String(count("OPEN"))} /><StatCard label="Submitted" value={String(count("SUBMITTED"))} /><StatCard label="Approved" value={String(count("APPROVED"))} /><StatCard label="Locked" value={String(count("LOCKED"))} /><StatCard label="Cancelled" value={String(count("CANCELLED"))} /><StatCard label="Total Sheets" value={String(rows.length)} /></div><form className="card filter-grid"><label>Exam code<input name="examCode" defaultValue={params.examCode ?? ""} /></label><label>Sheet status<select name="status" defaultValue={params.status ?? ""}><option value="">All</option>{["DRAFT", "OPEN", "SUBMITTED", "APPROVED", "LOCKED", "CANCELLED"].map((value) => <option key={value}>{value}</option>)}</select></label><button type="submit">Apply Filters</button><Link className="button secondary" href="/marks">Clear</Link></form><section className="card"><div className="table-wrap"><table><thead><tr><th>Exam</th><th>Target</th><th>Maximum / pass</th><th>Entered</th><th>Status</th><th>Open</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{row.examCycle.examCode}<br /><small>{row.examCycle.name}</small></td><td>{row.className}-{row.section || "Class-wide"}<br />{row.subjectName}{row.componentName ? ` · ${row.componentName}` : ""}</td><td>{row.maxMarks.toString()} / {row.passMarks?.toString() ?? "not configured"}</td><td>{row.marks.length}</td><td><StatusBadge status={row.entryStatus} /></td><td><Link href={`/marks/entry/${encodeURIComponent(row.id)}`}>Open Sheet</Link></td></tr>)}{!rows.length ? <tr><td colSpan={6}>No authorised mark sheets match these filters.</td></tr> : null}</tbody></table></div></section></div>; }
+
+export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const user = await requirePermission("ENTER_MARKS");
+  const params = await searchParams;
+  const [scope, permissions] = await Promise.all([
+    resolveMarksScope(prisma, user, params.academicYear, "WRITE"),
+    getCurrentUserEffectivePermissions()
+  ]);
+  const rows = await prisma.examAssessment.findMany({
+    where: {
+      ...marksScopeWhere(scope),
+      ...(params.status ? { entryStatus: params.status } : {}),
+      ...(params.examCode ? { examCycle: { examCode: params.examCode.trim().toUpperCase() } } : {})
+    },
+    include: { examCycle: { select: { examCode: true, name: true, status: true } }, marks: { select: { id: true } } },
+    orderBy: [{ examCycle: { startDate: "desc" } }, { className: "asc" }, { section: "asc" }, { subjectName: "asc" }]
+  });
+  const count = (status: string) => rows.filter((row) => row.entryStatus === status).length;
+  const delegated = user.role !== "PRINCIPAL" && user.role !== "SUPER_ADMIN";
+  return (
+    <div className="page marks-page">
+      <PageHeader title="Marks Entry" description="Principal-controlled raw marks entry. Delegated operators see only their exact approved scope." action={<div className="page-actions">
+        {permissionSetCan(permissions, "ENTER_MARKS") && (scope.broad || scope.targets.length > 0) ? <Link className="button secondary" href="/marks/import">Import CSV</Link> : null}
+        {!delegated ? <Link className="button secondary" href="/marks/delegation">Delegation</Link> : null}
+        {permissionSetCan(permissions, "VIEW_EXAM_REPORTS") ? <Link className="button" href="/marks/reports">Reports</Link> : null}
+      </div>} />
+      {delegated ? <div className="notice"><strong>Delegated marks-entry operator.</strong> Every save and submission is checked against the exact active scope.</div> : null}
+      {scope.reason ? <div className="notice">{scope.reason}</div> : null}
+      <div className="grid three">
+        <StatCard label="Open" value={String(count("OPEN"))} /><StatCard label="Submitted" value={String(count("SUBMITTED"))} /><StatCard label="Approved" value={String(count("APPROVED"))} /><StatCard label="Locked" value={String(count("LOCKED"))} /><StatCard label="Cancelled" value={String(count("CANCELLED"))} /><StatCard label="Total Sheets" value={String(rows.length)} />
+      </div>
+      <form className="card filter-grid"><label>Exam code<input name="examCode" defaultValue={params.examCode ?? ""} /></label><label>Sheet status<select name="status" defaultValue={params.status ?? ""}><option value="">All</option>{["DRAFT", "OPEN", "SUBMITTED", "APPROVED", "LOCKED", "CANCELLED"].map((value) => <option key={value}>{value}</option>)}</select></label><button type="submit">Apply Filters</button><Link className="button secondary" href="/marks">Clear</Link></form>
+      <section className="card"><div className="table-wrap"><table><thead><tr><th>Exam</th><th>Target</th><th>Maximum / pass</th><th>Entered</th><th>Status</th><th>Open</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{row.examCycle.examCode}<br /><small>{row.examCycle.name}</small></td><td>{row.className}-{row.section || "Class-wide"}<br />{row.subjectName}{row.componentName ? ` · ${row.componentName}` : ""}</td><td>{row.maxMarks.toString()} / {row.passMarks?.toString() ?? "not configured"}</td><td>{row.marks.length}</td><td><StatusBadge status={row.entryStatus} /></td><td><Link href={`/marks/entry/${encodeURIComponent(row.id)}`}>Open Sheet</Link></td></tr>)}{!rows.length ? <tr><td colSpan={6}>No authorised mark sheets match these filters.</td></tr> : null}</tbody></table></div></section>
+    </div>
+  );
+}
