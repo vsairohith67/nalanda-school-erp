@@ -126,3 +126,32 @@ version 41, and Git safety. No schema, migration, operational write, provider,
 AI, search, Diary, task, directory, or whiteboard scope was added. Status:
 `SUPER_ADMIN_COMMAND_CENTER_CLEARED`. The next governed product phase is
 `SUPER-ADMIN-WORK-1A`.
+
+## SUPER-ADMIN-WORK-1A implementation handoff (2026-08-21)
+
+The first Personal Work Programme is implemented on
+`feature/super-admin-work-programme-1a` and is ready for independent QA. The
+three former future cards—Diary, Tasks & Reminders, and Contacts & Suppliers—
+now open one exact-owner, exact-`SUPER_ADMIN` My Work workspace. Private,
+bounded summaries are composed into Command Center behind an independent
+failure boundary.
+
+The additive schema contains only owner-isolated diary, task, contact and
+privacy-safe audit records. No sharing, Universal Search, Smart AI, whiteboard
+editing, external provider messaging, procurement/payment automation or
+academic-integrity change is included. The required dependency order remains:
+`Diary / Tasks / Contacts -> Universal Search -> Smart AI`.
+
+See the [Personal Work Programme architecture](./SUPER_ADMIN_WORK_PROGRAMME_ARCHITECTURE.md).
+
+## SUPER-ADMIN-WORK-1A-QA clearance (2026-08-21)
+
+Independent QA cleared Diary, Tasks & Reminders, Contacts & Suppliers, the My
+Work shell and bounded Command Center summaries. Exact active `SUPER_ADMIN`
+access and two-owner isolation passed at page, route, API and service layers;
+all released non-Super-Admin roles and delegated profiles were denied. Fresh and
+copied migration/recovery, privacy-safe audit, no-provider side effects,
+representative volume and exact desktop/mobile light/dark Browser QA passed.
+The operational database remained byte-identical and the additive migration was
+not applied operationally. Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search
+is next; Smart AI remains downstream and Whiteboard remains planned.

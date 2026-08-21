@@ -11,21 +11,23 @@
 
 The V1 Teacher marks-write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`. `ACADEMIC-INTEGRITY-1A-QA` independently cleared the v1.1 release on 2026-08-21; deployment and live-data activation remain separate gates.
 
-## SUPER-ADMIN-COMMAND-1A Command Center foundation
+## Super Admin Command Center and Personal Work Programme
 
 - [Scope](SUPER_ADMIN_COMMAND_CENTER_SCOPE.md)
 - [Architecture](SUPER_ADMIN_COMMAND_CENTER_ARCHITECTURE.md)
+- [Personal Work Programme Architecture](SUPER_ADMIN_WORK_PROGRAMME_ARCHITECTURE.md)
+- [Personal Work Programme QA Clearance](evidence/SUPER_ADMIN_WORK_1A_QA_CLEARANCE.md)
 - [V1.5 and Post-RC Roadmap](V1_5_AND_POST_RC_ROADMAP.md)
 - [Pending Feature Reconciliation](PENDING_FEATURE_RECONCILIATION.md)
 - [UDISE 15E Evidence Checklist](UDISE_15E_EVIDENCE_CHECKLIST.md)
 - [Mobile App Roadmap](MOBILE_APP_ROADMAP.md)
 
 The exact `SUPER_ADMIN`-only, private/no-store Command Center foundation is
-independently QA-cleared as a bounded, read-only composition over IAM, OBS-1A,
-approved audit/event sources, and existing module records. It adds no schema,
-provider, AI, search, Diary, task, directory, or whiteboard functionality.
-Status: `SUPER_ADMIN_COMMAND_CENTER_CLEARED`. The next governed product phase is
-`SUPER-ADMIN-WORK-1A`.
+independently QA-cleared. `SUPER-ADMIN-WORK-1A` implements its first private
+owner-isolated product layer: Diary, Tasks & Reminders and Contacts & Suppliers
+inside one My Work shell with bounded, failure-isolated Command Center
+summaries. Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search is the next
+governed phase; Smart AI remains downstream of Search.
 
 ## V1-FINAL-1A final integration and release-candidate preparation
 

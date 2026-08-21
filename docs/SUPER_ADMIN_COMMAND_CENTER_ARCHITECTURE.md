@@ -157,3 +157,20 @@ passing tests and 3 intentional skips), production build, logical backup version
 41, and Git safety. Basic Memory was attempted once and unavailable:
 `BASIC_MEMORY_SYNC_SKIPPED_SUBSCRIPTION_EXPIRED`. No deployment or provider
 activation occurred. Result: `SUPER_ADMIN_COMMAND_CENTER_CLEARED`.
+
+## Personal Work Programme composition extension
+
+`SUPER-ADMIN-WORK-1A` keeps this read-only foundation intact and adds one
+separately authorised, exact-owner summary reader. Diary, task/reminder and
+contact counts are bounded and fail inside their own source boundary; their
+failure cannot blank Today, School Pulse, OBS-1A or Recent Activity. The three
+work cards are live navigation to `/super-admin/my-work`. Universal Search and
+Smart AI remain dependency-blocked and Whiteboard remains planned. The data,
+authorization, audit and UX contract is defined in
+[Super Admin Personal Work Programme Architecture](./SUPER_ADMIN_WORK_PROGRAMME_ARCHITECTURE.md).
+
+Independent `SUPER-ADMIN-WORK-1A-QA` cleared this composition extension on
+2026-08-21. Owner-specific summaries remained bounded and failure-isolated, all
+non-Super-Admin roles were denied, the existing Command Center sources did not
+regress, and the operational database remained byte-identical. Result:
+`SUPER_ADMIN_WORK_CLEARED`.

@@ -73,11 +73,11 @@ client-version probe was not attributable to this feature.
 
 ## Final verification
 
-- Routes: 336 page routes and 550 API routes.
+- Routes: 337 page routes and 551 API routes after current-main reconciliation.
 - Lifecycle backfill: dry run; zero created enrollment/event rows.
 - Typecheck: passed.
-- Complete test suite: 217 test files passed; 1 file intentionally skipped;
-  1,931 tests passed and 3 were intentionally skipped, from the optional
+- Complete test suite: 218 test files passed; 1 file intentionally skipped;
+  1,945 tests passed and 3 were intentionally skipped, from the optional
   qpdf adapter group because no approved qpdf executable plus pinned SHA-256 was
   configured. The existing non-qpdf PDF security and report-render suites passed.
 - Production build: passed.
@@ -85,6 +85,9 @@ client-version probe was not attributable to this feature.
 - Git safety: passed.
 - Prisma/schema migration: none added or required.
 - Security: zero unresolved Critical, High or authorization-relevant Medium.
+
+The reconciliation added only the independently cleared Super Admin Work
+migration; Academic Integrity itself still adds and requires no migration.
 
 All mutation-capable QA used copied or generated synthetic databases. The
 operational database stayed byte-identical before and after QA:
@@ -97,6 +100,10 @@ were unchanged. The frozen V1 RC1 tag was not moved, deleted or rewritten. The
 historical V1 Teacher policy remains `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`.
 
 At QA start, `main` still resolved to the cleared Command Center checkpoint.
-`feature/super-admin-work-programme-1a` remained an unmerged parallel branch and
-was not merged, reverted or modified by this release. No deployment, provider
-activation, real-user activation or real-data import was performed.
+During final release reconciliation, `SUPER-ADMIN-WORK-1A-QA` independently
+cleared and advanced `main` to `53a805be7ad5299e76e30b2989a052f1b5f935e8`.
+That exact two-commit My Work advance was reviewed and merged into this feature
+without reverting Diary, Tasks, Contacts, ownership isolation or Command Center
+summaries. All affected and complete verification gates were rerun after the
+reconciliation. No deployment, provider activation, real-user activation or
+real-data import was performed.

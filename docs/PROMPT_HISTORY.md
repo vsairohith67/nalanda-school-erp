@@ -1,5 +1,56 @@
 # Nalanda Fee Control — Major Prompt and Phase History
 
+## SUPER-ADMIN-WORK-1A-QA — Independent Personal Work Programme QA (2026-08-21)
+
+Independent QA reviewed the complete feature diff and additive migration from
+the cleared Command Center checkpoint. Copied and fresh databases proved
+idempotent migration, recovery, SQLite integrity and preservation of Student,
+Guardian, Staff, Payment, examination/report and IAM data. Two synthetic Super
+Admins proved Diary, Task, Contact and Command Center owner isolation. Every
+released non-Super-Admin role and a delegated profile were denied at direct
+route, API and service boundaries; origin, media type, malformed ID, mass
+assignment, stale/revoked/inactive session, XSS, pagination and privacy-safe
+audit checks passed with zero unresolved Critical or High findings.
+
+Browser QA passed Command Center and My Work at `1366x768` and exact `390x844`
+in light and dark modes with useful empty/validation states, keyboard focus,
+44 px targets, no overflow, no hydration error and no console error. Synthetic
+volume p95 remained below 50 ms. The serialized release gate passed 335 page
+routes, 549 API routes, lifecycle dry run, typecheck, 217 passing test files
+(1,935 passing tests; 3 intentional qpdf-runtime skips), production build,
+backup version 41 and Git safety. The operational database remained byte-exact
+at SHA-256 `65f47efa37da321023439303770645f8d656f2be58458c1a03b341408ef9a6fa`.
+The source migration remains unapplied operationally. No provider, deployment,
+real data/user, Universal Search, Smart AI, Whiteboard, procurement/payment or
+parallel academic-integrity work was activated or merged. Result:
+`SUPER_ADMIN_WORK_CLEARED`. Next dependency: `UNIVERSAL-SEARCH-1A`.
+
+## SUPER-ADMIN-WORK-1A — Super Admin Personal Work Programme (2026-08-21)
+
+Starting from cleared Command Center commit
+`467204394a0ca891fe6e9ac4d55fe59d0814aa17`, this phase implements one compact
+exact-`SUPER_ADMIN` My Work workspace with Digital Diary, Tasks & Reminders and
+Contacts & Suppliers. Four additive owner-isolated tables preserve future
+multi-Super-Admin safety without adding sharing. The API repeats exact-role
+authorization and every service query includes the signed-in owner identity.
+
+Diary, task and contact create/update/status flows, school-date boundaries,
+local reminder times, bounded lists, privacy-safe audit metadata, private
+no-store responses, Command Center summaries, empty/loading states, keyboard
+focus and one-column mobile CSS are covered. Contact storage refuses common
+card/password/OTP/PIN/credential material. Reminder support has no SMS,
+WhatsApp, email or other provider side effect.
+
+The migration applied successfully to a copied operational database with four
+protected users; SQLite integrity returned `ok`, the original database hash was
+unchanged and a post-migration backup was byte-exact. Focused implementation
+tests pass. Independent QA must still repeat exact-role route/API probes,
+ownership isolation, desktop `1366x768`, exact mobile `390x844`, light/dark,
+typecheck and focused recovery checks. No merge, tag, deploy, Universal Search,
+Smart AI, whiteboard, procurement/payment automation or academic-integrity
+change is authorised. Result at implementation handoff:
+`SUPER_ADMIN_WORK_READY_FOR_QA`.
+
 ## V1-FINAL-1A-QA — independent V1 release-candidate acceptance (2026-08-14)
 
 Independent QA inspected the complete retained-branch diff, rebuilt a fresh `V1FINALQA` school from all 18 migrations, proved schema equivalence, restore/replay/cleanup and the exact 800-Student profile, then repeated the Auth/IAM, finance, admissions, academic/calendar/reporting, payslip, support, Safe Exit, release-operations and private-file gates. The bounded profile recorded zero errors and zero SQLite busy failures well inside the local 2 s/3 s/5 s budgets.
@@ -1870,9 +1921,12 @@ linked-child conflict protection, immediate session-revoked grant removal,
 scope/IDOR/import/concurrency controls and historical immutability on copied or
 synthetic data. QA closed one Medium generic-IAM reserved-profile/override bypass,
 one delegated legacy-route permission mismatch and one unsafe unauthorized page
-surface. The final gate passed 336 page routes, 550 API routes, lifecycle dry run,
-typecheck, 1,931 tests with 3 optional qpdf skips, production build, backup
+surface. After current-main reconciliation, the final gate passed 337 page
+routes, 551 API routes, lifecycle dry run, typecheck, 1,945 tests with 3 optional
+qpdf skips, production build, backup
 version 41 and Git safety. Operational database SHA-256 remained
 `65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA`.
-Status: `ACADEMIC-INTEGRITY-1A — CLEARED`. No deployment, live provider, real
-user/data activation or parallel Super Admin Work merge was performed.
+Status: `ACADEMIC-INTEGRITY-1A — CLEARED`. After `SUPER-ADMIN-WORK-1A-QA`
+independently cleared and advanced `main`, its exact My Work changes were
+preserved during release reconciliation and all affected/full gates were rerun.
+No deployment, live provider or real user/data activation was performed.

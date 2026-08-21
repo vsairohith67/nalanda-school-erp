@@ -1,8 +1,8 @@
 # Authoritative Requirements Register
 
 **Register ID:** `GOV-RECON-1-REGISTER`<br>
-**As-of:** 2026-08-14<br>
-**Baseline:** protected released `main` at `16154c395459dcfe27052204c4dbcecfa7ddd169`; V1 final integration candidate on retained branch `release/v1-final-integration-acceptance`<br>
+**As-of:** 2026-08-21<br>
+**Baseline:** protected `main` through the independently cleared Super Admin Work checkpoint `53a805be7ad5299e76e30b2989a052f1b5f935e8`; Academic Integrity release reconciliation in progress<br>
 **Decision source:** `docs/V1_V1_5_V2_SCOPE.md`
 
 ## Status and evidence rules
@@ -13,6 +13,7 @@
 - `DEFERRED`: deliberately later than V1 or awaiting an authorised phase.
 - `SUPERSEDED`: retained historical requirement/scope record replaced by a dated decision.
 - `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`: implementation evidence is preserved, operational activation is default-off, and the capability is not part of V1 completion.
+- `READY_FOR_QA`: implementation evidence and focused developer verification exist, but independent acceptance/release evidence is still required.
 
 A route, model or document by itself cannot produce `COMPLETE`. Evidence classes use `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE`, `INFERRED_FROM_REPOSITORY`, `MISSING_OR_UNAVAILABLE_SOURCE`, `SUPERSEDED`, `DEFERRED` and `CONFLICTING_RECORD`.
 
@@ -26,7 +27,7 @@ A route, model or document by itself cannot produce `COMPLETE`. Evidence classes
 | V1-STAFF-004 | Staff foundation, attendance, leave and substitutes | Prompt 12/13 summaries and code (`INFERRED_FROM_REPOSITORY`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE`) | 2026-07-01 onward | Operate Staff records and daily workforce workflow | V1 | CLEARED | StaffMember, attendance, leave, substitute routes/services | Prompt 12/13 QA and later role regressions | Baseline | `2d1ac63` | Staff data role-gated; Teacher scope server-derived | Payslip request is separate V1-HR-014 | Maintain | High |
 | V1-TIME-005 | Timetable foundation, generation, activation and export | Prompt-history summaries and repository evidence (`INFERRED_FROM_REPOSITORY`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE`) | 2026-06 to 2026-07 | Run class/Teacher schedules | V1 | CLEARED | Timetable models/builders/generator/print/export | Prompt 7 series and later exact-scope QA | Baseline/Teacher scope | `2d1ac63`; `teacher-attendance-scope-v37-2026-07-29` | Teacher scope comes from assignments, not permission alone | None | Maintain | High |
 | V1-EXAM-006 | Versioned examination schemes, marks, moderation and calculation | EXAM-RC-IMPL-1/2 repository/Git (`EXACT_SOURCE`) | 2026-07-30 to 2026-07-31 | Produce governed academic results without inferred formula | V1 | CLEARED | Scheme, assignment, mark sheet, moderation and result snapshot services | Independent EXAM-RC-IMPL-1/2 QA | Exam scheme/marks | `exam-scheme-foundation-v37-2026-07-30`; `exam-marks-calculation-v37-2026-07-31` | Exact Teacher scope; locked inputs; explicit formula mode | Historical PDFs are evidence, not rules | Maintain | High |
-| V1.1-SEC-ACADEMIC-001 | Principal-controlled marks entry and exact non-teaching delegation | Management-directed `ACADEMIC-INTEGRITY-1A` (`EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `INDEPENDENT_QA_EVIDENCE`) | 2026-08-21 | Remove conflict-of-interest risk from ordinary Teacher marks entry | V1.1 | CLEARED | Permanent Teacher denial; Principal/Super Admin direct authority; reserved exact-scope `MARKS_ENTRY_OPERATOR`; session revocation; family-link conflict denial; no migration | Independent role/scope/API/Browser/security/concurrency/history QA plus 1,931 passed tests | `ACADEMIC-INTEGRITY-1A-QA` | v1.1 semantic release tag and retained feature branch | Server-enforced, auditable, revocable, bounded, deny-by-default | Prior Teacher write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`; historical entry/audit remains intact | Deployment and live-data onboarding remain separate gates | High |
+| V1.1-SEC-ACADEMIC-001 | Principal-controlled marks entry and exact non-teaching delegation | Management-directed `ACADEMIC-INTEGRITY-1A` (`EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `INDEPENDENT_QA_EVIDENCE`) | 2026-08-21 | Remove conflict-of-interest risk from ordinary Teacher marks entry | V1.1 | CLEARED | Permanent Teacher denial; Principal/Super Admin direct authority; reserved exact-scope `MARKS_ENTRY_OPERATOR`; session revocation; family-link conflict denial; no Academic Integrity migration | Independent role/scope/API/Browser/security/concurrency/history QA plus 1,945 passed post-reconciliation tests | `ACADEMIC-INTEGRITY-1A-QA` | v1.1 semantic release tag and retained feature branch | Server-enforced, auditable, revocable, bounded, deny-by-default | Prior Teacher write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`; historical entry/audit remains intact | Deployment and live-data onboarding remain separate gates | High |
 | V1-RC-007 | Report publication, issued snapshots, Parent delivery and PDF jobs | EXAM-RC-IMPL-3 Git/repository (`EXACT_SOURCE`) | 2026-07-31 | Publish approved results privately and reproducibly | V1 | CLEARED | Issued report-card versions, Parent link checks, PDF jobs | Independent publication/PDF QA | Report publication | `exam-report-publication-v37-2026-07-31` | Issued-only linked-Parent access; private/no-store | Does not establish canonical visual/physical acceptance | Maintain; consume template catalog | High |
 | V1-ADM-008 | Admissions and enquiry CRM | Prompt 23H Git/PR/release (`EXACT_SOURCE`) | 2026-08-03 | Govern prospective enquiry through exactly-once admission | V1 | CLEARED | Privacy-minimal CRM, documents, decisions and conversion | Independent Prompt 23H QA | Prompt 23H | `admissions-crm-v37-2026-08-03`; PR #2 | Prospective data isolated; copied-fixture QA; private documents | Completed task must not be reopened | Maintain | High |
 | V1-COMMS-009 | Governed in-app and one-way communication foundations | Prompt 19 sequence summaries and code (`INFERRED_FROM_REPOSITORY`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE`) | 2026-07-17 to 2026-08-14 | Notify users with consent/delivery audit | V1 | CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING | In-app notifications are the accepted V1 operational channel; WhatsApp/SMS/email remain mock/default-off foundations | Local/mock tests plus V1 final channel-boundary review | V1 final integration acceptance | `2d1ac63`; retained V1 final branch | Consent, masking, no provider activation | Live providers remain unauthorised and are not required for V1 release-candidate clearance | Configure only after separate provider, budget and policy approval | High |
@@ -48,6 +49,7 @@ A route, model or document by itself cannot produce `COMPLETE`. Evidence classes
 | V1.5-TRN-025 | Optional Transport | Authoritative GOV-RECON-1 correction | 2026-08-08 | Optional future transport operations | V1.5 | DEFERRED | None required now | None | None | None | Location/child safety and vendor boundaries before implementation | School currently provides no transport | Reassess only on service decision | High |
 | V1.5-CAF-026 | Optional Cafeteria | Authoritative GOV-RECON-1 correction | 2026-08-08 | Optional future cafeteria operations | V1.5 | DEFERRED | None required now | None | None | None | Student purchase/allergy/payment privacy before implementation | School currently provides no cafeteria | Reassess only on service decision | High |
 | V1.5-RC-034 | LKG/UKG developmental report cards and physical acceptance | 2026-08-12 report-card scope amendment (`EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `DEFERRED`) | 2026-08-12 | Preserve and later operationally accept the ten-page developmental booklet | V1.5 | IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5 | Existing KG renderer, tests, migrations, historical commits and ignored synthetic evidence preserved; `kg-report-cards-v1-5` default-off through existing release policy | Prior digital synthetic QA is retained foundation evidence; no V1.5 operational/physical acceptance | REPORT-PRINT-ACCEPT-1A scope split | historical report-card commits preserved | No ordinary-role KG operational controls in V1; existing issued snapshots remain readable; no source/Student data | Child requirement split from original `V1-RC-016`; not V1-cleared or production-ready | Revisit activation, LKG/UKG policy and physical/imposition acceptance only in an authorised V1.5 phase | High |
+| V1.5-WORK-035 | Super Admin Personal Work Programme | SUPER-ADMIN-WORK-1A exact prompt, repository implementation and independent QA (`EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE`) | 2026-08-21 | Give each exact Super Admin a private Diary, Tasks/Reminders and contact/supplier reference directory behind Command Center | V1.5 | CLEARED | Additive exact-owner Diary/Task/Contact/Audit models; exact-role page/API; one My Work shell; bounded resilient Command Center summaries; no sharing/provider/procurement/AI/search | Exact role/API/owner denial, lifecycle/date/security/privacy, fresh and copied migration/recovery, bounded volume, 1366x768 and 390x844 light/dark Browser QA, 1,935 tests, production build, backup v41 and Git safety passed | SUPER-ADMIN-WORK-1A-QA clearance | `feature/super-admin-work-programme-1a`; annotated `super-admin-work-v-2026-08-21` checkpoint | Exact active `SUPER_ADMIN`; every query owner-scoped; private/no-store; note bodies/contact PII excluded from audit metadata; no external messages; zero unresolved Critical/High findings | Operational migration remains unapplied; Universal Search next and Smart AI downstream; no academic-integrity scope changed | `UNIVERSAL-SEARCH-1A`; deployment/onboarding remains separately authorised | High |
 | V2-AI-027 | AI-generated lessons | Authoritative GOV-RECON-1 | 2026-08-08 | Assist Teachers with draft lessons | V2 | DEFERRED | Read-only/mock AI planning foundations only | No V2 programme acceptance | None | None | No Student data or automatic publication | Full payroll excluded | Future governed AI phase | High |
 | V2-AI-028 | AI-generated educational videos | Authoritative GOV-RECON-1 | 2026-08-08 | Produce draft educational video content | V2 | DEFERRED | None | None | None | None | Source rights, privacy, cost and safety controls | None | Future governed AI phase | High |
 | V2-AI-029 | Teacher review and approval | Authoritative GOV-RECON-1 | 2026-08-08 | Keep academic responsibility human | V2 | DEFERRED | None | None | None | None | Teacher approval required before any learner access | Mandatory V2 guard | Specify with V2 programme | High |
@@ -60,16 +62,17 @@ A route, model or document by itself cannot produce `COMPLETE`. Evidence classes
 
 | Dimension | Count |
 | --- | ---: |
-| Total requirements | 34 |
+| Total requirements | 35 |
 | V1 | 24 |
-| V1.5 | 4 |
+| V1.5 | 5 |
 | V2 | 6 |
-| CLEARED | 19 |
+| CLEARED | 20 |
 | CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING | 4 |
 | COMPLETE | 1 |
 | DEFERRED | 8 |
 | SUPERSEDED | 1 |
 | IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5 | 1 |
+| READY_FOR_QA | 0 |
 
 ## Critical V1 gaps
 

@@ -8,10 +8,10 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const auth = await requireApiRolePermission("VIEW_DASHBOARD", "SUPER_ADMIN");
-  if (auth.response) return auth.response;
+  if (auth.response || !auth.user) return auth.response;
   try {
     const settings = await getSchoolSettings(prisma);
-    return privateResponse(await getSuperAdminCommandCenter(prisma, settings.academicYear));
+    return privateResponse(await getSuperAdminCommandCenter(prisma, settings.academicYear, auth.user.id));
   } catch {
     return privateResponse({ error: "Command Center is temporarily unavailable." }, 503);
   }

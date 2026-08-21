@@ -16,9 +16,9 @@ const COMMAND_DATE_FORMATTER = new Intl.DateTimeFormat("en-IN", { day: "numeric"
 
 export default async function SuperAdminCommandCenterPage() {
   noStore();
-  await requireRolePermission("VIEW_DASHBOARD", "SUPER_ADMIN");
+  const user = await requireRolePermission("VIEW_DASHBOARD", "SUPER_ADMIN");
   const settings = await getSchoolSettings(prisma);
-  const commandCenter = await getSuperAdminCommandCenter(prisma, settings.academicYear);
+  const commandCenter = await getSuperAdminCommandCenter(prisma, settings.academicYear, user.id);
 
   return (
     <PageShell className="super-admin-command-center">
@@ -72,10 +72,17 @@ export default async function SuperAdminCommandCenterPage() {
         </nav>
       </section>
 
+      <section className="command-section" aria-labelledby="private-work-summary-title">
+        <div className="command-section-heading"><div><h2 id="private-work-summary-title">Private work summary</h2><p>Bounded owner-only Diary, Tasks, Reminders and Directory signals.</p></div><LockKeyhole size={24} aria-hidden /></div>
+        {commandCenter.workSummary.data.length ? <MetricGrid metrics={commandCenter.workSummary.data} currencyIds={NO_CURRENCY_IDS} /> : <SourceMessage state={commandCenter.workSummary.state} message={commandCenter.workSummary.message} />}
+      </section>
+
       <section className="command-section" aria-labelledby="work-programme-title">
         <div className="command-section-heading"><div><h2 id="work-programme-title">My work programme</h2><p>Diary / Tasks / Directory → Universal Search → Smart AI</p></div><Sparkles size={24} aria-hidden /></div>
         <div className="command-future-grid">
-          {commandCenter.workProgramme.map((item) => <article key={item.title} aria-disabled="true"><span>{item.status}</span><h3>{item.title}</h3><p>{item.detail}</p></article>)}
+          {commandCenter.workProgramme.map((item) => item.href
+            ? <Link href={item.href} key={item.title}><span>{item.status}</span><h3>{item.title}</h3><p>{item.detail}</p></Link>
+            : <article key={item.title} aria-disabled="true"><span>{item.status}</span><h3>{item.title}</h3><p>{item.detail}</p></article>)}
         </div>
       </section>
 

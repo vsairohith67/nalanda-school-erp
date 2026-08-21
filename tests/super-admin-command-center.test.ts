@@ -9,6 +9,7 @@ function readers(overrides: Partial<CommandCenterReaders> = {}): CommandCenterRe
     schoolPulse: vi.fn(async () => []),
     systemHealth: vi.fn(async () => ({ generatedAt: "2026-08-21T00:00:00.000Z", overall: "HEALTHY" as const, items: [] })),
     recentActivity: vi.fn(async () => []),
+    workSummary: vi.fn(async () => []),
     ...overrides
   };
 }
@@ -46,6 +47,16 @@ describe("Super Admin Command Center foundation", () => {
     const result = await composeSuperAdminCommandCenter(readers({ recentActivity: () => never }), { timeoutMs: 5 });
     expect(result.recentActivity).toMatchObject({ state: "DEGRADED", data: [] });
     expect(result.systemHealth.state).toBe("OK");
+  });
+
+  it("keeps the cleared Command Center available when the private work summary fails", async () => {
+    const result = await composeSuperAdminCommandCenter(readers({
+      today: async () => [{ id: "support", label: "Pending support", value: 1, detail: "Open", state: "OK", href: "/support" }],
+      workSummary: async () => { throw new Error("private work source unavailable"); }
+    }));
+    expect(result.today).toHaveLength(1);
+    expect(result.workSummary).toMatchObject({ state: "UNAVAILABLE", data: [] });
+    expect(JSON.stringify(result)).not.toContain("private work source unavailable");
   });
 
   it("preserves legitimate zero values and unavailable values as different states", async () => {
