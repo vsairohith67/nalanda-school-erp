@@ -21,7 +21,7 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | # | Work area | Classification | Evidence-based boundary and next disposition |
 |---:|---|---|---|
 | 1 | UDISE+ Prompt 15D and 15E | 15D: `CLEARED`; 15E: `BLOCKED_BY_EVIDENCE`; full operational support: `NOT_IMPLEMENTED` | 15D is a read-only checklist/reference foundation. 15E cannot start until current Student, Teacher, progression, Telangana, DCF, inconsistency, certification, report, register, and role evidence is supplied. No scraping, government-portal submission, or compliance claim. |
-| 2 | Super Admin Command Center | `PARTIAL` | Existing leadership dashboard, OBS-1A, IAM/release controls, academic operations, and module APIs are reusable. A single consolidated, permission-scoped Command Center is not yet proven. Build read-only composition first; extend OBS-1A rather than duplicating it. |
+| 2 | Super Admin Command Center | `IMPLEMENTATION_READY_FOR_QA` | The exact-Super-Admin, private/no-store read-only composition is implemented without schema or provider changes. It reuses OBS-1A, IAM, immutable audit/event sources, and existing module records. Independent security, read-only, responsive, performance, and full-regression QA remains required before clearance. |
 | 3 | Digital Diary | `NOT_IMPLEMENTED` | A working Notion template exists, but no proven ERP Digital Diary code was found. Treat it as part of the future Command Center product, not as a completed ERP feature. |
 | 4 | Tasks, reminders and calendar | `PARTIAL` | The academic calendar/event lifecycle is cleared. General work tasks, reminders, and Life OS orchestration are not implemented as an ERP product. Combine them with Diary and Command Center scope. |
 | 5 | Universal search | `NOT_IMPLEMENTED` | No proven permission-scoped universal ERP search exists. It must follow the directory/record model and precede Smart AI. |
@@ -71,6 +71,7 @@ Diary, tasks, reminders, contacts, universal search, OBS-1A extensions, Canvs/wh
 
 ## Next documents
 
+- [Super Admin Command Center architecture](./SUPER_ADMIN_COMMAND_CENTER_ARCHITECTURE.md)
 - [Ordered post-RC roadmap](./V1_5_AND_POST_RC_ROADMAP.md)
 - [UDISE 15E evidence checklist](./UDISE_15E_EVIDENCE_CHECKLIST.md)
 - [Super Admin Command Center scope](./SUPER_ADMIN_COMMAND_CENTER_SCOPE.md)

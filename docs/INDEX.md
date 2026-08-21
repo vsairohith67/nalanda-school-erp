@@ -1,5 +1,21 @@
 # Documentation Index
 
+## SUPER-ADMIN-COMMAND-1A Command Center foundation
+
+- [Scope](SUPER_ADMIN_COMMAND_CENTER_SCOPE.md)
+- [Architecture](SUPER_ADMIN_COMMAND_CENTER_ARCHITECTURE.md)
+- [V1.5 and Post-RC Roadmap](V1_5_AND_POST_RC_ROADMAP.md)
+- [Pending Feature Reconciliation](PENDING_FEATURE_RECONCILIATION.md)
+- [UDISE 15E Evidence Checklist](UDISE_15E_EVIDENCE_CHECKLIST.md)
+- [Mobile App Roadmap](MOBILE_APP_ROADMAP.md)
+
+The exact `SUPER_ADMIN`-only, private/no-store Command Center foundation is
+implemented as a bounded, read-only composition over IAM, OBS-1A, approved
+audit/event sources, and existing module records. It adds no schema, provider,
+AI, search, Diary, task, directory, or whiteboard functionality. Status:
+`SUPER_ADMIN_COMMAND_CENTER_READY_FOR_QA`; independent QA remains required
+before merge or tag.
+
 ## V1-FINAL-1A final integration and release-candidate preparation
 
 - [Independent Release-Candidate QA Clearance](V1_RELEASE_CANDIDATE_QA_CLEARANCE.md)

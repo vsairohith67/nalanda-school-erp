@@ -1805,3 +1805,24 @@ remain unchanged. The retained branch, `main` and
 `bulk-onboarding-v41-2026-08-10` close with `BULK_ONBOARDING_CLEARED`. Real
 onboarding, deployment, live providers and real-user activation remain
 unauthorised. Next phase: `RELEASE-OPS-1A`.
+
+## SUPER-ADMIN-COMMAND-1A - Super Admin Command Center Foundation (2026-08-21)
+
+The authorised roadmap-only commit was verified as exactly one commit ahead of
+the frozen V1 RC, fast-forwarded into `main`, and pushed without changing the RC
+tag. Implementation then created the retained feature branch
+`feature/super-admin-command-center-foundation`.
+
+The feature adds one exact `SUPER_ADMIN`-only route and one private, no-store
+server composition endpoint. It presents bounded Today, School Pulse, System
+Health, Recent Activity, Quick Access, My Work Programme, UDISE+, and Mobile
+sections. IAM remains the page/API authorization boundary; OBS-1A remains the
+health collector; immutable event sources remain the activity source. Timeouts,
+partial results, legitimate zeros, unavailable states, loading skeletons,
+responsive layout, keyboard focus, and privacy filtering are explicit.
+
+No schema, migration, operational write, provider call, PDF generation, AI,
+Universal Search, Diary, task/reminder, directory, or whiteboard functionality
+was added. Focused tests and the partitioned typecheck are implementation gates;
+independent `SUPER-ADMIN-COMMAND-1A-QA` remains required before merge, tag, or
+clearance. Status: `SUPER_ADMIN_COMMAND_CENTER_READY_FOR_QA`.

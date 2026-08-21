@@ -1,7 +1,7 @@
 # Super Admin Command Center Scope
 
 - **Recommended prompt:** `SUPER-ADMIN-COMMAND-1A — Super Admin Command Center Foundation`
-- **Classification:** `PARTIAL`
+- **Classification:** `IMPLEMENTATION_READY_FOR_QA`
 - **Target lane:** V1.5 product work
 
 ## Product decision
@@ -96,3 +96,16 @@ The canonical Canvs ERP board is the current governed visual architecture surfac
 ## Later operational dependency
 
 Private HTTPS staging is required before independent staging QA, physical-device certification, live-like provider sandbox validation, or real-user acceptance. It is not required to begin synthetic, read-only Command Center development.
+
+## SUPER-ADMIN-COMMAND-1A implementation checkpoint (2026-08-21)
+
+The foundation is implemented on
+`feature/super-admin-command-center-foundation` with one exact-role page and one
+private, no-store composition endpoint. It reuses IAM, OBS-1A, immutable
+audit/event sources, and existing module records. The response is bounded,
+timeout-aware, partial-result capable, and read-only. No schema, migration,
+provider, AI, search, Diary, task, directory, or whiteboard persistence was
+added. See the [Command Center architecture](./SUPER_ADMIN_COMMAND_CENTER_ARCHITECTURE.md).
+
+Status: `SUPER_ADMIN_COMMAND_CENTER_READY_FOR_QA`. Independent QA remains the
+gate before merge, tag, or clearance.

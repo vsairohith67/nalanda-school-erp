@@ -2,6 +2,7 @@ import { normalizePermission, type CanonicalPermission, type Permission, type Ro
 
 export type NavigationIcon =
   | "dashboard"
+  | "commandCenter"
   | "students"
   | "add"
   | "payments"
@@ -54,6 +55,7 @@ export const NAV_GROUPS: Array<{ id: NavigationGroupId; label: string }> = [
 ];
 
 export const NAV_ITEMS = [
+  { href: "/super-admin/command-center", label: "Command Center", icon: "commandCenter", permission: "VIEW_DASHBOARD", group: "dashboard", allowedRoles: ["SUPER_ADMIN"] as Role[] },
   { href: "/dashboard", label: "Dashboard", icon: "dashboard", permission: "VIEW_DASHBOARD", group: "dashboard" },
   { href: "/students", label: "Students", icon: "students", permission: "VIEW_STUDENTS", group: "studentsParents" },
   { href: "/students/lifecycle", label: "Student Lifecycle", icon: "students", permission: "VIEW_STUDENT_LIFECYCLE", group: "studentsParents" },
