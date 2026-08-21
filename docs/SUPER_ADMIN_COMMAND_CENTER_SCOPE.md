@@ -1,0 +1,98 @@
+# Super Admin Command Center Scope
+
+- **Recommended prompt:** `SUPER-ADMIN-COMMAND-1A — Super Admin Command Center Foundation`
+- **Classification:** `PARTIAL`
+- **Target lane:** V1.5 product work
+
+## Product decision
+
+Nalanda should build one Super Admin Command Center programme, not separate Diary, task, reminder, contact, search, monitoring, whiteboard, and AI applications. The programme retains ordered phases and evidence gates. Its first phase should be a permission-scoped, read-only composition layer over the ERP foundations already cleared. It may begin before hosting with synthetic data and existing APIs.
+
+`SUPER-ADMIN-COMMAND-1A` is the single recommended immediate implementation phase. Private staging remains a parallel operational track.
+
+## Existing foundations to reuse
+
+- Leadership/management dashboard and established module navigation.
+- OBS-1A technical and operational monitoring described in the [observability architecture](./OBSERVABILITY_OPERATIONS_ARCHITECTURE.md).
+- IAM, release controls, safe logs, and existing role-scoped APIs.
+- Academic calendar lifecycle in the [academic calendar model](./ACADEMIC_CALENDAR_MODEL_AND_LIFECYCLE.md).
+- Vendor and publisher-bill foundations in the [expense/vendor workflow](./EXPENSE_AND_VENDOR_WORKFLOW.md).
+- Existing read-only assistant safety contract in the [AI assistant workflow](./AI_ASSISTANT_SAFETY_AND_READ_ONLY_RETRIEVAL_WORKFLOW.md).
+
+OBS-1A is `CLEARED`; the Command Center must extend and present it, not duplicate its collection or operational logic.
+
+## Current gaps
+
+- The Digital Diary is a working Notion template, not proven ERP code: `NOT_IMPLEMENTED`.
+- General tasks and reminders remain `PARTIAL` because academic calendar/event lifecycle exists but general work orchestration does not.
+- A consolidated publisher/vendor/contact directory is `PARTIAL`.
+- Universal permission-scoped search is `NOT_IMPLEMENTED`.
+- A full ERP infinite-whiteboard engine is `NOT_IMPLEMENTED`.
+- Citation-based Smart AI is `PARTIAL` and remains downstream of directory and search work.
+
+## Phase 1 scope
+
+`SUPER-ADMIN-COMMAND-1A` should provide:
+
+- a responsive Super Admin landing surface using existing design and navigation conventions;
+- read-only operational, academic, finance, people, communications, and release-status summaries from existing authorised APIs;
+- actionable exception cards that link to the existing owning module rather than edit records in place;
+- clear source, timestamp, loading, empty, stale, partial, and failure states;
+- a read-only OBS-1A summary with a link to the existing technical operations detail;
+- explicit provider state such as mock, disabled, sandbox, or live, without activating anything;
+- saved view/layout preferences only if they can be implemented without weakening access or audit controls;
+- mobile-responsive behaviour consistent with the shared web application.
+
+The phase should prefer no new operational schema. If an implementation design later identifies a genuine persistence need, that schema decision must be proposed and reviewed separately.
+
+## Follow-on Command Center product
+
+After the read-only foundation is accepted, one integrated product may add:
+
+- Digital Diary workflows;
+- personal and assigned tasks;
+- reminders and governed calendar integration;
+- Life OS-style work planning within school roles;
+- publisher, book-supplier, vendor, official, and contact directory records;
+- permission-scoped universal search.
+
+The [calendar future module plan](./ERP_CALENDAR_FUTURE_MODULE_PLAN.md) is planning input, while the cleared academic calendar remains the source for implemented calendar behaviour.
+
+## Required dependency order
+
+1. Command Center read-only foundation.
+2. Diary/tasks/reminders and governed directory records.
+3. Universal permission-scoped search.
+4. Citation-based Smart AI.
+
+Universal Search must precede Smart AI. Publisher/vendor/contact records must exist before AI may answer supplier questions. AI must inherit the caller's permissions and cite the exact accessible ERP source.
+
+## Canvs and whiteboard boundary
+
+The canonical Canvs ERP board is the current governed visual architecture surface. The product should evaluate links, embeds, or controlled integration with that board where practical. It should not immediately build a second complete infinite-whiteboard engine. Any future in-ERP whiteboard remains `NOT_IMPLEMENTED` until a separate user need, ownership model, retention rule, permission model, and build-versus-integrate decision are accepted.
+
+## Explicit exclusions from Phase 1
+
+- Record creation, approval, bulk action, or other operational writes.
+- Deployment, DNS changes, provider activation, real data, or real users.
+- UDISE 15E fields or government-portal automation.
+- Live WhatsApp, email, SMS, push, payment, or AI-provider calls.
+- Universal search, semantic/vector retrieval, autonomous actions, or AI-generated writes.
+- A new monitoring backend or whiteboard engine.
+- Cross-role aggregation that exposes data the signed-in role cannot already access.
+
+## Focused acceptance requirements
+
+- Super Admin sees only authorised school and operational data.
+- Other roles cannot access the surface or its backing responses unless explicitly allowed.
+- Every summary identifies its source and freshness.
+- Partial source failure does not invent zeros or present stale data as current.
+- Navigation reaches existing owning modules without side effects.
+- Provider states are accurate and cannot activate a provider.
+- OBS-1A is reused and not duplicated.
+- Responsive keyboard, phone, tablet, and desktop behaviour is covered.
+- Focused component/API/permission tests pass; no full production build is required for the documentation phase.
+
+## Later operational dependency
+
+Private HTTPS staging is required before independent staging QA, physical-device certification, live-like provider sandbox validation, or real-user acceptance. It is not required to begin synthetic, read-only Command Center development.
