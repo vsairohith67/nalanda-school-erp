@@ -51,6 +51,10 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Generate isolated Prisma client
         run: pnpm db:generate
+      - name: Prepare isolated release database
+        run: |
+          mkdir -p prisma/tmp/release-ci
+          pnpm exec prisma migrate deploy --schema prisma/schema.prisma
       - name: Git and private-artifact safety
         run: pnpm git:safety-check
       - name: Release Operations focused tests
