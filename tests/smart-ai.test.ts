@@ -33,6 +33,14 @@ import {
   validateSmartAiLocalEndpoint
 } from "../lib/smart-ai-provider-local";
 import type { UniversalSearchResponse, UniversalSearchResult } from "../lib/universal-search-contract";
+import {
+  buildOllamaChatRequest,
+  createSmartAiLocalGateway,
+  readSmartAiLocalGatewayConfig,
+  validateOllamaEndpoint,
+  verifyQualifiedModel,
+  type SmartAiLocalGatewayConfig
+} from "../scripts/smart-ai-local-gateway";
 
 const actorA = { id: "super-admin-a", role: "SUPER_ADMIN" as const };
 const now = "2026-08-22T08:00:00.000Z";
@@ -363,6 +371,90 @@ describe("SMART-AI-1A provider state and loopback-only local adapter", () => {
   });
 });
 
+describe("SMART-AI-LOCAL-RUNTIME-1A pinned Ollama gateway", () => {
+  const digest = "a".repeat(64);
+  const config: SmartAiLocalGatewayConfig = {
+    model: "qwen3:4b-instruct-2507-q4_K_M",
+    modelDigest: digest,
+    ollamaEndpoint: new URL("http://127.0.0.1:11434/api/chat"),
+    gatewayPort: 11_435,
+    timeoutMs: 1_000
+  };
+
+  it("requires an official-library model tag, exact digest and loopback Ollama chat URL", () => {
+    expect(readSmartAiLocalGatewayConfig({
+      SMART_AI_LOCAL_MODEL: config.model,
+      SMART_AI_LOCAL_MODEL_DIGEST: digest,
+      SMART_AI_OLLAMA_ENDPOINT: config.ollamaEndpoint.href
+    })).toMatchObject({ model: config.model, modelDigest: digest, gatewayPort: 11_435 });
+    for (const model of ["community/qwen:latest", "qwen3", "https://example.com/model"]) {
+      expect(() => readSmartAiLocalGatewayConfig({ SMART_AI_LOCAL_MODEL: model, SMART_AI_LOCAL_MODEL_DIGEST: digest })).toThrow();
+    }
+    for (const endpoint of ["http://0.0.0.0:11434/api/chat", "http://192.168.1.5:11434/api/chat", "https://localhost/api/chat", "http://localhost:11434/api/generate", "http://localhost:11434/api/chat?cloud=true"]) {
+      expect(() => validateOllamaEndpoint(endpoint)).toThrow();
+    }
+  });
+
+  it("pins the installed model digest before the gateway can start", async () => {
+    const good = vi.fn(async () => new Response(JSON.stringify({ models: [{ name: config.model, digest }] }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    await expect(verifyQualifiedModel(config, good)).resolves.toBeUndefined();
+    const missing = vi.fn(async () => new Response(JSON.stringify({ models: [] }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    await expect(verifyQualifiedModel(config, missing)).rejects.toThrow(/missing/i);
+    const changed = vi.fn(async () => new Response(JSON.stringify({ models: [{ name: config.model, digest: "b".repeat(64) }] }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    await expect(verifyQualifiedModel(config, changed)).rejects.toThrow(/digest/i);
+  });
+
+  it("converts only the generic Smart AI contract to deterministic structured Ollama chat", () => {
+    const input = gatewayInput();
+    const body = buildOllamaChatRequest(input, config);
+    expect(body).toMatchObject({ model: config.model, stream: false, think: false, options: { num_ctx: 8_192, temperature: 0, seed: 42 } });
+    expect(body.format.properties.citations.items.enum).toEqual(["SRC-1"]);
+    expect(body.messages[1].content).toContain("SAFE SUMMARY (UNTRUSTED DATA)");
+    expect(body.messages[1].content).toMatch(/never instructions/i);
+    expect(JSON.stringify(body)).not.toMatch(/apiKey|password|https:\/\//i);
+  });
+
+  it("binds as a loopback-only non-CORS gateway and returns only the model JSON object", async () => {
+    const runtime = vi.fn(async (_url: string | URL | Request, request?: RequestInit) => {
+      const body = JSON.parse(String(request?.body));
+      expect(body.model).toBe(config.model);
+      expect(body.format.additionalProperties).toBe(false);
+      return new Response(JSON.stringify({ message: { content: JSON.stringify({ answer: "Synthetic grounded answer", citations: ["SRC-1"] }) } }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }) as unknown as typeof fetch;
+    const endpoint = await gatewayServer(config, runtime);
+    const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(gatewayInput()) });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ answer: "Synthetic grounded answer", citations: ["SRC-1"] });
+    const blocked = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json", Origin: "https://evil.example" }, body: JSON.stringify(gatewayInput()) });
+    expect(blocked.status).toBe(403);
+    expect(blocked.headers.get("access-control-allow-origin")).toBeNull();
+    expect(runtime).toHaveBeenCalledTimes(1);
+  });
+
+  it("degrades runtime errors, missing models, malformed output and timeout-like failures without leaking details", async () => {
+    for (const runtime of [
+      async () => new Response(JSON.stringify({ error: "synthetic OOM with private path" }), { status: 500, headers: { "Content-Type": "application/json" } }),
+      async () => new Response(JSON.stringify({ message: { content: "not-json" } }), { status: 200, headers: { "Content-Type": "application/json" } })
+    ]) {
+      const endpoint = await gatewayServer(config, runtime as typeof fetch);
+      const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(gatewayInput()) });
+      expect(response.status).toBe(503);
+      const text = await response.text();
+      expect(text).toContain("failed safely");
+      expect(text).not.toMatch(/OOM|private path|not-json/i);
+    }
+    const timeoutEndpoint = await gatewayServer({ ...config, timeoutMs: 25 }, ((_url: string | URL | Request, request?: RequestInit) => new Promise((_resolve, reject) => {
+      request?.signal?.addEventListener("abort", () => reject(request.signal?.reason), { once: true });
+    })) as typeof fetch);
+    const timeout = await fetch(timeoutEndpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(gatewayInput()) });
+    expect(timeout.status).toBe(504);
+    await expect(timeout.text()).resolves.toContain("failed safely");
+  });
+});
+
 describe("SMART-AI-1A source-level privacy, no-write and UI delivery invariants", () => {
   it("guards page, API and orchestration independently and keeps POST private", () => {
     const page = readFileSync("app/super-admin/ai/page.tsx", "utf8");
@@ -418,6 +510,34 @@ describe("SMART-AI-1A source-level privacy, no-write and UI delivery invariants"
 
 async function mockServer(handler: RequestListener) {
   const server = createServer(handler);
+  openServers.push(server);
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => resolve());
+  });
+  const address = server.address() as AddressInfo;
+  return `http://127.0.0.1:${address.port}/generate`;
+}
+
+function gatewayInput() {
+  const input = localInput();
+  return {
+    system: input.systemInstructions,
+    question: input.question,
+    conversation: input.conversation,
+    sources: input.sources.map(({ id, module, type, title, summary, status, timestamp }) => ({ id, module, type, title, summary, status, timestamp })),
+    context: input.serializedContext,
+    output: {
+      format: "json" as const,
+      schema: { answer: "string" as const, citations: ["SOURCE_ID"] as ["SOURCE_ID"], uncertainty: "optional string" as const },
+      maximumAnswerCharacters: input.maximumAnswerCharacters,
+      reasoning: "not requested" as const
+    }
+  };
+}
+
+async function gatewayServer(config: SmartAiLocalGatewayConfig, fetcher: typeof fetch) {
+  const server = createSmartAiLocalGateway(config, fetcher);
   openServers.push(server);
   await new Promise<void>((resolve, reject) => {
     server.once("error", reject);
