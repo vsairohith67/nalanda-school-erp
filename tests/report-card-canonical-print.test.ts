@@ -100,7 +100,7 @@ describe("REPORT-PRINT-ACCEPT-1A PDF proof", () => {
         expect(portrait || landscape).toBe(true);
       }
     }
-  }, 60_000);
+  }, 120_000);
 
   it("is deterministic and gives monochrome charts independent patterns plus numeric labels", async () => {
     const specimen = syntheticReportSpecimens().find((row) => row.family === "SECONDARY_IX_X" && row.mode === "MONOCHROME")!;

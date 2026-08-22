@@ -53,6 +53,7 @@ const OFFICIAL_LOGO_PATH = "/nalanda-logo-transparent.png";
 const icons: Record<NavigationIcon, LucideIcon> = {
   dashboard: LayoutDashboard,
   commandCenter: PanelsTopLeft,
+  search: Search,
   students: Users,
   add: PlusCircle,
   payments: Receipt,

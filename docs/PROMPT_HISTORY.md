@@ -1931,6 +1931,55 @@ independently cleared and advanced `main`, its exact My Work changes were
 preserved during release reconciliation and all affected/full gates were rerun.
 No deployment, live provider or real user/data activation was performed.
 
+## UNIVERSAL-SEARCH-1A — Permission-Scoped Super Admin Universal Search (2026-08-21 to 2026-08-22)
+
+The implementation began from fetched private `main` after verifying the
+handoff Super Admin Work tag at `53a805be7ad5299e76e30b2989a052f1b5f935e8`.
+`main` had advanced only through independently cleared Academic Integrity and
+its reconciliation merge at `61aac47f4f8f716a0fa61104124907002a2d36fb`, so
+the permitted Case 2 reconciliation rule was used. Permanent Teacher
+marks-write denial and exact delegated-operator controls were preserved.
+
+One exact-`SUPER_ADMIN` route and POST-only API now compose bounded authorised
+source adapters into a normalized privacy-safe result contract. Priority 1
+Students, Admissions, Guardians, Staff, Diary, Tasks and Contacts are included.
+Safe existing fee/receipt, examination, report-card, support, non-restricted
+Safe Exit, event, IAM metadata, release and observability adapters are included.
+Attendance and unified Audit search explicitly return `UNAVAILABLE`.
+
+Search uses deterministic exact-reference, exact-title, prefix, token and
+contains ranking; per-source timeout/failure isolation; 6 results per source;
+50 default and 60 maximum overall results; private/no-store responses; and no
+query-history write. My Work ownership comes only from the authenticated
+server session. No migration, search index/backfill, vector/embedding store,
+AI prompt/provider call, autonomous action, report/PDF/export source, external
+message or operational write is introduced.
+
+Status: `UNIVERSAL_SEARCH_READY_FOR_QA`. The feature branch may be reviewed only
+under the separate `UNIVERSAL-SEARCH-1A-QA` prompt. No merge, release tag,
+deployment, real-data indexing/import, Search clearance or Smart AI work is
+authorized by this implementation record.
+
+### UNIVERSAL-SEARCH-1A-QA independent clearance (2026-08-22)
+
+Independent QA classified the branch-switch lineage, reviewed the complete
+feature diff, and passed exact-role/active-context authorization, two-owner My
+Work isolation, secret-field non-matching, hostile input/filter bounds,
+deterministic ranking, read-only snapshots, failure/timeout isolation, copied
+scale, Academic Integrity and Super Admin Work regressions. Browser QA passed
+at 1366 x 768 and exact 390 x 844 in light/dark modes. Security diff scan
+reported zero findings. The full pre-reconciliation gates recorded 220 test
+files, 1,958 passing tests with 3 disclosed qpdf-capability skips, a production
+build, backup v41 and Git safety. After independently cleared Whiteboard Bridge
+advanced `main`, reconciliation preserved both releases; final route inventory
+reported 339 pages / 552 APIs and 9 affected files / 78 tests passed. The
+operational database remained byte-identical.
+
+Status: `UNIVERSAL_SEARCH_CLEARED`; annotated tag
+`universal-search-v41-2026-08-22`. This is a private/local release only. It
+does not authorize deployment, providers, real data/users or Smart AI
+implementation. A separately governed Smart AI planning phase is now
+unblocked, and any future AI retrieval must inherit Search authorization.
 ## WHITEBOARD-BRIDGE-1A — Super Admin Canonical Canvs Bridge Foundation (2026-08-22)
 
 Implementation converts the planned Command Center Whiteboard card into one

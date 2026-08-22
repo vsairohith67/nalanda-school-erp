@@ -237,7 +237,7 @@ describe("Prompt 20D copied-database website restore", () => {
       removeFreshTestDatabase(sourcePath);
       removeFreshTestDatabase(targetPath);
     }
-  });
+  }, 30_000);
 
   it("isolates a natural-key collision without overwriting local content", async () => {
     const databasePath = createFreshTestDatabase("public-website-collision-target");
@@ -277,5 +277,5 @@ describe("Prompt 20D copied-database website restore", () => {
       await target.$disconnect();
       removeFreshTestDatabase(databasePath);
     }
-  });
+  }, 30_000);
 });

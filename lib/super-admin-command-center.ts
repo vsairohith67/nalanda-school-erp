@@ -107,6 +107,7 @@ export async function composeSuperAdminCommandCenter(
     recentActivity,
     workSummary,
     quickAccess: [
+      { label: "Search", href: "/super-admin/search" },
       { label: "Students", href: "/students" },
       { label: "Admissions", href: "/admission-crm" },
       { label: "Fees", href: "/pending-dues" },
@@ -124,7 +125,7 @@ export async function composeSuperAdminCommandCenter(
       { title: "Diary", status: "LIVE", detail: "Private owner-isolated structured daily notes.", href: "/super-admin/my-work" },
       { title: "Tasks & Reminders", status: "LIVE", detail: "Private due work and local reminder times.", href: "/super-admin/my-work" },
       { title: "Contacts & Suppliers", status: "LIVE", detail: "Private contact reference directory; no procurement automation.", href: "/super-admin/my-work" },
-      { title: "Universal Search", status: "BLOCKED BY DEPENDENCY", detail: "Starts after Diary, Tasks and Directory." },
+      { title: "Universal Search", status: "LIVE", detail: "Permission-scoped deterministic retrieval across authorised ERP records.", href: "/super-admin/search" },
       { title: "Smart AI", status: "BLOCKED BY DEPENDENCY", detail: "Starts only after permission-scoped Universal Search." },
       { title: "Whiteboard", status: "AVAILABLE", detail: "Canonical ERP planning board.", href: "/super-admin/whiteboard", actionLabel: "Open Whiteboard" }
     ],

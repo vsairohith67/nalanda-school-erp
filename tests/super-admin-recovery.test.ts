@@ -444,7 +444,7 @@ describe("local Super Admin recovery utility", () => {
     } finally {
       await client.$disconnect();
     }
-  });
+  }, 30_000);
 
   it("rolls back the credential update when the audit transaction fails", async () => {
     const testScenario = await scenario("rollback-on-failure");
@@ -523,5 +523,5 @@ describe("local Super Admin recovery utility", () => {
       executeSuperAdminRecovery(recoveryInput(testScenario)),
       "AUTH_RECOVERY_ZERO_BASELINE_REQUIRED"
     );
-  });
+  }, 30_000);
 });

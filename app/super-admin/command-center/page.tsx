@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { Activity, ArrowRight, Gauge, HeartPulse, LockKeyhole, Smartphone, Sparkles, Stethoscope } from "lucide-react";
+import { Activity, ArrowRight, Gauge, HeartPulse, LockKeyhole, Search, Smartphone, Sparkles, Stethoscope } from "lucide-react";
 import { PageHeader, PageShell, SectionCard } from "@/components/ui";
 import { requireRolePermission } from "@/lib/auth";
 import { moneyExact } from "@/lib/format";
@@ -27,6 +27,11 @@ export default async function SuperAdminCommandCenterPage() {
         description="A private, read-only overview of authorised Nalanda ERP systems. Open the owning module to take action."
         action={<span className="command-read-only"><LockKeyhole size={17} aria-hidden /> Read-only</span>}
       />
+
+      <section className="command-search-launcher" aria-labelledby="command-search-title">
+        <div><Search size={24} aria-hidden /><div><h2 id="command-search-title">Universal Search</h2><p>Find authorised records across Nalanda ERP with one deterministic, private search.</p></div></div>
+        <Link href="/super-admin/search">Open Search <ArrowRight size={17} aria-hidden /></Link>
+      </section>
 
       <section className="command-priority" aria-labelledby="command-today-title">
         <div className="command-section-heading"><div><h2 id="command-today-title">Today</h2><p>Highest-priority existing work and school events.</p></div><Gauge size={24} aria-hidden /></div>

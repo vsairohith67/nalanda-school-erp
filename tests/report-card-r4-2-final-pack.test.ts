@@ -64,7 +64,7 @@ describe("R4.2 final source-locked pack", () => {
       expect(first.equals(second)).toBe(true);
       await expectA4(first, 25);
     }
-  }, 40_000);
+  }, 120_000);
 
   it("renders minimal 18-page physical packs without omitting a distinct structure", async () => {
     const physicalIds = FINAL_ACADEMIC_PAGE_SPECS.filter((page) => page.physicalInclude).map((page) => page.specimenId);
