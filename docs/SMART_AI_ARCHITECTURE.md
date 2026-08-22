@@ -8,6 +8,7 @@
 - **Persistence:** none
 - **Authority:** read-only synthesis over Universal Search only
 - **Independent QA:** `SMART_AI_CLEARED` on 2026-08-22
+- **Qualified local runtime:** optional, digest-pinned Ollama/Qwen path documented in [Smart AI Local Runtime](./SMART_AI_LOCAL_RUNTIME.md); committed default remains `DISABLED`
 
 ## Purpose and release boundary
 
@@ -242,11 +243,11 @@ or ingest Canvs content, and cannot write to the board.
 
 ## Future phases
 
-After independent SMART-AI-1A clearance, the next governed phase is
-`SMART-AI-LOCAL-RUNTIME-1A`. It may evaluate and activate an approved local
-runtime with synthetic data first. It must not activate a cloud provider or
-allow real Student data transmission without a separate explicit privacy and
-release decision.
+`SMART-AI-LOCAL-RUNTIME-1A` qualified one optional local workstation path with
+synthetic data first. Qualification does not activate the runtime in committed
+configuration, activate a cloud provider, or permit ERP evidence to leave the
+machine. A different runtime, model, model digest or workstation requires a new
+qualification.
 
 Any future role expansion requires a new exact permission/object-scope design.
 Any future AI Actions capability requires a separate governance, approval,
