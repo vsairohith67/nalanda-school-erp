@@ -167,5 +167,16 @@ target, protocol, host, path, or board-ID inputs cannot replace the destination.
 This bridge adds no iframe, Canvs authentication/token, server-side board fetch,
 sync, board-content storage, migration, operational write, Search adapter, Smart
 AI feature, or whiteboard engine. The Command Center card is `AVAILABLE`; the
-implementation remains `WHITEBOARD_BRIDGE_READY_FOR_QA` until independent QA and
-release clearance. See the [Whiteboard Bridge architecture](./SUPER_ADMIN_WHITEBOARD_BRIDGE.md).
+bridge is independently cleared. See the
+[Whiteboard Bridge architecture](./SUPER_ADMIN_WHITEBOARD_BRIDGE.md).
+
+## WHITEBOARD-BRIDGE-1A-QA clearance (2026-08-22)
+
+Independent QA cleared the exact-Super-Admin route, fixed canonical destination,
+safe external link, unavailable-configuration state, responsive light/dark UI,
+and database-neutral boundary. All released non-Super-Admin roles plus delegated
+dashboard access were denied. Academic Integrity v1.1, My Work, and Command
+Center behavior remained intact. The full release gate passed 338 page routes,
+551 APIs, lifecycle dry run, typecheck, 1,950 tests with 3 intentional skips,
+production build, backup version 41, and Git safety. Status:
+`WHITEBOARD_BRIDGE_CLEARED`.

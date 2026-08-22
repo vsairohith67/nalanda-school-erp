@@ -8,7 +8,7 @@
 
 The V1 RC remains cleared and frozen at `26a47632f7c1e9c9b5f2b48de8c9b56d60428aed`. MSI workstation transfer is complete; Dell remains a frozen fallback. No release evidence authorises deployment, live providers, real data, real users, pilot, or cutover. Remaining work divides into V1 operational launch gates, V1.5 product extensions, V2 AI, and mobile work.
 
-The read-only `SUPER-ADMIN-COMMAND-1A — Super Admin Command Center Foundation` and owner-isolated `SUPER-ADMIN-WORK-1A — Diary, Tasks, Reminders and Directory` are cleared. `WHITEBOARD-BRIDGE-1A` is implemented as a fixed, external Canvs launcher and is ready for independent QA. `UNIVERSAL-SEARCH-1A` remains a separate parallel workstream and must clear before Smart AI. Private staging proceeds as a separate operational track.
+The read-only `SUPER-ADMIN-COMMAND-1A — Super Admin Command Center Foundation`, owner-isolated `SUPER-ADMIN-WORK-1A — Diary, Tasks, Reminders and Directory`, and fixed external `WHITEBOARD-BRIDGE-1A` Canvs launcher are cleared. `UNIVERSAL-SEARCH-1A` remains a separate parallel workstream and must clear before Smart AI. Private staging proceeds as a separate operational track.
 
 ## Evidence rule
 
@@ -21,13 +21,13 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | # | Work area | Classification | Evidence-based boundary and next disposition |
 |---:|---|---|---|
 | 1 | UDISE+ Prompt 15D and 15E | 15D: `CLEARED`; 15E: `BLOCKED_BY_EVIDENCE`; full operational support: `NOT_IMPLEMENTED` | 15D is a read-only checklist/reference foundation. 15E cannot start until current Student, Teacher, progression, Telangana, DCF, inconsistency, certification, report, register, and role evidence is supplied. No scraping, government-portal submission, or compliance claim. |
-| 2 | Super Admin Command Center | `CLEARED` | Independent QA cleared the exact-Super-Admin, private/no-store read-only composition without schema, provider, or operational-data changes. Its My Work programme is also cleared; Whiteboard Bridge is ready for independent QA. Universal Search remains separate and Smart AI remains downstream. |
+| 2 | Super Admin Command Center | `CLEARED` | Independent QA cleared the exact-Super-Admin, private/no-store read-only composition without schema, provider, or operational-data changes. Its My Work programme and fixed canonical Whiteboard Bridge are also cleared. Universal Search remains separate and Smart AI remains downstream. |
 | 3 | Digital Diary | `CLEARED` | `SUPER-ADMIN-WORK-1A` provides exact-owner private structured daily notes in the My Work shell. Sharing, AI, and external synchronization remain outside that release. |
 | 4 | Tasks, reminders and calendar | My Work tasks/reminders: `CLEARED`; broader Life OS: `NOT_IMPLEMENTED` | Exact-owner tasks, due dates and local reminder times are cleared. The academic calendar remains separate; no external calendar synchronization or broader Life OS orchestration is claimed. |
 | 5 | Universal search | `NOT_IMPLEMENTED` | No proven permission-scoped universal ERP search exists. It must follow the directory/record model and precede Smart AI. |
 | 6 | Publishers, book suppliers, vendors and contacts | Private reference directory: `CLEARED`; broader procurement CRM: `PARTIAL` | My Work provides an exact-owner contact/supplier reference directory without procurement automation. Existing vendor and expense workflows remain separate. Supplier records must exist before AI answers supplier questions. |
 | 7 | Monitoring and operational dashboard extensions | `PARTIAL` | OBS-1A and its technical/operational foundation are cleared. Hosting-dependent live monitoring, provider health, cost/usage extensions, and unified Command Center presentation remain pending. Extend the existing architecture. |
-| 8 | Whiteboard | Bridge: `READY_FOR_INDEPENDENT_QA`; ERP engine: `NOT_IMPLEMENTED` | `WHITEBOARD-BRIDGE-1A` launches only the canonical Canvs board from an exact-Super-Admin route. It has no iframe, token exchange, server fetch, sync, board persistence, Search/AI integration, or open redirect. Canvs remains the editing engine. |
+| 8 | Whiteboard | Bridge: `CLEARED`; ERP engine: `NOT_IMPLEMENTED` | `WHITEBOARD-BRIDGE-1A-QA` independently proved that only the exact Super Admin route can launch the canonical Canvs board. It has no iframe, token exchange, server fetch, sync, board persistence, Search/AI integration, or open redirect. Canvs remains the editing engine. |
 | 9 | Citation-based Smart AI | `PARTIAL`; advanced scope `DEFERRED_TO_V2` | The read-only assistant foundation validates citations/timestamps using mock data. Universal search, supplier sources, semantic retrieval, attachments, external knowledge, and live providers are not complete. |
 | 10 | Android app | `NOT_IMPLEMENTED` | Responsive web/PWA foundations do not constitute a native Android app. A later shared-app Capacitor approach may be assessed only after staging and physical-device certification. |
 | 11 | iOS/iPadOS app | `NOT_IMPLEMENTED` | No native Apple application is proven. Final building, signing, and device certification require a Mac/Xcode environment and Apple account decisions. |
@@ -42,7 +42,7 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 ## Important dependency order
 
 1. Command Center and exact-owner Diary/tasks/reminders/directory are cleared.
-2. Independently QA the fixed canonical Canvs Whiteboard bridge; this does not unlock AI.
+2. The fixed canonical Canvs Whiteboard bridge is independently cleared; this does not unlock AI.
 3. Build and independently clear universal permission-scoped search over governed records.
 4. Only then consider a separately governed citation-based Smart AI pilot.
 

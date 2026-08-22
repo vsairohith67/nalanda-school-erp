@@ -1,7 +1,7 @@
 # Super Admin Whiteboard Bridge
 
 - **Prompt:** `WHITEBOARD-BRIDGE-1A`
-- **Implementation status:** `READY_FOR_INDEPENDENT_QA`
+- **Release status:** `CLEARED`
 - **Route:** `/super-admin/whiteboard`
 - **Authorisation:** exact active `SUPER_ADMIN` role only
 - **Database change:** none
@@ -53,6 +53,30 @@ The bridge intentionally has:
 
 `library.excalidrawlib`, where present in project sources, remains outside this
 feature and is not loaded, parsed, copied, embedded, or added as a dependency.
+
+## Independent QA clearance
+
+`WHITEBOARD-BRIDGE-1A-QA` cleared the bridge on 2026-08-22. Runtime tests denied
+the direct route and navigation entry to Director, Principal, Accountant,
+Admin, Computer Operator, Teacher, Parent, Student, Gate Staff, Viewer, and a
+delegated dashboard profile while allowing the exact Super Admin context.
+Encoded, redirected, protocol-relative, alternate-host, `javascript:`, `data:`,
+`file:`, and arbitrary HTTPS destinations could not replace the canonical link.
+
+Desktop 1366 x 768 and exact mobile 390 x 844 checks passed in light and dark
+modes for the Command Center card and Whiteboard page. The action remained at
+least 44 px, keyboard focus was visible, no horizontal overflow occurred, the
+invalid-configuration state rendered no outbound link, and the browser console
+contained no error, warning, or hydration entry. A complete security diff scan
+returned zero findings.
+
+The sequential release gate passed 338 page routes, 551 API routes, lifecycle
+dry run, typecheck, 1,950 tests with 3 intentional qpdf-dependent skips,
+production build, backup version 41, and Git safety. The operational database
+remained byte-identical at SHA-256
+`65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA`.
+No migration, board row, sync state, Search source, or Smart AI integration was
+added. Release tag: `super-admin-whiteboard-bridge-v41-2026-08-22`.
 
 ## Privacy, cache, and audit boundary
 

@@ -31,9 +31,9 @@ staging remain a parallel operational track.
 
 `WHITEBOARD-BRIDGE-1A` is a parallel, database-neutral integration checkpoint.
 Its implementation launches only the canonical Nalanda ERP Canvs board from an
-exact-Super-Admin route and is ready for independent QA. It does not change the
-ten-phase order below, add a whiteboard engine, participate in Search, or unlock
-Smart AI.
+exact-Super-Admin route and was independently QA-cleared on 2026-08-22. It does
+not change the ten-phase order below, add a whiteboard engine, participate in
+Search, or unlock Smart AI.
 
 ## Governed phase order
 
