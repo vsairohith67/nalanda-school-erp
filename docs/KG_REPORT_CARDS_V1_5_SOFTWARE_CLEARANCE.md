@@ -45,17 +45,17 @@ The terminal sequential regression completed in the required order:
 
 | Gate | Result |
 | --- | --- |
-| `pnpm.cmd routes:list` | Passed; 339 page routes and 553 API routes, including the linked-Parent acknowledgement API |
-| `pnpm.cmd lifecycle:backfill` | Passed dry-run; 336 active synthetic/copied Students scanned, zero missing enrollments and no data changed |
+| `pnpm.cmd routes:list` | Passed after Event Media reconciliation; 343 page routes and 563 API routes, including the linked-Parent acknowledgement API |
+| `pnpm.cmd lifecycle:backfill` | Passed dry-run; 362 active synthetic/copied Students scanned, zero missing enrollments and no data changed |
 | `pnpm.cmd typecheck` | Passed across all application, API, component, library, tool and test TypeScript projects |
-| `pnpm.cmd test` | Passed; 220 files and 1,964 tests, with 3 intentional qpdf-adapter skips because the separately pinned `QPDF_EXECUTABLE_PATH` and SHA-256 were not configured in this worktree |
+| `pnpm.cmd test` | Passed; 221 files and 1,972 tests, with 3 intentional qpdf-adapter skips because the separately pinned `QPDF_EXECUTABLE_PATH` and SHA-256 were not configured in this worktree |
 | `pnpm.cmd build` | Passed; Prisma Client generation plus both Next.js Turbopack compile and generate phases |
-| `pnpm.cmd backup` | Passed; logical backup version 41 created under the ignored local backup boundary |
+| `pnpm.cmd backup` | Passed; logical backup version 42 created under the ignored local backup boundary |
 | `pnpm.cmd git:safety-check` | Passed; no detected secret or private runtime artifact in candidate, staged or tracked files |
 
-Focused security, report-card, Academic Integrity and release-boundary regression also passed: 5 files and 62 tests. Canonical/report-card print regression passed after the bundled `pdftoppm` resolver was made deterministic. The operational database remained byte-identical at SHA-256 `65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA`.
+Focused security, report-card, Academic Integrity, Event Media compatibility and release-boundary regression also passed: 8 files and 90 tests. Canonical/report-card print regression passed after the bundled `pdftoppm` resolver was made deterministic. The operational database remained byte-identical at SHA-256 `65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA`.
 
-The retained release branch is `feature/kg-reports-v1-5-1a`. The annotated software-clearance tag is `kg-report-cards-v1-5-v41-2026-08-22`. Canonical Notion and Canvs surfaces are updated only after the terminal merged/tagged release verdict and read back once.
+The retained release branch is `feature/kg-reports-v1-5-1a`. The annotated software-clearance tag is `kg-report-cards-v1-5-v42-2026-08-22`. Canonical Notion and Canvs surfaces are updated only after the terminal merged/tagged release verdict and read back once.
 
 ## Remaining operational gates
 
