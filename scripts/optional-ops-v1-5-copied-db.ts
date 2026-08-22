@@ -211,6 +211,10 @@ async function exerciseCafeteria(client: PrismaClient, seed: Seeded) {
   await expectCode(() => enrollCafeteriaStudent(client, actor, { admissionNo: seed.students[0].admissionNo, mealPlanName: "Standard", effectiveFrom: "2026-08-01", changeReason: "INITIAL_OPT_IN" }), "CAFETERIA_EFFECTIVE_DATE_CONFLICT");
   const lunch = menu.items.find((entry: { mealSlot: string }) => entry.mealSlot === "LUNCH");
   invariant(lunch, "CAFETERIA_LUNCH_MENU_ITEM");
+  const concurrentEnrollment = await Promise.allSettled([0, 1].map(() => enrollCafeteriaStudent(client, actor, { admissionNo: seed.students[4].admissionNo, mealPlanName: "Standard", effectiveFrom: "2026-08-01", changeReason: "INITIAL_OPT_IN" })));
+  invariant(concurrentEnrollment.filter((result) => result.status === "fulfilled").length === 1, "CAFETERIA_CONCURRENT_ENROLLMENT_RESULT");
+  const concurrentMeal = await Promise.allSettled([0, 1].map(() => recordCafeteriaMeal(client, actor, { admissionNo: seed.students[4].admissionNo, menuItemKey: lunch.publicKey, serviceDate: "2026-08-22", mealSlot: "LUNCH", recordType: "PARTICIPATION", idempotencyKey: "optional-ops-meal-concurrent-001" })));
+  invariant(concurrentMeal.filter((result) => result.status === "fulfilled").length === 1, "CAFETERIA_CONCURRENT_MEAL_RESULT");
   await recordCafeteriaMeal(client, actor, { admissionNo: seed.students[0].admissionNo, menuItemKey: lunch.publicKey, serviceDate: "2026-08-22", mealSlot: "LUNCH", recordType: "PARTICIPATION", idempotencyKey: "optional-ops-meal-001" });
   const alternateLunch = alternateMenu.items.find((entry: { mealSlot: string }) => entry.mealSlot === "LUNCH");
   invariant(alternateLunch, "CAFETERIA_ALTERNATE_LUNCH_MENU_ITEM");

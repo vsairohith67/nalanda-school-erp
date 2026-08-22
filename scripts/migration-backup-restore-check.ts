@@ -151,7 +151,7 @@ export async function runMigrationBackupRestoreCheck() {
     success = true;
     console.log(`Backup/restore passed: version=43 arrays=${arrayEntries.length} students=${firstCounts.students} payments=${firstCounts.payments}`);
     console.log("Repeated restore remained count-idempotent; local login ownership and Student collision mapping were preserved.");
-    return { version: 42, arrays: arrayEntries.length, firstCounts, firstBusiness };
+    return { version: 43, arrays: arrayEntries.length, firstCounts, firstBusiness };
   } finally {
     if (success) {
       for (const databasePath of [sourcePath, targetPath, collisionPath]) cleanupIsolatedDatabase(databasePath);

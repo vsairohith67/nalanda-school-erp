@@ -80,7 +80,7 @@ export function CafeteriaWorkspace(props: Props) {
       {props.canMeals ? <form className="card form-grid" onSubmit={(event) => submit(event, "/api/operations/cafeteria/meals", (form) => ({ admissionNo: form.get("admissionNo"), menuItemKey: form.get("menuItemKey"), serviceDate: form.get("serviceDate"), mealSlot: form.get("mealSlot"), recordType: form.get("recordType"), idempotencyKey: crypto.randomUUID() }))}>
         <h2>Meal record</h2>
         <label>Student<select name="admissionNo" required><option value="">Select</option>{data?.students.map((row: any) => <option key={row.admissionNo} value={row.admissionNo}>{row.admissionNo} · {row.studentName}</option>)}</select></label>
-        <label>Menu item<select name="menuItemKey" required><option value="">Select</option>{menuItems.map(({ menu, item }: any) => <option key={item.publicKey} value={item.publicKey}>{new Date(menu.menuDate).toISOString().slice(0, 10)} · {item.mealSlot} · {item.item.name}</option>)}</select></label>
+        <label>Menu item<select name="menuItemKey" required><option value="">Select</option>{menuItems.map(({ menu, item }: any) => <option key={item.publicKey} value={item.publicKey}>{new Date(menu.menuDate).toISOString().slice(0, 10)} · {menu.mealPlanName} · {item.mealSlot} · {item.item.name}</option>)}</select></label>
         <label>Service date<input name="serviceDate" type="date" required /></label>
         <label>Meal slot<select name="mealSlot"><option value="BREAKFAST">Breakfast</option><option value="LUNCH">Lunch</option><option value="SNACK">Snack</option></select></label>
         <label>Record type<select name="recordType"><option value="ORDER">Order</option><option value="PARTICIPATION">Participation</option></select></label>

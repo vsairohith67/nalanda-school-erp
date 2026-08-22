@@ -51,3 +51,12 @@ pnpm.cmd qa:optional-operations
 ```
 
 It covers multiple vehicles/routes/stops, capacity boundaries, duplicate and concurrent assignment, effective-dated history, inactive references, foreign-key substitution, linked-child/cross-child access, catalog/menu availability, date boundaries, duplicate meal records, CSV formula neutralisation, audit privacy, protected academic/finance/attendance/Safe Exit table non-mutation, and idempotent restore.
+
+## Release state
+
+- `TRANSPORT — SOFTWARE CLEARED / DEFAULT-OFF`
+- `CAFETERIA — SOFTWARE CLEARED / DEFAULT-OFF`
+
+The release retains both feature flags at zero-percent rollout. It does not
+apply the migration to the operational database, create real records, activate
+either service, deploy the application, or enable an external provider.
