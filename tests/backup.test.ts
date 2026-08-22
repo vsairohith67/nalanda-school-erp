@@ -47,7 +47,7 @@ describe("full backup", () => {
       generatedBy: "Director"
     });
     expect(backup.metadata.appVersion).toBeTruthy();
-    expect(backup.metadata.backupVersion).toBe(41);
+    expect(backup.metadata.backupVersion).toBe(42);
     expect(backup.metadata.counts).toEqual({
       schoolSettings: 0,
       authSecurityRecords: 0,
@@ -205,7 +205,19 @@ describe("full backup", () => {
       studentDepartureIncidents: 0,
       studentDepartureIncidentActions: 0,
       studentDepartureNotificationOutbox: 0,
-      studentDepartureFallbackTasks: 0
+      studentDepartureFallbackTasks: 0,
+      transportVehicles: 0,
+      transportRoutes: 0,
+      transportStops: 0,
+      transportRouteStops: 0,
+      transportStudentAssignments: 0,
+      transportAuditEvents: 0,
+      cafeteriaCatalogItems: 0,
+      cafeteriaMenus: 0,
+      cafeteriaMenuItems: 0,
+      cafeteriaStudentEnrollments: 0,
+      cafeteriaMealRecords: 0,
+      cafeteriaAuditEvents: 0
     });
     expect(backup.students).toHaveLength(1);
     expect(backup.feeStructures).toHaveLength(1);

@@ -27,6 +27,7 @@ import { SUPPORT_BACKUP_KEYS, validateSupportBackupRows, type SupportBackup, typ
 import { SAFE_EXIT_BACKUP_KEYS, validateSafeExitBackupRows, type SafeExitBackup, type SafeExitBackupKey } from "@/lib/safe-exit-backup";
 import { FAMILY_COLLECTION_BACKUP_KEYS, validateFamilyCollectionBackupRows, type FamilyCollectionBackup } from "@/lib/family-collection-backup";
 import { validateTechnicalOperationsBackup, type TechnicalOperationsBackup } from "@/lib/technical-operations-backup";
+import { OPTIONAL_OPERATIONS_BACKUP_KEYS, validateOptionalOperationsBackupRows, type OptionalOperationsBackup, type OptionalOperationsBackupKey } from "@/lib/optional-operations-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 const MAX_ENTITY_ROWS = 100_000;
@@ -40,6 +41,7 @@ const TOP_LEVEL_KEYS = new Set([
   "payments",
   "paymentAudits",
   ...FAMILY_COLLECTION_BACKUP_KEYS,
+  ...OPTIONAL_OPERATIONS_BACKUP_KEYS,
   "users",
   "authSecurity",
   "iamAccess",
@@ -71,6 +73,7 @@ const TOP_LEVEL_KEYS = new Set([
   ...SUPPORT_BACKUP_KEYS,
   ...SAFE_EXIT_BACKUP_KEYS,
   ...FAMILY_COLLECTION_BACKUP_KEYS,
+  ...OPTIONAL_OPERATIONS_BACKUP_KEYS,
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
   "examGovernance",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
@@ -141,6 +144,7 @@ const BACKUP_COUNT_KEYS = new Set([
   ...SUPPORT_BACKUP_KEYS,
   ...SAFE_EXIT_BACKUP_KEYS,
   ...FAMILY_COLLECTION_BACKUP_KEYS,
+  ...OPTIONAL_OPERATIONS_BACKUP_KEYS,
   "examCycles", "examAssessments", "studentMarks", "studentMarkEvents",
   "examGovernanceRecords",
   "gradingSchemes", "gradeBands", "reportCardTemplates", "reportCardBatches", "reportCardBatchExamSources",
@@ -559,7 +563,7 @@ export type ValidatedBackup = {
   timetableDrafts: RestoreRecord[];
   timetableEntries: RestoreRecord[];
   technicalOperations: TechnicalOperationsBackup;
-} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup;
+} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup & OptionalOperationsBackup;
 
 export type EntityRestoreResult = {
   created: number;
@@ -760,7 +764,7 @@ export type RestoreResult = {
   timetableDrafts: EntityRestoreResult;
   timetableEntries: EntityRestoreResult;
   warnings: string[];
-} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey, EntityRestoreResult>;
+} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey | OptionalOperationsBackupKey, EntityRestoreResult>;
 
 export function parseAndValidateBackup(input: string | unknown): ValidatedBackup {
   let parsed: unknown = input;
@@ -785,7 +789,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     metadata.backupVersion !== undefined &&
     (!Number.isInteger(metadata.backupVersion) ||
       Number(metadata.backupVersion) < 1 ||
-      Number(metadata.backupVersion) > 41)
+      Number(metadata.backupVersion) > 42)
   ) {
     throw new Error("metadata.backupVersion is unsupported");
   }
@@ -821,6 +825,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     ["paymentId", "action"]
   );
   const familyCollectionBackup = validateFamilyCollectionBackupRows(root);
+  const optionalOperationsData = validateOptionalOperationsBackupRows(root);
   const users = validateOptionalRows(root.users, "users", USER_KEYS, ["username"])
     .map(sanitizeRestoreUser);
   const rolePermissions = validateOptionalRows(
@@ -1450,6 +1455,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     payments,
     paymentAudits,
     ...familyCollectionBackup,
+    ...optionalOperationsData,
     technicalOperations,
     users,
     authSecurity,

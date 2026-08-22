@@ -56,7 +56,7 @@ describe("governed onboarding permissions and recovery", () => {
       onboardingAuditEvents: [{ id: "audit-1", batchId: "batch-1", sequence: 1, eventType: "EXECUTED", previousStatus: "APPROVED", newStatus: "COMPLETED", actorUserId: "private-actor", reasonSafe: "Private execution reason", evidenceHash: "b".repeat(64), occurredAt: now }]
     });
     const serialized = JSON.stringify(backup);
-    expect(backup.metadata.backupVersion).toBe(41);
+    expect(backup.metadata.backupVersion).toBe(42);
     expect(serialized).not.toContain("source/private.xlsx");
     expect(serialized).not.toContain("9876543210");
     expect(serialized).not.toContain("Private operator note");

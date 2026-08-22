@@ -127,7 +127,7 @@ describe("EXAM-RC-IMPL-3 publication security and PDF contract", () => {
   }, 30_000);
 
   it("preserves backup version 40 and the isolated EXAM3 harness contract", () => {
-    expect(source("lib/backup.ts")).toContain("backupVersion: 41");
+    expect(source("lib/backup.ts")).toContain("backupVersion: 42");
     expect(source("package.json")).toContain("\"qa:exam3\": \"tsx scripts/qa-exam3-copied-db.ts\"");
     const harness = source("scripts/qa-exam3-copied-db.ts");
     expect(harness).toContain("assertIsolatedDatabasePath");

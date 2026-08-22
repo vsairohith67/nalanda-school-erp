@@ -28,7 +28,7 @@ export async function verifyStoredCloudBackupArtifact(
     if (decrypted.header.plaintextSha256 !== artifact.plaintextSha256) throw new Error("PLAINTEXT_HASH_MISMATCH");
     await record(prisma, artifact, "PLAINTEXT_HASH", "PASSED", "Decrypted exact-byte SHA-256 matches stored metadata.", Date.now() - started);
     const backup = parseAndValidateBackup(decrypted.plaintext.toString("utf8"));
-    if (backup.metadata.backupVersion !== 41) throw new Error("BACKUP_SCHEMA_INVALID");
+    if (backup.metadata.backupVersion !== 42) throw new Error("BACKUP_SCHEMA_INVALID");
     await record(prisma, artifact, "BACKUP_SCHEMA", "PASSED", "Nalanda backup schema and version 37 passed.", Date.now() - started);
     const verifiedAt = new Date();
     await prisma.$transaction([
@@ -39,7 +39,7 @@ export async function verifyStoredCloudBackupArtifact(
         eventType: "BACKUP_VERIFIED", reason: "MANUAL_REVERIFICATION", recordedByUserId: actorUserId
       } })
     ]);
-    return { verified: true, backupVersion: 41, artifactId: artifact.id };
+    return { verified: true, backupVersion: 42, artifactId: artifact.id };
   } catch (error) {
     const failureCode = error instanceof Error && /^[A-Z0-9_]+$/.test(error.message) ? error.message : "VERIFICATION_FAILED";
     await prisma.$transaction([

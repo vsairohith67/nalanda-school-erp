@@ -4,7 +4,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { businessBaseline } from "./migration-check-utils";
 
-const expected = { baseline: { students: 0, activeEnrollments: 0, payments: 0, collected: 0 }, users: 4, roleAssignments: 4, activeSuperAdmins: 1, backupVersion: 41, operationalCheckDefinitions: 13 } as const;
+const expected = { baseline: { students: 0, activeEnrollments: 0, payments: 0, collected: 0 }, users: 4, roleAssignments: 4, activeSuperAdmins: 1, backupVersion: 42, operationalCheckDefinitions: 13 } as const;
 
 function sha256(file: string) {
   return createHash("sha256").update(readFileSync(file)).digest("hex").toUpperCase();

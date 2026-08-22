@@ -16,7 +16,7 @@ describe("HR-PAYSLIP-REQ-1 backup and recovery", () => {
   it("preserves request/version/envelope links in version 37 without plaintext secret fields", () => {
     const rows = metadataRows();
     const backup = createBackupDocument({ generatedAt: new Date("2026-08-08T00:00:00.000Z"), generatedBy: "PAYSLIPREQ1", students: [], feeStructures: [], payments: [], paymentAudits: [], users: [], ...rows });
-    expect(backup.metadata.backupVersion).toBe(41);
+    expect(backup.metadata.backupVersion).toBe(42);
     expect(backup.metadata.counts.staffPayslipDocumentVersions).toBe(1);
     const parsed = parseAndValidateBackup(backup);
     expect(parsed.staffPayslipDocumentVersions[0]).toMatchObject({ requestId: "request-1", passwordKeyVersion: "SYNTHETIC_V1", supersedesVersionId: null });

@@ -229,7 +229,7 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
 
   it("preserves the Schoolknot checkpoint across additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(296);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(308);
     expect(schema).toContain("model SuperAdminDiaryEntry {");
     expect(schema).toContain("model SuperAdminTask {");
     expect(schema).toContain("model SuperAdminContact {");
@@ -247,7 +247,7 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
     );
     expect(countRouteFiles("app", "page.tsx") + Number(existsSync("app/sw.js/route.ts"))).toBeGreaterThanOrEqual(274);
     expect(countRouteFiles("app/api", "route.ts")).toBeGreaterThanOrEqual(378);
-    expect(read("lib/backup.ts")).toContain("backupVersion: 41");
+    expect(read("lib/backup.ts")).toContain("backupVersion: 42");
     const permissionTokens = new Set([...read("lib/permissions.ts").matchAll(/permission:\s*"([A-Z0-9_]+)"/g)].map((match) => match[1]));
     expect(permissionTokens.size).toBeGreaterThanOrEqual(339);
     expect(permissionTokens.has("CANCEL_FINAL_RECEIPT")).toBe(true);
@@ -256,7 +256,9 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
     expect(permissionTokens.has("ASSIGN_EXAM_TEACHERS")).toBe(true);
     expect(schema).toContain("model PayrollRun {");
     expect(schema).toContain("model PayslipVersion {");
-    for (const model of ["TransportRoute", "DisciplineIncident", "CafeteriaPlan"]) {
+    expect(schema).toContain("model TransportRoute {");
+    expect(schema).toContain("model CafeteriaMenu {");
+    for (const model of ["DisciplineIncident", "CafeteriaPlan"]) {
       expect(schema).not.toContain(`model ${model} {`);
     }
   });

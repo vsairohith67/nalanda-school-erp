@@ -47,6 +47,7 @@ import { defaultPathForRole, isExactActiveRoute } from "@/lib/navigation";
 import { isPublicWebsitePath } from "@/lib/public-website-routing";
 import { groupedVisibleNavigationItems, visibleNavigationItems, type NavigationIcon, type NavigationItem } from "@/lib/access-rules";
 import { roleDashboardTitle } from "@/lib/role-presentation";
+import type { OptionalOperationsFeatureCode } from "@/lib/optional-operations-feature-flags";
 
 const OFFICIAL_LOGO_PATH = "/nalanda-logo-transparent.png";
 
@@ -79,6 +80,7 @@ const icons: Record<NavigationIcon, LucideIcon> = {
   ,aiAssistant: Bot
   ,feeRegisterOcr: FileSearch
   ,cloudBackup: ShieldCheck
+  ,operations: ClipboardList
   ,website: Sparkles
   ,calendar: CalendarDays
 };
@@ -189,7 +191,8 @@ export function AppShell({
   health,
   healthBannerIssues,
   appInfo,
-  pilotMode
+  pilotMode,
+  enabledOptionalOperationsFeatures
 }: {
   children: React.ReactNode;
   user: AuthUser | null;
@@ -199,6 +202,7 @@ export function AppShell({
   healthBannerIssues: SystemHealthIssue[];
   appInfo: AppInfo;
   pilotMode: boolean;
+  enabledOptionalOperationsFeatures: OptionalOperationsFeatureCode[];
 }) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -302,6 +306,8 @@ export function AppShell({
             <Link href="/parent/notifications" className={pathname.startsWith("/parent/notifications") ? "active" : ""} aria-current={pathname.startsWith("/parent/notifications") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Megaphone size={17} aria-hidden />Notifications</Link>
             {permissions.includes("REQUEST_STUDENT_DEPARTURE") ? <Link href="/parent/student-departures" className={pathname.startsWith("/parent/student-departures") ? "active" : ""} aria-current={pathname.startsWith("/parent/student-departures") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><ClipboardCheck size={17} aria-hidden />Student Early Leave</Link> : null}
             {permissions.includes("VIEW_OWN_SUPPORT") ? <Link href="/parent/support" className={pathname.startsWith("/parent/support") ? "active" : ""} aria-current={pathname.startsWith("/parent/support") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Megaphone size={17} aria-hidden />Support</Link> : null}
+            {permissions.includes("VIEW_OWN_CHILD_TRANSPORT") && enabledOptionalOperationsFeatures.includes("TRANSPORT_V1_5") ? <Link href="/parent/transport" className={pathname.startsWith("/parent/transport") ? "active" : ""} aria-current={pathname.startsWith("/parent/transport") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><ClipboardList size={17} aria-hidden />Transport</Link> : null}
+            {permissions.includes("VIEW_OWN_CHILD_CAFETERIA") && enabledOptionalOperationsFeatures.includes("CAFETERIA_V1_5") ? <Link href="/parent/cafeteria" className={pathname.startsWith("/parent/cafeteria") ? "active" : ""} aria-current={pathname.startsWith("/parent/cafeteria") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><ClipboardList size={17} aria-hidden />Cafeteria</Link> : null}
             {permissions.includes("MANAGE_OWN_WHATSAPP_CONSENT") && permissions.includes("MANAGE_OWN_SMS_EMAIL_CONSENT") ? <Link href="/parent/communication-preferences" className={pathname === "/parent/communication-preferences" ? "active" : ""} aria-current={pathname === "/parent/communication-preferences" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Settings size={17} aria-hidden />Communication Preferences</Link> : null}
             <Link href="/install-app" className={pathname === "/install-app" ? "active" : ""} aria-current={pathname === "/install-app" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Download size={17} aria-hidden />Install App</Link>
           </nav>
@@ -320,7 +326,7 @@ export function AppShell({
       </div>
     );
   }
-  const teacherInternalNavItems = user.role === "TEACHER" ? visibleNavigationItems(permissions, user.role) : [];
+  const teacherInternalNavItems = user.role === "TEACHER" ? visibleNavigationItems(permissions, user.role, enabledOptionalOperationsFeatures) : [];
   if (user.role === "TEACHER" && teacherInternalNavItems.length === 0) {
     return (
       <div className={`app-shell parent-app-shell ${mobileNavOpen ? "mobile-nav-open" : ""}`}>
@@ -350,7 +356,7 @@ export function AppShell({
       </div>
     );
   }
-  const navGroups = groupedVisibleNavigationItems(permissions, user.role);
+  const navGroups = groupedVisibleNavigationItems(permissions, user.role, enabledOptionalOperationsFeatures);
   const renderNavLink = (item: NavigationItem) => {
     const Icon = icons[item.icon];
     const active = isExactActiveRoute(pathname, item.href);
