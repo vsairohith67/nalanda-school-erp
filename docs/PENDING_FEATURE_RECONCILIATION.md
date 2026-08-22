@@ -33,6 +33,7 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | 7 | Monitoring and operational dashboard extensions | `PARTIAL` | OBS-1A and its technical/operational foundation are cleared. Hosting-dependent live monitoring, provider health, cost/usage extensions, and unified Command Center presentation remain pending. Extend the existing architecture. |
 | 8 | Whiteboard | Bridge: `CLEARED`; ERP engine: `NOT_IMPLEMENTED` | `WHITEBOARD-BRIDGE-1A-QA` independently proved that only the exact Super Admin route can launch the canonical Canvs board. It has no iframe, token exchange, server fetch, sync, board persistence, Search/AI integration or open redirect. Canvs remains the editing engine. |
 | 9 | Citation-based Smart AI | `NEXT_FOR_SEPARATE_PLANNING`; advanced scope `DEFERRED_TO_V2` | The read-only assistant foundation validates citations/timestamps using mock data, and Universal Search now supplies a cleared permission-filtered retrieval boundary. No AI implementation, semantic retrieval, attachment ingestion, external knowledge or live provider is authorized. |
+| 10 | Parent Meetings, Appointments and Follow-up | Software implemented/independent QA evidence recorded; operational activation `DEFAULT_OFF` | Exact linked-child Parent requests, leadership workflow, explicit assigned-Teacher scope, separate private/Parent-visible evidence, local follow-up, in-app notifications and backup v43. No deploy, real data/users, external providers, My Work coupling or Search/AI integration. |
 | 10 | Android app | `NOT_IMPLEMENTED` | Responsive web/PWA foundations do not constitute a native Android app. A later shared-app Capacitor approach may be assessed only after staging and physical-device certification. |
 | 11 | iOS/iPadOS app | `NOT_IMPLEMENTED` | No native Apple application is proven. Final building, signing, and device certification require a Mac/Xcode environment and Apple account decisions. |
 | 12 | PWA and device certification | PWA foundation: `CLEARED`; end-to-end readiness: `PARTIAL`; physical certification: `OPERATIONAL_CONFIGURATION_PENDING` | Responsive web and the installable PWA foundation are present. Physical Android/iPhone/iPad testing waits for approved private HTTPS staging. See the [device checklist](./PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md). |
@@ -76,8 +77,8 @@ real-data indexing/import, providers or Smart AI implementation.
 ## Operational controls preserved
 
 - Operational database unchanged.
-- No schema or migration change.
-- No application feature implementation.
+- Parent Meetings adds a repository migration and default-off application module; the migration is exercised only on fresh/copied synthetic QA databases, never on the operational database.
+- Other pending work remains unchanged unless an exact newer clearance entry says otherwise.
 - No deployment, DNS change, provider activation, data import, user activation, pilot, or cutover.
 - No UDISE scraping, automatic submission, or false compliance claim.
 

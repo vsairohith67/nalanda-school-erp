@@ -60,7 +60,8 @@ describe("DEVOPS-1B clean-install migration repair", () => {
       "20260810100000_technical_operations_observability",
       "20260810184500_governed_bulk_onboarding",
       "20260821194500_super_admin_work_programme",
-      "20260822113000_event_media_v1_5_foundation"
+      "20260822113000_event_media_v1_5_foundation",
+      "20260822170000_parent_meetings_v1_5"
     ]);
     expect(readFileSync(path.join(ACTIVE_MIGRATION_ROOT, BASELINE_MIGRATION, "migration.sql"), "utf8"))
       .toContain('CREATE TABLE "Payment"');
@@ -91,7 +92,7 @@ describe("DEVOPS-1B clean-install migration repair", () => {
 
   it("deploys from empty, reports clean status, matches the schema, and bootstraps synthetic data", async () => {
     const output = pnpm(["migration:fresh-check"]);
-    expect(output).toContain("Fresh migration check passed: migrations=20 models=302 tables=302");
+    expect(output).toContain("Fresh migration check passed: migrations=21 models=308 tables=308");
     expect(output).toContain("Synthetic bootstrap passed");
   }, 180_000);
 

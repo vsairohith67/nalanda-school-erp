@@ -1,5 +1,16 @@
 # ERP Feature Status and Gap Map
 
+## Parent Meetings and Appointments — V1.5 update
+
+| Capability | Software status | Remaining boundary |
+| --- | --- | --- |
+| Parent linked-child meeting request and own safe history | Implemented behind default-off flag | Real Parent activation and meeting import require separate approval |
+| Leadership schedule, conflict checks, outcome and follow-up | Implemented | Operational calendar ownership and real-user process remain separate |
+| Explicit assigned-Teacher contribution | Implemented, assignment-only | No general Teacher browsing or marks authority |
+| Separate internal notes and released Parent summary | Implemented with append-only corrections | School content/retention policy and real use require operational approval |
+| In-app reminders and management reports | Implemented locally | No WhatsApp/SMS/email/push or external calendar activation |
+| Search/Smart AI | Deferred | Requires an explicitly governed later Search extension |
+
 ## GOV-RECON-1 corrected V1 status (2026-08-08)
 
 The authoritative status source is now `REQUIREMENTS_REGISTER.md`, with product scope in `V1_V1_5_V2_SCOPE.md`. A model or route is not sufficient for completion.

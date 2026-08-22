@@ -1,5 +1,19 @@
 # Authoritative Requirements Register
 
+## PARENT-MEETING-V1_5-1A governed requirement
+
+Parent Meetings, Appointments and Follow-up is an additive V1.5 local/private
+software capability behind default-off `PARENT_MEETINGS_V1_5`. The governing
+requirements are exact active Parent linked-child ownership, explicit assigned
+Teacher scope, Principal/Super Admin management, bounded Director oversight,
+separate append-oriented private and Parent-visible evidence, local follow-up,
+conflict-safe scheduling, in-app-only notifications and backup/recovery.
+Academic Integrity v1.1 is unchanged. Operational activation, deployment, real
+meeting history, live providers, external calendars/video, attachments, My
+Work coupling and Universal Search/Smart AI integration are not authorised by
+software clearance. See
+[`PARENT_MEETINGS_APPOINTMENTS_ARCHITECTURE.md`](./PARENT_MEETINGS_APPOINTMENTS_ARCHITECTURE.md).
+
 **Register ID:** `GOV-RECON-1-REGISTER`<br>
 **As-of:** 2026-08-22<br>
 **Baseline:** protected `main` at the authorised task-start checkpoint `4978da6e0fc3c1846750694a04f4015b61ca78af`; KG Report Cards V1.5 software clearance evidence is recorded below<br>

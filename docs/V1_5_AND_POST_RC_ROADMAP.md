@@ -72,6 +72,7 @@ Search, or unlock Smart AI.
 - Super Admin Command Center foundation.
 - One integrated diary/tasks/reminders/Life OS and publisher/vendor/contact directory product.
 - Universal permission-scoped search.
+- Parent Meetings, Appointments and Follow-up is implemented as default-off local/private software under `PARENT-MEETING-V1_5-1A`; operational activation and Search/Smart AI integration remain separate gates.
 - UDISE 15E only after evidence.
 - Full Payroll/ESS remains a controlled V1.5 operational deferral; its cleared technical foundation does not activate payroll or make it a V1 launch dependency.
 - Event-photo gallery and governed image enhancement remain candidates, not scheduled ahead of the command/search foundations.

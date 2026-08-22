@@ -24,6 +24,7 @@ import { SAFE_EXIT_BACKUP_KEYS, restoreSafeExitBackup, type SafeExitBackupKey } 
 import { FAMILY_COLLECTION_BACKUP_KEYS, type FamilyCollectionBackupKey } from "@/lib/family-collection-backup";
 import { restoreTechnicalOperationsBackup } from "@/lib/technical-operations-backup";
 import { EVENT_MEDIA_BACKUP_KEYS, restoreEventMediaBackup, type EventMediaBackupKey } from "@/lib/event-media-backup";
+import { PARENT_MEETING_BACKUP_KEYS, restoreParentMeetingBackup, type ParentMeetingBackupKey } from "@/lib/parent-meeting-backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -125,6 +126,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(SAFE_EXIT_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<SafeExitBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<FamilyCollectionBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(EVENT_MEDIA_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<EventMediaBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(PARENT_MEETING_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<ParentMeetingBackupKey, ReturnType<typeof emptyEntityResult>>),
     technicalOperations: emptyEntityResult(),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
@@ -382,6 +384,14 @@ async function restoreIntoDatabase(
   await restoreAuthSecurityData(client, backup, backupUserToLocalUser, backupStudentLocalIds, result);
   await restoreIamAccessData(client, backup, backupUserToLocalUser, result);
   await restoreStaffData(client, backup, backupUserToLocalUser, result);
+  const backupStaffLocalIds = new Map<string, string>();
+  for (const row of backup.staffMembers) {
+    const backupId = nullableText(row.id);
+    const staffCode = nullableText(row.staffCode);
+    if (!backupId) continue;
+    const local = await client.staffMember.findFirst({ where: { OR: [{ id: backupId }, ...(staffCode ? [{ staffCode }] : [])] }, select: { id: true } });
+    if (local) backupStaffLocalIds.set(backupId, local.id);
+  }
   const expenseMasterMaps = await restoreExpenseData(client, backup, backupUserToLocalUser, result);
   await restoreBudgetData(client, backup, backupUserToLocalUser, expenseMasterMaps, result);
   await restoreMiscIncomeAndCashBookData(client, backup, backupStudentLocalIds, backupUserToLocalUser, result);
@@ -592,6 +602,13 @@ async function restoreIntoDatabase(
   await restoreEventMediaBackup(client as unknown as PrismaClient, backup, {
     students: backupStudentLocalIds,
     guardians: backupGuardianIds,
+    users: backupUserToLocalUser,
+    restoredBy: restoredBy.id
+  }, result);
+  await restoreParentMeetingBackup(client as unknown as PrismaClient, backup, {
+    students: backupStudentLocalIds,
+    guardians: backupGuardianIds,
+    staffMembers: backupStaffLocalIds,
     users: backupUserToLocalUser,
     restoredBy: restoredBy.id
   }, result);

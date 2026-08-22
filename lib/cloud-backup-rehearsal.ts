@@ -42,7 +42,7 @@ export async function runCloudBackupRestoreRehearsal(
     if (decrypted.header.ciphertextSha256 !== artifact.ciphertextSha256 || decrypted.header.plaintextSha256 !== artifact.plaintextSha256) throw new Error("REHEARSAL_HASH_MISMATCH");
     await prisma.cloudBackupRestoreRehearsal.update({ where: { id: rehearsal.id }, data: { status: "VALIDATING" } });
     const backup = parseAndValidateBackup(decrypted.plaintext.toString("utf8"));
-    if (backup.metadata.backupVersion !== 42) throw new Error("REHEARSAL_BACKUP_UNSUPPORTED");
+    if (backup.metadata.backupVersion !== 43) throw new Error("REHEARSAL_BACKUP_UNSUPPORTED");
     await mkdir(tempRoot, { recursive: true });
     await copyFile(sourcePath, tempPath);
     rehearsalClient = new PrismaClient({ datasources: { db: { url: `file:${tempPath.replaceAll("\\", "/")}` } } });

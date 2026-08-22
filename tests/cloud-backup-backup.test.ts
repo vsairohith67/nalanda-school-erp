@@ -28,7 +28,7 @@ function emptyBackup() {
 describe("cloud backup metadata backup and restore", () => {
   it("uses version 37, contains all eight arrays, and excludes secrets", () => {
     const backup = emptyBackup();
-    expect(backup.metadata.backupVersion).toBe(42);
+    expect(backup.metadata.backupVersion).toBe(43);
     for (const key of cloudKeys) {
       expect(backup[key]).toEqual([]);
       expect(backup.metadata.counts[key]).toBe(0);

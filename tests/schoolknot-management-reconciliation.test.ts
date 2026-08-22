@@ -202,6 +202,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
       "20260810184500_governed_bulk_onboarding",
       "20260821194500_super_admin_work_programme",
       "20260822113000_event_media_v1_5_foundation",
+      "20260822170000_parent_meetings_v1_5",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);
@@ -210,7 +211,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
     expect(existsSync("app/sw.js/route.ts")).toBe(true);
     expect(countRouteFiles("app", "page.tsx") + 1).toBeGreaterThanOrEqual(274);
     expect(countRouteFiles("app/api", "route.ts")).toBeGreaterThanOrEqual(378);
-    expect(read("lib/backup.ts")).toContain("backupVersion: 42");
+    expect(read("lib/backup.ts")).toContain("backupVersion: 43");
   });
 
   it("adds no still-provisional business-domain models", () => {

@@ -1,5 +1,16 @@
 # Documentation Index
 
+## Parent Meetings, Appointments and Follow-up — V1.5
+
+- [Parent Meetings, Appointments and Follow-up Architecture](PARENT_MEETINGS_APPOINTMENTS_ARCHITECTURE.md)
+
+`PARENT-MEETING-V1_5-1A` is an additive, local/private, default-off software
+module. It preserves exact Parent linked-child ownership, explicit Teacher
+participant scope, physically separate private and Parent-visible evidence,
+append-oriented follow-up/history, in-app-only reminders and Academic
+Integrity v1.1. Operational activation, deployment, real records and external
+providers remain separate unauthorised gates.
+
 ## Nalanda ERP v1.1 — Academic Integrity Release
 
 - [Principal-Controlled Marks Entry and Delegation Architecture](ACADEMIC_INTEGRITY_V1_1_PRINCIPAL_MARKS_ENTRY.md)
