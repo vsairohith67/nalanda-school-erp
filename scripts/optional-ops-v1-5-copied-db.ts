@@ -39,7 +39,7 @@ import {
 } from "./migration-check-utils";
 
 type Seeded = Awaited<ReturnType<typeof seedSyntheticBase>>;
-const SYNTHETIC_PASSWORD = "OptionalOps-Synthetic-2026!";
+const SYNTHETIC_LOGIN_VALUE = "OptionalOps-Synthetic-2026!";
 
 function invariant(value: unknown, code: string): asserts value {
   if (!value) throw new Error(code);
@@ -56,7 +56,7 @@ async function expectCode(action: () => Promise<unknown>, code: string) {
 }
 
 async function seedSyntheticBase(client: PrismaClient, prefix: string) {
-  const passwordHash = await hashPassword(SYNTHETIC_PASSWORD);
+  const passwordHash = await hashPassword(SYNTHETIC_LOGIN_VALUE);
   const admin = await client.user.create({
     data: {
       name: "Optional Operations Synthetic Admin",
@@ -336,7 +336,7 @@ async function main() {
     invariant(!/private address|9000000|diagnosis|medical/i.test(auditText), "OPTIONAL_OPS_AUDIT_PRIVACY");
     await verifyRestoreSubstitution(source, rejection, rejectionSeed);
     const restored = await verifyBackupRestore(source, target, sourceSeed, targetSeed);
-    console.log(JSON.stringify({ status: "OPTIONAL_OPS_V1_5_COPIED_DATABASE_PASSED", defaultOff: true, productionOverrideDenied: true, syntheticOnly: true, transport, cafeteria, protectedModulesUnchanged: protectedAfter, restored, ...(keepSource ? { browserFixture: { databasePath: sourcePath, username: "opsv15-admin", password: SYNTHETIC_PASSWORD } } : {}) }));
+    console.log(JSON.stringify({ status: "OPTIONAL_OPS_V1_5_COPIED_DATABASE_PASSED", defaultOff: true, productionOverrideDenied: true, syntheticOnly: true, transport, cafeteria, protectedModulesUnchanged: protectedAfter, restored, ...(keepSource ? { browserFixture: { databasePath: sourcePath, username: "opsv15-admin", password: SYNTHETIC_LOGIN_VALUE } } : {}) }));
   } finally {
     await Promise.all([source?.$disconnect(), target?.$disconnect(), rejection?.$disconnect()]);
     if (!keepSource) cleanupIsolatedDatabase(sourcePath);
