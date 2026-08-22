@@ -172,7 +172,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
 
   it("preserves the prior checkpoint and recognizes additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(302);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(308);
     expect(schema).toContain("model SuperAdminDiaryEntry {");
     expect(schema).toContain("model SuperAdminTask {");
     expect(schema).toContain("model SuperAdminContact {");

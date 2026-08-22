@@ -102,9 +102,9 @@ describe("DEVOPS-1B clean-install migration repair", () => {
     expect(output).toContain("students=0 activeEnrollments=0 payments=0 collected=0");
   }, 180_000);
 
-  it("keeps version-42 restore idempotent and preserves local ownership collisions", async () => {
+  it("keeps version-43 restore idempotent and preserves local ownership collisions", async () => {
     const output = pnpm(["migration:restore-check"]);
-    expect(output).toContain("Backup/restore passed: version=42 arrays=251");
+    expect(output).toContain("Backup/restore passed: version=43 arrays=257");
     expect(output).toContain("local login ownership and Student collision mapping were preserved");
   }, 300_000);
 
