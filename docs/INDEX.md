@@ -70,7 +70,7 @@ This local/private acceptance reconciles the corrected V1 ledger, closes cross-m
 - [Physical Acceptance and Release Closure](REPORT_CARD_PRINT_ACCEPTANCE_RELEASE_CLOSURE.md)
 - [Versioned Template Maintenance Policy](REPORT_CARD_TEMPLATE_VERSIONED_MAINTENANCE_POLICY.md)
 
-Classes I-X are digitally and physically accepted under `REPORT_PRINT_ACCEPTANCE_CLEARED`. The R8 colour and true-monochrome packs passed on a Canon imageCLASS MF244dw using A4 paper, and the required one-generation dense monochrome photocopy remained readable and distinguishable. Future edits use a new governed template version; issued reports remain immutable. The preserved KG/LKG/UKG foundation stays default-off and deferred to V1.5. Next governed phase: `V1-FINAL-1A`.
+Classes I-X are digitally and physically accepted under `REPORT_PRINT_ACCEPTANCE_CLEARED`. The R8 colour and true-monochrome packs passed on a Canon imageCLASS MF244dw using A4 paper, and the required one-generation dense monochrome photocopy remained readable and distinguishable. Future edits use a new governed template version; issued reports remain immutable. KG/LKG/UKG is software-cleared under `KG-REPORTS-V1_5-1A` while production activation remains default-off; physical printer acceptance remains a later operational gate. See [KG Report Cards V1.5 Software Clearance](KG_REPORT_CARDS_V1_5_SOFTWARE_CLEARANCE.md).
 
 ## RELEASE-OPS-1A safe release, client update and rollback
 

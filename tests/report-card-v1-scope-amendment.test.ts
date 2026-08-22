@@ -5,6 +5,7 @@ import { releaseFeatureFlags } from "@/lib/release-feature-flags";
 import {
   KG_REPORT_CARD_DEFERRED_MESSAGE,
   KG_REPORT_CARD_DEFERRED_STATUS,
+  KG_REPORT_CARD_V1_5_STATUS,
   isKgReportCardOperationallyAvailable,
   isV1OperationalReportType
 } from "@/lib/report-card-release-policy";
@@ -12,8 +13,8 @@ import {
 const root = process.cwd();
 const source = (relative: string) => readFileSync(path.join(root, relative), "utf8");
 
-describe("REPORT-PRINT-ACCEPT-1A V1 scope amendment", () => {
-  it("preserves KG as a default-off V1.5 foundation in the existing release-policy system", () => {
+describe("REPORT-PRINT-ACCEPT-1A and KG-REPORTS-V1_5-1A release boundaries", () => {
+  it("preserves KG as default-off after V1.5 software clearance", () => {
     const flag = releaseFeatureFlags().find((row) => row.key === "kg-report-cards-v1-5");
     expect(flag).toMatchObject({
       environment: "PRODUCTION",
@@ -22,14 +23,15 @@ describe("REPORT-PRINT-ACCEPT-1A V1 scope amendment", () => {
       rolloutPercentage: 0,
       version: 1
     });
-    expect(KG_REPORT_CARD_DEFERRED_STATUS).toBe("IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5");
-    expect(KG_REPORT_CARD_DEFERRED_MESSAGE).toContain("planned for V1.5");
+    expect(KG_REPORT_CARD_DEFERRED_STATUS).toBe("SOFTWARE_CLEARED_OPERATIONAL_ACTIVATION_OFF");
+    expect(KG_REPORT_CARD_V1_5_STATUS).toBe("SOFTWARE_CLEARED_OPERATIONAL_ACTIVATION_OFF");
+    expect(KG_REPORT_CARD_DEFERRED_MESSAGE).toContain("operational activation remains off");
     expect(isKgReportCardOperationallyAvailable()).toBe(false);
     expect(isV1OperationalReportType("KG_RUBRIC")).toBe(false);
     expect(isV1OperationalReportType("MARK_BASED")).toBe(true);
   });
 
-  it("blocks new KG operational work while keeping historical views and implementation evidence", () => {
+  it("blocks new KG operational work while keeping cleared software and historical views", () => {
     const service = source("lib/report-cards.ts");
     const publication = source("lib/report-publication.ts");
     const examConfiguration = source("lib/exam-configurations.ts");
@@ -40,7 +42,7 @@ describe("REPORT-PRINT-ACCEPT-1A V1 scope amendment", () => {
     expect(service.match(/requireV1OperationalReportType/g)?.length).toBeGreaterThanOrEqual(8);
     expect(publication).toContain("KG_REPORT_CARD_DEFERRED_MESSAGE");
     expect(examConfiguration).toContain('templateFamily === "KG_DEVELOPMENTAL_BOOKLET"');
-    expect(historyPage).toContain("This historical record remains readable");
+    expect(historyPage).toContain("Historical records remain readable");
     expect(historyPage).toContain("Print Preview");
     expect(kgRenderer).toContain("FINAL_KG_PAGE_SPECS");
     expect(kgTests).toContain("KG report-card");
@@ -60,14 +62,15 @@ describe("REPORT-PRINT-ACCEPT-1A V1 scope amendment", () => {
     expect(register).toContain("| V1 | 24 |");
     expect(register).toContain("| V1.5 | 6 |");
     expect(register).toContain("| V2 | 6 |");
-    expect(register).toContain("| CLEARED | 21 |");
+    expect(register).toContain("| CLEARED | 22 |");
     expect(register).toContain("| CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING | 4 |");
     expect(register).toContain("| COMPLETE | 1 |");
     expect(register).not.toContain("| COMPLETE_LOCAL_PRIVATE |");
     expect(register).not.toContain("| PARTIAL |");
     expect(register).not.toContain("| MISSING |");
     expect(register).not.toContain("IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING");
-    expect(register).toContain("IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5");
+    expect(register).toContain("| IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5 | 0 |");
+    expect(register).toContain("SOFTWARE_CLEARED_OPERATIONAL_ACTIVATION_OFF");
     for (let correction = 1; correction <= 29; correction += 1) {
       expect(amendment.match(new RegExp(`^${correction}\\. `, "gm"))).toHaveLength(1);
     }

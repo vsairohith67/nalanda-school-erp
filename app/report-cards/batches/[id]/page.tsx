@@ -41,7 +41,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   return <div className="page report-cards-page">
     <PageHeader title={batch.title} description={`${batch.batchNumber} · ${batch.academicYear} · ${batch.className}${batch.section ? `-${batch.section}` : ""}`} action={<StatusBadge status={batch.status} />} />
     {scope.reason ? <p className="notice">{scope.reason}</p> : null}
-    {!operational && user.role === "SUPER_ADMIN" ? <p className="notice"><strong>KG report-card family — planned for V1.5.</strong> Historical records remain readable; operational workflow controls are disabled in V1.</p> : null}
+    {!operational && user.role === "SUPER_ADMIN" ? <p className="notice"><strong>KG Report Cards V1.5 — software cleared; operational activation off.</strong> Historical records remain readable; operational workflow controls stay disabled until a separate activation.</p> : null}
     <div className="grid four">
       <StatCard label="Student Cards" value={String(cards.length)} />
       <StatCard label="Ready for Review" value={String(ready)} />

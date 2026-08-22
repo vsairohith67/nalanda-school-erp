@@ -396,11 +396,12 @@ Physical USB scanner hardware has not been certified by code alone. Keyboard-inp
 - Report cards display finalized progression only and never mutate Student progression.
 - Teacher performance analytics and scoring remain out of scope for Prompt 17D.
 
-## REPORT-PRINT-ACCEPT-1A scope-amendment boundaries
+## REPORT-PRINT-ACCEPT-1A scope-amendment boundaries and V1.5 supersession
 
 - Classes I-X remain V1 and are not physically accepted; the user is still supplying corrections before R5.
-- KG/LKG/UKG is `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`, not V1-cleared or production-ready.
-- The default-off `kg-report-cards-v1-5` release flag blocks new KG operational scheme/template creation, activation, class binding, batch work and publication while preserving immutable issued/historical reads.
+- The historical `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5` state was superseded on 2026-08-22 by `SOFTWARE_CLEARED_OPERATIONAL_ACTIVATION_OFF` under `KG-REPORTS-V1_5-1A`.
+- The default-off `kg-report-cards-v1-5` production flag still blocks new KG operational scheme/template creation, activation, class binding, batch work and publication while preserving immutable issued/historical reads. A guarded copied/synthetic QA sentinel is not an operational activation path.
+- Physical printer acceptance, deployment, live-data onboarding and operational activation remain later governed gates.
 - R4.2 packs are retained but `SUPERSEDED_PENDING_CLASSES_I_X_CORRECTIONS`; they must not be printed.
 - Parent-facing one-decimal reconciliation and grade-band wording remain pending decisions; internal frozen-snapshot precision and scale boundaries must not be changed silently.
 
