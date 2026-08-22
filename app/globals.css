@@ -2301,6 +2301,7 @@ th {
 
 .user-menu {
   position: relative;
+  z-index: 80;
 }
 
 .user-menu summary {
@@ -2347,7 +2348,7 @@ th {
   border-radius: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
-  z-index: 20;
+  z-index: 100;
 }
 
 .user-menu-popover a,
@@ -5317,6 +5318,10 @@ details summary {
 .report-card-print :is(button, .button, input, select, textarea),
 .kg-entry-page :is(button, .button, input, select, textarea),
 .parent-results-page :is(button, .button, input, select, textarea) { min-height: 44px; }
+.parent-report-acknowledgement { display: grid; gap: .35rem; margin-top: .55rem; min-width: 0; }
+.parent-report-acknowledgement small { overflow-wrap: anywhere; }
+.parent-results-page :is(button, a, input, select, textarea):focus-visible,
+.parent-issued-report-page :is(button, a, input, select, textarea):focus-visible { outline: 3px solid var(--focus, #2f80ed); outline-offset: 2px; }
 @media (max-width: 640px) {
   .print-profile, .print-result { grid-template-columns: 1fr; }
   .report-card-print { padding: 0; }

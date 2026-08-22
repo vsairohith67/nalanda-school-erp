@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -235,8 +236,32 @@ export async function inspectRenderedPatternSwatchRobustness(
 
 async function resolvePdfToPpmExecutable() {
   if (process.platform !== "win32") return "pdftoppm";
-  const { stdout } = await execFileAsync("where.exe", ["pdftoppm.cmd"], { windowsHide: true });
-  const wrapper = stdout.split(/\r?\n/).map((line) => line.trim()).find(Boolean);
-  if (!wrapper) throw new Error("pdftoppm.cmd is required for rendered monochrome validation.");
-  return path.resolve(path.dirname(wrapper), "..", "..", "native", "poppler", "Library", "bin", "pdftoppm.exe");
+  const configured = String(process.env.REPORT_CARD_PDFTOPPM_PATH ?? "").trim();
+  if (configured && existsSync(configured)) return configured;
+  const executables = await findWindowsExecutables("pdftoppm.exe");
+  if (executables.length) return executables[0];
+
+  const candidates: string[] = [];
+  for (const wrapper of await findWindowsExecutables("pdftoppm.cmd")) {
+    candidates.push(
+      path.resolve(path.dirname(wrapper), "..", "Library", "bin", "pdftoppm.exe"),
+      path.resolve(path.dirname(wrapper), "..", "..", "native", "poppler", "Library", "bin", "pdftoppm.exe")
+    );
+  }
+  for (const pnpm of await findWindowsExecutables("pnpm.cmd")) {
+    candidates.push(path.resolve(path.dirname(pnpm), "..", "..", "native", "poppler", "Library", "bin", "pdftoppm.exe"));
+  }
+  candidates.push(path.join(os.homedir(), ".cache", "codex-runtimes", "codex-primary-runtime", "dependencies", "native", "poppler", "Library", "bin", "pdftoppm.exe"));
+  const executable = candidates.find((candidate) => existsSync(candidate));
+  if (executable) return executable;
+  throw new Error("pdftoppm is required for rendered monochrome validation. Configure REPORT_CARD_PDFTOPPM_PATH when it is not on PATH.");
+}
+
+async function findWindowsExecutables(name: string) {
+  try {
+    const { stdout } = await execFileAsync("where.exe", [name], { windowsHide: true });
+    return stdout.split(/\r?\n/).map((line) => line.trim()).filter((line) => line && existsSync(line));
+  } catch {
+    return [];
+  }
 }

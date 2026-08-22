@@ -92,7 +92,7 @@ export async function getParentPublishedReports(
       events: {
         where: {
           eventType: {
-            in: ["PUBLICATION_REPLACED", "PUBLICATION_WITHDRAWN"]
+            in: ["PUBLICATION_REPLACED", "PUBLICATION_WITHDRAWN", "PARENT_REPORT_ACKNOWLEDGED"]
           }
         },
         orderBy: { eventDate: "desc" }
@@ -121,6 +121,7 @@ export async function getParentPublishedReports(
           examination: snapshot.examination.name,
           academicYear: snapshot.academicYear,
           templateFamily: snapshot.templateFamily,
+          acknowledged: card.events.some((event: any) => event.eventType === "PARENT_REPORT_ACKNOWLEDGED" && event.versionId === version.id && event.recordedByUserId === userId),
           viewable:
             status === "ISSUED" &&
             version.versionNumber === card.currentVersionNumber &&
@@ -152,6 +153,7 @@ export async function getParentPublishedReports(
             version.versionNumber === card.currentVersionNumber
               ? "Current issued version"
               : "Superseded historical version",
+          acknowledged: card.events.some((event: any) => event.eventType === "PARENT_REPORT_ACKNOWLEDGED" && event.versionId === version.id && event.recordedByUserId === userId),
           snapshot: safeParentSnapshot(parsed)
         }];
       } catch {
@@ -176,6 +178,40 @@ export async function getParentPublishedReports(
     reportCards,
     legacyReportCards
   };
+}
+
+export async function acknowledgeParentReport(
+  client: ParentClient,
+  rawInput: unknown,
+  actor: ParentActor,
+  now = new Date()
+) {
+  if (actor.role !== "PARENT") throw new ReportPublicationError("A Parent account is required.", 403);
+  const row = object(rawInput);
+  const reportCardNumber = String(row.reportCardNumber ?? "").trim().toUpperCase();
+  const versionNumber = Number(row.versionNumber);
+  if (!/^[A-Z0-9][A-Z0-9-]{5,159}$/.test(reportCardNumber) || !Number.isInteger(versionNumber) || versionNumber < 1) throw new ReportPublicationError("Report acknowledgement target is invalid.");
+  const user = await client.user.findUnique({ where: { id: actor.id }, select: { guardianId: true, role: true } });
+  if (!user?.guardianId || user.role !== "PARENT") throw new ReportPublicationError("A linked Parent account is required.", 403);
+  const card = await client.studentReportCard.findFirst({
+    where: { reportCardNumber, status: "ISSUED", currentVersionNumber: versionNumber, student: { guardians: { some: { guardianId: user.guardianId } } } },
+    include: { versions: { where: { versionNumber }, take: 1 } }
+  });
+  const version = card?.versions[0];
+  if (!card || !version) throw new ReportPublicationError("Only the current issued report for a linked child can be acknowledged.", 404);
+  const eventId = `pack-${createHash("sha256").update(`${card.id}:${version.id}:${actor.id}`).digest("hex").slice(0, 24)}`;
+  const existing = await client.studentReportCardEvent.findUnique({ where: { id: eventId } });
+  if (existing) return { acknowledged: true, acknowledgedAt: existing.eventDate, idempotent: true };
+  try {
+    const event = await client.studentReportCardEvent.create({ data: { id: eventId, reportCardId: card.id, versionId: version.id, eventType: "PARENT_REPORT_ACKNOWLEDGED", eventDate: now, previousStatus: "ISSUED", newStatus: "ISSUED", recordedByUserId: actor.id, actorLabel: "Linked Parent / Guardian", notes: "Governed digital acknowledgement of the current issued version; no report values changed." } });
+    return { acknowledged: true, acknowledgedAt: event.eventDate, idempotent: false };
+  } catch (error) {
+    if ((error as { code?: string })?.code === "P2002") {
+      const event = await client.studentReportCardEvent.findUniqueOrThrow({ where: { id: eventId } });
+      return { acknowledged: true, acknowledgedAt: event.eventDate, idempotent: true };
+    }
+    throw error;
+  }
 }
 
 export async function authorizeParentReportAccess(

@@ -10,7 +10,7 @@
 
 | Canonical family | Authorised class scope | Variants | Distinct structure | Frozen policy inputs | Renderer |
 | --- | --- | --- | --- | --- | --- |
-| `KG_DEVELOPMENTAL_BOOKLET` | LKG/UKG — V1.5 only | Developmental booklet | Ten A4 pages; five evaluations; intellectual, detailed language/number/EVS/rhymes/story, personality, monthly attendance, growth, comments, signatures, promotion | KG scheme, response/grade legend, attendance basis, signature configuration, template/publication versions | `lib/report-pdf.ts`; status `IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5`; default-off in V1 |
+| `KG_DEVELOPMENTAL_BOOKLET` | LKG/UKG — V1.5 software-cleared, operationally off | Developmental booklet | Ten A4 pages; five evaluations; intellectual, detailed language/number/EVS/rhymes/story, personality, monthly attendance, growth, comments, signatures, promotion | KG scheme, response/grade legend, authoritative attendance basis, signature configuration, template/publication versions | `lib/report-pdf.ts`; status `SOFTWARE_CLEARED_OPERATIONAL_ACTIVATION_OFF`; production flag default-off |
 | `LOWER_PRIMARY_I_II` | Classes I-II | CT, Session, Combined | Variable components, configured combined result, skills table | Frozen scheme, components/maxima/weights, grade scale, rank/pass visibility, attendance, skills, signatures | `lib/report-pdf.ts` |
 | `UPPER_PRIMARY_III_V` | Classes III-V | CT, Session, Combined | Separate Science and Social rows, configured combined result, skills | Same frozen policy inputs | `lib/report-pdf.ts` |
 | `MIDDLE_VI_VIII_GROUPED` | Classes VI-VIII | CT, Session, Combined | English papers; History/Geography/Social and Physics/Chemistry/Biology/Science groups; personality | Same frozen policy inputs plus subject/paper/group configuration | `lib/report-pdf.ts` |
@@ -22,7 +22,7 @@ Legacy family identifiers remain readable for already-issued snapshots. They can
 
 Template availability is not activation. A new examination binding requires an active, versioned canonical template whose configured family matches the class and report type. Combined-result variants additionally require an approval reference. Issued reports retain the exact template definition, calculation snapshot, grade-scale version, scheme references, attendance basis, signature configuration, and publication version; later template changes cannot alter them.
 
-For V1, `kg-report-cards-v1-5` is default-off through the existing release-policy framework. New KG scheme/template creation, activation, examination binding, batch generation, entry, issue and correction fail closed. Ordinary operational selectors omit KG. The restricted Super Admin release view may show **KG report-card family — planned for V1.5**. Historical and already-issued snapshots remain readable.
+`kg-report-cards-v1-5` remains default-off in production through the release-policy framework. New KG scheme/template creation, activation, examination binding, batch generation, entry, issue and correction therefore fail closed operationally. A non-production sentinel permits only isolated copied/synthetic QA. Historical and already-issued snapshots remain readable, and software clearance does not authorize deployment or live-school activation.
 
 No template definition contains universal component maxima, weightages, or grade scales. In particular, historical 10+40, 20+80, 25+25, or multi-term arithmetic is not encoded as a canonical rule.
 

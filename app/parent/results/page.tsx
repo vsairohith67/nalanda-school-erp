@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { ParentReportActions } from "@/components/parent-report-actions";
+import { ParentReportAcknowledgement } from "@/components/parent-report-acknowledgement";
 import { PrintButton } from "@/components/print-button";
 import { requireRolePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -79,6 +80,7 @@ export default async function ParentResultsPage({
                       status: string;
                       issuedAt: Date;
                       viewable: boolean;
+                      acknowledged: boolean;
                     }>;
                   }) =>
                     card.versions.map((version) => (
@@ -87,7 +89,7 @@ export default async function ParentResultsPage({
                         <td>Version {version.versionNumber}</td>
                         <td><StatusBadge status={version.status} /></td>
                         <td>{displayDate(version.issuedAt)}</td>
-                        <td><ParentReportActions publicationReference={version.publicationReference} viewable={version.viewable} /></td>
+                        <td><ParentReportActions publicationReference={version.publicationReference} viewable={version.viewable} />{version.viewable ? <ParentReportAcknowledgement reportCardNumber={card.reportCardNumber} versionNumber={version.versionNumber} acknowledged={version.acknowledged} /> : null}</td>
                       </tr>
                     ))
                   )}
@@ -152,6 +154,8 @@ export default async function ParentResultsPage({
           <h3>Comments</h3>
           <p><strong>Class Teacher:</strong> {selectedLegacyVersion.snapshot.comments?.teacher ?? "-"}</p>
           <p><strong>Principal:</strong> {selectedLegacyVersion.snapshot.comments?.principal ?? "-"}</p>
+          <p><strong>Academic Progression reference:</strong> {selectedLegacyVersion.snapshot.promotionReference ?? selectedLegacyVersion.snapshot.data?.final?.promotionReference ?? "Not finalised"}</p>
+          {selectedLegacyVersion.versionNumber === selectedLegacyCard.latestVersion ? <ParentReportAcknowledgement reportCardNumber={selectedLegacyCard.reportCardNumber} versionNumber={selectedLegacyVersion.versionNumber} acknowledged={selectedLegacyVersion.acknowledged} /> : <p className="notice">Only the current issued version can be acknowledged.</p>}
           <div className="page-actions no-print">
             {selectedLegacyCard.versions.map((version: any) => (
               <Link
