@@ -21,7 +21,7 @@ This roadmap preserves the operational boundaries in the [Requirements Register]
 
 **Latest cleared product gate:**
 
-`OPTIONAL-OPS-V1_5-1A — Transport and Cafeteria Software Foundations`
+`SMART-AI-1A — Grounded Super Admin Smart AI Foundation`
 
 The Command Center, owner-isolated Diary, Tasks & Reminders, Contacts &
 Suppliers, permission-scoped Universal Search, and Smart AI foundation are independently cleared.
@@ -29,10 +29,11 @@ Search remains exact-`SUPER_ADMIN`, privacy-safe, server-authorized,
 deterministic and bounded. SMART-AI-1A is the independently cleared implementation
 of a disabled-by-default, exact-role, cited synthesis foundation over Search.
 It does not authorize model/runtime activation, real-data processing, external
-transmission or AI actions. Optional Transport and Cafeteria are also
-software-cleared, independently separated and default-off. That clearance does
-not activate school services, real data, finance, GPS/maps or providers. Hosting
-and private staging remain a parallel operational track.
+transmission or AI actions. Optional Transport and Cafeteria foundations are
+implemented, independently tested, separated and default-off, but their release
+is blocked until mandatory exact-SHA GitHub validation can start and pass. They
+do not activate school services, real data, finance, GPS/maps or providers.
+Hosting and private staging remain a parallel operational track.
 
 `WHITEBOARD-BRIDGE-1A` is a parallel, database-neutral integration checkpoint.
 Its implementation launches only the canonical Nalanda ERP Canvs board from an
@@ -78,7 +79,7 @@ Search, or unlock Smart AI.
 - UDISE 15E only after evidence.
 - Full Payroll/ESS remains a controlled V1.5 operational deferral; its cleared technical foundation does not activate payroll or make it a V1 launch dependency.
 - Event-photo gallery and governed image enhancement remain candidates, not scheduled ahead of the command/search foundations.
-- Transport, Cafeteria, and KG report-card software foundations are cleared and default-off. Real-school activation, live-data onboarding, deployment and physical/operational acceptance remain governed deferrals under the [known limitations and deferrals](./V1_KNOWN_LIMITATIONS_AND_DEFERRALS.md).
+- Transport and Cafeteria foundations are implemented, independently tested and default-off, with release blocked at mandatory exact-SHA GitHub validation. KG report-card software is cleared and default-off. Real-school activation, live-data onboarding, deployment and physical/operational acceptance remain governed deferrals under the [known limitations and deferrals](./V1_KNOWN_LIMITATIONS_AND_DEFERRALS.md).
 
 ### V2 work
 

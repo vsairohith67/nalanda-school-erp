@@ -15,10 +15,11 @@ The V1 Teacher marks-write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`. `A
 
 - [Transport and Cafeteria V1.5 Optional Operations Foundations](OPTIONAL_OPERATIONS_V1_5_FOUNDATIONS.md)
 
-Transport and Cafeteria are separate software foundations with governed
-`TRANSPORT_V1_5` and `CAFETERIA_V1_5` flags. Both remain `DEFAULT-OFF`; their
-software clearance does not activate real routes, Students, meals, payments,
-providers, GPS, maps, Safe Exit changes, or deployment.
+Transport and Cafeteria are separate, independently tested software foundations
+with governed `TRANSPORT_V1_5` and `CAFETERIA_V1_5` flags. Both remain
+`DEFAULT-OFF`. Release is blocked at the mandatory exact-SHA GitHub validation
+gate; no merge or tag exists. The foundation does not activate real routes,
+Students, meals, payments, providers, GPS, maps, Safe Exit changes, or deployment.
 
 ## Super Admin Command Center and Personal Work Programme
 
@@ -198,8 +199,8 @@ government filing are not authorised.
 Independent QA cleared Prompt 23I as `PAYROLL_ESS_CLEARED`. The retained
 feature branch and version-37 release tag are complete. Full payroll/ESS remains
 V1.5 operational scope and is not a V1 launch dependency. Optional Transport
-and Cafeteria software foundations are independently cleared and default-off;
-real-school activation remains separately governed.
+and Cafeteria foundations are independently tested and default-off, with release
+blocked until the mandatory exact-SHA GitHub validation can run successfully.
 
 ## Prompt 23H admissions and enquiry CRM
 
