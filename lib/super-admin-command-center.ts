@@ -4,6 +4,7 @@ import { attendanceDay } from "@/lib/student-attendance";
 import { getTechnicalOperationsDashboard } from "@/lib/technical-operations";
 import type { OperationalStatus, TechnicalOperationsDashboard } from "@/lib/technical-operations-types";
 import { summarizeSuperAdminWork } from "@/lib/super-admin-work";
+import { getSmartAiProviderStatus } from "@/lib/smart-ai-provider-local";
 
 export const COMMAND_CENTER_TIMEOUT_MS = 1_500;
 export const COMMAND_CENTER_ACTIVITY_LIMIT = 12;
@@ -55,7 +56,7 @@ export type SuperAdminCommandCenter = {
   recentActivity: CommandCenterSource<CommandCenterActivity[]>;
   workSummary: CommandCenterSource<CommandCenterMetric[]>;
   quickAccess: Array<{ label: string; href: string }>;
-  workProgramme: Array<{ title: string; status: "LIVE" | "AVAILABLE" | "PLANNED" | "BLOCKED BY DEPENDENCY"; detail: string; href?: string; actionLabel?: string }>;
+  workProgramme: Array<{ title: string; status: "LIVE" | "AVAILABLE" | "PLANNED" | "RUNTIME NOT CONFIGURED"; detail: string; href?: string; actionLabel?: string }>;
   udise: Array<{ label: string; status: string }>;
   mobile: Array<{ label: string; status: string }>;
 };
@@ -97,6 +98,7 @@ export async function composeSuperAdminCommandCenter(
     safeSource(() => readers.workSummary(), [], timeoutMs)
   ]);
 
+  const smartAi = getSmartAiProviderStatus();
   return {
     generatedAt: now.toISOString(),
     readOnly: true,
@@ -108,6 +110,7 @@ export async function composeSuperAdminCommandCenter(
     workSummary,
     quickAccess: [
       { label: "Search", href: "/super-admin/search" },
+      { label: "Smart AI", href: "/super-admin/ai" },
       { label: "Students", href: "/students" },
       { label: "Admissions", href: "/admission-crm" },
       { label: "Fees", href: "/pending-dues" },
@@ -126,7 +129,7 @@ export async function composeSuperAdminCommandCenter(
       { title: "Tasks & Reminders", status: "LIVE", detail: "Private due work and local reminder times.", href: "/super-admin/my-work" },
       { title: "Contacts & Suppliers", status: "LIVE", detail: "Private contact reference directory; no procurement automation.", href: "/super-admin/my-work" },
       { title: "Universal Search", status: "LIVE", detail: "Permission-scoped deterministic retrieval across authorised ERP records.", href: "/super-admin/search" },
-      { title: "Smart AI", status: "BLOCKED BY DEPENDENCY", detail: "Starts only after permission-scoped Universal Search." },
+      { title: "Smart AI", status: smartAi.state === "READY" ? "AVAILABLE" : "RUNTIME NOT CONFIGURED", detail: "Grounded ERP assistant through Universal Search; read-only and private.", href: "/super-admin/ai", actionLabel: "Open Smart AI" },
       { title: "Whiteboard", status: "AVAILABLE", detail: "Canonical ERP planning board.", href: "/super-admin/whiteboard", actionLabel: "Open Whiteboard" }
     ],
     udise: [
