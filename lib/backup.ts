@@ -24,6 +24,7 @@ import { loadSupportBackup, SUPPORT_BACKUP_KEYS, validateSupportBackupRows, type
 import { loadSafeExitBackup, SAFE_EXIT_BACKUP_KEYS, validateSafeExitBackupRows, type SafeExitBackup, type SafeExitBackupKey } from "./safe-exit-backup";
 import { emptyFamilyCollectionBackup, familyCollectionSchemaAvailable, FAMILY_COLLECTION_BACKUP_KEYS, loadFamilyCollectionBackup, validateFamilyCollectionBackupRows, type FamilyCollectionBackup } from "./family-collection-backup";
 import { emptyTechnicalOperationsBackup, loadTechnicalOperationsBackup, technicalOperationsRecordCount, technicalOperationsSchemaAvailable, validateTechnicalOperationsBackup, type TechnicalOperationsBackup } from "./technical-operations-backup";
+import { emptyEventMediaBackup, eventMediaSchemaAvailable, EVENT_MEDIA_BACKUP_KEYS, loadEventMediaBackup, validateEventMediaBackupRows, type EventMediaBackup, type EventMediaBackupKey } from "./event-media-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 
@@ -277,7 +278,7 @@ type BackupDocumentInput = {
   timetableEntries?: readonly unknown[];
   academicYear?: string;
   technicalOperations?: TechnicalOperationsBackup;
-} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup>;
+} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<EventMediaBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
   const onboardingBatches = sanitizeOnboardingBatches(input.onboardingBatches ?? []);
@@ -378,6 +379,8 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const safeExitCounts = Object.fromEntries(SAFE_EXIT_BACKUP_KEYS.map((key) => [key, safeExitBackup[key].length])) as Record<SafeExitBackupKey, number>;
   const familyCollectionBackup = validateFamilyCollectionBackupRows(input as unknown as Record<string, unknown>);
   const familyCollectionCounts = Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, familyCollectionBackup[key].length]));
+  const eventMediaBackup = validateEventMediaBackupRows(input as unknown as Record<string, unknown>);
+  const eventMediaCounts = Object.fromEntries(EVENT_MEDIA_BACKUP_KEYS.map((key) => [key, eventMediaBackup[key].length])) as Record<EventMediaBackupKey, number>;
   const technicalOperations = validateTechnicalOperationsBackup(input.technicalOperations);
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
   const teacherAnalyticsSnapshots = sanitizeActorFields(input.teacherAnalyticsSnapshots ?? []);
@@ -466,7 +469,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
       generatedAt: input.generatedAt.toISOString(),
       generatedBy: input.generatedBy,
       appVersion: packageJson.version,
-      backupVersion: 41,
+      backupVersion: 42,
       counts: {
         schoolSettings: input.schoolSettings ? 1 : 0,
         authSecurityRecords: authSecurityRecordCount(authSecurity),
@@ -651,6 +654,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
         publicWebsiteNavigationItems: publicWebsiteNavigationItems.length,
         publicWebsiteEvents: publicWebsiteEvents.length,
         ...familyCollectionCounts,
+        ...eventMediaCounts,
         timetableTeachers: timetableTeachers.length,
         timetableSubjects: timetableSubjects.length,
         timetableClassSections: timetableClassSections.length,
@@ -666,6 +670,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     payments: [...input.payments],
     paymentAudits: [...input.paymentAudits],
     ...familyCollectionBackup,
+    ...eventMediaBackup,
     users: sanitizeUsers(input.users),
     authSecurity,
     iamAccess,
@@ -1315,6 +1320,9 @@ export async function generateFullBackup(
   const familyCollectionBackup = await familyCollectionSchemaAvailable(client)
     ? await loadFamilyCollectionBackup(client as PrismaClient)
     : emptyFamilyCollectionBackup();
+  const eventMediaBackup = await eventMediaSchemaAvailable(client as unknown as PrismaClient)
+    ? await loadEventMediaBackup(client as unknown as PrismaClient)
+    : emptyEventMediaBackup();
   const technicalOperations = await technicalOperationsSchemaAvailable(client as unknown as PrismaClient)
     ? await loadTechnicalOperationsBackup(client as unknown as PrismaClient)
     : emptyTechnicalOperationsBackup();
@@ -1353,6 +1361,7 @@ export async function generateFullBackup(
     ...supportBackup,
     ...safeExitBackup,
     ...familyCollectionBackup,
+    ...eventMediaBackup,
     technicalOperations,
     rolePermissions,
     guardians,

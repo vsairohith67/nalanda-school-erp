@@ -127,7 +127,7 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
 
   it("preserves the Management checkpoint across additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(296);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(302);
     expect(schema).toContain("model SuperAdminDiaryEntry {");
     expect(schema).toContain("model SuperAdminTask {");
     expect(schema).toContain("model SuperAdminContact {");
@@ -159,13 +159,14 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
       "20260810100000_technical_operations_observability",
       "20260810184500_governed_bulk_onboarding",
       "20260821194500_super_admin_work_programme",
+      "20260822113000_event_media_v1_5_foundation",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);
     expect(archivedMigrationEntries.filter((name) => statSync(join("prisma/migration-archives/devops1b-legacy-chain", name)).isDirectory())).toHaveLength(40);
     expect(countRouteFiles("app", "page.tsx") + (existsSync("app/sw.js/route.ts") ? 1 : 0)).toBeGreaterThanOrEqual(274);
     expect(countRouteFiles("app/api", "route.ts")).toBeGreaterThanOrEqual(378);
-    expect(read("lib/backup.ts")).toContain("backupVersion: 41");
+    expect(read("lib/backup.ts")).toContain("backupVersion: 42");
     expect(schema).toContain("model PayrollRun {");
     expect(schema).toContain("model PayslipVersion {");
     for (const model of ["TransportRoute", "DisciplineIncident", "CafeteriaPlan"]) {

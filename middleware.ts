@@ -30,6 +30,7 @@ const publicPaths = [
 const publicPathPrefixes = [
   "/api/public/admissions/",
   "/api/public/support/",
+  "/api/event-media/public/",
   "/api/whatsapp/webhook/",
   "/api/sms-email/webhook/",
   "/icons/"
