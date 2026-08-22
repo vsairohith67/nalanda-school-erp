@@ -59,6 +59,7 @@ export const NAV_ITEMS = [
   { href: "/super-admin/command-center", label: "Command Center", icon: "commandCenter", permission: "VIEW_DASHBOARD", group: "dashboard", allowedRoles: ["SUPER_ADMIN"] as Role[] },
   { href: "/super-admin/search", label: "Search", icon: "search", permission: "VIEW_DASHBOARD", group: "dashboard", allowedRoles: ["SUPER_ADMIN"] as Role[] },
   { href: "/super-admin/my-work", label: "My Work", icon: "calendar", permission: "VIEW_DASHBOARD", group: "dashboard", allowedRoles: ["SUPER_ADMIN"] as Role[] },
+  { href: "/super-admin/whiteboard", label: "Whiteboard", icon: "commandCenter", permission: "VIEW_DASHBOARD", group: "dashboard", allowedRoles: ["SUPER_ADMIN"] as Role[] },
   { href: "/dashboard", label: "Dashboard", icon: "dashboard", permission: "VIEW_DASHBOARD", group: "dashboard" },
   { href: "/students", label: "Students", icon: "students", permission: "VIEW_STUDENTS", group: "studentsParents" },
   { href: "/students/lifecycle", label: "Student Lifecycle", icon: "students", permission: "VIEW_STUDENT_LIFECYCLE", group: "studentsParents" },

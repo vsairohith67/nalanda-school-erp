@@ -8,11 +8,11 @@
 
 The V1 RC remains cleared and frozen at `26a47632f7c1e9c9b5f2b48de8c9b56d60428aed`. MSI workstation transfer is complete; Dell remains a frozen fallback. No release evidence authorises deployment, live providers, real data, real users, pilot, or cutover. Remaining work divides into V1 operational launch gates, V1.5 product extensions, V2 AI, and mobile work.
 
-The read-only Command Center, exact-owner Personal Work Programme and
-permission-scoped Universal Search are independently cleared. Smart AI is
-unlocked for a separate planning prompt only; implementation, providers and
-real-data AI processing remain unauthorized. Private staging proceeds as a
-separate operational track.
+The read-only Command Center, exact-owner Personal Work Programme, fixed
+external Canvs Whiteboard Bridge and permission-scoped Universal Search are
+independently cleared. Smart AI is unlocked for a separate planning prompt
+only; implementation, providers and real-data AI processing remain
+unauthorized. Private staging proceeds as a separate operational track.
 
 ## Evidence rule
 
@@ -25,13 +25,13 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | # | Work area | Classification | Evidence-based boundary and next disposition |
 |---:|---|---|---|
 | 1 | UDISE+ Prompt 15D and 15E | 15D: `CLEARED`; 15E: `BLOCKED_BY_EVIDENCE`; full operational support: `NOT_IMPLEMENTED` | 15D is a read-only checklist/reference foundation. 15E cannot start until current Student, Teacher, progression, Telangana, DCF, inconsistency, certification, report, register, and role evidence is supplied. No scraping, government-portal submission, or compliance claim. |
-| 2 | Super Admin Command Center | `CLEARED` | Independent QA cleared the exact-Super-Admin, private/no-store composition. Its live Universal Search launcher is an implementation update and does not alter the Command Center clearance evidence. |
-| 3 | Digital Diary | `CLEARED` | Exact-owner Diary is independently cleared inside My Work and is an included owner-scoped Universal Search source. |
-| 4 | Tasks, reminders and calendar | My Work Tasks/Reminders: `CLEARED`; calendar: `CLEARED`; broader Life OS: `DEFERRED` | Exact-owner Tasks & Reminders and the existing academic calendar are cleared. Universal Search consumes bounded safe fields without completing tasks or sending reminders. |
+| 2 | Super Admin Command Center | `CLEARED` | Independent QA cleared the exact-Super-Admin, private/no-store composition. Its My Work, Universal Search launcher and fixed Whiteboard Bridge are also cleared without changing the original Command Center evidence. |
+| 3 | Digital Diary | `CLEARED` | Exact-owner Diary is independently cleared inside My Work and is an included owner-scoped Universal Search source. Sharing, AI and external synchronization remain outside the release. |
+| 4 | Tasks, reminders and calendar | My Work Tasks/Reminders: `CLEARED`; calendar: `CLEARED`; broader Life OS: `DEFERRED` | Exact-owner Tasks & Reminders and the existing academic calendar are cleared. Universal Search consumes bounded safe fields without completing tasks or sending reminders; no external calendar sync is claimed. |
 | 5 | Universal search | `CLEARED` | Independent QA cleared the exact-`SUPER_ADMIN`, deterministic, private/no-store server composition without a migration, index table, AI or external provider. Attendance and unified Audit search remain explicitly `UNAVAILABLE`. Smart AI planning is unblocked but requires its own authorization. |
-| 6 | Publishers, book suppliers, vendors and contacts | My Work directory: `CLEARED`; broader CRM/procurement: `DEFERRED` | Exact-owner Contacts & Suppliers is cleared and searchable through bounded safe fields. It remains a reference directory, not procurement/payment automation. |
+| 6 | Publishers, book suppliers, vendors and contacts | Private reference directory: `CLEARED`; broader CRM/procurement: `DEFERRED` | Exact-owner Contacts & Suppliers is cleared and searchable through bounded safe fields. It remains a reference directory, not procurement/payment automation. |
 | 7 | Monitoring and operational dashboard extensions | `PARTIAL` | OBS-1A and its technical/operational foundation are cleared. Hosting-dependent live monitoring, provider health, cost/usage extensions, and unified Command Center presentation remain pending. Extend the existing architecture. |
-| 8 | Infinite whiteboard | `NOT_IMPLEMENTED` | No ERP whiteboard engine is proven. The canonical Canvs architecture board already provides a governed visual surface; integration/reuse should be assessed before building another engine. |
+| 8 | Whiteboard | Bridge: `CLEARED`; ERP engine: `NOT_IMPLEMENTED` | `WHITEBOARD-BRIDGE-1A-QA` independently proved that only the exact Super Admin route can launch the canonical Canvs board. It has no iframe, token exchange, server fetch, sync, board persistence, Search/AI integration or open redirect. Canvs remains the editing engine. |
 | 9 | Citation-based Smart AI | `NEXT_FOR_SEPARATE_PLANNING`; advanced scope `DEFERRED_TO_V2` | The read-only assistant foundation validates citations/timestamps using mock data, and Universal Search now supplies a cleared permission-filtered retrieval boundary. No AI implementation, semantic retrieval, attachment ingestion, external knowledge or live provider is authorized. |
 | 10 | Android app | `NOT_IMPLEMENTED` | Responsive web/PWA foundations do not constitute a native Android app. A later shared-app Capacitor approach may be assessed only after staging and physical-device certification. |
 | 11 | iOS/iPadOS app | `NOT_IMPLEMENTED` | No native Apple application is proven. Final building, signing, and device certification require a Mac/Xcode environment and Apple account decisions. |
@@ -47,7 +47,7 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 
 1. Compose the Super Admin Command Center from existing cleared foundations.
 2. Establish the combined Diary/tasks/reminders/Life OS and directory model.
-3. Preserve the independently cleared permission-scoped Universal Search.
+3. Preserve the independently cleared fixed Canvs Whiteboard Bridge and permission-scoped Universal Search.
 4. Use a separate prompt to plan citation-based Smart AI; never bypass Search authorization.
 
 This order prevents AI from answering over missing supplier records or bypassing role permissions.

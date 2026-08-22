@@ -20,8 +20,11 @@ autonomous action.
 
 The mandatory branch-switch forensic review covered status, local and remote
 branches, graph, reflog, stashes, merge base and every feature file. The two
-Universal Search commits were cleanly based on the authorised Academic
-Integrity and Super Admin Work main. A suspicious local-only Academic
+Universal Search implementation commits were cleanly based on the authorised
+Academic Integrity and Super Admin Work main. Before release, `main` advanced
+only through independently cleared Whiteboard Bridge commits; those commits
+were reconciled without altering Search, Academic Integrity or My Work. A
+suspicious local-only Academic
 Integrity commit was classified
 `AUTOMATIC_COMMIT_BUT_CONTENT_VALID`: its valid content was already superseded
 by the independently cleared main and it was not merged into Search. No mixed
@@ -106,11 +109,14 @@ authorization/privacy Medium issue.
 
 The release gates were run sequentially on the isolated QA checkout:
 
-- routes: 338 page routes and 552 API routes;
+- routes after authorised Whiteboard reconciliation: 339 page routes and 552
+  API routes;
 - lifecycle backfill: dry run passed with zero rows created;
 - TypeScript: passed;
-- full Vitest suite: 220 files, 1,958 passed, 3 intentional qpdf-capability
-  skips disclosed;
+- full pre-reconciliation Vitest suite: 220 files, 1,958 passed, 3 intentional
+  qpdf-capability skips disclosed;
+- post-reconciliation Search, Command Center, Whiteboard, My Work, access-rule,
+  Academic Integrity and documentation regression: 9 files / 78 tests passed;
 - production build: passed;
 - backup: version 41 passed;
 - Git safety: passed.
