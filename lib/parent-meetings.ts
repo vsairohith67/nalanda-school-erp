@@ -370,7 +370,7 @@ export async function createParentMeetingFollowUp(client: Client, actor: ParentM
     await tx.parentMeeting.update({ where: { id: meeting.id }, data: { followUpRequired: true, rowVersion: { increment: 1 } } });
     const event = await audit(tx, actor, meeting.id, "FOLLOW_UP_CREATED", meeting.status, meeting.status, null, { followUpReference: followUp.publicKey, dueDate: dueDate.toISOString(), parentVisible: Boolean(parentVisibleDescription) });
     const current = await parentMeetingByKey(tx, meeting.publicKey);
-    await notify(tx, current, event.publicKey, "FOLLOW_UP_CREATED", actor.user.id);
+    await notify(tx, current, event.publicKey, "FOLLOW_UP_CREATED", actor.user.id, false, undefined, Boolean(parentVisibleDescription));
     return followUp;
   });
 }
@@ -394,7 +394,7 @@ export async function transitionParentMeetingFollowUp(client: Client, actor: Par
       const changedRow = await tx.parentMeetingFollowUp.updateMany({ where: { id: followUp.id, rowVersion: expectedRowVersion, status: "OPEN" }, data: action === "DONE" ? { status: "DONE", completedAt: now, completedByUserId: actor.user.id, rowVersion: { increment: 1 } } : { status: "CANCELLED", cancelledAt: now, cancelledByUserId: actor.user.id, cancellationReason: reason, rowVersion: { increment: 1 } } });
       if (changedRow.count !== 1) throw changed();
       const event = await audit(tx, actor, followUp.meetingId, action === "DONE" ? "FOLLOW_UP_COMPLETED" : "FOLLOW_UP_CANCELLED", followUp.meeting.status, followUp.meeting.status, reason, { followUpReference: followUp.publicKey });
-      if (action === "DONE") await notify(tx, followUp.meeting, event.publicKey, "FOLLOW_UP_DONE", actor.user.id);
+      if (action === "DONE") await notify(tx, followUp.meeting, event.publicKey, "FOLLOW_UP_DONE", actor.user.id, false, undefined, Boolean(followUp.parentVisibleDescription));
       return { followUpKey: followUp.publicKey, status: action === "DONE" ? "DONE" : "CANCELLED", rowVersion: expectedRowVersion + 1 };
     });
   } catch (error) { throw persistenceError(error); }
@@ -410,7 +410,7 @@ export async function processParentMeetingReminders(client: Client, actor: Paren
   ]);
   const results = [];
   for (const meeting of meetings) results.push(await notify(client, meeting, `UPCOMING:${meeting.publicKey}:${meeting.scheduledStartAt.toISOString()}`, "UPCOMING", actor.user.id));
-  for (const followUp of followUps) results.push(await notify(client, followUp.meeting, `FOLLOWUP:${followUp.publicKey}:${followUp.dueDate.toISOString().slice(0, 10)}`, "FOLLOW_UP_DUE", actor.user.id, false, [followUp.responsibleStaffMemberId]));
+  for (const followUp of followUps) results.push(await notify(client, followUp.meeting, `FOLLOWUP:${followUp.publicKey}:${followUp.dueDate.toISOString().slice(0, 10)}`, "FOLLOW_UP_DUE", actor.user.id, false, [followUp.responsibleStaffMemberId], false));
   return { upcomingMeetings: meetings.length, dueFollowUps: followUps.length, notifications: results, idempotency: "CAMPAIGN_FINGERPRINT" };
 }
 
@@ -539,13 +539,14 @@ async function audit(client: Client, actor: ParentMeetingActor, meetingId: strin
   return client.parentMeetingEvent.create({ data: { meetingId, eventType, actorUserId: actor.user.id, actorRole: actor.user.role, previousStatus, newStatus, reason, safeMetadataJson: safe ? JSON.stringify(safe) : null } });
 }
 
-async function notify(client: Client, meeting: any, eventKey: string, type: ParentMeetingNotificationType, actorUserId: string, leadershipRecipients = false, participantOverride?: string[]) {
+async function notify(client: Client, meeting: any, eventKey: string, type: ParentMeetingNotificationType, actorUserId: string, leadershipRecipients = false, participantOverride?: string[], includeParent = true) {
   return publishParentMeetingNotification(client, {
     eventKey,
     type,
     actorUserId,
     meetingPublicKey: meeting.publicKey,
     requesterGuardianId: meeting.requesterGuardianId,
+    includeParent,
     participantStaffMemberIds: participantOverride ?? meeting.participants?.filter((participant: any) => participant.status !== "REMOVED").map((participant: any) => participant.staffMemberId) ?? [],
     leadershipRecipients
   });

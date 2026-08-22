@@ -20,6 +20,7 @@ export async function publishParentMeetingNotification(client: any, input: {
   actorUserId: string;
   meetingPublicKey: string;
   requesterGuardianId?: string | null;
+  includeParent?: boolean;
   participantStaffMemberIds?: string[];
   leadershipRecipients?: boolean;
   now?: Date;
@@ -38,7 +39,8 @@ export async function publishParentMeetingNotification(client: any, input: {
   const copy = notificationCopy(input.type);
   let campaign: { id: string };
   try {
-    campaign = await client.notificationCampaign.create({ data: {
+    const createCampaign = async (db: any) => {
+      const created = await db.notificationCampaign.create({ data: {
       campaignNumber,
       category: "GENERAL",
       priority: ["CANCELLED", "NO_SHOW", "FOLLOW_UP_DUE"].includes(input.type) ? "HIGH" : "NORMAL",
@@ -60,7 +62,39 @@ export async function publishParentMeetingNotification(client: any, input: {
       submittedAt: now,
       approvedAt: now,
       publishedAt: now
-    } });
+      } });
+
+      for (const recipient of recipients) {
+        await db.notificationRecipient.create({ data: {
+          campaignId: created.id,
+          userId: recipient.id,
+          recipientRoleSnapshot: recipient.role,
+          contextType: "PARENT_MEETING_PRIVATE",
+          recipientContextJson: JSON.stringify({ meetingReference: input.meetingPublicKey, eventReference: fingerprint }),
+          deliveryStatus: "AVAILABLE",
+          availableAt: now
+        } });
+      }
+      if (!recipients.length) await db.notificationSkippedRecipient.create({ data: {
+        campaignId: created.id,
+        targetType: "PARENT_MEETING_SCOPE",
+        targetReferenceKey: fingerprint,
+        reasonCode: "NO_ACTIVE_AUTHORISED_USER",
+        safeContextJson: JSON.stringify({ eventType: input.type })
+      } });
+      await db.notificationEvent.create({ data: {
+        campaignId: created.id,
+        eventType: `PARENT_MEETING_${input.type}`,
+        newStatus: "PUBLISHED",
+        reason: recipients.length ? `Resolved ${recipients.length} authorised recipient(s).` : "No active authorised recipient was available.",
+        recordedByUserId: input.actorUserId,
+        eventDate: now
+      } });
+      return created;
+    };
+    campaign = typeof client.$transaction === "function"
+      ? await client.$transaction((tx: any) => createCampaign(tx))
+      : await createCampaign(client);
   } catch (error) {
     if (!isUniqueConflict(error)) throw error;
     const raced = await client.notificationCampaign.findUnique({ where: { campaignNumber }, select: { totalRecipientRows: true } });
@@ -68,38 +102,12 @@ export async function publishParentMeetingNotification(client: any, input: {
     return { campaignNumber, recipients: raced.totalRecipientRows, idempotent: true };
   }
 
-  for (const recipient of recipients) {
-    await client.notificationRecipient.create({ data: {
-      campaignId: campaign.id,
-      userId: recipient.id,
-      recipientRoleSnapshot: recipient.role,
-      contextType: "PARENT_MEETING_PRIVATE",
-      recipientContextJson: JSON.stringify({ meetingReference: input.meetingPublicKey, eventReference: fingerprint }),
-      deliveryStatus: "AVAILABLE",
-      availableAt: now
-    } });
-  }
-  if (!recipients.length) await client.notificationSkippedRecipient.create({ data: {
-    campaignId: campaign.id,
-    targetType: "PARENT_MEETING_SCOPE",
-    targetReferenceKey: fingerprint,
-    reasonCode: "NO_ACTIVE_AUTHORISED_USER",
-    safeContextJson: JSON.stringify({ eventType: input.type })
-  } });
-  await client.notificationEvent.create({ data: {
-    campaignId: campaign.id,
-    eventType: `PARENT_MEETING_${input.type}`,
-    newStatus: "PUBLISHED",
-    reason: recipients.length ? `Resolved ${recipients.length} authorised recipient(s).` : "No active authorised recipient was available.",
-    recordedByUserId: input.actorUserId,
-    eventDate: now
-  } });
   return { campaignNumber, recipients: recipients.length, idempotent: false };
 }
 
 async function resolveRecipients(client: any, input: Parameters<typeof publishParentMeetingNotification>[1], now: Date) {
   const ids = new Set<string>();
-  if (input.requesterGuardianId) {
+  if (input.includeParent !== false && input.requesterGuardianId) {
     const parentUsers = await client.user.findMany({
       where: { guardianId: input.requesterGuardianId, isActive: true, lifecycleStatus: "ACTIVE" },
       select: { id: true }, take: 10

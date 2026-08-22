@@ -49,6 +49,7 @@ function cleanup() { const target = checkedRoot(); if (existsSync(target)) rmSyn
 function migrate(file: string) { if (!existsSync(file)) writeFileSync(file, "", { flag: "wx" }); const prismaEntry = path.join(workspace, "node_modules", "prisma", "build", "index.js"); const run = spawnSync(process.execPath, [prismaEntry, "migrate", "deploy", "--schema", "prisma/schema.prisma"], { cwd: workspace, env: { ...process.env, DATABASE_URL: databaseUrl(file) }, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, windowsHide: true }); if (run.error || run.status !== 0) throw new Error(`${prefix}_MIGRATION_FAILED:${run.error?.message ?? `${run.stdout}\n${run.stderr}`}`); }
 function actor(user: SeedUser): ParentMeetingActor { return { user: { id: user.id, name: `${prefix} ${user.role}`, role: user.role, guardianId: user.guardianId ?? null, roleAssignmentId: user.assignmentId }, sessionId: user.sessionId ?? `qa-${user.id}` } as ParentMeetingActor; }
 function idMap(values: string[]) { return new Map(values.map((value) => [value, value])); }
+function parentMeetingCampaignNumber(type: string, eventKey: string) { const fingerprint = createHash("sha256").update(`PARENTMEETING15|${type}|${eventKey}`).digest("hex").slice(0, 24).toUpperCase(); return `PARENTMEETING15-${type}-${fingerprint}`; }
 
 async function seedBase(client: PrismaClient) {
   const passwordHash = await hashPassword(credential);
@@ -174,6 +175,14 @@ async function main() {
     invariant(followRace.filter((item) => item.status === "fulfilled").length === 1, `${prefix}_FOLLOWUP_CONCURRENCY_NONDETERMINISTIC`);
     const parentPayload = JSON.stringify(await listParentOwnMeetings(client, parentA, { academicYear: "2026-27" }));
     invariant(parentPayload.includes("Corrected Parent-safe summary") && parentPayload.includes("Please review the shared learning plan") && !parentPayload.includes("Internal follow-up") && !parentPayload.includes("LEADERSHIP-PRIVATE"), `${prefix}_PARENT_COMPLETED_PRIVACY_FAILED`);
+    const privateFollowUp = await createParentMeetingFollowUp(client, principal, scheduled.publicKey, { internalDescription: "Private staff-only follow-up", responsibleStaffHandle: base.staff.get("TEACHER").iamPublicKey, dueDate: "2026-09-10" });
+    const privateCreatedEvent = await client.parentMeetingEvent.findFirst({ where: { meetingId: privateFollowUp.meetingId, eventType: "FOLLOW_UP_CREATED", safeMetadataJson: { contains: privateFollowUp.publicKey } }, orderBy: { createdAt: "desc" } });
+    invariant(privateCreatedEvent, `${prefix}_PRIVATE_FOLLOWUP_EVENT_MISSING`);
+    const privateCreatedNumber = parentMeetingCampaignNumber("FOLLOW_UP_CREATED", privateCreatedEvent.publicKey);
+    const privateCreatedCampaign = await client.notificationCampaign.findUnique({ where: { campaignNumber: privateCreatedNumber } });
+    invariant(privateCreatedCampaign, `${prefix}_PRIVATE_FOLLOWUP_CAMPAIGN_MISSING`);
+    const privateCreatedRecipients = await client.notificationRecipient.findMany({ where: { campaignId: privateCreatedCampaign.id }, select: { userId: true } });
+    invariant(privateCreatedRecipients.some((row) => row.userId === base.users.get("TEACHER")!.id) && privateCreatedRecipients.every((row) => row.userId !== base.users.get("PARENT")!.id), `${prefix}_PRIVATE_FOLLOWUP_PARENT_NOTIFIED`);
 
     stage = "notifications, CSV and scale";
     const beforeReminder = await client.notificationCampaign.count({ where: { campaignNumber: { startsWith: "PARENTMEETING15-" } } });
@@ -182,12 +191,18 @@ async function main() {
     await processParentMeetingReminders(client, principal, new Date("2026-09-10T00:00:00+05:30"));
     const afterReminder = await client.notificationCampaign.count({ where: { campaignNumber: { startsWith: "PARENTMEETING15-" } } });
     invariant(middleReminder >= beforeReminder && middleReminder === afterReminder, `${prefix}_REMINDER_NOT_IDEMPOTENT`);
+    const privateDueNumber = parentMeetingCampaignNumber("FOLLOW_UP_DUE", `FOLLOWUP:${privateFollowUp.publicKey}:2026-09-10`);
+    const privateDueCampaign = await client.notificationCampaign.findUnique({ where: { campaignNumber: privateDueNumber } });
+    invariant(privateDueCampaign, `${prefix}_PRIVATE_FOLLOWUP_DUE_CAMPAIGN_MISSING`);
+    const privateDueRecipients = await client.notificationRecipient.findMany({ where: { campaignId: privateDueCampaign.id }, select: { userId: true } });
+    invariant(privateDueRecipients.some((row) => row.userId === base.users.get("TEACHER")!.id) && privateDueRecipients.every((row) => row.userId !== base.users.get("PARENT")!.id), `${prefix}_PRIVATE_FOLLOWUP_DUE_PARENT_NOTIFIED`);
     const unrelatedIds = [base.users.get("PARENT_B")!.id, base.users.get("TEACHER_B")!.id];
     const unrelatedRecipients = await client.notificationRecipient.count({ where: { campaign: { campaignNumber: { startsWith: "PARENTMEETING15-" } }, userId: { in: unrelatedIds }, recipientContextJson: { contains: scheduled.publicKey } } });
     invariant(unrelatedRecipients === 0, `${prefix}_UNRELATED_NOTIFICATION_RECIPIENT`);
     await createLeadershipParentMeeting(client, principal, { academicYear: "2026-27", studentAdmissionNo: base.students[1].admissionNo, category: "PRINCIPAL_APPOINTMENT", subject: "=HYPERLINK(\"https://invalid\")", requestReason: "CSV formula injection proof" });
     const csv = await exportParentMeetingReportCsv(client, principal);
     invariant(csv.includes("\"'=HYPERLINK") && !csv.includes("internal follow-up"), `${prefix}_CSV_SAFETY_FAILED`);
+    invariant(privateFollowUp.status === "OPEN", `${prefix}_PRIVATE_FOLLOWUP_STATE_INVALID`);
     const bulk = Array.from({ length: 1_010 }, (_, index) => ({ id: randomUUID(), publicKey: randomUUID(), studentId: base.students[index % 2].id, requesterGuardianId: base.guardians[index % 2].id, academicYear: "2026-27", source: "LEADERSHIP_CREATED", category: index % 2 ? "OTHER" : "GENERAL_SCHOOL_DISCUSSION", subject: `${prefix} historical meeting ${index}`, requestReason: "Synthetic scale record", status: "COMPLETED", createdByUserId: principal.user.id, completedByUserId: principal.user.id, completedAt: new Date(Date.UTC(2025, index % 12, (index % 27) + 1)), rowVersion: 1, createdAt: new Date(Date.UTC(2025, index % 12, (index % 27) + 1)), updatedAt: new Date(Date.UTC(2025, index % 12, (index % 27) + 1)) }));
     await client.parentMeeting.createMany({ data: bulk });
     const timings: number[] = [];
