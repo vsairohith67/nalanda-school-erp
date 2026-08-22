@@ -29,7 +29,7 @@ const PRIVATE_HEADERS = {
   Vary: "Cookie"
 } as const;
 const STATUS_OPEN = ["OPEN", "ACKNOWLEDGED", "INVESTIGATING", "SILENCED"];
-const BACKUP_VERSION = 41;
+const BACKUP_VERSION = 42;
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 
@@ -486,7 +486,7 @@ async function businessInvariantCounts(client: DatabaseClient) {
     { key: "parent_context_without_relationship", query: "SELECT COUNT(*) AS count FROM AuthSession s LEFT JOIN StudentGuardian g ON g.id=s.activeChildLinkId WHERE s.activeChildLinkId IS NOT NULL AND g.id IS NULL" },
     { key: "broken_private_asset", query: "SELECT SUM(total) AS count FROM (SELECT COUNT(*) total FROM ApplicationDocument WHERE LENGTH(sha256)<>64 OR recoveryStatus IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM ClassworkAttachment WHERE LENGTH(sha256)<>64 OR recoveryStatus IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM SupportRequestAttachment WHERE LENGTH(sha256)<>64 OR recoveryStatus IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM StaffPayslipDocumentVersion WHERE LENGTH(sourceSha256)<>64 OR LENGTH(derivativeSha256)<>64)" },
     { key: "safe_exit_release_without_evidence", query: "SELECT COUNT(*) AS count FROM StudentDepartureRequest r WHERE r.status IN ('CHECKED_OUT','RETURN_EXPECTED','RETURNED_TO_CAMPUS','CLOSED') AND (r.checkedOutAt IS NULL OR NOT EXISTS (SELECT 1 FROM StudentDepartureHandover h WHERE h.requestId=r.id) OR NOT EXISTS (SELECT 1 FROM StudentGatePass p WHERE p.requestId=r.id AND p.status='USED' AND p.consumedAt IS NOT NULL) OR NOT EXISTS (SELECT 1 FROM StudentCampusPresenceEvent c WHERE c.requestId=r.id AND c.eventType='EARLY_DEPARTURE'))" },
-    { key: "migration_backup_mismatch", query: "SELECT COUNT(*) AS count FROM ReleaseManifest WHERE isCurrent=1 AND (backupVersion<>41 OR migrationVersion<>'20260810184500_governed_bulk_onboarding')" }
+    { key: "migration_backup_mismatch", query: "SELECT COUNT(*) AS count FROM ReleaseManifest WHERE isCurrent=1 AND (backupVersion<>42 OR migrationVersion<>'20260822113000_event_media_v1_5_foundation')" }
   ];
   const result: Array<{ checkKey: string; affectedCount: number }> = [];
   for (const row of queries) {

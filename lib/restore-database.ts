@@ -23,6 +23,7 @@ import { SUPPORT_BACKUP_KEYS, restoreSupportBackup, type SupportBackupKey } from
 import { SAFE_EXIT_BACKUP_KEYS, restoreSafeExitBackup, type SafeExitBackupKey } from "@/lib/safe-exit-backup";
 import { FAMILY_COLLECTION_BACKUP_KEYS, type FamilyCollectionBackupKey } from "@/lib/family-collection-backup";
 import { restoreTechnicalOperationsBackup } from "@/lib/technical-operations-backup";
+import { EVENT_MEDIA_BACKUP_KEYS, restoreEventMediaBackup, type EventMediaBackupKey } from "@/lib/event-media-backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -123,6 +124,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(SUPPORT_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<SupportBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(SAFE_EXIT_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<SafeExitBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<FamilyCollectionBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(EVENT_MEDIA_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<EventMediaBackupKey, ReturnType<typeof emptyEntityResult>>),
     technicalOperations: emptyEntityResult(),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
@@ -587,6 +589,12 @@ async function restoreIntoDatabase(
   await restoreFeeRegisterOcrData(client, backup, backupStudentLocalIds, backupPaymentToLocalId, result);
   await restoreCloudBackupData(client, backup, result);
   await restorePublicWebsiteData(client, backup, result);
+  await restoreEventMediaBackup(client as unknown as PrismaClient, backup, {
+    students: backupStudentLocalIds,
+    guardians: backupGuardianIds,
+    users: backupUserToLocalUser,
+    restoredBy: restoredBy.id
+  }, result);
   await restoreTeacherAnalyticsData(client, backup, result);
   await restoreStaffAttendanceData(client, backup, backupUserToLocalUser, result);
   await restoreStaffLeaveData(client, backup, backupUserToLocalUser, result);

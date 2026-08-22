@@ -196,7 +196,7 @@ describe("Prompt 20A permissions and server guards", () => {
 describe("Prompt 20A backup version 34", () => {
   it("exports all six arrays without secrets, prompts or answers", () => {
     const backup = baseBackup();
-    expect(backup.metadata.backupVersion).toBe(41);
+    expect(backup.metadata.backupVersion).toBe(42);
     for (const key of ["aiAssistantProfiles","aiAssistantSourcePolicies","aiAssistantQueryAudits","aiAssistantSafetyEvents","aiAssistantEvaluationCases","aiAssistantEvaluationRuns"] as const) expect(backup[key]).toHaveLength(1);
     const text = JSON.stringify(backup);
     expect(text).not.toContain("must-not-export");
