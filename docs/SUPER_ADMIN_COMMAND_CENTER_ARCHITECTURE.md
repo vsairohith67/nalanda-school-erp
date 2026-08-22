@@ -121,9 +121,9 @@ all displayed activity text; unsafe HTML is not used.
 3. Permission-scoped Universal Search.
 4. Citation-grounded Smart AI.
 
-Whiteboard remains planned and Canvs remains the governed planning surface.
-This phase adds no Diary, task, reminder, directory, search, AI, or whiteboard
-persistence or fake functionality.
+Whiteboard remains a separate fixed Canvs launch and does not participate in
+Search or AI retrieval. Each downstream phase retains its own authorization and
+release gate.
 
 ## UDISE+ and Mobile boundary
 
@@ -164,8 +164,9 @@ activation occurred. Result: `SUPER_ADMIN_COMMAND_CENTER_CLEARED`.
 separately authorised, exact-owner summary reader. Diary, task/reminder and
 contact counts are bounded and fail inside their own source boundary; their
 failure cannot blank Today, School Pulse, OBS-1A or Recent Activity. The three
-work cards are live navigation to `/super-admin/my-work`. Universal Search and
-Smart AI remain dependency-blocked and Whiteboard remains planned. The data,
+work cards are live navigation to `/super-admin/my-work`. Universal Search is
+cleared, and SMART-AI-1A adds a compact launcher plus a runtime-accurate Smart AI
+programme card without duplicating Search. The data,
 authorization, audit and UX contract is defined in
 [Super Admin Personal Work Programme Architecture](./SUPER_ADMIN_WORK_PROGRAMME_ARCHITECTURE.md).
 
@@ -174,3 +175,14 @@ Independent `SUPER-ADMIN-WORK-1A-QA` cleared this composition extension on
 non-Super-Admin roles were denied, the existing Command Center sources did not
 regress, and the operational database remained byte-identical. Result:
 `SUPER_ADMIN_WORK_CLEARED`.
+
+## SMART-AI-1A composition extension
+
+The Command Center now links to `/super-admin/ai` from a compact launcher and
+the existing work-programme sequence. The card says `RUNTIME NOT CONFIGURED`
+when the merge-safe default provider is disabled; it never claims generated AI
+is live merely because adapter code exists. When an exact loopback runtime is
+separately configured, the launcher reports that local state without exposing
+an endpoint or credential. Smart AI reads no Command Center database source and
+does not alter existing metrics, Search, My Work or Whiteboard behavior. See
+[Smart AI Architecture](./SMART_AI_ARCHITECTURE.md).

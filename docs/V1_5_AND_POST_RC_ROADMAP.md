@@ -21,14 +21,15 @@ This roadmap preserves the operational boundaries in the [Requirements Register]
 
 **Next product planning gate:**
 
-`SMART-AI-2A — Citation-Grounded Smart AI Pilot planning`
+`SMART-AI-1A — Grounded Super Admin Smart AI Foundation`
 
 The Command Center, owner-isolated Diary, Tasks & Reminders, Contacts &
 Suppliers, and permission-scoped Universal Search are independently cleared.
 Search remains exact-`SUPER_ADMIN`, privacy-safe, server-authorized,
-deterministic and bounded. Smart AI is now unlocked for a separate planning
-prompt only; Search clearance does not authorize model/provider activation,
-real-data processing, external transmission or AI implementation. Hosting and
+deterministic and bounded. SMART-AI-1A is the separately governed implementation
+of a disabled-by-default, exact-role, cited synthesis foundation over Search.
+It does not authorize model/runtime activation, real-data processing, external
+transmission or AI actions. Hosting and
 private staging remain a parallel operational track.
 
 `WHITEBOARD-BRIDGE-1A` is a parallel, database-neutral integration checkpoint.
@@ -47,7 +48,7 @@ Search, or unlock Smart AI.
 | 4 | V1.5 product | `SUPER-ADMIN-WORK-1A — Diary, Tasks, Reminders and Directory` | Exact-owner private Diary, Tasks/Reminders and publisher/vendor/contact directory in one My Work shell, with bounded Command Center summaries. | Phase 3 cleared; exact-owner/no-sharing policy accepted | Cleared 2026-08-21 | **Complete** | Exact-role/API/ownership denial, CRUD/lifecycle/date boundaries, privacy-safe audit, migration/backup proof, no-provider side effects, exact desktop/mobile/light/dark UX passed | `SUPER_ADMIN_WORK_CLEARED` |
 | 5 | V1.5 product | `UNIVERSAL-SEARCH-1A — Permission-Scoped Universal Search` | Exact-`SUPER_ADMIN` deterministic search over normalized, privacy-safe authorised records; establishes the retrieval boundary required before Smart AI. | Phase 4 cleared; Academic Integrity v1.1 preserved | Cleared 2026-08-22 | **Complete** | Exact-role/API/active-context/owner/privacy/ranking/failure/scale/Browser/security/full-suite acceptance passed | `UNIVERSAL_SEARCH_CLEARED`; private/local only; no deployment or AI authorization |
 | 6 | V1.5 evidence/product | `UDISE-15E — Evidence Collection and Governed Extension` | Collect current official evidence, map Student/Teacher/state-specific workflows, then extend the read-only checklist only after the evidence gate passes. | [15E evidence checklist](./UDISE_15E_EVIDENCE_CHECKLIST.md) complete and approved | User-dependent evidence collection; 5–10 working days after unblocking | Yes | Field-to-source traceability, state-specific validation, privacy review, read-only enforcement, human acceptance; no portal automation | Accepted evidence map and governed read-only extension, or continued evidence block |
-| 7 | V2 AI | `SMART-AI-2A — Citation-Grounded Smart AI Pilot` | Extend the cleared cited, read-only mock foundation onto permission-scoped search and governed supplier/ERP sources. | Phases 4–5; approved provider/privacy/cost policy; staging | 10–15 working days | No | Citation completeness, permission inheritance, unsupported-answer refusal, prompt-injection tests, cost/rate limits, human review | Governed citation-based pilot accepted or stopped with measured evidence |
+| 7 | V1.5 product | `SMART-AI-1A — Grounded Super Admin Smart AI Foundation` | Exact-Super-Admin read-only synthesis over Universal Search with validated citations, disabled-by-default runtime and loopback-only provider foundation. | Phases 4–5 cleared; Academic Integrity and Whiteboard boundaries preserved | Implementation 2026-08-22; independent QA pending | **In progress** | Exact role/owner/secret/no-write boundaries, prompt injection, citations, loopback validation, Browser/security/full-suite acceptance | `SMART_AI_CLEARED` or measured remediation/block; no runtime activation |
 | 8 | Mobile | `ANDROID-CAPACITOR-1A — Android Foundation and Device QA` | After PWA certification, evaluate and, if approved, wrap the shared responsive application with Capacitor rather than fork the ERP. | Private HTTPS staging; PWA physical-device certification; stable shared web flows | 5–8 working days | No | Real Android device matrix, install/update/deep-link/session tests, upload/download tests, offline/error behaviour, privacy review | Android shared-code go/no-go and, if approved, certified internal foundation |
 | 9 | Mobile | `IOS-IPADOS-PREP-1A — iOS/iPadOS Preparation and Signing Readiness` | Prepare Apple-specific requirements and shared-app compatibility; build/sign only when a Mac/Xcode environment and Apple decisions exist. | Phase 8 findings; Mac/Xcode; Apple account/signing decisions; staging | 5–10 working days after environment is available | No | iPhone/iPad layout, Safari/PWA behaviour, signing/entitlement review, update path, device session and file-flow tests | Apple build/signing readiness decision and device evidence |
 | 10 | V1 operational | `V1-OPS-PILOT-1A — Real Data, Training, Pilot and Cutover` | Configure master data, perform controlled import, onboard named users, train, pilot, rehearse rollback, reconcile, and seek explicit production cutover approval. | Staging accepted; owners named; provider decisions complete; backups and rollback proven | 10–20 working days plus school scheduling | No | Import reconciliation, role acceptance, training records, pilot sign-off, rollback rehearsal, backup/restore evidence, cutover go/no-go | Explicit production cutover approval or documented no-go/rollback |
@@ -79,7 +80,8 @@ Search, or unlock Smart AI.
 
 ### V2 work
 
-- Citation-grounded Smart AI over universal search and governed directories.
+- `SMART-AI-LOCAL-RUNTIME-1A` may evaluate and activate an approved local model only after SMART-AI-1A clearance; cloud/external providers remain prohibited absent a separate privacy decision.
+- Future role expansion and any AI Actions require separate authorization, object-scope, confirmation, audit and rollback governance.
 - AI-generated lessons and educational videos remain V2, with Teacher approval and no automatic Student publication.
 - Semantic retrieval, external knowledge, attachments, live AI providers, and other advanced AI remain `DEFERRED_TO_V2`.
 - An infinite-whiteboard feature is not a prerequisite. Where a visual architecture surface is useful, integrate or reuse the canonical Canvs board before considering a separate engine.
