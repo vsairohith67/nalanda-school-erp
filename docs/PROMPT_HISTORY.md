@@ -1930,3 +1930,39 @@ Status: `ACADEMIC-INTEGRITY-1A — CLEARED`. After `SUPER-ADMIN-WORK-1A-QA`
 independently cleared and advanced `main`, its exact My Work changes were
 preserved during release reconciliation and all affected/full gates were rerun.
 No deployment, live provider or real user/data activation was performed.
+
+## WHITEBOARD-BRIDGE-1A — Super Admin Canonical Canvs Bridge Foundation (2026-08-22)
+
+Implementation converts the planned Command Center Whiteboard card into one
+exact `SUPER_ADMIN`-only route at `/super-admin/whiteboard`. The route reuses the
+authenticated application shell and launches only the canonical Nalanda ERP
+Canvs board in a protected external tab. A strict non-secret configuration
+validator accepts the exact `app.canvs.io` host, `/gdrive` path and canonical
+board ID; invalid, alternate, redirected, encoded or user-controlled targets
+fail closed without rendering an outbound link.
+
+The bridge adds no iframe, OAuth/SSO/token exchange, cookie or credential
+forwarding, `postMessage` authentication, webhook, server-side Canvs fetch,
+scrape, polling, sync, cache, snapshot, database table, migration, Excalidraw
+dependency, whiteboard engine, Universal Search adapter, Smart AI, RAG,
+embedding, or vector storage. Board editing remains in Canvs and changes are not
+stored by the ERP. Academic Integrity v1.1 and My Work IAM behavior are
+unchanged. Status: `WHITEBOARD_BRIDGE_READY_FOR_QA`; independent
+`WHITEBOARD-BRIDGE-1A-QA` is required before merge, tag, or clearance.
+
+## WHITEBOARD-BRIDGE-1A-QA — Independent Super Admin Canvs Bridge QA (2026-08-22)
+
+Independent QA proved exact Super Admin-only route and navigation access, the
+fixed canonical Canvs destination, fail-closed invalid configuration, protected
+new-tab behavior, and the absence of iframe, token/auth exchange, server fetch,
+sync, board storage, migration, Search, or Smart AI expansion. All released
+non-Super-Admin roles and delegated dashboard access were denied at runtime.
+Desktop 1366 x 768 and mobile 390 x 844 light/dark Browser QA passed with a
+44 px action, visible focus, no overflow, and no console or hydration errors.
+
+The operational database remained byte-identical at SHA-256
+`65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA`.
+The sequential gate passed 338 page routes, 551 API routes, lifecycle dry run,
+typecheck, 1,950 tests with 3 intentional qpdf-dependent skips, production
+build, backup version 41, and Git safety. A complete security diff scan returned
+zero findings. Status: `WHITEBOARD_BRIDGE_CLEARED`; no deployment was performed.

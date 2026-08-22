@@ -29,6 +29,12 @@ product dependency; it must remain permission-scoped, privacy-safe,
 server-authorized and bounded. Smart AI remains downstream. Hosting and private
 staging remain a parallel operational track.
 
+`WHITEBOARD-BRIDGE-1A` is a parallel, database-neutral integration checkpoint.
+Its implementation launches only the canonical Nalanda ERP Canvs board from an
+exact-Super-Admin route and was independently QA-cleared on 2026-08-22. It does
+not change the ten-phase order below, add a whiteboard engine, participate in
+Search, or unlock Smart AI.
+
 ## Governed phase order
 
 | Order | Lane | Exact prompt name | Scope | Dependencies | Estimated effort | Before hosting possible? | Focused QA requirement | Final result expected |
@@ -84,6 +90,7 @@ Hosting/provider choice, private staging, DNS/subdomain, master-data configurati
 
 - [Super Admin Command Center architecture](./SUPER_ADMIN_COMMAND_CENTER_ARCHITECTURE.md)
 - [Super Admin Personal Work Programme architecture](./SUPER_ADMIN_WORK_PROGRAMME_ARCHITECTURE.md)
+- [Super Admin Whiteboard Bridge](./SUPER_ADMIN_WHITEBOARD_BRIDGE.md)
 - [Pending feature reconciliation](./PENDING_FEATURE_RECONCILIATION.md)
 - [UDISE 15E evidence checklist](./UDISE_15E_EVIDENCE_CHECKLIST.md)
 - [Super Admin Command Center scope](./SUPER_ADMIN_COMMAND_CENTER_SCOPE.md)

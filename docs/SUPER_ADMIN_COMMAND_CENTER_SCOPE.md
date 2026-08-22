@@ -155,3 +155,28 @@ representative volume and exact desktop/mobile light/dark Browser QA passed.
 The operational database remained byte-identical and the additive migration was
 not applied operationally. Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search
 is next; Smart AI remains downstream and Whiteboard remains planned.
+
+## WHITEBOARD-BRIDGE-1A implementation handoff (2026-08-22)
+
+The former planned Whiteboard card now opens one exact `SUPER_ADMIN`-only route,
+`/super-admin/whiteboard`. That page is a lightweight, private/no-store reference
+surface for the one canonical Nalanda ERP Canvs board. It uses a fixed validated
+destination and safe external new-tab behavior. Alternate query, redirect,
+target, protocol, host, path, or board-ID inputs cannot replace the destination.
+
+This bridge adds no iframe, Canvs authentication/token, server-side board fetch,
+sync, board-content storage, migration, operational write, Search adapter, Smart
+AI feature, or whiteboard engine. The Command Center card is `AVAILABLE`; the
+bridge is independently cleared. See the
+[Whiteboard Bridge architecture](./SUPER_ADMIN_WHITEBOARD_BRIDGE.md).
+
+## WHITEBOARD-BRIDGE-1A-QA clearance (2026-08-22)
+
+Independent QA cleared the exact-Super-Admin route, fixed canonical destination,
+safe external link, unavailable-configuration state, responsive light/dark UI,
+and database-neutral boundary. All released non-Super-Admin roles plus delegated
+dashboard access were denied. Academic Integrity v1.1, My Work, and Command
+Center behavior remained intact. The full release gate passed 338 page routes,
+551 APIs, lifecycle dry run, typecheck, 1,950 tests with 3 intentional skips,
+production build, backup version 41, and Git safety. Status:
+`WHITEBOARD_BRIDGE_CLEARED`.
