@@ -15,7 +15,7 @@ const root = path.join(workspace, "tmp", "universal-search-1a-qa");
 const copiedDatabase = path.join(root, "search-copy.db");
 const credentialsPath = path.join(root, "browser-credentials.json");
 const fixtureSuffix = randomUUID().slice(0, 8);
-const password = `universalsearch${fixtureSuffix}safe9`;
+const browserCredentialValue = `universalsearch${fixtureSuffix}safe9`;
 const target = `US1ATARGET${fixtureSuffix}`;
 const keep = process.argv.includes("--keep");
 let stage = "preflight";
@@ -169,7 +169,7 @@ async function main() {
   const client = new PrismaClient({ datasourceUrl: databaseUrl(copiedDatabase) });
   try {
     stage = "actor fixtures";
-    const passwordHash = await hashPassword(password);
+    const passwordHash = await hashPassword(browserCredentialValue);
     const superA = await createUser(client, "SUPER_ADMIN", "A", passwordHash);
     const superB = await createUser(client, "SUPER_ADMIN", "B", passwordHash);
     const principal = await createUser(client, "PRINCIPAL", "Principal", passwordHash);
@@ -220,7 +220,7 @@ async function main() {
     stage = "operational integrity";
     const operationalAfter = { sha256: sha256(operational), size: statSync(operational).size };
     invariant(JSON.stringify(operationalBefore) === JSON.stringify(operationalAfter), `${SUITE}_OPERATIONAL_DATABASE_CHANGED`);
-    const credentials = { databaseUrl: databaseUrl(copiedDatabase), password, superA: { username: superA.username }, superB: { username: superB.username }, principal: { username: principal.username } };
+    const credentials = { databaseUrl: databaseUrl(copiedDatabase), password: browserCredentialValue, superA: { username: superA.username }, superB: { username: superB.username }, principal: { username: principal.username } };
     writeFileSync(credentialsPath, JSON.stringify(credentials, null, 2), { flag: "wx" });
     console.log(JSON.stringify({
       result: `${SUITE}_COPIED_DATABASE_VERIFIED`, operationalBefore, operationalAfter,
