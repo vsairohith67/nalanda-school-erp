@@ -141,14 +141,15 @@ CREATE UNIQUE INDEX "ParentMeetingParticipant_publicKey_key" ON "ParentMeetingPa
 CREATE UNIQUE INDEX "ParentMeetingParticipant_meetingId_staffMemberId_key" ON "ParentMeetingParticipant"("meetingId","staffMemberId");
 CREATE UNIQUE INDEX "ParentMeetingParticipant_one_primary" ON "ParentMeetingParticipant"("meetingId") WHERE "participantRole"='PRIMARY_STAFF' AND "status"<>'REMOVED';
 CREATE INDEX "ParentMeetingParticipant_staffMemberId_status_idx" ON "ParentMeetingParticipant"("staffMemberId","status");
-CREATE INDEX "ParentMeetingParticipant_meetingId_role_status_idx" ON "ParentMeetingParticipant"("meetingId","participantRole","status");
+CREATE INDEX "ParentMeetingParticipant_meetingId_participantRole_status_idx" ON "ParentMeetingParticipant"("meetingId","participantRole","status");
 CREATE UNIQUE INDEX "ParentMeetingNote_publicKey_key" ON "ParentMeetingNote"("publicKey");
 CREATE INDEX "ParentMeetingNote_meetingId_kind_createdAt_idx" ON "ParentMeetingNote"("meetingId","kind","createdAt");
 CREATE INDEX "ParentMeetingNote_authorUserId_createdAt_idx" ON "ParentMeetingNote"("authorUserId","createdAt");
 CREATE UNIQUE INDEX "ParentMeetingNote_correctsNoteId_key" ON "ParentMeetingNote"("correctsNoteId");
+CREATE INDEX "ParentMeetingNote_correctsNoteId_idx" ON "ParentMeetingNote"("correctsNoteId");
 CREATE UNIQUE INDEX "ParentMeetingFollowUp_publicKey_key" ON "ParentMeetingFollowUp"("publicKey");
 CREATE INDEX "ParentMeetingFollowUp_meetingId_status_dueDate_idx" ON "ParentMeetingFollowUp"("meetingId","status","dueDate");
-CREATE INDEX "ParentMeetingFollowUp_responsible_status_dueDate_idx" ON "ParentMeetingFollowUp"("responsibleStaffMemberId","status","dueDate");
+CREATE INDEX "ParentMeetingFollowUp_responsibleStaffMemberId_status_dueDate_idx" ON "ParentMeetingFollowUp"("responsibleStaffMemberId","status","dueDate");
 CREATE INDEX "ParentMeetingFollowUp_status_dueDate_idx" ON "ParentMeetingFollowUp"("status","dueDate");
 CREATE UNIQUE INDEX "ParentMeetingEvent_publicKey_key" ON "ParentMeetingEvent"("publicKey");
 CREATE INDEX "ParentMeetingEvent_meetingId_occurredAt_idx" ON "ParentMeetingEvent"("meetingId","occurredAt");
