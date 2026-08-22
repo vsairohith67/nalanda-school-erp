@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { Activity, ArrowRight, Gauge, HeartPulse, LockKeyhole, Search, Smartphone, Sparkles, Stethoscope } from "lucide-react";
+import { Activity, ArrowRight, Bot, Gauge, HeartPulse, LockKeyhole, Search, Smartphone, Sparkles, Stethoscope } from "lucide-react";
 import { PageHeader, PageShell, SectionCard } from "@/components/ui";
 import { requireRolePermission } from "@/lib/auth";
 import { moneyExact } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { getSchoolSettings } from "@/lib/school-settings";
 import { getSuperAdminCommandCenter, type CommandCenterMetric, type CommandCenterWidgetState } from "@/lib/super-admin-command-center";
+import { getSmartAiProviderStatus } from "@/lib/smart-ai-provider-local";
 
 export const dynamic = "force-dynamic";
 const NO_CURRENCY_IDS = new Set<string>();
@@ -19,6 +20,7 @@ export default async function SuperAdminCommandCenterPage() {
   const user = await requireRolePermission("VIEW_DASHBOARD", "SUPER_ADMIN");
   const settings = await getSchoolSettings(prisma);
   const commandCenter = await getSuperAdminCommandCenter(prisma, settings.academicYear, user.id);
+  const smartAiProvider = getSmartAiProviderStatus();
 
   return (
     <PageShell className="super-admin-command-center">
@@ -28,10 +30,16 @@ export default async function SuperAdminCommandCenterPage() {
         action={<span className="command-read-only"><LockKeyhole size={17} aria-hidden /> Read-only</span>}
       />
 
-      <section className="command-search-launcher" aria-labelledby="command-search-title">
-        <div><Search size={24} aria-hidden /><div><h2 id="command-search-title">Universal Search</h2><p>Find authorised records across Nalanda ERP with one deterministic, private search.</p></div></div>
-        <Link href="/super-admin/search">Open Search <ArrowRight size={17} aria-hidden /></Link>
-      </section>
+      <div className="command-launcher-grid">
+        <section className="command-search-launcher" aria-labelledby="command-search-title">
+          <div><Search size={24} aria-hidden /><div><h2 id="command-search-title">Universal Search</h2><p>Find authorised records across Nalanda ERP with one deterministic, private search.</p></div></div>
+          <Link href="/super-admin/search">Open Search <ArrowRight size={17} aria-hidden /></Link>
+        </section>
+        <section className="command-search-launcher command-ai-launcher" aria-labelledby="command-ai-title">
+          <div><Bot size={24} aria-hidden /><div><h2 id="command-ai-title">Smart AI</h2><p>Grounded ERP assistant · {smartAiProvider.state === "READY" ? "local runtime ready" : "runtime not configured"}.</p></div></div>
+          <Link href="/super-admin/ai">Open Smart AI <ArrowRight size={17} aria-hidden /></Link>
+        </section>
+      </div>
 
       <section className="command-priority" aria-labelledby="command-today-title">
         <div className="command-section-heading"><div><h2 id="command-today-title">Today</h2><p>Highest-priority existing work and school events.</p></div><Gauge size={24} aria-hidden /></div>
