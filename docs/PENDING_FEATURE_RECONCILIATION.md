@@ -8,7 +8,11 @@
 
 The V1 RC remains cleared and frozen at `26a47632f7c1e9c9b5f2b48de8c9b56d60428aed`. MSI workstation transfer is complete; Dell remains a frozen fallback. No release evidence authorises deployment, live providers, real data, real users, pilot, or cutover. Remaining work divides into V1 operational launch gates, V1.5 product extensions, V2 AI, and mobile work.
 
-The read-only Command Center and exact-owner Personal Work Programme are cleared. `UNIVERSAL-SEARCH-1A` is implemented and ready for separate independent QA; it is not cleared. Smart AI remains blocked until Search QA clears. Private staging proceeds as a separate operational track.
+The read-only Command Center, exact-owner Personal Work Programme and
+permission-scoped Universal Search are independently cleared. Smart AI is
+unlocked for a separate planning prompt only; implementation, providers and
+real-data AI processing remain unauthorized. Private staging proceeds as a
+separate operational track.
 
 ## Evidence rule
 
@@ -24,11 +28,11 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | 2 | Super Admin Command Center | `CLEARED` | Independent QA cleared the exact-Super-Admin, private/no-store composition. Its live Universal Search launcher is an implementation update and does not alter the Command Center clearance evidence. |
 | 3 | Digital Diary | `CLEARED` | Exact-owner Diary is independently cleared inside My Work and is an included owner-scoped Universal Search source. |
 | 4 | Tasks, reminders and calendar | My Work Tasks/Reminders: `CLEARED`; calendar: `CLEARED`; broader Life OS: `DEFERRED` | Exact-owner Tasks & Reminders and the existing academic calendar are cleared. Universal Search consumes bounded safe fields without completing tasks or sending reminders. |
-| 5 | Universal search | `READY_FOR_INDEPENDENT_QA` | Exact-`SUPER_ADMIN`, deterministic, private/no-store server composition is implemented without a migration, index table, AI or external provider. Attendance and unified Audit search explicitly report `UNAVAILABLE`. Smart AI stays blocked pending QA clearance. |
+| 5 | Universal search | `CLEARED` | Independent QA cleared the exact-`SUPER_ADMIN`, deterministic, private/no-store server composition without a migration, index table, AI or external provider. Attendance and unified Audit search remain explicitly `UNAVAILABLE`. Smart AI planning is unblocked but requires its own authorization. |
 | 6 | Publishers, book suppliers, vendors and contacts | My Work directory: `CLEARED`; broader CRM/procurement: `DEFERRED` | Exact-owner Contacts & Suppliers is cleared and searchable through bounded safe fields. It remains a reference directory, not procurement/payment automation. |
 | 7 | Monitoring and operational dashboard extensions | `PARTIAL` | OBS-1A and its technical/operational foundation are cleared. Hosting-dependent live monitoring, provider health, cost/usage extensions, and unified Command Center presentation remain pending. Extend the existing architecture. |
 | 8 | Infinite whiteboard | `NOT_IMPLEMENTED` | No ERP whiteboard engine is proven. The canonical Canvs architecture board already provides a governed visual surface; integration/reuse should be assessed before building another engine. |
-| 9 | Citation-based Smart AI | `PARTIAL`; advanced scope `DEFERRED_TO_V2` | The read-only assistant foundation validates citations/timestamps using mock data. Universal search, supplier sources, semantic retrieval, attachments, external knowledge, and live providers are not complete. |
+| 9 | Citation-based Smart AI | `NEXT_FOR_SEPARATE_PLANNING`; advanced scope `DEFERRED_TO_V2` | The read-only assistant foundation validates citations/timestamps using mock data, and Universal Search now supplies a cleared permission-filtered retrieval boundary. No AI implementation, semantic retrieval, attachment ingestion, external knowledge or live provider is authorized. |
 | 10 | Android app | `NOT_IMPLEMENTED` | Responsive web/PWA foundations do not constitute a native Android app. A later shared-app Capacitor approach may be assessed only after staging and physical-device certification. |
 | 11 | iOS/iPadOS app | `NOT_IMPLEMENTED` | No native Apple application is proven. Final building, signing, and device certification require a Mac/Xcode environment and Apple account decisions. |
 | 12 | PWA and device certification | PWA foundation: `CLEARED`; end-to-end readiness: `PARTIAL`; physical certification: `OPERATIONAL_CONFIGURATION_PENDING` | Responsive web and the installable PWA foundation are present. Physical Android/iPhone/iPad testing waits for approved private HTTPS staging. See the [device checklist](./PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md). |
@@ -43,8 +47,8 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 
 1. Compose the Super Admin Command Center from existing cleared foundations.
 2. Establish the combined Diary/tasks/reminders/Life OS and directory model.
-3. Independently QA the implemented permission-scoped Universal Search.
-4. Only after Search clearance may a separate prompt consider citation-based Smart AI.
+3. Preserve the independently cleared permission-scoped Universal Search.
+4. Use a separate prompt to plan citation-based Smart AI; never bypass Search authorization.
 
 This order prevents AI from answering over missing supplier records or bypassing role permissions.
 
@@ -55,12 +59,13 @@ Diary, tasks, reminders, contacts, universal search, OBS-1A extensions, Canvs/wh
 - KG report cards, optional Transport and Cafeteria modules, and operational rollout of the technically cleared full Payroll/ESS foundation remain `DEFERRED_TO_V1_5`.
 - AI-generated lessons and educational videos remain `DEFERRED_TO_V2`, require Teacher approval, and must not publish automatically to Students.
 
-## UNIVERSAL-SEARCH-1A implementation update (2026-08-22)
+## UNIVERSAL-SEARCH-1A clearance update (2026-08-22)
 
-The implementation and precise source/deferred-source contract are documented
-in [Universal Search Architecture](./UNIVERSAL_SEARCH_ARCHITECTURE.md). This
-update does not rewrite the historical planning baseline above and does not
-authorize full-suite QA, merge, tag, deployment, real-data indexing or Smart AI.
+The implementation, precise source/deferred-source contract and independent
+evidence are documented in [Universal Search Architecture](./UNIVERSAL_SEARCH_ARCHITECTURE.md)
+and the [QA clearance](./evidence/UNIVERSAL_SEARCH_1A_QA_CLEARANCE.md). Search is
+cleared for this private/local release. This does not authorize deployment,
+real-data indexing/import, providers or Smart AI implementation.
 
 ## Superseded checkpoints
 

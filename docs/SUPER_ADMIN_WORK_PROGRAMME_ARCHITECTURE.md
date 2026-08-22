@@ -108,8 +108,8 @@ upcoming reminders, recent diary entries, follow-ups and active/preferred
 contacts. The source has its own timeout/failure boundary, so a work-programme
 failure does not blank school pulse, OBS-1A or recent activity.
 
-Diary, Tasks & Reminders, and Contacts & Suppliers cards link to My Work and
-are marked `LIVE`. Universal Search and Smart AI remain dependency-blocked;
+Diary, Tasks & Reminders, Contacts & Suppliers and Universal Search are marked
+`LIVE`. Smart AI is available only for a separate governed planning phase;
 Whiteboard remains planned.
 
 ## Responsive and accessible UX
@@ -141,7 +141,8 @@ SHA-256 `65f47efa37da321023439303770645f8d656f2be58458c1a03b341408ef9a6fa`.
 The additive migration is source-cleared but remains unapplied to the
 operational database until a separately authorised deployment/onboarding gate.
 No provider was activated and no deployment, real data or real user was used.
-Status: `SUPER_ADMIN_WORK_CLEARED`. Next dependency: `UNIVERSAL-SEARCH-1A`.
+Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search is also independently
+cleared; the next product dependency is separate Smart AI planning.
 
 ## Downstream Universal Search implementation boundary (2026-08-22)
 
@@ -153,6 +154,8 @@ name/person/category/phone/email/tags are searchable. Contact notes remain
 excluded to protect latent secret/private-path content. Search serializes no
 owner or My Work database ID and changes no Work record.
 
-Universal Search is `READY_FOR_INDEPENDENT_QA`, not cleared. The Personal Work
-Programme's prior independent clearance and operational-migration boundary are
-unchanged. See [Universal Search Architecture](./UNIVERSAL_SEARCH_ARCHITECTURE.md).
+Universal Search is independently `CLEARED`. The Personal Work Programme's
+prior independent clearance and operational-migration boundary are unchanged.
+Smart AI is unlocked only for separate governed planning. See
+[Universal Search Architecture](./UNIVERSAL_SEARCH_ARCHITECTURE.md) and the
+[independent QA clearance](./evidence/UNIVERSAL_SEARCH_1A_QA_CLEARANCE.md).

@@ -1959,3 +1959,22 @@ Status: `UNIVERSAL_SEARCH_READY_FOR_QA`. The feature branch may be reviewed only
 under the separate `UNIVERSAL-SEARCH-1A-QA` prompt. No merge, release tag,
 deployment, real-data indexing/import, Search clearance or Smart AI work is
 authorized by this implementation record.
+
+### UNIVERSAL-SEARCH-1A-QA independent clearance (2026-08-22)
+
+Independent QA classified the branch-switch lineage, reviewed the complete
+feature diff, and passed exact-role/active-context authorization, two-owner My
+Work isolation, secret-field non-matching, hostile input/filter bounds,
+deterministic ranking, read-only snapshots, failure/timeout isolation, copied
+scale, Academic Integrity and Super Admin Work regressions. Browser QA passed
+at 1366 x 768 and exact 390 x 844 in light/dark modes. Security diff scan
+reported zero findings. Final gates recorded 338 page routes, 552 API routes,
+220 test files, 1,958 passing tests with 3 disclosed qpdf-capability skips, a
+production build, backup v41 and Git safety. The operational database remained
+byte-identical.
+
+Status: `UNIVERSAL_SEARCH_CLEARED`; annotated tag
+`universal-search-v41-2026-08-22`. This is a private/local release only. It
+does not authorize deployment, providers, real data/users or Smart AI
+implementation. A separately governed Smart AI planning phase is now
+unblocked, and any future AI retrieval must inherit Search authorization.

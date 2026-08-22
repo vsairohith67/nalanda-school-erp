@@ -154,12 +154,13 @@ copied migration/recovery, privacy-safe audit, no-provider side effects,
 representative volume and exact desktop/mobile light/dark Browser QA passed.
 The operational database remained byte-identical and the additive migration was
 not applied operationally. Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search
-is next; Smart AI remains downstream and Whiteboard remains planned.
+is now independently cleared; Smart AI is next for separate planning only and
+Whiteboard remains planned.
 
-## UNIVERSAL-SEARCH-1A implementation handoff (2026-08-22)
+## UNIVERSAL-SEARCH-1A private/local clearance (2026-08-22)
 
-Universal Search is implemented on `feature/universal-search-1a` and is ready
-for separate independent QA. The exact-role `/super-admin/search` route sends
+Universal Search is independently cleared on retained
+`feature/universal-search-1a`. The exact-role `/super-admin/search` route sends
 one private POST request to a server composition service with bounded,
 failure-isolated source adapters and normalized results. Priority 1 includes
 Students, Admissions, Guardians, Staff and the exact-owner Diary, Tasks and
@@ -169,8 +170,8 @@ and unified Audit search report `UNAVAILABLE` instead of fake zero results.
 The implementation adds no migration, search-index table, AI, prompt,
 embedding, vector store, external provider, autonomous action or operational
 write. Academic Integrity v1.1 is preserved and search provides no marks-edit
-action. Smart AI remains `BLOCKED UNTIL SEARCH QA CLEARS`. See the
+action. Smart AI is unlocked for a separate planning prompt only. See the
 [Universal Search architecture](./UNIVERSAL_SEARCH_ARCHITECTURE.md).
 
-Status: `UNIVERSAL_SEARCH_READY_FOR_QA`. This is not a clearance, merge,
-release, deployment or Smart AI authorization.
+Status: `UNIVERSAL_SEARCH_CLEARED`. The clearance is private/local and is not
+deployment, provider, real-data or Smart AI implementation authorization.

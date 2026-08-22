@@ -4,7 +4,8 @@
 - **Implementation branch:** `feature/universal-search-1a`
 - **Handoff baseline:** `53a805be7ad5299e76e30b2989a052f1b5f935e8`
 - **Reconciled starting main:** `61aac47f4f8f716a0fa61104124907002a2d36fb`
-- **Implementation status:** `READY_FOR_INDEPENDENT_QA`
+- **Release status:** `UNIVERSAL_SEARCH_CLEARED`
+- **Independent QA:** [UNIVERSAL-SEARCH-1A QA Clearance](./evidence/UNIVERSAL_SEARCH_1A_QA_CLEARANCE.md)
 - **Primary route:** `/super-admin/search`
 - **Primary API:** `POST /api/super-admin/search`
 
@@ -185,8 +186,9 @@ Authenticated Actor
 The future layer must never bypass Search authorization or replace target
 route authorization. This phase implements no AI layer, prompt, RAG,
 embedding, vector table, model/provider configuration, external call,
-autonomous action or generated answer. Smart AI remains
-`BLOCKED UNTIL SEARCH QA CLEARS`.
+autonomous action or generated answer. Search clearance only unlocks a
+separately governed Smart AI planning phase; it does not authorize AI
+implementation or provider/data use.
 
 ## Implementation validation boundary
 
@@ -207,6 +209,8 @@ request and a 50-result client bound. Owner A/B isolation passed. The copied
 fixture was removed, and the operational database remained byte-identical at
 SHA-256 `65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA`.
 
-This is an implementation handoff only. The complete application suite, merge,
-release tag, deployment and clearance decision belong exclusively to the
-separate `UNIVERSAL-SEARCH-1A-QA` phase.
+Independent `UNIVERSAL-SEARCH-1A-QA` cleared this private/local release on
+2026-08-22. The complete authorization, ownership, secret-field, failure,
+performance, Browser, security, full-suite and operational-database evidence
+is recorded in the linked clearance. Deployment, real-data indexing/import,
+providers and Smart AI remain outside this clearance.
