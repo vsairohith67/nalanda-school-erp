@@ -55,7 +55,7 @@ export type SuperAdminCommandCenter = {
   recentActivity: CommandCenterSource<CommandCenterActivity[]>;
   workSummary: CommandCenterSource<CommandCenterMetric[]>;
   quickAccess: Array<{ label: string; href: string }>;
-  workProgramme: Array<{ title: string; status: "LIVE" | "PLANNED" | "BLOCKED BY DEPENDENCY"; detail: string; href?: string }>;
+  workProgramme: Array<{ title: string; status: "LIVE" | "AVAILABLE" | "PLANNED" | "BLOCKED BY DEPENDENCY"; detail: string; href?: string; actionLabel?: string }>;
   udise: Array<{ label: string; status: string }>;
   mobile: Array<{ label: string; status: string }>;
 };
@@ -126,7 +126,7 @@ export async function composeSuperAdminCommandCenter(
       { title: "Contacts & Suppliers", status: "LIVE", detail: "Private contact reference directory; no procurement automation.", href: "/super-admin/my-work" },
       { title: "Universal Search", status: "BLOCKED BY DEPENDENCY", detail: "Starts after Diary, Tasks and Directory." },
       { title: "Smart AI", status: "BLOCKED BY DEPENDENCY", detail: "Starts only after permission-scoped Universal Search." },
-      { title: "Whiteboard", status: "PLANNED", detail: "Canvs remains the planning surface; no ERP whiteboard engine yet." }
+      { title: "Whiteboard", status: "AVAILABLE", detail: "Canonical ERP planning board.", href: "/super-admin/whiteboard", actionLabel: "Open Whiteboard" }
     ],
     udise: [
       { label: "Prompt 15D", status: "Read-only foundation complete" },

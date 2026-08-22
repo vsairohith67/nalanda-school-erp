@@ -1930,3 +1930,22 @@ Status: `ACADEMIC-INTEGRITY-1A — CLEARED`. After `SUPER-ADMIN-WORK-1A-QA`
 independently cleared and advanced `main`, its exact My Work changes were
 preserved during release reconciliation and all affected/full gates were rerun.
 No deployment, live provider or real user/data activation was performed.
+
+## WHITEBOARD-BRIDGE-1A — Super Admin Canonical Canvs Bridge Foundation (2026-08-22)
+
+Implementation converts the planned Command Center Whiteboard card into one
+exact `SUPER_ADMIN`-only route at `/super-admin/whiteboard`. The route reuses the
+authenticated application shell and launches only the canonical Nalanda ERP
+Canvs board in a protected external tab. A strict non-secret configuration
+validator accepts the exact `app.canvs.io` host, `/gdrive` path and canonical
+board ID; invalid, alternate, redirected, encoded or user-controlled targets
+fail closed without rendering an outbound link.
+
+The bridge adds no iframe, OAuth/SSO/token exchange, cookie or credential
+forwarding, `postMessage` authentication, webhook, server-side Canvs fetch,
+scrape, polling, sync, cache, snapshot, database table, migration, Excalidraw
+dependency, whiteboard engine, Universal Search adapter, Smart AI, RAG,
+embedding, or vector storage. Board editing remains in Canvs and changes are not
+stored by the ERP. Academic Integrity v1.1 and My Work IAM behavior are
+unchanged. Status: `WHITEBOARD_BRIDGE_READY_FOR_QA`; independent
+`WHITEBOARD-BRIDGE-1A-QA` is required before merge, tag, or clearance.

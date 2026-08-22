@@ -81,7 +81,7 @@ export default async function SuperAdminCommandCenterPage() {
         <div className="command-section-heading"><div><h2 id="work-programme-title">My work programme</h2><p>Diary / Tasks / Directory → Universal Search → Smart AI</p></div><Sparkles size={24} aria-hidden /></div>
         <div className="command-future-grid">
           {commandCenter.workProgramme.map((item) => item.href
-            ? <Link href={item.href} key={item.title}><span>{item.status}</span><h3>{item.title}</h3><p>{item.detail}</p></Link>
+            ? <Link href={item.href} key={item.title}><span>{item.status}</span><h3>{item.title}</h3><p>{item.detail}</p>{item.actionLabel ? <strong className="command-card-action">{item.actionLabel} <ArrowRight size={16} aria-hidden /></strong> : null}</Link>
             : <article key={item.title} aria-disabled="true"><span>{item.status}</span><h3>{item.title}</h3><p>{item.detail}</p></article>)}
         </div>
       </section>
