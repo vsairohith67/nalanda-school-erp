@@ -10,9 +10,10 @@ The V1 RC remains cleared and frozen at `26a47632f7c1e9c9b5f2b48de8c9b56d60428ae
 
 The read-only Command Center, exact-owner Personal Work Programme, fixed
 external Canvs Whiteboard Bridge and permission-scoped Universal Search are
-independently cleared. Smart AI is unlocked for a separate planning prompt
-only; implementation, providers and real-data AI processing remain
-unauthorized. Private staging proceeds as a separate operational track.
+independently cleared. The grounded Smart AI software foundation is also
+independently cleared. Provider/runtime activation, AI Actions, deployment and
+real-data AI processing remain unauthorized. Private staging proceeds as a
+separate operational track.
 
 ## Evidence rule
 
@@ -28,11 +29,11 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | 2 | Super Admin Command Center | `CLEARED` | Independent QA cleared the exact-Super-Admin, private/no-store composition. Its My Work, Universal Search launcher and fixed Whiteboard Bridge are also cleared without changing the original Command Center evidence. |
 | 3 | Digital Diary | `CLEARED` | Exact-owner Diary is independently cleared inside My Work and is an included owner-scoped Universal Search source. Sharing, AI and external synchronization remain outside the release. |
 | 4 | Tasks, reminders and calendar | My Work Tasks/Reminders: `CLEARED`; calendar: `CLEARED`; broader Life OS: `DEFERRED` | Exact-owner Tasks & Reminders and the existing academic calendar are cleared. Universal Search consumes bounded safe fields without completing tasks or sending reminders; no external calendar sync is claimed. |
-| 5 | Universal search | `CLEARED` | Independent QA cleared the exact-`SUPER_ADMIN`, deterministic, private/no-store server composition without a migration, index table, AI or external provider. Attendance and unified Audit search remain explicitly `UNAVAILABLE`. Smart AI planning is unblocked but requires its own authorization. |
+| 5 | Universal search | `CLEARED` | Independent QA cleared the exact-`SUPER_ADMIN`, deterministic, private/no-store server composition without a migration, index table, AI or external provider. Attendance and unified Audit search remain explicitly `UNAVAILABLE`. The separately cleared Smart AI foundation consumes this contract without changing Search. |
 | 6 | Publishers, book suppliers, vendors and contacts | Private reference directory: `CLEARED`; broader CRM/procurement: `DEFERRED` | Exact-owner Contacts & Suppliers is cleared and searchable through bounded safe fields. It remains a reference directory, not procurement/payment automation. |
 | 7 | Monitoring and operational dashboard extensions | `PARTIAL` | OBS-1A and its technical/operational foundation are cleared. Hosting-dependent live monitoring, provider health, cost/usage extensions, and unified Command Center presentation remain pending. Extend the existing architecture. |
 | 8 | Whiteboard | Bridge: `CLEARED`; ERP engine: `NOT_IMPLEMENTED` | `WHITEBOARD-BRIDGE-1A-QA` independently proved that only the exact Super Admin route can launch the canonical Canvs board. It has no iframe, token exchange, server fetch, sync, board persistence, Search/AI integration or open redirect. Canvs remains the editing engine. |
-| 9 | Citation-based Smart AI | `NEXT_FOR_SEPARATE_PLANNING`; advanced scope `DEFERRED_TO_V2` | The read-only assistant foundation validates citations/timestamps using mock data, and Universal Search now supplies a cleared permission-filtered retrieval boundary. No AI implementation, semantic retrieval, attachment ingestion, external knowledge or live provider is authorized. |
+| 9 | Citation-based Smart AI | Foundation: `CLEARED`; runtime/actions/advanced scope: `DEFERRED_TO_V2` | Independent QA cleared the exact-Super-Admin, Universal-Search-only, read-only, citation-validated software foundation. Runtime remains disabled. Semantic retrieval, attachment/image/Canvs ingestion, external knowledge/providers, persistent history and AI actions are not authorized. |
 | 10 | Android app | `NOT_IMPLEMENTED` | Responsive web/PWA foundations do not constitute a native Android app. A later shared-app Capacitor approach may be assessed only after staging and physical-device certification. |
 | 11 | iOS/iPadOS app | `NOT_IMPLEMENTED` | No native Apple application is proven. Final building, signing, and device certification require a Mac/Xcode environment and Apple account decisions. |
 | 12 | PWA and device certification | PWA foundation: `CLEARED`; end-to-end readiness: `PARTIAL`; physical certification: `OPERATIONAL_CONFIGURATION_PENDING` | Responsive web and the installable PWA foundation are present. Physical Android/iPhone/iPad testing waits for approved private HTTPS staging. See the [device checklist](./PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md). |
@@ -48,7 +49,7 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 1. Compose the Super Admin Command Center from existing cleared foundations.
 2. Establish the combined Diary/tasks/reminders/Life OS and directory model.
 3. Preserve the independently cleared fixed Canvs Whiteboard Bridge and permission-scoped Universal Search.
-4. Use a separate prompt to plan citation-based Smart AI; never bypass Search authorization.
+4. Preserve the cleared citation-based Smart AI foundation; any local runtime or AI Actions phase remains separate and must never bypass Search authorization.
 
 This order prevents AI from answering over missing supplier records or bypassing role permissions.
 
@@ -65,7 +66,18 @@ The implementation, precise source/deferred-source contract and independent
 evidence are documented in [Universal Search Architecture](./UNIVERSAL_SEARCH_ARCHITECTURE.md)
 and the [QA clearance](./evidence/UNIVERSAL_SEARCH_1A_QA_CLEARANCE.md). Search is
 cleared for this private/local release. This does not authorize deployment,
-real-data indexing/import, providers or Smart AI implementation.
+real-data indexing/import or providers. Smart AI has its own separate clearance
+and does not alter this Search release boundary.
+
+## SMART-AI-1A clearance update (2026-08-22)
+
+The grounded assistant foundation is independently cleared as
+`SMART_AI_CLEARED`. It remains exact-`SUPER_ADMIN`, read-only, ephemeral,
+Universal-Search-backed, citation-validated and disabled by default. See the
+[architecture](./SMART_AI_ARCHITECTURE.md) and
+[QA clearance](./evidence/SMART_AI_1A_QA_CLEARANCE.md). No provider runtime,
+real-data transmission, AI action, web browsing, image AI or deployment is
+activated.
 
 ## Superseded checkpoints
 

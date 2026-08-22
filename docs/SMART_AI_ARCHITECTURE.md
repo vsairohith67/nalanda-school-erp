@@ -7,6 +7,7 @@
 - **Default runtime:** `DISABLED`
 - **Persistence:** none
 - **Authority:** read-only synthesis over Universal Search only
+- **Independent QA:** `SMART_AI_CLEARED` on 2026-08-22
 
 ## Purpose and release boundary
 
@@ -251,3 +252,7 @@ Any future role expansion requires a new exact permission/object-scope design.
 Any future AI Actions capability requires a separate governance, approval,
 audit, confirmation, rollback and Academic Integrity phase. Neither is implied
 by this foundation.
+
+The independent authorization, privacy, provider, injection, citation,
+Browser, security, full-regression and database-integrity evidence is recorded
+in [SMART-AI-1A Independent QA Clearance](./evidence/SMART_AI_1A_QA_CLEARANCE.md).

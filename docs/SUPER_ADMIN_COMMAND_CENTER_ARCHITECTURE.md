@@ -186,3 +186,8 @@ separately configured, the launcher reports that local state without exposing
 an endpoint or credential. Smart AI reads no Command Center database source and
 does not alter existing metrics, Search, My Work or Whiteboard behavior. See
 [Smart AI Architecture](./SMART_AI_ARCHITECTURE.md).
+
+Independent SMART-AI-1A QA cleared this composition extension on 2026-08-22.
+The launcher remains runtime-accurate: the provider is disabled/not activated
+unless a separately governed loopback runtime is configured. See the
+[Smart AI QA clearance](./evidence/SMART_AI_1A_QA_CLEARANCE.md).

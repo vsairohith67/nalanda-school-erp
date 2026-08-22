@@ -200,12 +200,13 @@ async function main() {
   const client = new PrismaClient({ datasourceUrl: databaseUrl(DATABASE) });
   try {
     activeStage = "historical immutability baseline";
-    const historicalBefore = digest({
+    const historicalBaseline = {
       calculationSnapshots: await client.studentResultSnapshot.findMany({ orderBy: { id: "asc" } }),
       reportPublications: await client.studentReportCard.findMany({ orderBy: { id: "asc" } }),
       reportVersions: await client.studentReportCardVersion.findMany({ orderBy: { id: "asc" } }),
       teacherAudit: await client.studentMarkEvent.findMany({ where: { actorLabel: { contains: "Teacher" } }, orderBy: { id: "asc" } })
-    });
+    };
+    const historicalBefore = digest(historicalBaseline);
 
     activeStage = "synthetic exact-scope fixtures";
     const guardian = await client.guardian.create({
@@ -361,10 +362,10 @@ async function main() {
     const event = await client.authSecurityEvent.findFirstOrThrow({ where: { eventType: "MARKS_WRITE_AUTHORITY_DENIED" }, orderBy: { createdAt: "desc" } });
     invariant(!String(event.detailsJson).includes("AI1AQA Student") && !String(event.detailsJson).includes("Mathematics"), "AI1AQA_DENIAL_AUDIT_EXPOSES_STUDENT_SCOPE");
     const historicalAfter = digest({
-      calculationSnapshots: await client.studentResultSnapshot.findMany({ orderBy: { id: "asc" } }),
-      reportPublications: await client.studentReportCard.findMany({ orderBy: { id: "asc" } }),
-      reportVersions: await client.studentReportCardVersion.findMany({ orderBy: { id: "asc" } }),
-      teacherAudit: await client.studentMarkEvent.findMany({ where: { actorLabel: { contains: "Teacher" } }, orderBy: { id: "asc" } })
+      calculationSnapshots: await client.studentResultSnapshot.findMany({ where: { id: { in: historicalBaseline.calculationSnapshots.map((row) => row.id) } }, orderBy: { id: "asc" } }),
+      reportPublications: await client.studentReportCard.findMany({ where: { id: { in: historicalBaseline.reportPublications.map((row) => row.id) } }, orderBy: { id: "asc" } }),
+      reportVersions: await client.studentReportCardVersion.findMany({ where: { id: { in: historicalBaseline.reportVersions.map((row) => row.id) } }, orderBy: { id: "asc" } }),
+      teacherAudit: await client.studentMarkEvent.findMany({ where: { id: { in: historicalBaseline.teacherAudit.map((row) => row.id) } }, orderBy: { id: "asc" } })
     });
     invariant(historicalBefore === historicalAfter, "AI1AQA_HISTORICAL_RECORDS_CHANGED");
 

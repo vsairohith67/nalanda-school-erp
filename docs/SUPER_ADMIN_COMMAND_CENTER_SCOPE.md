@@ -158,8 +158,8 @@ copied migration/recovery, privacy-safe audit, no-provider side effects,
 representative volume and exact desktop/mobile light/dark Browser QA passed.
 The operational database remained byte-identical and the additive migration was
 not applied operationally. Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search
-is now independently cleared; SMART-AI-1A is implemented as a separate exact-
-role, Search-grounded, read-only foundation and
+is now independently cleared; SMART-AI-1A is independently cleared as a separate
+exact-role, Search-grounded, read-only foundation and
 the canonical Canvs Whiteboard Bridge is independently cleared.
 
 ## UNIVERSAL-SEARCH-1A private/local clearance (2026-08-22)
@@ -182,6 +182,11 @@ and [Smart AI architecture](./SMART_AI_ARCHITECTURE.md).
 
 Status: `UNIVERSAL_SEARCH_CLEARED`. The clearance is private/local and is not
 deployment, provider activation, real-data transmission or AI action authorization.
+
+SMART-AI-1A independently cleared its own private/local security, privacy,
+Browser and release gate on 2026-08-22. Status: `SMART_AI_CLEARED`. Provider
+runtime remains disabled/not activated, and no AI action is authorized. See the
+[Smart AI QA clearance](./evidence/SMART_AI_1A_QA_CLEARANCE.md).
 
 ## WHITEBOARD-BRIDGE-1A implementation handoff (2026-08-22)
 

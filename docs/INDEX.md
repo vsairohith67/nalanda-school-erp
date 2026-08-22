@@ -20,6 +20,7 @@ The V1 Teacher marks-write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`. `A
 - [Universal Search Architecture](UNIVERSAL_SEARCH_ARCHITECTURE.md)
 - [Universal Search Independent QA Clearance](evidence/UNIVERSAL_SEARCH_1A_QA_CLEARANCE.md)
 - [Grounded Smart AI Architecture](SMART_AI_ARCHITECTURE.md)
+- [Grounded Smart AI Independent QA Clearance](evidence/SMART_AI_1A_QA_CLEARANCE.md)
 - [Canonical Canvs Whiteboard Bridge](SUPER_ADMIN_WHITEBOARD_BRIDGE.md)
 - [V1.5 and Post-RC Roadmap](V1_5_AND_POST_RC_ROADMAP.md)
 - [Pending Feature Reconciliation](PENDING_FEATURE_RECONCILIATION.md)
@@ -33,7 +34,8 @@ inside one My Work shell with bounded, failure-isolated Command Center
 summaries. Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search is implemented
 and independently cleared with status `UNIVERSAL_SEARCH_CLEARED`. SMART-AI-1A
 implements the exact-Super-Admin, read-only, citation-grounded foundation over
-that Search boundary. Its runtime remains disabled by default and cloud/external
+that Search boundary and is independently cleared with status
+`SMART_AI_CLEARED`. Its runtime remains disabled by default and cloud/external
 providers, persistent conversations and AI actions remain prohibited. The fixed canonical Canvs Whiteboard bridge is
 also independently cleared without iframe, token exchange, sync, database
 change, Search indexing or AI integration.

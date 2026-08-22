@@ -213,5 +213,6 @@ Independent `UNIVERSAL-SEARCH-1A-QA` cleared this private/local release on
 2026-08-22. The complete authorization, ownership, secret-field, failure,
 performance, Browser, security, full-suite and operational-database evidence
 is recorded in the linked clearance. Deployment, real-data indexing/import,
-providers and Smart AI remain outside this Search clearance. SMART-AI-1A has
-its own independent security, privacy and release gate.
+providers and Smart AI remain outside this Search clearance. SMART-AI-1A later
+passed its own independent security, privacy and release gate without changing
+Search semantics; see its [QA clearance](./evidence/SMART_AI_1A_QA_CLEARANCE.md).
