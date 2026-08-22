@@ -175,7 +175,7 @@ try {
     Assert-Exit "synthetic backup"
     $latestBackup = Get-ChildItem -LiteralPath $env:BACKUP_DIRECTORY -File | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
     $backupDocument = Get-Content -LiteralPath $latestBackup.FullName -Raw | ConvertFrom-Json
-    if ($backupDocument.metadata.backupVersion -ne 41 -or @($backupDocument.students).Count -ne 1 -or @($backupDocument.payments).Count -ne 0) {
+    if ($backupDocument.metadata.backupVersion -ne 42 -or @($backupDocument.students).Count -ne 1 -or @($backupDocument.payments).Count -ne 0) {
       throw "LOCAL_REHEARSAL_BACKUP_VALIDATION_FAILED"
     }
   } finally {
@@ -276,7 +276,7 @@ try {
     hsts = $true
     privateNoStore = $true
     staticImmutable = $true
-    backupVersion = 41
+    backupVersion = 42
     restartDatabaseHashStable = $true
     rollbackLogin = $rollbackLogin.Status
     currentBuildId = $currentBuildId

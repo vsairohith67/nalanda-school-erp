@@ -71,7 +71,7 @@ export function validateFamilyCollectionBackupRows(input: Record<string, unknown
   }
   for (const [collectionId, collection] of collections) {
     const total = positivePaise(collection.totalPaise, "collection total");
-    if (Number(collection.creditPaise ?? 0) !== 0) throw new Error("Family credit must remain zero in backup version 41");
+    if (Number(collection.creditPaise ?? 0) !== 0) throw new Error("Family credit must remain zero in backup version 42");
     const instrumentRows = backup.familyCollectionInstruments.filter((row) => row.collectionId === collectionId);
     const allocationRows = backup.familyStudentAllocations.filter((row) => row.collectionId === collectionId);
     const instrumentTotal = instrumentRows.reduce((sum, row) => sum + positivePaise(row.amountPaise, "instrument amount"), 0);
