@@ -124,22 +124,24 @@ async function main() {
     await denied(() => createParentMeetingRequest(client, parentA, { academicYear: "2026-27", childHandle: ownB.context.childHandle, category: "OTHER", subject: "Cross child", requestReason: "Must be denied" }), `${prefix}_CROSS_CHILD_HANDLE_ACCEPTED`);
     await denied(() => createParentMeetingRequest(client, parentA, { academicYear: "2026-27", category: "ACADEMIC_PROGRESS", subject: "Duplicate request", requestReason: "Duplicate active request" }), `${prefix}_DUPLICATE_REQUEST_ACCEPTED`);
     await denied(() => createParentMeetingRequest(client, parentA, { academicYear: "2026-27", category: "OTHER", subject: "x", requestReason: "" }), `${prefix}_EMPTY_VALIDATION_ACCEPTED`);
+    await denied(() => scheduleParentMeeting(client, principal, parentRequest.publicKey, { expectedRowVersion: parentRequest.rowVersion, scheduledStartAt: "2027-02-29T10:00:00+05:30", durationMinutes: 30, mode: "PHONE", primaryStaffHandle: base.staff.get("TEACHER").iamPublicKey, participantStaffHandles: [base.staff.get("TEACHER").iamPublicKey] }), `${prefix}_INVALID_LEAP_DAY_ACCEPTED`);
 
     stage = "schedule, teacher scope and privacy";
     const scheduled = await scheduleParentMeeting(client, principal, parentRequest.publicKey, { expectedRowVersion: parentRequest.rowVersion, scheduledStartAt: "2026-09-10T10:00:00+05:30", durationMinutes: 30, mode: "IN_PERSON", locationReference: "Principal Office", onlineReference: "", primaryStaffHandle: base.staff.get("TEACHER").iamPublicKey, participantStaffHandles: [base.staff.get("TEACHER").iamPublicKey, base.staff.get("PRINCIPAL").iamPublicKey] });
     invariant((await listParentMeetingWorkspace(client, teacherA)).meetings.length === 1, `${prefix}_ASSIGNED_TEACHER_MISSING`);
     invariant((await listParentMeetingWorkspace(client, teacherB)).meetings.length === 0, `${prefix}_UNASSIGNED_TEACHER_VISIBLE`);
     await recordParentMeetingNote(client, principal, scheduled.publicKey, { kind: "LEADERSHIP_PRIVATE", body: "LEADERSHIP-PRIVATE-<img onerror=alert(1)>" });
-    await recordParentMeetingNote(client, principal, scheduled.publicKey, { kind: "PARTICIPANT_INTERNAL", body: "PARTICIPANT-INTERNAL-<svg onload=alert(1)>" });
-    await recordParentMeetingNote(client, teacherA, scheduled.publicKey, { kind: "PARTICIPANT_INTERNAL", body: "TEACHER-CONTRIBUTION-' OR 1=1 --" });
+    const leadershipParticipantNote = await recordParentMeetingNote(client, principal, scheduled.publicKey, { kind: "PARTICIPANT_INTERNAL", body: "PARTICIPANT-INTERNAL-<svg onload=alert(1)>" });
+    const teacherContribution = await recordParentMeetingNote(client, teacherA, scheduled.publicKey, { kind: "PARTICIPANT_INTERNAL", body: "TEACHER-CONTRIBUTION-' OR 1=1 --" });
+    await denied(() => recordParentMeetingNote(client, teacherA, scheduled.publicKey, { kind: "PARTICIPANT_INTERNAL", body: "Cross-author correction denied", correctsNoteKey: leadershipParticipantNote.publicKey, correctionReason: "Not my note" }), `${prefix}_TEACHER_CROSS_AUTHOR_CORRECTION`);
+    await recordParentMeetingNote(client, teacherA, scheduled.publicKey, { kind: "PARTICIPANT_INTERNAL", body: "Corrected own Teacher contribution", correctsNoteKey: teacherContribution.publicKey, correctionReason: "Corrected wording" });
     await denied(() => recordParentMeetingNote(client, teacherA, scheduled.publicKey, { kind: "LEADERSHIP_PRIVATE", body: "Teacher escalation" }), `${prefix}_TEACHER_LEADERSHIP_NOTE`);
     await denied(() => recordParentMeetingNote(client, teacherB, scheduled.publicKey, { kind: "PARTICIPANT_INTERNAL", body: "Unassigned" }), `${prefix}_UNASSIGNED_TEACHER_NOTE`);
     const teacherPayload = JSON.stringify(await listParentMeetingWorkspace(client, teacherA));
     invariant(!teacherPayload.includes("LEADERSHIP-PRIVATE") && teacherPayload.includes("PARTICIPANT-INTERNAL"), `${prefix}_TEACHER_NOTE_VISIBILITY_FAILED`);
     const parentPayloadBefore = JSON.stringify(await listParentOwnMeetings(client, parentA, { academicYear: "2026-27" }));
     invariant(!parentPayloadBefore.includes("LEADERSHIP-PRIVATE") && !parentPayloadBefore.includes("PARTICIPANT-INTERNAL") && !parentPayloadBefore.includes("staffHandle"), `${prefix}_PARENT_PRIVATE_PAYLOAD_LEAK`);
-    await recordParentMeetingAttendance(client, teacherA, scheduled.publicKey, { status: "ATTENDED", expectedRowVersion: 1 });
-    await denied(() => recordParentMeetingAttendance(client, teacherB, scheduled.publicKey, { status: "ATTENDED", expectedRowVersion: 1 }), `${prefix}_UNASSIGNED_ATTENDANCE`);
+    await denied(() => recordParentMeetingAttendance(client, teacherA, scheduled.publicKey, { status: "ATTENDED", expectedRowVersion: 1 }), `${prefix}_EARLY_ATTENDANCE_ACCEPTED`);
 
     stage = "conflicts and concurrency";
     const conflict = await createLeadershipParentMeeting(client, principal, { academicYear: "2026-27", studentAdmissionNo: base.students[1].admissionNo, category: "ATTENDANCE", subject: "Conflict check", requestReason: "Synthetic" });
@@ -156,6 +158,8 @@ async function main() {
 
     stage = "completion, summary and follow-up";
     await client.parentMeeting.update({ where: { publicKey: scheduled.publicKey }, data: { scheduledStartAt: new Date("2026-08-21T10:00:00+05:30"), scheduledEndAt: new Date("2026-08-21T10:30:00+05:30") } });
+    await recordParentMeetingAttendance(client, teacherA, scheduled.publicKey, { status: "ATTENDED", expectedRowVersion: 1 });
+    await denied(() => recordParentMeetingAttendance(client, teacherB, scheduled.publicKey, { status: "ATTENDED", expectedRowVersion: 1 }), `${prefix}_UNASSIGNED_ATTENDANCE`);
     const current = await client.parentMeeting.findUniqueOrThrow({ where: { publicKey: scheduled.publicKey } });
     const terminal = await Promise.allSettled([
       transitionParentMeeting(client, principal, scheduled.publicKey, { action: "COMPLETE", expectedRowVersion: current.rowVersion, followUpRequired: true }),
@@ -166,6 +170,7 @@ async function main() {
     invariant(["COMPLETED","CANCELLED"].includes(terminalMeeting.status), `${prefix}_TERMINAL_STATE_INVALID`);
     if (terminalMeeting.status !== "COMPLETED") throw new Error(`${prefix}_CONCURRENCY_CANCEL_WON_RETRY_REQUIRED`);
     const summary = await recordParentMeetingNote(client, principal, scheduled.publicKey, { kind: "PARENT_VISIBLE_SUMMARY", body: "Parent-safe summary <script>alert(1)</script>" });
+    await denied(() => recordParentMeetingNote(client, principal, scheduled.publicKey, { kind: "PARENT_VISIBLE_SUMMARY", body: "Unlinked replacement summary" }), `${prefix}_UNLINKED_SUMMARY_REPLACEMENT`);
     await recordParentMeetingNote(client, principal, scheduled.publicKey, { kind: "PARENT_VISIBLE_SUMMARY", body: "Corrected Parent-safe summary", correctsNoteKey: summary.publicKey, correctionReason: "Corrected wording" });
     const followUp = await createParentMeetingFollowUp(client, principal, scheduled.publicKey, { internalDescription: "Internal follow-up <img onerror=alert(1)>", parentVisibleDescription: "Please review the shared learning plan.", responsibleStaffHandle: base.staff.get("TEACHER").iamPublicKey, dueDate: "2026-09-15" });
     const followRace = await Promise.allSettled([

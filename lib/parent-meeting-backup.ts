@@ -58,8 +58,14 @@ export function validateParentMeetingBackupRows(root: Record<string, unknown>): 
     oneOf(row.source, ["PARENT_REQUEST","LEADERSHIP_CREATED"], `parentMeetings[${index}].source`);
     oneOf(row.category, ["ACADEMIC_PROGRESS","ATTENDANCE","GENERAL_SCHOOL_DISCUSSION","ADMINISTRATIVE","PRINCIPAL_APPOINTMENT","OTHER"], `parentMeetings[${index}].category`);
     oneOf(row.status, ["REQUESTED","SCHEDULING","SCHEDULED","CONFIRMED","COMPLETED","CANCELLED","NO_SHOW"], `parentMeetings[${index}].status`);
+    if (row.mode !== null && row.mode !== undefined) oneOf(row.mode, ["IN_PERSON","PHONE","ONLINE_REFERENCE"], `parentMeetings[${index}].mode`);
+    if (row.noShowState !== null && row.noShowState !== undefined) oneOf(row.noShowState, ["PARENT_NO_SHOW","STAFF_NO_SHOW","BOTH_NO_SHOW"], `parentMeetings[${index}].noShowState`);
     positive(row.rowVersion, `parentMeetings[${index}].rowVersion`);
     if (row.durationMinutes !== null && row.durationMinutes !== undefined && (Number(row.durationMinutes) < 10 || Number(row.durationMinutes) > 180)) throw new Error(`parentMeetings[${index}].durationMinutes is invalid`);
+    if (["SCHEDULED","CONFIRMED"].includes(text(row.status))) {
+      const start = date(row.scheduledStartAt, `parentMeetings[${index}].scheduledStartAt`), end = date(row.scheduledEndAt, `parentMeetings[${index}].scheduledEndAt`), duration = Number(row.durationMinutes);
+      if (!Number.isInteger(duration) || duration < 10 || duration > 180 || end <= start || end.getTime() - start.getTime() !== duration * 60_000 || !row.mode) throw new Error(`parentMeetings[${index}] has an invalid schedule`);
+    }
   }
   for (const key of PARENT_MEETING_BACKUP_KEYS.filter((item) => item !== "parentMeetings") as ParentMeetingBackupKey[]) for (const [index, row] of result[key].entries()) if (!meetingIds.has(text(row.meetingId))) throw new Error(`${key}[${index}] has an invalid meeting link`);
   for (const [index, row] of result.parentMeetingNotes.entries()) { oneOf(row.kind, ["LEADERSHIP_PRIVATE","PARTICIPANT_INTERNAL","PARENT_VISIBLE_SUMMARY"], `parentMeetingNotes[${index}].kind`); if (row.correctsNoteId && !noteIds.has(text(row.correctsNoteId))) throw new Error(`parentMeetingNotes[${index}] has an invalid correction link`); }
@@ -86,5 +92,6 @@ function text(value:unknown){return String(value??"").trim();}
 function oneOf(value:unknown,allowed:string[],label:string){if(!allowed.includes(text(value)))throw new Error(`${label} is unsupported`);}
 function positive(value:unknown,label:string){const number=Number(value);if(!Number.isInteger(number)||number<1)throw new Error(`${label} is invalid`);return number;}
 function json(value:unknown,label:string){if(typeof value!=="string"||value.length>2_000_000)throw new Error(`${label} is invalid`);try{return JSON.parse(value);}catch{throw new Error(`${label} is invalid`);}}
+function date(value:unknown,label:string){const result=value instanceof Date?value:new Date(String(value??""));if(Number.isNaN(result.getTime()))throw new Error(`${label} is invalid`);return result;}
 function dates(row:Record<string,unknown>,fields:string[]){const value={...row};for(const field of fields)if(value[field])value[field]=new Date(String(value[field]));return value;}
 function errorText(label:string,index:number,error:unknown){return `${label} ${index+1}: ${error instanceof Error?error.message:"Unknown restore error"}`;}

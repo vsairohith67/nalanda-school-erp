@@ -64,6 +64,8 @@ describe("PARENT-MEETING-V1_5-1A governance", () => {
     const migration = source("prisma/migrations/20260822170000_parent_meetings_v1_5/migration.sql");
     expect(migration).toContain("PARENT_MEETING_TRANSITION_INVALID");
     expect(migration).toContain("ParentMeetingNote_no_update");
+    expect(migration).toContain("ParentMeeting_schedule_required_insert");
+    expect(migration).toContain("ParentMeeting_schedule_conflict_insert");
     expect(migration).toContain("PARENT_MEETING_STAFF_CONFLICT");
     expect(migration).toContain("PARENT_MEETING_GUARDIAN_CONFLICT");
   });
@@ -84,6 +86,8 @@ describe("PARENT-MEETING-V1_5-1A governance", () => {
     expect(() => validateParentMeetingBackupRows(secret)).toThrow(/passwordHash is unsupported/);
     delete secret.parentMeetings[0].passwordHash;
     expect(validateParentMeetingBackupRows(secret).parentMeetings[0]?.subject).toBe("Password reset credential discussion");
+    secret.parentMeetings[0].status = "SCHEDULED";
+    expect(() => validateParentMeetingBackupRows(secret)).toThrow(/scheduledStartAt is invalid|invalid schedule/);
   });
 
   it("keeps private fields out of the Parent serializer and broad logs", () => {

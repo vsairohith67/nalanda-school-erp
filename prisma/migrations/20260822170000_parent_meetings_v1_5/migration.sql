@@ -179,6 +179,14 @@ WHEN NEW."status" IN ('SCHEDULED','CONFIRMED') AND (
 )
 BEGIN SELECT RAISE(ABORT, 'PARENT_MEETING_SCHEDULE_INVALID'); END;
 
+CREATE TRIGGER "ParentMeeting_schedule_required_insert"
+BEFORE INSERT ON "ParentMeeting"
+WHEN NEW."status" IN ('SCHEDULED','CONFIRMED') AND (
+  NEW."scheduledStartAt" IS NULL OR NEW."scheduledEndAt" IS NULL OR NEW."durationMinutes" NOT BETWEEN 10 AND 180 OR
+  NEW."scheduledEndAt" <= NEW."scheduledStartAt" OR NEW."mode" IS NULL
+)
+BEGIN SELECT RAISE(ABORT, 'PARENT_MEETING_SCHEDULE_INVALID'); END;
+
 CREATE TRIGGER "ParentMeeting_schedule_conflict"
 BEFORE UPDATE OF "status","scheduledStartAt","scheduledEndAt","mode","locationReference" ON "ParentMeeting"
 WHEN NEW."status" IN ('SCHEDULED','CONFIRMED')
@@ -203,6 +211,24 @@ BEGIN
       AND other."id"<>NEW."id" AND other."status" IN ('SCHEDULED','CONFIRMED')
       AND NEW."scheduledStartAt" < other."scheduledEndAt" AND NEW."scheduledEndAt" > other."scheduledStartAt"
   ) THEN RAISE(ABORT, 'PARENT_MEETING_STAFF_CONFLICT') END;
+END;
+
+CREATE TRIGGER "ParentMeeting_schedule_conflict_insert"
+BEFORE INSERT ON "ParentMeeting"
+WHEN NEW."status" IN ('SCHEDULED','CONFIRMED')
+BEGIN
+  SELECT CASE WHEN EXISTS (
+    SELECT 1 FROM "ParentMeeting" other
+    WHERE other."status" IN ('SCHEDULED','CONFIRMED')
+      AND NEW."scheduledStartAt" < other."scheduledEndAt" AND NEW."scheduledEndAt" > other."scheduledStartAt"
+      AND NEW."requesterGuardianId" IS NOT NULL AND other."requesterGuardianId"=NEW."requesterGuardianId"
+  ) THEN RAISE(ABORT, 'PARENT_MEETING_GUARDIAN_CONFLICT') END;
+  SELECT CASE WHEN NEW."mode"='IN_PERSON' AND length(trim(COALESCE(NEW."locationReference",'')))>0 AND EXISTS (
+    SELECT 1 FROM "ParentMeeting" other
+    WHERE other."status" IN ('SCHEDULED','CONFIRMED') AND other."mode"='IN_PERSON'
+      AND lower(trim(other."locationReference"))=lower(trim(NEW."locationReference"))
+      AND NEW."scheduledStartAt" < other."scheduledEndAt" AND NEW."scheduledEndAt" > other."scheduledStartAt"
+  ) THEN RAISE(ABORT, 'PARENT_MEETING_LOCATION_CONFLICT') END;
 END;
 
 CREATE TRIGGER "ParentMeetingParticipant_schedule_conflict_insert"

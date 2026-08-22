@@ -1,5 +1,5 @@
 import type { AuthUser } from "@/lib/auth";
-import { resolveActiveParentChildContext } from "@/lib/iam/contexts";
+import { ParentChildContextError, resolveActiveParentChildContext } from "@/lib/iam/contexts";
 import { parentMeetingsEnabled } from "@/lib/parent-meeting-feature";
 import { publishParentMeetingNotification, type ParentMeetingNotificationType } from "@/lib/parent-meeting-notifications";
 import type { Role } from "@/lib/permissions";
@@ -46,7 +46,7 @@ export async function createParentMeetingRequest(client: Client, actor: ParentMe
     academicYear,
     childHandle: optionalText(row.childHandle, 100, "Child context"),
     expectedContextVersion: optionalPositiveInteger(row.expectedContextVersion, "Context version")
-  }).catch(() => { throw unavailable(); });
+  }).catch((error) => { if (error instanceof ParentChildContextError) throw unavailable(); throw error; });
   const category = oneOf(row.category, PARENT_MEETING_CATEGORIES, "Meeting category");
   const subject = boundedText(row.subject, 3, 180, "Meeting subject");
   const requestReason = boundedText(row.requestReason, 3, 2_000, "Request reason", true);
@@ -155,7 +155,7 @@ export async function listParentOwnMeetings(client: Client, actor: ParentMeeting
     academicYear,
     childHandle: optionalText(row.childHandle, 100, "Child context"),
     expectedContextVersion: optionalPositiveInteger(row.expectedContextVersion, "Context version")
-  }).catch(() => { throw unavailable(); });
+  }).catch((error) => { if (error instanceof ParentChildContextError) throw unavailable(); throw error; });
   const meetings = await client.parentMeeting.findMany({
     where: { studentId: context.child.id, requesterGuardianId: context.guardianId },
     include: meetingInclude(),
@@ -316,9 +316,13 @@ export async function recordParentMeetingNote(client: Client, actor: ParentMeeti
       if (row.correctsNoteKey) {
         const corrected = await tx.parentMeetingNote.findUnique({ where: { publicKey: safeKey(row.correctsNoteKey, "Note reference") }, include: { corrections: { take: 1 } } });
         if (!corrected || corrected.meetingId !== meeting.id || corrected.kind !== kind) throw unavailable();
+        if (!manager && corrected.authorUserId !== actor.user.id) throw unavailable();
         if (corrected.corrections.length) throw changed("This note already has a preserved correction.");
         correctsNoteId = corrected.id;
         correctionReason = boundedText(row.correctionReason, 3, 500, "Correction reason");
+      } else if (kind === "PARENT_VISIBLE_SUMMARY") {
+        const existingSummary = await tx.parentMeetingNote.findFirst({ where: { meetingId: meeting.id, kind }, select: { id: true } });
+        if (existingSummary) throw new ParentMeetingError("Correct the current Parent-visible summary with a preserved reason instead of publishing an unrelated replacement.", 409, "SUMMARY_CORRECTION_REQUIRED");
       }
       const note = await tx.parentMeetingNote.create({ data: { meetingId: meeting.id, kind, body, authorUserId: actor.user.id, authorRole: actor.user.role, correctsNoteId, correctionReason } });
       const eventType = correctsNoteId ? "MEETING_NOTE_CORRECTED" : "MEETING_NOTE_ADDED";
@@ -339,6 +343,7 @@ export async function recordParentMeetingAttendance(client: Client, actor: Paren
   try {
     return await client.$transaction(async (tx: Client) => {
       const meeting = await meetingForUpdate(tx, meetingKey, true);
+      if (!meeting.scheduledStartAt || meeting.scheduledStartAt > new Date() || !["SCHEDULED", "CONFIRMED", "COMPLETED"].includes(meeting.status)) throw new ParentMeetingError("Attendance can be recorded only after the governed meeting start.", 409, "MEETING_ATTENDANCE_TOO_EARLY");
       let participant: any;
       if (manager) {
         const handle = safeHandle(row.staffHandle, "Staff participant");
@@ -497,7 +502,7 @@ function internalMeetingView(meeting: any, role: Role, actorUserId: string) {
     requester: meeting.requesterGuardian ? { displayName: meeting.requesterGuardian.displayName } : null,
     preferences: meeting.preferences.map((preference: any) => ({ startsAt: preference.startsAt, endsAt: preference.endsAt })),
     participants: meeting.participants.filter((participant: any) => participant.status !== "REMOVED").map((participant: any) => ({ publicKey: participant.publicKey, staffHandle: manager ? participant.staffMember.iamPublicKey : undefined, own: participant.staffMember.userId === actorUserId, name: participant.staffMember.displayName || participant.staffMember.fullName, designation: participant.staffMember.designation, participantRole: participant.participantRole, attendance: participant.status, rowVersion: participant.rowVersion })),
-    notes: notes.map((note: any) => ({ publicKey: note.publicKey, kind: note.kind, body: note.body, authorRole: note.authorRole, createdAt: note.createdAt, correctionReason: note.correctionReason, corrected: note.corrections.length > 0 })),
+    notes: notes.map((note: any) => ({ publicKey: note.publicKey, kind: note.kind, body: note.body, authorRole: note.authorRole, own: note.authorUserId === actorUserId, createdAt: note.createdAt, correctionReason: note.correctionReason, corrected: note.corrections.length > 0 })),
     followUps: meeting.followUps.map((followUp: any) => ({ publicKey: followUp.publicKey, internalDescription: manager || (teacher && followUp.responsibleStaffMember.userId === actorUserId) ? followUp.internalDescription : null, parentVisibleDescription: followUp.parentVisibleDescription, responsibleStaffHandle: manager ? followUp.responsibleStaffMember.iamPublicKey : undefined, responsibleName: followUp.responsibleStaffMember.displayName || followUp.responsibleStaffMember.fullName, own: followUp.responsibleStaffMember.userId === actorUserId, dueDate: followUp.dueDate, status: followUp.status, rowVersion: followUp.rowVersion })),
     cancellation: manager ? { internalReason: meeting.cancellationInternalReason, parentSummary: meeting.parentCancellationSummary } : { parentSummary: meeting.parentCancellationSummary },
     events: manager || role === "DIRECTOR" ? meeting.events.map((event: any) => ({ publicKey: event.publicKey, eventType: event.eventType, actorRole: event.actorRole, previousStatus: event.previousStatus, newStatus: event.newStatus, occurredAt: event.occurredAt, reason: manager ? event.reason : null })) : []
@@ -585,8 +590,9 @@ function oneOf<const T extends readonly string[]>(value: unknown, allowed: T, la
 function positiveInteger(value: unknown, label: string) { const result = Number(value); if (!Number.isSafeInteger(result) || result < 1) throw new ParentMeetingError(`${label} is invalid.`); return result; }
 function optionalPositiveInteger(value: unknown, label: string) { if (value == null || value === "") return null; return positiveInteger(value, label); }
 function boundedInteger(value: unknown, minimum: number, maximum: number, label: string) { const result = Number(value); if (!Number.isSafeInteger(result) || result < minimum || result > maximum) throw new ParentMeetingError(`${label} must be between ${minimum} and ${maximum}.`); return result; }
-function zonedDate(value: unknown, label: string) { const text = String(value ?? "").trim(); if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/.test(text)) throw new ParentMeetingError(`${label} must include an explicit time-zone offset.`); const result = new Date(text); if (Number.isNaN(result.getTime())) throw new ParentMeetingError(`${label} is invalid.`); return result; }
-function indiaDueDate(value: unknown) { const text = String(value ?? "").trim(); if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) throw new ParentMeetingError("Follow-up due date is invalid."); const date = new Date(`${text}T23:59:59.999+05:30`); if (Number.isNaN(date.getTime()) || date < new Date()) throw new ParentMeetingError("Follow-up due date cannot be in the past."); return date; }
+function zonedDate(value: unknown, label: string) { const text = String(value ?? "").trim(); const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|([+-])(\d{2}):(\d{2}))$/.exec(text); if (!match) throw new ParentMeetingError(`${label} must include an explicit time-zone offset.`); const [,year,month,day,hour,minute,second="0",,zone,,offsetHour="0",offsetMinute="0"] = match; if (!validCalendarParts(Number(year),Number(month),Number(day),Number(hour),Number(minute),Number(second)) || (zone !== "Z" && (Number(offsetHour) > 23 || Number(offsetMinute) > 59))) throw new ParentMeetingError(`${label} is invalid.`); const result = new Date(text); if (Number.isNaN(result.getTime())) throw new ParentMeetingError(`${label} is invalid.`); return result; }
+function indiaDueDate(value: unknown) { const text = String(value ?? "").trim(); const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text); if (!match || !validCalendarParts(Number(match[1]),Number(match[2]),Number(match[3]),0,0,0)) throw new ParentMeetingError("Follow-up due date is invalid."); const date = new Date(`${text}T23:59:59.999+05:30`); if (date < new Date()) throw new ParentMeetingError("Follow-up due date cannot be in the past."); return date; }
+function validCalendarParts(year: number, month: number, day: number, hour: number, minute: number, second: number) { if (year < 1 || year > 9999 || month < 1 || month > 12 || day < 1 || hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) return false; return day <= new Date(Date.UTC(year, month, 0)).getUTCDate(); }
 function safeKey(value: unknown, label: string) { const result = String(value ?? "").trim(); if (!/^[A-Za-z0-9_-]{20,100}$/.test(result)) throw new ParentMeetingError(`${label} is unavailable.`, 404, "PARENT_MEETING_UNAVAILABLE"); return result; }
 function safeHandle(value: unknown, label: string) { const result = String(value ?? "").trim(); if (!/^[A-Za-z0-9_-]{20,100}$/.test(result)) throw new ParentMeetingError(`${label} is invalid.`); return result; }
 function safeHandleList(value: unknown, label: string, minimum: number, maximum: number) { if (!Array.isArray(value)) throw new ParentMeetingError(`${label} must be a list.`); const result = [...new Set(value.map((item) => safeHandle(item, label)))]; if (result.length < minimum || result.length > maximum) throw new ParentMeetingError(`${label} must contain ${minimum}-${maximum} authorised staff members.`); return result; }
