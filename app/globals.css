@@ -53,7 +53,7 @@
 .parent-meeting-notice.success { border-color: color-mix(in srgb, #15804a 45%, var(--border)); background: color-mix(in srgb, #e7f8ee 72%, var(--surface)); color: #12623b; }
 .parent-meeting-notice.danger { border-color: color-mix(in srgb, #b4233c 48%, var(--border)); background: color-mix(in srgb, #fff0f2 76%, var(--surface)); color: #9b1931; }
 .dark .parent-meeting-notice.success, .dark .parent-meeting-notice.danger { color: var(--text); }
-.parent-meeting-notice button { display: grid; width: 36px; height: 36px; padding: 0; place-items: center; border: 0; border-radius: 8px; background: transparent; color: currentColor; font-size: 1.2rem; }
+.parent-meeting-notice button { display: grid; width: 44px; height: 44px; padding: 0; place-items: center; border: 0; border-radius: 8px; background: transparent; color: currentColor; font-size: 1.2rem; }
 .parent-meeting-metrics { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: .7rem; }
 .parent-meeting-metrics > div { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: .5rem; min-width: 0; padding: .8rem; border: 1px solid var(--border); border-radius: 11px; background: var(--surface); box-shadow: var(--shadow-sm); }
 .parent-meeting-metrics svg { width: 17px; color: var(--accent); }
@@ -67,12 +67,12 @@
 .parent-meeting-toolbar .button { min-height: 44px; }
 .parent-meeting-create { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
 .parent-meeting-create summary { min-height: 44px; padding: .8rem 1rem; cursor: pointer; font-weight: 800; }
-.parent-meeting-create form, .parent-meeting-schedule, .parent-meeting-note-form, .parent-meeting-followup-form, .parent-meeting-parent-form { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem; padding: 1rem; border-top: 1px solid var(--border); }
-.parent-meeting-create label, .parent-meeting-schedule label, .parent-meeting-note-form label, .parent-meeting-followup-form label, .parent-meeting-parent-form label { display: grid; align-content: start; gap: .35rem; min-width: 0; color: var(--muted); font-size: .74rem; font-weight: 750; }
-.parent-meeting-create label.wide, .parent-meeting-schedule label.wide, .parent-meeting-note-form label.wide, .parent-meeting-followup-form label.wide, .parent-meeting-parent-form label.wide { grid-column: span 2; }
-.parent-meeting-create input, .parent-meeting-create select, .parent-meeting-create textarea, .parent-meeting-schedule input, .parent-meeting-schedule select, .parent-meeting-schedule textarea, .parent-meeting-note-form input, .parent-meeting-note-form select, .parent-meeting-note-form textarea, .parent-meeting-followup-form input, .parent-meeting-followup-form select, .parent-meeting-followup-form textarea, .parent-meeting-parent-form input, .parent-meeting-parent-form select, .parent-meeting-parent-form textarea { width: 100%; min-height: 44px; padding: .62rem .68rem; border: 1px solid var(--border); border-radius: 9px; background: var(--background); color: var(--text); font: inherit; font-size: .82rem; }
-.parent-meeting-create textarea, .parent-meeting-note-form textarea, .parent-meeting-followup-form textarea, .parent-meeting-parent-form textarea { resize: vertical; }
-.parent-meeting-create button, .parent-meeting-schedule button, .parent-meeting-note-form button, .parent-meeting-followup-form button, .parent-meeting-parent-form button { align-self: end; min-height: 44px; }
+.parent-meeting-create form, .parent-meeting-schedule, .parent-meeting-note-form, .parent-meeting-followup-form, .parent-meeting-cancel-form, .parent-meeting-parent-form { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem; padding: 1rem; border-top: 1px solid var(--border); }
+.parent-meeting-create label, .parent-meeting-schedule label, .parent-meeting-note-form label, .parent-meeting-followup-form label, .parent-meeting-cancel-form label, .parent-meeting-parent-form label { display: grid; align-content: start; gap: .35rem; min-width: 0; color: var(--muted); font-size: .74rem; font-weight: 750; }
+.parent-meeting-create label.wide, .parent-meeting-schedule label.wide, .parent-meeting-note-form label.wide, .parent-meeting-followup-form label.wide, .parent-meeting-cancel-form label.wide, .parent-meeting-parent-form label.wide { grid-column: span 2; }
+.parent-meeting-create input, .parent-meeting-create select, .parent-meeting-create textarea, .parent-meeting-schedule input, .parent-meeting-schedule select, .parent-meeting-schedule textarea, .parent-meeting-note-form input, .parent-meeting-note-form select, .parent-meeting-note-form textarea, .parent-meeting-followup-form input, .parent-meeting-followup-form select, .parent-meeting-followup-form textarea, .parent-meeting-cancel-form input, .parent-meeting-cancel-form select, .parent-meeting-cancel-form textarea, .parent-meeting-parent-form input, .parent-meeting-parent-form select, .parent-meeting-parent-form textarea { width: 100%; min-height: 44px; padding: .62rem .68rem; border: 1px solid var(--border); border-radius: 9px; background: var(--background); color: var(--text); font: inherit; font-size: .82rem; }
+.parent-meeting-create textarea, .parent-meeting-note-form textarea, .parent-meeting-followup-form textarea, .parent-meeting-cancel-form textarea, .parent-meeting-parent-form textarea { resize: vertical; }
+.parent-meeting-create button, .parent-meeting-schedule button, .parent-meeting-note-form button, .parent-meeting-followup-form button, .parent-meeting-cancel-form button, .parent-meeting-parent-form button { align-self: end; min-height: 44px; }
 .parent-meeting-layout { display: grid; grid-template-columns: minmax(280px,.7fr) minmax(480px,1.55fr); min-height: 650px; overflow: hidden; border: 1px solid var(--border); border-radius: 13px; background: var(--surface); box-shadow: var(--shadow-sm); }
 .parent-meeting-list { display: grid; align-content: start; gap: .4rem; min-width: 0; max-height: 760px; overflow: auto; padding: .65rem; border-right: 1px solid var(--border); background: color-mix(in srgb, var(--surface-2) 62%, var(--surface)); }
 .parent-meeting-list > button { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .35rem .6rem; width: 100%; min-height: 92px; padding: .7rem; text-align: left; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--text); font: inherit; }
@@ -104,16 +104,20 @@
 .parent-meeting-participants strong, .parent-meeting-followups strong { overflow-wrap: anywhere; font-size: .75rem; }
 .parent-meeting-participants span, .parent-meeting-followups span, .parent-meeting-followups small { color: var(--muted); font-size: .66rem; }
 .inline-actions, .parent-meeting-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
-.inline-actions button, .parent-meeting-followups button { min-height: 36px; padding: .35rem .5rem; border: 1px solid var(--border); border-radius: 7px; background: transparent; color: var(--text); font: inherit; font-size: .66rem; font-weight: 750; }
+.inline-actions button, .parent-meeting-followups button { min-height: 44px; padding: .35rem .5rem; border: 1px solid var(--border); border-radius: 7px; background: transparent; color: var(--text); font: inherit; font-size: .66rem; font-weight: 750; }
 .parent-meeting-actions .button { min-height: 44px; }
 .parent-meeting-actions .danger { border-color: #b4233c; color: #b4233c; }
-.parent-meeting-schedule, .parent-meeting-note-form, .parent-meeting-followup-form { border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
-.parent-meeting-schedule h3, .parent-meeting-note-form h3, .parent-meeting-followup-form h3 { grid-column: 1 / -1; }
+.parent-meeting-schedule, .parent-meeting-note-form, .parent-meeting-followup-form, .parent-meeting-cancel-form { border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
+.parent-meeting-schedule h3, .parent-meeting-note-form h3, .parent-meeting-followup-form h3, .parent-meeting-cancel-form h3 { grid-column: 1 / -1; }
 .parent-meeting-schedule small { color: var(--muted); font-weight: 500; }
 .parent-meeting-history, .parent-meeting-events { display: grid; gap: .45rem; margin: .5rem 0 0; padding: 0; list-style: none; }
 .parent-meeting-history li { display: grid; gap: .45rem; padding: .65rem; border-left: 3px solid var(--border); background: var(--surface-2); }
 .parent-meeting-history li > div { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
 .parent-meeting-history time, .parent-meeting-history small { color: var(--muted); font-size: .65rem; }
+.parent-meeting-correction-form, .parent-meeting-parent-cancel { display: grid; gap: .65rem; margin-top: .75rem; padding: .75rem; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); }
+.parent-meeting-correction-form label, .parent-meeting-parent-cancel label { display: grid; gap: .35rem; color: var(--muted); font-size: .74rem; font-weight: 750; }
+.parent-meeting-correction-form textarea, .parent-meeting-parent-cancel textarea { width: 100%; min-height: 88px; padding: .62rem .68rem; border: 1px solid var(--border); border-radius: 9px; background: var(--background); color: var(--text); font: inherit; resize: vertical; }
+.parent-meeting-correction-form .button, .parent-meeting-parent-cancel .button { min-height: 44px; justify-self: start; }
 .parent-meeting-events li { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--border); font-size: .68rem; }
 .parent-meeting-events time, .parent-meeting-events small { color: var(--muted); }
 .parent-meeting-empty { display: grid; min-height: 220px; place-content: center; justify-items: center; gap: .45rem; padding: 1.5rem; text-align: center; color: var(--muted); }
@@ -147,8 +151,8 @@
   .parent-meeting-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .parent-meeting-toolbar { align-items: stretch; flex-direction: column; }
   .parent-meeting-toolbar .button { width: 100%; }
-  .parent-meeting-create form, .parent-meeting-schedule, .parent-meeting-note-form, .parent-meeting-followup-form, .parent-meeting-parent-form { grid-template-columns: minmax(0,1fr); }
-  .parent-meeting-create label.wide, .parent-meeting-schedule label.wide, .parent-meeting-note-form label.wide, .parent-meeting-followup-form label.wide, .parent-meeting-parent-form label.wide, .parent-meeting-parent-form h2, .parent-meeting-parent-form > p { grid-column: auto; }
+  .parent-meeting-create form, .parent-meeting-schedule, .parent-meeting-note-form, .parent-meeting-followup-form, .parent-meeting-cancel-form, .parent-meeting-parent-form { grid-template-columns: minmax(0,1fr); }
+  .parent-meeting-create label.wide, .parent-meeting-schedule label.wide, .parent-meeting-note-form label.wide, .parent-meeting-followup-form label.wide, .parent-meeting-cancel-form label.wide, .parent-meeting-parent-form label.wide, .parent-meeting-parent-form h2, .parent-meeting-parent-form > p { grid-column: auto; }
   .parent-meeting-layout { display: grid; grid-template-columns: minmax(0,1fr); min-height: 0; overflow: visible; }
   .parent-meeting-list { display: flex; max-height: none; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border); scroll-snap-type: x mandatory; }
   .parent-meeting-list > button { flex: 0 0 240px; scroll-snap-align: start; }

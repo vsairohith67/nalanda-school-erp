@@ -125,7 +125,7 @@ export async function listParentMeetingWorkspace(client: Client, actor: ParentMe
     ...(policy.teacherAssigned ? { participants: { some: { staffMember: { userId: actor.user.id, status: "ACTIVE" }, status: { not: "REMOVED" } } } } : {})
   };
   const [rows, total, reports, candidates, students] = await Promise.all([
-    client.parentMeeting.findMany({ where, include: meetingInclude(), orderBy: [{ scheduledStartAt: "asc" }, { createdAt: "desc" }], skip: filters.offset, take: filters.limit }),
+    boundedWorkspaceMeetings(client, where, filters),
     client.parentMeeting.count({ where }),
     parentMeetingReportCounts(client, actor, filters),
     policy.leadershipManage ? client.staffMember.findMany({ where: { status: "ACTIVE", iamPublicKey: { not: null } }, select: { iamPublicKey: true, fullName: true, displayName: true, designation: true, staffType: true }, orderBy: { fullName: "asc" }, take: 500 }) : [],
@@ -141,6 +141,16 @@ export async function listParentMeetingWorkspace(client: Client, actor: ParentMe
     studentCandidates: students,
     meetings: rows.map((meeting: any) => internalMeetingView(meeting, actor.user.role, actor.user.id))
   };
+}
+
+async function boundedWorkspaceMeetings(client: Client, where: Record<string, unknown>, filters: ReturnType<typeof listFilters>) {
+  if (filters.status) return client.parentMeeting.findMany({ where, include: meetingInclude(), skip: filters.offset, take: filters.limit, orderBy: [{ scheduledStartAt: "asc" }, { createdAt: "desc" }] });
+  const query = { include: meetingInclude(), take: filters.offset + filters.limit };
+  const [active, terminal] = await Promise.all([
+    client.parentMeeting.findMany({ ...query, where: { ...where, status: { in: ["REQUESTED", "SCHEDULING", "SCHEDULED", "CONFIRMED"] } }, orderBy: [{ scheduledStartAt: "asc" }, { createdAt: "desc" }] }),
+    client.parentMeeting.findMany({ ...query, where: { ...where, status: { in: ["COMPLETED", "CANCELLED", "NO_SHOW"] } }, orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }] })
+  ]);
+  return [...active, ...terminal].slice(filters.offset, filters.offset + filters.limit);
 }
 
 export async function listParentOwnMeetings(client: Client, actor: ParentMeetingActor, input: unknown) {
@@ -223,7 +233,7 @@ export async function scheduleParentMeeting(client: Client, actor: ParentMeeting
       await notify(tx, current, event.publicKey, changedSchedule ? "RESCHEDULED" : "SCHEDULED", actor.user.id);
       return current;
     });
-  } catch (error) { throw persistenceError(error); }
+  } catch (error) { throw persistenceError(error, undefined, true); }
 }
 
 export async function transitionParentMeeting(client: Client, actor: ParentMeetingActor, meetingKey: string, input: unknown) {
@@ -602,10 +612,16 @@ function requireManager(actor: ParentMeetingActor) { requireRole(actor, ["SUPER_
 function unavailable() { return new ParentMeetingError("The requested Parent meeting record is unavailable.", 404, "PARENT_MEETING_UNAVAILABLE"); }
 function changed(message = "The record changed; refresh and try again.") { return new ParentMeetingError(message, 409, "PARENT_MEETING_CONCURRENT_CHANGE"); }
 function transitionError(status: string, action: string) { return new ParentMeetingError(`Action ${action} is unavailable from ${status}.`, 409, "PARENT_MEETING_TRANSITION_INVALID"); }
-function persistenceError(error: unknown, duplicateMessage?: string) {
+function persistenceError(error: unknown, duplicateMessage?: string, constraintConflict = false) {
   if (error instanceof ParentMeetingError) return error;
   const text = error instanceof Error ? error.message : String(error);
   if (/PARENT_MEETING_(?:STAFF|GUARDIAN|LOCATION)_CONFLICT/.test(text)) return new ParentMeetingError("The proposed time overlaps an existing authorised participant, Parent, or location booking.", 409, "PARENT_MEETING_CONFLICT");
+  // Prisma's SQLite adapter can collapse a trigger RAISE(ABORT) from the
+  // schedule-conflict guards into P2003 without retaining the trigger text.
+  // Every participant handle has already been resolved to an active Staff
+  // record above, so a constraint failure inside this scheduling transaction
+  // is handled as a fail-closed booking conflict instead of a 500 response.
+  if (constraintConflict && /P2003|foreign key constraint/i.test(text)) return new ParentMeetingError("The proposed time overlaps an existing authorised participant, Parent, or location booking.", 409, "PARENT_MEETING_CONFLICT");
   if (/PARENT_MEETING_TRANSITION_INVALID/.test(text)) return transitionError("current state", "requested action");
   if (/P2002|unique constraint/i.test(text)) return new ParentMeetingError(duplicateMessage ?? "The same action was already recorded or the record changed concurrently.", 409, "PARENT_MEETING_DUPLICATE");
   return new ParentMeetingError("The Parent meeting request could not be completed safely.", 500, "PARENT_MEETING_INTERNAL_ERROR");
