@@ -295,7 +295,17 @@ export async function cancelParentMeetingRequest(client: Client, actor: ParentMe
   try {
     return await client.$transaction(async (tx: Client) => {
       const meeting = await meetingForUpdate(tx, meetingKey);
-      if (!actor.user.guardianId || meeting.requesterGuardianId !== actor.user.guardianId || meeting.requesterUserId !== actor.user.id) throw unavailable();
+      const context = await resolveActiveParentChildContext(tx, {
+        userId: actor.user.id,
+        sessionId: actor.sessionId,
+        roleAssignmentId: actor.user.roleAssignmentId,
+        academicYear: meeting.academicYear
+      }).catch((error) => { if (error instanceof ParentChildContextError) throw unavailable(); throw error; });
+      if (
+        meeting.studentId !== context.child.id ||
+        meeting.requesterGuardianId !== context.guardianId ||
+        meeting.requesterUserId !== actor.user.id
+      ) throw unavailable();
       if (!["REQUESTED", "SCHEDULING"].includes(meeting.status)) throw transitionError(meeting.status, "PARENT_CANCEL");
       const updated = await tx.parentMeeting.updateMany({ where: { id: meeting.id, rowVersion: expectedRowVersion }, data: { status: "CANCELLED", cancelledAt: new Date(), cancelledByUserId: actor.user.id, parentCancellationSummary: reason, activeRequestKey: null, rowVersion: { increment: 1 } } });
       if (updated.count !== 1) throw changed();

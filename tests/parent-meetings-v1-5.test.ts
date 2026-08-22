@@ -99,4 +99,11 @@ describe("PARENT-MEETING-V1_5-1A governance", () => {
     expect(notifications).toContain('channel: "IN_APP"');
     expect(notifications).not.toMatch(/fetch\(|https?:\/\/|WHATSAPP|SMS_PROVIDER|EMAIL_PROVIDER/);
   });
+
+  it("re-resolves the active linked-child context before a Parent cancellation mutation", () => {
+    const service = source("lib/parent-meetings.ts");
+    expect(service).toContain("meeting.studentId !== context.child.id");
+    expect(service).toContain("meeting.requesterGuardianId !== context.guardianId");
+    expect(service).not.toContain("meeting.requesterGuardianId !== actor.user.guardianId");
+  });
 });

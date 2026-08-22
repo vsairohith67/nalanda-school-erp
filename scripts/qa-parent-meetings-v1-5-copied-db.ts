@@ -5,6 +5,7 @@ import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../lib/password";
 import {
+  cancelParentMeetingRequest,
   createLeadershipParentMeeting,
   createParentMeetingFollowUp,
   createParentMeetingRequest,
@@ -126,6 +127,11 @@ async function main() {
     await denied(() => createParentMeetingRequest(client, parentA, { academicYear: "2026-27", category: "ACADEMIC_PROGRESS", subject: "Duplicate request", requestReason: "Duplicate active request" }), `${prefix}_DUPLICATE_REQUEST_ACCEPTED`);
     await denied(() => createParentMeetingRequest(client, parentA, { academicYear: "2026-27", category: "OTHER", subject: "x", requestReason: "" }), `${prefix}_EMPTY_VALIDATION_ACCEPTED`);
     await denied(() => scheduleParentMeeting(client, principal, parentRequest.publicKey, { expectedRowVersion: parentRequest.rowVersion, scheduledStartAt: "2027-02-29T10:00:00+05:30", durationMinutes: 30, mode: "PHONE", primaryStaffHandle: base.staff.get("TEACHER").iamPublicKey, participantStaffHandles: [base.staff.get("TEACHER").iamPublicKey] }), `${prefix}_INVALID_LEAP_DAY_ACCEPTED`);
+    const staleLinkRequest = await createParentMeetingRequest(client, parentB, { academicYear: "2026-27", category: "ADMINISTRATIVE", subject: "Stale linkage guard", requestReason: "Synthetic cancellation linkage test" });
+    await client.guardian.update({ where: { id: base.guardians[1].id }, data: { status: "Inactive" } });
+    await deniedWithCode(() => cancelParentMeetingRequest(client, parentB, staleLinkRequest.publicKey, { expectedRowVersion: staleLinkRequest.rowVersion, reason: "Must not use stale authority" }), "PARENT_MEETING_UNAVAILABLE", `${prefix}_STALE_PARENT_LINK_CANCEL_ACCEPTED`);
+    await client.guardian.update({ where: { id: base.guardians[1].id }, data: { status: "Active" } });
+    await cancelParentMeetingRequest(client, parentB, staleLinkRequest.publicKey, { expectedRowVersion: staleLinkRequest.rowVersion, reason: "Synthetic linkage test complete" });
 
     stage = "schedule, teacher scope and privacy";
     const scheduled = await scheduleParentMeeting(client, principal, parentRequest.publicKey, { expectedRowVersion: parentRequest.rowVersion, scheduledStartAt: "2026-09-10T10:00:00+05:30", durationMinutes: 30, mode: "IN_PERSON", locationReference: "Principal Office", onlineReference: "", primaryStaffHandle: base.staff.get("TEACHER").iamPublicKey, participantStaffHandles: [base.staff.get("TEACHER").iamPublicKey, base.staff.get("PRINCIPAL").iamPublicKey] });
