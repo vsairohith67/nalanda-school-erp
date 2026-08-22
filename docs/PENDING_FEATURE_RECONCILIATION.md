@@ -10,9 +10,10 @@ The V1 RC remains cleared and frozen at `26a47632f7c1e9c9b5f2b48de8c9b56d60428ae
 
 The read-only Command Center, exact-owner Personal Work Programme, fixed
 external Canvs Whiteboard Bridge and permission-scoped Universal Search are
-independently cleared. Smart AI is unlocked for a separate planning prompt
-only; implementation, providers and real-data AI processing remain
-unauthorized. Private staging proceeds as a separate operational track.
+independently cleared. The grounded Smart AI software foundation is also
+independently cleared. Provider/runtime activation, AI Actions, deployment and
+real-data AI processing remain unauthorized. Private staging proceeds as a
+separate operational track.
 
 ## Evidence rule
 
@@ -28,28 +29,28 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | 2 | Super Admin Command Center | `CLEARED` | Independent QA cleared the exact-Super-Admin, private/no-store composition. Its My Work, Universal Search launcher and fixed Whiteboard Bridge are also cleared without changing the original Command Center evidence. |
 | 3 | Digital Diary | `CLEARED` | Exact-owner Diary is independently cleared inside My Work and is an included owner-scoped Universal Search source. Sharing, AI and external synchronization remain outside the release. |
 | 4 | Tasks, reminders and calendar | My Work Tasks/Reminders: `CLEARED`; calendar: `CLEARED`; broader Life OS: `DEFERRED` | Exact-owner Tasks & Reminders and the existing academic calendar are cleared. Universal Search consumes bounded safe fields without completing tasks or sending reminders; no external calendar sync is claimed. |
-| 5 | Universal search | `CLEARED` | Independent QA cleared the exact-`SUPER_ADMIN`, deterministic, private/no-store server composition without a migration, index table, AI or external provider. Attendance and unified Audit search remain explicitly `UNAVAILABLE`. Smart AI planning is unblocked but requires its own authorization. |
+| 5 | Universal search | `CLEARED` | Independent QA cleared the exact-`SUPER_ADMIN`, deterministic, private/no-store server composition without a migration, index table, AI or external provider. Attendance and unified Audit search remain explicitly `UNAVAILABLE`. The separately cleared Smart AI foundation consumes this contract without changing Search. |
 | 6 | Publishers, book suppliers, vendors and contacts | Private reference directory: `CLEARED`; broader CRM/procurement: `DEFERRED` | Exact-owner Contacts & Suppliers is cleared and searchable through bounded safe fields. It remains a reference directory, not procurement/payment automation. |
 | 7 | Monitoring and operational dashboard extensions | `PARTIAL` | OBS-1A and its technical/operational foundation are cleared. Hosting-dependent live monitoring, provider health, cost/usage extensions, and unified Command Center presentation remain pending. Extend the existing architecture. |
 | 8 | Whiteboard | Bridge: `CLEARED`; ERP engine: `NOT_IMPLEMENTED` | `WHITEBOARD-BRIDGE-1A-QA` independently proved that only the exact Super Admin route can launch the canonical Canvs board. It has no iframe, token exchange, server fetch, sync, board persistence, Search/AI integration or open redirect. Canvs remains the editing engine. |
-| 9 | Citation-based Smart AI | `NEXT_FOR_SEPARATE_PLANNING`; advanced scope `DEFERRED_TO_V2` | The read-only assistant foundation validates citations/timestamps using mock data, and Universal Search now supplies a cleared permission-filtered retrieval boundary. No AI implementation, semantic retrieval, attachment ingestion, external knowledge or live provider is authorized. |
+| 9 | Citation-based Smart AI | Foundation: `CLEARED`; runtime/actions/advanced scope: `DEFERRED_TO_V2` | Independent QA cleared the exact-Super-Admin, Universal-Search-only, read-only, citation-validated software foundation. Runtime remains disabled. Semantic retrieval, attachment/image/Canvs ingestion, external knowledge/providers, persistent history and AI actions are not authorized. |
 | 10 | Parent Meetings, Appointments and Follow-up | Software implemented/independent QA evidence recorded; operational activation `DEFAULT_OFF` | Exact linked-child Parent requests, leadership workflow, explicit assigned-Teacher scope, separate private/Parent-visible evidence, local follow-up, in-app notifications and backup v43. No deploy, real data/users, external providers, My Work coupling or Search/AI integration. |
-| 10 | Android app | `NOT_IMPLEMENTED` | Responsive web/PWA foundations do not constitute a native Android app. A later shared-app Capacitor approach may be assessed only after staging and physical-device certification. |
-| 11 | iOS/iPadOS app | `NOT_IMPLEMENTED` | No native Apple application is proven. Final building, signing, and device certification require a Mac/Xcode environment and Apple account decisions. |
-| 12 | PWA and device certification | PWA foundation: `CLEARED`; end-to-end readiness: `PARTIAL`; physical certification: `OPERATIONAL_CONFIGURATION_PENDING` | Responsive web and the installable PWA foundation are present. Physical Android/iPhone/iPad testing waits for approved private HTTPS staging. See the [device checklist](./PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md). |
-| 13 | Event-photo gallery and image enhancement | `NOT_IMPLEMENTED`; candidate `DEFERRED_TO_V1_5` | No governed ERP gallery/enhancement implementation is proven. Any future phase requires consent, private storage, retention, moderation, human approval, and original-image preservation. |
-| 14 | Direct UPI and payment gateway | `PARTIAL` | Manual/mixed payment instruments and UPI reference capture are supported, but no online checkout, callback, settlement, refund, or production gateway is proven. Provider selection and activation remain separate operational gates. |
-| 15 | WhatsApp, Email and Push | `PARTIAL` | WhatsApp and SMS/email foundations remain mock/default-off; live delivery requires provider, consent, DNS/webhook, template, and sandbox evidence. Push is not implemented. See [WhatsApp](./WHATSAPP_BUSINESS_ONE_WAY_COMMUNICATION_WORKFLOW.md) and [SMS/email](./SMS_AND_EMAIL_ONE_WAY_COMMUNICATION_WORKFLOW.md). |
-| 16 | Hosting, DNS and private staging | `OPERATIONAL_CONFIGURATION_PENDING` | A planning/decision package exists, but no provider purchase, cloud resource, DNS change, HTTPS staging deployment, or public exposure is authorised. |
-| 17 | Real-data onboarding, training, pilot and cutover | `OPERATIONAL_CONFIGURATION_PENDING` | Plans and checklists exist; execution has not occurred. It requires accepted staging, named owners, controlled import, role onboarding, training, pilot reconciliation, rollback rehearsal, and an explicit cutover decision. |
-| 18 | Transport, Cafeteria and KG report-card deferrals | `DEFERRED_TO_V1_5` | These remain outside the frozen V1 RC. KG foundation/default-off decisions are preserved; none should be activated implicitly. |
+| 11 | Android app | `NOT_IMPLEMENTED` | Responsive web/PWA foundations do not constitute a native Android app. A later shared-app Capacitor approach may be assessed only after staging and physical-device certification. |
+| 12 | iOS/iPadOS app | `NOT_IMPLEMENTED` | No native Apple application is proven. Final building, signing, and device certification require a Mac/Xcode environment and Apple account decisions. |
+| 13 | PWA and device certification | PWA foundation: `CLEARED`; end-to-end readiness: `PARTIAL`; physical certification: `OPERATIONAL_CONFIGURATION_PENDING` | Responsive web and the installable PWA foundation are present. Physical Android/iPhone/iPad testing waits for approved private HTTPS staging. See the [device checklist](./PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md). |
+| 14 | Event-photo gallery and image enhancement | `NOT_IMPLEMENTED`; candidate `DEFERRED_TO_V1_5` | No governed ERP gallery/enhancement implementation is proven. Any future phase requires consent, private storage, retention, moderation, human approval, and original-image preservation. |
+| 15 | Direct UPI and payment gateway | `PARTIAL` | Manual/mixed payment instruments and UPI reference capture are supported, but no online checkout, callback, settlement, refund, or production gateway is proven. Provider selection and activation remain separate operational gates. |
+| 16 | WhatsApp, Email and Push | `PARTIAL` | WhatsApp and SMS/email foundations remain mock/default-off; live delivery requires provider, consent, DNS/webhook, template, and sandbox evidence. Push is not implemented. See [WhatsApp](./WHATSAPP_BUSINESS_ONE_WAY_COMMUNICATION_WORKFLOW.md) and [SMS/email](./SMS_AND_EMAIL_ONE_WAY_COMMUNICATION_WORKFLOW.md). |
+| 17 | Hosting, DNS and private staging | `OPERATIONAL_CONFIGURATION_PENDING` | A planning/decision package exists, but no provider purchase, cloud resource, DNS change, HTTPS staging deployment, or public exposure is authorised. |
+| 18 | Real-data onboarding, training, pilot and cutover | `OPERATIONAL_CONFIGURATION_PENDING` | Plans and checklists exist; execution has not occurred. It requires accepted staging, named owners, controlled import, role onboarding, training, pilot reconciliation, rollback rehearsal, and an explicit cutover decision. |
+| 19 | Transport, Cafeteria and KG report-card deferrals | `DEFERRED_TO_V1_5` | These remain outside the frozen V1 RC. KG foundation/default-off decisions are preserved; none should be activated implicitly. |
 
 ## Important dependency order
 
 1. Compose the Super Admin Command Center from existing cleared foundations.
 2. Establish the combined Diary/tasks/reminders/Life OS and directory model.
 3. Preserve the independently cleared fixed Canvs Whiteboard Bridge and permission-scoped Universal Search.
-4. Use a separate prompt to plan citation-based Smart AI; never bypass Search authorization.
+4. Preserve the cleared citation-based Smart AI foundation; any local runtime or AI Actions phase remains separate and must never bypass Search authorization.
 
 This order prevents AI from answering over missing supplier records or bypassing role permissions.
 
@@ -66,7 +67,18 @@ The implementation, precise source/deferred-source contract and independent
 evidence are documented in [Universal Search Architecture](./UNIVERSAL_SEARCH_ARCHITECTURE.md)
 and the [QA clearance](./evidence/UNIVERSAL_SEARCH_1A_QA_CLEARANCE.md). Search is
 cleared for this private/local release. This does not authorize deployment,
-real-data indexing/import, providers or Smart AI implementation.
+real-data indexing/import or providers. Smart AI has its own separate clearance
+and does not alter this Search release boundary.
+
+## SMART-AI-1A clearance update (2026-08-22)
+
+The grounded assistant foundation is independently cleared as
+`SMART_AI_CLEARED`. It remains exact-`SUPER_ADMIN`, read-only, ephemeral,
+Universal-Search-backed, citation-validated and disabled by default. See the
+[architecture](./SMART_AI_ARCHITECTURE.md) and
+[QA clearance](./evidence/SMART_AI_1A_QA_CLEARANCE.md). No provider runtime,
+real-data transmission, AI action, web browsing, image AI or deployment is
+activated.
 
 ## Superseded checkpoints
 

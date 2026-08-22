@@ -30,6 +30,8 @@ The V1 Teacher marks-write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`. `A
 - [Personal Work Programme QA Clearance](evidence/SUPER_ADMIN_WORK_1A_QA_CLEARANCE.md)
 - [Universal Search Architecture](UNIVERSAL_SEARCH_ARCHITECTURE.md)
 - [Universal Search Independent QA Clearance](evidence/UNIVERSAL_SEARCH_1A_QA_CLEARANCE.md)
+- [Grounded Smart AI Architecture](SMART_AI_ARCHITECTURE.md)
+- [Grounded Smart AI Independent QA Clearance](evidence/SMART_AI_1A_QA_CLEARANCE.md)
 - [Canonical Canvs Whiteboard Bridge](SUPER_ADMIN_WHITEBOARD_BRIDGE.md)
 - [V1.5 and Post-RC Roadmap](V1_5_AND_POST_RC_ROADMAP.md)
 - [Pending Feature Reconciliation](PENDING_FEATURE_RECONCILIATION.md)
@@ -41,9 +43,11 @@ independently QA-cleared. `SUPER-ADMIN-WORK-1A` implements its first private
 owner-isolated product layer: Diary, Tasks & Reminders and Contacts & Suppliers
 inside one My Work shell with bounded, failure-isolated Command Center
 summaries. Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search is implemented
-and independently cleared with status `UNIVERSAL_SEARCH_CLEARED`. Smart AI is
-unlocked for a separate planning phase only; no AI/provider/data use is
-authorized by Search clearance. The fixed canonical Canvs Whiteboard bridge is
+and independently cleared with status `UNIVERSAL_SEARCH_CLEARED`. SMART-AI-1A
+implements the exact-Super-Admin, read-only, citation-grounded foundation over
+that Search boundary and is independently cleared with status
+`SMART_AI_CLEARED`. Its runtime remains disabled by default and cloud/external
+providers, persistent conversations and AI actions remain prohibited. The fixed canonical Canvs Whiteboard bridge is
 also independently cleared without iframe, token exchange, sync, database
 change, Search indexing or AI integration.
 

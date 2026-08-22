@@ -551,6 +551,8 @@
 .command-priority,
 .command-section { display: grid; gap: .85rem; min-width: 0; }
 .command-search-launcher { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 1rem; border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border)); border-radius: .9rem; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, var(--surface)), var(--surface)); }
+.command-launcher-grid { min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.command-ai-launcher { border-color: color-mix(in srgb, var(--primary) 36%, var(--border)); background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, var(--surface)), var(--surface)); }
 .command-search-launcher > div { min-width: 0; display: flex; align-items: center; gap: .75rem; }
 .command-search-launcher h2 { margin: 0; font-size: 1.05rem; }
 .command-search-launcher p { margin: .18rem 0 0; color: var(--muted); overflow-wrap: anywhere; }
@@ -660,6 +662,7 @@
   .command-panel-intro { align-items: flex-start; flex-direction: column; }
   .command-search-launcher { align-items: stretch; flex-direction: column; }
   .command-search-launcher a { width: 100%; }
+  .command-launcher-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* UNIVERSAL-SEARCH-1A: exact-role, deterministic, private retrieval workspace */
@@ -767,6 +770,115 @@
   .universal-search-source-states li { grid-template-columns: auto minmax(0, 1fr); }
   .universal-search-source-states li > .universal-search-state { grid-column: 2; width: fit-content; }
   .universal-search-loading-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* SMART-AI-1A: exact-Super-Admin grounded synthesis over Universal Search */
+.smart-ai-page,
+.smart-ai-workspace,
+.smart-ai-conversation,
+.smart-ai-exchange,
+.smart-ai-answer,
+.smart-ai-sources { min-width: 0; }
+.smart-ai-page { display: grid; gap: 1rem; }
+.smart-ai-read-only { min-height: 44px; display: inline-flex; align-items: center; gap: .42rem; padding: .52rem .78rem; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-weight: 800; }
+.smart-ai-boundary { min-height: 44px; display: flex; align-items: center; gap: .42rem; margin: 0; color: var(--muted); font-size: .8rem; }
+.smart-ai-workspace { display: grid; gap: 1rem; }
+.smart-ai-runtime { min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .8rem; padding: .85rem 1rem; border-color: color-mix(in srgb, var(--border) 78%, var(--muted)); }
+.smart-ai-runtime.runtime-ready { border-color: color-mix(in srgb, var(--success) 42%, var(--border)); background: color-mix(in srgb, var(--success) 5%, var(--surface)); }
+.smart-ai-runtime.runtime-disabled,
+.smart-ai-runtime.runtime-misconfigured { border-style: dashed; background: var(--surface-muted); }
+.smart-ai-runtime-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: .72rem; background: color-mix(in srgb, var(--primary) 12%, var(--surface)); color: var(--primary); }
+.smart-ai-runtime h2 { margin: 0; font-size: 1rem; }
+.smart-ai-runtime p { margin: .18rem 0 0; color: var(--muted); font-size: .82rem; line-height: 1.4; overflow-wrap: anywhere; }
+.smart-ai-runtime > span { min-height: 30px; display: inline-flex; align-items: center; padding: .25rem .55rem; border-radius: 999px; background: var(--surface); color: var(--muted); font-size: .72rem; font-weight: 850; white-space: nowrap; }
+.smart-ai-compose { display: grid; gap: .9rem; padding: 1rem; }
+.smart-ai-compose-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.smart-ai-compose-heading h2 { margin: 0; font-size: 1.18rem; }
+.smart-ai-compose-heading p { margin: .22rem 0 0; color: var(--muted); line-height: 1.45; }
+.smart-ai-compose-heading button { flex: none; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; }
+.smart-ai-compose form { display: grid; gap: .5rem; }
+.smart-ai-compose label { color: var(--text); font-size: .82rem; font-weight: 800; }
+.smart-ai-compose textarea { width: 100%; min-height: 100px; resize: vertical; padding: .75rem .8rem; border: 1px solid var(--border); border-radius: .72rem; background: var(--surface); color: var(--text); font: inherit; font-size: 1rem; line-height: 1.5; }
+.smart-ai-compose textarea:focus { border-color: var(--accent); outline: 0; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.smart-ai-compose-actions { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.smart-ai-compose-actions p { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.4; }
+.smart-ai-compose-actions button { flex: none; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: .45rem; padding-inline: 1rem; }
+.smart-ai-live { min-height: 44px; display: flex; align-items: center; padding: .65rem .8rem; border: 1px solid color-mix(in srgb, var(--success) 30%, var(--border)); border-radius: .7rem; background: color-mix(in srgb, var(--success) 6%, var(--surface)); color: var(--muted); }
+.smart-ai-live.is-error { border-color: color-mix(in srgb, var(--danger) 48%, var(--border)); background: color-mix(in srgb, var(--danger) 7%, var(--surface)); color: var(--danger); }
+.smart-ai-conversation { display: grid; gap: 1rem; }
+.smart-ai-exchange { display: grid; gap: .65rem; }
+.smart-ai-question { max-width: min(48rem, 92%); justify-self: end; display: grid; gap: .25rem; padding: .75rem .85rem; border-radius: .85rem .85rem .2rem .85rem; background: color-mix(in srgb, var(--primary) 12%, var(--surface)); }
+.smart-ai-question span { color: var(--muted); font-size: .7rem; font-weight: 850; letter-spacing: .035em; text-transform: uppercase; }
+.smart-ai-question p { margin: 0; line-height: 1.5; overflow-wrap: anywhere; }
+.smart-ai-answer { overflow: hidden; border: 1px solid var(--border); border-radius: .9rem; background: var(--surface); }
+.smart-ai-answer > header { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .7rem .85rem; border-bottom: 1px solid var(--border); background: var(--surface-muted); }
+.smart-ai-answer > header > div { display: flex; align-items: center; gap: .45rem; color: var(--primary); }
+.smart-ai-answer > header > span { min-height: 28px; display: inline-flex; align-items: center; padding: .2rem .5rem; border-radius: 999px; background: var(--surface); color: var(--muted); font-size: .7rem; font-weight: 850; }
+.smart-ai-answer.status-provider-failure,
+.smart-ai-answer.status-retrieval-failure { border-color: color-mix(in srgb, var(--danger) 42%, var(--border)); }
+.smart-ai-answer.status-provider-disabled,
+.smart-ai-answer.status-retrieval-degraded,
+.smart-ai-answer.status-insufficient-evidence { border-style: dashed; }
+.smart-ai-warning { display: flex; align-items: flex-start; gap: .45rem; margin: .8rem .85rem 0; padding: .6rem .7rem; border: 1px solid color-mix(in srgb, #d97706 38%, var(--border)); border-radius: .62rem; background: color-mix(in srgb, #d97706 7%, var(--surface)); color: #b45309; font-size: .8rem; }
+.smart-ai-warning svg { flex: none; margin-top: .1rem; }
+.smart-ai-answer-text { margin: 0; padding: .9rem .95rem .7rem; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.smart-ai-answer-meta { min-height: 38px; display: flex; align-items: center; gap: .4rem; margin: 0; padding: 0 .95rem .75rem; color: var(--muted); font-size: .75rem; }
+.smart-ai-sources { border-top: 1px solid var(--border); }
+.smart-ai-sources > div { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .7rem .85rem; background: var(--surface-muted); }
+.smart-ai-sources h3 { margin: 0; font-size: .95rem; }
+.smart-ai-sources > div > span { color: var(--muted); font-size: .72rem; }
+.smart-ai-sources ol { list-style: none; margin: 0; padding: 0; }
+.smart-ai-sources li + li { border-top: 1px solid var(--border); }
+.smart-ai-sources a { min-width: 0; min-height: 76px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .7rem; padding: .72rem .85rem; color: inherit; text-decoration: none; }
+.smart-ai-sources a:hover { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+.smart-ai-source-id { min-width: 3.6rem; min-height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: .48rem; background: color-mix(in srgb, var(--accent) 10%, var(--surface-muted)); color: var(--accent); font-size: .72rem; font-weight: 900; }
+.smart-ai-source-copy { min-width: 0; display: grid; gap: .16rem; }
+.smart-ai-source-copy strong,
+.smart-ai-source-copy small,
+.smart-ai-source-copy p { overflow-wrap: anywhere; }
+.smart-ai-source-copy small { color: var(--muted); font-size: .73rem; }
+.smart-ai-source-copy p { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.4; }
+.smart-ai-source-open { min-height: 44px; display: inline-flex; align-items: center; gap: .35rem; color: var(--accent); font-size: .78rem; font-weight: 850; white-space: nowrap; }
+.smart-ai-empty { min-height: 17rem; display: grid; place-content: center; justify-items: center; padding: 1.2rem; text-align: center; }
+.smart-ai-empty > div { width: 50px; height: 50px; display: grid; place-items: center; border-radius: .85rem; background: color-mix(in srgb, var(--primary) 12%, var(--surface)); color: var(--primary); }
+.smart-ai-empty h2 { margin: .7rem 0 .3rem; }
+.smart-ai-empty p { max-width: 40rem; margin: .15rem 0; color: var(--muted); line-height: 1.5; }
+.smart-ai-privacy { min-width: 0; display: flex; align-items: flex-start; gap: .7rem; padding: .85rem; border: 1px solid var(--border); border-radius: .8rem; color: var(--muted); }
+.smart-ai-privacy svg { flex: none; color: var(--success); }
+.smart-ai-privacy h2 { margin: 0; color: var(--text); font-size: .94rem; }
+.smart-ai-privacy p { margin: .2rem 0 0; font-size: .8rem; line-height: 1.45; }
+.smart-ai-page :is(button, a, textarea):focus-visible { outline: 3px solid var(--focus, var(--accent)); outline-offset: 3px; }
+.smart-ai-compose textarea:focus-visible { outline: 0; }
+.smart-ai-loading-heading { display: grid; gap: .55rem; }
+.smart-ai-loading-heading span,
+.smart-ai-loading-runtime,
+.smart-ai-loading-compose { display: block; border-radius: .75rem; background: linear-gradient(90deg, var(--surface-muted), var(--surface), var(--surface-muted)); background-size: 200% 100%; animation: command-loading 1.4s ease-in-out infinite; }
+.smart-ai-loading-heading span:first-child { width: min(22rem, 70%); height: 2rem; }
+.smart-ai-loading-heading span:last-child { width: min(48rem, 95%); height: 1rem; }
+.smart-ai-loading-runtime { height: 5rem; }
+.smart-ai-loading-compose { height: 13rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .smart-ai-loading-heading span,
+  .smart-ai-loading-runtime,
+  .smart-ai-loading-compose { animation: none; }
+}
+
+@media (max-width: 700px) {
+  .smart-ai-page { gap: .85rem; }
+  .smart-ai-boundary { align-items: flex-start; }
+  .smart-ai-runtime { grid-template-columns: auto minmax(0, 1fr); padding: .75rem; }
+  .smart-ai-runtime > span { grid-column: 2; width: fit-content; }
+  .smart-ai-compose { padding: .75rem; }
+  .smart-ai-compose-heading,
+  .smart-ai-compose-actions { align-items: stretch; flex-direction: column; }
+  .smart-ai-compose-heading button,
+  .smart-ai-compose-actions button { width: 100%; }
+  .smart-ai-question { max-width: 96%; }
+  .smart-ai-answer > header { align-items: flex-start; }
+  .smart-ai-sources a { grid-template-columns: auto minmax(0, 1fr); padding: .7rem; }
+  .smart-ai-source-open { grid-column: 2; justify-self: start; }
+  .smart-ai-sources > div { align-items: flex-start; flex-direction: column; gap: .2rem; }
 }
 
 /* WHITEBOARD-BRIDGE-1A: fixed external launcher; no embedded board runtime */
