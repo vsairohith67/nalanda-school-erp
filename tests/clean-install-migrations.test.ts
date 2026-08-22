@@ -16,11 +16,12 @@ import {
   assertIsolatedDatabasePath
 } from "../scripts/migration-isolation";
 
-function pnpm(args: string[]) {
+function pnpm(args: string[], extraEnvironment: Record<string, string> = {}) {
   const entry = path.join(process.env.APPDATA ?? "", "npm", "node_modules", "pnpm", "bin", "pnpm.mjs");
   return execFileSync(process.execPath, [entry, ...args], {
     cwd: WORKSPACE_ROOT,
     encoding: "utf8",
+    env: { ...process.env, ...extraEnvironment },
     maxBuffer: 64 * 1024 * 1024,
     windowsHide: true
   });
@@ -91,7 +92,7 @@ describe("DEVOPS-1B clean-install migration repair", () => {
   });
 
   it("deploys from empty, reports clean status, matches the schema, and bootstraps synthetic data", async () => {
-    const output = pnpm(["migration:fresh-check"]);
+    const output = pnpm(["migration:fresh-check"], { MIGRATION_FRESH_CHECK_SKIP_GENERATE: "1" });
     expect(output).toContain("Fresh migration check passed: migrations=21 models=314 tables=314");
     expect(output).toContain("Synthetic bootstrap passed");
   }, 180_000);

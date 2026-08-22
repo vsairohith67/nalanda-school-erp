@@ -20,7 +20,14 @@ export async function runMigrationFreshInstallCheck() {
   const databasePath = createEmptyIsolatedDatabase("empty-db", "fresh-check");
   let success = false;
   try {
-    runPrisma(["generate", "--schema", "prisma/schema.prisma"], databasePath);
+    // Vitest runs this migration rehearsal alongside suites that keep the
+    // generated Windows query engine loaded. Renaming that DLL during a
+    // concurrent `prisma generate` fails with EPERM, so the full-suite wrapper
+    // skips only this redundant generation step. The standalone release gate
+    // still generates the client before applying migrations.
+    if (process.env.MIGRATION_FRESH_CHECK_SKIP_GENERATE !== "1") {
+      runPrisma(["generate", "--schema", "prisma/schema.prisma"], databasePath);
+    }
     runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"], databasePath);
     runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"], databasePath);
     const status = runPrisma(["migrate", "status", "--schema", "prisma/schema.prisma"], databasePath);
