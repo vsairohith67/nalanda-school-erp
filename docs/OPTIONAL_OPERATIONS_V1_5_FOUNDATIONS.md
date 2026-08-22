@@ -40,7 +40,7 @@ There is no wallet, stored card, online payment, fee/receipt posting, delivery s
 
 Creation/change events for vehicles, routes/stops, Transport assignments, catalog/menu data, Cafeteria enrollments, and meal records use separate privacy-safe audit tables. Audit metadata contains stable internal/public references and state transitions, not addresses, telephone numbers, health information, or credentials.
 
-Backup version 42 includes both module families in separate arrays and omits actor user IDs. Restore maps Students by admission number and Staff by Staff code, retains public historical references, rejects cross-route stop substitution and cross-Student/date/slot/meal-plan meal substitution, verifies foreign keys, and is idempotent. The schema change is additive in migration `20260822090000_optional_operations_v1_5_foundations`; copied-database checks cover fresh deploy, upgrade rehearsal, schema equivalence, backup/restore, and recovery. The operational database must have identical SHA-256 before and after QA.
+Backup version 43 includes both module families in separate arrays and omits actor user IDs. Restore maps Students by admission number and Staff by Staff code, retains public historical references, rejects cross-route stop substitution and cross-Student/date/slot/meal-plan meal substitution, verifies foreign keys, and is idempotent. The schema change is additive in migration `20260822090000_optional_operations_v1_5_foundations`; copied-database checks cover fresh deploy, upgrade rehearsal, schema equivalence, backup/restore, and recovery. The operational database must have identical SHA-256 before and after QA.
 
 ## QA activation
 

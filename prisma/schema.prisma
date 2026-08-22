@@ -8,56 +8,58 @@ datasource db {
 }
 
 model Student {
-  id                      String                                  @id @default(cuid())
-  academicYear            String                                  @default("2026-27")
-  admissionNo             String                                  @unique
-  studentName             String
-  fatherName              String
-  motherName              String?
-  className               String
-  section                 String?
-  rollNo                  String?
-  phone1                  String
-  phone2                  String?
-  whatsappNumber          String?
-  address                 String?
-  dateOfBirth             DateTime?
-  aadhaarNo               String?
-  tcStatus                String?
-  status                  String                                  @default("Active")
-  studentType             String                                  @default("Normal")
-  discountPercent         Float                                   @default(0)
-  startMonth              String                                  @default("June")
-  remarks                 String?
-  deletedAt               DateTime?
-  authLoginAliases        AuthLoginAlias[]
-  createdAt               DateTime                                @default(now())
-  updatedAt               DateTime                                @updatedAt
-  payments                Payment[]
-  familyAllocations       FamilyStudentAllocation[]
-  guardians               StudentGuardian[]
-  attendanceRecords       StudentAttendanceRecord[]
-  academicYearEnrollments AcademicYearEnrollment[]
-  lifecycleEvents         StudentLifecycleEvent[]
-  progressionDecisions    StudentProgressionDecision[]
-  miscIncomeReceipts      MiscIncomeReceipt[]
-  bookSaleReceipts        BookSaleReceipt[]
-  libraryMember           LibraryMember?
-  libraryCharges          LibraryCharge[]
-  examMarks               StudentMark[]
-  governedExamMarkEntries ExamMarkEntry[]
-  examResultSnapshots     StudentResultSnapshot[]
-  reportCards             StudentReportCard[]
-  classXDocumentPackages  ClassXDocumentPackage[]
-  identityCards           IdentityCard[]
-  classworkSubmissions    ClassworkSubmission[]
-  departureRequests       StudentDepartureRequest[]
-  departureStandingAuth   StudentStandingDepartureAuthorization[]
-  campusPresenceEvents    StudentCampusPresenceEvent[]
-  departureIncidents      StudentDepartureIncident[]
-  transportAssignments    TransportStudentAssignment[]
-  cafeteriaEnrollments    CafeteriaStudentEnrollment[]
-  cafeteriaMealRecords    CafeteriaMealRecord[]
+  id                       String                                  @id @default(cuid())
+  academicYear             String                                  @default("2026-27")
+  admissionNo              String                                  @unique
+  studentName              String
+  fatherName               String
+  motherName               String?
+  className                String
+  section                  String?
+  rollNo                   String?
+  phone1                   String
+  phone2                   String?
+  whatsappNumber           String?
+  address                  String?
+  dateOfBirth              DateTime?
+  aadhaarNo                String?
+  tcStatus                 String?
+  status                   String                                  @default("Active")
+  studentType              String                                  @default("Normal")
+  discountPercent          Float                                   @default(0)
+  startMonth               String                                  @default("June")
+  remarks                  String?
+  deletedAt                DateTime?
+  authLoginAliases         AuthLoginAlias[]
+  createdAt                DateTime                                @default(now())
+  updatedAt                DateTime                                @updatedAt
+  payments                 Payment[]
+  familyAllocations        FamilyStudentAllocation[]
+  guardians                StudentGuardian[]
+  attendanceRecords        StudentAttendanceRecord[]
+  academicYearEnrollments  AcademicYearEnrollment[]
+  lifecycleEvents          StudentLifecycleEvent[]
+  progressionDecisions     StudentProgressionDecision[]
+  miscIncomeReceipts       MiscIncomeReceipt[]
+  bookSaleReceipts         BookSaleReceipt[]
+  libraryMember            LibraryMember?
+  libraryCharges           LibraryCharge[]
+  examMarks                StudentMark[]
+  governedExamMarkEntries  ExamMarkEntry[]
+  examResultSnapshots      StudentResultSnapshot[]
+  reportCards              StudentReportCard[]
+  classXDocumentPackages   ClassXDocumentPackage[]
+  identityCards            IdentityCard[]
+  classworkSubmissions     ClassworkSubmission[]
+  eventMediaAssociations   EventMediaStudentAssociation[]
+  mediaPublicationConsents MediaPublicationConsent[]
+  departureRequests        StudentDepartureRequest[]
+  departureStandingAuth    StudentStandingDepartureAuthorization[]
+  campusPresenceEvents     StudentCampusPresenceEvent[]
+  departureIncidents       StudentDepartureIncident[]
+  transportAssignments     TransportStudentAssignment[]
+  cafeteriaEnrollments     CafeteriaStudentEnrollment[]
+  cafeteriaMealRecords     CafeteriaMealRecord[]
 
   @@index([academicYear])
   @@index([className, section])
@@ -818,26 +820,27 @@ model Notice {
 }
 
 model Guardian {
-  id                    String                                  @id @default(cuid())
-  iamPublicKey          String?                                 @unique
-  displayName           String
-  primaryMobile         String
-  alternateMobile       String?
-  email                 String?
-  relationship          String                                  @default("Parent")
-  status                String                                  @default("Active")
-  notes                 String?
-  createdAt             DateTime                                @default(now())
-  updatedAt             DateTime                                @updatedAt
-  students              StudentGuardian[]
-  users                 User[]
-  whatsappConsents      WhatsAppConsent[]
-  smsEmailConsents      SmsEmailConsent[]
-  smsEmailSuppressions  SmsEmailSuppression[]
-  smsEmailDeliveries    SmsEmailDelivery[]
-  familyCollections     FamilyCollection[]
-  departureConsents     StudentDepartureConsentEvidence[]
-  departureStandingAuth StudentStandingDepartureAuthorization[]
+  id                       String                                  @id @default(cuid())
+  iamPublicKey             String?                                 @unique
+  displayName              String
+  primaryMobile            String
+  alternateMobile          String?
+  email                    String?
+  relationship             String                                  @default("Parent")
+  status                   String                                  @default("Active")
+  notes                    String?
+  createdAt                DateTime                                @default(now())
+  updatedAt                DateTime                                @updatedAt
+  students                 StudentGuardian[]
+  users                    User[]
+  whatsappConsents         WhatsAppConsent[]
+  smsEmailConsents         SmsEmailConsent[]
+  smsEmailSuppressions     SmsEmailSuppression[]
+  smsEmailDeliveries       SmsEmailDelivery[]
+  familyCollections        FamilyCollection[]
+  departureConsents        StudentDepartureConsentEvidence[]
+  departureStandingAuth    StudentStandingDepartureAuthorization[]
+  mediaPublicationConsents MediaPublicationConsent[]
 
   @@index([displayName])
   @@index([primaryMobile])
@@ -8427,4 +8430,173 @@ model CafeteriaAuditEvent {
 
   @@index([entityType, entityPublicKey, occurredAt])
   @@index([eventType, occurredAt])
+}
+
+model EventMediaAlbum {
+  id                  String                 @id @default(cuid())
+  publicKey           String                 @unique @default(uuid())
+  title               String
+  eventDate           DateTime
+  description         String?
+  visibility          String                 @default("PRIVATE_LEADERSHIP")
+  status              String                 @default("DRAFT")
+  reviewStatus        String                 @default("NOT_SUBMITTED")
+  publicationState    String                 @default("PRIVATE")
+  coverAssetPublicKey String?
+  retentionPolicy     String                 @default("GOVERNED_SCHOOL_MEDIA")
+  retentionReviewAt   DateTime?
+  legalHold           Boolean                @default(false)
+  createdByUserId     String
+  reviewedByUserId    String?
+  approvedByUserId    String?
+  publishedByUserId   String?
+  unpublishedByUserId String?
+  archivedByUserId    String?
+  reviewedAt          DateTime?
+  approvedAt          DateTime?
+  publishedAt         DateTime?
+  unpublishedAt       DateTime?
+  archivedAt          DateTime?
+  rowVersion          Int                    @default(1)
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  assets              EventMediaAsset[]
+  auditEvents         EventMediaAuditEvent[]
+
+  @@index([status, eventDate])
+  @@index([visibility, publicationState])
+  @@index([retentionReviewAt, archivedAt])
+  @@index([createdByUserId, createdAt])
+}
+
+model EventMediaAsset {
+  id                     String                         @id @default(cuid())
+  publicKey              String                         @unique @default(uuid())
+  albumId                String
+  album                  EventMediaAlbum                @relation(fields: [albumId], references: [id], onDelete: Restrict)
+  originalStorageKey     String                         @unique
+  originalMediaType      String
+  originalExtension      String
+  originalByteSize       Int
+  originalSha256         String
+  originalWidth          Int
+  originalHeight         Int
+  uploadActorUserId      String
+  uploadedAt             DateTime                       @default(now())
+  reviewStatus           String                         @default("PENDING")
+  reviewedByUserId       String?
+  reviewedAt             DateTime?
+  reviewNote             String?
+  caption                String?
+  peopleDeclaration      String                         @default("UNKNOWN")
+  publicationEligibility String                         @default("UNKNOWN")
+  publicationStatus      String                         @default("PRIVATE")
+  withdrawalState        String                         @default("NONE")
+  withdrawalReason       String?
+  withdrawnAt            DateTime?
+  derivativeStatus       String                         @default("PENDING")
+  recoveryStatus         String                         @default("PENDING")
+  backupArtifactSha256   String?
+  backupKeyVersion       String?
+  backupVerifiedAt       DateTime?
+  archivedAt             DateTime?
+  rowVersion             Int                            @default(1)
+  createdAt              DateTime                       @default(now())
+  updatedAt              DateTime                       @updatedAt
+  derivatives            EventMediaDerivative[]
+  studentAssociations    EventMediaStudentAssociation[]
+  auditEvents            EventMediaAuditEvent[]
+
+  @@index([albumId, createdAt])
+  @@index([albumId, reviewStatus, publicationStatus])
+  @@index([publicationStatus, withdrawalState])
+  @@index([uploadActorUserId, uploadedAt])
+}
+
+model EventMediaDerivative {
+  id               String          @id @default(cuid())
+  publicKey        String          @unique @default(uuid())
+  assetId          String
+  asset            EventMediaAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  kind             String          @default("THUMBNAIL")
+  status           String          @default("READY")
+  storageKey       String?         @unique
+  mediaType        String?
+  extension        String?
+  byteSize         Int?
+  sha256           String?
+  width            Int?
+  height           Int?
+  metadataStripped Boolean         @default(true)
+  failureCode      String?
+  createdAt        DateTime        @default(now())
+
+  @@unique([assetId, kind])
+  @@index([assetId, status])
+}
+
+model EventMediaStudentAssociation {
+  id                 String          @id @default(cuid())
+  assetId            String
+  asset              EventMediaAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  studentId          String
+  student            Student         @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  associatedByUserId String
+  associatedAt       DateTime        @default(now())
+
+  @@unique([assetId, studentId])
+  @@index([studentId, assetId])
+}
+
+model MediaPublicationConsent {
+  id                String                 @id @default(cuid())
+  publicKey         String                 @unique @default(uuid())
+  studentId         String
+  student           Student                @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  guardianId        String?
+  guardian          Guardian?              @relation(fields: [guardianId], references: [id], onDelete: Restrict)
+  audience          String
+  status            String                 @default("GRANTED")
+  purposeScope      String                 @default("EVENT_MEDIA_PUBLICATION")
+  wordingVersion    String
+  source            String
+  evidenceReference String
+  grantedAt         DateTime
+  expiresAt         DateTime?
+  revokedAt         DateTime?
+  recordedByUserId  String
+  revokedByUserId   String?
+  revocationReason  String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  auditEvents       EventMediaAuditEvent[]
+
+  @@index([studentId, audience, status, grantedAt])
+  @@index([guardianId, grantedAt])
+  @@index([expiresAt, status])
+}
+
+model EventMediaAuditEvent {
+  id               String                   @id @default(cuid())
+  publicKey        String                   @unique @default(uuid())
+  albumId          String?
+  album            EventMediaAlbum?         @relation(fields: [albumId], references: [id], onDelete: Restrict)
+  assetId          String?
+  asset            EventMediaAsset?         @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  consentId        String?
+  consent          MediaPublicationConsent? @relation(fields: [consentId], references: [id], onDelete: Restrict)
+  eventType        String
+  actorUserId      String
+  actorRole        String
+  previousState    String?
+  newState         String?
+  reason           String?
+  safeMetadataJson String?
+  eventDate        DateTime                 @default(now())
+  createdAt        DateTime                 @default(now())
+
+  @@index([albumId, eventDate])
+  @@index([assetId, eventDate])
+  @@index([consentId, eventDate])
+  @@index([eventType, eventDate])
 }

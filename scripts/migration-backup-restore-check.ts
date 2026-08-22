@@ -85,7 +85,7 @@ export async function runMigrationBackupRestoreCheck() {
     const serialized = serializeBackup(generated);
     writeFileSync(backupPath, serialized, "utf8");
     const validated = parseAndValidateBackup(JSON.parse(serialized));
-    if (validated.metadata.backupVersion !== 42) throw new Error("BACKUP_VERSION_CHANGED");
+    if (validated.metadata.backupVersion !== 43) throw new Error("BACKUP_VERSION_CHANGED");
     if (/passwordHash|DEVOPS1B-local-only-(?:Director|Admin|Accountant|Viewer|Restore)/.test(serialized)) {
       throw new Error("BACKUP_SECRET_OR_PASSWORD_HASH_DETECTED");
     }
@@ -149,9 +149,9 @@ export async function runMigrationBackupRestoreCheck() {
     if (collisionUsers !== 1) throw new Error("RESTORE_COLLISION_IMPORTED_LOGIN_USERS");
 
     success = true;
-    console.log(`Backup/restore passed: version=37 arrays=${arrayEntries.length} students=${firstCounts.students} payments=${firstCounts.payments}`);
+    console.log(`Backup/restore passed: version=43 arrays=${arrayEntries.length} students=${firstCounts.students} payments=${firstCounts.payments}`);
     console.log("Repeated restore remained count-idempotent; local login ownership and Student collision mapping were preserved.");
-    return { version: 37, arrays: arrayEntries.length, firstCounts, firstBusiness };
+    return { version: 42, arrays: arrayEntries.length, firstCounts, firstBusiness };
   } finally {
     if (success) {
       for (const databasePath of [sourcePath, targetPath, collisionPath]) cleanupIsolatedDatabase(databasePath);

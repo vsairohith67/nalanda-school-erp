@@ -5,7 +5,7 @@ describe("app shell responsive navigation source contract", () => {
   it("uses grouped permission-derived navigation and mobile drawer controls", () => {
     const source = readFileSync("components/app-shell.tsx", "utf8");
 
-    expect(source).toContain("groupedVisibleNavigationItems(permissions, user.role)");
+    expect(source).toContain("groupedVisibleNavigationItems(permissions, user.role, enabledOptionalOperationsFeatures)");
     expect(source).toContain('href="/parent/class-x-documents"');
     expect(source).toContain('href="/parent/student-departures"');
     expect(source).toContain('permissions.includes("REQUEST_STUDENT_DEPARTURE")');

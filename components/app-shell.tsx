@@ -28,6 +28,7 @@ import {
   Megaphone,
   Bot,
   Sparkles,
+  Images,
   PanelLeftClose,
   PanelLeftOpen,
   Menu,
@@ -82,6 +83,7 @@ const icons: Record<NavigationIcon, LucideIcon> = {
   ,cloudBackup: ShieldCheck
   ,operations: ClipboardList
   ,website: Sparkles
+  ,eventMedia: Images
   ,calendar: CalendarDays
 };
 

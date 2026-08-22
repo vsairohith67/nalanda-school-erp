@@ -11,6 +11,7 @@ import { validateAiAssistantBackupRows } from "@/lib/ai-assistant-backup";
 import { validateFeeRegisterOcrBackupRows } from "@/lib/fee-register-ocr-backup";
 import { validateCloudBackupBackupRows } from "@/lib/cloud-backup-backup";
 import { validatePublicWebsiteBackupRows } from "@/lib/public-website-backup";
+import { EVENT_MEDIA_BACKUP_KEYS, validateEventMediaBackupRows, type EventMediaBackup, type EventMediaBackupKey } from "@/lib/event-media-backup";
 import {
   validateExamGovernanceBackup,
   type ExamGovernanceBackup
@@ -33,6 +34,7 @@ const APP_NAME = "Nalanda Fee Control";
 const MAX_ENTITY_ROWS = 100_000;
 
 const TOP_LEVEL_KEYS = new Set([
+  ...EVENT_MEDIA_BACKUP_KEYS,
   "metadata",
   "technicalOperations",
   "schoolSettings",
@@ -118,6 +120,7 @@ const METADATA_KEYS = new Set([
   "appName", "academicYear", "generatedAt", "generatedBy", "appVersion", "backupVersion", "counts"
 ]);
 const BACKUP_COUNT_KEYS = new Set([
+  ...EVENT_MEDIA_BACKUP_KEYS,
   "schoolSettings",
   "technicalOperationsRecords",
   "authSecurityRecords",
@@ -563,7 +566,7 @@ export type ValidatedBackup = {
   timetableDrafts: RestoreRecord[];
   timetableEntries: RestoreRecord[];
   technicalOperations: TechnicalOperationsBackup;
-} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup & OptionalOperationsBackup;
+} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup & OptionalOperationsBackup & EventMediaBackup;
 
 export type EntityRestoreResult = {
   created: number;
@@ -764,7 +767,7 @@ export type RestoreResult = {
   timetableDrafts: EntityRestoreResult;
   timetableEntries: EntityRestoreResult;
   warnings: string[];
-} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey | OptionalOperationsBackupKey, EntityRestoreResult>;
+} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey | OptionalOperationsBackupKey | EventMediaBackupKey, EntityRestoreResult>;
 
 export function parseAndValidateBackup(input: string | unknown): ValidatedBackup {
   let parsed: unknown = input;
@@ -789,7 +792,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     metadata.backupVersion !== undefined &&
     (!Number.isInteger(metadata.backupVersion) ||
       Number(metadata.backupVersion) < 1 ||
-      Number(metadata.backupVersion) > 42)
+      Number(metadata.backupVersion) > 43)
   ) {
     throw new Error("metadata.backupVersion is unsupported");
   }
@@ -1434,6 +1437,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   });
   const cloudBackupData = validateCloudBackupBackupRows(root);
   const publicWebsiteData = validatePublicWebsiteBackupRows(root);
+  const eventMediaData = validateEventMediaBackupRows(root);
   const technicalOperations = validateTechnicalOperationsBackup(root.technicalOperations);
   const counts = validateOptionalBackupCounts(metadata.counts);
 
@@ -1537,6 +1541,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     ...feeRegisterOcrData,
     ...cloudBackupData,
     ...publicWebsiteData,
+    ...eventMediaData,
     receiptNotes,
     importBatches,
     onboardingBatches,

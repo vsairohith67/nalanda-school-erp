@@ -106,7 +106,7 @@ describe("access rules", () => {
     expect(teacherNav.map((item) => item.href)).toEqual(["/admission-crm", "/attendance/students", "/attendance/students/reports", "/student-departures", "/leave/staff", "/substitutes", "/my-payroll", "/my-payslip-requests", "/my-support", "/homework/reports", "/homework", "/classwork", "/exams", "/teacher/calendar", "/teacher/exam-assignments", "/report-cards", "/teacher/analytics"]);
 
     const parentNav = visibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"), "PARENT");
-    expect(parentNav.map((item) => item.href)).toEqual(["/parent/support", "/parent/student-departures", "/my-classwork", "/parent/calendar", "/parent/class-x-documents", "/parent/family-receipts"]);
+    expect(parentNav.map((item) => item.href)).toEqual(["/parent/support", "/parent/student-departures", "/my-classwork", "/parent/event-media", "/parent/calendar", "/parent/class-x-documents", "/parent/family-receipts"]);
   });
 
   it("groups privileged navigation without changing permission visibility", async () => {
@@ -132,7 +132,7 @@ describe("access rules", () => {
   it("keeps grouped navigation safe for Parent, Teacher, and Viewer/Auditor roles", async () => {
     const parentGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "PARENT"), "PARENT");
     expect(parentGroups.map((group) => group.label)).toEqual(["Students & Parents"]);
-    expect(parentGroups[0]?.items.map((item) => item.href)).toEqual(["/parent/support", "/parent/student-departures", "/my-classwork", "/parent/calendar", "/parent/class-x-documents", "/parent/family-receipts"]);
+    expect(parentGroups[0]?.items.map((item) => item.href)).toEqual(["/parent/support", "/parent/student-departures", "/my-classwork", "/parent/event-media", "/parent/calendar", "/parent/class-x-documents", "/parent/family-receipts"]);
 
     const teacherGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "TEACHER"), "TEACHER");
     expect(teacherGroups.map((group) => group.label)).toEqual(["Students & Parents", "Attendance", "Staff & Leave", "Communication"]);

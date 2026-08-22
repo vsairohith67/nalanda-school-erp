@@ -1,7 +1,7 @@
 export const PUBLIC_WEBSITE_EXACT_PATHS = new Set([
   "/", "/about", "/academics", "/admissions", "/facilities", "/student-life",
   "/news", "/contact", "/school-app", "/privacy", "/accessibility", "/terms",
-  "/mandatory-disclosure", "/admissions/apply", "/robots.txt", "/sitemap.xml"
+  "/mandatory-disclosure", "/admissions/apply", "/event-gallery", "/robots.txt", "/sitemap.xml"
 ]);
 
 export const PRIVATE_ROBOTS_EXCLUSIONS = [
@@ -23,10 +23,10 @@ export const PRIVATE_ROBOTS_EXCLUSIONS = [
   "/payments", "/payroll", "/my-payroll", "/my-payslip-requests", "/payslip-requests", "/pending-dues", "/pilot-acceptance", "/receipt-audit", "/receipts", "/student", "/admissions/apply",
   "/permission-profiles", "/report-cards", "/reset-password", "/roles", "/settings", "/setup", "/sms-email", "/staff",
   "/student-departures", "/students", "/substitutes", "/teacher", "/teacher-analytics", "/timetable",
-  "/udise", "/unauthorized", "/users", "/vendors", "/whatsapp"
+  "/udise", "/unauthorized", "/users", "/vendors", "/whatsapp", "/event-media", "/event-gallery"
 ] as const;
 
 export function isPublicWebsitePath(pathname: string) {
   const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-  return PUBLIC_WEBSITE_EXACT_PATHS.has(normalized) || /^\/news\/[a-z0-9-]+$/.test(normalized);
+  return PUBLIC_WEBSITE_EXACT_PATHS.has(normalized) || /^\/news\/[a-z0-9-]+$/.test(normalized) || /^\/event-gallery\/[A-Za-z0-9-]{20,80}$/.test(normalized);
 }
