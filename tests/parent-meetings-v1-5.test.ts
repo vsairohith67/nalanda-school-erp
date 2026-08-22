@@ -75,13 +75,15 @@ describe("PARENT-MEETING-V1_5-1A governance", () => {
     expect(JSON.stringify(backup)).not.toMatch(/passwordHash|sessionToken|cookie/i);
   });
 
-  it("rejects malformed or secret-bearing meeting backup evidence", () => {
+  it("rejects malformed and unsupported backup fields without censoring legitimate meeting text", () => {
     const invalidLink: any = emptyParentMeetingBackup();
     invalidLink.parentMeetingNotes = [{ id: "n", publicKey: "note-public-key-1234567890", meetingId: "missing", kind: "LEADERSHIP_PRIVATE", body: "private", authorUserId: "u", authorRole: "PRINCIPAL", createdAt: new Date().toISOString() }];
     expect(() => validateParentMeetingBackupRows(invalidLink)).toThrow(/invalid meeting link/);
     const secret: any = emptyParentMeetingBackup();
-    secret.parentMeetings = [{ id: "m", publicKey: "meeting-public-key-123456", studentId: "s", academicYear: "2026-27", source: "LEADERSHIP_CREATED", category: "OTHER", subject: "password credential", status: "REQUESTED", createdByUserId: "u", rowVersion: 1, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }];
-    expect(() => validateParentMeetingBackupRows(secret)).toThrow(/prohibited/);
+    secret.parentMeetings = [{ id: "m", publicKey: "meeting-public-key-123456", studentId: "s", academicYear: "2026-27", source: "LEADERSHIP_CREATED", category: "OTHER", subject: "Password reset credential discussion", status: "REQUESTED", createdByUserId: "u", rowVersion: 1, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), passwordHash: "must never be restored" }];
+    expect(() => validateParentMeetingBackupRows(secret)).toThrow(/passwordHash is unsupported/);
+    delete secret.parentMeetings[0].passwordHash;
+    expect(validateParentMeetingBackupRows(secret).parentMeetings[0]?.subject).toBe("Password reset credential discussion");
   });
 
   it("keeps private fields out of the Parent serializer and broad logs", () => {

@@ -65,7 +65,6 @@ export function validateParentMeetingBackupRows(root: Record<string, unknown>): 
   for (const [index, row] of result.parentMeetingNotes.entries()) { oneOf(row.kind, ["LEADERSHIP_PRIVATE","PARTICIPANT_INTERNAL","PARENT_VISIBLE_SUMMARY"], `parentMeetingNotes[${index}].kind`); if (row.correctsNoteId && !noteIds.has(text(row.correctsNoteId))) throw new Error(`parentMeetingNotes[${index}] has an invalid correction link`); }
   for (const [index, row] of result.parentMeetingFollowUps.entries()) oneOf(row.status, ["OPEN","DONE","CANCELLED"], `parentMeetingFollowUps[${index}].status`);
   for (const [index, row] of result.parentMeetingEvents.entries()) if (row.safeMetadataJson) json(row.safeMetadataJson, `parentMeetingEvents[${index}].safeMetadataJson`);
-  if (/password|sessionToken|cookie|secret|credential/i.test(JSON.stringify(result))) throw new Error("Parent Meeting backup contains prohibited authentication or secret material");
   return result;
 }
 
