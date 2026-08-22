@@ -171,24 +171,24 @@ card or owning module routes. Search does not duplicate their workflows. Every
 destination retains its independent permission/object-scope enforcement; a
 safe Search result does not weaken the target route.
 
-## Future Smart AI retrieval boundary
+## Smart AI retrieval boundary
 
-The normalized composition service is designed so a separately authorised
-future layer can use this sequence:
+SMART-AI-1A uses the normalized composition service through this sequence:
 
 ```text
 Authenticated Actor
   -> Authorized Search Request
   -> Permission-filtered Normalized Results
-  -> future AI layer
+  -> bounded Smart AI source envelope
+  -> disabled or loopback-only provider adapter
+  -> validated answer and citations
 ```
 
-The future layer must never bypass Search authorization or replace target
-route authorization. This phase implements no AI layer, prompt, RAG,
-embedding, vector table, model/provider configuration, external call,
-autonomous action or generated answer. Search clearance only unlocks a
-separately governed Smart AI planning phase; it does not authorize AI
-implementation or provider/data use.
+Smart AI does not bypass Search authorization or replace target-route
+authorization. Universal Search itself still implements no prompt, RAG,
+embedding, vector table, provider call, autonomous action or generated answer.
+The separate Smart AI layer consumes only this normalized response, and its
+default runtime is disabled. See [Smart AI Architecture](./SMART_AI_ARCHITECTURE.md).
 
 ## Implementation validation boundary
 
@@ -213,4 +213,5 @@ Independent `UNIVERSAL-SEARCH-1A-QA` cleared this private/local release on
 2026-08-22. The complete authorization, ownership, secret-field, failure,
 performance, Browser, security, full-suite and operational-database evidence
 is recorded in the linked clearance. Deployment, real-data indexing/import,
-providers and Smart AI remain outside this clearance.
+providers and Smart AI remain outside this Search clearance. SMART-AI-1A has
+its own independent security, privacy and release gate.

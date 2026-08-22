@@ -33,6 +33,8 @@ This matrix separates presence from completeness. `Complete` requires tested wor
 | Full payroll automation/salary ESS | V1.5 | Complete | Product scope moved from V1; statutory integrations remain gated | Prompt 23I release preserved |
 | Super Admin Command Center | V1.5 | Complete locally/private | Deployment and real-user operation remain separate | `SUPER_ADMIN_COMMAND_CENTER_CLEARED` |
 | Super Admin Diary / Tasks / Contacts | V1.5 | Complete locally/private | Exact-owner role/API/browser/recovery/security acceptance passed; operational migration and deployment remain separate | `SUPER_ADMIN_WORK_CLEARED`; Universal Search next |
+| Universal Search | V1.5 | Complete locally/private | Exact-Super-Admin deterministic normalized retrieval is independently cleared; no AI/provider authorization | `UNIVERSAL_SEARCH_CLEARED` |
+| Grounded Smart AI Foundation | V1.5 | Implementation ready for QA | Exact-Super-Admin, Universal-Search-only, read-only and disabled-by-default; no persistent history, cloud provider or actions | `SMART-AI-1A-QA` pending |
 | Transport | V1.5 | Deferred | School does not provide service | Optional future decision |
 | Cafeteria | V1.5 | Deferred | School does not provide service | Optional future decision |
 | AI educational programme | V2 | Deferred | Planning/mock foundations are not the programme | Future V2 with Teacher approval |

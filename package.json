@@ -37,6 +37,8 @@
     "qa:universal-search:browser:setup": "tsx scripts/qa-universal-search-1a-copied-db.ts --keep",
     "qa:universal-search:browser:cleanup": "tsx scripts/qa-universal-search-1a-copied-db.ts cleanup",
     "qa:universal-search:independent": "tsx scripts/qa-universal-search-1a-independent.ts",
+    "qa:smart-ai": "tsx scripts/qa-smart-ai-1a-copied-db.ts",
+    "qa:smart-ai:mock-provider": "node scripts/qa-smart-ai-1a-local-provider.mjs",
     "qa:iam1a:browser:setup": "tsx scripts/qa-iam1a-browser-fixtures.ts setup",
     "qa:iam1a:browser:cleanup": "tsx scripts/qa-iam1a-browser-fixtures.ts cleanup",
     "qa:23c": "tsx scripts/qa23c-copied-db.ts",
