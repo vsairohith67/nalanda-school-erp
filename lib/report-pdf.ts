@@ -71,8 +71,7 @@ export async function renderReportPdf(
   const logo = await embeddedLogo(
     document,
     report.school.logoPath,
-    mode,
-    isCanonicalV1AcademicReport(report)
+    mode
   );
   const layout = new PdfLayout(document, report, mode, fonts, logo);
   if (report.templateFamily === "KG_DEVELOPMENTAL_BOOKLET") {
@@ -1377,8 +1376,7 @@ async function embeddedFonts(document: PDFDocument): Promise<PdfFonts> {
 async function embeddedLogo(
   document: PDFDocument,
   logoPath: string | null,
-  mode: ReportColourMode,
-  useR5AcademicTreatment: boolean
+  mode: ReportColourMode
 ) {
   if (!logoPath || !logoPath.startsWith("/") || logoPath.startsWith("//")) return null;
   const publicRoot = path.resolve(process.cwd(), "public");
@@ -1388,7 +1386,7 @@ async function embeddedLogo(
   const bytes = readFileSync(candidate);
   const extension = path.extname(candidate).toLowerCase();
   try {
-    if (mode === "MONOCHROME" && useR5AcademicTreatment) {
+    if (mode === "MONOCHROME") {
       return await document.embedPng(await sharp(bytes).grayscale().png().toBuffer());
     }
     if (extension === ".png") return await document.embedPng(bytes);

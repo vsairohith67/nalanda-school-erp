@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { calculateMarkReport } from "@/lib/report-card-calculations";
 import { createEmptyKgDraft, KG_ATTENDANCE_MONTHS, kgValidationGaps, normalizeKgDraft } from "@/lib/kg-report-card";
@@ -90,25 +91,33 @@ export async function createReportCardBatch(client: PrismaClient, input: unknown
   return client.$transaction(async (tx) => {
     const batch = await tx.reportCardBatch.create({ data: { batchNumber: data.batchNumber, academicYear: data.academicYear, reportType: data.reportType, templateId: data.template.id, className: data.className, section: data.section, title: data.title, reportingPeriod: data.reportingPeriod, templateSnapshotJson: JSON.stringify(templateSnapshot), createdByUserId: actor.id } });
     if (data.examCycle) await tx.reportCardBatchExamSource.create({ data: { batchId: batch.id, examCycleId: data.examCycle.id, displayOrder: 1 } });
-    const attendance = await Promise.all(students.map((enrollment) => attendanceSnapshot(tx as any, enrollment.studentId, data.academicYear, data.className, data.section)));
-    const progression = await Promise.all(students.map((enrollment) => promotionSnapshot(tx as any, enrollment.studentId, data.academicYear)));
+    const studentIds = students.map((enrollment) => enrollment.studentId);
+    const [attendance, progression] = await Promise.all([
+      attendanceSnapshots(tx as any, studentIds, data.academicYear, data.className, data.section, now),
+      promotionSnapshots(tx as any, studentIds, data.academicYear)
+    ]);
     let markRowsByStudent = new Map<string, any[]>();
     if (data.examCycle) {
       const assessments = await tx.examAssessment.findMany({ where: { examCycleId: data.examCycle.id, academicYear: data.academicYear, className: data.className, section: data.section ?? "", entryStatus: "LOCKED" }, include: { marks: true }, orderBy: [{ subjectName: "asc" }, { componentName: "asc" }] });
       markRowsByStudent = new Map(students.map((enrollment) => [enrollment.studentId, assessments.map((assessment) => { const mark = assessment.marks.find((item) => item.studentId === enrollment.studentId); return { subjectName: assessment.subjectName, componentName: assessment.componentName || null, maxMarks: assessment.maxMarks, passMarks: assessment.passMarks, weightagePercent: assessment.weightagePercent, entryStatus: mark?.entryStatus ?? "MISSING", marksObtained: mark?.marksObtained ?? null }; })]));
     }
-    for (let index = 0; index < students.length; index++) {
-      const enrollment = students[index]; const student = enrollment.student;
+    const cardRows = students.map((enrollment) => {
+      const student = enrollment.student;
+      const attendanceRow = attendance.get(enrollment.studentId)!;
+      const progressionRow = progression.get(enrollment.studentId)!;
+      const emptyKg = createEmptyKgDraft();
       const draft = data.reportType === "MARK_BASED" ? {
         kind: "MARK_BASED",
         sourceExam: { examCode: data.examCycle.examCode, name: data.examCycle.name, status: data.examCycle.status, lockedAt: data.examCycle.lockedAt?.toISOString?.() ?? data.examCycle.lockedAt ?? null },
         calculation: calculateMarkReport(markRowsByStudent.get(enrollment.studentId) ?? [], data.template.gradingScheme?.bands ?? []),
-        attendance: attendance[index].months,
-        attendanceSource: attendance[index].source
-      } : { kind: "KG_RUBRIC", ...createEmptyKgDraft(), attendance: attendance[index].months, attendanceSource: attendance[index].source };
-      const card = await tx.studentReportCard.create({ data: { reportCardNumber: reportCardNumber(data.batchNumber, student.admissionNo), batchId: batch.id, studentId: enrollment.studentId, academicYear: data.academicYear, className: data.className, section: data.section, reportType: data.reportType, draftDataJson: JSON.stringify(draft), progressionDecisionId: progression[index].decisionId, promotionDisplayText: progression[index].displayText, createdByUserId: actor.id } });
-      await tx.studentReportCardEvent.create({ data: { reportCardId: card.id, eventType: "CARD_CREATED", eventDate: now, newStatus: "DRAFT", recordedByUserId: actor.id, actorLabel: actor.name } });
-    }
+        attendance: attendanceRow.months,
+        attendanceSource: attendanceRow.source
+      } : { kind: "KG_RUBRIC", ...emptyKg, attendance: attendanceRow.months, attendanceSource: attendanceRow.source, final: { ...emptyKg.final, nextClass: progressionRow.nextClass, promotionReference: progressionRow.reference } };
+      return { reportCardNumber: reportCardNumber(data.batchNumber, student.admissionNo), batchId: batch.id, studentId: enrollment.studentId, academicYear: data.academicYear, className: data.className, section: data.section, reportType: data.reportType, draftDataJson: JSON.stringify(draft), progressionDecisionId: progressionRow.decisionId, promotionDisplayText: progressionRow.displayText, createdByUserId: actor.id };
+    });
+    await tx.studentReportCard.createMany({ data: cardRows });
+    const createdCards = await tx.studentReportCard.findMany({ where: { batchId: batch.id }, select: { id: true } });
+    await tx.studentReportCardEvent.createMany({ data: createdCards.map((card) => ({ reportCardId: card.id, eventType: "CARD_CREATED", eventDate: now, newStatus: "DRAFT", recordedByUserId: actor.id, actorLabel: actor.name })) });
     return tx.reportCardBatch.findUniqueOrThrow({ where: { id: batch.id }, include: { reportCards: true, examSources: true } });
   });
 }
@@ -118,18 +127,21 @@ export async function updateReportCardDraft(client: PrismaClient, id: string, in
   return client.$transaction(async (tx) => {
     const card = await tx.studentReportCard.findUnique({ where: { id } }); if (!card) throw new ReportCardError("Report card was not found.", 404);
     requireV1OperationalReportType(card.reportType);
+    if (card.reportType === "KG_RUBRIC" && !["PRINCIPAL", "SUPER_ADMIN"].includes(String(actor.role))) throw new ReportCardError("Only the Principal or Super Admin may write KG assessment values.", 403);
     if (card.status !== "DRAFT") throw new ReportCardError("Only a draft report card can be edited.", 409);
     const current = parseDraft(card); let draft: any = current;
     if (card.reportType === "KG_RUBRIC") {
       draft = { kind: "KG_RUBRIC", ...normalizeKgDraft(row.draftData ?? row) };
-      if (draft.attendanceSource.status === "CALCULATED_FROM_ATTENDANCE" && (current.attendanceSource?.status !== "CALCULATED_FROM_ATTENDANCE" || JSON.stringify(draft.attendance) !== JSON.stringify(current.attendance))) {
-        throw new ReportCardError("Calculated attendance snapshots are read-only and must come from locked Attendance records.", 403);
-      }
-      const fullApprovalControl = actor.role === "DIRECTOR" || actor.role === "SUPER_ADMIN";
+      if (JSON.stringify(draft.attendance) !== JSON.stringify(current.attendance) || JSON.stringify(draft.attendanceSource) !== JSON.stringify(current.attendanceSource)) throw new ReportCardError("KG attendance is read-only and must derive from locked Attendance records.", 403);
+      draft.attendance = current.attendance;
+      draft.attendanceSource = current.attendanceSource;
+      draft.final.nextClass = current.final?.nextClass ?? "";
+      draft.final.promotionReference = current.final?.promotionReference ?? null;
+      const leadershipControl = actor.role === "PRINCIPAL" || actor.role === "SUPER_ADMIN";
       for (const evaluation of Object.keys(draft.evaluationComments)) {
-        if (actor.role !== "TEACHER" && !fullApprovalControl) draft.evaluationComments[evaluation].classTeacherApproval = current.evaluationComments?.[evaluation]?.classTeacherApproval ?? null;
-        if (actor.role !== "PRINCIPAL" && !fullApprovalControl) draft.evaluationComments[evaluation].principalApproval = current.evaluationComments?.[evaluation]?.principalApproval ?? null;
-        if (!fullApprovalControl) draft.evaluationComments[evaluation].directorApproval = current.evaluationComments?.[evaluation]?.directorApproval ?? null;
+        if (!leadershipControl) draft.evaluationComments[evaluation].classTeacherApproval = current.evaluationComments?.[evaluation]?.classTeacherApproval ?? null;
+        if (!leadershipControl) draft.evaluationComments[evaluation].principalApproval = current.evaluationComments?.[evaluation]?.principalApproval ?? null;
+        if (actor.role !== "SUPER_ADMIN") draft.evaluationComments[evaluation].directorApproval = current.evaluationComments?.[evaluation]?.directorApproval ?? null;
       }
     }
     else if (row.draftData) {
@@ -142,11 +154,11 @@ export async function updateReportCardDraft(client: PrismaClient, id: string, in
       teacherOverallComment: safeReportCardText(row.teacherOverallComment, "Teacher comment", 2000, false),
       principalComment: actor.role === "TEACHER" ? card.principalComment : safeReportCardText(row.principalComment, "Principal comment", 2000, false),
       directorComment: actor.role === "TEACHER" ? card.directorComment : safeReportCardText(row.directorComment, "Director comment", 2000, false),
-      finalGrade: safeReportCardText(row.finalGrade, "Final grade", 20, false)
+      finalGrade: card.reportType === "KG_RUBRIC" ? draft.final.grade || null : safeReportCardText(row.finalGrade, "Final grade", 20, false)
     };
     const changed = await tx.studentReportCard.updateMany({ where: { id, status: "DRAFT", updatedAt: expected }, data: { ...comments, draftDataJson: JSON.stringify(draft) } });
     if (changed.count !== 1) throw new ReportCardError("This report card changed in another session. Reload before saving.", 409);
-    await tx.studentReportCardEvent.create({ data: { reportCardId: id, eventType: "ENTRY_UPDATED", eventDate: now, previousStatus: "DRAFT", newStatus: "DRAFT", recordedByUserId: actor.id, actorLabel: actor.name, notes: draft.attendanceSource?.status === "MANUALLY_REVIEWED_SNAPSHOT" ? "Attendance snapshot manually reviewed with a recorded reason." : null } });
+    await tx.studentReportCardEvent.create({ data: { reportCardId: id, eventType: "ENTRY_UPDATED", eventDate: now, previousStatus: "DRAFT", newStatus: "DRAFT", recordedByUserId: actor.id, actorLabel: actor.name, notes: draft.attendanceSource?.basisKey ? `Attendance basis ${draft.attendanceSource.basisKey} remains read-only.` : "Attendance source remains incomplete." } });
     return tx.studentReportCard.findUniqueOrThrow({ where: { id } });
   });
 }
@@ -178,9 +190,24 @@ export async function transitionReportCardBatch(client: PrismaClient, id: string
     if (action === "cancel" && ["ISSUED", "ARCHIVED", "CANCELLED"].includes(batch.status)) throw new ReportCardError("Issued, archived, or already cancelled batches cannot be cancelled.", 409);
     if (action === "submit" && batch.reportCards.some((card) => card.status !== "READY_FOR_REVIEW")) throw new ReportCardError("Every Student report card must be complete and submitted before the batch can be submitted.");
     if (action === "approve" && batch.reportCards.some((card) => card.status !== "READY_FOR_REVIEW")) throw new ReportCardError("Every Student report card must be ready for review before approval.");
+    let workflowCards = batch.reportCards as any[];
+    if (action === "issue" && batch.reportType === "KG_RUBRIC") {
+      const studentIds = batch.reportCards.map((card) => card.studentId);
+      const [attendance, progression] = await Promise.all([
+        attendanceSnapshots(tx as any, studentIds, batch.academicYear, batch.className, batch.section, now),
+        promotionSnapshots(tx as any, studentIds, batch.academicYear)
+      ]);
+      workflowCards = batch.reportCards.map((card) => {
+        const current = parseDraft(card);
+        const attendanceRow = attendance.get(card.studentId)!;
+        const progressionRow = progression.get(card.studentId)!;
+        const draft = { ...current, attendance: attendanceRow.months, attendanceSource: attendanceRow.source, final: { ...current.final, nextClass: progressionRow.nextClass, promotionReference: progressionRow.reference } };
+        return { ...card, draftDataJson: JSON.stringify(draft), progressionDecisionId: progressionRow.decisionId, promotionDisplayText: progressionRow.displayText, finalGrade: draft.final.grade || null };
+      });
+    }
     if (action === "issue") {
-      if (batch.reportCards.some((card) => card.status !== "APPROVED")) throw new ReportCardError("Every Student report card must be approved before issue.");
-      const gaps = batch.reportCards.flatMap((card) => reportCardValidationGaps(card, parseDraft(card)).map((gap) => `${card.student.studentName}: ${gap}`));
+      if (workflowCards.some((card) => card.status !== "APPROVED")) throw new ReportCardError("Every Student report card must be approved before issue.");
+      const gaps = workflowCards.flatMap((card) => reportCardValidationGaps(card, parseDraft(card)).map((gap) => `${card.student.studentName}: ${gap}`));
       if (gaps.length) throw new ReportCardError(`Issue is blocked by validation gaps: ${gaps.slice(0, 8).join("; ")}.`);
     }
     const reason = action === "cancel" ? safeReportCardText(reasonValue, "Cancellation reason", 1000)! : null;
@@ -194,19 +221,24 @@ export async function transitionReportCardBatch(client: PrismaClient, id: string
     const changed = await tx.reportCardBatch.updateMany({ where: { id, status: batch.status, updatedAt: expected }, data });
     if (changed.count !== 1) throw new ReportCardError("This batch changed in another session. Reload before continuing.", 409);
     if (action === "approve") {
-      for (const card of batch.reportCards) {
-        await tx.studentReportCard.update({ where: { id: card.id }, data: { status: "APPROVED", approvedAt: now, approvedByUserId: actor.id } });
-        await event(tx as any, card.id, "APPROVED", "READY_FOR_REVIEW", "APPROVED", actor, now);
-      }
+      const cardIds = batch.reportCards.map((card) => card.id);
+      await tx.studentReportCard.updateMany({ where: { id: { in: cardIds }, status: "READY_FOR_REVIEW" }, data: { status: "APPROVED", approvedAt: now, approvedByUserId: actor.id } });
+      await tx.studentReportCardEvent.createMany({ data: cardIds.map((reportCardId) => ({ reportCardId, eventType: "APPROVED", eventDate: now, previousStatus: "READY_FOR_REVIEW", newStatus: "APPROVED", recordedByUserId: actor.id, actorLabel: actor.name })) });
     }
     if (action === "issue") {
-      for (const card of batch.reportCards) {
-        const snapshot = buildIssuedSnapshot(batch, card, parseDraft(card), 1, now);
-        const calendarBasis = await currentReportCalendarBasis(tx, { academicYear: card.academicYear, className: card.className, section: card.section });
-        const version = await tx.studentReportCardVersion.create({ data: { reportCardId: card.id, versionNumber: 1, versionType: "ORIGINAL", snapshotJson: JSON.stringify(snapshot), issuedAt: now, issuedByUserId: actor.id, ...calendarBasis } });
-        await tx.studentReportCard.update({ where: { id: card.id }, data: { status: "ISSUED", currentVersionNumber: 1, issuedAt: now, issuedByUserId: actor.id } });
-        await event(tx as any, card.id, "ISSUED", "APPROVED", "ISSUED", actor, now, null, version.id);
+      const first = workflowCards[0];
+      const calendarBasis = await currentReportCalendarBasis(tx, { academicYear: first.academicYear, className: first.className, section: first.section });
+      await tx.studentReportCardVersion.createMany({ data: workflowCards.map((card) => ({ reportCardId: card.id, versionNumber: 1, versionType: "ORIGINAL", snapshotJson: JSON.stringify(buildIssuedSnapshot(batch, card, parseDraft(card), 1, now)), issuedAt: now, issuedByUserId: actor.id, ...calendarBasis })) });
+      if (batch.reportType === "KG_RUBRIC") {
+        for (const card of workflowCards) {
+          await tx.studentReportCard.update({ where: { id: card.id }, data: { status: "ISSUED", currentVersionNumber: 1, issuedAt: now, issuedByUserId: actor.id, draftDataJson: card.draftDataJson, progressionDecisionId: card.progressionDecisionId, promotionDisplayText: card.promotionDisplayText, finalGrade: card.finalGrade } });
+        }
+      } else {
+        await tx.studentReportCard.updateMany({ where: { id: { in: workflowCards.map((card) => card.id) }, status: "APPROVED" }, data: { status: "ISSUED", currentVersionNumber: 1, issuedAt: now, issuedByUserId: actor.id } });
       }
+      const versions = await tx.studentReportCardVersion.findMany({ where: { reportCardId: { in: workflowCards.map((card) => card.id) }, versionNumber: 1 }, select: { id: true, reportCardId: true } });
+      const versionByCard = new Map(versions.map((version) => [version.reportCardId, version.id]));
+      await tx.studentReportCardEvent.createMany({ data: workflowCards.map((card) => ({ reportCardId: card.id, versionId: versionByCard.get(card.id)!, eventType: "ISSUED", eventDate: now, previousStatus: "APPROVED", newStatus: "ISSUED", recordedByUserId: actor.id, actorLabel: actor.name })) });
     }
     if (action === "archive") {
       for (const card of batch.reportCards) await event(tx as any, card.id, "ARCHIVED", "ISSUED", "ISSUED", actor, now);
@@ -221,19 +253,24 @@ export async function transitionReportCardBatch(client: PrismaClient, id: string
   });
 }
 
-export async function correctIssuedReportCard(client: PrismaClient, id: string, input: unknown, actor: { id: string; name: string }, expectedValue: unknown, now = new Date()) {
+export async function correctIssuedReportCard(client: PrismaClient, id: string, input: unknown, actor: { id: string; name: string; role?: string }, expectedValue: unknown, now = new Date()) {
   const row = object(input, "Correction"); const reason = safeReportCardText(row.reason, "Correction reason", 1000)!; const expected = expectedDate(expectedValue, "report card");
   return client.$transaction(async (tx) => {
     const card = await tx.studentReportCard.findUnique({ where: { id }, include: { student: true, batch: { include: { template: true } }, versions: { orderBy: { versionNumber: "desc" }, take: 1 } } });
     if (!card || card.status !== "ISSUED" || !card.versions[0]) throw new ReportCardError("Only an issued report card can receive a correction.", 409);
     requireV1OperationalReportType(card.reportType);
+    if (card.reportType === "KG_RUBRIC" && !["PRINCIPAL", "SUPER_ADMIN"].includes(String(actor.role))) throw new ReportCardError("Only the Principal or Super Admin may correct KG assessment values.", 403);
     const prior = JSON.parse(card.versions[0].snapshotJson); let draft = row.draftData ?? prior.data;
     if (card.reportType === "MARK_BASED") {
       if (JSON.stringify(draft?.calculation) !== JSON.stringify(prior.data?.calculation)) throw new ReportCardError("Corrections cannot alter snapshotted raw-mark calculations.", 403);
-    } else draft = { kind: "KG_RUBRIC", ...normalizeKgDraft(draft) };
-    const corrected = { ...card, teacherOverallComment: safeReportCardText(row.teacherOverallComment ?? prior.comments?.teacher, "Teacher comment", 2000, false), principalComment: safeReportCardText(row.principalComment ?? prior.comments?.principal, "Principal comment", 2000, false), directorComment: safeReportCardText(row.directorComment ?? prior.comments?.director, "Director comment", 2000, false), finalGrade: safeReportCardText(row.finalGrade ?? prior.finalGrade, "Final grade", 20, false) };
+    } else {
+      const incoming = draft;
+      if (JSON.stringify(incoming?.attendance) !== JSON.stringify(prior.data?.attendance) || JSON.stringify(incoming?.attendanceSource) !== JSON.stringify(prior.data?.attendanceSource)) throw new ReportCardError("Corrections cannot alter the issued Attendance snapshot.", 403);
+      draft = { kind: "KG_RUBRIC", ...normalizeKgDraft({ ...incoming, attendance: prior.data.attendance, attendanceSource: prior.data.attendanceSource, final: { ...incoming?.final, nextClass: prior.data?.final?.nextClass ?? "", promotionReference: prior.data?.final?.promotionReference ?? null } }) };
+    }
+    const corrected = { ...card, teacherOverallComment: safeReportCardText(row.teacherOverallComment ?? prior.comments?.teacher, "Teacher comment", 2000, false), principalComment: safeReportCardText(row.principalComment ?? prior.comments?.principal, "Principal comment", 2000, false), directorComment: safeReportCardText(row.directorComment ?? prior.comments?.director, "Director comment", 2000, false), finalGrade: card.reportType === "KG_RUBRIC" ? draft.final.grade || null : safeReportCardText(row.finalGrade ?? prior.finalGrade, "Final grade", 20, false) };
     const gaps = reportCardValidationGaps(corrected, draft); if (gaps.length) throw new ReportCardError(`Corrected version is incomplete: ${gaps.slice(0, 8).join("; ")}.`);
-    const nextVersion = card.currentVersionNumber + 1; const snapshot = buildIssuedSnapshot(card.batch as any, { ...card, ...corrected }, draft, nextVersion, now);
+    const nextVersion = card.currentVersionNumber + 1; const snapshot = buildIssuedSnapshot(card.batch as any, { ...card, ...corrected }, draft, nextVersion, now, { type: "CORRECTION", reason, actorLabel: actor.name });
     const changed = await tx.studentReportCard.updateMany({ where: { id, status: "ISSUED", updatedAt: expected, currentVersionNumber: card.currentVersionNumber }, data: { currentVersionNumber: nextVersion, draftDataJson: JSON.stringify(draft), teacherOverallComment: corrected.teacherOverallComment, principalComment: corrected.principalComment, directorComment: corrected.directorComment, finalGrade: corrected.finalGrade, issuedAt: now, issuedByUserId: actor.id } });
     if (changed.count !== 1) throw new ReportCardError("This report card changed in another session. Reload before correcting.", 409);
     const version = await tx.studentReportCardVersion.create({ data: { reportCardId: id, versionNumber: nextVersion, versionType: "CORRECTION", snapshotJson: JSON.stringify(snapshot), correctionReason: reason, issuedAt: now, issuedByUserId: actor.id, supersedesVersionId: card.versions[0].id, calendarBasisVersionKey: card.versions[0].calendarBasisVersionKey, calendarBasisSnapshotJson: card.versions[0].calendarBasisSnapshotJson } });
@@ -269,28 +306,50 @@ async function validateBatchInput(client: PrismaClient, input: unknown) {
 }
 async function eligibleReportStudents(client: Pick<PrismaClient, "academicYearEnrollment">, data: { academicYear: string; className: string; section: string | null }) { return client.academicYearEnrollment.findMany({ where: { academicYear: data.academicYear, className: data.className, ...(data.section ? { section: data.section } : {}), status: "ACTIVE", student: { deletedAt: null, status: "Active" } }, include: { student: true }, orderBy: [{ rollNo: "asc" }, { student: { studentName: "asc" } }] }); }
 
-async function attendanceSnapshot(client: any, studentId: string, academicYear: string, className: string, section: string | null) {
-  const sessions = await client.studentAttendanceSession.findMany({ where: { academicYear, className, section: section ?? "", status: "LOCKED", records: { some: { studentId } } }, include: { records: { where: { studentId } } }, orderBy: { attendanceDate: "asc" } });
-  const months = KG_ATTENDANCE_MONTHS.map((month) => ({ month, workingDays: 0, daysPresent: 0 }));
-  for (const session of sessions) { const month = monthCode(new Date(session.attendanceDate).getUTCMonth()); const target = months.find((item) => item.month === month); const status = session.records[0]?.status; if (!target || !status) continue; target.workingDays += 1; if (["PRESENT", "LATE"].includes(status)) target.daysPresent += 1; else if (status === "HALF_DAY") target.daysPresent += 0.5; }
-  const complete = months.every((item) => item.workingDays > 0);
-  return { months, source: { status: complete ? "CALCULATED_FROM_ATTENDANCE" : "INCOMPLETE_SOURCE", overrideReason: null } };
+async function attendanceSnapshots(client: any, studentIds: string[], academicYear: string, className: string, section: string | null, derivedAt: Date) {
+  const sessions = studentIds.length ? await client.studentAttendanceSession.findMany({ where: { academicYear, className, section: section ?? "", status: "LOCKED", records: { some: { studentId: { in: studentIds } } } }, include: { records: { where: { studentId: { in: studentIds } }, select: { id: true, studentId: true, status: true } } }, orderBy: { attendanceDate: "asc" } }) : [];
+  const result = new Map<string, { months: Array<{ month: string; workingDays: number; daysPresent: number }>; source: Record<string, unknown> }>();
+  for (const studentId of studentIds) {
+    const months = KG_ATTENDANCE_MONTHS.map((month) => ({ month, workingDays: 0, daysPresent: 0 }));
+    const basis: Array<{ sessionId: string; date: string; recordId: string; status: string }> = [];
+    for (const session of sessions) {
+      const record = session.records.find((item: any) => item.studentId === studentId);
+      if (!record) continue;
+      const month = monthCode(new Date(session.attendanceDate).getUTCMonth());
+      const target = months.find((item) => item.month === month);
+      if (!target) continue;
+      target.workingDays += 1;
+      if (["PRESENT", "LATE"].includes(record.status)) target.daysPresent += 1;
+      else if (record.status === "HALF_DAY") target.daysPresent += 0.5;
+      basis.push({ sessionId: session.id, date: new Date(session.attendanceDate).toISOString().slice(0, 10), recordId: record.id, status: record.status });
+    }
+    const complete = months.every((item) => item.workingDays > 0);
+    const basisKey = basis.length ? `ATT-${createHash("sha256").update(JSON.stringify(basis)).digest("hex").slice(0, 20).toUpperCase()}` : null;
+    result.set(studentId, { months, source: { status: complete ? "CALCULATED_FROM_ATTENDANCE" : "INCOMPLETE_SOURCE", sourceModule: "ATTENDANCE", basisKey, derivedAt: derivedAt.toISOString(), lockedSessionCount: basis.length, lockedRecordCount: basis.length } });
+  }
+  return result;
 }
-async function promotionSnapshot(client: any, studentId: string, academicYear: string) {
-  const decision = await client.studentProgressionDecision.findFirst({ where: { studentId, academicYear, status: "FINALIZED" }, orderBy: { finalizedAt: "desc" } });
-  if (!decision) return { decisionId: null, displayText: "Promotion decision not finalised." };
-  const label = String(decision.decisionType).replaceAll("_", " ").toLowerCase();
-  return { decisionId: decision.id, displayText: decision.toClass ? `${label.replace(/^./, (value: string) => value.toUpperCase())} to ${decision.toClass}${decision.toSection ? `-${decision.toSection}` : ""}.` : `${label.replace(/^./, (value: string) => value.toUpperCase())}.` };
+async function promotionSnapshots(client: any, studentIds: string[], academicYear: string) {
+  const decisions = studentIds.length ? await client.studentProgressionDecision.findMany({ where: { studentId: { in: studentIds }, academicYear, status: "FINALIZED" }, orderBy: { finalizedAt: "desc" } }) : [];
+  const latest = new Map<string, any>();
+  for (const decision of decisions) if (!latest.has(decision.studentId)) latest.set(decision.studentId, decision);
+  type PromotionSnapshot = { decisionId: string | null; displayText: string; nextClass: string; reference: string | null };
+  return new Map<string, PromotionSnapshot>(studentIds.map((studentId): [string, PromotionSnapshot] => {
+    const decision = latest.get(studentId);
+    if (!decision) return [studentId, { decisionId: null, displayText: "Promotion decision not finalised.", nextClass: "", reference: null }];
+    const label = String(decision.decisionType).replaceAll("_", " ").toLowerCase();
+    return [studentId, { decisionId: decision.id, displayText: decision.toClass ? `${label.replace(/^./, (value: string) => value.toUpperCase())} to ${decision.toClass}${decision.toSection ? `-${decision.toSection}` : ""}.` : `${label.replace(/^./, (value: string) => value.toUpperCase())}.`, nextClass: decision.toClass ?? "", reference: `PROG-${createHash("sha256").update(decision.id).digest("hex").slice(0, 20).toUpperCase()}` }];
+  }));
 }
-function buildIssuedSnapshot(batch: any, card: any, draft: any, versionNumber: number, issuedAt: Date) {
+function buildIssuedSnapshot(batch: any, card: any, draft: any, versionNumber: number, issuedAt: Date, revision: { type: "CORRECTION"; reason: string; actorLabel: string } | null = null) {
   const templateSnapshot = JSON.parse(batch.templateSnapshotJson);
-  return { schemaVersion: 1, reportType: card.reportType, status: "ISSUED", versionNumber, issueDate: issuedAt.toISOString(), reportCardNumber: card.reportCardNumber, batchNumber: batch.batchNumber, title: batch.title, reportingPeriod: batch.reportingPeriod, academicYear: card.academicYear, template: templateSnapshot, student: { name: card.student.studentName, admissionNumber: card.student.admissionNo, rollNumber: card.student.rollNo ?? null, className: card.className, section: card.section, dateOfBirth: card.student.dateOfBirth ? new Date(card.student.dateOfBirth).toISOString().slice(0, 10) : null, fatherName: card.student.fatherName || null, motherName: card.student.motherName || null }, data: draft, comments: { teacher: card.teacherOverallComment ?? null, principal: card.principalComment ?? null, director: card.directorComment ?? null }, finalGrade: card.finalGrade ?? draft?.calculation?.grade?.code ?? draft?.final?.grade ?? null, promotionDisplayText: card.promotionDisplayText ?? "Promotion decision not finalised.", approvals: { submittedAt: card.submittedAt?.toISOString?.() ?? card.submittedAt ?? null, approvedAt: card.approvedAt?.toISOString?.() ?? card.approvedAt ?? null, issuedAt: issuedAt.toISOString() } };
+  return { schemaVersion: 1, reportType: card.reportType, status: "ISSUED", versionNumber, issueDate: issuedAt.toISOString(), reportCardNumber: card.reportCardNumber, batchNumber: batch.batchNumber, title: batch.title, reportingPeriod: batch.reportingPeriod, academicYear: card.academicYear, template: templateSnapshot, student: { name: card.student.studentName, admissionNumber: card.student.admissionNo, rollNumber: card.student.rollNo ?? null, className: card.className, section: card.section, dateOfBirth: card.student.dateOfBirth ? new Date(card.student.dateOfBirth).toISOString().slice(0, 10) : null, fatherName: card.student.fatherName || null, motherName: card.student.motherName || null }, data: draft, comments: { teacher: card.teacherOverallComment ?? null, principal: card.principalComment ?? null, director: card.directorComment ?? null }, finalGrade: card.finalGrade ?? draft?.calculation?.grade?.code ?? draft?.final?.grade ?? null, promotionDisplayText: card.promotionDisplayText ?? "Promotion decision not finalised.", promotionReference: draft?.final?.promotionReference ?? null, attendanceBasis: draft?.attendanceSource ?? null, approvals: { submittedAt: card.submittedAt?.toISOString?.() ?? card.submittedAt ?? null, approvedAt: card.approvedAt?.toISOString?.() ?? card.approvedAt ?? null, issuedAt: issuedAt.toISOString() }, revision: revision ? { ...revision, issuedAt: issuedAt.toISOString(), authority: "PRINCIPAL_OR_SUPER_ADMIN" } : { type: "ORIGINAL", issuedAt: issuedAt.toISOString() } };
 }
 async function event(tx: any, reportCardId: string, eventType: string, previousStatus: string | null, newStatus: string | null, actor: { id: string; name: string }, eventDate: Date, reason: string | null = null, versionId: string | null = null) { await tx.studentReportCardEvent.create({ data: { reportCardId, versionId, eventType, eventDate, previousStatus, newStatus, reason, recordedByUserId: actor.id, actorLabel: actor.name } }); }
 function object(input: unknown, label: string) { if (!input || typeof input !== "object" || Array.isArray(input)) throw new ReportCardError(`${label} must be an object.`); return input as Record<string, any>; }
 function reportTypeValue(value: unknown) { const reportType = String(value ?? "").toUpperCase(); if (!(REPORT_CARD_TYPES as readonly string[]).includes(reportType)) throw new ReportCardError("Choose Mark Based or KG Rubric."); return reportType; }
 function requireV1OperationalReportType(reportType: string) { if (!isV1OperationalReportType(reportType)) throw new ReportCardError(KG_REPORT_CARD_DEFERRED_MESSAGE, 409); }
 function academicYearValue(value: unknown, required: boolean) { const text = String(value ?? "").trim(); if (!text && !required) return null; if (!/^\d{4}-\d{2}$/.test(text)) throw new ReportCardError("Academic year must use YYYY-YY."); return text; }
-function expectedDate(value: unknown, label: string) { const date = new Date(String(value ?? "")); if (Number.isNaN(date.getTime())) throw new ReportCardError(`Reload the ${label} before continuing.`, 409); return date; }
+function expectedDate(value: unknown, label: string) { const date = value instanceof Date ? new Date(value.getTime()) : new Date(String(value ?? "")); if (Number.isNaN(date.getTime())) throw new ReportCardError(`Reload the ${label} before continuing.`, 409); return date; }
 function reportCardNumber(batchNumber: string, admissionNo: string) { return `${batchNumber}-${String(admissionNo).trim().toUpperCase().replace(/[^A-Z0-9-]/g, "-")}`.slice(0, 100); }
 function monthCode(monthIndex: number) { return ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"][monthIndex]; }

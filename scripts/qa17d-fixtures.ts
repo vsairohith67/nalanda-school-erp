@@ -520,9 +520,22 @@ async function setup() {
     kgDraft.evaluationComments[evaluation].comment = `QA Evaluation ${evaluation} complete.`;
   }
   kgDraft.attendance = KG_ATTENDANCE_MONTHS.map((month) => ({ month, workingDays: 20, daysPresent: 18 }));
-  kgDraft.attendanceSource = { status: "CALCULATED_FROM_ATTENDANCE", overrideReason: null };
+  kgDraft.attendanceSource = {
+    status: "CALCULATED_FROM_ATTENDANCE",
+    sourceModule: "ATTENDANCE",
+    basisKey: `${PREFIX}-ATTENDANCE-BASIS`,
+    derivedAt: "2026-07-12T10:00:00.000Z",
+    lockedSessionCount: 11,
+    lockedRecordCount: 110
+  };
   for (const evaluation of KG_GROWTH_PERIODS) kgDraft.growth[evaluation] = { heightCm: 110, weightKg: 20, observationDate: "2026-07-12" };
-  kgDraft.final = { grade: "A", comment: "QA contextual completion.", nextClass: "QA17D Grade 6", nextSessionStartDate: "2027-04-01" };
+  kgDraft.final = {
+    grade: "A",
+    comment: "QA contextual completion.",
+    nextClass: "QA17D Grade 6",
+    nextSessionStartDate: "2027-04-01",
+    promotionReference: `${PREFIX}-PROGRESSION-BASIS`
+  };
   const sectionBStudents = students.filter((student) => student.section === "B");
   await prisma.studentReportCard.createMany({
     data: sectionBStudents.map((student, index) => ({

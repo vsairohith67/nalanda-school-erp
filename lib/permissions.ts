@@ -1607,6 +1607,7 @@ export function normalizePermission(permission: string): CanonicalPermission | n
 }
 
 export function can(role: Role, permission: Permission | string) {
+  if (!isRole(String(role))) return false;
   if (role === "SUPER_ADMIN") return true;
   const canonical = normalizePermission(permission);
   return Boolean(canonical && RECOMMENDED_ROLE_PERMISSIONS[role].has(canonical));

@@ -66,10 +66,10 @@ export function createEmptyKgDraft() {
     summaryGrades: Object.fromEntries(KG_EVALUATIONS.map((evaluation) => [evaluation, {}])) as Record<string, Record<string, string>>,
     personality: Object.fromEntries(KG_EVALUATIONS.map((evaluation) => [evaluation, {}])) as Record<string, Record<string, string>>,
     attendance: KG_ATTENDANCE_MONTHS.map((month) => ({ month, workingDays: null as number | null, daysPresent: null as number | null })),
-    attendanceSource: { status: "INCOMPLETE_SOURCE", overrideReason: null as string | null },
+    attendanceSource: { status: "INCOMPLETE_SOURCE", sourceModule: "ATTENDANCE", basisKey: null as string | null, derivedAt: null as string | null, lockedSessionCount: 0, lockedRecordCount: 0 },
     growth: Object.fromEntries(KG_GROWTH_PERIODS.map((evaluation) => [evaluation, { heightCm: null as number | null, weightKg: null as number | null, observationDate: null as string | null }])) as Record<string, { heightCm: number | null; weightKg: number | null; observationDate: string | null }>,
     evaluationComments: Object.fromEntries(KG_EVALUATIONS.map((evaluation) => [evaluation, { comment: "", classTeacherApproval: null, principalApproval: null, directorApproval: null }])) as Record<string, { comment: string; classTeacherApproval: unknown; principalApproval: unknown; directorApproval: unknown }>,
-    final: { grade: "", comment: "", nextClass: "", nextSessionStartDate: null as string | null }
+    final: { grade: "", comment: "", nextClass: "", nextSessionStartDate: null as string | null, promotionReference: null as string | null }
   };
 }
 
@@ -106,10 +106,15 @@ export function normalizeKgDraft(input: unknown) {
     return { month, workingDays, daysPresent };
   });
   const status = String(draft.attendanceSource?.status ?? "INCOMPLETE_SOURCE").toUpperCase();
-  if (!["CALCULATED_FROM_ATTENDANCE", "INCOMPLETE_SOURCE", "MANUALLY_REVIEWED_SNAPSHOT"].includes(status)) throw new Error("Choose a valid attendance source status.");
-  const overrideReason = safeReportCardText(draft.attendanceSource?.overrideReason, "Attendance override reason", 1000, false);
-  if (status === "MANUALLY_REVIEWED_SNAPSHOT" && !overrideReason) throw new Error("A manual attendance snapshot requires a reason.");
-  draft.attendanceSource = { status, overrideReason };
+  if (!["CALCULATED_FROM_ATTENDANCE", "INCOMPLETE_SOURCE"].includes(status)) throw new Error("KG attendance must derive only from the authoritative Attendance module.");
+  const sourceModule = String(draft.attendanceSource?.sourceModule ?? "ATTENDANCE").toUpperCase();
+  if (sourceModule !== "ATTENDANCE") throw new Error("KG attendance source must be the Attendance module.");
+  const basisKey = draft.attendanceSource?.basisKey ? safeBasisKey(draft.attendanceSource.basisKey) : null;
+  const derivedAt = draft.attendanceSource?.derivedAt ? validIsoDateTime(draft.attendanceSource.derivedAt, "Attendance derivation time") : null;
+  const lockedSessionCount = wholeNumber(draft.attendanceSource?.lockedSessionCount ?? 0, "Locked attendance session count", 0, 10_000);
+  const lockedRecordCount = wholeNumber(draft.attendanceSource?.lockedRecordCount ?? 0, "Locked attendance record count", 0, 100_000);
+  if (status === "CALCULATED_FROM_ATTENDANCE" && (!basisKey || !derivedAt || lockedSessionCount < 1 || lockedRecordCount < 1)) throw new Error("Calculated KG attendance requires a complete locked Attendance basis.");
+  draft.attendanceSource = { status, sourceModule, basisKey, derivedAt, lockedSessionCount, lockedRecordCount };
   for (const evaluation of KG_GROWTH_PERIODS) {
     const row = draft.growth?.[evaluation] ?? {};
     const heightCm = optionalHalfNumber(row.heightCm, `Evaluation ${evaluation} height`, 30, 220);
@@ -130,7 +135,8 @@ export function normalizeKgDraft(input: unknown) {
     grade: String(draft.final?.grade ?? "").toUpperCase(),
     comment: safeReportCardText(draft.final?.comment, "Final comment", 2000, false) ?? "",
     nextClass: safeReportCardText(draft.final?.nextClass, "Next class", 40, false) ?? "",
-    nextSessionStartDate: draft.final?.nextSessionStartDate ? validDateText(draft.final.nextSessionStartDate, "Next-session start date") : null
+    nextSessionStartDate: draft.final?.nextSessionStartDate ? validDateText(draft.final.nextSessionStartDate, "Next-session start date") : null,
+    promotionReference: draft.final?.promotionReference ? safeBasisKey(draft.final.promotionReference) : null
   };
   if (draft.final.grade && !(KG_GRADE_CODES as readonly string[]).includes(draft.final.grade)) throw new Error("Choose a valid final KG grade.");
   return draft;
@@ -150,13 +156,14 @@ export function kgValidationGaps(input: unknown, options: { directorApprovalRequ
     if (options.directorApprovalRequired && !draft.evaluationComments[evaluation]?.directorApproval) gaps.push(`Evaluation ${evaluation}: Director approval`);
   }
   for (const row of draft.attendance) if (row.workingDays === null || row.daysPresent === null) gaps.push(`${row.month}: attendance`);
-  if (draft.attendanceSource.status === "INCOMPLETE_SOURCE") gaps.push("Attendance source is incomplete; review the snapshot and record a reason");
+  if (draft.attendanceSource.status === "INCOMPLETE_SOURCE") gaps.push("Attendance source is incomplete; complete and lock the authoritative Attendance records");
   for (const evaluation of KG_GROWTH_PERIODS) {
     const row = draft.growth[evaluation];
     if (row.heightCm === null || row.weightKg === null) gaps.push(`Evaluation ${evaluation}: physical growth`);
   }
   if (!draft.final.grade) gaps.push("Final grade");
   if (!draft.final.comment) gaps.push("Final comment");
+  if (draft.final.nextClass && !draft.final.promotionReference) gaps.push("Approved Academic Progression reference");
   return gaps;
 }
 
@@ -189,4 +196,7 @@ function exactObjectKeys(value: unknown, expected: readonly string[], label: str
 }
 function optionalWholeNumber(value: unknown, label: string, minimum: number, maximum: number) { if (value === null || value === undefined || value === "") return null; const number = Number(value); if (!Number.isInteger(number) || number < minimum || number > maximum) throw new Error(`${label} must be a whole number from ${minimum} to ${maximum}.`); return number; }
 function optionalHalfNumber(value: unknown, label: string, minimum: number, maximum: number) { if (value === null || value === undefined || value === "") return null; const number = Number(value); if (!Number.isFinite(number) || number < minimum || number > maximum || Math.round(number * 2) !== number * 2) throw new Error(`${label} must be from ${minimum} to ${maximum} in 0.5 increments.`); return number; }
+function wholeNumber(value: unknown, label: string, minimum: number, maximum: number) { const number = Number(value); if (!Number.isInteger(number) || number < minimum || number > maximum) throw new Error(`${label} must be a whole number from ${minimum} to ${maximum}.`); return number; }
 function validDateText(value: unknown, label: string) { const text = String(value ?? ""); if (!/^\d{4}-\d{2}-\d{2}$/.test(text) || Number.isNaN(new Date(`${text}T00:00:00Z`).getTime())) throw new Error(`${label} must use YYYY-MM-DD.`); return text; }
+function validIsoDateTime(value: unknown, label: string) { const text = String(value ?? ""); if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(text) || Number.isNaN(new Date(text).getTime())) throw new Error(`${label} must be an ISO timestamp.`); return text; }
+function safeBasisKey(value: unknown) { const text = String(value ?? "").trim().toUpperCase(); if (!/^[A-Z0-9][A-Z0-9-]{5,79}$/.test(text)) throw new Error("Snapshot reference is invalid."); return text; }
