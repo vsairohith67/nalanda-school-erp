@@ -60,6 +60,7 @@
     { "id": "V1.5-WORK-035", "tags": [{ "name": "super-admin-work-v-2026-08-21", "commit": "53a805be7ad5299e76e30b2989a052f1b5f935e8" }] },
     { "id": "V1.5-SEARCH-036", "tags": [{ "name": "universal-search-v41-2026-08-22", "commit": "a0bd3ba395625e8c3b38c6a0ea322af49cfd631c" }] },
     { "id": "V1.5-AI-037", "tags": [{ "name": "smart-ai-v42-2026-08-22", "commit": "fe249e37ca15a0fa897d0089ff193bc595c34fd1" }] },
+    { "id": "V1.5-MEET-038", "tags": [{ "name": "parent-meetings-v1-5-v43-2026-08-24", "commit": "e8742564cf9d54651521fbeba35548b45ff9b7e0" }] },
     { "id": "V1-SAFE-033", "tags": [{ "name": "student-early-exit-v39-2026-08-10", "commit": "dec3883e5e5350f72e1f1f3ffc31104caed1adc5" }] }
   ],
   "clearedReleases": [
@@ -170,6 +171,17 @@
       ],
       "softwareStatus": "CLEARED",
       "activationStatus": "LOCAL_PROVIDER_NOT_ACTIVE_BY_DEFAULT"
+    },
+    {
+      "id": "PARENT_MEETING_V1_5_1A",
+      "name": "Parent Meetings V1.5",
+      "tag": "parent-meetings-v1-5-v43-2026-08-24",
+      "commit": "e8742564cf9d54651521fbeba35548b45ff9b7e0",
+      "retainedBranches": [
+        { "ref": "origin/feature/parent-meeting-v1-5-1a", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ],
+      "softwareStatus": "CLEARED",
+      "activationStatus": "OPERATIONAL_ACTIVATION_DEFAULT_OFF"
     }
   ],
   "featureFlagRuntimeContracts": [
@@ -232,14 +244,6 @@
       "status": "RELEASE_BLOCKED",
       "implementationState": "IMPLEMENTED_AND_INDEPENDENTLY_TESTED",
       "blockerClass": "EXTERNAL_GITHUB_ACTIONS_BILLING_BLOCK"
-    },
-    {
-      "id": "PARENT_MEETING_V1_5_1A",
-      "name": "Parent Meetings",
-      "ref": "origin/feature/parent-meeting-v1-5-1a",
-      "status": "RELEASE_BLOCKED",
-      "implementationState": "IMPLEMENTED_READY_FOR_INDEPENDENT_QA",
-      "blockerClass": "INDEPENDENT_QA_AND_RELEASE_GATES_PENDING"
     }
   ]
 }

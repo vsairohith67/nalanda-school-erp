@@ -421,7 +421,7 @@ function operationalDatabaseIntegrity() {
   return sha256File(resolved) === expectedHash ? "MATCH" : "MISMATCH";
 }
 
-function validateGateResults(value, expectedHeadSha, expectedMainSha) {
+function validateGateResults(value, expectedHeadSha, expectedMainSha, expectedCandidateTestFiles) {
   if (value == null) return null;
   if (typeof value !== "object" || Array.isArray(value)) throw new Error("FINAL_SCOPE_GATE_RESULTS_INVALID");
   const allowedStatuses = new Set([
@@ -430,14 +430,18 @@ function validateGateResults(value, expectedHeadSha, expectedMainSha) {
     "FINAL_SCOPE_QA_REQUIRES_FIXES",
     "FINAL_SCOPE_QA_BLOCKED"
   ]);
-  const requiredStrings = ["migrationStatus", "restoreStatus", "securityStatus", "dependencyStatus", "secretConfigStatus", "buildStatus", "gitSafetyStatus", "externalGateStatus"];
+  const requiredStrings = ["migrationStatus", "restoreStatus", "securityStatus", "dependencyStatus", "secretConfigStatus", "featureFlagStatus", "buildStatus", "gitSafetyStatus", "externalGateStatus"];
   if (value.schemaVersion !== 1 || !allowedStatuses.has(value.status)) throw new Error("FINAL_SCOPE_GATE_RESULTS_STATUS_INVALID");
   if (value.headSha !== expectedHeadSha || value.baseSha !== expectedMainSha) throw new Error("FINAL_SCOPE_GATE_RESULTS_STALE");
-  for (const field of ["testFilesPassed", "testsPassed", "intentionalSkips"]) {
+  for (const field of ["testFilesPassed", "testFilesSkipped", "testFilesTotal", "testsPassed", "intentionalSkips", "testsTotal"]) {
     if (!Number.isInteger(value[field]) || value[field] < 0) throw new Error(`FINAL_SCOPE_GATE_RESULTS_${field.toUpperCase()}_INVALID`);
   }
+  if (value.testFilesPassed + value.testFilesSkipped !== value.testFilesTotal || value.testsPassed + value.intentionalSkips !== value.testsTotal) {
+    throw new Error("FINAL_SCOPE_GATE_RESULTS_TEST_TOTALS_INCONSISTENT");
+  }
+  if (value.testFilesTotal !== expectedCandidateTestFiles) throw new Error("FINAL_SCOPE_GATE_RESULTS_TEST_FILE_COUNT_MISMATCH");
   for (const field of requiredStrings) if (typeof value[field] !== "string" || !value[field]) throw new Error(`FINAL_SCOPE_GATE_RESULTS_${field.toUpperCase()}_INVALID`);
-  const localFields = ["migrationStatus", "restoreStatus", "securityStatus", "dependencyStatus", "secretConfigStatus", "buildStatus", "gitSafetyStatus"];
+  const localFields = ["migrationStatus", "restoreStatus", "securityStatus", "dependencyStatus", "secretConfigStatus", "featureFlagStatus", "buildStatus", "gitSafetyStatus"];
   for (const field of localFields) {
     if (!/^(?:PASS|FAIL_[A-Z0-9_]+|BLOCKED_[A-Z0-9_]+|NOT_RUN|NOT_EVALUATED)$/.test(value[field])) {
       throw new Error(`FINAL_SCOPE_GATE_RESULTS_${field.toUpperCase()}_SEMANTICS_INVALID`);
@@ -458,6 +462,10 @@ function validateGateResults(value, expectedHeadSha, expectedMainSha) {
   }
   if (value.status === "FINAL_SCOPE_QA_LOCAL_ACCEPTANCE_COMPLETE_RELEASE_BLOCKED_EXTERNAL_CI" && (localFields.some((field) => value[field] !== "PASS") || value.externalGateStatus !== "EXTERNAL_GITHUB_ACTIONS_BILLING_BLOCK")) {
     throw new Error("FINAL_SCOPE_GATE_RESULTS_EXTERNAL_BLOCK_WITH_RED_LOCAL_GATE");
+  }
+  if (["FINAL_SCOPE_QA_CLEARED", "FINAL_SCOPE_QA_LOCAL_ACCEPTANCE_COMPLETE_RELEASE_BLOCKED_EXTERNAL_CI"].includes(value.status)
+    && (value.testFilesPassed === 0 || value.testsPassed === 0 || value.testFilesTotal === 0 || value.testsTotal === 0)) {
+    throw new Error("FINAL_SCOPE_GATE_RESULTS_GREEN_WITH_ZERO_TESTS");
   }
   return value;
 }
@@ -593,23 +601,30 @@ function main() {
   };
 
   const gateResultPath = boundedArtifactPath("gate-results.json");
-  const gateResults = validateGateResults(optionalJson(gateResultPath), headSha, currentMain.sha);
+  const gateResults = validateGateResults(optionalJson(gateResultPath), headSha, currentMain.sha, candidate.testFileCount);
   const focusedTests = validateFocusedTests(optionalJson(boundedArtifactPath("focused-tests.json")), headSha, currentMain.sha);
   const dbIntegrity = operationalDatabaseIntegrity();
   const inventoryFailures = [...failures];
   const externalOnlyStatus = gateResults?.status === "FINAL_SCOPE_QA_LOCAL_ACCEPTANCE_COMPLETE_RELEASE_BLOCKED_EXTERNAL_CI";
+  const localGateFields = ["migrationStatus", "restoreStatus", "securityStatus", "dependencyStatus", "secretConfigStatus", "featureFlagStatus", "buildStatus", "gitSafetyStatus"];
   const incompleteGateFields = gateResults
-    ? ["migrationStatus", "restoreStatus", "securityStatus", "dependencyStatus", "secretConfigStatus", "buildStatus", "gitSafetyStatus"]
-      .filter((field) => /^(?:NOT_RUN|NOT_EVALUATED|UNKNOWN)$/i.test(gateResults[field]))
+    ? localGateFields
+      .filter((field) => /^(?:NOT_RUN|NOT_EVALUATED|UNKNOWN|BLOCKED_)/i.test(gateResults[field]))
       .map((field) => `MANDATORY_GATE_INCOMPLETE_${field.toUpperCase()}`)
     : ["MANDATORY_GATE_RESULTS_NOT_RECORDED"];
+  const failedGateFields = gateResults
+    ? localGateFields
+      .filter((field) => /^FAIL_/i.test(gateResults[field]))
+      .map((field) => `MANDATORY_GATE_FAILED_${field.toUpperCase()}_${gateResults[field]}`)
+    : [];
   const mandatoryGateFailures = [
     ...failures,
     ...(dbIntegrity === "MATCH" ? [] : [`OPERATIONAL_DB_INTEGRITY_${dbIntegrity}`]),
     ...incompleteGateFields,
+    ...failedGateFields,
     ...(gateResults?.mandatoryGateFailures ?? [])
   ];
-  const hasRealFailure = inventoryFailures.length > 0 || dbIntegrity !== "MATCH" || (gateResults?.mandatoryGateFailures.length ?? 0) > 0;
+  const hasRealFailure = inventoryFailures.length > 0 || dbIntegrity !== "MATCH" || failedGateFields.length > 0 || (gateResults?.mandatoryGateFailures.length ?? 0) > 0;
   const derivedStatus = hasRealFailure
     ? "FINAL_SCOPE_QA_REQUIRES_FIXES"
     : incompleteGateFields.length > 0
@@ -630,8 +645,11 @@ function main() {
     candidateTestFileCount: candidate.testFileCount,
     currentMainTestFileCount: currentMain.testFileCount,
     testFilesPassed: gateResults?.testFilesPassed ?? focusedTests?.testFilesPassed ?? null,
+    testFilesSkipped: gateResults?.testFilesSkipped ?? null,
+    testFilesTotal: gateResults?.testFilesTotal ?? null,
     testsPassed: gateResults?.testsPassed ?? focusedTests?.testsPassed ?? null,
     intentionalSkips: gateResults?.intentionalSkips ?? focusedTests?.intentionalSkips ?? null,
+    testsTotal: gateResults?.testsTotal ?? null,
     backupVersion: currentMain.backupVersion,
     operationalDbIntegrity: dbIntegrity,
     migrationStatus: gateResults?.migrationStatus ?? "NOT_RUN",
@@ -639,6 +657,7 @@ function main() {
     securityStatus: gateResults?.securityStatus ?? "NOT_RUN",
     dependencyStatus: gateResults?.dependencyStatus ?? "NOT_RUN",
     secretConfigStatus: gateResults?.secretConfigStatus ?? "NOT_RUN",
+    featureFlagStatus: gateResults?.featureFlagStatus ?? "NOT_RUN",
     buildStatus: gateResults?.buildStatus ?? "NOT_RUN",
     gitSafetyStatus: gateResults?.gitSafetyStatus ?? "NOT_RUN",
     featureFlags: candidate.featureFlags.map(({ key, defaultState, rolloutPercentage, environment }) => ({ key, defaultState, rolloutPercentage, environment })),

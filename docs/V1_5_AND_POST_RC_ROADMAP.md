@@ -93,9 +93,9 @@ Search, or unlock Smart AI.
 
 Hosting/provider choice, private staging, DNS/subdomain, master-data configuration, controlled import, onboarding, training, pilot, rollback, and cutover are operational launch gates. They do not become implicitly authorised by product development, documentation approval, or a green RC. Payment and communication providers remain mock/default-off until separately selected and activated under their own acceptance gates.
 
-## Corrected-scope acceptance gate (2026-08-23)
+## Corrected-scope acceptance gate (2026-08-24)
 
-`FINAL-SCOPE-QA-1A` is implemented but `REQUIRES_FIXES`: server-side runtime enforcement is missing for several committed default-off flags, and dependency audits retain mandatory Critical/High findings. Optional Operations is `LOCAL_ACCEPTANCE_COMPLETE / RELEASE_BLOCKED_EXTERNAL_CI`; Parent Meetings is `BLOCKED_BY_EVIDENCE / RELEASE_BLOCKED`. These branches remain unmerged, and no tag/deployment/activation is authorised. The next safe product step is a separately reviewed narrow flag-enforcement and dependency-remediation change followed by a full exact-head rerun.
+`FINAL-SCOPE-QA-1A` is implemented but `REQUIRES_FIXES`: server-side runtime enforcement is missing for several committed default-off flags, and `bulk-exports` lacks a governed surface map. Production and full dependency audits report zero findings. Optional Operations is `LOCAL_ACCEPTANCE_COMPLETE / RELEASE_BLOCKED_EXTERNAL_CI`; Parent Meetings is cleared on current main with operational activation default-off. No QA-branch merge, tag, deployment or activation is authorised. The next safe product step is a separately reviewed narrow flag-enforcement change followed by a full exact-head rerun.
 
 ## Related reconciliation documents
 

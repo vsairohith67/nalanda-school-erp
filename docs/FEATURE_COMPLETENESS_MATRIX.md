@@ -1,6 +1,6 @@
 # Feature Completeness Matrix
 
-**As-of:** 2026-08-22<br>
+**As-of:** 2026-08-24<br>
 **Source:** `docs/REQUIREMENTS_REGISTER.md`
 
 This matrix separates presence from completeness. `Complete` requires tested workflow and release evidence; `Partial` means meaningful code or planning exists but a required outcome is absent.
@@ -28,7 +28,7 @@ This matrix separates presence from completeness. `Complete` requires tested wor
 | Parent/Staff support/complaints/feedback | V1 | Complete | Privacy/retention wording and deployment remain operational gates | `support-complaints-v37-2026-08-09` |
 | Observability and operational health | V1 | Complete software / operational configuration pending | Local/private health, alerts and runbooks are released; live hosting telemetry is not active | `observability-operations-v40-2026-08-10` |
 | Bulk Student/Guardian/Staff onboarding | V1 | Complete locally/private | IMPORT-1A and independent QA prove controlled templates, private upload, bounded validation, explicit duplicate decisions, expiring dry-run approval, atomic/idempotent execution, lineage/reconciliation, dependency-safe rollback, OBS-1A metrics, backup v41 recovery and exact operational migration preservation | Real onboarding requires a separately approved maintenance/import phase; deployment and account activation remain gated |
-| Final corrected-scope cross-module QA | V1/V1.5 current main | Acceptance implemented / requires fixes | Runtime flag enforcement and Critical/High dependency gates are red; no merge/tag is authorised | [Final corrected-scope acceptance](FINAL_CORRECTED_SCOPE_ACCEPTANCE.md) |
+| Final corrected-scope cross-module QA | V1/V1.5 current main | Acceptance implemented / requires fixes | Runtime flag enforcement is red; dependency audits are clean, but no merge/tag is authorised while any mandatory local gate fails | [Final corrected-scope acceptance](FINAL_CORRECTED_SCOPE_ACCEPTANCE.md) |
 | Staging/pilot/reconciliation/cutover | V1 | Operational configuration pending | Explicit operational approval has not been granted | Separate operational release gate |
 | Full payroll automation/salary ESS | V1.5 | Complete | Product scope moved from V1; statutory integrations remain gated | Prompt 23I release preserved |
 | Super Admin Command Center | V1.5 | Complete locally/private | Deployment and real-user operation remain separate | `SUPER_ADMIN_COMMAND_CENTER_CLEARED` |
@@ -38,12 +38,13 @@ This matrix separates presence from completeness. `Complete` requires tested wor
 | Smart AI Local Runtime | V1.5 | Complete software / provider default-off | Loopback-only local runtime is cleared; committed provider remains `DISABLED`; cloud inference and AI Actions remain prohibited | `smart-ai-local-runtime-v42-2026-08-23` |
 | Event Media | V1.5 | Complete software / public gallery default-off | Private governed media is cleared; public activation and AI image processing are not authorised | `event-media-v1-5-v42-2026-08-22` |
 | KG developmental reports | V1.5 | Complete software / operational activation off | Software is cleared while real-school activation and physical-printer acceptance remain gated | `kg-report-cards-v1-5-v42-2026-08-22` |
+| Parent Meetings, Appointments and Follow-up | V1.5 | Complete software / operational activation off | Exact linked-child and assigned-Teacher workflow is cleared on current main; Search/AI integration and real operational use remain separate | `parent-meetings-v1-5-v43-2026-08-24` |
 | Transport | V1.5 | Deferred | School does not provide service | Optional future decision |
 | Cafeteria | V1.5 | Deferred | School does not provide service | Optional future decision |
 | AI educational programme | V2 | Deferred | Planning/mock foundations are not the programme | Future V2 with Teacher approval |
 
 ## V1 launch-blocker order
 
-1. Remediate and independently re-run `FINAL-SCOPE-QA-1A` runtime-flag and dependency gates.
-2. Preserve Optional Operations and Parent Meetings as separate release-blocked branches until their own gates clear.
+1. Remediate and independently re-run the `FINAL-SCOPE-QA-1A` runtime-flag gate, including a governed `bulk-exports` surface map.
+2. Preserve Optional Operations as a separate release-blocked branch until its exact-SHA external gate can run; Parent Meetings is already cleared on current main.
 3. Obtain separate approval for staging, controlled pilot, reconciliation and cutover.

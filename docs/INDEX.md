@@ -60,7 +60,7 @@ change, Search indexing or AI integration.
 
 - [Final Corrected-Scope Acceptance](FINAL_CORRECTED_SCOPE_ACCEPTANCE.md)
 
-The reusable current-main/candidate inventory and copied-database acceptance harness are implemented. The current verdict is `FINAL_SCOPE_QA_REQUIRES_FIXES` because server-side enforcement is missing for several declared default-off release flags and the dependency graph retains mandatory Critical/High findings. No merge, tag, deployment or activation is authorised.
+The reusable current-main/candidate inventory and copied-database acceptance harness are implemented. The current verdict is `FINAL_SCOPE_QA_REQUIRES_FIXES` because server-side enforcement is missing for several declared default-off release flags and `bulk-exports` lacks a governed surface map. Dependency audits are clean. No merge, tag, deployment or activation is authorised.
 
 ## V1-FINAL-1A final integration and release-candidate preparation
 

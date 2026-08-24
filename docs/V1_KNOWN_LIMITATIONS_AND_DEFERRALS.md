@@ -8,6 +8,6 @@
 - Public deployment, real-data import, real-user activation, domain/DNS and production cutover are not authorized.
 - Historical Schoolknot evidence gaps remain vendor evidence gaps; absence was never inferred as feature absence.
 - Physical report acceptance applies to the approved Classes I-X R8 family and recorded Canon/A4 conditions; future layout edits require a new governed version.
-- Parent Meetings is implemented with focused QA on a separate branch but remains `BLOCKED_BY_EVIDENCE / RELEASE_BLOCKED`; it is not a current-main capability.
+- Parent Meetings software is cleared on current main and remains operationally default-off; real use and Search/Smart AI integration require separate authorization.
 - `FINAL-SCOPE-QA-1A` found that `real-data-imports`, `public-admissions-form` and `payroll-ess-pilot` are committed default-off but are not enforced by their active server-side write surfaces; `bulk-exports` lacks a governed surface map. Release acceptance remains blocked until corrected and independently rerun.
-- Dependency audits currently retain one Critical and two High findings in the full graph, including one production High. No corrected-scope release may clear until the mandatory Critical/High gate is resolved or conclusively shown non-applicable.
+- Current production and full dependency audits report zero findings at every severity. This does not override the remaining runtime feature-flag blocker.

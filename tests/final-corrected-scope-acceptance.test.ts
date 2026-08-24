@@ -8,6 +8,7 @@ import {
 } from "@/lib/academic-integrity";
 import { eventMediaPublicGalleryEnabled } from "@/lib/event-media";
 import { immutablePermissionDenial } from "@/lib/iam/permission-governance";
+import { parentMeetingsEnabled } from "@/lib/parent-meeting-feature";
 import { can, PERMISSIONS, RECOMMENDED_ROLE_PERMISSIONS, ROLES } from "@/lib/permissions";
 import { evaluateReleaseFeatureFlag, releaseFeatureFlags } from "@/lib/release-feature-flags";
 import { getSmartAiProvider, validateSmartAiLocalEndpoint } from "@/lib/smart-ai-provider-local";
@@ -111,11 +112,14 @@ describe("FINAL-SCOPE-QA-1A corrected-scope contract acceptance", () => {
     }));
     expect(assignments.SMART_AI_PROVIDER).toBe("DISABLED");
     expect(assignments.EVENT_MEDIA_PUBLIC_GALLERY_ENABLED).toBe("false");
+    expect(assignments.PARENT_MEETINGS_V1_5).toBe("false");
     for (const [key, value] of Object.entries(assignments).filter(([key]) => /(?:LIVE|PUBLIC|INDEXING).*ENABLED|LIVE_PROVIDERS_ENABLED/.test(key))) {
       expect(value, key).not.toBe("true");
     }
     delete process.env.EVENT_MEDIA_PUBLIC_GALLERY_ENABLED;
     expect(eventMediaPublicGalleryEnabled()).toBe(false);
+    delete process.env.PARENT_MEETINGS_V1_5;
+    expect(parentMeetingsEnabled()).toBe(false);
   });
 
   it("keeps backup and restore version support aligned without assuming a historical version", () => {
