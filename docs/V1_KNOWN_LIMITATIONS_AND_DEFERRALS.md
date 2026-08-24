@@ -4,7 +4,7 @@
 - SQLite is single-instance; horizontal scaling is not supported.
 - qpdf and backup encryption keys require approved external operational configuration.
 - Payroll automation/ESS operational rollout and KG/LKG/UKG report-card activation are V1.5 operational gates; KG software itself is cleared and default-off.
-- Transport and cafeteria are optional V1.5 decisions. Their Optional Operations branch is implemented and independently tested but release-blocked by the external GitHub Actions billing gate; it is not merged or a current-main school service.
+- Transport and cafeteria software foundations are cleared on current main and remain operationally default-off. Nalanda still has no activated transport or cafeteria service; real data, deployment and operational use require separate authorization.
 - Public deployment, real-data import, real-user activation, domain/DNS and production cutover are not authorized.
 - Historical Schoolknot evidence gaps remain vendor evidence gaps; absence was never inferred as feature absence.
 - Physical report acceptance applies to the approved Classes I-X R8 family and recorded Canon/A4 conditions; future layout edits require a new governed version.

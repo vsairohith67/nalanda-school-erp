@@ -102,7 +102,7 @@ activated.
 
 ## FINAL-SCOPE-QA-1A current-main acceptance update (2026-08-24)
 
-The post-V1.5 corrected-scope harness and release-evidence tooling are implemented, but the terminal status is `FINAL_SCOPE_QA_REQUIRES_FIXES`. Three active write areas do not enforce their declared default-off flags (`real-data-imports`, `public-admissions-form`, `payroll-ess-pilot`), and `bulk-exports` lacks an authoritative governed-surface mapping. Production and full dependency audits are clean. Optional Operations remains `LOCAL_ACCEPTANCE_COMPLETE / RELEASE_BLOCKED_EXTERNAL_CI`; Parent Meetings is cleared on current main with operational activation default-off. No QA-branch merge, release tag, deployment or activation is authorised by this update.
+The post-V1.5 corrected-scope harness and release-evidence tooling are implemented, but the terminal status is `FINAL_SCOPE_QA_REQUIRES_FIXES`. Three active write areas do not enforce their declared default-off flags (`real-data-imports`, `public-admissions-form`, `payroll-ess-pilot`), and `bulk-exports` lacks an authoritative governed-surface mapping. Production and full dependency audits are clean. Optional Operations and Parent Meetings are cleared on current main with operational activation default-off. No QA-branch merge, release tag, deployment or activation is authorised by this update.
 
 ## Next documents
 

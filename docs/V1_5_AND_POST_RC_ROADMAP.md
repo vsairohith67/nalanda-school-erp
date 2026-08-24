@@ -21,7 +21,7 @@ This roadmap preserves the operational boundaries in the [Requirements Register]
 
 **Latest cleared product gate:**
 
-`SMART-AI-LOCAL-RUNTIME-1A — Loopback-Only Local Runtime (provider default-off)`
+`OPTIONAL-OPS-V1_5-1A — Optional Transport and Cafeteria Foundations (operational activation default-off)`
 
 The Command Center, owner-isolated Diary, Tasks & Reminders, Contacts &
 Suppliers, permission-scoped Universal Search, and Smart AI foundation are independently cleared.
@@ -97,7 +97,7 @@ Hosting/provider choice, private staging, DNS/subdomain, master-data configurati
 
 ## Corrected-scope acceptance gate (2026-08-24)
 
-`FINAL-SCOPE-QA-1A` is implemented but `REQUIRES_FIXES`: server-side runtime enforcement is missing for several committed default-off flags, and `bulk-exports` lacks a governed surface map. Production and full dependency audits report zero findings. Optional Operations is `LOCAL_ACCEPTANCE_COMPLETE / RELEASE_BLOCKED_EXTERNAL_CI`; Parent Meetings is cleared on current main with operational activation default-off. No QA-branch merge, tag, deployment or activation is authorised. The next safe product step is a separately reviewed narrow flag-enforcement change followed by a full exact-head rerun.
+`FINAL-SCOPE-QA-1A` is implemented but `REQUIRES_FIXES`: server-side runtime enforcement is missing for several committed default-off flags, and `bulk-exports` lacks a governed surface map. Production and full dependency audits report zero findings. Optional Operations and Parent Meetings are cleared on current main with operational activation default-off. No QA-branch merge, tag, deployment or activation is authorised. The next safe product step is a separately reviewed narrow flag-enforcement change followed by a full exact-head rerun.
 
 ## Related reconciliation documents
 

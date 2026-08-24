@@ -4,7 +4,7 @@
 **Evidence window:** 2026-08-23 to 2026-08-24<br>
 **Current verdict:** `FINAL_SCOPE_QA_REQUIRES_FIXES`<br>
 **Candidate branch:** `feature/final-scope-qa-1a`<br>
-**Authorized current main:** `e8742564cf9d54651521fbeba35548b45ff9b7e0`
+**Authorized current main:** `15b3d9e3968c2c13880106b55b4b9992f5c9ff9f`
 
 This is local/private release acceptance evidence. It does not authorize deployment, operational activation, real-data migration, provider activation, merge or release tagging.
 
@@ -18,17 +18,17 @@ No QA release tag was created and this branch was not merged to main.
 
 | Evidence | Result |
 | --- | --- |
-| Page routes | 346 |
-| API routes | 575 |
-| Main test files | 224 |
-| Candidate test files | 225 |
-| Active ordered migrations | 21 |
-| Prisma models/tables after fresh migration | 308 |
-| Backup format | v43; 257 durable collections |
-| Reachable annotated tags | 46 |
-| Cleared requirement/tag mappings | 25 verified |
+| Page routes | 350 |
+| API routes | 590 |
+| Main test files | 225 |
+| Candidate test files | 226 |
+| Active ordered migrations | 22 |
+| Prisma models/tables after fresh migration | 320 |
+| Backup format | v43; 269 durable collections |
+| Reachable annotated tags | 47 |
+| Cleared requirement/tag mappings | 27 verified |
 
-The full candidate suite passed 224 test files with one intentionally skipped test file, and 2,046 tests with three intentional skips out of 2,049 total. The skips are the existing qpdf/environment-dependent payslip checks; they were recorded as skips, not passes. TypeScript validation and the production build passed.
+The full candidate suite passed 225 test files with one intentionally skipped test file, and 2,052 tests with three intentional skips out of 2,055 total. The skips are the existing qpdf/environment-dependent payslip checks; they were recorded as skips, not passes. TypeScript validation and the production build passed.
 
 ## Cross-module acceptance
 
@@ -38,7 +38,7 @@ Smart AI remains `DISABLED` by committed default, accepts only loopback local en
 
 ## Feature-flag inventory
 
-All nine release flags are committed false with zero-percent rollout.
+All ten release flags are committed false with zero-percent rollout.
 
 | Flag | Runtime acceptance |
 | --- | --- |
@@ -50,13 +50,14 @@ All nine release flags are committed false with zero-percent rollout.
 | `public-admissions-form` | `UNENFORCED_EXPOSED_SURFACE` |
 | `payroll-ess-pilot` | `UNENFORCED_EXPOSED_SURFACE` |
 | `kg-report-cards-v1-5` | `ENFORCED` |
-| `future-transport-cafeteria` | `NO_RUNTIME_CAPABILITY` |
+| `transport-v1-5` | `ENFORCED` |
+| `cafeteria-v1-5` | `ENFORCED` |
 
 The red surfaces are deliberately recorded rather than silently expanded in this QA-only workstream.
 
 ## Migration, backup and restore
 
-The 21 active migration names are unique and ordered. Fresh deployment produced 308 models/tables, schema equivalence reported 1,516 indexes and 532 foreign keys, and a representative copied existing database upgraded from 292 to 308 models/tables without changing its business baseline. The backup v43 contract included 257 durable collections and restore completed twice with record counts, ownership, collision handling, audit/immutable data and role state preserved. No business migration was added by this task.
+The 22 active migration names are unique and ordered. Fresh deployment produced 320 models/tables, schema equivalence reported 1,577 indexes and 549 foreign keys, and a representative copied existing database upgraded from 292 to 320 models/tables without changing its business baseline. The backup v43 contract included 269 durable collections and restore completed twice with record counts, ownership, collision handling, audit/immutable data and role state preserved. No business migration was added by this task.
 
 The operational database was resolved and hashed before copied-database work, was never used as a write target, and matched byte-for-byte at the final integrity check. Private paths and digest values are intentionally excluded from this document.
 
@@ -68,11 +69,13 @@ Changed QA/tooling code was reviewed for command construction, bounded path hand
 
 ## Release and branch consistency
 
-Current main contains the retained cleared releases for Academic Integrity, Universal Search, Smart AI Foundation, Smart AI Local Runtime, KG Reports, Event Media, Whiteboard Bridge, Command Center, My Work, parallel-worktree safety and Parent Meetings. Their annotated tags resolve to commits contained in current-main history and their declared activation boundaries remain distinct from software clearance.
+Current main contains the retained cleared releases for Academic Integrity, Universal Search, Smart AI Foundation, Smart AI Local Runtime, KG Reports, Event Media, Whiteboard Bridge, Command Center, My Work, parallel-worktree safety, Parent Meetings and Optional Operations. Their annotated tags resolve to commits contained in current-main history and their declared activation boundaries remain distinct from software clearance.
 
 Parent Meetings is `CLEARED / OPERATIONAL_ACTIVATION_DEFAULT_OFF` on current main at `parent-meetings-v1-5-v43-2026-08-24`.
 
-Optional Operations remains committed and independently tested on `origin/feature/optional-ops-v1-5-1a`, but is not contained in main. At this evidence point it is 14 commits behind and 9 ahead of current main, and remains `LOCAL_ACCEPTANCE_COMPLETE / RELEASE_BLOCKED_EXTERNAL_CI` because its mandatory exact-SHA workflow was rejected before checkout by the external GitHub Actions billing/spending condition. Its functionality and local totals are excluded from current-main acceptance.
+Optional Transport and Cafeteria are `CLEARED / OPERATIONAL_ACTIVATION_DEFAULT_OFF` on current main at `optional-ops-v1-5-v43-2026-08-24`. Their retained branch is contained in the release, and the mandatory exact-SHA GitHub validation recorded by that release passed. No real service, route assignment, meal, deployment, provider or operational activation is implied.
+
+No current committed remote feature branch remains classified as release-blocked by this acceptance manifest.
 
 ## Exact next action
 

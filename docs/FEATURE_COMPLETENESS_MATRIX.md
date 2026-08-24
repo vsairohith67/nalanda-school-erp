@@ -39,12 +39,12 @@ This matrix separates presence from completeness. `Complete` requires tested wor
 | Event Media | V1.5 | Complete software / public gallery default-off | Private governed media is cleared; public activation and AI image processing are not authorised | `event-media-v1-5-v42-2026-08-22` |
 | KG developmental reports | V1.5 | Complete software / operational activation off | Software is cleared while real-school activation and physical-printer acceptance remain gated | `kg-report-cards-v1-5-v42-2026-08-22` |
 | Parent Meetings, Appointments and Follow-up | V1.5 | Complete software / operational activation off | Exact linked-child and assigned-Teacher workflow is cleared on current main; Search/AI integration and real operational use remain separate | `parent-meetings-v1-5-v43-2026-08-24` |
-| Transport | V1.5 | Deferred | School does not provide service | Optional future decision |
-| Cafeteria | V1.5 | Deferred | School does not provide service | Optional future decision |
+| Transport | V1.5 | Complete software / operational activation off | Governed foundation is cleared; the school does not currently provide or activate the service | `optional-ops-v1-5-v43-2026-08-24` |
+| Cafeteria | V1.5 | Complete software / operational activation off | Governed foundation is cleared; the school does not currently provide or activate the service | `optional-ops-v1-5-v43-2026-08-24` |
 | AI educational programme | V2 | Deferred | Planning/mock foundations are not the programme | Future V2 with Teacher approval |
 
 ## V1 launch-blocker order
 
 1. Remediate and independently re-run the `FINAL-SCOPE-QA-1A` runtime-flag gate, including a governed `bulk-exports` surface map.
-2. Preserve Optional Operations as a separate release-blocked branch until its exact-SHA external gate can run; Parent Meetings is already cleared on current main.
+2. Preserve Parent Meetings and Optional Operations as cleared but operationally default-off current-main software.
 3. Obtain separate approval for staging, controlled pilot, reconciliation and cutover.
