@@ -31,7 +31,7 @@ The authoritative status source is now `REQUIREMENTS_REGISTER.md`, with product 
 - V1 safe staging/release/client update is `PARTIAL`: readiness foundations exist, but the complete governed pipeline and client update UX are not released.
 - At this dated checkpoint, Support/complaint/feedback and final corrected-scope cross-module QA were recorded as `MISSING`; observability and bulk onboarding were `PARTIAL`; operational cutover was `DEFERRED` pending explicit approval. This sentence is `HISTORICAL_ONLY`; use the current-main correction above.
 
-Transport and Cafeteria are optional V1.5. V2 remains AI lessons/videos with Teacher approval and no automatic Student publication. Recommended next phase: `FIN-FAMILY-PAY-1`.
+Transport and Cafeteria V1.5 software foundations are cleared and governed `DEFAULT-OFF` after independent QA and mandatory exact-SHA GitHub validation. This does not mean Nalanda operates either service. V2 remains AI lessons/videos with Teacher approval and no automatic Student publication.
 
 ## Prompt 23B final Schoolknot multi-role consolidation
 

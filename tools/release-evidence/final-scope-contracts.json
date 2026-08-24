@@ -61,6 +61,8 @@
     { "id": "V1.5-SEARCH-036", "tags": [{ "name": "universal-search-v41-2026-08-22", "commit": "a0bd3ba395625e8c3b38c6a0ea322af49cfd631c" }] },
     { "id": "V1.5-AI-037", "tags": [{ "name": "smart-ai-v42-2026-08-22", "commit": "fe249e37ca15a0fa897d0089ff193bc595c34fd1" }] },
     { "id": "V1.5-MEET-038", "tags": [{ "name": "parent-meetings-v1-5-v43-2026-08-24", "commit": "e8742564cf9d54651521fbeba35548b45ff9b7e0" }] },
+    { "id": "V1.5-TRN-025", "tags": [{ "name": "optional-ops-v1-5-v43-2026-08-24", "commit": "15b3d9e3968c2c13880106b55b4b9992f5c9ff9f" }] },
+    { "id": "V1.5-CAF-026", "tags": [{ "name": "optional-ops-v1-5-v43-2026-08-24", "commit": "15b3d9e3968c2c13880106b55b4b9992f5c9ff9f" }] },
     { "id": "V1-SAFE-033", "tags": [{ "name": "student-early-exit-v39-2026-08-10", "commit": "dec3883e5e5350f72e1f1f3ffc31104caed1adc5" }] }
   ],
   "clearedReleases": [
@@ -182,6 +184,17 @@
       ],
       "softwareStatus": "CLEARED",
       "activationStatus": "OPERATIONAL_ACTIVATION_DEFAULT_OFF"
+    },
+    {
+      "id": "OPTIONAL_OPS_V1_5_1A",
+      "name": "Optional Transport and Cafeteria V1.5",
+      "tag": "optional-ops-v1-5-v43-2026-08-24",
+      "commit": "15b3d9e3968c2c13880106b55b4b9992f5c9ff9f",
+      "retainedBranches": [
+        { "ref": "origin/feature/optional-ops-v1-5-1a", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ],
+      "softwareStatus": "CLEARED",
+      "activationStatus": "OPERATIONAL_ACTIVATION_DEFAULT_OFF"
     }
   ],
   "featureFlagRuntimeContracts": [
@@ -231,19 +244,15 @@
       "evidencePaths": ["lib/report-card-release-policy.ts"]
     },
     {
-      "key": "future-transport-cafeteria",
-      "status": "NO_RUNTIME_CAPABILITY",
-      "evidencePaths": ["docs/V1_KNOWN_LIMITATIONS_AND_DEFERRALS.md"]
+      "key": "transport-v1-5",
+      "status": "ENFORCED",
+      "evidencePaths": ["lib/optional-operations-feature-flags.ts", "lib/optional-operations-api.ts"]
+    },
+    {
+      "key": "cafeteria-v1-5",
+      "status": "ENFORCED",
+      "evidencePaths": ["lib/optional-operations-feature-flags.ts", "lib/optional-operations-api.ts"]
     }
   ],
-  "releaseBlockedBranches": [
-    {
-      "id": "OPTIONAL_OPS_V1_5_1A",
-      "name": "Optional Operations",
-      "ref": "origin/feature/optional-ops-v1-5-1a",
-      "status": "RELEASE_BLOCKED",
-      "implementationState": "IMPLEMENTED_AND_INDEPENDENTLY_TESTED",
-      "blockerClass": "EXTERNAL_GITHUB_ACTIONS_BILLING_BLOCK"
-    }
-  ]
+  "releaseBlockedBranches": []
 }

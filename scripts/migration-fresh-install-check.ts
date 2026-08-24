@@ -20,7 +20,14 @@ export async function runMigrationFreshInstallCheck() {
   const databasePath = createEmptyIsolatedDatabase("empty-db", "fresh-check");
   let success = false;
   try {
-    runPrisma(["generate", "--schema", "prisma/schema.prisma"], databasePath);
+    // Vitest runs this migration rehearsal alongside suites that keep the
+    // generated Windows query engine loaded. Renaming that DLL during a
+    // concurrent `prisma generate` fails with EPERM, so the full-suite wrapper
+    // skips only this redundant generation step. The standalone release gate
+    // still generates the client before applying migrations.
+    if (process.env.MIGRATION_FRESH_CHECK_SKIP_GENERATE !== "1") {
+      runPrisma(["generate", "--schema", "prisma/schema.prisma"], databasePath);
+    }
     runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"], databasePath);
     runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"], databasePath);
     const status = runPrisma(["migrate", "status", "--schema", "prisma/schema.prisma"], databasePath);
@@ -43,7 +50,7 @@ export async function runMigrationFreshInstallCheck() {
     const migrations = Number((db.prepare("SELECT COUNT(*) AS value FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL").get() as { value: number }).value);
     const operationalChecks = Number((db.prepare("SELECT COUNT(*) AS value FROM OperationalCheckDefinition").get() as { value: number }).value);
     db.close();
-    if (users !== 4 || aliases !== 4 || students !== 8 || migrations !== 21 || operationalChecks !== 13) throw new Error("SYNTHETIC_BOOTSTRAP_COUNTS_INVALID");
+    if (users !== 4 || aliases !== 4 || students !== 8 || migrations !== 22 || operationalChecks !== 13) throw new Error("SYNTHETIC_BOOTSTRAP_COUNTS_INVALID");
     success = true;
     console.log(`Fresh migration check passed: migrations=${migrations} models=${schema.models} tables=${schema.tables}`);
     console.log(`Synthetic bootstrap passed: users=${users} usernameAliases=${aliases} students=${students} operationalChecks=${operationalChecks}; lifecycle backfill remained dry-run.`);

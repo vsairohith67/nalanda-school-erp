@@ -23,6 +23,7 @@ const focusedTests = [
   "tests/event-media-governance.test.ts",
   "tests/kg-report-card.test.ts",
   "tests/parent-meetings-v1-5.test.ts",
+  "tests/optional-operations-foundation.test.ts",
   "tests/release-operations.test.ts",
   "tests/payment-controls.test.ts",
   "tests/fee-structures.test.ts",

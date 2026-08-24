@@ -57,6 +57,9 @@ model Student {
   departureStandingAuth    StudentStandingDepartureAuthorization[]
   campusPresenceEvents     StudentCampusPresenceEvent[]
   departureIncidents       StudentDepartureIncident[]
+  transportAssignments     TransportStudentAssignment[]
+  cafeteriaEnrollments     CafeteriaStudentEnrollment[]
+  cafeteriaMealRecords     CafeteriaMealRecord[]
   parentMeetings           ParentMeeting[]
 
   @@index([academicYear])
@@ -655,6 +658,8 @@ model StaffMember {
   payslipMonthAvailability  StaffPayslipMonthAvailability[]
   payslipRequests           StaffPayslipRequest[]
   payslipAccessEvents       StaffPayslipAccessEvent[]
+  transportDriverRoutes     TransportRoute[]                @relation("TransportRouteDriver")
+  transportAttendantRoutes  TransportRoute[]                @relation("TransportRouteAttendant")
   parentMeetingParticipants ParentMeetingParticipant[]
   parentMeetingFollowUps    ParentMeetingFollowUp[]
 
@@ -8180,6 +8185,254 @@ model SuperAdminWorkAudit {
 
   @@index([ownerUserId, occurredAt])
   @@index([ownerUserId, entityType, entityPublicKey])
+  @@index([eventType, occurredAt])
+}
+
+// OPTIONAL-OPS-V1_5-1A: default-off Transport foundation. Location data is
+// deliberately limited to school-approved stop names and timing references.
+model TransportVehicle {
+  id               String           @id @default(cuid())
+  publicKey        String           @unique @default(uuid())
+  registrationCode String           @unique
+  displayName      String
+  capacity         Int
+  status           String           @default("ACTIVE")
+  version          Int              @default(1)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  routes           TransportRoute[]
+
+  @@index([status, displayName])
+}
+
+model TransportRoute {
+  id                     String                       @id @default(cuid())
+  publicKey              String                       @unique @default(uuid())
+  code                   String                       @unique
+  name                   String
+  directionMode          String                       @default("BOTH")
+  vehicleId              String
+  vehicle                TransportVehicle             @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  driverStaffMemberId    String?
+  driverStaffMember      StaffMember?                 @relation("TransportRouteDriver", fields: [driverStaffMemberId], references: [id], onDelete: SetNull)
+  attendantStaffMemberId String?
+  attendantStaffMember   StaffMember?                 @relation("TransportRouteAttendant", fields: [attendantStaffMemberId], references: [id], onDelete: SetNull)
+  capacity               Int
+  allocatedSeats         Int                          @default(0)
+  status                 String                       @default("ACTIVE")
+  version                Int                          @default(1)
+  createdAt              DateTime                     @default(now())
+  updatedAt              DateTime                     @updatedAt
+  routeStops             TransportRouteStop[]
+  assignments            TransportStudentAssignment[]
+
+  @@index([status, code])
+  @@index([vehicleId, status])
+  @@index([driverStaffMemberId])
+  @@index([attendantStaffMemberId])
+}
+
+model TransportStop {
+  id                String               @id @default(cuid())
+  publicKey         String               @unique @default(uuid())
+  code              String               @unique
+  name              String
+  approvedReference String?
+  active            Boolean              @default(true)
+  version           Int                  @default(1)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  routeStops        TransportRouteStop[]
+
+  @@index([active, name])
+}
+
+model TransportRouteStop {
+  id                String                       @id @default(cuid())
+  publicKey         String                       @unique @default(uuid())
+  routeId           String
+  route             TransportRoute               @relation(fields: [routeId], references: [id], onDelete: Restrict)
+  stopId            String
+  stop              TransportStop                @relation(fields: [stopId], references: [id], onDelete: Restrict)
+  direction         String
+  sequence          Int
+  timingReference   String?
+  active            Boolean                      @default(true)
+  version           Int                          @default(1)
+  createdAt         DateTime                     @default(now())
+  updatedAt         DateTime                     @updatedAt
+  pickupAssignments TransportStudentAssignment[] @relation("TransportPickupRouteStop")
+  dropAssignments   TransportStudentAssignment[] @relation("TransportDropRouteStop")
+
+  @@unique([routeId, direction, sequence])
+  @@unique([routeId, stopId, direction])
+  @@index([routeId, direction, active])
+  @@index([stopId, active])
+}
+
+model TransportStudentAssignment {
+  id                   String                      @id @default(cuid())
+  publicKey            String                      @unique @default(uuid())
+  studentId            String
+  student              Student                     @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  activeStudentId      String?                     @unique
+  routeId              String
+  route                TransportRoute              @relation(fields: [routeId], references: [id], onDelete: Restrict)
+  pickupRouteStopId    String
+  pickupRouteStop      TransportRouteStop          @relation("TransportPickupRouteStop", fields: [pickupRouteStopId], references: [id], onDelete: Restrict)
+  dropRouteStopId      String
+  dropRouteStop        TransportRouteStop          @relation("TransportDropRouteStop", fields: [dropRouteStopId], references: [id], onDelete: Restrict)
+  routeCodeSnapshot    String
+  routeNameSnapshot    String
+  pickupStopSnapshot   String
+  pickupTimingSnapshot String?
+  dropStopSnapshot     String
+  dropTimingSnapshot   String?
+  effectiveFrom        DateTime
+  effectiveTo          DateTime?
+  active               Boolean                     @default(true)
+  version              Int                         @default(1)
+  changeReason         String
+  replacesAssignmentId String?                     @unique
+  replacesAssignment   TransportStudentAssignment? @relation("TransportAssignmentReplacement", fields: [replacesAssignmentId], references: [id], onDelete: Restrict)
+  replacedByAssignment TransportStudentAssignment? @relation("TransportAssignmentReplacement")
+  createdByUserId      String
+  createdByRole        String
+  createdAt            DateTime                    @default(now())
+  updatedAt            DateTime                    @updatedAt
+
+  @@index([studentId, effectiveFrom])
+  @@index([routeId, active, effectiveFrom])
+  @@index([active, effectiveFrom, effectiveTo])
+}
+
+model TransportAuditEvent {
+  id               String   @id @default(cuid())
+  publicKey        String   @unique @default(uuid())
+  eventType        String
+  entityType       String
+  entityPublicKey  String
+  actorUserId      String
+  actorRole        String
+  safeMetadataJson String?
+  occurredAt       DateTime @default(now())
+
+  @@index([entityType, entityPublicKey, occurredAt])
+  @@index([eventType, occurredAt])
+}
+
+// OPTIONAL-OPS-V1_5-1A: separate default-off Cafeteria foundation. It has no
+// wallet, card, payment, receipt or automatic fee relation.
+model CafeteriaCatalogItem {
+  id        String              @id @default(cuid())
+  publicKey String              @unique @default(uuid())
+  code      String              @unique
+  name      String
+  category  String
+  available Boolean             @default(true)
+  status    String              @default("ACTIVE")
+  version   Int                 @default(1)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  menuItems CafeteriaMenuItem[]
+
+  @@index([status, available, category])
+}
+
+model CafeteriaMenu {
+  id           String              @id @default(cuid())
+  publicKey    String              @unique @default(uuid())
+  menuDate     DateTime
+  dayLabel     String
+  mealPlanName String              @default("STANDARD")
+  status       String              @default("ACTIVE")
+  version      Int                 @default(1)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  items        CafeteriaMenuItem[]
+
+  @@unique([menuDate, mealPlanName])
+  @@index([status, menuDate])
+}
+
+model CafeteriaMenuItem {
+  id          String                @id @default(cuid())
+  publicKey   String                @unique @default(uuid())
+  menuId      String
+  menu        CafeteriaMenu         @relation(fields: [menuId], references: [id], onDelete: Restrict)
+  itemId      String
+  item        CafeteriaCatalogItem  @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  mealSlot    String
+  available   Boolean               @default(true)
+  createdAt   DateTime              @default(now())
+  mealRecords CafeteriaMealRecord[]
+
+  @@unique([menuId, itemId, mealSlot])
+  @@index([menuId, mealSlot, available])
+  @@index([itemId, available])
+}
+
+model CafeteriaStudentEnrollment {
+  id                   String                      @id @default(cuid())
+  publicKey            String                      @unique @default(uuid())
+  studentId            String
+  student              Student                     @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  activeStudentId      String?                     @unique
+  mealPlanName         String?
+  effectiveFrom        DateTime
+  effectiveTo          DateTime?
+  active               Boolean                     @default(true)
+  version              Int                         @default(1)
+  changeReason         String
+  replacesEnrollmentId String?                     @unique
+  replacesEnrollment   CafeteriaStudentEnrollment? @relation("CafeteriaEnrollmentReplacement", fields: [replacesEnrollmentId], references: [id], onDelete: Restrict)
+  replacedByEnrollment CafeteriaStudentEnrollment? @relation("CafeteriaEnrollmentReplacement")
+  createdByUserId      String
+  createdByRole        String
+  createdAt            DateTime                    @default(now())
+  updatedAt            DateTime                    @updatedAt
+  mealRecords          CafeteriaMealRecord[]
+
+  @@index([studentId, effectiveFrom])
+  @@index([active, effectiveFrom, effectiveTo])
+}
+
+model CafeteriaMealRecord {
+  id               String                     @id @default(cuid())
+  publicKey        String                     @unique @default(uuid())
+  studentId        String
+  student          Student                    @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  enrollmentId     String
+  enrollment       CafeteriaStudentEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+  menuItemId       String
+  menuItem         CafeteriaMenuItem          @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+  serviceDateKey   String
+  mealSlot         String
+  recordType       String
+  status           String                     @default("RECORDED")
+  idempotencyKey   String                     @unique
+  recordedByUserId String
+  recordedByRole   String
+  recordedAt       DateTime                   @default(now())
+  createdAt        DateTime                   @default(now())
+
+  @@unique([studentId, serviceDateKey, mealSlot, recordType])
+  @@index([serviceDateKey, mealSlot, status])
+  @@index([enrollmentId, recordedAt])
+}
+
+model CafeteriaAuditEvent {
+  id               String   @id @default(cuid())
+  publicKey        String   @unique @default(uuid())
+  eventType        String
+  entityType       String
+  entityPublicKey  String
+  actorUserId      String
+  actorRole        String
+  safeMetadataJson String?
+  occurredAt       DateTime @default(now())
+
+  @@index([entityType, entityPublicKey, occurredAt])
   @@index([eventType, occurredAt])
 }
 

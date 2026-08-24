@@ -24,14 +24,16 @@ This roadmap preserves the operational boundaries in the [Requirements Register]
 `SMART-AI-LOCAL-RUNTIME-1A — Loopback-Only Local Runtime (provider default-off)`
 
 The Command Center, owner-isolated Diary, Tasks & Reminders, Contacts &
-Suppliers, and permission-scoped Universal Search are independently cleared.
+Suppliers, permission-scoped Universal Search, and Smart AI foundation are independently cleared.
 Search remains exact-`SUPER_ADMIN`, privacy-safe, server-authorized,
 deterministic and bounded. SMART-AI-1A is the independently cleared implementation
 of an exact-role, cited synthesis foundation over Search, and its separately
 cleared local runtime accepts only loopback endpoints. The committed provider
 remains `DISABLED`; the release does not authorize real-data activation, external
-transmission or AI actions. Hosting and
-private staging remain a parallel operational track.
+transmission or AI actions. Optional Transport and Cafeteria foundations are
+independently cleared and remain default-off. They do not activate school services,
+real data, finance, GPS/maps or providers.
+Hosting and private staging remain a parallel operational track.
 
 `WHITEBOARD-BRIDGE-1A` is a parallel, database-neutral integration checkpoint.
 Its implementation launches only the canonical Nalanda ERP Canvs board from an
@@ -79,7 +81,7 @@ Search, or unlock Smart AI.
 - UDISE 15E only after evidence.
 - Full Payroll/ESS remains a controlled V1.5 operational deferral; its cleared technical foundation does not activate payroll or make it a V1 launch dependency.
 - Event Media software is cleared with public publishing default-off; AI enhancement remains deferred.
-- KG report-card software is cleared with operational activation off. Transport/Cafeteria remain absent from main and release-blocked on the Optional Operations branch under the [known limitations and deferrals](./V1_KNOWN_LIMITATIONS_AND_DEFERRALS.md).
+- Transport, Cafeteria and KG report-card software foundations are cleared and default-off. Real-school activation, live-data onboarding, deployment and physical/operational acceptance remain governed deferrals under the [known limitations and deferrals](./V1_KNOWN_LIMITATIONS_AND_DEFERRALS.md).
 
 ### V2 work
 

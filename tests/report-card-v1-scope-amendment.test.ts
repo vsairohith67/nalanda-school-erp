@@ -53,8 +53,11 @@ describe("REPORT-PRINT-ACCEPT-1A and KG-REPORTS-V1_5-1A release boundaries", () 
     const amendment = source("docs/REPORT_CARD_V1_SCOPE_AMENDMENT.md");
     const requirementRows = [...register.matchAll(/^\| (V(?:1(?:\.1|\.5)?|2)-[A-Z][A-Z-]*-\d{3}) \|/gm)].map((match) => match[1]);
 
+    // Include the V1.1 Academic Integrity release as well as V1, V1.5, and V2
+    // so additions cannot silently duplicate or disappear from the ledger.
     expect(requirementRows).toHaveLength(39);
     expect(new Set(requirementRows).size).toBe(requirementRows.length);
+    expect(requirementRows.filter((id) => id === "V1.1-SEC-ACADEMIC-001")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1-RC-016")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-RC-034")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-SEARCH-036")).toHaveLength(1);
@@ -65,9 +68,11 @@ describe("REPORT-PRINT-ACCEPT-1A and KG-REPORTS-V1_5-1A release boundaries", () 
     expect(register).toContain("| V1.1 | 1 |");
     expect(register).toContain("| V1.5 | 8 |");
     expect(register).toContain("| V2 | 6 |");
-    expect(register).toContain("| CLEARED | 25 |");
+    expect(register).toContain("| CLEARED | 27 |");
+    expect(register).not.toContain("| RELEASE_BLOCKED |");
     expect(register).toContain("| CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING | 4 |");
     expect(register).toContain("| COMPLETE | 1 |");
+    expect(register).toContain("| DEFERRED | 6 |");
     expect(register).not.toContain("| COMPLETE_LOCAL_PRIVATE |");
     expect(register).not.toContain("| PARTIAL |");
     expect(register).not.toContain("| MISSING |");

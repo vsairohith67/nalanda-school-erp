@@ -1,4 +1,5 @@
 import { normalizePermission, type CanonicalPermission, type Permission, type Role } from "@/lib/permissions";
+import type { OptionalOperationsFeatureCode } from "@/lib/optional-operations-feature-flags";
 
 export type NavigationIcon =
   | "dashboard"
@@ -30,6 +31,7 @@ export type NavigationIcon =
   | "feeRegisterOcr"
   | "cloudBackup"
   | "website"
+  | "operations"
   | "eventMedia"
   | "parentMeetings"
   | "calendar";
@@ -42,6 +44,7 @@ export type NavigationGroupId =
   | "staffLeave"
   | "timetable"
   | "communication"
+  | "operations"
   | "administration"
   | "system";
 
@@ -53,6 +56,7 @@ export const NAV_GROUPS: Array<{ id: NavigationGroupId; label: string }> = [
   { id: "staffLeave", label: "Staff & Leave" },
   { id: "timetable", label: "Timetable" },
   { id: "communication", label: "Communication" },
+  { id: "operations", label: "Operations" },
   { id: "administration", label: "Administration" },
   { id: "system", label: "System" }
 ];
@@ -162,6 +166,8 @@ export const NAV_ITEMS = [
   { href: "/books", label: "Books Finance", icon: "payments", permission: "VIEW_BOOKS_FINANCE", group: "feesReports" },
   { href: "/books/reports", label: "Books Reports", icon: "collection", permission: "VIEW_BOOK_REPORTS", group: "feesReports" },
   { href: "/library", label: "Library", icon: "library", permission: "VIEW_LIBRARY", group: "administration" },
+  { href: "/operations/transport", label: "Transport", icon: "operations", permission: "VIEW_TRANSPORT", group: "operations", featureFlag: "TRANSPORT_V1_5" as OptionalOperationsFeatureCode },
+  { href: "/operations/cafeteria", label: "Cafeteria", icon: "operations", permission: "VIEW_CAFETERIA", group: "operations", featureFlag: "CAFETERIA_V1_5" as OptionalOperationsFeatureCode },
   { href: "/cash-book", label: "Daily Cash Book", icon: "rupee", permission: "VIEW_CASH_BOOK", group: "feesReports" },
   { href: "/cash-book/reports", label: "Cash Book Reports", icon: "collection", permission: "VIEW_CASH_BOOK_REPORTS", group: "feesReports" },
   { href: "/timetable", label: "Timetable", icon: "timetable", permission: "VIEW_TIMETABLE", group: "timetable" },
@@ -177,7 +183,7 @@ export const NAV_ITEMS = [
   { href: "/onboarding", label: "Bulk Onboarding", icon: "importExport", permission: "DOWNLOAD_ONBOARDING_TEMPLATE", group: "system", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "COMPUTER_OPERATOR"] as Role[] },
   { href: "/import-verification", label: "Import Verification", icon: "importVerification", permission: "VIEW_IMPORT_VERIFICATION", group: "system" },
   { href: "/pilot-acceptance", label: "Pilot Acceptance", icon: "pilot", permission: "RUN_PILOT_ACCEPTANCE", group: "system" }
-] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role; allowedRoles?: Role[]; feature?: "PARENT_MEETINGS_V1_5" }>;
+] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role; allowedRoles?: Role[]; featureFlag?: OptionalOperationsFeatureCode; feature?: "PARENT_MEETINGS_V1_5" }>;
 
 export type NavigationItem = (typeof NAV_ITEMS)[number];
 
@@ -187,16 +193,18 @@ export function permissionListCan(permissions: Iterable<CanonicalPermission>, pe
   return new Set(permissions).has(canonical);
 }
 
-export function visibleNavigationItems(permissions: Iterable<CanonicalPermission>, role?: Role, enabledFeatures: ReadonlySet<string> = new Set()) {
+export function visibleNavigationItems(permissions: Iterable<CanonicalPermission>, role?: Role, enabledFeatures: Iterable<string> = []) {
+  const features = new Set(enabledFeatures);
   return NAV_ITEMS.filter((item) =>
     permissionListCan(permissions, item.permission) &&
     (!("requiredRole" in item) || !item.requiredRole || !role || item.requiredRole === role) &&
     (!("allowedRoles" in item) || !item.allowedRoles || !role || item.allowedRoles.includes(role)) &&
-    (!("feature" in item) || !item.feature || enabledFeatures.has(item.feature))
+    (!("featureFlag" in item) || !item.featureFlag || features.has(item.featureFlag)) &&
+    (!("feature" in item) || !item.feature || features.has(item.feature))
   );
 }
 
-export function groupedVisibleNavigationItems(permissions: Iterable<CanonicalPermission>, role?: Role, enabledFeatures: ReadonlySet<string> = new Set()) {
+export function groupedVisibleNavigationItems(permissions: Iterable<CanonicalPermission>, role?: Role, enabledFeatures: Iterable<string> = []) {
   const visibleItems = visibleNavigationItems(permissions, role, enabledFeatures);
   return NAV_GROUPS.map((group) => ({
     ...group,

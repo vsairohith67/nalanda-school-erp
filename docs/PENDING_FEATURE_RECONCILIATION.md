@@ -15,6 +15,12 @@ independently cleared. Provider/runtime activation, AI Actions, deployment and
 real-data AI processing remain unauthorized. Private staging proceeds as a
 separate operational track.
 
+Transport and Cafeteria V1.5 software foundations are implemented,
+independently tested and `DEFAULT-OFF`. Their release is blocked until mandatory
+exact-SHA GitHub validation can run successfully. This is not evidence that
+Nalanda currently operates either service, and it authorizes no real data,
+activation or deployment.
+
 ## Evidence rule
 
 Newest verified RC and MSI-transfer evidence supersedes older pending checkpoints. Repository code and documentation were reconciled with the governing Notion pages, portable Codex handoffs, Asana project state, and the canonical Canvs ERP board. Basic Memory was unavailable and is recorded as `BASIC_MEMORY_SYNC_SKIPPED_SUBSCRIPTION_EXPIRED`.
@@ -43,7 +49,7 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | 16 | WhatsApp, Email and Push | `PARTIAL` | WhatsApp and SMS/email foundations remain mock/default-off; live delivery requires provider, consent, DNS/webhook, template, and sandbox evidence. Push is not implemented. See [WhatsApp](./WHATSAPP_BUSINESS_ONE_WAY_COMMUNICATION_WORKFLOW.md) and [SMS/email](./SMS_AND_EMAIL_ONE_WAY_COMMUNICATION_WORKFLOW.md). |
 | 17 | Hosting, DNS and private staging | `OPERATIONAL_CONFIGURATION_PENDING` | A planning/decision package exists, but no provider purchase, cloud resource, DNS change, HTTPS staging deployment, or public exposure is authorised. |
 | 18 | Real-data onboarding, training, pilot and cutover | `OPERATIONAL_CONFIGURATION_PENDING` | Plans and checklists exist; execution has not occurred. It requires accepted staging, named owners, controlled import, role onboarding, training, pilot reconciliation, rollback rehearsal, and an explicit cutover decision. |
-| 19 | Transport, Cafeteria and KG report-card state | KG software: `CLEARED / OPERATIONAL_ACTIVATION_OFF`; Transport/Cafeteria: `RELEASE_BLOCKED / DEFAULT_OFF` on unmerged Optional Operations branch | KG software is on current main and remains operationally off. Optional Operations is not current-main functionality; its exact-SHA external CI gate was rejected before checkout by the billing/spending condition. None may activate implicitly. |
+| 19 | Transport, Cafeteria and KG report-card foundations | Software: `CLEARED`; operational activation: `DEFAULT_OFF` / `DEFERRED` | Optional Transport and Cafeteria passed independent QA and mandatory exact-SHA CI; KG report-card software remains cleared. These stay outside the frozen V1 RC and must not be activated implicitly. No real service, live data, deployment or provider activation is authorised. |
 
 ## Important dependency order
 
@@ -58,7 +64,7 @@ Diary, tasks, reminders, contacts, universal search, OBS-1A extensions, Canvs/wh
 
 ## Controlled V1.5 and V2 deferrals
 
-- KG report-card software is `CLEARED` with operational activation off. Optional Transport/Cafeteria are implemented on a separate branch but `RELEASE_BLOCKED_EXTERNAL_CI` and absent from main. Operational rollout of the technically cleared full Payroll/ESS foundation remains gated.
+- KG report cards and Optional Transport/Cafeteria foundations are software-cleared and default-off. Their operational rollout, plus rollout of the technically cleared full Payroll/ESS foundation, remains separately deferred.
 - AI-generated lessons and educational videos remain `DEFERRED_TO_V2`, require Teacher approval, and must not publish automatically to Students.
 
 ## UNIVERSAL-SEARCH-1A clearance update (2026-08-22)
