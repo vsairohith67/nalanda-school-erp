@@ -120,6 +120,42 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
     expect(JSON.stringify(response)).not.toContain("private database detail");
   });
 
+  it("classifies every newly cleared candidate as safe metadata only and preserves default-off UNAVAILABLE states", async () => {
+    const newSources = ["PARENT_MEETINGS", "TRANSPORT", "CAFETERIA", "KG_REPORTS", "EVENT_MEDIA"] as const;
+    expect(UNIVERSAL_SEARCH_SOURCES.filter((source) => newSources.includes(source.id as typeof newSources[number])).map((source) => [source.id, source.coverage])).toEqual([
+      ["PARENT_MEETINGS", "SAFE_METADATA_ONLY"],
+      ["TRANSPORT", "SAFE_METADATA_ONLY"],
+      ["CAFETERIA", "SAFE_METADATA_ONLY"],
+      ["KG_REPORTS", "SAFE_METADATA_ONLY"],
+      ["EVENT_MEDIA", "SAFE_METADATA_ONLY"]
+    ]);
+
+    const searches = [vi.fn(async () => []), vi.fn(async () => []), vi.fn(async () => [])];
+    const response = await composeUniversalSearch(
+      parseUniversalSearchRequest({ query: "Arjun", sources: ["PARENT_MEETINGS", "TRANSPORT", "CAFETERIA"] }),
+      ["PARENT_MEETINGS", "TRANSPORT", "CAFETERIA"].map((source, index) => ({
+        source: source as UniversalSearchSourceId,
+        availability: () => ({ enabled: false, message: `${source} is DEFAULT-OFF.` }),
+        search: searches[index]
+      })),
+      { now }
+    );
+    expect(response.sources.every((source) => source.state === "UNAVAILABLE" && source.message?.includes("DEFAULT-OFF"))).toBe(true);
+    expect(searches.every((search) => search.mock.calls.length === 0)).toBe(true);
+  });
+
+  it("keeps an existing exact high-confidence reference ahead of a new-module exact reference", async () => {
+    const response = await composeUniversalSearch(
+      parseUniversalSearchRequest({ query: "REF-42", sources: ["STUDENTS", "PARENT_MEETINGS"] }),
+      [
+        adapter("STUDENTS", async () => [result("STUDENTS", "Existing Student", 1_000)]),
+        adapter("PARENT_MEETINGS", async () => [result("PARENT_MEETINGS", "New Meeting", 1_000)])
+      ],
+      { now }
+    );
+    expect(response.results.map((item) => item.source)).toEqual(["STUDENTS", "PARENT_MEETINGS"]);
+  });
+
   it("distinguishes no matches from unavailable and caps source and overall results", async () => {
     const request = parseUniversalSearchRequest({ query: "Nothing", sources: ["STUDENTS", "RECENT_ACTIVITY"], limit: 3 });
     const response = await composeUniversalSearch(request, [adapter("STUDENTS", async () => [])], { now });
@@ -200,6 +236,62 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
     ] as const) {
       expect(await sourceAdapter(client, source).search(context(prohibitedQuery))).toEqual([]);
     }
+  });
+
+  it("searches only approved metadata for Parent Meetings, Transport, Cafeteria, KG Reports and Event Media", async () => {
+    const client = {
+      parentMeeting: { findMany: vi.fn(async () => [{
+        publicKey: "PM-42", academicYear: "2026-27", category: "ACADEMIC_PROGRESS", status: "SCHEDULED", scheduledStartAt: now,
+        mode: "IN_PERSON", followUpRequired: true, updatedAt: now,
+        student: { studentName: "Arjun Reddy", admissionNo: "ADM-42", className: "8", section: "A" },
+        followUps: [{ status: "OPEN", dueDate: now }], subject: "PARENT-SENSITIVE-SUBJECT", requestReason: "PARENT-SENSITIVE-FREE-TEXT",
+        cancellationInternalReason: "HIDDEN-CANCELLATION", notes: [{ body: "LEADERSHIP-PRIVATE-NOTE" }]
+      }]) },
+      transportRoute: { findMany: vi.fn(async () => [{ publicKey: "TR-42", code: "ROUTE-42", name: "North Route", directionMode: "BOTH", status: "ACTIVE", updatedAt: now, vehicle: { registrationCode: "BUS-42", displayName: "Blue Bus" }, driverStaffMember: { personalMobile: "PRIVATE-DRIVER-DATA" } }]) },
+      transportVehicle: { findMany: vi.fn(async () => [{ publicKey: "TV-42", registrationCode: "BUS-42", displayName: "Blue Bus", status: "ACTIVE", updatedAt: now }]) },
+      transportStop: { findMany: vi.fn(async () => [{ publicKey: "TS-42", code: "STOP-42", name: "School Gate", approvedReference: "APPROVED-42", active: true, updatedAt: now, homeAddress: "HOME-ADDRESS-SENTINEL" }]) },
+      transportStudentAssignment: { findMany: vi.fn(async () => [{ publicKey: "TA-42", routeCodeSnapshot: "ROUTE-42", routeNameSnapshot: "North Route", pickupStopSnapshot: "School Gate", dropStopSnapshot: "School Gate", effectiveFrom: now, effectiveTo: null, active: true, updatedAt: now, student: { studentName: "Arjun Reddy", admissionNo: "ADM-42", className: "8", section: "A", address: "HOME-ADDRESS-SENTINEL" } }]) },
+      cafeteriaCatalogItem: { findMany: vi.fn(async () => [{ publicKey: "CI-42", code: "ITEM-42", name: "Vegetable Pulao", category: "LUNCH", available: true, status: "ACTIVE", updatedAt: now, dietaryNote: "HEALTH-DIET-SENTINEL", price: "FINANCIAL-INFERENCE-SENTINEL" }]) },
+      cafeteriaMenu: { findMany: vi.fn(async () => [{ publicKey: "CM-42", menuDate: now, dayLabel: "Monday", mealPlanName: "STANDARD", status: "ACTIVE", updatedAt: now }]) },
+      cafeteriaStudentEnrollment: { findMany: vi.fn(async () => [{ publicKey: "CE-42", effectiveFrom: now, effectiveTo: null, active: true, updatedAt: now, mealPlanName: "HEALTH-DIET-SENTINEL", student: { studentName: "Arjun Reddy", admissionNo: "ADM-42", className: "8", section: "A" } }]) },
+      cafeteriaMealRecord: { findMany: vi.fn(async () => [{ publicKey: "MEAL-42", serviceDateKey: "2026-08-24", mealSlot: "LUNCH", recordType: "SERVED", status: "RECORDED", recordedAt: now, student: { studentName: "Arjun Reddy", admissionNo: "ADM-42" }, menuItem: { item: { code: "ITEM-42", name: "Vegetable Pulao", dietaryNote: "HEALTH-DIET-SENTINEL" } } }]) },
+      studentReportCard: { findMany: vi.fn(async () => [{ id: "kg-db-42", reportCardNumber: "KG-REPORT-42", academicYear: "2026-27", className: "LKG", section: "A", status: "ISSUED", issuedAt: now, updatedAt: now, student: { studentName: "Arjun Junior", admissionNo: "KG-ADM-42" }, batch: { reportingPeriod: "Evaluations I-V" }, draftDataJson: "KG-RUBRIC-CONTENT-SENTINEL", teacherOverallComment: "KG-ASSESSMENT-SENTINEL" }]) },
+      eventMediaAlbum: { findMany: vi.fn(async () => [{ publicKey: "ALBUM-42", title: "STUDENT-IDENTIFYING-ALBUM-TITLE", eventDate: now, visibility: "PRIVATE_LEADERSHIP", status: "APPROVED", reviewStatus: "APPROVED", publicationState: "PRIVATE", updatedAt: now, _count: { assets: 1 }, description: "CONSENT-SENSITIVE-DESCRIPTION", legalHold: false }]) },
+      eventMediaAsset: { findMany: vi.fn(async () => [{ publicKey: "MEDIA-42", originalMediaType: "image/jpeg", originalWidth: 1600, originalHeight: 900, reviewStatus: "APPROVED", publicationStatus: "PRIVATE", uploadedAt: now, album: { publicKey: "ALBUM-42", title: "STUDENT-IDENTIFYING-ALBUM-TITLE" }, originalStorageKey: "PRIVATE-STORAGE-KEY", originalSha256: "IMAGE-SHA-SENTINEL", caption: "STUDENT-IDENTIFICATION-SENTINEL", reviewNote: "CONSENT-SENSITIVE-NOTE", peopleDeclaration: "MANUAL_ASSOCIATIONS_COMPLETE", exif: "EXIF-SENTINEL" }]) }
+    };
+
+    const cases: Array<[UniversalSearchSourceId, string]> = [
+      ["PARENT_MEETINGS", "PM-42"],
+      ["TRANSPORT", "ROUTE-42"],
+      ["CAFETERIA", "ITEM-42"],
+      ["KG_REPORTS", "KG-REPORT-42"],
+      ["EVENT_MEDIA", "ALBUM-42"]
+    ];
+    const results: UniversalSearchResult[] = [];
+    for (const [source, query] of cases) results.push(...await sourceAdapter(client, source).search(context(query)));
+    expect(new Set(results.map((item) => item.source))).toEqual(new Set(cases.map(([source]) => source)));
+    const serialized = JSON.stringify(results);
+    for (const forbidden of [
+      "PARENT-SENSITIVE-SUBJECT", "PARENT-SENSITIVE-FREE-TEXT", "HIDDEN-CANCELLATION", "LEADERSHIP-PRIVATE-NOTE",
+      "PRIVATE-DRIVER-DATA", "HOME-ADDRESS-SENTINEL", "HEALTH-DIET-SENTINEL", "FINANCIAL-INFERENCE-SENTINEL",
+      "KG-RUBRIC-CONTENT-SENTINEL", "KG-ASSESSMENT-SENTINEL", "CONSENT-SENSITIVE-DESCRIPTION", "PRIVATE-STORAGE-KEY",
+      "IMAGE-SHA-SENTINEL", "STUDENT-IDENTIFICATION-SENTINEL", "STUDENT-IDENTIFYING-ALBUM-TITLE", "CONSENT-SENSITIVE-NOTE", "EXIF-SENTINEL"
+    ]) expect(serialized).not.toContain(forbidden);
+
+    for (const [source, forbiddenQuery] of [
+      ["PARENT_MEETINGS", "LEADERSHIP-PRIVATE-NOTE"],
+      ["TRANSPORT", "PRIVATE-DRIVER-DATA"],
+      ["CAFETERIA", "HEALTH-DIET-SENTINEL"],
+      ["KG_REPORTS", "KG-RUBRIC-CONTENT-SENTINEL"],
+      ["EVENT_MEDIA", "EXIF-SENTINEL"]
+    ] as const) expect(await sourceAdapter(client, source).search(context(forbiddenQuery))).toEqual([]);
+
+    expect(JSON.stringify(client.parentMeeting.findMany.mock.calls[0]?.[0])).not.toMatch(/subject|requestReason|cancellationInternalReason|notes|body/);
+    expect(JSON.stringify(client.transportRoute.findMany.mock.calls[0]?.[0])).not.toMatch(/driverStaffMember|attendantStaffMember|address|mobile/);
+    expect(JSON.stringify(client.cafeteriaStudentEnrollment.findMany.mock.calls[0]?.[0])).not.toMatch(/mealPlanName|health|diet|price|amount/);
+    expect(JSON.stringify(client.studentReportCard.findMany.mock.calls[0]?.[0])).not.toMatch(/draftDataJson|snapshotJson|teacherOverallComment|principalComment|directorComment|finalGrade/i);
+    expect(JSON.stringify(client.eventMediaAsset.findMany.mock.calls[0]?.[0])).not.toMatch(/StorageKey|Sha256|caption|reviewNote|peopleDeclaration|studentAssociations|exif/i);
+    expect(JSON.stringify(client.eventMediaAlbum.findMany.mock.calls[0]?.[0])).not.toMatch(/title|description|studentAssociations|legalHold/i);
   });
 
   it("derives Diary, Tasks and Contacts owner only from the authenticated actor", async () => {

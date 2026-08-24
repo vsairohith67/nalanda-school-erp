@@ -1,5 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
+import { CAFETERIA_V1_5, optionalOperationsFeatureEnabled, TRANSPORT_V1_5 } from "@/lib/optional-operations-feature-flags";
+import { parentMeetingsEnabled } from "@/lib/parent-meeting-feature";
 import {
   UNIVERSAL_SEARCH_LIMITS,
   UNIVERSAL_SEARCH_SOURCES,
@@ -27,6 +29,7 @@ export type UniversalSearchAdapterContext = Pick<UniversalSearchRequest, "query"
 
 export type UniversalSearchAdapter = {
   source: UniversalSearchSourceId;
+  availability?: () => { enabled: boolean; message: string | null };
   search(context: UniversalSearchAdapterContext): Promise<UniversalSearchResult[]>;
 };
 
@@ -138,6 +141,20 @@ export async function composeUniversalSearch(
     if (!adapter) {
       return {
         status: { source: sourceId, label: definition.label, state: "UNAVAILABLE", count: 0, message: "No safe bounded adapter is available.", href: definition.href } satisfies UniversalSearchSourceStatus,
+        results: [] as UniversalSearchResult[]
+      };
+    }
+    try {
+      const availability = adapter.availability?.();
+      if (availability && !availability.enabled) {
+        return {
+          status: { source: sourceId, label: definition.label, state: "UNAVAILABLE", count: 0, message: availability.message, href: definition.href } satisfies UniversalSearchSourceStatus,
+          results: [] as UniversalSearchResult[]
+        };
+      }
+    } catch {
+      return {
+        status: { source: sourceId, label: definition.label, state: "DEGRADED", count: 0, message: "This source is temporarily degraded; other results remain available.", href: definition.href } satisfies UniversalSearchSourceStatus,
         results: [] as UniversalSearchResult[]
       };
     }
@@ -326,7 +343,7 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
     }),
     adapter("REPORT_CARDS", async (context) => {
       const rows = await client.studentReportCard.findMany({
-        where: { AND: context.tokens.map((token) => ({ OR: [
+        where: { reportType: { not: "KG_RUBRIC" }, AND: context.tokens.map((token) => ({ OR: [
           { reportCardNumber: { contains: token } },
           { academicYear: { contains: token } },
           { className: { contains: token } },
@@ -393,6 +410,238 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
         status: row.status, href: "/calendar", timestamp: row.startsAt,
         primary: [row.title], secondary: [row.description, row.venue, row.eventType, row.audienceType]
       }), context), context);
+    }),
+    adapter("PARENT_MEETINGS", async (context) => {
+      const rows = await client.parentMeeting.findMany({
+        where: { AND: context.tokens.map((token) => ({ OR: [
+          { publicKey: { contains: token } },
+          { academicYear: { contains: token } },
+          { category: { contains: token } },
+          { status: { contains: token } },
+          { student: { is: { studentName: { contains: token } } } },
+          { student: { is: { admissionNo: { contains: token } } } },
+          { followUps: { some: { status: { contains: token } } } }
+        ] })) },
+        select: {
+          publicKey: true, academicYear: true, category: true, status: true, scheduledStartAt: true, mode: true, followUpRequired: true, updatedAt: true,
+          student: { select: { studentName: true, admissionNo: true, className: true, section: true } },
+          followUps: { select: { status: true, dueDate: true }, orderBy: [{ status: "asc" }, { dueDate: "asc" }], take: 1 }
+        },
+        orderBy: [{ scheduledStartAt: "desc" }, { updatedAt: "desc" }],
+        take: context.candidateLimit
+      });
+      return ranked(rows.map((row) => {
+        const followUp = row.followUps[0];
+        return candidate({
+          source: "PARENT_MEETINGS", type: "Parent meeting metadata", title: row.student.studentName,
+          subtitle: `${row.publicKey} · ${label(row.category)} · ${row.student.className}${row.student.section ? `-${row.student.section}` : ""}`,
+          snippet: [
+            row.scheduledStartAt ? `Scheduled ${row.scheduledStartAt.toISOString()}` : "Not scheduled",
+            row.mode ? label(row.mode) : null,
+            followUp ? `Follow-up ${label(followUp.status)} due ${followUp.dueDate.toISOString().slice(0, 10)}` : row.followUpRequired ? "Follow-up required" : "No follow-up required"
+          ].filter(Boolean).join(" · "),
+          status: row.status, href: "/parent-meetings", timestamp: row.scheduledStartAt ?? row.updatedAt,
+          references: [row.publicKey, row.student.admissionNo], primary: [row.student.studentName], secondary: [row.academicYear, row.category, row.status, followUp?.status]
+        });
+      }), context);
+    }, () => ({
+      enabled: parentMeetingsEnabled(),
+      message: parentMeetingsEnabled() ? null : "Parent Meetings is software-cleared but operationally disabled; no records were queried."
+    })),
+    adapter("TRANSPORT", async (context) => {
+      const [routes, vehicles, stops, assignments] = await Promise.all([
+        client.transportRoute.findMany({
+          where: { AND: context.tokens.map((token) => ({ OR: [
+            { publicKey: { contains: token } }, { code: { contains: token } }, { name: { contains: token } }, { status: { contains: token } },
+            { vehicle: { is: { registrationCode: { contains: token } } } }, { vehicle: { is: { displayName: { contains: token } } } }
+          ] })) },
+          select: { publicKey: true, code: true, name: true, directionMode: true, status: true, updatedAt: true, vehicle: { select: { registrationCode: true, displayName: true } } },
+          orderBy: [{ status: "asc" }, { code: "asc" }], take: context.candidateLimit
+        }),
+        client.transportVehicle.findMany({
+          where: textWhere(["publicKey", "registrationCode", "displayName", "status"], context.tokens),
+          select: { publicKey: true, registrationCode: true, displayName: true, status: true, updatedAt: true },
+          orderBy: [{ status: "asc" }, { displayName: "asc" }], take: context.candidateLimit
+        }),
+        client.transportStop.findMany({
+          where: textWhere(["publicKey", "code", "name", "approvedReference"], context.tokens),
+          select: { publicKey: true, code: true, name: true, approvedReference: true, active: true, updatedAt: true },
+          orderBy: [{ active: "desc" }, { name: "asc" }], take: context.candidateLimit
+        }),
+        client.transportStudentAssignment.findMany({
+          where: { AND: context.tokens.map((token) => ({ OR: [
+            { publicKey: { contains: token } },
+            { student: { is: { studentName: { contains: token } } } },
+            { student: { is: { admissionNo: { contains: token } } } }
+          ] })) },
+          select: {
+            publicKey: true, routeCodeSnapshot: true, routeNameSnapshot: true, pickupStopSnapshot: true, dropStopSnapshot: true,
+            effectiveFrom: true, effectiveTo: true, active: true, updatedAt: true,
+            student: { select: { studentName: true, admissionNo: true, className: true, section: true } }
+          },
+          orderBy: [{ active: "desc" }, { effectiveFrom: "desc" }], take: context.candidateLimit
+        })
+      ]);
+      return ranked([
+        ...routes.map((row) => candidate({
+          source: "TRANSPORT", type: "Transport route", title: row.name,
+          subtitle: `${row.code} · ${row.vehicle.displayName} (${row.vehicle.registrationCode})`,
+          snippet: `Direction ${label(row.directionMode)}`, status: row.status, href: "/operations/transport", timestamp: row.updatedAt,
+          references: [row.code, row.publicKey, row.vehicle.registrationCode], primary: [row.name], secondary: [row.vehicle.displayName, row.status, row.directionMode]
+        })),
+        ...vehicles.map((row) => candidate({
+          source: "TRANSPORT", type: "Transport vehicle", title: row.displayName,
+          subtitle: row.registrationCode, status: row.status, href: "/operations/transport", timestamp: row.updatedAt,
+          references: [row.registrationCode, row.publicKey], primary: [row.displayName], secondary: [row.status]
+        })),
+        ...stops.map((row) => candidate({
+          source: "TRANSPORT", type: "Approved transport stop", title: row.name,
+          subtitle: row.code, snippet: row.approvedReference ? `Approved reference ${safeText(row.approvedReference, 80)}` : null,
+          status: row.active ? "ACTIVE" : "INACTIVE", href: "/operations/transport", timestamp: row.updatedAt,
+          references: [row.code, row.publicKey, row.approvedReference], primary: [row.name], secondary: [row.active ? "ACTIVE" : "INACTIVE"]
+        })),
+        ...assignments.map((row) => candidate({
+          source: "TRANSPORT", type: "Student transport assignment", title: row.student.studentName,
+          subtitle: `${row.student.admissionNo} · ${row.routeCodeSnapshot} · ${row.routeNameSnapshot}`,
+          snippet: `${row.pickupStopSnapshot} to ${row.dropStopSnapshot} · effective ${row.effectiveFrom.toISOString().slice(0, 10)}`,
+          status: row.active ? "ACTIVE" : "HISTORICAL", href: "/operations/transport", timestamp: row.updatedAt,
+          references: [row.publicKey, row.student.admissionNo], primary: [row.student.studentName], secondary: [row.student.className, row.student.section]
+        }))
+      ], context);
+    }, () => ({
+      enabled: optionalOperationsFeatureEnabled(TRANSPORT_V1_5, "SUPER_ADMIN"),
+      message: optionalOperationsFeatureEnabled(TRANSPORT_V1_5, "SUPER_ADMIN") ? null : "Transport is software-cleared but DEFAULT-OFF; no records were queried."
+    })),
+    adapter("CAFETERIA", async (context) => {
+      const [items, menus, enrollments, meals] = await Promise.all([
+        client.cafeteriaCatalogItem.findMany({
+          where: textWhere(["publicKey", "code", "name", "category", "status"], context.tokens),
+          select: { publicKey: true, code: true, name: true, category: true, available: true, status: true, updatedAt: true },
+          orderBy: [{ available: "desc" }, { name: "asc" }], take: context.candidateLimit
+        }),
+        client.cafeteriaMenu.findMany({
+          where: textWhere(["publicKey", "dayLabel", "mealPlanName", "status"], context.tokens),
+          select: { publicKey: true, menuDate: true, dayLabel: true, mealPlanName: true, status: true, updatedAt: true },
+          orderBy: { menuDate: "desc" }, take: context.candidateLimit
+        }),
+        client.cafeteriaStudentEnrollment.findMany({
+          where: { AND: context.tokens.map((token) => ({ OR: [
+            { publicKey: { contains: token } },
+            { student: { is: { studentName: { contains: token } } } },
+            { student: { is: { admissionNo: { contains: token } } } }
+          ] })) },
+          select: { publicKey: true, effectiveFrom: true, effectiveTo: true, active: true, updatedAt: true, student: { select: { studentName: true, admissionNo: true, className: true, section: true } } },
+          orderBy: [{ active: "desc" }, { effectiveFrom: "desc" }], take: context.candidateLimit
+        }),
+        client.cafeteriaMealRecord.findMany({
+          where: { AND: context.tokens.map((token) => ({ OR: [
+            { publicKey: { contains: token } },
+            { student: { is: { studentName: { contains: token } } } },
+            { student: { is: { admissionNo: { contains: token } } } }
+          ] })) },
+          select: {
+            publicKey: true, serviceDateKey: true, mealSlot: true, recordType: true, status: true, recordedAt: true,
+            student: { select: { studentName: true, admissionNo: true } },
+            menuItem: { select: { item: { select: { code: true, name: true } } } }
+          },
+          orderBy: { recordedAt: "desc" }, take: context.candidateLimit
+        })
+      ]);
+      return ranked([
+        ...items.map((row) => candidate({
+          source: "CAFETERIA", type: "Cafeteria item", title: row.name,
+          subtitle: `${row.code} · ${label(row.category)}`, status: row.available ? row.status : "UNAVAILABLE",
+          href: "/operations/cafeteria", timestamp: row.updatedAt,
+          references: [row.code, row.publicKey], primary: [row.name], secondary: [row.category, row.status]
+        })),
+        ...menus.map((row) => candidate({
+          source: "CAFETERIA", type: "Cafeteria menu", title: row.dayLabel,
+          subtitle: `${row.menuDate.toISOString().slice(0, 10)} · ${label(row.mealPlanName)}`, status: row.status,
+          href: "/operations/cafeteria", timestamp: row.updatedAt,
+          references: [row.publicKey], primary: [row.dayLabel], secondary: [row.mealPlanName, row.status]
+        })),
+        ...enrollments.map((row) => candidate({
+          source: "CAFETERIA", type: "Student cafeteria enrollment", title: row.student.studentName,
+          subtitle: `${row.student.admissionNo} · ${row.student.className}${row.student.section ? `-${row.student.section}` : ""}`,
+          snippet: `Effective ${row.effectiveFrom.toISOString().slice(0, 10)}${row.effectiveTo ? ` to ${row.effectiveTo.toISOString().slice(0, 10)}` : ""}`,
+          status: row.active ? "ACTIVE" : "HISTORICAL", href: "/operations/cafeteria", timestamp: row.updatedAt,
+          references: [row.publicKey, row.student.admissionNo], primary: [row.student.studentName], secondary: [row.student.className, row.student.section]
+        })),
+        ...meals.map((row) => candidate({
+          source: "CAFETERIA", type: "Meal participation metadata", title: row.student.studentName,
+          subtitle: `${row.student.admissionNo} · ${row.serviceDateKey} · ${label(row.mealSlot)}`,
+          snippet: `${row.menuItem.item.name} (${row.menuItem.item.code}) · ${label(row.recordType)}`,
+          status: row.status, href: "/operations/cafeteria", timestamp: row.recordedAt,
+          references: [row.publicKey, row.student.admissionNo], primary: [row.student.studentName]
+        }))
+      ], context);
+    }, () => ({
+      enabled: optionalOperationsFeatureEnabled(CAFETERIA_V1_5, "SUPER_ADMIN"),
+      message: optionalOperationsFeatureEnabled(CAFETERIA_V1_5, "SUPER_ADMIN") ? null : "Cafeteria is software-cleared but DEFAULT-OFF; no records were queried."
+    })),
+    adapter("KG_REPORTS", async (context) => {
+      const rows = await client.studentReportCard.findMany({
+        where: { reportType: "KG_RUBRIC", status: "ISSUED", AND: context.tokens.map((token) => ({ OR: [
+          { reportCardNumber: { contains: token } },
+          { academicYear: { contains: token } },
+          { className: { contains: token } },
+          { student: { is: { studentName: { contains: token } } } },
+          { student: { is: { admissionNo: { contains: token } } } },
+          { batch: { is: { reportingPeriod: { contains: token } } } }
+        ] })) },
+        select: {
+          id: true, reportCardNumber: true, academicYear: true, className: true, section: true, status: true, issuedAt: true, updatedAt: true,
+          student: { select: { studentName: true, admissionNo: true } },
+          batch: { select: { reportingPeriod: true } }
+        },
+        orderBy: [{ issuedAt: "desc" }, { updatedAt: "desc" }], take: context.candidateLimit
+      });
+      return ranked(rows.map((row) => candidate({
+        source: "KG_REPORTS", type: "Issued KG report metadata", title: row.student.studentName,
+        subtitle: `${row.reportCardNumber} · ${row.className}${row.section ? `-${row.section}` : ""}`,
+        snippet: `${row.student.admissionNo} · ${row.academicYear}${row.batch.reportingPeriod ? ` · ${safeText(row.batch.reportingPeriod, 80)}` : ""}`,
+        status: row.status, href: `/report-cards/${encodeURIComponent(row.id)}`, timestamp: row.issuedAt ?? row.updatedAt,
+        references: [row.reportCardNumber, row.student.admissionNo], primary: [row.student.studentName], secondary: [row.academicYear, row.className, row.batch.reportingPeriod]
+      }), context), context);
+    }),
+    adapter("EVENT_MEDIA", async (context) => {
+      const [albums, assets] = await Promise.all([
+        client.eventMediaAlbum.findMany({
+          where: { archivedAt: null, AND: context.tokens.map((token) => ({ OR: [
+            { publicKey: { contains: token } }, { visibility: { contains: token } },
+            { status: { contains: token } }, { reviewStatus: { contains: token } }, { publicationState: { contains: token } }
+          ] })) },
+          select: { publicKey: true, eventDate: true, visibility: true, status: true, reviewStatus: true, publicationState: true, updatedAt: true, _count: { select: { assets: true } } },
+          orderBy: [{ eventDate: "desc" }, { publicKey: "asc" }], take: context.candidateLimit
+        }),
+        client.eventMediaAsset.findMany({
+          where: { archivedAt: null, AND: context.tokens.map((token) => ({ OR: [
+            { publicKey: { contains: token } }, { originalMediaType: { contains: token } }, { reviewStatus: { contains: token } },
+            { publicationStatus: { contains: token } }, { album: { is: { publicKey: { contains: token } } } }
+          ] })) },
+          select: {
+            publicKey: true, originalMediaType: true, originalWidth: true, originalHeight: true, reviewStatus: true, publicationStatus: true, uploadedAt: true,
+            album: { select: { publicKey: true } }
+          },
+          orderBy: { uploadedAt: "desc" }, take: context.candidateLimit
+        })
+      ]);
+      return ranked([
+        ...albums.map((row) => candidate({
+          source: "EVENT_MEDIA", type: "Event Media album metadata", title: `Album ${safeText(row.publicKey, 60)}`,
+          subtitle: `${row.eventDate.toISOString().slice(0, 10)} · ${label(row.visibility)}`,
+          snippet: `${row._count.assets} media item${row._count.assets === 1 ? "" : "s"} · review ${label(row.reviewStatus)}`,
+          status: row.publicationState, href: "/event-media", timestamp: row.updatedAt,
+          references: [row.publicKey], primary: [], secondary: [row.visibility, row.status, row.reviewStatus, row.publicationState]
+        })),
+        ...assets.map((row) => candidate({
+          source: "EVENT_MEDIA", type: "Event Media item metadata", title: `Media ${safeText(row.publicKey, 36)}`,
+          subtitle: `${row.album.publicKey} · ${safeText(row.originalMediaType, 48)}`,
+          snippet: `${row.originalWidth}×${row.originalHeight} · review ${label(row.reviewStatus)}`,
+          status: row.publicationStatus, href: "/event-media", timestamp: row.uploadedAt,
+          references: [row.publicKey, row.album.publicKey], primary: [], secondary: [row.originalMediaType, row.reviewStatus, row.publicationStatus]
+        }))
+      ], context);
     }),
     adapter("USERS_IAM", async (context) => {
       const rows = await client.user.findMany({
@@ -476,8 +725,12 @@ export function rankSearchCandidate(context: Pick<UniversalSearchRequest, "norma
   return 0;
 }
 
-function adapter(source: UniversalSearchSourceId, search: UniversalSearchAdapter["search"]): UniversalSearchAdapter {
-  return { source, search };
+function adapter(
+  source: UniversalSearchSourceId,
+  search: UniversalSearchAdapter["search"],
+  availability?: UniversalSearchAdapter["availability"]
+): UniversalSearchAdapter {
+  return { source, search, ...(availability ? { availability } : {}) };
 }
 
 function candidate(value: SearchCandidate) {

@@ -89,7 +89,17 @@ const USER_BOUNDARIES: Array<{ pattern: RegExp; code: string; message: string }>
     message: "Smart AI cannot access another Super Admin's private work records."
   },
   {
-    pattern: /\b(change|edit|update|modify|delete|create|complete|publish|post|grant|assign|send|message|mark|record|approve|waive)\b.{0,65}\b(mark|marks|task|diary|contact|student|staff|phone(?:\s+number)?|messages?|payment|attendance|report|permission|iam|roles?|access|email|whatsapp|sms|safe exit|whiteboard)\b/i,
+    pattern: /\b(ocr|face recognition|facial recognition|image ingestion|exif)\b|\b(identify|recognise|recognize|name)\b.{0,35}\b(person|people|student|child|face)\b.{0,35}\b(image|photo|media)\b|\b(read|analyse|analyze|scan)\b.{0,25}\b(image|photo)\b/i,
+    code: "IMAGE_ANALYSIS_REQUEST",
+    message: "Smart AI receives Event Media metadata only. It cannot ingest images, run OCR or face recognition, inspect EXIF, or identify Students in media."
+  },
+  {
+    pattern: /\b(medical|allerg(?:y|ies|ic)|dietary|diet note|food restriction|diagnosis|medication)\b|\b(?:student|child|learner|pupil|person|people|personal)\b.{0,35}\bhealth\b|\bhealth\b.{0,35}\b(?:student|child|learner|pupil|person|people|record|note|condition|data|information)\b/i,
+    code: "SENSITIVE_HEALTH_REQUEST",
+    message: "Health and dietary-sensitive information is excluded from Universal Search and Smart AI."
+  },
+  {
+    pattern: /\b(change|edit|update|modify|delete|create|complete|publish|post|grant|assign|send|message|mark|record|approve|waive)\b.{0,65}\b(mark|marks|task|diary|contact|student|staff|phone(?:\s+number)?|messages?|payment|attendance|report|permission|iam|roles?|access|email|whatsapp|sms|safe exit|whiteboard|meeting|transport|route|cafeteria|menu|meal|media|album)\b/i,
     code: "WRITE_ACTION_REQUEST",
     message: "Smart AI is read-only and cannot change records, complete work, publish, grant access or send messages."
   },
@@ -115,7 +125,7 @@ export function classifySmartAiQuestion(question: string): SafetyDecision {
 const SOURCE_HINTS: Array<{ sources: UniversalSearchSourceId[]; pattern: RegExp }> = [
   { sources: ["STUDENTS"], pattern: /\bstudent|admission\s*(?:no|number|reference)\b/i },
   { sources: ["ADMISSIONS"], pattern: /\badmission|enquir|application|follow[- ]?up\b/i },
-  { sources: ["GUARDIANS"], pattern: /\bguardian|parent\b/i },
+  { sources: ["GUARDIANS"], pattern: /\bguardian\b|\bparent\b(?!\s+meeting)/i },
   { sources: ["STAFF"], pattern: /\bstaff|teacher|employee\b/i },
   { sources: ["DIARY"], pattern: /\bdiary|notes?\b/i },
   { sources: ["TASKS"], pattern: /\btask|reminder|overdue|to[- ]?do\b/i },
@@ -127,6 +137,11 @@ const SOURCE_HINTS: Array<{ sources: UniversalSearchSourceId[]; pattern: RegExp 
   { sources: ["SUPPORT"], pattern: /\bcomplaint|support|feedback|grievance\b/i },
   { sources: ["SAFE_EXIT"], pattern: /\bsafe exit|departure|gate pass\b/i },
   { sources: ["EVENTS"], pattern: /\bevent|calendar\b/i },
+  { sources: ["PARENT_MEETINGS"], pattern: /\bparent meeting|appointment|meeting follow[- ]?up\b/i },
+  { sources: ["TRANSPORT"], pattern: /\btransport|school bus|vehicle|route|stop\b/i },
+  { sources: ["CAFETERIA"], pattern: /\bcafeteria|canteen|menu|meal participation\b/i },
+  { sources: ["KG_REPORTS"], pattern: /\bkg|lkg|ukg|kindergarten|developmental report\b/i },
+  { sources: ["EVENT_MEDIA"], pattern: /\bevent media|media album|photo album|gallery\b/i },
   { sources: ["USERS_IAM"], pattern: /\buser|role|iam|account\b/i },
   { sources: ["RELEASE_OPERATIONS"], pattern: /\brelease|deployment|build version\b/i },
   { sources: ["OBSERVABILITY"], pattern: /\bhealth|incident|observability|system status\b/i }
@@ -134,7 +149,7 @@ const SOURCE_HINTS: Array<{ sources: UniversalSearchSourceId[]; pattern: RegExp 
 
 const SEARCH_STOP_WORDS = new Set([
   "a", "an", "and", "any", "are", "about", "available", "details", "do", "does", "for", "find", "from", "give", "have", "i", "in", "is", "match", "matches", "mention", "mentions", "my", "of", "our", "please", "record", "records", "school", "show", "tell", "that", "the", "their", "this", "to", "us", "we", "what", "which", "who", "with", "currently", "know", "need",
-  "student", "students", "admission", "admissions", "enquiry", "enquiries", "application", "applications", "guardian", "guardians", "parent", "parents", "staff", "teacher", "teachers", "diary", "note", "notes", "task", "tasks", "reminder", "reminders", "contact", "contacts", "supplier", "suppliers", "vendor", "vendors", "fee", "fees", "receipt", "receipts", "payment", "payments", "exam", "exams", "examination", "examinations", "complaint", "complaints", "support", "event", "events"
+  "student", "students", "admission", "admissions", "enquiry", "enquiries", "application", "applications", "guardian", "guardians", "parent", "parents", "staff", "teacher", "teachers", "diary", "note", "notes", "task", "tasks", "reminder", "reminders", "contact", "contacts", "supplier", "suppliers", "vendor", "vendors", "fee", "fees", "receipt", "receipts", "payment", "payments", "exam", "exams", "examination", "examinations", "complaint", "complaints", "support", "event", "events", "meeting", "meetings", "appointment", "transport", "vehicle", "route", "stop", "cafeteria", "canteen", "menu", "meal", "item", "items", "report", "reports", "kg", "lkg", "ukg", "kindergarten", "media", "album", "gallery"
 ]);
 
 export function deriveSmartAiRetrieval(question: string, conversation: SmartAiConversationTurn[] = []) {

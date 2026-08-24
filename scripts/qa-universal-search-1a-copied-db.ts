@@ -8,10 +8,12 @@ import { hashPassword, verifyPassword } from "../lib/password";
 import { resolveLoginIdentifier } from "../lib/auth-identifiers";
 import { parseUniversalSearchRequest, runUniversalSearch } from "../lib/universal-search";
 
-const SUITE = "UNIVERSALSEARCH1A";
+const extension = process.argv.includes("--extension-1b");
+const SUITE = extension ? "SEARCHEXTENSION1B" : "UNIVERSALSEARCH1A";
 const workspace = path.resolve(".");
 const operational = path.resolve(process.env.UNIVERSAL_SEARCH_OPERATIONAL_DB?.trim() || path.join(workspace, "prisma", "dev.db"));
-const root = path.join(workspace, "tmp", "universal-search-1a-qa");
+const rootName = extension ? "search-extension-1b-synthetic-qa" : "universal-search-1a-qa";
+const root = path.join(workspace, "tmp", rootName);
 const copiedDatabase = path.join(root, "search-copy.db");
 const credentialsPath = path.join(root, "browser-credentials.json");
 const fixtureSuffix = randomUUID().slice(0, 8);
@@ -35,7 +37,7 @@ function sha256(file: string) {
 function checkedRoot() {
   const resolved = path.resolve(root);
   const parent = path.resolve(workspace, "tmp");
-  invariant(resolved.startsWith(`${parent}${path.sep}`) && resolved.endsWith("universal-search-1a-qa"), `${SUITE}_CLEANUP_SCOPE_REFUSED`);
+  invariant(resolved.startsWith(`${parent}${path.sep}`) && resolved.endsWith(rootName), `${SUITE}_CLEANUP_SCOPE_REFUSED`);
   return resolved;
 }
 
@@ -158,6 +160,249 @@ async function seedVolume(client: PrismaClient, ownerA: string, ownerB: string) 
   })) });
 }
 
+async function seedExtensionVolume(client: PrismaClient, ownerA: string) {
+  stage = "extension synthetic volume";
+  const baseDate = new Date("2026-08-24T00:00:00.000Z");
+  const students = await client.student.findMany({
+    where: { admissionNo: { startsWith: `${target}-ADM-` } },
+    select: { id: true, admissionNo: true, studentName: true },
+    orderBy: { admissionNo: "asc" },
+    take: 300
+  });
+  const staff = await client.staffMember.findFirstOrThrow({ where: { staffCode: { startsWith: `${target}-STAFF-` } }, orderBy: { staffCode: "asc" } });
+  invariant(students.length === 300, `${SUITE}_EXTENSION_STUDENT_VOLUME_INVALID`);
+  const sentinelSuffix = fixtureSuffix.replace(/[^a-z0-9]/gi, "").toUpperCase();
+  const forbidden = {
+    parent: `ZXFORBIDDENPARENT${sentinelSuffix}Q7`,
+    driver: `ZXFORBIDDENDRIVER${sentinelSuffix}Q7`,
+    diet: `ZXFORBIDDENHEALTH${sentinelSuffix}Q7`,
+    kg: `ZXFORBIDDENRUBRIC${sentinelSuffix}Q7`,
+    media: `ZXFORBIDDENMEDIA${sentinelSuffix}Q7`
+  };
+  await client.staffMember.update({ where: { id: staff.id }, data: { emergencyContactMobile: forbidden.driver } });
+
+  await client.parentMeeting.createMany({ data: Array.from({ length: 240 }, (_, index) => ({
+    publicKey: `${target}-PM-${String(index).padStart(4, "0")}`,
+    studentId: students[index % students.length].id,
+    academicYear: "2026-27",
+    source: "LEADERSHIP_CREATED",
+    category: index % 2 ? "ACADEMIC_PROGRESS" : "GENERAL_SCHOOL_DISCUSSION",
+    subject: index === 0 ? forbidden.parent : `${target} private meeting subject ${index}`,
+    requestReason: `${target} parent-sensitive request reason ${index}`,
+    status: "SCHEDULED",
+    scheduledStartAt: new Date(baseDate.getTime() + index * 60 * 60 * 1000),
+    scheduledEndAt: new Date(baseDate.getTime() + (index * 60 + 30) * 60 * 1000),
+    durationMinutes: 30,
+    mode: "IN_PERSON",
+    locationReference: "School meeting room",
+    followUpRequired: index < 80,
+    createdByUserId: ownerA,
+    scheduledByUserId: ownerA
+  })) });
+  const meetings = await client.parentMeeting.findMany({ where: { publicKey: { startsWith: `${target}-PM-` } }, select: { id: true }, orderBy: { publicKey: "asc" }, take: 80 });
+  await client.parentMeetingFollowUp.createMany({ data: meetings.map((meeting, index) => ({
+    publicKey: `${target}-PF-${String(index).padStart(4, "0")}`,
+    meetingId: meeting.id,
+    internalDescription: `${target} leadership-private follow-up ${index}`,
+    parentVisibleDescription: `${target} parent-visible follow-up ${index}`,
+    responsibleStaffMemberId: staff.id,
+    dueDate: new Date(baseDate.getTime() + (index + 1) * 24 * 60 * 60 * 1000),
+    status: "OPEN",
+    createdByUserId: ownerA
+  })) });
+
+  await client.transportVehicle.createMany({ data: Array.from({ length: 40 }, (_, index) => ({
+    publicKey: `${target}-TV-${String(index).padStart(4, "0")}`,
+    registrationCode: `${target}-BUS-${String(index).padStart(4, "0")}`,
+    displayName: `${target} Vehicle ${String(index).padStart(4, "0")}`,
+    capacity: 50,
+    status: "ACTIVE"
+  })) });
+  const vehicles = await client.transportVehicle.findMany({ where: { registrationCode: { startsWith: `${target}-BUS-` } }, select: { id: true }, orderBy: { registrationCode: "asc" } });
+  await client.transportRoute.createMany({ data: Array.from({ length: 80 }, (_, index) => ({
+    publicKey: `${target}-TR-${String(index).padStart(4, "0")}`,
+    code: `${target}-ROUTE-${String(index).padStart(4, "0")}`,
+    name: `${target} Route ${String(index).padStart(4, "0")}`,
+    vehicleId: vehicles[index % vehicles.length].id,
+    driverStaffMemberId: staff.id,
+    capacity: 50,
+    directionMode: "BOTH",
+    status: "ACTIVE"
+  })) });
+  await client.transportStop.createMany({ data: Array.from({ length: 120 }, (_, index) => ({
+    publicKey: `${target}-TS-${String(index).padStart(4, "0")}`,
+    code: `${target}-STOP-${String(index).padStart(4, "0")}`,
+    name: `${target} Approved Stop ${String(index).padStart(4, "0")}`,
+    approvedReference: `${target}-APPROVED-${String(index).padStart(4, "0")}`,
+    active: true
+  })) });
+  const routes = await client.transportRoute.findMany({ where: { code: { startsWith: `${target}-ROUTE-` } }, select: { id: true, code: true, name: true }, orderBy: { code: "asc" } });
+  const stops = await client.transportStop.findMany({ where: { code: { startsWith: `${target}-STOP-` } }, select: { id: true, name: true }, orderBy: { code: "asc" } });
+  await client.transportRouteStop.createMany({ data: routes.flatMap((route, index) => {
+    const stop = stops[index % stops.length];
+    return [
+      { publicKey: `${target}-TRS-M-${String(index).padStart(4, "0")}`, routeId: route.id, stopId: stop.id, direction: "MORNING", sequence: 1, timingReference: "07:30", active: true },
+      { publicKey: `${target}-TRS-A-${String(index).padStart(4, "0")}`, routeId: route.id, stopId: stop.id, direction: "AFTERNOON", sequence: 1, timingReference: "14:30", active: true }
+    ];
+  }) });
+  const routeStops = await client.transportRouteStop.findMany({
+    where: { route: { code: { startsWith: `${target}-ROUTE-` } } },
+    select: { id: true, routeId: true, direction: true, timingReference: true, stop: { select: { name: true } } }
+  });
+  const stopsByRoute = new Map<string, { morning: typeof routeStops[number]; afternoon: typeof routeStops[number] }>();
+  for (const route of routes) {
+    const morning = routeStops.find((row) => row.routeId === route.id && row.direction === "MORNING");
+    const afternoon = routeStops.find((row) => row.routeId === route.id && row.direction === "AFTERNOON");
+    invariant(morning && afternoon, `${SUITE}_TRANSPORT_ROUTE_STOP_PAIR_MISSING`);
+    stopsByRoute.set(route.id, { morning, afternoon });
+  }
+  await client.transportStudentAssignment.createMany({ data: students.map((student, index) => {
+    const route = routes[index % routes.length];
+    const pair = stopsByRoute.get(route.id)!;
+    return {
+      publicKey: `${target}-TA-${String(index).padStart(4, "0")}`,
+      studentId: student.id,
+      activeStudentId: student.id,
+      routeId: route.id,
+      pickupRouteStopId: pair.morning.id,
+      dropRouteStopId: pair.afternoon.id,
+      routeCodeSnapshot: route.code,
+      routeNameSnapshot: route.name,
+      pickupStopSnapshot: pair.morning.stop.name,
+      pickupTimingSnapshot: pair.morning.timingReference,
+      dropStopSnapshot: pair.afternoon.stop.name,
+      dropTimingSnapshot: pair.afternoon.timingReference,
+      effectiveFrom: baseDate,
+      active: true,
+      changeReason: `${target} synthetic assignment`,
+      createdByUserId: ownerA,
+      createdByRole: "SUPER_ADMIN"
+    };
+  }) });
+
+  await client.cafeteriaCatalogItem.createMany({ data: Array.from({ length: 80 }, (_, index) => ({
+    publicKey: `${target}-CI-${String(index).padStart(4, "0")}`,
+    code: `${target}-ITEM-${String(index).padStart(4, "0")}`,
+    name: `${target} Menu Item ${String(index).padStart(4, "0")}`,
+    category: index % 2 ? "LUNCH" : "SNACK",
+    available: true,
+    status: "ACTIVE"
+  })) });
+  await client.cafeteriaMenu.createMany({ data: Array.from({ length: 30 }, (_, index) => ({
+    publicKey: `${target}-CM-${String(index).padStart(4, "0")}`,
+    menuDate: new Date(baseDate.getTime() + index * 24 * 60 * 60 * 1000),
+    dayLabel: `${target} Day ${String(index).padStart(2, "0")}`,
+    mealPlanName: "STANDARD",
+    status: "ACTIVE"
+  })) });
+  const items = await client.cafeteriaCatalogItem.findMany({ where: { code: { startsWith: `${target}-ITEM-` } }, select: { id: true }, orderBy: { code: "asc" } });
+  const menus = await client.cafeteriaMenu.findMany({ where: { dayLabel: { startsWith: `${target} Day` } }, select: { id: true }, orderBy: { menuDate: "asc" } });
+  await client.cafeteriaMenuItem.createMany({ data: items.map((item, index) => ({
+    publicKey: `${target}-CMI-${String(index).padStart(4, "0")}`,
+    menuId: menus[index % menus.length].id,
+    itemId: item.id,
+    mealSlot: "LUNCH",
+    available: true
+  })) });
+  await client.cafeteriaStudentEnrollment.createMany({ data: students.map((student, index) => ({
+    publicKey: `${target}-CE-${String(index).padStart(4, "0")}`,
+    studentId: student.id,
+    activeStudentId: student.id,
+    mealPlanName: index === 0 ? forbidden.diet : "STANDARD",
+    effectiveFrom: baseDate,
+    active: true,
+    changeReason: `${target} synthetic enrollment`,
+    createdByUserId: ownerA,
+    createdByRole: "SUPER_ADMIN"
+  })) });
+  const enrollments = await client.cafeteriaStudentEnrollment.findMany({ where: { publicKey: { startsWith: `${target}-CE-` } }, select: { id: true, studentId: true }, orderBy: { publicKey: "asc" } });
+  const menuItems = await client.cafeteriaMenuItem.findMany({ where: { item: { code: { startsWith: `${target}-ITEM-` } } }, select: { id: true } });
+  await client.cafeteriaMealRecord.createMany({ data: enrollments.map((enrollment, index) => ({
+    publicKey: `${target}-MEAL-${String(index).padStart(4, "0")}`,
+    studentId: enrollment.studentId,
+    enrollmentId: enrollment.id,
+    menuItemId: menuItems[index % menuItems.length].id,
+    serviceDateKey: baseDate.toISOString().slice(0, 10),
+    mealSlot: "LUNCH",
+    recordType: "SERVED",
+    status: "RECORDED",
+    idempotencyKey: `${target}-MEAL-IDEMPOTENCY-${String(index).padStart(4, "0")}`,
+    recordedByUserId: ownerA,
+    recordedByRole: "SUPER_ADMIN"
+  })) });
+
+  const template = await client.reportCardTemplate.create({ data: {
+    templateCode: `${target}-KG-TEMPLATE`, name: `${target} KG metadata template`, reportType: "KG_RUBRIC", academicYear: "2026-27",
+    className: "LKG", status: "ACTIVE", templateDefinitionJson: JSON.stringify({ synthetic: true }), createdByUserId: ownerA, activatedByUserId: ownerA
+  } });
+  const batch = await client.reportCardBatch.create({ data: {
+    batchNumber: `${target}-KG-BATCH`, academicYear: "2026-27", reportType: "KG_RUBRIC", templateId: template.id,
+    className: "LKG", section: "A", title: `${target} KG Evaluations I-V`, reportingPeriod: "Evaluations I-V", status: "ISSUED",
+    templateSnapshotJson: JSON.stringify({ synthetic: true }), createdByUserId: ownerA, issuedByUserId: ownerA, issuedAt: baseDate
+  } });
+  await client.studentReportCard.createMany({ data: students.slice(0, 200).map((student, index) => ({
+    reportCardNumber: `${target}-KG-REPORT-${String(index).padStart(4, "0")}`,
+    batchId: batch.id,
+    studentId: student.id,
+    academicYear: "2026-27",
+    className: "LKG",
+    section: "A",
+    reportType: "KG_RUBRIC",
+    status: "ISSUED",
+    currentVersionNumber: 1,
+    draftDataJson: index === 0 ? forbidden.kg : `${target} rubric snapshot ${index}`,
+    teacherOverallComment: `${target} private assessment comment ${index}`,
+    finalGrade: "A",
+    createdByUserId: ownerA,
+    issuedByUserId: ownerA,
+    issuedAt: baseDate
+  })) });
+
+  await client.eventMediaAlbum.createMany({ data: Array.from({ length: 60 }, (_, index) => ({
+    publicKey: `${target}-ALBUM-${String(index).padStart(4, "0")}`,
+    title: index === 0 ? forbidden.media : `${target} Event Album ${String(index).padStart(4, "0")}`,
+    eventDate: new Date(baseDate.getTime() - index * 24 * 60 * 60 * 1000),
+    description: index === 0 ? forbidden.media : `${target} consent-sensitive album description ${index}`,
+    visibility: "PRIVATE_LEADERSHIP",
+    status: "APPROVED",
+    reviewStatus: "APPROVED",
+    publicationState: "PRIVATE",
+    createdByUserId: ownerA,
+    reviewedByUserId: ownerA,
+    approvedByUserId: ownerA,
+    reviewedAt: baseDate,
+    approvedAt: baseDate
+  })) });
+  const albums = await client.eventMediaAlbum.findMany({ where: { publicKey: { startsWith: `${target}-ALBUM-` } }, select: { id: true }, orderBy: { publicKey: "asc" } });
+  await client.eventMediaAsset.createMany({ data: Array.from({ length: 300 }, (_, index) => ({
+    publicKey: `${target}-MEDIA-${String(index).padStart(4, "0")}`,
+    albumId: albums[index % albums.length].id,
+    originalStorageKey: `${target}/private/original-${String(index).padStart(4, "0")}.jpg`,
+    originalMediaType: "image/jpeg",
+    originalExtension: ".jpg",
+    originalByteSize: 128_000,
+    originalSha256: createHash("sha256").update(`${target}-media-${index}`).digest("hex"),
+    originalWidth: 1600,
+    originalHeight: 900,
+    uploadActorUserId: ownerA,
+    reviewStatus: "APPROVED",
+    reviewedByUserId: ownerA,
+    reviewedAt: baseDate,
+    reviewNote: `${target} consent-sensitive review note ${index}`,
+    caption: index === 0 ? forbidden.media : `${target} private caption ${index}`,
+    peopleDeclaration: "UNKNOWN",
+    publicationEligibility: "UNKNOWN",
+    publicationStatus: "PRIVATE",
+    derivativeStatus: "READY",
+    recoveryStatus: "VERIFIED"
+  })) });
+
+  return {
+    forbidden,
+    volume: { parentMeetings: 240, transportVehicles: 40, transportRoutes: 80, transportStops: 120, transportAssignments: 300, cafeteriaItems: 80, cafeteriaMenus: 30, cafeteriaEnrollments: 300, cafeteriaMeals: 300, kgReports: 200, eventAlbums: 60, eventMedia: 300 }
+  };
+}
+
 async function main() {
   cleanup();
   mkdirSync(root, { recursive: true });
@@ -166,6 +411,13 @@ async function main() {
   copyFileSync(operational, copiedDatabase);
   stage = "apply existing migrations to copy";
   applyExistingMigrations(copiedDatabase);
+  if (extension) {
+    process.env.DATABASE_URL = databaseUrl(copiedDatabase);
+    process.env.PARENT_MEETINGS_V1_5 = "true";
+    process.env.OPTIONAL_OPS_SYNTHETIC_QA = "1";
+    process.env.TRANSPORT_V1_5 = "enabled";
+    process.env.CAFETERIA_V1_5 = "enabled";
+  }
   const client = new PrismaClient({ datasourceUrl: databaseUrl(copiedDatabase) });
   try {
     stage = "actor fixtures";
@@ -174,6 +426,7 @@ async function main() {
     const superB = await createUser(client, "SUPER_ADMIN", "B", passwordHash);
     const principal = await createUser(client, "PRINCIPAL", "Principal", passwordHash);
     await seedVolume(client, superA.id, superB.id);
+    const extensionEvidence = extension ? await seedExtensionVolume(client, superA.id) : null;
 
     stage = "owner isolation";
     const ownerRequest = parseUniversalSearchRequest({ query: target, sources: ["DIARY", "TASKS", "CONTACTS"], limit: 50 });
@@ -182,6 +435,41 @@ async function main() {
     invariant(ownerA.results.length > 0 && ownerB.results.length > 0, `${SUITE}_OWNER_RESULTS_MISSING`);
     invariant(!JSON.stringify(ownerA).includes("OWNER B"), `${SUITE}_OWNER_A_LEAKED_OWNER_B`);
     invariant(ownerB.results.every((row) => row.title.includes("OWNER B")), `${SUITE}_OWNER_B_RESULTS_INVALID`);
+
+    if (extensionEvidence) {
+      stage = "extension source coverage and privacy sentinels";
+      const extensionSources = ["PARENT_MEETINGS", "TRANSPORT", "CAFETERIA", "KG_REPORTS", "EVENT_MEDIA"] as const;
+      const extensionResponse = await runUniversalSearch(client, { id: superA.id, role: "SUPER_ADMIN" }, parseUniversalSearchRequest({ query: target, sources: [...extensionSources], limit: 50 }));
+      invariant(extensionResponse.results.length > 0, `${SUITE}_EXTENSION_RESULTS_MISSING`);
+      invariant(
+        extensionResponse.sources.every((source) => source.state === "OK"),
+        `${SUITE}_EXTENSION_SOURCE_STATE_INVALID:${extensionResponse.sources.map((source) => `${source.source}=${source.state}:${source.reason ?? "none"}`).join(",")}`
+      );
+      invariant(extensionResponse.results.length <= 50, `${SUITE}_EXTENSION_RESULT_CAP_EXCEEDED`);
+      const sourceProbes = await Promise.all(([
+        ["PARENT_MEETINGS", `${target}-PM-0000`],
+        ["TRANSPORT", `${target}-ROUTE-000`],
+        ["CAFETERIA", `${target}-ITEM-000`],
+        ["KG_REPORTS", `${target}-KG-REPORT-0000`],
+        ["EVENT_MEDIA", `${target}-ALBUM-0000`]
+      ] as const).map(async ([source, query]) => runUniversalSearch(
+        client,
+        { id: superA.id, role: "SUPER_ADMIN" },
+        parseUniversalSearchRequest({ query, sources: [source], limit: 6 })
+      )));
+      invariant(sourceProbes.every((response) => response.results.length > 0 && response.sources[0]?.state === "OK"), `${SUITE}_EXTENSION_SOURCE_COVERAGE_INCOMPLETE`);
+      invariant(!Object.values(extensionEvidence.forbidden).some((value) => JSON.stringify([extensionResponse, sourceProbes]).includes(value)), `${SUITE}_EXTENSION_FORBIDDEN_VALUE_LEAKED`);
+      for (const [source, query] of [
+        ["PARENT_MEETINGS", extensionEvidence.forbidden.parent],
+        ["TRANSPORT", extensionEvidence.forbidden.driver],
+        ["CAFETERIA", extensionEvidence.forbidden.diet],
+        ["KG_REPORTS", extensionEvidence.forbidden.kg],
+        ["EVENT_MEDIA", extensionEvidence.forbidden.media]
+      ] as const) {
+        const sentinelResponse = await runUniversalSearch(client, { id: superA.id, role: "SUPER_ADMIN" }, parseUniversalSearchRequest({ query, sources: [source], limit: 6 }));
+        invariant(sentinelResponse.results.length === 0 && sentinelResponse.sources[0]?.state === "EMPTY", `${SUITE}_${source}_SENTINEL_MATCHED`);
+      }
+    }
 
     stage = "performance";
     const measured = new PrismaClient({ datasourceUrl: databaseUrl(copiedDatabase), log: [{ emit: "event", level: "query" }] });
@@ -214,7 +502,7 @@ async function main() {
     const heapGrowth = process.memoryUsage().heapUsed - heapBefore;
     invariant(p95Ms <= 1_500, `${SUITE}_P95_EXCEEDED:${p95Ms.toFixed(2)}`);
     invariant(maximumMs <= 2_000, `${SUITE}_HARD_CEILING_EXCEEDED:${maximumMs.toFixed(2)}`);
-    invariant(Math.max(...counts) <= 20, `${SUITE}_QUERY_BOUND_EXCEEDED:${Math.max(...counts)}`);
+    invariant(Math.max(...counts) <= (extension ? 48 : 20), `${SUITE}_QUERY_BOUND_EXCEEDED:${Math.max(...counts)}`);
     invariant(heapGrowth < 160 * 1024 * 1024, `${SUITE}_HEAP_GROWTH_EXCEEDED:${heapGrowth}`);
 
     stage = "operational integrity";
@@ -225,6 +513,7 @@ async function main() {
     console.log(JSON.stringify({
       result: `${SUITE}_COPIED_DATABASE_VERIFIED`, operationalBefore, operationalAfter,
       volume: { students: 1_200, guardians: 600, staff: 320, admissions: 360, diary: 432, tasks: 1_512, contacts: 532, fees: 240, exams: 140, support: 120, safeExit: 80 },
+      extension: extensionEvidence ? { coverage: ["PARENT_MEETINGS", "TRANSPORT", "CAFETERIA", "KG_REPORTS", "EVENT_MEDIA"], coverageDecision: "SAFE_METADATA_ONLY", forbiddenSentinelsExcluded: true, volume: extensionEvidence.volume } : null,
       ownerIsolation: true, resultLimit: 50, maximumQueriesPerRequest: Math.max(...counts), p95Ms: Number(p95Ms.toFixed(2)), maximumMs: Number(maximumMs.toFixed(2)),
       heapGrowthBytes: heapGrowth, copiedDatabaseRetained: keep, credentialsPath: keep ? credentialsPath : null
     }));
