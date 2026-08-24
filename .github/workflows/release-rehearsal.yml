@@ -18,7 +18,7 @@ concurrency:
 jobs:
   validate:
     if: ${{ inputs.confirm_private_synthetic_only == 'PRIVATE_SYNTHETIC_ONLY' }}
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     timeout-minutes: 45
     env:
       DATABASE_URL: file:./tmp/release-ci/synthetic.db
@@ -31,8 +31,8 @@ jobs:
       NALANDA_RELEASE_DATE: "2026-08-10T00:00:00.000Z"
       NALANDA_STANDALONE_BUILD: "true"
       APP_ORIGIN: http://127.0.0.1:3000
-      PRIVATE_STORAGE_ROOT: /tmp/nalanda-release-ci/private
-      BACKUP_DIRECTORY: /tmp/nalanda-release-ci/backups
+      PRIVATE_STORAGE_ROOT: ${{ runner.temp }}\nalanda-release-ci\private
+      BACKUP_DIRECTORY: ${{ runner.temp }}\nalanda-release-ci\backups
       LIVE_PROVIDERS_ENABLED: "false"
       PUBLIC_WEBSITE_INDEXING_ENABLED: "false"
       NALANDA_STAGING_BANNER: "true"
@@ -47,15 +47,21 @@ jobs:
           node-version: 22
       - name: Enable repository package manager
         run: corepack enable
+      - name: Install required local validation tools
+        run: |
+          choco install ripgrep poppler -y --no-progress
+          rg --version
+          pdftoppm -v
       - name: Install exactly from lockfile
         run: pnpm install --frozen-lockfile
       - name: Generate isolated Prisma client
         run: pnpm db:generate
       - name: Prepare isolated synthetic database
         run: |
-          mkdir -p prisma/tmp/release-ci
-          touch prisma/tmp/release-ci/synthetic.db
+          New-Item -ItemType Directory -Force -Path prisma\tmp\release-ci | Out-Null
+          New-Item -ItemType File -Force -Path prisma\tmp\release-ci\synthetic.db | Out-Null
           pnpm exec prisma migrate deploy
+          Copy-Item -LiteralPath prisma\tmp\release-ci\synthetic.db -Destination prisma\dev.db
       - name: Git and private-artifact safety
         run: pnpm git:safety-check
       - name: Production dependency audit

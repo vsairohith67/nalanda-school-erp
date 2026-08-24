@@ -194,6 +194,7 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     const publicAdmissionsUi = readFileSync("components/admissions-public-enquiry-form.tsx", "utf8");
     const loginUi = readFileSync("components/login-form.tsx", "utf8");
     const runtimeHarness = readFileSync("scripts/sec1-runtime-server.ps1", "utf8");
+    const releaseWorkflow = readFileSync(".github/workflows/release-rehearsal.yml", "utf8");
     expect(middleware).toContain("enforceOperationRateLimit");
     expect(middleware).toContain("proxyHealthPath");
     expect(middleware).toContain('"/api/health"');
@@ -217,5 +218,8 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     expect(runtimeHarness).toContain('[ValidateSet("single-process-rehearsal", "distributed")]');
     expect(runtimeHarness).toContain('$env:SECURITY_RATE_LIMIT_MODE = $RateLimitMode');
     expect(runtimeHarness).toContain('$env:QA20C_ISOLATED_DATABASE = "true"');
+    expect(releaseWorkflow).toContain("runs-on: windows-latest");
+    expect(releaseWorkflow).toContain("choco install ripgrep poppler -y --no-progress");
+    expect(releaseWorkflow).toContain("Copy-Item -LiteralPath prisma\\tmp\\release-ci\\synthetic.db -Destination prisma\\dev.db");
   });
 });
