@@ -219,7 +219,8 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     expect(runtimeHarness).toContain('$env:SECURITY_RATE_LIMIT_MODE = $RateLimitMode');
     expect(runtimeHarness).toContain('$env:QA20C_ISOLATED_DATABASE = "true"');
     expect(releaseWorkflow).toContain("runs-on: windows-latest");
-    expect(releaseWorkflow).toContain("choco install ripgrep poppler -y --no-progress");
+    expect(releaseWorkflow).toContain("choco install ripgrep --version=15.2.0 -y --no-progress");
+    expect(releaseWorkflow).toContain("choco install poppler --version=26.6.0 -y --no-progress");
     expect(releaseWorkflow).toContain("Copy-Item -LiteralPath prisma\\tmp\\release-ci\\synthetic.db -Destination prisma\\dev.db");
   });
 });
