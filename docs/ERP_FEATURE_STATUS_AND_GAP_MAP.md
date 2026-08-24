@@ -1,6 +1,10 @@
 # ERP Feature Status and Gap Map
 
-## GOV-RECON-1 corrected V1 status (2026-08-08)
+## Current-main correction (2026-08-23)
+
+Current `main` and its retained annotated tags supersede the dated checkpoint below wherever they conflict. Support/complaints, observability, bulk onboarding, Classes I-X print acceptance, the V1 cross-module RC, Academic Integrity v1.1, Command Center, My Work, Universal Search, Smart AI Foundation, Smart AI Local Runtime, Event Media software and KG Report Cards software are `CLEARED`; operational activation remains separately gated where documented. `FINAL-SCOPE-QA-1A` now supplies the missing post-V1.5 acceptance harness, but release acceptance is `REQUIRES_FIXES`: active import, public-admissions and Payroll/ESS write surfaces do not consume their committed default-off release flags, `bulk-exports` lacks a governed surface map, and dependency audits contain unresolved Critical/High advisories. Optional Operations is implemented/independently tested but `RELEASE_BLOCKED_EXTERNAL_CI`; Parent Meetings is implemented with focused QA but remains `BLOCKED_BY_EVIDENCE / RELEASE_BLOCKED`. Neither branch is a current-main capability.
+
+## Historical GOV-RECON-1 corrected V1 status (2026-08-08)
 
 The authoritative status source is now `REQUIREMENTS_REGISTER.md`, with product scope in `V1_V1_5_V2_SCOPE.md`. A model or route is not sufficient for completion.
 
@@ -9,7 +13,7 @@ The authoritative status source is now `REQUIREMENTS_REGISTER.md`, with product 
 - V1 Family/Multi-Student Mixed-Tender Fee Collection is `PARTIAL` and a launch blocker: the current one-Student receipt invariant prevents the exact workflow.
 - V1 canonical report-card templates and physical colour/black-and-white print acceptance are `PARTIAL`: the renderer exists, but approved original template sources and physical acceptance do not.
 - V1 safe staging/release/client update is `PARTIAL`: readiness foundations exist, but the complete governed pipeline and client update UX are not released.
-- Support/complaint/feedback and final corrected-scope cross-module QA are `MISSING`; observability and bulk onboarding are `PARTIAL`; operational cutover is `DEFERRED` pending explicit approval.
+- At this dated checkpoint, Support/complaint/feedback and final corrected-scope cross-module QA were recorded as `MISSING`; observability and bulk onboarding were `PARTIAL`; operational cutover was `DEFERRED` pending explicit approval. This sentence is `HISTORICAL_ONLY`; use the current-main correction above.
 
 Transport and Cafeteria are optional V1.5. V2 remains AI lessons/videos with Teacher approval and no automatic Student publication. Recommended next phase: `FIN-FAMILY-PAY-1`.
 

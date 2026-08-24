@@ -1,8 +1,8 @@
 # Authoritative Requirements Register
 
 **Register ID:** `GOV-RECON-1-REGISTER`<br>
-**As-of:** 2026-08-22<br>
-**Baseline:** protected `main` at the authorised task-start checkpoint `4978da6e0fc3c1846750694a04f4015b61ca78af`; KG Report Cards V1.5 software clearance evidence is recorded below<br>
+**As-of:** 2026-08-23<br>
+**Baseline:** protected `main` at the authorised `FINAL-SCOPE-QA-1A` task-start checkpoint `8fc1473c0f74a70fe1dc6afcd9740f1e7eab5495`; later candidate evidence must prove that the refreshed `origin/main` is contained in its history<br>
 **Decision source:** `docs/V1_V1_5_V2_SCOPE.md`
 
 ## Status and evidence rules
@@ -64,11 +64,12 @@ A route, model or document by itself cannot produce `COMPLETE`. Evidence classes
 
 | Dimension | Count |
 | --- | ---: |
-| Total requirements | 37 |
+| Total requirements | 38 |
 | V1 | 24 |
+| V1.1 | 1 |
 | V1.5 | 7 |
 | V2 | 6 |
-| CLEARED | 23 |
+| CLEARED | 24 |
 | CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING | 4 |
 | COMPLETE | 1 |
 | DEFERRED | 8 |

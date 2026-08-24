@@ -33,23 +33,23 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | 6 | Publishers, book suppliers, vendors and contacts | Private reference directory: `CLEARED`; broader CRM/procurement: `DEFERRED` | Exact-owner Contacts & Suppliers is cleared and searchable through bounded safe fields. It remains a reference directory, not procurement/payment automation. |
 | 7 | Monitoring and operational dashboard extensions | `PARTIAL` | OBS-1A and its technical/operational foundation are cleared. Hosting-dependent live monitoring, provider health, cost/usage extensions, and unified Command Center presentation remain pending. Extend the existing architecture. |
 | 8 | Whiteboard | Bridge: `CLEARED`; ERP engine: `NOT_IMPLEMENTED` | `WHITEBOARD-BRIDGE-1A-QA` independently proved that only the exact Super Admin route can launch the canonical Canvs board. It has no iframe, token exchange, server fetch, sync, board persistence, Search/AI integration or open redirect. Canvs remains the editing engine. |
-| 9 | Citation-based Smart AI | Foundation: `CLEARED`; runtime/actions/advanced scope: `DEFERRED_TO_V2` | Independent QA cleared the exact-Super-Admin, Universal-Search-only, read-only, citation-validated software foundation. Runtime remains disabled. Semantic retrieval, attachment/image/Canvs ingestion, external knowledge/providers, persistent history and AI actions are not authorized. |
+| 9 | Citation-based Smart AI | Foundation: `CLEARED`; local runtime: `CLEARED / PROVIDER_DEFAULT_OFF`; actions/advanced scope: `DEFERRED_TO_V2` | Independent QA cleared the exact-Super-Admin, Universal-Search-only, read-only, citation-validated software foundation and the loopback-only local-runtime boundary. Committed provider state remains `DISABLED`. Semantic retrieval, attachment/image/Canvs ingestion, external knowledge/providers, persistent history and AI actions are not authorized. |
 | 10 | Android app | `NOT_IMPLEMENTED` | Responsive web/PWA foundations do not constitute a native Android app. A later shared-app Capacitor approach may be assessed only after staging and physical-device certification. |
 | 11 | iOS/iPadOS app | `NOT_IMPLEMENTED` | No native Apple application is proven. Final building, signing, and device certification require a Mac/Xcode environment and Apple account decisions. |
 | 12 | PWA and device certification | PWA foundation: `CLEARED`; end-to-end readiness: `PARTIAL`; physical certification: `OPERATIONAL_CONFIGURATION_PENDING` | Responsive web and the installable PWA foundation are present. Physical Android/iPhone/iPad testing waits for approved private HTTPS staging. See the [device checklist](./PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md). |
-| 13 | Event-photo gallery and image enhancement | `NOT_IMPLEMENTED`; candidate `DEFERRED_TO_V1_5` | No governed ERP gallery/enhancement implementation is proven. Any future phase requires consent, private storage, retention, moderation, human approval, and original-image preservation. |
+| 13 | Event-photo gallery and image enhancement | Event Media software: `CLEARED`; public gallery: `DEFAULT_OFF`; AI enhancement: `DEFERRED` | Governed private Event Media is released with consent, ownership, moderation and metadata-stripped derivatives. Public activation, face recognition/embeddings, external image AI and automatic posting remain prohibited. |
 | 14 | Direct UPI and payment gateway | `PARTIAL` | Manual/mixed payment instruments and UPI reference capture are supported, but no online checkout, callback, settlement, refund, or production gateway is proven. Provider selection and activation remain separate operational gates. |
 | 15 | WhatsApp, Email and Push | `PARTIAL` | WhatsApp and SMS/email foundations remain mock/default-off; live delivery requires provider, consent, DNS/webhook, template, and sandbox evidence. Push is not implemented. See [WhatsApp](./WHATSAPP_BUSINESS_ONE_WAY_COMMUNICATION_WORKFLOW.md) and [SMS/email](./SMS_AND_EMAIL_ONE_WAY_COMMUNICATION_WORKFLOW.md). |
 | 16 | Hosting, DNS and private staging | `OPERATIONAL_CONFIGURATION_PENDING` | A planning/decision package exists, but no provider purchase, cloud resource, DNS change, HTTPS staging deployment, or public exposure is authorised. |
 | 17 | Real-data onboarding, training, pilot and cutover | `OPERATIONAL_CONFIGURATION_PENDING` | Plans and checklists exist; execution has not occurred. It requires accepted staging, named owners, controlled import, role onboarding, training, pilot reconciliation, rollback rehearsal, and an explicit cutover decision. |
-| 18 | Transport, Cafeteria and KG report-card deferrals | `DEFERRED_TO_V1_5` | These remain outside the frozen V1 RC. KG foundation/default-off decisions are preserved; none should be activated implicitly. |
+| 18 | Transport, Cafeteria and KG report-card state | KG software: `CLEARED / OPERATIONAL_ACTIVATION_OFF`; Transport/Cafeteria: `RELEASE_BLOCKED / DEFAULT_OFF` on unmerged Optional Operations branch | KG software is on current main and remains operationally off. Optional Operations is not current-main functionality; its exact-SHA external CI gate was rejected before checkout by the billing/spending condition. None may activate implicitly. |
 
 ## Important dependency order
 
 1. Compose the Super Admin Command Center from existing cleared foundations.
 2. Establish the combined Diary/tasks/reminders/Life OS and directory model.
 3. Preserve the independently cleared fixed Canvs Whiteboard Bridge and permission-scoped Universal Search.
-4. Preserve the cleared citation-based Smart AI foundation; any local runtime or AI Actions phase remains separate and must never bypass Search authorization.
+4. Preserve the cleared Smart AI foundation and loopback-only Local Runtime; AI Actions remain separate and must never bypass Search authorization.
 
 This order prevents AI from answering over missing supplier records or bypassing role permissions.
 
@@ -57,7 +57,7 @@ Diary, tasks, reminders, contacts, universal search, OBS-1A extensions, Canvs/wh
 
 ## Controlled V1.5 and V2 deferrals
 
-- KG report cards, optional Transport and Cafeteria modules, and operational rollout of the technically cleared full Payroll/ESS foundation remain `DEFERRED_TO_V1_5`.
+- KG report-card software is `CLEARED` with operational activation off. Optional Transport/Cafeteria are implemented on a separate branch but `RELEASE_BLOCKED_EXTERNAL_CI` and absent from main. Operational rollout of the technically cleared full Payroll/ESS foundation remains gated.
 - AI-generated lessons and educational videos remain `DEFERRED_TO_V2`, require Teacher approval, and must not publish automatically to Students.
 
 ## UNIVERSAL-SEARCH-1A clearance update (2026-08-22)
@@ -92,6 +92,10 @@ activated.
 - No application feature implementation.
 - No deployment, DNS change, provider activation, data import, user activation, pilot, or cutover.
 - No UDISE scraping, automatic submission, or false compliance claim.
+
+## FINAL-SCOPE-QA-1A current-main acceptance update (2026-08-23)
+
+The post-V1.5 corrected-scope harness and release-evidence tooling are implemented, but the terminal status is `FINAL_SCOPE_QA_REQUIRES_FIXES`. Three active write areas do not enforce their declared default-off flags (`real-data-imports`, `public-admissions-form`, `payroll-ess-pilot`), `bulk-exports` lacks an authoritative governed-surface mapping, and dependency audits have unresolved Critical/High advisories. Optional Operations remains `LOCAL_ACCEPTANCE_COMPLETE / RELEASE_BLOCKED_EXTERNAL_CI`; Parent Meetings remains `BLOCKED_BY_EVIDENCE / RELEASE_BLOCKED`. No merge, release tag, deployment or activation is authorised by this update.
 
 ## Next documents
 

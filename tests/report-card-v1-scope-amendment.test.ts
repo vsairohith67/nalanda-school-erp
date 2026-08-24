@@ -51,19 +51,20 @@ describe("REPORT-PRINT-ACCEPT-1A and KG-REPORTS-V1_5-1A release boundaries", () 
   it("records one non-duplicated scope split and preserves all 29 R5 corrections", () => {
     const register = source("docs/REQUIREMENTS_REGISTER.md");
     const amendment = source("docs/REPORT_CARD_V1_SCOPE_AMENDMENT.md");
-    const requirementRows = [...register.matchAll(/^\| (V(?:1(?:\.5)?|2)-[A-Z][A-Z-]*-\d{3}) \|/gm)].map((match) => match[1]);
+    const requirementRows = [...register.matchAll(/^\| (V(?:1(?:\.1|\.5)?|2)-[A-Z][A-Z-]*-\d{3}) \|/gm)].map((match) => match[1]);
 
-    expect(requirementRows).toHaveLength(37);
+    expect(requirementRows).toHaveLength(38);
     expect(new Set(requirementRows).size).toBe(requirementRows.length);
     expect(requirementRows.filter((id) => id === "V1-RC-016")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-RC-034")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-SEARCH-036")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-AI-037")).toHaveLength(1);
-    expect(register).toContain("| Total requirements | 37 |");
+    expect(register).toContain("| Total requirements | 38 |");
     expect(register).toContain("| V1 | 24 |");
+    expect(register).toContain("| V1.1 | 1 |");
     expect(register).toContain("| V1.5 | 7 |");
     expect(register).toContain("| V2 | 6 |");
-    expect(register).toContain("| CLEARED | 23 |");
+    expect(register).toContain("| CLEARED | 24 |");
     expect(register).toContain("| CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING | 4 |");
     expect(register).toContain("| COMPLETE | 1 |");
     expect(register).not.toContain("| COMPLETE_LOCAL_PRIVATE |");

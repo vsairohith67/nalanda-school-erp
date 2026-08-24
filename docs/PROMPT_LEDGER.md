@@ -2,7 +2,7 @@
 
 **Ledger ID:** `GOV-RECON-1-LEDGER`<br>
 **Reconstructed:** 2026-08-12<br>
-**Coverage:** earliest post-hoc Prompt Library evidence (created 2026-06-19) through SMART-AI-1A independent clearance
+**Coverage:** earliest post-hoc Prompt Library evidence (created 2026-06-19) through `FINAL-SCOPE-QA-1A` current-main acceptance on 2026-08-23
 
 ## Source limitation
 
@@ -114,6 +114,9 @@ The accessible Git history begins with the consolidated baseline commit `2d1ac63
 | 2026-08-08 | GOV-RECON-1 | Current authoritative user requirement and this branch | `EXACT_SOURCE` | Documentation/evidence/reconciliation phase; no application implementation |
 | 2026-08-08 to 2026-08-09 | HR-PAYSLIP-REQ-1 / recovery / independent QA | Current authoritative user requirement, retained `hr/staff-payslip-request-secure-delivery` and `payslip-request-delivery-v37-2026-08-09` | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE` | Released local/private after synthetic copied-DB, qpdf, Browser, migration, recovery and full-suite proof; no deployment, real Staff document or live provider |
 | 2026-08-09 | SUPPORT-1A / SUPPORT-1A-QA | Current authoritative user requirement and `support/parent-staff-complaints-feedback` | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE` | Additive implementation copied-fixture verified; independent QA and release gates pending at checkpoint |
+| 2026-08-09 | SUPPORT-1A release closure | `53a2e92`; annotated `support-complaints-v37-2026-08-09` | `EXACT_SOURCE`, `QA_RELEASE_EVIDENCE` | Independently cleared; the preceding pending sentence is a preserved checkpoint, not current status |
+| 2026-08-21 to 2026-08-23 | Academic Integrity, Command Center, My Work, Whiteboard Bridge, Universal Search, Smart AI Foundation, Event Media, KG Reports, parallel worktree safety and Smart AI Local Runtime | Retained annotated tags and current-main containment recorded in [final corrected-scope acceptance](FINAL_CORRECTED_SCOPE_ACCEPTANCE.md) | `EXACT_SOURCE`, `QA_RELEASE_EVIDENCE` | Software releases cleared with their documented activation/provider boundaries; no deployment implied |
+| 2026-08-23 | FINAL-SCOPE-QA-1A | Current authoritative task; `feature/final-scope-qa-1a` | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `INDEPENDENT_QA_EVIDENCE` | `FINAL_SCOPE_QA_REQUIRES_FIXES`: runtime release-flag enforcement and Critical/High dependency gates are red; no merge/tag/deployment |
 
 ## Exact missing source ranges
 
