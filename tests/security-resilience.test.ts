@@ -230,6 +230,8 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     expect(releaseWorkflow).toContain('"REPORT_CARD_PDFTOPPM_PATH=$($pdfToPpm.FullName)"');
     expect(releaseWorkflow).toContain("$env:RELEASE_CI_SYNTHETIC_OPT_IN = 'true'");
     expect(releaseWorkflow).toContain("pnpm exec tsx scripts/prepare-release-ci-synthetic.ts");
+    expect(releaseWorkflow).toContain('throw "Release CI refused a pre-existing environment file"');
+    expect(releaseWorkflow).toContain("New-Item -ItemType File -Path .env | Out-Null");
     expect(releaseWorkflow).toContain("DATABASE_URL: file:../tmp/release-ci/synthetic.db");
     expect(releaseWorkflow).toContain("Copy-Item -LiteralPath tmp\\release-ci\\synthetic.db -Destination prisma\\dev.db");
     expect(releaseWorkflow).toContain('throw "Release CI synthetic database already exists"');

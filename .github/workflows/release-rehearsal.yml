@@ -78,6 +78,8 @@ jobs:
           $env:SEED_ADMIN_PASSWORD = "CI-Admin-$([guid]::NewGuid())!"
           $env:SEED_ACCOUNTANT_PASSWORD = "CI-Accountant-$([guid]::NewGuid())!"
           $env:SEED_VIEWER_PASSWORD = "CI-Viewer-$([guid]::NewGuid())!"
+          if (Test-Path -LiteralPath .env) { throw "Release CI refused a pre-existing environment file" }
+          New-Item -ItemType File -Path .env | Out-Null
           pnpm db:seed
           $env:RELEASE_CI_SYNTHETIC_OPT_IN = 'true'
           pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
