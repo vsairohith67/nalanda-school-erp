@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { evaluateReleaseFeatureFlagConfig, parseReleaseFeatureFlags, releaseFeatureFlags, type ReleaseFeatureFlag } from "@/lib/release-feature-flags";
 import type { ReleaseEnvironment } from "@/lib/release-operations-types";
 
@@ -54,15 +57,28 @@ function loopbackOrigin(value: string | undefined) {
   }
 }
 
+function inside(parent: string, candidate: string) {
+  const relative = path.relative(parent, candidate);
+  return relative === "" || (relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+}
+
+function isolatedQaDatabase(value: string | undefined) {
+  try {
+    const parsed = new URL(value ?? "");
+    if (parsed.protocol !== "file:" || (parsed.hostname && parsed.hostname !== "localhost")) return false;
+    const resolved = path.resolve(fileURLToPath(parsed));
+    if (new RegExp(`(?:^|[\\\\/])prisma[\\\\/]dev\\.db$`, "i").test(resolved)) return false;
+    const allowedRoots = [path.resolve(process.cwd(), "tmp"), path.resolve(process.cwd(), ".qa-artifacts"), path.resolve(os.tmpdir())];
+    return allowedRoots.some((root) => inside(root, resolved));
+  } catch {
+    return false;
+  }
+}
+
 export function isSyntheticReleaseFeatureQaMode(environment: NodeJS.ProcessEnv = process.env) {
-  const databaseUrl = String(environment.DATABASE_URL ?? "").replaceAll("\\", "/");
-  const isolatedDatabase = databaseUrl.toLowerCase().startsWith("file:")
-    && /(?:^|\/)(?:tmp|temp|qa|test|copy|copied|synthetic)(?:\/|[-_.])/i.test(databaseUrl);
-  const operationalDatabase = /(?:^|\/)prisma\/dev\.db(?:$|[?])/i.test(databaseUrl);
   return environment.NODE_ENV !== "production"
     && environment.RELEASE_FEATURE_FLAGS_QA_MODE === RELEASE_FEATURE_FLAG_QA_MODE
-    && isolatedDatabase
-    && !operationalDatabase
+    && isolatedQaDatabase(environment.DATABASE_URL)
     && loopbackOrigin(environment.APP_ORIGIN);
 }
 

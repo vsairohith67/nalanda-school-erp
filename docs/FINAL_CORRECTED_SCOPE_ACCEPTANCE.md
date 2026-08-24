@@ -75,6 +75,8 @@ Production-only and full dependency audits both reported zero Critical, High, Me
 
 Changed QA/tooling code was reviewed for command construction, bounded path handling, temporary-file containment, Git invocation, database-copy targeting, secret handling and evidence output. The security-diff review reported no actionable finding. Git safety, merge-marker, focused-test/skip-integrity, tracked-artifact, model-binary, backup/database and unexpected-large-file checks passed.
 
+R1's pre-release diff review identified one Medium QA-path canonicalisation issue in the first locally green head: a trusted non-production file URL was classified by raw path text. It was corrected before push by canonicalising the file URL and requiring containment beneath the worktree QA roots or operating-system temporary directory, while rejecting the canonical operational database name. Traversal, encoded-path and unapproved-root tests now fail closed. The final exact-head security scan must show zero unresolved findings before external CI.
+
 ## Release and branch consistency
 
 Current main contains the retained cleared releases for Academic Integrity, Universal Search, Smart AI Foundation, Smart AI Local Runtime, KG Reports, Event Media, Whiteboard Bridge, Command Center, My Work, parallel-worktree safety, Parent Meetings and Optional Operations. Their annotated tags resolve to commits contained in current-main history and their declared activation boundaries remain distinct from software clearance.

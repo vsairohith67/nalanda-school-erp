@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { createPublicEnquiry } from "@/lib/admissions";
 import { executeOnboardingBatch } from "@/lib/onboarding";
@@ -20,7 +21,7 @@ afterEach(() => { process.env = { ...originalEnvironment }; });
 const syntheticQaEnvironment = {
   ...originalEnvironment,
   NODE_ENV: "test",
-  DATABASE_URL: "file:C:/tmp/final-scope-qa/synthetic.db",
+  DATABASE_URL: `file:${path.resolve("tmp/final-scope-qa/synthetic.db").replaceAll("\\", "/")}`,
   APP_ORIGIN: "http://127.0.0.1:3210",
   RELEASE_FEATURE_FLAGS_QA_MODE: "SYNTHETIC_COPY_ONLY",
   RELEASE_FEATURE_FLAGS_QA_ENABLED: "real-data-imports,public-admissions-form,payroll-ess-pilot"
@@ -52,6 +53,9 @@ describe("release feature flag runtime enforcement", () => {
     const rejectedEnvironments: NodeJS.ProcessEnv[] = [
       { ...syntheticQaEnvironment, NODE_ENV: "production" },
       { ...syntheticQaEnvironment, DATABASE_URL: "file:C:/app/prisma/dev.db" },
+      { ...syntheticQaEnvironment, DATABASE_URL: `file:${path.resolve("tmp/../prisma/dev.db").replaceAll("\\", "/")}` },
+      { ...syntheticQaEnvironment, DATABASE_URL: `file:${path.resolve("tmp").replaceAll("\\", "/")}/..%2Fprisma%2Fdev.db` },
+      { ...syntheticQaEnvironment, DATABASE_URL: "file:C:/unapproved/location/synthetic.db" },
       { ...syntheticQaEnvironment, DATABASE_URL: "postgresql://database.example/tmp/synthetic" },
       { ...syntheticQaEnvironment, APP_ORIGIN: "https://qa.example.test" },
       { ...syntheticQaEnvironment, RELEASE_FEATURE_FLAGS_QA_MODE: "true" },
@@ -65,7 +69,7 @@ describe("release feature flag runtime enforcement", () => {
     const environment = {
       ...originalEnvironment,
       NODE_ENV: "test",
-      DATABASE_URL: "file:C:/tmp/final-scope-qa/synthetic.db",
+      DATABASE_URL: `file:${path.resolve("tmp/final-scope-qa/synthetic.db").replaceAll("\\", "/")}`,
       APP_ORIGIN: "http://127.0.0.1:3210",
       QUERY_FEATURE_FLAG: "real-data-imports=true",
       BODY_FEATURE_FLAG: "public-admissions-form=true",
