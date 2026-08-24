@@ -92,6 +92,11 @@
     "qa:event-media-v1-5:independent": "tsx scripts/qa-event-media-v1-5-copied-db.ts --prefix=EVENTMEDIA15QA",
     "qa:event-media-v1-5:browser:setup": "tsx scripts/qa-event-media-v1-5-copied-db.ts --prefix=EVENTMEDIA15BROWSER --keep",
     "qa:event-media-v1-5:browser:cleanup": "tsx scripts/qa-event-media-v1-5-copied-db.ts --prefix=EVENTMEDIA15BROWSER cleanup",
+    "parent-meetings:reminders": "tsx scripts/parent-meeting-reminders.ts",
+    "qa:parent-meetings-v1-5": "tsx scripts/qa-parent-meetings-v1-5-copied-db.ts --prefix=PARENTMEETING15",
+    "qa:parent-meetings-v1-5:independent": "tsx scripts/qa-parent-meetings-v1-5-copied-db.ts --prefix=PARENTMEETING15QA",
+    "qa:parent-meetings-v1-5:browser:setup": "tsx scripts/qa-parent-meetings-v1-5-copied-db.ts --prefix=PARENTMEETING15BROWSER --keep",
+    "qa:parent-meetings-v1-5:browser:cleanup": "tsx scripts/qa-parent-meetings-v1-5-copied-db.ts --prefix=PARENTMEETING15BROWSER cleanup",
     "support:sla-check": "tsx scripts/support-sla-check.ts",
     "qa:support1a": "tsx scripts/qa-support1a-copied-db.ts",
     "qa:support1a:independent": "tsx scripts/qa-support1a-copied-db.ts --prefix=SUPPORT1AQA",
@@ -193,7 +198,7 @@
     "prisma": "^6.10.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.6"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

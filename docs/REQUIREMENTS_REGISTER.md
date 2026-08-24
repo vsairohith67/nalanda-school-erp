@@ -1,5 +1,19 @@
 # Authoritative Requirements Register
 
+## PARENT-MEETING-V1_5-1A governed requirement
+
+Parent Meetings, Appointments and Follow-up is an additive V1.5 local/private
+software capability behind default-off `PARENT_MEETINGS_V1_5`. The governing
+requirements are exact active Parent linked-child ownership, explicit assigned
+Teacher scope, Principal/Super Admin management, bounded Director oversight,
+separate append-oriented private and Parent-visible evidence, local follow-up,
+conflict-safe scheduling, in-app-only notifications and backup/recovery.
+Academic Integrity v1.1 is unchanged. Operational activation, deployment, real
+meeting history, live providers, external calendars/video, attachments, My
+Work coupling and Universal Search/Smart AI integration are not authorised by
+software clearance. See
+[`PARENT_MEETINGS_APPOINTMENTS_ARCHITECTURE.md`](./PARENT_MEETINGS_APPOINTMENTS_ARCHITECTURE.md).
+
 **Register ID:** `GOV-RECON-1-REGISTER`<br>
 **As-of:** 2026-08-22<br>
 **Baseline:** protected `main` at the authorised task-start checkpoint `4978da6e0fc3c1846750694a04f4015b61ca78af`; KG Report Cards V1.5 software clearance evidence is recorded below<br>
@@ -52,6 +66,7 @@ A route, model or document by itself cannot produce `COMPLETE`. Evidence classes
 | V1.5-WORK-035 | Super Admin Personal Work Programme | SUPER-ADMIN-WORK-1A exact prompt, repository implementation and independent QA (`EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE`) | 2026-08-21 | Give each exact Super Admin a private Diary, Tasks/Reminders and contact/supplier reference directory behind Command Center | V1.5 | CLEARED | Additive exact-owner Diary/Task/Contact/Audit models; exact-role page/API; one My Work shell; bounded resilient Command Center summaries; no sharing/provider/procurement/AI/search | Exact role/API/owner denial, lifecycle/date/security/privacy, fresh and copied migration/recovery, bounded volume, 1366x768 and 390x844 light/dark Browser QA, 1,935 tests, production build, backup v41 and Git safety passed | SUPER-ADMIN-WORK-1A-QA clearance | `feature/super-admin-work-programme-1a`; annotated `super-admin-work-v-2026-08-21` checkpoint | Exact active `SUPER_ADMIN`; every query owner-scoped; private/no-store; note bodies/contact PII excluded from audit metadata; no external messages; zero unresolved Critical/High findings | Operational migration remains unapplied; Universal Search next and Smart AI downstream; no academic-integrity scope changed | `UNIVERSAL-SEARCH-1A`; deployment/onboarding remains separately authorised | High |
 | V1.5-SEARCH-036 | Permission-Scoped Super Admin Universal Search | UNIVERSAL-SEARCH-1A and UNIVERSAL-SEARCH-1A-QA exact prompts plus repository/release evidence (`EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE`) | 2026-08-21 to 2026-08-22 | Let the exact Super Admin find authorised ERP records through one private deterministic query and establish the permission-filtered retrieval boundary required before Smart AI | V1.5 | CLEARED | One POST composition endpoint; normalized contract; 18-source status catalogue; 16 bounded adapters; exact-owner My Work; deterministic ranking; failure/timeout isolation; private/no-store route and responsive keyboard UX; no migration/index table/AI/external provider/write | Exact role/active-context/API/input/owner/secret/ranking/failure tests; copied representative scale p95 61.68 ms; four-viewport Browser QA; zero-finding security diff; 220 files / 1,958 tests passed with 3 disclosed qpdf skips; build, backup v41 and Git safety passed | `UNIVERSAL_SEARCH_CLEARED` | retained `feature/universal-search-1a`; `universal-search-v41-2026-08-22` | Exact active `SUPER_ADMIN`; server-derived owner; safe allowlisted fields; 6/source, 50 default, 60 maximum; query not persisted; restricted Safe Exit and secret/auth/financial/file fields excluded; marks results navigation-only | Attendance and unified Audit search remain explicitly unavailable; no deploy/real data/AI; Academic Integrity preserved | Smart AI may be planned separately but remains unauthorized for implementation/provider/data use | High |
 | V1.5-AI-037 | Grounded Super Admin Smart AI Foundation | SMART-AI-1A and SMART-AI-1A-QA exact prompts plus repository/release evidence (`EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE`) | 2026-08-22 | Let the exact Super Admin ask bounded school-management questions over already-authorized ERP evidence without creating a second data or write path | V1.5 | CLEARED | Exact-role page/API/orchestration; internal Universal Search retrieval; bounded untrusted source envelopes; server-validated citations/destinations; disabled and loopback-only providers; ephemeral conversation UI; no migration or AI action | Authorization, two-owner/secret/no-write/injection/citation/provider/degradation/concurrency copied-DB QA; four-viewport Browser QA; 17-file security review with one Low fixed and zero unresolved Critical/High/Medium; 222 files / 2,024 tests passed with 3 disclosed qpdf skips; build, backup v42, Git safety and byte-identical operational DB | `SMART_AI_CLEARED` | retained `feature/smart-ai-1a` and `feature/smart-ai-finalize-1a`; `smart-ai-v42-2026-08-22` | Exact active `SUPER_ADMIN`; Search is the sole ERP retrieval boundary; safe fields only; prompt/source text untrusted; citations current-request only; private/no-store; no prompt/answer logs; no external network | Provider runtime disabled/not activated; no cloud/real-data transmission, persistent history, embeddings/vector index, web/file/image/Canvs ingestion, AI action or deployment | `SMART-AI-LOCAL-RUNTIME-1A` may be evaluated separately; AI Actions remain future/blocked | High |
+| V1.5-MEET-038 | Parent Meetings, Appointments and Follow-up | PARENT-MEETING-V1_5-1A exact prompts plus repository/release evidence (`EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `QA_RELEASE_EVIDENCE`) | 2026-08-22 to 2026-08-24 | Replace scattered appointment coordination with one governed, auditable school workflow | V1.5 | CLEARED | Default-off linked-child Parent requests; Principal/Super Admin scheduling and lifecycle; Director oversight; explicit assigned-Teacher participation; separate private and Parent-visible notes; local follow-up, reports and in-app reminders; backup v43 | Focused and copied-DB role/linkage/IDOR/privacy/transition/concurrency/XSS/notification/1,010-record scale, migration/restore twice, Academic Integrity regression, controlled Browser matrix, 223-file/2,038-test regression and 55/55 zero-finding security diff passed; operational DB byte-identical | `PARENT_MEETING_V1_5_CLEARED` | retained `feature/parent-meeting-v1-5-1a`; annotated `parent-meetings-v1-5-v43-2026-08-24` | Server-derived Parent ownership; explicit Teacher assignment; append-oriented evidence; no private-note leakage; no marks mutation | No deployment, operational activation, real data/users, external providers/calendar/video, attachments, My Work coupling or Search/Smart AI integration | Operational activation requires a later explicit gate; keep flag off | High |
 | V2-AI-027 | AI-generated lessons | Authoritative GOV-RECON-1 | 2026-08-08 | Assist Teachers with draft lessons | V2 | DEFERRED | Read-only/mock AI planning foundations only | No V2 programme acceptance | None | None | No Student data or automatic publication | Full payroll excluded | Future governed AI phase | High |
 | V2-AI-028 | AI-generated educational videos | Authoritative GOV-RECON-1 | 2026-08-08 | Produce draft educational video content | V2 | DEFERRED | None | None | None | None | Source rights, privacy, cost and safety controls | None | Future governed AI phase | High |
 | V2-AI-029 | Teacher review and approval | Authoritative GOV-RECON-1 | 2026-08-08 | Keep academic responsibility human | V2 | DEFERRED | None | None | None | None | Teacher approval required before any learner access | Mandatory V2 guard | Specify with V2 programme | High |
@@ -64,11 +79,11 @@ A route, model or document by itself cannot produce `COMPLETE`. Evidence classes
 
 | Dimension | Count |
 | --- | ---: |
-| Total requirements | 37 |
+| Total requirements | 38 |
 | V1 | 24 |
-| V1.5 | 7 |
+| V1.5 | 8 |
 | V2 | 6 |
-| CLEARED | 23 |
+| CLEARED | 24 |
 | CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING | 4 |
 | COMPLETE | 1 |
 | DEFERRED | 8 |

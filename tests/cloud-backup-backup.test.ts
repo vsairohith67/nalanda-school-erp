@@ -26,9 +26,9 @@ function emptyBackup() {
 }
 
 describe("cloud backup metadata backup and restore", () => {
-  it("uses version 37, contains all eight arrays, and excludes secrets", () => {
+  it("uses version 43, contains all eight arrays, and excludes secrets", () => {
     const backup = emptyBackup();
-    expect(backup.metadata.backupVersion).toBe(42);
+    expect(backup.metadata.backupVersion).toBe(43);
     for (const key of cloudKeys) {
       expect(backup[key]).toEqual([]);
       expect(backup.metadata.counts[key]).toBe(0);
@@ -50,7 +50,7 @@ describe("cloud backup metadata backup and restore", () => {
 
   it("rejects future versions and forbidden credential/key fields", () => {
     const future = emptyBackup() as Record<string, any>;
-    future.metadata.backupVersion = 43;
+    future.metadata.backupVersion = 44;
     expect(() => parseAndValidateBackup(future)).toThrow("unsupported");
 
     const secret = emptyBackup() as Record<string, any>;

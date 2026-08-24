@@ -53,15 +53,16 @@ describe("REPORT-PRINT-ACCEPT-1A and KG-REPORTS-V1_5-1A release boundaries", () 
     const amendment = source("docs/REPORT_CARD_V1_SCOPE_AMENDMENT.md");
     const requirementRows = [...register.matchAll(/^\| (V(?:1(?:\.5)?|2)-[A-Z][A-Z-]*-\d{3}) \|/gm)].map((match) => match[1]);
 
-    expect(requirementRows).toHaveLength(37);
+    expect(requirementRows).toHaveLength(38);
     expect(new Set(requirementRows).size).toBe(requirementRows.length);
     expect(requirementRows.filter((id) => id === "V1-RC-016")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-RC-034")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-SEARCH-036")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-AI-037")).toHaveLength(1);
-    expect(register).toContain("| Total requirements | 37 |");
+    expect(requirementRows.filter((id) => id === "V1.5-MEET-038")).toHaveLength(1);
+    expect(register).toContain("| Total requirements | 38 |");
     expect(register).toContain("| V1 | 24 |");
-    expect(register).toContain("| V1.5 | 7 |");
+    expect(register).toContain("| V1.5 | 8 |");
     expect(register).toContain("| V2 | 6 |");
     expect(register).toContain("| CLEARED | 23 |");
     expect(register).toContain("| CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING | 4 |");
@@ -71,6 +72,7 @@ describe("REPORT-PRINT-ACCEPT-1A and KG-REPORTS-V1_5-1A release boundaries", () 
     expect(register).not.toContain("| MISSING |");
     expect(register).not.toContain("IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING");
     expect(register).toContain("| IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5 | 0 |");
+    expect(register).toContain("| READY_FOR_QA | 1 |");
     expect(register).toContain("SOFTWARE_CLEARED_OPERATIONAL_ACTIVATION_OFF");
     for (let correction = 1; correction <= 29; correction += 1) {
       expect(amendment.match(new RegExp(`^${correction}\\. `, "gm"))).toHaveLength(1);

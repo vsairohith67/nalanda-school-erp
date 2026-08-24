@@ -95,7 +95,7 @@ describe("Event Media privacy and media governance", () => {
   it("documents encrypted double-restore coverage for originals and derivatives", () => {
     const backup = source("lib/event-media-asset-backup.ts"), docs = source("docs/EVENT_MEDIA_GOVERNANCE.md");
     for (const evidence of ["restoreRoots: [string, string]", "firstRestore.fileDigest !== secondRestore.fileDigest", "row.entry", "originalSha256", "recoveryStatus: \"VERIFIED\""]) expect(backup).toContain(evidence);
-    expect(docs).toContain("Logical backup version 42");
+    expect(docs).toContain("Logical backup version 43");
     expect(docs).toContain("No face recognition");
     expect(EVENT_MEDIA_ASSET_BACKUP_MAX_TOTAL_BYTES).toBeLessThan(CLOUD_BACKUP_MAX_PLAINTEXT_BYTES - 8 * 1024 * 1024);
   });
