@@ -31,8 +31,8 @@ jobs:
       NALANDA_RELEASE_DATE: "2026-08-10T00:00:00.000Z"
       NALANDA_STANDALONE_BUILD: "true"
       APP_ORIGIN: http://127.0.0.1:3000
-      PRIVATE_STORAGE_ROOT: ${{ runner.temp }}\nalanda-release-ci\private
-      BACKUP_DIRECTORY: ${{ runner.temp }}\nalanda-release-ci\backups
+      PRIVATE_STORAGE_ROOT: ${{ github.workspace }}\tmp\release-ci\private
+      BACKUP_DIRECTORY: ${{ github.workspace }}\tmp\release-ci\backups
       LIVE_PROVIDERS_ENABLED: "false"
       PUBLIC_WEBSITE_INDEXING_ENABLED: "false"
       NALANDA_STAGING_BANNER: "true"
