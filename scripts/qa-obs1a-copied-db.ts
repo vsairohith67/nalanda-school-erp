@@ -61,7 +61,7 @@ async function main() {
     const policyTwo = await saveClientVersionPolicy(source, { environment: "local", currentVersion: "1.0.1", minimumSupportedVersion: "1.0.0", enforcementMode: "ADVISORY", expectedVersion: policy.version }, actor.id);
     invariant(policyTwo.version === 2, "OBS1AQA_CLIENT_POLICY_VERSION");
 
-    await source.releaseManifest.create({ data: { releaseVersion: `${prefix}-checkpoint`, environment: "local", gitCommit: "synthetic", buildId: "synthetic", migrationVersion: "20260810100000_technical_operations_observability", backupVersion: 41, pwaBuildId: "synthetic", applicationSchemaId: "synthetic", isCurrent: false, createdByUserId: actor.id } });
+    await source.releaseManifest.create({ data: { releaseVersion: `${prefix}-checkpoint`, environment: "local", gitCommit: "synthetic", buildId: "synthetic", migrationVersion: "20260810100000_technical_operations_observability", backupVersion: 42, pwaBuildId: "synthetic", applicationSchemaId: "synthetic", isCurrent: false, createdByUserId: actor.id } });
     const backup = parseAndValidateBackup(await generateFullBackup(source as never, { generatedBy: prefix }));
     invariant(backup.metadata.backupVersion === 43, "OBS1AQA_BACKUP_VERSION");
     invariant(backup.technicalOperations.operationalAlerts.length === 2 && backup.technicalOperations.operationalIncidents.length === 1, "OBS1AQA_BACKUP_HISTORY");

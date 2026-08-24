@@ -24,6 +24,7 @@ import { loadSupportBackup, SUPPORT_BACKUP_KEYS, validateSupportBackupRows, type
 import { loadSafeExitBackup, SAFE_EXIT_BACKUP_KEYS, validateSafeExitBackupRows, type SafeExitBackup, type SafeExitBackupKey } from "./safe-exit-backup";
 import { emptyFamilyCollectionBackup, familyCollectionSchemaAvailable, FAMILY_COLLECTION_BACKUP_KEYS, loadFamilyCollectionBackup, validateFamilyCollectionBackupRows, type FamilyCollectionBackup } from "./family-collection-backup";
 import { emptyTechnicalOperationsBackup, loadTechnicalOperationsBackup, technicalOperationsRecordCount, technicalOperationsSchemaAvailable, validateTechnicalOperationsBackup, type TechnicalOperationsBackup } from "./technical-operations-backup";
+import { loadOptionalOperationsBackup, OPTIONAL_OPERATIONS_BACKUP_KEYS, validateOptionalOperationsBackupRows, type OptionalOperationsBackup, type OptionalOperationsBackupKey } from "./optional-operations-backup";
 import { emptyEventMediaBackup, eventMediaSchemaAvailable, EVENT_MEDIA_BACKUP_KEYS, loadEventMediaBackup, validateEventMediaBackupRows, type EventMediaBackup, type EventMediaBackupKey } from "./event-media-backup";
 import { emptyParentMeetingBackup, loadParentMeetingBackup, parentMeetingSchemaAvailable, PARENT_MEETING_BACKUP_KEYS, validateParentMeetingBackupRows, type ParentMeetingBackup, type ParentMeetingBackupKey } from "./parent-meeting-backup";
 
@@ -102,6 +103,8 @@ type BackupClient = Pick<
   | "studentDepartureRequest" | "studentDepartureConsentEvidence" | "studentStandingDepartureAuthorization"
   | "studentGatePass" | "studentDepartureHandover" | "studentDepartureEvent" | "studentCampusPresenceEvent"
   | "studentDepartureIncident" | "studentDepartureIncidentAction" | "studentDepartureNotificationOutbox" | "studentDepartureFallbackTask"
+  | "transportVehicle" | "transportRoute" | "transportStop" | "transportRouteStop" | "transportStudentAssignment" | "transportAuditEvent"
+  | "cafeteriaCatalogItem" | "cafeteriaMenu" | "cafeteriaMenuItem" | "cafeteriaStudentEnrollment" | "cafeteriaMealRecord" | "cafeteriaAuditEvent"
 >;
 
 type BackupDocumentInput = {
@@ -279,7 +282,7 @@ type BackupDocumentInput = {
   timetableEntries?: readonly unknown[];
   academicYear?: string;
   technicalOperations?: TechnicalOperationsBackup;
-} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup>;
+} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
   const onboardingBatches = sanitizeOnboardingBatches(input.onboardingBatches ?? []);
@@ -380,6 +383,8 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const safeExitCounts = Object.fromEntries(SAFE_EXIT_BACKUP_KEYS.map((key) => [key, safeExitBackup[key].length])) as Record<SafeExitBackupKey, number>;
   const familyCollectionBackup = validateFamilyCollectionBackupRows(input as unknown as Record<string, unknown>);
   const familyCollectionCounts = Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, familyCollectionBackup[key].length]));
+  const optionalOperationsBackup = validateOptionalOperationsBackupRows(input as unknown as Record<string, unknown>);
+  const optionalOperationsCounts = Object.fromEntries(OPTIONAL_OPERATIONS_BACKUP_KEYS.map((key) => [key, optionalOperationsBackup[key].length])) as Record<OptionalOperationsBackupKey, number>;
   const eventMediaBackup = validateEventMediaBackupRows(input as unknown as Record<string, unknown>);
   const eventMediaCounts = Object.fromEntries(EVENT_MEDIA_BACKUP_KEYS.map((key) => [key, eventMediaBackup[key].length])) as Record<EventMediaBackupKey, number>;
   const parentMeetingBackup = validateParentMeetingBackupRows(input as unknown as Record<string, unknown>);
@@ -657,6 +662,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
         publicWebsiteNavigationItems: publicWebsiteNavigationItems.length,
         publicWebsiteEvents: publicWebsiteEvents.length,
         ...familyCollectionCounts,
+        ...optionalOperationsCounts,
         ...eventMediaCounts,
         ...parentMeetingCounts,
         timetableTeachers: timetableTeachers.length,
@@ -674,6 +680,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     payments: [...input.payments],
     paymentAudits: [...input.paymentAudits],
     ...familyCollectionBackup,
+    ...optionalOperationsBackup,
     ...eventMediaBackup,
     ...parentMeetingBackup,
     users: sanitizeUsers(input.users),
@@ -1325,6 +1332,7 @@ export async function generateFullBackup(
   const familyCollectionBackup = await familyCollectionSchemaAvailable(client)
     ? await loadFamilyCollectionBackup(client as PrismaClient)
     : emptyFamilyCollectionBackup();
+  const optionalOperationsBackup = await loadOptionalOperationsBackup(client as unknown as PrismaClient);
   const eventMediaBackup = await eventMediaSchemaAvailable(client as unknown as PrismaClient)
     ? await loadEventMediaBackup(client as unknown as PrismaClient)
     : emptyEventMediaBackup();
@@ -1369,6 +1377,7 @@ export async function generateFullBackup(
     ...supportBackup,
     ...safeExitBackup,
     ...familyCollectionBackup,
+    ...optionalOperationsBackup,
     ...eventMediaBackup,
     ...parentMeetingBackup,
     technicalOperations,

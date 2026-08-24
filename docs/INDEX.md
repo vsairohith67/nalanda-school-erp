@@ -25,6 +25,16 @@ Independent QA and the controlled-browser matrix are cleared under
 
 The V1 Teacher marks-write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`. `ACADEMIC-INTEGRITY-1A-QA` independently cleared the v1.1 release on 2026-08-21; deployment and live-data activation remain separate gates.
 
+## Optional Operations V1.5 foundations
+
+- [Transport and Cafeteria V1.5 Optional Operations Foundations](OPTIONAL_OPERATIONS_V1_5_FOUNDATIONS.md)
+
+Transport and Cafeteria are separate, independently tested software foundations
+with governed `TRANSPORT_V1_5` and `CAFETERIA_V1_5` flags. Both remain
+`DEFAULT-OFF` after independent QA and mandatory exact-SHA GitHub validation.
+The foundation does not activate real routes,
+Students, meals, payments, providers, GPS, maps, Safe Exit changes, or deployment.
+
 ## Super Admin Command Center and Personal Work Programme
 
 - [Scope](SUPER_ADMIN_COMMAND_CENTER_SCOPE.md)
@@ -203,8 +213,8 @@ government filing are not authorised.
 Independent QA cleared Prompt 23I as `PAYROLL_ESS_CLEARED`. The retained
 feature branch and version-37 release tag are complete. Full payroll/ESS remains
 V1.5 operational scope and is not a V1 launch dependency. Optional Transport
-remains V1.5; the next implementation phase is the V1 blocker
-`FIN-FAMILY-PAY-1`.
+and Cafeteria foundations are software-cleared and default-off; their real-service
+activation remains a separately governed decision.
 
 ## Prompt 23H admissions and enquiry CRM
 

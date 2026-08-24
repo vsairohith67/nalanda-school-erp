@@ -9,7 +9,7 @@ import {
   statSync
 } from "node:fs";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { DatabaseSync } from "node:sqlite";
 import { PrismaClient } from "@prisma/client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
@@ -59,9 +59,16 @@ async function scenario(
   const rollbackPath = path.join(directory, "rollback-copy.db");
   copyFileSync(OPERATIONAL_DATABASE, databasePath);
   const migrationPath = path.join(WORKSPACE, "prisma", "migrations", "20260731130549_auth_verified_recovery_session_registry", "migration.sql");
-  execFileSync(process.execPath, ["--experimental-sqlite", "-e", 'const {DatabaseSync}=require("node:sqlite");const fs=require("node:fs");const db=new DatabaseSync(process.argv[1]);try{const exists=db.prepare("SELECT 1 FROM sqlite_master WHERE type=\'table\' AND name=\'AuthLoginAlias\'").get();if(!exists)db.exec(fs.readFileSync(process.argv[2],"utf8"));}finally{db.close();}', databasePath, migrationPath]);
   const iamMigrationPath = path.join(WORKSPACE, "prisma", "migrations", "20260801110000_iam_named_users_permission_contexts", "migration.sql");
-  execFileSync(process.execPath, ["--experimental-sqlite", "-e", 'const {DatabaseSync}=require("node:sqlite");const fs=require("node:fs");const db=new DatabaseSync(process.argv[1]);try{const exists=db.prepare("SELECT 1 FROM pragma_table_info(\'User\') WHERE name=\'iamPublicKey\'").get();if(!exists)db.exec(fs.readFileSync(process.argv[2],"utf8"));}finally{db.close();}', databasePath, iamMigrationPath]);
+  const migrationDatabase = new DatabaseSync(databasePath);
+  try {
+    const authSchemaExists = migrationDatabase.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='AuthLoginAlias'").get();
+    if (!authSchemaExists) migrationDatabase.exec(readFileSync(migrationPath, "utf8"));
+    const iamSchemaExists = migrationDatabase.prepare("SELECT 1 FROM pragma_table_info('User') WHERE name='iamPublicKey'").get();
+    if (!iamSchemaExists) migrationDatabase.exec(readFileSync(iamMigrationPath, "utf8"));
+  } finally {
+    migrationDatabase.close();
+  }
   if (mutate) {
     const client = prismaFor(databasePath);
     try {

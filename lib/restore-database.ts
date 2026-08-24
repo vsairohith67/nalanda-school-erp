@@ -23,6 +23,7 @@ import { SUPPORT_BACKUP_KEYS, restoreSupportBackup, type SupportBackupKey } from
 import { SAFE_EXIT_BACKUP_KEYS, restoreSafeExitBackup, type SafeExitBackupKey } from "@/lib/safe-exit-backup";
 import { FAMILY_COLLECTION_BACKUP_KEYS, type FamilyCollectionBackupKey } from "@/lib/family-collection-backup";
 import { restoreTechnicalOperationsBackup } from "@/lib/technical-operations-backup";
+import { OPTIONAL_OPERATIONS_BACKUP_KEYS, restoreOptionalOperationsBackup, type OptionalOperationsBackupKey } from "@/lib/optional-operations-backup";
 import { EVENT_MEDIA_BACKUP_KEYS, restoreEventMediaBackup, type EventMediaBackupKey } from "@/lib/event-media-backup";
 import { PARENT_MEETING_BACKUP_KEYS, restoreParentMeetingBackup, type ParentMeetingBackupKey } from "@/lib/parent-meeting-backup";
 
@@ -100,6 +101,8 @@ type RestoreDatabaseClient = Pick<
   | "advanceRecoverySchedule" | "payslipVersion" | "payrollEvent"
   | "staffPayslipMonthAvailability" | "staffPayslipRequest" | "staffPayslipRequestMonth"
   | "staffPayslipRequestEvent" | "staffPayslipDocumentVersion" | "staffPayslipDocumentMonth" | "staffPayslipAccessEvent"
+  | "transportVehicle" | "transportRoute" | "transportStop" | "transportRouteStop" | "transportStudentAssignment" | "transportAuditEvent"
+  | "cafeteriaCatalogItem" | "cafeteriaMenu" | "cafeteriaMenuItem" | "cafeteriaStudentEnrollment" | "cafeteriaMealRecord" | "cafeteriaAuditEvent"
 >;
 
 export async function restoreValidatedBackup(
@@ -125,6 +128,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(SUPPORT_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<SupportBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(SAFE_EXIT_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<SafeExitBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(FAMILY_COLLECTION_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<FamilyCollectionBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(OPTIONAL_OPERATIONS_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<OptionalOperationsBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(EVENT_MEDIA_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<EventMediaBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(PARENT_MEETING_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<ParentMeetingBackupKey, ReturnType<typeof emptyEntityResult>>),
     technicalOperations: emptyEntityResult(),
@@ -585,6 +589,13 @@ async function restoreIntoDatabase(
     result[key].created = safeExitResult[key].created;
     result[key].skipped = safeExitResult[key].skipped;
     result[key].errors.push(...safeExitResult[key].errors);
+  }
+  const optionalOperationsResult = await restoreOptionalOperationsBackup(client as unknown as PrismaClient, backup, restoredBy);
+  for (const key of OPTIONAL_OPERATIONS_BACKUP_KEYS) {
+    result[key].created = optionalOperationsResult[key].created;
+    result[key].updated = optionalOperationsResult[key].updated;
+    result[key].skipped = optionalOperationsResult[key].skipped;
+    result[key].errors.push(...optionalOperationsResult[key].errors);
   }
   const technicalOperationsResult = await restoreTechnicalOperationsBackup(client as unknown as PrismaClient, backup.technicalOperations);
   result.technicalOperations = { ...technicalOperationsResult, warnings: [] };
