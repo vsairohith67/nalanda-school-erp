@@ -121,6 +121,17 @@
       ]
     },
     {
+      "id": "SEARCH_EXTENSION_1B",
+      "name": "Universal Search Extension 1B",
+      "tag": "universal-search-extension-v43-2026-08-24",
+      "commit": "d8df242e399d1959910f0d2bd73a2c8ac49cdf7e",
+      "retainedBranches": [
+        { "ref": "origin/feature/search-extension-1b", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ],
+      "softwareStatus": "CLEARED",
+      "activationStatus": "NOT_APPLICABLE"
+    },
+    {
       "id": "DEV_PARALLEL_SAFETY_1A",
       "name": "Parallel worktree safety",
       "tag": "dev-parallel-safety-2026-08-22",
@@ -200,12 +211,17 @@
   "featureFlagRuntimeContracts": [
     {
       "key": "real-data-imports",
-      "status": "UNENFORCED_EXPOSED_SURFACE",
+      "status": "ENFORCED",
       "evidencePaths": [
+        "lib/release-feature-flag-runtime.ts",
         "app/api/import/students/route.ts",
         "app/api/import/staff/route.ts",
         "app/api/import/guardians/route.ts",
-        "app/api/import/payments/route.ts"
+        "app/api/import/payments/route.ts",
+        "app/api/library/import/[kind]/route.ts",
+        "app/api/marks/import/route.ts",
+        "app/api/onboarding/batches/[publicKey]/execute/route.ts",
+        "lib/onboarding.ts"
       ]
     },
     {
@@ -225,18 +241,39 @@
     },
     {
       "key": "bulk-exports",
-      "status": "BLOCKED_BY_EVIDENCE",
-      "evidencePaths": ["docs/RELEASE_FEATURE_FLAG_POLICY.md"]
+      "status": "ENFORCED_NO_MAPPED_SURFACES",
+      "evidencePaths": [
+        "lib/release-feature-flag-runtime.ts",
+        "tools/release-evidence/bulk-export-contracts.json",
+        "tools/release-evidence/bulk-export-governance.mjs",
+        "docs/BULK_EXPORT_GOVERNANCE.md"
+      ]
     },
     {
       "key": "public-admissions-form",
-      "status": "UNENFORCED_EXPOSED_SURFACE",
-      "evidencePaths": ["app/api/public/admissions/enquiries/route.ts", "lib/admissions.ts"]
+      "status": "ENFORCED",
+      "evidencePaths": [
+        "lib/release-feature-flag-runtime.ts",
+        "app/(public)/admissions/page.tsx",
+        "app/(public)/admissions/apply/page.tsx",
+        "app/api/public/admissions/enquiries/route.ts",
+        "app/api/public/admissions/application/route.ts",
+        "app/api/public/admissions/application/documents/route.ts",
+        "app/api/public/admissions/application/documents/[publicKey]/route.ts",
+        "lib/admissions.ts",
+        "lib/admissions-files.ts"
+      ]
     },
     {
       "key": "payroll-ess-pilot",
-      "status": "UNENFORCED_EXPOSED_SURFACE",
-      "evidencePaths": ["app/api/payroll/route.ts", "app/api/my-payroll/route.ts"]
+      "status": "ENFORCED",
+      "evidencePaths": [
+        "lib/release-feature-flag-runtime.ts",
+        "app/my-payroll/page.tsx",
+        "app/api/my-payroll/route.ts",
+        "app/api/my-payroll/payslips/[reference]/download/route.ts",
+        "lib/payroll.ts"
+      ]
     },
     {
       "key": "kg-report-cards-v1-5",

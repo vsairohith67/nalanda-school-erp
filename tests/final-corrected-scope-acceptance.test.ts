@@ -95,16 +95,15 @@ describe("FINAL-SCOPE-QA-1A corrected-scope contract acceptance", () => {
     };
     expect(new Set(contracts.featureFlagRuntimeContracts.map((entry) => entry.key))).toEqual(new Set(flags.map((flag) => flag.key)));
     for (const contract of contracts.featureFlagRuntimeContracts) {
-      expect(["ENFORCED", "COMPENSATING_CONTROL", "NO_RUNTIME_PROVIDER_CAPABILITY", "NO_RUNTIME_CAPABILITY", "UNENFORCED_EXPOSED_SURFACE", "BLOCKED_BY_EVIDENCE"]).toContain(contract.status);
+      expect(["ENFORCED", "ENFORCED_NO_MAPPED_SURFACES", "COMPENSATING_CONTROL", "NO_RUNTIME_PROVIDER_CAPABILITY", "NO_RUNTIME_CAPABILITY", "UNENFORCED_EXPOSED_SURFACE", "BLOCKED_BY_EVIDENCE"]).toContain(contract.status);
       expect(contract.evidencePaths.length, contract.key).toBeGreaterThan(0);
       for (const evidencePath of contract.evidencePaths) expect(existsSync(evidencePath), `${contract.key}:${evidencePath}`).toBe(true);
     }
-    expect(contracts.featureFlagRuntimeContracts.filter((entry) => entry.status === "UNENFORCED_EXPOSED_SURFACE").map((entry) => entry.key).sort()).toEqual([
-      "payroll-ess-pilot",
-      "public-admissions-form",
-      "real-data-imports"
-    ]);
-    expect(contracts.featureFlagRuntimeContracts.find((entry) => entry.key === "bulk-exports")?.status).toBe("BLOCKED_BY_EVIDENCE");
+    expect(contracts.featureFlagRuntimeContracts.filter((entry) => entry.status === "UNENFORCED_EXPOSED_SURFACE")).toEqual([]);
+    for (const key of ["real-data-imports", "public-admissions-form", "payroll-ess-pilot"]) {
+      expect(contracts.featureFlagRuntimeContracts.find((entry) => entry.key === key)?.status).toBe("ENFORCED");
+    }
+    expect(contracts.featureFlagRuntimeContracts.find((entry) => entry.key === "bulk-exports")?.status).toBe("ENFORCED_NO_MAPPED_SURFACES");
     const example = readFileSync(".env.example", "utf8");
     const assignments = Object.fromEntries(example.split(/\r?\n/).flatMap((line) => {
       const match = line.match(/^\s*([A-Z][A-Z0-9_]*)\s*=\s*["']?([^"'\s#]+)["']?\s*$/);

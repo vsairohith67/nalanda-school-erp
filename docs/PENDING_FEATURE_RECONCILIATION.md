@@ -104,6 +104,10 @@ activated.
 
 The post-V1.5 corrected-scope harness and release-evidence tooling are implemented, but the terminal status is `FINAL_SCOPE_QA_REQUIRES_FIXES`. Three active write areas do not enforce their declared default-off flags (`real-data-imports`, `public-admissions-form`, `payroll-ess-pilot`), and `bulk-exports` lacks an authoritative governed-surface mapping. Production and full dependency audits are clean. Optional Operations and Parent Meetings are cleared on current main with operational activation default-off. No QA-branch merge, release tag, deployment or activation is authorised by this update.
 
+## FINAL-SCOPE-QA-1A-R1 remediation update (2026-08-24)
+
+The first-run result above remains historical evidence. R1 now enforces all three affected flags through server/API/service boundaries and classifies 60 export-like API routes as 40 governed bulk exports plus 20 explicit non-bulk surfaces. OFF/ON copied-database Browser QA, 227 passing test files / 2,071 passing tests, build, migration, two restore rehearsals, backup v43, dependency/security checks and operational database integrity are green. Current main's authorised Universal Search Extension 1B release is reconciled. Exact-head GitHub validation is still pending; no QA merge, tag, deployment or operational activation is authorised until that gate passes.
+
 ## Next documents
 
 - [Super Admin Command Center architecture](./SUPER_ADMIN_COMMAND_CENTER_ARCHITECTURE.md)

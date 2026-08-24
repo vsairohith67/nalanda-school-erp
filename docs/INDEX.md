@@ -69,8 +69,9 @@ change, Search indexing or AI integration.
 ## FINAL-SCOPE-QA-1A corrected-scope current-main acceptance
 
 - [Final Corrected-Scope Acceptance](FINAL_CORRECTED_SCOPE_ACCEPTANCE.md)
+- [Bulk Export Governance](BULK_EXPORT_GOVERNANCE.md)
 
-The reusable current-main/candidate inventory and copied-database acceptance harness are implemented. The current verdict is `FINAL_SCOPE_QA_REQUIRES_FIXES` because server-side enforcement is missing for several declared default-off release flags and `bulk-exports` lacks a governed surface map. Dependency audits are clean. No merge, tag, deployment or activation is authorised.
+The first run's `FINAL_SCOPE_QA_REQUIRES_FIXES` checkpoint is preserved in the acceptance document. R1 now has local mandatory acceptance green: the three operational default-off flags are server-enforced, all 60 export-like API routes have a machine-checked classification, and dependency/security/recovery gates are clean. Exact-head external CI remains pending, so no merge, tag, deployment or activation is yet authorised.
 
 ## V1-FINAL-1A final integration and release-candidate preparation
 

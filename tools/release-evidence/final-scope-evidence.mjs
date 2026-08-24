@@ -15,6 +15,7 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateBulkExportGovernance } from "./bulk-export-governance.mjs";
 
 const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const artifactRoot = path.join(workspaceRoot, ".qa-artifacts", "final-scope-qa");
@@ -497,6 +498,7 @@ function main() {
   const candidateMigrations = migrationInventory();
   const candidateBackup = backupContract();
   const flags = featureFlagInventory();
+  const bulkExportGovernance = validateBulkExportGovernance();
   const programmeReleases = clearedReleaseChecks(mainRef);
   const requirementReleases = requirementReleaseChecks(mainRef);
   const blockedBranches = blockedBranchChecks(mainRef);
@@ -543,8 +545,9 @@ function main() {
   if (blockedBranches.some((entry) => entry.containedInCurrentMain)) failures.push("BLOCKED_BRANCH_CLASSIFICATION_STALE");
   if (!candidateBackup.compatible || currentMain.backupVersion !== currentMain.restoreMaximumBackupVersion) failures.push("BACKUP_RESTORE_VERSION_MISMATCH");
   if (candidateMigrations.duplicateNames.length || currentMain.duplicateMigrationNames.length) failures.push("DUPLICATE_MIGRATION_NAMES");
-  if (flags.runtimeContracts.some((entry) => entry.status === "UNCLASSIFIED" || !entry.evidencePathsExist || (entry.status === "ENFORCED" && !entry.runtimeReferences.length))) failures.push("FEATURE_FLAG_CONTRACT_INVENTORY_INVALID");
+  if (flags.runtimeContracts.some((entry) => entry.status === "UNCLASSIFIED" || !entry.evidencePathsExist || (entry.status.startsWith("ENFORCED") && !entry.runtimeReferences.length))) failures.push("FEATURE_FLAG_CONTRACT_INVENTORY_INVALID");
   if (flags.runtimeContracts.some((entry) => ["UNENFORCED_EXPOSED_SURFACE", "BLOCKED_BY_EVIDENCE"].includes(entry.status))) failures.push("FEATURE_FLAG_RUNTIME_ENFORCEMENT_FAILURE");
+  if (bulkExportGovernance.status !== "PASS") failures.push("BULK_EXPORT_GOVERNANCE_FAILURE");
   if (trackedSafety.forbiddenTrackedArtifacts.length || trackedSafety.unresolvedMergeMarkerFiles.length) failures.push("TRACKED_GIT_SAFETY_FAILURE");
   if (docs.missingDocuments.length || docs.brokenLinks.length) failures.push("AUTHORITATIVE_DOCUMENT_LINK_FAILURE");
   if (!candidateContainsCurrentMain) failures.push("CANDIDATE_BEHIND_CURRENT_MAIN");
@@ -574,6 +577,7 @@ function main() {
     permissions: candidatePermissions,
     featureFlags: flags.releaseFlags,
     featureFlagRuntimeContracts: flags.runtimeContracts,
+    bulkExportGovernance,
     safeConfigurationDefaults: flags.safeConfigurationDefaults,
     schemaMatchesCurrentMain: candidateSchemaMatchesMain,
     routeContractMatchesCurrentMain: candidateRouteContractMatchesMain,
@@ -595,6 +599,7 @@ function main() {
     releaseBlockedBranches: blockedBranches,
     documentAliases: contracts.documentAliases,
     trackedSafety,
+    bulkExportGovernance,
     documentation: docs,
     status: failures.length ? "FAIL" : "PASS",
     failures
@@ -661,6 +666,7 @@ function main() {
     buildStatus: gateResults?.buildStatus ?? "NOT_RUN",
     gitSafetyStatus: gateResults?.gitSafetyStatus ?? "NOT_RUN",
     featureFlags: candidate.featureFlags.map(({ key, defaultState, rolloutPercentage, environment }) => ({ key, defaultState, rolloutPercentage, environment })),
+    bulkExportGovernance,
     requirementReleaseChecks: requirementReleases.releases.map(({ id, status }) => ({ id, status })),
     programmeReleaseChecks: programmeReleases.map(({ id, tag, resolvedCommit, softwareStatus, activationStatus, status }) => ({ id, tag, resolvedCommit, softwareStatus, activationStatus, status })),
     releaseBlockedBranches: blockedBranches.map(({ id, name, ref, sha, aheadOfMain, behindMain, mergeBase, containedInCurrentMain, implementationState, blockerClass, status, evidenceStatus }) => ({ id, name, ref, sha, aheadOfMain, behindMain, mergeBase, containedInCurrentMain, implementationState, blockerClass, status, evidenceStatus })),

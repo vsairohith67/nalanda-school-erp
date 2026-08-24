@@ -16,7 +16,7 @@ software clearance. See
 
 **Register ID:** `GOV-RECON-1-REGISTER`<br>
 **As-of:** 2026-08-24<br>
-**Baseline:** protected `main` at `e8742564cf9d54651521fbeba35548b45ff9b7e0`, including the cleared Parent Meetings v1.5 release; `FINAL-SCOPE-QA-1A` started from `8fc1473c0f74a70fe1dc6afcd9740f1e7eab5495` and its final candidate must contain the refreshed `origin/main`<br>
+**Baseline:** protected `main` at `3d51164b8214211d26e48c2c6f9920286ef9c689`, including the cleared Parent Meetings, Optional Operations and Universal Search Extension 1B releases; `FINAL-SCOPE-QA-1A` started from `8fc1473c0f74a70fe1dc6afcd9740f1e7eab5495` and its final candidate must contain the refreshed `origin/main`<br>
 **Decision source:** `docs/V1_V1_5_V2_SCOPE.md`
 
 ## Status and evidence rules

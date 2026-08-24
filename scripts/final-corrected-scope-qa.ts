@@ -25,6 +25,8 @@ const focusedTests = [
   "tests/parent-meetings-v1-5.test.ts",
   "tests/optional-operations-foundation.test.ts",
   "tests/release-operations.test.ts",
+  "tests/release-feature-flag-runtime.test.ts",
+  "tests/bulk-export-governance.test.ts",
   "tests/payment-controls.test.ts",
   "tests/fee-structures.test.ts",
   "tests/expenses.test.ts",

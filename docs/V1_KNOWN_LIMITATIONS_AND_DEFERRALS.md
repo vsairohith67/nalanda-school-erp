@@ -9,5 +9,5 @@
 - Historical Schoolknot evidence gaps remain vendor evidence gaps; absence was never inferred as feature absence.
 - Physical report acceptance applies to the approved Classes I-X R8 family and recorded Canon/A4 conditions; future layout edits require a new governed version.
 - Parent Meetings software is cleared on current main and remains operationally default-off; real use and Search/Smart AI integration require separate authorization.
-- `FINAL-SCOPE-QA-1A` found that `real-data-imports`, `public-admissions-form` and `payroll-ess-pilot` are committed default-off but are not enforced by their active server-side write surfaces; `bulk-exports` lacks a governed surface map. Release acceptance remains blocked until corrected and independently rerun.
-- Current production and full dependency audits report zero findings at every severity. This does not override the remaining runtime feature-flag blocker.
+- The first `FINAL-SCOPE-QA-1A` run found missing server enforcement for `real-data-imports`, `public-admissions-form` and `payroll-ess-pilot`, plus missing `bulk-exports` governance. R1 corrected those gaps and completed the independent local rerun; exact-head external CI remains the release boundary.
+- Current production and full dependency audits report zero findings at every severity. This does not authorise operational activation of any default-off flag.

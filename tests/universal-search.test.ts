@@ -286,12 +286,13 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
       ["EVENT_MEDIA", "EXIF-SENTINEL"]
     ] as const) expect(await sourceAdapter(client, source).search(context(forbiddenQuery))).toEqual([]);
 
-    expect(JSON.stringify(client.parentMeeting.findMany.mock.calls[0]?.[0])).not.toMatch(/subject|requestReason|cancellationInternalReason|notes|body/);
-    expect(JSON.stringify(client.transportRoute.findMany.mock.calls[0]?.[0])).not.toMatch(/driverStaffMember|attendantStaffMember|address|mobile/);
-    expect(JSON.stringify(client.cafeteriaStudentEnrollment.findMany.mock.calls[0]?.[0])).not.toMatch(/mealPlanName|health|diet|price|amount/);
-    expect(JSON.stringify(client.studentReportCard.findMany.mock.calls[0]?.[0])).not.toMatch(/draftDataJson|snapshotJson|teacherOverallComment|principalComment|directorComment|finalGrade/i);
-    expect(JSON.stringify(client.eventMediaAsset.findMany.mock.calls[0]?.[0])).not.toMatch(/StorageKey|Sha256|caption|reviewNote|peopleDeclaration|studentAssociations|exif/i);
-    expect(JSON.stringify(client.eventMediaAlbum.findMany.mock.calls[0]?.[0])).not.toMatch(/title|description|studentAssociations|legalHold/i);
+    const firstCallArgument = (mock: unknown) => (mock as { mock: { calls: unknown[][] } }).mock.calls[0]?.[0];
+    expect(JSON.stringify(firstCallArgument(client.parentMeeting.findMany))).not.toMatch(/subject|requestReason|cancellationInternalReason|notes|body/);
+    expect(JSON.stringify(firstCallArgument(client.transportRoute.findMany))).not.toMatch(/driverStaffMember|attendantStaffMember|address|mobile/);
+    expect(JSON.stringify(firstCallArgument(client.cafeteriaStudentEnrollment.findMany))).not.toMatch(/mealPlanName|health|diet|price|amount/);
+    expect(JSON.stringify(firstCallArgument(client.studentReportCard.findMany))).not.toMatch(/draftDataJson|snapshotJson|teacherOverallComment|principalComment|directorComment|finalGrade/i);
+    expect(JSON.stringify(firstCallArgument(client.eventMediaAsset.findMany))).not.toMatch(/StorageKey|Sha256|caption|reviewNote|peopleDeclaration|studentAssociations|exif/i);
+    expect(JSON.stringify(firstCallArgument(client.eventMediaAlbum.findMany))).not.toMatch(/title|description|studentAssociations|legalHold/i);
   });
 
   it("derives Diary, Tasks and Contacts owner only from the authenticated actor", async () => {

@@ -1,18 +1,26 @@
 # Final Corrected-Scope Cross-Module Acceptance
 
-**Prompt:** `FINAL-SCOPE-QA-1A`<br>
+**Prompt:** `FINAL-SCOPE-QA-1A` / `FINAL-SCOPE-QA-1A-R1`<br>
 **Evidence window:** 2026-08-23 to 2026-08-24<br>
-**Current verdict:** `FINAL_SCOPE_QA_REQUIRES_FIXES`<br>
+**Current verdict:** `LOCAL_MANDATORY_ACCEPTANCE_GREEN / EXACT_HEAD_CI_PENDING`<br>
 **Candidate branch:** `feature/final-scope-qa-1a`<br>
-**Authorized current main:** `15b3d9e3968c2c13880106b55b4b9992f5c9ff9f`
+**Authorized current main:** `3d51164b8214211d26e48c2c6f9920286ef9c689`
 
 This is local/private release acceptance evidence. It does not authorize deployment, operational activation, real-data migration, provider activation, merge or release tagging.
 
-## Outcome
+## R1 remediation outcome
 
-The reusable acceptance and release-evidence harness is implemented and the current-main regression, build, migration, restore, backup, security, dependency, secret/configuration and operational-database integrity checks pass. Release acceptance is still red because three declared default-off flags are not consumed by their active server-side write surfaces and one declared flag lacks an authoritative governed-surface map. UI hiding and a zero-percent configuration value are not sufficient server-side enforcement.
+The three previously red default-off capabilities now fail closed at trusted server boundaries. `real-data-imports` guards every discovered operational import commit plus the shared onboarding execution service; safe zero-write preview and template behavior remains available. `public-admissions-form` guards the public page, application page, every public submission/document API and the two public write services without disabling authenticated Admissions CRM. `payroll-ess-pilot` guards the Staff self-service page, API, payslip download and self-request service without broadening the flag over leadership Payroll administration.
 
-No QA release tag was created and this branch was not merged to main.
+The committed defaults remain false with zero-percent rollout. A QA-only activation path requires a non-production process, a loopback application origin, an explicitly named synthetic-copy mode, a file database under a copied/test temporary path and a known allowlisted flag key. Client query, body, cookie and header values cannot affect evaluation. Focused copied-database Browser acceptance proved OFF denial and ON availability for the intended synthetic actor at desktop and 390×844 mobile width, with direct-URL, multi-role context, overflow and focus checks.
+
+Bulk-export discovery now classifies all 60 export-like API routes: 40 are governed bulk exports and 20 are explicitly single-record or otherwise not bulk exports. The machine validator fails on an unclassified future surface and checks server authorization evidence, private/no-store behavior, CSV neutralisation, hidden-field selection, mapping consistency and bounded manifest metadata. The real `bulk-exports` flag means newly released bulk surfaces; zero current cleared surfaces are mapped to it, so existing governed exports retain their per-surface authorization and bounds rather than being placed behind an invented global switch.
+
+All local mandatory gates are green. Exact-head GitHub validation is the remaining release boundary. No QA release tag has been created and this branch has not yet been merged to main.
+
+## Historical first-run checkpoint
+
+The 2026-08-24 first run correctly returned `FINAL_SCOPE_QA_REQUIRES_FIXES`: `real-data-imports`, `public-admissions-form` and `payroll-ess-pilot` lacked complete server-side runtime enforcement, while `bulk-exports` lacked an authoritative governed-surface map. That checkpoint remains the reason for R1 and is not rewritten as a pass.
 
 ## Current-main inventory
 
@@ -21,14 +29,14 @@ No QA release tag was created and this branch was not merged to main.
 | Page routes | 350 |
 | API routes | 590 |
 | Main test files | 225 |
-| Candidate test files | 226 |
+| Candidate test files | 228 |
 | Active ordered migrations | 22 |
 | Prisma models/tables after fresh migration | 320 |
 | Backup format | v43; 269 durable collections |
 | Reachable annotated tags | 47 |
 | Cleared requirement/tag mappings | 27 verified |
 
-The full candidate suite passed 225 test files with one intentionally skipped test file, and 2,052 tests with three intentional skips out of 2,055 total. The skips are the existing qpdf/environment-dependent payslip checks; they were recorded as skips, not passes. TypeScript validation and the production build passed.
+The full candidate suite passed 227 test files with one intentionally skipped test file, and 2,071 tests with three intentional skips out of 2,074 total. The skips are the existing qpdf/environment-dependent payslip checks; they were recorded as skips, not passes. TypeScript validation and the production build passed.
 
 ## Cross-module acceptance
 
@@ -42,18 +50,18 @@ All ten release flags are committed false with zero-percent rollout.
 
 | Flag | Runtime acceptance |
 | --- | --- |
-| `real-data-imports` | `UNENFORCED_EXPOSED_SURFACE` |
+| `real-data-imports` | `ENFORCED` |
 | `online-payments` | `NO_RUNTIME_PROVIDER_CAPABILITY` |
 | `live-messaging` | `COMPENSATING_CONTROL` |
 | `ai-ocr-live-processing` | `COMPENSATING_CONTROL` |
-| `bulk-exports` | `BLOCKED_BY_EVIDENCE` |
-| `public-admissions-form` | `UNENFORCED_EXPOSED_SURFACE` |
-| `payroll-ess-pilot` | `UNENFORCED_EXPOSED_SURFACE` |
+| `bulk-exports` | `ENFORCED_NO_MAPPED_SURFACES` |
+| `public-admissions-form` | `ENFORCED` |
+| `payroll-ess-pilot` | `ENFORCED` |
 | `kg-report-cards-v1-5` | `ENFORCED` |
 | `transport-v1-5` | `ENFORCED` |
 | `cafeteria-v1-5` | `ENFORCED` |
 
-The red surfaces are deliberately recorded rather than silently expanded in this QA-only workstream.
+All runtime classifications now have executable evidence. Operational activation remains separately prohibited.
 
 ## Migration, backup and restore
 
@@ -77,6 +85,8 @@ Optional Transport and Cafeteria are `CLEARED / OPERATIONAL_ACTIVATION_DEFAULT_O
 
 No current committed remote feature branch remains classified as release-blocked by this acceptance manifest.
 
+Current main also contains the authorised Universal Search Extension 1B release at annotated tag `universal-search-extension-v43-2026-08-24`. Reconciliation preserved the earlier Smart AI mutation/IAM denials and the extension's image-analysis, health-data and new-source write denials. Two narrow QA-only typing defects exposed by the complete typecheck were corrected without changing runtime Search behavior.
+
 ## Exact next action
 
-Implement a separately reviewed, narrow server-side enforcement change for `real-data-imports`, `public-admissions-form` and `payroll-ess-pilot`, and create an authoritative governed-surface map for `bulk-exports`. Then independently rerun this exact-head acceptance package. Only after every local mandatory gate is green should the approved exact-SHA external CI gate be attempted and merge/tag reconsidered.
+Commit and push the final evidence head, run the approved exact-SHA GitHub validation, and release only if that exact head receives runner allocation, checkout and all mandatory green jobs. The three remediated flags, Optional Operations, Parent Meetings, KG Reports and every provider remain operationally inactive.
