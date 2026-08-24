@@ -2,11 +2,13 @@
 
 - **Prompt:** `SEARCH-EXTENSION-1B`
 - **Decision date:** 2026-08-24
-- **Result:** local acceptance complete; corrective exact-head security and CI evidence pending
+- **Result:** `SEARCH_EXTENSION_1B_CLEARED`
 - **Feature branch:** `feature/search-extension-1b`
 - **Authorised starting main:** `37fba4673312c135a3a8be6d447c543a9ca28f95`
 - **Existing release tag:** `universal-search-extension-v43-2026-08-24` at `3d51164b8214211d26e48c2c6f9920286ef9c689` (retained; never moved)
-- **Corrective release tag:** to be recorded after exact-head CI because the required version/date name already exists
+- **Corrective release tag:** `universal-search-extension-v43-2026-08-24-r1` at `e39cb93177ad389768b097791696e88902db2945`
+- **Exact-head CI:** [run 32751493284](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/32751493284), job `validate` / `97509259876`, passed every mandatory step at feature SHA `a8e0668bdc2785f079a1561cc5c62cdc46084b35`.
+- **Merged main:** PR #8, normal merge `e39cb93177ad389768b097791696e88902db2945`.
 - **Deployment:** not performed or authorised
 
 ## Exact source coverage
