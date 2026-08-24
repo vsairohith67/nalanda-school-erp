@@ -223,6 +223,10 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     expect(releaseWorkflow).not.toContain("${{ runner.temp }}");
     expect(releaseWorkflow).toContain("choco install ripgrep --version=15.2.0 -y --no-progress");
     expect(releaseWorkflow).toContain("choco install poppler --version=26.6.0 -y --no-progress");
+    expect(releaseWorkflow).toContain("if ($env:ChocolateyToolsLocation) { $env:ChocolateyToolsLocation }");
+    expect(releaseWorkflow).toContain("'C:\\tools'");
+    expect(releaseWorkflow).toContain("-ErrorAction SilentlyContinue");
+    expect(releaseWorkflow).toContain('throw "Pinned Poppler install did not provide pdftoppm.exe"');
     expect(releaseWorkflow).toContain('"REPORT_CARD_PDFTOPPM_PATH=$($pdfToPpm.FullName)"');
     expect(releaseWorkflow).toContain("Copy-Item -LiteralPath prisma\\tmp\\release-ci\\synthetic.db -Destination prisma\\dev.db");
   });
