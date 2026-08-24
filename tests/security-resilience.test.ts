@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
+import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
+import { middleware } from "../middleware";
 import {
   assertBoundedJsonValue,
   requestJsonBudgetIssue,
@@ -54,6 +56,23 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     resetSecurityRateLimitStoresForTests();
     await expect(enforceOperationRateLimit("/api/super-admin/ai", "POST", { session: "session-1" }, { environment: { NODE_ENV: "production" } }))
       .resolves.toMatchObject({ allowed: false, status: 503, code: "RATE_LIMIT_STORE_UNAVAILABLE" });
+  });
+
+  it("normalizes failed or malformed distributed-store decisions to controlled 503", async () => {
+    const unavailableStore = {
+      kind: "distributed" as const,
+      distributed: true,
+      async consume() { throw new Error("synthetic store outage"); }
+    };
+    const malformedStore = {
+      kind: "distributed" as const,
+      distributed: true,
+      async consume() { return { allowed: true, retryAfterSeconds: -1 }; }
+    };
+    for (const store of [unavailableStore, malformedStore]) {
+      await expect(enforceOperationRateLimit("/api/public/support/requests", "POST", { ip: "192.0.2.20" }, { store }))
+        .resolves.toMatchObject({ allowed: false, status: 503, code: "RATE_LIMIT_STORE_UNAVAILABLE", retryAfterSeconds: 30 });
+    }
   });
 
   it("permits the single-process adapter only for an explicit isolated loopback production-mode rehearsal", async () => {
@@ -137,6 +156,34 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     expect(unsafeRequestOriginAllowed(request("/api/whatsapp/webhook/test") as never, "https://erp.example.test")).toBe(true);
   });
 
+  it("rejects an untrusted direct-origin request before reading its body stream", async () => {
+    const names = ["TRUST_PROXY_HEADERS", "NALANDA_TRUSTED_PROXY_MODE", "NALANDA_PROXY_SHARED_SECRET", "NALANDA_REQUIRE_TRUSTED_PROXY", "APP_ORIGIN"] as const;
+    const prior = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+    Object.assign(process.env, {
+      TRUST_PROXY_HEADERS: "true",
+      NALANDA_TRUSTED_PROXY_MODE: "authenticated-edge-v1",
+      NALANDA_PROXY_SHARED_SECRET: "synthetic-proof-at-least-thirty-two-characters",
+      NALANDA_REQUIRE_TRUSTED_PROXY: "true",
+      APP_ORIGIN: "https://staging.example.test"
+    });
+    try {
+      const body = new ReadableStream<Uint8Array>({ pull(controller) { controller.error(new Error("BODY_MUST_NOT_BE_READ")); } });
+      const requestInit = {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body,
+        duplex: "half"
+      } as unknown as ConstructorParameters<typeof NextRequest>[1];
+      const request = new NextRequest("https://staging.example.test/api/public/support/requests", requestInit);
+      await expect(middleware(request)).resolves.toMatchObject({ status: 403 });
+    } finally {
+      for (const name of names) {
+        if (prior[name] === undefined) delete process.env[name];
+        else process.env[name] = prior[name];
+      }
+    }
+  });
+
   it("wires governed controls to every named expensive family and preserves health", () => {
     const middleware = readFileSync("middleware.ts", "utf8");
     const pdf = readFileSync("lib/report-pdf-jobs.ts", "utf8");
@@ -144,15 +191,26 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     const search = readFileSync("app/api/super-admin/search/route.ts", "utf8");
     const eventMedia = readFileSync("app/api/event-media/albums/[albumKey]/assets/route.ts", "utf8");
     const publicSupportUi = readFileSync("components/public-support-form.tsx", "utf8");
+    const publicAdmissionsUi = readFileSync("components/admissions-public-enquiry-form.tsx", "utf8");
     const loginUi = readFileSync("components/login-form.tsx", "utf8");
     expect(middleware).toContain("enforceOperationRateLimit");
     expect(middleware).toContain("proxyHealthPath");
+    expect(middleware).toContain('"/api/health"');
+    expect(middleware.indexOf("trustedClientIdentity(request.headers)")).toBeLessThan(middleware.indexOf("requestBodyTooLarge(request)"));
+    expect(middleware.indexOf("enforceOperationRateLimit(pathname")).toBeLessThan(middleware.indexOf("requestBodyTooLarge(request)"));
     expect(pdf).toContain("MAX_QUEUED_REPORT_PDF_JOBS");
     expect(smartAi).toContain('withOperationCapacity("SMART_AI"');
     expect(search).toContain('withOperationCapacity("UNIVERSAL_SEARCH"');
     expect(eventMedia).toContain('withOperationCapacity("EVENT_MEDIA_IMAGE"');
     expect(publicSupportUi).toContain("if (!response.ok)");
+    expect(publicSupportUi).toContain("submissionKeyRef.current ??=");
+    expect(publicSupportUi).toContain("We could not confirm that your support request was received.");
+    expect(publicSupportUi).not.toContain("reference: `NPS-SUP-${crypto.randomUUID()");
     expect(publicSupportUi).toContain("Too many support requests. Please wait before trying again.");
+    expect(publicAdmissionsUi).toContain("if (!response.ok)");
+    expect(publicAdmissionsUi).toContain("requestKeyRef.current ??=");
+    expect(publicAdmissionsUi).toContain("Too many admissions enquiries. Please wait before trying again.");
+    expect(publicAdmissionsUi).toContain("We could not confirm that your enquiry was received.");
     expect(loginUi).toContain("Too many sign-in attempts. Please wait before trying again.");
     expect(loginUi).toContain("Sign-in protection is temporarily unavailable. Please retry shortly.");
   });

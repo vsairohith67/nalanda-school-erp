@@ -77,12 +77,36 @@ export async function enforceOperationRateLimit(
     return { allowed: false, retryAfterSeconds: 30, policy: matched, status: 503, code: "RATE_LIMIT_STORE_UNAVAILABLE" };
   }
   const keys = await actorKeys(matched, pathname, actors, options.dimensions ?? matched.dimensions);
-  const decision = await store.consume({ keys, maximum: matched.maximum, windowMs: matched.windowMs, now: options.now ?? Date.now() });
+  let decision: RateLimitStoreDecision;
+  try {
+    decision = await store.consume({ keys, maximum: matched.maximum, windowMs: matched.windowMs, now: options.now ?? Date.now() });
+  } catch {
+    return unavailableDecision(matched);
+  }
+  if (
+    typeof decision?.allowed !== "boolean" ||
+    !Number.isSafeInteger(decision.retryAfterSeconds) ||
+    decision.retryAfterSeconds < 0 ||
+    (!decision.allowed && decision.retryAfterSeconds < 1) ||
+    decision.retryAfterSeconds > Math.ceil(matched.windowMs / 1_000)
+  ) {
+    return unavailableDecision(matched);
+  }
   return {
     ...decision,
     policy: matched,
     status: decision.allowed ? 200 : 429,
     code: decision.allowed ? "ALLOWED" : "RATE_LIMITED"
+  };
+}
+
+function unavailableDecision(policyValue: RateLimitPolicy): RateLimitDecision {
+  return {
+    allowed: false,
+    retryAfterSeconds: 30,
+    policy: policyValue,
+    status: 503,
+    code: "RATE_LIMIT_STORE_UNAVAILABLE"
   };
 }
 

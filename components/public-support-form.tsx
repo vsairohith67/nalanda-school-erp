@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 
 export function PublicSupportForm() {
   const [busy, setBusy] = useState(false), [result, setResult] = useState<{ message: string; reference?: string } | null>(null);
+  const submissionKeyRef = useRef<string | null>(null);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setResult(null);
     const form = event.currentTarget, data = new FormData(form);
-    data.set("consent", data.get("consent") === "on" ? "true" : "false"); data.set("submissionKey", crypto.randomUUID());
+    submissionKeyRef.current ??= crypto.randomUUID();
+    data.set("consent", data.get("consent") === "on" ? "true" : "false"); data.set("submissionKey", submissionKeyRef.current);
     try {
       const response = await fetch("/api/public/support/requests", { method: "POST", body: data, cache: "no-store" });
       const body = await response.json().catch(() => ({}));
@@ -18,9 +20,11 @@ export function PublicSupportForm() {
           : "Support intake is temporarily busy. Please retry shortly." });
         return;
       }
-      setResult({ message: body.message, reference: body.reference }); form.reset();
+      setResult({ message: body.message, reference: body.reference });
+      submissionKeyRef.current = null;
+      form.reset();
     }
-    catch { setResult({ message: "Your support request has been received. Keep the reference shown on this page.", reference: `NPS-SUP-${crypto.randomUUID().slice(0, 8).toUpperCase()}` }); }
+    catch { setResult({ message: "We could not confirm that your support request was received. Your form is still here; check your connection and retry." }); }
     finally { setBusy(false); }
   }
   return <section className="public-section public-support-section" aria-labelledby="contact-support-title">

@@ -28,6 +28,7 @@ const publicPaths = [
   "/api/auth/login",
   "/api/auth/recovery/request",
   "/api/auth/recovery/reset",
+  "/api/health",
   "/api/deployment-health",
   "/api/release/client-version",
   "/api/setup"
@@ -50,31 +51,6 @@ export async function middleware(request: NextRequest) {
     response.headers.set("cross-origin-resource-policy", "same-origin");
     return response;
   };
-  if (await requestBodyTooLarge(request)) {
-    if (/(?:upload|attachments|documents|pages|assets)/i.test(pathname)) emitSecurityResilienceEvent("BLOCKED_UPLOAD", { routeFamily: "api", status: 413 });
-    if (/(?:import|export)/i.test(pathname)) emitSecurityResilienceEvent("EXCESSIVE_EXPORT_IMPORT", { routeFamily: "api", status: 413 });
-    const response = NextResponse.json({ error: "Request body is too large" }, { status: 413 });
-    response.headers.set("cache-control", "private, no-store");
-    return applySecurityHeaders(response);
-  }
-  const jsonBudgetIssue = await requestJsonBudgetIssue(request);
-  if (jsonBudgetIssue) {
-    if (/(?:import|export)/i.test(pathname)) emitSecurityResilienceEvent("EXCESSIVE_EXPORT_IMPORT", { routeFamily: "api", status: 413 });
-    const response = NextResponse.json({ error: jsonBudgetIssue }, { status: 413 });
-    response.headers.set("cache-control", "private, no-store");
-    return applySecurityHeaders(response);
-  }
-  if (!unsafeRequestOriginAllowed(request)) {
-    const response = NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
-    response.headers.set("cache-control", "private, no-store");
-    return applySecurityHeaders(response);
-  }
-  const queryIssue = requestQueryBudgetIssue(request.nextUrl);
-  if (queryIssue) {
-    const response = NextResponse.json({ error: queryIssue }, { status: 400 });
-    response.headers.set("cache-control", "private, no-store");
-    return applySecurityHeaders(response);
-  }
   const clientIdentity = trustedClientIdentity(request.headers);
   const proxyHealthPath = pathname === "/api/health" || pathname === "/api/deployment-health";
   if (trustedProxyRequired() && !clientIdentity.trusted && !proxyHealthPath) {
@@ -131,6 +107,18 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(response);
   }
 
+  if (!unsafeRequestOriginAllowed(request)) {
+    const response = NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
+    response.headers.set("cache-control", "private, no-store");
+    return applySecurityHeaders(response);
+  }
+  const queryIssue = requestQueryBudgetIssue(request.nextUrl);
+  if (queryIssue) {
+    const response = NextResponse.json({ error: queryIssue }, { status: 400 });
+    response.headers.set("cache-control", "private, no-store");
+    return applySecurityHeaders(response);
+  }
+
   const maintenanceActive = process.env.NALANDA_MAINTENANCE_MODE === "true";
   const maintenanceAllowed = pathname === "/maintenance" || pathname === "/api/health" || pathname === "/api/deployment-health" || pathname === "/api/release/client-version" || pathname.startsWith("/technical-operations") || pathname === "/api/technical-operations" || pathname.startsWith("/api/technical-operations/") || pathname.startsWith("/_next/") || pathname.startsWith("/icons/") || pathname === "/manifest.webmanifest" || pathname === "/sw.js";
   if (maintenanceActive && !maintenanceAllowed) {
@@ -142,6 +130,21 @@ export async function middleware(request: NextRequest) {
     }
     const response = NextResponse.redirect(new URL("/maintenance", applicationOrigin(request)));
     response.headers.set("cache-control", "no-store");
+    return applySecurityHeaders(response);
+  }
+
+  if (await requestBodyTooLarge(request)) {
+    if (/(?:upload|attachments|documents|pages|assets)/i.test(pathname)) emitSecurityResilienceEvent("BLOCKED_UPLOAD", { routeFamily: "api", status: 413 });
+    if (/(?:import|export)/i.test(pathname)) emitSecurityResilienceEvent("EXCESSIVE_EXPORT_IMPORT", { routeFamily: "api", status: 413 });
+    const response = NextResponse.json({ error: "Request body is too large" }, { status: 413 });
+    response.headers.set("cache-control", "private, no-store");
+    return applySecurityHeaders(response);
+  }
+  const jsonBudgetIssue = await requestJsonBudgetIssue(request);
+  if (jsonBudgetIssue) {
+    if (/(?:import|export)/i.test(pathname)) emitSecurityResilienceEvent("EXCESSIVE_EXPORT_IMPORT", { routeFamily: "api", status: 413 });
+    const response = NextResponse.json({ error: jsonBudgetIssue }, { status: 413 });
+    response.headers.set("cache-control", "private, no-store");
     return applySecurityHeaders(response);
   }
 
