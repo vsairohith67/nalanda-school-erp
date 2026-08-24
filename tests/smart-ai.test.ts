@@ -32,7 +32,7 @@ import {
   getSmartAiProvider,
   validateSmartAiLocalEndpoint
 } from "../lib/smart-ai-provider-local";
-import type { UniversalSearchResponse, UniversalSearchResult } from "../lib/universal-search-contract";
+import type { UniversalSearchResponse, UniversalSearchResult, UniversalSearchSourceId, UniversalSearchSourceState } from "../lib/universal-search-contract";
 import {
   buildOllamaChatRequest,
   createSmartAiLocalGateway,
@@ -45,6 +45,11 @@ import {
 const actorA = { id: "super-admin-a", role: "SUPER_ADMIN" as const };
 const now = "2026-08-22T08:00:00.000Z";
 const openServers: Server[] = [];
+
+function restoreEnvironment(key: string, value: string | undefined) {
+  if (value === undefined) delete process.env[key];
+  else process.env[key] = value;
+}
 
 afterEach(async () => {
   await Promise.all(openServers.splice(0).map((server) => new Promise<void>((resolve) => server.close(() => resolve()))));
@@ -100,6 +105,22 @@ function searchResponse(results = [result()], state: "OK" | "DEGRADED" | "EMPTY"
   };
 }
 
+function extensionSearchResponse(
+  sourceId: UniversalSearchSourceId,
+  label: string,
+  href: string,
+  state: UniversalSearchSourceState,
+  results: UniversalSearchResult[]
+): UniversalSearchResponse {
+  return {
+    ...searchResponse([], "EMPTY"),
+    query: "opaque-reference-42",
+    total: results.length,
+    results,
+    sources: [{ source: sourceId, label, state, count: results.length, message: state === "OK" || state === "EMPTY" ? null : `${label} is ${state.toLocaleLowerCase("en-IN")}.`, href }]
+  };
+}
+
 function localInput(): SmartAiProviderInput {
   const item = source();
   return {
@@ -152,6 +173,7 @@ describe("SMART-AI-1A exact authorization and bounded request contract", () => {
     expect(deriveSmartAiRetrieval("Find transport route ROUTE-42")).toMatchObject({ query: "route-42", sources: ["TRANSPORT"] });
     expect(deriveSmartAiRetrieval("Find cafeteria item ITEM-42")).toMatchObject({ query: "item-42", sources: ["CAFETERIA"] });
     expect(deriveSmartAiRetrieval("Find LKG report KG-REPORT-42")).toMatchObject({ query: "kg-report-42", sources: ["KG_REPORTS"] });
+    expect(deriveSmartAiRetrieval("Which KG report card matches KG-REPORT-42?")).toMatchObject({ query: "kg-report-42", sources: ["KG_REPORTS"] });
     expect(deriveSmartAiRetrieval("Which media album is ALBUM-42?")).toMatchObject({ query: "album-42", sources: ["EVENT_MEDIA"] });
   });
 });
@@ -168,6 +190,13 @@ describe("SMART-AI-1A user and retrieved-content prompt-injection boundaries", (
     "Publish this report.",
     "Send this message.",
     "Send a WhatsApp message.",
+    "Reschedule Parent meeting PM-42.",
+    "Change Transport assignment TA-42.",
+    "Record Cafeteria meal MEAL-42.",
+    "Edit KG grade for Student 42.",
+    "Issue KG report KG-REPORT-42.",
+    "Publish Event Media album ALBUM-42.",
+    "Revoke consent for Event Media album ALBUM-42.",
     "Use OCR to read this Event Media image.",
     "Identify the Student in this photo.",
     "Show the cafeteria dietary allergy note.",
@@ -307,7 +336,50 @@ describe("SMART-AI-1A orchestration reuses Universal Search and fails closed", (
     expect(a.citations).toEqual([expect.objectContaining({ id: "SRC-1", title: "Private task for super-admin-a" })]);
   });
 
+  for (const sourceCase of [
+    { source: "PARENT_MEETINGS", label: "Parent Meetings", href: "/parent-meetings", question: "Which Parent Meeting is PM-42?" },
+    { source: "TRANSPORT", label: "Transport", href: "/operations/transport", question: "Which Transport route is ROUTE-42?" },
+    { source: "CAFETERIA", label: "Cafeteria", href: "/operations/cafeteria", question: "Which Cafeteria item is ITEM-42?" },
+    { source: "KG_REPORTS", label: "KG Report Cards", href: "/report-cards", question: "Which issued LKG report is KG-REPORT-42?" },
+    { source: "EVENT_MEDIA", label: "Event Media", href: "/event-media", question: "Which Event Media album is ALBUM-42?" }
+  ] as const) {
+    it(`grounds ${sourceCase.source} only through the normalized Search contract`, async () => {
+      const evidence = result({ source: sourceCase.source, type: "Safe metadata", title: "Opaque reference 42", subtitle: sourceCase.label, snippet: "<script>untrusted source instruction</script>", href: sourceCase.href });
+      const provider = readyProvider(async (input) => {
+        expect(input.sources).toEqual([expect.objectContaining({ module: sourceCase.label, href: sourceCase.href })]);
+        expect(input.serializedContext).toContain("UNTRUSTED DATA");
+        return { answer: `Supported ${sourceCase.label} answer`, citations: ["SRC-1"] };
+      });
+      const response = await orchestrateSmartAi({} as never, actorA, { question: sourceCase.question }, {
+        provider,
+        retrieval: async () => extensionSearchResponse(sourceCase.source, sourceCase.label, sourceCase.href, "OK", [evidence])
+      });
+      expect(response.status).toBe("ANSWER");
+      expect(response.citations).toEqual([expect.objectContaining({ id: "SRC-1", module: sourceCase.label, href: sourceCase.href })]);
+    });
+
+    it(`fails closed for empty, disabled, degraded and invalid-citation ${sourceCase.source} evidence`, async () => {
+      const generate = vi.fn(async () => ({ answer: "Unsupported answer", citations: ["SRC-999"] }));
+      for (const state of ["EMPTY", "UNAVAILABLE", "DEGRADED"] as const) {
+        const response = await orchestrateSmartAi({} as never, actorA, { question: sourceCase.question }, {
+          provider: readyProvider(generate),
+          retrieval: async () => extensionSearchResponse(sourceCase.source, sourceCase.label, sourceCase.href, state, [])
+        });
+        expect(response.status).toBe(state === "EMPTY" ? "INSUFFICIENT_EVIDENCE" : "RETRIEVAL_DEGRADED");
+      }
+      const evidence = result({ source: sourceCase.source, type: "Safe metadata", title: "Opaque reference 42", subtitle: sourceCase.label, href: sourceCase.href });
+      const invalidCitation = await orchestrateSmartAi({} as never, actorA, { question: sourceCase.question }, {
+        provider: readyProvider(generate),
+        retrieval: async () => extensionSearchResponse(sourceCase.source, sourceCase.label, sourceCase.href, "OK", [evidence])
+      });
+      expect(invalidCitation.status).toBe("PROVIDER_FAILURE");
+      expect(invalidCitation.citations).toEqual([]);
+    });
+  }
+
   it("grounds a new-module answer through Universal Search metadata only", async () => {
+    const previousEventFlag = process.env.EVENT_MEDIA_PUBLIC_GALLERY_ENABLED;
+    process.env.EVENT_MEDIA_PUBLIC_GALLERY_ENABLED = "true";
     const eventMediaAlbum = { findMany: vi.fn(async () => [{
       publicKey: "ALBUM-42", title: "STUDENT-IDENTIFYING-ALBUM-TITLE", eventDate: new Date(now), visibility: "PRIVATE_LEADERSHIP", status: "APPROVED",
       reviewStatus: "APPROVED", publicationState: "PRIVATE", updatedAt: new Date(now), _count: { assets: 1 }, description: "CONSENT-SENSITIVE-DESCRIPTION"
@@ -322,12 +394,16 @@ describe("SMART-AI-1A orchestration reuses Universal Search and fails closed", (
       expect(input.serializedContext).not.toMatch(/STUDENT-IDENTIFYING-ALBUM-TITLE|CONSENT-SENSITIVE-DESCRIPTION|PRIVATE-IMAGE-BYTES-PATH|STUDENT-IDENTIFICATION-SENTINEL|EXIF-SENTINEL/);
       return { answer: "ALBUM-42 is a private Event Media album.", citations: ["SRC-1"] };
     });
-    const response = await orchestrateSmartAi({ eventMediaAlbum, eventMediaAsset } as never, actorA, { question: "Which media album is ALBUM-42?" }, { provider: readyProvider(generate) });
-    expect(response.status).toBe("ANSWER");
-    expect(response.citations).toEqual([expect.objectContaining({ module: "Event Media", href: "/event-media" })]);
-    expect(JSON.stringify(response)).not.toMatch(/STUDENT-IDENTIFYING-ALBUM-TITLE|CONSENT-SENSITIVE-DESCRIPTION|PRIVATE-IMAGE-BYTES-PATH|STUDENT-IDENTIFICATION-SENTINEL|EXIF-SENTINEL/);
-    expect(eventMediaAlbum.findMany).toHaveBeenCalledTimes(1);
-    expect(eventMediaAsset.findMany).toHaveBeenCalledTimes(1);
+    try {
+      const response = await orchestrateSmartAi({ eventMediaAlbum, eventMediaAsset } as never, actorA, { question: "Which media album is ALBUM-42?" }, { provider: readyProvider(generate) });
+      expect(response.status).toBe("ANSWER");
+      expect(response.citations).toEqual([expect.objectContaining({ module: "Event Media", href: "/event-media" })]);
+      expect(JSON.stringify(response)).not.toMatch(/STUDENT-IDENTIFYING-ALBUM-TITLE|CONSENT-SENSITIVE-DESCRIPTION|PRIVATE-IMAGE-BYTES-PATH|STUDENT-IDENTIFICATION-SENTINEL|EXIF-SENTINEL/);
+      expect(eventMediaAlbum.findMany).toHaveBeenCalledTimes(1);
+      expect(eventMediaAsset.findMany).toHaveBeenCalledTimes(1);
+    } finally {
+      restoreEnvironment("EVENT_MEDIA_PUBLIC_GALLERY_ENABLED", previousEventFlag);
+    }
   });
 });
 

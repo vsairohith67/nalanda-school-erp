@@ -99,7 +99,7 @@ const USER_BOUNDARIES: Array<{ pattern: RegExp; code: string; message: string }>
     message: "Health and dietary-sensitive information is excluded from Universal Search and Smart AI."
   },
   {
-    pattern: /\b(change|edit|update|modify|delete|create|complete|publish|post|grant|assign|send|message|mark|record|approve|waive)\b.{0,65}\b(mark|marks|task|diary|contact|student|staff|phone(?:\s+number)?|messages?|payment|attendance|report|permission|iam|roles?|access|email|whatsapp|sms|safe exit|whiteboard|meeting|transport|route|cafeteria|menu|meal|media|album)\b/i,
+    pattern: /\b(change|edit|update|modify|delete|create|complete|publish|post|grant|assign|send|message|mark|record|approve|waive|reschedule|cancel|issue|revoke)\b.{0,65}\b(mark|marks|grades?|task|diary|contact|student|staff|phone(?:\s+number)?|messages?|payment|attendance|report|permission|iam|roles?|access|email|whatsapp|sms|safe exit|whiteboard|meeting|follow[- ]?up|transport|route|assignment|cafeteria|menu|meal|media|album|consent)\b/i,
     code: "WRITE_ACTION_REQUEST",
     message: "Smart AI is read-only and cannot change records, complete work, publish, grant access or send messages."
   },
@@ -149,11 +149,12 @@ const SOURCE_HINTS: Array<{ sources: UniversalSearchSourceId[]; pattern: RegExp 
 
 const SEARCH_STOP_WORDS = new Set([
   "a", "an", "and", "any", "are", "about", "available", "details", "do", "does", "for", "find", "from", "give", "have", "i", "in", "is", "match", "matches", "mention", "mentions", "my", "of", "our", "please", "record", "records", "school", "show", "tell", "that", "the", "their", "this", "to", "us", "we", "what", "which", "who", "with", "currently", "know", "need",
-  "student", "students", "admission", "admissions", "enquiry", "enquiries", "application", "applications", "guardian", "guardians", "parent", "parents", "staff", "teacher", "teachers", "diary", "note", "notes", "task", "tasks", "reminder", "reminders", "contact", "contacts", "supplier", "suppliers", "vendor", "vendors", "fee", "fees", "receipt", "receipts", "payment", "payments", "exam", "exams", "examination", "examinations", "complaint", "complaints", "support", "event", "events", "meeting", "meetings", "appointment", "transport", "vehicle", "route", "stop", "cafeteria", "canteen", "menu", "meal", "item", "items", "report", "reports", "kg", "lkg", "ukg", "kindergarten", "media", "album", "gallery"
+  "student", "students", "admission", "admissions", "enquiry", "enquiries", "application", "applications", "guardian", "guardians", "parent", "parents", "staff", "teacher", "teachers", "diary", "note", "notes", "task", "tasks", "reminder", "reminders", "contact", "contacts", "supplier", "suppliers", "vendor", "vendors", "fee", "fees", "receipt", "receipts", "payment", "payments", "exam", "exams", "examination", "examinations", "complaint", "complaints", "support", "event", "events", "meeting", "meetings", "appointment", "transport", "vehicle", "route", "stop", "cafeteria", "canteen", "menu", "meal", "item", "items", "report", "reports", "card", "cards", "kg", "lkg", "ukg", "kindergarten", "media", "album", "gallery"
 ]);
 
 export function deriveSmartAiRetrieval(question: string, conversation: SmartAiConversationTurn[] = []) {
-  const sources = [...new Set(SOURCE_HINTS.filter((hint) => hint.pattern.test(question)).flatMap((hint) => hint.sources))];
+  let sources = [...new Set(SOURCE_HINTS.filter((hint) => hint.pattern.test(question)).flatMap((hint) => hint.sources))];
+  if (sources.includes("KG_REPORTS")) sources = sources.filter((source) => source !== "REPORT_CARDS");
   const extracted = extractionTokens(question);
   const priorUser = [...conversation].reverse().find((turn) => turn.role === "USER");
   const fallbackTokens = priorUser ? extractionTokens(priorUser.content) : [];

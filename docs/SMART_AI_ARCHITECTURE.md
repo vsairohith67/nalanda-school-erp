@@ -73,6 +73,13 @@ interface. Its only default retrieval call is Universal Search. A source
 failure remains failure evidence; unavailable sources are never relabelled as
 zero matches.
 
+SEARCH-EXTENSION-1B makes Parent Meetings, Transport, Cafeteria, KG Report
+Cards and Event Media eligible only through their governed normalized Search
+records. Each remains `SAFE_METADATA_ONLY` and default-off with its owning
+module dependency. Smart AI receives no direct Prisma client for those models,
+does not decide a projection or destination, and cannot use a disabled source.
+The machine-readable rules are in [Search Extension 1B Source Governance](./SEARCH_EXTENSION_1B_SOURCE_GOVERNANCE.md).
+
 ## Request and context bounds
 
 The initial limits are deliberately small for a future local model:
@@ -192,7 +199,10 @@ Smart AI contains no business mutation, transaction, autonomous tool or action
 registry. It cannot create/complete Tasks, edit Diary or Contacts, change
 Students or Staff, post payments, mark attendance, change marks, publish
 reports, grant permission, send email/SMS/WhatsApp, open a Safe Exit transaction
-or write to the whiteboard.
+or write to the whiteboard. Extension-specific denials include rescheduling a
+Parent meeting, changing a Transport assignment, recording a Cafeteria meal,
+editing a KG grade, issuing a KG report, publishing Event Media and revoking
+consent.
 
 Academic Integrity v1.1 remains unchanged: normal Principal/Super Admin marks
 workflows and exact `MARKS_ENTRY_OPERATOR` scope continue through their existing

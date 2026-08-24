@@ -2,7 +2,7 @@
 
 ## Current-main correction (2026-08-24)
 
-Current `main` and its retained annotated tags supersede the dated checkpoint below wherever they conflict. Support/complaints, observability, bulk onboarding, Classes I-X print acceptance, the V1 cross-module RC, Academic Integrity v1.1, Command Center, My Work, Universal Search, Smart AI Foundation, Smart AI Local Runtime, Event Media software, KG Report Cards software, Parent Meetings software and Optional Operations software are `CLEARED`; operational activation remains separately gated where documented. `FINAL-SCOPE-QA-1A` supplies the missing post-V1.5 acceptance harness, but its release acceptance remains `REQUIRES_FIXES`: active import, public-admissions and Payroll/ESS write surfaces do not consume their committed default-off release flags, and `bulk-exports` lacks a governed surface map.
+Current `main` and its retained annotated tags supersede the dated checkpoint below wherever they conflict. Support/complaints, observability, bulk onboarding, Classes I-X print acceptance, the V1 cross-module RC, Academic Integrity v1.1, Command Center, My Work, Universal Search, Smart AI Foundation, Smart AI Local Runtime, Event Media software, KG Report Cards software, Parent Meetings software and Optional Operations software are `CLEARED`; operational activation remains separately gated where documented. `FINAL-SCOPE-QA-1A` is also cleared: the active import, public-admissions, Payroll/ESS and bulk-export runtime gaps were corrected and accepted at `corrected-scope-qa-v43-2026-08-24`.
 
 ## Parent Meetings and Appointments — V1.5 update
 
@@ -13,7 +13,7 @@ Current `main` and its retained annotated tags supersede the dated checkpoint be
 | Explicit assigned-Teacher contribution | Software cleared, assignment-only | No general Teacher browsing or marks authority |
 | Separate internal notes and released Parent summary | Software cleared with append-only corrections | School content/retention policy and real use require operational approval |
 | In-app reminders and management reports | Software cleared locally | No WhatsApp/SMS/email/push or external calendar activation |
-| Search/Smart AI | Deferred | Requires an explicitly governed later Search extension |
+| Search/Smart AI | `SAFE_METADATA_ONLY` integration cleared under `SEARCH-EXTENSION-1B` | Owning Parent Meetings flag remains default-off; no notes, request reasons, cancellation narrative or direct Smart AI query/action |
 
 Independent acceptance result: `PARENT_MEETING_V1_5_CLEARED`. The controlled
 Browser, role/privacy/security, copied-migration/restore, full regression,
@@ -32,6 +32,17 @@ The authoritative status source is now `REQUIREMENTS_REGISTER.md`, with product 
 - At this dated checkpoint, Support/complaint/feedback and final corrected-scope cross-module QA were recorded as `MISSING`; observability and bulk onboarding were `PARTIAL`; operational cutover was `DEFERRED` pending explicit approval. This sentence is `HISTORICAL_ONLY`; use the current-main correction above.
 
 Transport and Cafeteria V1.5 software foundations are cleared and governed `DEFAULT-OFF` after independent QA and mandatory exact-SHA GitHub validation. This does not mean Nalanda operates either service. V2 remains AI lessons/videos with Teacher approval and no automatic Student publication.
+
+## Universal Search Extension 1B
+
+Parent Meetings, Transport, Cafeteria, KG Report Cards and Event Media are each
+classified `SAFE_METADATA_ONLY` in one machine-readable Search registry. Every
+adapter checks its recorded default-off dependency before querying and returns
+`UNAVAILABLE`, not a false zero, while disabled. Smart AI inherits only the
+normalized Search evidence and current-request citations. Direct database
+retrieval, write actions, health/dietary inference, private meeting text,
+rubric/comment data and image/OCR/face processing remain prohibited. See
+[Search Extension 1B Source Governance](./SEARCH_EXTENSION_1B_SOURCE_GOVERNANCE.md).
 
 ## Prompt 23B final Schoolknot multi-role consolidation
 

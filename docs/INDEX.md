@@ -43,6 +43,8 @@ Students, meals, payments, providers, GPS, maps, Safe Exit changes, or deploymen
 - [Personal Work Programme QA Clearance](evidence/SUPER_ADMIN_WORK_1A_QA_CLEARANCE.md)
 - [Universal Search Architecture](UNIVERSAL_SEARCH_ARCHITECTURE.md)
 - [Universal Search Independent QA Clearance](evidence/UNIVERSAL_SEARCH_1A_QA_CLEARANCE.md)
+- [Search Extension 1B Source Governance](SEARCH_EXTENSION_1B_SOURCE_GOVERNANCE.md)
+- [Search Extension 1B QA Clearance](evidence/SEARCH_EXTENSION_1B_QA_CLEARANCE.md)
 - [Grounded Smart AI Architecture](SMART_AI_ARCHITECTURE.md)
 - [Grounded Smart AI Independent QA Clearance](evidence/SMART_AI_1A_QA_CLEARANCE.md)
 - [Smart AI Local Runtime Qualification](SMART_AI_LOCAL_RUNTIME.md)
@@ -60,7 +62,10 @@ summaries. Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search is implemented
 and independently cleared with status `UNIVERSAL_SEARCH_CLEARED`. SMART-AI-1A
 implements the exact-Super-Admin, read-only, citation-grounded foundation over
 that Search boundary and is independently cleared with status
-`SMART_AI_CLEARED`. The loopback-only Local Runtime is also software-cleared;
+`SMART_AI_CLEARED`. SEARCH-EXTENSION-1B adds only governed safe metadata from
+Parent Meetings, Transport, Cafeteria, KG Report Cards and Event Media through
+that same boundary; all owning operational dependencies remain default-off.
+The loopback-only Local Runtime is also software-cleared;
 its committed provider remains disabled by default and cloud/external
 providers, persistent conversations and AI actions remain prohibited. The fixed canonical Canvs Whiteboard bridge is
 also independently cleared without iframe, token exchange, sync, database
