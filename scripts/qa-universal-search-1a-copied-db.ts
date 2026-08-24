@@ -179,6 +179,8 @@ async function seedExtensionVolume(client: PrismaClient, ownerA: string) {
     kg: `ZXFORBIDDENRUBRIC${sentinelSuffix}Q7`,
     media: `ZXFORBIDDENMEDIA${sentinelSuffix}Q7`
   };
+  const xssPayload = "<script>search-extension-xss</script><img src=x onerror=alert(1)><svg onload=alert(1)>[x](javascript:alert(1))";
+  await client.student.update({ where: { id: students[0].id }, data: { studentName: `${target} ${xssPayload}` } });
   await client.staffMember.update({ where: { id: staff.id }, data: { emergencyContactMobile: forbidden.driver } });
 
   await client.parentMeeting.createMany({ data: Array.from({ length: 1_050 }, (_, index) => ({
@@ -222,7 +224,7 @@ async function seedExtensionVolume(client: PrismaClient, ownerA: string) {
   await client.transportRoute.createMany({ data: Array.from({ length: 80 }, (_, index) => ({
     publicKey: `${target}-TR-${String(index).padStart(4, "0")}`,
     code: `${target}-ROUTE-${String(index).padStart(4, "0")}`,
-    name: `${target} Route ${String(index).padStart(4, "0")}`,
+    name: index === 0 ? `${target} Route ${String(index).padStart(4, "0")} ${xssPayload}` : `${target} Route ${String(index).padStart(4, "0")}`,
     vehicleId: vehicles[index % vehicles.length].id,
     driverStaffMemberId: staff.id,
     capacity: 50,
@@ -232,7 +234,7 @@ async function seedExtensionVolume(client: PrismaClient, ownerA: string) {
   await client.transportStop.createMany({ data: Array.from({ length: 120 }, (_, index) => ({
     publicKey: `${target}-TS-${String(index).padStart(4, "0")}`,
     code: `${target}-STOP-${String(index).padStart(4, "0")}`,
-    name: `${target} Approved Stop ${String(index).padStart(4, "0")}`,
+    name: index === 0 ? `${target} Approved Stop ${String(index).padStart(4, "0")} ${xssPayload}` : `${target} Approved Stop ${String(index).padStart(4, "0")}`,
     approvedReference: `${target}-APPROVED-${String(index).padStart(4, "0")}`,
     active: true
   })) });
@@ -283,7 +285,7 @@ async function seedExtensionVolume(client: PrismaClient, ownerA: string) {
   await client.cafeteriaCatalogItem.createMany({ data: Array.from({ length: 80 }, (_, index) => ({
     publicKey: `${target}-CI-${String(index).padStart(4, "0")}`,
     code: `${target}-ITEM-${String(index).padStart(4, "0")}`,
-    name: `${target} Menu Item ${String(index).padStart(4, "0")}`,
+    name: index === 0 ? `${target} Menu Item ${String(index).padStart(4, "0")} ${xssPayload}` : `${target} Menu Item ${String(index).padStart(4, "0")}`,
     category: index % 2 ? "LUNCH" : "SNACK",
     available: true,
     status: "ACTIVE"
@@ -291,7 +293,7 @@ async function seedExtensionVolume(client: PrismaClient, ownerA: string) {
   await client.cafeteriaMenu.createMany({ data: Array.from({ length: 30 }, (_, index) => ({
     publicKey: `${target}-CM-${String(index).padStart(4, "0")}`,
     menuDate: new Date(baseDate.getTime() + index * 24 * 60 * 60 * 1000),
-    dayLabel: `${target} Day ${String(index).padStart(2, "0")}`,
+    dayLabel: index === 0 ? `${target} Day ${String(index).padStart(2, "0")} ${xssPayload}` : `${target} Day ${String(index).padStart(2, "0")}`,
     mealPlanName: "STANDARD",
     status: "ACTIVE"
   })) });
@@ -359,7 +361,7 @@ async function seedExtensionVolume(client: PrismaClient, ownerA: string) {
   })) });
 
   await client.eventMediaAlbum.createMany({ data: Array.from({ length: 60 }, (_, index) => ({
-    publicKey: `${target}-ALBUM-${String(index).padStart(4, "0")}`,
+    publicKey: index === 0 ? `${target}-ALBUM-${String(index).padStart(4, "0")}${xssPayload}` : `${target}-ALBUM-${String(index).padStart(4, "0")}`,
     title: index === 0 ? forbidden.media : `${target} Event Album ${String(index).padStart(4, "0")}`,
     eventDate: new Date(baseDate.getTime() - index * 24 * 60 * 60 * 1000),
     description: index === 0 ? forbidden.media : `${target} consent-sensitive album description ${index}`,
@@ -375,7 +377,7 @@ async function seedExtensionVolume(client: PrismaClient, ownerA: string) {
   })) });
   const albums = await client.eventMediaAlbum.findMany({ where: { publicKey: { startsWith: `${target}-ALBUM-` } }, select: { id: true }, orderBy: { publicKey: "asc" } });
   await client.eventMediaAsset.createMany({ data: Array.from({ length: 300 }, (_, index) => ({
-    publicKey: `${target}-MEDIA-${String(index).padStart(4, "0")}`,
+    publicKey: index === 0 ? `${target}-MEDIA-${String(index).padStart(4, "0")}${xssPayload}` : `${target}-MEDIA-${String(index).padStart(4, "0")}`,
     albumId: albums[index % albums.length].id,
     originalStorageKey: `${target}/private/original-${String(index).padStart(4, "0")}.jpg`,
     originalMediaType: "image/jpeg",
@@ -399,6 +401,7 @@ async function seedExtensionVolume(client: PrismaClient, ownerA: string) {
 
   return {
     forbidden,
+    xssPayload,
     volume: { parentMeetings: 1_050, transportVehicles: 40, transportRoutes: 80, transportStops: 120, transportAssignments: 300, cafeteriaItems: 80, cafeteriaMenus: 30, cafeteriaEnrollments: 300, cafeteriaMeals: 300, kgReports: 200, eventAlbums: 60, eventMedia: 300 }
   };
 }
@@ -460,6 +463,7 @@ async function main() {
         parseUniversalSearchRequest({ query, sources: [source], limit: 6 })
       )));
       invariant(sourceProbes.every((response) => response.results.length > 0 && response.sources[0]?.state === "OK"), `${SUITE}_EXTENSION_SOURCE_COVERAGE_INCOMPLETE`);
+      invariant(sourceProbes.every((response) => JSON.stringify(response).includes("<script>search-extension-xss")), `${SUITE}_EXTENSION_XSS_SAFE_FIELD_FIXTURE_MISSING`);
       invariant(!Object.values(extensionEvidence.forbidden).some((value) => JSON.stringify([extensionResponse, sourceProbes]).includes(value)), `${SUITE}_EXTENSION_FORBIDDEN_VALUE_LEAKED`);
       for (const [source, query] of [
         ["PARENT_MEETINGS", extensionEvidence.forbidden.parent],

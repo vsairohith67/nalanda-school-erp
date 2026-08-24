@@ -397,6 +397,7 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
   it("uses the shared shell, accessible keyboard/result patterns and responsive 44px controls", () => {
     const page = readFileSync("app/super-admin/search/page.tsx", "utf8");
     const workspace = readFileSync("components/universal-search-workspace.tsx", "utf8");
+    const smartAiWorkspace = readFileSync("components/smart-ai-workspace.tsx", "utf8");
     const css = readFileSync("app/globals.css", "utf8");
     expect(page).toContain("<PageShell");
     expect(workspace).toContain('role="search"');
@@ -404,6 +405,7 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
     expect(workspace).toContain('event.key === "Escape"');
     expect(workspace).toContain('event.key !== "ArrowDown"');
     expect(workspace).not.toMatch(/alert\(|confirm\(|prompt\(/);
+    for (const surface of [workspace, smartAiWorkspace]) expect(surface).not.toMatch(/dangerouslySetInnerHTML|\.innerHTML\s*=|document\.write\s*\(/);
     expect(css).toContain(".universal-search-page :is(button, a, input):focus-visible");
     expect(css).toContain("@media (max-width: 700px)");
     expect(css).toContain("min-height: 44px");
