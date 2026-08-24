@@ -1,5 +1,9 @@
 # ERP Feature Status and Gap Map
 
+## Current-main correction (2026-08-24)
+
+Current `main` and its retained annotated tags supersede the dated checkpoint below wherever they conflict. Support/complaints, observability, bulk onboarding, Classes I-X print acceptance, the V1 cross-module RC, Academic Integrity v1.1, Command Center, My Work, Universal Search, Smart AI Foundation, Smart AI Local Runtime, Event Media software, KG Report Cards software, Parent Meetings software and Optional Operations software are `CLEARED`; operational activation remains separately gated where documented. `FINAL-SCOPE-QA-1A` supplies the missing post-V1.5 acceptance harness, but its release acceptance remains `REQUIRES_FIXES`: active import, public-admissions and Payroll/ESS write surfaces do not consume their committed default-off release flags, and `bulk-exports` lacks a governed surface map.
+
 ## Parent Meetings and Appointments — V1.5 update
 
 | Capability | Software status | Remaining boundary |
@@ -16,7 +20,7 @@ Browser, role/privacy/security, copied-migration/restore, full regression,
 backup v43 and byte-identical operational-database gates passed. This is
 software clearance only; operational activation remains default-off.
 
-## GOV-RECON-1 corrected V1 status (2026-08-08)
+## Historical GOV-RECON-1 corrected V1 status (2026-08-08)
 
 The authoritative status source is now `REQUIREMENTS_REGISTER.md`, with product scope in `V1_V1_5_V2_SCOPE.md`. A model or route is not sufficient for completion.
 
@@ -25,7 +29,7 @@ The authoritative status source is now `REQUIREMENTS_REGISTER.md`, with product 
 - V1 Family/Multi-Student Mixed-Tender Fee Collection is `PARTIAL` and a launch blocker: the current one-Student receipt invariant prevents the exact workflow.
 - V1 canonical report-card templates and physical colour/black-and-white print acceptance are `PARTIAL`: the renderer exists, but approved original template sources and physical acceptance do not.
 - V1 safe staging/release/client update is `PARTIAL`: readiness foundations exist, but the complete governed pipeline and client update UX are not released.
-- Support/complaint/feedback and final corrected-scope cross-module QA are `MISSING`; observability and bulk onboarding are `PARTIAL`; operational cutover is `DEFERRED` pending explicit approval.
+- At this dated checkpoint, Support/complaint/feedback and final corrected-scope cross-module QA were recorded as `MISSING`; observability and bulk onboarding were `PARTIAL`; operational cutover was `DEFERRED` pending explicit approval. This sentence is `HISTORICAL_ONLY`; use the current-main correction above.
 
 Transport and Cafeteria V1.5 software foundations are cleared and governed `DEFAULT-OFF` after independent QA and mandatory exact-SHA GitHub validation. This does not mean Nalanda operates either service. V2 remains AI lessons/videos with Teacher approval and no automatic Student publication.
 

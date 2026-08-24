@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireApiPermission } from "@/lib/auth";
 import { buildGuardianImportPreview, importGuardianLinks } from "@/lib/guardians";
 import { createImportBatchRecord, deriveImportBatchStatus, guardianSampleRows } from "@/lib/import-verification";
+import { REAL_DATA_IMPORTS_FEATURE, requireOperationalReleaseFeatureForApi } from "@/lib/release-feature-flag-runtime";
 
 export async function POST(request: NextRequest) {
   const auth = await requireApiPermission("IMPORT_GUARDIANS");
@@ -14,6 +15,8 @@ export async function POST(request: NextRequest) {
     if (!rows.length) throw new Error("No guardian rows supplied");
     const preview = await buildGuardianImportPreview(prisma, rows);
     if (body.action === "preview") return NextResponse.json({ preview });
+    const featureUnavailable = requireOperationalReleaseFeatureForApi(REAL_DATA_IMPORTS_FEATURE);
+    if (featureUnavailable) return featureUnavailable;
 
     const fileName = String(body.fileName ?? "Guardian link import").trim() || "Guardian link import";
     const notes = String(body.notes ?? "").trim() || null;

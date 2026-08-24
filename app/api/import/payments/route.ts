@@ -18,6 +18,7 @@ import {
   recordPaymentDryRun,
   type ExpectedPaymentTotals
 } from "@/lib/import-verification";
+import { REAL_DATA_IMPORTS_FEATURE, requireOperationalReleaseFeatureForApi } from "@/lib/release-feature-flag-runtime";
 
 export async function POST(request: NextRequest) {
   const auth = await requireApiPermission("CREATE_PAYMENTS");
@@ -56,6 +57,8 @@ export async function POST(request: NextRequest) {
     const reconciliation = calculatePaymentReconciliation(preview);
 
     if (body.action === "preview") return NextResponse.json({ preview, reconciliation });
+    const featureUnavailable = requireOperationalReleaseFeatureForApi(REAL_DATA_IMPORTS_FEATURE);
+    if (featureUnavailable) return featureUnavailable;
     const fileName = String(body.fileName ?? "Payment import").trim() || "Payment import";
     const notes = String(body.notes ?? "").trim() || null;
     const expectedTotals = normalizeExpectedTotals(body.expectedTotals);

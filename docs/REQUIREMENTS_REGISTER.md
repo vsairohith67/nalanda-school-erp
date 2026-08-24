@@ -15,8 +15,8 @@ software clearance. See
 [`PARENT_MEETINGS_APPOINTMENTS_ARCHITECTURE.md`](./PARENT_MEETINGS_APPOINTMENTS_ARCHITECTURE.md).
 
 **Register ID:** `GOV-RECON-1-REGISTER`<br>
-**As-of:** 2026-08-22<br>
-**Baseline:** protected `main` at the authorised task-start checkpoint `4978da6e0fc3c1846750694a04f4015b61ca78af`; KG Report Cards V1.5 software clearance evidence is recorded below<br>
+**As-of:** 2026-08-24<br>
+**Baseline:** protected `main` at `3d51164b8214211d26e48c2c6f9920286ef9c689`, including the cleared Parent Meetings, Optional Operations and Universal Search Extension 1B releases; `FINAL-SCOPE-QA-1A` started from `8fc1473c0f74a70fe1dc6afcd9740f1e7eab5495` and its final candidate must contain the refreshed `origin/main`<br>
 **Decision source:** `docs/V1_V1_5_V2_SCOPE.md`
 
 ## Status and evidence rules

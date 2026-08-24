@@ -1,6 +1,6 @@
 # Feature Completeness Matrix
 
-**As-of:** 2026-08-22<br>
+**As-of:** 2026-08-24<br>
 **Source:** `docs/REQUIREMENTS_REGISTER.md`
 
 This matrix separates presence from completeness. `Complete` requires tested workflow and release evidence; `Partial` means meaningful code or planning exists but a required outcome is absent.
@@ -16,32 +16,35 @@ This matrix separates presence from completeness. `Complete` requires tested wor
 | Principal-controlled marks authority and scoped non-teaching delegation | V1.1 security correction | Complete / independently QA-cleared | Ordinary Teacher write authority is removed prospectively; exact non-teaching delegation, linked-child denial, session revocation and immutable history are independently proved | [ACADEMIC-INTEGRITY-1A-QA clearance](evidence/ACADEMIC_INTEGRITY_1A_QA_CLEARANCE.md); [v1.1 architecture](ACADEMIC_INTEGRITY_V1_1_PRINCIPAL_MARKS_ENTRY.md) |
 | Issued report publication and Parent delivery | V1 | Complete | Canonical visual/print approval separate | EXAM-RC-IMPL-3 release |
 | Admissions CRM | V1 | Complete | Do not reopen; real onboarding unauthorised | Prompt 23H release |
-| Communications | V1 | Partial | Live provider acceptance absent | Future deployment/provider gate |
+| Communications | V1 | Complete software / operational configuration pending | In-app/MOCK foundations are cleared; live providers remain unauthorised | Separate deployment/provider gate |
 | Expenses/budgets/misc income/Cash Book | V1 | Complete | Family fee instruments separate | Prompt 16/FIN evidence |
 | Library | V1 | Complete | Inaccessible Schoolknot screens remain comparison evidence gaps | Prompt 16E-J evidence |
 | Certificates/Class X packages/ID cards | V1 | Complete | Report-card template catalog separate | Prompt 18 evidence |
 | Backup/restore/migrations | V1 | Complete | Every new model must extend it | DEVOPS-1B/1E evidence |
 | Staff Payslip Request and Secure Delivery | V1 | Complete local/private | Governed request/upload/protection/reveal/delivery/replacement/audit workflow independently verified | Deployment prerequisites and approved retention policy remain before real use |
 | Family/Multi-Student Mixed-Tender Fee Collection | V1 | Complete locally/private | Provider activation, deployment, real-data onboarding and physical-printer acceptance remain gated | `FIN-FAMILY-PAY-1` implementation and independent QA |
-| Canonical report-card template library/physical print | V1 | Partial | No original canonical assets or physical print acceptance | Obtain samples; run print protocol |
-| Safe staging/release/client update | V1 | Partial | Plans exist; end-to-end environment/update operation not released | Governed implementation/rehearsal |
-| Parent/Staff support/complaints/feedback | V1 | Missing | No complete role-owned case workflow proven | Specify/implement later V1 phase |
-| Observability and operational health | V1 | Partial | Local health exists; production monitoring/alerts absent | Stage metrics/alerts/runbooks |
+| Canonical report-card template library/physical print | V1 | Complete | R8 digital/physical acceptance is retained and tagged; future edits require a governed version | `report-card-print-acceptance-v41-2026-08-14` |
+| Safe staging/release/client update | V1 | Complete local/private | Software/rehearsal is released; actual hosting/deployment remains unauthorised | `release-operations-v41-2026-08-10` |
+| Parent/Staff support/complaints/feedback | V1 | Complete | Privacy/retention wording and deployment remain operational gates | `support-complaints-v37-2026-08-09` |
+| Observability and operational health | V1 | Complete software / operational configuration pending | Local/private health, alerts and runbooks are released; live hosting telemetry is not active | `observability-operations-v40-2026-08-10` |
 | Bulk Student/Guardian/Staff onboarding | V1 | Complete locally/private | IMPORT-1A and independent QA prove controlled templates, private upload, bounded validation, explicit duplicate decisions, expiring dry-run approval, atomic/idempotent execution, lineage/reconciliation, dependency-safe rollback, OBS-1A metrics, backup v41 recovery and exact operational migration preservation | Real onboarding requires a separately approved maintenance/import phase; deployment and account activation remain gated |
-| Final cross-module QA | V1 | Missing | Earlier tests cannot cover corrected missing V1 requirements | Run after implementation blockers |
-| Staging/pilot/reconciliation/cutover | V1 | Deferred | Explicit operational approval not granted | Final release gate |
+| Final corrected-scope cross-module QA | V1/V1.5 current main | Acceptance implemented / requires fixes | Runtime flag enforcement is red; dependency audits are clean, but no merge/tag is authorised while any mandatory local gate fails | [Final corrected-scope acceptance](FINAL_CORRECTED_SCOPE_ACCEPTANCE.md) |
+| Staging/pilot/reconciliation/cutover | V1 | Operational configuration pending | Explicit operational approval has not been granted | Separate operational release gate |
 | Full payroll automation/salary ESS | V1.5 | Complete | Product scope moved from V1; statutory integrations remain gated | Prompt 23I release preserved |
 | Super Admin Command Center | V1.5 | Complete locally/private | Deployment and real-user operation remain separate | `SUPER_ADMIN_COMMAND_CENTER_CLEARED` |
-| Super Admin Diary / Tasks / Contacts | V1.5 | Complete locally/private | Exact-owner role/API/browser/recovery/security acceptance passed; operational migration and deployment remain separate | `SUPER_ADMIN_WORK_CLEARED`; Universal Search next |
+| Super Admin Diary / Tasks / Contacts | V1.5 | Complete locally/private | Exact-owner role/API/browser/recovery/security acceptance passed; operational migration and deployment remain separate | `SUPER_ADMIN_WORK_CLEARED`; Universal Search is also cleared |
 | Universal Search | V1.5 | Complete locally/private | Exact-Super-Admin deterministic normalized retrieval is independently cleared; no AI/provider authorization | `UNIVERSAL_SEARCH_CLEARED` |
 | Grounded Smart AI Foundation | V1.5 | Complete locally/private | Exact-Super-Admin, Universal-Search-only, read-only, citation-validated and independently QA-cleared; runtime remains disabled and there is no persistent history, cloud provider or action authority | `SMART_AI_CLEARED`; [independent QA clearance](evidence/SMART_AI_1A_QA_CLEARANCE.md) |
-| Transport | V1.5 | Deferred | School does not provide service | Optional future decision |
-| Cafeteria | V1.5 | Deferred | School does not provide service | Optional future decision |
+| Smart AI Local Runtime | V1.5 | Complete software / provider default-off | Loopback-only local runtime is cleared; committed provider remains `DISABLED`; cloud inference and AI Actions remain prohibited | `smart-ai-local-runtime-v42-2026-08-23` |
+| Event Media | V1.5 | Complete software / public gallery default-off | Private governed media is cleared; public activation and AI image processing are not authorised | `event-media-v1-5-v42-2026-08-22` |
+| KG developmental reports | V1.5 | Complete software / operational activation off | Software is cleared while real-school activation and physical-printer acceptance remain gated | `kg-report-cards-v1-5-v42-2026-08-22` |
+| Parent Meetings, Appointments and Follow-up | V1.5 | Complete software / operational activation off | Exact linked-child and assigned-Teacher workflow is cleared on current main; Search/AI integration and real operational use remain separate | `parent-meetings-v1-5-v43-2026-08-24` |
+| Transport | V1.5 | Complete software / operational activation off | Governed foundation is cleared; the school does not currently provide or activate the service | `optional-ops-v1-5-v43-2026-08-24` |
+| Cafeteria | V1.5 | Complete software / operational activation off | Governed foundation is cleared; the school does not currently provide or activate the service | `optional-ops-v1-5-v43-2026-08-24` |
 | AI educational programme | V2 | Deferred | Planning/mock foundations are not the programme | Future V2 with Teacher approval |
 
 ## V1 launch-blocker order
 
-1. `HR-PAYSLIP-REQ-1` — Staff payslip request and secure delivery.
-2. Canonical report-card source catalog and physical print acceptance.
-3. Safe staging/release/client update implementation and rehearsal.
-4. Final cross-module QA, controlled pilot, reconciliation and cutover.
+1. Remediate and independently re-run the `FINAL-SCOPE-QA-1A` runtime-flag gate, including a governed `bulk-exports` surface map.
+2. Preserve Parent Meetings and Optional Operations as cleared but operationally default-off current-main software.
+3. Obtain separate approval for staging, controlled pilot, reconciliation and cutover.

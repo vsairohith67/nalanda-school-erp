@@ -32,7 +32,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ typ
   return new NextResponse(formatTimetableCsv(rows), {
     headers: {
       "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="timetable-${type}-${safeFilename(source.draft.name)}.csv"`
+      "content-disposition": `attachment; filename="timetable-${type}-${safeFilename(source.draft.name)}.csv"`,
+      "cache-control": "private, no-store",
+      "x-content-type-options": "nosniff"
     }
   });
 }

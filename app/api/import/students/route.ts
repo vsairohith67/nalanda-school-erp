@@ -14,6 +14,7 @@ import {
   studentSampleRows,
   summarizeStudentTrial
 } from "@/lib/import-verification";
+import { REAL_DATA_IMPORTS_FEATURE, requireOperationalReleaseFeatureForApi } from "@/lib/release-feature-flag-runtime";
 
 export async function POST(request: NextRequest) {
   const auth = await requireApiPermission("IMPORT_STUDENTS");
@@ -30,6 +31,8 @@ export async function POST(request: NextRequest) {
     const preview = normalizeStudentImportRows(rows, existingAdmissions);
 
     if (body.action === "preview") return NextResponse.json({ preview });
+    const featureUnavailable = requireOperationalReleaseFeatureForApi(REAL_DATA_IMPORTS_FEATURE);
+    if (featureUnavailable) return featureUnavailable;
     const mode: StudentImportMode =
       body.mode === "update" ? "update" :
       body.mode === "create-only" ? "create-only" :

@@ -7,5 +7,5 @@ export async function GET() {
   const auth = await requireApiPermission("EXPORT_UDISE_CHECKLIST");
   if (auth.response) return auth.response;
   const report = await loadUdiseChecklist(prisma);
-  return new NextResponse(udiseChecklistCsv(report), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename=${udiseChecklistFilename(report.academicYear)}` } });
+  return new NextResponse(udiseChecklistCsv(report), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename=${udiseChecklistFilename(report.academicYear)}`, "cache-control": "private, no-store", "x-content-type-options": "nosniff" } });
 }

@@ -19,7 +19,7 @@ function publicBody(index: number) { return { guardianName: `${SUITE} Guardian $
 
 async function setup() {
   const operationalBefore = { sha256: fileSha256(OPERATIONAL), size: statSync(OPERATIONAL).size }, root = assertRoot(); if (existsSync(root)) rmSync(root, { recursive: true, force: true }); mkdirSync(root, { recursive: true }); copyFileSync(OPERATIONAL, DATABASE);
-  const secret = randomBytes(48).toString("base64url"), password = `${randomBytes(18).toString("base64url")}Aa1!`, origin = `http://localhost:${PORT}`, environment: NodeJS.ProcessEnv = { ...process.env, NODE_ENV: "production", DATABASE_URL: databaseUrl(DATABASE), SESSION_SECRET: secret, AUTH_SECRET: secret, APP_ORIGIN: origin, PORT: String(PORT), ADMISSIONS_HASH_PEPPER: randomBytes(48).toString("base64url"), ADMISSIONS_PRIVATE_STORAGE_ROOT: path.join(ROOT, "private-documents") };
+  const secret = randomBytes(48).toString("base64url"), password = `${randomBytes(18).toString("base64url")}Aa1!`, origin = `http://localhost:${PORT}`, environment: NodeJS.ProcessEnv = { ...process.env, NODE_ENV: "development", DATABASE_URL: databaseUrl(DATABASE), SESSION_SECRET: secret, AUTH_SECRET: secret, APP_ORIGIN: origin, PORT: String(PORT), ADMISSIONS_HASH_PEPPER: randomBytes(48).toString("base64url"), ADMISSIONS_PRIVATE_STORAGE_ROOT: path.join(ROOT, "private-documents"), RELEASE_FEATURE_FLAGS_QA_MODE: "SYNTHETIC_COPY_ONLY", RELEASE_FEATURE_FLAGS_QA_ENABLED: "public-admissions-form" };
   migrate(environment); Object.assign(process.env, environment); const client = new PrismaClient({ datasourceUrl: databaseUrl(DATABASE) });
   try {
     const principalRow = await createUser(client, "PRINCIPAL", password), viewerRow = await createUser(client, "VIEWER", password), principal = authUser(principalRow);

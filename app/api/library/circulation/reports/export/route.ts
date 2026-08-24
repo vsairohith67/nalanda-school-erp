@@ -11,5 +11,5 @@ export async function GET(request: NextRequest) {
   const requestedDays = Number(request.nextUrl.searchParams.get("days") ?? "7");
   if (!Number.isInteger(requestedDays) || requestedDays < 0 || requestedDays > 90) return NextResponse.json({ error: "days must be a whole number from 0 to 90" }, { status: 400 });
   const report = await loadCirculationReports(prisma, false, requestedDays);
-  return new NextResponse(circulationReportCsv(report, type), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename=${circulationReportFilename(type)}` } });
+  return new NextResponse(circulationReportCsv(report, type), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename=${circulationReportFilename(type)}`, "cache-control": "private, no-store", "x-content-type-options": "nosniff" } });
 }

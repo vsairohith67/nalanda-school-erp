@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "mainRef": "origin/main",
+  "taskStartMainSha": "8fc1473c0f74a70fe1dc6afcd9740f1e7eab5495",
+  "evidenceHierarchy": [
+    "CURRENT_GIT_MAIN_REALITY",
+    "RETAINED_ANNOTATED_RELEASE_TAG_EVIDENCE",
+    "CURRENT_REQUIREMENTS_REGISTER",
+    "CURRENT_COMPLETION_AND_FORWARD_ROADMAP",
+    "CURRENT_MODULE_ARCHITECTURE",
+    "PRESERVED_HISTORICAL_NOTES"
+  ],
+  "statusVocabulary": [
+    "CLEARED",
+    "RELEASE_BLOCKED",
+    "PARTIAL",
+    "OPERATIONAL_CONFIGURATION_PENDING",
+    "BLOCKED_BY_EVIDENCE",
+    "DEFAULT_OFF",
+    "DEFERRED",
+    "SUPERSEDED",
+    "HISTORICAL_ONLY"
+  ],
+  "authoritativeDocuments": [
+    "docs/REQUIREMENTS_REGISTER.md",
+    "docs/V1_V1_5_V2_SCOPE.md",
+    "docs/ERP_FEATURE_STATUS_AND_GAP_MAP.md",
+    "docs/PENDING_FEATURE_RECONCILIATION.md",
+    "docs/V1_5_AND_POST_RC_ROADMAP.md",
+    "docs/PROMPT_LEDGER.md",
+    "docs/INDEX.md",
+    "docs/V1_KNOWN_LIMITATIONS_AND_DEFERRALS.md",
+    "docs/FEATURE_COMPLETENESS_MATRIX.md",
+    "docs/V1_CROSS_MODULE_INTEGRATION_REPORT.md"
+  ],
+  "documentAliases": {
+    "docs/KNOWN_LIMITATIONS.md": "docs/V1_KNOWN_LIMITATIONS_AND_DEFERRALS.md"
+  },
+  "requirementReleases": [
+    { "id": "V1-CORE-001", "tags": [{ "name": "finance-integrity-v37-2026-07-26", "commit": "a3e55f34531f1bdc0a06e8b93c25690fb4d87563" }] },
+    { "id": "V1-SEC-002", "tags": [{ "name": "auth-verified-recovery-v37-2026-07-31", "commit": "e8c3d2e5e8448ddc3b850f8df11fe98984064ae3" }, { "name": "iam-delegated-access-v37-2026-08-01", "commit": "9fe5c2b928c2c84bc2e4c739d5bf377ce1501fc7" }] },
+    { "id": "V1-STU-003", "tags": [{ "name": "baseline-sec1-management-2026-07-22", "commit": "2d1ac63ae4ed987ed9aaf7e9754b93e0f3213758" }] },
+    { "id": "V1-STAFF-004", "tags": [{ "name": "baseline-sec1-management-2026-07-22", "commit": "2d1ac63ae4ed987ed9aaf7e9754b93e0f3213758" }] },
+    { "id": "V1-TIME-005", "tags": [{ "name": "teacher-attendance-scope-v37-2026-07-29", "commit": "b62270972b0df19fba00e1d5604bf0738c146a00" }] },
+    { "id": "V1-EXAM-006", "tags": [{ "name": "exam-scheme-foundation-v37-2026-07-30", "commit": "72bdb9902077d40de2411f4739d7e59df5900876" }, { "name": "exam-marks-calculation-v37-2026-07-31", "commit": "93fcfc179e00c7b5ebecb761af0ccb2d5adffcdd" }] },
+    { "id": "V1.1-SEC-ACADEMIC-001", "tags": [{ "name": "nalanda-erp-v1.1-academic-integrity-v-2026-08-21", "commit": "61aac47f4f8f716a0fa61104124907002a2d36fb" }] },
+    { "id": "V1-RC-007", "tags": [{ "name": "exam-report-publication-v37-2026-07-31", "commit": "cbc4e0f110f744f65cd6500fa55aa067f66bca2b" }] },
+    { "id": "V1-ADM-008", "tags": [{ "name": "admissions-crm-v37-2026-08-03", "commit": "0d6cc25e6b20de09a9129799c029770f376a2d44" }] },
+    { "id": "V1-FIN-010", "tags": [{ "name": "finance-integrity-v37-2026-07-26", "commit": "a3e55f34531f1bdc0a06e8b93c25690fb4d87563" }] },
+    { "id": "V1-LIB-011", "tags": [{ "name": "baseline-sec1-management-2026-07-22", "commit": "2d1ac63ae4ed987ed9aaf7e9754b93e0f3213758" }] },
+    { "id": "V1-DOC-012", "tags": [{ "name": "baseline-sec1-management-2026-07-22", "commit": "2d1ac63ae4ed987ed9aaf7e9754b93e0f3213758" }] },
+    { "id": "V1-REC-013", "tags": [{ "name": "clean-install-v37-2026-07-22", "commit": "a0f84455705bf9fbe8d57150f92db580501744ce" }, { "name": "operational-migration-baseline-v37-2026-07-29", "commit": "39d4b5a495273d45656a981cd66ea3da2eaacdde" }] },
+    { "id": "V1-RC-016", "tags": [{ "name": "report-card-print-acceptance-v41-2026-08-14", "commit": "16154c395459dcfe27052204c4dbcecfa7ddd169" }] },
+    { "id": "V1-DEVOPS-017", "tags": [{ "name": "release-operations-v41-2026-08-10", "commit": "6693f8d3e4c975be748e8d7f103cd72f2ee36cfc" }] },
+    { "id": "V1-SUPPORT-018", "tags": [{ "name": "support-complaints-v37-2026-08-09", "commit": "53a2e92c7320c05e9dd9ff56c69a19ad44480614" }] },
+    { "id": "V1-OBS-019", "tags": [{ "name": "observability-operations-v40-2026-08-10", "commit": "21a62df9d8d564cada57663069f60652efcd2b7a" }] },
+    { "id": "V1-IMPORT-020", "tags": [{ "name": "bulk-onboarding-v41-2026-08-10", "commit": "b5795d62081efce6f3fa7586a43c11d89ae9156b" }] },
+    { "id": "V1-QA-021", "tags": [{ "name": "nalanda-erp-v1-rc1-v41-2026-08-14", "commit": "26a47632f7c1e9c9b5f2b48de8c9b56d60428aed" }] },
+    { "id": "V1.5-RC-034", "tags": [{ "name": "kg-report-cards-v1-5-v42-2026-08-22", "commit": "ee15a71ca04048231851144de8a64c1ca3140acd" }] },
+    { "id": "V1.5-WORK-035", "tags": [{ "name": "super-admin-work-v-2026-08-21", "commit": "53a805be7ad5299e76e30b2989a052f1b5f935e8" }] },
+    { "id": "V1.5-SEARCH-036", "tags": [{ "name": "universal-search-v41-2026-08-22", "commit": "a0bd3ba395625e8c3b38c6a0ea322af49cfd631c" }] },
+    { "id": "V1.5-AI-037", "tags": [{ "name": "smart-ai-v42-2026-08-22", "commit": "fe249e37ca15a0fa897d0089ff193bc595c34fd1" }] },
+    { "id": "V1.5-MEET-038", "tags": [{ "name": "parent-meetings-v1-5-v43-2026-08-24", "commit": "e8742564cf9d54651521fbeba35548b45ff9b7e0" }] },
+    { "id": "V1.5-TRN-025", "tags": [{ "name": "optional-ops-v1-5-v43-2026-08-24", "commit": "15b3d9e3968c2c13880106b55b4b9992f5c9ff9f" }] },
+    { "id": "V1.5-CAF-026", "tags": [{ "name": "optional-ops-v1-5-v43-2026-08-24", "commit": "15b3d9e3968c2c13880106b55b4b9992f5c9ff9f" }] },
+    { "id": "V1-SAFE-033", "tags": [{ "name": "student-early-exit-v39-2026-08-10", "commit": "dec3883e5e5350f72e1f1f3ffc31104caed1adc5" }] }
+  ],
+  "clearedReleases": [
+    {
+      "id": "SUPPORT_1A",
+      "name": "Support, complaints and feedback",
+      "tag": "support-complaints-v37-2026-08-09",
+      "commit": "53a2e92c7320c05e9dd9ff56c69a19ad44480614",
+      "retainedBranches": [
+        { "ref": "origin/support/parent-staff-complaints-feedback", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ]
+    },
+    {
+      "id": "SUPER_ADMIN_COMMAND_1A",
+      "name": "Super Admin Command Center",
+      "tag": "super-admin-command-center-v41-2026-08-21",
+      "commit": "467204394a0ca891fe6e9ac4d55fe59d0814aa17",
+      "retainedBranches": [
+        { "ref": "origin/feature/super-admin-command-center-foundation", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ]
+    },
+    {
+      "id": "SUPER_ADMIN_WORK_1A",
+      "name": "Super Admin My Work",
+      "tag": "super-admin-work-v-2026-08-21",
+      "commit": "53a805be7ad5299e76e30b2989a052f1b5f935e8",
+      "retainedBranches": [
+        { "ref": "origin/feature/super-admin-work-programme-1a", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ]
+    },
+    {
+      "id": "ACADEMIC_INTEGRITY_1A",
+      "name": "Academic Integrity v1.1",
+      "tag": "nalanda-erp-v1.1-academic-integrity-v-2026-08-21",
+      "commit": "61aac47f4f8f716a0fa61104124907002a2d36fb",
+      "retainedBranches": [
+        { "ref": "origin/feature/academic-integrity-principal-marks-v1-1", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ]
+    },
+    {
+      "id": "WHITEBOARD_BRIDGE_1A",
+      "name": "Whiteboard Bridge",
+      "tag": "super-admin-whiteboard-bridge-v41-2026-08-22",
+      "commit": "1a56d5e3b5947e835c07fcdf0baaaa7665bf0acf",
+      "retainedBranches": [
+        { "ref": "origin/feature/super-admin-whiteboard-bridge-1a", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ]
+    },
+    {
+      "id": "UNIVERSAL_SEARCH_1A",
+      "name": "Universal Search",
+      "tag": "universal-search-v41-2026-08-22",
+      "commit": "a0bd3ba395625e8c3b38c6a0ea322af49cfd631c",
+      "retainedBranches": [
+        { "ref": "origin/feature/universal-search-1a", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ]
+    },
+    {
+      "id": "SEARCH_EXTENSION_1B",
+      "name": "Universal Search Extension 1B",
+      "tag": "universal-search-extension-v43-2026-08-24",
+      "commit": "3d51164b8214211d26e48c2c6f9920286ef9c689",
+      "retainedBranches": [
+        { "ref": "origin/feature/search-extension-1b", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ],
+      "softwareStatus": "CLEARED",
+      "activationStatus": "NOT_APPLICABLE"
+    },
+    {
+      "id": "DEV_PARALLEL_SAFETY_1A",
+      "name": "Parallel worktree safety",
+      "tag": "dev-parallel-safety-2026-08-22",
+      "commit": "4978da6e0fc3c1846750694a04f4015b61ca78af",
+      "retainedBranches": [
+        { "ref": "origin/feature/dev-parallel-safety-1a", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ]
+    },
+    {
+      "id": "KG_REPORTS_V1_5_1A",
+      "name": "KG Report Cards V1.5",
+      "tag": "kg-report-cards-v1-5-v42-2026-08-22",
+      "commit": "ee15a71ca04048231851144de8a64c1ca3140acd",
+      "retainedBranches": [
+        { "ref": "origin/feature/kg-reports-v1-5-1a", "policy": "EXISTS" }
+      ],
+      "softwareStatus": "CLEARED",
+      "activationStatus": "KG_OPERATIONAL_ACTIVATION_OFF"
+    },
+    {
+      "id": "EVENT_MEDIA_V1_5_1A",
+      "name": "Event Media V1.5",
+      "tag": "event-media-v1-5-v42-2026-08-22",
+      "commit": "86dff935300851ac2846cd3ed4d6cdf18812dc63",
+      "retainedBranches": [
+        { "ref": "origin/feature/event-media-v1-5-1a", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ],
+      "softwareStatus": "CLEARED",
+      "activationStatus": "PUBLIC_GALLERY_DEFAULT_OFF"
+    },
+    {
+      "id": "SMART_AI_1A",
+      "name": "Smart AI Foundation",
+      "tag": "smart-ai-v42-2026-08-22",
+      "commit": "fe249e37ca15a0fa897d0089ff193bc595c34fd1",
+      "retainedBranches": [
+        { "ref": "origin/feature/smart-ai-1a", "policy": "EXISTS" },
+        { "ref": "origin/feature/smart-ai-finalize-1a", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ],
+      "softwareStatus": "CLEARED",
+      "activationStatus": "PROVIDER_DEFAULT_OFF"
+    },
+    {
+      "id": "SMART_AI_LOCAL_RUNTIME_1A",
+      "name": "Smart AI Local Runtime",
+      "tag": "smart-ai-local-runtime-v42-2026-08-23",
+      "commit": "8fc1473c0f74a70fe1dc6afcd9740f1e7eab5495",
+      "retainedBranches": [
+        { "ref": "origin/feature/smart-ai-local-runtime-1a", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ],
+      "softwareStatus": "CLEARED",
+      "activationStatus": "LOCAL_PROVIDER_NOT_ACTIVE_BY_DEFAULT"
+    },
+    {
+      "id": "PARENT_MEETING_V1_5_1A",
+      "name": "Parent Meetings V1.5",
+      "tag": "parent-meetings-v1-5-v43-2026-08-24",
+      "commit": "e8742564cf9d54651521fbeba35548b45ff9b7e0",
+      "retainedBranches": [
+        { "ref": "origin/feature/parent-meeting-v1-5-1a", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ],
+      "softwareStatus": "CLEARED",
+      "activationStatus": "OPERATIONAL_ACTIVATION_DEFAULT_OFF"
+    },
+    {
+      "id": "OPTIONAL_OPS_V1_5_1A",
+      "name": "Optional Transport and Cafeteria V1.5",
+      "tag": "optional-ops-v1-5-v43-2026-08-24",
+      "commit": "15b3d9e3968c2c13880106b55b4b9992f5c9ff9f",
+      "retainedBranches": [
+        { "ref": "origin/feature/optional-ops-v1-5-1a", "policy": "HEAD_CONTAINED_IN_RELEASE" }
+      ],
+      "softwareStatus": "CLEARED",
+      "activationStatus": "OPERATIONAL_ACTIVATION_DEFAULT_OFF"
+    }
+  ],
+  "featureFlagRuntimeContracts": [
+    {
+      "key": "real-data-imports",
+      "status": "ENFORCED",
+      "evidencePaths": [
+        "lib/release-feature-flag-runtime.ts",
+        "app/api/import/students/route.ts",
+        "app/api/import/staff/route.ts",
+        "app/api/import/guardians/route.ts",
+        "app/api/import/payments/route.ts",
+        "app/api/library/import/[kind]/route.ts",
+        "app/api/marks/import/route.ts",
+        "app/api/onboarding/batches/[publicKey]/execute/route.ts",
+        "lib/onboarding.ts"
+      ]
+    },
+    {
+      "key": "online-payments",
+      "status": "NO_RUNTIME_PROVIDER_CAPABILITY",
+      "evidencePaths": ["package.json"]
+    },
+    {
+      "key": "live-messaging",
+      "status": "COMPENSATING_CONTROL",
+      "evidencePaths": ["lib/whatsapp-profiles.ts", "lib/sms-email-profiles.ts"]
+    },
+    {
+      "key": "ai-ocr-live-processing",
+      "status": "COMPENSATING_CONTROL",
+      "evidencePaths": ["lib/fee-register-ocr-provider.ts"]
+    },
+    {
+      "key": "bulk-exports",
+      "status": "ENFORCED_NO_MAPPED_SURFACES",
+      "evidencePaths": [
+        "lib/release-feature-flag-runtime.ts",
+        "tools/release-evidence/bulk-export-contracts.json",
+        "tools/release-evidence/bulk-export-governance.mjs",
+        "docs/BULK_EXPORT_GOVERNANCE.md"
+      ]
+    },
+    {
+      "key": "public-admissions-form",
+      "status": "ENFORCED",
+      "evidencePaths": [
+        "lib/release-feature-flag-runtime.ts",
+        "app/(public)/admissions/page.tsx",
+        "app/(public)/admissions/apply/page.tsx",
+        "app/api/public/admissions/enquiries/route.ts",
+        "app/api/public/admissions/application/route.ts",
+        "app/api/public/admissions/application/documents/route.ts",
+        "app/api/public/admissions/application/documents/[publicKey]/route.ts",
+        "lib/admissions.ts",
+        "lib/admissions-files.ts"
+      ]
+    },
+    {
+      "key": "payroll-ess-pilot",
+      "status": "ENFORCED",
+      "evidencePaths": [
+        "lib/release-feature-flag-runtime.ts",
+        "app/my-payroll/page.tsx",
+        "app/api/my-payroll/route.ts",
+        "app/api/my-payroll/payslips/[reference]/download/route.ts",
+        "lib/payroll.ts"
+      ]
+    },
+    {
+      "key": "kg-report-cards-v1-5",
+      "status": "ENFORCED",
+      "evidencePaths": ["lib/report-card-release-policy.ts"]
+    },
+    {
+      "key": "transport-v1-5",
+      "status": "ENFORCED",
+      "evidencePaths": ["lib/optional-operations-feature-flags.ts", "lib/optional-operations-api.ts"]
+    },
+    {
+      "key": "cafeteria-v1-5",
+      "status": "ENFORCED",
+      "evidencePaths": ["lib/optional-operations-feature-flags.ts", "lib/optional-operations-api.ts"]
+    }
+  ],
+  "releaseBlockedBranches": []
+}

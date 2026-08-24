@@ -45,6 +45,7 @@ Students, meals, payments, providers, GPS, maps, Safe Exit changes, or deploymen
 - [Universal Search Independent QA Clearance](evidence/UNIVERSAL_SEARCH_1A_QA_CLEARANCE.md)
 - [Grounded Smart AI Architecture](SMART_AI_ARCHITECTURE.md)
 - [Grounded Smart AI Independent QA Clearance](evidence/SMART_AI_1A_QA_CLEARANCE.md)
+- [Smart AI Local Runtime Qualification](SMART_AI_LOCAL_RUNTIME.md)
 - [Canonical Canvs Whiteboard Bridge](SUPER_ADMIN_WHITEBOARD_BRIDGE.md)
 - [V1.5 and Post-RC Roadmap](V1_5_AND_POST_RC_ROADMAP.md)
 - [Pending Feature Reconciliation](PENDING_FEATURE_RECONCILIATION.md)
@@ -59,10 +60,18 @@ summaries. Status: `SUPER_ADMIN_WORK_CLEARED`. Universal Search is implemented
 and independently cleared with status `UNIVERSAL_SEARCH_CLEARED`. SMART-AI-1A
 implements the exact-Super-Admin, read-only, citation-grounded foundation over
 that Search boundary and is independently cleared with status
-`SMART_AI_CLEARED`. Its runtime remains disabled by default and cloud/external
+`SMART_AI_CLEARED`. The loopback-only Local Runtime is also software-cleared;
+its committed provider remains disabled by default and cloud/external
 providers, persistent conversations and AI actions remain prohibited. The fixed canonical Canvs Whiteboard bridge is
 also independently cleared without iframe, token exchange, sync, database
 change, Search indexing or AI integration.
+
+## FINAL-SCOPE-QA-1A corrected-scope current-main acceptance
+
+- [Final Corrected-Scope Acceptance](FINAL_CORRECTED_SCOPE_ACCEPTANCE.md)
+- [Bulk Export Governance](BULK_EXPORT_GOVERNANCE.md)
+
+The first run's `FINAL_SCOPE_QA_REQUIRES_FIXES` checkpoint is preserved in the acceptance document. R1 has mandatory acceptance green: the three operational default-off flags are server-enforced, all 60 export-like API routes have a machine-checked classification, dependency/security/recovery gates are clean, and exact-source-head GitHub validation passed. The terminal documentation-only head remains fail-closed until its exact-SHA validation; deployment and operational activation are not authorised.
 
 ## V1-FINAL-1A final integration and release-candidate preparation
 
@@ -187,7 +196,7 @@ OBS-1A is independently QA-cleared locally/private and remains provider-neutral.
 - [Safe Staging, Release and Client Update Strategy](SAFE_STAGING_RELEASE_AND_CLIENT_UPDATE_STRATEGY.md)
 - [Basic Memory Cloud Sync Package](BASIC_MEMORY_SYNC_PACKAGE.md)
 
-The 2026-08-08 scope correction is authoritative: full payroll automation is V1.5 even though Prompt 23I is released. `FIN-FAMILY-PAY-1` and the separate `HR-PAYSLIP-REQ-1` request/protected-delivery workflow are released locally/private after independent QA. Canonical template/physical print and safe update blockers remain. Provider activation, deployment and real-data onboarding are outside these releases. Historical documents remain accessible and are explicitly superseded where they conflict.
+The 2026-08-08 scope correction is authoritative: full payroll automation is V1.5 even though Prompt 23I is released. `FIN-FAMILY-PAY-1` and the separate `HR-PAYSLIP-REQ-1` request/protected-delivery workflow are released locally/private after independent QA. Canonical template/physical print and safe update software are now cleared; operational activation, provider configuration, deployment and real-data onboarding remain outside these releases. Historical documents remain accessible and are explicitly superseded where they conflict.
 
 ## Prompt 23I payroll, payslips and employee self-service
 
@@ -264,15 +273,14 @@ results, external providers and real-user onboarding remain unauthorised.
 - [Classwork Governance Diagram](diagrams/classwork-secure-submissions.mmd)
 - [Implementation Evidence](evidence/CLASSWORK_23F_IMPLEMENTATION_EVIDENCE.md)
 
-Prompt 23F is implemented on the retained feature branch
-`feature/classwork-secure-submissions` and is ready for independent QA. It adds
+Prompt 23F is independently cleared on the retained feature branch
+`feature/classwork-secure-submissions` and annotated tag
+`classwork-submissions-v37-2026-08-03`. It adds
 versioned scoped classwork, private attachment delivery, linked-child or
 self-scoped submission versions, append-only feedback/audit, exactly-once
 in-app notifications, and encrypted attachment-byte recovery. The operational
-database remains at the exact zero-business-data baseline. The additive
-migration is intentionally not applied to the operational database until
-independent QA approves release; merge, tag, deployment, live providers and
-real-user onboarding remain unauthorised.
+database remains at the exact zero-business-data baseline. Deployment, live
+providers and real-user onboarding remain unauthorised.
 
 ## Prompt 23E events, holidays and academic calendar
 
@@ -339,14 +347,14 @@ is Prompt 23E — Events, Holidays and Academic Calendar.
 - [IAM Phase Diagram](diagrams/iam-delegated-access-contexts.mmd)
 - [Implementation Checkpoint](evidence/IAM_1A_IMPLEMENTATION_CHECKPOINT.md)
 
-IAM-1A is on the retained feature branch
+IAM-1A is independently QA-cleared on the retained feature branch
 `iam/named-users-permission-contexts`. It adds one authoritative deny-first
 permission evaluator, versioned profiles/overrides, governed user lifecycle,
 last-Super-Admin protection, opaque server-side role/child contexts, responsive
 administration and version-37 backup/restore coverage. The operational
-database and protected accounts remain unchanged. Independent IAM-1A-QA has
-not started; merge, staging, provider activation and real-user onboarding are
-not authorised.
+database and protected accounts remain unchanged. The retained annotated tag is
+`iam-delegated-access-v37-2026-08-01`; staging, provider activation and real-user
+onboarding are not authorised.
 
 ## AUTH-2B verified login, recovery and central sessions
 

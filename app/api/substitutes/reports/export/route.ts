@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const fromText = sp.get("from") ?? `${today.slice(0, 8)}01`;
     const toText = sp.get("to") ?? today;
     const report = await substituteReportData(prisma, { from: substituteDate(fromText, "From date"), to: substituteDate(toText, "To date") });
-    return new NextResponse(substituteReportCsv(report.assignments), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename=substitute-coverage-${fromText}-to-${toText}.csv` } });
+    return new NextResponse(substituteReportCsv(report.assignments), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename=substitute-coverage-${fromText}-to-${toText}.csv`, "cache-control": "private, no-store", "x-content-type-options": "nosniff" } });
   } catch (error) {
     return NextResponse.json({ error: safeClientError(error, "Unable to export substitute reports") }, { status: 400 });
   }
