@@ -71,7 +71,7 @@ change, Search indexing or AI integration.
 - [Final Corrected-Scope Acceptance](FINAL_CORRECTED_SCOPE_ACCEPTANCE.md)
 - [Bulk Export Governance](BULK_EXPORT_GOVERNANCE.md)
 
-The first run's `FINAL_SCOPE_QA_REQUIRES_FIXES` checkpoint is preserved in the acceptance document. R1 now has local mandatory acceptance green: the three operational default-off flags are server-enforced, all 60 export-like API routes have a machine-checked classification, and dependency/security/recovery gates are clean. Exact-head external CI remains pending, so no merge, tag, deployment or activation is yet authorised.
+The first run's `FINAL_SCOPE_QA_REQUIRES_FIXES` checkpoint is preserved in the acceptance document. R1 has mandatory acceptance green: the three operational default-off flags are server-enforced, all 60 export-like API routes have a machine-checked classification, dependency/security/recovery gates are clean, and exact-source-head GitHub validation passed. The terminal documentation-only head remains fail-closed until its exact-SHA validation; deployment and operational activation are not authorised.
 
 ## V1-FINAL-1A final integration and release-candidate preparation
 

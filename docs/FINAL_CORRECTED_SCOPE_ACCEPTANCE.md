@@ -2,11 +2,11 @@
 
 **Prompt:** `FINAL-SCOPE-QA-1A` / `FINAL-SCOPE-QA-1A-R1`<br>
 **Evidence window:** 2026-08-23 to 2026-08-24<br>
-**Current verdict:** `LOCAL_MANDATORY_ACCEPTANCE_GREEN / EXACT_HEAD_CI_PENDING`<br>
+**Current verdict:** `RELEASE_ACCEPTANCE_GREEN`<br>
 **Candidate branch:** `feature/final-scope-qa-1a`<br>
 **Authorized current main:** `3d51164b8214211d26e48c2c6f9920286ef9c689`
 
-This is local/private release acceptance evidence. It does not authorize deployment, operational activation, real-data migration, provider activation, merge or release tagging.
+This is software release acceptance evidence. It does not authorize deployment, operational activation, real-data migration or provider activation.
 
 ## R1 remediation outcome
 
@@ -16,7 +16,7 @@ The committed defaults remain false with zero-percent rollout. A QA-only activat
 
 Bulk-export discovery now classifies all 60 export-like API routes: 40 are governed bulk exports and 20 are explicitly single-record or otherwise not bulk exports. The machine validator fails on an unclassified future surface and checks server authorization evidence, private/no-store behavior, CSV neutralisation, hidden-field selection, mapping consistency and bounded manifest metadata. The real `bulk-exports` flag means newly released bulk surfaces; zero current cleared surfaces are mapped to it, so existing governed exports retain their per-surface authorization and bounds rather than being placed behind an invented global switch.
 
-All local mandatory gates are green. Exact-head GitHub validation is the remaining release boundary. No QA release tag has been created and this branch has not yet been merged to main.
+All local mandatory gates are green. GitHub run `32731736266`, job `97445250824`, allocated a real runner, checked out exact candidate SHA `6c1662901e2d4a5732a816c1927e51c4c60e9a0b`, and passed locked installation, isolated migration deployment, Git/private-artifact safety, focused tests, typecheck and production build. The final documentation-only release head must receive the same exact-head validation before merge.
 
 ## Historical first-run checkpoint
 
@@ -75,7 +75,7 @@ Production-only and full dependency audits both reported zero Critical, High, Me
 
 Changed QA/tooling code was reviewed for command construction, bounded path handling, temporary-file containment, Git invocation, database-copy targeting, secret handling and evidence output. The security-diff review reported no actionable finding. Git safety, merge-marker, focused-test/skip-integrity, tracked-artifact, model-binary, backup/database and unexpected-large-file checks passed.
 
-R1's pre-release diff review identified one Medium QA-path canonicalisation issue in the first locally green head: a trusted non-production file URL was classified by raw path text. It was corrected before push by canonicalising the file URL and requiring containment beneath the worktree QA roots or operating-system temporary directory, while rejecting the canonical operational database name. Traversal, encoded-path and unapproved-root tests now fail closed. The final exact-head security scan must show zero unresolved findings before external CI.
+R1's pre-release diff review identified one Medium QA-path canonicalisation issue in the first locally green head: a trusted non-production file URL was classified by raw path text. It was corrected before push by canonicalising the file URL and requiring containment beneath the worktree QA roots or operating-system temporary directory, while rejecting the canonical operational database name. Traversal, encoded-path and unapproved-root tests now fail closed. The final 51-file, eight-surface security diff scan completed with zero findings.
 
 ## Release and branch consistency
 
@@ -89,6 +89,6 @@ No current committed remote feature branch remains classified as release-blocked
 
 Current main also contains the authorised Universal Search Extension 1B release at annotated tag `universal-search-extension-v43-2026-08-24`. Reconciliation preserved the earlier Smart AI mutation/IAM denials and the extension's image-analysis, health-data and new-source write denials. Two narrow QA-only typing defects exposed by the complete typecheck were corrected without changing runtime Search behavior.
 
-## Exact next action
+## Release decision
 
-Commit and push the final evidence head, run the approved exact-SHA GitHub validation, and release only if that exact head receives runner allocation, checkout and all mandatory green jobs. The three remediated flags, Optional Operations, Parent Meetings, KG Reports and every provider remain operationally inactive.
+The corrected-scope software candidate is accepted for guarded merge and annotated release tagging after the final documentation-only head receives exact-SHA GitHub validation. The three remediated flags, Optional Operations, Parent Meetings, KG Reports and every provider remain operationally inactive. Deployment and operational activation remain separate, unauthorised work.

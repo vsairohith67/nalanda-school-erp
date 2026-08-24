@@ -106,7 +106,7 @@ The post-V1.5 corrected-scope harness and release-evidence tooling are implement
 
 ## FINAL-SCOPE-QA-1A-R1 remediation update (2026-08-24)
 
-The first-run result above remains historical evidence. R1 now enforces all three affected flags through server/API/service boundaries and classifies 60 export-like API routes as 40 governed bulk exports plus 20 explicit non-bulk surfaces. OFF/ON copied-database Browser QA, 227 passing test files / 2,071 passing tests, build, migration, two restore rehearsals, backup v43, dependency/security checks and operational database integrity are green. Current main's authorised Universal Search Extension 1B release is reconciled. Exact-head GitHub validation is still pending; no QA merge, tag, deployment or operational activation is authorised until that gate passes.
+The first-run result above remains historical evidence. R1 enforces all three affected flags through server/API/service boundaries and classifies 60 export-like API routes as 40 governed bulk exports plus 20 explicit non-bulk surfaces. OFF/ON copied-database Browser QA, 227 passing test files / 2,071 passing tests, build, migration, two restore rehearsals, backup v43, dependency/security checks and operational database integrity are green. Current main's authorised Universal Search Extension 1B release is reconciled. Exact source-head GitHub run `32731736266` passed every mandatory step; the terminal documentation-only head remains fail-closed until its own exact-SHA validation. Deployment and operational activation remain unauthorised.
 
 ## Next documents
 
