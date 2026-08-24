@@ -59,6 +59,7 @@
     { "id": "V1.5-RC-034", "tags": [{ "name": "kg-report-cards-v1-5-v42-2026-08-22", "commit": "ee15a71ca04048231851144de8a64c1ca3140acd" }] },
     { "id": "V1.5-WORK-035", "tags": [{ "name": "super-admin-work-v-2026-08-21", "commit": "53a805be7ad5299e76e30b2989a052f1b5f935e8" }] },
     { "id": "V1.5-SEARCH-036", "tags": [{ "name": "universal-search-v41-2026-08-22", "commit": "a0bd3ba395625e8c3b38c6a0ea322af49cfd631c" }] },
+    { "id": "V1.5-SEARCH-039", "tags": [{ "name": "universal-search-extension-v43-2026-08-24-r1", "commit": "e39cb93177ad389768b097791696e88902db2945" }] },
     { "id": "V1.5-AI-037", "tags": [{ "name": "smart-ai-v42-2026-08-22", "commit": "fe249e37ca15a0fa897d0089ff193bc595c34fd1" }] },
     { "id": "V1.5-MEET-038", "tags": [{ "name": "parent-meetings-v1-5-v43-2026-08-24", "commit": "e8742564cf9d54651521fbeba35548b45ff9b7e0" }] },
     { "id": "V1.5-TRN-025", "tags": [{ "name": "optional-ops-v1-5-v43-2026-08-24", "commit": "15b3d9e3968c2c13880106b55b4b9992f5c9ff9f" }] },
@@ -123,8 +124,8 @@
     {
       "id": "SEARCH_EXTENSION_1B",
       "name": "Universal Search Extension 1B",
-      "tag": "universal-search-extension-v43-2026-08-24",
-      "commit": "3d51164b8214211d26e48c2c6f9920286ef9c689",
+      "tag": "universal-search-extension-v43-2026-08-24-r1",
+      "commit": "e39cb93177ad389768b097791696e88902db2945",
       "retainedBranches": [
         { "ref": "origin/feature/search-extension-1b", "policy": "HEAD_CONTAINED_IN_RELEASE" }
       ],

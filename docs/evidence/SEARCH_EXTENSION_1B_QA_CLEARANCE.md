@@ -4,8 +4,11 @@
 - **Decision date:** 2026-08-24
 - **Result:** `SEARCH_EXTENSION_1B_CLEARED`
 - **Feature branch:** `feature/search-extension-1b`
-- **Authorised starting main:** `15b3d9e3968c2c13880106b55b4b9992f5c9ff9f`
-- **Release tag:** `universal-search-extension-v43-2026-08-24`
+- **Authorised starting main:** `37fba4673312c135a3a8be6d447c543a9ca28f95`
+- **Existing release tag:** `universal-search-extension-v43-2026-08-24` at `3d51164b8214211d26e48c2c6f9920286ef9c689` (retained; never moved)
+- **Corrective release tag:** `universal-search-extension-v43-2026-08-24-r1` at `e39cb93177ad389768b097791696e88902db2945`
+- **Exact-head CI:** [run 32751493284](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/32751493284), job `validate` / `97509259876`, passed every mandatory step at feature SHA `a8e0668bdc2785f079a1561cc5c62cdc46084b35`.
+- **Merged main:** PR #8, normal merge `e39cb93177ad389768b097791696e88902db2945`.
 - **Deployment:** not performed or authorised
 
 ## Exact source coverage
@@ -46,7 +49,7 @@ their adapter is unsupported. Unsupported sources are never represented as
 Each adapter was exercised on a copied database populated only with synthetic
 fixtures:
 
-- 240 meetings and 80 follow-ups;
+- 1,050 meetings plus follow-up metadata;
 - 40 vehicles, 80 routes, 120 stops and 300 Student assignments;
 - 80 cafeteria items, 30 menus, 300 enrollments and 300 meal records;
 - 200 issued KG reports; and
@@ -82,8 +85,10 @@ Focused tests and browser QA proved:
 - hidden notes, image data, dietary/health data and unsupported claims did not
   cross the provider boundary.
 
-The focused Search and Smart AI suites passed 77 tests (16 Search and 61 Smart
-AI).
+The final focused Search and Smart AI suites passed 96 tests (18 Search and 78
+Smart AI), including per-source citation, insufficient-evidence, disabled,
+degraded, invalid/cross-request citation, prohibited-field, prompt-injection,
+no-write and inert-XSS checks.
 
 ## Performance and source limits
 
@@ -91,9 +96,9 @@ The extension copied-database benchmark passed with:
 
 - result cap: 50;
 - maximum Prisma queries: 42 across all enabled sources;
-- local p95: 74.19 ms and maximum: 75.19 ms on the terminal cleanup run;
-- retained browser-fixture setup p95: 276.23 ms and maximum: 322.83 ms; and
-- measured heap growth: approximately 2.05 MB.
+- local p95: 133.99 ms and maximum: 156.61 ms on the terminal copied-database run;
+- the prior retained browser-fixture run measured p95 80.86 ms; and
+- measured heap growth: 18,866,152 bytes.
 
 The query count is bounded per request and did not scale with individual
 result rows. No N+1 path was observed, and p95 remained well below the accepted
@@ -102,23 +107,27 @@ local Search threshold.
 ## Browser QA
 
 Universal Search passed at 1366 x 768 and 390 x 844 in light and dark themes.
-All five new filter cards rendered the `Safe metadata` badge. Parent Meeting,
-Transport, Cafeteria, KG report and Event Media queries returned bounded module
-cards with approved fields only. The mobile document width equalled the
-390-pixel viewport in both themes, with no horizontal overflow. Smart AI
-returned validated `SRC-1` citations for representative Event Media and Parent
-Meeting questions. Browser console error logs were empty.
+All five new filter cards rendered the `Safe metadata` badge. Exact Parent
+Meeting, Transport, Cafeteria, KG and Event Media queries opened the server-owned
+module destinations. Multi-source, exact-reference, zero-result, flag-off and
+degraded-source states were visible and accessible; the timeout state is also
+covered by the adapter/UI regression tests. Keyboard focus was visible, minimum
+controls were 44 px, and there was no horizontal overflow. Hostile searchable
+text and Smart AI citation cards remained inert. Smart AI returned one validated
+current-request citation for every approved new source. Principal route access
+redirected to `/unauthorized`, and its direct Search API request returned 403.
+There were zero console errors or hydration errors; two known development-only
+autoprefixer warnings were the only console warnings.
 
 ## Security review
 
-Codex Security diff scan `c8ce7d9b-1840-4402-803d-24042354afaf` covered the
-complete pre-fix implementation snapshot
-`codex-security-snapshot/v1:sha256:8763c14567f7740dc6c97d726a4f7dafdcaa75d91f1d438f42939bd5bb939abb`.
-It reported zero Critical/High findings and one Low Event Media free-text-title
-boundary finding. That Low finding (`csf_4f3b9e685bd74250834fd8cc`) was fixed by
-removing title matching/selection/output and adding a dedicated sentinel
-regression. Focused tests, copied-database QA and browser QA all passed after
-the fix.
+Codex Security diff scan `83a1d005-b36f-40cf-bd55-e9480fd032fd` covered the
+complete corrective implementation through
+`75e3a836ef391d2b30b228ca0d1514ca63ee02c5`. It completed all five generated
+review items plus the supporting route/API/provider/rendering chain with zero
+findings at every severity and no deferred surface. The TAC advisory could not
+be verified because the connector was not connected; this was advisory only and
+did not reduce local scan coverage.
 
 Manual IDOR/BOLA, exact-role, owner-scope, query abuse, injection/XSS, secret
 leakage, filter manipulation, failure/timeout isolation, no-write and no-image
@@ -131,16 +140,25 @@ The mandatory release gates passed:
 - `pnpm.cmd routes:list`: 350 page routes and 590 API routes;
 - `pnpm.cmd lifecycle:backfill`: dry run, zero rows created;
 - `pnpm.cmd typecheck`: every TypeScript partition passed;
-- `pnpm.cmd test`: 224 files passed, 1 intentionally skipped; 2,051 tests
+- `pnpm.cmd test`: 227 files passed, 1 intentionally skipped; 2,090 tests
   passed and 3 qpdf-capability tests intentionally skipped;
 - `pnpm.cmd build`: production compile and generate passed;
-- `pnpm.cmd backup`: format version 43 backup created and hashed; and
-- `pnpm.cmd git:safety-check`: passed.
+- `pnpm.cmd backup`: format version 43 backup created;
+- fresh migration: 22 migrations and 320 models/tables;
+- copied upgrade: applied twice with the business baseline preserved;
+- restore: two separately invoked rehearsals passed, each internally restoring twice;
+- production and full dependency audits: no known vulnerabilities;
+- corrected-scope focused acceptance: 32 files / 450 tests / zero skips / DB match; and
+- independent Academic Integrity: exact Principal and Super Admin allow, Teacher and
+  linked-child denial, scoped operator enforcement and one-success/one-reject concurrency.
 
 The first full-suite attempt disclosed that a safety worktree does not inherit
-ignored `.env` or `prisma/dev.db` files. Exact disposable copies were made
-inside this worktree, all three affected legacy suites passed independently,
-and the exact full test command then passed. The temporary copies were removed.
+ignored `.env` or `prisma/dev.db` files, and the requirement-count assertion
+still expected the pre-extension ledger. A minimal ignored environment file and
+an exact disposable database copy were created; the ledger assertion was updated
+to require the unique `V1.5-SEARCH-039` row. All 37 affected tests then passed,
+followed by the green full suite above. The worktree reference copy remained
+hash-identical.
 
 No schema or migration was added. The operational database remained 8,409,088
 bytes with SHA-256

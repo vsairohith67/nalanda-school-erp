@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import { ROLES } from "../lib/permissions";
 import { parseUniversalSearchBody } from "../lib/universal-search-api";
 import {
+  SEARCH_EXTENSION_1B_SOURCE_GOVERNANCE,
+  SEARCH_EXTENSION_1B_SOURCE_IDS,
   UNIVERSAL_SEARCH_LIMITS,
   UNIVERSAL_SEARCH_SOURCES,
   assertUniversalSearchActor,
@@ -11,6 +13,7 @@ import {
   createUniversalSearchAdapters,
   parseUniversalSearchRequest,
   rankSearchCandidate,
+  runUniversalSearch,
   type UniversalSearchAdapter,
   type UniversalSearchAdapterContext,
   type UniversalSearchResult,
@@ -19,6 +22,11 @@ import {
 
 const actor = { id: "super-admin-a", role: "SUPER_ADMIN" as const };
 const now = new Date("2026-08-22T00:00:00.000Z");
+
+function restoreEnvironment(key: string, value: string | undefined) {
+  if (value === undefined) delete process.env[key];
+  else process.env[key] = value;
+}
 
 function context(query: string): UniversalSearchAdapterContext {
   const request = parseUniversalSearchRequest({ query, sources: ["STUDENTS"] });
@@ -137,7 +145,7 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
   });
 
   it("classifies every newly cleared candidate as safe metadata only and preserves default-off UNAVAILABLE states", async () => {
-    const newSources = ["PARENT_MEETINGS", "TRANSPORT", "CAFETERIA", "KG_REPORTS", "EVENT_MEDIA"] as const;
+    const newSources = SEARCH_EXTENSION_1B_SOURCE_IDS;
     expect(UNIVERSAL_SEARCH_SOURCES.filter((source) => newSources.includes(source.id as typeof newSources[number])).map((source) => [source.id, source.coverage])).toEqual([
       ["PARENT_MEETINGS", "SAFE_METADATA_ONLY"],
       ["TRANSPORT", "SAFE_METADATA_ONLY"],
@@ -146,11 +154,11 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
       ["EVENT_MEDIA", "SAFE_METADATA_ONLY"]
     ]);
 
-    const searches = [vi.fn(async () => []), vi.fn(async () => []), vi.fn(async () => [])];
+    const searches = newSources.map(() => vi.fn(async () => []));
     const response = await composeUniversalSearch(
-      parseUniversalSearchRequest({ query: "Arjun", sources: ["PARENT_MEETINGS", "TRANSPORT", "CAFETERIA"] }),
-      ["PARENT_MEETINGS", "TRANSPORT", "CAFETERIA"].map((source, index) => ({
-        source: source as UniversalSearchSourceId,
+      parseUniversalSearchRequest({ query: "Arjun", sources: [...newSources] }),
+      newSources.map((source, index) => ({
+        source,
         availability: () => ({ enabled: false, message: `${source} is DEFAULT-OFF.` }),
         search: searches[index]
       })),
@@ -158,6 +166,59 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
     );
     expect(response.sources.every((source) => source.state === "UNAVAILABLE" && source.message?.includes("DEFAULT-OFF"))).toBe(true);
     expect(searches.every((search) => search.mock.calls.length === 0)).toBe(true);
+  });
+
+  it("keeps one machine-readable governance record for every post-1A adapter", () => {
+    const baselineAdapters = new Set<UniversalSearchSourceId>([
+      "STUDENTS", "ADMISSIONS", "GUARDIANS", "STAFF", "DIARY", "TASKS", "CONTACTS", "FEES", "EXAMINATIONS",
+      "REPORT_CARDS", "SUPPORT", "SAFE_EXIT", "EVENTS", "USERS_IAM", "RELEASE_OPERATIONS", "OBSERVABILITY"
+    ]);
+    const adapterSources = createUniversalSearchAdapters({} as PrismaClient, actor.id).map((entry) => entry.source);
+    const post1aAdapters = adapterSources.filter((source) => !baselineAdapters.has(source));
+    expect(post1aAdapters).toEqual([...SEARCH_EXTENSION_1B_SOURCE_IDS]);
+    expect(Object.keys(SEARCH_EXTENSION_1B_SOURCE_GOVERNANCE)).toEqual([...SEARCH_EXTENSION_1B_SOURCE_IDS]);
+    for (const source of post1aAdapters) {
+      const definition = UNIVERSAL_SEARCH_SOURCES.find((entry) => entry.id === source);
+      expect(definition && "governance" in definition ? definition.governance : null).toMatchObject({
+        classification: "SAFE_METADATA_ONLY",
+        perSourceLimit: UNIVERSAL_SEARCH_LIMITS.perSourceLimit,
+        timeoutMs: UNIVERSAL_SEARCH_LIMITS.sourceTimeoutMs,
+        destinationType: "SERVER_OWNED_MODULE_ROUTE",
+        smartAiEligible: true,
+        releaseFlagDependency: { committedDefault: "OFF" }
+      });
+    }
+  });
+
+  it("checks every new module flag before any operational query", async () => {
+    const previous = {
+      parent: process.env.PARENT_MEETINGS_V1_5,
+      event: process.env.EVENT_MEDIA_PUBLIC_GALLERY_ENABLED,
+      kg: process.env.KG_REPORT_CARDS_V1_5_QA_MODE,
+      optional: process.env.OPTIONAL_OPS_SYNTHETIC_QA
+    };
+    delete process.env.PARENT_MEETINGS_V1_5;
+    delete process.env.EVENT_MEDIA_PUBLIC_GALLERY_ENABLED;
+    delete process.env.KG_REPORT_CARDS_V1_5_QA_MODE;
+    delete process.env.OPTIONAL_OPS_SYNTHETIC_QA;
+    const delegates = Object.fromEntries([
+      "parentMeeting", "transportRoute", "transportVehicle", "transportStop", "transportStudentAssignment", "cafeteriaCatalogItem",
+      "cafeteriaMenu", "cafeteriaStudentEnrollment", "cafeteriaMealRecord", "studentReportCard", "eventMediaAlbum", "eventMediaAsset"
+    ].map((name) => [name, { findMany: vi.fn(async () => []) }]));
+    try {
+      const response = await runUniversalSearch(
+        delegates as unknown as PrismaClient,
+        actor,
+        parseUniversalSearchRequest({ query: "Arjun", sources: [...SEARCH_EXTENSION_1B_SOURCE_IDS] })
+      );
+      expect(response.sources.every((source) => source.state === "UNAVAILABLE" && /disabled|default-off/i.test(source.message ?? ""))).toBe(true);
+      for (const delegate of Object.values(delegates)) expect(delegate.findMany).not.toHaveBeenCalled();
+    } finally {
+      restoreEnvironment("PARENT_MEETINGS_V1_5", previous.parent);
+      restoreEnvironment("EVENT_MEDIA_PUBLIC_GALLERY_ENABLED", previous.event);
+      restoreEnvironment("KG_REPORT_CARDS_V1_5_QA_MODE", previous.kg);
+      restoreEnvironment("OPTIONAL_OPS_SYNTHETIC_QA", previous.optional);
+    }
   });
 
   it("keeps an existing exact high-confidence reference ahead of a new-module exact reference", async () => {
@@ -271,7 +332,7 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
       cafeteriaMenu: { findMany: vi.fn(async () => [{ publicKey: "CM-42", menuDate: now, dayLabel: "Monday", mealPlanName: "STANDARD", status: "ACTIVE", updatedAt: now }]) },
       cafeteriaStudentEnrollment: { findMany: vi.fn(async () => [{ publicKey: "CE-42", effectiveFrom: now, effectiveTo: null, active: true, updatedAt: now, mealPlanName: "HEALTH-DIET-SENTINEL", student: { studentName: "Arjun Reddy", admissionNo: "ADM-42", className: "8", section: "A" } }]) },
       cafeteriaMealRecord: { findMany: vi.fn(async () => [{ publicKey: "MEAL-42", serviceDateKey: "2026-08-24", mealSlot: "LUNCH", recordType: "SERVED", status: "RECORDED", recordedAt: now, student: { studentName: "Arjun Reddy", admissionNo: "ADM-42" }, menuItem: { item: { code: "ITEM-42", name: "Vegetable Pulao", dietaryNote: "HEALTH-DIET-SENTINEL" } } }]) },
-      studentReportCard: { findMany: vi.fn(async () => [{ id: "kg-db-42", reportCardNumber: "KG-REPORT-42", academicYear: "2026-27", className: "LKG", section: "A", status: "ISSUED", issuedAt: now, updatedAt: now, student: { studentName: "Arjun Junior", admissionNo: "KG-ADM-42" }, batch: { reportingPeriod: "Evaluations I-V" }, draftDataJson: "KG-RUBRIC-CONTENT-SENTINEL", teacherOverallComment: "KG-ASSESSMENT-SENTINEL" }]) },
+      studentReportCard: { findMany: vi.fn(async () => [{ id: "kg-db-42", reportCardNumber: "KG-REPORT-42", academicYear: "2026-27", className: "LKG", section: "A", status: "ISSUED", currentVersionNumber: 3, issuedAt: now, updatedAt: now, student: { studentName: "Arjun Junior", admissionNo: "KG-ADM-42" }, batch: { reportingPeriod: "Evaluations I-V" }, draftDataJson: "KG-RUBRIC-CONTENT-SENTINEL", teacherOverallComment: "KG-ASSESSMENT-SENTINEL" }]) },
       eventMediaAlbum: { findMany: vi.fn(async () => [{ publicKey: "ALBUM-42", title: "STUDENT-IDENTIFYING-ALBUM-TITLE", eventDate: now, visibility: "PRIVATE_LEADERSHIP", status: "APPROVED", reviewStatus: "APPROVED", publicationState: "PRIVATE", updatedAt: now, _count: { assets: 1 }, description: "CONSENT-SENSITIVE-DESCRIPTION", legalHold: false }]) },
       eventMediaAsset: { findMany: vi.fn(async () => [{ publicKey: "MEDIA-42", originalMediaType: "image/jpeg", originalWidth: 1600, originalHeight: 900, reviewStatus: "APPROVED", publicationStatus: "PRIVATE", uploadedAt: now, album: { publicKey: "ALBUM-42", title: "STUDENT-IDENTIFYING-ALBUM-TITLE" }, originalStorageKey: "PRIVATE-STORAGE-KEY", originalSha256: "IMAGE-SHA-SENTINEL", caption: "STUDENT-IDENTIFICATION-SENTINEL", reviewNote: "CONSENT-SENSITIVE-NOTE", peopleDeclaration: "MANUAL_ASSOCIATIONS_COMPLETE", exif: "EXIF-SENTINEL" }]) }
     };
@@ -286,11 +347,12 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
     const results: UniversalSearchResult[] = [];
     for (const [source, query] of cases) results.push(...await sourceAdapter(client, source).search(context(query)));
     expect(new Set(results.map((item) => item.source))).toEqual(new Set(cases.map(([source]) => source)));
+    expect(results.find((item) => item.source === "KG_REPORTS")?.href).toBe("/report-cards");
     const serialized = JSON.stringify(results);
     for (const forbidden of [
       "PARENT-SENSITIVE-SUBJECT", "PARENT-SENSITIVE-FREE-TEXT", "HIDDEN-CANCELLATION", "LEADERSHIP-PRIVATE-NOTE",
       "PRIVATE-DRIVER-DATA", "HOME-ADDRESS-SENTINEL", "HEALTH-DIET-SENTINEL", "FINANCIAL-INFERENCE-SENTINEL",
-      "KG-RUBRIC-CONTENT-SENTINEL", "KG-ASSESSMENT-SENTINEL", "CONSENT-SENSITIVE-DESCRIPTION", "PRIVATE-STORAGE-KEY",
+      "kg-db-42", "KG-RUBRIC-CONTENT-SENTINEL", "KG-ASSESSMENT-SENTINEL", "CONSENT-SENSITIVE-DESCRIPTION", "PRIVATE-STORAGE-KEY",
       "IMAGE-SHA-SENTINEL", "STUDENT-IDENTIFICATION-SENTINEL", "STUDENT-IDENTIFYING-ALBUM-TITLE", "CONSENT-SENSITIVE-NOTE", "EXIF-SENTINEL"
     ]) expect(serialized).not.toContain(forbidden);
 
@@ -305,8 +367,10 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
     const firstCallArgument = (mock: unknown) => (mock as { mock: { calls: unknown[][] } }).mock.calls[0]?.[0];
     expect(JSON.stringify(firstCallArgument(client.parentMeeting.findMany))).not.toMatch(/subject|requestReason|cancellationInternalReason|notes|body/);
     expect(JSON.stringify(firstCallArgument(client.transportRoute.findMany))).not.toMatch(/driverStaffMember|attendantStaffMember|address|mobile/);
+    expect(JSON.stringify(firstCallArgument(client.transportStop.findMany))).not.toMatch(/approvedReference/);
+    expect(JSON.stringify(firstCallArgument(client.cafeteriaMenu.findMany))).not.toMatch(/mealPlanName|health|diet/);
     expect(JSON.stringify(firstCallArgument(client.cafeteriaStudentEnrollment.findMany))).not.toMatch(/mealPlanName|health|diet|price|amount/);
-    expect(JSON.stringify(firstCallArgument(client.studentReportCard.findMany))).not.toMatch(/draftDataJson|snapshotJson|teacherOverallComment|principalComment|directorComment|finalGrade/i);
+    expect(JSON.stringify(firstCallArgument(client.studentReportCard.findMany))).not.toMatch(/\bid\b|batchId|studentId|draftDataJson|snapshotJson|teacherOverallComment|principalComment|directorComment|finalGrade/i);
     expect(JSON.stringify(firstCallArgument(client.eventMediaAsset.findMany))).not.toMatch(/StorageKey|Sha256|caption|reviewNote|peopleDeclaration|studentAssociations|exif/i);
     expect(JSON.stringify(firstCallArgument(client.eventMediaAlbum.findMany))).not.toMatch(/title|description|studentAssociations|legalHold/i);
   });
@@ -349,6 +413,7 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
   it("uses the shared shell, accessible keyboard/result patterns and responsive 44px controls", () => {
     const page = readFileSync("app/super-admin/search/page.tsx", "utf8");
     const workspace = readFileSync("components/universal-search-workspace.tsx", "utf8");
+    const smartAiWorkspace = readFileSync("components/smart-ai-workspace.tsx", "utf8");
     const css = readFileSync("app/globals.css", "utf8");
     expect(page).toContain("<PageShell");
     expect(workspace).toContain('role="search"');
@@ -356,6 +421,7 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
     expect(workspace).toContain('event.key === "Escape"');
     expect(workspace).toContain('event.key !== "ArrowDown"');
     expect(workspace).not.toMatch(/alert\(|confirm\(|prompt\(/);
+    for (const surface of [workspace, smartAiWorkspace]) expect(surface).not.toMatch(/dangerouslySetInnerHTML|\.innerHTML\s*=|document\.write\s*\(/);
     expect(css).toContain(".universal-search-page :is(button, a, input):focus-visible");
     expect(css).toContain("@media (max-width: 700px)");
     expect(css).toContain("min-height: 44px");

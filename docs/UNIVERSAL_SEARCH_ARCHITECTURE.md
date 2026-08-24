@@ -114,8 +114,8 @@ collapsed into a fake zero result.
 | 2 | Parent Meetings | `SAFE_METADATA_ONLY` when enabled; otherwise `UNAVAILABLE` | Meeting reference, safe Student identity, academic year, category, lifecycle/schedule/mode and follow-up state only. Subject, request reason, Parent-visible or leadership-private free text, cancellation reasons, note bodies, participants and audit content are not selected or matched |
 | 2 | Transport | `SAFE_METADATA_ONLY` when enabled; otherwise `UNAVAILABLE` | Route, vehicle and approved-stop references plus Student-specific assignment metadata matched only by the Student/reference. Home addresses, broad route-roster matching, driver/attendant identity and private Staff data are excluded |
 | 2 | Cafeteria | `SAFE_METADATA_ONLY` when enabled; otherwise `UNAVAILABLE` | Catalog/menu metadata and Student-specific enrollment/participation state matched only by the Student/reference. Health/dietary notes, payment/price data and financial inference are excluded |
-| 2 | KG Report Cards | `SAFE_METADATA_ONLY` | Issued `KG_RUBRIC` report reference, safe Student identity, class/year, reporting period and publication state only. Drafts, rubric/assessment content, grades, comments, snapshots and cancellation reasons are excluded |
-| 2 | Event Media | `SAFE_METADATA_ONLY` | Album/media reference, event date, lifecycle/publication/review state, media type/dimensions and counts only. Free-text album titles, bytes, storage keys, hashes, captions, review notes, Student associations/identification, consent detail, EXIF, OCR and face recognition are excluded |
+| 2 | KG Report Cards | `SAFE_METADATA_ONLY` when enabled; otherwise `UNAVAILABLE` | Issued `KG_RUBRIC` report reference, safe Student identity, class/year, reporting period, version, issue date and publication state only. Internal IDs, drafts, rubric/assessment content, grades, comments, snapshots and cancellation reasons are excluded |
+| 2 | Event Media | `SAFE_METADATA_ONLY` when enabled; otherwise `UNAVAILABLE` | Album/media reference, event date, lifecycle/publication/review state, media type/dimensions and counts only. Free-text album titles, bytes, storage keys, hashes, captions, review notes, Student associations/identification, consent detail, EXIF, OCR and face recognition are excluded |
 | 3 | Users / IAM | Included, safe metadata only | Name, username/email for matching, designation, role and lifecycle state; password hashes, sessions, reset/recovery, MFA and authorization internals are absent |
 | 3 | Audit / Recent Activity | `UNAVAILABLE` | Unified audit text search is deferred until a privacy-safe searchable metadata contract is separately approved |
 | 3 | Release Operations | Included, safe metadata only | Release version, environment, commit/build and migration identifiers; no secrets, packages or file paths |
@@ -126,12 +126,13 @@ infrastructure is introduced. Existing indexed identifiers and owner/status/date
 indexes are reused with bounded reads. No attachment, PDF, report or private
 file content is parsed during search.
 
-Parent Meetings, Transport and Cafeteria are governed default-off modules.
-Their adapters expose an explicit runtime availability check before any Prisma
-read. When the owning feature is disabled, Search reports `UNAVAILABLE` with a
-safe reason; it does not query an unsupported table and does not turn the state
-into `EMPTY`. KG historical issued metadata and private Event Media metadata
-retain their existing owning-module authorization at the destination route.
+All five extension modules have a recorded default-off dependency. Their
+adapters expose an explicit runtime availability check before any Prisma read.
+When the owning feature is disabled, Search reports `UNAVAILABLE` with a safe
+reason; it does not query an operational table and does not turn the state into
+`EMPTY`. KG destinations use the reauthorizing module route and never serialize
+the report-card database ID. The complete allowlist and denylist are recorded in
+[Search Extension 1B Source Governance](./SEARCH_EXTENSION_1B_SOURCE_GOVERNANCE.md).
 
 ## Exact-owner My Work privacy
 
@@ -210,12 +211,13 @@ embedding, vector table, provider call, autonomous action or generated answer.
 The separate Smart AI layer consumes only this normalized response, and its
 default runtime is disabled. See [Smart AI Architecture](./SMART_AI_ARCHITECTURE.md).
 
-SEARCH-EXTENSION-1B adds only source-routing hints for the five metadata
-sources. Smart AI still calls `runUniversalSearch` and contains no Prisma model
-read or alternate adapter. Image/OCR/face-identification and health/dietary
-requests are refused before retrieval. The provider receives no image bytes,
-EXIF, assessment bodies, private meeting notes or dietary-sensitive fields;
-citations still resolve only to current server-owned Search destinations.
+SEARCH-EXTENSION-1B adds source-routing hints only for the five registry entries
+marked Smart AI eligible. Smart AI still calls `runUniversalSearch` and contains
+no Prisma model read or alternate adapter. Image/OCR/face-identification and
+health/dietary requests are refused before retrieval. The provider receives no
+image bytes, EXIF, assessment bodies, private meeting notes or dietary-sensitive
+fields; citations still resolve only to current server-owned Search
+destinations.
 
 ## Implementation validation boundary
 

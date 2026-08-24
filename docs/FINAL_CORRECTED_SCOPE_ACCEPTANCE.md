@@ -87,7 +87,7 @@ Optional Transport and Cafeteria are `CLEARED / OPERATIONAL_ACTIVATION_DEFAULT_O
 
 No current committed remote feature branch remains classified as release-blocked by this acceptance manifest.
 
-Current main also contains the authorised Universal Search Extension 1B release at annotated tag `universal-search-extension-v43-2026-08-24`. Reconciliation preserved the earlier Smart AI mutation/IAM denials and the extension's image-analysis, health-data and new-source write denials. Two narrow QA-only typing defects exposed by the complete typecheck were corrected without changing runtime Search behavior.
+Current main also contains the authorised Universal Search Extension 1B corrective release at annotated tag `universal-search-extension-v43-2026-08-24-r1` on merge `e39cb93177ad389768b097791696e88902db2945`; the earlier `universal-search-extension-v43-2026-08-24` tag remains immutable. Exact-head run `32751493284` passed at feature SHA `a8e0668bdc2785f079a1561cc5c62cdc46084b35`. Reconciliation preserved the earlier Smart AI mutation/IAM denials and the extension's image-analysis, health-data and new-source write denials. Two narrow QA-only typing defects exposed by the complete typecheck were corrected without changing runtime Search behavior.
 
 ## Release decision
 

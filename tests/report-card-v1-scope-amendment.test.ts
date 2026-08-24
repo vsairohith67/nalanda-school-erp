@@ -55,7 +55,7 @@ describe("REPORT-PRINT-ACCEPT-1A and KG-REPORTS-V1_5-1A release boundaries", () 
 
     // Include the V1.1 Academic Integrity release as well as V1, V1.5, and V2
     // so additions cannot silently duplicate or disappear from the ledger.
-    expect(requirementRows).toHaveLength(39);
+    expect(requirementRows).toHaveLength(40);
     expect(new Set(requirementRows).size).toBe(requirementRows.length);
     expect(requirementRows.filter((id) => id === "V1.1-SEC-ACADEMIC-001")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1-RC-016")).toHaveLength(1);
@@ -63,12 +63,13 @@ describe("REPORT-PRINT-ACCEPT-1A and KG-REPORTS-V1_5-1A release boundaries", () 
     expect(requirementRows.filter((id) => id === "V1.5-SEARCH-036")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-AI-037")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-MEET-038")).toHaveLength(1);
-    expect(register).toContain("| Total requirements | 39 |");
+    expect(requirementRows.filter((id) => id === "V1.5-SEARCH-039")).toHaveLength(1);
+    expect(register).toContain("| Total requirements | 40 |");
     expect(register).toContain("| V1 | 24 |");
     expect(register).toContain("| V1.1 | 1 |");
-    expect(register).toContain("| V1.5 | 8 |");
+    expect(register).toContain("| V1.5 | 9 |");
     expect(register).toContain("| V2 | 6 |");
-    expect(register).toContain("| CLEARED | 27 |");
+    expect(register).toContain("| CLEARED | 28 |");
     expect(register).not.toContain("| RELEASE_BLOCKED |");
     expect(register).toContain("| CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING | 4 |");
     expect(register).toContain("| COMPLETE | 1 |");
