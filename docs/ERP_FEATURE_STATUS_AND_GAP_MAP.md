@@ -1,5 +1,21 @@
 # ERP Feature Status and Gap Map
 
+## Parent Meetings and Appointments — V1.5 update
+
+| Capability | Software status | Remaining boundary |
+| --- | --- | --- |
+| Parent linked-child meeting request and own safe history | Software cleared behind default-off flag | Real Parent activation and meeting import require separate approval |
+| Leadership schedule, conflict checks, outcome and follow-up | Software cleared | Operational calendar ownership and real-user process remain separate |
+| Explicit assigned-Teacher contribution | Software cleared, assignment-only | No general Teacher browsing or marks authority |
+| Separate internal notes and released Parent summary | Software cleared with append-only corrections | School content/retention policy and real use require operational approval |
+| In-app reminders and management reports | Software cleared locally | No WhatsApp/SMS/email/push or external calendar activation |
+| Search/Smart AI | Deferred | Requires an explicitly governed later Search extension |
+
+Independent acceptance result: `PARENT_MEETING_V1_5_CLEARED`. The controlled
+Browser, role/privacy/security, copied-migration/restore, full regression,
+backup v43 and byte-identical operational-database gates passed. This is
+software clearance only; operational activation remains default-off.
+
 ## GOV-RECON-1 corrected V1 status (2026-08-08)
 
 The authoritative status source is now `REQUIREMENTS_REGISTER.md`, with product scope in `V1_V1_5_V2_SCOPE.md`. A model or route is not sufficient for completion.
@@ -11,7 +27,7 @@ The authoritative status source is now `REQUIREMENTS_REGISTER.md`, with product 
 - V1 safe staging/release/client update is `PARTIAL`: readiness foundations exist, but the complete governed pipeline and client update UX are not released.
 - Support/complaint/feedback and final corrected-scope cross-module QA are `MISSING`; observability and bulk onboarding are `PARTIAL`; operational cutover is `DEFERRED` pending explicit approval.
 
-Transport and Cafeteria V1.5 software foundations are implemented, independently tested and governed `DEFAULT-OFF`; release is blocked at mandatory exact-SHA GitHub validation. This does not mean Nalanda operates either service. V2 remains AI lessons/videos with Teacher approval and no automatic Student publication.
+Transport and Cafeteria V1.5 software foundations are cleared and governed `DEFAULT-OFF` after independent QA and mandatory exact-SHA GitHub validation. This does not mean Nalanda operates either service. V2 remains AI lessons/videos with Teacher approval and no automatic Student publication.
 
 ## Prompt 23B final Schoolknot multi-role consolidation
 

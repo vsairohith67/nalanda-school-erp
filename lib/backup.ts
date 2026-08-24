@@ -26,6 +26,7 @@ import { emptyFamilyCollectionBackup, familyCollectionSchemaAvailable, FAMILY_CO
 import { emptyTechnicalOperationsBackup, loadTechnicalOperationsBackup, technicalOperationsRecordCount, technicalOperationsSchemaAvailable, validateTechnicalOperationsBackup, type TechnicalOperationsBackup } from "./technical-operations-backup";
 import { loadOptionalOperationsBackup, OPTIONAL_OPERATIONS_BACKUP_KEYS, validateOptionalOperationsBackupRows, type OptionalOperationsBackup, type OptionalOperationsBackupKey } from "./optional-operations-backup";
 import { emptyEventMediaBackup, eventMediaSchemaAvailable, EVENT_MEDIA_BACKUP_KEYS, loadEventMediaBackup, validateEventMediaBackupRows, type EventMediaBackup, type EventMediaBackupKey } from "./event-media-backup";
+import { emptyParentMeetingBackup, loadParentMeetingBackup, parentMeetingSchemaAvailable, PARENT_MEETING_BACKUP_KEYS, validateParentMeetingBackupRows, type ParentMeetingBackup, type ParentMeetingBackupKey } from "./parent-meeting-backup";
 
 const APP_NAME = "Nalanda Fee Control";
 
@@ -281,7 +282,7 @@ type BackupDocumentInput = {
   timetableEntries?: readonly unknown[];
   academicYear?: string;
   technicalOperations?: TechnicalOperationsBackup;
-} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup>;
+} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
   const onboardingBatches = sanitizeOnboardingBatches(input.onboardingBatches ?? []);
@@ -386,6 +387,8 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const optionalOperationsCounts = Object.fromEntries(OPTIONAL_OPERATIONS_BACKUP_KEYS.map((key) => [key, optionalOperationsBackup[key].length])) as Record<OptionalOperationsBackupKey, number>;
   const eventMediaBackup = validateEventMediaBackupRows(input as unknown as Record<string, unknown>);
   const eventMediaCounts = Object.fromEntries(EVENT_MEDIA_BACKUP_KEYS.map((key) => [key, eventMediaBackup[key].length])) as Record<EventMediaBackupKey, number>;
+  const parentMeetingBackup = validateParentMeetingBackupRows(input as unknown as Record<string, unknown>);
+  const parentMeetingCounts = Object.fromEntries(PARENT_MEETING_BACKUP_KEYS.map((key) => [key, parentMeetingBackup[key].length])) as Record<ParentMeetingBackupKey, number>;
   const technicalOperations = validateTechnicalOperationsBackup(input.technicalOperations);
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
   const teacherAnalyticsSnapshots = sanitizeActorFields(input.teacherAnalyticsSnapshots ?? []);
@@ -661,6 +664,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
         ...familyCollectionCounts,
         ...optionalOperationsCounts,
         ...eventMediaCounts,
+        ...parentMeetingCounts,
         timetableTeachers: timetableTeachers.length,
         timetableSubjects: timetableSubjects.length,
         timetableClassSections: timetableClassSections.length,
@@ -678,6 +682,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     ...familyCollectionBackup,
     ...optionalOperationsBackup,
     ...eventMediaBackup,
+    ...parentMeetingBackup,
     users: sanitizeUsers(input.users),
     authSecurity,
     iamAccess,
@@ -1331,6 +1336,9 @@ export async function generateFullBackup(
   const eventMediaBackup = await eventMediaSchemaAvailable(client as unknown as PrismaClient)
     ? await loadEventMediaBackup(client as unknown as PrismaClient)
     : emptyEventMediaBackup();
+  const parentMeetingBackup = await parentMeetingSchemaAvailable(client as unknown as PrismaClient)
+    ? await loadParentMeetingBackup(client as unknown as PrismaClient)
+    : emptyParentMeetingBackup();
   const technicalOperations = await technicalOperationsSchemaAvailable(client as unknown as PrismaClient)
     ? await loadTechnicalOperationsBackup(client as unknown as PrismaClient)
     : emptyTechnicalOperationsBackup();
@@ -1371,6 +1379,7 @@ export async function generateFullBackup(
     ...familyCollectionBackup,
     ...optionalOperationsBackup,
     ...eventMediaBackup,
+    ...parentMeetingBackup,
     technicalOperations,
     rolePermissions,
     guardians,

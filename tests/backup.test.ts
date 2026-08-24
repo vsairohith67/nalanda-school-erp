@@ -219,7 +219,13 @@ describe("full backup", () => {
       cafeteriaMenuItems: 0,
       cafeteriaStudentEnrollments: 0,
       cafeteriaMealRecords: 0,
-      cafeteriaAuditEvents: 0
+      cafeteriaAuditEvents: 0,
+      parentMeetings: 0,
+      parentMeetingPreferences: 0,
+      parentMeetingParticipants: 0,
+      parentMeetingNotes: 0,
+      parentMeetingFollowUps: 0,
+      parentMeetingEvents: 0
     });
     expect(backup.students).toHaveLength(1);
     expect(backup.feeStructures).toHaveLength(1);

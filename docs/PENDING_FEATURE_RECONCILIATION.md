@@ -40,15 +40,16 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | 7 | Monitoring and operational dashboard extensions | `PARTIAL` | OBS-1A and its technical/operational foundation are cleared. Hosting-dependent live monitoring, provider health, cost/usage extensions, and unified Command Center presentation remain pending. Extend the existing architecture. |
 | 8 | Whiteboard | Bridge: `CLEARED`; ERP engine: `NOT_IMPLEMENTED` | `WHITEBOARD-BRIDGE-1A-QA` independently proved that only the exact Super Admin route can launch the canonical Canvs board. It has no iframe, token exchange, server fetch, sync, board persistence, Search/AI integration or open redirect. Canvs remains the editing engine. |
 | 9 | Citation-based Smart AI | Foundation: `CLEARED`; runtime/actions/advanced scope: `DEFERRED_TO_V2` | Independent QA cleared the exact-Super-Admin, Universal-Search-only, read-only, citation-validated software foundation. Runtime remains disabled. Semantic retrieval, attachment/image/Canvs ingestion, external knowledge/providers, persistent history and AI actions are not authorized. |
-| 10 | Android app | `NOT_IMPLEMENTED` | Responsive web/PWA foundations do not constitute a native Android app. A later shared-app Capacitor approach may be assessed only after staging and physical-device certification. |
-| 11 | iOS/iPadOS app | `NOT_IMPLEMENTED` | No native Apple application is proven. Final building, signing, and device certification require a Mac/Xcode environment and Apple account decisions. |
-| 12 | PWA and device certification | PWA foundation: `CLEARED`; end-to-end readiness: `PARTIAL`; physical certification: `OPERATIONAL_CONFIGURATION_PENDING` | Responsive web and the installable PWA foundation are present. Physical Android/iPhone/iPad testing waits for approved private HTTPS staging. See the [device checklist](./PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md). |
-| 13 | Event-photo gallery and image enhancement | `NOT_IMPLEMENTED`; candidate `DEFERRED_TO_V1_5` | No governed ERP gallery/enhancement implementation is proven. Any future phase requires consent, private storage, retention, moderation, human approval, and original-image preservation. |
-| 14 | Direct UPI and payment gateway | `PARTIAL` | Manual/mixed payment instruments and UPI reference capture are supported, but no online checkout, callback, settlement, refund, or production gateway is proven. Provider selection and activation remain separate operational gates. |
-| 15 | WhatsApp, Email and Push | `PARTIAL` | WhatsApp and SMS/email foundations remain mock/default-off; live delivery requires provider, consent, DNS/webhook, template, and sandbox evidence. Push is not implemented. See [WhatsApp](./WHATSAPP_BUSINESS_ONE_WAY_COMMUNICATION_WORKFLOW.md) and [SMS/email](./SMS_AND_EMAIL_ONE_WAY_COMMUNICATION_WORKFLOW.md). |
-| 16 | Hosting, DNS and private staging | `OPERATIONAL_CONFIGURATION_PENDING` | A planning/decision package exists, but no provider purchase, cloud resource, DNS change, HTTPS staging deployment, or public exposure is authorised. |
-| 17 | Real-data onboarding, training, pilot and cutover | `OPERATIONAL_CONFIGURATION_PENDING` | Plans and checklists exist; execution has not occurred. It requires accepted staging, named owners, controlled import, role onboarding, training, pilot reconciliation, rollback rehearsal, and an explicit cutover decision. |
-| 18 | Transport, Cafeteria and KG report-card foundations | Transport/Cafeteria release: `BLOCKED`; KG software: `CLEARED`; operation: `DEFAULT-OFF` / `DEFERRED` | These remain outside the frozen V1 RC. Optional Ops local and independent gates passed, but its mandatory exact-SHA GitHub gate cannot start because of account billing/spending state. No real service, live data, deployment or implicit activation is authorised. |
+| 10 | Parent Meetings, Appointments and Follow-up | `CLEARED`; operational activation `DEFAULT_OFF` | `PARENT_MEETING_V1_5_CLEARED`: exact linked-child Parent requests, leadership workflow, explicit assigned-Teacher scope, separate private/Parent-visible evidence, local follow-up, in-app notifications, controlled Browser/security acceptance and backup v43. No deploy, real data/users, external providers, My Work coupling or Search/AI integration. |
+| 11 | Android app | `NOT_IMPLEMENTED` | Responsive web/PWA foundations do not constitute a native Android app. A later shared-app Capacitor approach may be assessed only after staging and physical-device certification. |
+| 12 | iOS/iPadOS app | `NOT_IMPLEMENTED` | No native Apple application is proven. Final building, signing, and device certification require a Mac/Xcode environment and Apple account decisions. |
+| 13 | PWA and device certification | PWA foundation: `CLEARED`; end-to-end readiness: `PARTIAL`; physical certification: `OPERATIONAL_CONFIGURATION_PENDING` | Responsive web and the installable PWA foundation are present. Physical Android/iPhone/iPad testing waits for approved private HTTPS staging. See the [device checklist](./PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md). |
+| 14 | Event-photo gallery and image enhancement | `NOT_IMPLEMENTED`; candidate `DEFERRED_TO_V1_5` | No governed ERP gallery/enhancement implementation is proven. Any future phase requires consent, private storage, retention, moderation, human approval, and original-image preservation. |
+| 15 | Direct UPI and payment gateway | `PARTIAL` | Manual/mixed payment instruments and UPI reference capture are supported, but no online checkout, callback, settlement, refund, or production gateway is proven. Provider selection and activation remain separate operational gates. |
+| 16 | WhatsApp, Email and Push | `PARTIAL` | WhatsApp and SMS/email foundations remain mock/default-off; live delivery requires provider, consent, DNS/webhook, template, and sandbox evidence. Push is not implemented. See [WhatsApp](./WHATSAPP_BUSINESS_ONE_WAY_COMMUNICATION_WORKFLOW.md) and [SMS/email](./SMS_AND_EMAIL_ONE_WAY_COMMUNICATION_WORKFLOW.md). |
+| 17 | Hosting, DNS and private staging | `OPERATIONAL_CONFIGURATION_PENDING` | A planning/decision package exists, but no provider purchase, cloud resource, DNS change, HTTPS staging deployment, or public exposure is authorised. |
+| 18 | Real-data onboarding, training, pilot and cutover | `OPERATIONAL_CONFIGURATION_PENDING` | Plans and checklists exist; execution has not occurred. It requires accepted staging, named owners, controlled import, role onboarding, training, pilot reconciliation, rollback rehearsal, and an explicit cutover decision. |
+| 19 | Transport, Cafeteria and KG report-card foundations | Software: `CLEARED`; operational activation: `DEFAULT_OFF` / `DEFERRED` | Optional Transport and Cafeteria passed independent QA and mandatory exact-SHA CI; KG report-card software remains cleared. These stay outside the frozen V1 RC and must not be activated implicitly. No real service, live data, deployment or provider activation is authorised. |
 
 ## Important dependency order
 
@@ -63,7 +64,7 @@ Diary, tasks, reminders, contacts, universal search, OBS-1A extensions, Canvs/wh
 
 ## Controlled V1.5 and V2 deferrals
 
-- KG report cards are software-cleared and default-off. Optional Transport/Cafeteria foundations are independently tested and default-off but release-blocked; their operational rollout, plus rollout of the technically cleared full Payroll/ESS foundation, remains separately deferred.
+- KG report cards and Optional Transport/Cafeteria foundations are software-cleared and default-off. Their operational rollout, plus rollout of the technically cleared full Payroll/ESS foundation, remains separately deferred.
 - AI-generated lessons and educational videos remain `DEFERRED_TO_V2`, require Teacher approval, and must not publish automatically to Students.
 
 ## UNIVERSAL-SEARCH-1A clearance update (2026-08-22)
@@ -94,8 +95,8 @@ activated.
 ## Operational controls preserved
 
 - Operational database unchanged.
-- No schema or migration change.
-- No application feature implementation.
+- Parent Meetings adds a repository migration and default-off application module; the migration is exercised only on fresh/copied synthetic QA databases, never on the operational database.
+- Other pending work remains unchanged unless an exact newer clearance entry says otherwise.
 - No deployment, DNS change, provider activation, data import, user activation, pilot, or cutover.
 - No UDISE scraping, automatic submission, or false compliance claim.
 

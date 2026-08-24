@@ -46,7 +46,7 @@ describe("UX-1A shared login and shell", () => {
 
   it("keeps one compact authenticated year control and permission-driven navigation", () => {
     const shell = source("components/app-shell.tsx");
-    expect(shell).toContain("groupedVisibleNavigationItems(permissions, user.role, enabledOptionalOperationsFeatures)");
+    expect(shell).toContain("groupedVisibleNavigationItems(permissions, user.role, enabledFeatures)");
     expect(shell).toContain("<AcademicYearControl academicYear={settings.academicYear} />");
     expect(shell).toContain("roleDashboardTitle(user.role)");
     expect(shell).not.toContain("Fee Control");

@@ -63,7 +63,7 @@ export async function runMigrationBackupRestoreCheck() {
   const sourcePath = createEmptyIsolatedDatabase("restore", "backup-source");
   const targetPath = createEmptyIsolatedDatabase("restore", "restore-target");
   const collisionPath = createEmptyIsolatedDatabase("restore", "restore-collision");
-  const backupPath = assertIsolatedDatabasePath(path.join(QA_ROOT, "restore", `DEVOPS1B-v37-${process.pid}.backup.json`));
+  const backupPath = assertIsolatedDatabasePath(path.join(QA_ROOT, "restore", `DEVOPS1B-v43-${process.pid}.backup.json`));
   let success = false;
   try {
     for (const databasePath of [sourcePath, targetPath, collisionPath]) {

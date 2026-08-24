@@ -54,12 +54,13 @@ It covers multiple vehicles/routes/stops, capacity boundaries, duplicate and con
 
 ## Current release state
 
-- `TRANSPORT — RELEASE BLOCKED / DEFAULT-OFF`
-- `CAFETERIA — RELEASE BLOCKED / DEFAULT-OFF`
+- `TRANSPORT — SOFTWARE CLEARED / DEFAULT-OFF`
+- `CAFETERIA — SOFTWARE CLEARED / DEFAULT-OFF`
 
-Local, independent, migration/recovery, Browser, full-regression and security
-gates passed, but the required exact-SHA GitHub validation failed before
-checkout with zero steps because of account billing/spending state. No merge or
-tag was created. Both feature flags remain at zero-percent rollout. The work did
-not apply the migration to the operational database, create real records,
-activate either service, deploy the application, or enable an external provider.
+Local, independent, migration/recovery, Browser, full-regression, security and
+mandatory exact-SHA GitHub validation gates passed. The release retains
+`feature/optional-ops-v1-5-1a` and records annotated tag
+`optional-ops-v1-5-v43-2026-08-24`. Both feature flags remain at zero-percent
+rollout. The work did not apply the migration to the operational database,
+create real records, activate either service, deploy the application, or enable
+an external provider.

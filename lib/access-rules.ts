@@ -31,9 +31,10 @@ export type NavigationIcon =
   | "feeRegisterOcr"
   | "cloudBackup"
   | "website"
-  | "calendar"
   | "operations"
-  | "eventMedia";
+  | "eventMedia"
+  | "parentMeetings"
+  | "calendar";
 
 export type NavigationGroupId =
   | "dashboard"
@@ -99,6 +100,8 @@ export const NAV_ITEMS = [
   { href: "/notifications/reports", label: "Notification Reports", icon: "collection", permission: "VIEW_NOTIFICATION_REPORTS", group: "communication" },
   { href: "/support", label: "Support & Complaints", icon: "notices", permission: "VIEW_SUPPORT_REQUESTS", group: "communication" },
   { href: "/support/reports", label: "Support Reports", icon: "collection", permission: "VIEW_SUPPORT_REPORTS", group: "communication" },
+  { href: "/parent-meetings", label: "Parent Meetings", icon: "parentMeetings", permission: "VIEW_PARENT_MEETINGS", group: "communication", allowedRoles: ["SUPER_ADMIN", "PRINCIPAL", "DIRECTOR"] as Role[], feature: "PARENT_MEETINGS_V1_5" },
+  { href: "/parent-meetings", label: "Assigned Parent Meetings", icon: "parentMeetings", permission: "VIEW_ASSIGNED_PARENT_MEETINGS", group: "communication", requiredRole: "TEACHER", feature: "PARENT_MEETINGS_V1_5" },
   { href: "/my-support", label: "My Support", icon: "notices", permission: "VIEW_OWN_SUPPORT", group: "communication", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "ACCOUNTANT", "COMPUTER_OPERATOR", "TEACHER"] as Role[] },
   { href: "/parent/support", label: "Support", icon: "notices", permission: "VIEW_OWN_SUPPORT", group: "studentsParents", requiredRole: "PARENT" },
   { href: "/parent/student-departures", label: "Student Early Leave", icon: "attendance", permission: "REQUEST_STUDENT_DEPARTURE", group: "studentsParents", requiredRole: "PARENT" },
@@ -180,7 +183,7 @@ export const NAV_ITEMS = [
   { href: "/onboarding", label: "Bulk Onboarding", icon: "importExport", permission: "DOWNLOAD_ONBOARDING_TEMPLATE", group: "system", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "COMPUTER_OPERATOR"] as Role[] },
   { href: "/import-verification", label: "Import Verification", icon: "importVerification", permission: "VIEW_IMPORT_VERIFICATION", group: "system" },
   { href: "/pilot-acceptance", label: "Pilot Acceptance", icon: "pilot", permission: "RUN_PILOT_ACCEPTANCE", group: "system" }
-] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role; allowedRoles?: Role[]; featureFlag?: OptionalOperationsFeatureCode }>;
+] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role; allowedRoles?: Role[]; featureFlag?: OptionalOperationsFeatureCode; feature?: "PARENT_MEETINGS_V1_5" }>;
 
 export type NavigationItem = (typeof NAV_ITEMS)[number];
 
@@ -190,17 +193,18 @@ export function permissionListCan(permissions: Iterable<CanonicalPermission>, pe
   return new Set(permissions).has(canonical);
 }
 
-export function visibleNavigationItems(permissions: Iterable<CanonicalPermission>, role?: Role, enabledFeatures: Iterable<OptionalOperationsFeatureCode> = []) {
+export function visibleNavigationItems(permissions: Iterable<CanonicalPermission>, role?: Role, enabledFeatures: Iterable<string> = []) {
   const features = new Set(enabledFeatures);
   return NAV_ITEMS.filter((item) =>
     permissionListCan(permissions, item.permission) &&
     (!("requiredRole" in item) || !item.requiredRole || !role || item.requiredRole === role) &&
     (!("allowedRoles" in item) || !item.allowedRoles || !role || item.allowedRoles.includes(role)) &&
-    (!("featureFlag" in item) || !item.featureFlag || features.has(item.featureFlag))
+    (!("featureFlag" in item) || !item.featureFlag || features.has(item.featureFlag)) &&
+    (!("feature" in item) || !item.feature || features.has(item.feature))
   );
 }
 
-export function groupedVisibleNavigationItems(permissions: Iterable<CanonicalPermission>, role?: Role, enabledFeatures: Iterable<OptionalOperationsFeatureCode> = []) {
+export function groupedVisibleNavigationItems(permissions: Iterable<CanonicalPermission>, role?: Role, enabledFeatures: Iterable<string> = []) {
   const visibleItems = visibleNavigationItems(permissions, role, enabledFeatures);
   return NAV_GROUPS.map((group) => ({
     ...group,

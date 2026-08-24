@@ -15,6 +15,7 @@ import { PwaRuntime } from "@/components/pwa-runtime";
 import { ModalAccessibilityGuard } from "@/components/modal-accessibility-guard";
 import { SecurityDialogProvider } from "@/components/security-dialog-provider";
 import { headers } from "next/headers";
+import { parentMeetingsEnabled } from "@/lib/parent-meeting-feature";
 
 // The shared layout resolves the authenticated user and role permissions.
 // Force per-request rendering so a previously rendered private page can never
@@ -84,6 +85,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                 pilotMode={Boolean(user && permissionSetCan(effectivePermissions, "VIEW_SYSTEM_HEALTH")
                   && isPilotDatabaseUrl(process.env.DATABASE_URL))}
                 enabledOptionalOperationsFeatures={user ? enabledOptionalOperationsFeatures(user.role) : []}
+                parentMeetingsEnabled={parentMeetingsEnabled()}
               >
                 {children}
               </AppShell>

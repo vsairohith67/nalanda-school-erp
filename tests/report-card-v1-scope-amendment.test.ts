@@ -55,20 +55,21 @@ describe("REPORT-PRINT-ACCEPT-1A and KG-REPORTS-V1_5-1A release boundaries", () 
 
     // Include the V1.1 Academic Integrity release as well as V1, V1.5, and V2
     // so additions cannot silently duplicate or disappear from the ledger.
-    expect(requirementRows).toHaveLength(38);
+    expect(requirementRows).toHaveLength(39);
     expect(new Set(requirementRows).size).toBe(requirementRows.length);
     expect(requirementRows.filter((id) => id === "V1.1-SEC-ACADEMIC-001")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1-RC-016")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-RC-034")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-SEARCH-036")).toHaveLength(1);
     expect(requirementRows.filter((id) => id === "V1.5-AI-037")).toHaveLength(1);
-    expect(register).toContain("| Total requirements | 38 |");
+    expect(requirementRows.filter((id) => id === "V1.5-MEET-038")).toHaveLength(1);
+    expect(register).toContain("| Total requirements | 39 |");
     expect(register).toContain("| V1 | 24 |");
     expect(register).toContain("| V1.1 | 1 |");
-    expect(register).toContain("| V1.5 | 7 |");
+    expect(register).toContain("| V1.5 | 8 |");
     expect(register).toContain("| V2 | 6 |");
-    expect(register).toContain("| CLEARED | 24 |");
-    expect(register).toContain("| RELEASE_BLOCKED | 2 |");
+    expect(register).toContain("| CLEARED | 27 |");
+    expect(register).not.toContain("| RELEASE_BLOCKED |");
     expect(register).toContain("| CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING | 4 |");
     expect(register).toContain("| COMPLETE | 1 |");
     expect(register).toContain("| DEFERRED | 6 |");
@@ -77,6 +78,7 @@ describe("REPORT-PRINT-ACCEPT-1A and KG-REPORTS-V1_5-1A release boundaries", () 
     expect(register).not.toContain("| MISSING |");
     expect(register).not.toContain("IN_PROGRESS_PHYSICAL_ACCEPTANCE_PENDING");
     expect(register).toContain("| IMPLEMENTED_FOUNDATION_DEFERRED_TO_V1_5 | 0 |");
+    expect(register).toContain("| READY_FOR_QA | 0 |");
     expect(register).toContain("SOFTWARE_CLEARED_OPERATIONAL_ACTIVATION_OFF");
     for (let correction = 1; correction <= 29; correction += 1) {
       expect(amendment.match(new RegExp(`^${correction}\\. `, "gm"))).toHaveLength(1);

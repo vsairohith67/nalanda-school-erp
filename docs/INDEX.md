@@ -1,5 +1,19 @@
 # Documentation Index
 
+## Parent Meetings, Appointments and Follow-up — V1.5
+
+- [Parent Meetings, Appointments and Follow-up Architecture](PARENT_MEETINGS_APPOINTMENTS_ARCHITECTURE.md)
+- [Parent Meetings V1.5 Independent QA Clearance](evidence/PARENT_MEETING_V1_5_QA_CLEARANCE.md)
+
+`PARENT-MEETING-V1_5-1A` is an additive, local/private, default-off software
+module. It preserves exact Parent linked-child ownership, explicit Teacher
+participant scope, physically separate private and Parent-visible evidence,
+append-oriented follow-up/history, in-app-only reminders and Academic
+Integrity v1.1. Operational activation, deployment, real records and external
+providers remain separate unauthorised gates.
+Independent QA and the controlled-browser matrix are cleared under
+`PARENT_MEETING_V1_5_CLEARED`; the operational feature flag remains off.
+
 ## Nalanda ERP v1.1 — Academic Integrity Release
 
 - [Principal-Controlled Marks Entry and Delegation Architecture](ACADEMIC_INTEGRITY_V1_1_PRINCIPAL_MARKS_ENTRY.md)
@@ -17,8 +31,8 @@ The V1 Teacher marks-write policy is `SUPERSEDED_BY_ACADEMIC_INTEGRITY_V1_1`. `A
 
 Transport and Cafeteria are separate, independently tested software foundations
 with governed `TRANSPORT_V1_5` and `CAFETERIA_V1_5` flags. Both remain
-`DEFAULT-OFF`. Release is blocked at the mandatory exact-SHA GitHub validation
-gate; no merge or tag exists. The foundation does not activate real routes,
+`DEFAULT-OFF` after independent QA and mandatory exact-SHA GitHub validation.
+The foundation does not activate real routes,
 Students, meals, payments, providers, GPS, maps, Safe Exit changes, or deployment.
 
 ## Super Admin Command Center and Personal Work Programme
@@ -199,8 +213,8 @@ government filing are not authorised.
 Independent QA cleared Prompt 23I as `PAYROLL_ESS_CLEARED`. The retained
 feature branch and version-37 release tag are complete. Full payroll/ESS remains
 V1.5 operational scope and is not a V1 launch dependency. Optional Transport
-and Cafeteria foundations are independently tested and default-off, with release
-blocked until the mandatory exact-SHA GitHub validation can run successfully.
+and Cafeteria foundations are software-cleared and default-off; their real-service
+activation remains a separately governed decision.
 
 ## Prompt 23H admissions and enquiry CRM
 
