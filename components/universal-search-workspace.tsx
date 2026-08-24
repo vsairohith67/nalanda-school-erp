@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import {
+  Baby,
   BookOpenText,
   BriefcaseBusiness,
+  BusFront,
   CalendarDays,
+  CalendarClock,
   ContactRound,
   FileText,
   GraduationCap,
   HeartPulse,
+  Images,
   ListTodo,
   LoaderCircle,
   MessageSquareWarning,
@@ -16,19 +20,21 @@ import {
   ReceiptText,
   Search,
   ShieldCheck,
+  UtensilsCrossed,
   UserRound,
   Users
 } from "lucide-react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
-import type { UniversalSearchResponse, UniversalSearchSourceId, UniversalSearchSourceState } from "@/lib/universal-search-contract";
+import type { UniversalSearchResponse, UniversalSearchSourceCoverage, UniversalSearchSourceId, UniversalSearchSourceState } from "@/lib/universal-search-contract";
 
 type SourceOption = {
   id: UniversalSearchSourceId;
   label: string;
   priority: number;
   available: boolean;
+  coverage: UniversalSearchSourceCoverage;
   href: string;
 };
 
@@ -47,6 +53,11 @@ const icons: Record<UniversalSearchSourceId, LucideIcon> = {
   SUPPORT: MessageSquareWarning,
   SAFE_EXIT: ShieldCheck,
   EVENTS: CalendarDays,
+  PARENT_MEETINGS: CalendarClock,
+  TRANSPORT: BusFront,
+  CAFETERIA: UtensilsCrossed,
+  KG_REPORTS: Baby,
+  EVENT_MEDIA: Images,
   USERS_IAM: Users,
   RECENT_ACTIVITY: ShieldCheck,
   RELEASE_OPERATIONS: PackageCheck,
@@ -168,7 +179,7 @@ export function UniversalSearchWorkspace({ sources }: { sources: SourceOption[] 
           <div className="universal-search-filter-grid">
             {sources.map((source) => (
               <button type="button" key={source.id} className={selectedSources.includes(source.id) ? "active" : ""} aria-pressed={selectedSources.includes(source.id)} onClick={() => toggleSource(source.id)}>
-                <SourceIcon source={source.id} /><span>{source.label}</span>{!source.available ? <small>Unavailable</small> : null}
+                <SourceIcon source={source.id} /><span>{source.label}</span>{source.coverage !== "SEARCHABLE" ? <small style={source.coverage === "SAFE_METADATA_ONLY" ? { color: "var(--muted)" } : undefined}>{source.coverage === "UNAVAILABLE" ? "Unavailable" : "Safe metadata"}</small> : null}
               </button>
             ))}
           </div>
@@ -186,7 +197,7 @@ export function UniversalSearchWorkspace({ sources }: { sources: SourceOption[] 
               {groups.filter((group) => group.results.length).map((group) => (
                 <section key={group.source.id} className="universal-search-result-group" aria-labelledby={`search-group-${group.source.id.toLowerCase()}`}>
                   <header>
-                    <div><SourceIcon source={group.source.id} /><div><h2 id={`search-group-${group.source.id.toLowerCase()}`}>{group.source.label}</h2><p>{group.results.length} bounded match{group.results.length === 1 ? "" : "es"}</p></div></div>
+                    <div><SourceIcon source={group.source.id} /><div><h2 id={`search-group-${group.source.id.toLowerCase()}`}>{group.source.label}</h2><p>{group.results.length} bounded match{group.results.length === 1 ? "" : "es"}{group.source.coverage === "SAFE_METADATA_ONLY" ? " · Safe metadata only" : ""}</p></div></div>
                     <Link href={group.source.href}>Open module</Link>
                   </header>
                   <ol>

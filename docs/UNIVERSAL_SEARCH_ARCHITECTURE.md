@@ -8,6 +8,8 @@
 - **Independent QA:** [UNIVERSAL-SEARCH-1A QA Clearance](./evidence/UNIVERSAL_SEARCH_1A_QA_CLEARANCE.md)
 - **Primary route:** `/super-admin/search`
 - **Primary API:** `POST /api/super-admin/search`
+- **Extension prompt:** `SEARCH-EXTENSION-1B`
+- **Extension branch:** `feature/search-extension-1b`
 
 ## Purpose and hard boundary
 
@@ -105,10 +107,15 @@ collapsed into a fake zero result.
 | 2 | Fees / receipts | Included | Receipt number, admission number and Student name; no amount, account, payment instrument or full financial metadata is returned |
 | 2 | Attendance | `UNAVAILABLE` | No dedicated safe bounded reference adapter is proven; Student matches are not relabelled as attendance results |
 | 2 | Examinations | Included | Exam code, name, type, year and description; destinations are navigation only and contain no mark-edit action |
-| 2 | Report Cards | Included | Report number, Student name/admission, class, year, type and publication status; no draft/snapshot/comment body is searched |
+| 2 | Report Cards | Included | Non-KG report number, Student name/admission, class, year, type and publication status; no draft/snapshot/comment body is searched |
 | 2 | Support / complaints | Included | Reference, subject, requester name/type and linked receipt reference; original statements, internal notes, attachments and archived cases are excluded |
 | 2 | Safe Exit | Included | Non-restricted request reference, verification reference and Student identity/class metadata; restricted incidents, handover contacts and reason details are excluded |
 | 2 | Events / calendar | Included | Title, safe description, venue, event/audience type and lifecycle status; internal notes are excluded |
+| 2 | Parent Meetings | `SAFE_METADATA_ONLY` when enabled; otherwise `UNAVAILABLE` | Meeting reference, safe Student identity, academic year, category, lifecycle/schedule/mode and follow-up state only. Subject, request reason, Parent-visible or leadership-private free text, cancellation reasons, note bodies, participants and audit content are not selected or matched |
+| 2 | Transport | `SAFE_METADATA_ONLY` when enabled; otherwise `UNAVAILABLE` | Route, vehicle and approved-stop references plus Student-specific assignment metadata matched only by the Student/reference. Home addresses, broad route-roster matching, driver/attendant identity and private Staff data are excluded |
+| 2 | Cafeteria | `SAFE_METADATA_ONLY` when enabled; otherwise `UNAVAILABLE` | Catalog/menu metadata and Student-specific enrollment/participation state matched only by the Student/reference. Health/dietary notes, payment/price data and financial inference are excluded |
+| 2 | KG Report Cards | `SAFE_METADATA_ONLY` | Issued `KG_RUBRIC` report reference, safe Student identity, class/year, reporting period and publication state only. Drafts, rubric/assessment content, grades, comments, snapshots and cancellation reasons are excluded |
+| 2 | Event Media | `SAFE_METADATA_ONLY` | Album/media reference, event date, lifecycle/publication/review state, media type/dimensions and counts only. Free-text album titles, bytes, storage keys, hashes, captions, review notes, Student associations/identification, consent detail, EXIF, OCR and face recognition are excluded |
 | 3 | Users / IAM | Included, safe metadata only | Name, username/email for matching, designation, role and lifecycle state; password hashes, sessions, reset/recovery, MFA and authorization internals are absent |
 | 3 | Audit / Recent Activity | `UNAVAILABLE` | Unified audit text search is deferred until a privacy-safe searchable metadata contract is separately approved |
 | 3 | Release Operations | Included, safe metadata only | Release version, environment, commit/build and migration identifiers; no secrets, packages or file paths |
@@ -118,6 +125,13 @@ No migration, search-index table, backfill, vector store or external search
 infrastructure is introduced. Existing indexed identifiers and owner/status/date
 indexes are reused with bounded reads. No attachment, PDF, report or private
 file content is parsed during search.
+
+Parent Meetings, Transport and Cafeteria are governed default-off modules.
+Their adapters expose an explicit runtime availability check before any Prisma
+read. When the owning feature is disabled, Search reports `UNAVAILABLE` with a
+safe reason; it does not query an unsupported table and does not turn the state
+into `EMPTY`. KG historical issued metadata and private Event Media metadata
+retain their existing owning-module authorization at the destination route.
 
 ## Exact-owner My Work privacy
 
@@ -148,6 +162,12 @@ the approved fields. Ranking is stable and testable:
 
 Final ties use fixed source order, case-insensitive title, timestamp and safe
 destination. There is no fuzzy, semantic, random or ML ranking.
+
+The five extension sources appear after the established Priority 1 and core
+academic/operational sources in fixed source order. Therefore a new-module
+result with the same score cannot displace an existing high-confidence exact
+Student, admission, Guardian, Staff, My Work, fee, examination or standard
+report-card reference.
 
 ## Failure isolation and private delivery
 
@@ -189,6 +209,13 @@ authorization. Universal Search itself still implements no prompt, RAG,
 embedding, vector table, provider call, autonomous action or generated answer.
 The separate Smart AI layer consumes only this normalized response, and its
 default runtime is disabled. See [Smart AI Architecture](./SMART_AI_ARCHITECTURE.md).
+
+SEARCH-EXTENSION-1B adds only source-routing hints for the five metadata
+sources. Smart AI still calls `runUniversalSearch` and contains no Prisma model
+read or alternate adapter. Image/OCR/face-identification and health/dietary
+requests are refused before retrieval. The provider receives no image bytes,
+EXIF, assessment bodies, private meeting notes or dietary-sensitive fields;
+citations still resolve only to current server-owned Search destinations.
 
 ## Implementation validation boundary
 
