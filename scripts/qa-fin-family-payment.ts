@@ -360,7 +360,7 @@ async function cleanupMarkers(prisma: PrismaClient) {
 }
 
 function migrate(databasePath: string) {
-  const command = spawnSync("pnpm.cmd", ["exec", "prisma", "migrate", "deploy"], { cwd: path.resolve("."), env: { ...process.env, DATABASE_URL: databaseUrl(databasePath) }, encoding: "utf8", shell: true });
+  const command = spawnSync("C:\\Windows\\System32\\cmd.exe", ["/d", "/s", "/c", "pnpm.cmd exec prisma migrate deploy"], { cwd: path.resolve("."), env: { ...process.env, DATABASE_URL: databaseUrl(databasePath) }, encoding: "utf8", windowsHide: true });
   if (command.status !== 0) throw new Error(`FAMPAY1_MIGRATION_FAILED: ${command.stderr || command.stdout}`);
 }
 function client(databasePath: string) { return new PrismaClient({ datasources: { db: { url: databaseUrl(databasePath) } } }); }

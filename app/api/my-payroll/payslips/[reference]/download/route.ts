@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { findPayslipForDownload, PAYROLL_PRIVATE_HEADERS } from "@/lib/payroll";
 import { payrollError, requirePayrollAny } from "@/lib/payroll-api";
 import { generatePayslipPdf } from "@/lib/payroll-pdf";
+import { PAYROLL_ESS_PILOT_FEATURE, requireOperationalReleaseFeatureForApi } from "@/lib/release-feature-flag-runtime";
 import { prisma } from "@/lib/prisma";
 export async function GET(request: NextRequest, context: { params: Promise<{ reference: string }> }) {
   const auth = await requirePayrollAny(["VIEW_OWN_PAYROLL"]);
   if (auth.response || !auth.user) return auth.response;
+  const featureUnavailable = requireOperationalReleaseFeatureForApi(PAYROLL_ESS_PILOT_FEATURE);
+  if (featureUnavailable) return featureUnavailable;
   try {
     const payslip = await findPayslipForDownload(prisma, (await context.params).reference, { ownUserId: auth.user.id });
     const monochrome = request.nextUrl.searchParams.get("mode") === "monochrome";

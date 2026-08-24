@@ -99,7 +99,7 @@ const USER_BOUNDARIES: Array<{ pattern: RegExp; code: string; message: string }>
     message: "Health and dietary-sensitive information is excluded from Universal Search and Smart AI."
   },
   {
-    pattern: /\b(change|edit|update|modify|delete|create|complete|publish|post|grant|assign|send|message|mark|record|approve|waive)\b.{0,65}\b(mark|marks|task|diary|contact|student|staff|phone(?:\s+number)?|message|payment|attendance|report|permission|email|whatsapp|sms|safe exit|whiteboard|meeting|transport|route|cafeteria|menu|meal|media|album)\b/i,
+    pattern: /\b(change|edit|update|modify|delete|create|complete|publish|post|grant|assign|send|message|mark|record|approve|waive)\b.{0,65}\b(mark|marks|task|diary|contact|student|staff|phone(?:\s+number)?|messages?|payment|attendance|report|permission|iam|roles?|access|email|whatsapp|sms|safe exit|whiteboard|meeting|transport|route|cafeteria|menu|meal|media|album)\b/i,
     code: "WRITE_ACTION_REQUEST",
     message: "Smart AI is read-only and cannot change records, complete work, publish, grant access or send messages."
   },

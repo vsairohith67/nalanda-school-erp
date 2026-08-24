@@ -2,6 +2,7 @@ import { createHash, createHmac, randomBytes, randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { hashPassword } from "@/lib/password";
 import type { AuthUser } from "@/lib/auth";
+import { PUBLIC_ADMISSIONS_FORM_FEATURE, assertOperationalReleaseFeature } from "@/lib/release-feature-flag-runtime";
 
 export const ADMISSION_STATUSES = [
   "NEW", "CONTACTED", "VISIT_SCHEDULED", "APPLICATION_INVITED",
@@ -48,6 +49,7 @@ export function validatePublicEnquiry(input: unknown) {
 }
 
 export async function createPublicEnquiry(client: PrismaClient, input: PublicEnquiryInput, requestEvidence: string) {
+  assertOperationalReleaseFeature(PUBLIC_ADMISSIONS_FORM_FEATURE);
   if (input.honeypot || !input.consent) return { accepted: true };
   const requestHash = keyedHash(`public|${requestEvidence}`);
   const since = new Date(Date.now() - 15 * 60_000);
@@ -172,6 +174,7 @@ export async function loadInvitedApplication(client: PrismaClient, token: string
 }
 
 export async function saveInvitedApplication(client: PrismaClient, token: string, body: unknown, submit = false) {
+  assertOperationalReleaseFeature(PUBLIC_ADMISSIONS_FORM_FEATURE);
   const input = object(body); rejectUnknown(input, APPLICATION_FIELDS);
   const application = await invitedApplication(client, token, false);
   const expectedVersion = integer(input.expectedVersion, "Expected version", 1, 1_000_000);

@@ -3,6 +3,7 @@ import { lstat, mkdir, open, readFile, realpath, rm } from "node:fs/promises";
 import path from "node:path";
 import type { PrismaClient } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
+import { PUBLIC_ADMISSIONS_FORM_FEATURE, assertOperationalReleaseFeature } from "@/lib/release-feature-flag-runtime";
 import { validateClassworkUpload, type ValidatedClassworkFile } from "@/lib/classwork-files";
 import { ADMISSION_DOCUMENT_TYPES, AdmissionError, safeKey } from "@/lib/admissions";
 import { validatedPrivateStorageRoot } from "@/lib/private-storage-root";
@@ -16,6 +17,7 @@ export function admissionsStorageRoot() {
 }
 
 export async function uploadApplicationDocument(client: PrismaClient, input: { applicationKey?: string; invitationToken?: string; documentType: string; file: File; actor?: AuthUser }) {
+  if (!input.actor) assertOperationalReleaseFeature(PUBLIC_ADMISSIONS_FORM_FEATURE);
   const application = input.actor
     ? await client.admissionApplication.findUnique({ where: { publicKey: safeKey(input.applicationKey) }, include: { cycle: true, documents: { select: { byteSize: true, documentType: true, version: true } } } })
     : await invitedApplication(client, input.invitationToken);

@@ -30,6 +30,7 @@ const WORKSPACE = path.resolve(".");
 const OPERATIONAL_DATABASE = path.join(WORKSPACE, "prisma", "dev.db");
 const TMP_ROOT = path.join(WORKSPACE, "tmp");
 const ROOT = path.join(TMP_ROOT, `auth-recovery-${process.pid}-${randomUUID()}`);
+const TEMPLATE_DATABASE = path.join(ROOT, "scenario-template.db");
 
 type Scenario = {
   databasePath: string;
@@ -57,18 +58,7 @@ async function scenario(
   mkdirSync(directory, { recursive: true });
   const databasePath = path.join(directory, "recovery-copy.db");
   const rollbackPath = path.join(directory, "rollback-copy.db");
-  copyFileSync(OPERATIONAL_DATABASE, databasePath);
-  const migrationPath = path.join(WORKSPACE, "prisma", "migrations", "20260731130549_auth_verified_recovery_session_registry", "migration.sql");
-  const iamMigrationPath = path.join(WORKSPACE, "prisma", "migrations", "20260801110000_iam_named_users_permission_contexts", "migration.sql");
-  const migrationDatabase = new DatabaseSync(databasePath);
-  try {
-    const authSchemaExists = migrationDatabase.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='AuthLoginAlias'").get();
-    if (!authSchemaExists) migrationDatabase.exec(readFileSync(migrationPath, "utf8"));
-    const iamSchemaExists = migrationDatabase.prepare("SELECT 1 FROM pragma_table_info('User') WHERE name='iamPublicKey'").get();
-    if (!iamSchemaExists) migrationDatabase.exec(readFileSync(iamMigrationPath, "utf8"));
-  } finally {
-    migrationDatabase.close();
-  }
+  copyFileSync(TEMPLATE_DATABASE, databasePath);
   if (mutate) {
     const client = prismaFor(databasePath);
     try {
@@ -125,6 +115,18 @@ describe("local Super Admin recovery utility", () => {
     mkdirSync(TMP_ROOT, { recursive: true });
     if (existsSync(ROOT)) throw new Error("AUTH_RECOVERY_QA_ROOT_ALREADY_EXISTS");
     mkdirSync(ROOT, { recursive: true });
+    copyFileSync(OPERATIONAL_DATABASE, TEMPLATE_DATABASE);
+    const migrationPath = path.join(WORKSPACE, "prisma", "migrations", "20260731130549_auth_verified_recovery_session_registry", "migration.sql");
+    const iamMigrationPath = path.join(WORKSPACE, "prisma", "migrations", "20260801110000_iam_named_users_permission_contexts", "migration.sql");
+    const migrationDatabase = new DatabaseSync(TEMPLATE_DATABASE);
+    try {
+      const authSchemaExists = migrationDatabase.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='AuthLoginAlias'").get();
+      if (!authSchemaExists) migrationDatabase.exec(readFileSync(migrationPath, "utf8"));
+      const iamSchemaExists = migrationDatabase.prepare("SELECT 1 FROM pragma_table_info('User') WHERE name='iamPublicKey'").get();
+      if (!iamSchemaExists) migrationDatabase.exec(readFileSync(iamMigrationPath, "utf8"));
+    } finally {
+      migrationDatabase.close();
+    }
     const stat = statSync(OPERATIONAL_DATABASE);
     operationalBefore.sha256 = fileSha256(OPERATIONAL_DATABASE);
     operationalBefore.size = stat.size;

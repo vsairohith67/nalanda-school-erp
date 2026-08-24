@@ -6,6 +6,7 @@ import { requireCriticalReauthentication, type IamActor } from "@/lib/iam/securi
 import { parseOnboardingWorkbook } from "@/lib/onboarding-workbooks";
 import { readOnboardingWorkbook, sha256 } from "@/lib/onboarding-storage";
 import type { OnboardingBundle, OnboardingIssue, OnboardingWorkbookRows } from "@/lib/onboarding-types";
+import { REAL_DATA_IMPORTS_FEATURE, assertOperationalReleaseFeature } from "@/lib/release-feature-flag-runtime";
 
 type Client = PrismaClient | Prisma.TransactionClient;
 type Resolution = "CREATE_NEW" | "LINK_EXISTING" | "UPDATE_EXISTING" | "SKIP" | "REJECT_ROW";
@@ -149,6 +150,7 @@ export async function approveOnboardingBatch(client: PrismaClient, publicKey: st
 }
 
 export async function executeOnboardingBatch(client: PrismaClient, publicKey: string, actor: IamActor, input: { reason: string; reauthPassword: string; planHash: string; workbookHash: string; idempotencyKey: string }) {
+  assertOperationalReleaseFeature(REAL_DATA_IMPORTS_FEATURE);
   await requireCriticalReauthentication(client, actor, input.reauthPassword);
   const reason = bounded(input.reason, "Execution reason", 12, 500), idempotencyKey = opaqueKey(input.idempotencyKey);
   const batch = await client.onboardingBatch.findUnique({ where: { publicKey } });

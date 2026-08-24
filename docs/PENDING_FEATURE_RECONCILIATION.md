@@ -39,12 +39,12 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 | 6 | Publishers, book suppliers, vendors and contacts | Private reference directory: `CLEARED`; broader CRM/procurement: `DEFERRED` | Exact-owner Contacts & Suppliers is cleared and searchable through bounded safe fields. It remains a reference directory, not procurement/payment automation. |
 | 7 | Monitoring and operational dashboard extensions | `PARTIAL` | OBS-1A and its technical/operational foundation are cleared. Hosting-dependent live monitoring, provider health, cost/usage extensions, and unified Command Center presentation remain pending. Extend the existing architecture. |
 | 8 | Whiteboard | Bridge: `CLEARED`; ERP engine: `NOT_IMPLEMENTED` | `WHITEBOARD-BRIDGE-1A-QA` independently proved that only the exact Super Admin route can launch the canonical Canvs board. It has no iframe, token exchange, server fetch, sync, board persistence, Search/AI integration or open redirect. Canvs remains the editing engine. |
-| 9 | Citation-based Smart AI | Foundation: `CLEARED`; runtime/actions/advanced scope: `DEFERRED_TO_V2` | Independent QA cleared the exact-Super-Admin, Universal-Search-only, read-only, citation-validated software foundation. Runtime remains disabled. Semantic retrieval, attachment/image/Canvs ingestion, external knowledge/providers, persistent history and AI actions are not authorized. |
+| 9 | Citation-based Smart AI | Foundation: `CLEARED`; local runtime: `CLEARED / PROVIDER_DEFAULT_OFF`; actions/advanced scope: `DEFERRED_TO_V2` | Independent QA cleared the exact-Super-Admin, Universal-Search-only, read-only, citation-validated software foundation and the loopback-only local-runtime boundary. Committed provider state remains `DISABLED`. Semantic retrieval, attachment/image/Canvs ingestion, external knowledge/providers, persistent history and AI actions are not authorized. |
 | 10 | Parent Meetings, Appointments and Follow-up | `CLEARED`; operational activation `DEFAULT_OFF` | `PARENT_MEETING_V1_5_CLEARED`: exact linked-child Parent requests, leadership workflow, explicit assigned-Teacher scope, separate private/Parent-visible evidence, local follow-up, in-app notifications, controlled Browser/security acceptance and backup v43. No deploy, real data/users, external providers, My Work coupling or Search/AI integration. |
 | 11 | Android app | `NOT_IMPLEMENTED` | Responsive web/PWA foundations do not constitute a native Android app. A later shared-app Capacitor approach may be assessed only after staging and physical-device certification. |
 | 12 | iOS/iPadOS app | `NOT_IMPLEMENTED` | No native Apple application is proven. Final building, signing, and device certification require a Mac/Xcode environment and Apple account decisions. |
 | 13 | PWA and device certification | PWA foundation: `CLEARED`; end-to-end readiness: `PARTIAL`; physical certification: `OPERATIONAL_CONFIGURATION_PENDING` | Responsive web and the installable PWA foundation are present. Physical Android/iPhone/iPad testing waits for approved private HTTPS staging. See the [device checklist](./PWA_PHYSICAL_DEVICE_STAGING_CHECKLIST.md). |
-| 14 | Event-photo gallery and image enhancement | `NOT_IMPLEMENTED`; candidate `DEFERRED_TO_V1_5` | No governed ERP gallery/enhancement implementation is proven. Any future phase requires consent, private storage, retention, moderation, human approval, and original-image preservation. |
+| 14 | Event-photo gallery and image enhancement | Event Media software: `CLEARED`; public gallery: `DEFAULT_OFF`; AI enhancement: `DEFERRED` | Governed private Event Media is released with consent, ownership, moderation and metadata-stripped derivatives. Public activation, face recognition/embeddings, external image AI and automatic posting remain prohibited. |
 | 15 | Direct UPI and payment gateway | `PARTIAL` | Manual/mixed payment instruments and UPI reference capture are supported, but no online checkout, callback, settlement, refund, or production gateway is proven. Provider selection and activation remain separate operational gates. |
 | 16 | WhatsApp, Email and Push | `PARTIAL` | WhatsApp and SMS/email foundations remain mock/default-off; live delivery requires provider, consent, DNS/webhook, template, and sandbox evidence. Push is not implemented. See [WhatsApp](./WHATSAPP_BUSINESS_ONE_WAY_COMMUNICATION_WORKFLOW.md) and [SMS/email](./SMS_AND_EMAIL_ONE_WAY_COMMUNICATION_WORKFLOW.md). |
 | 17 | Hosting, DNS and private staging | `OPERATIONAL_CONFIGURATION_PENDING` | A planning/decision package exists, but no provider purchase, cloud resource, DNS change, HTTPS staging deployment, or public exposure is authorised. |
@@ -56,7 +56,7 @@ Primary repository references include the [Requirements Register](./REQUIREMENTS
 1. Compose the Super Admin Command Center from existing cleared foundations.
 2. Establish the combined Diary/tasks/reminders/Life OS and directory model.
 3. Preserve the independently cleared fixed Canvs Whiteboard Bridge and permission-scoped Universal Search.
-4. Preserve the cleared citation-based Smart AI foundation; any local runtime or AI Actions phase remains separate and must never bypass Search authorization.
+4. Preserve the cleared Smart AI foundation and loopback-only Local Runtime; AI Actions remain separate and must never bypass Search authorization.
 
 This order prevents AI from answering over missing supplier records or bypassing role permissions.
 
@@ -99,6 +99,14 @@ activated.
 - Other pending work remains unchanged unless an exact newer clearance entry says otherwise.
 - No deployment, DNS change, provider activation, data import, user activation, pilot, or cutover.
 - No UDISE scraping, automatic submission, or false compliance claim.
+
+## FINAL-SCOPE-QA-1A current-main acceptance update (2026-08-24)
+
+The post-V1.5 corrected-scope harness and release-evidence tooling are implemented, but the terminal status is `FINAL_SCOPE_QA_REQUIRES_FIXES`. Three active write areas do not enforce their declared default-off flags (`real-data-imports`, `public-admissions-form`, `payroll-ess-pilot`), and `bulk-exports` lacks an authoritative governed-surface mapping. Production and full dependency audits are clean. Optional Operations and Parent Meetings are cleared on current main with operational activation default-off. No QA-branch merge, release tag, deployment or activation is authorised by this update.
+
+## FINAL-SCOPE-QA-1A-R1 remediation update (2026-08-24)
+
+The first-run result above remains historical evidence. R1 enforces all three affected flags through server/API/service boundaries and classifies 60 export-like API routes as 40 governed bulk exports plus 20 explicit non-bulk surfaces. OFF/ON copied-database Browser QA, 227 passing test files / 2,071 passing tests, build, migration, two restore rehearsals, backup v43, dependency/security checks and operational database integrity are green. Current main's authorised Universal Search Extension 1B release is reconciled. Exact source-head GitHub run `32731736266` passed every mandatory step; the terminal documentation-only head remains fail-closed until its own exact-SHA validation. Deployment and operational activation remain unauthorised.
 
 ## Next documents
 

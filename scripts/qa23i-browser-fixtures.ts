@@ -48,7 +48,7 @@ async function setup() {
   const secret = randomBytes(48).toString("base64url");
   const password = `${randomBytes(18).toString("base64url")}Aa1!`;
   const origin = `http://localhost:${port}`;
-  const environment: NodeJS.ProcessEnv = { ...process.env, NODE_ENV: "production", DATABASE_URL: databaseUrl(database), SESSION_SECRET: secret, AUTH_SECRET: secret, APP_ORIGIN: origin, PORT: String(port) };
+  const environment: NodeJS.ProcessEnv = { ...process.env, NODE_ENV: "development", DATABASE_URL: databaseUrl(database), SESSION_SECRET: secret, AUTH_SECRET: secret, APP_ORIGIN: origin, PORT: String(port), RELEASE_FEATURE_FLAGS_QA_MODE: "SYNTHETIC_COPY_ONLY", RELEASE_FEATURE_FLAGS_QA_ENABLED: "payroll-ess-pilot" };
   migrate(environment);
   const client = new PrismaClient({ datasourceUrl: databaseUrl(database) });
   try {

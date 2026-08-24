@@ -9,6 +9,8 @@ export async function GET() {
   const report = await loadWhatsAppReports(prisma);
   return new NextResponse(whatsappReportsCsv(report), { headers: {
     "Content-Type": "text/csv; charset=utf-8",
-    "Content-Disposition": `attachment; filename="${whatsappReportsFilename()}"`
+    "Content-Disposition": `attachment; filename="${whatsappReportsFilename()}"`,
+    "Cache-Control": "private, no-store",
+    "X-Content-Type-Options": "nosniff"
   } });
 }

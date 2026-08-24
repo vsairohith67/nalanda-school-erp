@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { can } from "../lib/permissions";
@@ -32,6 +32,16 @@ const UKG_SECTION = `R${Date.now().toString().slice(-6)}`;
 const browserCredential = `Kg15Qa-${randomUUID()}!aA9`;
 const outputRoot = path.resolve(process.cwd(), "tmp", "kg-reports-v1-5-qa");
 const statePath = path.join(outputRoot, "browser-state.json");
+
+function cleanupOutputRoot() {
+  const expectedParent = path.resolve(process.cwd(), "tmp");
+  const resolved = path.resolve(outputRoot);
+  if (path.dirname(resolved) !== expectedParent || path.basename(resolved) !== "kg-reports-v1-5-qa") {
+    throw new Error("KG15QA_CLEANUP_SCOPE_REFUSED");
+  }
+  if (existsSync(resolved)) rmSync(resolved, { recursive: true, force: true });
+  return { result: "KG_REPORTS_V1_5_QA_CLEANUP_COMPLETE", exists: existsSync(resolved) };
+}
 
 function requireIsolatedCopy() {
   const url = String(process.env.DATABASE_URL ?? "");
@@ -227,7 +237,8 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+const work = process.argv.includes("--cleanup") ? Promise.resolve().then(() => console.log(JSON.stringify(cleanupOutputRoot()))) : main();
+work.catch((error) => {
   console.error(error instanceof Error ? error.stack ?? error.message : error);
   process.exitCode = 1;
 });

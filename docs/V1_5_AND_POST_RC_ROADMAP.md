@@ -21,18 +21,18 @@ This roadmap preserves the operational boundaries in the [Requirements Register]
 
 **Latest cleared product gate:**
 
-`SMART-AI-1A — Grounded Super Admin Smart AI Foundation`
+`OPTIONAL-OPS-V1_5-1A — Optional Transport and Cafeteria Foundations (operational activation default-off)`
 
 The Command Center, owner-isolated Diary, Tasks & Reminders, Contacts &
 Suppliers, permission-scoped Universal Search, and Smart AI foundation are independently cleared.
 Search remains exact-`SUPER_ADMIN`, privacy-safe, server-authorized,
 deterministic and bounded. SMART-AI-1A is the independently cleared implementation
-of a disabled-by-default, exact-role, cited synthesis foundation over Search.
-It does not authorize model/runtime activation, real-data processing, external
+of an exact-role, cited synthesis foundation over Search, and its separately
+cleared local runtime accepts only loopback endpoints. The committed provider
+remains `DISABLED`; the release does not authorize real-data activation, external
 transmission or AI actions. Optional Transport and Cafeteria foundations are
-implemented, independently tested, separated and default-off, but their release
-is blocked until mandatory exact-SHA GitHub validation can start and pass. They
-do not activate school services, real data, finance, GPS/maps or providers.
+independently cleared and remain default-off. They do not activate school services,
+real data, finance, GPS/maps or providers.
 Hosting and private staging remain a parallel operational track.
 
 `WHITEBOARD-BRIDGE-1A` is a parallel, database-neutral integration checkpoint.
@@ -80,12 +80,12 @@ Search, or unlock Smart AI.
 - Parent Meetings, Appointments and Follow-up is implemented as default-off local/private software under `PARENT-MEETING-V1_5-1A`; operational activation and Search/Smart AI integration remain separate gates.
 - UDISE 15E only after evidence.
 - Full Payroll/ESS remains a controlled V1.5 operational deferral; its cleared technical foundation does not activate payroll or make it a V1 launch dependency.
-- Event-photo gallery and governed image enhancement remain candidates, not scheduled ahead of the command/search foundations.
+- Event Media software is cleared with public publishing default-off; AI enhancement remains deferred.
 - Transport, Cafeteria and KG report-card software foundations are cleared and default-off. Real-school activation, live-data onboarding, deployment and physical/operational acceptance remain governed deferrals under the [known limitations and deferrals](./V1_KNOWN_LIMITATIONS_AND_DEFERRALS.md).
 
 ### V2 work
 
-- `SMART-AI-LOCAL-RUNTIME-1A` may evaluate and activate an approved local model only after SMART-AI-1A clearance; cloud/external providers remain prohibited absent a separate privacy decision.
+- `SMART-AI-LOCAL-RUNTIME-1A` is software-cleared with the committed provider default `DISABLED`; any operational activation still requires separate approval. Cloud/external providers remain prohibited absent a separate privacy decision.
 - Future role expansion and any AI Actions require separate authorization, object-scope, confirmation, audit and rollback governance.
 - AI-generated lessons and educational videos remain V2, with Teacher approval and no automatic Student publication.
 - Semantic retrieval, external knowledge, attachments, live AI providers, and other advanced AI remain `DEFERRED_TO_V2`.
@@ -94,6 +94,10 @@ Search, or unlock Smart AI.
 ## Operational separation
 
 Hosting/provider choice, private staging, DNS/subdomain, master-data configuration, controlled import, onboarding, training, pilot, rollback, and cutover are operational launch gates. They do not become implicitly authorised by product development, documentation approval, or a green RC. Payment and communication providers remain mock/default-off until separately selected and activated under their own acceptance gates.
+
+## Corrected-scope acceptance gate (2026-08-24)
+
+`FINAL-SCOPE-QA-1A` is implemented but `REQUIRES_FIXES`: server-side runtime enforcement is missing for several committed default-off flags, and `bulk-exports` lacks a governed surface map. Production and full dependency audits report zero findings. Optional Operations and Parent Meetings are cleared on current main with operational activation default-off. No QA-branch merge, tag, deployment or activation is authorised. The next safe product step is a separately reviewed narrow flag-enforcement change followed by a full exact-head rerun.
 
 ## Related reconciliation documents
 
