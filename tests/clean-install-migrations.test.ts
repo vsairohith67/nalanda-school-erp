@@ -16,11 +16,12 @@ import {
   WORKSPACE_ROOT,
   assertIsolatedDatabasePath
 } from "../scripts/migration-isolation";
+import { resolvePnpmRuntimeEntry } from "../scripts/migration-check-utils";
 
 const execFileAsync = promisify(execFile);
 
 async function pnpm(args: string[], extraEnvironment: Record<string, string> = {}) {
-  const entry = path.join(process.env.APPDATA ?? "", "npm", "node_modules", "pnpm", "bin", "pnpm.mjs");
+  const entry = resolvePnpmRuntimeEntry();
   const result = await execFileAsync(process.execPath, [entry, ...args], {
     cwd: WORKSPACE_ROOT,
     encoding: "utf8",
@@ -32,6 +33,13 @@ async function pnpm(args: string[], extraEnvironment: Record<string, string> = {
 }
 
 describe("DEVOPS-1B clean-install migration repair", () => {
+  it("resolves an injected pnpm runtime without assuming an AppData installation", () => {
+    expect(resolvePnpmRuntimeEntry(
+      { NODE_ENV: "test", PNPM_RUNTIME_ENTRY: process.execPath },
+      path.join(WORKSPACE_ROOT, "missing-node-runtime.exe")
+    )).toBe(process.execPath);
+  });
+
   it("preserves and reproduces the original Payment dependency failure", () => {
     const sql = readFileSync(path.join(LEGACY_MIGRATION_ROOT, "20260618_phase2_auth_audit", "migration.sql"), "utf8");
     expect(sql.split(/\r?\n/)[0]).toContain('ALTER TABLE "Payment"');

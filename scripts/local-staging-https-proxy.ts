@@ -18,11 +18,14 @@ const server = https.createServer({ pfx: readFileSync(pfxPath), passphrase }, (r
   delete headers["x-forwarded-host"];
   delete headers["x-forwarded-proto"];
   delete headers["x-real-ip"];
+  delete headers["cf-connecting-ip"];
+  delete headers["x-nalanda-proxy-auth"];
   headers.host = "staging.localhost";
   headers["x-forwarded-for"] = request.socket.remoteAddress ?? "127.0.0.1";
   headers["x-real-ip"] = request.socket.remoteAddress ?? "127.0.0.1";
   headers["x-forwarded-host"] = "staging.localhost";
   headers["x-forwarded-proto"] = "https";
+  headers["x-nalanda-proxy-auth"] = process.env.NALANDA_PROXY_SHARED_SECRET ?? "";
   const upstream = http.request({
     host: "127.0.0.1",
     port: backendPort,

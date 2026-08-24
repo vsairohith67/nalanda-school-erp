@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { trustedProxyRequest } from "@/lib/trusted-client";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const DEFAULT_BODY_LIMIT_BYTES = 5 * 1024 * 1024;
@@ -12,6 +13,25 @@ const PAYSLIP_PDF_BODY_LIMIT_BYTES = 12 * 1024 * 1024;
 const PUBLIC_SUPPORT_BODY_LIMIT_BYTES = 3 * 1024 * 1024;
 const SUPPORT_ATTACHMENT_BODY_LIMIT_BYTES = 6 * 1024 * 1024;
 const EVENT_MEDIA_MULTIPART_BODY_LIMIT_BYTES = 16 * 1024 * 1024;
+const IMPORT_BODY_LIMIT_BYTES = 8 * 1024 * 1024;
+const SEARCH_AI_BODY_LIMIT_BYTES = 32 * 1024;
+const PDF_JOB_BODY_LIMIT_BYTES = 128 * 1024;
+
+export const SECURITY_RESOURCE_BUDGETS = {
+  maximumJsonBytes: DEFAULT_BODY_LIMIT_BYTES,
+  maximumArrayLength: 2_000,
+  maximumObjectKeys: 200,
+  maximumStringLength: 20_000,
+  maximumJsonDepth: 12,
+  maximumJsonNodes: 100_000,
+  maximumPaginationSize: 250,
+  maximumExportRows: 10_000,
+  maximumImportRows: 2_000,
+  maximumDateRangeDays: 366,
+  maximumBatchOperations: 2_000,
+  outboundRequestTimeoutMs: 30_000,
+  boundedRetryCount: 3
+} as const;
 
 export function isUnsafeMethod(method: string) {
   return !SAFE_METHODS.has(method.toUpperCase());
@@ -25,6 +45,9 @@ export function isProviderWebhookPath(pathname: string) {
 export function requestBodyLimitBytes(pathname: string) {
   if (pathname.startsWith("/api/auth/")) return AUTH_BODY_LIMIT_BYTES;
   if (pathname.startsWith("/api/iam/")) return IAM_BODY_LIMIT_BYTES;
+  if (pathname === "/api/super-admin/search" || pathname === "/api/super-admin/ai" || pathname.startsWith("/api/ai-assistant/")) return SEARCH_AI_BODY_LIMIT_BYTES;
+  if (pathname.startsWith("/api/report-cards/pdf-jobs")) return PDF_JOB_BODY_LIMIT_BYTES;
+  if (pathname.startsWith("/api/import/") || /\/import(?:\/|$)/i.test(pathname)) return IMPORT_BODY_LIMIT_BYTES;
   if (pathname.startsWith("/api/public/support/")) return PUBLIC_SUPPORT_BODY_LIMIT_BYTES;
   if (/^\/api\/(?:my-support|parent\/support|support)\/[^/]+\/attachments$/.test(pathname)) return SUPPORT_ATTACHMENT_BODY_LIMIT_BYTES;
   if (/^\/api\/event-media\/albums\/[^/]+\/assets$/.test(pathname)) return EVENT_MEDIA_MULTIPART_BODY_LIMIT_BYTES;
@@ -69,6 +92,24 @@ export async function requestBodyTooLarge(request: BodyLimitedRequest) {
   }
 }
 
+export async function requestJsonBudgetIssue(request: BodyLimitedRequest) {
+  if (!isUnsafeMethod(request.method)) return null;
+  const type = request.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase();
+  if (type !== "application/json") return null;
+  try {
+    const value = await request.clone().json();
+    assertBoundedJsonValue(value);
+    return null;
+  } catch (error) {
+    if (error instanceof Error && /^JSON_(?:NODE|DEPTH|STRING|ARRAY|OBJECT_KEY|KEY)_LIMIT_EXCEEDED$/.test(error.message)) {
+      return "JSON request complexity exceeds the safe server limit.";
+    }
+    // Syntax and domain validation stay with the route so existing controlled
+    // error contracts are preserved.
+    return null;
+  }
+}
+
 export function unsafeRequestOriginAllowed(
   request: Pick<NextRequest, "headers" | "method" | "nextUrl">,
   configuredOrigin = process.env.APP_ORIGIN?.trim()
@@ -95,7 +136,59 @@ export function unsafeRequestOriginAllowed(
   if (fetchSite) return fetchSite === "same-origin" || fetchSite === "none";
 
   // Non-browser workers and signed provider callbacks may omit browser metadata.
-  return true;
+  // All other cookie-authenticated or public browser mutations fail closed.
+  // Future mobile/sync clients require a separate authenticated protocol.
+  return false;
+}
+
+export function assertBoundedJsonValue(
+  value: unknown,
+  overrides: Partial<Record<keyof typeof SECURITY_RESOURCE_BUDGETS, number>> = {}
+) {
+  const limits = { ...SECURITY_RESOURCE_BUDGETS, ...overrides };
+  let nodes = 0;
+  const visit = (current: unknown, depth: number) => {
+    nodes += 1;
+    if (nodes > limits.maximumJsonNodes) throw new Error("JSON_NODE_LIMIT_EXCEEDED");
+    if (depth > limits.maximumJsonDepth) throw new Error("JSON_DEPTH_LIMIT_EXCEEDED");
+    if (typeof current === "string" && current.length > limits.maximumStringLength) throw new Error("JSON_STRING_LIMIT_EXCEEDED");
+    if (Array.isArray(current)) {
+      if (current.length > limits.maximumArrayLength) throw new Error("JSON_ARRAY_LIMIT_EXCEEDED");
+      current.forEach((item) => visit(item, depth + 1));
+      return;
+    }
+    if (current && typeof current === "object") {
+      const entries = Object.entries(current as Record<string, unknown>);
+      if (entries.length > limits.maximumObjectKeys) throw new Error("JSON_OBJECT_KEY_LIMIT_EXCEEDED");
+      entries.forEach(([key, item]) => {
+        if (key.length > 200) throw new Error("JSON_KEY_LIMIT_EXCEEDED");
+        visit(item, depth + 1);
+      });
+    }
+  };
+  visit(value, 0);
+  return value;
+}
+
+export function requestQueryBudgetIssue(url: Pick<URL, "pathname" | "searchParams">) {
+  for (const name of ["pageSize", "perPage", "page_size"]) {
+    const raw = url.searchParams.get(name);
+    if (raw === null) continue;
+    if (!/^\d{1,6}$/.test(raw) || Number(raw) < 1 || Number(raw) > SECURITY_RESOURCE_BUDGETS.maximumPaginationSize) {
+      return "Pagination size exceeds the safe server limit.";
+    }
+  }
+  for (const [startName, endName] of [["from", "to"], ["startDate", "endDate"], ["dateFrom", "dateTo"]] as const) {
+    const start = url.searchParams.get(startName);
+    const end = url.searchParams.get(endName);
+    if (!start || !end) continue;
+    const from = isoDate(start);
+    const to = isoDate(end);
+    if (from === null || to === null || to < from || (to - from) / 86_400_000 > SECURITY_RESOURCE_BUDGETS.maximumDateRangeDays) {
+      return "Date range exceeds the safe server limit.";
+    }
+  }
+  return null;
 }
 
 export function contentSecurityPolicy(nonce: string, enableUpgrade = process.env.ENABLE_HTTPS_UPGRADE === "true") {
@@ -141,8 +234,7 @@ function validOrigin(value: string, expectedOrigins: Set<string>) {
 
 function requestOrigins(
   request: Pick<NextRequest, "headers" | "nextUrl">,
-  trustProxyHeaders = process.env.TRUST_PROXY_HEADERS === "true" &&
-    process.env.NALANDA_TRUSTED_PROXY_MODE === "single-hop-sanitized"
+  trustProxyHeaders = trustedProxyRequest(request.headers)
 ) {
   const origins = new Set([request.nextUrl.origin]);
   const host = trustProxyHeaders
@@ -153,6 +245,12 @@ function requestOrigins(
     : null;
   if (host && (protocol === "http" || protocol === "https")) origins.add(`${protocol}://${host}`);
   return origins;
+}
+
+function isoDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const timestamp = Date.parse(`${value}T00:00:00.000Z`);
+  return Number.isFinite(timestamp) ? timestamp : null;
 }
 
 function normalizedOrigin(value: string) {

@@ -3,6 +3,7 @@ import type { AuthUser } from "@/lib/auth";
 import { getCurrentUserEffectivePermissions } from "@/lib/auth";
 import { SupportError } from "@/lib/support";
 import { SupportFileError } from "@/lib/support-files";
+import { assertBoundedJsonValue } from "@/lib/request-security";
 
 export const SUPPORT_PRIVATE_HEADERS = { "Cache-Control": "private, no-store, max-age=0", "X-Content-Type-Options": "nosniff", "Vary": "Cookie" };
 
@@ -19,5 +20,5 @@ export async function supportActor(user: AuthUser) {
 export async function parseJsonBody(request: Request) {
   const type = request.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase();
   if (type !== "application/json") throw new SupportError("Content type must be application/json.", 415);
-  try { return await request.json(); } catch { throw new SupportError("A valid JSON request body is required."); }
+  try { const body = await request.json(); assertBoundedJsonValue(body, { maximumArrayLength: 100, maximumStringLength: 4_000, maximumJsonNodes: 1_000 }); return body; } catch { throw new SupportError("A valid and bounded JSON request body is required."); }
 }

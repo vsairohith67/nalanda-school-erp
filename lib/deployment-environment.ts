@@ -32,7 +32,8 @@ const REQUIRED_SECRETS = [
   "WHATSAPP_PHONE_HASH_PEPPER",
   "SMS_EMAIL_MOCK_WEBHOOK_SECRET",
   "SMS_EMAIL_CONTACT_HASH_PEPPER",
-  "AI_ASSISTANT_AUDIT_HASH_PEPPER"
+  "AI_ASSISTANT_AUDIT_HASH_PEPPER",
+  "NALANDA_PROXY_SHARED_SECRET"
 ] as const;
 const SEED_PASSWORDS = [
   "SEED_DIRECTOR_PASSWORD",
@@ -127,16 +128,27 @@ export function validateDeploymentEnvironment(
     ["ENABLE_HSTS", "true"],
     ["ENABLE_HTTPS_UPGRADE", "true"],
     ["TRUST_PROXY_HEADERS", "true"],
-    ["NALANDA_TRUSTED_PROXY_MODE", "single-hop-sanitized"]
+    ["NALANDA_TRUSTED_PROXY_MODE", "authenticated-edge-v1"],
+    ["NALANDA_REQUIRE_TRUSTED_PROXY", "true"]
   ] as const) {
     if (value(environment, name) !== expected) {
       add("SECURE_TRANSPORT_SETTING_REQUIRED", name, `Must be exactly ${expected}.`);
     }
   }
+  if (!["x-forwarded-for", "x-real-ip", "cf-connecting-ip"].includes(value(environment, "NALANDA_CLIENT_IP_HEADER"))) {
+    add("TRUSTED_CLIENT_IP_HEADER_INVALID", "NALANDA_CLIENT_IP_HEADER", "Choose one exact ingress-overwritten client IP header.");
+  }
 
   const dataRootValue = value(environment, "STAGING_DATA_DIR");
   const dataRoot = dataRootValue ? path.resolve(dataRootValue) : "";
   const localRehearsal = value(environment, "NALANDA_LOCAL_REHEARSAL") === "true";
+  const localRateLimitRehearsal = localRehearsal &&
+    value(environment, "QA20C_ISOLATED_DATABASE") === "true" &&
+    value(environment, "NALANDA_LOCAL_SECURITY_REHEARSAL") === "true" &&
+    value(environment, "SECURITY_RATE_LIMIT_MODE") === "single-process-rehearsal";
+  if (value(environment, "SECURITY_RATE_LIMIT_MODE") !== "distributed" && !localRateLimitRehearsal) {
+    add("DISTRIBUTED_RATE_LIMIT_REQUIRED", "SECURITY_RATE_LIMIT_MODE", "Use an atomic distributed adapter, except in an explicit isolated local rehearsal.");
+  }
   const releaseEnvFiles = existsSync(path.resolve(workspaceRoot))
     ? readdirSync(path.resolve(workspaceRoot), { withFileTypes: true })
       .filter((entry) => entry.isFile() && (entry.name === ".env" || (entry.name.startsWith(".env.") && entry.name !== ".env.example")))
@@ -352,6 +364,9 @@ export function validateReleaseEnvironmentContract(environment: NodeJS.ProcessEn
   }
 
   if (productionShaped && value(environment, "SESSION_COOKIE_SECURE") !== "true") add("INSECURE_COOKIE_REJECTED", "SESSION_COOKIE_SECURE", "Secure cookies are mandatory.");
+  if (productionShaped && value(environment, "NALANDA_TRUSTED_PROXY_MODE") !== "authenticated-edge-v1") add("TRUSTED_PROXY_MODE_REQUIRED", "NALANDA_TRUSTED_PROXY_MODE", "Staging and production require authenticated edge identity.");
+  if (productionShaped && value(environment, "NALANDA_REQUIRE_TRUSTED_PROXY") !== "true") add("TRUSTED_PROXY_REQUIRED", "NALANDA_REQUIRE_TRUSTED_PROXY", "Direct origin requests must fail closed.");
+  if (productionShaped && value(environment, "SECURITY_RATE_LIMIT_MODE") !== "distributed") add("DISTRIBUTED_RATE_LIMIT_REQUIRED", "SECURITY_RATE_LIMIT_MODE", "Production-shaped environments require an atomic distributed rate-limit adapter.");
   if (value(environment, "DEBUG") === "true" || value(environment, "NEXT_PUBLIC_DEBUG") === "true") add("DEBUG_MODE_REJECTED", "DEBUG", "Debug mode is prohibited in release-shaped environments.");
   if (value(environment, "LIVE_PROVIDERS_ENABLED") !== "false") add("LIVE_PROVIDER_MODE_REJECTED", "LIVE_PROVIDERS_ENABLED", "Provider mode must remain explicitly disabled until separately approved.");
 

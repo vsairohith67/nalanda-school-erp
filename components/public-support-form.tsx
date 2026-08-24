@@ -1,22 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 
 export function PublicSupportForm() {
-  const [busy, setBusy] = useState(false), [result, setResult] = useState<{ message: string; reference: string } | null>(null);
+  const [busy, setBusy] = useState(false), [result, setResult] = useState<{ message: string; reference?: string } | null>(null);
+  const submissionKeyRef = useRef<string | null>(null);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setResult(null);
     const form = event.currentTarget, data = new FormData(form);
-    data.set("consent", data.get("consent") === "on" ? "true" : "false"); data.set("submissionKey", crypto.randomUUID());
-    try { const response = await fetch("/api/public/support/requests", { method: "POST", body: data, cache: "no-store" }), body = await response.json(); setResult({ message: body.message, reference: body.reference }); form.reset(); }
-    catch { setResult({ message: "Your support request has been received. Keep the reference shown on this page.", reference: `NPS-SUP-${crypto.randomUUID().slice(0, 8).toUpperCase()}` }); }
+    submissionKeyRef.current ??= crypto.randomUUID();
+    data.set("consent", data.get("consent") === "on" ? "true" : "false"); data.set("submissionKey", submissionKeyRef.current);
+    try {
+      const response = await fetch("/api/public/support/requests", { method: "POST", body: data, cache: "no-store" });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setResult({ message: response.status === 429
+          ? "Too many support requests. Please wait before trying again."
+          : "Support intake is temporarily busy. Please retry shortly." });
+        return;
+      }
+      setResult({ message: body.message, reference: body.reference });
+      submissionKeyRef.current = null;
+      form.reset();
+    }
+    catch { setResult({ message: "We could not confirm that your support request was received. Your form is still here; check your connection and retry." }); }
     finally { setBusy(false); }
   }
   return <section className="public-section public-support-section" aria-labelledby="contact-support-title">
     <div className="public-section-heading"><p className="public-eyebrow">Limited pre-login help</p><h2 id="contact-support-title">Contact Support</h2><p>Use this form only for login, account access, technical or admissions help. It cannot reset an account or retrieve Student or Staff information.</p></div>
     <div className="support-emergency" role="note"><strong>Urgent physical danger or medical emergency?</strong><span>Use the school&apos;s immediate emergency channel or local emergency services. This form does not replace emergency response.</span></div>
-    {result ? <div className="card support-reference" role="status" aria-live="polite"><strong>{result.message}</strong><output>{result.reference}</output><p>The reference is an acknowledgment only. It does not confirm that any username, admission number, employee reference, mobile or email exists.</p></div> : null}
+    {result ? <div className="card support-reference" role="status" aria-live="polite"><strong>{result.message}</strong>{result.reference ? <><output>{result.reference}</output><p>The reference is an acknowledgment only. It does not confirm that any username, admission number, employee reference, mobile or email exists.</p></> : null}</div> : null}
     <form className="card form-grid public-support-form" onSubmit={submit} encType="multipart/form-data">
       <label>Requester name<input name="requesterName" autoComplete="name" minLength={2} maxLength={100} required /></label>
       <label>Requester type<select name="requesterType" required defaultValue=""><option value="" disabled>Choose one</option><option value="PARENT">Parent</option><option value="STAFF">Staff</option><option value="APPLICANT">Applicant</option><option value="OTHER">Other</option></select></label>

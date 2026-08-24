@@ -6,6 +6,8 @@ import {
   type SmartAiResponse,
   type SmartAiSource
 } from "@/lib/smart-ai-contract";
+import { withCircuitBreaker } from "@/lib/resource-guard";
+import { emitSecurityResilienceEvent } from "@/lib/security-observability";
 import { getSmartAiProvider } from "@/lib/smart-ai-provider-local";
 import { SmartAiProviderError, type SmartAiProvider, validateSmartAiProviderOutput } from "@/lib/smart-ai-provider";
 import {
@@ -133,7 +135,10 @@ export async function orchestrateSmartAi(
       serializedContext: context.serialized,
       maximumAnswerCharacters: SMART_AI_LIMITS.maximumAnswerCharacters
     };
-    const generated = validateSmartAiProviderOutput(await provider.generate(providerInput, options.signal), context.sources);
+    const generated = validateSmartAiProviderOutput(
+      await withCircuitBreaker("smart-ai-provider", () => provider.generate(providerInput, options.signal)),
+      context.sources
+    );
     const citationIds = new Set(generated.citations);
     const answer = generated.uncertainty ? `${generated.answer}\n\nUncertainty: ${generated.uncertainty}` : generated.answer;
     return response({
@@ -151,6 +156,10 @@ export async function orchestrateSmartAi(
       sourceCoverage
     });
   } catch (error) {
+    emitSecurityResilienceEvent(
+      error instanceof SmartAiProviderError && error.code === "LOCAL_PROVIDER_TIMEOUT" ? "OPERATION_TIMEOUT" : "PROVIDER_UNAVAILABLE",
+      { operation: "smart-ai-provider", status: 503 }
+    );
     const providerMessage = error instanceof SmartAiProviderError && error.code === "LOCAL_PROVIDER_TIMEOUT"
       ? "The local Smart AI runtime timed out. No ERP record was changed; try again later."
       : "The Smart AI runtime failed safely. Authorised Search evidence is shown below, but no generated answer was accepted.";

@@ -45,7 +45,7 @@ describe("DEVOPS-1C staging readiness package", () => {
   it("requires HTTPS, trusted proxy sanitization and private no-store caching", () => {
     const tls = source("STAGING_TLS_PROXY_AND_SECURITY_HEADERS.md");
     expect(tls).toEqual(expect.stringContaining("HTTPS"));
-    expect(tls).toEqual(expect.stringContaining("single-hop-sanitized"));
+    expect(tls).toEqual(expect.stringContaining("authenticated-edge-v1"));
     expect(tls).toEqual(expect.stringContaining("private, no-store"));
     expect(tls).toEqual(expect.stringContaining("Strict-Transport-Security"));
   });

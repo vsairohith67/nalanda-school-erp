@@ -1,3 +1,5 @@
+import { trustedClientIdentity } from "@/lib/trusted-client";
+
 type LoginBucket = {
   failures: number[];
   blockedUntil: number;
@@ -69,16 +71,7 @@ export function loginRequestSource(
   headers: Pick<Headers, "get">,
   environment: Record<string, string | undefined> = process.env
 ) {
-  if (
-    environment.TRUST_PROXY_HEADERS === "true" &&
-    environment.NALANDA_TRUSTED_PROXY_MODE === "single-hop-sanitized"
-  ) {
-    const forwarded = headers.get("x-forwarded-for")?.split(",", 1)[0]?.trim();
-    const real = headers.get("x-real-ip")?.trim();
-    const value = forwarded || real;
-    if (value) return value.slice(0, 128);
-  }
-  return "direct";
+  return trustedClientIdentity(headers, environment).source;
 }
 
 export function resetLoginRateLimitForTests() {

@@ -66,6 +66,7 @@ export type ReportPdfJobManifest = {
 const REPORT_PDF_ROOT = path.join(process.cwd(), "tmp", "report-publication");
 const MANIFEST_SUFFIX = ".job.json";
 const MAX_ACTIVE_REPORT_PDF_JOBS = 2;
+export const MAX_QUEUED_REPORT_PDF_JOBS = 16;
 const JOB_EXPIRY_MINUTES = 30;
 const scheduler = globalThis as typeof globalThis & {
   __nalandaReportPdfScheduler?: {
@@ -111,6 +112,9 @@ export async function createReportPdfJob(
   if (input.format === "INDIVIDUAL_PDF" && reports.length !== 1) {
     throw new ReportPublicationError("Individual PDF generation requires one report.");
   }
+  if (!options.deferProcessing && reportPdfQueueState().queue.length >= MAX_QUEUED_REPORT_PDF_JOBS) {
+    throw new ReportPublicationError("PDF capacity is temporarily exhausted. Retry shortly.", 503, "PDF_QUEUE_SATURATED");
+  }
   const manifest: ReportPdfJobManifest = {
     schemaVersion: 1,
     jobKey,
@@ -142,12 +146,11 @@ export async function createReportPdfJob(
 }
 
 export function enqueueReportPdfJob(client: JobClient, jobKey: string) {
-  const state = scheduler.__nalandaReportPdfScheduler ??= {
-    active: 0,
-    queued: new Set<string>(),
-    queue: []
-  };
+  const state = reportPdfQueueState();
   if (state.queued.has(jobKey)) return;
+  if (state.queue.length >= MAX_QUEUED_REPORT_PDF_JOBS) {
+    throw new ReportPublicationError("PDF capacity is temporarily exhausted. Retry shortly.", 503, "PDF_QUEUE_SATURATED");
+  }
   state.queued.add(jobKey);
   state.queue.push(async () => {
     try {
@@ -157,6 +160,14 @@ export function enqueueReportPdfJob(client: JobClient, jobKey: string) {
     }
   });
   void drainQueue(state);
+}
+
+function reportPdfQueueState() {
+  return scheduler.__nalandaReportPdfScheduler ??= {
+    active: 0,
+    queued: new Set<string>(),
+    queue: []
+  };
 }
 
 export async function processReportPdfJob(

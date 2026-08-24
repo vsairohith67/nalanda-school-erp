@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { consumePasswordReset } from "@/lib/auth-recovery";
 import { safeClientError } from "@/lib/client-errors";
+import { assertBoundedJsonValue } from "@/lib/request-security";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    assertBoundedJsonValue(body, { maximumArrayLength: 4, maximumStringLength: 256, maximumJsonNodes: 20 });
     const token = String(body.token ?? "");
     const newPassword = String(body.newPassword ?? "");
     const confirmPassword = String(body.confirmPassword ?? "");

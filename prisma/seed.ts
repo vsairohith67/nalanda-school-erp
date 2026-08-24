@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { existsSync } from "node:fs";
 import { loadEnvFile } from "node:process";
 import { ACADEMIC_YEAR, DEFAULT_FEE_STRUCTURE, dueMonthsForClass } from "../lib/constants";
 import { ensureDefaultRolePermissions } from "../lib/role-permissions";
@@ -7,7 +8,7 @@ import { seedTimetableDefaults } from "../lib/timetable";
 import { ensureDefaultMiscIncomeItems } from "../lib/misc-income";
 import { demoBusinessSeedDecision } from "../lib/demo-business-seed-safety";
 
-loadEnvFile();
+if (existsSync(".env")) loadEnvFile();
 const prisma = new PrismaClient();
 
 async function main() {

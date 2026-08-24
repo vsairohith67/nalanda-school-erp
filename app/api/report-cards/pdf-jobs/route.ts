@@ -31,7 +31,9 @@ export async function POST(request: NextRequest) {
 
 function pdfError(error: unknown) {
   if (error instanceof ReportPublicationError) {
-    return NextResponse.json({ error: error.message, code: error.code }, { status: error.status });
+    const response = NextResponse.json({ error: error.message, code: error.code }, { status: error.status });
+    if (error.status === 429 || error.status === 503) response.headers.set("Retry-After", "5");
+    return response;
   }
   return NextResponse.json(
     { error: "Unable to manage the PDF job." },

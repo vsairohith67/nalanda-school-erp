@@ -1,0 +1,35 @@
+# Documentation template only. It cannot be applied directly and contains no account, DNS, IP, credential or provider ID.
+status: NOT_ACTIVATED
+claims:
+  ddos_guarantee: NOT_CLAIMED
+  origin_publicly_reachable: false
+origin:
+  transport: authenticated_tunnel_or_restricted_edge
+  tls_end_to_end: true
+  application_listener: private_or_loopback
+  database_internet_exposed: false
+  storage_internet_exposed: false
+  firewall_default: deny
+proxy_identity:
+  mode: authenticated-edge-v1
+  overwrite_client_headers: true
+  proof_header: X-Nalanda-Proxy-Auth
+  client_ip_header: X-Forwarded-For
+rate_limits:
+  distributed_atomic_store_required: true
+  policies:
+    login: strict_account_and_trusted_ip
+    recovery_and_otp: strict_anti_enumeration
+    public_forms: strict_with_accessible_optional_challenge
+    uploads_imports_exports_pdf_images: strict_cost_and_concurrency
+    search_and_ai: per_user_and_concurrency
+    sync_future: authenticated_device_session_and_replay_budget
+cache:
+  immutable_static_assets: allowed
+  authenticated_or_private: never
+  api_or_download_or_ai_or_search: never
+emergency:
+  under_attack_mode: manual_time_bounded
+  country_asn_controls: manual_time_bounded
+  preserve_health: true
+  preserve_authorization: true

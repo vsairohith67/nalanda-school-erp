@@ -8,7 +8,9 @@ param(
   [ValidateRange(1024, 65535)]
   [int]$Port = 3011,
   [ValidateSet("QASEC1", "QASEC1QA")]
-  [string]$Marker = "QASEC1"
+  [string]$Marker = "QASEC1",
+  [ValidateSet("single-process-rehearsal", "distributed")]
+  [string]$RateLimitMode = "single-process-rehearsal"
 )
 
 $ErrorActionPreference = "Stop"
@@ -77,6 +79,12 @@ $env:SMS_EMAIL_CONTACT_HASH_PEPPER = "$Marker-runtime-sms-email-contact-hash-pep
 $env:AI_ASSISTANT_AUDIT_HASH_PEPPER = "$Marker-runtime-ai-audit-hash-pepper-2026"
 $env:SESSION_COOKIE_SECURE = "false"
 $env:TRUST_PROXY_HEADERS = "true"
+$env:APP_ORIGIN = "http://127.0.0.1:$Port"
+$env:NALANDA_LOCAL_SECURITY_REHEARSAL = if ($RateLimitMode -eq "single-process-rehearsal") { "true" } else { "false" }
+$env:SECURITY_RATE_LIMIT_MODE = $RateLimitMode
+$env:RELEASE_FEATURE_FLAGS_QA_MODE = "SYNTHETIC_COPY_ONLY"
+$env:RELEASE_FEATURE_FLAGS_QA_ENABLED = "public-admissions-form"
+$env:QA20C_ISOLATED_DATABASE = "true"
 $env:WHATSAPP_LIVE_ENABLED = "false"
 $env:COMMUNICATION_LIVE_ENABLED = "false"
 $env:CLOUD_BACKUP_LIVE_ENABLED = "false"
@@ -103,5 +111,6 @@ if (-not $listener) {
 }
 
 Write-Output "STARTED port=$Port pid=$($listener.OwningProcess)"
+Write-Output "RATE_LIMIT_MODE=$RateLimitMode"
 Write-Output "QA_DATABASE=$qaDatabase"
 Write-Output "OPERATIONAL_DATABASE=$operationalDatabase"

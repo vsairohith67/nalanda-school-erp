@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { existsSync, realpathSync } from "node:fs";
 import { mkdir, lstat, readFile, realpath, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -138,7 +139,10 @@ export function assertPrivateFeeRegisterStorageRoot(configured: string, resolved
   if (relativeToPublic === "" || (!relativeToPublic.startsWith(`..${path.sep}`) && relativeToPublic !== ".." && !path.isAbsolute(relativeToPublic))) {
     throw new Error("Fee-register OCR storage must not resolve inside the public directory");
   }
-  const relativeToConfigured = path.relative(configured, resolvedRoot);
+  const canonicalConfigured = existsSync(configured)
+    ? realpathSync.native(configured)
+    : path.resolve(configured);
+  const relativeToConfigured = path.relative(canonicalConfigured, resolvedRoot);
   if (relativeToConfigured !== "") throw new Error("OCR source storage root resolved to an unexpected location");
 }
 

@@ -2,6 +2,7 @@ import {
   linkSync,
   mkdirSync,
   mkdtempSync,
+  realpathSync,
   rmSync,
   writeFileSync
 } from "node:fs";
@@ -58,8 +59,8 @@ describe("demo business seed safety", () => {
       data.workspace
     )).toEqual({
       enabled: true,
-      databasePath: data.isolated,
-      isolatedRoot: data.isolatedRoot
+      databasePath: realpathSync.native(data.isolated),
+      isolatedRoot: realpathSync.native(data.isolatedRoot)
     });
   });
 
@@ -117,6 +118,7 @@ describe("demo business seed safety", () => {
   it("checks the business-data gate before any seed mutation", async () => {
     const { readFile } = await import("node:fs/promises");
     const source = await readFile(path.join(process.cwd(), "prisma", "seed.ts"), "utf8");
+    expect(source).toContain('if (existsSync(".env")) loadEnvFile();');
     const gate = source.indexOf("demoBusinessSeedDecision(process.env, process.cwd())");
     const firstMutation = source.indexOf("ensureSeedUsers(prisma, process.env, process.cwd())");
     const studentMutation = source.indexOf("prisma.student.upsert");

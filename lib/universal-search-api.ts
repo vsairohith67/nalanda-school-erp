@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { unsafeRequestOriginAllowed } from "@/lib/request-security";
 import { parseUniversalSearchRequest, UniversalSearchError } from "@/lib/universal-search";
+import { assertBoundedJsonValue } from "@/lib/request-security";
+import { ResourceGuardError } from "@/lib/resource-guard";
 
 export const UNIVERSAL_SEARCH_PRIVATE_HEADERS = {
   "Cache-Control": "private, no-store, max-age=0",
@@ -29,7 +31,12 @@ export async function parseUniversalSearchBody(request: NextRequest) {
   const raw = await request.text();
   if (!raw || raw.length > 16_000) throw new UniversalSearchError("Search request is missing or too large.", 413, "UNIVERSAL_SEARCH_REQUEST_SIZE");
   try {
-    return parseUniversalSearchRequest(JSON.parse(raw));
+    const parsed = JSON.parse(raw);
+    // Search currently exposes 23 governed source identifiers. Keep room for
+    // bounded source growth without rejecting the application's own select-all
+    // request, while remaining far below the global JSON array ceiling.
+    assertBoundedJsonValue(parsed, { maximumArrayLength: 32, maximumStringLength: 2_000, maximumJsonNodes: 200 });
+    return parseUniversalSearchRequest(parsed);
   } catch (error) {
     if (error instanceof UniversalSearchError) throw error;
     throw new UniversalSearchError("Search request must be valid JSON.", 400, "UNIVERSAL_SEARCH_JSON_INVALID");
@@ -37,6 +44,11 @@ export async function parseUniversalSearchBody(request: NextRequest) {
 }
 
 export function universalSearchError(error: unknown) {
+  if (error instanceof ResourceGuardError) {
+    const response = universalSearchJson({ error: error.message, code: error.code }, error.status);
+    response.headers.set("Retry-After", String(error.retryAfterSeconds));
+    return response;
+  }
   if (error instanceof UniversalSearchError) {
     return universalSearchJson({ error: error.message, code: error.code }, error.status);
   }

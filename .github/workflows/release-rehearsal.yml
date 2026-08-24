@@ -18,10 +18,10 @@ concurrency:
 jobs:
   validate:
     if: ${{ inputs.confirm_private_synthetic_only == 'PRIVATE_SYNTHETIC_ONLY' }}
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     timeout-minutes: 45
     env:
-      DATABASE_URL: file:./tmp/release-ci/synthetic.db
+      DATABASE_URL: file:../tmp/release-ci/synthetic.db
       NALANDA_ENVIRONMENT: TEST
       NALANDA_RELEASE_ID: release-ci-${{ github.run_id }}
       NALANDA_RELEASE_CHANNEL: TEST
@@ -31,8 +31,8 @@ jobs:
       NALANDA_RELEASE_DATE: "2026-08-10T00:00:00.000Z"
       NALANDA_STANDALONE_BUILD: "true"
       APP_ORIGIN: http://127.0.0.1:3000
-      PRIVATE_STORAGE_ROOT: /tmp/nalanda-release-ci/private
-      BACKUP_DIRECTORY: /tmp/nalanda-release-ci/backups
+      PRIVATE_STORAGE_ROOT: ${{ github.workspace }}\tmp\release-ci\private
+      BACKUP_DIRECTORY: ${{ github.workspace }}\tmp\release-ci\backups
       LIVE_PROVIDERS_ENABLED: "false"
       PUBLIC_WEBSITE_INDEXING_ENABLED: "false"
       NALANDA_STAGING_BANNER: "true"
@@ -47,19 +47,57 @@ jobs:
           node-version: 22
       - name: Enable repository package manager
         run: corepack enable
+      - name: Install required local validation tools
+        run: |
+          choco install ripgrep --version=15.2.0 -y --no-progress
+          rg --version
+          $popplerArchive = Join-Path $env:RUNNER_TEMP 'poppler-26.02.0-0.zip'
+          $popplerExtract = Join-Path $env:RUNNER_TEMP 'poppler-26.02.0-0'
+          Invoke-WebRequest -Uri 'https://github.com/oschwartz10612/poppler-windows/releases/download/v26.02.0-0/Release-26.02.0-0.zip' -OutFile $popplerArchive
+          $expectedPopplerSha256 = '993e4a94376ed712fafc7058d724ea0b943d118bbd2305cd9ed55174eb85cda5'
+          $actualPopplerSha256 = (Get-FileHash -LiteralPath $popplerArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualPopplerSha256 -ne $expectedPopplerSha256) { throw "Pinned Poppler archive checksum mismatch" }
+          Expand-Archive -LiteralPath $popplerArchive -DestinationPath $popplerExtract
+          $pdfToPpm = Get-Item -LiteralPath (Join-Path $popplerExtract 'poppler-26.02.0\Library\bin\pdftoppm.exe') -ErrorAction Stop
+          "REPORT_CARD_PDFTOPPM_PATH=$($pdfToPpm.FullName)" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
+          & $pdfToPpm.FullName -v
       - name: Install exactly from lockfile
         run: pnpm install --frozen-lockfile
       - name: Generate isolated Prisma client
         run: pnpm db:generate
       - name: Prepare isolated synthetic database
         run: |
-          mkdir -p prisma/tmp/release-ci
-          touch prisma/tmp/release-ci/synthetic.db
+          New-Item -ItemType Directory -Force -Path tmp\release-ci | Out-Null
+          if (Test-Path -LiteralPath tmp\release-ci\synthetic.db) { throw "Release CI synthetic database already exists" }
+          New-Item -ItemType File -Path tmp\release-ci\synthetic.db | Out-Null
           pnpm exec prisma migrate deploy
+          $env:NODE_ENV = 'development'
+          $env:RELEASE_CI_SYNTHETIC_OPT_IN = 'true'
+          pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db
       - name: Git and private-artifact safety
         run: pnpm git:safety-check
+      - name: Production dependency audit
+        run: pnpm audit --prod --audit-level high
+      - name: Security resilience focused acceptance
+        run: pnpm security:resilience:acceptance
       - name: Release Operations focused tests
         run: pnpm exec vitest run tests/release-operations.test.ts tests/release-operations-ui.test.ts
+      - name: Route and lifecycle inventory
+        run: |
+          pnpm routes:list
+          pnpm lifecycle:backfill
+      - name: Full regression tests
+        run: pnpm test
+      - name: Migration and restore-twice acceptance
+        run: |
+          pnpm migration:inventory
+          pnpm migration:fresh-check
+          pnpm migration:existing-db-check
+          pnpm migration:schema-check
+          pnpm migration:restore-check
+      - name: Synthetic backup generation
+        run: pnpm backup
       - name: Typecheck
         run: pnpm typecheck
       - name: Build standalone release runtime

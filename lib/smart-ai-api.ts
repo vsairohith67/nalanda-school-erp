@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { unsafeRequestOriginAllowed } from "@/lib/request-security";
 import { SMART_AI_LIMITS } from "@/lib/smart-ai-contract";
 import { parseSmartAiRequest, SmartAiError } from "@/lib/smart-ai-safety";
+import { assertBoundedJsonValue } from "@/lib/request-security";
+import { ResourceGuardError } from "@/lib/resource-guard";
 
 export const SMART_AI_PRIVATE_HEADERS = {
   "Cache-Control": "private, no-store, max-age=0",
@@ -32,7 +34,9 @@ export async function parseSmartAiBody(request: NextRequest) {
     throw new SmartAiError("Smart AI request is missing or too large.", 413, "SMART_AI_REQUEST_SIZE");
   }
   try {
-    return parseSmartAiRequest(JSON.parse(raw));
+    const parsed = JSON.parse(raw);
+    assertBoundedJsonValue(parsed, { maximumArrayLength: SMART_AI_LIMITS.maximumConversationTurns, maximumStringLength: SMART_AI_LIMITS.maximumConversationCharacters, maximumJsonNodes: 100 });
+    return parseSmartAiRequest(parsed);
   } catch (error) {
     if (error instanceof SmartAiError) throw error;
     throw new SmartAiError("Smart AI request must be valid JSON.", 400, "SMART_AI_JSON_INVALID");
@@ -40,6 +44,11 @@ export async function parseSmartAiBody(request: NextRequest) {
 }
 
 export function smartAiError(error: unknown) {
+  if (error instanceof ResourceGuardError) {
+    const response = smartAiJson({ error: error.message, code: error.code }, error.status);
+    response.headers.set("Retry-After", String(error.retryAfterSeconds));
+    return response;
+  }
   if (error instanceof SmartAiError) return smartAiJson({ error: error.message, code: error.code }, error.status);
   return smartAiJson({ error: "Smart AI failed safely. No school record was changed.", code: "SMART_AI_UNAVAILABLE" }, 500);
 }

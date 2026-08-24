@@ -25,8 +25,10 @@ Legend: R = required for staging runtime; C = conditional; O = optional/tool-onl
 | `PUBLIC_WEBSITE_URL` | canonical public URL | R | local origin / same staging origin | No | must equal `APP_ORIGIN` | same as origin | n/a / DevOps |
 | `PUBLIC_WEBSITE_INDEXING_ENABLED` | robots/indexing gate | R | `false` / `false` | No | exactly false | no fallback | disabled / School Director |
 | `SESSION_COOKIE_SECURE` | secure cookie | R | false locally / true | No | exactly true in staging | restart; no insecure fallback | n/a / Security |
-| `TRUST_PROXY_HEADERS` | forwarded header opt-in | R | false / true | No | true only with sanitized one-hop mode and loopback listener | disable if proxy bypass exists | n/a / Security |
-| `NALANDA_TRUSTED_PROXY_MODE` | prevents flag-only trust | R | disabled / `single-hop-sanitized` | No | exact enum | restart; fail closed | n/a / Security |
+| `TRUST_PROXY_HEADERS` | forwarded header opt-in | R | false / true | No | true only with authenticated edge proof and private listener | disable if proxy bypass exists | n/a / Security |
+| `NALANDA_TRUSTED_PROXY_MODE` | prevents flag-only trust | R | disabled / `authenticated-edge-v1` | No | exact enum plus required proof | restart; fail closed | n/a / Security |
+| `NALANDA_PROXY_SHARED_SECRET` | authenticates reverse-proxy boundary | R | unique local / secret-manager value | Yes | at least 32 high-entropy characters; never accept client input | coordinated proxy/app rotation | n/a / Security |
+| `SECURITY_RATE_LIMIT_MODE` | multi-instance abuse-store contract | R | memory development / distributed | No | distributed required in staging/production | governed endpoints fail 503 if absent | n/a / Security |
 | `ENABLE_HSTS` | HSTS response | R | false / true | No | exactly true after HTTPS is verified | disable only during approved TLS incident | n/a / Security |
 | `ENABLE_HTTPS_UPGRADE` | CSP upgrade requests | R | false / true | No | exactly true | restart | n/a / Security |
 | `NEXT_PUBLIC_PWA_BUILD_VERSION` | service-worker cache version | R | dev label / non-secret release | No | release identifier, no secrets | changes per release | n/a / DevOps |

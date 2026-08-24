@@ -20,6 +20,8 @@ describe("SEC-1 runtime security hardening", () => {
   const previousSecure = process.env.SESSION_COOKIE_SECURE;
   const previousTrustProxy = process.env.TRUST_PROXY_HEADERS;
   const previousTrustedProxyMode = process.env.NALANDA_TRUSTED_PROXY_MODE;
+  const previousProxySecret = process.env.NALANDA_PROXY_SHARED_SECRET;
+  const previousAppOrigin = process.env.APP_ORIGIN;
 
   it("provides a safe custom 404 with an explicit recovery action", () => {
     const source = readFileSync("app/not-found.tsx", "utf8");
@@ -35,6 +37,8 @@ describe("SEC-1 runtime security hardening", () => {
     process.env.SESSION_COOKIE_SECURE = "false";
     delete process.env.TRUST_PROXY_HEADERS;
     delete process.env.NALANDA_TRUSTED_PROXY_MODE;
+    delete process.env.NALANDA_PROXY_SHARED_SECRET;
+    delete process.env.APP_ORIGIN;
   });
 
   afterEach(() => {
@@ -44,6 +48,10 @@ describe("SEC-1 runtime security hardening", () => {
     else process.env.TRUST_PROXY_HEADERS = previousTrustProxy;
     if (previousTrustedProxyMode === undefined) delete process.env.NALANDA_TRUSTED_PROXY_MODE;
     else process.env.NALANDA_TRUSTED_PROXY_MODE = previousTrustedProxyMode;
+    if (previousProxySecret === undefined) delete process.env.NALANDA_PROXY_SHARED_SECRET;
+    else process.env.NALANDA_PROXY_SHARED_SECRET = previousProxySecret;
+    if (previousAppOrigin === undefined) delete process.env.APP_ORIGIN;
+    else process.env.APP_ORIGIN = previousAppOrigin;
   });
 
   it("bounds repeated account and source login failures without permanent lockout", async () => {
@@ -172,14 +180,18 @@ describe("SEC-1 runtime security hardening", () => {
       headers: new Headers({
         origin: "https://proxy.qasec1.invalid",
         "x-forwarded-host": "proxy.qasec1.invalid",
-        "x-forwarded-proto": "https"
+        "x-forwarded-proto": "https",
+        "x-forwarded-for": "203.0.113.10"
       }),
       nextUrl: new URL("http://localhost:3011/api/auth/logout")
     };
     expect(unsafeRequestOriginAllowed(request as never)).toBe(false);
     process.env.TRUST_PROXY_HEADERS = "true";
     expect(unsafeRequestOriginAllowed(request as never)).toBe(false);
-    process.env.NALANDA_TRUSTED_PROXY_MODE = "single-hop-sanitized";
+    process.env.NALANDA_TRUSTED_PROXY_MODE = "authenticated-edge-v1";
+    process.env.NALANDA_PROXY_SHARED_SECRET = "qasec1-proxy-proof-that-is-longer-than-thirty-two-characters";
+    process.env.APP_ORIGIN = "https://proxy.qasec1.invalid";
+    request.headers.set("x-nalanda-proxy-auth", process.env.NALANDA_PROXY_SHARED_SECRET);
     expect(unsafeRequestOriginAllowed(request as never)).toBe(true);
   });
 
@@ -189,12 +201,16 @@ describe("SEC-1 runtime security hardening", () => {
     expect(applicationOrigin(request as never, "not-a-url")).toBe("http://127.0.0.1:3101");
   });
 
-  it("accepts a forwarded client address only in the sanitized single-hop mode", () => {
-    const headers = new Headers({ "x-forwarded-for": "203.0.113.10, 198.51.100.2", "x-real-ip": "192.0.2.20" });
+  it("accepts a forwarded client address only with authenticated edge proof", () => {
+    const secret = "qasec1-proxy-proof-that-is-longer-than-thirty-two-characters";
+    const headers = new Headers({ "x-forwarded-for": "203.0.113.10", "x-forwarded-host": "staging.example.test", "x-forwarded-proto": "https", "x-nalanda-proxy-auth": secret });
     expect(loginRequestSource(headers, { TRUST_PROXY_HEADERS: "true" })).toBe("direct");
     expect(loginRequestSource(headers, {
       TRUST_PROXY_HEADERS: "true",
-      NALANDA_TRUSTED_PROXY_MODE: "single-hop-sanitized"
+      NALANDA_TRUSTED_PROXY_MODE: "authenticated-edge-v1",
+      NALANDA_PROXY_SHARED_SECRET: secret,
+      APP_ORIGIN: "https://staging.example.test",
+      NALANDA_CLIENT_IP_HEADER: "x-forwarded-for"
     })).toBe("203.0.113.10");
   });
 
