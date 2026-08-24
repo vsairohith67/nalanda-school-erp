@@ -1,8 +1,24 @@
 # ERP Feature Status and Gap Map
 
-## Current-main correction (2026-08-23)
+## Current-main correction (2026-08-24)
 
-Current `main` and its retained annotated tags supersede the dated checkpoint below wherever they conflict. Support/complaints, observability, bulk onboarding, Classes I-X print acceptance, the V1 cross-module RC, Academic Integrity v1.1, Command Center, My Work, Universal Search, Smart AI Foundation, Smart AI Local Runtime, Event Media software and KG Report Cards software are `CLEARED`; operational activation remains separately gated where documented. `FINAL-SCOPE-QA-1A` now supplies the missing post-V1.5 acceptance harness, but release acceptance is `REQUIRES_FIXES`: active import, public-admissions and Payroll/ESS write surfaces do not consume their committed default-off release flags, `bulk-exports` lacks a governed surface map, and dependency audits contain unresolved Critical/High advisories. Optional Operations is implemented/independently tested but `RELEASE_BLOCKED_EXTERNAL_CI`; Parent Meetings is implemented with focused QA but remains `BLOCKED_BY_EVIDENCE / RELEASE_BLOCKED`. Neither branch is a current-main capability.
+Current `main` and its retained annotated tags supersede the dated checkpoint below wherever they conflict. Support/complaints, observability, bulk onboarding, Classes I-X print acceptance, the V1 cross-module RC, Academic Integrity v1.1, Command Center, My Work, Universal Search, Smart AI Foundation, Smart AI Local Runtime, Event Media software, KG Report Cards software and Parent Meetings software are `CLEARED`; operational activation remains separately gated where documented. `FINAL-SCOPE-QA-1A` supplies the missing post-V1.5 acceptance harness, but its release acceptance remains `REQUIRES_FIXES`: active import, public-admissions and Payroll/ESS write surfaces do not consume their committed default-off release flags, and `bulk-exports` lacks a governed surface map. Optional Operations is implemented/independently tested but remains an unmerged `RELEASE_BLOCKED_EXTERNAL_CI` capability.
+
+## Parent Meetings and Appointments — V1.5 update
+
+| Capability | Software status | Remaining boundary |
+| --- | --- | --- |
+| Parent linked-child meeting request and own safe history | Software cleared behind default-off flag | Real Parent activation and meeting import require separate approval |
+| Leadership schedule, conflict checks, outcome and follow-up | Software cleared | Operational calendar ownership and real-user process remain separate |
+| Explicit assigned-Teacher contribution | Software cleared, assignment-only | No general Teacher browsing or marks authority |
+| Separate internal notes and released Parent summary | Software cleared with append-only corrections | School content/retention policy and real use require operational approval |
+| In-app reminders and management reports | Software cleared locally | No WhatsApp/SMS/email/push or external calendar activation |
+| Search/Smart AI | Deferred | Requires an explicitly governed later Search extension |
+
+Independent acceptance result: `PARENT_MEETING_V1_5_CLEARED`. The controlled
+Browser, role/privacy/security, copied-migration/restore, full regression,
+backup v43 and byte-identical operational-database gates passed. This is
+software clearance only; operational activation remains default-off.
 
 ## Historical GOV-RECON-1 corrected V1 status (2026-08-08)
 

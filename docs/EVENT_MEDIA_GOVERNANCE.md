@@ -27,7 +27,7 @@ For `PARENT_PORTAL` or `PUBLIC`, a photo with Students is eligible only when aut
 
 Albums and media use governed archival and withdrawal; API hard-delete routes do not exist. Archival does not erase originals, audit rows, or consent records. Audit history covers creation/upload, review, approval, publication, unpublication, consent changes, archival, withdrawal, and derivative failure without binary image contents.
 
-Logical backup version 42 includes all six Event Media metadata tables and excludes image bytes. Private bytes have a separate encrypted `event-media:asset-backup` flow. That command:
+Logical backup version 43 continues to include all six Event Media metadata tables and excludes image bytes. Private bytes have a separate encrypted `event-media:asset-backup` flow. That command:
 
 1. verifies every original and ready thumbnail against its stored SHA-256;
 2. bounds each encrypted asset-backup set to 240 MiB of media, leaving container capacity for the ZIP manifest and headers; larger libraries must be split into explicit asset-key batches;

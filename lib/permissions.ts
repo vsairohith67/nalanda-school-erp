@@ -493,6 +493,13 @@ export const PERMISSIONS = [
   "PUBLISH_EVENT_MEDIA",
   "ARCHIVE_EVENT_MEDIA",
   "VIEW_OWN_EVENT_MEDIA",
+  "VIEW_PARENT_MEETINGS",
+  "MANAGE_PARENT_MEETINGS",
+  "EXPORT_PARENT_MEETING_REPORTS",
+  "VIEW_ASSIGNED_PARENT_MEETINGS",
+  "CONTRIBUTE_ASSIGNED_PARENT_MEETINGS",
+  "VIEW_OWN_PARENT_MEETINGS",
+  "REQUEST_OWN_PARENT_MEETINGS",
   "VIEW_SUPPORT_REQUESTS",
   "MANAGE_SUPPORT_CONFIGURATION",
   "TRIAGE_SUPPORT_REQUESTS",
@@ -1247,6 +1254,19 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     ]
   },
   {
+    id: "parent-meetings",
+    title: "Parent Meetings and Follow-up",
+    permissions: [
+      { permission: "VIEW_PARENT_MEETINGS", label: "View Parent meetings", description: "View the governed meeting queue within exact leadership oversight scope." },
+      { permission: "MANAGE_PARENT_MEETINGS", label: "Manage Parent meetings", description: "Schedule, assign, complete, cancel and preserve Parent meeting history as Principal or Super Admin." },
+      { permission: "EXPORT_PARENT_MEETING_REPORTS", label: "Export Parent meeting reports", description: "Export bounded formula-safe management fields without private notes." },
+      { permission: "VIEW_ASSIGNED_PARENT_MEETINGS", label: "View assigned Parent meetings", description: "View only meetings where the exact active Teacher is explicitly assigned." },
+      { permission: "CONTRIBUTE_ASSIGNED_PARENT_MEETINGS", label: "Contribute to assigned meetings", description: "Record attendance and participant-internal contributions only within an explicit assignment." },
+      { permission: "VIEW_OWN_PARENT_MEETINGS", label: "View own linked-child meetings", description: "View only Parent-safe meetings for the exact active Guardian and linked-child context." },
+      { permission: "REQUEST_OWN_PARENT_MEETINGS", label: "Request linked-child meetings", description: "Request a meeting only for the active server-derived linked child." }
+    ]
+  },
+  {
     id: "public-website",
     title: "Public Website",
     permissions: [
@@ -1583,6 +1603,10 @@ for (const permission of eventMediaLeadershipPermissions) {
   principalPermissions.add(permission);
 }
 
+for (const permission of ["MANAGE_PARENT_MEETINGS", "EXPORT_PARENT_MEETING_REPORTS"] as CanonicalPermission[]) directorPermissions.delete(permission);
+directorPermissions.add("VIEW_PARENT_MEETINGS");
+for (const permission of ["VIEW_PARENT_MEETINGS", "MANAGE_PARENT_MEETINGS", "EXPORT_PARENT_MEETING_REPORTS"] as CanonicalPermission[]) principalPermissions.add(permission);
+
 export const RECOMMENDED_ROLE_PERMISSIONS: Record<Role, ReadonlySet<CanonicalPermission>> = {
   SUPER_ADMIN: new Set(PERMISSIONS),
   DIRECTOR: directorPermissions,
@@ -1596,6 +1620,13 @@ export const RECOMMENDED_ROLE_PERMISSIONS: Record<Role, ReadonlySet<CanonicalPer
   STUDENT: new Set(["VIEW_OWN_CLASSWORK", "SUBMIT_OWN_CLASSWORK", "UPLOAD_CLASSWORK_ATTACHMENTS", "DOWNLOAD_CLASSWORK_ATTACHMENTS", "VIEW_OWN_REPORT_CARDS", "VIEW_OWN_NOTIFICATIONS", "ACKNOWLEDGE_OWN_NOTIFICATIONS"]),
   VIEWER: viewerPermissions
 };
+
+for (const permission of ["VIEW_ASSIGNED_PARENT_MEETINGS", "CONTRIBUTE_ASSIGNED_PARENT_MEETINGS"] as CanonicalPermission[]) {
+  (RECOMMENDED_ROLE_PERMISSIONS.TEACHER as Set<CanonicalPermission>).add(permission);
+}
+for (const permission of ["VIEW_OWN_PARENT_MEETINGS", "REQUEST_OWN_PARENT_MEETINGS"] as CanonicalPermission[]) {
+  (RECOMMENDED_ROLE_PERMISSIONS.PARENT as Set<CanonicalPermission>).add(permission);
+}
 
 export function isRole(value: string): value is Role {
   return (ROLES as readonly string[]).includes(value);

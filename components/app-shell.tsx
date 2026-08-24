@@ -82,6 +82,7 @@ const icons: Record<NavigationIcon, LucideIcon> = {
   ,cloudBackup: ShieldCheck
   ,website: Sparkles
   ,eventMedia: Images
+  ,parentMeetings: CalendarDays
   ,calendar: CalendarDays
 };
 
@@ -191,7 +192,8 @@ export function AppShell({
   health,
   healthBannerIssues,
   appInfo,
-  pilotMode
+  pilotMode,
+  parentMeetingsEnabled
 }: {
   children: React.ReactNode;
   user: AuthUser | null;
@@ -201,6 +203,7 @@ export function AppShell({
   healthBannerIssues: SystemHealthIssue[];
   appInfo: AppInfo;
   pilotMode: boolean;
+  parentMeetingsEnabled: boolean;
 }) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -304,6 +307,7 @@ export function AppShell({
             <Link href="/parent/notifications" className={pathname.startsWith("/parent/notifications") ? "active" : ""} aria-current={pathname.startsWith("/parent/notifications") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Megaphone size={17} aria-hidden />Notifications</Link>
             {permissions.includes("REQUEST_STUDENT_DEPARTURE") ? <Link href="/parent/student-departures" className={pathname.startsWith("/parent/student-departures") ? "active" : ""} aria-current={pathname.startsWith("/parent/student-departures") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><ClipboardCheck size={17} aria-hidden />Student Early Leave</Link> : null}
             {permissions.includes("VIEW_OWN_SUPPORT") ? <Link href="/parent/support" className={pathname.startsWith("/parent/support") ? "active" : ""} aria-current={pathname.startsWith("/parent/support") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Megaphone size={17} aria-hidden />Support</Link> : null}
+            {parentMeetingsEnabled && permissions.includes("VIEW_OWN_PARENT_MEETINGS") ? <Link href="/parent/meetings" className={pathname.startsWith("/parent/meetings") ? "active" : ""} aria-current={pathname.startsWith("/parent/meetings") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><CalendarDays size={17} aria-hidden />Parent Meetings</Link> : null}
             {permissions.includes("MANAGE_OWN_WHATSAPP_CONSENT") && permissions.includes("MANAGE_OWN_SMS_EMAIL_CONSENT") ? <Link href="/parent/communication-preferences" className={pathname === "/parent/communication-preferences" ? "active" : ""} aria-current={pathname === "/parent/communication-preferences" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Settings size={17} aria-hidden />Communication Preferences</Link> : null}
             <Link href="/install-app" className={pathname === "/install-app" ? "active" : ""} aria-current={pathname === "/install-app" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Download size={17} aria-hidden />Install App</Link>
           </nav>
@@ -322,7 +326,8 @@ export function AppShell({
       </div>
     );
   }
-  const teacherInternalNavItems = user.role === "TEACHER" ? visibleNavigationItems(permissions, user.role) : [];
+  const enabledFeatures = parentMeetingsEnabled ? new Set(["PARENT_MEETINGS_V1_5"]) : new Set<string>();
+  const teacherInternalNavItems = user.role === "TEACHER" ? visibleNavigationItems(permissions, user.role, enabledFeatures) : [];
   if (user.role === "TEACHER" && teacherInternalNavItems.length === 0) {
     return (
       <div className={`app-shell parent-app-shell ${mobileNavOpen ? "mobile-nav-open" : ""}`}>
@@ -352,7 +357,7 @@ export function AppShell({
       </div>
     );
   }
-  const navGroups = groupedVisibleNavigationItems(permissions, user.role);
+  const navGroups = groupedVisibleNavigationItems(permissions, user.role, enabledFeatures);
   const renderNavLink = (item: NavigationItem) => {
     const Icon = icons[item.icon];
     const active = isExactActiveRoute(pathname, item.href);

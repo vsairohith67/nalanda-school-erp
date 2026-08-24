@@ -57,6 +57,7 @@ model Student {
   departureStandingAuth    StudentStandingDepartureAuthorization[]
   campusPresenceEvents     StudentCampusPresenceEvent[]
   departureIncidents       StudentDepartureIncident[]
+  parentMeetings           ParentMeeting[]
 
   @@index([academicYear])
   @@index([className, section])
@@ -654,6 +655,8 @@ model StaffMember {
   payslipMonthAvailability  StaffPayslipMonthAvailability[]
   payslipRequests           StaffPayslipRequest[]
   payslipAccessEvents       StaffPayslipAccessEvent[]
+  parentMeetingParticipants ParentMeetingParticipant[]
+  parentMeetingFollowUps    ParentMeetingFollowUp[]
 
   @@index([fullName])
   @@index([staffType])
@@ -836,6 +839,7 @@ model Guardian {
   departureConsents        StudentDepartureConsentEvidence[]
   departureStandingAuth    StudentStandingDepartureAuthorization[]
   mediaPublicationConsents MediaPublicationConsent[]
+  parentMeetings           ParentMeeting[]
 
   @@index([displayName])
   @@index([primaryMobile])
@@ -8346,4 +8350,151 @@ model EventMediaAuditEvent {
   @@index([assetId, eventDate])
   @@index([consentId, eventDate])
   @@index([eventType, eventDate])
+}
+
+model ParentMeeting {
+  id                         String                     @id @default(cuid())
+  publicKey                  String                     @unique @default(uuid())
+  studentId                  String
+  student                    Student                    @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  requesterGuardianId        String?
+  requesterGuardian          Guardian?                  @relation(fields: [requesterGuardianId], references: [id], onDelete: Restrict)
+  academicYear               String
+  source                     String
+  category                   String
+  subject                    String
+  requestReason              String?
+  status                     String                     @default("REQUESTED")
+  scheduledStartAt           DateTime?
+  scheduledEndAt             DateTime?
+  durationMinutes            Int?
+  mode                       String?
+  locationReference          String?
+  onlineReference            String?
+  requesterUserId            String?
+  createdByUserId            String
+  scheduledByUserId          String?
+  completedByUserId          String?
+  cancelledByUserId          String?
+  cancellationInternalReason String?
+  parentCancellationSummary  String?
+  noShowState                String?
+  followUpRequired           Boolean                    @default(false)
+  completedAt                DateTime?
+  cancelledAt                DateTime?
+  activeRequestKey           String?                    @unique
+  rowVersion                 Int                        @default(1)
+  createdAt                  DateTime                   @default(now())
+  updatedAt                  DateTime                   @updatedAt
+  preferences                ParentMeetingPreference[]
+  participants               ParentMeetingParticipant[]
+  notes                      ParentMeetingNote[]
+  followUps                  ParentMeetingFollowUp[]
+  events                     ParentMeetingEvent[]
+
+  @@index([status, scheduledStartAt])
+  @@index([studentId, createdAt])
+  @@index([requesterGuardianId, createdAt])
+  @@index([academicYear, category, status])
+  @@index([scheduledStartAt, scheduledEndAt])
+}
+
+model ParentMeetingPreference {
+  id        String        @id @default(cuid())
+  meetingId String
+  meeting   ParentMeeting @relation(fields: [meetingId], references: [id], onDelete: Restrict)
+  sequence  Int
+  startsAt  DateTime
+  endsAt    DateTime
+  createdAt DateTime      @default(now())
+
+  @@unique([meetingId, sequence])
+  @@index([meetingId, startsAt])
+}
+
+model ParentMeetingParticipant {
+  id               String        @id @default(cuid())
+  publicKey        String        @unique @default(uuid())
+  meetingId        String
+  meeting          ParentMeeting @relation(fields: [meetingId], references: [id], onDelete: Restrict)
+  staffMemberId    String
+  staffMember      StaffMember   @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  participantRole  String
+  status           String        @default("ASSIGNED")
+  assignedByUserId String
+  assignedAt       DateTime      @default(now())
+  attendanceAt     DateTime?
+  removedAt        DateTime?
+  rowVersion       Int           @default(1)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@unique([meetingId, staffMemberId])
+  @@index([staffMemberId, status])
+  @@index([meetingId, participantRole, status])
+}
+
+model ParentMeetingNote {
+  id               String              @id @default(cuid())
+  publicKey        String              @unique @default(uuid())
+  meetingId        String
+  meeting          ParentMeeting       @relation(fields: [meetingId], references: [id], onDelete: Restrict)
+  kind             String
+  body             String
+  authorUserId     String
+  authorRole       String
+  correctsNoteId   String?             @unique
+  correctsNote     ParentMeetingNote?  @relation("ParentMeetingNoteCorrection", fields: [correctsNoteId], references: [id], onDelete: Restrict)
+  corrections      ParentMeetingNote[] @relation("ParentMeetingNoteCorrection")
+  correctionReason String?
+  createdAt        DateTime            @default(now())
+
+  @@index([meetingId, kind, createdAt])
+  @@index([authorUserId, createdAt])
+  @@index([correctsNoteId])
+}
+
+model ParentMeetingFollowUp {
+  id                       String        @id @default(cuid())
+  publicKey                String        @unique @default(uuid())
+  meetingId                String
+  meeting                  ParentMeeting @relation(fields: [meetingId], references: [id], onDelete: Restrict)
+  internalDescription      String
+  parentVisibleDescription String?
+  responsibleStaffMemberId String
+  responsibleStaffMember   StaffMember   @relation(fields: [responsibleStaffMemberId], references: [id], onDelete: Restrict)
+  dueDate                  DateTime
+  status                   String        @default("OPEN")
+  createdByUserId          String
+  completedByUserId        String?
+  cancelledByUserId        String?
+  completedAt              DateTime?
+  cancelledAt              DateTime?
+  cancellationReason       String?
+  rowVersion               Int           @default(1)
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+
+  @@index([meetingId, status, dueDate])
+  @@index([responsibleStaffMemberId, status, dueDate])
+  @@index([status, dueDate])
+}
+
+model ParentMeetingEvent {
+  id               String        @id @default(cuid())
+  publicKey        String        @unique @default(uuid())
+  meetingId        String
+  meeting          ParentMeeting @relation(fields: [meetingId], references: [id], onDelete: Restrict)
+  eventType        String
+  actorUserId      String
+  actorRole        String
+  previousStatus   String?
+  newStatus        String?
+  reason           String?
+  safeMetadataJson String?
+  occurredAt       DateTime      @default(now())
+  createdAt        DateTime      @default(now())
+
+  @@index([meetingId, occurredAt])
+  @@index([eventType, occurredAt])
 }

@@ -1,6 +1,7 @@
-import { execFileSync } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 import { readFileSync, readdirSync, rmSync, symlinkSync } from "node:fs";
 import path from "node:path";
+import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import {
   ACTIVE_MIGRATION_ROOT,
@@ -16,14 +17,17 @@ import {
   assertIsolatedDatabasePath
 } from "../scripts/migration-isolation";
 
-function pnpm(args: string[]) {
+const execFileAsync = promisify(execFile);
+
+async function pnpm(args: string[]) {
   const entry = path.join(process.env.APPDATA ?? "", "npm", "node_modules", "pnpm", "bin", "pnpm.mjs");
-  return execFileSync(process.execPath, [entry, ...args], {
+  const result = await execFileAsync(process.execPath, [entry, ...args], {
     cwd: WORKSPACE_ROOT,
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
     windowsHide: true
   });
+  return result.stdout;
 }
 
 describe("DEVOPS-1B clean-install migration repair", () => {
@@ -60,7 +64,8 @@ describe("DEVOPS-1B clean-install migration repair", () => {
       "20260810100000_technical_operations_observability",
       "20260810184500_governed_bulk_onboarding",
       "20260821194500_super_admin_work_programme",
-      "20260822113000_event_media_v1_5_foundation"
+      "20260822113000_event_media_v1_5_foundation",
+      "20260822170000_parent_meetings_v1_5"
     ]);
     expect(readFileSync(path.join(ACTIVE_MIGRATION_ROOT, BASELINE_MIGRATION, "migration.sql"), "utf8"))
       .toContain('CREATE TABLE "Payment"');
@@ -90,20 +95,20 @@ describe("DEVOPS-1B clean-install migration repair", () => {
   });
 
   it("deploys from empty, reports clean status, matches the schema, and bootstraps synthetic data", async () => {
-    const output = pnpm(["migration:fresh-check"]);
-    expect(output).toContain("Fresh migration check passed: migrations=20 models=302 tables=302");
+    const output = await pnpm(["migration:fresh-check"]);
+    expect(output).toContain("Fresh migration check passed: migrations=21 models=308 tables=308");
     expect(output).toContain("Synthetic bootstrap passed");
-  }, 180_000);
+  }, 300_000);
 
   it("onboards an unbaselined schema twice without changing application data", async () => {
-    const output = pnpm(["exec", "tsx", "scripts/migration-existing-db-rehearsal.ts", "--synthetic"]);
+    const output = await pnpm(["exec", "tsx", "scripts/migration-existing-db-rehearsal.ts", "--synthetic"]);
     expect(output).toContain("Existing database onboarding passed twice");
     expect(output).toContain("students=0 activeEnrollments=0 payments=0 collected=0");
   }, 180_000);
 
-  it("keeps version-42 restore idempotent and preserves local ownership collisions", async () => {
-    const output = pnpm(["migration:restore-check"]);
-    expect(output).toContain("Backup/restore passed: version=42 arrays=251");
+  it("keeps version-43 restore idempotent and preserves local ownership collisions", async () => {
+    const output = await pnpm(["migration:restore-check"]);
+    expect(output).toContain("Backup/restore passed: version=43 arrays=257");
     expect(output).toContain("local login ownership and Student collision mapping were preserved");
   }, 300_000);
 
