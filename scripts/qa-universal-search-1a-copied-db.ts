@@ -443,7 +443,7 @@ async function main() {
       invariant(extensionResponse.results.length > 0, `${SUITE}_EXTENSION_RESULTS_MISSING`);
       invariant(
         extensionResponse.sources.every((source) => source.state === "OK"),
-        `${SUITE}_EXTENSION_SOURCE_STATE_INVALID:${extensionResponse.sources.map((source) => `${source.source}=${source.state}:${source.reason ?? "none"}`).join(",")}`
+        `${SUITE}_EXTENSION_SOURCE_STATE_INVALID:${extensionResponse.sources.map((source) => `${source.source}=${source.state}:${source.message ?? "none"}`).join(",")}`
       );
       invariant(extensionResponse.results.length <= 50, `${SUITE}_EXTENSION_RESULT_CAP_EXCEEDED`);
       const sourceProbes = await Promise.all(([
