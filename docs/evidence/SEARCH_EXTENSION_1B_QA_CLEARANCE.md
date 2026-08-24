@@ -119,11 +119,13 @@ autoprefixer warnings were the only console warnings.
 
 ## Security review
 
-Codex Security diff scan `41db9a85-4a03-47f3-a35c-99b1b2230843` covered the
-complete implementation through `8eeaebf2924851c7d02a49cd08d81d5eac7cd41b`
-and reported zero findings. A final corrective scan is required after the KG
-grounding and release-evidence commits; its scan ID and finding totals are
-recorded in the terminal release record.
+Codex Security diff scan `83a1d005-b36f-40cf-bd55-e9480fd032fd` covered the
+complete corrective implementation through
+`75e3a836ef391d2b30b228ca0d1514ca63ee02c5`. It completed all five generated
+review items plus the supporting route/API/provider/rendering chain with zero
+findings at every severity and no deferred surface. The TAC advisory could not
+be verified because the connector was not connected; this was advisory only and
+did not reduce local scan coverage.
 
 Manual IDOR/BOLA, exact-role, owner-scope, query abuse, injection/XSS, secret
 leakage, filter manipulation, failure/timeout isolation, no-write and no-image
