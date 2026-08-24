@@ -173,6 +173,7 @@ describe("SMART-AI-1A exact authorization and bounded request contract", () => {
     expect(deriveSmartAiRetrieval("Find transport route ROUTE-42")).toMatchObject({ query: "route-42", sources: ["TRANSPORT"] });
     expect(deriveSmartAiRetrieval("Find cafeteria item ITEM-42")).toMatchObject({ query: "item-42", sources: ["CAFETERIA"] });
     expect(deriveSmartAiRetrieval("Find LKG report KG-REPORT-42")).toMatchObject({ query: "kg-report-42", sources: ["KG_REPORTS"] });
+    expect(deriveSmartAiRetrieval("Which KG report card matches KG-REPORT-42?")).toMatchObject({ query: "kg-report-42", sources: ["KG_REPORTS"] });
     expect(deriveSmartAiRetrieval("Which media album is ALBUM-42?")).toMatchObject({ query: "album-42", sources: ["EVENT_MEDIA"] });
   });
 });

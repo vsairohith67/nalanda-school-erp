@@ -149,11 +149,12 @@ const SOURCE_HINTS: Array<{ sources: UniversalSearchSourceId[]; pattern: RegExp 
 
 const SEARCH_STOP_WORDS = new Set([
   "a", "an", "and", "any", "are", "about", "available", "details", "do", "does", "for", "find", "from", "give", "have", "i", "in", "is", "match", "matches", "mention", "mentions", "my", "of", "our", "please", "record", "records", "school", "show", "tell", "that", "the", "their", "this", "to", "us", "we", "what", "which", "who", "with", "currently", "know", "need",
-  "student", "students", "admission", "admissions", "enquiry", "enquiries", "application", "applications", "guardian", "guardians", "parent", "parents", "staff", "teacher", "teachers", "diary", "note", "notes", "task", "tasks", "reminder", "reminders", "contact", "contacts", "supplier", "suppliers", "vendor", "vendors", "fee", "fees", "receipt", "receipts", "payment", "payments", "exam", "exams", "examination", "examinations", "complaint", "complaints", "support", "event", "events", "meeting", "meetings", "appointment", "transport", "vehicle", "route", "stop", "cafeteria", "canteen", "menu", "meal", "item", "items", "report", "reports", "kg", "lkg", "ukg", "kindergarten", "media", "album", "gallery"
+  "student", "students", "admission", "admissions", "enquiry", "enquiries", "application", "applications", "guardian", "guardians", "parent", "parents", "staff", "teacher", "teachers", "diary", "note", "notes", "task", "tasks", "reminder", "reminders", "contact", "contacts", "supplier", "suppliers", "vendor", "vendors", "fee", "fees", "receipt", "receipts", "payment", "payments", "exam", "exams", "examination", "examinations", "complaint", "complaints", "support", "event", "events", "meeting", "meetings", "appointment", "transport", "vehicle", "route", "stop", "cafeteria", "canteen", "menu", "meal", "item", "items", "report", "reports", "card", "cards", "kg", "lkg", "ukg", "kindergarten", "media", "album", "gallery"
 ]);
 
 export function deriveSmartAiRetrieval(question: string, conversation: SmartAiConversationTurn[] = []) {
-  const sources = [...new Set(SOURCE_HINTS.filter((hint) => hint.pattern.test(question)).flatMap((hint) => hint.sources))];
+  let sources = [...new Set(SOURCE_HINTS.filter((hint) => hint.pattern.test(question)).flatMap((hint) => hint.sources))];
+  if (sources.includes("KG_REPORTS")) sources = sources.filter((source) => source !== "REPORT_CARDS");
   const extracted = extractionTokens(question);
   const priorUser = [...conversation].reverse().find((turn) => turn.role === "USER");
   const fallbackTokens = priorUser ? extractionTokens(priorUser.content) : [];
