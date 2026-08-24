@@ -2,6 +2,7 @@ import {
   linkSync,
   mkdirSync,
   mkdtempSync,
+  realpathSync,
   rmSync,
   writeFileSync
 } from "node:fs";
@@ -58,8 +59,8 @@ describe("demo business seed safety", () => {
       data.workspace
     )).toEqual({
       enabled: true,
-      databasePath: data.isolated,
-      isolatedRoot: data.isolatedRoot
+      databasePath: realpathSync.native(data.isolated),
+      isolatedRoot: realpathSync.native(data.isolatedRoot)
     });
   });
 

@@ -194,6 +194,7 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     const publicAdmissionsUi = readFileSync("components/admissions-public-enquiry-form.tsx", "utf8");
     const loginUi = readFileSync("components/login-form.tsx", "utf8");
     const runtimeHarness = readFileSync("scripts/sec1-runtime-server.ps1", "utf8");
+    const releaseCiSynthetic = readFileSync("scripts/prepare-release-ci-synthetic.ts", "utf8");
     const releaseWorkflow = readFileSync(".github/workflows/release-rehearsal.yml", "utf8");
     expect(middleware).toContain("enforceOperationRateLimit");
     expect(middleware).toContain("proxyHealthPath");
@@ -227,6 +228,14 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     expect(releaseWorkflow).toContain('throw "Pinned Poppler archive checksum mismatch"');
     expect(releaseWorkflow).toContain("poppler-26.02.0\\Library\\bin\\pdftoppm.exe");
     expect(releaseWorkflow).toContain('"REPORT_CARD_PDFTOPPM_PATH=$($pdfToPpm.FullName)"');
-    expect(releaseWorkflow).toContain("Copy-Item -LiteralPath prisma\\tmp\\release-ci\\synthetic.db -Destination prisma\\dev.db");
+    expect(releaseWorkflow).toContain("$env:RELEASE_CI_SYNTHETIC_OPT_IN = 'true'");
+    expect(releaseWorkflow).toContain("pnpm exec tsx scripts/prepare-release-ci-synthetic.ts");
+    expect(releaseWorkflow).toContain("DATABASE_URL: file:../tmp/release-ci/synthetic.db");
+    expect(releaseWorkflow).toContain("Copy-Item -LiteralPath tmp\\release-ci\\synthetic.db -Destination prisma\\dev.db");
+    expect(releaseWorkflow).toContain('throw "Release CI synthetic database already exists"');
+    expect(releaseCiSynthetic).toContain('process.env.RELEASE_CI_SYNTHETIC_OPT_IN !== "true"');
+    expect(releaseCiSynthetic).toContain('process.env.NALANDA_ENVIRONMENT !== "TEST"');
+    expect(releaseCiSynthetic).toContain('sameFile(databasePath, operationalPath)');
+    expect(releaseCiSynthetic).toContain('students !== 0 || payments !== 0 || guardians !== 0 || staff !== 0');
   });
 });

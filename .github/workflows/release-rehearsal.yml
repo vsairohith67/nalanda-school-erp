@@ -21,7 +21,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     env:
-      DATABASE_URL: file:./tmp/release-ci/synthetic.db
+      DATABASE_URL: file:../tmp/release-ci/synthetic.db
       NALANDA_ENVIRONMENT: TEST
       NALANDA_RELEASE_ID: release-ci-${{ github.run_id }}
       NALANDA_RELEASE_CHANNEL: TEST
@@ -67,10 +67,21 @@ jobs:
         run: pnpm db:generate
       - name: Prepare isolated synthetic database
         run: |
-          New-Item -ItemType Directory -Force -Path prisma\tmp\release-ci | Out-Null
-          New-Item -ItemType File -Force -Path prisma\tmp\release-ci\synthetic.db | Out-Null
+          New-Item -ItemType Directory -Force -Path tmp\release-ci | Out-Null
+          if (Test-Path -LiteralPath tmp\release-ci\synthetic.db) { throw "Release CI synthetic database already exists" }
+          New-Item -ItemType File -Path tmp\release-ci\synthetic.db | Out-Null
           pnpm exec prisma migrate deploy
-          Copy-Item -LiteralPath prisma\tmp\release-ci\synthetic.db -Destination prisma\dev.db
+          $env:NODE_ENV = 'development'
+          $env:ALLOW_DEMO_USERS = 'true'
+          $env:DEMO_USER_DATABASE_ROOT = (Resolve-Path -LiteralPath tmp\release-ci).Path
+          $env:SEED_DIRECTOR_PASSWORD = "CI-Director-$([guid]::NewGuid())!"
+          $env:SEED_ADMIN_PASSWORD = "CI-Admin-$([guid]::NewGuid())!"
+          $env:SEED_ACCOUNTANT_PASSWORD = "CI-Accountant-$([guid]::NewGuid())!"
+          $env:SEED_VIEWER_PASSWORD = "CI-Viewer-$([guid]::NewGuid())!"
+          pnpm db:seed
+          $env:RELEASE_CI_SYNTHETIC_OPT_IN = 'true'
+          pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db
       - name: Git and private-artifact safety
         run: pnpm git:safety-check
       - name: Production dependency audit
