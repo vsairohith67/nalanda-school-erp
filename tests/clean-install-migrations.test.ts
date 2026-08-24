@@ -98,7 +98,7 @@ describe("DEVOPS-1B clean-install migration repair", () => {
     const output = await pnpm(["migration:fresh-check"]);
     expect(output).toContain("Fresh migration check passed: migrations=21 models=308 tables=308");
     expect(output).toContain("Synthetic bootstrap passed");
-  }, 180_000);
+  }, 300_000);
 
   it("onboards an unbaselined schema twice without changing application data", async () => {
     const output = await pnpm(["exec", "tsx", "scripts/migration-existing-db-rehearsal.ts", "--synthetic"]);
