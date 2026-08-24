@@ -21,7 +21,7 @@ This roadmap preserves the operational boundaries in the [Requirements Register]
 
 **Latest cleared product gate:**
 
-`OPTIONAL-OPS-V1_5-1A — Optional Transport and Cafeteria Foundations (operational activation default-off)`
+`FINAL-SCOPE-QA-1A — Final Corrected-Scope Acceptance`
 
 The Command Center, owner-isolated Diary, Tasks & Reminders, Contacts &
 Suppliers, permission-scoped Universal Search, and Smart AI foundation are independently cleared.
@@ -34,6 +34,11 @@ transmission or AI actions. Optional Transport and Cafeteria foundations are
 independently cleared and remain default-off. They do not activate school services,
 real data, finance, GPS/maps or providers.
 Hosting and private staging remain a parallel operational track.
+
+`SEARCH-EXTENSION-1B` is the governed Search/Smart AI metadata integration for
+Parent Meetings, Transport, Cafeteria, KG Report Cards and Event Media. It uses
+only the existing Universal Search contract; all five source dependencies remain
+default-off, and no direct Smart AI query, write action or image AI is added.
 
 `WHITEBOARD-BRIDGE-1A` is a parallel, database-neutral integration checkpoint.
 Its implementation launches only the canonical Nalanda ERP Canvs board from an
@@ -50,9 +55,10 @@ Search, or unlock Smart AI.
 | 3 | V1.5 product | `SUPER-ADMIN-COMMAND-1A — Super Admin Command Center Foundation` | Exact `SUPER_ADMIN`-only, read-only composition over existing dashboards and operational signals. | Cleared dashboard, OBS-1A, IAM, academic calendar, and existing APIs | Cleared 2026-08-21 | **Complete** | Exact role/API denial, source isolation, responsive/accessibility, p95, privacy, no-write, security scan, and full regression passed | `SUPER_ADMIN_COMMAND_CENTER_CLEARED` |
 | 4 | V1.5 product | `SUPER-ADMIN-WORK-1A — Diary, Tasks, Reminders and Directory` | Exact-owner private Diary, Tasks/Reminders and publisher/vendor/contact directory in one My Work shell, with bounded Command Center summaries. | Phase 3 cleared; exact-owner/no-sharing policy accepted | Cleared 2026-08-21 | **Complete** | Exact-role/API/ownership denial, CRUD/lifecycle/date boundaries, privacy-safe audit, migration/backup proof, no-provider side effects, exact desktop/mobile/light/dark UX passed | `SUPER_ADMIN_WORK_CLEARED` |
 | 5 | V1.5 product | `UNIVERSAL-SEARCH-1A — Permission-Scoped Universal Search` | Exact-`SUPER_ADMIN` deterministic search over normalized, privacy-safe authorised records; establishes the retrieval boundary required before Smart AI. | Phase 4 cleared; Academic Integrity v1.1 preserved | Cleared 2026-08-22 | **Complete** | Exact-role/API/active-context/owner/privacy/ranking/failure/scale/Browser/security/full-suite acceptance passed | `UNIVERSAL_SEARCH_CLEARED`; private/local only; no deployment or AI authorization |
+| 5A | V1.5 product | `SEARCH-EXTENSION-1B — Governed Search Source Expansion` | Add five `SAFE_METADATA_ONLY`, flag-gated module adapters and let Smart AI inherit them through Search only. | Universal Search, Smart AI and all five source modules software-cleared | Released 2026-08-24; corrective exact-head revalidation recorded in its clearance evidence | **Complete** | Registry, field projection, default-off, privacy sentinel, no-write, scale, Browser, security and exact-head release gates | `SEARCH_EXTENSION_1B_CLEARED`; no operational activation |
 | 6 | V1.5 evidence/product | `UDISE-15E — Evidence Collection and Governed Extension` | Collect current official evidence, map Student/Teacher/state-specific workflows, then extend the read-only checklist only after the evidence gate passes. | [15E evidence checklist](./UDISE_15E_EVIDENCE_CHECKLIST.md) complete and approved | User-dependent evidence collection; 5–10 working days after unblocking | Yes | Field-to-source traceability, state-specific validation, privacy review, read-only enforcement, human acceptance; no portal automation | Accepted evidence map and governed read-only extension, or continued evidence block |
 | 7 | V1.5 product | `SMART-AI-1A — Grounded Super Admin Smart AI Foundation` | Exact-Super-Admin read-only synthesis over Universal Search with validated citations, disabled-by-default runtime and loopback-only provider foundation. | Phases 4–5 cleared; Academic Integrity and Whiteboard boundaries preserved | Cleared 2026-08-22 | **Complete** | Exact role/owner/secret/no-write boundaries, prompt injection, citations, loopback validation, Browser/security/full-suite acceptance passed | `SMART_AI_CLEARED`; no runtime activation |
-| 8 | V1.5 product | `PARENT-MEETING-V1_5-1A — Parent Meetings, Appointments and Follow-up` | Linked-child requests, governed leadership scheduling, explicit-Teacher participation, separate private/released notes and local follow-up. | Smart AI Local Runtime main reconciled; Academic Integrity preserved | Cleared 2026-08-24 | **Complete** | Exact role/IDOR/privacy/workflow/concurrency, controlled Browser matrix, additive migration/restore, security diff, full regression and operational-hash gates passed | `PARENT_MEETING_V1_5_CLEARED`; operational flag remains default-off; Search/AI extension deferred |
+| 8 | V1.5 product | `PARENT-MEETING-V1_5-1A — Parent Meetings, Appointments and Follow-up` | Linked-child requests, governed leadership scheduling, explicit-Teacher participation, separate private/released notes and local follow-up. | Smart AI Local Runtime main reconciled; Academic Integrity preserved | Cleared 2026-08-24 | **Complete** | Exact role/IDOR/privacy/workflow/concurrency, controlled Browser matrix, additive migration/restore, security diff, full regression and operational-hash gates passed | `PARENT_MEETING_V1_5_CLEARED`; operational flag remains default-off; safe Search/AI metadata integration is separately governed by `SEARCH-EXTENSION-1B` |
 | 9 | Mobile | `ANDROID-CAPACITOR-1A — Android Foundation and Device QA` | After PWA certification, evaluate and, if approved, wrap the shared responsive application with Capacitor rather than fork the ERP. | Private HTTPS staging; PWA physical-device certification; stable shared web flows | 5–8 working days | No | Real Android device matrix, install/update/deep-link/session tests, upload/download tests, offline/error behaviour, privacy review | Android shared-code go/no-go and, if approved, certified internal foundation |
 | 10 | Mobile | `IOS-IPADOS-PREP-1A — iOS/iPadOS Preparation and Signing Readiness` | Prepare Apple-specific requirements and shared-app compatibility; build/sign only when a Mac/Xcode environment and Apple decisions exist. | Phase 9 findings; Mac/Xcode; Apple account/signing decisions; staging | 5–10 working days after environment is available | No | iPhone/iPad layout, Safari/PWA behaviour, signing/entitlement review, update path, device session and file-flow tests | Apple build/signing readiness decision and device evidence |
 | 11 | V1 operational | `V1-OPS-PILOT-1A — Real Data, Training, Pilot and Cutover` | Configure master data, perform controlled import, onboard named users, train, pilot, rehearse rollback, reconcile, and seek explicit production cutover approval. | Staging accepted; owners named; provider decisions complete; backups and rollback proven | 10–20 working days plus school scheduling | No | Import reconciliation, role acceptance, training records, pilot sign-off, rollback rehearsal, backup/restore evidence, cutover go/no-go | Explicit production cutover approval or documented no-go/rollback |
@@ -77,10 +83,10 @@ Search, or unlock Smart AI.
 - Super Admin Command Center foundation.
 - One integrated diary/tasks/reminders/Life OS and publisher/vendor/contact directory product.
 - Universal permission-scoped search.
-- Parent Meetings, Appointments and Follow-up is implemented as default-off local/private software under `PARENT-MEETING-V1_5-1A`; operational activation and Search/Smart AI integration remain separate gates.
+- Parent Meetings, Appointments and Follow-up is implemented as default-off local/private software under `PARENT-MEETING-V1_5-1A`; its Search/Smart AI safe-metadata integration is separately governed by `SEARCH-EXTENSION-1B`, while operational activation remains a separate gate.
 - UDISE 15E only after evidence.
 - Full Payroll/ESS remains a controlled V1.5 operational deferral; its cleared technical foundation does not activate payroll or make it a V1 launch dependency.
-- Event Media software is cleared with public publishing default-off; AI enhancement remains deferred.
+- Event Media software is cleared with public publishing default-off; opaque safe-metadata retrieval is governed by `SEARCH-EXTENSION-1B`, while image/OCR/face AI remains deferred.
 - Transport, Cafeteria and KG report-card software foundations are cleared and default-off. Real-school activation, live-data onboarding, deployment and physical/operational acceptance remain governed deferrals under the [known limitations and deferrals](./V1_KNOWN_LIMITATIONS_AND_DEFERRALS.md).
 
 ### V2 work
@@ -97,7 +103,11 @@ Hosting/provider choice, private staging, DNS/subdomain, master-data configurati
 
 ## Corrected-scope acceptance gate (2026-08-24)
 
-`FINAL-SCOPE-QA-1A` is implemented but `REQUIRES_FIXES`: server-side runtime enforcement is missing for several committed default-off flags, and `bulk-exports` lacks a governed surface map. Production and full dependency audits report zero findings. Optional Operations and Parent Meetings are cleared on current main with operational activation default-off. No QA-branch merge, tag, deployment or activation is authorised. The next safe product step is a separately reviewed narrow flag-enforcement change followed by a full exact-head rerun.
+`FINAL-SCOPE-QA-1A` is cleared on current `main` at annotated tag
+`corrected-scope-qa-v43-2026-08-24`. Server-side runtime enforcement and the
+bulk-export surface map were corrected and the exact-head acceptance passed.
+This remains software acceptance only: no deployment, provider, real-data or
+operational feature activation is authorised.
 
 ## Related reconciliation documents
 

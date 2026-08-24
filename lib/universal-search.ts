@@ -1,7 +1,9 @@
 import type { PrismaClient } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
+import { eventMediaPublicGalleryEnabled } from "@/lib/event-media";
 import { CAFETERIA_V1_5, optionalOperationsFeatureEnabled, TRANSPORT_V1_5 } from "@/lib/optional-operations-feature-flags";
 import { parentMeetingsEnabled } from "@/lib/parent-meeting-feature";
+import { isKgReportCardOperationallyAvailable } from "@/lib/report-card-release-policy";
 import {
   UNIVERSAL_SEARCH_LIMITS,
   UNIVERSAL_SEARCH_SOURCES,
@@ -12,7 +14,12 @@ import {
   type UniversalSearchSourceStatus
 } from "@/lib/universal-search-contract";
 
-export { UNIVERSAL_SEARCH_LIMITS, UNIVERSAL_SEARCH_SOURCES } from "@/lib/universal-search-contract";
+export {
+  SEARCH_EXTENSION_1B_SOURCE_GOVERNANCE,
+  SEARCH_EXTENSION_1B_SOURCE_IDS,
+  UNIVERSAL_SEARCH_LIMITS,
+  UNIVERSAL_SEARCH_SOURCES
+} from "@/lib/universal-search-contract";
 export type {
   UniversalSearchRequest,
   UniversalSearchResponse,
@@ -120,17 +127,18 @@ export async function composeUniversalSearch(
   options: { now?: Date; timeoutMs?: number } = {}
 ): Promise<UniversalSearchResponse> {
   const now = options.now ?? new Date();
-  const timeoutMs = options.timeoutMs ?? UNIVERSAL_SEARCH_LIMITS.sourceTimeoutMs;
   const bySource = new Map(adapters.map((adapter) => [adapter.source, adapter]));
-  const context: UniversalSearchAdapterContext = {
-    query: request.query,
-    normalizedQuery: request.normalizedQuery,
-    tokens: request.tokens,
-    perSourceLimit: UNIVERSAL_SEARCH_LIMITS.perSourceLimit,
-    candidateLimit: UNIVERSAL_SEARCH_LIMITS.candidateLimit
-  };
   const settled = await Promise.all(request.sources.map(async (sourceId) => {
     const definition = SOURCE_BY_ID.get(sourceId)!;
+    const governance = "governance" in definition ? definition.governance : null;
+    const context: UniversalSearchAdapterContext = {
+      query: request.query,
+      normalizedQuery: request.normalizedQuery,
+      tokens: request.tokens,
+      perSourceLimit: governance?.perSourceLimit ?? UNIVERSAL_SEARCH_LIMITS.perSourceLimit,
+      candidateLimit: UNIVERSAL_SEARCH_LIMITS.candidateLimit
+    };
+    const timeoutMs = options.timeoutMs ?? governance?.timeoutMs ?? UNIVERSAL_SEARCH_LIMITS.sourceTimeoutMs;
     if (!definition.available) {
       return {
         status: { source: sourceId, label: definition.label, state: "UNAVAILABLE", count: 0, message: unavailableReason(sourceId), href: definition.href } satisfies UniversalSearchSourceStatus,
@@ -171,7 +179,7 @@ export async function composeUniversalSearch(
         results: [] as UniversalSearchResult[]
       };
     }
-    const results = outcome.value.slice(0, UNIVERSAL_SEARCH_LIMITS.perSourceLimit);
+    const results = outcome.value.slice(0, context.perSourceLimit);
     return {
       status: { source: sourceId, label: definition.label, state: results.length ? "OK" : "EMPTY", count: results.length, message: results.length ? null : "No matches in this source.", href: definition.href } satisfies UniversalSearchSourceStatus,
       results
@@ -464,8 +472,8 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
           orderBy: [{ status: "asc" }, { displayName: "asc" }], take: context.candidateLimit
         }),
         client.transportStop.findMany({
-          where: textWhere(["publicKey", "code", "name", "approvedReference"], context.tokens),
-          select: { publicKey: true, code: true, name: true, approvedReference: true, active: true, updatedAt: true },
+          where: textWhere(["publicKey", "code", "name"], context.tokens),
+          select: { publicKey: true, code: true, name: true, active: true, updatedAt: true },
           orderBy: [{ active: "desc" }, { name: "asc" }], take: context.candidateLimit
         }),
         client.transportStudentAssignment.findMany({
@@ -496,9 +504,9 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
         })),
         ...stops.map((row) => candidate({
           source: "TRANSPORT", type: "Approved transport stop", title: row.name,
-          subtitle: row.code, snippet: row.approvedReference ? `Approved reference ${safeText(row.approvedReference, 80)}` : null,
+          subtitle: row.code, snippet: null,
           status: row.active ? "ACTIVE" : "INACTIVE", href: "/operations/transport", timestamp: row.updatedAt,
-          references: [row.code, row.publicKey, row.approvedReference], primary: [row.name], secondary: [row.active ? "ACTIVE" : "INACTIVE"]
+          references: [row.code, row.publicKey], primary: [row.name], secondary: [row.active ? "ACTIVE" : "INACTIVE"]
         })),
         ...assignments.map((row) => candidate({
           source: "TRANSPORT", type: "Student transport assignment", title: row.student.studentName,
@@ -520,8 +528,8 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
           orderBy: [{ available: "desc" }, { name: "asc" }], take: context.candidateLimit
         }),
         client.cafeteriaMenu.findMany({
-          where: textWhere(["publicKey", "dayLabel", "mealPlanName", "status"], context.tokens),
-          select: { publicKey: true, menuDate: true, dayLabel: true, mealPlanName: true, status: true, updatedAt: true },
+          where: textWhere(["publicKey", "dayLabel", "status"], context.tokens),
+          select: { publicKey: true, menuDate: true, dayLabel: true, status: true, updatedAt: true },
           orderBy: { menuDate: "desc" }, take: context.candidateLimit
         }),
         client.cafeteriaStudentEnrollment.findMany({
@@ -556,9 +564,9 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
         })),
         ...menus.map((row) => candidate({
           source: "CAFETERIA", type: "Cafeteria menu", title: row.dayLabel,
-          subtitle: `${row.menuDate.toISOString().slice(0, 10)} · ${label(row.mealPlanName)}`, status: row.status,
+          subtitle: row.menuDate.toISOString().slice(0, 10), status: row.status,
           href: "/operations/cafeteria", timestamp: row.updatedAt,
-          references: [row.publicKey], primary: [row.dayLabel], secondary: [row.mealPlanName, row.status]
+          references: [row.publicKey], primary: [row.dayLabel], secondary: [row.status]
         })),
         ...enrollments.map((row) => candidate({
           source: "CAFETERIA", type: "Student cafeteria enrollment", title: row.student.studentName,
@@ -590,7 +598,7 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
           { batch: { is: { reportingPeriod: { contains: token } } } }
         ] })) },
         select: {
-          id: true, reportCardNumber: true, academicYear: true, className: true, section: true, status: true, issuedAt: true, updatedAt: true,
+          reportCardNumber: true, academicYear: true, className: true, section: true, status: true, currentVersionNumber: true, issuedAt: true, updatedAt: true,
           student: { select: { studentName: true, admissionNo: true } },
           batch: { select: { reportingPeriod: true } }
         },
@@ -599,11 +607,14 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
       return ranked(rows.map((row) => candidate({
         source: "KG_REPORTS", type: "Issued KG report metadata", title: row.student.studentName,
         subtitle: `${row.reportCardNumber} · ${row.className}${row.section ? `-${row.section}` : ""}`,
-        snippet: `${row.student.admissionNo} · ${row.academicYear}${row.batch.reportingPeriod ? ` · ${safeText(row.batch.reportingPeriod, 80)}` : ""}`,
-        status: row.status, href: `/report-cards/${encodeURIComponent(row.id)}`, timestamp: row.issuedAt ?? row.updatedAt,
+        snippet: `${row.student.admissionNo} · ${row.academicYear} · Version ${row.currentVersionNumber}${row.batch.reportingPeriod ? ` · ${safeText(row.batch.reportingPeriod, 80)}` : ""}`,
+        status: row.status, href: "/report-cards", timestamp: row.issuedAt ?? row.updatedAt,
         references: [row.reportCardNumber, row.student.admissionNo], primary: [row.student.studentName], secondary: [row.academicYear, row.className, row.batch.reportingPeriod]
       }), context), context);
-    }),
+    }, () => ({
+      enabled: isKgReportCardOperationallyAvailable(),
+      message: isKgReportCardOperationallyAvailable() ? null : "KG Report Cards is software-cleared but operationally disabled; no records were queried."
+    })),
     adapter("EVENT_MEDIA", async (context) => {
       const [albums, assets] = await Promise.all([
         client.eventMediaAlbum.findMany({
@@ -642,7 +653,10 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
           references: [row.publicKey, row.album.publicKey], primary: [], secondary: [row.originalMediaType, row.reviewStatus, row.publicationStatus]
         }))
       ], context);
-    }),
+    }, () => ({
+      enabled: eventMediaPublicGalleryEnabled(),
+      message: eventMediaPublicGalleryEnabled() ? null : "Event Media public operations are DEFAULT-OFF; no records were queried."
+    })),
     adapter("USERS_IAM", async (context) => {
       const rows = await client.user.findMany({
         where: textWhere(["name", "username", "email", "designation", "role", "lifecycleStatus"], context.tokens),

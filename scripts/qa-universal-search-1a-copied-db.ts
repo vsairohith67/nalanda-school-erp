@@ -181,7 +181,7 @@ async function seedExtensionVolume(client: PrismaClient, ownerA: string) {
   };
   await client.staffMember.update({ where: { id: staff.id }, data: { emergencyContactMobile: forbidden.driver } });
 
-  await client.parentMeeting.createMany({ data: Array.from({ length: 240 }, (_, index) => ({
+  await client.parentMeeting.createMany({ data: Array.from({ length: 1_050 }, (_, index) => ({
     publicKey: `${target}-PM-${String(index).padStart(4, "0")}`,
     studentId: students[index % students.length].id,
     academicYear: "2026-27",
@@ -399,7 +399,7 @@ async function seedExtensionVolume(client: PrismaClient, ownerA: string) {
 
   return {
     forbidden,
-    volume: { parentMeetings: 240, transportVehicles: 40, transportRoutes: 80, transportStops: 120, transportAssignments: 300, cafeteriaItems: 80, cafeteriaMenus: 30, cafeteriaEnrollments: 300, cafeteriaMeals: 300, kgReports: 200, eventAlbums: 60, eventMedia: 300 }
+    volume: { parentMeetings: 1_050, transportVehicles: 40, transportRoutes: 80, transportStops: 120, transportAssignments: 300, cafeteriaItems: 80, cafeteriaMenus: 30, cafeteriaEnrollments: 300, cafeteriaMeals: 300, kgReports: 200, eventAlbums: 60, eventMedia: 300 }
   };
 }
 
@@ -414,6 +414,8 @@ async function main() {
   if (extension) {
     process.env.DATABASE_URL = databaseUrl(copiedDatabase);
     process.env.PARENT_MEETINGS_V1_5 = "true";
+    process.env.EVENT_MEDIA_PUBLIC_GALLERY_ENABLED = "true";
+    process.env.KG_REPORT_CARDS_V1_5_QA_MODE = "SYNTHETIC_COPY_ONLY";
     process.env.OPTIONAL_OPS_SYNTHETIC_QA = "1";
     process.env.TRANSPORT_V1_5 = "enabled";
     process.env.CAFETERIA_V1_5 = "enabled";
