@@ -18,15 +18,30 @@ function sanitize(value: string) {
 
 export type CommandResult = { stdout: string; stderr: string; combined: string };
 
+export function resolvePnpmRuntimeEntry(
+  environment: NodeJS.ProcessEnv = process.env,
+  nodeExecutable = process.execPath
+) {
+  const candidates = [
+    environment.PNPM_RUNTIME_ENTRY,
+    environment.npm_execpath,
+    path.join(path.dirname(nodeExecutable), "node_modules", "corepack", "dist", "pnpm.js"),
+    path.join(environment.APPDATA ?? "", "npm", "node_modules", "pnpm", "bin", "pnpm.cjs"),
+    path.join(environment.APPDATA ?? "", "npm", "node_modules", "pnpm", "bin", "pnpm.mjs")
+  ].filter((candidate): candidate is string => Boolean(candidate));
+  const entry = candidates.find((candidate) => existsSync(candidate));
+  if (!entry) throw new Error("PNPM_RUNTIME_NOT_FOUND");
+  return entry;
+}
+
 export function runPnpm(
   args: string[],
   databasePath?: string,
   extraEnvironment: Record<string, string | undefined> = {}
 ): CommandResult {
-  const windowsPnpmEntry = path.join(process.env.APPDATA ?? "", "npm", "node_modules", "pnpm", "bin", "pnpm.mjs");
+  const windowsPnpmEntry = process.platform === "win32" ? resolvePnpmRuntimeEntry() : "";
   const command = process.platform === "win32" ? process.execPath : "pnpm";
   const commandArgs = process.platform === "win32" ? [windowsPnpmEntry, ...args] : args;
-  if (process.platform === "win32" && !existsSync(windowsPnpmEntry)) throw new Error("PNPM_RUNTIME_NOT_FOUND");
   const environment = {
     ...process.env,
     ...extraEnvironment,
