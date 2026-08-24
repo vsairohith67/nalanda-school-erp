@@ -8,7 +8,11 @@ assertQa20cIsolatedEnvironment(process.env, { logEvidence: true });
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"]
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+    transactionOptions: {
+      maxWait: 2_000,
+      timeout: 10_000
+    }
   });
 
 if (process.env.NODE_ENV !== "production") {

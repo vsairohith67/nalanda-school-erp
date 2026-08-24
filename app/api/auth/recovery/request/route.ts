@@ -5,6 +5,8 @@ import { isRecoveryChannelType } from "@/lib/auth-identifiers";
 import { GENERIC_RECOVERY_RESPONSE, requestPasswordReset } from "@/lib/auth-recovery";
 import { loginRequestSource } from "@/lib/auth-rate-limit";
 import { recoveryRequestAllowed } from "@/lib/auth-recovery-rate-limit";
+import { assertBoundedJsonValue } from "@/lib/request-security";
+import { emitSecurityResilienceEvent } from "@/lib/security-observability";
 
 export async function POST(request: NextRequest) {
   const response = () => privateJson({ message: GENERIC_RECOVERY_RESPONSE }, 202);
@@ -12,6 +14,7 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
     if (!contentType.startsWith("application/json")) return response();
     const body = await request.json();
+    assertBoundedJsonValue(body, { maximumArrayLength: 4, maximumStringLength: 254, maximumJsonNodes: 20 });
     const identifier = String(body.identifier ?? "").trim();
     const channelType = String(body.channelType ?? "");
     if (!identifier || identifier.length > 254 || !isRecoveryChannelType(channelType)) return response();
@@ -19,6 +22,7 @@ export async function POST(request: NextRequest) {
     const limit = await recoveryRequestAllowed(identifier, channelType, source);
     if (!limit.allowed) {
       console.warn(`AUTH_RECOVERY_RATE_LIMIT account=${limit.accountHash} source=${limit.sourceHash}`);
+      emitSecurityResilienceEvent("AUTHENTICATION_ABUSE", { actorHash: limit.accountHash, sourceHash: limit.sourceHash, status: 429 });
       return response();
     }
     const adapter = configuredAuthDeliveryAdapter();

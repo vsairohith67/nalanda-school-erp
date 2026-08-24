@@ -5,9 +5,14 @@ import {
   applicationOrigin,
   contentSecurityPolicy,
   isProviderWebhookPath,
+  requestQueryBudgetIssue,
+  requestJsonBudgetIssue,
   requestBodyTooLarge,
   unsafeRequestOriginAllowed
 } from "@/lib/request-security";
+import { enforceOperationRateLimit } from "@/lib/security-resilience";
+import { emitSecurityResilienceEvent } from "@/lib/security-observability";
+import { trustedClientIdentity, trustedProxyRequired } from "@/lib/trusted-client";
 
 const publicPaths = [
   "/login",
@@ -46,12 +51,35 @@ export async function middleware(request: NextRequest) {
     return response;
   };
   if (await requestBodyTooLarge(request)) {
+    if (/(?:upload|attachments|documents|pages|assets)/i.test(pathname)) emitSecurityResilienceEvent("BLOCKED_UPLOAD", { routeFamily: "api", status: 413 });
+    if (/(?:import|export)/i.test(pathname)) emitSecurityResilienceEvent("EXCESSIVE_EXPORT_IMPORT", { routeFamily: "api", status: 413 });
     const response = NextResponse.json({ error: "Request body is too large" }, { status: 413 });
+    response.headers.set("cache-control", "private, no-store");
+    return applySecurityHeaders(response);
+  }
+  const jsonBudgetIssue = await requestJsonBudgetIssue(request);
+  if (jsonBudgetIssue) {
+    if (/(?:import|export)/i.test(pathname)) emitSecurityResilienceEvent("EXCESSIVE_EXPORT_IMPORT", { routeFamily: "api", status: 413 });
+    const response = NextResponse.json({ error: jsonBudgetIssue }, { status: 413 });
     response.headers.set("cache-control", "private, no-store");
     return applySecurityHeaders(response);
   }
   if (!unsafeRequestOriginAllowed(request)) {
     const response = NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
+    response.headers.set("cache-control", "private, no-store");
+    return applySecurityHeaders(response);
+  }
+  const queryIssue = requestQueryBudgetIssue(request.nextUrl);
+  if (queryIssue) {
+    const response = NextResponse.json({ error: queryIssue }, { status: 400 });
+    response.headers.set("cache-control", "private, no-store");
+    return applySecurityHeaders(response);
+  }
+  const clientIdentity = trustedClientIdentity(request.headers);
+  const proxyHealthPath = pathname === "/api/health" || pathname === "/api/deployment-health";
+  if (trustedProxyRequired() && !clientIdentity.trusted && !proxyHealthPath) {
+    emitSecurityResilienceEvent("EDGE_ORIGIN_MISMATCH", { reason: clientIdentity.reason, routeFamily: pathname.startsWith("/api/") ? "api" : "page", status: 403 });
+    const response = NextResponse.json({ error: "Trusted ingress is required." }, { status: 403 });
     response.headers.set("cache-control", "private, no-store");
     return applySecurityHeaders(response);
   }
@@ -62,7 +90,33 @@ export async function middleware(request: NextRequest) {
     publicPathPrefixes.some((prefix) => pathname.startsWith(prefix)) ||
     pathname.startsWith("/_next/") ||
     pathname === "/favicon.ico";
-  const session = isPublic ? null : await verifySessionToken(request.cookies.get(SESSION_COOKIE)?.value);
+  const sessionReference = await verifySessionToken(request.cookies.get(SESSION_COOKIE)?.value);
+  const session = isPublic ? null : sessionReference;
+
+  const rateLimit = await enforceOperationRateLimit(pathname, request.method, {
+    ...(clientIdentity.trusted ? { ip: clientIdentity.source } : {}),
+    ...(sessionReference ? { session: sessionReference.sessionId } : {})
+  }, { dimensions: ["ip", "session", "endpoint", "operationCost"] });
+  if (!rateLimit.allowed) {
+    emitSecurityResilienceEvent("RATE_LIMIT_HIT", {
+      policy: rateLimit.policy?.id,
+      retryAfterSeconds: rateLimit.retryAfterSeconds,
+      status: rateLimit.status
+    });
+    if (rateLimit.policy?.id === "bulk-export" || rateLimit.policy?.id === "real-data-import") {
+      emitSecurityResilienceEvent("EXCESSIVE_EXPORT_IMPORT", { policy: rateLimit.policy.id, status: rateLimit.status });
+    }
+    if (rateLimit.policy?.id === "upload" || rateLimit.policy?.id === "event-media") {
+      emitSecurityResilienceEvent("BLOCKED_UPLOAD", { policy: rateLimit.policy.id, status: rateLimit.status });
+    }
+    const response = NextResponse.json(
+      { error: rateLimit.status === 429 ? "Too many requests. Please retry shortly." : "Abuse protection is temporarily unavailable. Please retry shortly." },
+      { status: rateLimit.status }
+    );
+    response.headers.set("cache-control", "private, no-store");
+    response.headers.set("retry-after", String(Math.max(1, rateLimit.retryAfterSeconds)));
+    return applySecurityHeaders(response);
+  }
 
   if (!isPublic && !session) {
     if (pathname.startsWith("/api/")) {

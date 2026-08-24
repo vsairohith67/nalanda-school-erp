@@ -45,8 +45,8 @@ async function prepare() {
     AUTH2B_DELIVERY_ADAPTER: "LOCAL_TEST_SINK",
     AUTH2B_COPIED_DATABASE_ROOT: ROOT,
     AUTH2B_LOCAL_DELIVERY_MAILBOX: MAILBOX,
-    TRUST_PROXY_HEADERS: "true",
-    NALANDA_TRUSTED_PROXY_MODE: "single-hop-sanitized"
+    TRUST_PROXY_HEADERS: "false",
+    NALANDA_TRUSTED_PROXY_MODE: "disabled"
   };
   execFileSync(process.env.ComSpec || "C:\\Windows\\System32\\cmd.exe", ["/d", "/s", "/c", "pnpm.cmd exec prisma migrate deploy --schema prisma/schema.prisma"], {
     cwd: WORKSPACE, env: environment, stdio: "pipe"

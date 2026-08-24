@@ -11,7 +11,7 @@ This plan preserves SEC-1 controls and adds no public endpoint except a content-
 
 ## Trusted proxy contract
 
-Trust requires all three conditions: the app port is loopback/private and firewall-blocked, the single ingress overwrites (not appends untrusted values to) `X-Forwarded-Proto`, `X-Forwarded-Host`, `X-Forwarded-For`/`X-Real-IP`, and both `TRUST_PROXY_HEADERS=true` plus `NALANDA_TRUSTED_PROXY_MODE=single-hop-sanitized` pass validation. If any condition is absent, forwarded headers are ignored and the rate limiter uses `direct`.
+Trust requires all conditions: the app port is loopback/private and firewall-blocked; the ingress overwrites forwarding/client identity headers; it adds a secret-store `X-Nalanda-Proxy-Auth` proof; canonical host/protocol match `APP_ORIGIN`; and `TRUST_PROXY_HEADERS=true`, `NALANDA_TRUSTED_PROXY_MODE=authenticated-edge-v1`, `NALANDA_REQUIRE_TRUSTED_PROXY=true`, one approved `NALANDA_CLIENT_IP_HEADER`, and a high-entropy `NALANDA_PROXY_SHARED_SECRET` pass validation. If proof is missing or invalid, forwarded headers are ignored; production-shaped origin requests fail closed except content-free health.
 
 Reject multiple/invalid hosts, unexpected schemes, CR/LF, oversized header blocks, and direct app-port traffic at the proxy. Preserve the original client IP only in the sanitized single-hop field. Do not trust arbitrary RFC 7239 `Forwarded` input.
 
@@ -40,7 +40,7 @@ Reject multiple/invalid hosts, unexpected schemes, CR/LF, oversized header block
 
 ## Rate limits and brute force
 
-The in-process login limiter blocks a trusted client source/account combination after 10 failures in 5 minutes for 60 seconds. It is single-instance and resets on restart. Add ingress limits for connection rate, login POSTs, setup, upload routes, AI/worker triggers, and webhooks; use conservative bursts and 429/Retry-After without reflecting identifiers. Alert on distributed/repeated failures. Do not use a single untrusted `direct` bucket that lets one caller deny all logins.
+The central typed policy and specialised login limiter provide development/test controls, but their memory adapters are single-process and reset on restart. Staging/production require `SECURITY_RATE_LIMIT_MODE=distributed` plus a registered atomic distributed adapter, and fail with controlled 503 on governed endpoints when it is absent. Add corresponding ingress limits for connection rate and each named endpoint family; use conservative bursts and 429/Retry-After without reflecting identifiers. Alert on distributed/repeated failures. Do not claim the in-memory adapter protects multiple instances.
 
 ## Local/automated evidence
 

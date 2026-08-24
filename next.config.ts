@@ -16,7 +16,9 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const productionTransportHeaders =
-      process.env.ENABLE_HSTS === "true"
+      process.env.NODE_ENV === "production" &&
+      process.env.ENABLE_HSTS === "true" &&
+      process.env.APP_ORIGIN?.startsWith("https://")
         ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }]
         : [];
     return [
@@ -25,11 +27,14 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-DNS-Prefetch-Control", value: "off" },
           { key: "Referrer-Policy", value: "same-origin" },
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(), bluetooth=(), usb=(), serial=()"
           },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
           ...productionTransportHeaders
         ]
       },

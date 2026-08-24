@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import type { PrismaClient } from "@prisma/client";
 import { describe, expect, it, vi } from "vitest";
 import { ROLES } from "../lib/permissions";
+import { parseUniversalSearchBody } from "../lib/universal-search-api";
 import {
   UNIVERSAL_SEARCH_LIMITS,
   UNIVERSAL_SEARCH_SOURCES,
@@ -74,6 +75,21 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
       { query: "Arjun", limit: "500000" },
       { query: "Arjun", sort: "passwordHash" }
     ]) expect(() => parseUniversalSearchRequest(input)).toThrow();
+  });
+
+  it("accepts the bounded select-all request emitted by the governed Search UI", async () => {
+    const origin = process.env.APP_ORIGIN ?? "http://localhost:3000";
+    const request = new Request(`${origin}/api/super-admin/search`, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin },
+      body: JSON.stringify({ query: "NoMatchSynthetic", sources: UNIVERSAL_SEARCH_SOURCES.map((source) => source.id), limit: 50 })
+    });
+    Object.defineProperty(request, "nextUrl", { value: new URL(request.url) });
+    await expect(parseUniversalSearchBody(request as never)).resolves.toMatchObject({
+      query: "NoMatchSynthetic",
+      sources: UNIVERSAL_SEARCH_SOURCES.map((source) => source.id),
+      limit: 50
+    });
   });
 
   it("handles Unicode, apostrophes, punctuation, SQL-like, script, HTML and path-like text as bounded data", () => {

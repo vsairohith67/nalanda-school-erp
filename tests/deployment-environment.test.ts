@@ -26,7 +26,11 @@ function validEnvironment(): NodeJS.ProcessEnv {
     ENABLE_HSTS: "true",
     ENABLE_HTTPS_UPGRADE: "true",
     TRUST_PROXY_HEADERS: "true",
-    NALANDA_TRUSTED_PROXY_MODE: "single-hop-sanitized",
+    NALANDA_TRUSTED_PROXY_MODE: "authenticated-edge-v1",
+    NALANDA_REQUIRE_TRUSTED_PROXY: "true",
+    NALANDA_PROXY_SHARED_SECRET: "unique-staging-proxy-proof-9630e42a-27c7-465d",
+    NALANDA_CLIENT_IP_HEADER: "x-forwarded-for",
+    SECURITY_RATE_LIMIT_MODE: "distributed",
     STAGING_DATA_DIR: data,
     DATABASE_URL: `file:${child("database/staging.db").replaceAll("\\", "/")}`,
     FEE_REGISTER_OCR_STORAGE_DIR: child("private/ocr"),
@@ -94,7 +98,7 @@ describe("staging deployment environment validation", () => {
     expect(codes(development)).toContain("DEVELOPMENT_SECRET_REJECTED");
   });
 
-  it("rejects insecure cookies and disabled trusted-proxy sanitization", () => {
+  it("rejects insecure cookies and disabled authenticated proxy trust", () => {
     const environment = validEnvironment();
     environment.SESSION_COOKIE_SECURE = "false";
     environment.NALANDA_TRUSTED_PROXY_MODE = "disabled";

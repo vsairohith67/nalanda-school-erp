@@ -6,6 +6,8 @@ import { useRef, useState } from "react";
 import { safeInternalPath } from "@/lib/navigation";
 
 const GENERIC_LOGIN_ERROR = "We couldn’t sign you in with those details.";
+const LOGIN_RATE_LIMIT_ERROR = "Too many sign-in attempts. Please wait before trying again.";
+const LOGIN_PROTECTION_UNAVAILABLE = "Sign-in protection is temporarily unavailable. Please retry shortly.";
 
 export function LoginForm() {
   const router = useRouter();
@@ -34,7 +36,11 @@ export function LoginForm() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setError(GENERIC_LOGIN_ERROR);
+        setError(response.status === 429
+          ? LOGIN_RATE_LIMIT_ERROR
+          : response.status === 503
+            ? LOGIN_PROTECTION_UNAVAILABLE
+            : GENERIC_LOGIN_ERROR);
         return;
       }
       if (data.mustChangePassword) {

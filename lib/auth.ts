@@ -10,6 +10,7 @@ import {
 } from "@/lib/session-token";
 import { resolvePersistedSession } from "@/lib/auth-sessions";
 import { isFirstRunRequired } from "@/lib/setup";
+import { emitSecurityResilienceEvent, securityActorHash } from "@/lib/security-observability";
 
 export type AuthUser = {
   id: string;
@@ -99,6 +100,7 @@ export async function requireApiPermission(permission: Permission) {
     permission
   });
   if (!decision.allowed) {
+    emitSecurityResilienceEvent("AUTHORIZATION_DENIAL", { operation: permission, actorHash: await securityActorHash(context.user.id), status: 403 });
     return { response: NextResponse.json({ error: "You do not have permission for this action" }, { status: 403 }), user: null };
   }
   return { response: null, user: context.user };
@@ -129,6 +131,7 @@ export async function requireApiRolePermission(permission: Permission, requiredR
   const auth = await requireApiPermission(permission);
   if (auth.response || !auth.user) return auth;
   if (auth.user.role !== requiredRole) {
+    emitSecurityResilienceEvent("AUTHORIZATION_DENIAL", { operation: `${permission}:${requiredRole}`, actorHash: await securityActorHash(auth.user.id), status: 403 });
     return {
       response: NextResponse.json({ error: "You do not have permission for this action" }, { status: 403 }),
       user: null

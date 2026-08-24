@@ -79,8 +79,8 @@ No private asset is intentionally written under `public/`. Source releases and d
 - `middleware.ts` applies a nonce CSP, COOP, CORP, origin checks, body-size enforcement, authentication, and private cache controls.
 - General request limit is 5 MiB; OCR page upload is 26 MiB; Server Actions are 4 MiB. The reverse proxy must set equal or lower limits and timeouts.
 - HSTS is emitted only when `ENABLE_HSTS=true`. Staging also requires secure cookies and HTTPS-upgrade CSP.
-- Forwarded origin/client-IP headers are trusted only when both `TRUST_PROXY_HEADERS=true` and `NALANDA_TRUSTED_PROXY_MODE=single-hop-sanitized`. The Node listener must be unreachable except through the proxy, which overwrites forwarded headers.
-- Login brute-force protection is process-local: 10 failures in 5 minutes cause a 60-second source/account block when a trusted source address exists. Central ingress limits are still required.
+- Forwarded origin/client-IP headers are trusted only with `TRUST_PROXY_HEADERS=true`, `authenticated-edge-v1`, canonical host/protocol, and the secret proxy proof. The Node listener must be unreachable except through the proxy, which overwrites forwarding and proof headers.
+- Login brute-force protection retains its account/proven-source control. The central memory adapter is development-only; staging/production require an atomic distributed adapter plus matching edge limits.
 - APIs and authenticated pages are `private, no-store`. Public website pages use revalidation; hashed Next static assets use framework immutable caching. The service worker rejects navigation HTML, API, login, private/no-store, cookie-bearing, JSON/PDF/CSV/binary responses.
 - PWA uses a generated manifest and dynamic service worker. Physical device certification is blocked until a real HTTPS staging origin exists.
 

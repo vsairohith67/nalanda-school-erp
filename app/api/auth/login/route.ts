@@ -18,6 +18,8 @@ import {
   loginRequestSource,
   recordLoginFailure
 } from "@/lib/auth-rate-limit";
+import { assertBoundedJsonValue } from "@/lib/request-security";
+import { emitSecurityResilienceEvent } from "@/lib/security-observability";
 
 const dummyPasswordHash = hashPassword("invalid-login-placeholder");
 const GENERIC_LOGIN_ERROR = "We couldn’t sign you in with those details.";
@@ -37,6 +39,7 @@ export async function POST(request: NextRequest) {
     let body: Record<string, unknown>;
     try {
       body = await request.json();
+      assertBoundedJsonValue(body, { maximumArrayLength: 4, maximumStringLength: 1_024, maximumJsonNodes: 20 });
     } catch {
       return privateJson({ error: GENERIC_LOGIN_ERROR }, 400);
     }
@@ -53,6 +56,7 @@ export async function POST(request: NextRequest) {
     const before = await checkLoginRateLimit({ identifier, source });
     if (!before.allowed) {
       console.warn(`AUTH_LOGIN_RATE_LIMIT account=${before.accountHash} source=${before.sourceHash}`);
+      emitSecurityResilienceEvent("AUTHENTICATION_ABUSE", { actorHash: before.accountHash, sourceHash: before.sourceHash, status: 429 });
       await recordLoginSecurityEvent("LOGIN_RATE_LIMITED", null, before.accountHash, { blocked: true });
       return rateLimitResponse(before.retryAfterSeconds);
     }
@@ -67,6 +71,7 @@ export async function POST(request: NextRequest) {
     ) {
       const failure = await recordLoginFailure({ identifier, source });
       console.warn(`AUTH_LOGIN_FAILURE account=${failure.accountHash} source=${failure.sourceHash}`);
+      emitSecurityResilienceEvent("AUTHENTICATION_ABUSE", { actorHash: failure.accountHash, sourceHash: failure.sourceHash, status: failure.blocked ? 429 : 401 });
       await recordLoginSecurityEvent(
         user && (!user.isActive || user.lifecycleStatus !== "ACTIVE") ? "DISABLED_ACCOUNT_LOGIN_ATTEMPT" : failure.blocked ? "LOGIN_RATE_LIMITED" : "LOGIN_FAILED",
         user?.id ?? null,

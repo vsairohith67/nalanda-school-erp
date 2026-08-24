@@ -181,7 +181,10 @@
     "release:package": "tsx scripts/release-ops.ts package",
     "release:verify-artifact": "tsx scripts/release-ops.ts verify-artifact",
     "release:env-check": "tsx scripts/validate-release-environment.ts",
-    "qa:releaseops1a": "tsx scripts/qa-releaseops1a.ts"
+    "qa:releaseops1a": "tsx scripts/qa-releaseops1a.ts",
+    "security:resilience:load": "tsx scripts/security-resilience-local-load.ts",
+    "qa:security-resilience": "tsx scripts/qa-security-resilience-1a.ts",
+    "security:resilience:acceptance": "vitest run tests/security-resilience.test.ts tests/sec1-runtime-security.test.ts tests/deployment-environment.test.ts && pnpm.cmd security:resilience:load && pnpm.cmd qa:security-resilience"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",
