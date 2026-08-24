@@ -175,3 +175,6 @@ reminder command exits without writes. Copied/synthetic QA may enable it.
 recovery path passed independent QA. It does not enable operational use,
 onboard real Parents, import meeting history, send live communications,
 perform external calendar sync, deploy or change production configuration.
+
+The exact independent acceptance evidence is recorded in
+[`evidence/PARENT_MEETING_V1_5_QA_CLEARANCE.md`](./evidence/PARENT_MEETING_V1_5_QA_CLEARANCE.md).
