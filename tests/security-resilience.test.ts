@@ -193,6 +193,7 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     const publicSupportUi = readFileSync("components/public-support-form.tsx", "utf8");
     const publicAdmissionsUi = readFileSync("components/admissions-public-enquiry-form.tsx", "utf8");
     const loginUi = readFileSync("components/login-form.tsx", "utf8");
+    const runtimeHarness = readFileSync("scripts/sec1-runtime-server.ps1", "utf8");
     expect(middleware).toContain("enforceOperationRateLimit");
     expect(middleware).toContain("proxyHealthPath");
     expect(middleware).toContain('"/api/health"');
@@ -213,5 +214,8 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     expect(publicAdmissionsUi).toContain("We could not confirm that your enquiry was received.");
     expect(loginUi).toContain("Too many sign-in attempts. Please wait before trying again.");
     expect(loginUi).toContain("Sign-in protection is temporarily unavailable. Please retry shortly.");
+    expect(runtimeHarness).toContain('[ValidateSet("single-process-rehearsal", "distributed")]');
+    expect(runtimeHarness).toContain('$env:SECURITY_RATE_LIMIT_MODE = $RateLimitMode');
+    expect(runtimeHarness).toContain('$env:QA20C_ISOLATED_DATABASE = "true"');
   });
 });
