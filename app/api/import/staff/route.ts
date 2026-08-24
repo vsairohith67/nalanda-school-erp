@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireApiPermission } from "@/lib/auth";
 import { applyStaffImport, buildStaffImportPreview } from "@/lib/staff";
 import { createImportBatchRecord, deriveImportBatchStatus } from "@/lib/import-verification";
+import { REAL_DATA_IMPORTS_FEATURE, requireOperationalReleaseFeatureForApi } from "@/lib/release-feature-flag-runtime";
 
 export async function POST(request: NextRequest) {
   const auth = await requireApiPermission("IMPORT_STAFF"); if (auth.response) return auth.response;
@@ -12,6 +13,8 @@ export async function POST(request: NextRequest) {
     if (!rows.length) throw new Error("No staff rows supplied");
     const preview = await buildStaffImportPreview(prisma, rows);
     if (body.action === "preview") return NextResponse.json({ preview });
+    const featureUnavailable = requireOperationalReleaseFeatureForApi(REAL_DATA_IMPORTS_FEATURE);
+    if (featureUnavailable) return featureUnavailable;
     if (body.action !== "import") throw new Error("Unknown staff import action");
     if (body.confirmed !== true) throw new Error("Staff import must be confirmed after review");
     const result = await prisma.$transaction(async (tx) => {

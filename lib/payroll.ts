@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "@prisma/client";
+import { PAYROLL_ESS_PILOT_FEATURE, assertOperationalReleaseFeature } from "@/lib/release-feature-flag-runtime";
 import { requireCriticalReauthentication, type IamActor } from "@/lib/iam/security";
 import { getSchoolSettings } from "@/lib/school-settings";
 import {
@@ -323,6 +324,7 @@ export async function payrollRunWorkflow(client: PrismaClient, runKey: string, r
 }
 
 export async function createSalaryAdvance(client: PrismaClient, raw: Record<string, unknown>, actor: PayrollActor, ownUserId?: string | null) {
+  if (ownUserId) assertOperationalReleaseFeature(PAYROLL_ESS_PILOT_FEATURE);
   let staff;
   if (ownUserId) staff = await linkedPayrollStaff(client, ownUserId);
   else staff = await client.staffMember.findUnique({ where: { iamPublicKey: uuid(raw.staffKey, "Staff reference") } });

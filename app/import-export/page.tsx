@@ -5,6 +5,7 @@ import { canOpenImportExportWorkspace } from "@/lib/access-rules";
 import { prisma } from "@/lib/prisma";
 import { permissionSetCan } from "@/lib/role-permissions";
 import { redirect } from "next/navigation";
+import { REAL_DATA_IMPORTS_FEATURE, isOperationalReleaseFeatureEnabled } from "@/lib/release-feature-flag-runtime";
 
 export default async function ImportExportPage() {
   const user = await requireUser();
@@ -19,6 +20,7 @@ export default async function ImportExportPage() {
   const canExportReports = permissionSetCan(permissions, "EXPORT_REPORTS");
   const canBackup = permissionSetCan(permissions, "RUN_BACKUP");
   const canRestore = permissionSetCan(permissions, "RUN_RESTORE");
+  const operationalImportsEnabled = isOperationalReleaseFeatureEnabled(REAL_DATA_IMPORTS_FEATURE);
   if (!canOpen || !canOpenImportExportWorkspace(permissions)) redirect("/unauthorized");
 
   return (
@@ -27,11 +29,12 @@ export default async function ImportExportPage() {
         title="Import / Export"
         description="Preview and validate student, guardian, staff, or payment Excel/CSV files before importing, then export operational data."
       />
+      {!operationalImportsEnabled ? <p className="notice warning">Operational imports are not active. Existing exports, backup tools and zero-write preview contracts remain separate.</p> : null}
       <ImportExport
-        canImportStudents={canImportStudents}
-        canImportGuardians={canImportGuardians}
-        canImportStaff={canImportStaff}
-        canImportPayments={canImportPayments}
+        canImportStudents={canImportStudents && operationalImportsEnabled}
+        canImportGuardians={canImportGuardians && operationalImportsEnabled}
+        canImportStaff={canImportStaff && operationalImportsEnabled}
+        canImportPayments={canImportPayments && operationalImportsEnabled}
         canExportStudents={canExportStudents}
         canExportPayments={canExportPayments}
         canExportReports={canExportReports}
