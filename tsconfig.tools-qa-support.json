@@ -1,6 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "plugins": [], "incremental": true, "tsBuildInfoFile": "./tsconfig.tools-qa-support.tsbuildinfo" },
-  "include": ["scripts/qa-support*.ts", "scripts/qa-event-media*.ts"],
+  "include": [
+    "scripts/qa-support*.ts",
+    "scripts/qa-event-media*.ts",
+    "scripts/qa-universal-search*.ts",
+    "scripts/qa-smart-ai*.ts"
+  ],
   "exclude": ["node_modules", ".next"]
 }

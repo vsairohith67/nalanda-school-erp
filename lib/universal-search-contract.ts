@@ -9,27 +9,33 @@ export const UNIVERSAL_SEARCH_LIMITS = {
 } as const;
 
 export const UNIVERSAL_SEARCH_SOURCES = [
-  { id: "STUDENTS", label: "Students", priority: 1, available: true, href: "/students" },
-  { id: "ADMISSIONS", label: "Admissions", priority: 1, available: true, href: "/admission-crm" },
-  { id: "GUARDIANS", label: "Guardians", priority: 1, available: true, href: "/guardians" },
-  { id: "STAFF", label: "Staff", priority: 1, available: true, href: "/staff" },
-  { id: "DIARY", label: "Diary", priority: 1, available: true, href: "/super-admin/my-work#diary" },
-  { id: "TASKS", label: "Tasks & Reminders", priority: 1, available: true, href: "/super-admin/my-work#tasks" },
-  { id: "CONTACTS", label: "Contacts & Suppliers", priority: 1, available: true, href: "/super-admin/my-work#contacts" },
-  { id: "FEES", label: "Fees & Receipts", priority: 2, available: true, href: "/payments" },
-  { id: "ATTENDANCE", label: "Attendance", priority: 2, available: false, href: "/attendance/students" },
-  { id: "EXAMINATIONS", label: "Examinations", priority: 2, available: true, href: "/exams" },
-  { id: "REPORT_CARDS", label: "Report Cards", priority: 2, available: true, href: "/report-cards" },
-  { id: "SUPPORT", label: "Support & Complaints", priority: 2, available: true, href: "/support" },
-  { id: "SAFE_EXIT", label: "Safe Exit", priority: 2, available: true, href: "/student-departures" },
-  { id: "EVENTS", label: "Events & Calendar", priority: 2, available: true, href: "/calendar" },
-  { id: "USERS_IAM", label: "Users / IAM", priority: 3, available: true, href: "/users" },
-  { id: "RECENT_ACTIVITY", label: "Audit / Recent Activity", priority: 3, available: false, href: "/access-history" },
-  { id: "RELEASE_OPERATIONS", label: "Release Operations", priority: 3, available: true, href: "/release-operations" },
-  { id: "OBSERVABILITY", label: "Observability / System Health", priority: 3, available: true, href: "/technical-operations" }
+  { id: "STUDENTS", label: "Students", priority: 1, available: true, coverage: "SEARCHABLE", href: "/students" },
+  { id: "ADMISSIONS", label: "Admissions", priority: 1, available: true, coverage: "SEARCHABLE", href: "/admission-crm" },
+  { id: "GUARDIANS", label: "Guardians", priority: 1, available: true, coverage: "SEARCHABLE", href: "/guardians" },
+  { id: "STAFF", label: "Staff", priority: 1, available: true, coverage: "SEARCHABLE", href: "/staff" },
+  { id: "DIARY", label: "Diary", priority: 1, available: true, coverage: "SEARCHABLE", href: "/super-admin/my-work#diary" },
+  { id: "TASKS", label: "Tasks & Reminders", priority: 1, available: true, coverage: "SEARCHABLE", href: "/super-admin/my-work#tasks" },
+  { id: "CONTACTS", label: "Contacts & Suppliers", priority: 1, available: true, coverage: "SEARCHABLE", href: "/super-admin/my-work#contacts" },
+  { id: "FEES", label: "Fees & Receipts", priority: 2, available: true, coverage: "SAFE_METADATA_ONLY", href: "/payments" },
+  { id: "ATTENDANCE", label: "Attendance", priority: 2, available: false, coverage: "UNAVAILABLE", href: "/attendance/students" },
+  { id: "EXAMINATIONS", label: "Examinations", priority: 2, available: true, coverage: "SAFE_METADATA_ONLY", href: "/exams" },
+  { id: "REPORT_CARDS", label: "Report Cards", priority: 2, available: true, coverage: "SAFE_METADATA_ONLY", href: "/report-cards" },
+  { id: "SUPPORT", label: "Support & Complaints", priority: 2, available: true, coverage: "SAFE_METADATA_ONLY", href: "/support" },
+  { id: "SAFE_EXIT", label: "Safe Exit", priority: 2, available: true, coverage: "SAFE_METADATA_ONLY", href: "/student-departures" },
+  { id: "EVENTS", label: "Events & Calendar", priority: 2, available: true, coverage: "SAFE_METADATA_ONLY", href: "/calendar" },
+  { id: "PARENT_MEETINGS", label: "Parent Meetings", priority: 2, available: true, coverage: "SAFE_METADATA_ONLY", href: "/parent-meetings" },
+  { id: "TRANSPORT", label: "Transport", priority: 2, available: true, coverage: "SAFE_METADATA_ONLY", href: "/operations/transport" },
+  { id: "CAFETERIA", label: "Cafeteria", priority: 2, available: true, coverage: "SAFE_METADATA_ONLY", href: "/operations/cafeteria" },
+  { id: "KG_REPORTS", label: "KG Report Cards", priority: 2, available: true, coverage: "SAFE_METADATA_ONLY", href: "/report-cards" },
+  { id: "EVENT_MEDIA", label: "Event Media", priority: 2, available: true, coverage: "SAFE_METADATA_ONLY", href: "/event-media" },
+  { id: "USERS_IAM", label: "Users / IAM", priority: 3, available: true, coverage: "SAFE_METADATA_ONLY", href: "/users" },
+  { id: "RECENT_ACTIVITY", label: "Audit / Recent Activity", priority: 3, available: false, coverage: "UNAVAILABLE", href: "/access-history" },
+  { id: "RELEASE_OPERATIONS", label: "Release Operations", priority: 3, available: true, coverage: "SAFE_METADATA_ONLY", href: "/release-operations" },
+  { id: "OBSERVABILITY", label: "Observability / System Health", priority: 3, available: true, coverage: "SAFE_METADATA_ONLY", href: "/technical-operations" }
 ] as const;
 
 export type UniversalSearchSourceId = (typeof UNIVERSAL_SEARCH_SOURCES)[number]["id"];
+export type UniversalSearchSourceCoverage = (typeof UNIVERSAL_SEARCH_SOURCES)[number]["coverage"];
 export type UniversalSearchSourceState = "OK" | "EMPTY" | "DEGRADED" | "UNAVAILABLE" | "TIMEOUT";
 
 export type UniversalSearchResult = {
