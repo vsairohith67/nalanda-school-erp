@@ -50,18 +50,15 @@ jobs:
       - name: Install required local validation tools
         run: |
           choco install ripgrep --version=15.2.0 -y --no-progress
-          choco install poppler --version=26.6.0 -y --no-progress
           rg --version
-          $pdfSearchRoots = @(
-            'C:\ProgramData\chocolatey\lib\poppler\tools'
-            if ($env:ChocolateyToolsLocation) { $env:ChocolateyToolsLocation }
-            'C:\tools'
-          ) | Select-Object -Unique
-          $pdfToPpm = $pdfSearchRoots |
-            Where-Object { Test-Path -LiteralPath $_ -PathType Container } |
-            ForEach-Object { Get-ChildItem -LiteralPath $_ -Filter pdftoppm.exe -File -Recurse -ErrorAction SilentlyContinue } |
-            Select-Object -First 1
-          if (-not $pdfToPpm) { throw "Pinned Poppler install did not provide pdftoppm.exe" }
+          $popplerArchive = Join-Path $env:RUNNER_TEMP 'poppler-26.02.0-0.zip'
+          $popplerExtract = Join-Path $env:RUNNER_TEMP 'poppler-26.02.0-0'
+          Invoke-WebRequest -Uri 'https://github.com/oschwartz10612/poppler-windows/releases/download/v26.02.0-0/Release-26.02.0-0.zip' -OutFile $popplerArchive
+          $expectedPopplerSha256 = '993e4a94376ed712fafc7058d724ea0b943d118bbd2305cd9ed55174eb85cda5'
+          $actualPopplerSha256 = (Get-FileHash -LiteralPath $popplerArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualPopplerSha256 -ne $expectedPopplerSha256) { throw "Pinned Poppler archive checksum mismatch" }
+          Expand-Archive -LiteralPath $popplerArchive -DestinationPath $popplerExtract
+          $pdfToPpm = Get-Item -LiteralPath (Join-Path $popplerExtract 'poppler-26.02.0\Library\bin\pdftoppm.exe') -ErrorAction Stop
           "REPORT_CARD_PDFTOPPM_PATH=$($pdfToPpm.FullName)" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
           & $pdfToPpm.FullName -v
       - name: Install exactly from lockfile
