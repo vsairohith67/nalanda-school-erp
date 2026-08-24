@@ -124,7 +124,7 @@
       "id": "SEARCH_EXTENSION_1B",
       "name": "Universal Search Extension 1B",
       "tag": "universal-search-extension-v43-2026-08-24",
-      "commit": "d8df242e399d1959910f0d2bd73a2c8ac49cdf7e",
+      "commit": "3d51164b8214211d26e48c2c6f9920286ef9c689",
       "retainedBranches": [
         { "ref": "origin/feature/search-extension-1b", "policy": "HEAD_CONTAINED_IN_RELEASE" }
       ],
