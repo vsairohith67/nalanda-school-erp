@@ -1,7 +1,12 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { existsSync, realpathSync, statSync } from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
+import { ACADEMIC_YEAR, DEFAULT_FEE_STRUCTURE, dueMonthsForClass } from "../lib/constants";
+import { ensureDefaultMiscIncomeItems } from "../lib/misc-income";
+import { ensureDefaultRolePermissions } from "../lib/role-permissions";
+import { ensureSeedUsers, SEED_USER_DEFINITIONS } from "../lib/seed-users";
+import { seedTimetableDefaults } from "../lib/timetable";
 
 function canonical(candidate: string) {
   const resolved = path.resolve(candidate);
@@ -24,6 +29,52 @@ function configuredDatabasePath() {
   return canonical(path.isAbsolute(raw) ? raw : path.resolve(process.cwd(), "prisma", raw));
 }
 
+async function seedSyntheticSystemBaseline(prisma: PrismaClient, databasePath: string) {
+  const [users, students, payments, guardians, staff] = await Promise.all([
+    prisma.user.count(),
+    prisma.student.count(),
+    prisma.payment.count(),
+    prisma.guardian.count(),
+    prisma.staffMember.count()
+  ]);
+  if (users !== 0 || students !== 0 || payments !== 0 || guardians !== 0 || staff !== 0) {
+    throw new Error("RELEASE_CI_SYNTHETIC_INITIAL_DATABASE_NOT_EMPTY");
+  }
+
+  const seedEnvironment: NodeJS.ProcessEnv = {
+    ...process.env,
+    NODE_ENV: "development",
+    ALLOW_DEMO_USERS: "true",
+    DEMO_USER_DATABASE_ROOT: path.dirname(databasePath)
+  };
+  for (const definition of SEED_USER_DEFINITIONS) {
+    seedEnvironment[definition.env] = `CI-${definition.name}-${randomBytes(24).toString("hex")}!`;
+  }
+  const seedResult = await ensureSeedUsers(prisma, seedEnvironment, process.cwd());
+  if (!seedResult.enabled || seedResult.createdRoles.length !== SEED_USER_DEFINITIONS.length) {
+    throw new Error("RELEASE_CI_SYNTHETIC_USERS_INVALID");
+  }
+
+  await ensureDefaultRolePermissions(prisma);
+  await ensureDefaultMiscIncomeItems(prisma);
+  await prisma.schoolSettings.upsert({
+    where: { id: "school" },
+    update: {},
+    create: { id: "school" }
+  });
+  await seedTimetableDefaults(prisma);
+  for (const group of DEFAULT_FEE_STRUCTURE) {
+    for (const className of group.classes) {
+      const [term1Month, term2Month, term3Month, term4Month] = dueMonthsForClass(className);
+      await prisma.feeStructure.upsert({
+        where: { academicYear_className: { academicYear: ACADEMIC_YEAR, className } },
+        update: { termAmount: group.termAmount, term1Month, term2Month, term3Month, term4Month, active: true },
+        create: { academicYear: ACADEMIC_YEAR, className, termAmount: group.termAmount, term1Month, term2Month, term3Month, term4Month }
+      });
+    }
+  }
+}
+
 async function main() {
   if (
     process.env.RELEASE_CI_SYNTHETIC_OPT_IN !== "true" ||
@@ -42,6 +93,7 @@ async function main() {
 
   const prisma = new PrismaClient();
   try {
+    await seedSyntheticSystemBaseline(prisma, databasePath);
     await prisma.$transaction(async (tx) => {
       const [users, students, payments, guardians, staff, director] = await Promise.all([
         tx.user.count(),

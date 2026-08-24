@@ -230,14 +230,16 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     expect(releaseWorkflow).toContain('"REPORT_CARD_PDFTOPPM_PATH=$($pdfToPpm.FullName)"');
     expect(releaseWorkflow).toContain("$env:RELEASE_CI_SYNTHETIC_OPT_IN = 'true'");
     expect(releaseWorkflow).toContain("pnpm exec tsx scripts/prepare-release-ci-synthetic.ts");
-    expect(releaseWorkflow).toContain('throw "Release CI refused a pre-existing environment file"');
-    expect(releaseWorkflow).toContain("New-Item -ItemType File -Path .env | Out-Null");
+    expect(releaseWorkflow).not.toContain("SEED_DIRECTOR_PASSWORD");
+    expect(releaseWorkflow).not.toContain("pnpm db:seed");
     expect(releaseWorkflow).toContain("DATABASE_URL: file:../tmp/release-ci/synthetic.db");
     expect(releaseWorkflow).toContain("Copy-Item -LiteralPath tmp\\release-ci\\synthetic.db -Destination prisma\\dev.db");
     expect(releaseWorkflow).toContain('throw "Release CI synthetic database already exists"');
     expect(releaseCiSynthetic).toContain('process.env.RELEASE_CI_SYNTHETIC_OPT_IN !== "true"');
     expect(releaseCiSynthetic).toContain('process.env.NALANDA_ENVIRONMENT !== "TEST"');
     expect(releaseCiSynthetic).toContain('sameFile(databasePath, operationalPath)');
+    expect(releaseCiSynthetic).toContain("randomBytes(24).toString(\"hex\")");
+    expect(releaseCiSynthetic).toContain("ensureSeedUsers(prisma, seedEnvironment, process.cwd())");
     expect(releaseCiSynthetic).toContain('students !== 0 || payments !== 0 || guardians !== 0 || staff !== 0');
   });
 });
