@@ -41,6 +41,7 @@ export const RATE_LIMIT_POLICIES: readonly RateLimitPolicy[] = [
   policy("auth.login", "MEDIUM", ["POST"], 30, MINUTE, (path) => path === "/api/auth/login"),
   policy("auth.recovery", "MEDIUM", ["POST"], 5, 15 * MINUTE, (path) => path.startsWith("/api/auth/recovery/")),
   policy("auth.otp", "MEDIUM", ["POST"], 6, 10 * MINUTE, (path) => /^\/api\/auth\/(?:otp|verification)(?:\/|$)/i.test(path)),
+  policy("native.auth", "HIGH", ["POST"], 12, 10 * MINUTE, (path) => path.startsWith("/api/native-auth/")),
   policy("public.admissions", "MEDIUM", ["POST", "PATCH"], 8, 10 * MINUTE, (path) => path.startsWith("/api/public/admissions/")),
   policy("public.support", "MEDIUM", ["POST"], 6, 10 * MINUTE, (path) => path.startsWith("/api/public/support/")),
   policy("smart-ai", "HIGH", ["POST"], 8, MINUTE, (path) => path === "/api/super-admin/ai" || path.startsWith("/api/ai-assistant/")),
@@ -51,6 +52,7 @@ export const RATE_LIMIT_POLICIES: readonly RateLimitPolicy[] = [
   policy("real-data-import", "HIGH", ["POST"], 6, 15 * MINUTE, (path) => path.startsWith("/api/import/") || /\/import(?:\/|$)/i.test(path)),
   policy("bulk-export", "HIGH", ["GET", "POST"], 12, 10 * MINUTE, (path) => /\/export(?:\/|$)/i.test(path)),
   policy("offline-sync", "HIGH", ["GET", "POST", "PATCH"], 60, MINUTE, (path) => path.startsWith("/api/offline-sync/")),
+  policy("native.sync", "HIGH", ["GET", "POST"], 45, MINUTE, (path) => path.startsWith("/api/native/")),
   policy("sync", "HIGH", ["GET", "POST", "PATCH"], 30, MINUTE, (path) => /\/sync\/(?:push|pull)(?:\/|$)/i.test(path))
 ] as const;
 

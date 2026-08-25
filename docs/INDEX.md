@@ -772,3 +772,18 @@ service or live WhatsApp provider is included. Next governed phase: `OBS-1A`.
 - [Independent QA and release clearance](evidence/OBS_1A_QA_CLEARANCE.md)
 
 OBS-1A is independently QA-cleared on its retained feature branch and released locally/private as `observability-operations-v40-2026-08-10`. The additive migration is applied with byte-identical rollback evidence; deployment, provider activation, telemetry transmission and real-user onboarding remain unauthorised.
+
+# CROSS-PLATFORM-APPS-1A
+
+- [Architecture](CROSS_PLATFORM_APPS_ARCHITECTURE.md)
+- [Framework ADR](CROSS_PLATFORM_FRAMEWORK_ADR.md)
+- [Native authentication bridge](NATIVE_AUTHENTICATION_BRIDGE.md)
+- [Native Offline Sync storage adapter](NATIVE_OFFLINE_STORAGE_ADAPTER.md)
+- [Security model](CROSS_PLATFORM_SECURITY_MODEL.md)
+- [Build and CI](CROSS_PLATFORM_BUILD_AND_CI.md)
+- [Signing and store boundary](CROSS_PLATFORM_SIGNING_AND_STORE_BOUNDARY.md)
+- [Testing matrix](CROSS_PLATFORM_TESTING_MATRIX.md)
+- [Operations runbook](CROSS_PLATFORM_OPERATIONS_RUNBOOK.md)
+- [Future governed prompts](CROSS_PLATFORM_APPS_1A_FUTURE_PROMPTS.md)
+
+This is a default-off, zero-rollout software foundation. It does not activate staging, real users/data, signing, store publication, push, or physical-device certification.

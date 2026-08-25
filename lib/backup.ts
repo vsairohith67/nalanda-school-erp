@@ -28,6 +28,7 @@ import { loadOptionalOperationsBackup, OPTIONAL_OPERATIONS_BACKUP_KEYS, validate
 import { emptyEventMediaBackup, eventMediaSchemaAvailable, EVENT_MEDIA_BACKUP_KEYS, loadEventMediaBackup, validateEventMediaBackupRows, type EventMediaBackup, type EventMediaBackupKey } from "./event-media-backup";
 import { emptyParentMeetingBackup, loadParentMeetingBackup, parentMeetingSchemaAvailable, PARENT_MEETING_BACKUP_KEYS, validateParentMeetingBackupRows, type ParentMeetingBackup, type ParentMeetingBackupKey } from "./parent-meeting-backup";
 import { emptyOfflineSyncBackup, loadOfflineSyncBackup, offlineSyncSchemaAvailable, OFFLINE_SYNC_BACKUP_KEYS, validateOfflineSyncBackupRows, type OfflineSyncBackup, type OfflineSyncBackupKey } from "./offline-sync/backup";
+import { emptyNativeAppBackup, loadNativeAppBackup, nativeAppSchemaAvailable, NATIVE_APP_BACKUP_KEYS, validateNativeAppBackupRows, type NativeAppBackup, type NativeAppBackupKey } from "./native-app/backup";
 
 const APP_NAME = "Nalanda Fee Control";
 
@@ -107,6 +108,7 @@ type BackupClient = Pick<
   | "transportVehicle" | "transportRoute" | "transportStop" | "transportRouteStop" | "transportStudentAssignment" | "transportAuditEvent"
   | "cafeteriaCatalogItem" | "cafeteriaMenu" | "cafeteriaMenuItem" | "cafeteriaStudentEnrollment" | "cafeteriaMealRecord" | "cafeteriaAuditEvent"
   | "offlineSyncDevice" | "offlineSyncMutation" | "offlineSyncEvent" | "offlineSyncConflictReview"
+  | "nativeSession" | "nativeRefreshTokenHistory"
 >;
 
 type BackupDocumentInput = {
@@ -284,7 +286,7 @@ type BackupDocumentInput = {
   timetableEntries?: readonly unknown[];
   academicYear?: string;
   technicalOperations?: TechnicalOperationsBackup;
-} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup> & Partial<OfflineSyncBackup>;
+} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup> & Partial<OfflineSyncBackup> & Partial<NativeAppBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
   const onboardingBatches = sanitizeOnboardingBatches(input.onboardingBatches ?? []);
@@ -393,6 +395,8 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const parentMeetingCounts = Object.fromEntries(PARENT_MEETING_BACKUP_KEYS.map((key) => [key, parentMeetingBackup[key].length])) as Record<ParentMeetingBackupKey, number>;
   const offlineSyncBackup = validateOfflineSyncBackupRows(input as unknown as Record<string, unknown>);
   const offlineSyncCounts = Object.fromEntries(OFFLINE_SYNC_BACKUP_KEYS.map((key) => [key, offlineSyncBackup[key].length])) as Record<OfflineSyncBackupKey, number>;
+  const nativeAppBackup = validateNativeAppBackupRows(input as unknown as Record<string, unknown>);
+  const nativeAppCounts = Object.fromEntries(NATIVE_APP_BACKUP_KEYS.map((key) => [key, nativeAppBackup[key].length])) as Record<NativeAppBackupKey, number>;
   const technicalOperations = validateTechnicalOperationsBackup(input.technicalOperations);
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
   const teacherAnalyticsSnapshots = sanitizeActorFields(input.teacherAnalyticsSnapshots ?? []);
@@ -670,6 +674,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
         ...eventMediaCounts,
         ...parentMeetingCounts,
         ...offlineSyncCounts,
+        ...nativeAppCounts,
         timetableTeachers: timetableTeachers.length,
         timetableSubjects: timetableSubjects.length,
         timetableClassSections: timetableClassSections.length,
@@ -689,6 +694,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     ...eventMediaBackup,
     ...parentMeetingBackup,
     ...offlineSyncBackup,
+    ...nativeAppBackup,
     users: sanitizeUsers(input.users),
     authSecurity,
     iamAccess,
@@ -1348,6 +1354,9 @@ export async function generateFullBackup(
   const offlineSyncBackup = await offlineSyncSchemaAvailable(client as unknown as PrismaClient)
     ? await loadOfflineSyncBackup(client as unknown as PrismaClient)
     : emptyOfflineSyncBackup();
+  const nativeAppBackup = await nativeAppSchemaAvailable(client as unknown as PrismaClient)
+    ? await loadNativeAppBackup(client as unknown as PrismaClient)
+    : emptyNativeAppBackup();
   const technicalOperations = await technicalOperationsSchemaAvailable(client as unknown as PrismaClient)
     ? await loadTechnicalOperationsBackup(client as unknown as PrismaClient)
     : emptyTechnicalOperationsBackup();
@@ -1390,6 +1399,7 @@ export async function generateFullBackup(
     ...eventMediaBackup,
     ...parentMeetingBackup,
     ...offlineSyncBackup,
+    ...nativeAppBackup,
     technicalOperations,
     rolePermissions,
     guardians,

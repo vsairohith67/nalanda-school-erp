@@ -1,0 +1,153 @@
+name: Cross-platform apps 1A
+
+on:
+  pull_request:
+    paths:
+      - "apps/nalanda-cross-platform/**"
+      - "app/api/native-auth/**"
+      - "app/api/native/**"
+      - "app/native/**"
+      - "lib/native-app/**"
+      - "lib/offline-sync/**"
+      - "prisma/**"
+      - "tests/*cross-platform*"
+      - "tests/native-auth-1a.test.ts"
+      - "middleware.ts"
+      - "lib/request-security.ts"
+      - "lib/security-resilience.ts"
+      - "lib/trusted-client.ts"
+      - "scripts/harden-cross-platform-generated-project.mjs"
+      - "config/release-feature-flags.json"
+      - ".env.example"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/cross-platform-apps.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cross-platform-apps-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  NALANDA_NATIVE_PROFILE: "NO_REMOTE_SERVER_CONFIGURED"
+
+jobs:
+  contracts:
+    name: TypeScript, contracts and bundled shell
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate --schema prisma/schema.prisma
+      - run: pnpm exec prisma validate --schema prisma/schema.prisma
+      - run: pnpm audit --prod --audit-level high
+      - run: pnpm app:typecheck
+      - run: pnpm test:cross-platform
+      - run: pnpm app:build:web
+
+  windows:
+    name: Unsigned Windows NSIS compiler gate
+    runs-on: windows-2025
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: rustup toolchain install 1.97.1 --profile minimal
+      - name: Record Windows compiler environment
+        shell: pwsh
+        run: node --version; pnpm --version; rustc --version; cargo --version; Get-ComputerInfo -Property WindowsProductName,WindowsVersion,OsArchitecture
+      - run: pnpm app:rust:test
+      - run: pnpm app:windows:build
+      - name: Write Windows package checksum
+        shell: pwsh
+        run: Get-ChildItem apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/*.exe | Get-FileHash -Algorithm SHA256 | ForEach-Object { "$($_.Hash) *$([IO.Path]::GetFileName($_.Path))" } | Set-Content apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/SHA256SUMS.txt
+      - name: Verify Windows package checksum
+        shell: pwsh
+        working-directory: apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis
+        run: Get-Content SHA256SUMS.txt | ForEach-Object { $parts = $_ -split ' \*', 2; if ((Get-FileHash -Algorithm SHA256 -LiteralPath $parts[1]).Hash -ne $parts[0]) { throw "Windows package checksum mismatch" } }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unsigned-windows-nsis
+          path: |
+            apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/*.exe
+            apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
+
+  android:
+    name: Unsigned Android debug compiler gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with: { distribution: temurin, java-version: "17" }
+      - run: pnpm install --frozen-lockfile
+      - run: rustup toolchain install 1.97.1 --profile minimal
+      - run: rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+      - name: Record Android compiler environment
+        run: node --version && pnpm --version && rustc --version && cargo --version && java -version && "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --version
+      - run: pnpm app:android:init
+      - run: pnpm app:android:build
+      - name: Write Android package checksums
+        working-directory: apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk
+        run: find . -type f -name '*.apk' -exec sha256sum {} \; > SHA256SUMS.txt
+      - name: Verify Android package checksums
+        working-directory: apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk
+        run: sha256sum --check SHA256SUMS.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unsigned-android-debug-apk
+          path: |
+            apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+            apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
+
+  ios:
+    name: Unsigned iOS simulator compiler gate
+    runs-on: macos-15
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: rustup toolchain install 1.97.1 --profile minimal
+      - run: rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+      - name: Record iOS compiler environment
+        run: node --version && pnpm --version && rustc --version && cargo --version && xcodebuild -version && xcrun --sdk iphonesimulator --show-sdk-version
+      - run: pnpm app:ios:init
+      - run: pnpm app:ios:build
+      - name: Write iOS simulator checksums
+        working-directory: apps/nalanda-cross-platform/src-tauri/gen/apple/build
+        run: find . -type f ! -name 'SHA256SUMS.txt' -exec shasum -a 256 {} \; > SHA256SUMS.txt
+      - name: Verify iOS simulator checksums
+        working-directory: apps/nalanda-cross-platform/src-tauri/gen/apple/build
+        run: shasum -a 256 --check SHA256SUMS.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unsigned-ios-simulator
+          path: apps/nalanda-cross-platform/src-tauri/gen/apple/build
+          if-no-files-found: error
+          retention-days: 7

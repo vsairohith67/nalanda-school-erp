@@ -300,6 +300,17 @@
         "middleware.ts",
         "app/api/offline-sync/sync/route.ts"
       ]
+    },
+    {
+      "key": "cross-platform-apps-1a",
+      "status": "ENFORCED",
+      "evidencePaths": [
+        "lib/native-app/feature-flag.ts",
+        "lib/offline-sync/feature-flag.ts",
+        "middleware.ts",
+        "app/api/native-auth/request/route.ts",
+        "app/api/native/v1/context/route.ts"
+      ]
     }
   ],
   "releaseBlockedBranches": []

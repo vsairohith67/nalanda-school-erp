@@ -12,7 +12,7 @@ import {
 } from "@/lib/request-security";
 import { enforceOperationRateLimit } from "@/lib/security-resilience";
 import { emitSecurityResilienceEvent } from "@/lib/security-observability";
-import { trustedClientIdentity, trustedProxyRequired } from "@/lib/trusted-client";
+import { nativeDirectIngressAllowed, nativeDirectRateLimitActor, trustedClientIdentity, trustedProxyRequired } from "@/lib/trusted-client";
 
 const publicPaths = [
   "/login",
@@ -43,10 +43,21 @@ const publicPathPrefixes = [
   "/icons/"
 ];
 const offlinePublicShellPaths = new Set(["/offline", "/offline/finance"]);
+const nativeRouteAuthorizedPaths = new Set([
+  "/api/native-auth/request",
+  "/api/native-auth/exchange",
+  "/api/native-auth/refresh",
+  "/api/native-auth/logout",
+  "/api/native/v1/context",
+  "/api/native/v1/reference-pack",
+  "/api/native/v1/sync",
+  "/api/native/v1/conflicts"
+]);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isOfflinePublicShell = offlinePublicShellPaths.has(pathname);
+  const isNativeRouteAuthorized = nativeRouteAuthorizedPaths.has(pathname);
   const nonce = crypto.randomUUID().replaceAll("-", "");
   const applySecurityHeaders = (response: NextResponse) => {
     response.headers.set("content-security-policy", contentSecurityPolicy(nonce));
@@ -62,6 +73,20 @@ export async function middleware(request: NextRequest) {
     response.headers.set("cache-control", "private, no-store");
     return applySecurityHeaders(response);
   }
+  const directNativeIngress = isNativeRouteAuthorized && !clientIdentity.trusted && nativeDirectIngressAllowed();
+  const directNativeActor = directNativeIngress ? nativeDirectRateLimitActor(request.headers) : null;
+  if (isNativeRouteAuthorized && !clientIdentity.trusted && !directNativeIngress) {
+    emitSecurityResilienceEvent("EDGE_ORIGIN_MISMATCH", { reason: "native-ingress-untrusted", routeFamily: "native", status: 403 });
+    const response = NextResponse.json({ error: "Trusted native ingress is required.", code: "NATIVE_INGRESS_REJECTED" }, { status: 403 });
+    response.headers.set("cache-control", "private, no-store");
+    return applySecurityHeaders(response);
+  }
+  if (directNativeIngress && !directNativeActor) {
+    emitSecurityResilienceEvent("EDGE_ORIGIN_MISMATCH", { reason: "native-local-client-id-missing", routeFamily: "native", status: 403 });
+    const response = NextResponse.json({ error: "A valid local native client identity is required.", code: "NATIVE_CLIENT_ID_REQUIRED" }, { status: 403 });
+    response.headers.set("cache-control", "private, no-store");
+    return applySecurityHeaders(response);
+  }
   const isPublicWebsite = isPublicWebsitePath(pathname);
   const isPublic =
     isPublicWebsite ||
@@ -70,10 +95,10 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/_next/") ||
     pathname === "/favicon.ico";
   const sessionReference = await verifySessionToken(request.cookies.get(SESSION_COOKIE)?.value);
-  const session = isPublic ? null : sessionReference;
+  const session = isPublic || isNativeRouteAuthorized ? null : sessionReference;
 
   const rateLimit = await enforceOperationRateLimit(pathname, request.method, {
-    ...(clientIdentity.trusted ? { ip: clientIdentity.source } : {}),
+    ...(clientIdentity.trusted ? { ip: clientIdentity.source } : directNativeActor ? { ip: `local-native:${directNativeActor}` } : {}),
     ...(sessionReference ? { session: sessionReference.sessionId } : {})
   }, { dimensions: ["ip", "session", "endpoint", "operationCost"] });
   if (!rateLimit.allowed) {
@@ -97,7 +122,7 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(response);
   }
 
-  if (!isPublic && !session) {
+  if (!isPublic && !isNativeRouteAuthorized && !session) {
     if (pathname.startsWith("/api/")) {
       const response = NextResponse.json({ error: "Authentication required" }, { status: 401 });
       response.headers.set("cache-control", "private, no-store");
@@ -110,7 +135,10 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(response);
   }
 
-  if (!unsafeRequestOriginAllowed(request)) {
+  // Native protocol routes authenticate and authorize inside their route handlers
+  // with opaque credentials and device signatures. They do not carry browser
+  // cookies and therefore must not be coupled to the browser CSRF boundary.
+  if (!isNativeRouteAuthorized && !unsafeRequestOriginAllowed(request)) {
     const response = NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
     response.headers.set("cache-control", "private, no-store");
     return applySecurityHeaders(response);
@@ -169,7 +197,7 @@ export async function middleware(request: NextRequest) {
   if (pathname === "/forgot-password" || pathname === "/reset-password") {
     response.headers.set("cache-control", "private, no-store");
   }
-  if (!isPublic && !pathname.startsWith("/_next/")) {
+  if (!isPublic && !isNativeRouteAuthorized && !pathname.startsWith("/_next/")) {
     response.headers.set("cache-control", "private, no-store");
   }
   if (isProviderWebhookPath(pathname)) response.headers.set("cache-control", "private, no-store");

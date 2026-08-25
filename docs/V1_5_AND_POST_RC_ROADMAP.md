@@ -113,6 +113,12 @@ operational feature activation is authorised.
 
 Encrypted Accountant-only finance drafts and device-bound synchronization are implemented on a dedicated release branch. The capability is not an operational roadmap commitment: its flag is false at zero rollout. Production activation remains a separate high-risk gate requiring managed-device policy, training, monitoring, distributed abuse controls, support ownership and a narrow approved cohort.
 
+## CROSS-PLATFORM-APPS-1A default-off software foundation
+
+The Tauri 2 Windows, Android, and iOS foundation reuses the online ERP, server authorization, device registry, and Offline Sync 1A protocol. It adds a privileged bundled shell, an unprivileged exact-origin online surface, device-bound native authorization, Stronghold-backed key/token storage, ciphertext-only SQLite, app lock, conflict/status UX, and unsigned private CI packages. Both release flags remain OFF at 0%; no staging, real device, signing, store publication, real-data onboarding, or deployment is implied.
+
+The exact governed sequence is `POSTGRES-READINESS-1A`, then `PRIVATE-STAGING-1B`, then `CROSS-PLATFORM-APPS-1B`. Signing/store phases remain separate by platform.
+
 ## Related reconciliation documents
 
 - [Super Admin Command Center architecture](./SUPER_ADMIN_COMMAND_CENTER_ARCHITECTURE.md)

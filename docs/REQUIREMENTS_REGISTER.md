@@ -98,3 +98,11 @@ A route, model or document by itself cannot produce `COMPLETE`. Evidence classes
 ## Critical V1 gaps
 
 There are no unresolved V1 product gaps in the corrected ledger. Four V1 requirements are `CLEARED_WITH_OPERATIONAL_CONFIGURATION_PENDING`: communications, Staff payslip delivery, family payment and controlled cutover. Their remaining items are explicitly external or operational—provider/configuration approval, key/runtime provisioning, real-data onboarding, training/pilot and production authorization—and do not reopen the local/private product implementation. KG/LKG/UKG is software-cleared for V1.5 but remains excluded from V1 completeness and operationally default-off. Neither the V1 nor KG software-clearance record authorizes deployment, live-data onboarding or activation.
+
+## Active addendum: CROSS-PLATFORM-APPS-1A
+
+| ID | Requirement | Source | Date | Goal | Programme | Status | Implemented boundary | Evidence | Activation boundary | Next gate | Priority |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| V1.5-APP-041 | Secure Windows, Android and iOS software foundation | CROSS-PLATFORM-APPS-1A exact prompt and repository evidence | 2026-08-26 | Reuse the ERP and Offline Sync through one governed native shell | V1.5 | READY_FOR_EXACT_HEAD_QA | Tauri 2 local shell, unprivileged online surface, device-bound native auth, Stronghold key/token storage, ciphertext-only SQLite, three cleared finance drafts, platform projects and unsigned CI | ADR, unit/contract tests, copied-DB QA, browser evidence, security review and platform CI records | Both flags OFF/0%; no staging, real data/users/devices, signing, store publication, push or deployment | `POSTGRES-READINESS-1A`, `PRIVATE-STAGING-1B`, `CROSS-PLATFORM-APPS-1B` | High |
+
+This active addendum is intentionally not folded into the historical count table until its exact-head release verdict is recorded.

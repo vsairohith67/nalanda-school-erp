@@ -1,0 +1,24 @@
+{
+  "verdict": "PASS",
+  "measuredAt": "2026-08-26",
+  "environment": "Windows 11; Node 24.19.0; synthetic in-process adapter benchmark",
+  "syntheticOnly": true,
+  "draftCount": 1000,
+  "encryptMs": 216.73,
+  "decryptMs": 178.55,
+  "ciphertextBytes": 243220,
+  "referenceStudentCount": 800,
+  "referencePackEncryptMs": 7.71,
+  "referencePackCiphertextBytes": 91444,
+  "mutationCount": 75,
+  "batchCount": 3,
+  "batchJsonBytes": 13724,
+  "batchCoordinateMs": 0.19,
+  "conflictCount": 200,
+  "conflictRenderModelMs": 0.11,
+  "heapDeltaMiB": 2.79,
+  "limitations": [
+    "These are deterministic shared-adapter timings, not installed-app launch or WebView process measurements.",
+    "Cold/warm launch, installed SQLite file size, WebView process growth, and physical-device power/low-memory behavior remain platform runtime evidence."
+  ]
+}

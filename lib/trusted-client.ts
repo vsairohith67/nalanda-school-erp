@@ -60,6 +60,23 @@ export function trustedProxyRequired(environment: Environment = process.env) {
   return environment.NALANDA_REQUIRE_TRUSTED_PROXY === "true";
 }
 
+export function nativeDirectIngressAllowed(environment: Environment = process.env) {
+  if (environment.NODE_ENV === "production" || environment.NALANDA_NATIVE_PROFILE !== "LOCAL_DEVELOPMENT") return false;
+  try {
+    const origin = new URL(environment.APP_ORIGIN ?? "");
+    return origin.protocol === "http:" &&
+      (origin.hostname === "localhost" || origin.hostname.endsWith(".localhost") || origin.hostname === "127.0.0.1" || origin.hostname === "[::1]");
+  } catch {
+    return false;
+  }
+}
+
+export function nativeDirectRateLimitActor(headers: HeaderReader, environment: Environment = process.env) {
+  if (!nativeDirectIngressAllowed(environment)) return null;
+  const value = headers.get("x-offline-device-id")?.trim().toLowerCase() ?? "";
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value) ? value : null;
+}
+
 function direct(reason: TrustedClientIdentity["reason"], boundaryMismatch: boolean): TrustedClientIdentity {
   return { source: "direct", trusted: false, boundaryMismatch, reason };
 }

@@ -7,6 +7,16 @@
     "build": "prisma generate && next build --turbopack --experimental-build-mode compile && next build --turbopack --experimental-build-mode generate",
     "typecheck": "node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.app-api.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.app-ui.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.components.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.lib.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tools-core.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tools-qa-auth-iam.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tools-qa-fin-payslip.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tools-qa-exam-ux.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tools-qa-support.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tools-qa-safe-exit.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tools-qa-17-20.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tools-qa-23c-f.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tools-qa-23g.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tools-qa-23h-i.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tests-a-f.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tests-g-l.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tests-m-r.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tests-s.json && node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit --project tsconfig.tests-t-z.json",
     "test": "vitest run",
+    "test:cross-platform": "vitest run tests/cross-platform-apps-1a.test.ts tests/native-auth-1a.test.ts && pnpm --dir apps/nalanda-cross-platform test",
+    "app:typecheck": "pnpm --dir apps/nalanda-cross-platform typecheck",
+    "app:test": "pnpm --dir apps/nalanda-cross-platform test",
+    "app:build:web": "pnpm --dir apps/nalanda-cross-platform build",
+    "app:rust:test": "cargo test --manifest-path apps/nalanda-cross-platform/src-tauri/Cargo.toml",
+    "app:windows:build": "pnpm --dir apps/nalanda-cross-platform tauri build --bundles nsis",
+    "app:android:init": "pnpm --dir apps/nalanda-cross-platform tauri android init && node scripts/harden-cross-platform-generated-project.mjs android",
+    "app:android:build": "pnpm --dir apps/nalanda-cross-platform tauri android build --apk --debug",
+    "app:ios:init": "pnpm --dir apps/nalanda-cross-platform tauri ios init && node scripts/harden-cross-platform-generated-project.mjs ios",
+    "app:ios:build": "pnpm --dir apps/nalanda-cross-platform tauri ios build --debug --target aarch64-sim --no-sign",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:init": "python scripts/init-sqlite.py",
@@ -187,7 +197,9 @@
     "qa:releaseops1a": "tsx scripts/qa-releaseops1a.ts",
     "security:resilience:load": "tsx scripts/security-resilience-local-load.ts",
     "qa:security-resilience": "tsx scripts/qa-security-resilience-1a.ts",
-    "security:resilience:acceptance": "vitest run tests/security-resilience.test.ts tests/sec1-runtime-security.test.ts tests/deployment-environment.test.ts && pnpm security:resilience:load && pnpm qa:security-resilience"
+    "security:resilience:acceptance": "vitest run tests/security-resilience.test.ts tests/sec1-runtime-security.test.ts tests/deployment-environment.test.ts && pnpm security:resilience:load && pnpm qa:security-resilience",
+    "qa:cross-platform-apps": "tsx scripts/qa-cross-platform-apps-1a-copied-db.ts",
+    "qa:cross-platform-apps:performance": "tsx scripts/qa-cross-platform-app-performance.ts"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",
