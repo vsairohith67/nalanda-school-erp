@@ -130,6 +130,10 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
     expect(workflows).toContain('- "scripts/harden-cross-platform-generated-project.mjs"');
     expect(workflows).toContain("find . -type f");
     expect(workflows).toContain('DATABASE_URL: "file:../tmp/release-ci/synthetic.db"');
+    expect(workflows).toContain("name: Install pinned full-regression tools");
+    expect(workflows).toContain("choco install ripgrep --version=15.2.0");
+    expect(workflows).toContain("REPORT_CARD_PDFTOPPM_PATH");
+    expect(workflows).toMatch(/contracts:\s+[\s\S]*?runs-on: windows-2025/);
     expect(workflows.match(/ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/g)?.length).toBe(4);
     for (const command of ["pnpm test", "pnpm typecheck", "pnpm build", "pnpm migration:fresh-check", "pnpm migration:restore-check", "pnpm security:resilience:acceptance", "pnpm app:rust:test"]) {
       expect(workflows).toContain(command);

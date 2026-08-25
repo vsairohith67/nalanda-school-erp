@@ -39,7 +39,7 @@ env:
 jobs:
   contracts:
     name: TypeScript, contracts and bundled shell
-    runs-on: ubuntu-24.04
+    runs-on: windows-2025
     timeout-minutes: 75
     env:
       DATABASE_URL: "file:../tmp/release-ci/synthetic.db"
@@ -65,17 +65,35 @@ jobs:
         with: { version: 11.21.0 }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 24.19.0, cache: pnpm }
+      - name: Install pinned full-regression tools
+        shell: pwsh
+        run: |
+          choco install ripgrep --version=15.2.0 -y --no-progress
+          rg --version
+          $popplerArchive = Join-Path $env:RUNNER_TEMP 'poppler-26.02.0-0.zip'
+          $popplerExtract = Join-Path $env:RUNNER_TEMP 'poppler-26.02.0-0'
+          Invoke-WebRequest -Uri 'https://github.com/oschwartz10612/poppler-windows/releases/download/v26.02.0-0/Release-26.02.0-0.zip' -OutFile $popplerArchive
+          $expectedPopplerSha256 = '993e4a94376ed712fafc7058d724ea0b943d118bbd2305cd9ed55174eb85cda5'
+          $actualPopplerSha256 = (Get-FileHash -LiteralPath $popplerArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualPopplerSha256 -ne $expectedPopplerSha256) { throw "Pinned Poppler archive checksum mismatch" }
+          Expand-Archive -LiteralPath $popplerArchive -DestinationPath $popplerExtract
+          $pdfToPpm = Get-Item -LiteralPath (Join-Path $popplerExtract 'poppler-26.02.0\Library\bin\pdftoppm.exe') -ErrorAction Stop
+          "REPORT_CARD_PDFTOPPM_PATH=$($pdfToPpm.FullName)" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
+          & $pdfToPpm.FullName -v
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate --schema prisma/schema.prisma
       - run: pnpm exec prisma validate --schema prisma/schema.prisma
       - name: Prepare isolated synthetic database
+        shell: pwsh
         run: |
-          mkdir -p tmp/release-ci
-          test ! -e tmp/release-ci/synthetic.db
-          touch tmp/release-ci/synthetic.db
+          New-Item -ItemType Directory -Force -Path tmp\release-ci | Out-Null
+          if (Test-Path -LiteralPath tmp\release-ci\synthetic.db) { throw "Cross-platform CI synthetic database already exists" }
+          New-Item -ItemType File -Path tmp\release-ci\synthetic.db | Out-Null
           pnpm exec prisma migrate deploy
-          NODE_ENV=development RELEASE_CI_SYNTHETIC_OPT_IN=true pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
-          cp tmp/release-ci/synthetic.db prisma/dev.db
+          $env:NODE_ENV = 'development'
+          $env:RELEASE_CI_SYNTHETIC_OPT_IN = 'true'
+          pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db
       - run: pnpm git:safety-check
       - run: pnpm audit --prod --audit-level high
       - run: pnpm security:resilience:acceptance
