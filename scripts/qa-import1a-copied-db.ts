@@ -81,7 +81,7 @@ async function main() {
 
     const backup = parseAndValidateBackup(await generateFullBackup(source as never, { generatedBy: "IMPORT1A copied database QA" }));
     const serialized = JSON.stringify(backup);
-    invariant(backup.metadata.backupVersion === 43 && backup.onboardingBatches.length === 2, "IMPORT1A_BACKUP_METADATA_MISSING");
+    invariant(backup.metadata.backupVersion === 44 && backup.onboardingBatches.length === 2, "IMPORT1A_BACKUP_METADATA_MISSING");
     invariant(!serialized.includes("private-workbook") && !serialized.includes(QA_PASSWORD) && !serialized.includes("Copied database synthetic execution proof"), "IMPORT1A_BACKUP_PRIVATE_VALUE_LEAK");
 
     const targetActor = await ensureRestoreActor(target);

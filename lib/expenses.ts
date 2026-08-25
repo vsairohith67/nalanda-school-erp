@@ -88,6 +88,18 @@ export function newExpenseNumber(date = new Date()) {
   return `EXP-${key}-${randomUUID().replaceAll("-", "").slice(0, 6).toUpperCase()}`;
 }
 
+export async function createExpenseDraftInTransaction(tx: Prisma.TransactionClient, input: unknown, actor: { id: string; name: string }) {
+  const data = validateExpenseInput(input);
+  await validateActiveExpenseMasters(tx, data);
+  const expense = await tx.expenseRecord.create({ data: { ...data, expenseNumber: newExpenseNumber(), createdByUserId: actor.id } });
+  await tx.expenseAudit.create({ data: { expenseRecordId: expense.id, action: "CREATED", toStatus: "DRAFT", actorUserId: actor.id, actorName: actor.name } });
+  return tx.expenseRecord.findUniqueOrThrow({ where: { id: expense.id }, include: expenseDetailInclude });
+}
+
+export function createExpenseDraft(client: PrismaClient, input: unknown, actor: { id: string; name: string }) {
+  return client.$transaction((tx) => createExpenseDraftInTransaction(tx, input, actor));
+}
+
 export function csvCell(value: unknown) {
   let text = value == null ? "" : String(value);
   if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;

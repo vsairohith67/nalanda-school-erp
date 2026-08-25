@@ -47,7 +47,7 @@ describe("full backup", () => {
       generatedBy: "Director"
     });
     expect(backup.metadata.appVersion).toBeTruthy();
-    expect(backup.metadata.backupVersion).toBe(43);
+    expect(backup.metadata.backupVersion).toBe(44);
     expect(backup.metadata.counts).toEqual({
       schoolSettings: 0,
       authSecurityRecords: 0,
@@ -74,6 +74,10 @@ describe("full backup", () => {
       familyCollections: 0, familyCollectionInstruments: 0, familyStudentAllocations: 0,
       allocationInstrumentShares: 0, familyReceiptVersions: 0, familyCollectionEvents: 0,
       familyProviderAllocationPlans: 0,
+      offlineSyncDevices: 0,
+      offlineSyncMutations: 0,
+      offlineSyncEvents: 0,
+      offlineSyncConflictReviews: 0,
       eventMediaAlbums: 0, eventMediaAssets: 0, eventMediaDerivatives: 0,
       eventMediaStudentAssociations: 0, mediaPublicationConsents: 0, eventMediaAuditEvents: 0,
       bookCatalogItems: 0, bookCatalogRates: 0, bookSaleReceipts: 0, bookSaleReceiptLines: 0, bookCashSettlements: 0,

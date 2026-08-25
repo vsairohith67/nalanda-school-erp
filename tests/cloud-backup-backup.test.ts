@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { createBackupDocument } from "../lib/backup";
 import { parseAndValidateBackup } from "../lib/restore";
+import { isSupportedStoredCloudBackupVersion } from "../lib/cloud-backup-versions";
 
 const cloudKeys = [
   "cloudBackupProfiles",
@@ -26,9 +28,9 @@ function emptyBackup() {
 }
 
 describe("cloud backup metadata backup and restore", () => {
-  it("uses version 43, contains all eight arrays, and excludes secrets", () => {
+  it("uses version 44, contains all eight arrays, and excludes secrets", () => {
     const backup = emptyBackup();
-    expect(backup.metadata.backupVersion).toBe(43);
+    expect(backup.metadata.backupVersion).toBe(44);
     for (const key of cloudKeys) {
       expect(backup[key]).toEqual([]);
       expect(backup.metadata.counts[key]).toBe(0);
@@ -48,9 +50,29 @@ describe("cloud backup metadata backup and restore", () => {
     for (const key of cloudKeys) expect(parsed[key]).toEqual([]);
   });
 
+  it("keeps retained v43 and current v44 cloud artifacts eligible for verification and rehearsal", () => {
+    const prior = emptyBackup() as Record<string, any>;
+    prior.metadata.backupVersion = 43;
+    for (const key of ["offlineSyncDevices", "offlineSyncMutations", "offlineSyncEvents", "offlineSyncConflictReviews"]) {
+      delete prior[key];
+      delete prior.metadata.counts[key];
+    }
+    expect(parseAndValidateBackup(prior).metadata.backupVersion).toBe(43);
+    expect(isSupportedStoredCloudBackupVersion(43)).toBe(true);
+    expect(isSupportedStoredCloudBackupVersion(44)).toBe(true);
+    expect(isSupportedStoredCloudBackupVersion(42)).toBe(false);
+    const verification = readFileSync("lib/cloud-backup-verification.ts", "utf8");
+    const rehearsal = readFileSync("lib/cloud-backup-rehearsal.ts", "utf8");
+    expect(verification).toContain("isSupportedStoredCloudBackupVersion");
+    expect(verification).toContain("backupVersion: backup.metadata.backupVersion");
+    expect(rehearsal).toContain("isSupportedStoredCloudBackupVersion");
+    expect(verification).not.toContain("backup.metadata.backupVersion !== 44");
+    expect(rehearsal).not.toContain("backup.metadata.backupVersion !== 44");
+  });
+
   it("rejects future versions and forbidden credential/key fields", () => {
     const future = emptyBackup() as Record<string, any>;
-    future.metadata.backupVersion = 44;
+    future.metadata.backupVersion = 45;
     expect(() => parseAndValidateBackup(future)).toThrow("unsupported");
 
     const secret = emptyBackup() as Record<string, any>;

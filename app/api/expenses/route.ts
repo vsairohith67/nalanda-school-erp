@@ -2,7 +2,7 @@ import { safeClientError } from "@/lib/client-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { requireApiPermission, hasUserPermission } from "@/lib/auth";
-import { expenseDetailInclude, localDate, newExpenseNumber, serializeExpense, validateActiveExpenseMasters, validateExpenseInput } from "@/lib/expenses";
+import { createExpenseDraft, expenseDetailInclude, localDate, serializeExpense } from "@/lib/expenses";
 import { prisma } from "@/lib/prisma";
 
 
@@ -31,13 +31,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = await requireApiPermission("MANAGE_EXPENSES"); if (auth.response) return auth.response;
   try {
-    const data = validateExpenseInput(await request.json());
-    const row = await prisma.$transaction(async (tx) => {
-      await validateActiveExpenseMasters(tx, data);
-      const expense = await tx.expenseRecord.create({ data: { ...data, expenseNumber: newExpenseNumber(), createdByUserId: auth.user.id } });
-      await tx.expenseAudit.create({ data: { expenseRecordId: expense.id, action: "CREATED", toStatus: "DRAFT", actorUserId: auth.user.id, actorName: auth.user.name } });
-      return tx.expenseRecord.findUniqueOrThrow({ where: { id: expense.id }, include: expenseDetailInclude });
-    });
+    const row = await createExpenseDraft(prisma, await request.json(), auth.user);
     return NextResponse.json({ expense: serializeExpense(row) }, { status: 201 });
   } catch (error) { return NextResponse.json({ error: safeClientError(error, "Unable to create expense") }, { status: 400 }); }
 }

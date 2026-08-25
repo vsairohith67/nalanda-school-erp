@@ -333,6 +333,9 @@ export const PERMISSIONS = [
   "MANAGE_MISC_INCOME_ITEMS",
   "VIEW_MISC_INCOME_REPORTS",
   "EXPORT_MISC_INCOME_REPORTS",
+  "USE_OFFLINE_SYNC",
+  "MANAGE_OFFLINE_SYNC_DEVICES",
+  "REVIEW_OFFLINE_SYNC_CONFLICTS",
   "VIEW_BOOKS_FINANCE",
   "MANAGE_BOOK_CATALOG",
   "MANAGE_BOOK_RATES",
@@ -817,6 +820,15 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { permission: "MANAGE_MISC_INCOME_ITEMS", label: "Manage income items and rates", description: "Configure non-fee income items and academic-year rates without hard deletion." },
       { permission: "VIEW_MISC_INCOME_REPORTS", label: "View miscellaneous-income reports", description: "View date, item, student, method, and account summaries." },
       { permission: "EXPORT_MISC_INCOME_REPORTS", label: "Export miscellaneous-income reports", description: "Download formula-safe miscellaneous-income CSV reports." }
+    ]
+  },
+  {
+    id: "offlineSync",
+    title: "Encrypted Offline Finance Drafts",
+    permissions: [
+      { permission: "USE_OFFLINE_SYNC", label: "Use offline finance drafts", description: "Use an approved device to prepare encrypted fee-payment, expense, and miscellaneous-income drafts for governed synchronization." },
+      { permission: "MANAGE_OFFLINE_SYNC_DEVICES", label: "Manage offline devices", description: "Approve, revoke, retire, and review registered offline-capable devices." },
+      { permission: "REVIEW_OFFLINE_SYNC_CONFLICTS", label: "Review offline conflicts", description: "Review privacy-safe synchronization conflicts and record a governed resolution." }
     ]
   },
   {
@@ -1444,6 +1456,7 @@ const principalPermissions = new Set<CanonicalPermission>([
   ,"VIEW_EXPENSES", "VIEW_EXPENSE_REPORTS"
   ,"VIEW_BUDGETS", "VIEW_BUDGET_REPORTS"
   ,"VIEW_MISC_INCOME", "VIEW_MISC_INCOME_REPORTS", "VIEW_CASH_BOOK", "VIEW_CASH_BOOK_REPORTS"
+  ,"REVIEW_OFFLINE_SYNC_CONFLICTS"
   ,"VIEW_BOOKS_FINANCE", "VIEW_BOOK_REPORTS"
   ,"VIEW_LIBRARY", "VIEW_LIBRARY_REPORTS", "VIEW_LIBRARY_CIRCULATION", "VIEW_LIBRARY_CIRCULATION_REPORTS"
   ,"VIEW_LIBRARY_BARCODES"
@@ -1566,6 +1579,7 @@ const accountantPermissions = new Set<CanonicalPermission>([
   "VIEW_VENDORS", "MANAGE_VENDORS", "VIEW_EXPENSES", "MANAGE_EXPENSES", "MARK_EXPENSE_PAID", "VIEW_EXPENSE_REPORTS", "EXPORT_EXPENSE_REPORTS",
   "VIEW_BUDGETS", "MANAGE_BUDGETS", "VIEW_BUDGET_REPORTS", "EXPORT_BUDGET_REPORTS"
   ,"VIEW_MISC_INCOME", "MANAGE_MISC_INCOME", "MANAGE_MISC_INCOME_ITEMS", "VIEW_MISC_INCOME_REPORTS", "EXPORT_MISC_INCOME_REPORTS"
+  ,"USE_OFFLINE_SYNC"
   ,"VIEW_CASH_BOOK", "MANAGE_CASH_BOOK", "SUBMIT_CASH_BOOK", "VIEW_CASH_BOOK_REPORTS", "EXPORT_CASH_BOOK_REPORTS"
   ,"VIEW_BOOKS_FINANCE", "MANAGE_BOOK_SALES", "MANAGE_BOOK_CASH_SETTLEMENT", "SUBMIT_BOOK_CASH_SETTLEMENT", "VIEW_BOOK_REPORTS", "EXPORT_BOOK_REPORTS", "MANAGE_PUBLISHER_BILLS"
   ,"VIEW_LIBRARY_CHARGES", "COLLECT_LIBRARY_CHARGES", "VIEW_LIBRARY_CHARGE_REPORTS", "EXPORT_LIBRARY_CHARGE_REPORTS"
@@ -1651,6 +1665,10 @@ for (const permission of eventMediaLeadershipPermissions) {
 for (const permission of ["MANAGE_PARENT_MEETINGS", "EXPORT_PARENT_MEETING_REPORTS"] as CanonicalPermission[]) directorPermissions.delete(permission);
 directorPermissions.add("VIEW_PARENT_MEETINGS");
 for (const permission of ["VIEW_PARENT_MEETINGS", "MANAGE_PARENT_MEETINGS", "EXPORT_PARENT_MEETING_REPORTS"] as CanonicalPermission[]) principalPermissions.add(permission);
+for (const permission of ["REVIEW_OFFLINE_SYNC_CONFLICTS"] as CanonicalPermission[]) {
+  directorPermissions.add(permission);
+  principalPermissions.add(permission);
+}
 
 export const RECOMMENDED_ROLE_PERMISSIONS: Record<Role, ReadonlySet<CanonicalPermission>> = {
   SUPER_ADMIN: new Set(PERMISSIONS),

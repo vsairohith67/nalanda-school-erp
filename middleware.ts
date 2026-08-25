@@ -20,6 +20,7 @@ const publicPaths = [
   "/reset-password",
   "/setup",
   "/offline",
+  "/offline/finance",
   "/maintenance",
   "/manifest.webmanifest",
   "/sw.js",
@@ -41,9 +42,11 @@ const publicPathPrefixes = [
   "/api/sms-email/webhook/",
   "/icons/"
 ];
+const offlinePublicShellPaths = new Set(["/offline", "/offline/finance"]);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const isOfflinePublicShell = offlinePublicShellPaths.has(pathname);
   const nonce = crypto.randomUUID().replaceAll("-", "");
   const applySecurityHeaders = (response: NextResponse) => {
     response.headers.set("content-security-policy", contentSecurityPolicy(nonce));
@@ -151,11 +154,16 @@ export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   if (isPublicWebsite) requestHeaders.set("x-nalanda-public-website", "1");
+  if (isOfflinePublicShell) requestHeaders.set("x-nalanda-offline-shell", "1");
   if (pathname === "/maintenance") requestHeaders.set("x-nalanda-maintenance-page", "1");
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   if (isPublicWebsite) {
     response.headers.set("cache-control", "public, max-age=0, must-revalidate");
     response.headers.set("x-nalanda-route-boundary", "public-content-only");
+  }
+  if (isOfflinePublicShell) {
+    response.headers.set("cache-control", "public, max-age=0, must-revalidate");
+    response.headers.set("x-nalanda-route-boundary", "offline-public-shell");
   }
   if (pathname.startsWith("/api/")) response.headers.set("cache-control", "private, no-store");
   if (pathname === "/forgot-password" || pathname === "/reset-password") {

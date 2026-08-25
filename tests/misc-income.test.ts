@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { can, PERMISSIONS } from "../lib/permissions";
 import { assertNoActiveRateOverlap, DEFAULT_MISC_INCOME_ITEMS, miscIncomeCsv, miscIncomeItemWriteError, miscIncomeReport, serializeMiscReceipt, validateMiscItemInput, validateMiscRateInput, validateMiscReceiptInput } from "../lib/misc-income";
 
-const rate = { id: "rate-1", academicYear: "2026-27", amount: new Prisma.Decimal("100.25"), effectiveFrom: null, effectiveTo: null };
+const rate = { id: "rate-1", academicYear: "2026-27", amount: new Prisma.Decimal("100.25"), effectiveFrom: null, effectiveTo: null, updatedAt: new Date("2026-07-01T00:00:00.000Z") };
 const items = [{ id: "belt", itemCode: "BELT", name: "Belt", studentLinkPolicy: "OPTIONAL", status: "ACTIVE", rates: [rate] }];
 function client(overrides: any = {}) { return { miscIncomeItem: { findMany: async () => overrides.items ?? items }, student: { findFirst: async () => overrides.student ?? { id: "student-1" } } } as any; }
 function receipt(overrides: any = {}) { return { receiptDate: "2026-07-15", academicYear: "2026-27", studentId: "student-1", payerName: "QA Payer", paymentMethod: "CASH", receivedAccount: "CASH_COUNTER", lines: [{ itemId: "belt", quantity: 2, discountAmount: "0" }], ...overrides }; }
@@ -25,6 +25,15 @@ describe("miscellaneous income foundation", () => {
   it("enforces NOT_REQUIRED student links", async () => { const unlinked = [{ ...items[0], studentLinkPolicy: "NOT_REQUIRED" }]; await expect(validateMiscReceiptInput(client({ items: unlinked }), receipt())).rejects.toThrow(/not requiring a student/i); });
   it("blocks mixed student-linked receipts containing a NOT_REQUIRED item", async () => { const mixed = [{ ...items[0], id: "tc", studentLinkPolicy: "REQUIRED" }, { ...items[0], id: "other", studentLinkPolicy: "NOT_REQUIRED" }]; await expect(validateMiscReceiptInput(client({ items: mixed }), receipt({ lines: [{ itemId: "tc", quantity: 1, discountAmount: 0 }, { itemId: "other", quantity: 1, discountAmount: 0 }] }))).rejects.toThrow(/not requiring a student/i); });
   it("requires a matching academic-year rate", async () => { const noRate = [{ ...items[0], rates: [{ ...rate, academicYear: "2025-26" }] }]; await expect(validateMiscReceiptInput(client({ items: noRate }), receipt())).rejects.toThrow(/exactly one active/); });
+  it("binds offline receipts to the exact cached rate identity and version", async () => {
+    const line = { itemId: "belt", expectedRateId: rate.id, expectedRateVersion: rate.updatedAt.toISOString(), quantity: 1, discountAmount: 0 };
+    await expect(validateMiscReceiptInput(client(), receipt({ lines: [line] }), { requireExpectedRate: true })).resolves.toMatchObject({ lines: [{ rateId: rate.id }] });
+    await expect(validateMiscReceiptInput(client(), receipt({ lines: [{ ...line, expectedRateVersion: new Date("2026-07-02T00:00:00.000Z").toISOString() }] }), { requireExpectedRate: true })).rejects.toThrow("MISC_INCOME_RATE_CHANGED");
+    await expect(validateMiscReceiptInput(client(), receipt({ lines: [{ itemId: "belt", quantity: 1, discountAmount: 0 }] }), { requireExpectedRate: true })).rejects.toThrow("MISC_INCOME_RATE_PROOF_REQUIRED");
+  });
+  it("keeps online miscellaneous-income receipts backward compatible without offline rate proof", async () => {
+    await expect(validateMiscReceiptInput(client(), receipt())).resolves.toMatchObject({ lines: [{ rateId: rate.id }] });
+  });
   it("keeps cash free of transaction references", async () => { const data = await validateMiscReceiptInput(client(), receipt({ transactionReference: "SHOULD-DROP" })); expect(data.transactionReference).toBeNull(); expect(data.receivedAccount).toBe("CASH_COUNTER"); });
   it("always records physical cash against the cash counter", async () => { const data = await validateMiscReceiptInput(client(), receipt({ receivedAccount: "DIRECTOR_GPAY" })); expect(data.receivedAccount).toBe("CASH_COUNTER"); });
   it("requires references for UPI and bank modes", async () => { await expect(validateMiscReceiptInput(client(), receipt({ paymentMethod: "UPI", receivedAccount: "DIRECTOR_GPAY", transactionReference: "" }))).rejects.toThrow(/reference is required/); const data = await validateMiscReceiptInput(client(), receipt({ paymentMethod: "BANK_TRANSFER", receivedAccount: "NPS_CURRENT_ACCOUNT", transactionReference: "BANK-1" })); expect(data.transactionReference).toBe("BANK-1"); });

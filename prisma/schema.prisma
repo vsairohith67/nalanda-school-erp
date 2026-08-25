@@ -449,6 +449,13 @@ model User {
   iamRoleAssignments               UserRoleAssignment[]
   iamProfileAssignments            UserPermissionProfileAssignment[]
   iamPermissionOverrides           UserPermissionOverride[]
+  offlineSyncDevices               OfflineSyncDevice[]                 @relation("OfflineSyncDeviceOwner")
+  offlineSyncDevicesApproved       OfflineSyncDevice[]                 @relation("OfflineSyncDeviceApprovedBy")
+  offlineSyncDevicesRevoked        OfflineSyncDevice[]                 @relation("OfflineSyncDeviceRevokedBy")
+  offlineSyncChallenges            OfflineSyncChallenge[]              @relation("OfflineSyncChallengeUser")
+  offlineSyncMutations             OfflineSyncMutation[]               @relation("OfflineSyncMutationActor")
+  offlineSyncEvents                OfflineSyncEvent[]                  @relation("OfflineSyncEventActor")
+  offlineSyncConflictReviews       OfflineSyncConflictReview[]         @relation("OfflineSyncConflictReviewer")
 
   @@index([role])
   @@index([isActive])
@@ -8750,4 +8757,146 @@ model ParentMeetingEvent {
 
   @@index([meetingId, occurredAt])
   @@index([eventType, occurredAt])
+}
+
+// OFFLINE-SYNC-1A is additive and DEFAULT-OFF. These tables contain only
+// registered public device material, privacy-safe synchronization ledgers,
+// append-only events and governed conflict reviews. Browser-local encrypted
+// drafts, offline PIN material and private device keys never enter the server DB.
+model OfflineSyncDevice {
+  id               String                      @id @default(cuid())
+  publicDeviceId   String                      @unique @default(uuid())
+  userId           String
+  user             User                        @relation("OfflineSyncDeviceOwner", fields: [userId], references: [id], onDelete: Restrict)
+  label            String
+  platform         String
+  publicSigningKey String
+  publicKeyHash    String
+  keyAlgorithm     String                      @default("ECDSA_P256_SHA256")
+  keyVersion       Int                         @default(1)
+  status           String                      @default("PENDING_APPROVAL")
+  requestedAt      DateTime                    @default(now())
+  approvedAt       DateTime?
+  approvedByUserId String?
+  approvedBy       User?                       @relation("OfflineSyncDeviceApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  lastSeenAt       DateTime?
+  revokedAt        DateTime?
+  revokedByUserId  String?
+  revokedBy        User?                       @relation("OfflineSyncDeviceRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull)
+  revocationReason String?
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+  nonces           OfflineSyncNonce[]
+  mutations        OfflineSyncMutation[]
+  events           OfflineSyncEvent[]
+  conflictReviews  OfflineSyncConflictReview[]
+
+  @@index([userId, status])
+  @@index([status, requestedAt])
+  @@index([lastSeenAt])
+}
+
+model OfflineSyncChallenge {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation("OfflineSyncChallengeUser", fields: [userId], references: [id], onDelete: Restrict)
+  purpose          String
+  publicDeviceId   String
+  deviceKeyVersion Int
+  publicKeyHash    String
+  challengeHash    String    @unique
+  expiresAt        DateTime
+  usedAt           DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([userId, purpose, expiresAt])
+  @@index([publicDeviceId, purpose])
+  @@index([expiresAt])
+}
+
+model OfflineSyncNonce {
+  id        String            @id @default(cuid())
+  deviceId  String
+  device    OfflineSyncDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  nonceHash String
+  seenAt    DateTime          @default(now())
+  expiresAt DateTime
+
+  @@unique([deviceId, nonceHash])
+  @@index([expiresAt])
+}
+
+model OfflineSyncMutation {
+  id                       String                      @id @default(cuid())
+  deviceId                 String
+  device                   OfflineSyncDevice           @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  actorUserId              String
+  actor                    User                        @relation("OfflineSyncMutationActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+  activeRole               String
+  clientMutationId         String
+  localDraftId             String
+  operationType            String
+  requestHash              String
+  payloadHash              String
+  syncSchemaVersion        Int
+  referenceSnapshotVersion String
+  baseEntityVersion        String?
+  status                   String                      @default("RECEIVED")
+  authoritativeEntityType  String?
+  authoritativeEntityId    String?
+  authoritativeReference   String?
+  safeResultJson           String?
+  conflictCode             String?
+  rejectionCode            String?
+  createdClientAt          DateTime
+  receivedServerAt         DateTime                    @default(now())
+  committedAt              DateTime?
+  lastAttemptAt            DateTime                    @default(now())
+  createdAt                DateTime                    @default(now())
+  updatedAt                DateTime                    @updatedAt
+  events                   OfflineSyncEvent[]
+  conflictReviews          OfflineSyncConflictReview[]
+
+  @@unique([deviceId, clientMutationId])
+  @@index([actorUserId, updatedAt])
+  @@index([deviceId, status, updatedAt])
+  @@index([operationType, status])
+  @@index([authoritativeEntityType, authoritativeEntityId])
+}
+
+model OfflineSyncEvent {
+  id               String               @id @default(cuid())
+  deviceId         String?
+  device           OfflineSyncDevice?   @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  mutationId       String?
+  mutation         OfflineSyncMutation? @relation(fields: [mutationId], references: [id], onDelete: SetNull)
+  actorUserId      String?
+  actor            User?                @relation("OfflineSyncEventActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  eventType        String
+  safeMetadataJson String?
+  occurredAt       DateTime             @default(now())
+
+  @@index([deviceId, occurredAt])
+  @@index([mutationId, occurredAt])
+  @@index([actorUserId, occurredAt])
+  @@index([eventType, occurredAt])
+}
+
+model OfflineSyncConflictReview {
+  id                    String              @id @default(cuid())
+  mutationId            String
+  mutation              OfflineSyncMutation @relation(fields: [mutationId], references: [id], onDelete: Restrict)
+  deviceId              String
+  device                OfflineSyncDevice   @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  reviewedByUserId      String
+  reviewedBy            User                @relation("OfflineSyncConflictReviewer", fields: [reviewedByUserId], references: [id], onDelete: Restrict)
+  resolutionStatus      String
+  resolutionNote        String
+  replacementMutationId String?
+  reviewedAt            DateTime            @default(now())
+  createdAt             DateTime            @default(now())
+
+  @@index([mutationId, reviewedAt])
+  @@index([deviceId, reviewedAt])
+  @@index([reviewedByUserId, reviewedAt])
 }

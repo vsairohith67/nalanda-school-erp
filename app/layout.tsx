@@ -16,6 +16,7 @@ import { ModalAccessibilityGuard } from "@/components/modal-accessibility-guard"
 import { SecurityDialogProvider } from "@/components/security-dialog-provider";
 import { headers } from "next/headers";
 import { parentMeetingsEnabled } from "@/lib/parent-meeting-feature";
+import { isOfflineSyncEnabled } from "@/lib/offline-sync/feature-flag";
 
 // The shared layout resolves the authenticated user and role permissions.
 // Force per-request rendering so a previously rendered private page can never
@@ -60,6 +61,24 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       </html>
     );
   }
+  // The service worker may cache only this deliberately public shell. It contains
+  // no session, user, permission, settings, health, or other server-derived data;
+  // every offline-sync API continues to authenticate and authorize independently.
+  if (requestHeaders.get("x-nalanda-offline-shell") === "1") {
+    return (
+      <html lang="en" suppressHydrationWarning>
+        <body>
+          {staging ? <div className="staging-environment-banner" role="status">STAGING · Synthetic data only · No live providers</div> : null}
+          <ThemeProvider>
+            <ModalAccessibilityGuard />
+            <SecurityDialogProvider>
+              <PwaRuntime>{children}</PwaRuntime>
+            </SecurityDialogProvider>
+          </ThemeProvider>
+        </body>
+      </html>
+    );
+  }
   const [user, settings] = await Promise.all([getCurrentUser(), getSchoolSettings(prisma)]);
   const effectivePermissions = user
     ? await getCurrentUserEffectivePermissions()
@@ -86,6 +105,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                   && isPilotDatabaseUrl(process.env.DATABASE_URL))}
                 enabledOptionalOperationsFeatures={user ? enabledOptionalOperationsFeatures(user.role) : []}
                 parentMeetingsEnabled={parentMeetingsEnabled()}
+                offlineSyncEnabled={isOfflineSyncEnabled()}
               >
                 {children}
               </AppShell>

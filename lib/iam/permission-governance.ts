@@ -24,6 +24,7 @@ export const SUPER_ADMIN_ONLY_PERMISSIONS = new Set<CanonicalPermission>([
   ,"EXECUTE_RELEASE"
   ,"ROLLBACK_RELEASE"
   ,"MANAGE_RELEASE_FEATURE_FLAGS"
+  ,"MANAGE_OFFLINE_SYNC_DEVICES"
 ]);
 
 export const CRITICAL_SUPER_ADMIN_PERMISSIONS = new Set<CanonicalPermission>([
@@ -80,6 +81,7 @@ export const LEADERSHIP_RESTRICTED_PERMISSIONS = new Set<CanonicalPermission>([
   ,"CORRECT_STUDENT_EXIT_RECORD"
   ,"VIEW_RELEASE_OPERATIONS_SUMMARY"
   ,"APPROVE_RELEASE_CANDIDATE"
+  ,"REVIEW_OFFLINE_SYNC_CONFLICTS"
 ]);
 
 export const RELEASE_OPERATIONS_PERMISSIONS = new Set<CanonicalPermission>([
@@ -164,6 +166,8 @@ const COMPUTER_OPERATOR_IMMUTABLE_DENIALS = new Set<CanonicalPermission>([
   "RUN_RESTORE",
   "MANAGE_SCHOOL_SETTINGS",
   ...PERMISSIONS.filter((permission) => /PAYMENT|EXPENSE|BUDGET|CASH_BOOK|BOOKS_FINANCE|MISC_INCOME|PAYROLL|SALARY|PAYSLIP|COMPENSATION/.test(permission))
+  ,"USE_OFFLINE_SYNC"
+  ,"REVIEW_OFFLINE_SYNC_CONFLICTS"
 ]);
 
 export function permissionDelegability(permission: CanonicalPermission): PermissionDelegability {

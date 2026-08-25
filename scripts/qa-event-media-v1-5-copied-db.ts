@@ -137,7 +137,7 @@ async function main() {
     stage = "backup and restore";
     const eventBackup = validateEventMediaBackupRows(await loadEventMediaBackup(client) as unknown as Record<string, unknown>);
     const logical = createBackupDocument({ generatedAt: new Date(), generatedBy: `${prefix} copied QA`, students: [], feeStructures: [], payments: [], paymentAudits: [], users: [], ...eventBackup });
-    invariant(logical.metadata.backupVersion === 43 && logical.eventMediaAlbums.length === 2 && !JSON.stringify(logical).includes(exifOriginal.toString("base64")), `${prefix}_LOGICAL_BACKUP_INVALID`);
+    invariant(logical.metadata.backupVersion === 44 && logical.eventMediaAlbums.length === 2 && !JSON.stringify(logical).includes(exifOriginal.toString("base64")), `${prefix}_LOGICAL_BACKUP_INVALID`);
     const restoreResult = { ...Object.fromEntries(EVENT_MEDIA_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])), warnings: [] } as any;
     const idMap = (values: string[]) => new Map(values.map((value) => [value, value]));
     await restoreEventMediaBackup(restoreClient, eventBackup, { students: idMap(base.students.map((row) => row.id)), guardians: idMap([base.guardianOne.id, base.guardianBoth.id]), users: idMap([base.directorId, base.teacherId]), restoredBy: base.directorId }, restoreResult);
@@ -162,7 +162,7 @@ async function main() {
   assertSqliteSnapshotUnchanged(operationalBefore, operationalAfter, `${prefix}_OPERATIONAL_DB_CHANGED`);
   const runtimePath = path.join(root, "browser-runtime.json");
   if (keep) writeFileSync(runtimePath, JSON.stringify({ databaseUrl: databaseUrl(copied), storageRoot: storage, sessionSecret: browserSessionSecret, username: base.directorUsername, parentUsername: base.parentUsername, password: browserCredential }, null, 2), { flag: "wx" });
-  const evidence = { result: `${prefix}_COPIED_DB_QA_PASSED`, operationalSha256: operationalBefore[0]?.hash, migration: "20260822113000_event_media_v1_5_foundation", backupVersion: 43, publicPublishing: "DEFAULT_OFF", syntheticImagesOnly: true, kept: keep, ...(keep ? { runtimePath } : {}) };
+  const evidence = { result: `${prefix}_COPIED_DB_QA_PASSED`, operationalSha256: operationalBefore[0]?.hash, migration: "20260822113000_event_media_v1_5_foundation", backupVersion: 44, publicPublishing: "DEFAULT_OFF", syntheticImagesOnly: true, kept: keep, ...(keep ? { runtimePath } : {}) };
   console.log(JSON.stringify(evidence, null, 2));
   if (!keep) { cleanup(); invariant(!existsSync(root), `${prefix}_QA_RESIDUE_REMAINS`); }
 }
