@@ -10,10 +10,11 @@ export default function OfflinePage() {
         <p className="offline-eyebrow">Nalanda Public School ERP</p>
         <h1 id="offline-heading">You are offline.</h1>
         <p>Reconnect to continue securely.</p>
-        <p><strong>School records are not stored for offline use.</strong></p>
+        <p><strong>General school records are not stored for offline use.</strong> A previously approved Accountant may use the separate encrypted finance-draft workspace on a trusted device.</p>
         <OfflinePageStatus />
         <div className="page-actions">
           <a className="button" href="/offline">Retry Connection</a>
+          <Link className="button secondary" href="/offline/finance">Open Encrypted Drafts</Link>
           <Link className="button secondary" href="/login">Return to Login</Link>
         </div>
         <noscript><p>Reconnect, then reload this page or return to the login page.</p></noscript>
@@ -21,4 +22,3 @@ export default function OfflinePage() {
     </main>
   );
 }
-

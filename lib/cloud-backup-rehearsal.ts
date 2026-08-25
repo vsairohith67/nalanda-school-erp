@@ -7,6 +7,7 @@ import { decryptCloudBackup, sha256 } from "@/lib/cloud-backup-container";
 import { parseAndValidateBackup, type RestoreResult } from "@/lib/restore";
 import { restoreValidatedBackup } from "@/lib/restore-database";
 import { indiaDateKey } from "@/lib/cloud-backup-schedules";
+import { isSupportedStoredCloudBackupVersion } from "@/lib/cloud-backup-versions";
 
 export async function runCloudBackupRestoreRehearsal(
   prisma: PrismaClientType,
@@ -42,7 +43,7 @@ export async function runCloudBackupRestoreRehearsal(
     if (decrypted.header.ciphertextSha256 !== artifact.ciphertextSha256 || decrypted.header.plaintextSha256 !== artifact.plaintextSha256) throw new Error("REHEARSAL_HASH_MISMATCH");
     await prisma.cloudBackupRestoreRehearsal.update({ where: { id: rehearsal.id }, data: { status: "VALIDATING" } });
     const backup = parseAndValidateBackup(decrypted.plaintext.toString("utf8"));
-    if (backup.metadata.backupVersion !== 43) throw new Error("REHEARSAL_BACKUP_UNSUPPORTED");
+    if (!isSupportedStoredCloudBackupVersion(backup.metadata.backupVersion)) throw new Error("REHEARSAL_BACKUP_UNSUPPORTED");
     await mkdir(tempRoot, { recursive: true });
     await copyFile(sourcePath, tempPath);
     rehearsalClient = new PrismaClient({ datasources: { db: { url: `file:${tempPath.replaceAll("\\", "/")}` } } });

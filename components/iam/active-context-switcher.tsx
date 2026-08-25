@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { lockOfflineVaultAcrossTabs } from "@/lib/offline-sync/client/coordinator";
 
 type RoleContext = { handle: string; label: string; designation: string | null; active: boolean; validUntil: string | null };
 type ChildContext = { handle: string; name: string; admissionNo: string; className: string; section: string | null; status: string; active: boolean };
@@ -58,6 +59,7 @@ export function ActiveContextSwitcher({ activeRole }: { activeRole: string }) {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error ?? "Context switch failed");
+      lockOfflineVaultAcrossTabs("CONTEXT_SWITCH");
       setStatus(success);
       router.refresh();
       await loadRoles();

@@ -1,19 +1,13 @@
 import { safeClientError } from "@/lib/client-errors";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validatePaymentPayload } from "@/lib/validation";
 import { requireApiPermission } from "@/lib/auth";
-import {
-  assertReceiptStudentMatchInDatabase,
-  normalizePaymentComponents
-} from "@/lib/payment-controls";
 import {
   FINANCE_PAYMENT_SELECT,
   paymentManagementResponse,
   privateFinanceJson
 } from "@/lib/finance-privacy";
-import { assertReceiptIsNewForCreate } from "@/lib/receipt-integrity";
-import { receiptAuditSnapshot } from "@/lib/receipt";
+import { createPaymentReceipt } from "@/lib/payment-service";
 
 export async function GET(request: NextRequest) {
   const auth = await requireApiPermission("VIEW_PAYMENTS");
@@ -39,65 +33,10 @@ export async function POST(request: NextRequest) {
   const auth = await requireApiPermission("CREATE_PAYMENTS");
   if (auth.response) return auth.response;
   try {
-    const body = await request.json();
-    const components = normalizePaymentComponents(body);
-    const payloads = components
-      ? components.map((component) => validatePaymentPayload({ ...body, ...component }))
-      : [validatePaymentPayload(body)];
-    const firstPayload = payloads[0];
-    if (payloads.some((payload) =>
-      payload.receiptNo !== firstPayload.receiptNo ||
-      payload.admissionNo !== firstPayload.admissionNo ||
-      payload.date.getTime() !== firstPayload.date.getTime() ||
-      payload.feeType !== firstPayload.feeType ||
-      payload.termHint !== firstPayload.termHint
-    )) {
-      throw new Error("All payment components must use the same receipt, student, date, fee type, and term");
-    }
-    const student = await prisma.student.findUnique({ where: { admissionNo: firstPayload.admissionNo } });
-    if (!student || student.deletedAt) throw new Error("Admission number not found in Student Master");
-    const payments = await prisma.$transaction(async (tx) => {
-      await assertReceiptIsNewForCreate(tx, firstPayload.receiptNo);
-      await assertReceiptStudentMatchInDatabase(tx, {
-        receiptNo: firstPayload.receiptNo,
-        admissionNo: firstPayload.admissionNo
-      });
-      await tx.receiptNote.create({
-        data: {
-          receiptNo: firstPayload.receiptNo,
-          status: "Active",
-          remarks: "Payment receipt created"
-        }
-      });
-      const createdRows = [];
-      for (const payload of payloads) {
-        const created = await tx.payment.create({
-          data: {
-            ...payload,
-            enteredBy: auth.user.name,
-            editedBy: null,
-            studentId: student.id,
-            studentName: student.studentName,
-            className: student.className,
-            section: student.section
-          }
-        });
-        await tx.paymentAudit.create({
-          data: {
-            paymentId: created.id,
-            action: "CREATED",
-            newValueJson: JSON.stringify(receiptAuditSnapshot(created)),
-            changedByUserId: auth.user.id,
-            changedByName: auth.user.name,
-            reason: payloads.length > 1 ? "Split receipt component created" : "Payment entry created"
-          }
-        });
-        createdRows.push(created);
-      }
-      return createdRows;
-    });
+    const result = await createPaymentReceipt(prisma, await request.json(), auth.user);
+    const payments = result.rows;
     return privateFinanceJson({
-      receiptNo: firstPayload.receiptNo,
+      receiptNo: result.receiptNo,
       split: payments.length > 1,
       total: payments.reduce((sum, payment) => sum + payment.amountPaid, 0),
       status: "ACTIVE",

@@ -1,5 +1,7 @@
 import { BANK_TRANSFER_PAYMENT_MODES, PAYMENT_MODES } from "@/lib/constants";
 
+export const MAX_PAYMENT_COMPONENTS = 10;
+
 export type PaymentControlLike = {
   amountPaid: number;
   isCancelled?: boolean | null;
@@ -35,6 +37,9 @@ export function paymentComponentTotal(components: Array<Pick<PaymentComponent, "
 
 export function normalizePaymentComponents(body: Record<string, unknown>) {
   if (!Array.isArray(body.components)) return null;
+  if (body.components.length > MAX_PAYMENT_COMPONENTS) {
+    throw new Error(`A receipt can contain at most ${MAX_PAYMENT_COMPONENTS} payment components`);
+  }
   const allowMissingTransactionRef = body.allowMissingTransactionRef === true;
   const components = body.components.map((value) => {
     const component = (value ?? {}) as Record<string, unknown>;

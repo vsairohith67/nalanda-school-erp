@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "plugins": [], "incremental": true, "tsBuildInfoFile": "./tsconfig.tools-qa-fin-payslip.tsbuildinfo" },
-  "include": ["scripts/qa-fin*.ts", "scripts/qa-payslipreq1*.ts"],
+  "include": ["scripts/qa-fin*.ts", "scripts/qa-payslipreq1*.ts", "scripts/qa-offline-sync*.ts"],
   "exclude": ["node_modules", ".next"]
 }

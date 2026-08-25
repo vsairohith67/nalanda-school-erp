@@ -26,6 +26,7 @@ import { restoreTechnicalOperationsBackup } from "@/lib/technical-operations-bac
 import { OPTIONAL_OPERATIONS_BACKUP_KEYS, restoreOptionalOperationsBackup, type OptionalOperationsBackupKey } from "@/lib/optional-operations-backup";
 import { EVENT_MEDIA_BACKUP_KEYS, restoreEventMediaBackup, type EventMediaBackupKey } from "@/lib/event-media-backup";
 import { PARENT_MEETING_BACKUP_KEYS, restoreParentMeetingBackup, type ParentMeetingBackupKey } from "@/lib/parent-meeting-backup";
+import { OFFLINE_SYNC_BACKUP_KEYS, restoreOfflineSyncBackup, type OfflineSyncBackupKey } from "@/lib/offline-sync/backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -131,6 +132,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(OPTIONAL_OPERATIONS_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<OptionalOperationsBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(EVENT_MEDIA_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<EventMediaBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(PARENT_MEETING_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<ParentMeetingBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(OFFLINE_SYNC_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<OfflineSyncBackupKey, ReturnType<typeof emptyEntityResult>>),
     technicalOperations: emptyEntityResult(),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
@@ -620,6 +622,10 @@ async function restoreIntoDatabase(
     students: backupStudentLocalIds,
     guardians: backupGuardianIds,
     staffMembers: backupStaffLocalIds,
+    users: backupUserToLocalUser,
+    restoredBy: restoredBy.id
+  }, result);
+  await restoreOfflineSyncBackup(client as unknown as PrismaClient, backup, {
     users: backupUserToLocalUser,
     restoredBy: restoredBy.id
   }, result);

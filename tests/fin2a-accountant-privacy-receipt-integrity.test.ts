@@ -378,7 +378,7 @@ describe("FIN-2A cancellation authority and receipt integrity", () => {
       assertReceiptIsNewForCreate(noteExists, "FIN2A-100")
     ).rejects.toMatchObject({ status: 409 });
 
-    const source = readFileSync("app/api/payments/route.ts", "utf8");
+    const source = readFileSync("lib/payment-service.ts", "utf8");
     expect(source).toContain("assertReceiptIsNewForCreate");
     expect(source).toContain("tx.receiptNote.create");
     expect(source).not.toContain(

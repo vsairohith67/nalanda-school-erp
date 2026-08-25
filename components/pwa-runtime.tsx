@@ -13,6 +13,7 @@ import { isStandaloneDisplay, safeRegistrationError } from "@/lib/pwa-client";
 import { PWA_BUILD_VERSION } from "@/lib/pwa-version";
 import { evaluateClientUpdate, type PublicClientVersionContract } from "@/lib/release-client-version";
 import { hasUnsafeClientWork, PWA_UNSAFE_ACTIVITY_EVENTS, safeUpdateDeferralKey } from "@/lib/pwa-update-safety";
+import { installOfflineVaultLockListener } from "@/lib/offline-sync/client/coordinator";
 
 export type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -161,6 +162,7 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
     document.addEventListener("input", markEditedFormDirty, true);
     document.addEventListener("change", markEditedFormDirty, true);
     document.addEventListener("reset", clearEditedFormDirty, true);
+    const removeOfflineVaultLockListener = installOfflineVaultLockListener();
     void registerServiceWorker();
 
     return () => {
@@ -174,6 +176,7 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
       document.removeEventListener("input", markEditedFormDirty, true);
       document.removeEventListener("change", markEditedFormDirty, true);
       document.removeEventListener("reset", clearEditedFormDirty, true);
+      removeOfflineVaultLockListener();
     };
   }, [registerServiceWorker]);
 
@@ -268,7 +271,7 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
       {children}
       {!online ? (
         <aside className="pwa-status-banner pwa-offline-banner" role="status" aria-live="polite">
-          <span><strong>Offline</strong> — viewing and saving school records requires a connection.</span>
+          <span><strong>Offline</strong> — general school records require a connection. Approved Accountants can use the encrypted offline finance-draft workspace.</span>
           <button type="button" className="secondary" onClick={() => void retryConnection()}>
             Retry Connection
           </button>

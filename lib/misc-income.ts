@@ -96,7 +96,9 @@ function referenceFields(row: Record<string, unknown>) {
   return { paymentMethod, receivedAccount, transactionReference, chequeNumber: null, chequeDate: null };
 }
 
-export async function validateMiscReceiptInput(client: PrismaClient | Prisma.TransactionClient, input: unknown) {
+type MiscReceiptValidationOptions = { requireExpectedRate?: boolean };
+
+export async function validateMiscReceiptInput(client: PrismaClient | Prisma.TransactionClient, input: unknown, options: MiscReceiptValidationOptions = {}) {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Receipt details are required");
   const row = input as Record<string, unknown>;
   if (!Array.isArray(row.lines) || !row.lines.length || row.lines.length > 30) throw new Error("At least one and at most 30 receipt lines are required");
@@ -117,7 +119,14 @@ export async function validateMiscReceiptInput(client: PrismaClient | Prisma.Tra
     const quantity = Number(line.quantity); if (!Number.isInteger(quantity) || quantity <= 0 || quantity > 10000) throw new Error(`Line ${index + 1} quantity must be a positive whole number`);
     const availableRates = item.rates.filter((rate) => rate.academicYear === academicYear && (!rate.effectiveFrom || rate.effectiveFrom <= receiptDate) && (!rate.effectiveTo || rate.effectiveTo >= receiptDate));
     if (availableRates.length !== 1) throw new Error(`Line ${index + 1} must resolve to exactly one active academic-year rate`);
-    const rate = availableRates[0]; const unitAmount = rate.amount; const gross = unitAmount.mul(quantity); const discount = moneyDecimal(line.discountAmount ?? 0, `Line ${index + 1} discount`);
+    const rate = availableRates[0];
+    if (options.requireExpectedRate) {
+      const expectedRateId = String(line.expectedRateId ?? "").trim();
+      const expectedRateVersion = String(line.expectedRateVersion ?? "").trim();
+      if (!expectedRateId || !expectedRateVersion || Number.isNaN(new Date(expectedRateVersion).getTime())) throw new Error("MISC_INCOME_RATE_PROOF_REQUIRED");
+      if (rate.id !== expectedRateId || rate.updatedAt.toISOString() !== expectedRateVersion) throw new Error("MISC_INCOME_RATE_CHANGED");
+    }
+    const unitAmount = rate.amount; const gross = unitAmount.mul(quantity); const discount = moneyDecimal(line.discountAmount ?? 0, `Line ${index + 1} discount`);
     if (discount.gt(gross)) throw new Error(`Line ${index + 1} discount cannot exceed its gross amount`);
     grossAmount = grossAmount.add(gross); discountAmount = discountAmount.add(discount);
     return { itemId, itemNameSnapshot: item.name, rateId: rate.id, quantity, unitAmount, discountAmount: discount, lineTotal: gross.sub(discount), notes: text(line.notes, `Line ${index + 1} notes`, 500, false) };
@@ -127,10 +136,12 @@ export async function validateMiscReceiptInput(client: PrismaClient | Prisma.Tra
 }
 
 export async function createMiscReceipt(client: PrismaClient, input: unknown, actorId: string) {
-  return client.$transaction(async (tx) => {
-    const data = await validateMiscReceiptInput(tx, input);
-    return tx.miscIncomeReceipt.create({ data: { ...data, lines: { create: data.lines }, receiptNumber: newMiscReceiptNumber(data.receiptDate), createdByUserId: actorId }, include: miscReceiptInclude });
-  });
+  return client.$transaction((tx) => createMiscReceiptInTransaction(tx, input, actorId));
+}
+
+export async function createMiscReceiptInTransaction(tx: Prisma.TransactionClient, input: unknown, actorId: string, options: MiscReceiptValidationOptions = {}) {
+  const data = await validateMiscReceiptInput(tx, input, options);
+  return tx.miscIncomeReceipt.create({ data: { ...data, lines: { create: data.lines }, receiptNumber: newMiscReceiptNumber(data.receiptDate), createdByUserId: actorId }, include: miscReceiptInclude });
 }
 
 export async function cancelMiscReceipt(client: PrismaClient, id: string, reason: unknown, actorId: string) {

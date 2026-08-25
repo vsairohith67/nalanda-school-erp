@@ -171,7 +171,7 @@ export async function runAdmissionsQa(mode: Mode) {
 
     const backup = await generateFullBackup(client as any, { generatedBy: prefix, generatedAt: new Date("2026-08-03T13:00:00.000Z") });
     const validated = parseAndValidateBackup(JSON.stringify(backup));
-    invariant(validated.metadata.backupVersion === 43 && validated.admissionConversions.length === 1, "ADMISSIONS_LOGICAL_BACKUP_INVALID");
+    invariant(validated.metadata.backupVersion === 44 && validated.admissionConversions.length === 1, "ADMISSIONS_LOGICAL_BACKUP_INVALID");
     runPrisma(["migrate", "deploy"], restorePath);
     const restoreActor = await qaUser(restoreClient, `${prefix}RESTORE`, "SUPER_ADMIN");
     const firstRestore = await restoreValidatedBackup(restoreClient, validated, { id: restoreActor.id, name: restoreActor.name });

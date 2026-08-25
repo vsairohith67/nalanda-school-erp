@@ -16,6 +16,7 @@ const EVENT_MEDIA_MULTIPART_BODY_LIMIT_BYTES = 16 * 1024 * 1024;
 const IMPORT_BODY_LIMIT_BYTES = 8 * 1024 * 1024;
 const SEARCH_AI_BODY_LIMIT_BYTES = 32 * 1024;
 const PDF_JOB_BODY_LIMIT_BYTES = 128 * 1024;
+const OFFLINE_SYNC_BODY_LIMIT_BYTES = 512 * 1024;
 
 export const SECURITY_RESOURCE_BUDGETS = {
   maximumJsonBytes: DEFAULT_BODY_LIMIT_BYTES,
@@ -43,6 +44,7 @@ export function isProviderWebhookPath(pathname: string) {
 }
 
 export function requestBodyLimitBytes(pathname: string) {
+  if (pathname.startsWith("/api/offline-sync/")) return OFFLINE_SYNC_BODY_LIMIT_BYTES;
   if (pathname.startsWith("/api/auth/")) return AUTH_BODY_LIMIT_BYTES;
   if (pathname.startsWith("/api/iam/")) return IAM_BODY_LIMIT_BYTES;
   if (pathname === "/api/super-admin/search" || pathname === "/api/super-admin/ai" || pathname.startsWith("/api/ai-assistant/")) return SEARCH_AI_BODY_LIMIT_BYTES;

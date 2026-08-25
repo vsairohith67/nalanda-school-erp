@@ -7,6 +7,7 @@ import {
 
 const PRECACHE_PATHS = [
   "/offline",
+  "/offline/finance",
   "/manifest.webmanifest",
   "/nalanda-logo.jpg",
   "/icons/icon-192.png",
@@ -29,6 +30,7 @@ const PWA_VERSION = ${JSON.stringify(PWA_BUILD_VERSION)};
 const CACHE_PREFIX = ${JSON.stringify(NALANDA_PWA_CACHE_PREFIX)};
 const STATIC_CACHE = ${JSON.stringify(PWA_STATIC_CACHE_NAME)};
 const OFFLINE_PATH = "/offline";
+const OFFLINE_FINANCE_PATH = "/offline/finance";
 const PRECACHE_PATHS = ${JSON.stringify(PRECACHE_PATHS)};
 const PUBLIC_CACHE_PATHS = new Set(${JSON.stringify([...PWA_PUBLIC_CACHE_PATHS])});
 const MESSAGE_TYPES = new Set(${JSON.stringify(PWA_MESSAGE_TYPES)});
@@ -45,6 +47,7 @@ function isSafeStaticRequest(request) {
     url.pathname.startsWith("/api/") ||
     url.pathname === "/login" ||
     url.pathname === OFFLINE_PATH ||
+    url.pathname === OFFLINE_FINANCE_PATH ||
     url.pathname.startsWith("/_next/image")
   ) return false;
   return url.pathname.startsWith("/_next/static/") || PUBLIC_CACHE_PATHS.has(url.pathname);
@@ -70,7 +73,12 @@ async function fetchApprovedPrecachePath(path) {
   const response = await fetch(request);
   if (!response.ok || response.status !== 200 || response.redirected) return;
   const cacheControl = (response.headers.get("cache-control") || "").toLowerCase();
-  if (cacheControl.includes("private") || response.headers.get("set-cookie")) return;
+  if (cacheControl.includes("private") || cacheControl.includes("no-store") || response.headers.get("set-cookie")) return;
+  if (path === OFFLINE_PATH || path === OFFLINE_FINANCE_PATH) {
+    const boundary = response.headers.get("x-nalanda-route-boundary");
+    const contentType = (response.headers.get("content-type") || "").toLowerCase();
+    if (boundary !== "offline-public-shell" || !contentType.includes("text/html")) return;
+  }
   const cache = await caches.open(STATIC_CACHE);
   await cache.put(path, response);
 }
@@ -101,9 +109,10 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(fetch(request).catch(async () => {
-      const cached = await caches.match(OFFLINE_PATH, { cacheName: STATIC_CACHE });
+      const fallbackPath = url.pathname === OFFLINE_FINANCE_PATH ? OFFLINE_FINANCE_PATH : OFFLINE_PATH;
+      const cached = await caches.match(fallbackPath, { cacheName: STATIC_CACHE });
       return cached || new Response(
-        "<!doctype html><html lang=\\"en\\"><meta charset=\\"utf-8\\"><title>Nalanda ERP - Offline</title><body><main><h1>Nalanda Public School ERP</h1><p>You are offline.</p><p>Reconnect to continue securely. School records are not stored for offline use.</p></main></body></html>",
+        "<!doctype html><html lang=\\"en\\"><meta charset=\\"utf-8\\"><title>Nalanda ERP - Offline</title><body><main><h1>Nalanda Public School ERP</h1><p>You are offline.</p><p>Reconnect to continue, or use a previously approved encrypted Accountant draft workspace on this device.</p></main></body></html>",
         { status: 503, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }
       );
     }));
@@ -161,4 +170,3 @@ self.addEventListener("message", (event) => {
 });
 `.trimStart();
 }
-
