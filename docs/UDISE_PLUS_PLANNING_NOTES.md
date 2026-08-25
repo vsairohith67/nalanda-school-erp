@@ -3,6 +3,14 @@
 Planning phase: Prompt 15A  
 Status: planning/checklist only. No UDISE+ integration, academic progression workflow, schema change, or government submission feature is built by this document.
 
+## Current-state correction — 25 August 2026
+
+The historical gap statements below describe the system when Prompt 15A was written. Current code now includes `AcademicYearEnrollment`, `StudentLifecycleEvent`, `StudentProgressionDecision`, examination/mark/result/report-card snapshots, and governed Guardian/Parent-related evidence. Their existence does **not** prove semantic equivalence to UDISE+ fields, periods, codes, or portal workflow.
+
+UDISE-15E-1C pins the checklist to the public 2026-27 DCF evidence, adds the static source-attributed 75-group register, replaces `Complete` wording with precise candidate/partial/verification statuses, makes lifecycle and progression checks conditional, and masks bounded Student/Staff outputs. It remains GET-only and read-only. It adds no schema, persistent School/Facility snapshot, portal login, submission, certification, sensitive-field expansion, Telangana workflow, or automated entry.
+
+Admission date is now only a `PARTIALLY_TRACKED` candidate when the current-cycle `AcademicYearEnrollment.enrollmentDate` exists. `createdAt` is never treated as admission date. Staff attendance and leave remain internal ERP foundations and are excluded from official UDISE completeness indicators.
+
 ## Purpose and caution
 
 UDISE+ planning for this ERP means preparing accurate school-owned records, reviewable summaries, evidence links, and approval history so authorized staff can compare ERP data with the current UDISE+ portal. It does not mean claiming legal compliance or automatically submitting government data.

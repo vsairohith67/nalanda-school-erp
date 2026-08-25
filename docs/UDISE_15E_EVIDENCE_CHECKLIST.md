@@ -5,6 +5,12 @@
 
 ## Boundary
 
+### UDISE-15E-1C evidence freeze — 25 August 2026
+
+The bounded checklist correction uses `UDISE_15E_EVIDENCE_PARTIAL` for cycle `2026-27`, public filename `UDISE_DCF_Final_26_27_v3.pdf`, internal document version `5.0` dated 15 July 2026, and reviewed date 25 August 2026. The public-filename/internal-version conflict and mixed Student academic-year references remain visible. The static register reconciles 75 unique groups: 18 School, 15 Facility, 27 Student, 14 Staff and 1 Block; primary statuses reconcile to 8 tracked, 21 partial, 23 not tracked, 17 sensitive/conditional and 6 portal-only/unverified.
+
+This evidence freeze authorises checklist terminology/logic, evidence badges, the source register, separate indicators, and masked bounded outputs only. Current Profile/Facility, Student and Teacher manuals, Telangana workflow/code lists, correction/certification screens, school authoritative records, and privacy decisions remain open gates for later 1D/1E work.
+
 Prompt 15E may begin only after the current official and school evidence below is available, provenance is recorded, privacy is reviewed, and the authorised school reviewer accepts the scope. Until then, full UDISE+ operational support is `NOT_IMPLEMENTED` and `BLOCKED_BY_EVIDENCE` where field truth is missing.
 
 Prompt 15E must not:

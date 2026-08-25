@@ -3,6 +3,14 @@
 Planning phase: Prompt 15A  
 Purpose: school review checklist, not a compliance claim or a request to collect every listed field.
 
+## Current-state correction — 25 August 2026
+
+This document preserves historical Prompt 15A/15D notes. Current code includes academic-year enrollment history, append-only lifecycle events, governed progression decisions, and examination/mark/result/report-card snapshots. These are internal evidence candidates only; they do not establish current UDISE+ field, period, code-list, verification, or portal equivalence.
+
+UDISE-15E-1C uses the pinned 2026-27 evidence cycle and a static 75-group register. Student and Staff review surfaces now use opaque row references and masked source references, show no names or raw contact/address/date/identifier/sensitive values, and separate ERP presence, school verification, official evidence, applicability, and portal-verification indicators. Viewer remains aggregate/source-register only.
+
+The current `AcademicYearEnrollment.enrollmentDate` may support a partially tracked admission-date candidate; record `createdAt` never does. Missing lifecycle/progression evidence is evaluated only when applicability is established and is not an unconditional defect for a new/current Student.
+
 Use this checklist to compare the ERP, school registers, and the latest UDISE+ portal. **Verify against current UDISE+ portal requirements before production use.** Do not guess missing values or collect sensitive data merely because it appears below.
 
 ## Status legend
