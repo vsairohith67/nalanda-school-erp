@@ -129,7 +129,7 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
     expect(workflows).toContain('- "lib/trusted-client.ts"');
     expect(workflows).toContain('- "scripts/harden-cross-platform-generated-project.mjs"');
     expect(workflows).toContain("find . -type f");
-    expect(workflows).toContain('DATABASE_URL: "file:../tmp/cross-platform-ci/synthetic.db"');
+    expect(workflows).toContain('DATABASE_URL: "file:../tmp/release-ci/synthetic.db"');
     expect(workflows.match(/ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/g)?.length).toBe(4);
     for (const command of ["pnpm test", "pnpm typecheck", "pnpm build", "pnpm migration:fresh-check", "pnpm migration:restore-check", "pnpm security:resilience:acceptance", "pnpm app:rust:test"]) {
       expect(workflows).toContain(command);

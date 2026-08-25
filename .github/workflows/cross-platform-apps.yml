@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 75
     env:
-      DATABASE_URL: "file:../tmp/cross-platform-ci/synthetic.db"
+      DATABASE_URL: "file:../tmp/release-ci/synthetic.db"
       NALANDA_ENVIRONMENT: "TEST"
       NALANDA_RELEASE_ID: cross-platform-ci-${{ github.run_id }}
       NALANDA_RELEASE_CHANNEL: "TEST"
@@ -52,8 +52,8 @@ jobs:
       NALANDA_RELEASE_DATE: "2026-08-26T00:00:00.000Z"
       NALANDA_STANDALONE_BUILD: "true"
       APP_ORIGIN: "http://127.0.0.1:3000"
-      PRIVATE_STORAGE_ROOT: ${{ github.workspace }}/tmp/cross-platform-ci/private
-      BACKUP_DIRECTORY: ${{ github.workspace }}/tmp/cross-platform-ci/backups
+      PRIVATE_STORAGE_ROOT: ${{ github.workspace }}/tmp/release-ci/private
+      BACKUP_DIRECTORY: ${{ github.workspace }}/tmp/release-ci/backups
       LIVE_PROVIDERS_ENABLED: "false"
       PUBLIC_WEBSITE_INDEXING_ENABLED: "false"
       NALANDA_STAGING_BANNER: "true"
@@ -70,12 +70,12 @@ jobs:
       - run: pnpm exec prisma validate --schema prisma/schema.prisma
       - name: Prepare isolated synthetic database
         run: |
-          mkdir -p tmp/cross-platform-ci
-          test ! -e tmp/cross-platform-ci/synthetic.db
-          touch tmp/cross-platform-ci/synthetic.db
+          mkdir -p tmp/release-ci
+          test ! -e tmp/release-ci/synthetic.db
+          touch tmp/release-ci/synthetic.db
           pnpm exec prisma migrate deploy
           NODE_ENV=development RELEASE_CI_SYNTHETIC_OPT_IN=true pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
-          cp tmp/cross-platform-ci/synthetic.db prisma/dev.db
+          cp tmp/release-ci/synthetic.db prisma/dev.db
       - run: pnpm git:safety-check
       - run: pnpm audit --prod --audit-level high
       - run: pnpm security:resilience:acceptance
