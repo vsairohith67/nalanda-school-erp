@@ -127,6 +127,8 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
     expect(workflows).toContain('- "lib/trusted-client.ts"');
     expect(workflows).toContain('- "scripts/harden-cross-platform-generated-project.mjs"');
     expect(workflows).toContain("find . -type f");
+    expect(workflows).toContain('DATABASE_URL: "file:./ci-cross-platform.db"');
+    expect(workflows.match(/ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/g)?.length).toBe(4);
     expect(source("apps/nalanda-cross-platform/src-tauri/tauri.conf.json")).toContain('"scheme": ["nalandaps-erp"]');
   });
 
@@ -137,6 +139,7 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
     expect(hardener).toContain("WindowManager.LayoutParams.FLAG_SECURE");
     expect(hardener).toContain("UIFileSharingEnabled");
     expect(hardener).toContain("LSSupportsOpeningDocumentsInPlace");
+    expect(hardener).toContain('CI=true pnpm tauri ios xcode-script');
     const scripts = JSON.parse(source("package.json")).scripts;
     expect(scripts["app:android:init"]).toContain("harden-cross-platform-generated-project.mjs android");
     expect(scripts["app:ios:init"]).toContain("harden-cross-platform-generated-project.mjs ios");

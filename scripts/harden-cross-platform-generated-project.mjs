@@ -45,6 +45,17 @@ if (platform === "android") {
       writeFileSync(plist, text);
     }
   }
+  const projects = filesBelow(join(generatedRoot, "apple"), "project.pbxproj");
+  if (projects.length !== 1) throw new Error("Generated iOS Xcode project was not found uniquely.");
+  let project = readFileSync(projects[0], "utf8");
+  const xcodePnpmCommand = 'shellScript = "pnpm tauri ios xcode-script';
+  const nonInteractiveXcodePnpmCommand = 'shellScript = "CI=true pnpm tauri ios xcode-script';
+  if (!project.includes(nonInteractiveXcodePnpmCommand)) {
+    if (!project.includes(xcodePnpmCommand)) throw new Error("Generated iOS Rust build phase was not recognized.");
+    project = project.replace(xcodePnpmCommand, nonInteractiveXcodePnpmCommand);
+    writeFileSync(projects[0], project);
+  }
+  if (!project.includes(nonInteractiveXcodePnpmCommand)) throw new Error("Generated iOS Rust build phase was not hardened for non-interactive CI.");
 } else {
   throw new Error("Use android or ios.");
 }
