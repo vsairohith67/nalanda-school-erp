@@ -12,4 +12,3 @@ Separately governed future work is required for:
 - privacy disclosures, support ownership, update policy, rollback policy, and physical-device acceptance.
 
 The foundation release never implies any store publication or operational activation.
-

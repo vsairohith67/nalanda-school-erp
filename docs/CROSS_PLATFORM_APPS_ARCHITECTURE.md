@@ -19,4 +19,3 @@ Native tokens are narrow transport credentials. Every sensitive request rechecks
 The repository contains the shared source, native Rust shell, generated development icons, build commands, and private CI matrix. Store signing, public distribution, private HTTPS staging, real-device certification, real users, and real school data are separate future gates.
 
 See [the framework ADR](adr/ADR_CROSS_PLATFORM_APP_FRAMEWORK.md), [authentication bridge](NATIVE_AUTHENTICATION_BRIDGE.md), [offline storage adapter](NATIVE_OFFLINE_STORAGE_ADAPTER.md), and [security model](CROSS_PLATFORM_SECURITY_MODEL.md).
-

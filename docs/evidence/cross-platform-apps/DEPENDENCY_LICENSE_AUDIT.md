@@ -1,6 +1,6 @@
 # Dependency and license audit
 
-Date: 2026-08-26  
+Date: 2026-08-26
 Scope: `CROSS-PLATFORM-APPS-1A`
 
 ## JavaScript
@@ -20,4 +20,3 @@ Rust license metadata contained primarily MIT, Apache-2.0, BSD, ISC, Unicode-3.0
 ## CI supply-chain controls
 
 GitHub Actions are pinned to exact commit SHAs, Node/pnpm/Rust versions are pinned, package installation uses both lockfiles, artifacts are unsigned/private with seven-day retention, and each platform job writes SHA-256 checksums. No signing, deployment, store, provider, or operational-data secret is present in the workflow.
-
