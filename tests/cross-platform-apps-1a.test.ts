@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
 const root = path.resolve(".");
@@ -117,7 +119,7 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
     const flags = JSON.parse(source("config/release-feature-flags.json"));
     expect(flags.find((flag: { key: string }) => flag.key === "cross-platform-apps-1a")).toMatchObject({ defaultState: false, rolloutPercentage: 0, version: 1 });
     const workflows = source(".github/workflows/cross-platform-apps.yml");
-    expect(workflows).not.toMatch(/store|notari|signing|deploy/i);
+    expect(workflows).not.toMatch(/microsoft store|google play|app store|testflight|notari|code[- ]?signing|production deploy|publish/i);
     expect(workflows.match(/SHA256SUMS\.txt/g)?.length).toBeGreaterThanOrEqual(9);
     expect(workflows).toContain("Verify Windows package checksum");
     expect(workflows).toContain("Verify Android package checksums");
@@ -127,8 +129,11 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
     expect(workflows).toContain('- "lib/trusted-client.ts"');
     expect(workflows).toContain('- "scripts/harden-cross-platform-generated-project.mjs"');
     expect(workflows).toContain("find . -type f");
-    expect(workflows).toContain('DATABASE_URL: "file:./ci-cross-platform.db"');
+    expect(workflows).toContain('DATABASE_URL: "file:../tmp/cross-platform-ci/synthetic.db"');
     expect(workflows.match(/ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/g)?.length).toBe(4);
+    for (const command of ["pnpm test", "pnpm typecheck", "pnpm build", "pnpm migration:fresh-check", "pnpm migration:restore-check", "pnpm security:resilience:acceptance", "pnpm app:rust:test"]) {
+      expect(workflows).toContain(command);
+    }
     expect(source("apps/nalanda-cross-platform/src-tauri/tauri.conf.json")).toContain('"scheme": ["nalandaps-erp"]');
   });
 
@@ -143,6 +148,41 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
     const scripts = JSON.parse(source("package.json")).scripts;
     expect(scripts["app:android:init"]).toContain("harden-cross-platform-generated-project.mjs android");
     expect(scripts["app:ios:init"]).toContain("harden-cross-platform-generated-project.mjs ios");
+  });
+
+  it("preserves Tauri's generated Android lifecycle while adding screen protection", () => {
+    const fixture = mkdtempSync(path.join(tmpdir(), "nalanda-android-hardening-"));
+    const manifest = path.join(fixture, "android", "app", "src", "main", "AndroidManifest.xml");
+    const activity = path.join(fixture, "android", "app", "src", "main", "java", "com", "nalandaps", "erp", "MainActivity.kt");
+    try {
+      mkdirSync(path.dirname(activity), { recursive: true });
+      writeFileSync(manifest, '<manifest><application android:allowBackup="true"></application></manifest>');
+      writeFileSync(activity, `package com.nalandaps.erp
+
+import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
+import app.tauri.TauriActivity
+
+class MainActivity : TauriActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    enableEdgeToEdge()
+    super.onCreate(savedInstanceState)
+  }
+}
+`);
+      for (let pass = 0; pass < 2; pass += 1) {
+        const result = spawnSync(process.execPath, [path.join(root, "scripts", "harden-cross-platform-generated-project.mjs"), "android", fixture], { encoding: "utf8" });
+        expect(result.status, result.stderr).toBe(0);
+      }
+      const hardened = readFileSync(activity, "utf8");
+      expect(hardened).toContain("import android.view.WindowManager");
+      expect(hardened).toContain("enableEdgeToEdge()");
+      expect(hardened).toContain("WindowManager.LayoutParams.FLAG_SECURE");
+      expect(hardened.match(/override fun onCreate/g)?.length).toBe(1);
+      expect(hardened.match(/class MainActivity/g)?.length).toBe(1);
+    } finally {
+      rmSync(fixture, { recursive: true, force: true });
+    }
   });
 
   it("keeps privacy-safe diagnostics bounded and payload-free", () => {

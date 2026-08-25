@@ -40,9 +40,23 @@ jobs:
   contracts:
     name: TypeScript, contracts and bundled shell
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 75
     env:
-      DATABASE_URL: "file:./ci-cross-platform.db"
+      DATABASE_URL: "file:../tmp/cross-platform-ci/synthetic.db"
+      NALANDA_ENVIRONMENT: "TEST"
+      NALANDA_RELEASE_ID: cross-platform-ci-${{ github.run_id }}
+      NALANDA_RELEASE_CHANNEL: "TEST"
+      NEXT_PUBLIC_PWA_BUILD_VERSION: cross-platform-ci-${{ github.run_id }}
+      NALANDA_MINIMUM_WEB_CLIENT: cross-platform-ci-${{ github.run_id }}
+      NALANDA_CLIENT_UPDATE_SEVERITY: "AVAILABLE"
+      NALANDA_RELEASE_DATE: "2026-08-26T00:00:00.000Z"
+      NALANDA_STANDALONE_BUILD: "true"
+      APP_ORIGIN: "http://127.0.0.1:3000"
+      PRIVATE_STORAGE_ROOT: ${{ github.workspace }}/tmp/cross-platform-ci/private
+      BACKUP_DIRECTORY: ${{ github.workspace }}/tmp/cross-platform-ci/backups
+      LIVE_PROVIDERS_ENABLED: "false"
+      PUBLIC_WEBSITE_INDEXING_ENABLED: "false"
+      NALANDA_STAGING_BANNER: "true"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -54,7 +68,32 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate --schema prisma/schema.prisma
       - run: pnpm exec prisma validate --schema prisma/schema.prisma
+      - name: Prepare isolated synthetic database
+        run: |
+          mkdir -p tmp/cross-platform-ci
+          test ! -e tmp/cross-platform-ci/synthetic.db
+          touch tmp/cross-platform-ci/synthetic.db
+          pnpm exec prisma migrate deploy
+          NODE_ENV=development RELEASE_CI_SYNTHETIC_OPT_IN=true pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          cp tmp/cross-platform-ci/synthetic.db prisma/dev.db
+      - run: pnpm git:safety-check
       - run: pnpm audit --prod --audit-level high
+      - run: pnpm security:resilience:acceptance
+      - name: Route and lifecycle inventory
+        run: |
+          pnpm routes:list
+          pnpm lifecycle:backfill
+      - run: pnpm test
+      - name: Migration and restore-twice acceptance
+        run: |
+          pnpm migration:inventory
+          pnpm migration:fresh-check
+          pnpm migration:existing-db-check
+          pnpm migration:schema-check
+          pnpm migration:restore-check
+      - run: pnpm backup
+      - run: pnpm typecheck
+      - run: pnpm build
       - run: pnpm app:typecheck
       - run: pnpm test:cross-platform
       - run: pnpm app:build:web
@@ -148,6 +187,7 @@ jobs:
       - name: Record iOS compiler environment
         run: node --version && pnpm --version && rustc --version && cargo --version && xcodebuild -version && xcrun --sdk iphonesimulator --show-sdk-version
       - run: pnpm app:ios:init
+      - run: pnpm app:rust:test
       - run: pnpm app:ios:build
       - name: Write iOS simulator checksums
         working-directory: apps/nalanda-cross-platform/src-tauri/gen/apple/build
