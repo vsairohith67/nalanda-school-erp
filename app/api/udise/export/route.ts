@@ -11,8 +11,7 @@ export async function GET(request: NextRequest) {
   if (requestedKind !== "masked-rows" && requestedKind !== "source-register") {
     return NextResponse.json({ error: "Unsupported UDISE export kind" }, { status: 400, headers: UDISE_PRIVATE_HEADERS });
   }
-  const report = await loadUdiseChecklist(prisma);
-  const csv = requestedKind === "source-register" ? udiseSourceRegisterCsv(report) : udiseChecklistCsv(report);
+  const csv = requestedKind === "source-register" ? udiseSourceRegisterCsv() : udiseChecklistCsv(await loadUdiseChecklist(prisma));
   return new NextResponse(csv, { headers: {
     ...UDISE_PRIVATE_HEADERS,
     "content-type": "text/csv; charset=utf-8",

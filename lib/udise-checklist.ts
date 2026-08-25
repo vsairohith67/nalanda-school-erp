@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { SchoolSettingsValue } from "@/lib/school-settings";
 import { UDISE_EVIDENCE, UDISE_EVIDENCE_REGISTER, UDISE_REGISTER_TOTALS, type UdiseEvidenceGroup } from "@/lib/udise-evidence-register";
@@ -7,6 +7,11 @@ export const UDISE_PLANNING_WARNING = UDISE_EVIDENCE.planningBoundary;
 export const UDISE_VERIFICATION_WARNING = UDISE_EVIDENCE.portalVerificationWarning;
 export const UDISE_STUDENT_ROW_LIMIT = 2_000;
 export const UDISE_STAFF_ROW_LIMIT = 500;
+export const UDISE_GUARDIAN_RELATION_LIMIT = 8;
+export const UDISE_ENROLLMENT_RELATION_LIMIT = 2;
+export const UDISE_LIFECYCLE_RELATION_LIMIT = 8;
+export const UDISE_PROGRESSION_RELATION_LIMIT = 8;
+const UDISE_PRIOR_ACADEMIC_CYCLE = "2025-26";
 
 export const CHECKLIST_STATUSES = [
   "ERP_VALUE_PRESENT_NOT_OFFICIALLY_VERIFIED", "TRACKED_AUTHORITATIVE", "TRACKED_DERIVED",
@@ -188,9 +193,8 @@ function sourceChecklistStatus(status: ParentContactSourceStatus): ChecklistStat
   return "ERP_VALUE_PRESENT_NOT_OFFICIALLY_VERIFIED";
 }
 
-function opaqueRowReference(kind: "STUDENT" | "STAFF", sourceReference: string, index: number) {
-  const digest = createHash("sha256").update(`${kind}\u0000${sourceReference}\u0000${index}`).digest("hex").slice(0, 12).toUpperCase();
-  return `${kind === "STUDENT" ? "STU" : "STF"}-${digest}`;
+function opaqueRowReference(kind: "STUDENT" | "STAFF") {
+  return `${kind === "STUDENT" ? "STU" : "STF"}-${randomBytes(8).toString("hex").toUpperCase()}`;
 }
 
 export function maskUdiseReference(value: string | null | undefined, prefix: "ADM" | "STAFF") {
@@ -232,7 +236,7 @@ export function buildUdiseChecklist(input: {
   };
 
   const strength = new Map<string, { master: number; enrollment: number }>();
-  const students = input.students.map((student, index) => {
+  const students = input.students.map((student) => {
     const dateOfBirthStatus: ChecklistStatus = student.dateOfBirth ? "ERP_VALUE_PRESENT_NOT_OFFICIALLY_VERIFIED" : "MISSING";
     const addressStatus: ChecklistStatus = student.address?.trim() ? "PARTIALLY_TRACKED" : "NOT_TRACKED";
     const parentSourceStatus = sourceStatus(normalizedTextSet([student.fatherName, student.motherName]), normalizedTextSet(student.guardians.map((link) => link.guardian.displayName)));
@@ -276,7 +280,7 @@ export function buildUdiseChecklist(input: {
     ].filter(Boolean) as string[])];
 
     return {
-      rowReference: opaqueRowReference("STUDENT", student.admissionNo, index),
+      rowReference: opaqueRowReference("STUDENT"),
       maskedAdmissionReference: maskUdiseReference(student.admissionNo, "ADM"),
       className: student.className, section: student.section ?? "",
       classSection: `${student.className}${student.section ? `-${student.section}` : " (section missing)"}`,
@@ -295,14 +299,14 @@ export function buildUdiseChecklist(input: {
 
   for (const item of strength.values()) add(categoryCounts["Enrollment/lifecycle"], item.master === item.enrollment ? "ERP_VALUE_PRESENT_NOT_OFFICIALLY_VERIFIED" : "TRACKED_BUT_REQUIRES_VERIFICATION");
 
-  const staff = input.staff.map((member, index) => {
+  const staff = input.staff.map((member) => {
     const mobileStatus = presence(member.mobile);
     const emailStatus = presence(member.email);
     const qualificationStatus = member.qualification?.trim() ? "PARTIALLY_TRACKED" as const : "MISSING" as const;
     for (const status of [presence(member.staffCode), presence(member.fullName), presence(member.staffType), presence(member.designation), mobileStatus, emailStatus, qualificationStatus, presence(member.status), "NOT_TRACKED" as const]) add(categoryCounts["Staff data"], status);
     const gapTypes = [!member.staffCode?.trim() && "staff-code", !member.mobile?.trim() && "mobile", !member.email?.trim() && "email", !member.qualification?.trim() && "qualification", "not-tracked"].filter(Boolean) as string[];
     return {
-      rowReference: opaqueRowReference("STAFF", member.staffCode ?? member.fullName, index), maskedStaffReference: maskUdiseReference(member.staffCode, "STAFF"),
+      rowReference: opaqueRowReference("STAFF"), maskedStaffReference: maskUdiseReference(member.staffCode, "STAFF"),
       staffType: member.staffType, recordStatus: member.status, mobileStatus, emailStatus, qualificationStatus,
       demographicStatus: "SENSITIVE_CONDITIONAL", attendanceFoundation: "INTERNAL_ERP_FOUNDATION_NOT_OFFICIAL_UDISE_EVIDENCE",
       leaveFoundation: "INTERNAL_ERP_FOUNDATION_NOT_OFFICIAL_UDISE_EVIDENCE", gapTypes, gapCount: gapTypes.length
@@ -368,11 +372,15 @@ export function buildUdiseChecklist(input: {
 type UdiseClient = Pick<PrismaClient, "student" | "staffMember" | "schoolSettings">;
 
 export type UdiseLoadFilters = {
+  includeStudents?: boolean;
+  includeStaff?: boolean;
   student?: { className?: string; section?: string; status?: string };
   staff?: { staffType?: string; status?: string };
 };
 
 export async function loadUdiseChecklist(client: UdiseClient, filters: UdiseLoadFilters = {}) {
+  const includeStudents = filters.includeStudents !== false;
+  const includeStaff = filters.includeStaff !== false;
   const studentWhere = {
     deletedAt: null,
     ...(filters.student?.className ? { className: filters.student.className } : {}),
@@ -383,24 +391,52 @@ export async function loadUdiseChecklist(client: UdiseClient, filters: UdiseLoad
     ...(filters.staff?.staffType ? { staffType: filters.staff.staffType } : {}),
     ...(filters.staff?.status ? { status: filters.staff.status } : {})
   };
+  const studentsMatchedPromise = includeStudents ? client.student.count({ where: studentWhere }) : Promise.resolve(0);
+  const staffMatchedPromise = includeStaff ? client.staffMember.count({ where: staffWhere }) : Promise.resolve(0);
+  const studentsPromise: Promise<UdiseStudentSource[]> = includeStudents ? client.student.findMany({
+    where: studentWhere,
+    take: UDISE_STUDENT_ROW_LIMIT,
+    select: {
+      admissionNo: true, studentName: true, fatherName: true, motherName: true, phone1: true, phone2: true, whatsappNumber: true,
+      className: true, section: true, status: true, dateOfBirth: true, address: true, aadhaarNo: true,
+      guardians: {
+        take: UDISE_GUARDIAN_RELATION_LIMIT,
+        orderBy: [{ isPrimaryContact: "desc" }, { id: "asc" }],
+        select: { isPrimaryContact: true, guardian: { select: { displayName: true, primaryMobile: true, alternateMobile: true } } }
+      },
+      academicYearEnrollments: {
+        where: { academicYear: { in: [UDISE_EVIDENCE.academicCycle, UDISE_PRIOR_ACADEMIC_CYCLE] } },
+        take: UDISE_ENROLLMENT_RELATION_LIMIT,
+        orderBy: [{ academicYear: "desc" }, { id: "asc" }],
+        select: { academicYear: true, className: true, section: true, status: true, enrollmentDate: true }
+      },
+      lifecycleEvents: {
+        where: { academicYear: UDISE_EVIDENCE.academicCycle },
+        take: UDISE_LIFECYCLE_RELATION_LIMIT,
+        orderBy: [{ effectiveDate: "desc" }, { id: "asc" }],
+        select: { academicYear: true, eventType: true }
+      },
+      progressionDecisions: {
+        where: { OR: [{ academicYear: UDISE_EVIDENCE.academicCycle }, { toAcademicYear: UDISE_EVIDENCE.academicCycle }] },
+        take: UDISE_PROGRESSION_RELATION_LIMIT,
+        orderBy: [{ effectiveDate: "desc" }, { id: "asc" }],
+        select: { academicYear: true, decisionType: true, status: true, toAcademicYear: true }
+      }
+    },
+    orderBy: [{ className: "asc" }, { section: "asc" }, { studentName: "asc" }]
+  }) : Promise.resolve([]);
+  const staffPromise: Promise<UdiseStaffSource[]> = includeStaff ? client.staffMember.findMany({
+    where: staffWhere,
+    take: UDISE_STAFF_ROW_LIMIT,
+    select: { staffCode: true, fullName: true, staffType: true, designation: true, mobile: true, email: true, qualification: true, status: true },
+    orderBy: [{ status: "asc" }, { fullName: "asc" }]
+  }) : Promise.resolve([]);
   const [school, studentsMatched, staffMatched, students, staff] = await Promise.all([
     client.schoolSettings.findUnique({ where: { id: "school" } }),
-    client.student.count({ where: studentWhere }),
-    client.staffMember.count({ where: staffWhere }),
-    client.student.findMany({
-      where: studentWhere,
-      take: UDISE_STUDENT_ROW_LIMIT,
-      select: {
-        admissionNo: true, studentName: true, fatherName: true, motherName: true, phone1: true, phone2: true, whatsappNumber: true,
-        className: true, section: true, status: true, dateOfBirth: true, address: true, aadhaarNo: true,
-        guardians: { select: { isPrimaryContact: true, guardian: { select: { displayName: true, primaryMobile: true, alternateMobile: true } } } },
-        academicYearEnrollments: { select: { academicYear: true, className: true, section: true, status: true, enrollmentDate: true } },
-        lifecycleEvents: { select: { academicYear: true, eventType: true } },
-        progressionDecisions: { select: { academicYear: true, decisionType: true, status: true, toAcademicYear: true } }
-      },
-      orderBy: [{ className: "asc" }, { section: "asc" }, { studentName: "asc" }]
-    }),
-    client.staffMember.findMany({ where: staffWhere, take: UDISE_STAFF_ROW_LIMIT, select: { staffCode: true, fullName: true, staffType: true, designation: true, mobile: true, email: true, qualification: true, status: true }, orderBy: [{ status: "asc" }, { fullName: "asc" }] })
+    studentsMatchedPromise,
+    staffMatchedPromise,
+    studentsPromise,
+    staffPromise
   ]);
   return buildUdiseChecklist({ students, staff, school, matchedRows: { students: studentsMatched, staff: staffMatched } });
 }
@@ -421,10 +457,14 @@ function safeCsvCell(value: unknown) {
   return `"${protectedValue.replaceAll('"', '""')}"`;
 }
 
+function csvEvidenceMetadataRows() {
+  return [[UDISE_PLANNING_WARNING], [UDISE_VERIFICATION_WARNING], ["Evidence status", UDISE_EVIDENCE.evidenceStatus], ["Evidence cycle", UDISE_EVIDENCE.academicCycle],
+    ["Evidence source", UDISE_EVIDENCE.title], ["Public filename", UDISE_EVIDENCE.publicFilename], ["Internal version", UDISE_EVIDENCE.internalVersion],
+    ["Document date", UDISE_EVIDENCE.documentDate], ["Reviewed date", UDISE_EVIDENCE.reviewedDate]];
+}
+
 function csvMetadataRows(report: UdiseChecklistReport, generatedAt: Date) {
-  return [[report.warning], [report.verificationWarning], ["Evidence status", report.evidence.evidenceStatus], ["Evidence cycle", report.evidence.academicCycle],
-    ["Evidence source", report.evidence.title], ["Public filename", report.evidence.publicFilename], ["Internal version", report.evidence.internalVersion],
-    ["Document date", report.evidence.documentDate], ["Reviewed date", report.evidence.reviewedDate],
+  return [...csvEvidenceMetadataRows(),
     ["Student rows", `${report.limits.studentRowsLoaded} loaded of ${report.limits.studentRowsMatched} matched${report.limits.studentRowsTruncated ? " - truncated" : ""}`],
     ["Staff rows", `${report.limits.staffRowsLoaded} loaded of ${report.limits.staffRowsMatched} matched${report.limits.staffRowsTruncated ? " - truncated" : ""}`],
     ["Generated at", generatedAt.toISOString()], []];
@@ -440,11 +480,11 @@ export function udiseChecklistCsv(report: UdiseChecklistReport, generatedAt = ne
   return rows.map((row) => row.map(safeCsvCell).join(",")).join("\r\n");
 }
 
-export function udiseSourceRegisterCsv(report: UdiseChecklistReport, generatedAt = new Date()) {
+export function udiseSourceRegisterCsv(generatedAt = new Date()) {
   const rows: unknown[][] = [
-    ...csvMetadataRows(report, generatedAt),
+    ...csvEvidenceMetadataRows(), ["Generated at", generatedAt.toISOString()], [],
     ["Evidence ID", "Group ID", "Domain", "Label", "Primary status", "Official source", "Source scope", "ERP mapping", "Applicability", "Sensitivity", "Recommendation"],
-    ...report.sourceRegister.map((group) => [group.evidenceId, group.id, group.domain, group.label, group.primaryStatus, group.sourceReference, group.sourceScope, group.currentErpMapping, group.applicability, group.sensitivity, group.recommendation])
+    ...UDISE_EVIDENCE_REGISTER.map((group) => [group.evidenceId, group.id, group.domain, group.label, group.primaryStatus, group.sourceReference, group.sourceScope, group.currentErpMapping, group.applicability, group.sensitivity, group.recommendation])
   ];
   return rows.map((row) => row.map(safeCsvCell).join(",")).join("\r\n");
 }

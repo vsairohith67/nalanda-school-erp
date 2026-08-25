@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const auth = await requireApiPermission("VIEW_UDISE_MASKED_ROWS");
   if (auth.response) return auth.response;
   const sp = request.nextUrl.searchParams;
-  const report = await loadUdiseChecklist(prisma, { staff: { staffType: sp.get("staffType") || undefined, status: sp.get("status") || undefined } });
+  const report = await loadUdiseChecklist(prisma, { includeStudents: false, staff: { staffType: sp.get("staffType") || undefined, status: sp.get("status") || undefined } });
   const rows = filterUdiseStaff(report.staff, { staffType: sp.get("staffType") || undefined, status: sp.get("status") || undefined, gapType: sp.get("gapType") || undefined }).slice(0, UDISE_STAFF_ROW_LIMIT);
   return udisePrivateJson({ warning: report.warning, verificationWarning: report.verificationWarning, evidence: report.evidence, limits: report.limits, rowLimit: UDISE_STAFF_ROW_LIMIT, rows });
 }

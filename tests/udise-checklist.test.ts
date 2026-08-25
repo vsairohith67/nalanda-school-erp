@@ -201,14 +201,23 @@ describe("UDISE-15E-1C masked Staff and export behavior", () => {
   it("uses opaque and masked references without names, contacts, addresses or sensitive values", () => {
     const value = report([student({ admissionNo: "=HYPERLINK(\"bad\")", studentName: "+Formula" })], [staff({ staffCode: "@BAD", fullName: "Private Teacher" })]);
     const csv = udiseChecklistCsv(value, new Date("2026-08-25T00:00:00Z"));
-    expect(value.students[0].rowReference).toMatch(/^STU-[A-F0-9]{12}$/);
-    expect(value.staff[0].rowReference).toMatch(/^STF-[A-F0-9]{12}$/);
+    expect(value.students[0].rowReference).toMatch(/^STU-[A-F0-9]{16}$/);
+    expect(value.staff[0].rowReference).toMatch(/^STF-[A-F0-9]{16}$/);
     expect(value.students[0].maskedAdmissionReference).toMatch(/^ADM-••••/);
     expect(value.staff[0].maskedStaffReference).toMatch(/^STAFF-••••/);
     for (const forbidden of ["Asha Student", "+Formula", "Private Teacher", "9999999999", "9000000000", "asha@example.test", "Available", "123412341234", "HYPERLINK"]) expect(csv).not.toContain(forbidden);
     expect(csv).not.toMatch(/passwordHash|userId|studentId|guardianId|aadhaarNo|DATABASE_URL/i);
     expect(csv).toContain("UDISE_15E_EVIDENCE_PARTIAL");
     expect(csv).toContain("Opaque row reference");
+  });
+
+  it("uses fresh random row references that cannot be recomputed from source identifiers", () => {
+    const first = report();
+    const second = report();
+    expect(first.students[0].rowReference).not.toBe(second.students[0].rowReference);
+    expect(first.staff[0].rowReference).not.toBe(second.staff[0].rowReference);
+    expect(first.students[0].rowReference).not.toContain("NPS001");
+    expect(first.staff[0].rowReference).not.toContain("T01");
   });
 
   it("enforces fixed row limits and fixed export names", () => {
@@ -223,7 +232,7 @@ describe("UDISE-15E-1C masked Staff and export behavior", () => {
   });
 
   it("exports all 75 source groups without row-level values", () => {
-    const csv = udiseSourceRegisterCsv(report(), new Date("2026-08-25T00:00:00Z"));
+    const csv = udiseSourceRegisterCsv(new Date("2026-08-25T00:00:00Z"));
     expect((csv.match(/"N1:/g) ?? [])).toHaveLength(74);
     expect(csv).toContain('"N7/N9/T3:ST27"');
     expect(csv).toContain("School identity and geography labels");

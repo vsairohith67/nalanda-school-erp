@@ -47,8 +47,18 @@ describe("UDISE-15E-1C route, authorization and privacy boundaries", () => {
     const helper = source("lib/udise-checklist.ts");
     expect(helper).toContain("UDISE_STUDENT_ROW_LIMIT = 2_000");
     expect(helper).toContain("UDISE_STAFF_ROW_LIMIT = 500");
+    expect(helper).toContain("UDISE_GUARDIAN_RELATION_LIMIT = 8");
+    expect(helper).toContain("UDISE_ENROLLMENT_RELATION_LIMIT = 2");
+    expect(helper).toContain("UDISE_LIFECYCLE_RELATION_LIMIT = 8");
+    expect(helper).toContain("UDISE_PROGRESSION_RELATION_LIMIT = 8");
     expect(helper).toContain("take: UDISE_STUDENT_ROW_LIMIT");
     expect(helper).toContain("take: UDISE_STAFF_ROW_LIMIT");
+    expect(helper).toContain("take: UDISE_GUARDIAN_RELATION_LIMIT");
+    expect(helper).toContain("take: UDISE_ENROLLMENT_RELATION_LIMIT");
+    expect(helper).toContain("take: UDISE_LIFECYCLE_RELATION_LIMIT");
+    expect(helper).toContain("take: UDISE_PROGRESSION_RELATION_LIMIT");
+    expect(helper).toContain("includeStudents");
+    expect(helper).toContain("includeStaff");
     expect(helper).toContain("studentRowsTruncated");
     expect(helper).toContain("staffRowsTruncated");
     expect(helper).toContain("client.student.count");
@@ -57,6 +67,8 @@ describe("UDISE-15E-1C route, authorization and privacy boundaries", () => {
     expect(helper).toContain("slice(0, UDISE_STAFF_ROW_LIMIT)");
     expect(helper).toContain("safeCsvCell");
     expect(helper).toContain("Opaque row reference");
+    const exportRoute = source("app/api/udise/export/route.ts");
+    expect(exportRoute.indexOf('requestedKind === "source-register"')).toBeLessThan(exportRoute.indexOf("loadUdiseChecklist(prisma)"));
     expect(helper).not.toMatch(/request\.json\(|searchParams\.entries\(|Object\.fromEntries\(.*searchParams/s);
   });
 

@@ -8,7 +8,7 @@ import { filterUdiseStudents, loadUdiseChecklist, UDISE_STUDENT_ROW_LIMIT } from
 export default async function UdiseStudentsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   await requirePermission("VIEW_UDISE_MASKED_ROWS");
   const search = await searchParams;
-  const report = await loadUdiseChecklist(prisma, { student: { className: search.className, section: search.section, status: search.status } });
+  const report = await loadUdiseChecklist(prisma, { includeStaff: false, student: { className: search.className, section: search.section, status: search.status } });
   const rows = filterUdiseStudents(report.students, { className: search.className, section: search.section, status: search.status, gapType: search.gapType }).slice(0, UDISE_STUDENT_ROW_LIMIT);
   const classes = [...new Set(report.students.map((row) => row.className))].sort();
   const sections = [...new Set(report.students.map((row) => row.section).filter(Boolean))].sort();
