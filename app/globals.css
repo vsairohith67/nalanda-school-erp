@@ -2696,7 +2696,7 @@ th {
 
 .content {
   min-width: 0;
-  max-width: 100%;
+  max-width: 100vw;
 }
 
 .topbar {
@@ -4435,10 +4435,7 @@ details summary {
 
 .lifecycle-stats .stat-card strong { font-size: 24px; }
 
-.udise-page { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
-.udise-page .page-header > *,
-.udise-page .section-title > *,
-.udise-summary-list div > * { min-width: 0; }
+.udise-page { min-width: 0; }
 .udise-warning { display: grid; gap: 4px; }
 .udise-warning span { color: var(--muted); font-size: 13px; }
 .udise-category h3 { margin-top: 0; }
@@ -4449,7 +4446,7 @@ details summary {
 .udise-category dt,
 .udise-summary-list dt { color: var(--muted); }
 .udise-category dd,
-.udise-summary-list dd { margin: 0; font-weight: 800; overflow-wrap: anywhere; text-align: right; }
+.udise-summary-list dd { margin: 0; font-weight: 800; }
 .udise-quick-links { display: flex; flex-wrap: wrap; gap: 10px; }
 .udise-quick-links a { font-weight: 800; }
 .udise-table-wrap { max-width: 100%; }
@@ -4459,8 +4456,6 @@ details summary {
 @media (max-width: 700px) {
   .udise-filters { grid-template-columns: 1fr 1fr; }
   .udise-filters button { align-self: end; }
-  .udise-summary-list div { align-items: flex-start; flex-direction: column; }
-  .udise-summary-list dd { text-align: left; }
 }
 
 /* Prompt 17B: exams and raw marks foundation */
