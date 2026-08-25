@@ -149,6 +149,7 @@ export const ACADEMIC_INTEGRITY_MARKS_WRITE_PERMISSIONS = new Set<CanonicalPermi
 
 const VIEWER_IMMUTABLE_DENIALS = new Set<CanonicalPermission>([
   "VIEW_LIBRARY_STOCK_VERIFICATION",
+  "VIEW_UDISE_MASKED_ROWS",
   "VIEW_LEDGER",
   "PRINT_LEDGER",
   ...PERMISSIONS.filter((permission) => permission.startsWith("EXPORT_"))

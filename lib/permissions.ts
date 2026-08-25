@@ -30,6 +30,7 @@ export const PERMISSIONS = [
   "FINALIZE_STUDENT_PROGRESSION",
   "VIEW_STUDENT_PROGRESSION_REPORTS",
   "VIEW_UDISE_CHECKLIST",
+  "VIEW_UDISE_MASKED_ROWS",
   "EXPORT_UDISE_CHECKLIST",
   "VIEW_GUARDIANS",
   "MANAGE_GUARDIANS",
@@ -599,8 +600,9 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       ,{ permission: "APPROVE_STUDENT_PROGRESSION", label: "Approve student progression", description: "Approve or reject submitted progression decisions." }
       ,{ permission: "FINALIZE_STUDENT_PROGRESSION", label: "Finalize student progression", description: "Confirm approved decisions in a transaction that preserves lifecycle history." }
       ,{ permission: "VIEW_STUDENT_PROGRESSION_REPORTS", label: "View progression reports", description: "Open read-only progression decision lists and summaries." }
-      ,{ permission: "VIEW_UDISE_CHECKLIST", label: "View UDISE planning checklist", description: "Open the read-only student, staff, and school data-gap checklist." }
-      ,{ permission: "EXPORT_UDISE_CHECKLIST", label: "Export UDISE planning checklist", description: "Download the internal checklist CSV; this is not an official UDISE+ export." }
+      ,{ permission: "VIEW_UDISE_CHECKLIST", label: "View UDISE planning checklist", description: "Open the aggregate checklist, evidence badge, summary, and source register." }
+      ,{ permission: "VIEW_UDISE_MASKED_ROWS", label: "View UDISE masked rows", description: "Open bounded Student and Staff gap rows with opaque and masked references." }
+      ,{ permission: "EXPORT_UDISE_CHECKLIST", label: "Export UDISE planning checklist", description: "Download a bounded masked-row or source-register CSV; this is not an official UDISE+ export." }
     ]
   },
   {
@@ -1402,7 +1404,7 @@ const principalPermissions = new Set<CanonicalPermission>([
   "VIEW_ACADEMIC_YEAR_ENROLLMENTS",
   "MANAGE_ACADEMIC_YEAR_ENROLLMENTS",
   "VIEW_STUDENT_PROGRESSION", "MANAGE_STUDENT_PROGRESSION", "APPROVE_STUDENT_PROGRESSION", "FINALIZE_STUDENT_PROGRESSION", "VIEW_STUDENT_PROGRESSION_REPORTS",
-  "VIEW_UDISE_CHECKLIST", "EXPORT_UDISE_CHECKLIST",
+  "VIEW_UDISE_CHECKLIST", "VIEW_UDISE_MASKED_ROWS", "EXPORT_UDISE_CHECKLIST",
   "VIEW_GUARDIANS",
   "VIEW_STAFF",
   "MANAGE_STAFF",
@@ -1471,7 +1473,7 @@ const adminPermissions = new Set<CanonicalPermission>([
   "VIEW_ACADEMIC_YEAR_ENROLLMENTS",
   "MANAGE_ACADEMIC_YEAR_ENROLLMENTS",
   "VIEW_STUDENT_PROGRESSION", "MANAGE_STUDENT_PROGRESSION", "APPROVE_STUDENT_PROGRESSION", "FINALIZE_STUDENT_PROGRESSION", "VIEW_STUDENT_PROGRESSION_REPORTS",
-  "VIEW_UDISE_CHECKLIST", "EXPORT_UDISE_CHECKLIST",
+  "VIEW_UDISE_CHECKLIST", "VIEW_UDISE_MASKED_ROWS", "EXPORT_UDISE_CHECKLIST",
   "VIEW_GUARDIANS",
   "MANAGE_GUARDIANS",
   "IMPORT_GUARDIANS",

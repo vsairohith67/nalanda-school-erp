@@ -9,6 +9,8 @@ import {
   saveRolePermissionMatrix,
   validateRolePermissionPayload
 } from "../lib/role-permissions";
+import { MARKS_DELEGATION_PERMISSIONS } from "../lib/academic-integrity";
+import { immutablePermissionDenial } from "../lib/iam/permission-governance";
 
 describe("role permissions", () => {
   it("keeps Super Admin all-access even when rows are missing", () => {
@@ -212,18 +214,25 @@ describe("role permissions", () => {
     expect(matrix.PARENT.VIEW_STUDENT_LIFECYCLE).toBe(false);
   });
 
-  it("uses view/export separation for the UDISE planning checklist", () => {
+  it("separates aggregate/register, masked-row, and export authority for the UDISE planning checklist", () => {
     const matrix = defaultPermissionMatrix();
     for (const role of ["SUPER_ADMIN", "DIRECTOR", "ADMIN", "PRINCIPAL"] as const) {
       expect(matrix[role].VIEW_UDISE_CHECKLIST).toBe(true);
+      expect(matrix[role].VIEW_UDISE_MASKED_ROWS).toBe(true);
       expect(matrix[role].EXPORT_UDISE_CHECKLIST).toBe(true);
     }
     expect(matrix.VIEWER.VIEW_UDISE_CHECKLIST).toBe(true);
+    expect(matrix.VIEWER.VIEW_UDISE_MASKED_ROWS).toBe(false);
     expect(matrix.VIEWER.EXPORT_UDISE_CHECKLIST).toBe(false);
-    for (const role of ["ACCOUNTANT", "TEACHER", "PARENT"] as const) {
+    expect(immutablePermissionDenial("VIEWER", "VIEW_UDISE_MASKED_ROWS")).toContain("permanently restricted");
+    for (const role of ["ACCOUNTANT", "COMPUTER_OPERATOR", "GATE_STAFF", "TEACHER", "PARENT", "STUDENT"] as const) {
       expect(matrix[role].VIEW_UDISE_CHECKLIST).toBe(false);
+      expect(matrix[role].VIEW_UDISE_MASKED_ROWS).toBe(false);
       expect(matrix[role].EXPORT_UDISE_CHECKLIST).toBe(false);
     }
+    expect(MARKS_DELEGATION_PERMISSIONS).not.toContain("VIEW_UDISE_CHECKLIST");
+    expect(MARKS_DELEGATION_PERMISSIONS).not.toContain("VIEW_UDISE_MASKED_ROWS");
+    expect(MARKS_DELEGATION_PERMISSIONS).not.toContain("EXPORT_UDISE_CHECKLIST");
   });
 
   it("normalizes legacy permissions to canonical matrix names", () => {
