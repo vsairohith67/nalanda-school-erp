@@ -1,5 +1,10 @@
 # Documentation Index
 
+- [OFFLINE-SYNC-1A specification](./OFFLINE_SYNC_1A_SPECIFICATION.md)
+- [OFFLINE-SYNC-1A user and operations guide](./OFFLINE_SYNC_1A_UX_AND_OPERATIONS.md)
+- [OFFLINE-SYNC-1A threat model](./security/OFFLINE_SYNC_1A_THREAT_MODEL.md)
+- [OFFLINE-SYNC-1A QA and release evidence](./evidence/OFFLINE_SYNC_1A_QA_CLEARANCE.md)
+
 ## Parent Meetings, Appointments and Follow-up — V1.5
 
 - [Parent Meetings, Appointments and Follow-up Architecture](PARENT_MEETINGS_APPOINTMENTS_ARCHITECTURE.md)

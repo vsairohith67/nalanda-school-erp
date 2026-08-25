@@ -41,7 +41,7 @@ describe("Prompt 23H admissions CRM governance", () => {
 
   it("includes every admissions collection in backup version 40 without raw invitation tokens", () => {
     const backup = createBackupDocument({ generatedAt: new Date("2026-08-03T12:00:00.000Z"), generatedBy: "ADMIT23H", students: [], feeStructures: [], payments: [], paymentAudits: [], users: [], admissionCycles: [{ id: "cycle-1" }], admissionApplications: [{ id: "app-1", invitationTokenHash: "a".repeat(64) }] });
-    expect(backup.metadata.backupVersion).toBe(43);
+    expect(backup.metadata.backupVersion).toBe(44);
     expect(backup.metadata.counts.admissionCycles).toBe(1);
     const parsed = parseAndValidateBackup(backup);
     expect(parsed.admissionApplications[0].invitationTokenHash).toBe("a".repeat(64));

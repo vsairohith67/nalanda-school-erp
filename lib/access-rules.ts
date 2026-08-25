@@ -149,6 +149,9 @@ export const NAV_ITEMS = [
   { href: "/website-admin", label: "Public Website", icon: "website", permission: "VIEW_PUBLIC_WEBSITE_ADMIN", group: "administration" },
   { href: "/payments", label: "Payments", icon: "payments", permission: "VIEW_PAYMENTS", group: "feesReports" },
   { href: "/payments/new", label: "Add Payment", icon: "rupee", permission: "CREATE_PAYMENTS", group: "feesReports" },
+  { href: "/offline/finance", label: "Offline Finance Drafts", icon: "rupee", permission: "USE_OFFLINE_SYNC", group: "feesReports", allowedRoles: ["SUPER_ADMIN", "ACCOUNTANT"] as Role[], feature: "OFFLINE_SYNC_1A" },
+  { href: "/offline/devices", label: "Offline Device Governance", icon: "roles", permission: "MANAGE_OFFLINE_SYNC_DEVICES", group: "administration", allowedRoles: ["SUPER_ADMIN"] as Role[], feature: "OFFLINE_SYNC_1A" },
+  { href: "/offline/conflicts", label: "Offline Conflict Review", icon: "audit", permission: "REVIEW_OFFLINE_SYNC_CONFLICTS", group: "administration", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL"] as Role[], feature: "OFFLINE_SYNC_1A" },
   { href: "/family-collections", label: "Family Collections", icon: "payments", permission: "VIEW_FAMILY_COLLECTIONS", group: "feesReports" },
   { href: "/family-collections/new", label: "New Family Collection", icon: "rupee", permission: "CREATE_FAMILY_COLLECTIONS", group: "feesReports" },
   { href: "/parent/family-receipts", label: "Family Fee Receipts", icon: "payments", permission: "VIEW_OWN_FAMILY_RECEIPTS", group: "studentsParents", requiredRole: "PARENT" },
@@ -183,7 +186,7 @@ export const NAV_ITEMS = [
   { href: "/onboarding", label: "Bulk Onboarding", icon: "importExport", permission: "DOWNLOAD_ONBOARDING_TEMPLATE", group: "system", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "COMPUTER_OPERATOR"] as Role[] },
   { href: "/import-verification", label: "Import Verification", icon: "importVerification", permission: "VIEW_IMPORT_VERIFICATION", group: "system" },
   { href: "/pilot-acceptance", label: "Pilot Acceptance", icon: "pilot", permission: "RUN_PILOT_ACCEPTANCE", group: "system" }
-] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role; allowedRoles?: Role[]; featureFlag?: OptionalOperationsFeatureCode; feature?: "PARENT_MEETINGS_V1_5" }>;
+] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role; allowedRoles?: Role[]; featureFlag?: OptionalOperationsFeatureCode; feature?: "PARENT_MEETINGS_V1_5" | "OFFLINE_SYNC_1A" }>;
 
 export type NavigationItem = (typeof NAV_ITEMS)[number];
 

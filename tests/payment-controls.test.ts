@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   assertReceiptStudentMatch,
   assertReceiptStudentMatchInDatabase,
+  MAX_PAYMENT_COMPONENTS,
   normalizePaymentComponents,
   paymentComponentTotal,
   requiresTransactionReference,
@@ -133,6 +134,12 @@ describe("payment collection controls", () => {
     ]);
   });
 
+  it("bounds split receipt components before mapping authoritative writes", () => {
+    const component = { amountPaid: 1, paymentMode: "Cash", receivedAccount: "Cash" };
+    expect(normalizePaymentComponents({ components: Array.from({ length: MAX_PAYMENT_COMPONENTS }, () => component) })).toHaveLength(MAX_PAYMENT_COMPONENTS);
+    expect(() => normalizePaymentComponents({ components: Array.from({ length: MAX_PAYMENT_COMPONENTS + 1 }, () => component) })).toThrow(`at most ${MAX_PAYMENT_COMPONENTS}`);
+  });
+
   it("allows same-student receipt components and rejects a different student", () => {
     expect(() => assertReceiptStudentMatch("QA-1", "QA-1")).not.toThrow();
     expect(() => assertReceiptStudentMatch(undefined, "QA-1")).not.toThrow();
@@ -158,7 +165,7 @@ describe("payment collection controls", () => {
 
   it("routes every payment writer through the shared receipt-owner invariant", () => {
     for (const file of [
-      "app/api/payments/route.ts",
+      "lib/payment-service.ts",
       "lib/payment-import.ts",
       "lib/restore-database.ts"
     ]) {

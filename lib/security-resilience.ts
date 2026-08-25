@@ -50,6 +50,7 @@ export const RATE_LIMIT_POLICIES: readonly RateLimitPolicy[] = [
   policy("upload", "HIGH", ["POST", "PUT", "PATCH"], 12, 10 * MINUTE, (path) => /(?:attachments|documents|pages|assets)(?:\/|$)/i.test(path)),
   policy("real-data-import", "HIGH", ["POST"], 6, 15 * MINUTE, (path) => path.startsWith("/api/import/") || /\/import(?:\/|$)/i.test(path)),
   policy("bulk-export", "HIGH", ["GET", "POST"], 12, 10 * MINUTE, (path) => /\/export(?:\/|$)/i.test(path)),
+  policy("offline-sync", "HIGH", ["GET", "POST", "PATCH"], 60, MINUTE, (path) => path.startsWith("/api/offline-sync/")),
   policy("sync", "HIGH", ["GET", "POST", "PATCH"], 30, MINUTE, (path) => /\/sync\/(?:push|pull)(?:\/|$)/i.test(path))
 ] as const;
 

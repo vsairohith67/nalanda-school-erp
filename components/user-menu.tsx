@@ -9,6 +9,7 @@ import { clearNalandaPwaCaches } from "@/lib/pwa-client";
 import { roleDisplayLabel, userInitials } from "@/lib/role-presentation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ActiveContextSwitcher } from "@/components/iam/active-context-switcher";
+import { lockOfflineVaultAcrossTabs } from "@/lib/offline-sync/client/coordinator";
 
 export function UserMenu({ user }: { user: AuthUser }) {
   const roleContext = roleDisplayLabel(user.role);
@@ -29,6 +30,7 @@ export function UserMenu({ user }: { user: AuthUser }) {
     setLoggingOut(true);
     setLogoutError("");
     try {
+      lockOfflineVaultAcrossTabs("LOGOUT");
       const [cacheResult, logoutResult] = await Promise.allSettled([
         clearNalandaPwaCaches(),
         postLogout()

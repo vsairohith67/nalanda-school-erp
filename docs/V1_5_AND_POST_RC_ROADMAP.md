@@ -109,6 +109,10 @@ bulk-export surface map were corrected and the exact-head acceptance passed.
 This remains software acceptance only: no deployment, provider, real-data or
 operational feature activation is authorised.
 
+## OFFLINE-SYNC-1A default-off software foundation
+
+Encrypted Accountant-only finance drafts and device-bound synchronization are implemented on a dedicated release branch. The capability is not an operational roadmap commitment: its flag is false at zero rollout. Production activation remains a separate high-risk gate requiring managed-device policy, training, monitoring, distributed abuse controls, support ownership and a narrow approved cohort.
+
 ## Related reconciliation documents
 
 - [Super Admin Command Center architecture](./SUPER_ADMIN_COMMAND_CENTER_ARCHITECTURE.md)

@@ -290,6 +290,16 @@
       "key": "cafeteria-v1-5",
       "status": "ENFORCED",
       "evidencePaths": ["lib/optional-operations-feature-flags.ts", "lib/optional-operations-api.ts"]
+    },
+    {
+      "key": "offline-sync-1a",
+      "status": "ENFORCED",
+      "evidencePaths": [
+        "lib/offline-sync/feature-flag.ts",
+        "lib/access-rules.ts",
+        "middleware.ts",
+        "app/api/offline-sync/sync/route.ts"
+      ]
     }
   ],
   "releaseBlockedBranches": []

@@ -196,7 +196,8 @@ export function AppShell({
   appInfo,
   pilotMode,
   enabledOptionalOperationsFeatures,
-  parentMeetingsEnabled
+  parentMeetingsEnabled,
+  offlineSyncEnabled
 }: {
   children: React.ReactNode;
   user: AuthUser | null;
@@ -208,6 +209,7 @@ export function AppShell({
   pilotMode: boolean;
   enabledOptionalOperationsFeatures: OptionalOperationsFeatureCode[];
   parentMeetingsEnabled: boolean;
+  offlineSyncEnabled: boolean;
 }) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -273,7 +275,8 @@ export function AppShell({
     pathname === "/forgot-password" ||
     pathname === "/reset-password" ||
     pathname === "/setup" ||
-    pathname === "/offline"
+    pathname === "/offline" ||
+    pathname === "/offline/finance"
   ) return children;
   if (!user) return null;
   if (user.role === "PARENT") {
@@ -334,6 +337,7 @@ export function AppShell({
   }
   const enabledFeatures = new Set<string>(enabledOptionalOperationsFeatures);
   if (parentMeetingsEnabled) enabledFeatures.add("PARENT_MEETINGS_V1_5");
+  if (offlineSyncEnabled) enabledFeatures.add("OFFLINE_SYNC_1A");
   const teacherInternalNavItems = user.role === "TEACHER" ? visibleNavigationItems(permissions, user.role, enabledFeatures) : [];
   if (user.role === "TEACHER" && teacherInternalNavItems.length === 0) {
     return (

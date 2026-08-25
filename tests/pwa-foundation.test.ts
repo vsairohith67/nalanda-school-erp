@@ -149,10 +149,11 @@ describe("service worker lifecycle and protocol", () => {
     expect(worker).toContain("isNalandaCacheName(name)");
   });
 
-  it("uses network-only navigation with only the generic offline fallback", () => {
+  it("uses network-only navigation with narrow generic and encrypted-finance shell fallbacks", () => {
     expect(worker).toContain('request.mode === "navigate"');
     expect(worker).toContain("fetch(request).catch");
-    expect(worker).toContain('caches.match(OFFLINE_PATH, { cacheName: STATIC_CACHE })');
+    expect(worker).toContain('url.pathname === OFFLINE_FINANCE_PATH ? OFFLINE_FINANCE_PATH : OFFLINE_PATH');
+    expect(worker).toContain('caches.match(fallbackPath, { cacheName: STATIC_CACHE })');
     expect(worker).not.toContain('caches.match(request, { cacheName: STATIC_CACHE });\n      return cached || fetch(request)');
   });
 
@@ -232,7 +233,7 @@ describe("PWA UI, access and privacy integration", () => {
 
   it("keeps the offline page generic and free of record fields", () => {
     const offline = source("app/offline/page.tsx");
-    expect(offline).toContain("School records are not stored for offline use.");
+    expect(offline).toContain("General school records are not stored for offline use.");
     expect(offline).not.toMatch(/studentName|admissionNo|staffName|receiptNo|guardianId|last viewed/i);
   });
 

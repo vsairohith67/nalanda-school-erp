@@ -4,6 +4,8 @@
 
 Current `main` and its retained annotated tags supersede the dated checkpoint below wherever they conflict. Support/complaints, observability, bulk onboarding, Classes I-X print acceptance, the V1 cross-module RC, Academic Integrity v1.1, Command Center, My Work, Universal Search, Smart AI Foundation, Smart AI Local Runtime, Event Media software, KG Report Cards software, Parent Meetings software and Optional Operations software are `CLEARED`; operational activation remains separately gated where documented. `FINAL-SCOPE-QA-1A` is also cleared: the active import, public-admissions, Payroll/ESS and bulk-export runtime gaps were corrected and accepted at `corrected-scope-qa-v43-2026-08-24`.
 
+`OFFLINE-SYNC-1A` is in release acceptance on `feature/offline-sync-1a`: encrypted Accountant-only fee-payment, expense and miscellaneous-income drafts, approved-device proof, privacy-minimal reference packs and server-authoritative idempotent sync are implemented behind a production default-off zero-rollout flag. This entry is not a clearance or activation claim until the exact-head QA/CI/merge/tag/tracker record is terminal.
+
 ## Parent Meetings and Appointments — V1.5 update
 
 | Capability | Software status | Remaining boundary |
