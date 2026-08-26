@@ -1,0 +1,201 @@
+name: PostgreSQL readiness dual-provider gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: postgres-readiness-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CI: "true"
+  NODE_ENV: test
+  NALANDA_ENVIRONMENT: TEST
+
+jobs:
+  sqlite-release-gate:
+    name: SQLite existing release gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      DATABASE_PROVIDER: sqlite
+      DATABASE_URL: file:../tmp/postgres-ci/sqlite.db
+      ALLOW_DEMO_USERS: "true"
+      ALLOW_DEMO_BUSINESS_DATA: "true"
+      DEMO_USER_DATABASE_ROOT: ${{ github.workspace }}/tmp/postgres-ci
+      DEMO_BUSINESS_DATA_ROOT: ${{ github.workspace }}/tmp/postgres-ci
+      SESSION_SECRET: synthetic-ci-session-secret-not-for-use
+      AUTH_SECRET: synthetic-ci-auth-secret-not-for-use
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: Fresh SQLite migration and seed
+        run: |
+          mkdir -p tmp/postgres-ci
+          touch tmp/postgres-ci/sqlite.db
+          pnpm db:generate:sqlite
+          pnpm db:migrate:sqlite
+          pnpm db:seed
+      - run: pnpm routes:list
+      - run: pnpm lifecycle:backfill
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm backup
+      - run: pnpm git:safety-check
+
+  postgres-schema-migrations:
+    name: PostgreSQL schema and migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_USER: nalanda_migrator
+          POSTGRES_PASSWORD: synthetic-ci-postgres-password
+          POSTGRES_DB: nalanda_schema_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nalanda_migrator -d nalanda_schema_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_PROVIDER: postgresql
+      POSTGRES_READINESS_SYNTHETIC_QA: "1"
+      DATABASE_URL: postgresql://nalanda_migrator:synthetic-ci-postgres-password@127.0.0.1:5432/nalanda_schema_ci?schema=public
+      DIRECT_URL: postgresql://nalanda_migrator:synthetic-ci-postgres-password@127.0.0.1:5432/nalanda_schema_ci?schema=public
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate:postgres
+      - name: Baseline and repeat deploy
+        run: |
+          pnpm db:migrate:postgres
+          pnpm db:migrate:postgres
+          pnpm db:status:postgres
+      - run: pnpm qa:postgres:parity
+      - run: pnpm qa:postgres
+
+  postgres-application-regression:
+    name: PostgreSQL application regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_USER: nalanda_migrator
+          POSTGRES_PASSWORD: synthetic-ci-postgres-password
+          POSTGRES_DB: nalanda_application_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nalanda_migrator -d nalanda_application_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_PROVIDER: postgresql
+      POSTGRES_READINESS_SYNTHETIC_QA: "1"
+      DATABASE_URL: postgresql://nalanda_migrator:synthetic-ci-postgres-password@127.0.0.1:5432/nalanda_application_ci?schema=public&application_name=synthetic
+      DIRECT_URL: postgresql://nalanda_migrator:synthetic-ci-postgres-password@127.0.0.1:5432/nalanda_application_ci?schema=public&application_name=synthetic
+      SESSION_SECRET: synthetic-ci-session-secret-not-for-use
+      AUTH_SECRET: synthetic-ci-auth-secret-not-for-use
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate:postgres
+      - run: pnpm db:migrate:postgres
+      - run: pnpm qa:postgres:performance
+      - run: pnpm qa:postgres:concurrency
+      - run: pnpm test
+      - run: pnpm build
+
+  cross-provider-parity-recovery:
+    name: Cross-provider parity and recovery
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_USER: nalanda_migrator
+          POSTGRES_PASSWORD: synthetic-ci-postgres-password
+          POSTGRES_DB: nalanda_parity_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nalanda_migrator -d nalanda_parity_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      POSTGRES_READINESS_SYNTHETIC_QA: "1"
+      SQLITE_URL: file:../tmp/postgres-ci/sqlite.db
+      POSTGRES_URL: postgresql://nalanda_migrator:synthetic-ci-postgres-password@127.0.0.1:5432/nalanda_parity_ci?schema=public
+      POSTGRES_TRANSFER_FILE: ${{ github.workspace }}/tmp/postgres-ci/synthetic-transfer-v44.json
+      ALLOW_DEMO_USERS: "true"
+      ALLOW_DEMO_BUSINESS_DATA: "true"
+      DEMO_USER_DATABASE_ROOT: ${{ github.workspace }}/tmp/postgres-ci
+      DEMO_BUSINESS_DATA_ROOT: ${{ github.workspace }}/tmp/postgres-ci
+      POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: Synthetic SQLite export
+        run: |
+          mkdir -p tmp/postgres-ci
+          touch tmp/postgres-ci/sqlite.db
+          export DATABASE_PROVIDER=sqlite DATABASE_URL="$SQLITE_URL"
+          pnpm db:generate:sqlite
+          pnpm db:migrate:sqlite
+          pnpm db:seed
+          pnpm exec tsx scripts/postgres/logical-transfer.ts export
+      - name: PostgreSQL logical restore twice
+        run: |
+          export DATABASE_PROVIDER=postgresql DATABASE_URL="$POSTGRES_URL" DIRECT_URL="$POSTGRES_URL"
+          pnpm db:generate:postgres
+          pnpm db:migrate:postgres
+          pnpm qa:postgres:restore
+          pnpm qa:postgres:parity
+      - name: Physical dump and restore
+        run: |
+          docker exec "$POSTGRES_CONTAINER_ID" pg_dump -U nalanda_migrator -d nalanda_parity_ci -Fc -f /tmp/postgres-readiness-ci.dump
+          docker exec "$POSTGRES_CONTAINER_ID" sha256sum /tmp/postgres-readiness-ci.dump
+          docker exec "$POSTGRES_CONTAINER_ID" createdb -U nalanda_migrator nalanda_parity_restore_ci
+          docker exec "$POSTGRES_CONTAINER_ID" pg_restore -U nalanda_migrator -d nalanda_parity_restore_ci --no-owner --exit-on-error /tmp/postgres-readiness-ci.dump
+          test "$(docker exec "$POSTGRES_CONTAINER_ID" psql -U nalanda_migrator -d nalanda_parity_restore_ci -At -c 'SELECT count(*) FROM information_schema.tables WHERE table_schema=''public'' AND table_type=''BASE TABLE'' AND table_name<>''_prisma_migrations'';')" = "330"
+          docker exec "$POSTGRES_CONTAINER_ID" rm -f /tmp/postgres-readiness-ci.dump

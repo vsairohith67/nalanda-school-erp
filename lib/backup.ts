@@ -29,6 +29,7 @@ import { emptyEventMediaBackup, eventMediaSchemaAvailable, EVENT_MEDIA_BACKUP_KE
 import { emptyParentMeetingBackup, loadParentMeetingBackup, parentMeetingSchemaAvailable, PARENT_MEETING_BACKUP_KEYS, validateParentMeetingBackupRows, type ParentMeetingBackup, type ParentMeetingBackupKey } from "./parent-meeting-backup";
 import { emptyOfflineSyncBackup, loadOfflineSyncBackup, offlineSyncSchemaAvailable, OFFLINE_SYNC_BACKUP_KEYS, validateOfflineSyncBackupRows, type OfflineSyncBackup, type OfflineSyncBackupKey } from "./offline-sync/backup";
 import { emptyNativeAppBackup, loadNativeAppBackup, nativeAppSchemaAvailable, NATIVE_APP_BACKUP_KEYS, validateNativeAppBackupRows, type NativeAppBackup, type NativeAppBackupKey } from "./native-app/backup";
+import { databaseColumnExists, databaseTableExists } from "./database-capabilities";
 
 const APP_NAME = "Nalanda Fee Control";
 
@@ -871,13 +872,12 @@ export function createBackupDocument(input: BackupDocumentInput) {
   };
 }
 
-async function sqliteSchemaHas(client: BackupClient, table: string, column?: string) {
-  const query = (client as any).$queryRawUnsafe;
-  if (typeof query !== "function") return true;
+async function databaseSchemaHas(client: BackupClient, table: string, column?: string) {
   const allowedTables = new Set(["StudentAttendanceSession", "StudentReportCardVersion", "AcademicCalendarVersion", "ClassworkItem", "AcademicReportDefinition", "AdmissionCycle", "PayrollPolicyVersion", "StaffPayslipRequest", "SupportRequest", "StudentDepartureRequest", "OnboardingBatch", "OnboardingRowOutcome", "OnboardingAuditEvent"]);
   if (!allowedTables.has(table)) throw new Error("BACKUP_SCHEMA_PROBE_REFUSED");
-  const rows = await query.call(client, `PRAGMA table_info("${table}")`) as Array<{ name?: string }>;
-  return column ? rows.some((row) => row.name === column) : rows.length > 0;
+  return column
+    ? databaseColumnExists(client as unknown as PrismaClient, table, column)
+    : databaseTableExists(client as unknown as PrismaClient, table);
 }
 
 export async function generateFullBackup(
@@ -885,19 +885,19 @@ export async function generateFullBackup(
   options: { generatedBy: string; generatedAt?: Date; excludeCloudBackupRunId?: string }
 ) {
   const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable, classworkAvailable, academicReportingAvailable, admissionsAvailable, payrollAvailable, payslipRequestAvailable, supportAvailable, safeExitAvailable, onboardingBatchesAvailable, onboardingRowsAvailable, onboardingAuditsAvailable] = await Promise.all([
-    sqliteSchemaHas(client, "StudentAttendanceSession", "operationalCalendarVersionKey"),
-    sqliteSchemaHas(client, "StudentReportCardVersion", "calendarBasisVersionKey"),
-    sqliteSchemaHas(client, "AcademicCalendarVersion"),
-    sqliteSchemaHas(client, "ClassworkItem"),
-    sqliteSchemaHas(client, "AcademicReportDefinition"),
-    sqliteSchemaHas(client, "AdmissionCycle"),
-    sqliteSchemaHas(client, "PayrollPolicyVersion"),
-    sqliteSchemaHas(client, "StaffPayslipRequest"),
-    sqliteSchemaHas(client, "SupportRequest"),
-    sqliteSchemaHas(client, "StudentDepartureRequest"),
-    sqliteSchemaHas(client, "OnboardingBatch"),
-    sqliteSchemaHas(client, "OnboardingRowOutcome"),
-    sqliteSchemaHas(client, "OnboardingAuditEvent")
+    databaseSchemaHas(client, "StudentAttendanceSession", "operationalCalendarVersionKey"),
+    databaseSchemaHas(client, "StudentReportCardVersion", "calendarBasisVersionKey"),
+    databaseSchemaHas(client, "AcademicCalendarVersion"),
+    databaseSchemaHas(client, "ClassworkItem"),
+    databaseSchemaHas(client, "AcademicReportDefinition"),
+    databaseSchemaHas(client, "AdmissionCycle"),
+    databaseSchemaHas(client, "PayrollPolicyVersion"),
+    databaseSchemaHas(client, "StaffPayslipRequest"),
+    databaseSchemaHas(client, "SupportRequest"),
+    databaseSchemaHas(client, "StudentDepartureRequest"),
+    databaseSchemaHas(client, "OnboardingBatch"),
+    databaseSchemaHas(client, "OnboardingRowOutcome"),
+    databaseSchemaHas(client, "OnboardingAuditEvent")
   ]);
   const studentAttendanceSessionArgs = {
     select: {

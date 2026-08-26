@@ -1,4 +1,5 @@
 import packageJson from "../package.json";
+import { databaseProviderLabel } from "@/lib/database-provider";
 
 export const APP_NAME = "Nalanda Fee Control";
 export const DATABASE_PROVIDER = "SQLite";
@@ -15,6 +16,6 @@ export function getAppInfo(environment: NodeJS.ProcessEnv = process.env): AppInf
     name: APP_NAME,
     version: packageJson.version,
     buildMode: environment.NODE_ENV === "production" ? "Production" : "Development",
-    databaseProvider: DATABASE_PROVIDER
+    databaseProvider: databaseProviderLabel(environment)
   };
 }

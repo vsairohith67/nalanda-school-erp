@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { databaseTableExists } from "@/lib/database-capabilities";
 
 export const NATIVE_APP_BACKUP_KEYS = ["nativeSessions", "nativeRefreshTokenHistory"] as const;
 export type NativeAppBackupKey = (typeof NATIVE_APP_BACKUP_KEYS)[number];
@@ -54,10 +55,12 @@ export function emptyNativeAppBackup(environment: NodeJS.ProcessEnv = process.en
 
 export async function nativeAppSchemaAvailable(client: PrismaClient) {
   try {
-    const rows = await client.$queryRawUnsafe<Array<{ name: string }>>(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('NativeSession','NativeRefreshTokenHistory')"
-    );
-    return rows.length === 2;
+    if (!(client as any).nativeSession?.findMany || !(client as any).nativeRefreshTokenHistory?.findMany) return false;
+    const [sessions, history] = await Promise.all([
+      databaseTableExists(client, "NativeSession"),
+      databaseTableExists(client, "NativeRefreshTokenHistory")
+    ]);
+    return sessions && history;
   } catch {
     return false;
   }

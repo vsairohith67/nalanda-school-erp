@@ -119,6 +119,10 @@ The Tauri 2 Windows, Android, and iOS foundation reuses the online ERP, server a
 
 The exact governed sequence is `POSTGRES-READINESS-1A`, then `PRIVATE-STAGING-1B`, then `CROSS-PLATFORM-APPS-1B`. Signing/store phases remain separate by platform.
 
+## POSTGRES-READINESS-1A provider-dual foundation
+
+The software now has an explicit SQLite-default and PostgreSQL 17 build contract, separate provider migration histories, deterministic model/trigger parity, provider-safe runtime health/backup paths, synthetic backup-v44 transfer, database roles, race/recovery QA, and a four-job exact-head CI design. This phase is software readiness only. `PRIVATE-STAGING-1B-R1` remains the separate provisioning/deployment gate, and real-data migration remains unauthorized.
+
 ## Related reconciliation documents
 
 - [Super Admin Command Center architecture](./SUPER_ADMIN_COMMAND_CENTER_ARCHITECTURE.md)
