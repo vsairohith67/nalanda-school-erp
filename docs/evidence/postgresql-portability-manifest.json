@@ -9,11 +9,11 @@
     "SHOULD_USE_PRISMA_API",
     "UNSAFE_OR_UNUSED"
   ],
-  "scannedFiles": 2622,
-  "providerSpecificFiles": 217,
+  "scannedFiles": 2628,
+  "providerSpecificFiles": 220,
   "counts": {
-    "REQUIRES_ADAPTER": 114,
-    "PROVIDER_NEUTRAL": 85,
+    "REQUIRES_ADAPTER": 115,
+    "PROVIDER_NEUTRAL": 87,
     "SQLITE_ONLY": 16,
     "POSTGRESQL_ONLY": 2
   },
@@ -325,824 +325,16 @@
       ]
     },
     {
-      "path": "docs/evidence/postgresql-portability-manifest.json",
+      "path": "docs/evidence/POSTGRES_READINESS_1A_QA_CLEARANCE.md",
       "classification": "PROVIDER_NEUTRAL",
       "matches": [
         {
-          "line": 37,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 47,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 57,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 61,
+          "line": 63,
           "pattern": "WAL"
         },
         {
-          "line": 65,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 69,
-          "pattern": "INSERT OR IGNORE"
-        },
-        {
-          "line": 73,
-          "pattern": "AUTOINCREMENT"
-        },
-        {
-          "line": 77,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 81,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 91,
-          "pattern": "datetime("
-        },
-        {
-          "line": 95,
-          "pattern": "datetime("
-        },
-        {
-          "line": 105,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 135,
+          "line": 63,
           "pattern": "sidecar"
-        },
-        {
-          "line": 227,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 237,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 261,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 271,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 299,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 303,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 323,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 333,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 343,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 417,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 421,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 431,
-          "pattern": "WAL"
-        },
-        {
-          "line": 523,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 539,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 543,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 553,
-          "pattern": "INSERT OR IGNORE"
-        },
-        {
-          "line": 573,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 633,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 709,
-          "pattern": "WAL"
-        },
-        {
-          "line": 713,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 717,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 721,
-          "pattern": "WAL"
-        },
-        {
-          "line": 745,
-          "pattern": "WAL"
-        },
-        {
-          "line": 749,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 759,
-          "pattern": "WAL"
-        },
-        {
-          "line": 767,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 781,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 795,
-          "pattern": "WAL"
-        },
-        {
-          "line": 805,
-          "pattern": "WAL"
-        },
-        {
-          "line": 815,
-          "pattern": "WAL"
-        },
-        {
-          "line": 819,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 823,
-          "pattern": "WAL"
-        },
-        {
-          "line": 827,
-          "pattern": "WAL"
-        },
-        {
-          "line": 835,
-          "pattern": "WAL"
-        },
-        {
-          "line": 839,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 843,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 877,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 887,
-          "pattern": "datetime("
-        },
-        {
-          "line": 891,
-          "pattern": "datetime("
-        },
-        {
-          "line": 895,
-          "pattern": "datetime("
-        },
-        {
-          "line": 905,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 937,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 941,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 945,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 967,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 975,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 983,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1061,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1071,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1081,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1091,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1131,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 1151,
-          "pattern": "datetime("
-        },
-        {
-          "line": 1155,
-          "pattern": "datetime("
-        },
-        {
-          "line": 1159,
-          "pattern": "datetime("
-        },
-        {
-          "line": 1163,
-          "pattern": "datetime("
-        },
-        {
-          "line": 1167,
-          "pattern": "datetime("
-        },
-        {
-          "line": 1171,
-          "pattern": "datetime("
-        },
-        {
-          "line": 1209,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 1243,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1253,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 1257,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 1261,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 1291,
-          "pattern": "INSERT OR IGNORE"
-        },
-        {
-          "line": 1295,
-          "pattern": "INSERT OR IGNORE"
-        },
-        {
-          "line": 1305,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1309,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1313,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 1317,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1321,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 1325,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1493,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1497,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1501,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 1525,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1529,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 1533,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1891,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1895,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1899,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 1923,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 1927,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 1931,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3567,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 3571,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3575,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3579,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3583,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 3587,
-          "pattern": "BEGIN IMMEDIATE"
-        },
-        {
-          "line": 3591,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3595,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3599,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3613,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 3617,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3621,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3625,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3629,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3633,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 3637,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3663,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 3667,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3671,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3675,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3679,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3683,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3687,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3691,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3695,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 3699,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3703,
-          "pattern": "BEGIN IMMEDIATE"
-        },
-        {
-          "line": 3707,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3711,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3715,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3719,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3723,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3737,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3741,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3793,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 3801,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 3809,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 3827,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3831,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 3835,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3859,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 3863,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3867,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3871,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3875,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3879,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 3883,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 3887,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 3891,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3901,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 3905,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 3909,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3927,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 3937,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3975,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 3979,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 3983,
-          "pattern": "sqlite_sequence"
-        },
-        {
-          "line": 3987,
-          "pattern": "AUTOINCREMENT"
-        },
-        {
-          "line": 3991,
-          "pattern": "WITHOUT ROWID"
-        },
-        {
-          "line": 3995,
-          "pattern": "INSERT OR IGNORE"
-        },
-        {
-          "line": 3999,
-          "pattern": "REPLACE INTO"
-        },
-        {
-          "line": 4003,
-          "pattern": "datetime("
-        },
-        {
-          "line": 4007,
-          "pattern": "strftime("
-        },
-        {
-          "line": 4011,
-          "pattern": "julianday("
-        },
-        {
-          "line": 4015,
-          "pattern": "unixepoch("
-        },
-        {
-          "line": 4019,
-          "pattern": "json_extract"
-        },
-        {
-          "line": 4023,
-          "pattern": "json_each"
-        },
-        {
-          "line": 4027,
-          "pattern": "group_concat"
-        },
-        {
-          "line": 4031,
-          "pattern": "COLLATE NOCASE"
-        },
-        {
-          "line": 4035,
-          "pattern": "GLOB"
-        },
-        {
-          "line": 4039,
-          "pattern": "VACUUM"
-        },
-        {
-          "line": 4043,
-          "pattern": "WAL"
-        },
-        {
-          "line": 4047,
-          "pattern": "busy_timeout"
-        },
-        {
-          "line": 4051,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 4055,
-          "pattern": "BEGIN IMMEDIATE"
-        },
-        {
-          "line": 4059,
-          "pattern": "BEGIN EXCLUSIVE"
-        },
-        {
-          "line": 4067,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 4151,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 4219,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4223,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 4227,
-          "pattern": "BEGIN IMMEDIATE"
-        },
-        {
-          "line": 4231,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4235,
-          "pattern": "foreign_keys"
-        },
-        {
-          "line": 4307,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4417,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4425,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4485,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 4513,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4521,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4559,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4567,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4621,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4663,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4715,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4723,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 4763,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 4793,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 4829,
-          "pattern": "sqlite_master"
-        },
-        {
-          "line": 5137,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 5141,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 5145,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 5169,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 5173,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 5305,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 5309,
-          "pattern": "PRAGMA"
-        },
-        {
-          "line": 5323,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 5345,
-          "pattern": "sidecar"
-        },
-        {
-          "line": 5541,
-          "pattern": "sqlite_master"
         }
       ]
     },
@@ -4825,11 +4017,11 @@
       "classification": "REQUIRES_ADAPTER",
       "matches": [
         {
-          "line": 162,
+          "line": 172,
           "pattern": "raw query"
         },
         {
-          "line": 165,
+          "line": 175,
           "pattern": "raw query"
         }
       ]
@@ -4839,99 +4031,99 @@
       "classification": "REQUIRES_ADAPTER",
       "matches": [
         {
-          "line": 8,
+          "line": 9,
           "pattern": "PRAGMA"
         },
         {
-          "line": 9,
+          "line": 10,
           "pattern": "sqlite_master"
         },
         {
-          "line": 10,
+          "line": 11,
           "pattern": "sqlite_sequence"
         },
         {
-          "line": 11,
+          "line": 12,
           "pattern": "AUTOINCREMENT"
         },
         {
-          "line": 12,
+          "line": 13,
           "pattern": "WITHOUT ROWID"
         },
         {
-          "line": 13,
+          "line": 14,
           "pattern": "INSERT OR IGNORE"
         },
         {
-          "line": 14,
+          "line": 15,
           "pattern": "REPLACE INTO"
         },
         {
-          "line": 15,
+          "line": 16,
           "pattern": "datetime("
         },
         {
-          "line": 16,
+          "line": 17,
           "pattern": "strftime("
         },
         {
-          "line": 17,
+          "line": 18,
           "pattern": "julianday("
         },
         {
-          "line": 18,
+          "line": 19,
           "pattern": "unixepoch("
         },
         {
-          "line": 19,
+          "line": 20,
           "pattern": "json_extract"
         },
         {
-          "line": 20,
+          "line": 21,
           "pattern": "json_each"
         },
         {
-          "line": 21,
+          "line": 22,
           "pattern": "group_concat"
         },
         {
-          "line": 22,
+          "line": 23,
           "pattern": "COLLATE NOCASE"
         },
         {
-          "line": 23,
+          "line": 24,
           "pattern": "GLOB"
         },
         {
-          "line": 24,
+          "line": 25,
           "pattern": "VACUUM"
         },
         {
-          "line": 25,
+          "line": 26,
           "pattern": "WAL"
         },
         {
-          "line": 26,
+          "line": 27,
           "pattern": "busy_timeout"
         },
         {
-          "line": 27,
+          "line": 28,
           "pattern": "foreign_keys"
         },
         {
-          "line": 28,
+          "line": 29,
           "pattern": "BEGIN IMMEDIATE"
         },
         {
-          "line": 29,
+          "line": 30,
           "pattern": "BEGIN EXCLUSIVE"
         },
         {
-          "line": 30,
+          "line": 31,
           "pattern": "SQLite file"
         },
         {
-          "line": 31,
+          "line": 32,
           "pattern": "sidecar"
         }
       ]
@@ -4975,27 +4167,27 @@
       "classification": "REQUIRES_ADAPTER",
       "matches": [
         {
-          "line": 30,
+          "line": 32,
           "pattern": "raw query"
         },
         {
-          "line": 31,
+          "line": 33,
           "pattern": "raw query"
         },
         {
-          "line": 43,
+          "line": 46,
           "pattern": "raw query"
         },
         {
-          "line": 45,
+          "line": 48,
           "pattern": "raw query"
         },
         {
-          "line": 56,
+          "line": 59,
           "pattern": "raw query"
         },
         {
-          "line": 74,
+          "line": 80,
           "pattern": "raw query"
         }
       ]
@@ -5005,7 +4197,7 @@
       "classification": "REQUIRES_ADAPTER",
       "matches": [
         {
-          "line": 48,
+          "line": 77,
           "pattern": "SQLite file"
         }
       ]
@@ -5027,6 +4219,20 @@
         {
           "line": 70,
           "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "scripts/postgres/trigger-parity.mjs",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 13,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 25,
+          "pattern": "SQLite file"
         }
       ]
     },
@@ -6123,7 +5329,7 @@
           "pattern": "SQLite file"
         },
         {
-          "line": 29,
+          "line": 32,
           "pattern": "SQLite file"
         }
       ]
@@ -6271,6 +5477,34 @@
       ]
     },
     {
+      "path": "tests/postgresql-synthetic-qa.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 18,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 19,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/postgresql-test-partition.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 54,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 55,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
       "path": "tests/qa20c-isolation.test.ts",
       "classification": "PROVIDER_NEUTRAL",
       "matches": [
@@ -6331,7 +5565,7 @@
       "classification": "PROVIDER_NEUTRAL",
       "matches": [
         {
-          "line": 89,
+          "line": 91,
           "pattern": "SQLite file"
         }
       ]

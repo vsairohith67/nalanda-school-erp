@@ -34,12 +34,20 @@ describe("PostgreSQL application regression partition", () => {
     const postgresJob = workflow.match(/  postgres-application-regression:[\s\S]+?(?=\n  cross-provider-parity-recovery:)/)?.[0];
     const crossProviderJob = workflow.match(/  cross-provider-parity-recovery:[\s\S]+$/)?.[0];
     const crossProviderJobEnv = crossProviderJob?.match(/\n    env:[\s\S]+?(?=\n    steps:)/)?.[0];
+    const syntheticSqliteSeed = readFileSync(path.join(workspace, "scripts", "postgres", "synthetic-sqlite-seed.ts"), "utf8");
+    const portabilityAudit = readFileSync(path.join(workspace, "scripts", "postgres", "portability-audit.mjs"), "utf8");
     const evidenceWriters = ["qa.ts", "roles-contract.ts", "performance-contract.ts", "concurrency-contract.ts"]
       .map((file) => readFileSync(path.join(workspace, "scripts", "postgres", file), "utf8"));
-    expect(sqliteJob).toContain("Configure ephemeral synthetic seed credentials");
-    expect(crossProviderJob).toContain("Configure ephemeral synthetic seed credentials");
-    expect(workflow.match(/seed_password SEED_DIRECTOR_PASSWORD/g)).toHaveLength(2);
-    expect(workflow.match(/openssl rand -hex 24/g)).toHaveLength(2);
+    expect(workflow).not.toContain("Configure ephemeral synthetic seed credentials");
+    expect(workflow).not.toContain("SEED_DIRECTOR_PASSWORD");
+    expect(workflow.match(/pnpm exec tsx scripts\/postgres\/synthetic-sqlite-seed\.ts/g)).toHaveLength(2);
+    expect(syntheticSqliteSeed).toContain("assertSyntheticSqliteTransfer()");
+    expect(syntheticSqliteSeed).toContain('randomBytes(24).toString("hex")');
+    expect(portabilityAudit).toContain('relative.replaceAll("\\\\", "/") !== outputRelative');
+    expect(workflow.match(/Install PDF rasterization dependency/g)).toHaveLength(2);
+    expect(workflow.match(/sudo apt-get install -y --no-install-recommends poppler-utils/g)).toHaveLength(2);
+    expect(crossProviderJob).toContain("restored_table_count=");
+    expect(crossProviderJob).toContain("table_schema='public'");
     for (const source of evidenceWriters) {
       expect(source).toMatch(/mkdirSync\(path\.dirname\(output(?:Path)?\), \{ recursive: true \}\)/);
     }

@@ -25,6 +25,7 @@ jobs:
     timeout-minutes: 60
     env:
       DATABASE_PROVIDER: sqlite
+      POSTGRES_READINESS_SYNTHETIC_QA: "1"
       DATABASE_URL: file:../tmp/postgres-ci/sqlite.db
       ALLOW_DEMO_USERS: "true"
       ALLOW_DEMO_BUSINESS_DATA: "true"
@@ -39,25 +40,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install PDF rasterization dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends poppler-utils
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
-      - name: Configure ephemeral synthetic seed credentials
-        shell: bash
-        run: |
-          seed_password() {
-            printf '%s=CI-%s!\n' "$1" "$(openssl rand -hex 24)" >> "$GITHUB_ENV"
-          }
-          seed_password SEED_DIRECTOR_PASSWORD
-          seed_password SEED_ADMIN_PASSWORD
-          seed_password SEED_ACCOUNTANT_PASSWORD
-          seed_password SEED_VIEWER_PASSWORD
       - name: Fresh SQLite migration and seed
         run: |
           mkdir -p tmp/postgres-ci
           touch tmp/postgres-ci/sqlite.db
           pnpm db:generate:sqlite
           pnpm db:migrate:sqlite
-          pnpm db:seed
+          pnpm exec tsx scripts/postgres/synthetic-sqlite-seed.ts
           cp tmp/postgres-ci/sqlite.db prisma/dev.db
       - run: pnpm routes:list
       - run: pnpm lifecycle:backfill
@@ -156,6 +151,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install PDF rasterization dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends poppler-utils
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - name: Configure synthetic PostgreSQL connection
@@ -217,16 +216,6 @@ jobs:
           node-version: 22
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
-      - name: Configure ephemeral synthetic seed credentials
-        shell: bash
-        run: |
-          seed_password() {
-            printf '%s=CI-%s!\n' "$1" "$(openssl rand -hex 24)" >> "$GITHUB_ENV"
-          }
-          seed_password SEED_DIRECTOR_PASSWORD
-          seed_password SEED_ADMIN_PASSWORD
-          seed_password SEED_ACCOUNTANT_PASSWORD
-          seed_password SEED_VIEWER_PASSWORD
       - name: Configure synthetic PostgreSQL connection
         shell: bash
         run: |
@@ -242,7 +231,7 @@ jobs:
           export DATABASE_PROVIDER=sqlite DATABASE_URL="$SQLITE_URL"
           pnpm db:generate:sqlite
           pnpm db:migrate:sqlite
-          pnpm db:seed
+          pnpm exec tsx scripts/postgres/synthetic-sqlite-seed.ts
           pnpm exec tsx scripts/postgres/logical-transfer.ts export
       - name: PostgreSQL logical restore twice
         run: |
@@ -259,5 +248,6 @@ jobs:
           docker exec "$POSTGRES_CONTAINER_ID" sha256sum /tmp/postgres-readiness-ci.dump
           docker exec "$POSTGRES_CONTAINER_ID" createdb -U nalanda_migrator nalanda_parity_restore_ci
           docker exec "$POSTGRES_CONTAINER_ID" pg_restore -U nalanda_migrator -d nalanda_parity_restore_ci --no-owner --exit-on-error /tmp/postgres-readiness-ci.dump
-          test "$(docker exec "$POSTGRES_CONTAINER_ID" psql -U nalanda_migrator -d nalanda_parity_restore_ci -At -c 'SELECT count(*) FROM information_schema.tables WHERE table_schema=''public'' AND table_type=''BASE TABLE'' AND table_name<>''_prisma_migrations'';')" = "330"
+          restored_table_count="$(docker exec "$POSTGRES_CONTAINER_ID" psql -U nalanda_migrator -d nalanda_parity_restore_ci -At -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' AND table_name<>'_prisma_migrations';")"
+          test "$restored_table_count" = "330"
           docker exec "$POSTGRES_CONTAINER_ID" rm -f /tmp/postgres-readiness-ci.dump

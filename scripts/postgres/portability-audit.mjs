@@ -4,6 +4,7 @@ import path from "node:path";
 
 const root = path.resolve(".");
 const output = path.join(root, "docs", "evidence", "postgresql-portability-manifest.json");
+const outputRelative = path.relative(root, output).replaceAll("\\", "/");
 const patterns = [
   ["PRAGMA", /\bPRAGMA\b/i],
   ["sqlite_master", /\bsqlite_master\b/i],
@@ -49,6 +50,7 @@ function classification(relative) {
 const files = execFileSync("rg", ["--files", "-g", "!node_modules/**", "-g", "!.next/**", "-g", "!tmp/**", "-g", "!.qa-artifacts/**"], { cwd: root, encoding: "utf8" })
   .split(/\r?\n/)
   .filter(Boolean)
+  .filter((relative) => relative.replaceAll("\\", "/") !== outputRelative)
   .sort((a, b) => a.localeCompare(b));
 const entries = [];
 for (const relative of files) {
