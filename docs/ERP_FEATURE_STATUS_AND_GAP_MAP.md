@@ -315,3 +315,9 @@ Independent Prompt 23B-M-QA corrected 12 over-strong row classifications. Naland
 This is planning/reconciliation only. No Management gap module was implemented. Parent, Teacher and Principal audits remain pending, so Prompt 23B final consolidation is **not complete** and cross-role priorities remain held. Prompt 21B/21C/21D remain blocked; Prompt 22B remains conditional and unimplemented.
 
 Management-only QA result: `MANAGEMENT_RECONCILIATION_CLEARED`. The clearance applies only to the corrected interim reconciliation; see `SCHOOLKNOT_MANAGEMENT_RECONCILIATION_QA_REPORT.md`. Final Prompt 23B still waits for the three pending authenticated role audits.
+
+## Cross-platform Windows, Android and iOS apps
+
+`CROSS-PLATFORM-APPS-1A` implements a single Tauri 2 software foundation with a trusted bundled shell and a zero-capability remote ERP surface. The native auth bridge, encrypted Offline Sync adapter, app lock, device governance, three permitted Accountant draft workflows, platform projects, private unsigned CI, and default-off server gates are in scope. The server remains authoritative.
+
+Current release state in this branch is `READY_FOR_EXACT_HEAD_QA`. Remaining product boundaries are not hidden gaps: private HTTPS staging, PostgreSQL readiness, interactive/physical-device certification, signing, store publication, push, production origins, real users/data, deployment, and operational activation are separately governed and remain inactive.

@@ -1,0 +1,19 @@
+[[permission]]
+identifier = "local-shell-commands"
+description = "Narrow app commands; no shell, arbitrary filesystem, arbitrary SQL or generic URL command."
+commands.allow = [
+  "app_profile",
+  "vault_snapshot_state",
+  "cache_put",
+  "cache_list",
+  "cache_delete",
+  "cache_reset",
+  "unlock_guard_status",
+  "unlock_guard_record_failure",
+  "unlock_guard_clear",
+  "diagnostic_record",
+  "diagnostic_export",
+  "native_api_request",
+  "open_authorization",
+  "open_online_erp",
+]

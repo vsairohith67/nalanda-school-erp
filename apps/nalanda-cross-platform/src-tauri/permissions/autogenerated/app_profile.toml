@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-app-profile"
+description = "Enables the app_profile command without any pre-configured scope."
+commands.allow = ["app_profile"]
+
+[[permission]]
+identifier = "deny-app-profile"
+description = "Denies the app_profile command without any pre-configured scope."
+commands.deny = ["app_profile"]

@@ -20,6 +20,7 @@ export const PRIVATE_ROBOTS_EXCLUSIONS = [
   "/fee-register-ocr", "/forgot-password", "/guardians", "/homework", "/id-cards", "/import-export", "/onboarding",
   "/import-verification", "/install-app", "/leave", "/ledger", "/library", "/login",
   "/marks", "/misc-income", "/notices", "/notifications", "/offline", "/operations", "/parent", "/parent-meetings",
+  "/native",
   "/payments", "/payroll", "/my-payroll", "/my-payslip-requests", "/payslip-requests", "/pending-dues", "/pilot-acceptance", "/receipt-audit", "/receipts", "/student", "/admissions/apply",
   "/permission-profiles", "/report-cards", "/reset-password", "/roles", "/settings", "/setup", "/sms-email", "/staff",
   "/student-departures", "/students", "/substitutes", "/teacher", "/teacher-analytics", "/timetable",

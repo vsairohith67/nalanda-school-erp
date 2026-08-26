@@ -27,6 +27,7 @@ import { OPTIONAL_OPERATIONS_BACKUP_KEYS, restoreOptionalOperationsBackup, type 
 import { EVENT_MEDIA_BACKUP_KEYS, restoreEventMediaBackup, type EventMediaBackupKey } from "@/lib/event-media-backup";
 import { PARENT_MEETING_BACKUP_KEYS, restoreParentMeetingBackup, type ParentMeetingBackupKey } from "@/lib/parent-meeting-backup";
 import { OFFLINE_SYNC_BACKUP_KEYS, restoreOfflineSyncBackup, type OfflineSyncBackupKey } from "@/lib/offline-sync/backup";
+import { NATIVE_APP_BACKUP_KEYS, restoreNativeAppBackup, type NativeAppBackupKey } from "@/lib/native-app/backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -104,6 +105,7 @@ type RestoreDatabaseClient = Pick<
   | "staffPayslipRequestEvent" | "staffPayslipDocumentVersion" | "staffPayslipDocumentMonth" | "staffPayslipAccessEvent"
   | "transportVehicle" | "transportRoute" | "transportStop" | "transportRouteStop" | "transportStudentAssignment" | "transportAuditEvent"
   | "cafeteriaCatalogItem" | "cafeteriaMenu" | "cafeteriaMenuItem" | "cafeteriaStudentEnrollment" | "cafeteriaMealRecord" | "cafeteriaAuditEvent"
+  | "offlineSyncDevice" | "nativeSession" | "nativeRefreshTokenHistory"
 >;
 
 export async function restoreValidatedBackup(
@@ -133,6 +135,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(EVENT_MEDIA_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<EventMediaBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(PARENT_MEETING_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<ParentMeetingBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(OFFLINE_SYNC_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<OfflineSyncBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(NATIVE_APP_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<NativeAppBackupKey, ReturnType<typeof emptyEntityResult>>),
     technicalOperations: emptyEntityResult(),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
@@ -628,6 +631,9 @@ async function restoreIntoDatabase(
   await restoreOfflineSyncBackup(client as unknown as PrismaClient, backup, {
     users: backupUserToLocalUser,
     restoredBy: restoredBy.id
+  }, result);
+  await restoreNativeAppBackup(client as unknown as PrismaClient, backup, {
+    users: backupUserToLocalUser
   }, result);
   await restoreTeacherAnalyticsData(client, backup, result);
   await restoreStaffAttendanceData(client, backup, backupUserToLocalUser, result);

@@ -37,7 +37,7 @@ function classify(error: unknown): { outcome: "CONFLICT" | "REJECTED"; code: str
   return { outcome: "REJECTED", code: message.slice(0, 120).replace(/[^A-Za-z0-9_-]/g, "_").toUpperCase() || "DOMAIN_VALIDATION_FAILED" };
 }
 
-async function reauthorize(tx: Prisma.TransactionClient, user: AuthUser, sessionId: string, device: OfflineSyncDevice, permission: string) {
+async function reauthorize(tx: Prisma.TransactionClient, user: AuthUser, sessionId: string | null | undefined, device: OfflineSyncDevice, permission: string) {
   const freshDevice = await tx.offlineSyncDevice.findUnique({ where: { id: device.id } });
   if (!freshDevice || freshDevice.status !== "ACTIVE" || freshDevice.userId !== user.id || freshDevice.keyVersion !== device.keyVersion) throw new Error("DEVICE_NO_LONGER_ACTIVE");
   if (!offlineSyncRoleAllowed(user.role)) throw new Error("OFFLINE_ROLE_NOT_ALLOWED");
@@ -64,7 +64,7 @@ async function createAuthoritative(tx: Prisma.TransactionClient, item: OfflineMu
   return { entityType: "MISC_INCOME_RECEIPT", entityId: value.id, reference: value.receiptNumber, result: { receiptId: value.id, receiptNumber: value.receiptNumber, status: value.status } };
 }
 
-export async function processOfflineMutation(input: { item: OfflineMutationEnvelope; requestHash: string; device: OfflineSyncDevice; user: AuthUser; sessionId: string }): Promise<Result> {
+export async function processOfflineMutation(input: { item: OfflineMutationEnvelope; requestHash: string; device: OfflineSyncDevice; user: AuthUser; sessionId?: string | null }): Promise<Result> {
   const calculatedPayloadHash = sha256Hex(stableJson(input.item.payload));
   if (calculatedPayloadHash !== input.item.payloadHash) return { clientMutationId: input.item.clientMutationId, outcome: "REJECTED", code: "PAYLOAD_HASH_MISMATCH" };
   try {

@@ -78,6 +78,8 @@ describe("full backup", () => {
       offlineSyncMutations: 0,
       offlineSyncEvents: 0,
       offlineSyncConflictReviews: 0,
+      nativeSessions: 0,
+      nativeRefreshTokenHistory: 0,
       eventMediaAlbums: 0, eventMediaAssets: 0, eventMediaDerivatives: 0,
       eventMediaStudentAssociations: 0, mediaPublicationConsents: 0, eventMediaAuditEvents: 0,
       bookCatalogItems: 0, bookCatalogRates: 0, bookSaleReceipts: 0, bookSaleReceiptLines: 0, bookCashSettlements: 0,
@@ -235,6 +237,9 @@ describe("full backup", () => {
     expect(backup.feeStructures).toHaveLength(1);
     expect(backup.payments[0]).toMatchObject({ isCancelled: true });
     expect(backup.paymentAudits).toHaveLength(1);
+    expect(backup.nativeSessions).toEqual([]);
+    expect(backup.nativeRefreshTokenHistory).toEqual([]);
+    expect(backup.nativeAppPolicy).toMatchObject({ nativeApiVersion: 1, featureDefaultEnabled: false });
     expect(backup.rolePermissions).toEqual([{ role: "ACCOUNTANT", permission: "RUN_BACKUP", enabled: true }]);
     expect(backup.guardians).toHaveLength(1);
     expect(backup.studentGuardians).toHaveLength(1);

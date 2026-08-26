@@ -172,7 +172,8 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
 
   it("preserves the prior checkpoint and recognizes additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(326);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(330);
+    for (const model of ["NativeAuthRequest", "NativeAuthorizationCode", "NativeSession", "NativeRefreshTokenHistory"]) expect(schema).toContain(`model ${model} {`);
     expect(schema).toContain("model SuperAdminDiaryEntry {");
     expect(schema).toContain("model SuperAdminTask {");
     expect(schema).toContain("model SuperAdminContact {");
@@ -205,6 +206,7 @@ describe("Prompt 23B-M Management-only reconciliation", () => {
       "20260822113000_event_media_v1_5_foundation",
       "20260822170000_parent_meetings_v1_5",
       "20260825090000_offline_sync_1a",
+      "20260826003000_cross_platform_apps_1a",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);

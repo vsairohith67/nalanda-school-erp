@@ -1,0 +1,15 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "local-main",
+  "description": "Least-privilege commands for the bundled local shell only.",
+  "local": true,
+  "windows": ["main"],
+  "permissions": [
+    "local-shell-commands",
+    "deep-link:default",
+    "stronghold:default",
+    "stronghold:allow-destroy",
+    "stronghold:allow-remove-store-record",
+    "stronghold:allow-remove-secret"
+  ]
+}

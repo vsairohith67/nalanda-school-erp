@@ -1,0 +1,41 @@
+{
+  "gate": "CROSS-PLATFORM-APPS-1A copied-database adversarial QA",
+  "executedAt": "2026-08-26",
+  "verdict": "PASS",
+  "database": {
+    "operationalPath": "C:\\Users\\rohit\\Documents\\school software\\prisma\\dev.db",
+    "beforeSha256": "65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA",
+    "afterSha256": "65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA",
+    "beforeBytes": 8409088,
+    "afterBytes": 8409088,
+    "sidecarsBefore": [],
+    "sidecarsAfter": [],
+    "copyOnly": true,
+    "syntheticOnly": true,
+    "migrationDeployPasses": 2,
+    "logicalRestorePasses": 2,
+    "backupVersion": 44
+  },
+  "checks": {
+    "authorization": "PKCE_S256_DEVICE_SIGNED",
+    "authorizationCodeReplay": "REJECTED",
+    "access": "OPAQUE_DEVICE_BOUND",
+    "mixedSessionDevice": "REJECTED_BEFORE_MUTATION",
+    "refreshRotation": "ROTATED",
+    "refreshReuse": "FAMILY_REVOKED",
+    "credentialVersionChange": "ACCESS_REJECTED",
+    "preRevocationBackupRestore": "REVOKED_REAUTH_REQUIRED",
+    "localCacheContract": "CIPHERTEXT_ONLY",
+    "revocationTrigger": "UNREVOCATION_REJECTED",
+    "nativeBackup": "DURABLE_BINDINGS_POLICY_AND_REVOCATION_ONLY",
+    "revokedSessionAfterRestore": "REVOKED",
+    "plaintextNativeCredentialsInBackup": "ABSENT"
+  },
+  "notes": [
+    "The expected NATIVE_SESSION_REVOCATION_IRREVERSIBLE SQLite error was deliberately provoked and caught.",
+    "A valid same-user device-B proof was rejected under device-A's session before nonce or last-seen mutation.",
+    "A backup captured while a synthetic session was active was restored after the row was removed; the restored credential was forced revoked and retained access material was rejected.",
+    "The final logical backup was parsed and restored twice; durable binding metadata, rotation history, revocation state and the version-policy snapshot were covered while raw codes and tokens were absent.",
+    "No real school identity, finance record, device or server was used."
+  ]
+}

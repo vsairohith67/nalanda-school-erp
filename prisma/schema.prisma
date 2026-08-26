@@ -456,6 +456,9 @@ model User {
   offlineSyncMutations             OfflineSyncMutation[]               @relation("OfflineSyncMutationActor")
   offlineSyncEvents                OfflineSyncEvent[]                  @relation("OfflineSyncEventActor")
   offlineSyncConflictReviews       OfflineSyncConflictReview[]         @relation("OfflineSyncConflictReviewer")
+  nativeAuthRequests               NativeAuthRequest[]
+  nativeAuthorizationCodes         NativeAuthorizationCode[]
+  nativeSessions                   NativeSession[]
 
   @@index([role])
   @@index([isActive])
@@ -8764,32 +8767,34 @@ model ParentMeetingEvent {
 // append-only events and governed conflict reviews. Browser-local encrypted
 // drafts, offline PIN material and private device keys never enter the server DB.
 model OfflineSyncDevice {
-  id               String                      @id @default(cuid())
-  publicDeviceId   String                      @unique @default(uuid())
-  userId           String
-  user             User                        @relation("OfflineSyncDeviceOwner", fields: [userId], references: [id], onDelete: Restrict)
-  label            String
-  platform         String
-  publicSigningKey String
-  publicKeyHash    String
-  keyAlgorithm     String                      @default("ECDSA_P256_SHA256")
-  keyVersion       Int                         @default(1)
-  status           String                      @default("PENDING_APPROVAL")
-  requestedAt      DateTime                    @default(now())
-  approvedAt       DateTime?
-  approvedByUserId String?
-  approvedBy       User?                       @relation("OfflineSyncDeviceApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
-  lastSeenAt       DateTime?
-  revokedAt        DateTime?
-  revokedByUserId  String?
-  revokedBy        User?                       @relation("OfflineSyncDeviceRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull)
-  revocationReason String?
-  createdAt        DateTime                    @default(now())
-  updatedAt        DateTime                    @updatedAt
-  nonces           OfflineSyncNonce[]
-  mutations        OfflineSyncMutation[]
-  events           OfflineSyncEvent[]
-  conflictReviews  OfflineSyncConflictReview[]
+  id                       String                      @id @default(cuid())
+  publicDeviceId           String                      @unique @default(uuid())
+  userId                   String
+  user                     User                        @relation("OfflineSyncDeviceOwner", fields: [userId], references: [id], onDelete: Restrict)
+  label                    String
+  platform                 String
+  publicSigningKey         String
+  publicKeyHash            String
+  keyAlgorithm             String                      @default("ECDSA_P256_SHA256")
+  keyVersion               Int                         @default(1)
+  status                   String                      @default("PENDING_APPROVAL")
+  requestedAt              DateTime                    @default(now())
+  approvedAt               DateTime?
+  approvedByUserId         String?
+  approvedBy               User?                       @relation("OfflineSyncDeviceApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  lastSeenAt               DateTime?
+  revokedAt                DateTime?
+  revokedByUserId          String?
+  revokedBy                User?                       @relation("OfflineSyncDeviceRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull)
+  revocationReason         String?
+  createdAt                DateTime                    @default(now())
+  updatedAt                DateTime                    @updatedAt
+  nonces                   OfflineSyncNonce[]
+  mutations                OfflineSyncMutation[]
+  events                   OfflineSyncEvent[]
+  conflictReviews          OfflineSyncConflictReview[]
+  nativeAuthorizationCodes NativeAuthorizationCode[]
+  nativeSessions           NativeSession[]
 
   @@index([userId, status])
   @@index([status, requestedAt])
@@ -8899,4 +8904,105 @@ model OfflineSyncConflictReview {
   @@index([mutationId, reviewedAt])
   @@index([deviceId, reviewedAt])
   @@index([reviewedByUserId, reviewedAt])
+}
+
+// CROSS-PLATFORM-APPS-1A stores only hashed opaque credentials, public signing
+// material and privacy-safe authorization linkage. Passwords, PINs, private
+// device keys, plaintext local drafts and refresh-token values are forbidden.
+model NativeAuthRequest {
+  id                String                   @id @default(cuid())
+  publicRequestId   String                   @unique @default(uuid())
+  challengeHash     String                   @unique
+  stateHash         String
+  nonceHash         String
+  pkceChallenge     String
+  pkceMethod        String                   @default("S256")
+  appId             String
+  appVersion        String
+  redirectUri       String
+  platform          String
+  deviceLabel       String
+  publicDeviceId    String
+  publicSigningKey  String
+  publicKeyHash     String
+  status            String                   @default("PENDING_BROWSER_AUTH")
+  userId            String?
+  user              User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  webSessionId      String?
+  roleAssignmentId  String?
+  expiresAt         DateTime
+  authorizedAt      DateTime?
+  consumedAt        DateTime?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  authorizationCode NativeAuthorizationCode?
+
+  @@index([publicDeviceId, status])
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+}
+
+model NativeAuthorizationCode {
+  id                   String            @id @default(cuid())
+  codeHash             String            @unique
+  requestId            String            @unique
+  request              NativeAuthRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  userId               String
+  user                 User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  deviceId             String
+  device               OfflineSyncDevice @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  roleAssignmentId     String
+  credentialVersion    Int
+  authorizationVersion Int
+  appId                String
+  redirectUri          String
+  pkceChallenge        String
+  expiresAt            DateTime
+  usedAt               DateTime?
+  createdAt            DateTime          @default(now())
+
+  @@index([userId, expiresAt])
+  @@index([deviceId, expiresAt])
+}
+
+model NativeSession {
+  id                   String                      @id @default(cuid())
+  publicSessionId      String                      @unique @default(uuid())
+  userId               String
+  user                 User                        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  deviceId             String
+  device               OfflineSyncDevice           @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  roleAssignmentId     String
+  accessTokenHash      String                      @unique
+  refreshTokenHash     String                      @unique
+  credentialVersion    Int
+  authorizationVersion Int
+  scopesJson           String
+  tokenVersion         Int                         @default(1)
+  accessExpiresAt      DateTime
+  refreshExpiresAt     DateTime
+  absoluteExpiresAt    DateTime
+  lastSeenAt           DateTime                    @default(now())
+  revokedAt            DateTime?
+  revocationReason     String?
+  createdAt            DateTime                    @default(now())
+  updatedAt            DateTime                    @updatedAt
+  refreshHistory       NativeRefreshTokenHistory[]
+
+  @@index([userId, revokedAt, absoluteExpiresAt])
+  @@index([deviceId, revokedAt])
+  @@index([refreshExpiresAt])
+}
+
+model NativeRefreshTokenHistory {
+  id               String        @id @default(cuid())
+  sessionId        String
+  session          NativeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  refreshTokenHash String        @unique
+  tokenVersion     Int
+  status           String        @default("ROTATED")
+  rotatedAt        DateTime      @default(now())
+  reusedAt         DateTime?
+
+  @@index([sessionId, tokenVersion])
 }

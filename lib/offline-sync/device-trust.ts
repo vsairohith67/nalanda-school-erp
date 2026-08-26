@@ -35,6 +35,15 @@ export function normalizePublicJwk(value: unknown) {
   return { kty: "EC", crv: "P-256", x: jwk.x, y: jwk.y, ext: true, key_ops: ["verify"] } satisfies JsonWebKey;
 }
 
+export function normalizeNativePublicJwk(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new OfflineTrustError("PUBLIC_KEY_INVALID", 400);
+  const jwk = value as JsonWebKey;
+  if (jwk.kty !== "OKP" || jwk.crv !== "Ed25519" || !jwk.x || jwk.d || jwk.key_ops?.some((op) => op !== "verify")) {
+    throw new OfflineTrustError("PUBLIC_KEY_INVALID", 400);
+  }
+  return { kty: "OKP", crv: "Ed25519", x: jwk.x, ext: true, key_ops: ["verify"] } satisfies JsonWebKey;
+}
+
 export function publicJwkHash(jwk: JsonWebKey) {
   return sha256Hex(JSON.stringify({ crv: jwk.crv, kty: jwk.kty, x: jwk.x, y: jwk.y }));
 }
@@ -55,6 +64,22 @@ export async function verifyEcdsaSignature(serializedJwk: string, message: strin
   } catch {
     return false;
   }
+}
+
+export async function verifyEd25519Signature(serializedJwk: string, message: string, signature: string) {
+  try {
+    const jwk = normalizeNativePublicJwk(JSON.parse(serializedJwk));
+    const key = await crypto.subtle.importKey("jwk", jwk, "Ed25519", false, ["verify"]);
+    return await crypto.subtle.verify("Ed25519", key, fromBase64Url(signature), new TextEncoder().encode(message));
+  } catch {
+    return false;
+  }
+}
+
+export async function verifyDeviceSignature(device: Pick<OfflineSyncDevice, "keyAlgorithm" | "publicSigningKey">, message: string, signature: string) {
+  if (device.keyAlgorithm === "ED25519") return verifyEd25519Signature(device.publicSigningKey, message, signature);
+  if (device.keyAlgorithm === "ECDSA_P256_SHA256") return verifyEcdsaSignature(device.publicSigningKey, message, signature);
+  return false;
 }
 
 export async function createDeviceChallenge(input: {
@@ -132,7 +157,8 @@ export async function verifyOfflineRequest(input: {
   request: Request;
   rawBody: string;
   user: AuthUser;
-  sessionId: string;
+  sessionId?: string | null;
+  expectedDeviceId?: string;
 }) {
   const header = (name: string) => String(input.request.headers.get(name) ?? "").trim();
   const publicDeviceId = header("x-offline-device-id");
@@ -154,6 +180,7 @@ export async function verifyOfflineRequest(input: {
   return prisma.$transaction(async (tx) => {
     const device = await tx.offlineSyncDevice.findUnique({ where: { publicDeviceId } });
     if (!device || device.userId !== input.user.id) throw new OfflineTrustError("DEVICE_NOT_REGISTERED");
+    if (input.expectedDeviceId && device.id !== input.expectedDeviceId) throw new OfflineTrustError("SESSION_DEVICE_MISMATCH", 401);
     if (device.status !== "ACTIVE") throw new OfflineTrustError(device.status === "REVOKED" ? "DEVICE_REVOKED" : "DEVICE_NOT_ACTIVE");
     if (device.keyVersion !== keyVersion) throw new OfflineTrustError("DEVICE_KEY_VERSION_STALE");
     const permission = await evaluateEffectivePermission(tx, {
@@ -164,7 +191,7 @@ export async function verifyOfflineRequest(input: {
     });
     if (!permission.allowed) throw new OfflineTrustError("OFFLINE_PERMISSION_DENIED");
     const message = requestProofMessage({ method: input.request.method, path: canonicalOfflineRequestTarget(new URL(input.request.url)), timestamp, nonce, bodyHash, publicDeviceId, keyVersion, schemaVersion });
-    if (!(await verifyEcdsaSignature(device.publicSigningKey, message, signature))) throw new OfflineTrustError("DEVICE_PROOF_INVALID", 401);
+    if (!(await verifyDeviceSignature(device, message, signature))) throw new OfflineTrustError("DEVICE_PROOF_INVALID", 401);
     try {
       await tx.offlineSyncNonce.create({ data: { deviceId: device.id, nonceHash: sha256Hex(nonce), expiresAt: new Date(Date.now() + NONCE_RETENTION_MS) } });
     } catch (error) {

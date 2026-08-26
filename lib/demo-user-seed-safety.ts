@@ -78,15 +78,15 @@ export function demoUserSeedDecision(
   }
 
   const configuredDatabase = databasePathFromUrl(environment.DATABASE_URL?.trim() ?? "", workspace);
-  if (!existsSync(configuredDatabase) || !statSync(configuredDatabase).isFile()) {
-    throw new Error("DEMO_USER_DATABASE_MUST_ALREADY_EXIST");
-  }
   const databasePath = canonicalPath(configuredDatabase);
   if (
     databasePath.toLowerCase() === operationalDatabase.toLowerCase() ||
     sameFileIdentity(databasePath, operationalDatabase)
   ) {
     throw new Error("DEMO_USERS_REFUSED_OPERATIONAL_DATABASE");
+  }
+  if (!existsSync(configuredDatabase) || !statSync(configuredDatabase).isFile()) {
+    throw new Error("DEMO_USER_DATABASE_MUST_ALREADY_EXIST");
   }
   if (!inside(isolatedRoot, databasePath)) {
     throw new Error("DEMO_USER_DATABASE_OUTSIDE_ISOLATED_ROOT");

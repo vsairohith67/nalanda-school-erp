@@ -42,6 +42,16 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
     expect((await enforceOperationRateLimit("/api/auth/login", "POST", { ip: "192.0.2.11" }, { store, now: 31 })).allowed).toBe(true);
   });
 
+  it("isolates direct-development native quotas by the validated local device actor", async () => {
+    const store = createDeterministicRateLimitStore();
+    const dimensions = ["ip", "endpoint", "operationCost"] as const;
+    for (let index = 0; index < 12; index += 1) {
+      expect((await enforceOperationRateLimit("/api/native-auth/request", "POST", { ip: "local-native:00000000-0000-4000-8000-000000000001" }, { store, now: index, dimensions })).allowed).toBe(true);
+    }
+    expect((await enforceOperationRateLimit("/api/native-auth/request", "POST", { ip: "local-native:00000000-0000-4000-8000-000000000001" }, { store, now: 13, dimensions })).status).toBe(429);
+    expect((await enforceOperationRateLimit("/api/native-auth/request", "POST", { ip: "local-native:00000000-0000-4000-8000-000000000002" }, { store, now: 13, dimensions })).allowed).toBe(true);
+  });
+
   it("provides a deterministic bounded adapter and controlled Retry-After", async () => {
     const store = createDeterministicRateLimitStore(100);
     for (let attempt = 0; attempt < 5; attempt += 1) {

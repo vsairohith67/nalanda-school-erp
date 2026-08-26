@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-cache-list"
+description = "Enables the cache_list command without any pre-configured scope."
+commands.allow = ["cache_list"]
+
+[[permission]]
+identifier = "deny-cache-list"
+description = "Denies the cache_list command without any pre-configured scope."
+commands.deny = ["cache_list"]

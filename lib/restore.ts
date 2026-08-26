@@ -14,6 +14,7 @@ import { validatePublicWebsiteBackupRows } from "@/lib/public-website-backup";
 import { EVENT_MEDIA_BACKUP_KEYS, validateEventMediaBackupRows, type EventMediaBackup, type EventMediaBackupKey } from "@/lib/event-media-backup";
 import { PARENT_MEETING_BACKUP_KEYS, validateParentMeetingBackupRows, type ParentMeetingBackup, type ParentMeetingBackupKey } from "@/lib/parent-meeting-backup";
 import { OFFLINE_SYNC_BACKUP_KEYS, validateOfflineSyncBackupRows, type OfflineSyncBackup, type OfflineSyncBackupKey } from "@/lib/offline-sync/backup";
+import { NATIVE_APP_BACKUP_KEYS, validateNativeAppBackupRows, type NativeAppBackup, type NativeAppBackupKey } from "@/lib/native-app/backup";
 import {
   validateExamGovernanceBackup,
   type ExamGovernanceBackup
@@ -39,6 +40,8 @@ const TOP_LEVEL_KEYS = new Set([
   ...EVENT_MEDIA_BACKUP_KEYS,
   ...PARENT_MEETING_BACKUP_KEYS,
   ...OFFLINE_SYNC_BACKUP_KEYS,
+  ...NATIVE_APP_BACKUP_KEYS,
+  "nativeAppPolicy",
   "metadata",
   "technicalOperations",
   "schoolSettings",
@@ -127,6 +130,7 @@ const BACKUP_COUNT_KEYS = new Set([
   ...EVENT_MEDIA_BACKUP_KEYS,
   ...PARENT_MEETING_BACKUP_KEYS,
   ...OFFLINE_SYNC_BACKUP_KEYS,
+  ...NATIVE_APP_BACKUP_KEYS,
   "schoolSettings",
   "technicalOperationsRecords",
   "authSecurityRecords",
@@ -572,7 +576,7 @@ export type ValidatedBackup = {
   timetableDrafts: RestoreRecord[];
   timetableEntries: RestoreRecord[];
   technicalOperations: TechnicalOperationsBackup;
-} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup & OptionalOperationsBackup & EventMediaBackup & ParentMeetingBackup & OfflineSyncBackup;
+} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup & OptionalOperationsBackup & EventMediaBackup & ParentMeetingBackup & OfflineSyncBackup & NativeAppBackup;
 
 export type EntityRestoreResult = {
   created: number;
@@ -773,7 +777,7 @@ export type RestoreResult = {
   timetableDrafts: EntityRestoreResult;
   timetableEntries: EntityRestoreResult;
   warnings: string[];
-} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey | OptionalOperationsBackupKey | EventMediaBackupKey | ParentMeetingBackupKey | OfflineSyncBackupKey, EntityRestoreResult>;
+} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey | OptionalOperationsBackupKey | EventMediaBackupKey | ParentMeetingBackupKey | OfflineSyncBackupKey | NativeAppBackupKey, EntityRestoreResult>;
 
 export function parseAndValidateBackup(input: string | unknown): ValidatedBackup {
   let parsed: unknown = input;
@@ -1446,6 +1450,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   const eventMediaData = validateEventMediaBackupRows(root);
   const parentMeetingData = validateParentMeetingBackupRows(root);
   const offlineSyncData = validateOfflineSyncBackupRows(root);
+  const nativeAppData = validateNativeAppBackupRows(root);
   const technicalOperations = validateTechnicalOperationsBackup(root.technicalOperations);
   const counts = validateOptionalBackupCounts(metadata.counts);
 
@@ -1552,6 +1557,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     ...eventMediaData,
     ...parentMeetingData,
     ...offlineSyncData,
+    ...nativeAppData,
     receiptNotes,
     importBatches,
     onboardingBatches,

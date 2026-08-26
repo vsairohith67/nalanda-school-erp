@@ -133,3 +133,9 @@ The accessible Git history begins with the consolidated baseline commit `2d1ac63
 6. Pre-2026-07-22 Git/file-introduction history, because the repository starts with a consolidated baseline commit.
 
 These gaps are not blockers to the current requirements register; they remain explicit evidence limitations and must not be filled with invented wording.
+
+## 2026-08-26 cross-platform application foundation
+
+| Date | Prompt / phase | Primary evidence | Evidence class | Current status |
+| --- | --- | --- | --- | --- |
+| 2026-08-26 | CROSS-PLATFORM-APPS-1A | Dedicated `feature/cross-platform-apps-1a` worktree; Tauri 2 ADR; native-auth, encrypted-storage, UI, copied-DB and platform-CI evidence | `EXACT_SOURCE`, `IMPLEMENTED_CODE_EVIDENCE`, `INDEPENDENT_QA_IN_PROGRESS` | Default-off software implementation complete; exact-head multi-platform CI and release closure remain the terminal gates |
