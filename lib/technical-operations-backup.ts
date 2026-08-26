@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { databaseColumnExists } from "@/lib/database-capabilities";
 
 export const TECHNICAL_OPERATIONS_BACKUP_KEYS = [
   "operationalCheckDefinitions",
@@ -35,10 +36,10 @@ export function technicalOperationsRecordCount(backup: TechnicalOperationsBackup
   return TECHNICAL_OPERATIONS_BACKUP_KEYS.reduce((total, key) => total + backup[key].length, 0);
 }
 
-export async function technicalOperationsSchemaAvailable(client: Partial<Pick<PrismaClient, "$queryRawUnsafe">>) {
-  if (typeof client.$queryRawUnsafe !== "function") return false;
-  const rows = await client.$queryRawUnsafe<Array<{ name?: string }>>('PRAGMA table_info("OperationalCheckDefinition")');
-  return rows.some((row) => row.name === "checkKey");
+export async function technicalOperationsSchemaAvailable(client: Partial<Pick<PrismaClient, "$queryRaw">>) {
+  if (!(client as any).operationalCheckDefinition?.findMany) return false;
+  if (typeof client.$queryRaw !== "function") return false;
+  return databaseColumnExists(client, "OperationalCheckDefinition", "checkKey");
 }
 
 export async function loadTechnicalOperationsBackup(client: PrismaClient): Promise<TechnicalOperationsBackup> {

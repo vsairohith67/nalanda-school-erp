@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { databaseTableExists } from "@/lib/database-capabilities";
 
 export const OFFLINE_SYNC_BACKUP_KEYS = ["offlineSyncDevices", "offlineSyncMutations", "offlineSyncEvents", "offlineSyncConflictReviews"] as const;
 export type OfflineSyncBackupKey = (typeof OFFLINE_SYNC_BACKUP_KEYS)[number];
@@ -20,7 +21,7 @@ const REQUIRED: Record<OfflineSyncBackupKey, string[]> = {
 };
 
 export function emptyOfflineSyncBackup(): OfflineSyncBackup { return Object.fromEntries(OFFLINE_SYNC_BACKUP_KEYS.map((key) => [key, []])) as unknown as OfflineSyncBackup; }
-export async function offlineSyncSchemaAvailable(client: PrismaClient) { try { const rows = await client.$queryRawUnsafe<Array<{ name: string }>>("SELECT name FROM sqlite_master WHERE type='table' AND name='OfflineSyncDevice'"); return rows.length === 1; } catch { return false; } }
+export async function offlineSyncSchemaAvailable(client: PrismaClient) { try { if (!(client as any).offlineSyncDevice?.findMany) return false; return await databaseTableExists(client, "OfflineSyncDevice"); } catch { return false; } }
 export async function loadOfflineSyncBackup(client: PrismaClient): Promise<OfflineSyncBackup> {
   const [devices, mutations, events, reviews] = await Promise.all([
     client.offlineSyncDevice.findMany({ orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),

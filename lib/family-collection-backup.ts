@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { databaseTableExists } from "@/lib/database-capabilities";
 
 export const FAMILY_COLLECTION_BACKUP_KEYS = [
   "familyCollections",
@@ -18,10 +19,9 @@ export function emptyFamilyCollectionBackup(): FamilyCollectionBackup {
 }
 
 export async function familyCollectionSchemaAvailable(client: PrismaClient | any) {
-  const query = (client as any).$queryRawUnsafe;
-  if (typeof query !== "function") return Boolean((client as any).familyCollection?.findMany);
-  const rows = await query.call(client, `PRAGMA table_info("FamilyCollection")`) as unknown[];
-  return rows.length > 0;
+  if (!(client as any).familyCollection?.findMany) return false;
+  if (typeof (client as any).$queryRaw !== "function") return true;
+  return databaseTableExists(client, "FamilyCollection");
 }
 
 export async function loadFamilyCollectionBackup(client: PrismaClient | any): Promise<FamilyCollectionBackup> {

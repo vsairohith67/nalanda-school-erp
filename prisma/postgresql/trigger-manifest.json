@@ -1,0 +1,1354 @@
+{
+  "contractVersion": 1,
+  "source": "synthetic fresh SQLite migration deploy",
+  "sourceSha256": "A584C24ABE5538D4039CB626F9BA3433531FF05573AF7B9AB8044E879E79F311",
+  "views": 0,
+  "triggerCount": 168,
+  "sqlSha256": "8DC922EED0D6FE260D6A2458360DAC6485A8CD19476E683F1CC1F0CC93E01074",
+  "triggers": [
+    {
+      "name": "academic_calendar_audit_append_only_delete",
+      "table": "AcademicCalendarAuditEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "FE6E025ABEB91A8893365E70B23E1C265D706727FE57D592E6FA01F9B1ABE74E"
+    },
+    {
+      "name": "academic_calendar_audit_append_only_update",
+      "table": "AcademicCalendarAuditEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "4D957E421DDC231A5F4D1517BED8817AD9A412460F704DC2C6718DC1AD0826F6"
+    },
+    {
+      "name": "academic_calendar_audit_target_guard",
+      "table": "AcademicCalendarAuditEvent",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "8390BBEEFBEA1AC9EE6DD5554F3CEF35C8FB54AC5C957CA9026C3DF0E3247EB3"
+    },
+    {
+      "name": "academic_calendar_publication_evidence_immutable",
+      "table": "AcademicCalendarVersion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "3136DCEF28E1F5FA0075CBC0C384E8E6A4C43A435439B0F5EEEBF8333ACA0F16"
+    },
+    {
+      "name": "academic_calendar_published_history_no_delete",
+      "table": "AcademicCalendarVersion",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "4F651463664964426BD19A558120EF2BD69DF37D17FEBA95F152F05DE1D66C8B"
+    },
+    {
+      "name": "academic_calendar_replacement_scope_guard",
+      "table": "AcademicCalendarVersion",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "66339D8A9C5C24BABC07232CA25596BB80606DF6B573A6818071260C4E5AD46D"
+    },
+    {
+      "name": "academic_calendar_version_content_immutable",
+      "table": "AcademicCalendarVersion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "EBAA5A259207974DC7D70AF8BB9C0FF51E8477BC327F2665A871DDFE6B35BA51"
+    },
+    {
+      "name": "academic_calendar_version_evidence_set_once",
+      "table": "AcademicCalendarVersion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "002313044A9E5008D64E73206FF350AA8250B553EEB74C483383D2FADF61BD98"
+    },
+    {
+      "name": "academic_calendar_version_insert_draft_only",
+      "table": "AcademicCalendarVersion",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "85C43E8B8DF5342D1B7E614A3B9100FEECE2B7A328328D78D94591BF3A59E758"
+    },
+    {
+      "name": "academic_calendar_version_status_transition",
+      "table": "AcademicCalendarVersion",
+      "event": "UPDATE",
+      "columns": "\"status\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "34D1FFF86D56CDBB2C6D17B9E69E3589BC36D9DC424BA4D1C25A1E78A3AD15FC"
+    },
+    {
+      "name": "AcademicReportAudit_no_delete",
+      "table": "AcademicReportAuditEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "11C781D9AF257741DE23CBD0CFE793BAD3B0C0A0068D9EF8238FBF96547AE07B"
+    },
+    {
+      "name": "AcademicReportAudit_no_update",
+      "table": "AcademicReportAuditEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "6C44703EEA60A36B5DB0B9CF9DC7A1B4A57180F2F5B76AF18BCB4F4CE7C14B47"
+    },
+    {
+      "name": "AcademicReportRun_no_delete",
+      "table": "AcademicReportRun",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "261D2C401807202E62ACB36C88DB93429FDE8C019CC57A5FEDDEAA681204482B"
+    },
+    {
+      "name": "AcademicReportRun_no_update",
+      "table": "AcademicReportRun",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "EF57374557AC8DE0AF1B4D39C517EE605556386CF3E4597DBE0AFE093962EBB8"
+    },
+    {
+      "name": "AcademicReportSource_no_delete",
+      "table": "AcademicReportSourceReference",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "402B9834A913246837134AB6AA534D227BF1639B2BF79A22BE1CF5E452990E3A"
+    },
+    {
+      "name": "AcademicReportSource_no_update",
+      "table": "AcademicReportSourceReference",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "7F52DAFBC4D6B9527364D4B435C31AD6A5BFA47FEFCEA4F1DAA725908D7A8A1E"
+    },
+    {
+      "name": "AdmissionApplicationVersion_no_delete",
+      "table": "AdmissionApplicationVersion",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "D6772589133C906202BED928C9967689073A633A0C748574640A97F787AC98D2"
+    },
+    {
+      "name": "AdmissionApplicationVersion_no_update",
+      "table": "AdmissionApplicationVersion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "153137C33D309DB5E747A49541C740B57DCF22046461845E33D2ECE49CC91DFF"
+    },
+    {
+      "name": "AdmissionConversion_no_delete",
+      "table": "AdmissionConversion",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "DAC78D4EB2CD61F7E374FA05666BB2BAF6E0232B8E5AEEB20647E44011FCAF4D"
+    },
+    {
+      "name": "AdmissionConversion_no_update",
+      "table": "AdmissionConversion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "923C89E275F3D7836B9E1A112B7ABB1C97CDEE3F9B2606D5ECDA9086B64996FE"
+    },
+    {
+      "name": "AdmissionDecision_no_delete",
+      "table": "AdmissionDecision",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "6083CFA5D82226A41693578C380D03AD3FFF99AC346A35613F9702D5FCC78D92"
+    },
+    {
+      "name": "AdmissionDecision_no_update",
+      "table": "AdmissionDecision",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "72038B3868F4DF65C66AA8C59101AA9E8153E66C0E08A79B4094BC9F20EC9876"
+    },
+    {
+      "name": "AdmissionDuplicateResolution_no_delete",
+      "table": "AdmissionDuplicateResolution",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "8ED5812DD1B0904DE4E968C4CD7C383CB0028F7D4C065A50F79FC76C135EF24D"
+    },
+    {
+      "name": "AdmissionDuplicateResolution_no_update",
+      "table": "AdmissionDuplicateResolution",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "FD32D422A7B80DC7A46E11D0BF92C21F1725DAD8796BC057B86A2C05BE75160B"
+    },
+    {
+      "name": "AdmissionEvent_no_delete",
+      "table": "AdmissionEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "BCBE44CBE37AC7CC70E40209C9C4519D3ECE2321E7F33D287365CD7BE68D34E5"
+    },
+    {
+      "name": "AdmissionEvent_no_update",
+      "table": "AdmissionEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "294B19ED96D54DC32DFDB7D0A93F739A0856639D4898899FB5C1493F346FC0E3"
+    },
+    {
+      "name": "AdmissionOffer_no_delete",
+      "table": "AdmissionOffer",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "355933DC3A44FB08D0B7E091F93065CFEE8BB50D8378C7B83F791F1A5CDE23B2"
+    },
+    {
+      "name": "AdvanceRecoverySchedule_no_delete",
+      "table": "AdvanceRecoverySchedule",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "841A484448F1CCC7C1F0987961CC5C07540D3C4FF93289A004A73FAD47297D42"
+    },
+    {
+      "name": "ClassworkAttachment_identity_immutable",
+      "table": "ClassworkAttachment",
+      "event": "UPDATE",
+      "columns": "\"itemVersionId\",\"submissionVersionId\",\"storageKey\",\"safeDisplayName\",\"mediaType\",\"extension\",\"byteSize\",\"sha256\",\"width\",\"height\",\"createdByUserId\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "190503ECF370161BEC9A3923FE75C6BF7E61AB4123158965E194DE33D972CEEB"
+    },
+    {
+      "name": "ClassworkAttachment_no_delete",
+      "table": "ClassworkAttachment",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "88C572B4E32971AB259E46F437D85FD1469D64C4CB682AE876AF586461AED11F"
+    },
+    {
+      "name": "ClassworkAuditEvent_no_delete",
+      "table": "ClassworkAuditEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "78FC2B5864C869C0DE11AB6790016230E15B695D9A4575685787C7667F264DE9"
+    },
+    {
+      "name": "ClassworkAuditEvent_no_update",
+      "table": "ClassworkAuditEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "660C38E052367D158956EDFAFE8CFEDEA7C2E1FFEC8E753598054D266BAED300"
+    },
+    {
+      "name": "ClassworkFeedback_no_delete",
+      "table": "ClassworkFeedback",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "CBA617DF31AAFEB9FDB34318650AF6890CEB271BB315F43E9890265387FFE45F"
+    },
+    {
+      "name": "ClassworkFeedback_no_update",
+      "table": "ClassworkFeedback",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "DCECAD87FC2D7537FA8B5FB146B6ECB96DD116BDB9B3D6A1C5154946157491C6"
+    },
+    {
+      "name": "ClassworkItem_no_delete",
+      "table": "ClassworkItem",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "6DC538400E6C32D834D1F1EF0E4E85A391306B204CC1EEBB82B46A0CB7AA7090"
+    },
+    {
+      "name": "ClassworkItemVersion_lifecycle_guard",
+      "table": "ClassworkItemVersion",
+      "event": "UPDATE",
+      "columns": "\"versionStatus\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "7ECED7DCBDB55BA77A5601770E95A1DA0F4FEF8A694383C2B46A77A77B6F13B4"
+    },
+    {
+      "name": "ClassworkItemVersion_no_delete",
+      "table": "ClassworkItemVersion",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "F735C270ADF88AC3F1B530138606C25FF47BF83C9EC898FD4014AF82963F9E86"
+    },
+    {
+      "name": "ClassworkItemVersion_published_content_immutable",
+      "table": "ClassworkItemVersion",
+      "event": "UPDATE",
+      "columns": "\"title\",\"instructions\",\"dueAt\",\"correctionReason\",\"createdByUserId\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "5D1E6B11D52B6EC0290B7ADACDB56F11638B3612AD0AF457E3CCD41F5869D5E5"
+    },
+    {
+      "name": "ClassworkSubmission_no_delete",
+      "table": "ClassworkSubmission",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "819028A05C30C803FD69A5B07EC0A054FDA24DCF91117A88ED5D5F8430C3249A"
+    },
+    {
+      "name": "ClassworkSubmissionVersion_lifecycle_guard",
+      "table": "ClassworkSubmissionVersion",
+      "event": "UPDATE",
+      "columns": "\"versionStatus\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "DF126539E5DFD040158CB4F7709B8D3F52DA9BC790674CE1B80793EBC4FA1359"
+    },
+    {
+      "name": "ClassworkSubmissionVersion_locked_immutable",
+      "table": "ClassworkSubmissionVersion",
+      "event": "UPDATE",
+      "columns": "\"textBody\",\"itemVersionId\",\"createdByUserId\",\"createdByRole\",\"parentGuardianId\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "08D03ACE8A443C2E3D31BFB7D522A9D6BBDE83D826B051FAB2FC774C4A3206FF"
+    },
+    {
+      "name": "ClassworkSubmissionVersion_no_delete",
+      "table": "ClassworkSubmissionVersion",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "6AE5B5D6123536E839B1623B3F9BF796C390039CF2B501DBD56C90626986B4DA"
+    },
+    {
+      "name": "EmployeePayrollResult_no_approved_delete",
+      "table": "EmployeePayrollResult",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "3D33936B09E91A06470A94D6D162836AA3903A017F4AFB242F4456AC0020996E"
+    },
+    {
+      "name": "EmployeePayrollResult_no_approved_update",
+      "table": "EmployeePayrollResult",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "7C1A69B133977B9DC8E3F83FFE059015C29006D65245D934D902C2A418925B55"
+    },
+    {
+      "name": "EventMediaAlbum_no_delete",
+      "table": "EventMediaAlbum",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "06D74E84B518F873F6721EA8C9A6EFD6E94E885967C01E6DA5CDBF3A1DF18571"
+    },
+    {
+      "name": "EventMediaAsset_no_delete",
+      "table": "EventMediaAsset",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "EC8ABC82A6EA92D74BCBB7D87092351EE164314298FEE25392CFD2702461365F"
+    },
+    {
+      "name": "EventMediaAsset_original_immutable",
+      "table": "EventMediaAsset",
+      "event": "UPDATE",
+      "columns": "\"originalStorageKey\", \"originalMediaType\", \"originalExtension\", \"originalByteSize\", \"originalSha256\", \"originalWidth\", \"originalHeight\", \"uploadActorUserId\", \"uploadedAt\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "D1864B7AF6C465F7AC67CA1296AFE42CAB29005894D06A2E471A3C9ADC5943F1"
+    },
+    {
+      "name": "EventMediaAuditEvent_no_delete",
+      "table": "EventMediaAuditEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "BB25F0C91A0FD43988B2A59F8575BF61B2290A1E66CEF1A5947E8D18F31A01B3"
+    },
+    {
+      "name": "EventMediaAuditEvent_no_update",
+      "table": "EventMediaAuditEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "DBA28195EF29271B2A7EEE271CF11A0132CD9197986AC8BECE8DE8D1E067AEED"
+    },
+    {
+      "name": "EventMediaDerivative_no_delete",
+      "table": "EventMediaDerivative",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "DE95CF9DA27E1752B2661F648DDC890BE2799A598A9F60310BE3326E5D390F6C"
+    },
+    {
+      "name": "exam_timetable_event_append_only_delete",
+      "table": "ExaminationTimetableEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "6586BC8E13E6FDCABF410D0FF02742A1EF1298A6ACE7F0E9094226BC5DC2742E"
+    },
+    {
+      "name": "exam_timetable_event_append_only_update",
+      "table": "ExaminationTimetableEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "657E98E33666072E7E4009863FCD8A60A1CC3E543865E88878C681360596C047"
+    },
+    {
+      "name": "exam_timetable_publication_evidence_immutable",
+      "table": "ExaminationTimetableVersion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "B9173DD584417AAEF3D8B7D9517C398ED4047584E92B6F9C1D4DC3FF9E43B64A"
+    },
+    {
+      "name": "exam_timetable_published_history_no_delete",
+      "table": "ExaminationTimetableVersion",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "E8EB2982C37F9CC6B7EC9BA81B9DBAD6D85FFFF826E43071BCBBCA7254F2C8D5"
+    },
+    {
+      "name": "exam_timetable_row_delete_draft_only",
+      "table": "ExaminationTimetableRow",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "A0B0EC27931904D60BF5B6C3DD888FB921B62BA0D3364B9391D334483F738DFB"
+    },
+    {
+      "name": "exam_timetable_row_insert_draft_only",
+      "table": "ExaminationTimetableRow",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "4E99F419C279B5A9DB58A882010384C811D8ED6443049AB4A4D031322FF22F5B"
+    },
+    {
+      "name": "exam_timetable_row_update_draft_only",
+      "table": "ExaminationTimetableRow",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "7E1923739AEB25458B4582BE29BFA6D66B3915DC612F6C25DF9DBA2C2C69B676"
+    },
+    {
+      "name": "exam_timetable_version_content_immutable",
+      "table": "ExaminationTimetableVersion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "F3EA632C5914F07D0D9DEC596A1266EEC2DE4EE89BC229E056B4B66ED5ADF07A"
+    },
+    {
+      "name": "iam_prevent_active_super_admin_role_delete",
+      "table": "UserRoleAssignment",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "482BF3F25F6CA851A745F6CD7DAED71F10E8929CB6C6D1214C8635E85659702A"
+    },
+    {
+      "name": "iam_prevent_expiring_super_admin_role_insert",
+      "table": "UserRoleAssignment",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "6388B509D630840B49531E0DB087B792C7D43FA34544061320F94037330E6D17"
+    },
+    {
+      "name": "iam_prevent_expiring_super_admin_role_update",
+      "table": "UserRoleAssignment",
+      "event": "UPDATE",
+      "columns": "\"role\", \"validUntil\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "E874EE7FEBB9BB8821CF14B2B0B73D3F33C101F2B1ADCB3AADABFA8082B4F989"
+    },
+    {
+      "name": "iam_prevent_last_super_admin_role_end",
+      "table": "UserRoleAssignment",
+      "event": "UPDATE",
+      "columns": "\"role\", \"status\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "F8241C0E93FE455E8273A63FF06896CC7C682FACBD55CE5C4C176F670B630F0C"
+    },
+    {
+      "name": "iam_prevent_last_super_admin_suspension",
+      "table": "User",
+      "event": "UPDATE",
+      "columns": "\"isActive\", \"lifecycleStatus\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "F051E9B7D958370226A94472FD56DA8F7EDE006EFAB1EA6EF6BCD55AB927A802"
+    },
+    {
+      "name": "maintenance_window_event_no_delete",
+      "table": "MaintenanceWindowEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "471896E7DEE43BC739E6F4345B4929ECBBA73CA60933E85A9A1306DB7467C4F0"
+    },
+    {
+      "name": "maintenance_window_event_no_update",
+      "table": "MaintenanceWindowEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "E3B0D698C3A09D1182DC6ACDC4FB3B0A5B39F1CF6A5660002F608D396A433530"
+    },
+    {
+      "name": "maintenance_window_no_delete",
+      "table": "MaintenanceWindow",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "64C176AA74A123218D0D8CC7FE924EF2DA8FD520D4F5F2E3601BAD5846AE9079"
+    },
+    {
+      "name": "MediaPublicationConsent_no_delete",
+      "table": "MediaPublicationConsent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "5620CDA8F385640ACE42BD9E74B5B04063A89D30505D166FB41242F6FFE28C16"
+    },
+    {
+      "name": "NativeAuthorizationCode_single_use",
+      "table": "NativeAuthorizationCode",
+      "event": "UPDATE",
+      "columns": "\"usedAt\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "53F170F4362F1EA19D28DAB30579E4FE50B580006A3242153783A0632DE9891F"
+    },
+    {
+      "name": "NativeAuthRequest_security_material_immutable",
+      "table": "NativeAuthRequest",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "9639F2AB97623509BDABF6A3B5997B28CCF441AD573E6EDE5F84459B7133B493"
+    },
+    {
+      "name": "NativeRefreshTokenHistory_append_only_delete",
+      "table": "NativeRefreshTokenHistory",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "F40FD912E7404F5A6EBCCBA473C819B1FF4A47F73D33395AA64A5071398941BC"
+    },
+    {
+      "name": "NativeSession_revocation_irreversible",
+      "table": "NativeSession",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "2CBF2F0BB71D03A593184F2AD3786142ADC3E4D51B154BD4C289B76E6027D040"
+    },
+    {
+      "name": "OfflineSyncConflictReview_no_delete",
+      "table": "OfflineSyncConflictReview",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "0F0662BD2B3B24748C01CF593F2065ACDE5D902330F8CB0C6394FD9A182D2B4B"
+    },
+    {
+      "name": "OfflineSyncConflictReview_no_update",
+      "table": "OfflineSyncConflictReview",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "F81AFCF5D25077E9C709E9A188F6012332534BB1274334934A4FB472532D95F3"
+    },
+    {
+      "name": "OfflineSyncDevice_key_rotation",
+      "table": "OfflineSyncDevice",
+      "event": "UPDATE",
+      "columns": "\"publicSigningKey\",\"publicKeyHash\",\"keyVersion\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "4342226AB2004E9248895B87924539FBF64F8C544644CF1C8DFBB5C063C0164A"
+    },
+    {
+      "name": "OfflineSyncDevice_status_insert",
+      "table": "OfflineSyncDevice",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "C9CA7C827B55FB8F142FEC9D24067ABA1A3D802AC013769FF80970A2DD64BC56"
+    },
+    {
+      "name": "OfflineSyncDevice_status_update",
+      "table": "OfflineSyncDevice",
+      "event": "UPDATE",
+      "columns": "\"status\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "8A300A2C063EC90F92FCCEFC09D28A5B94358A03401BEB271C9E5B69DE8970CB"
+    },
+    {
+      "name": "OfflineSyncEvent_no_delete",
+      "table": "OfflineSyncEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "1AD73880D58961A3606801C8E8A880A100E41AEE38D67C9A707AB1031BFE2EF7"
+    },
+    {
+      "name": "OfflineSyncEvent_no_update",
+      "table": "OfflineSyncEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "30450553A00E4BC79216451D9E3D27ECF341079AC591AEE1EDE40756BAC017C9"
+    },
+    {
+      "name": "OfflineSyncMutation_contract_insert",
+      "table": "OfflineSyncMutation",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "BBF520BFE1B82166829A7F06FC035E16295B68FAFB9E1685DA48273449D298A2"
+    },
+    {
+      "name": "OfflineSyncMutation_no_delete",
+      "table": "OfflineSyncMutation",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "EF82E7683F943DE10000F1E68F1DE6DE1A53AD7B69A6331412EB2A17E4CA54F3"
+    },
+    {
+      "name": "OfflineSyncMutation_terminal_immutable",
+      "table": "OfflineSyncMutation",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "3BBBEF09C6D85B914DD3743D77D15AB23A3A967D0AC2B721890FACD104397B9C"
+    },
+    {
+      "name": "operational_alert_event_no_delete",
+      "table": "OperationalAlertEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "F2BBEAC5E317039B62B040D2112AEC60283F5F62F952ACC667EF88923DC398C9"
+    },
+    {
+      "name": "operational_alert_event_no_update",
+      "table": "OperationalAlertEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "0F4B9ED8CFABE3C6FFA774319DDCE57584B12EE874AAF7B1FF79E0DEDADCF41D"
+    },
+    {
+      "name": "operational_alert_no_delete",
+      "table": "OperationalAlert",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "AD39DF9D1E415B74164F733859660CA910235F75DBAB0D4627BFD3090707F078"
+    },
+    {
+      "name": "operational_calendar_day_delete_draft_only",
+      "table": "OperationalCalendarDay",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "3EEB7A1E0CE8723A682919031DA18A5C1A7E575C8E4A480B37E37AC7647E9FA4"
+    },
+    {
+      "name": "operational_calendar_day_insert_draft_only",
+      "table": "OperationalCalendarDay",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "B4101B7724F38E27B6F1F729A7A3AF8DC6C15F6A078E58C3486B4EB02F07240E"
+    },
+    {
+      "name": "operational_calendar_day_update_draft_only",
+      "table": "OperationalCalendarDay",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "89DCD6B45F97333161BF98F87CE00ADCA497E93DDBA06415D62F889ABD878FCA"
+    },
+    {
+      "name": "operational_incident_event_no_delete",
+      "table": "OperationalIncidentEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "07CB183B31DC6467E32EB637A327C670FF7C60B5EBA5616A9469F9EF87030635"
+    },
+    {
+      "name": "operational_incident_event_no_update",
+      "table": "OperationalIncidentEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "AE6D28D43856F2438FB36BBD4318ED515A914B1C4884651E7CA667C13D5D3932"
+    },
+    {
+      "name": "operational_incident_no_delete",
+      "table": "OperationalIncident",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "4EF97A6BD2E9A18945F6A76AE490E8288F43EA687CEA3F9FB6E4579D7A2E7936"
+    },
+    {
+      "name": "ParentMeeting_identity_immutable",
+      "table": "ParentMeeting",
+      "event": "UPDATE",
+      "columns": "\"studentId\",\"requesterGuardianId\",\"academicYear\",\"source\",\"requesterUserId\",\"createdByUserId\",\"createdAt\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "CFEF8BDDC745F97C75A1A2DE547E54AB92F9CBD3D6D88DEE6A9363D94C86D3C2"
+    },
+    {
+      "name": "ParentMeeting_no_delete",
+      "table": "ParentMeeting",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "5E9FA14F27A07AD768203E0287547F2AC71CD17805F605A3EC8868D04C79DFC4"
+    },
+    {
+      "name": "ParentMeeting_schedule_conflict",
+      "table": "ParentMeeting",
+      "event": "UPDATE",
+      "columns": "\"status\",\"scheduledStartAt\",\"scheduledEndAt\",\"mode\",\"locationReference\"",
+      "statementCount": 3,
+      "sqliteSqlSha256": "7BF83B70ECA0D249B45A6521AA60204C98E4346242A8215EDF72CE412DFE5347"
+    },
+    {
+      "name": "ParentMeeting_schedule_conflict_insert",
+      "table": "ParentMeeting",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 2,
+      "sqliteSqlSha256": "CF8D972F7213575B384AEFE2823F348E841F717BC39484E770FC14684D4B06AD"
+    },
+    {
+      "name": "ParentMeeting_schedule_required",
+      "table": "ParentMeeting",
+      "event": "UPDATE",
+      "columns": "\"status\",\"scheduledStartAt\",\"scheduledEndAt\",\"durationMinutes\",\"mode\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "5C8F62365F4C878B7FCA4F7326D1E21A7D81ABB466CCB879D3FC8649B871D4A1"
+    },
+    {
+      "name": "ParentMeeting_schedule_required_insert",
+      "table": "ParentMeeting",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "D25557D060476447FE29DA503E8B9E143CD28A979B19EBCC68381D0B716069FD"
+    },
+    {
+      "name": "ParentMeeting_status_transition",
+      "table": "ParentMeeting",
+      "event": "UPDATE",
+      "columns": "\"status\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "F834685BC228CEDA1BAEBFE73274F6F2D5592004A981547A969C68E69E7C3E05"
+    },
+    {
+      "name": "ParentMeetingEvent_no_delete",
+      "table": "ParentMeetingEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "B541552EA982B070333184085619B2349CA0B0B3ACBB1D625246AC40E8D95CE0"
+    },
+    {
+      "name": "ParentMeetingEvent_no_update",
+      "table": "ParentMeetingEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "C72A183A3FFD649C8C39D77FEE04B44110D33E516BF62435E6C374B4F6642BD1"
+    },
+    {
+      "name": "ParentMeetingFollowUp_no_delete",
+      "table": "ParentMeetingFollowUp",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "E4CC1102632C7D4293C240534C2A1A6BCEF44C295092DE7CB02D962E0CC7CD5F"
+    },
+    {
+      "name": "ParentMeetingFollowUp_status_transition",
+      "table": "ParentMeetingFollowUp",
+      "event": "UPDATE",
+      "columns": "\"status\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "88183C1A151980892BFCA113A3FD1FEE30518F33A3EC9941BB1C8A9261D4D313"
+    },
+    {
+      "name": "ParentMeetingNote_no_delete",
+      "table": "ParentMeetingNote",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "5D4C730C2BEE4E6A54FDD3C2029E38B77922F3DE7E5ACF086CF501FAEF7CD387"
+    },
+    {
+      "name": "ParentMeetingNote_no_update",
+      "table": "ParentMeetingNote",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "B60AF21A94060A643E6B21F6EB686A64A4943C6F11B2B30EBF2072D396F5A6B3"
+    },
+    {
+      "name": "ParentMeetingParticipant_no_delete",
+      "table": "ParentMeetingParticipant",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "9FF68875A34AD3E9DCD6061D5EE2FC47A32AC1F0E12C8DBD5CCA7BCDCD78A879"
+    },
+    {
+      "name": "ParentMeetingParticipant_schedule_conflict_insert",
+      "table": "ParentMeetingParticipant",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "E39D12992C949744CD2EFE99220A06DD5C7185D77BA95574C73F2AF86EA739A3"
+    },
+    {
+      "name": "ParentMeetingParticipant_schedule_conflict_update",
+      "table": "ParentMeetingParticipant",
+      "event": "UPDATE",
+      "columns": "\"staffMemberId\",\"status\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "91F8A588225015A7D70532B01D156580E235CE2277DBB0B4193FDFDBFBC233F5"
+    },
+    {
+      "name": "ParentMeetingPreference_no_delete",
+      "table": "ParentMeetingPreference",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "3C47FEBDD5794334423E2B271A00411D41A8EB97EC1A096DAE1133757AAE5F25"
+    },
+    {
+      "name": "ParentMeetingPreference_no_update",
+      "table": "ParentMeetingPreference",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "7D4BC789AD66EF685240A35C51A668133AE881912884B74B4294FF86FB4848BE"
+    },
+    {
+      "name": "PayrollComponentResult_no_approved_delete",
+      "table": "PayrollComponentResult",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "88665EC22160886598538BDB957532F06032308D349EFF80A417D8E1C43EC932"
+    },
+    {
+      "name": "PayrollComponentResult_no_approved_update",
+      "table": "PayrollComponentResult",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "597613ED3E9C6A281FB9F125288D72DE06FDEB729FF3853BE662A6D9C84CAE11"
+    },
+    {
+      "name": "PayrollEvent_no_delete",
+      "table": "PayrollEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "0C4D2D4A738257E06505BCD26CD6CD4AE90C91777378AB3D14B4F192ABF49B35"
+    },
+    {
+      "name": "PayrollEvent_no_update",
+      "table": "PayrollEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "99F8E274C7586A7596B9312F86C18F89B2D83B18077ADBB27C39D3F2D979C9C4"
+    },
+    {
+      "name": "PayrollRun_no_approved_delete",
+      "table": "PayrollRun",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "D6EE9F3A02847C1165262A64B9E29153C4C4852E35E7B03F32EFDAF3932FEFCE"
+    },
+    {
+      "name": "PayslipVersion_no_delete",
+      "table": "PayslipVersion",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "73569F5E82184F9E33EFD7F7E1349F7D36DCFAFF4162D379427D21B1CAE06A88"
+    },
+    {
+      "name": "PayslipVersion_no_update",
+      "table": "PayslipVersion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "EEC8175B23C1DF6CA59A8ABF589DA7872FC7D0D4DB86CE4C21AB0A3FABFD8249"
+    },
+    {
+      "name": "safe_exit_consent_no_delete",
+      "table": "StudentDepartureConsentEvidence",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "99F7A801C2053827B832C3CAB86B1DC1910344C781DEF746E02E0D60071B0124"
+    },
+    {
+      "name": "safe_exit_consent_no_update",
+      "table": "StudentDepartureConsentEvidence",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "38790170F133440D9AF7CDB59EE802E6E628726B6D5C051DCFC72AA9D89A633D"
+    },
+    {
+      "name": "safe_exit_correction_no_delete",
+      "table": "StudentDepartureCorrectionEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "AC4A5B1A41E188E7D66843A7751FFA00A91F44F4D44EE29BC49C9601586CD28D"
+    },
+    {
+      "name": "safe_exit_correction_no_update",
+      "table": "StudentDepartureCorrectionEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "B2075426A092E4B538FE906846273B33063C3AAA245736BD891DF8B5ADF8EEA7"
+    },
+    {
+      "name": "safe_exit_event_no_delete",
+      "table": "StudentDepartureEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "251D60417C385FAA3A3C49177E4D936B6EEF0689BC35ED068A3E50A26F0B6BEC"
+    },
+    {
+      "name": "safe_exit_event_no_update",
+      "table": "StudentDepartureEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "52820D82BEB2B8D86DDE299BEE94B755C938BBF028BB71A5543E6E7D017DDFB8"
+    },
+    {
+      "name": "safe_exit_fallback_no_delete",
+      "table": "StudentDepartureFallbackTask",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "0E361815F0B5EB9F1E518DCD558EC4A6F131A7649763CDF35AE2E1809D9654CD"
+    },
+    {
+      "name": "safe_exit_gate_pass_no_delete",
+      "table": "StudentGatePass",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "3929805F8671AB96E205497621F99A36C26DAF67F417D48A9BB4304FC0AEF375"
+    },
+    {
+      "name": "safe_exit_handover_no_delete",
+      "table": "StudentDepartureHandover",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "CA31C528C5ADEFCF190AAD774C2DD36E30EA90258C1EB6C475BA0DCEC52F6FBD"
+    },
+    {
+      "name": "safe_exit_handover_no_update",
+      "table": "StudentDepartureHandover",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "A4FF9150B1EB4AFD85876A3E9DBA949BF2731590FB9754C93529350DE1F59B93"
+    },
+    {
+      "name": "safe_exit_incident_action_no_delete",
+      "table": "StudentDepartureIncidentAction",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "84F4A77402F8B693686FEAC1B66855BFD1F70D435EF8C50697A8066DD1E35D63"
+    },
+    {
+      "name": "safe_exit_incident_action_no_update",
+      "table": "StudentDepartureIncidentAction",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "77D17E2B6D82C080AF9D13F860E18BD0D59B47369DE239CDC31DD68FEF29C4E9"
+    },
+    {
+      "name": "safe_exit_incident_no_delete",
+      "table": "StudentDepartureIncident",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "75104E85A369A1D3C0CE9497FFE7179FCC1D8BF464FA94FACAE82087C65773F4"
+    },
+    {
+      "name": "safe_exit_outbox_no_delete",
+      "table": "StudentDepartureNotificationOutbox",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "C4739E3F877E41249127F839E11446361369DFF54CD5FABD693ABF3D4BD871EF"
+    },
+    {
+      "name": "safe_exit_pass_immutable_identity",
+      "table": "StudentGatePass",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "D9BF9A06F2DB8BC162C28ADC80D290F3701F9BC74832ABD938EAD16433A2225C"
+    },
+    {
+      "name": "safe_exit_pass_status_insert",
+      "table": "StudentGatePass",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "F51105A35650DF4BC722419441D9A6301F1004BACC9106674DE37FBDD03C415A"
+    },
+    {
+      "name": "safe_exit_pass_status_update",
+      "table": "StudentGatePass",
+      "event": "UPDATE",
+      "columns": "\"status\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "0F1FF02E074E8F60D7DA745F658074DB044558A37F55BC7CD0DAC4035C4D6581"
+    },
+    {
+      "name": "safe_exit_presence_no_delete",
+      "table": "StudentCampusPresenceEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "776BA39B142BCABE8D889E3556BA8A9EEA85A2A783C09D83F6B0E62A4A3A9020"
+    },
+    {
+      "name": "safe_exit_presence_no_update",
+      "table": "StudentCampusPresenceEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "042D93D2B439372A30B20814791C6439700B42231A1A438CFC887F76CA506694"
+    },
+    {
+      "name": "safe_exit_request_immutable_identity",
+      "table": "StudentDepartureRequest",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "35E551ACD37B2824995CC3ACD3049F3CB1D9F3BC8A2666D3260101E043220C48"
+    },
+    {
+      "name": "safe_exit_request_no_delete",
+      "table": "StudentDepartureRequest",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "3A67D61CDB89CABF07D9ACF60541D425EF3101D50AADD9521ABEEFCBF921DF89"
+    },
+    {
+      "name": "safe_exit_request_status_insert",
+      "table": "StudentDepartureRequest",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "FAA07AECAF28148A57F65984AFC44049B54D2AF4BA4390ED0B314B4957300A30"
+    },
+    {
+      "name": "safe_exit_request_status_update",
+      "table": "StudentDepartureRequest",
+      "event": "UPDATE",
+      "columns": "\"status\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "27941AB1B19CC5BC113C6D5EEDDAAA5EDEAAEF7F297727065EFF2B2EEDF30A45"
+    },
+    {
+      "name": "safe_exit_standing_auth_no_delete",
+      "table": "StudentStandingDepartureAuthorization",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "D8F69E840C7E86825D0223E0CFCD06D3A0A18238A3292A3989BBBDE5E963DE9B"
+    },
+    {
+      "name": "safe_exit_standing_auth_no_update",
+      "table": "StudentStandingDepartureAuthorization",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "5B3208C03C2F2564983A84A5E2D4AEA68D7B00CDBD314F3278302B7671409B4F"
+    },
+    {
+      "name": "safe_exit_temporary_return_insert",
+      "table": "StudentDepartureRequest",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "AC0A8DE631A61C44BA5ED113032307E7372761B753D1257FB2E563E36914AC11"
+    },
+    {
+      "name": "safe_exit_temporary_return_update",
+      "table": "StudentDepartureRequest",
+      "event": "UPDATE",
+      "columns": "\"temporaryReturnRequired\", \"expectedReturnAt\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "CC6A330B4DBCD48F64BC95C844A2191BFA14F340A9EE2CDF9CDEA5203D077648"
+    },
+    {
+      "name": "SalaryAdvance_no_delete",
+      "table": "SalaryAdvance",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "38CBF8F2D0AC0BF94FC942E09618B33A162CD5ABA26B6F2B76704451CF72AAAA"
+    },
+    {
+      "name": "SalaryComponentDefinition_no_locked_delete",
+      "table": "SalaryComponentDefinition",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "864D5DCDE0DCD75E239E0726CBE48E18C2074D881ACF6193E4F0397C8B9681A0"
+    },
+    {
+      "name": "SalaryComponentDefinition_no_locked_update",
+      "table": "SalaryComponentDefinition",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "F487433BCC7AFA8C819AC3D1A702F631FD1D4A56BC848063ED1CCDF7149218EE"
+    },
+    {
+      "name": "SalaryRevision_no_delete",
+      "table": "SalaryRevision",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "A96D8CE2B0D0EAF14C9FC8805C10D66E38384842405EA3DE27349F91E9BAEA58"
+    },
+    {
+      "name": "SalaryRevision_no_update",
+      "table": "SalaryRevision",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "9E38BD2102C40814DFAAB808EBAF94EC3CE42FC95A4DD58DD782A4B39B514FA8"
+    },
+    {
+      "name": "SalaryStructureVersion_no_approved_delete",
+      "table": "SalaryStructureVersion",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "F318E4DF43773D23474734FEB0B8A76087154BD0BFB508611FB4004BF19D76DA"
+    },
+    {
+      "name": "SalaryStructureVersion_no_approved_update",
+      "table": "SalaryStructureVersion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "E8E318DE3C738B4BA768C924148649AE0AA9391125AAC485E7DF921BCC235696"
+    },
+    {
+      "name": "school_calendar_current_pointer_owner_guard",
+      "table": "SchoolCalendarEvent",
+      "event": "UPDATE",
+      "columns": "\"currentPublishedVersionId\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "7026AA3812E768DE406E59BC0D0E6834518453D84C08AC74F4443E206AF22FFB"
+    },
+    {
+      "name": "school_calendar_event_insert_draft_only",
+      "table": "SchoolCalendarEvent",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "8FB52E64085FD7330438CE495993DC6DA3595EAF41828F4A1932EA8F2B15F5F4"
+    },
+    {
+      "name": "school_calendar_event_publication_evidence_immutable",
+      "table": "SchoolCalendarEventVersion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "81A00E51573D20EED6359CA07A60643832BE5000F55D5879C96BD698E8A6BF93"
+    },
+    {
+      "name": "school_calendar_event_published_history_no_delete",
+      "table": "SchoolCalendarEventVersion",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "FBEC9024347343102C1A8BE61402D6BA7AEEAEDC002D31BD732B2ED9962CC7B3"
+    },
+    {
+      "name": "school_calendar_event_replacement_owner_guard",
+      "table": "SchoolCalendarEventVersion",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "3189C0B8DE46D7E1519357282EDC9BA613D29084B37FD1E546CA468062C0488F"
+    },
+    {
+      "name": "school_calendar_event_version_content_immutable",
+      "table": "SchoolCalendarEventVersion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "A11839D3301FD50968BC29438270A54A6EFDC4EEA9CE06AF99CCF858B6B2B141"
+    },
+    {
+      "name": "school_calendar_event_version_evidence_set_once",
+      "table": "SchoolCalendarEventVersion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "4C8D919BE8B53E33FCFB4CE888CF0168F2A4FC58468A711F3A49212D60FC0AED"
+    },
+    {
+      "name": "school_calendar_event_version_insert_draft_only",
+      "table": "SchoolCalendarEventVersion",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "2D236535A3E779923794C6F185757D214D09AB1B7FB51A12A4619D20E40D4333"
+    },
+    {
+      "name": "school_calendar_event_version_status_transition",
+      "table": "SchoolCalendarEventVersion",
+      "event": "UPDATE",
+      "columns": "\"status\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "BC0EF55D702C0E74CDF83CBAD08E8B092F6F7CB60ABEDFA37D7D55D2A5EBDE51"
+    },
+    {
+      "name": "StaffPayslipAccessEvent_no_delete",
+      "table": "StaffPayslipAccessEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "FD322AD0CBAE933FC491812E53D829486145579411B76EB2D406730BE23BE7CC"
+    },
+    {
+      "name": "StaffPayslipAccessEvent_no_update",
+      "table": "StaffPayslipAccessEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "2D42879B375895847A54381EB22659625A4343B8DA71A51A37FE8BB71698260D"
+    },
+    {
+      "name": "StaffPayslipDocumentMonth_no_delete",
+      "table": "StaffPayslipDocumentMonth",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "B02926ED78EC212027529AFC8CDFD98E23F798AC98125D6AABEC10D4D4DCF509"
+    },
+    {
+      "name": "StaffPayslipDocumentMonth_no_update",
+      "table": "StaffPayslipDocumentMonth",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "35E4EB18B47240F620982E29459F460B3BE5B04E92720348B49E2023A6F15C9B"
+    },
+    {
+      "name": "StaffPayslipDocumentVersion_issued_immutable",
+      "table": "StaffPayslipDocumentVersion",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "C16EF185F5CF96C888D5E998DCB4D3B372EE0F9861845FCFEC8080B28A262919"
+    },
+    {
+      "name": "StaffPayslipDocumentVersion_no_delete",
+      "table": "StaffPayslipDocumentVersion",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "E10E1234F5D5754890324ED440D18B6DBC63BF82F7476B6696577F88DA48D264"
+    },
+    {
+      "name": "StaffPayslipRequest_no_delete",
+      "table": "StaffPayslipRequest",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "421189DFA452EE848050107361C560ED44BDF95CAAE299BF1E34B829115B270C"
+    },
+    {
+      "name": "StaffPayslipRequestEvent_no_delete",
+      "table": "StaffPayslipRequestEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "4C60E2E80B708441C39A1F638197D734FBF2FB3DF57C4C01C215E0993CC6AFC1"
+    },
+    {
+      "name": "StaffPayslipRequestEvent_no_update",
+      "table": "StaffPayslipRequestEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "2087BB77FE3A05019404B06DB4F502F04915AF6601D75B64EF488EEF0CE630C3"
+    },
+    {
+      "name": "StaffPayslipRequestMonth_no_delete",
+      "table": "StaffPayslipRequestMonth",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "4FCDC1ABD137F917E3F03E2BEEF40DE2975D20D5FF3DAA748E2D347BDD138FE8"
+    }
+  ]
+}

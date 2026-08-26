@@ -1,9 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 import { assertQa20cIsolatedEnvironment } from "@/lib/qa20c-isolation";
+import { assertDatabaseProviderConfiguration } from "@/lib/database-provider";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 assertQa20cIsolatedEnvironment(process.env, { logEvidence: true });
+assertDatabaseProviderConfiguration(process.env);
 
 export const prisma =
   globalForPrisma.prisma ??

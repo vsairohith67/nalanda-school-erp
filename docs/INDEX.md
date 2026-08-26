@@ -787,3 +787,19 @@ OBS-1A is independently QA-cleared on its retained feature branch and released l
 - [Future governed prompts](CROSS_PLATFORM_APPS_1A_FUTURE_PROMPTS.md)
 
 This is a default-off, zero-rollout software foundation. It does not activate staging, real users/data, signing, store publication, push, or physical-device certification.
+
+# POSTGRES-READINESS-1A
+
+- [Architecture](POSTGRESQL_READINESS_ARCHITECTURE.md)
+- [Portability audit](POSTGRESQL_PORTABILITY_AUDIT.md)
+- [Schema and migration policy](POSTGRESQL_SCHEMA_AND_MIGRATION_POLICY.md)
+- [Connection pooling](POSTGRESQL_CONNECTION_POOLING.md)
+- [Logical data transfer](POSTGRESQL_DATA_TRANSFER.md)
+- [Backup and restore](POSTGRESQL_BACKUP_AND_RESTORE.md)
+- [Concurrency and retry](POSTGRESQL_CONCURRENCY_AND_RETRY.md)
+- [Operations runbook](POSTGRESQL_OPERATIONS_RUNBOOK.md)
+- [Pilot migration plan](SQLITE_TO_POSTGRESQL_PILOT_MIGRATION_PLAN.md)
+- [QA clearance evidence](evidence/POSTGRES_READINESS_1A_QA_CLEARANCE.md)
+- [Next private staging prompt](prompts/PRIVATE-STAGING-1B-R1.md)
+
+The provider-dual software contract preserves SQLite as local/default and adds a separate PostgreSQL 17 schema/migration line for later private synthetic staging. It does not deploy, purchase, convert operational data, activate real users, or authorize a pilot.

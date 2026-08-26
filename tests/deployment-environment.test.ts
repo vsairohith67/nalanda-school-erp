@@ -19,6 +19,8 @@ function validEnvironment(): NodeJS.ProcessEnv {
     NEXT_PUBLIC_PWA_BUILD_VERSION: "staging-validator-20260723",
     NALANDA_LOCAL_REHEARSAL: "true",
     QA20C_ISOLATED_DATABASE: "true",
+    DATABASE_PROVIDER: "sqlite",
+    POSTGRES_READINESS_SQLITE_QA_OVERRIDE: "SYNTHETIC_LOCAL_ONLY",
     APP_ORIGIN: "https://staging.localhost",
     PUBLIC_WEBSITE_URL: "https://staging.localhost",
     PUBLIC_WEBSITE_INDEXING_ENABLED: "false",
@@ -66,6 +68,15 @@ function codes(environment: NodeJS.ProcessEnv) {
 describe("staging deployment environment validation", () => {
   it("accepts the isolated synthetic rehearsal contract", () => {
     expect(validateDeploymentEnvironment(validEnvironment(), workspace)).toMatchObject({ ok: true, environment: "staging" });
+  });
+
+  it("accepts PostgreSQL staging with separate runtime and direct URLs", () => {
+    const environment = validEnvironment();
+    environment.DATABASE_PROVIDER = "postgresql";
+    environment.DATABASE_URL = "postgresql://pooler.example.invalid/nalanda_staging";
+    environment.DIRECT_URL = "postgresql://direct.example.invalid/nalanda_staging";
+    delete environment.POSTGRES_READINESS_SQLITE_QA_OVERRIDE;
+    expect(validateDeploymentEnvironment(environment, workspace)).toMatchObject({ ok: true, environment: "staging" });
   });
 
   it("rejects prisma/dev.db and other dev.db targets", () => {

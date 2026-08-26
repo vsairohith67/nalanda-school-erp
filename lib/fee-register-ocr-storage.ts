@@ -25,7 +25,7 @@ export type ValidatedRegisterImage = {
 
 export function feeRegisterStorageRoot() {
   const configured = process.env.FEE_REGISTER_OCR_STORAGE_DIR?.trim();
-  const root = path.resolve(configured || path.join(process.cwd(), "data", "fee-register-ocr"));
+  const root = resolvePortablePath(configured || path.join(process.cwd(), "data", "fee-register-ocr"));
   const publicRoot = path.resolve(process.cwd(), "public");
   if (root === publicRoot || root.startsWith(`${publicRoot}${path.sep}`)) {
     throw new Error("Fee-register OCR storage must not be inside the public directory");
@@ -135,15 +135,25 @@ async function ensureStorageRoot() {
 
 export function assertPrivateFeeRegisterStorageRoot(configured: string, resolvedRoot: string, resolvedPublicRoot: string, configuredIsSymbolicLink: boolean) {
   if (configuredIsSymbolicLink) throw new Error("OCR source storage root must not be a symbolic link or junction");
-  const relativeToPublic = path.relative(resolvedPublicRoot, resolvedRoot);
+  const portableConfigured = resolvePortablePath(configured);
+  const portableResolvedRoot = resolvePortablePath(resolvedRoot);
+  const portablePublicRoot = resolvePortablePath(resolvedPublicRoot);
+  const relativeToPublic = path.relative(portablePublicRoot, portableResolvedRoot);
   if (relativeToPublic === "" || (!relativeToPublic.startsWith(`..${path.sep}`) && relativeToPublic !== ".." && !path.isAbsolute(relativeToPublic))) {
     throw new Error("Fee-register OCR storage must not resolve inside the public directory");
   }
-  const canonicalConfigured = existsSync(configured)
-    ? realpathSync.native(configured)
-    : path.resolve(configured);
-  const relativeToConfigured = path.relative(canonicalConfigured, resolvedRoot);
+  const canonicalConfigured = existsSync(portableConfigured)
+    ? realpathSync.native(portableConfigured)
+    : portableConfigured;
+  const relativeToConfigured = path.relative(canonicalConfigured, portableResolvedRoot);
   if (relativeToConfigured !== "") throw new Error("OCR source storage root resolved to an unexpected location");
+}
+
+function resolvePortablePath(candidate: string) {
+  const normalized = process.platform === "win32"
+    ? candidate.replaceAll("/", "\\")
+    : candidate.replaceAll("\\", "/");
+  return path.resolve(normalized);
 }
 
 function safeChild(root: string, storageKey: string) {

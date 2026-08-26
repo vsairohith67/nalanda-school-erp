@@ -10,4 +10,8 @@ describe("app version information", () => {
       databaseProvider: "SQLite"
     });
   });
+
+  it("reports the selected PostgreSQL build without exposing connection details", () => {
+    expect(getAppInfo({ NODE_ENV: "production", DATABASE_PROVIDER: "postgresql" }).databaseProvider).toBe("PostgreSQL");
+  });
 });

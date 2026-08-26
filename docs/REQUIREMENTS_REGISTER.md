@@ -106,3 +106,11 @@ There are no unresolved V1 product gaps in the corrected ledger. Four V1 require
 | V1.5-APP-041 | Secure Windows, Android and iOS software foundation | CROSS-PLATFORM-APPS-1A exact prompt and repository evidence | 2026-08-26 | Reuse the ERP and Offline Sync through one governed native shell | V1.5 | READY_FOR_EXACT_HEAD_QA | Tauri 2 local shell, unprivileged online surface, device-bound native auth, Stronghold key/token storage, ciphertext-only SQLite, three cleared finance drafts, platform projects and unsigned CI | ADR, unit/contract tests, copied-DB QA, browser evidence, security review and platform CI records | Both flags OFF/0%; no staging, real data/users/devices, signing, store publication, push or deployment | `POSTGRES-READINESS-1A`, `PRIVATE-STAGING-1B`, `CROSS-PLATFORM-APPS-1B` | High |
 
 This active addendum is intentionally not folded into the historical count table until its exact-head release verdict is recorded.
+
+## Active addendum: POSTGRES-READINESS-1A
+
+| ID | Requirement | Source | Date | Goal | Programme | Status | Implemented boundary | Evidence | Activation boundary | Next gate | Priority |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| V1.5-DB-042 | Provider-dual SQLite/PostgreSQL 17 build, migration, transfer, concurrency, recovery and CI contract | POSTGRES-READINESS-1A exact prompt and repository evidence | 2026-08-26 | Make the ERP software-ready for private synthetic PostgreSQL staging while preserving SQLite | V1.5 | READY_FOR_EXACT_HEAD_QA | Deterministic 330-model PostgreSQL schema, separate baseline/history, 168 trigger equivalents, provider adapters, backup-v44 transfer, least-privilege roles, concurrency/performance/recovery QA and four-job CI | PostgreSQL readiness docs, machine manifest, local QA record and exact-head workflow | SQLite remains default; no managed DB, deployment, operational conversion, real data/users, DNS or pilot | `PRIVATE-STAGING-1B-R1` | Critical |
+
+This addendum does not change the historical count table until the exact-head release verdict is recorded.

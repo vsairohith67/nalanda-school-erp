@@ -104,8 +104,9 @@ export function buildReleasePackage(input: {
     }
   }
   collect(path.join(input.workspaceRoot, "prisma", "migrations"), "prisma/migrations", files);
+  collect(path.join(input.workspaceRoot, "prisma", "postgresql"), "prisma/postgresql", files);
   collect(path.join(input.workspaceRoot, "deploy", "staging"), "deploy/staging", files);
-  for (const source of ["prisma/schema.prisma", "package.json", "pnpm-lock.yaml"]) {
+  for (const source of ["prisma/schema.prisma", "prisma/postgresql/schema.prisma", "package.json", "pnpm-lock.yaml"]) {
     const absolute = path.join(input.workspaceRoot, source);
     if (!existsSync(absolute)) throw new Error(`RELEASE_PACKAGE_REQUIRED_FILE_MISSING:${source}`);
     const bytes = readFileSync(absolute); assertAllowed(source, bytes); files.set(source, bytes);

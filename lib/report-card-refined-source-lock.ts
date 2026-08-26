@@ -4827,8 +4827,8 @@ function palette(mode: RefinedColourMode) {
 async function embedAssets(document: PDFDocument, identity: ReportSchoolIdentitySnapshot): Promise<Assets> {
   document.registerFontkit(fontkit);
   const regular = await embedFont(document, ["arial.ttf", "Arial.ttf"], StandardFonts.Helvetica);
-  const bold = await embedFont(document, ["arialbd.ttf", "Arial Bold.ttf"], StandardFonts.HelveticaBold);
-  const school = await embedFont(document, ["georgiab.ttf", "Georgia Bold.ttf"], StandardFonts.TimesRomanBold);
+  const bold = await embedFont(document, ["arialbd.ttf", "Arial_Bold.ttf", "Arial Bold.ttf"], StandardFonts.HelveticaBold);
+  const school = await embedFont(document, ["georgiab.ttf", "Georgia_Bold.ttf", "Georgia Bold.ttf"], StandardFonts.TimesRomanBold);
   const logoPath = path.resolve(process.cwd(), "public", identity.logoPath.replace(/^\//, ""));
   const logoBytes = await readFile(logoPath).catch(() => null);
   const colourLogo = logoBytes ? await document.embedPng(logoBytes) : null;
@@ -4841,9 +4841,10 @@ async function embedAssets(document: PDFDocument, identity: ReportSchoolIdentity
 async function embedFont(document: PDFDocument, candidates: string[], fallback: StandardFonts) {
   for (const candidate of candidates) {
     for (const root of [
+      process.env.REPORT_CARD_FONT_DIR?.trim(),
       path.join(process.env.WINDIR ?? "C:\\Windows", "Fonts"),
       path.resolve(process.cwd(), "public", "fonts")
-    ]) {
+    ].filter((value): value is string => Boolean(value))) {
       try {
         return await document.embedFont(await readFile(path.join(root, candidate)), { subset: true });
       } catch {

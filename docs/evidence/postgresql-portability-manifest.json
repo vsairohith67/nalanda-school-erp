@@ -1,0 +1,5738 @@
+{
+  "contract": "POSTGRES-READINESS-1A",
+  "generatedBy": "scripts/postgres/portability-audit.mjs",
+  "classifications": [
+    "PROVIDER_NEUTRAL",
+    "SQLITE_ONLY",
+    "POSTGRESQL_ONLY",
+    "REQUIRES_ADAPTER",
+    "SHOULD_USE_PRISMA_API",
+    "UNSAFE_OR_UNUSED"
+  ],
+  "scannedFiles": 2628,
+  "providerSpecificFiles": 220,
+  "counts": {
+    "REQUIRES_ADAPTER": 115,
+    "PROVIDER_NEUTRAL": 87,
+    "SQLITE_ONLY": 16,
+    "POSTGRESQL_ONLY": 2
+  },
+  "entries": [
+    {
+      "path": ".env.example",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 6,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "app/api/export/[type]/route.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 94,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "app/api/fee-register-ocr/pages/[pageId]/image/route.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 17,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "apps/nalanda-cross-platform/src-tauri/src/lib.rs",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 241,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 241,
+          "pattern": "WAL"
+        },
+        {
+          "line": 241,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 256,
+          "pattern": "INSERT OR IGNORE"
+        },
+        {
+          "line": 258,
+          "pattern": "AUTOINCREMENT"
+        },
+        {
+          "line": 764,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 818,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "components/account-security-panel.tsx",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 147,
+          "pattern": "datetime("
+        },
+        {
+          "line": 163,
+          "pattern": "datetime("
+        }
+      ]
+    },
+    {
+      "path": "docs/ACCOUNTANT_DATA_MINIMISATION_AND_RECEIPT_INTEGRITY.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 55,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "docs/AUTH_2B_INDEPENDENT_QA_CLOSURE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 124,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/AUTH_2B_VERIFIED_RECOVERY_SESSION_REGISTRY.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 96,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/AUTOMATIC_CLOUD_BACKUP_AND_DISASTER_RECOVERY_WORKFLOW.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 141,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/BUG_LIMITATION_AND_TECH_DEBT_REGISTER.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 523,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/CLEAN_INSTALL_AND_EXISTING_DATABASE_ONBOARDING.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 25,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 75,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/CLEAN_INSTALL_MIGRATION_FAILURE_ANALYSIS.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 5,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/CONTROLLED_SAMPLE_DATA_CLEANUP_AND_NEW_BASELINE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 86,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 148,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/CROSS_PLATFORM_APPS_1A_OPERATIONS.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 25,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/DEVELOPER_CONTINUATION_GUIDE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 144,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 175,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 211,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 283,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 653,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 1110,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 1167,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/DISASTER_RECOVERY_RUNBOOK.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 57,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/ERP_SECURITY_ATTACK_SURFACE_AND_THREAT_MODEL.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 21,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "docs/EVENT_MEDIA_GOVERNANCE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 43,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 43,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/evidence/cross-platform-apps/concepts/desktop-offline-workspace.png",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 373,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 1541,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/evidence/cross-platform-apps/concepts/mobile-fee-draft.png",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 2376,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/evidence/cross-platform-apps/COPIED_DB_QA.json",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 6,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 11,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 12,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/evidence/GOV_RECON_1_PREFLIGHT_AND_HISTORY_EVIDENCE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 17,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/evidence/OBS_1A_QA_CLEARANCE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 46,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "docs/evidence/POSTGRES_READINESS_1A_QA_CLEARANCE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 63,
+          "pattern": "WAL"
+        },
+        {
+          "line": 63,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/evidence/PROMPT_23E_QA_COPIED_DATABASE_CHECKPOINT.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 9,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/evidence/PROMPT_23E_QA_RELEASE_CLOSURE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 23,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/evidence/PROMPT_23H_QA_RELEASE_EVIDENCE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 79,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/evidence/RELEASE_OPS_1A_QA_CLEARANCE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 12,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 32,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/evidence/SEARCH_EXTENSION_1B_QA_CLEARANCE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 156,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/evidence/ux1a-qa/checkpoint-batch-1.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 18,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/EXAMINATION_SCHEME_ASSIGNMENT_FOUNDATION.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 189,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/EXAMINATION_SCHEME_ASSIGNMENT_QA_CLOSURE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 130,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/GIT_BASELINE_AND_RECOVERY_WORKFLOW.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 22,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 68,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/INDEX.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 712,
+          "pattern": "WAL"
+        }
+      ]
+    },
+    {
+      "path": "docs/KG_REPORT_CARDS_V1_5_SOFTWARE_CLEARANCE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 15,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 30,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/LOCAL_SUPER_ADMIN_RECOVERY_PROCEDURE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 35,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 41,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/NOOB_OPERATING_GUIDE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 348,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 413,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 960,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/OPERATIONAL_MIGRATION_BASELINE_ONBOARDING.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 71,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 91,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 116,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/OPERATIONS.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 7,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 62,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 132,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/POSTGRESQL_PORTABILITY_AUDIT.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 5,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 11,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 11,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 11,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/POSTGRESQL_READINESS_ARCHITECTURE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 25,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 25,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/PRE_EXISTING_SAMPLE_DATA_PROVENANCE_AND_CLEANUP_PLAN.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 149,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 184,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 255,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 311,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 338,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 355,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "docs/PRISMA_MIGRATION_DEPENDENCY_INVENTORY.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 352,
+          "pattern": "INSERT OR IGNORE"
+        }
+      ]
+    },
+    {
+      "path": "docs/PROJECT_HANDOVER.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 128,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/PROMPT_HISTORY.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 1093,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 1140,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/REAL_DATA_PILOT_PLAN.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 16,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/REAL_DATA_PILOT_RUNBOOK.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 30,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 42,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 46,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 100,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 183,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/RELEASE_ENVIRONMENT_AND_SECRET_MATRIX.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 15,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/RELEASE_OPERATIONS_ARCHITECTURE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 17,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/SAMPLE_IMPORT_FORMATS.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 22,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/SEC_1_INDEPENDENT_QA_CLOSURE_REPORT.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 134,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "docs/SEC_1_RUNTIME_BROWSER_AND_UI_UX_AUDIT.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 12,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 13,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/SEC_1_SECURITY_AUDIT_AND_HARDENING_REPORT.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 28,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 63,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 65,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/SQLITE_TO_POSTGRESQL_PILOT_MIGRATION_PLAN.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 14,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/STAFF_PAYSLIP_REQUEST_DEVELOPER_GUIDE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 19,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/STAGING_CURRENT_RUNTIME_INVENTORY.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 42,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 43,
+          "pattern": "WAL"
+        },
+        {
+          "line": 43,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 48,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 72,
+          "pattern": "WAL"
+        }
+      ]
+    },
+    {
+      "path": "docs/STAGING_DATA_AND_PRIVACY_POLICY.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 20,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/STAGING_DATABASE_DEPLOYMENT_AND_ROLLBACK.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 20,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 26,
+          "pattern": "WAL"
+        },
+        {
+          "line": 44,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "docs/STAGING_DEPLOYMENT_ARCHITECTURE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 14,
+          "pattern": "WAL"
+        },
+        {
+          "line": 14,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 43,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "docs/STAGING_ENVIRONMENT_AND_SECRET_MATRIX.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 17,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 23,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 45,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/STAGING_HOSTING_OPTIONS.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 18,
+          "pattern": "WAL"
+        }
+      ]
+    },
+    {
+      "path": "docs/STAGING_SCHEDULER_AND_SINGLETON_JOBS.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 9,
+          "pattern": "WAL"
+        }
+      ]
+    },
+    {
+      "path": "docs/STAGING_SQLITE_FEASIBILITY_AND_LIMITS.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 9,
+          "pattern": "WAL"
+        },
+        {
+          "line": 9,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 14,
+          "pattern": "WAL"
+        },
+        {
+          "line": 18,
+          "pattern": "WAL"
+        },
+        {
+          "line": 18,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 28,
+          "pattern": "WAL"
+        },
+        {
+          "line": 28,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 32,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "docs/SUPPORT_OPERATOR_DEVELOPER_GUIDE.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 3,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "docs/TEACHER_ATTENDANCE_EXACT_SCOPE_WORKFLOW.md",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 147,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 148,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "lib/academic-calendar-api.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 6,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "lib/academic-calendar.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 852,
+          "pattern": "datetime("
+        },
+        {
+          "line": 853,
+          "pattern": "datetime("
+        },
+        {
+          "line": 1082,
+          "pattern": "datetime("
+        }
+      ]
+    },
+    {
+      "path": "lib/ai-assistant-safety.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 13,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 19,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "lib/browser-restore-safety.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 18,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "lib/cloud-backup-rehearsal.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 36,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 106,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 161,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 162,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 163,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "lib/database-capabilities.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 4,
+          "pattern": "raw query"
+        },
+        {
+          "line": 7,
+          "pattern": "raw query"
+        },
+        {
+          "line": 8,
+          "pattern": "raw query"
+        },
+        {
+          "line": 18,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 39,
+          "pattern": "raw query"
+        },
+        {
+          "line": 43,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 43,
+          "pattern": "raw query"
+        },
+        {
+          "line": 44,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 44,
+          "pattern": "raw query"
+        },
+        {
+          "line": 47,
+          "pattern": "raw query"
+        },
+        {
+          "line": 48,
+          "pattern": "raw query"
+        },
+        {
+          "line": 54,
+          "pattern": "raw query"
+        },
+        {
+          "line": 58,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "lib/demo-business-seed-safety.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 69,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "lib/demo-user-seed-safety.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 66,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "lib/deployment-environment.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 193,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 194,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 394,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "lib/family-collection-backup.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 23,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "lib/family-collections.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 34,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "lib/finance-export-audit.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 64,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "lib/finance-privacy.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 240,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "lib/onboarding-types.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 5,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "lib/optional-operations-backup.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 33,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "lib/pilot.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 14,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "lib/release-feature-flag-runtime.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 70,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "lib/release-package.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 10,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "lib/report-card-release-policy.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 17,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "lib/safe-exit.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 109,
+          "pattern": "datetime("
+        },
+        {
+          "line": 163,
+          "pattern": "datetime("
+        },
+        {
+          "line": 176,
+          "pattern": "datetime("
+        },
+        {
+          "line": 194,
+          "pattern": "datetime("
+        },
+        {
+          "line": 205,
+          "pattern": "datetime("
+        },
+        {
+          "line": 219,
+          "pattern": "datetime("
+        }
+      ]
+    },
+    {
+      "path": "lib/super-admin-recovery.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 161,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "lib/technical-operations-backup.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 39,
+          "pattern": "raw query"
+        },
+        {
+          "line": 41,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "lib/technical-operations.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 125,
+          "pattern": "raw query"
+        },
+        {
+          "line": 132,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 158,
+          "pattern": "raw query"
+        },
+        {
+          "line": 344,
+          "pattern": "raw query"
+        },
+        {
+          "line": 501,
+          "pattern": "raw query"
+        },
+        {
+          "line": 545,
+          "pattern": "raw query"
+        },
+        {
+          "line": 556,
+          "pattern": "raw query"
+        },
+        {
+          "line": 624,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "lib/udise-http.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 5,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 1110,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 2038,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 2227,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migration-archives/devops1b-legacy-chain/20260715_budget_spending_controls/migration.sql",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 37,
+          "pattern": "partial index"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migration-archives/devops1b-legacy-chain/20260715_library_membership_circulation_foundation/migration.sql",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 148,
+          "pattern": "partial index"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migration-archives/devops1b-legacy-chain/20260716_library_incident_charge_portal_foundation/migration.sql",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 209,
+          "pattern": "INSERT OR IGNORE"
+        },
+        {
+          "line": 212,
+          "pattern": "INSERT OR IGNORE"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260731130549_auth_verified_recovery_session_registry/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 100,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 101,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 101,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 126,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 126,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 127,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260801110000_iam_named_users_permission_contexts/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 215,
+          "pattern": "trigger"
+        },
+        {
+          "line": 239,
+          "pattern": "trigger"
+        },
+        {
+          "line": 263,
+          "pattern": "trigger"
+        },
+        {
+          "line": 277,
+          "pattern": "trigger"
+        },
+        {
+          "line": 284,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260801183000_parent_attendance_exam_timetable/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 89,
+          "pattern": "trigger"
+        },
+        {
+          "line": 107,
+          "pattern": "trigger"
+        },
+        {
+          "line": 118,
+          "pattern": "trigger"
+        },
+        {
+          "line": 125,
+          "pattern": "trigger"
+        },
+        {
+          "line": 132,
+          "pattern": "trigger"
+        },
+        {
+          "line": 139,
+          "pattern": "trigger"
+        },
+        {
+          "line": 146,
+          "pattern": "trigger"
+        },
+        {
+          "line": 152,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260802170000_events_holidays_academic_calendar/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 215,
+          "pattern": "trigger"
+        },
+        {
+          "line": 230,
+          "pattern": "trigger"
+        },
+        {
+          "line": 238,
+          "pattern": "trigger"
+        },
+        {
+          "line": 242,
+          "pattern": "trigger"
+        },
+        {
+          "line": 246,
+          "pattern": "trigger"
+        },
+        {
+          "line": 250,
+          "pattern": "trigger"
+        },
+        {
+          "line": 255,
+          "pattern": "trigger"
+        },
+        {
+          "line": 271,
+          "pattern": "trigger"
+        },
+        {
+          "line": 279,
+          "pattern": "trigger"
+        },
+        {
+          "line": 283,
+          "pattern": "trigger"
+        },
+        {
+          "line": 286,
+          "pattern": "trigger"
+        },
+        {
+          "line": 292,
+          "pattern": "trigger"
+        },
+        {
+          "line": 296,
+          "pattern": "trigger"
+        },
+        {
+          "line": 308,
+          "pattern": "trigger"
+        },
+        {
+          "line": 325,
+          "pattern": "trigger"
+        },
+        {
+          "line": 331,
+          "pattern": "trigger"
+        },
+        {
+          "line": 335,
+          "pattern": "trigger"
+        },
+        {
+          "line": 339,
+          "pattern": "trigger"
+        },
+        {
+          "line": 351,
+          "pattern": "trigger"
+        },
+        {
+          "line": 368,
+          "pattern": "trigger"
+        },
+        {
+          "line": 374,
+          "pattern": "trigger"
+        },
+        {
+          "line": 381,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260803123000_classwork_secure_submissions/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 5,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 6,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 6,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 42,
+          "pattern": "trigger"
+        },
+        {
+          "line": 48,
+          "pattern": "trigger"
+        },
+        {
+          "line": 54,
+          "pattern": "trigger"
+        },
+        {
+          "line": 58,
+          "pattern": "trigger"
+        },
+        {
+          "line": 59,
+          "pattern": "trigger"
+        },
+        {
+          "line": 60,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 60,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 61,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 253,
+          "pattern": "trigger"
+        },
+        {
+          "line": 254,
+          "pattern": "trigger"
+        },
+        {
+          "line": 255,
+          "pattern": "trigger"
+        },
+        {
+          "line": 256,
+          "pattern": "trigger"
+        },
+        {
+          "line": 257,
+          "pattern": "trigger"
+        },
+        {
+          "line": 258,
+          "pattern": "trigger"
+        },
+        {
+          "line": 259,
+          "pattern": "trigger"
+        },
+        {
+          "line": 260,
+          "pattern": "trigger"
+        },
+        {
+          "line": 261,
+          "pattern": "trigger"
+        },
+        {
+          "line": 263,
+          "pattern": "trigger"
+        },
+        {
+          "line": 268,
+          "pattern": "trigger"
+        },
+        {
+          "line": 273,
+          "pattern": "trigger"
+        },
+        {
+          "line": 278,
+          "pattern": "trigger"
+        },
+        {
+          "line": 283,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260803143000_academic_reporting/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 103,
+          "pattern": "trigger"
+        },
+        {
+          "line": 105,
+          "pattern": "trigger"
+        },
+        {
+          "line": 107,
+          "pattern": "trigger"
+        },
+        {
+          "line": 109,
+          "pattern": "trigger"
+        },
+        {
+          "line": 111,
+          "pattern": "trigger"
+        },
+        {
+          "line": 113,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260803193000_admissions_enquiry_crm/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 478,
+          "pattern": "trigger"
+        },
+        {
+          "line": 482,
+          "pattern": "trigger"
+        },
+        {
+          "line": 486,
+          "pattern": "trigger"
+        },
+        {
+          "line": 490,
+          "pattern": "trigger"
+        },
+        {
+          "line": 494,
+          "pattern": "trigger"
+        },
+        {
+          "line": 498,
+          "pattern": "trigger"
+        },
+        {
+          "line": 502,
+          "pattern": "trigger"
+        },
+        {
+          "line": 506,
+          "pattern": "trigger"
+        },
+        {
+          "line": 510,
+          "pattern": "trigger"
+        },
+        {
+          "line": 514,
+          "pattern": "trigger"
+        },
+        {
+          "line": 518,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260808054148_payroll_payslips_employee_self_service/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 493,
+          "pattern": "trigger"
+        },
+        {
+          "line": 498,
+          "pattern": "trigger"
+        },
+        {
+          "line": 503,
+          "pattern": "trigger"
+        },
+        {
+          "line": 508,
+          "pattern": "trigger"
+        },
+        {
+          "line": 513,
+          "pattern": "trigger"
+        },
+        {
+          "line": 517,
+          "pattern": "trigger"
+        },
+        {
+          "line": 521,
+          "pattern": "trigger"
+        },
+        {
+          "line": 526,
+          "pattern": "trigger"
+        },
+        {
+          "line": 531,
+          "pattern": "trigger"
+        },
+        {
+          "line": 536,
+          "pattern": "trigger"
+        },
+        {
+          "line": 541,
+          "pattern": "trigger"
+        },
+        {
+          "line": 546,
+          "pattern": "trigger"
+        },
+        {
+          "line": 550,
+          "pattern": "trigger"
+        },
+        {
+          "line": 554,
+          "pattern": "trigger"
+        },
+        {
+          "line": 558,
+          "pattern": "trigger"
+        },
+        {
+          "line": 562,
+          "pattern": "trigger"
+        },
+        {
+          "line": 566,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260808213000_staff_payslip_request_secure_delivery/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 184,
+          "pattern": "trigger"
+        },
+        {
+          "line": 188,
+          "pattern": "trigger"
+        },
+        {
+          "line": 192,
+          "pattern": "trigger"
+        },
+        {
+          "line": 196,
+          "pattern": "trigger"
+        },
+        {
+          "line": 200,
+          "pattern": "trigger"
+        },
+        {
+          "line": 204,
+          "pattern": "trigger"
+        },
+        {
+          "line": 220,
+          "pattern": "trigger"
+        },
+        {
+          "line": 224,
+          "pattern": "trigger"
+        },
+        {
+          "line": 228,
+          "pattern": "trigger"
+        },
+        {
+          "line": 232,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260809140000_student_safe_exit_gate_pass/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 429,
+          "pattern": "trigger"
+        },
+        {
+          "line": 432,
+          "pattern": "trigger"
+        },
+        {
+          "line": 435,
+          "pattern": "trigger"
+        },
+        {
+          "line": 438,
+          "pattern": "trigger"
+        },
+        {
+          "line": 441,
+          "pattern": "trigger"
+        },
+        {
+          "line": 444,
+          "pattern": "trigger"
+        },
+        {
+          "line": 447,
+          "pattern": "trigger"
+        },
+        {
+          "line": 450,
+          "pattern": "trigger"
+        },
+        {
+          "line": 453,
+          "pattern": "trigger"
+        },
+        {
+          "line": 456,
+          "pattern": "trigger"
+        },
+        {
+          "line": 459,
+          "pattern": "trigger"
+        },
+        {
+          "line": 462,
+          "pattern": "trigger"
+        },
+        {
+          "line": 465,
+          "pattern": "trigger"
+        },
+        {
+          "line": 468,
+          "pattern": "trigger"
+        },
+        {
+          "line": 471,
+          "pattern": "trigger"
+        },
+        {
+          "line": 474,
+          "pattern": "trigger"
+        },
+        {
+          "line": 477,
+          "pattern": "trigger"
+        },
+        {
+          "line": 482,
+          "pattern": "trigger"
+        },
+        {
+          "line": 486,
+          "pattern": "trigger"
+        },
+        {
+          "line": 490,
+          "pattern": "trigger"
+        },
+        {
+          "line": 494,
+          "pattern": "trigger"
+        },
+        {
+          "line": 500,
+          "pattern": "trigger"
+        },
+        {
+          "line": 504,
+          "pattern": "trigger"
+        },
+        {
+          "line": 510,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 511,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 511,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 547,
+          "pattern": "trigger"
+        },
+        {
+          "line": 552,
+          "pattern": "trigger"
+        },
+        {
+          "line": 557,
+          "pattern": "trigger"
+        },
+        {
+          "line": 560,
+          "pattern": "trigger"
+        },
+        {
+          "line": 561,
+          "pattern": "trigger"
+        },
+        {
+          "line": 562,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 562,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 563,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260809224500_student_exit_return_standing_corrections/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 43,
+          "pattern": "trigger"
+        },
+        {
+          "line": 46,
+          "pattern": "trigger"
+        },
+        {
+          "line": 52,
+          "pattern": "trigger"
+        },
+        {
+          "line": 56,
+          "pattern": "trigger"
+        },
+        {
+          "line": 61,
+          "pattern": "trigger"
+        },
+        {
+          "line": 66,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260810100000_technical_operations_observability/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 269,
+          "pattern": "trigger"
+        },
+        {
+          "line": 270,
+          "pattern": "trigger"
+        },
+        {
+          "line": 271,
+          "pattern": "trigger"
+        },
+        {
+          "line": 272,
+          "pattern": "trigger"
+        },
+        {
+          "line": 273,
+          "pattern": "trigger"
+        },
+        {
+          "line": 274,
+          "pattern": "trigger"
+        },
+        {
+          "line": 275,
+          "pattern": "trigger"
+        },
+        {
+          "line": 276,
+          "pattern": "trigger"
+        },
+        {
+          "line": 277,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260822113000_event_media_v1_5_foundation/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 167,
+          "pattern": "trigger"
+        },
+        {
+          "line": 173,
+          "pattern": "trigger"
+        },
+        {
+          "line": 176,
+          "pattern": "trigger"
+        },
+        {
+          "line": 179,
+          "pattern": "trigger"
+        },
+        {
+          "line": 182,
+          "pattern": "trigger"
+        },
+        {
+          "line": 185,
+          "pattern": "trigger"
+        },
+        {
+          "line": 188,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260822170000_parent_meetings_v1_5/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 142,
+          "pattern": "partial index"
+        },
+        {
+          "line": 158,
+          "pattern": "trigger"
+        },
+        {
+          "line": 162,
+          "pattern": "trigger"
+        },
+        {
+          "line": 175,
+          "pattern": "trigger"
+        },
+        {
+          "line": 183,
+          "pattern": "trigger"
+        },
+        {
+          "line": 191,
+          "pattern": "trigger"
+        },
+        {
+          "line": 217,
+          "pattern": "trigger"
+        },
+        {
+          "line": 235,
+          "pattern": "trigger"
+        },
+        {
+          "line": 249,
+          "pattern": "trigger"
+        },
+        {
+          "line": 263,
+          "pattern": "trigger"
+        },
+        {
+          "line": 268,
+          "pattern": "trigger"
+        },
+        {
+          "line": 270,
+          "pattern": "trigger"
+        },
+        {
+          "line": 272,
+          "pattern": "trigger"
+        },
+        {
+          "line": 274,
+          "pattern": "trigger"
+        },
+        {
+          "line": 276,
+          "pattern": "trigger"
+        },
+        {
+          "line": 278,
+          "pattern": "trigger"
+        },
+        {
+          "line": 280,
+          "pattern": "trigger"
+        },
+        {
+          "line": 282,
+          "pattern": "trigger"
+        },
+        {
+          "line": 284,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260825090000_offline_sync_1a/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 133,
+          "pattern": "trigger"
+        },
+        {
+          "line": 136,
+          "pattern": "trigger"
+        },
+        {
+          "line": 139,
+          "pattern": "trigger"
+        },
+        {
+          "line": 142,
+          "pattern": "trigger"
+        },
+        {
+          "line": 145,
+          "pattern": "trigger"
+        },
+        {
+          "line": 148,
+          "pattern": "trigger"
+        },
+        {
+          "line": 149,
+          "pattern": "trigger"
+        },
+        {
+          "line": 150,
+          "pattern": "trigger"
+        },
+        {
+          "line": 151,
+          "pattern": "trigger"
+        },
+        {
+          "line": 152,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/migrations/20260826003000_cross_platform_apps_1a/migration.sql",
+      "classification": "SQLITE_ONLY",
+      "matches": [
+        {
+          "line": 110,
+          "pattern": "trigger"
+        },
+        {
+          "line": 127,
+          "pattern": "trigger"
+        },
+        {
+          "line": 132,
+          "pattern": "trigger"
+        },
+        {
+          "line": 137,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/postgresql/migrations/20260826_postgresql_baseline/migration.sql",
+      "classification": "POSTGRESQL_ONLY",
+      "matches": [
+        {
+          "line": 13122,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13139,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13159,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13179,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13196,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13215,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13242,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13270,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13287,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13311,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13328,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13345,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13362,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13379,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13396,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13413,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13430,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13447,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13464,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13481,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13498,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13515,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13532,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13549,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13566,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13583,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13600,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13617,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13634,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13651,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13668,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13685,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13702,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13719,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13736,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13753,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13770,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13787,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13804,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13821,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13838,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13855,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13872,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13889,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13906,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13923,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13940,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13957,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13974,
+          "pattern": "trigger"
+        },
+        {
+          "line": 13991,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14008,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14025,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14046,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14063,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14080,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14097,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14114,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14142,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14159,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14176,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14193,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14212,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14231,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14248,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14265,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14282,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14299,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14316,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14345,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14362,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14379,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14396,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14413,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14430,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14447,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14464,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14481,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14498,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14515,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14532,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14549,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14566,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14583,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14600,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14617,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14634,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14651,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14668,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14685,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14702,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14719,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14736,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14776,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14806,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14826,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14846,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14871,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14888,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14905,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14922,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14939,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14956,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14973,
+          "pattern": "trigger"
+        },
+        {
+          "line": 14990,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15014,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15038,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15055,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15072,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15089,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15106,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15123,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15140,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15157,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15174,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15191,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15208,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15225,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15242,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15259,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15276,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15293,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15310,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15327,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15344,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15361,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15378,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15395,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15412,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15429,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15446,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15463,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15480,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15497,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15514,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15531,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15548,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15565,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15582,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15599,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15616,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15634,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15652,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15669,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15686,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15703,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15720,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15737,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15754,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15771,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15790,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15807,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15827,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15844,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15863,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15891,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15919,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15936,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15960,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15977,
+          "pattern": "trigger"
+        },
+        {
+          "line": 15994,
+          "pattern": "trigger"
+        },
+        {
+          "line": 16011,
+          "pattern": "trigger"
+        },
+        {
+          "line": 16028,
+          "pattern": "trigger"
+        },
+        {
+          "line": 16056,
+          "pattern": "trigger"
+        },
+        {
+          "line": 16073,
+          "pattern": "trigger"
+        },
+        {
+          "line": 16090,
+          "pattern": "trigger"
+        },
+        {
+          "line": 16107,
+          "pattern": "trigger"
+        },
+        {
+          "line": 16124,
+          "pattern": "trigger"
+        },
+        {
+          "line": 16141,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "prisma/postgresql/trigger-equivalents.sql",
+      "classification": "POSTGRESQL_ONLY",
+      "matches": [
+        {
+          "line": 15,
+          "pattern": "trigger"
+        },
+        {
+          "line": 32,
+          "pattern": "trigger"
+        },
+        {
+          "line": 52,
+          "pattern": "trigger"
+        },
+        {
+          "line": 72,
+          "pattern": "trigger"
+        },
+        {
+          "line": 89,
+          "pattern": "trigger"
+        },
+        {
+          "line": 108,
+          "pattern": "trigger"
+        },
+        {
+          "line": 135,
+          "pattern": "trigger"
+        },
+        {
+          "line": 163,
+          "pattern": "trigger"
+        },
+        {
+          "line": 180,
+          "pattern": "trigger"
+        },
+        {
+          "line": 204,
+          "pattern": "trigger"
+        },
+        {
+          "line": 221,
+          "pattern": "trigger"
+        },
+        {
+          "line": 238,
+          "pattern": "trigger"
+        },
+        {
+          "line": 255,
+          "pattern": "trigger"
+        },
+        {
+          "line": 272,
+          "pattern": "trigger"
+        },
+        {
+          "line": 289,
+          "pattern": "trigger"
+        },
+        {
+          "line": 306,
+          "pattern": "trigger"
+        },
+        {
+          "line": 323,
+          "pattern": "trigger"
+        },
+        {
+          "line": 340,
+          "pattern": "trigger"
+        },
+        {
+          "line": 357,
+          "pattern": "trigger"
+        },
+        {
+          "line": 374,
+          "pattern": "trigger"
+        },
+        {
+          "line": 391,
+          "pattern": "trigger"
+        },
+        {
+          "line": 408,
+          "pattern": "trigger"
+        },
+        {
+          "line": 425,
+          "pattern": "trigger"
+        },
+        {
+          "line": 442,
+          "pattern": "trigger"
+        },
+        {
+          "line": 459,
+          "pattern": "trigger"
+        },
+        {
+          "line": 476,
+          "pattern": "trigger"
+        },
+        {
+          "line": 493,
+          "pattern": "trigger"
+        },
+        {
+          "line": 510,
+          "pattern": "trigger"
+        },
+        {
+          "line": 527,
+          "pattern": "trigger"
+        },
+        {
+          "line": 544,
+          "pattern": "trigger"
+        },
+        {
+          "line": 561,
+          "pattern": "trigger"
+        },
+        {
+          "line": 578,
+          "pattern": "trigger"
+        },
+        {
+          "line": 595,
+          "pattern": "trigger"
+        },
+        {
+          "line": 612,
+          "pattern": "trigger"
+        },
+        {
+          "line": 629,
+          "pattern": "trigger"
+        },
+        {
+          "line": 646,
+          "pattern": "trigger"
+        },
+        {
+          "line": 663,
+          "pattern": "trigger"
+        },
+        {
+          "line": 680,
+          "pattern": "trigger"
+        },
+        {
+          "line": 697,
+          "pattern": "trigger"
+        },
+        {
+          "line": 714,
+          "pattern": "trigger"
+        },
+        {
+          "line": 731,
+          "pattern": "trigger"
+        },
+        {
+          "line": 748,
+          "pattern": "trigger"
+        },
+        {
+          "line": 765,
+          "pattern": "trigger"
+        },
+        {
+          "line": 782,
+          "pattern": "trigger"
+        },
+        {
+          "line": 799,
+          "pattern": "trigger"
+        },
+        {
+          "line": 816,
+          "pattern": "trigger"
+        },
+        {
+          "line": 833,
+          "pattern": "trigger"
+        },
+        {
+          "line": 850,
+          "pattern": "trigger"
+        },
+        {
+          "line": 867,
+          "pattern": "trigger"
+        },
+        {
+          "line": 884,
+          "pattern": "trigger"
+        },
+        {
+          "line": 901,
+          "pattern": "trigger"
+        },
+        {
+          "line": 918,
+          "pattern": "trigger"
+        },
+        {
+          "line": 939,
+          "pattern": "trigger"
+        },
+        {
+          "line": 956,
+          "pattern": "trigger"
+        },
+        {
+          "line": 973,
+          "pattern": "trigger"
+        },
+        {
+          "line": 990,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1007,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1035,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1052,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1069,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1086,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1105,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1124,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1141,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1158,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1175,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1192,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1209,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1238,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1255,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1272,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1289,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1306,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1323,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1340,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1357,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1374,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1391,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1408,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1425,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1442,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1459,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1476,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1493,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1510,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1527,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1544,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1561,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1578,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1595,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1612,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1629,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1669,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1699,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1719,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1739,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1764,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1781,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1798,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1815,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1832,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1849,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1866,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1883,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1907,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1931,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1948,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1965,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1982,
+          "pattern": "trigger"
+        },
+        {
+          "line": 1999,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2016,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2033,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2050,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2067,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2084,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2101,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2118,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2135,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2152,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2169,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2186,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2203,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2220,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2237,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2254,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2271,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2288,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2305,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2322,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2339,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2356,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2373,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2390,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2407,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2424,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2441,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2458,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2475,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2492,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2509,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2527,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2545,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2562,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2579,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2596,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2613,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2630,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2647,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2664,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2683,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2700,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2720,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2737,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2756,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2784,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2812,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2829,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2853,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2870,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2887,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2904,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2921,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2949,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2966,
+          "pattern": "trigger"
+        },
+        {
+          "line": 2983,
+          "pattern": "trigger"
+        },
+        {
+          "line": 3000,
+          "pattern": "trigger"
+        },
+        {
+          "line": 3017,
+          "pattern": "trigger"
+        },
+        {
+          "line": 3034,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "scripts/create-pilot-copy.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 27,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/data0a-copied-cleanup.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 29,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 91,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 155,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 264,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 280,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 280,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 290,
+          "pattern": "BEGIN IMMEDIATE"
+        },
+        {
+          "line": 371,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 419,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 498,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "scripts/data0a-provenance-audit.mjs",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 8,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 68,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 71,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 72,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 152,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 153,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 153,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 225,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "scripts/data0aqa-independent-verification.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 27,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 28,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 29,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 30,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 86,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 251,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 346,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 362,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 363,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 483,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 517,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 543,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 543,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 552,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 584,
+          "pattern": "BEGIN IMMEDIATE"
+        },
+        {
+          "line": 617,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 703,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 712,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 759,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 765,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "scripts/data0b-preclean-backup.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 110,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 150,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 151,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "scripts/final-corrected-scope-qa.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 12,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/generate-report-card-r7-packs.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 26,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/generate-report-card-r8-packs.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 32,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/git-safety-check.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 19,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 20,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 22,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 22,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 23,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 23,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 24,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 24,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 52,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/init-sqlite.py",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 4,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 11,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 11,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 207,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "scripts/local-staging-rehearsal.ps1",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 47,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 65,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/migration-check-utils.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 108,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 111,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 112,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 113,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 117,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 121,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 122,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 141,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 148,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "scripts/migration-existing-db-rehearsal.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 22,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 35,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 39,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "scripts/migration-isolation.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 16,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 54,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 62,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "scripts/optional-ops-v1-5-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 274,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 274,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/parent23d-browser-runtime.ps1",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 13,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/postgres/performance-contract.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 172,
+          "pattern": "raw query"
+        },
+        {
+          "line": 175,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/postgres/portability-audit.mjs",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 9,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 10,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 11,
+          "pattern": "sqlite_sequence"
+        },
+        {
+          "line": 12,
+          "pattern": "AUTOINCREMENT"
+        },
+        {
+          "line": 13,
+          "pattern": "WITHOUT ROWID"
+        },
+        {
+          "line": 14,
+          "pattern": "INSERT OR IGNORE"
+        },
+        {
+          "line": 15,
+          "pattern": "REPLACE INTO"
+        },
+        {
+          "line": 16,
+          "pattern": "datetime("
+        },
+        {
+          "line": 17,
+          "pattern": "strftime("
+        },
+        {
+          "line": 18,
+          "pattern": "julianday("
+        },
+        {
+          "line": 19,
+          "pattern": "unixepoch("
+        },
+        {
+          "line": 20,
+          "pattern": "json_extract"
+        },
+        {
+          "line": 21,
+          "pattern": "json_each"
+        },
+        {
+          "line": 22,
+          "pattern": "group_concat"
+        },
+        {
+          "line": 23,
+          "pattern": "COLLATE NOCASE"
+        },
+        {
+          "line": 24,
+          "pattern": "GLOB"
+        },
+        {
+          "line": 25,
+          "pattern": "VACUUM"
+        },
+        {
+          "line": 26,
+          "pattern": "WAL"
+        },
+        {
+          "line": 27,
+          "pattern": "busy_timeout"
+        },
+        {
+          "line": 28,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 29,
+          "pattern": "BEGIN IMMEDIATE"
+        },
+        {
+          "line": 30,
+          "pattern": "BEGIN EXCLUSIVE"
+        },
+        {
+          "line": 31,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 32,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "scripts/postgres/qa.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 14,
+          "pattern": "raw query"
+        },
+        {
+          "line": 15,
+          "pattern": "raw query"
+        },
+        {
+          "line": 16,
+          "pattern": "raw query"
+        },
+        {
+          "line": 17,
+          "pattern": "raw query"
+        },
+        {
+          "line": 18,
+          "pattern": "raw query"
+        },
+        {
+          "line": 19,
+          "pattern": "raw query"
+        },
+        {
+          "line": 20,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/postgres/roles-contract.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 32,
+          "pattern": "raw query"
+        },
+        {
+          "line": 33,
+          "pattern": "raw query"
+        },
+        {
+          "line": 46,
+          "pattern": "raw query"
+        },
+        {
+          "line": 48,
+          "pattern": "raw query"
+        },
+        {
+          "line": 59,
+          "pattern": "raw query"
+        },
+        {
+          "line": 80,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/postgres/select-provider.mjs",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 77,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/postgres/sqlite-schema-inventory.mjs",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 23,
+          "pattern": "sqlite_master"
+        }
+      ]
+    },
+    {
+      "path": "scripts/postgres/trigger-contract.mjs",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 70,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "scripts/postgres/trigger-parity.mjs",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 13,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 25,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/prepare-release-ci-synthetic.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 88,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 89,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-academic-integrity-1a-independent.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 25,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 28,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-auth2a-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 22,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 24,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 25,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 26,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 27,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 87,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 87,
+          "pattern": "foreign_keys"
+        },
+        {
+          "line": 88,
+          "pattern": "BEGIN IMMEDIATE"
+        },
+        {
+          "line": 104,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 104,
+          "pattern": "foreign_keys"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-auth2b-browser-fixtures.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 12,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 14,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-auth2b-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 15,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 18,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-auth2b-independent.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 19,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 22,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 214,
+          "pattern": "raw query"
+        },
+        {
+          "line": 214,
+          "pattern": "trigger"
+        },
+        {
+          "line": 218,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-cross-platform-apps-1a-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 8,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 10,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 151,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 151,
+          "pattern": "raw query"
+        },
+        {
+          "line": 154,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-event-media-v1-5-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 22,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 154,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-exam1-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 344,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-exam1qa-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 881,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-exam2-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 756,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-exam2qa-independent.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 843,
+          "pattern": "raw query"
+        },
+        {
+          "line": 844,
+          "pattern": "trigger"
+        },
+        {
+          "line": 857,
+          "pattern": "raw query"
+        },
+        {
+          "line": 1051,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-exam3qa-independent.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 319,
+          "pattern": "trigger"
+        },
+        {
+          "line": 621,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 629,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-fin-family-payment.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 30,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 32,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 273,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 273,
+          "pattern": "raw query"
+        },
+        {
+          "line": 274,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 274,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-fin2a-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 38,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-fin2b-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 35,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-iam1a-browser-fixtures.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 11,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 14,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-iam1a-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 19,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 22,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 23,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 150,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 150,
+          "pattern": "raw query"
+        },
+        {
+          "line": 152,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-import1a-browser-fixtures.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 9,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-import1a-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 95,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 95,
+          "pattern": "raw query"
+        },
+        {
+          "line": 96,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 96,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-kg-reports-v1-5-1a-independent.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 49,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-obs1a-browser-fixtures.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 10,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 12,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-obs1a-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 79,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 79,
+          "pattern": "raw query"
+        },
+        {
+          "line": 80,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 80,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-offline-sync-1a-browser-fixtures.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 11,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 13,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-offline-sync-1a-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 9,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 10,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-parent-meetings-v1-5-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 35,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 36,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 37,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 238,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 238,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-payslipreq1-browser-fixtures.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 10,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-payslipreq1-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 30,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 32,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-safeexit1-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 16,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 31,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 31,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-smart-ai-1a-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 11,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-super-admin-work-1a-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 23,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 25,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 26,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 27,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 28,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 29,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 79,
+          "pattern": "raw query"
+        },
+        {
+          "line": 86,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 86,
+          "pattern": "raw query"
+        },
+        {
+          "line": 87,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 87,
+          "pattern": "raw query"
+        },
+        {
+          "line": 164,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-support1a-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 17,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-universal-search-1a-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 14,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 17,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 542,
+          "pattern": "raw query"
+        },
+        {
+          "line": 543,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 549,
+          "pattern": "raw query"
+        },
+        {
+          "line": 551,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa-ux1a-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 17,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 125,
+          "pattern": "raw query"
+        },
+        {
+          "line": 219,
+          "pattern": "raw query"
+        },
+        {
+          "line": 220,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 225,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa20b-independent-inspect.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 113,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23c-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 42,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 1171,
+          "pattern": "raw query"
+        },
+        {
+          "line": 1494,
+          "pattern": "raw query"
+        },
+        {
+          "line": 1495,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 1500,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23d-browser-fixtures.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 12,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 19,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23d-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 21,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 26,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 27,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23dqa-baseline-probe.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 9,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 12,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23e-browser-fixtures.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 10,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 13,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 38,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 39,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23e-browser-runtime.ps1",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 11,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23e-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 14,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 17,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 18,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23eqa-independent.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 28,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 31,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 32,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 162,
+          "pattern": "raw query"
+        },
+        {
+          "line": 163,
+          "pattern": "raw query"
+        },
+        {
+          "line": 191,
+          "pattern": "raw query"
+        },
+        {
+          "line": 192,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23f-browser-fixtures.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 15,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 19,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23f-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 19,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23g-browser-fixtures.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 10,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23g-copied-db.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 14,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23gqa-independent.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 26,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 29,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 30,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23h-browser-fixtures.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 12,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23h-harness.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 147,
+          "pattern": "raw query"
+        },
+        {
+          "line": 147,
+          "pattern": "trigger"
+        },
+        {
+          "line": 149,
+          "pattern": "raw query"
+        },
+        {
+          "line": 169,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "scripts/qa23i-browser-fixtures.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 13,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 15,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/release-ops.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 87,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/run-import1a-copied-db.ps1",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 11,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 22,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 23,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/safeexit1-browser-runtime.ps1",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 13,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/sec1-runtime-server.ps1",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 6,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 7,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 19,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/sqlite-copy-safety.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 6,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 10,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 11,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "scripts/support1a-browser-runtime.ps1",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 11,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/verify-devops1c-operational-integrity.ts",
+      "classification": "REQUIRES_ADAPTER",
+      "matches": [
+        {
+          "line": 15,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 35,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 36,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "tests/browser-restore-safety.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 29,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 40,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 79,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 80,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 81,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/clean-install-migrations.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 98,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 99,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 103,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/cross-platform-apps-1a.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 132,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/data0a-provenance-qa.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 12,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/database-provider.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 11,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 16,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 21,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 32,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/demo-business-seed-safety.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 27,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 28,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/deployment-environment.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 37,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 82,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 84,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 139,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/fin2a-accountant-privacy-receipt-integrity.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 157,
+          "pattern": "PRAGMA"
+        },
+        {
+          "line": 202,
+          "pattern": "PRAGMA"
+        }
+      ]
+    },
+    {
+      "path": "tests/git-safety-check.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 13,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 13,
+          "pattern": "sidecar"
+        },
+        {
+          "line": 27,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/helpers/fresh-test-database.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 8,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 27,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 33,
+          "pattern": "sidecar"
+        }
+      ]
+    },
+    {
+      "path": "tests/pilot-reset-sample-data.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 32,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 39,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 40,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 41,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 47,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/pilot.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 23,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 30,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 31,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 42,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 43,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 44,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/postgresql-synthetic-qa.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 18,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 19,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/postgresql-test-partition.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 57,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 58,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/qa20c-isolation.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 23,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 54,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 69,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 70,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 71,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/release-feature-flag-runtime.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 24,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 55,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 56,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 57,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 58,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 72,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/release-operations.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 91,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/security-resilience.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 245,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 246,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/seed-users.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 23,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 149,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/smart-ai.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 590,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "tests/student-safe-exit.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 41,
+          "pattern": "trigger"
+        }
+      ]
+    },
+    {
+      "path": "tests/super-admin-recovery.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 30,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 33,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 59,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 60,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 123,
+          "pattern": "sqlite_master"
+        },
+        {
+          "line": 317,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 318,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/system-health.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 15,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 88,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 138,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/technical-operations.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 54,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 64,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/test-data-cleanup.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 87,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 133,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 143,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 150,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 162,
+          "pattern": "SQLite file"
+        },
+        {
+          "line": 198,
+          "pattern": "SQLite file"
+        }
+      ]
+    },
+    {
+      "path": "tests/universal-search.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 407,
+          "pattern": "raw query"
+        }
+      ]
+    },
+    {
+      "path": "tests/whatsapp-consent-batch-permissions.test.ts",
+      "classification": "PROVIDER_NEUTRAL",
+      "matches": [
+        {
+          "line": 127,
+          "pattern": "SQLite file"
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import path from "node:path";
 import { existsSync, readdirSync } from "node:fs";
+import { isSyntheticSqliteDeploymentOverride, resolveDatabaseProvider } from "@/lib/database-provider";
 
 export type DeploymentEnvironmentIssue = {
   code: string;
@@ -175,17 +176,26 @@ export function validateDeploymentEnvironment(
     }
   }
 
+  let databaseProvider: "sqlite" | "postgresql" = "sqlite";
+  try { databaseProvider = resolveDatabaseProvider(environment); }
+  catch { add("DATABASE_PROVIDER_INVALID", "DATABASE_PROVIDER", "Use exactly sqlite or postgresql."); }
   const dbUrl = value(environment, "DATABASE_URL");
-  const dbPath = dataRoot ? databasePath(dbUrl, dataRoot) : null;
-  if (!dbPath) {
-    add("DATABASE_URL_INVALID", "DATABASE_URL", "Must be a query-free SQLite file URL.");
+  if (databaseProvider === "postgresql") {
+    if (!/^postgres(?:ql)?:\/\//i.test(dbUrl)) add("DATABASE_URL_INVALID", "DATABASE_URL", "PostgreSQL staging requires a PostgreSQL runtime URL.");
+    if (!/^postgres(?:ql)?:\/\//i.test(value(environment, "DIRECT_URL"))) add("DIRECT_URL_INVALID", "DIRECT_URL", "PostgreSQL staging requires a separate trusted direct migration URL.");
   } else {
-    paths.DATABASE_URL = dbPath;
-    if (/([\\/]|^)dev\.db$/i.test(dbPath) || /prisma[\\/]dev\.db$/i.test(dbPath)) {
-      add("OPERATIONAL_DATABASE_REJECTED", "DATABASE_URL", "prisma/dev.db and dev.db are never valid staging targets.");
-    }
-    if (dataRoot && !within(dataRoot, dbPath)) {
-      add("DATABASE_PATH_ESCAPE", "DATABASE_URL", "Database path must resolve inside STAGING_DATA_DIR.");
+    if (!isSyntheticSqliteDeploymentOverride(environment)) add("SQLITE_STAGING_FORBIDDEN", "DATABASE_PROVIDER", "Staging requires PostgreSQL; SQLite is allowed only for an explicit isolated synthetic local rehearsal.");
+    const dbPath = dataRoot ? databasePath(dbUrl, dataRoot) : null;
+    if (!dbPath) {
+      add("DATABASE_URL_INVALID", "DATABASE_URL", "SQLite rehearsal requires a query-free file URL.");
+    } else {
+      paths.DATABASE_URL = dbPath;
+      if (/([\\/]|^)dev\.db$/i.test(dbPath) || /prisma[\\/]dev\.db$/i.test(dbPath)) {
+        add("OPERATIONAL_DATABASE_REJECTED", "DATABASE_URL", "prisma/dev.db and dev.db are never valid staging targets.");
+      }
+      if (dataRoot && !within(dataRoot, dbPath)) {
+        add("DATABASE_PATH_ESCAPE", "DATABASE_URL", "Database path must resolve inside STAGING_DATA_DIR.");
+      }
     }
   }
 
@@ -371,7 +381,16 @@ export function validateReleaseEnvironmentContract(environment: NodeJS.ProcessEn
   if (value(environment, "LIVE_PROVIDERS_ENABLED") !== "false") add("LIVE_PROVIDER_MODE_REJECTED", "LIVE_PROVIDERS_ENABLED", "Provider mode must remain explicitly disabled until separately approved.");
 
   const database = value(environment, "DATABASE_URL");
-  if (!database.startsWith("file:") || database.includes("?")) add("RELEASE_DATABASE_URL_INVALID", "DATABASE_URL", "Use a query-free SQLite file URL.");
+  let databaseProvider: "sqlite" | "postgresql" = "sqlite";
+  try { databaseProvider = resolveDatabaseProvider(environment); }
+  catch { add("DATABASE_PROVIDER_INVALID", "DATABASE_PROVIDER", "Use exactly sqlite or postgresql."); }
+  if (databaseProvider === "postgresql") {
+    if (!/^postgres(?:ql)?:\/\//i.test(database)) add("RELEASE_DATABASE_URL_INVALID", "DATABASE_URL", "PostgreSQL requires a PostgreSQL runtime URL.");
+    if (!/^postgres(?:ql)?:\/\//i.test(value(environment, "DIRECT_URL"))) add("DIRECT_URL_INVALID", "DIRECT_URL", "PostgreSQL requires a trusted direct migration URL.");
+  } else {
+    if (productionShaped && !isSyntheticSqliteDeploymentOverride(environment)) add("SQLITE_RELEASE_ENVIRONMENT_FORBIDDEN", "DATABASE_PROVIDER", "Staging and production require PostgreSQL.");
+    if (!database.startsWith("file:") || database.includes("?")) add("RELEASE_DATABASE_URL_INVALID", "DATABASE_URL", "SQLite rehearsal requires a query-free file URL.");
+  }
   if (/(?:^|[\\/])(?:prisma[\\/])?dev\.db$/i.test(database.slice(5))) add("OPERATIONAL_DEV_DB_REJECTED", "DATABASE_URL", "Operational dev.db cannot be used by any release environment.");
   const roots = ["PRIVATE_STORAGE_ROOT", "BACKUP_DIRECTORY"].map((name) => [name, value(environment, name)] as const);
   for (const [name, configured] of roots) {
@@ -383,7 +402,9 @@ export function validateReleaseEnvironmentContract(environment: NodeJS.ProcessEn
   }
   const stagingDatabase = value(environment, "NALANDA_STAGING_DATABASE_URL");
   const productionDatabase = value(environment, "NALANDA_PRODUCTION_DATABASE_URL");
-  if (stagingDatabase && productionDatabase && path.resolve(stagingDatabase.replace(/^file:/, "")) === path.resolve(productionDatabase.replace(/^file:/, ""))) add("ENVIRONMENT_DATABASE_SHARED", "DATABASE_URL", "Staging and production must not share a database.");
+  if (stagingDatabase && productionDatabase && (databaseProvider === "postgresql"
+    ? stagingDatabase === productionDatabase
+    : path.resolve(stagingDatabase.replace(/^file:/, "")) === path.resolve(productionDatabase.replace(/^file:/, "")))) add("ENVIRONMENT_DATABASE_SHARED", "DATABASE_URL", "Staging and production must not share a database.");
   const stagingStorage = value(environment, "NALANDA_STAGING_STORAGE_ROOT");
   const productionStorage = value(environment, "NALANDA_PRODUCTION_STORAGE_ROOT");
   if (stagingStorage && productionStorage && path.resolve(stagingStorage) === path.resolve(productionStorage)) add("ENVIRONMENT_STORAGE_SHARED", "PRIVATE_STORAGE_ROOT", "Staging and production must not share private storage.");

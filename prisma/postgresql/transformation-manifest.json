@@ -1,0 +1,19 @@
+{
+  "contractVersion": 1,
+  "canonicalSchema": "prisma/schema.prisma",
+  "generatedSchema": "prisma/postgresql/schema.prisma",
+  "allowedTransformations": [
+    "prepend generated-file notice",
+    "change datasource provider from sqlite to postgresql",
+    "add DIRECT_URL to the datasource"
+  ],
+  "forbiddenImplicitTransformations": [
+    "model or field omission",
+    "scalar type change",
+    "nullability change",
+    "default change",
+    "relation or referential-action change",
+    "unique or index change",
+    "financial representation change"
+  ]
+}

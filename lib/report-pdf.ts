@@ -45,8 +45,8 @@ function isCanonicalV1AcademicReport(report: RenderableReport) {
 const POINTS_PER_MM = 72 / 25.4;
 const A4_PORTRAIT: [number, number] = [595.28, 841.89];
 const FONT_REGULAR_CANDIDATES = ["arial.ttf", "segoeui.ttf", "calibri.ttf"];
-const FONT_BOLD_CANDIDATES = ["arialbd.ttf", "segoeuib.ttf", "calibrib.ttf"];
-const SCHOOL_BOLD_CANDIDATES = ["georgiab.ttf", "Georgia Bold.ttf"];
+const FONT_BOLD_CANDIDATES = ["arialbd.ttf", "Arial_Bold.ttf", "segoeuib.ttf", "calibrib.ttf"];
+const SCHOOL_BOLD_CANDIDATES = ["georgiab.ttf", "Georgia_Bold.ttf", "Georgia Bold.ttf"];
 
 export async function renderReportPdf(
   report: RenderableReport,
@@ -1346,7 +1346,7 @@ function profileRows(report: RenderableReport): Array<[string, string]> {
 }
 
 async function embeddedFonts(document: PDFDocument): Promise<PdfFonts> {
-  const fontRoot = path.join(process.env.WINDIR || "C:\\Windows", "Fonts");
+  const fontRoot = process.env.REPORT_CARD_FONT_DIR?.trim() || path.join(process.env.WINDIR || "C:\\Windows", "Fonts");
   const regularPath = FONT_REGULAR_CANDIDATES.map((name) => path.join(fontRoot, name))
     .find((candidate) => existsSync(candidate));
   const boldPath = FONT_BOLD_CANDIDATES.map((name) => path.join(fontRoot, name))

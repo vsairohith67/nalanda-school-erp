@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { databaseTableExists } from "@/lib/database-capabilities";
 
 export const PARENT_MEETING_BACKUP_KEYS = ["parentMeetings", "parentMeetingPreferences", "parentMeetingParticipants", "parentMeetingNotes", "parentMeetingFollowUps", "parentMeetingEvents"] as const;
 export type ParentMeetingBackupKey = (typeof PARENT_MEETING_BACKUP_KEYS)[number];
@@ -30,8 +31,8 @@ export function emptyParentMeetingBackup(): ParentMeetingBackup {
 
 export async function parentMeetingSchemaAvailable(client: PrismaClient) {
   try {
-    const rows = await client.$queryRawUnsafe<Array<{ name: string }>>("SELECT name FROM sqlite_master WHERE type='table' AND name='ParentMeeting'");
-    return rows.length === 1;
+    if (!(client as any).parentMeeting?.findMany) return false;
+    return await databaseTableExists(client, "ParentMeeting");
   } catch { return false; }
 }
 

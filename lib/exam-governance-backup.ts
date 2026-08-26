@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { databaseColumnExists, databaseTableExists } from "@/lib/database-capabilities";
 
 export type ExamGovernanceBackup = {
   examinations: Record<string, unknown>[];
@@ -128,7 +129,6 @@ export function examGovernanceRecordCount(value: ExamGovernanceBackup) {
 export async function loadExamGovernanceBackup(client: PrismaClient): Promise<ExamGovernanceBackup> {
   const source = client as any;
   if (
-    typeof source.$queryRawUnsafe !== "function" ||
     !source.examination ||
     !source.examinationClassScope ||
     !source.examSubjectPaper ||
@@ -136,12 +136,13 @@ export async function loadExamGovernanceBackup(client: PrismaClient): Promise<Ex
   ) {
     return emptyExamGovernanceBackup();
   }
-  const schemaRows = await source.$queryRawUnsafe(
-    "SELECT m.name AS tableName, p.name AS columnName FROM sqlite_master m LEFT JOIN pragma_table_info(m.name) p WHERE m.type = 'table' AND m.name IN ('ExaminationSchemeVersion', 'ExaminationSchemeAudit', 'ExamMarkSheet', 'ExamMarkEntry', 'StudentResultSnapshot', 'ExaminationTimetableVersion', 'ExaminationTimetableRow', 'ExaminationTimetableEvent')"
-  ) as Array<{ tableName: string; columnName: string | null }>;
-  const tables = new Set(schemaRows.map((row) => row.tableName));
-  const schemeHasMarksPolicy = schemaRows.some((row) => row.tableName === "ExaminationSchemeVersion" && row.columnName === "markDecimalPlaces");
-  const auditHasEventKey = schemaRows.some((row) => row.tableName === "ExaminationSchemeAudit" && row.columnName === "eventKey");
+  const tableNames = ["ExaminationSchemeVersion", "ExaminationSchemeAudit", "ExamMarkSheet", "ExamMarkEntry", "StudentResultSnapshot", "ExaminationTimetableVersion", "ExaminationTimetableRow", "ExaminationTimetableEvent"];
+  const availability = await Promise.all(tableNames.map(async (table) => [table, await databaseTableExists(source, table)] as const));
+  const tables = new Set(availability.filter(([, available]) => available).map(([table]) => table));
+  const [schemeHasMarksPolicy, auditHasEventKey] = await Promise.all([
+    databaseColumnExists(source, "ExaminationSchemeVersion", "markDecimalPlaces"),
+    databaseColumnExists(source, "ExaminationSchemeAudit", "eventKey")
+  ]);
   const legacySchemeSelect = {
     id: true,
     examinationId: true,

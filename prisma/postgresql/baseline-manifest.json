@@ -1,0 +1,23 @@
+{
+  "promptId": "POSTGRES-READINESS-1A",
+  "sourceMainSha": "d8c3d158211ad9e5feee9611c43ddf433db340f2",
+  "canonicalSqliteSchemaSha256": "B8898226E8E9DB028A5637B95F07F3D1FDB02231191B4C82922CC13368D77363",
+  "postgresqlSchemaSha256": "8612504CA59563B650EE76F6AF5190A6D4F3C81FD6D85057E23C9019D2FAE99B",
+  "sqliteMigrationCount": 24,
+  "postgresqlBaselineMigration": "20260826_postgresql_baseline",
+  "modelCount": 330,
+  "tableCount": 330,
+  "enumCount": 0,
+  "indexCount": 1627,
+  "activeTriggerCount": 168,
+  "viewCount": 0,
+  "partialIndexCount": 1,
+  "generatedWith": {
+    "date": "2026-08-26",
+    "prisma": "6.19.3",
+    "postgresql": "17.11",
+    "image": "postgres:17.11-bookworm"
+  },
+  "extensionsRequired": [],
+  "containsData": false
+}

@@ -21,6 +21,8 @@ function sourceFixture() {
   file(root, "prisma/schema.prisma", "generator client { provider = \"prisma-client-js\" }\ndatasource db { provider = \"sqlite\" url = env(\"DATABASE_URL\") }\n");
   file(root, "prisma/migrations/20260810000000_additive/migration.sql", "CREATE TABLE ReleaseFixture (id TEXT PRIMARY KEY);\n");
   file(root, "prisma/migrations/migration_lock.toml", 'provider = "sqlite"\n');
+  file(root, "prisma/postgresql/schema.prisma", "generator client { provider = \"prisma-client-js\" }\ndatasource db { provider = \"postgresql\" url = env(\"DATABASE_URL\") directUrl = env(\"DIRECT_URL\") }\n");
+  file(root, "prisma/postgresql/migrations/20260826000000_baseline/migration.sql", "CREATE TABLE \"ReleaseFixture\" (id TEXT PRIMARY KEY);\n");
   file(root, "public/icon.png", Buffer.from([1, 2, 3]));
   file(root, ".next/standalone/server.js", 'console.log("fixture")\n');
   file(root, ".next/static/chunks/app.js", "self.fixture=true;\n");
@@ -80,7 +82,7 @@ describe("release environment and feature gates", () => {
     const valid: NodeJS.ProcessEnv = {
       NODE_ENV: "production",
       NALANDA_ENVIRONMENT: "STAGING", NALANDA_RELEASE_ID: "staging-release-1", NALANDA_RELEASE_CHANNEL: "STAGING", NEXT_PUBLIC_PWA_BUILD_VERSION: "staging-release-1",
-      APP_ORIGIN: "https://staging.example.invalid", SESSION_COOKIE_SECURE: "true", DEBUG: "false", LIVE_PROVIDERS_ENABLED: "false", DATABASE_URL: "file:./staging.sqlite",
+      APP_ORIGIN: "https://staging.example.invalid", SESSION_COOKIE_SECURE: "true", DEBUG: "false", LIVE_PROVIDERS_ENABLED: "false", DATABASE_PROVIDER: "postgresql", DATABASE_URL: "postgresql://pooler.example.invalid/staging", DIRECT_URL: "postgresql://direct.example.invalid/staging",
       NALANDA_TRUSTED_PROXY_MODE: "authenticated-edge-v1", NALANDA_REQUIRE_TRUSTED_PROXY: "true", SECURITY_RATE_LIMIT_MODE: "distributed",
       PRIVATE_STORAGE_ROOT: path.join(external, "private"), BACKUP_DIRECTORY: path.join(external, "backups"), AUTH_SECRET: "A9b8C7d6E5f4G3h2I1j0K9l8M7n6O5p4",
       CLOUD_BACKUP_ENCRYPTION_KEY_V1: "Q2xlYXJlZFN0YWdpbmdLZXlGb3JUZXN0c09ubHkh", NALANDA_STAGING_BANNER: "true", PUBLIC_WEBSITE_INDEXING_ENABLED: "false"

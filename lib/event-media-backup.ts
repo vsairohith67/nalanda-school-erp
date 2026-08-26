@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { databaseTableExists } from "@/lib/database-capabilities";
 
 export const EVENT_MEDIA_BACKUP_KEYS = ["eventMediaAlbums", "eventMediaAssets", "eventMediaDerivatives", "eventMediaStudentAssociations", "mediaPublicationConsents", "eventMediaAuditEvents"] as const;
 export type EventMediaBackupKey = (typeof EVENT_MEDIA_BACKUP_KEYS)[number];
@@ -25,7 +26,7 @@ const REQUIRED: Record<EventMediaBackupKey, string[]> = {
 export function emptyEventMediaBackup(): EventMediaBackup { return Object.fromEntries(EVENT_MEDIA_BACKUP_KEYS.map((key) => [key, []])) as unknown as EventMediaBackup; }
 
 export async function eventMediaSchemaAvailable(client: PrismaClient) {
-  try { const rows = await client.$queryRawUnsafe<Array<{ name: string }>>("SELECT name FROM sqlite_master WHERE type='table' AND name='EventMediaAlbum'"); return rows.length === 1; }
+  try { if (!(client as any).eventMediaAlbum?.findMany) return false; return await databaseTableExists(client, "EventMediaAlbum"); }
   catch { return false; }
 }
 

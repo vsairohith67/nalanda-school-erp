@@ -321,3 +321,7 @@ Management-only QA result: `MANAGEMENT_RECONCILIATION_CLEARED`. The clearance ap
 `CROSS-PLATFORM-APPS-1A` implements a single Tauri 2 software foundation with a trusted bundled shell and a zero-capability remote ERP surface. The native auth bridge, encrypted Offline Sync adapter, app lock, device governance, three permitted Accountant draft workflows, platform projects, private unsigned CI, and default-off server gates are in scope. The server remains authoritative.
 
 Current release state in this branch is `READY_FOR_EXACT_HEAD_QA`. Remaining product boundaries are not hidden gaps: private HTTPS staging, PostgreSQL readiness, interactive/physical-device certification, signing, store publication, push, production origins, real users/data, deployment, and operational activation are separately governed and remain inactive.
+
+## PostgreSQL readiness
+
+`POSTGRES-READINESS-1A` adds the provider-dual software contract without replacing SQLite. The PostgreSQL 17 schema/baseline, active trigger and partial-index equivalents, provider-safe health/backup behavior, logical transfer, least-privilege roles, concurrency, performance, physical restore, and exact-head CI matrix are implemented on the retained feature branch. Local synthetic evidence is green; exact-head CI/release closure is the current gate. Private staging, provider purchase, real data/users, DNS, and migration/pilot activation remain separate and inactive.

@@ -1,12 +1,14 @@
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statfsSync, statSync } from "node:fs";
 import path from "node:path";
-import type { PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
 import packageJson from "../package.json";
 import { PWA_BUILD_VERSION } from "@/lib/pwa-version";
 import { validateDeploymentEnvironment } from "@/lib/deployment-environment";
 import { safeErrorFingerprint } from "@/lib/safe-logging";
 import { publishCriticalOperationalAlertNotification } from "@/lib/operational-alert-notifications";
+import { databaseIntegritySummary, databaseSizeBytes } from "@/lib/database-capabilities";
+import { databaseProviderLabel, resolveDatabaseProvider } from "@/lib/database-provider";
 import {
   OPERATIONAL_DOMAINS,
   operationalDomainLabel,
@@ -113,32 +115,38 @@ export async function getTechnicalOperationsDashboard(
 }
 
 async function databaseHealth(client: DatabaseClient, now: Date) {
+  const provider = resolveDatabaseProvider();
   let reachable = false;
   let status: OperationalStatus = "CRITICAL";
   let dbBytes = 0;
   let residueCount = 0;
   let expectedLocation = false;
   try {
-    await client.$queryRawUnsafe("SELECT 1 AS ok");
+    await client.$queryRaw(Prisma.sql`SELECT 1 AS ok`);
     reachable = true;
     status = "HEALTHY";
-    const dbPath = operationalDatabasePath();
-    expectedLocation = isWithinWorkspace(dbPath);
-    dbBytes = statSync(dbPath).size;
-    residueCount = ["-wal", "-shm", "-journal"].filter((suffix) => existsSync(`${dbPath}${suffix}`) && statSync(`${dbPath}${suffix}`).size > 0).length;
-    if (!expectedLocation || residueCount > 0) status = "WARNING";
+    if (provider === "sqlite") {
+      const dbPath = operationalDatabasePath();
+      expectedLocation = isWithinWorkspace(dbPath);
+      dbBytes = statSync(dbPath).size;
+      residueCount = ["-wal", "-shm", "-journal"].filter((suffix) => existsSync(`${dbPath}${suffix}`) && statSync(`${dbPath}${suffix}`).size > 0).length;
+      if (!expectedLocation || residueCount > 0) status = "WARNING";
+    } else {
+      expectedLocation = true;
+      dbBytes = await databaseSizeBytes(client, provider) ?? 0;
+    }
   } catch {
     reachable = false;
   }
   return {
     reachable,
     card: domainCard("DATABASE_HEALTH", status, now,
-      reachable ? "The operational database is reachable; only aggregate file health is shown." : "The operational database is unavailable.",
-      status === "HEALTHY" ? "Run the governed deep check on schedule." : "Review database location and journal residue before changing data.",
+      reachable ? `The selected ${databaseProviderLabel()} database is reachable; only aggregate health is shown.` : "The operational database is unavailable.",
+      status === "HEALTHY" ? "Run the governed deep check on schedule." : "Review the provider-specific database runbook before changing data.",
       "/docs/runbooks/OBS_CORE_DATABASE_RUNBOOK.md",
       [
         { label: "Reachable", value: reachable ? "Yes" : "No", status: reachable ? "HEALTHY" : "CRITICAL" },
-        { label: "Expected location", value: expectedLocation ? "Yes" : "No", status: expectedLocation ? "HEALTHY" : "CRITICAL" },
+        { label: provider === "sqlite" ? "Expected location" : "Provider contract", value: expectedLocation ? "Yes" : "No", status: expectedLocation ? "HEALTHY" : "CRITICAL" },
         { label: "Database size", value: formatBytes(dbBytes) },
         { label: "Active journal artifacts", value: residueCount, status: residueCount ? "WARNING" : "HEALTHY" }
       ])
@@ -147,7 +155,7 @@ async function databaseHealth(client: DatabaseClient, now: Date) {
 
 async function migrationHealth(client: DatabaseClient, now: Date) {
   try {
-    const rows = await client.$queryRawUnsafe<MigrationRow[]>("SELECT migration_name, finished_at, rolled_back_at FROM _prisma_migrations ORDER BY started_at ASC");
+    const rows = await client.$queryRaw<MigrationRow[]>(Prisma.sql`SELECT migration_name, finished_at, rolled_back_at FROM _prisma_migrations ORDER BY started_at ASC`);
     const repository = migrationDirectories();
     const applied = rows.filter((row) => row.finished_at && !row.rolled_back_at);
     const failed = rows.filter((row) => !row.finished_at || row.rolled_back_at);
@@ -333,7 +341,7 @@ async function providerHealth(client: DatabaseClient): Promise<ProviderHealthIte
 }
 
 async function releaseHealth(client: DatabaseClient) {
-  const migrations = await caught(() => client.$queryRawUnsafe<MigrationRow[]>("SELECT migration_name, finished_at, rolled_back_at FROM _prisma_migrations ORDER BY started_at DESC")) ?? [];
+  const migrations = await caught(() => client.$queryRaw<MigrationRow[]>(Prisma.sql`SELECT migration_name, finished_at, rolled_back_at FROM _prisma_migrations ORDER BY started_at DESC`)) ?? [];
   const current = await caught(() => client.releaseManifest.findFirst({ where: { isCurrent: true }, orderBy: { createdAt: "desc" } }));
   const policy = await caught(() => client.clientVersionPolicy.findUnique({ where: { environment: runtimeEnvironment() } }));
   const migrationVersion = migrations.find((row) => row.finished_at && !row.rolled_back_at)?.migration_name ?? "unknown";
@@ -408,12 +416,11 @@ export async function runGovernedDeepChecks(client: DatabaseClient, actorUserId:
       if (definition.checkKey === "database.integrity") {
         if (injected?.databaseIntegrity) status = injected.databaseIntegrity;
         else {
-          const integrity = await client.$queryRawUnsafe<Array<{ quick_check: string }>>("PRAGMA quick_check");
-          const foreignKeys = await client.$queryRawUnsafe<unknown[]>("PRAGMA foreign_key_check");
-          affectedCount = foreignKeys.length + (integrity.every((row) => row.quick_check === "ok") ? 0 : 1);
+          const integrity = await databaseIntegritySummary(client);
+          affectedCount = integrity.affectedCount;
           status = affectedCount ? "CRITICAL" : "HEALTHY";
         }
-        summarySafe = status === "HEALTHY" ? "SQLite integrity and foreign-key checks passed." : "SQLite integrity or foreign-key evidence requires immediate attention.";
+        summarySafe = status === "HEALTHY" ? `${databaseProviderLabel()} integrity and constraint checks passed.` : `${databaseProviderLabel()} integrity or constraint evidence requires immediate attention.`;
       } else if (definition.checkKey === "business.integrity") {
         const checks = await businessInvariantCounts(client);
         affectedCount = checks.reduce((sum, row) => sum + row.affectedCount, 0);
@@ -477,20 +484,21 @@ export async function upsertConditionAlert(client: DatabaseClient, input: { chec
 }
 
 async function businessInvariantCounts(client: DatabaseClient) {
-  const queries: Array<{ key: string; query: string }> = [
-    { key: "orphan_enrollment", query: "SELECT COUNT(*) AS count FROM AcademicYearEnrollment e LEFT JOIN Student s ON s.id=e.studentId WHERE s.id IS NULL" },
-    { key: "payment_receipt", query: "SELECT COUNT(*) AS count FROM Payment WHERE isCancelled=0 AND (receiptNo IS NULL OR TRIM(receiptNo)='')" },
-    { key: "family_total", query: "SELECT COUNT(*) AS count FROM FamilyCollection c WHERE c.totalPaise <> COALESCE((SELECT SUM(i.amountPaise) FROM FamilyCollectionInstrument i WHERE i.collectionId=c.id),0)" },
-    { key: "duplicate_report_publication", query: "SELECT COUNT(*) AS count FROM (SELECT studentId,academicYear,COUNT(*) n FROM StudentReportCard WHERE status='ISSUED' GROUP BY studentId,academicYear HAVING n>1)" },
-    { key: "duplicate_active_payroll", query: "SELECT COUNT(*) AS count FROM (SELECT periodId,COUNT(*) n FROM PayrollRun WHERE status IN ('APPROVED','LOCKED','PAYSLIPS_ISSUED') GROUP BY periodId HAVING n>1)" },
-    { key: "parent_context_without_relationship", query: "SELECT COUNT(*) AS count FROM AuthSession s LEFT JOIN StudentGuardian g ON g.id=s.activeChildLinkId WHERE s.activeChildLinkId IS NOT NULL AND g.id IS NULL" },
-    { key: "broken_private_asset", query: "SELECT SUM(total) AS count FROM (SELECT COUNT(*) total FROM ApplicationDocument WHERE LENGTH(sha256)<>64 OR recoveryStatus IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM ClassworkAttachment WHERE LENGTH(sha256)<>64 OR recoveryStatus IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM SupportRequestAttachment WHERE LENGTH(sha256)<>64 OR recoveryStatus IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM StaffPayslipDocumentVersion WHERE LENGTH(sourceSha256)<>64 OR LENGTH(derivativeSha256)<>64)" },
-    { key: "safe_exit_release_without_evidence", query: "SELECT COUNT(*) AS count FROM StudentDepartureRequest r WHERE r.status IN ('CHECKED_OUT','RETURN_EXPECTED','RETURNED_TO_CAMPUS','CLOSED') AND (r.checkedOutAt IS NULL OR NOT EXISTS (SELECT 1 FROM StudentDepartureHandover h WHERE h.requestId=r.id) OR NOT EXISTS (SELECT 1 FROM StudentGatePass p WHERE p.requestId=r.id AND p.status='USED' AND p.consumedAt IS NOT NULL) OR NOT EXISTS (SELECT 1 FROM StudentCampusPresenceEvent c WHERE c.requestId=r.id AND c.eventType='EARLY_DEPARTURE'))" },
-    { key: "migration_backup_mismatch", query: "SELECT COUNT(*) AS count FROM ReleaseManifest WHERE isCurrent=1 AND (backupVersion<>44 OR migrationVersion<>'20260825090000_offline_sync_1a')" }
+  const expectedMigration = resolveDatabaseProvider() === "postgresql" ? "20260826_postgresql_baseline" : "20260826003000_cross_platform_apps_1a";
+  const queries: Array<{ key: string; query: Prisma.Sql }> = [
+    { key: "orphan_enrollment", query: Prisma.sql`SELECT COUNT(*) AS count FROM "AcademicYearEnrollment" e LEFT JOIN "Student" s ON s."id"=e."studentId" WHERE s."id" IS NULL` },
+    { key: "payment_receipt", query: Prisma.sql`SELECT COUNT(*) AS count FROM "Payment" WHERE "isCancelled"=FALSE AND ("receiptNo" IS NULL OR TRIM("receiptNo")='')` },
+    { key: "family_total", query: Prisma.sql`SELECT COUNT(*) AS count FROM "FamilyCollection" c WHERE c."totalPaise" <> COALESCE((SELECT SUM(i."amountPaise") FROM "FamilyCollectionInstrument" i WHERE i."collectionId"=c."id"),0)` },
+    { key: "duplicate_report_publication", query: Prisma.sql`SELECT COUNT(*) AS count FROM (SELECT "studentId","academicYear",COUNT(*) n FROM "StudentReportCard" WHERE "status"='ISSUED' GROUP BY "studentId","academicYear" HAVING COUNT(*)>1) duplicate_rows` },
+    { key: "duplicate_active_payroll", query: Prisma.sql`SELECT COUNT(*) AS count FROM (SELECT "periodId",COUNT(*) n FROM "PayrollRun" WHERE "status" IN ('APPROVED','LOCKED','PAYSLIPS_ISSUED') GROUP BY "periodId" HAVING COUNT(*)>1) duplicate_rows` },
+    { key: "parent_context_without_relationship", query: Prisma.sql`SELECT COUNT(*) AS count FROM "AuthSession" s LEFT JOIN "StudentGuardian" g ON g."id"=s."activeChildLinkId" WHERE s."activeChildLinkId" IS NOT NULL AND g."id" IS NULL` },
+    { key: "broken_private_asset", query: Prisma.sql`SELECT SUM(total) AS count FROM (SELECT COUNT(*) total FROM "ApplicationDocument" WHERE LENGTH("sha256")<>64 OR "recoveryStatus" IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM "ClassworkAttachment" WHERE LENGTH("sha256")<>64 OR "recoveryStatus" IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM "SupportRequestAttachment" WHERE LENGTH("sha256")<>64 OR "recoveryStatus" IN ('FAILED','HASH_MISMATCH','MISSING') UNION ALL SELECT COUNT(*) FROM "StaffPayslipDocumentVersion" WHERE LENGTH("sourceSha256")<>64 OR LENGTH("derivativeSha256")<>64) private_assets` },
+    { key: "safe_exit_release_without_evidence", query: Prisma.sql`SELECT COUNT(*) AS count FROM "StudentDepartureRequest" r WHERE r."status" IN ('CHECKED_OUT','RETURN_EXPECTED','RETURNED_TO_CAMPUS','CLOSED') AND (r."checkedOutAt" IS NULL OR NOT EXISTS (SELECT 1 FROM "StudentDepartureHandover" h WHERE h."requestId"=r."id") OR NOT EXISTS (SELECT 1 FROM "StudentGatePass" p WHERE p."requestId"=r."id" AND p."status"='USED' AND p."consumedAt" IS NOT NULL) OR NOT EXISTS (SELECT 1 FROM "StudentCampusPresenceEvent" c WHERE c."requestId"=r."id" AND c."eventType"='EARLY_DEPARTURE'))` },
+    { key: "migration_backup_mismatch", query: Prisma.sql`SELECT COUNT(*) AS count FROM "ReleaseManifest" WHERE "isCurrent"=TRUE AND ("backupVersion"<>44 OR "migrationVersion"<>${expectedMigration})` }
   ];
   const result: Array<{ checkKey: string; affectedCount: number }> = [];
   for (const row of queries) {
-    const values = await client.$queryRawUnsafe<CountRow[]>(row.query);
+    const values = await client.$queryRaw<CountRow[]>(row.query);
     result.push({ checkKey: row.key, affectedCount: Number(values[0]?.count ?? 0) });
   }
   return result;
@@ -532,8 +540,10 @@ type StatusTable = "WhatsAppDelivery" | "SmsEmailDelivery" | "StudentDepartureNo
 async function statusCounts(client: DatabaseClient, table: StatusTable, column: "status" | "recoveryStatus" | "eventType" = "status") {
   try {
     // Both identifiers are closed, compile-time allowlists; no request input reaches this query.
-    const rows = await client.$queryRawUnsafe<Array<{ status: string; total: bigint | number }>>(
-      `SELECT "${column}" AS status, COUNT(*) AS total FROM "${table}" GROUP BY "${column}"`
+    const safeColumn = Prisma.raw(`"${column}"`);
+    const safeTable = Prisma.raw(`"${table}"`);
+    const rows = await client.$queryRaw<Array<{ status: string; total: bigint | number }>>(
+      Prisma.sql`SELECT ${safeColumn} AS status, COUNT(*) AS total FROM ${safeTable} GROUP BY ${safeColumn}`
     );
     return Object.fromEntries(rows.map((row) => [String(row.status), Number(row.total ?? 0)]));
   } catch {
@@ -543,8 +553,8 @@ async function statusCounts(client: DatabaseClient, table: StatusTable, column: 
 
 async function onboardingJobMetrics(client: DatabaseClient) {
   try {
-    const rows = await client.$queryRawUnsafe<Array<{ jobType: string; status: string; total: bigint | number; attempts: bigint | number }>>(
-      "SELECT jobType, status, COUNT(*) AS total, SUM(attemptCount) AS attempts FROM BackgroundJobRun WHERE component = 'GOVERNED_BULK_ONBOARDING' GROUP BY jobType, status"
+    const rows = await client.$queryRaw<Array<{ jobType: string; status: string; total: bigint | number; attempts: bigint | number }>>(
+      Prisma.sql`SELECT "jobType", "status", COUNT(*) AS total, SUM("attemptCount") AS attempts FROM "BackgroundJobRun" WHERE "component" = 'GOVERNED_BULK_ONBOARDING' GROUP BY "jobType", "status"`
     );
     const count = (types: string[], status: string) => rows.filter((row) => types.includes(row.jobType) && row.status === status).reduce((sum, row) => sum + Number(row.total ?? 0), 0);
     return {
@@ -579,15 +589,15 @@ function latestLogicalBackup() {
 
 function approvedStorageRoots() {
   const root = process.cwd();
-  const candidates = [
-    ["Operational database", path.dirname(operationalDatabasePath())],
+  const candidates: Array<readonly [string, string]> = [
     ["Backups", path.resolve(process.env.BACKUP_DIRECTORY?.trim() || path.join(root, "backups"))],
     ["Private uploads", path.resolve(process.env.ADMISSIONS_PRIVATE_STORAGE_ROOT?.trim() || path.join(root, "data", "private"))],
     ["Governed onboarding private workbooks", path.resolve(process.env.ONBOARDING_STORAGE_ROOT?.trim() || path.join(root, "storage", "onboarding"))],
     ["Generated documents", path.resolve(process.env.PAYSLIP_PRIVATE_STORAGE_ROOT?.trim() || path.join(root, "data", "generated"))],
     ["Temporary processing", path.resolve(process.env.CLOUD_BACKUP_TEMP_DIR?.trim() || path.join(root, "tmp"))],
     ["Application cache", path.join(root, ".next")]
-  ] as const;
+  ];
+  if (resolveDatabaseProvider() === "sqlite") candidates.unshift(["Operational database", path.dirname(operationalDatabasePath())]);
   return candidates.filter(([, target]) => isWithinWorkspace(target)).map(([label, target]) => ({ label, path: target }));
 }
 
@@ -623,7 +633,9 @@ function isWithinWorkspace(target: string) {
 }
 
 function migrationDirectories() {
-  const root = path.join(process.cwd(), "prisma", "migrations");
+  const root = resolveDatabaseProvider() === "postgresql"
+    ? path.join(process.cwd(), "prisma", "postgresql", "migrations")
+    : path.join(process.cwd(), "prisma", "migrations");
   return existsSync(root) ? readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort() : [];
 }
 
