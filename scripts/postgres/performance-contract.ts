@@ -13,6 +13,11 @@ async function createInBatches<T>(rows: T[], create: (batch: T[]) => Promise<unk
   for (let offset = 0; offset < rows.length; offset += 250) await create(rows.slice(offset, offset + 250));
 }
 
+function createManySkippingDuplicates<T>(delegate: unknown, data: T[]) {
+  return (delegate as { createMany(args: { data: T[]; skipDuplicates: true }): Promise<unknown> })
+    .createMany({ data, skipDuplicates: true });
+}
+
 async function seedScale() {
   const disabledPasswordHash = await hashPassword(randomBytes(48).toString("base64url"));
   await prisma.user.upsert({
@@ -52,12 +57,12 @@ async function seedScale() {
     createdAt: generatedAt,
     updatedAt: generatedAt
   }));
-  await createInBatches(students, (data) => prisma.student.createMany({ data, skipDuplicates: true }));
-  await createInBatches(guardians, (data) => prisma.guardian.createMany({ data, skipDuplicates: true }));
-  await createInBatches(staff, (data) => prisma.staffMember.createMany({ data, skipDuplicates: true }));
+  await createInBatches(students, (data) => createManySkippingDuplicates(prisma.student, data));
+  await createInBatches(guardians, (data) => createManySkippingDuplicates(prisma.guardian, data));
+  await createInBatches(staff, (data) => createManySkippingDuplicates(prisma.staffMember, data));
   await createInBatches(
     students.map((student, index) => ({ id: `pg-scale-link-${String(index).padStart(4, "0")}`, guardianId: guardians[index].id, studentId: student.id, relationshipToStudent: "Parent", isPrimaryContact: true, createdAt: generatedAt, updatedAt: generatedAt })),
-    (data) => prisma.studentGuardian.createMany({ data, skipDuplicates: true })
+    (data) => createManySkippingDuplicates(prisma.studentGuardian, data)
   );
 
   const payments = Array.from({ length: 2400 }, (_, index) => {
@@ -79,7 +84,7 @@ async function seedScale() {
       updatedAt: generatedAt
     };
   });
-  await createInBatches(payments, (data) => prisma.payment.createMany({ data, skipDuplicates: true }));
+  await createInBatches(payments, (data) => createManySkippingDuplicates(prisma.payment, data));
 
   const meetings = Array.from({ length: 1000 }, (_, index) => ({
     id: `pg-scale-meeting-${String(index).padStart(4, "0")}`,
@@ -95,7 +100,7 @@ async function seedScale() {
     createdAt: generatedAt,
     updatedAt: generatedAt
   }));
-  await createInBatches(meetings, (data) => prisma.parentMeeting.createMany({ data, skipDuplicates: true }));
+  await createInBatches(meetings, (data) => createManySkippingDuplicates(prisma.parentMeeting, data));
 
   const device = await prisma.offlineSyncDevice.upsert({
     where: { publicDeviceId: "pg-scale-device-public" },
@@ -121,7 +126,7 @@ async function seedScale() {
     createdAt: generatedAt,
     updatedAt: generatedAt
   }));
-  await createInBatches(mutations, (data) => prisma.offlineSyncMutation.createMany({ data, skipDuplicates: true }));
+  await createInBatches(mutations, (data) => createManySkippingDuplicates(prisma.offlineSyncMutation, data));
 
   const nativeSessions = Array.from({ length: 1000 }, (_, index) => ({
     id: `pg-scale-native-session-${String(index).padStart(4, "0")}`,
@@ -141,7 +146,7 @@ async function seedScale() {
     createdAt: generatedAt,
     updatedAt: generatedAt
   }));
-  await createInBatches(nativeSessions, (data) => prisma.nativeSession.createMany({ data, skipDuplicates: true }));
+  await createInBatches(nativeSessions, (data) => createManySkippingDuplicates(prisma.nativeSession, data));
 }
 
 const plans = [

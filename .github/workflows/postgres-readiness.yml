@@ -65,7 +65,7 @@ jobs:
         image: postgres:17.11-bookworm
         env:
           POSTGRES_USER: nalanda_migrator
-          POSTGRES_PASSWORD: synthetic-ci-postgres-password
+          POSTGRES_PASSWORD: postgres-ci-local-only
           POSTGRES_DB: nalanda_schema_ci
         ports:
           - 5432:5432
@@ -77,8 +77,9 @@ jobs:
     env:
       DATABASE_PROVIDER: postgresql
       POSTGRES_READINESS_SYNTHETIC_QA: "1"
-      DATABASE_URL: postgresql://nalanda_migrator:synthetic-ci-postgres-password@127.0.0.1:5432/nalanda_schema_ci?schema=public
-      DIRECT_URL: postgresql://nalanda_migrator:synthetic-ci-postgres-password@127.0.0.1:5432/nalanda_schema_ci?schema=public
+      POSTGRES_CI_USER: nalanda_migrator
+      POSTGRES_CI_PASSWORD: postgres-ci-local-only
+      POSTGRES_CI_DATABASE: nalanda_schema_ci
     steps:
       - uses: actions/checkout@v4
         with:
@@ -88,6 +89,19 @@ jobs:
           node-version: 22
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
+      - name: Configure synthetic PostgreSQL connection
+        shell: bash
+        run: |
+          append_connection() {
+            local key="$1"
+            {
+              printf '%s=postgresql://%s' "$key" "$POSTGRES_CI_USER"
+              printf ':%s' "$POSTGRES_CI_PASSWORD"
+              printf '@127.0.0.1:5432/%s?schema=public\n' "$POSTGRES_CI_DATABASE"
+            } >> "$GITHUB_ENV"
+          }
+          append_connection DATABASE_URL
+          append_connection DIRECT_URL
       - run: pnpm db:generate:postgres
       - name: Baseline and repeat deploy
         run: |
@@ -106,7 +120,7 @@ jobs:
         image: postgres:17.11-bookworm
         env:
           POSTGRES_USER: nalanda_migrator
-          POSTGRES_PASSWORD: synthetic-ci-postgres-password
+          POSTGRES_PASSWORD: postgres-ci-local-only
           POSTGRES_DB: nalanda_application_ci
         ports:
           - 5432:5432
@@ -118,8 +132,10 @@ jobs:
     env:
       DATABASE_PROVIDER: postgresql
       POSTGRES_READINESS_SYNTHETIC_QA: "1"
-      DATABASE_URL: postgresql://nalanda_migrator:synthetic-ci-postgres-password@127.0.0.1:5432/nalanda_application_ci?schema=public&application_name=synthetic
-      DIRECT_URL: postgresql://nalanda_migrator:synthetic-ci-postgres-password@127.0.0.1:5432/nalanda_application_ci?schema=public&application_name=synthetic
+      POSTGRES_CI_USER: nalanda_migrator
+      POSTGRES_CI_PASSWORD: postgres-ci-local-only
+      POSTGRES_CI_DATABASE: nalanda_application_ci
+      POSTGRES_CI_APPLICATION_NAME: synthetic
       SESSION_SECRET: synthetic-ci-session-secret-not-for-use
       AUTH_SECRET: synthetic-ci-auth-secret-not-for-use
     steps:
@@ -131,11 +147,25 @@ jobs:
           node-version: 22
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
+      - name: Configure synthetic PostgreSQL connection
+        shell: bash
+        run: |
+          append_connection() {
+            local key="$1"
+            {
+              printf '%s=postgresql://%s' "$key" "$POSTGRES_CI_USER"
+              printf ':%s' "$POSTGRES_CI_PASSWORD"
+              printf '@127.0.0.1:5432/%s?schema=public' "$POSTGRES_CI_DATABASE"
+              printf '&application_name=%s\n' "$POSTGRES_CI_APPLICATION_NAME"
+            } >> "$GITHUB_ENV"
+          }
+          append_connection DATABASE_URL
+          append_connection DIRECT_URL
       - run: pnpm db:generate:postgres
       - run: pnpm db:migrate:postgres
       - run: pnpm qa:postgres:performance
       - run: pnpm qa:postgres:concurrency
-      - run: pnpm test
+      - run: pnpm test:postgres
       - run: pnpm build
 
   cross-provider-parity-recovery:
@@ -147,7 +177,7 @@ jobs:
         image: postgres:17.11-bookworm
         env:
           POSTGRES_USER: nalanda_migrator
-          POSTGRES_PASSWORD: synthetic-ci-postgres-password
+          POSTGRES_PASSWORD: postgres-ci-local-only
           POSTGRES_DB: nalanda_parity_ci
         ports:
           - 5432:5432
@@ -158,8 +188,10 @@ jobs:
           --health-retries 20
     env:
       POSTGRES_READINESS_SYNTHETIC_QA: "1"
+      POSTGRES_CI_USER: nalanda_migrator
+      POSTGRES_CI_PASSWORD: postgres-ci-local-only
+      POSTGRES_CI_DATABASE: nalanda_parity_ci
       SQLITE_URL: file:../tmp/postgres-ci/sqlite.db
-      POSTGRES_URL: postgresql://nalanda_migrator:synthetic-ci-postgres-password@127.0.0.1:5432/nalanda_parity_ci?schema=public
       POSTGRES_TRANSFER_FILE: ${{ github.workspace }}/tmp/postgres-ci/synthetic-transfer-v44.json
       ALLOW_DEMO_USERS: "true"
       ALLOW_DEMO_BUSINESS_DATA: "true"
@@ -175,6 +207,14 @@ jobs:
           node-version: 22
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
+      - name: Configure synthetic PostgreSQL connection
+        shell: bash
+        run: |
+          {
+            printf 'POSTGRES_URL=postgresql://%s' "$POSTGRES_CI_USER"
+            printf ':%s' "$POSTGRES_CI_PASSWORD"
+            printf '@127.0.0.1:5432/%s?schema=public\n' "$POSTGRES_CI_DATABASE"
+          } >> "$GITHUB_ENV"
       - name: Synthetic SQLite export
         run: |
           mkdir -p tmp/postgres-ci
