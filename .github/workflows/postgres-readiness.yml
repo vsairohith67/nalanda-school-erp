@@ -41,6 +41,16 @@ jobs:
           node-version: 22
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
+      - name: Configure ephemeral synthetic seed credentials
+        shell: bash
+        run: |
+          seed_password() {
+            printf '%s=CI-%s!\n' "$1" "$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+          }
+          seed_password SEED_DIRECTOR_PASSWORD
+          seed_password SEED_ADMIN_PASSWORD
+          seed_password SEED_ACCOUNTANT_PASSWORD
+          seed_password SEED_VIEWER_PASSWORD
       - name: Fresh SQLite migration and seed
         run: |
           mkdir -p tmp/postgres-ci
@@ -207,6 +217,16 @@ jobs:
           node-version: 22
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
+      - name: Configure ephemeral synthetic seed credentials
+        shell: bash
+        run: |
+          seed_password() {
+            printf '%s=CI-%s!\n' "$1" "$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+          }
+          seed_password SEED_DIRECTOR_PASSWORD
+          seed_password SEED_ADMIN_PASSWORD
+          seed_password SEED_ACCOUNTANT_PASSWORD
+          seed_password SEED_VIEWER_PASSWORD
       - name: Configure synthetic PostgreSQL connection
         shell: bash
         run: |

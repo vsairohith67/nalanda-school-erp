@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { recordCafeteriaMeal } from "../../lib/cafeteria";
@@ -149,6 +149,7 @@ async function main() {
     providerAgnosticRegression: ["marks authorization", "report replacement/publication", "same business payment from two devices", "device revocation during sync", "last Super Admin protection", "native refresh rotation", "Offline Sync conflict/rejection"]
   };
   const output = path.resolve(process.env.POSTGRES_CONCURRENCY_EVIDENCE ?? "tmp/postgres-readiness-1a/concurrency.json");
+  mkdirSync(path.dirname(output), { recursive: true });
   writeFileSync(output, `${JSON.stringify(evidence, null, 2)}\n`, "utf8");
   console.log(JSON.stringify({ result: evidence.result, databaseRaceCount: races.length, safeOutcomeCount: evidence.safeOutcomeCount }));
 }

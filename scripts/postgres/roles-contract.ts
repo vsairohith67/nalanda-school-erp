@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { resolveDatabaseProvider } from "../../lib/database-provider";
@@ -99,6 +99,7 @@ async function main() {
   if (Object.entries(evidence).some(([key, value]) => key !== "roles" && key !== "result" && value !== true)) {
     throw new Error(`POSTGRES_ROLES_CONTRACT_FAILED:${JSON.stringify(evidence)}`);
   }
+  mkdirSync(path.dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, `${JSON.stringify(evidence, null, 2)}\n`, "utf8");
   console.log(JSON.stringify({ result: evidence.result, roleCount: roleRows.length, runtimeCrud, prohibitedOperationsDenied: 9 }));
 }

@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { resolveDatabaseProvider } from "../../lib/database-provider";
@@ -193,6 +193,7 @@ async function main() {
   }
   const evidence = { result: "POSTGRES_PERFORMANCE_CONTRACT_PASSED", scale, queryCount: queryPlans.length, maxExecutionMs, queryPlans };
   const output = path.resolve(process.env.POSTGRES_PERFORMANCE_EVIDENCE ?? "tmp/postgres-readiness-1a/performance.json");
+  mkdirSync(path.dirname(output), { recursive: true });
   writeFileSync(output, `${JSON.stringify(evidence, null, 2)}\n`, "utf8");
   console.log(JSON.stringify({ result: evidence.result, scale, queryCount: queryPlans.length, maxExecutionMs }));
 }

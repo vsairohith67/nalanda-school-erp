@@ -34,6 +34,15 @@ describe("PostgreSQL application regression partition", () => {
     const postgresJob = workflow.match(/  postgres-application-regression:[\s\S]+?(?=\n  cross-provider-parity-recovery:)/)?.[0];
     const crossProviderJob = workflow.match(/  cross-provider-parity-recovery:[\s\S]+$/)?.[0];
     const crossProviderJobEnv = crossProviderJob?.match(/\n    env:[\s\S]+?(?=\n    steps:)/)?.[0];
+    const evidenceWriters = ["qa.ts", "roles-contract.ts", "performance-contract.ts", "concurrency-contract.ts"]
+      .map((file) => readFileSync(path.join(workspace, "scripts", "postgres", file), "utf8"));
+    expect(sqliteJob).toContain("Configure ephemeral synthetic seed credentials");
+    expect(crossProviderJob).toContain("Configure ephemeral synthetic seed credentials");
+    expect(workflow.match(/seed_password SEED_DIRECTOR_PASSWORD/g)).toHaveLength(2);
+    expect(workflow.match(/openssl rand -hex 24/g)).toHaveLength(2);
+    for (const source of evidenceWriters) {
+      expect(source).toMatch(/mkdirSync\(path\.dirname\(output(?:Path)?\), \{ recursive: true \}\)/);
+    }
     expect(sqliteJob).toContain("cp tmp/postgres-ci/sqlite.db prisma/dev.db");
     expect(sqliteJob?.indexOf("cp tmp/postgres-ci/sqlite.db prisma/dev.db")).toBeLessThan(
       sqliteJob?.indexOf("- run: pnpm test") ?? -1
