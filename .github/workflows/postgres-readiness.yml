@@ -58,7 +58,12 @@ jobs:
           pnpm db:generate:sqlite
           pnpm db:migrate:sqlite
           pnpm exec tsx scripts/postgres/synthetic-sqlite-seed.ts
-          cp tmp/postgres-ci/sqlite.db prisma/dev.db
+          mkdir -p tmp/release-ci
+          test ! -e tmp/release-ci/synthetic.db
+          touch tmp/release-ci/synthetic.db
+          DATABASE_URL=file:../tmp/release-ci/synthetic.db pnpm db:migrate:sqlite
+          DATABASE_URL=file:../tmp/release-ci/synthetic.db NODE_ENV=development RELEASE_CI_SYNTHETIC_OPT_IN=true pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          cp tmp/release-ci/synthetic.db prisma/dev.db
       - run: pnpm routes:list
       - run: pnpm lifecycle:backfill
       - run: pnpm typecheck

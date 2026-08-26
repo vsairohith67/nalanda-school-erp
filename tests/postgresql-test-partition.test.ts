@@ -52,8 +52,10 @@ describe("PostgreSQL application regression partition", () => {
     for (const source of evidenceWriters) {
       expect(source).toMatch(/mkdirSync\(path\.dirname\(output(?:Path)?\), \{ recursive: true \}\)/);
     }
-    expect(sqliteJob).toContain("cp tmp/postgres-ci/sqlite.db prisma/dev.db");
-    expect(sqliteJob?.indexOf("cp tmp/postgres-ci/sqlite.db prisma/dev.db")).toBeLessThan(
+    expect(sqliteJob).toContain("pnpm exec tsx scripts/postgres/synthetic-sqlite-seed.ts");
+    expect(sqliteJob).toContain("RELEASE_CI_SYNTHETIC_OPT_IN=true pnpm exec tsx scripts/prepare-release-ci-synthetic.ts");
+    expect(sqliteJob).toContain("cp tmp/release-ci/synthetic.db prisma/dev.db");
+    expect(sqliteJob?.indexOf("cp tmp/release-ci/synthetic.db prisma/dev.db")).toBeLessThan(
       sqliteJob?.indexOf("- run: pnpm test") ?? -1
     );
     expect(sqliteJob).toMatch(/^\s*- run: pnpm test\s*$/m);

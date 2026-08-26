@@ -5495,11 +5495,11 @@
       "classification": "PROVIDER_NEUTRAL",
       "matches": [
         {
-          "line": 55,
+          "line": 57,
           "pattern": "SQLite file"
         },
         {
-          "line": 56,
+          "line": 58,
           "pattern": "SQLite file"
         }
       ]
