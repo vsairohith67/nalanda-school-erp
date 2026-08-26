@@ -44,8 +44,9 @@ describe("PostgreSQL application regression partition", () => {
     expect(syntheticSqliteSeed).toContain("assertSyntheticSqliteTransfer()");
     expect(syntheticSqliteSeed).toContain('randomBytes(24).toString("hex")');
     expect(portabilityAudit).toContain('relative.replaceAll("\\\\", "/") !== outputRelative');
-    expect(workflow.match(/Install PDF rasterization dependency/g)).toHaveLength(2);
-    expect(workflow.match(/sudo apt-get install -y --no-install-recommends poppler-utils/g)).toHaveLength(2);
+    expect(workflow.match(/Install governed QA utilities and report fonts/g)).toHaveLength(2);
+    expect(workflow.match(/poppler-utils ripgrep ttf-mscorefonts-installer/g)).toHaveLength(2);
+    expect(workflow.match(/REPORT_CARD_FONT_DIR: \/usr\/share\/fonts\/truetype\/msttcorefonts/g)).toHaveLength(2);
     expect(crossProviderJob).toContain("restored_table_count=");
     expect(crossProviderJob).toContain("table_schema='public'");
     for (const source of evidenceWriters) {

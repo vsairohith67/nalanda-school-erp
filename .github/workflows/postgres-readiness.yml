@@ -26,6 +26,7 @@ jobs:
     env:
       DATABASE_PROVIDER: sqlite
       POSTGRES_READINESS_SYNTHETIC_QA: "1"
+      REPORT_CARD_FONT_DIR: /usr/share/fonts/truetype/msttcorefonts
       DATABASE_URL: file:../tmp/postgres-ci/sqlite.db
       ALLOW_DEMO_USERS: "true"
       ALLOW_DEMO_BUSINESS_DATA: "true"
@@ -40,10 +41,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install PDF rasterization dependency
+      - name: Install governed QA utilities and report fonts
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends poppler-utils
+          echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | sudo debconf-set-selections
+          sudo apt-get install -y --no-install-recommends poppler-utils ripgrep ttf-mscorefonts-installer
+          test -f "$REPORT_CARD_FONT_DIR/Arial.ttf"
+          test -f "$REPORT_CARD_FONT_DIR/Arial_Bold.ttf"
+          test -f "$REPORT_CARD_FONT_DIR/Georgia_Bold.ttf"
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - name: Fresh SQLite migration and seed
@@ -142,6 +147,7 @@ jobs:
       POSTGRES_CI_PASSWORD: postgres-ci-local-only
       POSTGRES_CI_DATABASE: nalanda_application_ci
       POSTGRES_CI_APPLICATION_NAME: synthetic
+      REPORT_CARD_FONT_DIR: /usr/share/fonts/truetype/msttcorefonts
       SESSION_SECRET: synthetic-ci-session-secret-not-for-use
       AUTH_SECRET: synthetic-ci-auth-secret-not-for-use
     steps:
@@ -151,10 +157,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install PDF rasterization dependency
+      - name: Install governed QA utilities and report fonts
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends poppler-utils
+          echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | sudo debconf-set-selections
+          sudo apt-get install -y --no-install-recommends poppler-utils ripgrep ttf-mscorefonts-installer
+          test -f "$REPORT_CARD_FONT_DIR/Arial.ttf"
+          test -f "$REPORT_CARD_FONT_DIR/Arial_Bold.ttf"
+          test -f "$REPORT_CARD_FONT_DIR/Georgia_Bold.ttf"
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - name: Configure synthetic PostgreSQL connection
