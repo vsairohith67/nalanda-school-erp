@@ -198,7 +198,6 @@ jobs:
       ALLOW_DEMO_BUSINESS_DATA: "true"
       DEMO_USER_DATABASE_ROOT: ${{ github.workspace }}/tmp/postgres-ci
       DEMO_BUSINESS_DATA_ROOT: ${{ github.workspace }}/tmp/postgres-ci
-      POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -233,6 +232,8 @@ jobs:
           pnpm qa:postgres:restore
           pnpm qa:postgres:parity
       - name: Physical dump and restore
+        env:
+          POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
         run: |
           docker exec "$POSTGRES_CONTAINER_ID" pg_dump -U nalanda_migrator -d nalanda_parity_ci -Fc -f /tmp/postgres-readiness-ci.dump
           docker exec "$POSTGRES_CONTAINER_ID" sha256sum /tmp/postgres-readiness-ci.dump

@@ -32,6 +32,8 @@ describe("PostgreSQL application regression partition", () => {
     const workflow = readFileSync(path.join(workspace, ".github", "workflows", "postgres-readiness.yml"), "utf8");
     const sqliteJob = workflow.match(/  sqlite-release-gate:[\s\S]+?(?=\n  postgres-schema-migrations:)/)?.[0];
     const postgresJob = workflow.match(/  postgres-application-regression:[\s\S]+?(?=\n  cross-provider-parity-recovery:)/)?.[0];
+    const crossProviderJob = workflow.match(/  cross-provider-parity-recovery:[\s\S]+$/)?.[0];
+    const crossProviderJobEnv = crossProviderJob?.match(/\n    env:[\s\S]+?(?=\n    steps:)/)?.[0];
     expect(sqliteJob).toContain("cp tmp/postgres-ci/sqlite.db prisma/dev.db");
     expect(sqliteJob?.indexOf("cp tmp/postgres-ci/sqlite.db prisma/dev.db")).toBeLessThan(
       sqliteJob?.indexOf("- run: pnpm test") ?? -1
@@ -40,5 +42,9 @@ describe("PostgreSQL application regression partition", () => {
     expect(sqliteJob).not.toContain("pnpm test:postgres");
     expect(postgresJob).toMatch(/^\s*- run: pnpm test:postgres\s*$/m);
     expect(postgresJob).not.toMatch(/^\s*- run: pnpm test\s*$/m);
+    expect(crossProviderJobEnv).not.toContain("POSTGRES_CONTAINER_ID");
+    expect(workflow).toMatch(
+      /- name: Physical dump and restore\s+env:\s+POSTGRES_CONTAINER_ID:\s*\$\{\{ job\.services\.postgres\.id \}\}/
+    );
   });
 });
