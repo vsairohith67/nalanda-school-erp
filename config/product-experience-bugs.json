@@ -618,7 +618,7 @@
       "expected": "The acceptance gate proves the Nalanda package is foregrounded and its WebView exists, while preferring semantic page text when Android exposes it.",
       "actual": "The AVD booted, the APK installed and the launcher event succeeded, but uiautomator did not expose the web page copy, so a text-only grep stopped the gate before screenshot collection.",
       "rootCause": "Android WebView accessibility serialization is runner and WebView-version dependent; visible HTML text is not guaranteed to appear in the uiautomator XML even when the native activity and WebView are healthy.",
-      "fixCommit": "PENDING",
+      "fixCommit": "f2e744d6327a06a685fbd443738cc3085f31ce56",
       "regressionTest": "Exact-head Android emulator gate requiring the Nalanda resumed activity plus WebView hierarchy, semantic text when exposed, and always-uploaded synthetic diagnostics"
     }
   ]
