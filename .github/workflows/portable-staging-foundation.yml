@@ -75,6 +75,7 @@ jobs:
           test "$(docker image inspect nalanda-portable-staging:ci --format '{{.Config.User}}')" = "65532:65532"
           test "$(docker image inspect nalanda-portable-staging:ci --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')" = "$EXPECTED_SHA"
           docker image inspect nalanda-portable-staging:ci --format '{{.Id}}' | tee image-digest.txt
+          docker image inspect nalanda-portable-staging:ci --format '{{.Size}}' | tee image-size-bytes.txt
           docker save nalanda-portable-staging:ci | sha256sum | tee image-archive-sha256.txt
       - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with: { image: "nalanda-portable-staging:ci", format: "spdx-json", output-file: "sbom.spdx.json", upload-artifact: false }
@@ -85,6 +86,31 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: false
           exit-code: "1"
+      - name: Generate exact-head build provenance
+        env:
+          SOURCE_REPOSITORY: ${{ github.repository }}
+          WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const crypto = require("node:crypto");
+          const read = (path) => fs.readFileSync(path, "utf8").trim();
+          const sha256 = (path) => crypto.createHash("sha256").update(fs.readFileSync(path)).digest("hex");
+          const provenance = {
+            schemaVersion: 1,
+            sourceRepository: process.env.SOURCE_REPOSITORY,
+            sourceCommit: process.env.EXPECTED_SHA,
+            sourceDateEpoch: Number(require("node:child_process").execFileSync("git", ["show", "-s", "--format=%ct", "HEAD"], { encoding: "utf8" }).trim()),
+            workflowRunUrl: process.env.WORKFLOW_RUN_URL,
+            imageName: "nalanda-portable-staging:ci",
+            imageId: read("image-digest.txt"),
+            imageSizeBytes: Number(read("image-size-bytes.txt")),
+            imageArchiveSha256: read("image-archive-sha256.txt").split(/\s+/)[0],
+            sbomSpdxJsonSha256: sha256("sbom.spdx.json"),
+            signing: { status: "NOT_PERFORMED", reason: "No approved production signing identity or private registry is configured." }
+          };
+          fs.writeFileSync("build-provenance.json", `${JSON.stringify(provenance, null, 2)}\n`, { flag: "wx" });
+          NODE
       - name: Build-context secret/data assertion
         run: |
           test -z "$(docker run --rm --entrypoint /nodejs/bin/node nalanda-portable-staging:ci -e 'const fs=require(\"fs\"); console.log(fs.existsSync(\"/app/prisma/dev.db\")||fs.existsSync(\"/app/.git\")?\"bad\":\"\")')"
@@ -93,8 +119,10 @@ jobs:
           name: portable-oci-evidence-${{ env.EXPECTED_SHA }}
           path: |
             image-digest.txt
+            image-size-bytes.txt
             image-archive-sha256.txt
             sbom.spdx.json
+            build-provenance.json
           retention-days: 14
           if-no-files-found: error
       - name: Cleanup
