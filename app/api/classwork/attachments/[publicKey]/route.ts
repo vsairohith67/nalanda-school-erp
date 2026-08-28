@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     let learner = null;
     if (auth.user.role === "PARENT" || auth.user.role === "STUDENT") learner = await requestLearnerContext(request, auth.user);
     const result = await retrieveClassworkAttachment(prisma, (await params).publicKey, auth.user, learner);
-    return new NextResponse(result.bytes, { headers: {
+    return new NextResponse(new Uint8Array(result.bytes), { headers: {
       "Cache-Control": "private, no-store",
       "Content-Type": result.attachment.mediaType,
       "Content-Length": String(result.attachment.byteSize),

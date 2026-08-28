@@ -487,9 +487,18 @@ async function main() {
     const heapBefore = process.memoryUsage().heapUsed;
     try {
       await runUniversalSearch(measured, { id: superA.id, role: "SUPER_ADMIN" }, request);
-      // A timed-out Prisma read cannot be cancelled. Let any cold-start read settle
-      // before measuring steady-state query counts so it is not charged to the next run.
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // A timed-out Prisma read cannot be cancelled. Require bounded quiescence
+      // before measuring so slow shared runners do not charge cold reads to the
+      // next steady-state request.
+      let previousCount = queryCount;
+      let stableSamples = 0;
+      for (let attempt = 0; attempt < 100 && stableSamples < 3; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        if (queryCount === previousCount) stableSamples += 1;
+        else stableSamples = 0;
+        previousCount = queryCount;
+      }
+      invariant(stableSamples >= 3, `${SUITE}_QUERY_QUIESCENCE_TIMEOUT`);
       queryCount = 0;
       for (let index = 0; index < 25; index += 1) {
         const beforeQueries = queryCount;

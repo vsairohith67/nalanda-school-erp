@@ -4,6 +4,7 @@ import path from "node:path";
 import { PDFArray, PDFDict, PDFDocument, PDFName, PDFRef, PDFStream, type PDFObject } from "pdf-lib";
 import sharp from "sharp";
 import { validatedPrivateStorageRoot } from "@/lib/private-storage-root";
+import { configuredPrivateObjectStore, modulePrivateObjectKey } from "@/lib/portable-runtime/private-object-store";
 
 export const CLASSWORK_MAX_FILE_BYTES = 5 * 1024 * 1024;
 export const CLASSWORK_MAX_IMAGE_DIMENSION = 8_000;
@@ -109,6 +110,16 @@ export async function storeClassworkFile(file: ValidatedClassworkFile) {
   const normalizedExtension = file.extension === ".jpeg" ? ".jpg" : file.extension;
   const token = randomUUID().toLowerCase();
   const storageKey = `${token.slice(0, 2)}/${token.slice(2, 4)}/${token}${normalizedExtension}`;
+  if (portableObjectStorageEnabled()) {
+    await configuredPrivateObjectStore().putPrivateObject({
+      key: modulePrivateObjectKey("classwork", storageKey),
+      bytes: file.bytes,
+      sha256: file.sha256,
+      contentType: file.mediaType,
+      contentDisposition: file.safeDisplayName
+    });
+    return storageKey;
+  }
   const target = resolveStorageKey(storageKey);
   await assertNoSymlinkPath(classworkStorageRoot());
   await mkdir(path.dirname(target), { recursive: true });
@@ -126,6 +137,11 @@ export async function storeClassworkFile(file: ValidatedClassworkFile) {
 }
 
 export async function readClassworkFile(storageKey: string, expectedSha256: string) {
+  if (portableObjectStorageEnabled()) {
+    const object = await configuredPrivateObjectStore().getPrivateObject(modulePrivateObjectKey("classwork", storageKey), CLASSWORK_MAX_FILE_BYTES);
+    if (object.metadata.sha256 !== expectedSha256.toLowerCase()) throw new ClassworkFileError("The private attachment failed integrity verification.", 409);
+    return object.bytes;
+  }
   const target = resolveStorageKey(storageKey);
   await assertNoSymlinkPath(path.dirname(target));
   const stat = await lstat(target);
@@ -136,9 +152,17 @@ export async function readClassworkFile(storageKey: string, expectedSha256: stri
 }
 
 export async function rollbackStoredClassworkFile(storageKey: string) {
+  if (portableObjectStorageEnabled()) {
+    await configuredPrivateObjectStore().deleteGovernedObject(modulePrivateObjectKey("classwork", storageKey));
+    return;
+  }
   const target = resolveStorageKey(storageKey);
   const stat = await lstat(target).catch(() => null);
   if (stat?.isFile() && !stat.isSymbolicLink()) await rm(target, { force: true });
+}
+
+function portableObjectStorageEnabled() {
+  return process.env.PRIVATE_OBJECT_STORAGE_PROVIDER?.trim().toUpperCase() === "S3_COMPATIBLE";
 }
 
 export function resolveStorageKey(storageKey: string) {

@@ -1,5 +1,7 @@
 # V1.5 and Post-RC Roadmap
 
+Portable staging is the software prerequisite for an owner-approved provider adapter. Generated next phases are `PRIVATE-STAGING-1B-PROVIDER-ADAPTER` and synthetic-only `SYNTHETIC-PILOT-READINESS-1A`; neither is executed here.
+
 - **Prompt:** `V1.5-ROADMAP-1A`
 - **Reconciled:** 2026-08-21
 - **Scope:** Planning and documentation only

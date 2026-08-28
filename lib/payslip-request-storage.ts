@@ -4,6 +4,7 @@ import path from "node:path";
 import { decryptPayslipSecret, encryptPayslipSecret, type AuthenticatedEnvelope } from "@/lib/payslip-request-crypto";
 import { PAYSLIP_PDF_MAX_BYTES, PayslipPdfError } from "@/lib/payslip-request-pdf";
 import { validatedPrivateStorageRoot } from "@/lib/private-storage-root";
+import { configuredPrivateObjectStore, modulePrivateObjectKey } from "@/lib/portable-runtime/private-object-store";
 
 const STORAGE_KEY = /^(?:source\/[a-f0-9]{2}\/[a-f0-9]{2}\/[a-f0-9-]{36}\.enc|delivery\/[a-f0-9]{2}\/[a-f0-9]{2}\/[a-f0-9-]{36}\.pdf)$/;
 
@@ -43,6 +44,7 @@ export async function readPayslipStoredBackupBytes(storageKey: string, maximumBy
 
 export async function rollbackPayslipStoredFiles(storageKeys: string[]) {
   for (const storageKey of storageKeys) {
+    if (portableObjectStorageEnabled()) { await configuredPrivateObjectStore().deleteGovernedObject(modulePrivateObjectKey("payslip", storageKey)); continue; }
     const target = resolvePayslipStorageKey(storageKey);
     const stat = await lstat(target).catch(() => null);
     if (stat?.isFile() && !stat.isSymbolicLink()) await rm(target, { force: true });
@@ -58,6 +60,10 @@ export function resolvePayslipStorageKey(storageKey: string, overrideRoot?: stri
 }
 
 async function storeFile(storageKey: string, bytes: Buffer) {
+  if (portableObjectStorageEnabled()) {
+    await configuredPrivateObjectStore().putPrivateObject({ key: modulePrivateObjectKey("payslip", storageKey), bytes, sha256: sha256(bytes), contentType: storageKey.endsWith(".pdf") ? "application/pdf" : "application/octet-stream" });
+    return;
+  }
   const root = payslipRequestStorageRoot();
   await mkdir(root, { recursive: true, mode: 0o700 });
   await assertNoSymlinkPath(root);
@@ -71,6 +77,7 @@ async function storeFile(storageKey: string, bytes: Buffer) {
 }
 
 async function readStoredFile(storageKey: string, maximumBytes: number) {
+  if (portableObjectStorageEnabled()) return (await configuredPrivateObjectStore().getPrivateObject(modulePrivateObjectKey("payslip", storageKey), maximumBytes)).bytes;
   const target = resolvePayslipStorageKey(storageKey);
   await assertNoSymlinkPath(path.dirname(target));
   const stat = await lstat(target);
@@ -97,3 +104,4 @@ async function assertNoSymlinkPath(target: string) {
 function sha256(value: Uint8Array) {
   return createHash("sha256").update(value).digest("hex");
 }
+function portableObjectStorageEnabled() { return process.env.PRIVATE_OBJECT_STORAGE_PROVIDER?.trim().toUpperCase() === "S3_COMPATIBLE"; }

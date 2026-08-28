@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireApiPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { previewCloudBackupRetention, pruneCloudBackupRetention } from "@/lib/cloud-backup-retention";
+import { requiresPortableBackupWorker } from "@/lib/cloud-backup-worker";
 
 export async function GET(request: NextRequest) {
   const auth = await requireApiPermission("MANAGE_CLOUD_BACKUP_RETENTION"); if (auth.response) return auth.response;
@@ -40,6 +41,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json(), profileId = String(body.profileId ?? "");
     if (body.confirmation !== `PURGE EXPIRED ${profileId}`) throw new Error("Exact retention purge confirmation is required.");
+    const profile = await prisma.cloudBackupProfile.findUnique({ where: { id: profileId } });
+    if (!profile) throw new Error("Cloud backup profile was not found.");
+    if (requiresPortableBackupWorker(profile)) {
+      return NextResponse.json(
+        { error: "Portable retention deletion requires the separately authorised backup maintenance job." },
+        { status: 409, headers: { "Cache-Control": "private, no-store" } }
+      );
+    }
     return NextResponse.json(await pruneCloudBackupRetention(prisma, profileId, auth.user.id));
   } catch (error) { return failure(error); }
 }

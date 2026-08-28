@@ -60,6 +60,9 @@ async function main() {
     return;
   }
   if (command === "prune") {
+    if (new Set(["synthetic-staging", "staging", "production"]).has((process.env.NALANDA_ENVIRONMENT || "").toLowerCase())) {
+      throw new Error("PORTABLE_RETENTION_PLAN_REQUIRED");
+    }
     console.log(JSON.stringify(await pruneCloudBackupRetention(prisma, profile.id), null, 2));
     return;
   }
@@ -68,7 +71,7 @@ async function main() {
 
 async function activeProfile() {
   const profile = await prisma.cloudBackupProfile.findFirst({ where: { status: "ACTIVE" }, orderBy: { profileCode: "asc" } });
-  if (!profile) throw new Error("No active MOCK or LOCAL_FOLDER cloud backup profile is configured.");
+  if (!profile) throw new Error("No active permitted backup profile is configured.");
   return profile;
 }
 

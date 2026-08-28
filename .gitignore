@@ -36,6 +36,8 @@ backups/*
 !backups/.gitkeep
 *.backup.json
 *-backup-*.json
+!deploy/portable/minio-backup-policy.json
+!deploy/portable/minio-backup-maintenance-policy.json
 
 # Private runtime storage, uploads, OCR images/crops, and provider objects
 data/

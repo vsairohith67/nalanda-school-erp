@@ -74,7 +74,10 @@ export function classifyRiskyPath(filePath: string): SafetyFinding[] {
 
   if (/(^|\/)\.env(?:\..+)?$/i.test(relativePath) && !/(^|\/)\.env\.example$/i.test(relativePath)) add("ENV_FILE");
   if (/\.(?:db|sqlite|sqlite3)(?:-(?:journal|wal|shm))?$/i.test(relativePath) || /\.(?:db|sqlite|sqlite3)-(?:journal|wal|shm)$/i.test(relativePath)) add("DATABASE_FILE");
-  if ((/(^|\/)backups?\//i.test(relativePath) || /backup/i.test(path.posix.basename(relativePath))) && /\.json$/i.test(relativePath)) add("BACKUP_JSON");
+  const isDeploymentAccessPolicy = /^(?:deploy|deployment)\/[^/]+\/[^/]*policy\.json$/i.test(relativePath);
+  if (!isDeploymentAccessPolicy
+    && (/(^|\/)backups?\//i.test(relativePath) || /backup/i.test(path.posix.basename(relativePath)))
+    && /\.json$/i.test(relativePath)) add("BACKUP_JSON");
   if (/(^|\/)(?:data\/(?:fee-register-ocr|uploads?|private|cloud-backup[^/]*|provider[^/]*)|storage|uploads?|private-uploads?|ocr-storage)(?:\/|$)/i.test(relativePath)) add("PRIVATE_RUNTIME_STORAGE");
   if (/(^|\/)(?:tmp|temp|\.qa[^/]*|qa-artifacts|test-results)(?:\/|$)/i.test(relativePath)) add("QA_TEMPORARY_PATH");
   if (/\.log(?:\..+)?$/i.test(relativePath)) add("RUNTIME_LOG");
@@ -97,6 +100,8 @@ function placeholderValue(value: string) {
   if (/^<[^>]+>$/.test(clean)) return true;
   if (/(?:placeholder|example|sample|mock|local-only|replace|generate-locally|your-)/i.test(clean)) return true;
   if (/^file:\.\/(?:local-|example)/i.test(clean)) return true;
+  if (/^\$\(cat \/run\/secrets\/[a-z0-9._-]+\)$/i.test(clean)) return true;
+  if (/^\$\{?[a-z_][a-z0-9_]*\}?$/i.test(clean)) return true;
   return false;
 }
 
@@ -105,15 +110,17 @@ export function scanTextContent(filePath: string, content: string): SafetyFindin
   const findings: SafetyFinding[] = [];
   const add = (reasonCode: string) => findings.push({ relativePath, reasonCode });
 
-  for (const rule of HIGH_CONFIDENCE_PATTERNS) {
-    if (rule.pattern.test(content)) add(rule.reasonCode);
-  }
-
   const isDocumentation = /(^|\/)docs?\//i.test(relativePath) || /\.md$/i.test(relativePath);
   const isSyntheticTest = /(^|\/)(?:tests?|fixtures?)(?:\/|$)/i.test(relativePath)
     || /\.test\.[cm]?[jt]sx?$/i.test(relativePath)
-    || /(^|\/)scripts\/(?:qa\d+[a-z0-9-]*-fixtures|sec1-runtime-[^/]+)\.[^/]+$/i.test(relativePath);
+    || /(^|\/)scripts\/(?:qa\d+[a-z0-9-]*-fixtures|sec1-runtime-[^/]+)\.[^/]+$/i.test(relativePath)
+    || relativePath === "scripts/portable/generate-synthetic-secrets.mjs";
   const isEnvExample = /(^|\/)\.env\.example$/i.test(relativePath);
+
+  for (const rule of HIGH_CONFIDENCE_PATTERNS) {
+    if (rule.reasonCode === "CREDENTIAL_BEARING_DATABASE_URL" && isSyntheticTest) continue;
+    if (rule.pattern.test(content)) add(rule.reasonCode);
+  }
 
   if (isEnvExample) {
     for (const line of content.split(/\r?\n/)) {

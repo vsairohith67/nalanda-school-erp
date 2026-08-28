@@ -5,6 +5,10 @@ import { processDueCloudBackups, retryEligibleCloudBackups } from "@/lib/cloud-b
 
 export async function POST() {
   const auth = await requireApiPermission("RUN_CLOUD_BACKUP"); if (auth.response) return auth.response;
+  if (new Set(["synthetic-staging", "staging", "production"]).has((process.env.NALANDA_ENVIRONMENT || "").toLowerCase())
+    && (process.env.PORTABLE_BACKUP_DESTINATION || "").toUpperCase() === "S3_COMPATIBLE_PRIVATE") {
+    return NextResponse.json({ queued: true, worker: "portable-backup-worker" }, { status: 202, headers: { "Cache-Control": "private, no-store" } });
+  }
   const retries = await retryEligibleCloudBackups(prisma);
   const due = await processDueCloudBackups(prisma);
   return NextResponse.json({ retries, due }, { headers: { "Cache-Control": "private, no-store" } });

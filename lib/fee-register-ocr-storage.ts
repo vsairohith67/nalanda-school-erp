@@ -2,9 +2,11 @@ import { createHash, randomUUID } from "node:crypto";
 import { existsSync, realpathSync } from "node:fs";
 import { mkdir, lstat, readFile, realpath, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { configuredPrivateObjectStore, modulePrivateObjectKey } from "@/lib/portable-runtime/private-object-store";
 
 export const FEE_REGISTER_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 export type FeeRegisterImageType = (typeof FEE_REGISTER_IMAGE_TYPES)[number];
+const PORTABLE_FEE_REGISTER_MAX_BYTES = 26 * 1024 * 1024;
 
 const EXTENSIONS: Record<FeeRegisterImageType, readonly string[]> = {
   "image/jpeg": [".jpg", ".jpeg"],
@@ -75,16 +77,26 @@ export function validateRegisterImage(
 }
 
 export async function storeRegisterImage(image: ValidatedRegisterImage) {
-  const root = await ensureStorageRoot();
   const storageKey = `${randomUUID().replaceAll("-", "")}${image.extension}`;
+  if (portableObjectStorageEnabled()) {
+    await configuredPrivateObjectStore().putPrivateObject({ key: modulePrivateObjectKey("fee-register-ocr", storageKey), bytes: image.bytes, sha256: image.sha256, contentType: image.mimeType });
+    return storageKey;
+  }
+  const root = await ensureStorageRoot();
   const target = safeChild(root, storageKey);
   await writeFile(target, image.bytes, { flag: "wx", mode: 0o600 });
   return storageKey;
 }
 
 export async function readRegisterImage(storageKey: string, expectedSha256?: string, expectedByteSize?: number) {
-  const root = await ensureStorageRoot();
   validateStorageKey(storageKey);
+  if (portableObjectStorageEnabled()) {
+    const object = await configuredPrivateObjectStore().getPrivateObject(modulePrivateObjectKey("fee-register-ocr", storageKey), PORTABLE_FEE_REGISTER_MAX_BYTES);
+    if (expectedByteSize !== undefined && object.bytes.length !== expectedByteSize) throw new Error("OCR source image failed size verification");
+    if (expectedSha256 !== undefined && object.metadata.sha256 !== expectedSha256.toLowerCase()) throw new Error("OCR source image failed SHA-256 verification");
+    return object.bytes;
+  }
+  const root = await ensureStorageRoot();
   const target = safeChild(root, storageKey);
   const stat = await lstat(target).catch(() => null);
   if (!stat?.isFile() || stat.isSymbolicLink()) throw new Error("OCR source image is unavailable");
@@ -106,8 +118,9 @@ export async function registerImageExists(storageKey: string) {
 }
 
 export async function purgeRegisterImage(storageKey: string) {
-  const root = await ensureStorageRoot();
   validateStorageKey(storageKey);
+  if (portableObjectStorageEnabled()) return (await configuredPrivateObjectStore().deleteGovernedObject(modulePrivateObjectKey("fee-register-ocr", storageKey))).deleted;
+  const root = await ensureStorageRoot();
   const target = safeChild(root, storageKey);
   const stat = await lstat(target).catch(() => null);
   if (!stat) return false;
@@ -117,6 +130,8 @@ export async function purgeRegisterImage(storageKey: string) {
   await unlink(resolved);
   return true;
 }
+
+function portableObjectStorageEnabled() { return process.env.PRIVATE_OBJECT_STORAGE_PROVIDER?.trim().toUpperCase() === "S3_COMPATIBLE"; }
 
 function validateStorageKey(storageKey: string) {
   if (!/^[a-f0-9]{32}\.(jpg|png|webp)$/.test(storageKey)) throw new Error("Invalid OCR source storage key");
