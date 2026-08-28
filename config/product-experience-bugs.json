@@ -605,7 +605,7 @@
       "expected": "AVD creation and emulator launch share one explicit runner-local directory, and the gate proves the named AVD exists before launch.",
       "actual": "The system image and AVD creation commands completed, but the emulator reported Unknown AVD name px1a_phone and could not find its ini file under HOME/.android/avd.",
       "rootCause": "The workflow relied on implicit AVD directory discovery; the hosted runner tools did not agree on the default location after the SDK components were installed during the step.",
-      "fixCommit": "PENDING",
+      "fixCommit": "35a62d98be68f21ba83ad833d20e0e8a4b53d64b",
       "regressionTest": "Exact-head Android emulator gate with exported ANDROID_AVD_HOME, an ini-file assertion and emulator -list-avds proof before startup"
     }
   ]
