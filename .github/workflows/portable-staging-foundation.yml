@@ -46,7 +46,14 @@ jobs:
           echo 'REPORT_CARD_FONT_DIR=/usr/share/fonts/truetype/msttcorefonts' >> "$GITHUB_ENV"
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate:postgres && pnpm qa:postgres:parity
-      - run: pnpm db:generate:sqlite && pnpm typecheck && pnpm test
+      - run: pnpm db:generate:sqlite
+      - name: Prepare isolated SQLite database for inherited copied-database tests
+        run: |
+          mkdir -p tmp/server-ci
+          touch tmp/server-ci/synthetic.db
+          DATABASE_URL=file:../tmp/server-ci/synthetic.db pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          cp tmp/server-ci/synthetic.db prisma/dev.db
+      - run: pnpm typecheck && pnpm test
       - run: DATABASE_PROVIDER=postgresql DATABASE_URL=postgresql://build.invalid/nalanda DIRECT_URL=postgresql://build.invalid/nalanda pnpm build
       - name: Cleanup
         if: always()
