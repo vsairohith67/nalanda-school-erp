@@ -49,10 +49,11 @@ jobs:
       - run: pnpm db:generate:sqlite
       - name: Prepare isolated SQLite database for inherited copied-database tests
         run: |
-          mkdir -p tmp/server-ci
-          touch tmp/server-ci/synthetic.db
-          DATABASE_URL=file:../tmp/server-ci/synthetic.db pnpm exec prisma migrate deploy --schema prisma/schema.prisma
-          cp tmp/server-ci/synthetic.db prisma/dev.db
+          mkdir -p tmp/release-ci
+          touch tmp/release-ci/synthetic.db
+          DATABASE_URL=file:../tmp/release-ci/synthetic.db pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          RELEASE_CI_SYNTHETIC_OPT_IN=true NALANDA_ENVIRONMENT=TEST NODE_ENV=development DATABASE_URL=file:../tmp/release-ci/synthetic.db pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          cp tmp/release-ci/synthetic.db prisma/dev.db
       - run: pnpm typecheck && pnpm test
       - run: DATABASE_PROVIDER=postgresql DATABASE_URL=postgresql://build.invalid/nalanda DIRECT_URL=postgresql://build.invalid/nalanda pnpm build
       - name: Cleanup
