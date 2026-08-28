@@ -4,9 +4,9 @@
   "syntheticEvidenceOnly": true,
   "summary": {
     "critical": 0,
-    "high": 10,
+    "high": 11,
     "medium": 35,
-    "fixed": 45,
+    "fixed": 46,
     "unresolved": 0
   },
   "bugs": [
@@ -594,6 +594,19 @@
       "rootCause": "The workflow relied only on the broad 80-minute job timeout; a failed emulator launch or stuck ADB command could provide no bounded failure or useful startup diagnostics.",
       "fixCommit": "35d056adbfa730101f0bf6b70eb83d2d91553441",
       "regressionTest": "Exact-head Android emulator gate with a 240-second device deadline, 60-second ADB operation bounds and emulator-log output on startup failure"
+    },
+    {
+      "id": "PX-046",
+      "platform": "ANDROID_CI_EMULATOR",
+      "role": "RELEASE_ENGINEER",
+      "route": "packaged Android emulator acceptance gate",
+      "severity": "HIGH",
+      "reproduction": "Run the exact-head Android emulator gate on a hosted Linux runner where avdmanager and emulator resolve different default AVD storage locations.",
+      "expected": "AVD creation and emulator launch share one explicit runner-local directory, and the gate proves the named AVD exists before launch.",
+      "actual": "The system image and AVD creation commands completed, but the emulator reported Unknown AVD name px1a_phone and could not find its ini file under HOME/.android/avd.",
+      "rootCause": "The workflow relied on implicit AVD directory discovery; the hosted runner tools did not agree on the default location after the SDK components were installed during the step.",
+      "fixCommit": "PENDING",
+      "regressionTest": "Exact-head Android emulator gate with exported ANDROID_AVD_HOME, an ini-file assertion and emulator -list-avds proof before startup"
     }
   ]
 }
