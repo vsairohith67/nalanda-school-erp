@@ -42,6 +42,8 @@ jobs:
           echo 'ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true' | sudo debconf-set-selections
           sudo apt-get install -y poppler-utils ripgrep ttf-mscorefonts-installer
           fc-cache -f
+          test -f /usr/share/fonts/truetype/msttcorefonts/Georgia_Bold.ttf
+          echo 'REPORT_CARD_FONT_DIR=/usr/share/fonts/truetype/msttcorefonts' >> "$GITHUB_ENV"
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate:postgres && pnpm qa:postgres:parity
       - run: pnpm db:generate:sqlite && pnpm typecheck && pnpm test
@@ -177,6 +179,8 @@ jobs:
           echo 'ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true' | sudo debconf-set-selections
           sudo apt-get install -y poppler-utils ripgrep ttf-mscorefonts-installer
           fc-cache -f
+          test -f /usr/share/fonts/truetype/msttcorefonts/Georgia_Bold.ttf
+          echo 'REPORT_CARD_FONT_DIR=/usr/share/fonts/truetype/msttcorefonts' >> "$GITHUB_ENV"
       - run: pnpm install --frozen-lockfile
       - name: Prepare isolated realistic synthetic SQLite database
         run: |
