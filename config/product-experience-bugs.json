@@ -592,7 +592,7 @@
       "expected": "Every emulator and ADB operation has a bounded deadline and emits the emulator log when startup fails, so the mandatory gate reaches a diagnostic terminal result.",
       "actual": "The packaged-app exercise remained nonterminal for more than 18 minutes because adb wait-for-device and subsequent ADB operations had no command-level deadline.",
       "rootCause": "The workflow relied only on the broad 80-minute job timeout; a failed emulator launch or stuck ADB command could provide no bounded failure or useful startup diagnostics.",
-      "fixCommit": "PENDING",
+      "fixCommit": "35d056adbfa730101f0bf6b70eb83d2d91553441",
       "regressionTest": "Exact-head Android emulator gate with a 240-second device deadline, 60-second ADB operation bounds and emulator-log output on startup failure"
     }
   ]
