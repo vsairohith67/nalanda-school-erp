@@ -36,6 +36,12 @@ jobs:
         with: { version: 11.21.0 }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 24.19.0, cache: pnpm }
+      - name: Install inherited PDF and source-scan test tools
+        run: |
+          sudo apt-get update
+          echo 'ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true' | sudo debconf-set-selections
+          sudo apt-get install -y poppler-utils ripgrep ttf-mscorefonts-installer
+          fc-cache -f
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate:postgres && pnpm qa:postgres:parity
       - run: pnpm db:generate:sqlite && pnpm typecheck && pnpm test
@@ -165,6 +171,12 @@ jobs:
         with: { version: 11.21.0 }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 24.19.0, cache: pnpm }
+      - name: Install inherited PDF and source-scan test tools
+        run: |
+          sudo apt-get update
+          echo 'ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true' | sudo debconf-set-selections
+          sudo apt-get install -y poppler-utils ripgrep ttf-mscorefonts-installer
+          fc-cache -f
       - run: pnpm install --frozen-lockfile
       - name: Prepare isolated realistic synthetic SQLite database
         run: |
