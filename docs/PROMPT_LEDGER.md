@@ -1,6 +1,6 @@
 # Prompt Ledger — Earliest Recoverable Evidence to Present
 
-| 2026-08-26 | PORTABLE-STAGING-FOUNDATION-1A | Provider-neutral OCI/PostgreSQL/Valkey/private-object/backup/synthetic staging | `IMPLEMENTATION_AND_QA_IN_PROGRESS` | Provider/resources/DNS/real users/data remain open or inactive. |
+| 2026-08-28 | PORTABLE-STAGING-FOUNDATION-1A | Provider-neutral OCI/PostgreSQL/Valkey/private-object/backup/synthetic staging | `SOFTWARE_CLEARED`; public-certificate Browser acceptance and production signing remain external toolchain gates | Provider/resources/DNS/real users/data remain open or inactive. |
 
 **Ledger ID:** `GOV-RECON-1-LEDGER`<br>
 **Reconstructed:** 2026-08-12<br>

@@ -1,6 +1,6 @@
 # PORTABLE-STAGING-FOUNDATION-1A QA evidence
 
-Current verdict: `LOCAL_FOUNDATION_GREEN_EXTERNAL_EXACT_HEAD_PENDING`.
+Release verdict: `PORTABLE_STAGING_FOUNDATION_PARTIAL_EXTERNAL_TOOLCHAIN_GATE`.
 
 This is foundation evidence, not a deployment record. The provider is undecided, DNS is unchanged, no cloud or VPS exists, no real user or school data was activated, and production flags remain off.
 
@@ -43,8 +43,8 @@ This is foundation evidence, not a deployment record. The provider is undecided,
 
 - The in-app browser reached the local Caddy endpoint but rejected the synthetic Caddy authority with `ERR_CERT_AUTHORITY_INVALID`. The browser policy did not permit bypassing certificate validation. HTTPS and CA validation succeeded with the generated CA through the command-line client. Public-certificate browser acceptance remains a provider-activation gate.
 - No production signing identity or remote registry is configured. CI generates an SPDX SBOM and fails on high or critical image vulnerabilities; production image signing and transparency evidence remain external provider/toolchain work.
-- Exact-head GitHub Actions, normal merge proof, annotated tag, and tracker read-back remain mandatory before a terminal verdict.
+- Exact-head GitHub Actions, normal merge proof, the annotated tag, and tracker read-back are retained as external release records rather than hard-coded into this source snapshot.
 
 ## Release boundary
 
-The local portable staging foundation is ready for exact-head CI. It does not authorize cloud purchase, DNS changes, public exposure, real-data ingestion, real-user onboarding, managed-provider configuration, production signing, or deployment.
+The provider-neutral software foundation is cleared through the repository release gate. Public-certificate Browser acceptance and production image signing remain external provider/toolchain gates. This clearance does not authorize cloud purchase, DNS changes, public exposure, real-data ingestion, real-user onboarding, managed-provider configuration, or deployment.
