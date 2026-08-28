@@ -210,7 +210,12 @@ jobs:
           pnpm backup
           pnpm git:safety-check
       - name: Inherited product regressions
-        run: UNIVERSAL_SEARCH_OPERATIONAL_DB=prisma/dev.db pnpm qa:search-extension && pnpm qa:final-scope:focused
+        run: |
+          mkdir -p tmp/search-ci
+          touch tmp/search-ci/base.db
+          DATABASE_URL=file:../tmp/search-ci/base.db pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          UNIVERSAL_SEARCH_OPERATIONAL_DB=tmp/search-ci/base.db pnpm qa:search-extension
+          pnpm qa:final-scope:focused
       - name: Cleanup
         if: always()
         run: docker compose -f deploy/portable/compose.yml down --volumes --remove-orphans || true; rm -rf tmp backups data
