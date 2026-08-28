@@ -4,9 +4,9 @@
   "syntheticEvidenceOnly": true,
   "summary": {
     "critical": 0,
-    "high": 12,
+    "high": 13,
     "medium": 35,
-    "fixed": 47,
+    "fixed": 48,
     "unresolved": 0
   },
   "bugs": [
@@ -620,6 +620,19 @@
       "rootCause": "Android WebView accessibility serialization is runner and WebView-version dependent; visible HTML text is not guaranteed to appear in the uiautomator XML even when the native activity and WebView are healthy.",
       "fixCommit": "f2e744d6327a06a685fbd443738cc3085f31ce56",
       "regressionTest": "Exact-head Android emulator gate requiring the Nalanda resumed activity plus WebView hierarchy, semantic text when exposed, and always-uploaded synthetic diagnostics"
+    },
+    {
+      "id": "PX-048",
+      "platform": "ANDROID_CI_EMULATOR",
+      "role": "RELEASE_ENGINEER",
+      "route": "packaged Android emulator acceptance gate",
+      "severity": "HIGH",
+      "reproduction": "Launch the packaged application on the hosted Android 35 emulator and inspect dumpsys activity activities after the launcher event succeeds.",
+      "expected": "The gate recognizes the current Android foreground-activity marker, proves the resumed activity belongs to the Nalanda package, and continues to UI hierarchy and screenshot evidence.",
+      "actual": "The package installed, launched and was RESUMED, but the assertion searched only for the older mResumedActivity marker while Android 35 emitted topResumedActivity and ResumedActivity markers.",
+      "rootCause": "The exact-head CI assertion encoded one historical dumpsys label instead of accepting the bounded set of current and prior resumed-activity markers.",
+      "fixCommit": "PENDING",
+      "regressionTest": "Product-experience workflow contract test requires Android 35 topResumedActivity and ResumedActivity markers plus the prior mResumedActivity compatibility marker"
     }
   ]
 }

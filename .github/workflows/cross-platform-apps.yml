@@ -206,7 +206,7 @@ jobs:
           adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
           sleep 4
           adb_cmd shell dumpsys activity activities > tmp/platform-review/android-activity-state.txt
-          grep -m1 -F 'mResumedActivity' tmp/platform-review/android-activity-state.txt | grep -F "$PACKAGE"
+          grep -E -m1 '(topResumedActivity=|ResumedActivity:|mResumedActivity:)' tmp/platform-review/android-activity-state.txt | grep -F "$PACKAGE"
           adb_cmd shell uiautomator dump /sdcard/px1a-window.xml
           adb_cmd pull /sdcard/px1a-window.xml tmp/platform-review/android-window.xml
           adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-phone-portrait.png
