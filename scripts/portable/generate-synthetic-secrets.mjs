@@ -69,7 +69,9 @@ const files = new Map([
 ]);
 
 for (const [name, value] of files) {
-  const handle = await open(path.join(root, name), "wx", 0o600);
+  // The parent remains 0700; read-only file mode lets rootless Compose services
+  // consume bind-mounted synthetic secrets on native Linux hosts.
+  const handle = await open(path.join(root, name), "wx", 0o444);
   try { await handle.writeFile(`${value}\n`, "utf8"); await handle.sync(); }
   finally { await handle.close(); }
 }
