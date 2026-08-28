@@ -579,7 +579,7 @@
       "expected": "The gate resolves the installed Android SDK tools, boots the emulator, installs the APK and exercises portrait, landscape, tablet, lifecycle, deep-link and offline states.",
       "actual": "The Android APK compiled, but the emulator step stopped at adb: command not found before the app could launch.",
       "rootCause": "sdkmanager installed platform-tools under ANDROID_HOME, but that installation directory was not added to the step PATH and every device command relied on an unqualified adb executable.",
-      "fixCommit": "PENDING",
+      "fixCommit": "2d91722048bceb7ba66e953f4897a25e856813cc",
       "regressionTest": "Exact-head CI Android debug build and emulator UX gate using the verified ANDROID_HOME/platform-tools/adb binary"
     }
   ]
