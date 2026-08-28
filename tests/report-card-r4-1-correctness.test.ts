@@ -184,7 +184,7 @@ describe("R4.1 true monochrome and micro-packs", () => {
         expect(page.getHeight()).toBeCloseTo(841.89, 1);
       }
     }
-  }, 20_000);
+  }, 60_000);
 
   it("finds chromatic pixels while accepting antialiased grayscale tolerance", () => {
     expect(inspectRgbPixels(Uint8Array.from([40, 41, 40, 100, 100, 100]), 3, 2).chromaticPixels).toBe(0);

@@ -1,6 +1,6 @@
-# Nalanda Fee Control
+# Nalanda School Management System
 
-Nalanda Fee Control is a local-first school operations app for student records, fee collection, dues, receipts, imports, backups, users, and timetable preparation. It is designed for a trusted Windows school computer.
+Nalanda School Management System is a secure school ERP and operations platform for student records, fee collection, dues, receipts, imports, backups, users, and timetable preparation. It is designed for governed use across web and installed school apps.
 
 ## Setup
 

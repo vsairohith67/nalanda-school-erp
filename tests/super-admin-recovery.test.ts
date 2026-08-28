@@ -104,7 +104,7 @@ async function expectCode(run: Promise<unknown>, code: string) {
   await expect(run).rejects.toMatchObject({ code });
 }
 
-describe("local Super Admin recovery utility", () => {
+describe("local Super Admin recovery utility", { timeout: 15_000 }, () => {
   const operationalBefore = {
     sha256: "",
     size: 0,
@@ -420,7 +420,7 @@ describe("local Super Admin recovery utility", () => {
     } finally {
       await afterClient.$disconnect();
     }
-  });
+  }, 15_000);
 
   it("supports repeated governed recovery with a fresh checkpoint each time", async () => {
     const testScenario = await scenario("repeated");

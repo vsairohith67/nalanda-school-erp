@@ -49,7 +49,7 @@ export default async function PaymentsPage({
         {permissionSetCan(permissions, "EXPORT_PAYMENTS") ? <Link className="button secondary" href={`/api/export/payments${exportQuery ? `?${exportQuery}` : ""}`}>Export CSV</Link> : null}
       </form>
       <section className="card">
-        <div className="section-title"><h3>{payments.length} Payment Rows</h3></div>
+        <div className="section-title"><h2>{payments.length} Payment Rows</h2></div>
         <div className="table-wrap">
           <table>
             <thead><tr><th>Date</th><th>Receipt</th><th>Adm No</th><th>Student</th><th>Class</th><th>Amount</th><th>Mode</th><th>Account</th><th>Ref</th><th>Fee Type</th><th>Status</th><th>Actions</th></tr></thead>

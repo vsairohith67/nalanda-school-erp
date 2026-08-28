@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Bot, DatabaseZap, LoaderCircle, LockKeyhole, RotateCcw, Send, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useRef, useState } from "react";
 import { SMART_AI_LIMITS, type SmartAiProviderStatus, type SmartAiResponse, type SmartAiSource } from "@/lib/smart-ai-contract";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
 type Exchange = {
   id: number;
@@ -65,7 +66,7 @@ export function SmartAiWorkspace({ initialProvider }: { initialProvider: SmartAi
 
       <section className="smart-ai-compose card" aria-labelledby="smart-ai-ask-title">
         <div className="smart-ai-compose-heading">
-          <div><h2 id="smart-ai-ask-title">Ask Smart AI</h2><p>Ask about authorised Nalanda ERP records. Smart AI cannot take actions or use the internet.</p></div>
+          <div><h2 id="smart-ai-ask-title">Ask Smart AI</h2><p>Ask about authorised {PRODUCT_BRAND.productName} records. Smart AI cannot take actions or use the internet.</p></div>
           <button type="button" className="secondary" onClick={newConversation} disabled={busy || (!exchanges.length && !question)}><RotateCcw size={17} aria-hidden /> New conversation</button>
         </div>
         <form onSubmit={ask} noValidate>

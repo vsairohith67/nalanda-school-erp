@@ -34,11 +34,10 @@ describe("UX-1A shared login and shell", () => {
 
   it("uses the exact governed login identity and real support and recovery routes", () => {
     const page = source("app/login/page.tsx");
-    for (const text of [
-      "Nalanda Public School",
-      "Nalanda Education Management System",
-      "Unified School Management Platform"
-    ]) expect(page).toContain(text);
+    expect(page).toContain('import { PRODUCT_BRAND } from "@/config/product-brand"');
+    for (const key of ["schoolName", "productName", "technicalDescriptor", "nativeShortName"]) expect(page).toContain(`PRODUCT_BRAND.${key}`);
+    const brand = source("config/product-brand.ts");
+    for (const text of ["NALANDA PUBLIC SCHOOL", "Nalanda School Management System", "Secure School ERP & Operations Platform", "Nalanda School"]) expect(brand).toContain(text);
     for (const href of ["/forgot-password", "/privacy", "/terms", "/contact"]) expect(page).toContain(`href="${href}"`);
     expect(page).toContain("Forgot Password");
     expect(page).not.toContain("Academic Year");

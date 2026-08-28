@@ -1,5 +1,6 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { AcademicReportSummary } from "@/lib/academic-reporting-types";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
 const PAGE: [number, number] = [595.28, 841.89];
 const MARGIN = 42;
@@ -10,7 +11,7 @@ export async function renderAcademicReportPdf(summary: AcademicReportSummary, mo
   document.setTitle(summary.title);
   document.setAuthor("Nalanda governed academic reporting");
   document.setSubject("Governed academic report generated from locked and issued versions");
-  document.setCreator("Nalanda Fee Control");
+  document.setCreator(PRODUCT_BRAND.productName);
   document.setProducer("Nalanda governed academic reporting");
   document.setCreationDate(new Date("2000-01-01T00:00:00.000Z"));
   document.setModificationDate(new Date("2000-01-01T00:00:00.000Z"));

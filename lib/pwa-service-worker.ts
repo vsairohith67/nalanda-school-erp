@@ -4,6 +4,9 @@ import {
   PWA_BUILD_VERSION,
   PWA_STATIC_CACHE_NAME
 } from "@/lib/pwa-version";
+import { PRODUCT_BRAND } from "@/config/product-brand";
+
+const OFFLINE_FALLBACK_HTML = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${PRODUCT_BRAND.nativeShortName} - Offline</title><body><main><h1>${PRODUCT_BRAND.productName}</h1><p>You are offline.</p><p>Reconnect to continue, or use a previously approved encrypted Accountant draft workspace on this device.</p></main></body></html>`;
 
 const PRECACHE_PATHS = [
   "/offline",
@@ -112,7 +115,7 @@ self.addEventListener("fetch", (event) => {
       const fallbackPath = url.pathname === OFFLINE_FINANCE_PATH ? OFFLINE_FINANCE_PATH : OFFLINE_PATH;
       const cached = await caches.match(fallbackPath, { cacheName: STATIC_CACHE });
       return cached || new Response(
-        "<!doctype html><html lang=\\"en\\"><meta charset=\\"utf-8\\"><title>Nalanda ERP - Offline</title><body><main><h1>Nalanda Public School ERP</h1><p>You are offline.</p><p>Reconnect to continue, or use a previously approved encrypted Accountant draft workspace on this device.</p></main></body></html>",
+        ${JSON.stringify(OFFLINE_FALLBACK_HTML)},
         { status: 503, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }
       );
     }));

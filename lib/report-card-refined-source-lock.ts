@@ -12,6 +12,7 @@ import {
   StandardFonts,
   rgb
 } from "pdf-lib";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
 export const NALANDA_LEGACY_REFINED_TEMPLATE_FAMILIES = [
   "NALANDA_LEGACY_REFINED_COLOUR",
@@ -725,7 +726,7 @@ export async function renderRefinedSourceLockedPage(
   drawPage(page, assets, identity, kind, mode, edgeCase);
   document.setTitle(kind + " " + templateFamilyForMode(mode));
   document.setSubject("Synthetic-only NALANDA_LEGACY_REFINED source-lock review");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
 
@@ -742,7 +743,7 @@ export async function renderR3VisualPack(identity: ReportSchoolIdentitySnapshot 
   }
   document.setTitle("VISUAL-DIRECTION-PACK-R3");
   document.setSubject("Synthetic-only NALANDA_LEGACY_REFINED final correction review");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
 
@@ -755,7 +756,7 @@ export async function renderR3EdgePack(identity: ReportSchoolIdentitySnapshot = 
   }
   document.setTitle("EDGE-CASE-RENDERING-PACK-R3");
   document.setSubject("Synthetic-only wrapping and state stress evidence");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
 
@@ -781,7 +782,7 @@ export async function renderR4VisualPack(identity: ReportSchoolIdentitySnapshot 
   }
   document.setTitle("VISUAL-DIRECTION-PACK-R4");
   document.setSubject("Synthetic-only NALANDA_LEGACY_REFINED pre-print correctness review");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
 
@@ -796,7 +797,7 @@ export async function renderR4EdgePack(identity: ReportSchoolIdentitySnapshot = 
   }
   document.setTitle("EDGE-CASE-RENDERING-PACK-R4");
   document.setSubject("Synthetic-only long-name and AB/EX/NE/NA rendering evidence");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
 
@@ -816,7 +817,7 @@ export async function renderR41VisualPack(identity: ReportSchoolIdentitySnapshot
   }
   document.setTitle("VISUAL-DIRECTION-PACK-R4-1");
   document.setSubject("Synthetic-only final numerical and true-monochrome review");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
 
@@ -834,7 +835,7 @@ export async function renderR41EdgePack(identity: ReportSchoolIdentitySnapshot =
   }
   document.setTitle("EDGE-CASE-RENDERING-PACK-R4-1");
   document.setSubject("Synthetic-only grouped calculation, cohort, state, and wrapping evidence");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
 
@@ -915,7 +916,7 @@ export async function renderR42EdgePack(identity: ReportSchoolIdentitySnapshot =
   }
   document.setTitle("EDGE-CASE-RENDERING-PACK-R4-2");
   document.setSubject("Synthetic-only chart-label, state, decimal, and wrapping evidence");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   setDeterministicPdfDates(document);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
@@ -961,7 +962,7 @@ export async function renderR5VisualPack(identity: ReportSchoolIdentitySnapshot 
   }
   document.setTitle("VISUAL-DIRECTION-PACK-R5");
   document.setSubject("Synthetic-only Classes I-X consolidated colour and monochrome digital review");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   setDeterministicPdfDates(document);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
@@ -992,7 +993,7 @@ export async function renderR5EdgePack(identity: ReportSchoolIdentitySnapshot = 
   }
   document.setTitle("EDGE-CASE-RENDERING-PACK-R5");
   document.setSubject("Synthetic-only long identity, result state, rounding, chart collision, conditional status, and grade-band evidence");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   setDeterministicPdfDates(document);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
@@ -1048,7 +1049,7 @@ export async function renderR5DetailChecks(identity: ReportSchoolIdentitySnapsho
   }
   document.setTitle("R5-DETAIL-CHECKS");
   document.setSubject("Synthetic-only enlarged header, identity-grid, chart-pattern, legend, and signature checks");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   setDeterministicPdfDates(document);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
@@ -1097,7 +1098,7 @@ export async function renderR6VisualPack(identity: ReportSchoolIdentitySnapshot 
   }
   document.setTitle("VISUAL-DIRECTION-PACK-R6");
   document.setSubject("Synthetic-only Classes I-X R6 header and adaptive-chart digital review");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   setDeterministicPdfDates(document);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
@@ -1177,7 +1178,7 @@ export async function renderR6DetailChecks(identity: ReportSchoolIdentitySnapsho
   }
   document.setTitle("R6-DETAIL-CHECKS");
   document.setSubject("Synthetic-only R6 header emphasis, authoritative monochrome patterns, dense charts and frozen geometry");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   setDeterministicPdfDates(document);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
@@ -1219,7 +1220,7 @@ export async function renderR7VisualPack(identity: ReportSchoolIdentitySnapshot 
   }
   document.setTitle("VISUAL-DIRECTION-PACK-R7");
   document.setSubject("Synthetic-only Classes I-X R7 summary, signature and monochrome-pattern digital review");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   setDeterministicPdfDates(document);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
@@ -1297,7 +1298,7 @@ export async function renderR7DetailChecks(identity: ReportSchoolIdentitySnapsho
   }
   document.setTitle("R7-DETAIL-CHECKS");
   document.setSubject("Synthetic-only R7 header, summary-card, attendance, signature and monochrome-pattern checks");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   setDeterministicPdfDates(document);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
@@ -1333,7 +1334,7 @@ export async function renderR8FinalDigitalReview(identity: ReportSchoolIdentityS
   }
   document.setTitle("FINAL-DIGITAL-REVIEW-R8");
   document.setSubject("Synthetic-only Classes I-X R8 final digital review; physical printing remains paused");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   setDeterministicPdfDates(document);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
@@ -1350,7 +1351,7 @@ export async function renderR8PhysicalAcceptancePack(
   }
   document.setTitle(`PHYSICAL-ACCEPTANCE-CLASSES-I-X-${mode}`);
   document.setSubject("Synthetic-only Classes I-X physical acceptance candidate; digital approval and printing pending");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   setDeterministicPdfDates(document);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
@@ -1416,7 +1417,7 @@ export async function renderR8DetailChecks(identity: ReportSchoolIdentitySnapsho
   }
   document.setTitle("R8-DETAIL-CHECKS");
   document.setSubject("Synthetic-only R8 measured summaries, dense-table priority, adaptive chart and 15 mm signing checks");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   setDeterministicPdfDates(document);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }
@@ -1515,7 +1516,7 @@ async function renderFinalPageCollection(
   }
   document.setTitle(title);
   document.setSubject("Synthetic-only NALANDA_LEGACY_REFINED physical acceptance candidate");
-  document.setProducer("Nalanda ERP local synthetic source-lock renderer");
+  document.setProducer(`${PRODUCT_BRAND.productName} local synthetic source-lock renderer`);
   setDeterministicPdfDates(document);
   return Buffer.from(await document.save({ useObjectStreams: false }));
 }

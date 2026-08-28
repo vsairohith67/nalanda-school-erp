@@ -60,18 +60,18 @@ export default async function StudentsPage({
         <div className="section-title"><h3>{students.length} Students</h3></div>
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Adm No</th><th>Student</th><th>Father</th><th>Class</th><th>Phone</th><th>Type</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Adm No</th><th>Student</th><th>Father</th><th>Class</th><th>Phone</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
               {students.map((student) => (
                 <tr key={student.id}>
                   <td>{student.admissionNo}</td>
-                  <td>{student.studentName}</td>
+                  <td><Link href={`/students/${student.id}`}>{student.studentName}</Link></td>
                   <td>{student.fatherName}</td>
                   <td>{student.className}{student.section ? `-${student.section}` : ""}</td>
                   <td>{student.phone1}</td>
                   <td>{student.studentType} {student.discountPercent ? `${student.discountPercent}%` : ""}</td>
                   <td>{student.status}</td>
-                  <td>{permissionSetCan(permissions, "EDIT_STUDENTS") ? <Link href={`/students/${student.id}/edit`}>Edit</Link> : null}</td>
+                  <td><div className="row-actions"><Link href={`/students/${student.id}`}>Open 360</Link>{permissionSetCan(permissions, "EDIT_STUDENTS") ? <Link href={`/students/${student.id}/edit`}>Edit</Link> : null}</div></td>
                 </tr>
               ))}
               {!students.length ? <tr><td colSpan={8}>No students match the selected filters.</td></tr> : null}

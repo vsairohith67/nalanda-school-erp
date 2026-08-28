@@ -14,6 +14,7 @@ import { PWA_BUILD_VERSION } from "@/lib/pwa-version";
 import { evaluateClientUpdate, type PublicClientVersionContract } from "@/lib/release-client-version";
 import { hasUnsafeClientWork, PWA_UNSAFE_ACTIVITY_EVENTS, safeUpdateDeferralKey } from "@/lib/pwa-update-safety";
 import { installOfflineVaultLockListener } from "@/lib/offline-sync/client/coordinator";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
 export type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -283,7 +284,7 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
       ) : null}
       {updateAvailable && !updateDeferred ? (
         <aside className="pwa-update-banner" role="status" aria-live="polite">
-          <span><strong>{clientUpdateState === "UPDATE_REQUIRED" || clientUpdateState === "INCOMPATIBLE" ? "A required Nalanda ERP update is ready." : "A new version of Nalanda ERP is available."}</strong> Update only when your current work is saved.</span>
+          <span><strong>{clientUpdateState === "UPDATE_REQUIRED" || clientUpdateState === "INCOMPATIBLE" ? `A required ${PRODUCT_BRAND.nativeShortName} update is ready.` : `A new version of ${PRODUCT_BRAND.nativeShortName} is available.`}</strong> Update only when your current work is saved.</span>
           <div className="page-actions">
             <button type="button" onClick={() => setConfirmingUpdate(true)}>Update Now</button>
             <button type="button" className="secondary" onClick={() => { setUpdateDeferred(true); if (serverVersion) window.localStorage.setItem(safeUpdateDeferralKey(serverVersion.releaseId), "true"); }}>Update after saving</button>
@@ -299,7 +300,7 @@ export function PwaRuntime({ children }: { children: React.ReactNode }) {
             aria-labelledby="pwa-update-dialog-title"
             aria-describedby="pwa-update-dialog-description"
           >
-            <h2 id="pwa-update-dialog-title">Update Nalanda ERP</h2>
+            <h2 id="pwa-update-dialog-title">Update {PRODUCT_BRAND.nativeShortName}</h2>
             <p id="pwa-update-dialog-description">
               Confirm that your current form work is saved. The app will activate the waiting version and reload exactly once.
             </p>

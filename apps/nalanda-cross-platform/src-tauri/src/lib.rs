@@ -662,7 +662,7 @@ fn open_online_erp(app: AppHandle) -> Result<(), String> {
     }
     let url = Url::parse(&origin).map_err(|_| "REMOTE_ORIGIN_INVALID")?;
     WebviewWindowBuilder::new(&app, "online-erp", WebviewUrl::External(url))
-        .title("Nalanda Public School ERP · Online")
+        .title("Nalanda School Management System · Online")
         .on_navigation(allowed_online_navigation)
         .build()
         .map_err(|_| "ONLINE_ERP_OPEN_FAILED")?;
@@ -732,7 +732,7 @@ pub fn run() {
             open_online_erp
         ])
         .run(tauri::generate_context!())
-        .expect("error while running Nalanda ERP app");
+        .expect("error while running Nalanda School app");
 }
 
 #[cfg(test)]

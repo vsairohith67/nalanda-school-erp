@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createBackupDocument, formatBackupFilename, generateFullBackup } from "../lib/backup";
 import { BROWSER_BACKUP_WARNING_MESSAGES } from "../lib/client-storage";
+import { PRODUCT_BRAND } from "../config/product-brand";
 
 describe("full backup", () => {
   it("creates the expected backup structure", () => {
@@ -41,7 +42,7 @@ describe("full backup", () => {
     });
 
     expect(backup.metadata).toMatchObject({
-      appName: "Nalanda Fee Control",
+      appName: PRODUCT_BRAND.productName,
       academicYear: "2026-27",
       generatedAt: "2026-06-18T12:34:56.000Z",
       generatedBy: "Director"
@@ -377,7 +378,7 @@ describe("full backup", () => {
 
   it("formats timestamped backup filenames", () => {
     expect(formatBackupFilename(new Date(2026, 5, 18, 7, 5)))
-      .toBe("nalanda-fee-control-backup-2026-06-18-07-05.json");
+      .toBe(`${PRODUCT_BRAND.backupFilenamePrefix}-2026-06-18-07-05.json`);
   });
 
   it("uses beginner-friendly browser backup warning wording", () => {

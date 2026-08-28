@@ -3,6 +3,7 @@ import { ExternalLink, LockKeyhole, ShieldCheck, TriangleAlert } from "lucide-re
 import { PageHeader, PageShell, SectionCard } from "@/components/ui";
 import { requireRolePermission } from "@/lib/auth";
 import { resolveSuperAdminWhiteboardDestination } from "@/lib/super-admin-whiteboard";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
 export const dynamic = "force-dynamic";
 
@@ -16,12 +17,12 @@ export default async function SuperAdminWhiteboardPage() {
     <PageShell className="whiteboard-page">
       <PageHeader
         title="Whiteboard"
-        description="Nalanda ERP planning and project visualization through the canonical external Canvs workspace."
+        description={`${PRODUCT_BRAND.productName} planning and project visualization through the canonical external Canvs workspace.`}
         action={<span className="command-read-only"><LockKeyhole size={17} aria-hidden /> Super Admin only</span>}
       />
 
       <SectionCard
-        title="Canonical Nalanda ERP board"
+        title={`Canonical ${PRODUCT_BRAND.productName} board`}
         description="One governed planning destination; the ERP does not accept alternate board links."
         className="whiteboard-launch-card"
       >
@@ -59,7 +60,7 @@ export default async function SuperAdminWhiteboardPage() {
               <TriangleAlert size={22} aria-hidden />
               <div>
                 <strong>Whiteboard is unavailable</strong>
-                <p>The configured destination does not match the canonical Nalanda ERP board. No external link has been provided.</p>
+                <p>The configured destination does not match the canonical {PRODUCT_BRAND.productName} board. No external link has been provided.</p>
               </div>
             </div>
           )}

@@ -2,6 +2,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 
 export const STAFF_TYPES = ["TEACHING", "NON_TEACHING", "ADMIN", "SUPPORT", "OTHER"] as const;
 export const STAFF_STATUSES = ["ACTIVE", "INACTIVE", "LEFT"] as const;
+class StaffValidationError extends Error {}
 export type StaffType = (typeof STAFF_TYPES)[number];
 export type StaffStatus = (typeof STAFF_STATUSES)[number];
 
@@ -29,7 +30,7 @@ export function validateStaffInput(value: unknown): StaffInput {
   const status = enumValue(row.status ?? "ACTIVE", STAFF_STATUSES, "Status");
   const experienceYears = optionalNumber(row.experienceYears, "Experience years");
   if (experienceYears !== null && (experienceYears < 0 || experienceYears > 80)) {
-    throw new Error("Experience years must be between 0 and 80");
+    throw new StaffValidationError("Experience years must be between 0 and 80");
   }
   return {
     staffCode: upperOptional(row.staffCode), fullName, displayName: optional(row.displayName),
@@ -133,11 +134,12 @@ export async function applyStaffImport(client: StaffClient, preview: Awaited<Ret
 
 export function friendlyStaffError(error: unknown) {
   const message = error instanceof Error ? error.message : "Unable to save staff member";
+  if (error instanceof StaffValidationError) return message;
   if (message.includes("Unique constraint") && message.includes("staffCode")) return "Staff code is already in use";
   if (message.includes("Unique constraint") && message.includes("userId")) return "This Teacher login is already linked to another staff profile";
   if (message.includes("Unique constraint") && message.includes("timetableTeacherId")) return "This timetable teacher is already linked to another staff profile";
   if (message.includes("Unique constraint")) return "A staff code or optional link is already in use";
-  return message;
+  return "Unable to save staff member. Review the fields and try again.";
 }
 
 function fallbackStaffInput(value: unknown): StaffInput {
@@ -151,21 +153,21 @@ function fallbackStaffInput(value: unknown): StaffInput {
     status: "ACTIVE", notes: optional(row.notes) };
 }
 function record(value: unknown) { return value && typeof value === "object" ? value as Record<string, unknown> : {}; }
-function required(value: unknown, label: string) { const text = String(value ?? "").trim(); if (!text) throw new Error(`${label} is required`); return text; }
+function required(value: unknown, label: string) { const text = String(value ?? "").trim(); if (!text) throw new StaffValidationError(`${label} is required`); return text; }
 function optional(value: unknown) { const text = String(value ?? "").trim(); return text || null; }
 function upperOptional(value: unknown) { return optional(value)?.toUpperCase() ?? null; }
 function phone(value: unknown, label: string) {
   const text = String(value ?? "").trim();
   if (!text) return null;
-  if (!/^[+\d\s().-]+$/.test(text)) throw new Error(`${label} contains unsupported characters`);
+  if (!/^[+\d\s().-]+$/.test(text)) throw new StaffValidationError(`${label} contains unsupported characters`);
   const digits = text.replace(/\D/g, "");
-  if (digits.length < 7 || digits.length > 15) throw new Error(`${label} must contain 7 to 15 digits`);
+  if (digits.length < 7 || digits.length > 15) throw new StaffValidationError(`${label} must contain 7 to 15 digits`);
   return digits;
 }
 function safeFallbackPhone(value: unknown) { const digits = String(value ?? "").replace(/\D/g, ""); return digits || null; }
-function email(value: unknown) { const text = optional(value)?.toLowerCase() ?? null; if (text && !/^\S+@\S+\.\S+$/.test(text)) throw new Error("Email is invalid"); return text; }
+function email(value: unknown) { const text = optional(value)?.toLowerCase() ?? null; if (text && !/^\S+@\S+\.\S+$/.test(text)) throw new StaffValidationError("Email is invalid"); return text; }
 function safeFallbackEmail(value: unknown) { return optional(value)?.toLowerCase() ?? null; }
-function optionalNumber(value: unknown, label: string) { if (value === undefined || value === null || String(value).trim() === "") return null; const result = Number(value); if (!Number.isFinite(result)) throw new Error(`${label} must be a number`); return result; }
+function optionalNumber(value: unknown, label: string) { if (value === undefined || value === null || String(value).trim() === "") return null; const result = Number(value); if (!Number.isFinite(result)) throw new StaffValidationError(`${label} must be a number`); return result; }
 function optionalDate(value: unknown, label: string) {
   if (value === undefined || value === null || String(value).trim() === "") return null;
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -174,10 +176,10 @@ function optionalDate(value: unknown, label: string) {
   }
   const text = String(value).trim();
   const match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$|^(\d{1,2})[\/.](\d{1,2})[\/.](\d{4})$/);
-  if (!match) throw new Error(`${label} must use YYYY-MM-DD or DD/MM/YYYY`);
+  if (!match) throw new StaffValidationError(`${label} must use YYYY-MM-DD or DD/MM/YYYY`);
   const year = Number(match[1] ?? match[6]); const month = Number(match[2] ?? match[5]); const day = Number(match[3] ?? match[4]);
   const date = new Date(Date.UTC(year, month - 1, day));
-  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) throw new Error(`${label} is invalid`);
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) throw new StaffValidationError(`${label} is invalid`);
   return date;
 }
-function enumValue<T extends readonly string[]>(value: unknown, values: T, label: string) { const text = String(value ?? "").trim().toUpperCase().replace(/[ -]+/g, "_"); if (!values.includes(text)) throw new Error(`${label} is invalid`); return text as T[number]; }
+function enumValue<T extends readonly string[]>(value: unknown, values: T, label: string) { const text = String(value ?? "").trim().toUpperCase().replace(/[ -]+/g, "_"); if (!values.includes(text)) throw new StaffValidationError(`${label} is invalid`); return text as T[number]; }

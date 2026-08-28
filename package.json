@@ -215,6 +215,10 @@
     "security:resilience:acceptance": "vitest run tests/security-resilience.test.ts tests/sec1-runtime-security.test.ts tests/deployment-environment.test.ts && pnpm security:resilience:load && pnpm qa:security-resilience",
     "qa:cross-platform-apps": "tsx scripts/qa-cross-platform-apps-1a-copied-db.ts",
     "qa:cross-platform-apps:performance": "tsx scripts/qa-cross-platform-app-performance.ts"
+    ,"inventory:product-experience": "tsx scripts/product-experience-screen-inventory.ts"
+    ,"qa:product-experience": "tsx scripts/product-experience-screen-inventory.ts && vitest run tests/product-experience-1a.test.ts"
+    ,"qa:product-experience:fixture": "tsx scripts/prepare-product-experience-1a-synthetic.ts"
+    ,"qa:product-experience:fixture:cleanup": "tsx scripts/prepare-product-experience-1a-synthetic.ts cleanup"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",

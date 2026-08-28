@@ -110,7 +110,9 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
 
   it("uses the official school logo and explicit offline/conflict wording", () => {
     const app = source("apps/nalanda-cross-platform/src/App.tsx");
-    expect(app).toContain("nalanda-logo-transparent.png");
+    expect(app).toContain('import { PRODUCT_BRAND } from "../../../config/product-brand"');
+    expect(app).toContain("PRODUCT_BRAND.logoPath");
+    expect(source("config/product-brand.ts")).toContain('logoPath: "/nalanda-logo-transparent.png"');
     expect(app).toContain("This is a draft, not a receipt");
     expect(source("apps/nalanda-cross-platform/src/domain.ts")).toContain("Nothing was overwritten");
   });

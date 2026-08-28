@@ -877,11 +877,11 @@ The SMS & Email centre is safe by default: both channels start in MOCK and LIVE 
 
 Parents and Staff manage SMS and Email consent separately on their communication-preference page. A changed mobile/email requires new consent. Suppression clearing is an authorised review with a reason; opting in does not clear it automatically. Routine operator commands are documented in `SMS_AND_EMAIL_ONE_WAY_COMMUNICATION_WORKFLOW.md`.
 
-# Installing and updating the Nalanda ERP web app
+# Installing and updating the Nalanda School Management System web app
 
 Open **Install App** from the account menu or Parent/Teacher navigation.
 
-- In a supporting browser, choose **Install Nalanda ERP** only when the browser offers it.
+- In a supporting browser, choose **Install Nalanda School** only when the browser offers it.
 - On iPhone/iPad, open the ERP in Safari, use Share, choose Add to Home Screen, enable Open as Web App when offered, and choose Add.
 - Installation does not download school records. Login and a live connection are still required.
 - If Offline appears, reconnect and choose **Retry Connection**. Forms are not queued or saved offline.

@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { getSchoolSettings } from "@/lib/school-settings";
 import { getSuperAdminCommandCenter, type CommandCenterMetric, type CommandCenterWidgetState } from "@/lib/super-admin-command-center";
 import { getSmartAiProviderStatus } from "@/lib/smart-ai-provider-local";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
 export const dynamic = "force-dynamic";
 const NO_CURRENCY_IDS = new Set<string>();
@@ -26,13 +27,13 @@ export default async function SuperAdminCommandCenterPage() {
     <PageShell className="super-admin-command-center">
       <PageHeader
         title="Command Center"
-        description="A private, read-only overview of authorised Nalanda ERP systems. Open the owning module to take action."
+        description={`A private, read-only overview of authorised ${PRODUCT_BRAND.productName} systems. Open the owning module to take action.`}
         action={<span className="command-read-only"><LockKeyhole size={17} aria-hidden /> Read-only</span>}
       />
 
       <div className="command-launcher-grid">
         <section className="command-search-launcher" aria-labelledby="command-search-title">
-          <div><Search size={24} aria-hidden /><div><h2 id="command-search-title">Universal Search</h2><p>Find authorised records across Nalanda ERP with one deterministic, private search.</p></div></div>
+          <div><Search size={24} aria-hidden /><div><h2 id="command-search-title">Universal Search</h2><p>Find authorised records across {PRODUCT_BRAND.productName} with one deterministic, private search.</p></div></div>
           <Link href="/super-admin/search">Open Search <ArrowRight size={17} aria-hidden /></Link>
         </section>
         <section className="command-search-launcher command-ai-launcher" aria-labelledby="command-ai-title">

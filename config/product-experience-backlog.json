@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "promptId": "PRODUCT-EXPERIENCE-1A",
+  "confirmedAt": "2026-08-26",
+  "items": [
+    {
+      "id": "PX-BACKLOG-001",
+      "title": "Physical-device Android and iOS acceptance",
+      "gate": "CROSS-PLATFORM-APPS-HARDWARE-CERTIFICATION",
+      "reason": "Emulator/simulator evidence does not certify physical keyboard, camera, storage, biometric, power or OEM lifecycle behaviour.",
+      "blocksProductExperience1A": false
+    },
+    {
+      "id": "PX-BACKLOG-002",
+      "title": "Interactive iOS simulator acceptance",
+      "gate": "MACOS_INTERACTIVE_ACCEPTANCE",
+      "reason": "Windows cannot host an interactive iOS simulator; macOS simulator build and shared UI contracts are the software gate.",
+      "blocksProductExperience1A": false
+    },
+    {
+      "id": "PX-BACKLOG-003",
+      "title": "Observed school-user longitudinal usability study",
+      "gate": "OPERATIONAL_PILOT",
+      "reason": "Synthetic personas and records validate software flow, not real-user training, policy adoption or production data use.",
+      "blocksProductExperience1A": false
+    },
+    {
+      "id": "PX-BACKLOG-004",
+      "title": "Large-grid virtualization only where measured",
+      "gate": "PERFORMANCE_SCALE_FOLLOW_UP",
+      "reason": "Add virtualization only if synthetic or staging measurements exceed the accepted interaction budget; preserve keyboard and screen-reader semantics.",
+      "blocksProductExperience1A": false
+    },
+    {
+      "id": "PX-BACKLOG-005",
+      "title": "Staff biometric mapping activation",
+      "gate": "BIOMETRIC-STAFF-ATTENDANCE-1A",
+      "reason": "Product Experience includes only a privacy-safe placeholder; no biometric template, device secret or ingestion flow is present.",
+      "blocksProductExperience1A": false
+    }
+  ]
+}

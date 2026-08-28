@@ -1,4 +1,4 @@
-# Nalanda Public School ERP app
+# Nalanda School Management System app
 
 Tauri 2 foundation for Windows, Android and iOS. The committed build is unsigned, default off and has no remote server configured.
 

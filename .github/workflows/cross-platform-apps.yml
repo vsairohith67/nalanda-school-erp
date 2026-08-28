@@ -152,9 +152,9 @@ jobs:
           retention-days: 7
 
   android:
-    name: Unsigned Android debug compiler gate
+    name: Android debug build and emulator UX gate
     runs-on: ubuntu-24.04
-    timeout-minutes: 55
+    timeout-minutes: 80
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -172,6 +172,65 @@ jobs:
         run: node --version && pnpm --version && rustc --version && cargo --version && java -version && "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --version
       - run: pnpm app:android:init
       - run: pnpm app:android:build
+      - name: Exercise the packaged app in an Android emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/platform-review
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          AVDMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
+          "$SDKMANAGER" "platform-tools" "emulator" "system-images;android-35;google_apis;x86_64"
+          echo no | "$AVDMANAGER" create avd --force --name px1a_phone --package "system-images;android-35;google_apis;x86_64" --device "pixel_6"
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+          nohup "$ANDROID_HOME/emulator/emulator" -avd px1a_phone -no-window -noaudio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > "$RUNNER_TEMP/px1a-emulator.log" 2>&1 &
+          adb wait-for-device
+          for attempt in $(seq 1 90); do
+            if [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then break; fi
+            if [ "$attempt" = "90" ]; then cat "$RUNNER_TEMP/px1a-emulator.log"; exit 1; fi
+            sleep 2
+          done
+          APK_PATH="$(find apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk -type f -name '*.apk' | head -n 1)"
+          test -n "$APK_PATH"
+          adb install -r "$APK_PATH"
+          PACKAGE="com.nalandaps.erp"
+          adb shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
+          sleep 4
+          adb shell uiautomator dump /sdcard/px1a-window.xml
+          adb pull /sdcard/px1a-window.xml tmp/platform-review/android-window.xml
+          grep -Eq 'Nalanda|Welcome back|App PIN' tmp/platform-review/android-window.xml
+          adb exec-out screencap -p > tmp/platform-review/android-synthetic-phone-portrait.png
+          adb shell input tap 540 900
+          sleep 1
+          adb exec-out screencap -p > tmp/platform-review/android-synthetic-soft-keyboard.png
+          adb shell settings put system accelerometer_rotation 0
+          adb shell settings put system user_rotation 1
+          sleep 2
+          adb exec-out screencap -p > tmp/platform-review/android-synthetic-landscape.png
+          adb shell input keyevent KEYCODE_HOME
+          adb shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
+          adb shell input keyevent KEYCODE_BACK
+          adb shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
+          adb shell am force-stop "$PACKAGE"
+          adb shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
+          adb shell am start -W -a android.intent.action.VIEW -d 'nalandaps-erp://auth/callback?code=invalid&state=invalid&request_id=invalid'
+          adb shell wm size 1280x800
+          adb shell wm density 160
+          adb shell settings put system user_rotation 0
+          sleep 2
+          adb exec-out screencap -p > tmp/platform-review/android-synthetic-tablet.png
+          adb shell svc wifi disable
+          adb shell svc data disable || true
+          adb shell am force-stop "$PACKAGE"
+          adb shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
+          sleep 2
+          adb exec-out screencap -p > tmp/platform-review/android-synthetic-offline.png
+          adb shell svc wifi enable
+          adb shell svc data enable || true
+          adb shell wm size reset
+          adb shell wm density reset
+          adb logcat -d -t 800 AndroidRuntime:E '*:S' > tmp/platform-review/android-runtime-errors.txt || true
+          if grep -F "$PACKAGE" tmp/platform-review/android-runtime-errors.txt; then cat tmp/platform-review/android-runtime-errors.txt; exit 1; fi
+          printf '%s\n' 'SYNTHETIC UX EVIDENCE ONLY - NO REAL RECORDS' > tmp/platform-review/ANDROID-SYNTHETIC.txt
       - name: Write Android package checksums
         working-directory: apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk
         run: find . -type f -name '*.apk' -exec sha256sum {} \; > SHA256SUMS.txt
@@ -186,11 +245,17 @@ jobs:
             apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: synthetic-android-emulator-ux
+          path: tmp/platform-review/android-*
+          if-no-files-found: error
+          retention-days: 7
 
   ios:
-    name: Unsigned iOS simulator compiler gate
+    name: iOS simulator build and shared UI gate
     runs-on: macos-15
-    timeout-minutes: 55
+    timeout-minutes: 70
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -207,6 +272,34 @@ jobs:
       - run: pnpm app:ios:init
       - run: pnpm app:rust:test
       - run: pnpm app:ios:build
+      - name: Exercise the packaged app in iPhone and iPad simulators
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/platform-review
+          APP_PATH="$(find apps/nalanda-cross-platform/src-tauri/gen/apple/build -type d -name '*.app' | head -n 1)"
+          test -n "$APP_PATH"
+          xcrun simctl list devices available -j > "$RUNNER_TEMP/px1a-devices.json"
+          IPHONE_UDID="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next(x["udid"] for xs in d["devices"].values() for x in xs if x.get("isAvailable") and x["name"].startswith("iPhone")))' "$RUNNER_TEMP/px1a-devices.json")"
+          IPAD_UDID="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next(x["udid"] for xs in d["devices"].values() for x in xs if x.get("isAvailable") and x["name"].startswith("iPad")))' "$RUNNER_TEMP/px1a-devices.json")"
+          for UDID in "$IPHONE_UDID" "$IPAD_UDID"; do
+            xcrun simctl boot "$UDID" 2>/dev/null || true
+            xcrun simctl bootstatus "$UDID" -b
+            xcrun simctl install "$UDID" "$APP_PATH"
+            xcrun simctl launch --terminate-running-process "$UDID" com.nalandaps.erp
+            sleep 3
+            xcrun simctl io "$UDID" screenshot "tmp/platform-review/ios-synthetic-$UDID-light.png"
+            xcrun simctl ui "$UDID" appearance dark
+            xcrun simctl launch --terminate-running-process "$UDID" com.nalandaps.erp
+            sleep 2
+            xcrun simctl io "$UDID" screenshot "tmp/platform-review/ios-synthetic-$UDID-dark.png"
+            xcrun simctl openurl "$UDID" 'nalandaps-erp://auth/callback?code=invalid&state=invalid&request_id=invalid'
+            xcrun simctl terminate "$UDID" com.nalandaps.erp
+            xcrun simctl launch "$UDID" com.nalandaps.erp
+          done
+          printf '%s\n' 'SYNTHETIC UX EVIDENCE ONLY - NO REAL RECORDS' > tmp/platform-review/IOS-SYNTHETIC.txt
+          xcrun simctl shutdown "$IPHONE_UDID" || true
+          xcrun simctl shutdown "$IPAD_UDID" || true
       - name: Write iOS simulator checksums
         working-directory: apps/nalanda-cross-platform/src-tauri/gen/apple/build
         run: find . -type f ! -name 'SHA256SUMS.txt' -exec shasum -a 256 {} \; > SHA256SUMS.txt
@@ -217,5 +310,11 @@ jobs:
         with:
           name: unsigned-ios-simulator
           path: apps/nalanda-cross-platform/src-tauri/gen/apple/build
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: synthetic-ios-simulator-ux
+          path: tmp/platform-review/ios-*
           if-no-files-found: error
           retention-days: 7

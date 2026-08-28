@@ -49,7 +49,7 @@ export type NavigationGroupId =
   | "system";
 
 export const NAV_GROUPS: Array<{ id: NavigationGroupId; label: string }> = [
-  { id: "dashboard", label: "Dashboard" },
+  { id: "dashboard", label: "Home & current work" },
   { id: "studentsParents", label: "Students & Parents" },
   { id: "feesReports", label: "Fees & Reports" },
   { id: "attendance", label: "Attendance" },

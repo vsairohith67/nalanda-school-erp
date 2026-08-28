@@ -112,7 +112,7 @@ describe("access rules", () => {
   it("groups privileged navigation without changing permission visibility", async () => {
     const directorGroups = groupedVisibleNavigationItems(await getEffectivePermissions(emptyClient as never, "DIRECTOR"), "DIRECTOR");
     expect(directorGroups.map((group) => group.label)).toEqual([
-      "Dashboard",
+      "Home & current work",
       "Students & Parents",
       "Fees & Reports",
       "Attendance",
