@@ -1,5 +1,7 @@
 # ERP Feature Status and Gap Map
 
+Portable staging changes deployment plumbing only. Public Admissions, Offline Sync, Cross-Platform Apps, Transport, Cafeteria, Event Media public publishing, cloud AI and live messaging remain off. Provider, public staging, DNS, real users/data, devices and production remain external gates.
+
 ## Current-main correction (2026-08-24)
 
 Current `main` and its retained annotated tags supersede the dated checkpoint below wherever they conflict. Support/complaints, observability, bulk onboarding, Classes I-X print acceptance, the V1 cross-module RC, Academic Integrity v1.1, Command Center, My Work, Universal Search, Smart AI Foundation, Smart AI Local Runtime, Event Media software, KG Report Cards software, Parent Meetings software and Optional Operations software are `CLEARED`; operational activation remains separately gated where documented. `FINAL-SCOPE-QA-1A` is also cleared: the active import, public-admissions, Payroll/ESS and bulk-export runtime gaps were corrected and accepted at `corrected-scope-qa-v43-2026-08-24`.

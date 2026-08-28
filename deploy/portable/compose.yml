@@ -1,0 +1,501 @@
+name: nalanda-portable-synthetic
+
+x-app-environment: &app-environment
+  NODE_ENV: production
+  NALANDA_ENVIRONMENT: synthetic-staging
+  NALANDA_SYNTHETIC_STAGING: "true"
+  NALANDA_DEPLOYMENT_ID: portable-synthetic-${PORTABLE_SOURCE_SHA:-local}
+  APP_ORIGIN: https://portable-staging.localhost:8443
+  DATABASE_PROVIDER: postgresql
+  DATABASE_URL_FILE: /run/secrets/database_url
+  VALKEY_MODE: distributed
+  VALKEY_URL_FILE: /run/secrets/valkey_url
+  PRIVATE_OBJECT_STORAGE_PROVIDER: S3_COMPATIBLE
+  S3_ENDPOINT: http://object-store:9000
+  S3_REGION: us-east-1
+  S3_PRIVATE_BUCKET: nalanda-portable-synthetic-private
+  S3_FORCE_PATH_STYLE: "true"
+  S3_SERVER_SIDE_ENCRYPTION: AES256
+  S3_ACCESS_KEY_ID_FILE: /run/secrets/s3_access_key_id
+  S3_SECRET_ACCESS_KEY_FILE: /run/secrets/s3_secret_access_key
+  PORTABLE_BACKUP_DESTINATION: S3_COMPATIBLE_PRIVATE
+  AUTH_SECRET_FILE: /run/secrets/auth_secret
+  AUTH_VERIFICATION_SECRET_FILE: /run/secrets/auth_verification_secret
+  NALANDA_PROXY_SHARED_SECRET_FILE: /run/secrets/proxy_shared_secret
+  PORTABLE_INTERNAL_HEALTH_TOKEN_FILE: /run/secrets/internal_health_token
+  TRUST_PROXY_HEADERS: "true"
+  NALANDA_TRUSTED_PROXY_MODE: authenticated-edge-v1
+  NALANDA_REQUIRE_TRUSTED_PROXY: "true"
+  NALANDA_CLIENT_IP_HEADER: x-forwarded-for
+  NALANDA_MAINTENANCE_MODE: "false"
+  PORTABLE_METRICS_ENABLED: "true"
+  PORTABLE_STRUCTURED_LOGGING: "true"
+  NALANDA_MINIMUM_NATIVE_CLIENT: 0.1.0
+  NALANDA_NATIVE_ALLOWED_ORIGINS: nalanda://auth,https://portable-staging.localhost:8443
+  PORTABLE_EXPECTED_POSTGRES_MIGRATION: 20260826_postgresql_baseline
+  AI_ASSISTANT_PROVIDER: DISABLED
+  PUBLIC_ADMISSIONS_ENABLED: "false"
+  OFFLINE_SYNC_ENABLED: "false"
+  CROSS_PLATFORM_APPS_ENABLED: "false"
+  TRANSPORT_ENABLED: "false"
+  CAFETERIA_ENABLED: "false"
+  EVENT_MEDIA_PUBLIC_PUBLISHING_ENABLED: "false"
+  CLOUD_AI_ENABLED: "false"
+  LIVE_PROVIDERS_ENABLED: "false"
+  WHATSAPP_LIVE_SENDING_ENABLED: "false"
+  SMS_EMAIL_SMS_LIVE_ENABLED: "false"
+  SMS_EMAIL_EMAIL_LIVE_ENABLED: "false"
+
+x-app-secrets: &app-secrets
+  - database_url
+  - valkey_url
+  - s3_access_key_id
+  - s3_secret_access_key
+  - auth_secret
+  - auth_verification_secret
+  - proxy_shared_secret
+  - internal_health_token
+
+x-app-service: &app-service
+  image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+  build:
+    context: ../..
+    dockerfile: Dockerfile
+    args:
+      SOURCE_COMMIT: ${PORTABLE_SOURCE_SHA:-unknown}
+      SOURCE_DATE_EPOCH: ${PORTABLE_SOURCE_DATE_EPOCH:-0}
+      IMAGE_VERSION: portable-staging-foundation-1a
+  restart: unless-stopped
+  read_only: true
+  init: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,nodev,size=268435456,mode=1777
+  networks: [application, data]
+  environment: *app-environment
+  secrets: *app-secrets
+  pids_limit: 256
+  mem_limit: 1536m
+  cpus: 1.5
+  healthcheck:
+    test: [CMD, /nodejs/bin/node, dist/portable/runtime-command.mjs, health-probe]
+    interval: 15s
+    timeout: 8s
+    retries: 10
+    start_period: 60s
+
+services:
+  postgres:
+    image: postgres:17.11-bookworm@sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nalanda_portable_synthetic
+      POSTGRES_USER: nalanda_bootstrap
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_bootstrap_password
+    secrets:
+      - postgres_bootstrap_password
+      - postgres_migrator_password
+      - postgres_runtime_password
+      - postgres_backup_password
+      - postgres_backup_maintenance_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres-init-runtime-role.sh:/docker-entrypoint-initdb.d/10-runtime-role.sh:ro
+    networks: [data, backup-data]
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /run:rw,nosuid,nodev,size=67108864
+      - /tmp:rw,noexec,nosuid,nodev,size=134217728
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U nalanda_bootstrap -d nalanda_portable_synthetic]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    pids_limit: 256
+    mem_limit: 1536m
+    cpus: 1.5
+
+  valkey:
+    image: valkey/valkey:8.1.3-bookworm@sha256:fea8b3e67b15729d4bb70589eb03367bab9ad1ee89c876f54327fc7c6e618571
+    restart: unless-stopped
+    entrypoint: [/bin/sh, /opt/nalanda/valkey-entrypoint.sh]
+    user: "65534:65534"
+    secrets: [valkey_password]
+    volumes:
+      - ./valkey-entrypoint.sh:/opt/nalanda/valkey-entrypoint.sh:ro
+    networks: [data]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=67108864
+    healthcheck:
+      test: [CMD-SHELL, valkey-cli --no-auth-warning -a "$$(cat /run/secrets/valkey_password)" ping | grep -q PONG]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.75
+
+  object-store-permissions:
+    image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z@sha256:d249d1fb6966de4d8ad26c04754b545205ff15a62e4fd19ebd0f26fa5baacbc0
+    entrypoint: [/bin/chown, -R, "65534:65534", /data]
+    user: "0:0"
+    volumes:
+      - object-data:/data
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN]
+    security_opt: [no-new-privileges:true]
+    restart: "no"
+
+  object-store:
+    image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z@sha256:d249d1fb6966de4d8ad26c04754b545205ff15a62e4fd19ebd0f26fa5baacbc0
+    restart: unless-stopped
+    entrypoint: [/bin/sh, /opt/nalanda/minio-entrypoint.sh]
+    user: "65534:65534"
+    command: ["server", "/data", "--address", ":9000", "--console-address", ":9001"]
+    secrets: [minio_root_access_key, minio_root_secret_key, minio_kms_secret_key]
+    volumes:
+      - object-data:/data
+      - ./minio-entrypoint.sh:/opt/nalanda/minio-entrypoint.sh:ro
+    networks: [data, backup-data]
+    depends_on:
+      object-store-permissions: { condition: service_completed_successfully }
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, curl, -fsS, http://127.0.0.1:9000/minio/health/live]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    pids_limit: 256
+    mem_limit: 1024m
+    cpus: 1.0
+
+  object-bootstrap:
+    image: quay.io/minio/mc:RELEASE.2025-07-21T05-28-08Z@sha256:fb8f773eac8ef9d6da0486d5dec2f42f219358bcb8de579d1623d518c9ebd4cc
+    entrypoint: [/bin/sh, /opt/nalanda/minio-bootstrap.sh]
+    user: "65534:65534"
+    environment:
+      MC_CONFIG_DIR: /tmp/mc
+    secrets: [minio_root_access_key, minio_root_secret_key, s3_access_key_id, s3_secret_access_key, s3_backup_access_key_id, s3_backup_secret_access_key, s3_backup_maintenance_access_key_id, s3_backup_maintenance_secret_access_key]
+    volumes:
+      - ./minio-bootstrap.sh:/opt/nalanda/minio-bootstrap.sh:ro
+      - ./minio-app-policy.json:/opt/nalanda/minio-app-policy.json:ro
+      - ./minio-backup-policy.json:/opt/nalanda/minio-backup-policy.json:ro
+      - ./minio-backup-maintenance-policy.json:/opt/nalanda/minio-backup-maintenance-policy.json:ro
+    depends_on:
+      object-store: { condition: service_healthy }
+    networks: [data]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=67108864"]
+    restart: "no"
+
+  object-init:
+    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    command: [dist/portable/object-store-init.mjs]
+    environment:
+      NALANDA_SYNTHETIC_STAGING: "true"
+      S3_ENDPOINT: http://object-store:9000
+      S3_REGION: us-east-1
+      S3_PRIVATE_BUCKET: nalanda-portable-synthetic-private
+      S3_FORCE_PATH_STYLE: "true"
+      S3_ACCESS_KEY_ID_FILE: /run/secrets/s3_access_key_id
+      S3_SECRET_ACCESS_KEY_FILE: /run/secrets/s3_secret_access_key
+    secrets: [s3_access_key_id, s3_secret_access_key]
+    depends_on:
+      object-bootstrap: { condition: service_completed_successfully }
+    networks: [data]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=67108864"]
+    restart: "no"
+
+  migrator:
+    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    command: [dist/portable/runtime-command.mjs, migrate]
+    environment:
+      <<: *app-environment
+      DIRECT_URL_FILE: /run/secrets/direct_url
+      POSTGRES_RUNTIME_ROLE: nalanda_runtime
+      POSTGRES_BACKUP_ROLE: nalanda_backup
+      POSTGRES_BACKUP_MAINTENANCE_ROLE: nalanda_backup_maintenance
+    secrets:
+      - database_url
+      - direct_url
+      - valkey_url
+      - s3_access_key_id
+      - s3_secret_access_key
+      - auth_secret
+      - auth_verification_secret
+      - proxy_shared_secret
+      - internal_health_token
+    depends_on:
+      postgres: { condition: service_healthy }
+      valkey: { condition: service_healthy }
+      object-init: { condition: service_completed_successfully }
+    networks: [data]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=134217728"]
+    restart: "no"
+
+  seed:
+    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    command: [dist/portable/runtime-command.mjs, seed-synthetic]
+    environment:
+      <<: *app-environment
+      STAGING_SYNTHETIC_SEED_OPT_IN: "true"
+      STAGING_SYNTHETIC_DIRECTOR_PASSWORD_FILE: /run/secrets/synthetic_director_password
+    secrets:
+      - database_url
+      - valkey_url
+      - s3_access_key_id
+      - s3_secret_access_key
+      - auth_secret
+      - auth_verification_secret
+      - proxy_shared_secret
+      - internal_health_token
+      - synthetic_director_password
+    depends_on:
+      migrator: { condition: service_completed_successfully }
+    networks: [data]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=134217728"]
+    restart: "no"
+
+  runtime-qa:
+    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    command: [dist/portable/integration-qa.mjs]
+    environment: *app-environment
+    secrets: *app-secrets
+    depends_on:
+      web-1: { condition: service_healthy }
+      web-2: { condition: service_healthy }
+    networks: [application, data]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=134217728"]
+    restart: "no"
+
+  backup-qa:
+    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    command: [dist/portable/backup-qa.mjs]
+    environment:
+      <<: *app-environment
+      DIRECT_URL_FILE: /run/secrets/direct_url
+      DATABASE_URL_FILE: /run/secrets/backup_database_url
+      S3_ACCESS_KEY_ID_FILE: /run/secrets/s3_backup_access_key_id
+      S3_SECRET_ACCESS_KEY_FILE: /run/secrets/s3_backup_secret_access_key
+      CLOUD_BACKUP_ENCRYPTION_KEY_V1_FILE: /run/secrets/backup_encryption_key
+      PORTABLE_BACKUP_WORKER_MANAGED: "true"
+      VALKEY_URL_FILE: ""
+      AUTH_SECRET_FILE: ""
+      AUTH_VERIFICATION_SECRET_FILE: ""
+      NALANDA_PROXY_SHARED_SECRET_FILE: ""
+      PORTABLE_INTERNAL_HEALTH_TOKEN_FILE: ""
+    secrets:
+      - backup_database_url
+      - direct_url
+      - s3_backup_access_key_id
+      - s3_backup_secret_access_key
+      - backup_encryption_key
+    depends_on:
+      web-1: { condition: service_healthy }
+      web-2: { condition: service_healthy }
+    networks: [backup-data]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=268435456"]
+    restart: "no"
+
+  backup-worker:
+    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    command: [dist/portable/runtime-command.mjs, backup-worker]
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      S3_ACCESS_KEY_ID_FILE: /run/secrets/s3_backup_access_key_id
+      S3_SECRET_ACCESS_KEY_FILE: /run/secrets/s3_backup_secret_access_key
+      CLOUD_BACKUP_ENCRYPTION_KEY_V1_FILE: /run/secrets/backup_encryption_key
+      VALKEY_MODE: memory
+      VALKEY_URL_FILE: ""
+      TRUST_PROXY_HEADERS: "false"
+      NALANDA_NATIVE_ALLOWED_ORIGINS: ""
+      AUTH_SECRET_FILE: ""
+      AUTH_VERIFICATION_SECRET_FILE: ""
+      NALANDA_PROXY_SHARED_SECRET_FILE: ""
+      PORTABLE_INTERNAL_HEALTH_TOKEN_FILE: ""
+      PORTABLE_BACKUP_WORKER_POLL_MS: "5000"
+      DATABASE_URL_FILE: /run/secrets/backup_database_url
+    secrets:
+      - backup_database_url
+      - s3_backup_access_key_id
+      - s3_backup_secret_access_key
+      - backup_encryption_key
+    depends_on:
+      seed: { condition: service_completed_successfully }
+    networks: [backup-data]
+    read_only: true
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=268435456,mode=1777"]
+    pids_limit: 256
+    mem_limit: 1536m
+    cpus: 1.5
+
+  backup-maintenance:
+    profiles: [maintenance]
+    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    command: [dist/portable/runtime-command.mjs, backup-maintenance]
+    environment:
+      <<: *app-environment
+      DATABASE_URL_FILE: /run/secrets/backup_maintenance_database_url
+      S3_ACCESS_KEY_ID_FILE: /run/secrets/s3_backup_maintenance_access_key_id
+      S3_SECRET_ACCESS_KEY_FILE: /run/secrets/s3_backup_maintenance_secret_access_key
+      VALKEY_MODE: memory
+      VALKEY_URL_FILE: ""
+      TRUST_PROXY_HEADERS: "false"
+      NALANDA_NATIVE_ALLOWED_ORIGINS: ""
+      AUTH_SECRET_FILE: ""
+      AUTH_VERIFICATION_SECRET_FILE: ""
+      NALANDA_PROXY_SHARED_SECRET_FILE: ""
+      PORTABLE_INTERNAL_HEALTH_TOKEN_FILE: ""
+      PORTABLE_RETENTION_PLAN_SHA256: ${PORTABLE_RETENTION_PLAN_SHA256:-}
+    secrets:
+      - backup_maintenance_database_url
+      - s3_backup_maintenance_access_key_id
+      - s3_backup_maintenance_secret_access_key
+    volumes:
+      - ../../tmp/portable-staging/maintenance/retention-plan.json:/run/maintenance/retention-plan.json:ro
+    depends_on:
+      seed: { condition: service_completed_successfully }
+    networks: [backup-data]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=134217728,mode=1777"]
+    restart: "no"
+
+  backup-maintenance-plan:
+    profiles: [maintenance-plan]
+    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    command: [dist/portable/runtime-command.mjs, backup-maintenance-plan]
+    environment:
+      <<: *app-environment
+      DATABASE_URL_FILE: /run/secrets/backup_database_url
+      PRIVATE_OBJECT_STORAGE_PROVIDER: FILESYSTEM
+      S3_ACCESS_KEY_ID_FILE: ""
+      S3_SECRET_ACCESS_KEY_FILE: ""
+      VALKEY_MODE: memory
+      VALKEY_URL_FILE: ""
+      TRUST_PROXY_HEADERS: "false"
+      NALANDA_NATIVE_ALLOWED_ORIGINS: ""
+      AUTH_SECRET_FILE: ""
+      AUTH_VERIFICATION_SECRET_FILE: ""
+      NALANDA_PROXY_SHARED_SECRET_FILE: ""
+      PORTABLE_INTERNAL_HEALTH_TOKEN_FILE: ""
+    secrets:
+      - backup_database_url
+    depends_on:
+      seed: { condition: service_completed_successfully }
+    networks: [backup-data]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=67108864,mode=1777"]
+    restart: "no"
+
+  web-1:
+    <<: *app-service
+    environment:
+      <<: *app-environment
+      NALANDA_REPLICA_ID: web-1
+    depends_on:
+      seed: { condition: service_completed_successfully }
+
+  web-2:
+    <<: *app-service
+    environment:
+      <<: *app-environment
+      NALANDA_REPLICA_ID: web-2
+    depends_on:
+      seed: { condition: service_completed_successfully }
+
+  reverse-proxy:
+    image: caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    restart: unless-stopped
+    entrypoint: [/bin/sh, /opt/nalanda/caddy-entrypoint.sh]
+    user: "65534:65534"
+    secrets: [proxy_shared_secret]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy-entrypoint.sh:/opt/nalanda/caddy-entrypoint.sh:ro
+    tmpfs:
+      - /data:rw,nosuid,nodev,size=67108864,uid=65534,gid=65534
+      - /config:rw,nosuid,nodev,size=16777216,uid=65534,gid=65534
+    ports:
+      - 127.0.0.1:8443:8443
+    networks: [edge, application]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      web-1: { condition: service_healthy }
+      web-2: { condition: service_healthy }
+    pids_limit: 128
+    mem_limit: 256m
+    cpus: 0.5
+
+networks:
+  edge: {}
+  application: { internal: true }
+  data: { internal: true }
+  backup-data: { internal: true }
+
+volumes:
+  postgres-data: {}
+  object-data: {}
+
+secrets:
+  minio_root_access_key: { file: ../../tmp/portable-staging/secrets/minio_root_access_key }
+  minio_root_secret_key: { file: ../../tmp/portable-staging/secrets/minio_root_secret_key }
+  minio_kms_secret_key: { file: ../../tmp/portable-staging/secrets/minio_kms_secret_key }
+  postgres_bootstrap_password: { file: ../../tmp/portable-staging/secrets/postgres_bootstrap_password }
+  postgres_runtime_password: { file: ../../tmp/portable-staging/secrets/postgres_runtime_password }
+  postgres_backup_password: { file: ../../tmp/portable-staging/secrets/postgres_backup_password }
+  postgres_backup_maintenance_password: { file: ../../tmp/portable-staging/secrets/postgres_backup_maintenance_password }
+  postgres_migrator_password: { file: ../../tmp/portable-staging/secrets/postgres_migrator_password }
+  valkey_password: { file: ../../tmp/portable-staging/secrets/valkey_password }
+  s3_access_key_id: { file: ../../tmp/portable-staging/secrets/s3_access_key_id }
+  s3_secret_access_key: { file: ../../tmp/portable-staging/secrets/s3_secret_access_key }
+  s3_backup_access_key_id: { file: ../../tmp/portable-staging/secrets/s3_backup_access_key_id }
+  s3_backup_secret_access_key: { file: ../../tmp/portable-staging/secrets/s3_backup_secret_access_key }
+  s3_backup_maintenance_access_key_id: { file: ../../tmp/portable-staging/secrets/s3_backup_maintenance_access_key_id }
+  s3_backup_maintenance_secret_access_key: { file: ../../tmp/portable-staging/secrets/s3_backup_maintenance_secret_access_key }
+  auth_secret: { file: ../../tmp/portable-staging/secrets/auth_secret }
+  auth_verification_secret: { file: ../../tmp/portable-staging/secrets/auth_verification_secret }
+  proxy_shared_secret: { file: ../../tmp/portable-staging/secrets/proxy_shared_secret }
+  internal_health_token: { file: ../../tmp/portable-staging/secrets/internal_health_token }
+  backup_encryption_key: { file: ../../tmp/portable-staging/secrets/backup_encryption_key }
+  synthetic_director_password: { file: ../../tmp/portable-staging/secrets/synthetic_director_password }
+  database_url: { file: ../../tmp/portable-staging/secrets/database_url }
+  backup_database_url: { file: ../../tmp/portable-staging/secrets/backup_database_url }
+  backup_maintenance_database_url: { file: ../../tmp/portable-staging/secrets/backup_maintenance_database_url }
+  direct_url: { file: ../../tmp/portable-staging/secrets/direct_url }
+  valkey_url: { file: ../../tmp/portable-staging/secrets/valkey_url }

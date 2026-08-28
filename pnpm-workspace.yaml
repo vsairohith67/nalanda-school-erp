@@ -1,6 +1,8 @@
 packages:
   - 'apps/*'
 
+injectWorkspacePackages: true
+
 allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true

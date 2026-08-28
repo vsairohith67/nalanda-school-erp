@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { createCloudBackupProvider } from "@/lib/cloud-backup-provider";
 
+
 type RetentionRun = { id: string; completedAt: Date | null; createdAt: Date };
 type RetentionPolicyShape = {
   keepLatestVerifiedCount: number;
@@ -80,7 +81,9 @@ export async function previewCloudBackupRetention(prisma: PrismaClient, profileI
       runId: run.id,
       runNumber: run.runNumber,
       artifactId: artifact.id,
+      artifactStatus: artifact.status,
       objectKeySafe: artifact.objectKeySafe,
+      providerObjectVersionSafe: run.providerObjectVersionSafe,
       providerKind: profile.providerKind,
       createdAt: artifact.createdAt,
       verified: run.status === "VERIFIED" && artifact.status === "VERIFIED",
@@ -107,7 +110,12 @@ export async function previewCloudBackupRetention(prisma: PrismaClient, profileI
   };
 }
 
-export async function pruneCloudBackupRetention(prisma: PrismaClient, profileId: string, actorUserId?: string) {
+export async function pruneCloudBackupRetention(
+  prisma: PrismaClient,
+  profileId: string,
+  actorUserId?: string,
+  options: { authorisedExactVersions?: ReadonlySet<string> } = {}
+) {
   const preview = await previewCloudBackupRetention(prisma, profileId);
   const profile = await prisma.cloudBackupProfile.findUniqueOrThrow({ where: { id: profileId }, include: { retentionPolicy: true } });
   if (!profile.retentionPolicy?.autoPruneEnabled) throw new Error("Automatic pruning is disabled.");
@@ -118,20 +126,55 @@ export async function pruneCloudBackupRetention(prisma: PrismaClient, profileId:
   const health = await provider.healthCheck();
   if (!health.ready) throw new Error("Provider health check blocks pruning.");
   const pruned: string[] = [];
-  for (const candidate of preview.rows.filter((row) => row.eligible)) {
-    const current = await prisma.cloudBackupArtifact.findUnique({ where: { id: candidate.artifactId } });
+  const eligibleCandidates = preview.rows.filter((row) => row.eligible);
+  if (options.authorisedExactVersions) {
+    const alreadyDurable = new Set(preview.rows.filter((row) => row.artifactStatus === "PRUNED").map((row) =>
+      `${row.artifactId}:${row.objectKeySafe}:${row.providerObjectVersionSafe}`
+    ));
+    const authorisedRemaining = new Set([...options.authorisedExactVersions].filter((identity) => !alreadyDurable.has(identity)));
+    const currentExactVersions = new Set(eligibleCandidates.map((row) =>
+      `${row.artifactId}:${row.objectKeySafe}:${row.providerObjectVersionSafe}`
+    ));
+    if (currentExactVersions.size !== authorisedRemaining.size ||
+      [...currentExactVersions].some((identity) => !authorisedRemaining.has(identity))) {
+      throw new Error("Authorised exact-version retention plan no longer matches current eligibility.");
+    }
+  }
+  for (const candidate of eligibleCandidates) {
+    const current = await prisma.cloudBackupArtifact.findUnique({
+      where: { id: candidate.artifactId },
+      include: { run: { select: { providerObjectVersionSafe: true } } }
+    });
     if (!current || current.status === "PRUNED") continue;
-    if (current.objectKeySafe !== candidate.objectKeySafe) throw new Error("Exact object identity changed; pruning is blocked.");
-    await provider.deleteObject(current.objectKeySafe);
-    await prisma.$transaction([
-      prisma.cloudBackupArtifact.update({ where: { id: current.id }, data: { status: "PRUNED", prunedAt: new Date() } }),
-      prisma.cloudBackupEvent.create({ data: {
+    if (current.objectKeySafe !== candidate.objectKeySafe || current.run.providerObjectVersionSafe !== candidate.providerObjectVersionSafe) {
+      throw new Error("Exact object identity changed; pruning is blocked.");
+    }
+    if (profile.providerKind === "OBJECT_STORAGE" && !current.run.providerObjectVersionSafe) {
+      throw new Error("Exact object version is missing; pruning is blocked.");
+    }
+    const exactIdentity = `${current.id}:${current.objectKeySafe}:${current.run.providerObjectVersionSafe}`;
+    if (options.authorisedExactVersions && !options.authorisedExactVersions.has(exactIdentity)) {
+      throw new Error("Exact object version is outside the authorised retention plan.");
+    }
+    const deletion = await provider.deleteObject(current.objectKeySafe, current.run.providerObjectVersionSafe);
+    const authorisedRecovery = deletion.alreadyMissing && options.authorisedExactVersions?.has(exactIdentity) === true;
+    if (!deletion.deleted && !authorisedRecovery) throw new Error("Exact object version was not deleted; pruning is blocked.");
+    const artifactUpdate = () => prisma.cloudBackupArtifact.update({ where: { id: current.id }, data: { status: "PRUNED", prunedAt: new Date() } });
+    const eventCreate = () => prisma.cloudBackupEvent.create({ data: {
         profileId, runId: current.runId, artifactId: current.id,
-        eventType: "RETENTION_PRUNED",
-        safeMetadataJson: JSON.stringify({ exactObjectIdentity: current.objectKeySafe }),
+        eventType: authorisedRecovery ? "RETENTION_PRUNE_RECONCILED" : "RETENTION_PRUNED",
+        safeMetadataJson: JSON.stringify({ exactObjectIdentity: current.objectKeySafe, exactObjectVersion: current.run.providerObjectVersionSafe, authorisedRecovery }),
         recordedByUserId: actorUserId
-      } })
-    ]);
+      } });
+    const transactionCapable = prisma as PrismaClient & { $transaction?: PrismaClient["$transaction"] };
+    if (typeof transactionCapable.$transaction === "function") {
+      await transactionCapable.$transaction([artifactUpdate(), eventCreate()]);
+    } else {
+      // The caller already holds the locked interactive transaction. Direct
+      // operations preserve that transaction and avoid an unsupported nested one.
+      await artifactUpdate();
+      await eventCreate();
+    }
     pruned.push(current.id);
   }
   return { prunedCount: pruned.length, artifactIds: pruned };

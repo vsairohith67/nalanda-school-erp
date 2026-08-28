@@ -8,6 +8,6 @@ export async function GET(_request: Request, context: { params: Promise<{ assetK
   try {
     const derivative = await getPublishedEventMediaDerivative(prisma, (await context.params).assetKey, "PUBLIC");
     const bytes = await readEventMediaBytes(derivative.storageKey!, derivative.sha256!, derivative.byteSize!);
-    return new NextResponse(bytes, { headers: { "Content-Type": derivative.mediaType!, "Content-Disposition": "inline; filename=event-photo.jpg", "Cache-Control": "public, max-age=0, must-revalidate", "X-Content-Type-Options": "nosniff" } });
+    return new NextResponse(new Uint8Array(bytes), { headers: { "Content-Type": derivative.mediaType!, "Content-Disposition": "inline; filename=event-photo.jpg", "Cache-Control": "public, max-age=0, must-revalidate", "X-Content-Type-Options": "nosniff" } });
   } catch (error) { return eventMediaApiFailure(error); }
 }

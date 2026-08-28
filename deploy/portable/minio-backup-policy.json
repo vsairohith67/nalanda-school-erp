@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetBucketLocation", "s3:GetBucketVersioning"],
+      "Resource": ["arn:aws:s3:::nalanda-portable-synthetic-private"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::nalanda-portable-synthetic-private"],
+      "Condition": { "StringLike": { "s3:prefix": ["private/backups/*"] } }
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:AbortMultipartUpload",
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:ListMultipartUploadParts",
+        "s3:PutObject"
+      ],
+      "Resource": ["arn:aws:s3:::nalanda-portable-synthetic-private/private/backups/*"]
+    }
+  ]
+}

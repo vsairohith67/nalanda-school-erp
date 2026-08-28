@@ -30,6 +30,10 @@ const publicPaths = [
   "/api/auth/recovery/request",
   "/api/auth/recovery/reset",
   "/api/health",
+  "/api/health/live",
+  "/api/health/ready",
+  "/api/internal/health/dependencies",
+  "/api/internal/metrics",
   "/api/deployment-health",
   "/api/release/client-version",
   "/api/setup"
@@ -66,7 +70,7 @@ export async function middleware(request: NextRequest) {
     return response;
   };
   const clientIdentity = trustedClientIdentity(request.headers);
-  const proxyHealthPath = pathname === "/api/health" || pathname === "/api/deployment-health";
+  const proxyHealthPath = pathname === "/api/health" || pathname.startsWith("/api/health/") || pathname === "/api/deployment-health";
   if (trustedProxyRequired() && !clientIdentity.trusted && !proxyHealthPath) {
     emitSecurityResilienceEvent("EDGE_ORIGIN_MISMATCH", { reason: clientIdentity.reason, routeFamily: pathname.startsWith("/api/") ? "api" : "page", status: 403 });
     const response = NextResponse.json({ error: "Trusted ingress is required." }, { status: 403 });
@@ -205,5 +209,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  runtime: "nodejs",
   matcher: ["/((?!_next/static|_next/image).*)"]
 };

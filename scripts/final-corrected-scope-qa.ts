@@ -161,6 +161,7 @@ function main() {
     writeFileSync(summaryResult, `${JSON.stringify(summary, null, 2)}\n`, { encoding: "utf8", flag: "w" });
     rmSync(rawResult, { force: true });
     process.stdout.write(`${JSON.stringify({ result: "FINAL_CORRECTED_SCOPE_FOCUSED_ACCEPTANCE_PASSED", testFilesPassed: summary.testFilesPassed, testsPassed: summary.testsPassed, intentionalSkips: summary.intentionalSkips, operationalCopyIntegrity: summary.operationalCopyIntegrity })}\n`);
+    if (process.argv.includes("--focused-only")) return;
     const evidenceTool = path.join(workspaceRoot, "tools", "release-evidence", "final-scope-evidence.mjs");
     const evidence = spawnSync(process.execPath, [evidenceTool], {
       cwd: workspaceRoot,
