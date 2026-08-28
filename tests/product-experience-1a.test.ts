@@ -202,6 +202,9 @@ describe("PRODUCT-EXPERIENCE-1A product contract", () => {
     expect(workflow).toContain('test -f "$ANDROID_AVD_HOME/px1a_phone.ini"');
     expect(workflow).toContain('timeout 240 "$ADB" wait-for-device');
     expect(workflow).toContain('adb_cmd() { timeout 60 "$ADB" "$@"; }');
+    expect(workflow).toContain("android-activity-state.txt");
+    expect(workflow).toContain("mResumedActivity");
+    expect(workflow).toContain("android.webkit.WebView");
     expect(workflow).toContain('adb_cmd shell am force-stop');
     expect(workflow).toContain("android-synthetic-tablet.png");
     expect(workflow).toContain("Exercise the packaged app in iPhone and iPad simulators");
@@ -221,9 +224,9 @@ describe("PRODUCT-EXPERIENCE-1A product contract", () => {
 
   it("records every proven scoped defect and separates the confirmed backlog", () => {
     const register = JSON.parse(source("config/product-experience-bugs.json"));
-    expect(register.summary).toEqual({ critical: 0, high: 11, medium: 35, fixed: 46, unresolved: 0 });
-    expect(register.bugs).toHaveLength(46);
-    expect(new Set(register.bugs.map((bug: { id: string }) => bug.id)).size).toBe(46);
+    expect(register.summary).toEqual({ critical: 0, high: 12, medium: 35, fixed: 47, unresolved: 0 });
+    expect(register.bugs).toHaveLength(47);
+    expect(new Set(register.bugs.map((bug: { id: string }) => bug.id)).size).toBe(47);
     for (const bug of register.bugs) {
       expect(bug).toMatchObject({
         id: expect.stringMatching(/^PX-\d{3}$/),

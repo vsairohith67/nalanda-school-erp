@@ -4,9 +4,9 @@
   "syntheticEvidenceOnly": true,
   "summary": {
     "critical": 0,
-    "high": 11,
+    "high": 12,
     "medium": 35,
-    "fixed": 46,
+    "fixed": 47,
     "unresolved": 0
   },
   "bugs": [
@@ -607,6 +607,19 @@
       "rootCause": "The workflow relied on implicit AVD directory discovery; the hosted runner tools did not agree on the default location after the SDK components were installed during the step.",
       "fixCommit": "35a62d98be68f21ba83ad833d20e0e8a4b53d64b",
       "regressionTest": "Exact-head Android emulator gate with exported ANDROID_AVD_HOME, an ini-file assertion and emulator -list-avds proof before startup"
+    },
+    {
+      "id": "PX-047",
+      "platform": "ANDROID_CI_EMULATOR",
+      "role": "RELEASE_ENGINEER",
+      "route": "packaged Android emulator acceptance gate",
+      "severity": "HIGH",
+      "reproduction": "Boot the packaged Tauri Android application successfully and inspect its WebView with uiautomator on the hosted Android 35 emulator.",
+      "expected": "The acceptance gate proves the Nalanda package is foregrounded and its WebView exists, while preferring semantic page text when Android exposes it.",
+      "actual": "The AVD booted, the APK installed and the launcher event succeeded, but uiautomator did not expose the web page copy, so a text-only grep stopped the gate before screenshot collection.",
+      "rootCause": "Android WebView accessibility serialization is runner and WebView-version dependent; visible HTML text is not guaranteed to appear in the uiautomator XML even when the native activity and WebView are healthy.",
+      "fixCommit": "PENDING",
+      "regressionTest": "Exact-head Android emulator gate requiring the Nalanda resumed activity plus WebView hierarchy, semantic text when exposed, and always-uploaded synthetic diagnostics"
     }
   ]
 }

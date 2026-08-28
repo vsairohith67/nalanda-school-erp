@@ -205,10 +205,15 @@ jobs:
           PACKAGE="com.nalandaps.erp"
           adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
           sleep 4
+          adb_cmd shell dumpsys activity activities > tmp/platform-review/android-activity-state.txt
+          grep -m1 -F 'mResumedActivity' tmp/platform-review/android-activity-state.txt | grep -F "$PACKAGE"
           adb_cmd shell uiautomator dump /sdcard/px1a-window.xml
           adb_cmd pull /sdcard/px1a-window.xml tmp/platform-review/android-window.xml
-          grep -Eq 'Nalanda|Welcome back|App PIN' tmp/platform-review/android-window.xml
           adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-phone-portrait.png
+          cat tmp/platform-review/android-window.xml
+          if ! grep -Eq 'Nalanda|Welcome back|App PIN' tmp/platform-review/android-window.xml; then
+            grep -F 'android.webkit.WebView' tmp/platform-review/android-window.xml
+          fi
           adb_cmd shell input tap 540 900
           sleep 1
           adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-soft-keyboard.png
@@ -256,6 +261,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
         with:
           name: synthetic-android-emulator-ux
           path: tmp/platform-review/android-*
