@@ -168,14 +168,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Prepare isolated realistic synthetic SQLite database
         run: |
-          mkdir -p tmp/portable-ci
-          touch tmp/portable-ci/synthetic.db
-          DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm exec prisma migrate deploy --schema prisma/schema.prisma
-          RELEASE_CI_SYNTHETIC_OPT_IN=true NALANDA_ENVIRONMENT=TEST NODE_ENV=development DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
-          cp tmp/portable-ci/synthetic.db prisma/dev.db
+          mkdir -p tmp/release-ci
+          touch tmp/release-ci/synthetic.db
+          DATABASE_URL=file:../tmp/release-ci/synthetic.db pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          RELEASE_CI_SYNTHETIC_OPT_IN=true NALANDA_ENVIRONMENT=TEST NODE_ENV=development DATABASE_URL=file:../tmp/release-ci/synthetic.db pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          cp tmp/release-ci/synthetic.db prisma/dev.db
       - name: Sequential full-scope acceptance
         env:
-          DATABASE_URL: file:../tmp/portable-ci/synthetic.db
+          DATABASE_URL: file:../tmp/release-ci/synthetic.db
           NALANDA_ENVIRONMENT: TEST
         run: |
           pnpm routes:list

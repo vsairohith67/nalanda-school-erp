@@ -91,7 +91,11 @@ export async function processOfflineMutation(input: { item: OfflineMutationEnvel
         await recordOfflineEvent(tx, { eventType: classification.outcome === "CONFLICT" ? "MUTATION_CONFLICT" : "MUTATION_REJECTED", actorUserId: input.user.id, deviceId: input.device.id, mutationId: ledger.id, safeMetadata: { operationType: input.item.operationType, code: classification.code } });
         return { clientMutationId: input.item.clientMutationId, ...classification };
       }
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    }, {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      maxWait: 10_000,
+      timeout: 30_000
+    });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const prior = await prisma.offlineSyncMutation.findUnique({ where: { deviceId_clientMutationId: { deviceId: input.device.id, clientMutationId: input.item.clientMutationId } } });
