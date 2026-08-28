@@ -57,7 +57,7 @@ jobs:
       - name: Verify configuration and labels
         run: |
           test "$(docker image inspect nalanda-portable-staging:ci --format '{{.Config.User}}')" = "65532:65532"
-          test "$(docker image inspect nalanda-portable-staging:ci --format '{{index .Config.Labels \"org.opencontainers.image.revision\"}}')" = "$EXPECTED_SHA"
+          test "$(docker image inspect nalanda-portable-staging:ci --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')" = "$EXPECTED_SHA"
           docker image inspect nalanda-portable-staging:ci --format '{{.Id}}' | tee image-digest.txt
           docker save nalanda-portable-staging:ci | sha256sum | tee image-archive-sha256.txt
       - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0

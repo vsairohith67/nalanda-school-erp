@@ -10,7 +10,15 @@ backup_secret="$(cat /run/secrets/s3_backup_secret_access_key)"
 maintenance_access="$(cat /run/secrets/s3_backup_maintenance_access_key_id)"
 maintenance_secret="$(cat /run/secrets/s3_backup_maintenance_secret_access_key)"
 
-mc alias set nalanda http://object-store:9000 "$root_access" "$root_secret"
+attempt=0
+until mc alias set nalanda http://object-store:9000 "$root_access" "$root_secret" >/dev/null 2>&1; do
+  attempt=$((attempt + 1))
+  if [ "$attempt" -ge 30 ]; then
+    echo "MINIO_BOOTSTRAP_ADMIN_READINESS_TIMEOUT" >&2
+    exit 1
+  fi
+  sleep 1
+done
 mc mb --ignore-existing nalanda/nalanda-portable-synthetic-private
 mc version enable nalanda/nalanda-portable-synthetic-private
 mc anonymous set none nalanda/nalanda-portable-synthetic-private
