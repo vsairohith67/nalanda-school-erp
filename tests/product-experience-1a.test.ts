@@ -197,7 +197,8 @@ describe("PRODUCT-EXPERIENCE-1A product contract", () => {
     expect(app).toContain("PRODUCT_BRAND.productName");
     expect(app).not.toContain("Priya");
     expect(workflow).toContain("Exercise the packaged app in an Android emulator");
-    expect(workflow).toContain("adb shell am force-stop");
+    expect(workflow).toContain('ADB="$ANDROID_HOME/platform-tools/adb"');
+    expect(workflow).toContain('"$ADB" shell am force-stop');
     expect(workflow).toContain("android-synthetic-tablet.png");
     expect(workflow).toContain("Exercise the packaged app in iPhone and iPad simulators");
     expect(workflow).toContain("xcrun simctl install");
@@ -216,9 +217,9 @@ describe("PRODUCT-EXPERIENCE-1A product contract", () => {
 
   it("records every proven scoped defect and separates the confirmed backlog", () => {
     const register = JSON.parse(source("config/product-experience-bugs.json"));
-    expect(register.summary).toEqual({ critical: 0, high: 8, medium: 35, fixed: 43, unresolved: 0 });
-    expect(register.bugs).toHaveLength(43);
-    expect(new Set(register.bugs.map((bug: { id: string }) => bug.id)).size).toBe(43);
+    expect(register.summary).toEqual({ critical: 0, high: 9, medium: 35, fixed: 44, unresolved: 0 });
+    expect(register.bugs).toHaveLength(44);
+    expect(new Set(register.bugs.map((bug: { id: string }) => bug.id)).size).toBe(44);
     for (const bug of register.bugs) {
       expect(bug).toMatchObject({
         id: expect.stringMatching(/^PX-\d{3}$/),

@@ -4,9 +4,9 @@
   "syntheticEvidenceOnly": true,
   "summary": {
     "critical": 0,
-    "high": 8,
+    "high": 9,
     "medium": 35,
-    "fixed": 43,
+    "fixed": 44,
     "unresolved": 0
   },
   "bugs": [
@@ -568,6 +568,19 @@
       "rootCause": "A repository-wide child-process scan used the generic unit-test timeout despite normal filesystem and parallel CPU variance.",
       "fixCommit": "baf9e34666115ab313af62d71a11d7da0e4d0335",
       "regressionTest": "tests/bulk-export-governance.test.ts exact 60-surface governance result with a bounded 15-second budget"
+    },
+    {
+      "id": "PX-044",
+      "platform": "ANDROID_CI_EMULATOR",
+      "role": "RELEASE_ENGINEER",
+      "route": "packaged Android emulator acceptance gate",
+      "severity": "HIGH",
+      "reproduction": "Run the exact-head Android debug build and packaged-app emulator UX job on the GitHub-hosted Linux runner.",
+      "expected": "The gate resolves the installed Android SDK tools, boots the emulator, installs the APK and exercises portrait, landscape, tablet, lifecycle, deep-link and offline states.",
+      "actual": "The Android APK compiled, but the emulator step stopped at adb: command not found before the app could launch.",
+      "rootCause": "sdkmanager installed platform-tools under ANDROID_HOME, but that installation directory was not added to the step PATH and every device command relied on an unqualified adb executable.",
+      "fixCommit": "PENDING",
+      "regressionTest": "Exact-head CI Android debug build and emulator UX gate using the verified ANDROID_HOME/platform-tools/adb binary"
     }
   ]
 }
