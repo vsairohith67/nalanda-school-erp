@@ -159,7 +159,7 @@ services:
     restart: unless-stopped
     entrypoint: [/bin/sh, /opt/nalanda/minio-entrypoint.sh]
     user: "65534:65534"
-    command: [server, /data, --address, :9000, --console-address, :9001]
+    command: ["server", "/data", "--address", ":9000", "--console-address", ":9001"]
     secrets: [minio_root_access_key, minio_root_secret_key, minio_kms_secret_key]
     volumes:
       - object-data:/data

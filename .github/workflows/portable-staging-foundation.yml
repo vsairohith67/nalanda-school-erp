@@ -119,6 +119,12 @@ jobs:
         with: { node-version: 24.19.0, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm qa:portable-runtime
+      - name: Prepare isolated synthetic SQLite database for copied-database regressions
+        run: |
+          mkdir -p tmp/portable-ci
+          touch tmp/portable-ci/synthetic.db
+          DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          cp tmp/portable-ci/synthetic.db prisma/dev.db
       - run: pnpm security:resilience:acceptance && pnpm qa:offline-sync && pnpm qa:cross-platform-apps
       - if: always()
         run: rm -rf tmp/portable-staging
@@ -165,7 +171,7 @@ jobs:
           mkdir -p tmp/portable-ci
           touch tmp/portable-ci/synthetic.db
           DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm exec prisma migrate deploy --schema prisma/schema.prisma
-          RELEASE_CI_SYNTHETIC_OPT_IN=true DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          RELEASE_CI_SYNTHETIC_OPT_IN=true NALANDA_ENVIRONMENT=TEST NODE_ENV=development DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
           cp tmp/portable-ci/synthetic.db prisma/dev.db
       - name: Sequential full-scope acceptance
         env:
