@@ -4,9 +4,9 @@
   "syntheticEvidenceOnly": true,
   "summary": {
     "critical": 0,
-    "high": 9,
+    "high": 10,
     "medium": 35,
-    "fixed": 44,
+    "fixed": 45,
     "unresolved": 0
   },
   "bugs": [
@@ -581,6 +581,19 @@
       "rootCause": "sdkmanager installed platform-tools under ANDROID_HOME, but that installation directory was not added to the step PATH and every device command relied on an unqualified adb executable.",
       "fixCommit": "2d91722048bceb7ba66e953f4897a25e856813cc",
       "regressionTest": "Exact-head CI Android debug build and emulator UX gate using the verified ANDROID_HOME/platform-tools/adb binary"
+    },
+    {
+      "id": "PX-045",
+      "platform": "ANDROID_CI_EMULATOR",
+      "role": "RELEASE_ENGINEER",
+      "route": "packaged Android emulator acceptance gate",
+      "severity": "HIGH",
+      "reproduction": "Run the exact-head Android emulator job when the emulator does not become reachable promptly.",
+      "expected": "Every emulator and ADB operation has a bounded deadline and emits the emulator log when startup fails, so the mandatory gate reaches a diagnostic terminal result.",
+      "actual": "The packaged-app exercise remained nonterminal for more than 18 minutes because adb wait-for-device and subsequent ADB operations had no command-level deadline.",
+      "rootCause": "The workflow relied only on the broad 80-minute job timeout; a failed emulator launch or stuck ADB command could provide no bounded failure or useful startup diagnostics.",
+      "fixCommit": "PENDING",
+      "regressionTest": "Exact-head Android emulator gate with a 240-second device deadline, 60-second ADB operation bounds and emulator-log output on startup failure"
     }
   ]
 }

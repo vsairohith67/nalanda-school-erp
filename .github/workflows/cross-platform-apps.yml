@@ -184,53 +184,58 @@ jobs:
           test -x "$ADB"
           echo no | "$AVDMANAGER" create avd --force --name px1a_phone --package "system-images;android-35;google_apis;x86_64" --device "pixel_6"
           if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
-          nohup "$ANDROID_HOME/emulator/emulator" -avd px1a_phone -no-window -noaudio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > "$RUNNER_TEMP/px1a-emulator.log" 2>&1 &
-          "$ADB" wait-for-device
+          EMULATOR_LOG="$RUNNER_TEMP/px1a-emulator.log"
+          nohup "$ANDROID_HOME/emulator/emulator" -avd px1a_phone -no-window -noaudio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > "$EMULATOR_LOG" 2>&1 &
+          if ! timeout 240 "$ADB" wait-for-device; then
+            cat "$EMULATOR_LOG"
+            exit 1
+          fi
+          adb_cmd() { timeout 60 "$ADB" "$@"; }
           for attempt in $(seq 1 90); do
-            if [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then break; fi
-            if [ "$attempt" = "90" ]; then cat "$RUNNER_TEMP/px1a-emulator.log"; exit 1; fi
+            if [ "$(adb_cmd shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then break; fi
+            if [ "$attempt" = "90" ]; then cat "$EMULATOR_LOG"; exit 1; fi
             sleep 2
           done
           APK_PATH="$(find apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk -type f -name '*.apk' | head -n 1)"
           test -n "$APK_PATH"
-          "$ADB" install -r "$APK_PATH"
+          adb_cmd install -r "$APK_PATH"
           PACKAGE="com.nalandaps.erp"
-          "$ADB" shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
+          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
           sleep 4
-          "$ADB" shell uiautomator dump /sdcard/px1a-window.xml
-          "$ADB" pull /sdcard/px1a-window.xml tmp/platform-review/android-window.xml
+          adb_cmd shell uiautomator dump /sdcard/px1a-window.xml
+          adb_cmd pull /sdcard/px1a-window.xml tmp/platform-review/android-window.xml
           grep -Eq 'Nalanda|Welcome back|App PIN' tmp/platform-review/android-window.xml
-          "$ADB" exec-out screencap -p > tmp/platform-review/android-synthetic-phone-portrait.png
-          "$ADB" shell input tap 540 900
+          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-phone-portrait.png
+          adb_cmd shell input tap 540 900
           sleep 1
-          "$ADB" exec-out screencap -p > tmp/platform-review/android-synthetic-soft-keyboard.png
-          "$ADB" shell settings put system accelerometer_rotation 0
-          "$ADB" shell settings put system user_rotation 1
+          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-soft-keyboard.png
+          adb_cmd shell settings put system accelerometer_rotation 0
+          adb_cmd shell settings put system user_rotation 1
           sleep 2
-          "$ADB" exec-out screencap -p > tmp/platform-review/android-synthetic-landscape.png
-          "$ADB" shell input keyevent KEYCODE_HOME
-          "$ADB" shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          "$ADB" shell input keyevent KEYCODE_BACK
-          "$ADB" shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          "$ADB" shell am force-stop "$PACKAGE"
-          "$ADB" shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          "$ADB" shell am start -W -a android.intent.action.VIEW -d 'nalandaps-erp://auth/callback?code=invalid&state=invalid&request_id=invalid'
-          "$ADB" shell wm size 1280x800
-          "$ADB" shell wm density 160
-          "$ADB" shell settings put system user_rotation 0
+          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-landscape.png
+          adb_cmd shell input keyevent KEYCODE_HOME
+          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
+          adb_cmd shell input keyevent KEYCODE_BACK
+          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
+          adb_cmd shell am force-stop "$PACKAGE"
+          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
+          adb_cmd shell am start -W -a android.intent.action.VIEW -d 'nalandaps-erp://auth/callback?code=invalid&state=invalid&request_id=invalid'
+          adb_cmd shell wm size 1280x800
+          adb_cmd shell wm density 160
+          adb_cmd shell settings put system user_rotation 0
           sleep 2
-          "$ADB" exec-out screencap -p > tmp/platform-review/android-synthetic-tablet.png
-          "$ADB" shell svc wifi disable
-          "$ADB" shell svc data disable || true
-          "$ADB" shell am force-stop "$PACKAGE"
-          "$ADB" shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
+          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-tablet.png
+          adb_cmd shell svc wifi disable
+          adb_cmd shell svc data disable || true
+          adb_cmd shell am force-stop "$PACKAGE"
+          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
           sleep 2
-          "$ADB" exec-out screencap -p > tmp/platform-review/android-synthetic-offline.png
-          "$ADB" shell svc wifi enable
-          "$ADB" shell svc data enable || true
-          "$ADB" shell wm size reset
-          "$ADB" shell wm density reset
-          "$ADB" logcat -d -t 800 AndroidRuntime:E '*:S' > tmp/platform-review/android-runtime-errors.txt || true
+          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-offline.png
+          adb_cmd shell svc wifi enable
+          adb_cmd shell svc data enable || true
+          adb_cmd shell wm size reset
+          adb_cmd shell wm density reset
+          adb_cmd logcat -d -t 800 AndroidRuntime:E '*:S' > tmp/platform-review/android-runtime-errors.txt || true
           if grep -F "$PACKAGE" tmp/platform-review/android-runtime-errors.txt; then cat tmp/platform-review/android-runtime-errors.txt; exit 1; fi
           printf '%s\n' 'SYNTHETIC UX EVIDENCE ONLY - NO REAL RECORDS' > tmp/platform-review/ANDROID-SYNTHETIC.txt
       - name: Write Android package checksums
