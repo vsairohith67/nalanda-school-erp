@@ -1,7 +1,7 @@
 [package]
 name = "nalanda-cross-platform"
 version = "0.1.0"
-description = "Default-off secure Nalanda Public School ERP app foundation"
+description = "Nalanda School - Secure School ERP & Operations Platform"
 authors = ["Nalanda Public School"]
 edition = "2021"
 rust-version = "1.77.2"

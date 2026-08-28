@@ -2,7 +2,7 @@
 REM Create a timestamped JSON backup in the project's backups folder.
 REM Copy completed backups to a separate USB drive or protected folder.
 cd /d "%~dp0.."
-echo Creating Nalanda Fee Control backup...
+echo Creating Nalanda School Management System backup...
 call pnpm.cmd backup
 echo.
 if errorlevel 1 (

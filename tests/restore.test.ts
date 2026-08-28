@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseAndValidateBackup, paymentFingerprint, type RestoreRecord } from "../lib/restore";
+import { PRODUCT_BRAND } from "../config/product-brand";
 
 function validBackup(): {
   metadata: Record<string, unknown>;
@@ -31,6 +32,13 @@ function validBackup(): {
 }
 
 describe("backup restore validation", () => {
+  it("accepts the current typed product name while retaining legacy backup compatibility", () => {
+    const current = validBackup();
+    current.metadata.appName = PRODUCT_BRAND.productName;
+    expect(parseAndValidateBackup(current).metadata.appName).toBe(PRODUCT_BRAND.productName);
+    expect(parseAndValidateBackup(validBackup()).metadata.appName).toBe("Nalanda Fee Control");
+  });
+
   it("rejects invalid JSON", () => {
     expect(() => parseAndValidateBackup("{not-json")).toThrow("Invalid backup JSON");
   });

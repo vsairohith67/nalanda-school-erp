@@ -30,8 +30,9 @@ import { emptyParentMeetingBackup, loadParentMeetingBackup, parentMeetingSchemaA
 import { emptyOfflineSyncBackup, loadOfflineSyncBackup, offlineSyncSchemaAvailable, OFFLINE_SYNC_BACKUP_KEYS, validateOfflineSyncBackupRows, type OfflineSyncBackup, type OfflineSyncBackupKey } from "./offline-sync/backup";
 import { emptyNativeAppBackup, loadNativeAppBackup, nativeAppSchemaAvailable, NATIVE_APP_BACKUP_KEYS, validateNativeAppBackupRows, type NativeAppBackup, type NativeAppBackupKey } from "./native-app/backup";
 import { databaseColumnExists, databaseTableExists } from "./database-capabilities";
+import { PRODUCT_BRAND } from "../config/product-brand";
 
-const APP_NAME = "Nalanda Fee Control";
+const APP_NAME = PRODUCT_BRAND.productName;
 
 type BackupClient = Pick<
   PrismaClient,
@@ -1566,7 +1567,7 @@ export async function generateFullBackup(
 export function formatBackupFilename(date = new Date()) {
   const pad = (value: number) => String(value).padStart(2, "0");
   return [
-    "nalanda-fee-control-backup",
+    PRODUCT_BRAND.backupFilenamePrefix,
     date.getFullYear(),
     pad(date.getMonth() + 1),
     pad(date.getDate()),

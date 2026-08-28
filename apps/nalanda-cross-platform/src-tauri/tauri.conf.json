@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Nalanda Public School ERP",
+  "productName": "Nalanda School",
   "version": "0.1.0",
   "identifier": "com.nalandaps.erp",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Nalanda Public School ERP",
+        "title": "Nalanda School Management System",
         "width": 1280,
         "height": 820,
         "minWidth": 360,
@@ -30,9 +30,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "category": "Finance",
-    "shortDescription": "Secure ERP workspace for Nalanda Public School",
-    "longDescription": "Default-off offline finance draft and governed online ERP workspace.",
+    "category": "Education",
+    "shortDescription": "Secure School ERP & Operations Platform",
+    "longDescription": "Nalanda School Management System provides a default-off encrypted offline finance-draft workspace and governed online school operations access.",
     "windows": {
       "nsis": { "installMode": "currentUser" },
       "webviewInstallMode": { "type": "embedBootstrapper", "silent": true }

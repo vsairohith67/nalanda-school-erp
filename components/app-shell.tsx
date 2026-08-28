@@ -49,8 +49,9 @@ import { isPublicWebsitePath } from "@/lib/public-website-routing";
 import { groupedVisibleNavigationItems, visibleNavigationItems, type NavigationIcon, type NavigationItem } from "@/lib/access-rules";
 import { roleDashboardTitle } from "@/lib/role-presentation";
 import type { OptionalOperationsFeatureCode } from "@/lib/optional-operations-feature-flags";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
-const OFFICIAL_LOGO_PATH = "/nalanda-logo-transparent.png";
+const OFFICIAL_LOGO_PATH = PRODUCT_BRAND.logoPath;
 
 const icons: Record<NavigationIcon, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -95,11 +96,12 @@ function ShellBrand({ settings }: { settings: SchoolSettingsValue }) {
         <div className="brand-logo">
           <Image src={OFFICIAL_LOGO_PATH} alt="" width={54} height={54} priority />
         </div>
-        <div className="brand-name" aria-label={settings.schoolName}>
-          <strong>{settings.schoolName}</strong>
+        <div className="brand-name full-school-name" aria-label={PRODUCT_BRAND.schoolName}>
+          <strong>{PRODUCT_BRAND.schoolName}</strong>
         </div>
       </div>
-      <span className="brand-product">Education Management System</span>
+      <span className="brand-product">{PRODUCT_BRAND.productName}</span>
+      <small className="brand-descriptor">{PRODUCT_BRAND.technicalDescriptor}</small>
     </div>
   );
 }
@@ -154,14 +156,14 @@ function ShellHeader({
         >
           <Menu size={20} aria-hidden />
         </button>
-        <Link className="mobile-brand-mark" href={defaultPathForRole(user.role)} aria-label={`${settings.schoolName} home`}>
+        <Link className="mobile-brand-mark" href={defaultPathForRole(user.role)} aria-label={`${PRODUCT_BRAND.productName} home`}>
           <Image src={OFFICIAL_LOGO_PATH} alt="" width={38} height={38} priority />
         </Link>
       </div>
       <div className="topbar-identity">
         <Image src={OFFICIAL_LOGO_PATH} alt="" width={40} height={40} priority />
         <span>
-          <strong>{settings.schoolName}</strong>
+          <strong className="full-school-name">{PRODUCT_BRAND.schoolName}</strong>
           <small>{roleDashboardTitle(user.role)}</small>
         </span>
       </div>
@@ -414,7 +416,6 @@ export function AppShell({
           {user.role === "TEACHER" && permissions.includes("MANAGE_OWN_WHATSAPP_CONSENT") && permissions.includes("MANAGE_OWN_SMS_EMAIL_CONSENT") ? <Link href="/teacher/communication-preferences" className={pathname === "/teacher/communication-preferences" ? "active" : ""} aria-current={pathname === "/teacher/communication-preferences" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><Settings size={17} aria-hidden /><span>Communication Preferences</span></Link> : null}
           {user.role === "TEACHER" ? <Link href="/teacher/id-card" className={pathname === "/teacher/id-card" ? "active" : ""} aria-current={pathname === "/teacher/id-card" ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><ClipboardList size={17} aria-hidden /><span>My ID Card</span></Link> : null}
           {user.role === "TEACHER" && permissions.includes("VIEW_OWN_EXAM_MARKS") ? <Link href="/teacher/academic-reports" className={pathname.startsWith("/teacher/academic-reports") ? "active" : ""} aria-current={pathname.startsWith("/teacher/academic-reports") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><ClipboardCheck size={17} aria-hidden /><span>Academic Reports</span></Link> : null}
-          {user.role === "TEACHER" && permissions.includes("VIEW_OWN_EXAM_ASSIGNMENTS") ? <Link href="/teacher/exam-assignments" className={pathname.startsWith("/teacher/exam-assignments") ? "active" : ""} aria-current={pathname.startsWith("/teacher/exam-assignments") ? "page" : undefined} onClick={() => setMobileNavOpen(false)}><ClipboardCheck size={17} aria-hidden /><span>Exam Assignments</span></Link> : null}
           {navGroups.map((group) => (
             <section className="nav-group" aria-labelledby={`nav-group-${group.id}`} key={group.id}>
               <h2 id={`nav-group-${group.id}`}>{group.label}</h2>

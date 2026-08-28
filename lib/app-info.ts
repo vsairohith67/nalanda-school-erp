@@ -1,7 +1,8 @@
 import packageJson from "../package.json";
 import { databaseProviderLabel } from "@/lib/database-provider";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
-export const APP_NAME = "Nalanda Fee Control";
+export const APP_NAME = PRODUCT_BRAND.productName;
 export const DATABASE_PROVIDER = "SQLite";
 
 export type AppInfo = {

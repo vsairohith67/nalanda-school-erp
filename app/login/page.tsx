@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { defaultPathForRole } from "@/lib/navigation";
 import { prisma } from "@/lib/prisma";
 import { isFirstRunRequired } from "@/lib/setup";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
 export default async function LoginPage() {
   if (await isFirstRunRequired(prisma)) redirect("/setup");
@@ -19,23 +20,23 @@ export default async function LoginPage() {
       <section className="login-panel" aria-labelledby="login-heading">
         <div className="login-brand-panel">
           <div className="login-identity">
-            <Image className="login-logo" src="/nalanda-logo-transparent.png" alt="" width={72} height={72} priority />
+            <Image className="login-logo" src={PRODUCT_BRAND.logoPath} alt="" width={72} height={72} priority />
             <div>
-              <p className="login-school-name">Nalanda Public School</p>
-              <p className="login-system-name">Nalanda Education Management System</p>
+              <p className="login-school-name full-school-name">{PRODUCT_BRAND.schoolName}</p>
+              <p className="login-system-name">{PRODUCT_BRAND.productName}</p>
             </div>
           </div>
           <div className="login-platform-copy">
             <span>Secure school portal</span>
-            <h1>Unified School Management Platform</h1>
-            <p>One protected workspace for authorised school operations, communication, learning, and administration.</p>
+            <h1>{PRODUCT_BRAND.productName}</h1>
+            <p>{PRODUCT_BRAND.technicalDescriptor}. One protected workspace for authorised school operations, communication, learning, and administration.</p>
           </div>
           <p className="login-security-note">Private access for authorised users only.</p>
         </div>
         <div className="login-form-panel">
           <div className="login-copy">
             <span className="login-kicker">Welcome back</span>
-            <h2 id="login-heading">Sign in to Nalanda</h2>
+            <h2 id="login-heading">Sign in to {PRODUCT_BRAND.nativeShortName}</h2>
             <p>Use your school-issued username or a verified login identifier and password.</p>
           </div>
           <Suspense fallback={<div className="login-form" role="status">Loading secure sign-in…</div>}>

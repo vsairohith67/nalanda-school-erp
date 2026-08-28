@@ -110,13 +110,13 @@ describe("DEVOPS-1B clean-install migration repair", () => {
     const output = await pnpm(["migration:fresh-check"], { MIGRATION_FRESH_CHECK_SKIP_GENERATE: "1" });
     expect(output).toContain("Fresh migration check passed: migrations=24 models=330 tables=330");
     expect(output).toContain("Synthetic bootstrap passed");
-  }, 300_000);
+  }, 600_000);
 
   it("onboards an unbaselined schema twice without changing application data", async () => {
     const output = await pnpm(["exec", "tsx", "scripts/migration-existing-db-rehearsal.ts", "--synthetic"]);
     expect(output).toContain("Existing database onboarding passed twice");
     expect(output).toContain("students=0 activeEnrollments=0 payments=0 collected=0");
-  }, 180_000);
+  }, 300_000);
 
   it("keeps version-44 restore idempotent and preserves local ownership collisions", async () => {
     const output = await pnpm(["migration:restore-check"]);

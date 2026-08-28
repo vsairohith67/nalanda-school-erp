@@ -32,8 +32,10 @@ import { SAFE_EXIT_BACKUP_KEYS, validateSafeExitBackupRows, type SafeExitBackup,
 import { FAMILY_COLLECTION_BACKUP_KEYS, validateFamilyCollectionBackupRows, type FamilyCollectionBackup } from "@/lib/family-collection-backup";
 import { validateTechnicalOperationsBackup, type TechnicalOperationsBackup } from "@/lib/technical-operations-backup";
 import { OPTIONAL_OPERATIONS_BACKUP_KEYS, validateOptionalOperationsBackupRows, type OptionalOperationsBackup, type OptionalOperationsBackupKey } from "@/lib/optional-operations-backup";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
-const APP_NAME = "Nalanda Fee Control";
+const LEGACY_BACKUP_APP_NAME = "Nalanda Fee Control";
+const ACCEPTED_BACKUP_APP_NAMES = new Set([PRODUCT_BRAND.productName, LEGACY_BACKUP_APP_NAME]);
 const MAX_ENTITY_ROWS = 100_000;
 
 const TOP_LEVEL_KEYS = new Set([
@@ -795,7 +797,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   const metadata = requireRecord(root.metadata, "Backup metadata");
   rejectUnknownKeys(metadata, METADATA_KEYS, "Backup metadata");
   const appName = requireString(metadata.appName, "metadata.appName");
-  if (appName !== APP_NAME) {
+  if (!ACCEPTED_BACKUP_APP_NAMES.has(appName)) {
     throw new Error(`Unsupported backup appName: ${appName}`);
   }
   if (

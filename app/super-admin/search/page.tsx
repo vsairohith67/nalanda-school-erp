@@ -4,6 +4,7 @@ import { UniversalSearchWorkspace } from "@/components/universal-search-workspac
 import { PageHeader, PageShell } from "@/components/ui";
 import { requireRolePermission } from "@/lib/auth";
 import { UNIVERSAL_SEARCH_SOURCES } from "@/lib/universal-search-contract";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function SuperAdminSearchPage() {
     <PageShell className="universal-search-page">
       <PageHeader
         title="Search"
-        description="Deterministic, permission-scoped search across authorised Nalanda ERP records. Search finds and navigates; it never changes a record."
+        description={`Deterministic, permission-scoped search across authorised ${PRODUCT_BRAND.productName} records. Search finds and navigates; it never changes a record.`}
         action={<span className="command-read-only"><LockKeyhole size={17} aria-hidden /> Private · read-only</span>}
       />
       <UniversalSearchWorkspace sources={UNIVERSAL_SEARCH_SOURCES.map((source) => ({ ...source }))} />

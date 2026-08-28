@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePwa } from "@/components/pwa-runtime";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
 const INSTALL_DISMISSAL_KEY = "nalanda-pwa-install-dismissed-at";
 
@@ -53,13 +54,13 @@ export function PwaInstallManager() {
       <section className="card card-pad">
         <h3>Installation status</h3>
         {pwa.standalone || pwa.installed ? (
-          <p className="notice success" role="status">Nalanda ERP is running in an installed or standalone display.</p>
+          <p className="notice success" role="status">{PRODUCT_BRAND.productName} is running in an installed or standalone display.</p>
         ) : (
-          <p className="notice">Nalanda ERP is currently open in a browser tab.</p>
+          <p className="notice">{PRODUCT_BRAND.productName} is currently open in a browser tab.</p>
         )}
         {!dismissed && !pwa.installed && pwa.installPrompt ? (
           <div className="page-actions">
-            <button type="button" onClick={() => void install()}>Install Nalanda ERP</button>
+            <button type="button" onClick={() => void install()}>Install {PRODUCT_BRAND.nativeShortName}</button>
             <button type="button" className="secondary" onClick={dismiss}>Not Now</button>
           </div>
         ) : null}
@@ -80,12 +81,12 @@ export function PwaInstallManager() {
             </ol>
           ) : platform === "android" ? (
             <ol>
-              <li>Use the Install Nalanda ERP button when Chrome or another supported browser offers it.</li>
+              <li>Use the Install {PRODUCT_BRAND.nativeShortName} button when Chrome or another supported browser offers it.</li>
               <li>If no button appears, open the browser menu and look for Install app or Add to Home screen.</li>
             </ol>
           ) : (
             <ol>
-              <li>Use the Install Nalanda ERP button when your browser reports that the app is installable.</li>
+              <li>Use the Install {PRODUCT_BRAND.nativeShortName} button when your browser reports that the app is installable.</li>
               <li>Otherwise, use the browser menu or address-bar install control if available.</li>
             </ol>
           )}
@@ -110,4 +111,3 @@ export function PwaInstallManager() {
     </div>
   );
 }
-

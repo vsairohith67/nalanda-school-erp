@@ -41,8 +41,8 @@ function pngDimensions(path: string) {
 describe("PWA manifest and icon assets", () => {
   it("uses the required identity, launch scope and standalone display", () => {
     expect(buildPwaManifest()).toMatchObject({
-      name: "Nalanda Public School ERP",
-      short_name: "Nalanda ERP",
+      name: "Nalanda School Management System",
+      short_name: "Nalanda School",
       start_url: "/",
       scope: "/",
       display: "standalone",

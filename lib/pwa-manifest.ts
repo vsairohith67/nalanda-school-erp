@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
 export const PWA_ICON_PATHS = [
   "/icons/icon-192.png",
@@ -11,9 +12,9 @@ export const PWA_ICON_PATHS = [
 export function buildPwaManifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Nalanda Public School ERP",
-    short_name: "Nalanda ERP",
-    description: "Secure school operations, Parent and Teacher portal",
+    name: PRODUCT_BRAND.productName,
+    short_name: PRODUCT_BRAND.nativeShortName,
+    description: PRODUCT_BRAND.technicalDescriptor,
     start_url: "/",
     scope: "/",
     display: "standalone",
@@ -31,4 +32,3 @@ export function buildPwaManifest(): MetadataRoute.Manifest {
     ]
   };
 }
-

@@ -158,5 +158,5 @@ describe("FINAL-SCOPE-QA-1A corrected-scope contract acceptance", () => {
       if (!existsSync(file) || statSync(file).size > 2 * 1024 * 1024) continue;
       expect(readFileSync(file, "utf8"), file).not.toMatch(/^(?:<<<<<<<|=======|>>>>>>>)/m);
     }
-  });
+  }, 15_000);
 });

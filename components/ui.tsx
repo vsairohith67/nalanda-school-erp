@@ -1,4 +1,5 @@
 import { money } from "@/lib/format";
+import { AlertTriangle, CheckCircle2, CircleDashed, Clock3, LockKeyhole, OctagonX, WifiOff } from "lucide-react";
 
 export function PageShell({
   children,
@@ -22,7 +23,7 @@ export function PageHeader({
   return (
     <div className="page-header">
       <div>
-        <h2>{title}</h2>
+        <h1>{title}</h1>
         {description ? <p>{description}</p> : null}
       </div>
       {action}
@@ -69,15 +70,37 @@ export function StatCard({ label, value }: { label: string; value: string | numb
 }
 
 export function StatusBadge({ status }: { status: string }) {
-  const className =
-    status === "Fully Paid" || status === "Good" || status === "COMPLETED" || status === "Completed"
-      ? "badge success"
-      : status === "Defaulter" || status === "Needs Review" || status === "Missing" || status === "Critical" || status === "FAILED" || status === "Failed"
-        ? "badge danger"
-        : status === "Partial Paid" || status === "Split Payment" || status === "Warning" || status === "PARTIAL" || status === "DRY_RUN" || status === "Partial" || status === "Dry Run"
-          ? "badge warn"
-          : "badge";
-  return <span className={className}>{status.replaceAll("_", " ")}</span>;
+  const normalized = status.trim().replaceAll(" ", "_").toUpperCase();
+  const label = status.replaceAll("_", " ");
+  const tone = /COMPLETED|COMPLETE|SUCCESS|ACTIVE|APPROVED|ACCEPTED|SYNCED|GOOD|FULLY_PAID|HEALTHY|AVAILABLE/.test(normalized)
+    ? "success"
+    : /FAILED|FAILURE|ERROR|CRITICAL|MISSING|DEFAULTER|CONFLICT/.test(normalized)
+      ? "error"
+      : /REJECTED|DENIED|CANCELLED|REVOKED/.test(normalized)
+        ? "rejected"
+        : /LOCKED/.test(normalized)
+          ? "locked"
+          : /OFFLINE|SERVER_UNAVAILABLE/.test(normalized)
+            ? "offline"
+            : /DEGRADED|WARNING|WARN|PARTIAL|NEEDS_REVIEW|DRY_RUN|STALE/.test(normalized)
+              ? "warning"
+              : /PENDING|QUEUED|SYNCING|SUBMITTED|PROCESSING/.test(normalized)
+                ? "pending"
+                : /DRAFT|LOCAL_ONLY|SAVED_LOCALLY/.test(normalized)
+                  ? "draft"
+                  : /DISABLED|INACTIVE/.test(normalized)
+                    ? "disabled"
+                    : /UNAVAILABLE|EXPIRED/.test(normalized)
+                      ? "unavailable"
+                      : "draft";
+  const Icon = tone === "success" ? CheckCircle2
+    : tone === "error" || tone === "rejected" ? OctagonX
+      : tone === "warning" ? AlertTriangle
+        : tone === "pending" ? Clock3
+          : tone === "locked" || tone === "disabled" ? LockKeyhole
+            : tone === "offline" || tone === "unavailable" ? WifiOff
+              : CircleDashed;
+  return <span className={`status-badge status-${tone}`} aria-label={`Status: ${label}`}><Icon aria-hidden />{label}</span>;
 }
 
 export function EmptyState({

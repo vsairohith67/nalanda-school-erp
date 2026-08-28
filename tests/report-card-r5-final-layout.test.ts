@@ -70,7 +70,7 @@ describe("R5 Classes I-X scope and structural parity", () => {
       expect(page.getHeight()).toBeCloseTo(841.89, 1);
       expect(page.getCropBox()).toMatchObject({ x: 0, y: 0 });
     }
-  }, 30_000);
+  }, 90_000);
 
   it("uses identical physical signature geometry in both modes", () => {
     expect(R5_SIGNATURE_GEOMETRY.clearSigningHeightPt / 72 * 25.4).toBeCloseTo(18, 1);

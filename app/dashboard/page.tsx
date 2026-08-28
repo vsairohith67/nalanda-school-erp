@@ -90,13 +90,17 @@ export default async function DashboardPage() {
     ,dashboard.cashControl ? { label: "Expected cash on hand", value: dashboard.cashControl.expectedCashOnHand == null ? "Not opened" : moneyExact(dashboard.cashControl.expectedCashOnHand), detail: `Today's cash book: ${dashboard.cashControl.todayStatus.replaceAll("_", " ")}`, tone: dashboard.cashControl.todayStatus === "LOCKED" ? "success" : "warn", icon: Banknote } : null
     ,dashboard.cashControl ? { label: "Pending cash-book approvals", value: String(dashboard.cashControl.pendingApprovals), detail: dashboard.cashControl.unexplainedVariance ? "Unexplained variance warning" : "Submitted cash days", tone: dashboard.cashControl.pendingApprovals || dashboard.cashControl.unexplainedVariance ? "warn" : "success", icon: ShieldCheck } : null
   ].filter(Boolean) as Array<{ label: string; value: string; detail: string; tone: string; icon: LucideIcon }>;
+  const tonePriority: Record<string, number> = { warn: 0, danger: 0, success: 1, teal: 2, blue: 3 };
+  const prioritisedMetricCards = [...metricCards]
+    .sort((left, right) => (tonePriority[left.tone] ?? 9) - (tonePriority[right.tone] ?? 9))
+    .slice(0, user.role === "SUPER_ADMIN" ? 4 : 6);
 
   return (
     <PageShell className="dashboard-page">
       <section className="dashboard-welcome" aria-labelledby="dashboard-heading">
         <div className="dashboard-welcome-copy">
           <span className="dashboard-eyebrow">{roleDashboardTitle(user.role)}</span>
-          <h2 id="dashboard-heading">Good {currentSchoolHour < 12 ? "morning" : currentSchoolHour < 17 ? "afternoon" : "evening"}, {user.name}</h2>
+          <h1 id="dashboard-heading">Good {currentSchoolHour < 12 ? "morning" : currentSchoolHour < 17 ? "afternoon" : "evening"}, {user.name}</h1>
           <div className="dashboard-context">
             <span>{settings.schoolName}</span>
             <span>Academic Year {settings.academicYear}</span>
@@ -120,9 +124,11 @@ export default async function DashboardPage() {
         </div>
       </section>
 
+      {user.role === "SUPER_ADMIN" ? <section className="dashboard-section" aria-labelledby="super-admin-work-heading"><div className="dashboard-section-heading compact"><div><h2 id="super-admin-work-heading">Super Admin current work</h2><p>Primary governance workspaces stay prominent; module detail remains in its owner.</p></div></div><div className="dashboard-actions"><Link className="dashboard-action" href="/super-admin/command-center"><ShieldCheck size={20} aria-hidden /><span>Command Center</span><span aria-hidden>→</span></Link><Link className="dashboard-action" href="/super-admin/my-work"><CalendarClock size={20} aria-hidden /><span>My Work</span><span aria-hidden>→</span></Link><Link className="dashboard-action" href="/super-admin/search"><Users size={20} aria-hidden /><span>Universal Search</span><span aria-hidden>→</span></Link><Link className="dashboard-action" href="/super-admin/ai"><ShieldCheck size={20} aria-hidden /><span>Smart AI</span><span aria-hidden>→</span></Link><Link className="dashboard-action" href="/technical-operations"><DatabaseBackup size={20} aria-hidden /><span>System & deployment state</span><span aria-hidden>→</span></Link><Link className="dashboard-action" href="/release-operations"><ShieldCheck size={20} aria-hidden /><span>Security, backup & feature flags</span><span aria-hidden>→</span></Link></div></section> : null}
+
       <section className="dashboard-section" aria-labelledby="today-heading">
         <div className="dashboard-section-heading">
-          <div><h2 id="today-heading">Today at a glance</h2><p>Live operational totals from existing school records.</p></div>
+          <div><h2 id="today-heading">Current work and urgent exceptions</h2><p>Prioritised live totals from existing school records. Full reports stay in their owning modules.</p></div>
         </div>
         <div className="dashboard-metrics">
           {dashboard.finance ? (
@@ -135,7 +141,7 @@ export default async function DashboardPage() {
             </Link>
           ) : null}
           <div className="dashboard-metric-grid">
-            {metricCards.map((metric) => {
+            {prioritisedMetricCards.map((metric) => {
               const Icon = metric.icon;
               return (
                 <article className={`dashboard-metric tone-${metric.tone}`} key={metric.label}>
@@ -144,7 +150,7 @@ export default async function DashboardPage() {
                 </article>
               );
             })}
-            {!dashboard.finance && !metricCards.length ? <div className="dashboard-empty">No dashboard metrics are available for this role yet.</div> : null}
+            {!dashboard.finance && !prioritisedMetricCards.length ? <div className="dashboard-empty">No dashboard metrics are available for this role yet.</div> : null}
           </div>
         </div>
       </section>

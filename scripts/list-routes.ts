@@ -21,7 +21,7 @@ function walk(dir: string): string[] {
 function routeFromFile(file: string): RouteEntry | null {
   const relative = path.relative(appDir, file).replaceAll(path.sep, "/");
   if (!relative.endsWith("/page.tsx") && !relative.endsWith("/route.ts")) return null;
-  const isApi = relative.startsWith("api/");
+  const isApi = /(^|\/)route\.ts$/.test(relative);
   const routePath = relative
     .replace(/\/page\.tsx$/, "")
     .replace(/\/route\.ts$/, "")

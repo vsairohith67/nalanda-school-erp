@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LAST_BACKUP_KEY } from "@/lib/client-storage";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 
 export function BackupPanel({ compact = false }: { compact?: boolean }) {
   const [lastBackup, setLastBackup] = useState<string | null>(null);
@@ -75,7 +76,7 @@ export function BackupPanel({ compact = false }: { compact?: boolean }) {
 
 function getDownloadFilename(contentDisposition: string | null) {
   const match = contentDisposition?.match(/filename="?([^";]+)"?/i);
-  return match?.[1] ?? "nalanda-fee-control-backup.json";
+  return match?.[1] ?? `${PRODUCT_BRAND.backupFilenamePrefix}.json`;
 }
 
 function formatLastBackup(value: string) {

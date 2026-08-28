@@ -17,6 +17,7 @@ import type {
   SafePublishedReportSnapshot
 } from "@/lib/report-publication-types";
 import { reportTemplateFamilyLabel } from "@/lib/report-publication-types";
+import { PRODUCT_BRAND } from "@/config/product-brand";
 import {
   R5_CHART_LABEL_CLEARANCE_PT,
   R5_CHART_NUMERIC_LABEL_FONT_SIZE,
@@ -64,7 +65,7 @@ export async function renderReportPdf(
   document.setAuthor(report.school.name);
   document.setSubject("Governed issued school report card");
   document.setProducer("Nalanda governed report publication");
-  document.setCreator("Nalanda Fee Control");
+  document.setCreator(PRODUCT_BRAND.productName);
   document.setCreationDate(new Date("2000-01-01T00:00:00.000Z"));
   document.setModificationDate(new Date("2000-01-01T00:00:00.000Z"));
   const fonts = await embeddedFonts(document);

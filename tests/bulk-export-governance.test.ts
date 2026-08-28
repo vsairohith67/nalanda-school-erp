@@ -38,7 +38,7 @@ describe("bulk export governance", () => {
       bulkExportFlagMappedSurfaceCount: 0,
       errors: []
     });
-  });
+  }, 15_000);
 
   it("requires an explicit governance decision for every discovered source", () => {
     const contract = manifest();

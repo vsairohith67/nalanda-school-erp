@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./product-experience.css";
 import { AppShell } from "@/components/app-shell";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getCurrentUser, getCurrentUserEffectivePermissions } from "@/lib/auth";
@@ -17,6 +18,8 @@ import { SecurityDialogProvider } from "@/components/security-dialog-provider";
 import { headers } from "next/headers";
 import { parentMeetingsEnabled } from "@/lib/parent-meeting-feature";
 import { isOfflineSyncEnabled } from "@/lib/offline-sync/feature-flag";
+import { PRODUCT_BRAND } from "@/config/product-brand";
+import { ProductExperienceRuntime } from "@/components/product-experience-runtime";
 
 // The shared layout resolves the authenticated user and role permissions.
 // Force per-request rendering so a previously rendered private page can never
@@ -24,8 +27,8 @@ import { isOfflineSyncEnabled } from "@/lib/offline-sync/feature-flag";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Nalanda Public School ERP",
-  description: "Secure school operations, Parent and Teacher portal",
+  title: PRODUCT_BRAND.productName,
+  description: PRODUCT_BRAND.technicalDescriptor,
   robots: { index: false, follow: false },
   manifest: "/manifest.webmanifest",
   icons: {
@@ -47,17 +50,19 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const requestHeaders = await headers();
   const staging = process.env.NALANDA_ENVIRONMENT?.toUpperCase() === "STAGING";
+  const syntheticReview = process.env.NALANDA_SYNTHETIC_REVIEW === "true";
+  const syntheticBanner = staging || syntheticReview;
   if (requestHeaders.get("x-nalanda-maintenance-page") === "1") {
     return (
       <html lang="en" suppressHydrationWarning>
-        <body>{staging ? <div className="staging-environment-banner" role="status">STAGING | Synthetic data only | No live providers</div> : null}{children}</body>
+        <body>{syntheticBanner ? <div className="staging-environment-banner" role="status">SYNTHETIC REVIEW · No real records · No live providers</div> : null}{children}</body>
       </html>
     );
   }
   if (requestHeaders.get("x-nalanda-public-website") === "1") {
     return (
       <html lang="en" suppressHydrationWarning>
-        <body className="public-website-body">{staging ? <div className="staging-environment-banner" role="status">STAGING · Synthetic data only · No live providers</div> : null}{children}</body>
+        <body className="public-website-body">{syntheticBanner ? <div className="staging-environment-banner" role="status">SYNTHETIC REVIEW · No real records · No live providers</div> : null}{children}</body>
       </html>
     );
   }
@@ -68,7 +73,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     return (
       <html lang="en" suppressHydrationWarning>
         <body>
-          {staging ? <div className="staging-environment-banner" role="status">STAGING · Synthetic data only · No live providers</div> : null}
+          {syntheticBanner ? <div className="staging-environment-banner" role="status">SYNTHETIC REVIEW · No real records · No live providers</div> : null}
           <ThemeProvider>
             <ModalAccessibilityGuard />
             <SecurityDialogProvider>
@@ -89,9 +94,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        {staging ? <div className="staging-environment-banner" role="status">STAGING · Synthetic data only · No live providers</div> : null}
+        {syntheticBanner ? <div className="staging-environment-banner" role="status">SYNTHETIC REVIEW · No real records · No live providers</div> : null}
         <ThemeProvider>
           <ModalAccessibilityGuard />
+          <ProductExperienceRuntime />
           <SecurityDialogProvider>
             <PwaRuntime>
               <AppShell

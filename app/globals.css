@@ -168,7 +168,7 @@
 .parent-meeting-parent-list { display: grid; gap: .75rem; }
 .parent-meeting-parent-list > h2 { margin: .25rem 0 0; font-size: 1rem; }
 .parent-meeting-parent-list > article { display: grid; gap: .75rem; padding: 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-sm); }
-.parent-meeting-parent-list article > header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.parent-meeting-parent-list article > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .parent-meeting-parent-list h3, .parent-meeting-parent-list h4, .parent-meeting-parent-list p { margin: 0; }
 .parent-meeting-parent-list h4 { font-size: .78rem; }
 .parent-meeting-parent-list p, .parent-meeting-parent-list small { font-size: .75rem; line-height: 1.5; }
@@ -435,7 +435,7 @@
 .event-media-review-form input, .event-media-review-form select, .event-media-review-form textarea,
 .event-media-consent-panel input, .event-media-consent-panel select { width: 100%; min-height: 44px; padding: .65rem .7rem; border: 1px solid var(--border); border-radius: 9px; background: var(--background); color: var(--text); font: inherit; font-size: .84rem; font-weight: 500; }
 .event-media-create textarea, .event-media-review-form textarea { resize: vertical; }
-.event-media-form-actions { display: flex; align-items: end; justify-content: flex-end; gap: .5rem; }
+.event-media-form-actions { display: flex; align-items: flex-end; justify-content: flex-end; gap: .5rem; }
 .event-media-layout { display: grid; grid-template-columns: minmax(250px, .72fr) minmax(380px, 1.35fr) minmax(310px, .93fr); min-height: 600px; overflow: hidden; border: 1px solid var(--border); border-radius: 13px; background: var(--surface); box-shadow: var(--shadow-sm); }
 .event-media-album-rail { display: grid; align-content: start; gap: .45rem; min-width: 0; max-height: 720px; overflow: auto; padding: .75rem; border-right: 1px solid var(--border); background: color-mix(in srgb, var(--surface-2) 55%, var(--surface)); }
 .event-media-album-rail > button { display: grid; grid-template-columns: 82px minmax(0, 1fr) auto; align-items: center; gap: .7rem; width: 100%; min-height: 104px; padding: .45rem; text-align: left; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--text); font: inherit; }
@@ -726,7 +726,7 @@
 .universal-search-filters { min-width: 0; display: grid; gap: .65rem; margin: 0; padding: .8rem; border: 1px solid var(--border); border-radius: .75rem; }
 .universal-search-filter-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .universal-search-filter-actions button { min-height: 44px; }
-.universal-search-filter-grid { min-width: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .5rem; }
+.universal-search-filter-grid { min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); gap: .5rem; }
 .universal-search-filter-grid button { min-width: 0; min-height: 48px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .4rem; padding: .5rem .6rem; border: 1px solid var(--border); border-radius: .62rem; background: var(--surface); color: var(--muted); text-align: left; }
 .universal-search-filter-grid button span { min-width: 0; overflow-wrap: anywhere; font-size: .78rem; font-weight: 750; }
 .universal-search-filter-grid button small { grid-column: 2; color: var(--danger); font-size: .66rem; }
@@ -828,7 +828,7 @@
 .smart-ai-runtime p { margin: .18rem 0 0; color: var(--muted); font-size: .82rem; line-height: 1.4; overflow-wrap: anywhere; }
 .smart-ai-runtime > span { min-height: 30px; display: inline-flex; align-items: center; padding: .25rem .55rem; border-radius: 999px; background: var(--surface); color: var(--muted); font-size: .72rem; font-weight: 850; white-space: nowrap; }
 .smart-ai-compose { display: grid; gap: .9rem; padding: 1rem; }
-.smart-ai-compose-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.smart-ai-compose-heading { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
 .smart-ai-compose-heading h2 { margin: 0; font-size: 1.18rem; }
 .smart-ai-compose-heading p { margin: .22rem 0 0; color: var(--muted); line-height: 1.45; }
 .smart-ai-compose-heading button { flex: none; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; }
@@ -836,7 +836,7 @@
 .smart-ai-compose label { color: var(--text); font-size: .82rem; font-weight: 800; }
 .smart-ai-compose textarea { width: 100%; min-height: 100px; resize: vertical; padding: .75rem .8rem; border: 1px solid var(--border); border-radius: .72rem; background: var(--surface); color: var(--text); font: inherit; font-size: 1rem; line-height: 1.5; }
 .smart-ai-compose textarea:focus { border-color: var(--accent); outline: 0; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
-.smart-ai-compose-actions { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.smart-ai-compose-actions { min-width: 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
 .smart-ai-compose-actions p { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.4; }
 .smart-ai-compose-actions button { flex: none; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: .45rem; padding-inline: 1rem; }
 .smart-ai-live { min-height: 44px; display: flex; align-items: center; padding: .65rem .8rem; border: 1px solid color-mix(in srgb, var(--success) 30%, var(--border)); border-radius: .7rem; background: color-mix(in srgb, var(--success) 6%, var(--surface)); color: var(--muted); }
@@ -3098,6 +3098,7 @@ th {
 
 .dashboard-welcome {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
@@ -3113,6 +3114,10 @@ th {
 .dashboard-welcome-copy > div,
 .dashboard-statuses {
   min-width: 0;
+}
+
+.dashboard-welcome-copy {
+  flex: 1 1 28rem;
 }
 
 .dashboard-welcome h2 {
@@ -3142,7 +3147,8 @@ th {
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  flex: 0 1 auto;
+  flex: 1 1 27rem;
+  flex-wrap: wrap;
 }
 
 .dashboard-role {
@@ -3276,7 +3282,7 @@ th {
 
 .dashboard-metric-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
   gap: 11px;
 }
 
