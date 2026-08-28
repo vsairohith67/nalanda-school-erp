@@ -1,5 +1,7 @@
 # Pending Feature Reconciliation
 
+Portable staging does not close product/operational deferrals. Its next action after evidence-gated clearance is an owner-approved provider adapter; no provider, resource, DNS or real-data activation is implied.
+
 - **Prompt:** `V1.5-ROADMAP-1A`
 - **Reconciled:** 2026-08-21
 - **Result scope:** Post-RC planning only

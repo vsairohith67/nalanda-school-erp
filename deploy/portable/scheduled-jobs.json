@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "parent-meeting-reminders",
+      "command": "scheduled-job parent-meeting-reminders",
+      "recommendedSchedule": "every 15 minutes during school hours",
+      "lock": "postgres-advisory-transaction",
+      "maximumRuntimeSeconds": 300,
+      "retryPolicy": "three bounded retries outside the lease",
+      "idempotencyPolicy": "existing reminder idempotency keys",
+      "identity": "restricted scheduled-job database identity",
+      "dependencies": ["postgresql"],
+      "failureAlert": "PARENT_MEETING_REMINDER_FAILED",
+      "stagingEnabled": true,
+      "productionEnabled": false
+    },
+    {
+      "id": "support-sla-check",
+      "command": "scheduled-job support-sla-check",
+      "recommendedSchedule": "every 10 minutes",
+      "lock": "postgres-advisory-transaction",
+      "maximumRuntimeSeconds": 300,
+      "retryPolicy": "one retry after dependency recovery",
+      "idempotencyPolicy": "existing SLA escalation idempotency keys",
+      "identity": "restricted scheduled-job database identity",
+      "dependencies": ["postgresql"],
+      "failureAlert": "SUPPORT_SLA_CHECK_FAILED",
+      "stagingEnabled": true,
+      "productionEnabled": false
+    },
+    {
+      "id": "cloud-backup-process-due",
+      "command": "scheduled-job cloud-backup-process-due",
+      "recommendedSchedule": "continuous portable backup worker with bounded polling, or hourly external invocation",
+      "lock": "postgres-advisory-transaction",
+      "maximumRuntimeSeconds": 1800,
+      "retryPolicy": "provider-classified bounded retry",
+      "idempotencyPolicy": "existing backup run and object identities",
+      "identity": "backup job database and private object identities",
+      "dependencies": ["postgresql", "private-object-storage"],
+      "failureAlert": "PORTABLE_BACKUP_FAILED",
+      "stagingEnabled": true,
+      "productionEnabled": false
+    }
+  ]
+}

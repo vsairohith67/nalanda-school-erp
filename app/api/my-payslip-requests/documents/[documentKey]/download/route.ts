@@ -14,6 +14,6 @@ export async function GET(request: NextRequest, context: { params: Promise<{ doc
   if (request.headers.has("range")) return new NextResponse(null, { status: 416, headers: { ...PAYSLIP_PRIVATE_HEADERS, "Accept-Ranges": "none" } });
   try {
     const result = await downloadOwnPayslip(prisma, documentKey, auth.context);
-    return new NextResponse(result.bytes, { status: 200, headers: { ...PAYSLIP_PRIVATE_HEADERS, "Content-Type": "application/pdf", "Content-Length": String(result.bytes.length), "Content-Disposition": `attachment; filename="${result.filename}"`, "Content-Security-Policy": "sandbox; default-src 'none'", "Accept-Ranges": "none", "X-Document-SHA256": result.sha256 } });
+    return new NextResponse(new Uint8Array(result.bytes), { status: 200, headers: { ...PAYSLIP_PRIVATE_HEADERS, "Content-Type": "application/pdf", "Content-Length": String(result.bytes.length), "Content-Disposition": `attachment; filename="${result.filename}"`, "Content-Security-Policy": "sandbox; default-src 'none'", "Accept-Ranges": "none", "X-Document-SHA256": result.sha256 } });
   } catch (error) { return payslipError(error); }
 }

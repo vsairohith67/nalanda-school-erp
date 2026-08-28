@@ -11,6 +11,6 @@ export async function GET(_request: Request, context: { params: Promise<{ assetK
   try {
     const derivative = await getPublishedEventMediaDerivative(prisma, (await context.params).assetKey, "PARENT_PORTAL", auth.user.guardianId);
     const bytes = await readEventMediaBytes(derivative.storageKey!, derivative.sha256!, derivative.byteSize!);
-    return new NextResponse(bytes, { headers: { ...EVENT_MEDIA_PRIVATE_HEADERS, "Content-Type": derivative.mediaType!, "Content-Disposition": "inline; filename=private-event-photo.jpg" } });
+    return new NextResponse(new Uint8Array(bytes), { headers: { ...EVENT_MEDIA_PRIVATE_HEADERS, "Content-Type": derivative.mediaType!, "Content-Disposition": "inline; filename=private-event-photo.jpg" } });
   } catch (error) { return eventMediaApiFailure(error); }
 }

@@ -3,6 +3,7 @@ import { lstat, mkdir, open, readFile, realpath, rm } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { validatedPrivateStorageRoot } from "@/lib/private-storage-root";
+import { configuredPrivateObjectStore, modulePrivateObjectKey } from "@/lib/portable-runtime/private-object-store";
 
 export const EVENT_MEDIA_MAX_FILE_BYTES = 15 * 1024 * 1024;
 export const EVENT_MEDIA_MAX_INPUT_PIXELS = 40_000_000;
@@ -104,6 +105,10 @@ export function eventMediaStorageRoot() {
 export async function storeEventMediaBytes(kind: "original" | "derivative", extension: ".png" | ".jpg" | ".webp", bytes: Buffer) {
   const token = randomUUID().toLowerCase();
   const storageKey = `${kind}/${token.slice(0, 2)}/${token.slice(2, 4)}/${token}${extension}`;
+  if (portableObjectStorageEnabled()) {
+    await configuredPrivateObjectStore().putPrivateObject({ key: modulePrivateObjectKey("event-media", storageKey), bytes, sha256: digest(bytes), contentType: extension === ".png" ? "image/png" : extension === ".webp" ? "image/webp" : "image/jpeg" });
+    return storageKey;
+  }
   const target = resolveEventMediaStorageKey(storageKey);
   await assertNoSymlinkPath(eventMediaStorageRoot());
   await mkdir(path.dirname(target), { recursive: true });
@@ -116,6 +121,11 @@ export async function storeEventMediaBytes(kind: "original" | "derivative", exte
 }
 
 export async function readEventMediaBytes(storageKey: string, expectedSha256: string, maximumBytes = EVENT_MEDIA_MAX_FILE_BYTES) {
+  if (portableObjectStorageEnabled()) {
+    const object = await configuredPrivateObjectStore().getPrivateObject(modulePrivateObjectKey("event-media", storageKey), maximumBytes);
+    if (object.metadata.sha256 !== expectedSha256.toLowerCase()) throw new EventMediaFileError("The private media asset failed integrity verification.", 409, "ASSET_INTEGRITY_FAILED");
+    return object.bytes;
+  }
   const target = resolveEventMediaStorageKey(storageKey);
   await assertNoSymlinkPath(path.dirname(target));
   const stat = await lstat(target).catch(() => null);
@@ -126,10 +136,13 @@ export async function readEventMediaBytes(storageKey: string, expectedSha256: st
 }
 
 export async function rollbackEventMediaBytes(storageKey: string) {
+  if (portableObjectStorageEnabled()) { await configuredPrivateObjectStore().deleteGovernedObject(modulePrivateObjectKey("event-media", storageKey)); return; }
   const target = resolveEventMediaStorageKey(storageKey);
   const stat = await lstat(target).catch(() => null);
   if (stat?.isFile() && !stat.isSymbolicLink()) await rm(target, { force: true });
 }
+
+function portableObjectStorageEnabled() { return process.env.PRIVATE_OBJECT_STORAGE_PROVIDER?.trim().toUpperCase() === "S3_COMPATIBLE"; }
 
 export function resolveEventMediaStorageKey(storageKey: string) {
   if (!STORAGE_KEY.test(storageKey)) throw new EventMediaFileError("The private media key is invalid.", 404, "INVALID_STORAGE_KEY");

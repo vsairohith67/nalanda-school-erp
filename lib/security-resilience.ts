@@ -123,7 +123,17 @@ export function configuredRateLimitStore(environment: Record<string, string | un
     if (localProductionRehearsalAllowed(environment)) {
       return globalState.__nalandaRateLimitStore ??= createSingleProcessRateLimitStore();
     }
-    return globalState.__nalandaDistributedRateLimitStore ?? null;
+    if (globalState.__nalandaDistributedRateLimitStore) return globalState.__nalandaDistributedRateLimitStore;
+    if ((environment.VALKEY_MODE ?? "").toLowerCase() !== "distributed") return null;
+    try {
+      // Node.js middleware is explicitly selected in middleware.ts. Keeping the
+      // import lazy prevents development and SQLite-only tests from opening a
+      // network connection merely by importing the security policy module.
+      const factory = require("@/lib/portable-runtime/valkey-rate-limit-store") as typeof import("@/lib/portable-runtime/valkey-rate-limit-store");
+      return globalState.__nalandaDistributedRateLimitStore = factory.createValkeyRateLimitStore(environment as NodeJS.ProcessEnv);
+    } catch {
+      return null;
+    }
   }
   return globalState.__nalandaRateLimitStore ??= createSingleProcessRateLimitStore();
 }

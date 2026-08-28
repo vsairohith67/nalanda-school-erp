@@ -1,5 +1,29 @@
 # Documentation Index
 
+## Portable staging foundation
+
+- [Architecture](PORTABLE_STAGING_ARCHITECTURE.md)
+- [Audit](PORTABLE_STAGING_CURRENT_STATE_AUDIT.md)
+- [ADR](adr/ADR_PORTABLE_STAGING_RUNTIME.md)
+- [OCI runtime](OCI_IMAGE_BUILD_AND_RUNTIME.md)
+- [Configuration/secrets](PORTABLE_CONFIGURATION_AND_SECRETS.md)
+- [Distributed Valkey](DISTRIBUTED_VALKEY_RATE_LIMITING.md)
+- [Private objects](PRIVATE_OBJECT_STORAGE_ARCHITECTURE.md)
+- [File migration](PORTABLE_FILE_STORAGE_MIGRATION_BOUNDARY.md)
+- [Backup/restore](PORTABLE_BACKUP_AND_RESTORE.md)
+- [Synthetic runbook](PORTABLE_SYNTHETIC_STAGING_RUNBOOK.md)
+- [Upgrade/rollback](PORTABLE_UPGRADE_AND_ROLLBACK.md)
+- [Disaster recovery](PORTABLE_DISASTER_RECOVERY.md)
+- [Observability](PORTABLE_OBSERVABILITY.md)
+- [Scheduled jobs](PORTABLE_SCHEDULED_JOBS.md)
+- [Supply chain](OCI_SUPPLY_CHAIN_SECURITY.md)
+- [Provider contract/overlays](PROVIDER_ADAPTER_CONTRACT.md)
+- [QA evidence](evidence/PORTABLE_STAGING_FOUNDATION_1A_QA_CLEARANCE.md)
+- [Provider adapter prompt](prompts/PRIVATE_STAGING_1B_PROVIDER_ADAPTER.md)
+- [Synthetic pilot prompt](prompts/SYNTHETIC_PILOT_READINESS_1A.md)
+
+This foundation does not choose/create a provider, public staging, DNS, real data/users or production.
+
 - [OFFLINE-SYNC-1A specification](./OFFLINE_SYNC_1A_SPECIFICATION.md)
 - [OFFLINE-SYNC-1A user and operations guide](./OFFLINE_SYNC_1A_UX_AND_OPERATIONS.md)
 - [OFFLINE-SYNC-1A threat model](./security/OFFLINE_SYNC_1A_THREAT_MODEL.md)

@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { lstat, mkdir, open, readFile, realpath, rm } from "node:fs/promises";
 import path from "node:path";
 import { validatedPrivateStorageRoot } from "@/lib/private-storage-root";
+import { configuredPrivateObjectStore, modulePrivateObjectKey } from "@/lib/portable-runtime/private-object-store";
 import sharp, { type Metadata } from "sharp";
 import { validatePayslipPdf } from "@/lib/payslip-request-pdf";
 
@@ -72,6 +73,10 @@ export function supportStorageRoot() { return validatedPrivateStorageRoot(proces
 export async function storeSupportFile(file: ValidatedSupportFile) {
   const token = randomUUID().toLowerCase();
   const storageKey = `${token.slice(0, 2)}/${token.slice(2, 4)}/${token}${file.extension}`;
+  if (portableObjectStorageEnabled()) {
+    await configuredPrivateObjectStore().putPrivateObject({ key: modulePrivateObjectKey("support", storageKey), bytes: file.bytes, sha256: file.sha256, contentType: file.mediaType, contentDisposition: file.safeDisplayName });
+    return storageKey;
+  }
   const target = resolveSupportStorageKey(storageKey);
   await assertNoSymlinkPath(supportStorageRoot());
   await mkdir(path.dirname(target), { recursive: true });
@@ -84,6 +89,11 @@ export async function storeSupportFile(file: ValidatedSupportFile) {
 }
 
 export async function readSupportFile(storageKey: string, expectedSha256: string) {
+  if (portableObjectStorageEnabled()) {
+    const object = await configuredPrivateObjectStore().getPrivateObject(modulePrivateObjectKey("support", storageKey), SUPPORT_AUTH_FILE_MAX_BYTES);
+    if (object.metadata.sha256 !== expectedSha256.toLowerCase()) throw new SupportFileError("The private attachment failed integrity verification.", 409);
+    return object.bytes;
+  }
   const target = resolveSupportStorageKey(storageKey);
   await assertNoSymlinkPath(path.dirname(target));
   const stat = await lstat(target);
@@ -94,10 +104,13 @@ export async function readSupportFile(storageKey: string, expectedSha256: string
 }
 
 export async function rollbackStoredSupportFile(storageKey: string) {
+  if (portableObjectStorageEnabled()) { await configuredPrivateObjectStore().deleteGovernedObject(modulePrivateObjectKey("support", storageKey)); return; }
   const target = resolveSupportStorageKey(storageKey);
   const stat = await lstat(target).catch(() => null);
   if (stat?.isFile() && !stat.isSymbolicLink()) await rm(target, { force: true });
 }
+
+function portableObjectStorageEnabled() { return process.env.PRIVATE_OBJECT_STORAGE_PROVIDER?.trim().toUpperCase() === "S3_COMPATIBLE"; }
 
 export function resolveSupportStorageKey(storageKey: string) {
   if (!STORAGE_KEY.test(storageKey)) throw new SupportFileError("The private attachment key is invalid.", 404);

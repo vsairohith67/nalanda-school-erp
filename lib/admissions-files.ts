@@ -7,6 +7,7 @@ import { PUBLIC_ADMISSIONS_FORM_FEATURE, assertOperationalReleaseFeature } from 
 import { validateClassworkUpload, type ValidatedClassworkFile } from "@/lib/classwork-files";
 import { ADMISSION_DOCUMENT_TYPES, AdmissionError, safeKey } from "@/lib/admissions";
 import { validatedPrivateStorageRoot } from "@/lib/private-storage-root";
+import { configuredPrivateObjectStore, modulePrivateObjectKey } from "@/lib/portable-runtime/private-object-store";
 
 const STORAGE_KEY = /^[a-f0-9]{2}\/[a-f0-9]{2}\/[a-f0-9-]{36}\.(?:pdf|png|jpg|webp)$/;
 const MAX_DOCUMENTS = 12;
@@ -59,18 +60,21 @@ export async function retrieveApplicationDocument(client: PrismaClient, document
 }
 
 export async function storeAdmissionFile(file: ValidatedClassworkFile) {
-  const extension = file.extension === ".jpeg" ? ".jpg" : file.extension; const token = randomUUID().toLowerCase(); const storageKey = `${token.slice(0, 2)}/${token.slice(2, 4)}/${token}${extension}`; const target = resolveAdmissionStorageKey(storageKey);
+  const extension = file.extension === ".jpeg" ? ".jpg" : file.extension; const token = randomUUID().toLowerCase(); const storageKey = `${token.slice(0, 2)}/${token.slice(2, 4)}/${token}${extension}`;
+  if (portableObjectStorageEnabled()) { await configuredPrivateObjectStore().putPrivateObject({ key: modulePrivateObjectKey("admissions", storageKey), bytes: file.bytes, sha256: file.sha256, contentType: file.mediaType, contentDisposition: file.safeDisplayName }); return storageKey; }
+  const target = resolveAdmissionStorageKey(storageKey);
   await assertNoSymlinkPath(admissionsStorageRoot()); await mkdir(path.dirname(target), { recursive: true }); await assertNoSymlinkPath(path.dirname(target));
   const handle = await open(target, "wx", 0o600); try { await handle.writeFile(file.bytes); await handle.sync(); } finally { await handle.close(); }
   const stat = await lstat(target); if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== file.byteSize) throw new AdmissionError("Private admission-document storage verification failed.", 500);
   return storageKey;
 }
 
-export async function readAdmissionFile(storageKey: string, expectedSha256: string) { const target = resolveAdmissionStorageKey(storageKey); await assertNoSymlinkPath(path.dirname(target)); const stat = await lstat(target); if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 5 * 1024 * 1024) throw new AdmissionError("The private document is unavailable.", 404); const bytes = await readFile(target); if (sha256(bytes) !== expectedSha256.toLowerCase()) throw new AdmissionError("The private document failed integrity verification.", 409); return bytes; }
-export async function rollbackAdmissionFile(storageKey: string) { const target = resolveAdmissionStorageKey(storageKey); const stat = await lstat(target).catch(() => null); if (stat?.isFile() && !stat.isSymbolicLink()) await rm(target, { force: true }); }
+export async function readAdmissionFile(storageKey: string, expectedSha256: string) { if (portableObjectStorageEnabled()) { const object = await configuredPrivateObjectStore().getPrivateObject(modulePrivateObjectKey("admissions", storageKey), 5 * 1024 * 1024); if (object.metadata.sha256 !== expectedSha256.toLowerCase()) throw new AdmissionError("The private document failed integrity verification.", 409); return object.bytes; } const target = resolveAdmissionStorageKey(storageKey); await assertNoSymlinkPath(path.dirname(target)); const stat = await lstat(target); if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 5 * 1024 * 1024) throw new AdmissionError("The private document is unavailable.", 404); const bytes = await readFile(target); if (sha256(bytes) !== expectedSha256.toLowerCase()) throw new AdmissionError("The private document failed integrity verification.", 409); return bytes; }
+export async function rollbackAdmissionFile(storageKey: string) { if (portableObjectStorageEnabled()) { await configuredPrivateObjectStore().deleteGovernedObject(modulePrivateObjectKey("admissions", storageKey)); return; } const target = resolveAdmissionStorageKey(storageKey); const stat = await lstat(target).catch(() => null); if (stat?.isFile() && !stat.isSymbolicLink()) await rm(target, { force: true }); }
 export function resolveAdmissionStorageKey(storageKey: string) { if (!STORAGE_KEY.test(storageKey)) throw new AdmissionError("The private document key is invalid.", 404); const root = admissionsStorageRoot(); const target = path.resolve(root, ...storageKey.split("/")); if (target === root || !target.startsWith(`${root}${path.sep}`)) throw new AdmissionError("The private document key is invalid.", 404); return target; }
 
 async function invitedApplication(client: PrismaClient, token: unknown) { const value = String(token ?? "").trim(); if (!/^[A-Za-z0-9_-]{40,100}$/.test(value)) throw new AdmissionError("This invitation is unavailable or expired.", 404); const row = await client.admissionApplication.findUnique({ where: { invitationTokenHash: sha256(value) }, include: { cycle: true, documents: { select: { byteSize: true, documentType: true, version: true } } } }); if (!row || row.invitationUsedAt || !row.invitationExpiresAt || row.invitationExpiresAt <= new Date() || row.invitationAttemptCount >= row.invitationAttemptLimit) throw new AdmissionError("This invitation is unavailable or expired.", 404); return row; }
 async function assertNoSymlinkPath(target: string) { const root = path.parse(target).root; let current = root; for (const part of path.relative(root, target).split(path.sep).filter(Boolean)) { current = path.join(current, part); const stat = await lstat(current).catch(() => null); if (stat?.isSymbolicLink()) throw new AdmissionError("Private storage symlinks are not allowed.", 500); } const rootStat = await lstat(admissionsStorageRoot()).catch(() => null); if (rootStat?.isSymbolicLink()) throw new AdmissionError("Private storage symlinks are not allowed.", 500); if (rootStat) await realpath(admissionsStorageRoot()); }
 function jsonArray(value: string) { try { const row = JSON.parse(value); return Array.isArray(row) ? row.map(String) : []; } catch { return []; } }
 function sha256(value: Uint8Array | string) { return createHash("sha256").update(value).digest("hex"); }
+function portableObjectStorageEnabled() { return process.env.PRIVATE_OBJECT_STORAGE_PROVIDER?.trim().toUpperCase() === "S3_COMPATIBLE"; }

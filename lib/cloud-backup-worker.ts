@@ -9,6 +9,7 @@ import {
   sha256
 } from "@/lib/cloud-backup-container";
 import {
+  CloudBackupProviderError,
   createCloudBackupProvider,
   safeProviderError
 } from "@/lib/cloud-backup-provider";
@@ -21,6 +22,22 @@ const ACTIVE_RUN_STATUSES = [
 ];
 const DEFAULT_STALE_RUN_MS = 60 * 60 * 1000;
 
+export function requiresPortableBackupWorker(profile: { providerKind: string; liveUseEnabled: boolean }) {
+  const governed = new Set(["synthetic-staging", "staging", "production"])
+    .has((process.env.NALANDA_ENVIRONMENT || "").toLowerCase());
+  return governed && profile.providerKind === "OBJECT_STORAGE" && profile.liveUseEnabled &&
+    (process.env.PRIVATE_OBJECT_STORAGE_PROVIDER || "").toUpperCase() === "S3_COMPATIBLE" &&
+    (process.env.PORTABLE_BACKUP_DESTINATION || "").toUpperCase() === "S3_COMPATIBLE_PRIVATE";
+}
+
+function allowedProviderProfile(profile: { providerKind: string; liveUseEnabled: boolean }) {
+  if (["MOCK", "LOCAL_FOLDER"].includes(profile.providerKind) && !profile.liveUseEnabled) return true;
+  const governed = new Set(["synthetic-staging", "staging", "production"]).has((process.env.NALANDA_ENVIRONMENT || "").toLowerCase());
+  return governed && profile.providerKind === "OBJECT_STORAGE" && profile.liveUseEnabled &&
+    (process.env.PRIVATE_OBJECT_STORAGE_PROVIDER || "").toUpperCase() === "S3_COMPATIBLE" &&
+    (process.env.PORTABLE_BACKUP_DESTINATION || "").toUpperCase() === "S3_COMPATIBLE_PRIVATE";
+}
+
 export async function createManualCloudBackupRun(
   prisma: PrismaClient,
   profileId: string,
@@ -30,8 +47,10 @@ export async function createManualCloudBackupRun(
   return prisma.$transaction(async (tx) => {
     const profile = await tx.cloudBackupProfile.findUnique({ where: { id: profileId } });
     if (!profile || profile.status !== "ACTIVE") throw new Error("An active cloud backup profile is required.");
-    if (!["MOCK", "LOCAL_FOLDER"].includes(profile.providerKind) || profile.liveUseEnabled) throw new Error("Prompt 20C permits only non-LIVE MOCK or LOCAL_FOLDER runs.");
-    const active = await tx.cloudBackupRun.findFirst({ where: { profileId, status: { in: ACTIVE_RUN_STATUSES } } });
+    if (!allowedProviderProfile(profile)) throw new Error("The backup profile is not permitted by the current runtime contract.");
+    const active = await tx.cloudBackupRun.findFirst({
+      where: { profileId, status: { in: ACTIVE_RUN_STATUSES } }
+    });
     if (active) return active;
     const suffix = randomBytes(3).toString("hex");
     const run = await tx.cloudBackupRun.create({ data: {
@@ -47,6 +66,21 @@ export async function createManualCloudBackupRun(
   });
 }
 
+export async function processPendingCloudBackupRuns(prisma: PrismaClient, limit = 1) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 10) throw new Error("BACKUP_QUEUE_LIMIT_INVALID");
+  const pending = await prisma.cloudBackupRun.findMany({
+    where: { status: "PENDING" },
+    orderBy: { createdAt: "asc" },
+    take: limit
+  });
+  const processed: string[] = [];
+  for (const run of pending) {
+    await executeCloudBackupRun(prisma, run.id);
+    processed.push(run.id);
+  }
+  return { pending: pending.length, processed: processed.length, runIds: processed };
+}
+
 export async function executeCloudBackupRun(prisma: PrismaClient, runId: string) {
   const claimed = await prisma.cloudBackupRun.updateMany({
     where: { id: runId, status: "PENDING" },
@@ -59,14 +93,20 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
   }
   let run = await prisma.cloudBackupRun.findUniqueOrThrow({ where: { id: runId }, include: { profile: true, schedule: true } });
   const provider = createCloudBackupProvider(run.profile);
+  let safeStage = "PROVIDER_HEALTH";
   try {
-    if (run.profile.status !== "ACTIVE" || !["MOCK", "LOCAL_FOLDER"].includes(run.profile.providerKind) || run.profile.liveUseEnabled) {
+    if (run.profile.status !== "ACTIVE" || !allowedProviderProfile(run.profile)) {
       throw new Error("PROFILE_NOT_ACTIVE");
     }
     const health = await provider.healthCheck();
-    if (!health.ready) throw new Error("PROVIDER_NOT_READY");
+    if (!health.ready) throw new CloudBackupProviderError(
+      "PROVIDER_NOT_READY",
+      "The encrypted backup provider is not ready.",
+      true
+    );
     await event(prisma, { profileId: run.profileId, scheduleId: run.scheduleId, runId, eventType: "BACKUP_STARTED" });
 
+    safeStage = "BACKUP_GENERATION";
     const generatedAt = new Date();
     const backup = await generateFullBackup(prisma, {
       generatedAt,
@@ -74,6 +114,7 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
       excludeCloudBackupRunId: run.id
     });
     await transition(prisma, runId, "CREATING_BACKUP", "VALIDATING");
+    safeStage = "BACKUP_VALIDATION";
     const plaintext = Buffer.from(serializeBackup(backup), "utf8");
     const validated = parseAndValidateBackup(plaintext.toString("utf8"));
     if (validated.metadata.backupVersion !== 44) throw new Error("BACKUP_VERSION_INVALID");
@@ -81,6 +122,7 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
 
     await transition(prisma, runId, "VALIDATING", "COMPRESSING");
     await transition(prisma, runId, "COMPRESSING", "ENCRYPTING");
+    safeStage = "BACKUP_ENCRYPTION";
     const encrypted = await encryptCloudBackup(plaintext, {
       backupFormatVersion: 36,
       createdAt: generatedAt,
@@ -88,6 +130,7 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
     });
     const artifactId = randomBytes(13).toString("hex");
     const objectKeySafe = `cloud-backup/${run.id}/${artifactId}.npsbackup`;
+    safeStage = "BACKUP_METADATA";
     const artifact = await prisma.cloudBackupArtifact.create({ data: {
       id: artifactId,
       runId,
@@ -125,6 +168,7 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
     await verification(prisma, runId, artifact.id, "LOCAL_CONTAINER", "PASSED", "Validated backup was compressed and authenticated locally.");
     await event(prisma, { profileId: run.profileId, runId, artifactId: artifact.id, eventType: "BACKUP_ENCRYPTED" });
 
+    safeStage = "BACKUP_UPLOAD";
     const uploaded = await provider.putObject(objectKeySafe, encrypted.bytes);
     await prisma.cloudBackupArtifact.update({ where: { id: artifact.id }, data: {
       status: "UPLOADED", providerObjectIdSafe: uploaded.objectIdSafe, uploadedAt: new Date()
@@ -136,6 +180,7 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
     } });
     await event(prisma, { profileId: run.profileId, runId, artifactId: artifact.id, eventType: "BACKUP_UPLOADED" });
 
+    safeStage = "BACKUP_READBACK_VERIFICATION";
     const head = await provider.headObject(objectKeySafe);
     if (!head || head.byteSize !== encrypted.bytes.length) throw new Error("REMOTE_HEAD_MISMATCH");
     await verification(prisma, runId, artifact.id, "REMOTE_HEAD", "PASSED", "Provider metadata confirms the expected encrypted byte size.");
@@ -163,7 +208,15 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
     await event(prisma, { profileId: run.profileId, scheduleId: run.scheduleId, runId, artifactId: artifact.id, eventType: "BACKUP_VERIFIED" });
   } catch (error) {
     const providerFailure = safeProviderError(error);
-    const code = error instanceof Error && /^[A-Z0-9_]+$/.test(error.message) ? error.message : providerFailure.code;
+    const runtimeErrorCode = error && typeof error === "object" && "code" in error &&
+      typeof (error as { code?: unknown }).code === "string" && /^[A-Z][0-9]{4}$/.test((error as { code: string }).code)
+      ? (error as { code: string }).code
+      : "";
+    const code = error instanceof Error && /^[A-Z0-9_]+$/.test(error.message)
+      ? error.message
+      : providerFailure.code !== "PROVIDER_FAILURE"
+        ? providerFailure.code
+        : `${safeStage}${runtimeErrorCode ? `_${runtimeErrorCode}` : ""}_FAILED`;
     const safeMessage = code === providerFailure.code ? providerFailure.safeMessage : safeFailureMessage(code);
     const retryable = provider.classifyRetryability(error) || providerFailure.retryable;
     const current = await prisma.cloudBackupRun.findUnique({ where: { id: runId } });

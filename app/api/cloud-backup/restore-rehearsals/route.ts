@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireApiPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { runCloudBackupRestoreRehearsal } from "@/lib/cloud-backup-rehearsal";
+import { requiresPortableBackupWorker } from "@/lib/cloud-backup-worker";
 
 export async function GET() {
   const auth = await requireApiPermission("RUN_CLOUD_BACKUP_RESTORE_REHEARSAL"); if (auth.response) return auth.response;
@@ -14,6 +15,17 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json(), artifactId = String(body.artifactId ?? "");
     if (body.confirmation !== `REHEARSE ${artifactId}`) throw new Error("Exact isolated-rehearsal confirmation is required.");
+    const artifact = await prisma.cloudBackupArtifact.findUnique({
+      where: { id: artifactId },
+      include: { run: { include: { profile: true } } }
+    });
+    if (!artifact) throw new Error("Verified backup artifact was not found.");
+    if (requiresPortableBackupWorker(artifact.run.profile)) {
+      return NextResponse.json(
+        { error: "Portable PostgreSQL recovery rehearsal requires the separately authorised restore job." },
+        { status: 409, headers: { "Cache-Control": "private, no-store" } }
+      );
+    }
     return NextResponse.json({ rehearsal: await runCloudBackupRestoreRehearsal(prisma, artifactId, auth.user.id) }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) { return NextResponse.json({ error: safeClientError(error, "Restore rehearsal failed safely.") }, { status: 400, headers: { "Cache-Control": "private, no-store" } }); }
 }

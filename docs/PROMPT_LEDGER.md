@@ -1,5 +1,7 @@
 # Prompt Ledger — Earliest Recoverable Evidence to Present
 
+| 2026-08-26 | PORTABLE-STAGING-FOUNDATION-1A | Provider-neutral OCI/PostgreSQL/Valkey/private-object/backup/synthetic staging | `IMPLEMENTATION_AND_QA_IN_PROGRESS` | Provider/resources/DNS/real users/data remain open or inactive. |
+
 **Ledger ID:** `GOV-RECON-1-LEDGER`<br>
 **Reconstructed:** 2026-08-12<br>
 **Coverage:** earliest post-hoc Prompt Library evidence (created 2026-06-19) through `FINAL-SCOPE-QA-1A` current-main acceptance on 2026-08-24

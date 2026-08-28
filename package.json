@@ -70,6 +70,7 @@
     "smart-ai:local-gateway": "tsx scripts/smart-ai-local-gateway.ts",
     "qa:smart-ai:local-runtime": "node scripts/qa-smart-ai-local-runtime-1a.mjs",
     "qa:final-scope": "tsx scripts/final-corrected-scope-qa.ts",
+    "qa:final-scope:focused": "tsx scripts/final-corrected-scope-qa.ts --focused-only",
     "release:evidence:final-scope": "node tools/release-evidence/final-scope-evidence.mjs",
     "qa:iam1a:browser:setup": "tsx scripts/qa-iam1a-browser-fixtures.ts setup",
     "qa:iam1a:browser:cleanup": "tsx scripts/qa-iam1a-browser-fixtures.ts cleanup",
@@ -214,12 +215,22 @@
     "qa:security-resilience": "tsx scripts/qa-security-resilience-1a.ts",
     "security:resilience:acceptance": "vitest run tests/security-resilience.test.ts tests/sec1-runtime-security.test.ts tests/deployment-environment.test.ts && pnpm security:resilience:load && pnpm qa:security-resilience",
     "qa:cross-platform-apps": "tsx scripts/qa-cross-platform-apps-1a-copied-db.ts",
-    "qa:cross-platform-apps:performance": "tsx scripts/qa-cross-platform-app-performance.ts"
+    "qa:cross-platform-apps:performance": "tsx scripts/qa-cross-platform-app-performance.ts",
+    "portable:bundle": "node scripts/portable/bundle.mjs",
+    "portable:config-check": "tsx scripts/portable/validate-config.ts",
+    "portable:secrets:generate": "node scripts/portable/generate-synthetic-secrets.mjs",
+    "portable:secrets:cleanup": "node scripts/portable/cleanup-synthetic.mjs",
+    "qa:portable-runtime": "vitest run tests/portable-runtime.test.ts",
+    "qa:portable-stack": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/portable/qa-stack.ps1"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1114.0",
+    "@aws-sdk/lib-storage": "3.1114.0",
+    "@aws-sdk/s3-request-presigner": "3.1114.0",
     "@pdf-lib/fontkit": "^1.1.1",
-    "@prisma/client": "^6.10.1",
+    "@prisma/client": "6.19.3",
     "fflate": "^0.8.3",
+    "iovalkey": "0.4.0",
     "lucide-react": "^0.468.0",
     "next": "15.5.21",
     "next-themes": "^0.4.6",
@@ -231,11 +242,12 @@
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@types/node": "22.19.21",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
-    "prisma": "^6.10.1",
+    "esbuild": "0.28.1",
+    "prisma": "6.19.3",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^3.2.6"

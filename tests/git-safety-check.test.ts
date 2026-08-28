@@ -17,6 +17,10 @@ describe("Git safety scanner", () => {
     expect(classifyRiskyPath("backups/nalanda-backup-example.json").map((finding) => finding.reasonCode)).toContain("BACKUP_JSON");
   });
 
+  it("allows deployment access-policy JSON without treating it as backup output", () => {
+    expect(classifyRiskyPath("deploy/portable/minio-backup-policy.json")).toEqual([]);
+  });
+
   it("allows documentation policy wording", () => {
     const findings = scanTextContent("docs/SECURITY_POLICY.md", "Never commit a passwordHash, API key, token, encryption key, or webhook secret.");
     expect(findings).toEqual([]);
@@ -31,5 +35,11 @@ describe("Git safety scanner", () => {
       'SMS_EMAIL_SMS_LIVE_ENABLED="false"'
     ].join("\n"));
     expect(findings).toEqual([]);
+  });
+
+  it("allows mounted-secret shell assignments and synthetic database fixtures", () => {
+    expect(scanTextContent("deploy/portable/entrypoint.sh", 'password="$(cat /run/secrets/runtime_password)"')).toEqual([]);
+    expect(scanTextContent("deploy/portable/init.sh", 'psql --set=runtime_password="$runtime_password"')).toEqual([]);
+    expect(scanTextContent("tests/portable-runtime.test.ts", 'DATABASE_URL: "postgresql://runtime:synthetic@postgres:5432/nalanda"')).toEqual([]);
   });
 });

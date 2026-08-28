@@ -1,6 +1,7 @@
 import type { CloudBackupProfile } from "@prisma/client";
 import { createMockCloudBackupProvider } from "@/lib/cloud-backup-provider-mock";
 import { createLocalFolderCloudBackupProvider } from "@/lib/cloud-backup-provider-local";
+import { createS3CompatibleCloudBackupProvider } from "@/lib/cloud-backup-provider-s3";
 import {
   createDisabledGoogleDriveCloudBackupProvider,
   createDisabledObjectStorageCloudBackupProvider
@@ -26,12 +27,12 @@ export type CloudBackupObjectHead = {
 
 export interface CloudBackupProvider {
   readonly kind: CloudBackupProviderKind;
-  readonly mode: "QA" | "LIVE_DISABLED";
+  readonly mode: "QA" | "LIVE_DISABLED" | "PRIVATE_PORTABLE";
   healthCheck(): Promise<{ ready: boolean; safeMessage: string }>;
   putObject(objectKey: string, bytes: Buffer): Promise<CloudBackupObjectHead>;
   headObject(objectKey: string): Promise<CloudBackupObjectHead | null>;
   getObject(objectKey: string): Promise<Buffer>;
-  deleteObject(objectKey: string): Promise<{ deleted: boolean; alreadyMissing: boolean }>;
+  deleteObject(objectKey: string, versionSafe?: string | null): Promise<{ deleted: boolean; alreadyMissing: boolean }>;
   listObjectsBySafePrefix(prefix: string, limit: number): Promise<CloudBackupObjectHead[]>;
   classifyRetryability(error: unknown): boolean;
   redactError(error: unknown): { code: string; safeMessage: string };
@@ -57,7 +58,8 @@ export function createCloudBackupProvider(
     case "LOCAL_FOLDER":
       return createLocalFolderCloudBackupProvider(profile.requestTimeoutMs);
     case "OBJECT_STORAGE":
-      return createDisabledObjectStorageCloudBackupProvider(profile.liveUseEnabled);
+      if (!profile.liveUseEnabled) return createDisabledObjectStorageCloudBackupProvider(false);
+      return createS3CompatibleCloudBackupProvider();
     case "GOOGLE_DRIVE":
       return createDisabledGoogleDriveCloudBackupProvider(profile.liveUseEnabled);
     default:

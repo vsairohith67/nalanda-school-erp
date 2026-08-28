@@ -1,5 +1,9 @@
 # Authoritative Requirements Register
 
+## PORTABLE-STAGING-FOUNDATION-1A
+
+Implementation/evidence in progress. The contract is provider-neutral and synthetic-only. Provider, account, region, budget, edge, DNS/TLS, legal/DPA, real onboarding, user activation, devices and production are separate gates. Evidence: [portable QA](evidence/PORTABLE_STAGING_FOUNDATION_1A_QA_CLEARANCE.md).
+
 ## PARENT-MEETING-V1_5-1A governed requirement
 
 Parent Meetings, Appointments and Follow-up is an additive V1.5 local/private

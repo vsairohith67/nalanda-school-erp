@@ -53,6 +53,6 @@ export async function supportDownload(user: AuthUser, attachmentKey: string, mod
   try {
     const attachment = await loadSupportAttachment(prisma, await supportActor(user), attachmentKey, mode);
     const bytes = await readSupportFile(attachment.storageKey, attachment.sha256);
-    return new NextResponse(bytes, { headers: { ...SUPPORT_PRIVATE_HEADERS, "Content-Type": attachment.mediaType, "Content-Length": String(bytes.length), "Content-Disposition": `attachment; filename="${attachment.safeDisplayName.replace(/["\\\r\n]/g, "")}"`, "Content-Security-Policy": "sandbox; default-src 'none'", "Accept-Ranges": "none", "X-Attachment-SHA256": attachment.sha256 } });
+    return new NextResponse(new Uint8Array(bytes), { headers: { ...SUPPORT_PRIVATE_HEADERS, "Content-Type": attachment.mediaType, "Content-Length": String(bytes.length), "Content-Disposition": `attachment; filename="${attachment.safeDisplayName.replace(/["\\\r\n]/g, "")}"`, "Content-Security-Policy": "sandbox; default-src 'none'", "Accept-Ranges": "none", "X-Attachment-SHA256": attachment.sha256 } });
   } catch (error) { return supportApiError(error); }
 }

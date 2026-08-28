@@ -1,0 +1,184 @@
+name: Portable Staging Foundation exact-head
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact feature commit to validate
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portable-staging-${{ inputs.expected_sha }}
+  cancel-in-progress: false
+
+env:
+  CI: "true"
+  NEXT_TELEMETRY_DISABLED: "1"
+  EXPECTED_SHA: ${{ inputs.expected_sha }}
+
+jobs:
+  server-and-database:
+    name: 1 - server and database
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false }
+      - name: Require exact head
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate:postgres && pnpm qa:postgres:parity
+      - run: pnpm db:generate:sqlite && pnpm typecheck && pnpm test
+      - run: DATABASE_PROVIDER=postgresql DATABASE_URL=postgresql://build.invalid/nalanda DIRECT_URL=postgresql://build.invalid/nalanda pnpm build
+      - name: Cleanup
+        if: always()
+        run: rm -rf tmp/portable-staging data/cloud-backup-rehearsal
+
+  oci-image:
+    name: 2 - OCI image and supply chain
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false }
+      - run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - name: Build exact image
+        run: docker build --pull=false --build-arg SOURCE_COMMIT="$EXPECTED_SHA" --build-arg SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" -t nalanda-portable-staging:ci .
+      - name: Verify configuration and labels
+        run: |
+          test "$(docker image inspect nalanda-portable-staging:ci --format '{{.Config.User}}')" = "65532:65532"
+          test "$(docker image inspect nalanda-portable-staging:ci --format '{{index .Config.Labels \"org.opencontainers.image.revision\"}}')" = "$EXPECTED_SHA"
+          docker image inspect nalanda-portable-staging:ci --format '{{.Id}}' | tee image-digest.txt
+          docker save nalanda-portable-staging:ci | sha256sum | tee image-archive-sha256.txt
+      - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with: { image: "nalanda-portable-staging:ci", format: "spdx-json", output-file: "sbom.spdx.json", upload-artifact: false }
+      - uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: nalanda-portable-staging:ci
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: false
+          exit-code: "1"
+      - name: Build-context secret/data assertion
+        run: |
+          test -z "$(docker run --rm --entrypoint /nodejs/bin/node nalanda-portable-staging:ci -e 'const fs=require(\"fs\"); console.log(fs.existsSync(\"/app/prisma/dev.db\")||fs.existsSync(\"/app/.git\")?\"bad\":\"\")')"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: portable-oci-evidence-${{ env.EXPECTED_SHA }}
+          path: |
+            image-digest.txt
+            image-archive-sha256.txt
+            sbom.spdx.json
+          retention-days: 14
+          if-no-files-found: error
+      - name: Cleanup
+        if: always()
+        run: docker image rm -f nalanda-portable-staging:ci || true
+
+  portable-stack:
+    name: 3 - portable stack
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false }
+      - run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Full synthetic stack
+        shell: pwsh
+        run: ./scripts/portable/qa-stack.ps1
+      - name: Cleanup
+        if: always()
+        run: docker compose -f deploy/portable/compose.yml down --volumes --remove-orphans || true; rm -rf tmp/portable-staging
+
+  distributed-runtime:
+    name: 4 - distributed runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false }
+      - run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm qa:portable-runtime
+      - run: pnpm security:resilience:acceptance && pnpm qa:offline-sync && pnpm qa:cross-platform-apps
+      - if: always()
+        run: rm -rf tmp/portable-staging
+
+  object-storage-and-recovery:
+    name: 5 - object storage and recovery
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false }
+      - run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Prepare isolated synthetic SQLite database
+        run: |
+          mkdir -p tmp/portable-ci
+          touch tmp/portable-ci/synthetic.db
+          DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          cp tmp/portable-ci/synthetic.db prisma/dev.db
+      - run: DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm qa:portable-runtime && DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm backup
+      - run: pnpm audit --audit-level high
+      - if: always()
+        run: rm -rf backups tmp data/cloud-backup-rehearsal
+
+  full-synthetic-acceptance:
+    name: 6 - full synthetic acceptance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false }
+      - run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Prepare isolated realistic synthetic SQLite database
+        run: |
+          mkdir -p tmp/portable-ci
+          touch tmp/portable-ci/synthetic.db
+          DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          RELEASE_CI_SYNTHETIC_OPT_IN=true DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          cp tmp/portable-ci/synthetic.db prisma/dev.db
+      - name: Sequential full-scope acceptance
+        env:
+          DATABASE_URL: file:../tmp/portable-ci/synthetic.db
+          NALANDA_ENVIRONMENT: TEST
+        run: |
+          pnpm routes:list
+          pnpm lifecycle:backfill
+          pnpm typecheck
+          pnpm test
+          pnpm build
+          pnpm backup
+          pnpm git:safety-check
+      - name: Inherited product regressions
+        run: UNIVERSAL_SEARCH_OPERATIONAL_DB=prisma/dev.db pnpm qa:search-extension && pnpm qa:final-scope:focused
+      - name: Cleanup
+        if: always()
+        run: docker compose -f deploy/portable/compose.yml down --volumes --remove-orphans || true; rm -rf tmp backups data
