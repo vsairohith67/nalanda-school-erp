@@ -1,6 +1,8 @@
 name: Portable Staging Foundation exact-head
 
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       expected_sha:
@@ -18,7 +20,7 @@ concurrency:
 env:
   CI: "true"
   NEXT_TELEMETRY_DISABLED: "1"
-  EXPECTED_SHA: ${{ inputs.expected_sha }}
+  EXPECTED_SHA: ${{ inputs.expected_sha || github.event.pull_request.head.sha }}
 
 jobs:
   server-and-database:
