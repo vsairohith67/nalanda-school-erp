@@ -631,7 +631,7 @@
       "expected": "The gate recognizes the current Android foreground-activity marker, proves the resumed activity belongs to the Nalanda package, and continues to UI hierarchy and screenshot evidence.",
       "actual": "The package installed, launched and was RESUMED, but the assertion searched only for the older mResumedActivity marker while Android 35 emitted topResumedActivity and ResumedActivity markers.",
       "rootCause": "The exact-head CI assertion encoded one historical dumpsys label instead of accepting the bounded set of current and prior resumed-activity markers.",
-      "fixCommit": "PENDING",
+      "fixCommit": "7616fe58be26688ec3b7ff2fc6d46e767968b142",
       "regressionTest": "Product-experience workflow contract test requires Android 35 topResumedActivity and ResumedActivity markers plus the prior mResumedActivity compatibility marker"
     }
   ]
