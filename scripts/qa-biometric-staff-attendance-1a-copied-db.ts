@@ -108,7 +108,11 @@ async function main() {
     const ingest = async (batchReference: string, events: ReturnType<typeof bridgeSimulator.simulateScenario>, nonce = randomBytes(24).toString("base64url")) => {
       const envelope = contracts.validateBiometricEnvelope({ schemaVersion: 1, batchReference, bridgeTime: "2026-08-28T12:00:00.000Z", events }, new Date("2026-08-28T12:00:00.000Z"));
       const rawBody = JSON.stringify(envelope);
-      return ingestion.ingestBiometricBatch({ envelope, rawBody, verified: { bridge, nonceHash: contracts.sha256Hex(nonce), keyVersion: bridge.keyVersion, nonceExpiresAt: new Date("2026-08-29T12:00:00.000Z") } });
+      try {
+        return await ingestion.ingestBiometricBatch({ envelope, rawBody, verified: { bridge, nonceHash: contracts.sha256Hex(nonce), keyVersion: bridge.keyVersion, nonceExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) } });
+      } catch (error) {
+        throw new Error(`${SUITE}_INGEST_FAILED:${batchReference}:${error instanceof Error ? error.message : String(error)}`);
+      }
     };
     const normal = bridgeSimulator.simulateScenario("normal", device.publicDeviceId);
     const accepted = await ingest(`normal-${suffix}`, normal);
