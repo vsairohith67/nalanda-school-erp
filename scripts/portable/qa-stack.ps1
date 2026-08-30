@@ -11,8 +11,8 @@ $secretRoot = Join-Path $workspace 'tmp\portable-staging\secrets'
 $qaRoot = Join-Path $workspace 'tmp\portable-staging\qa'
 $originalLocation = Get-Location
 $results = [ordered]@{}
-$curlCommand = if ($IsWindows) { 'curl.exe' } else { 'curl' }
-$curlTlsArgs = if ($IsWindows) { @('--ssl-no-revoke') } else { @() }
+$isWindowsHost = $env:OS -eq 'Windows_NT'
+$curlCommand = if ($isWindowsHost) { (Get-Command curl.exe -ErrorAction Stop).Source } else { 'curl' }
 
 function Invoke-Checked([string]$Label, [scriptblock]$Command) {
   & $Command
@@ -29,6 +29,15 @@ function Wait-ServiceHealthy([string]$Service) {
     Start-Sleep -Seconds 2
   }
   throw "$Service did not recover to healthy state"
+}
+
+function Invoke-HttpsReadiness([string]$CaFile, [switch]$Retry) {
+  [string[]]$curlArguments = @()
+  if ($isWindowsHost) { $curlArguments += '--ssl-no-revoke' }
+  $curlArguments += @('--cacert', $CaFile)
+  if ($Retry) { $curlArguments += @('--retry', '20', '--retry-delay', '2', '--retry-all-errors') }
+  $curlArguments += @('--fail', '--silent', '--show-error', 'https://portable-staging.localhost:8443/api/health/ready')
+  & $curlCommand $curlArguments | Out-Null
 }
 
 function Assert-DependencyOutage([string]$Service) {
@@ -86,7 +95,7 @@ try {
   Invoke-Checked 'local CA extraction' {
     docker compose -f $composeFile exec -T reverse-proxy cat /data/caddy/pki/authorities/local/root.crt | Set-Content -LiteralPath $caFile -Encoding ascii
   }
-  Invoke-Checked 'HTTPS readiness' { & $curlCommand @curlTlsArgs --cacert $caFile --fail --silent --show-error https://portable-staging.localhost:8443/api/health/ready | Out-Null }
+  Invoke-Checked 'HTTPS readiness' { Invoke-HttpsReadiness $caFile }
   foreach ($replica in @('web-1', 'web-2')) {
     Invoke-Checked "$replica readiness" { docker compose -f $composeFile exec -T reverse-proxy wget -T 15 -qO- "http://${replica}:3000/api/health/ready" | Out-Null }
   }
@@ -98,7 +107,7 @@ try {
   $env:PORTABLE_IMAGE_TAG = 'candidate'
   Invoke-Checked 'rolling upgrade one replica' { docker compose -f $composeFile up -d --no-deps --force-recreate web-1 }
   Wait-ServiceHealthy 'web-1'
-  Invoke-Checked 'rolling upgrade availability' { & $curlCommand @curlTlsArgs --cacert $caFile --fail --silent --show-error https://portable-staging.localhost:8443/api/health/ready | Out-Null }
+  Invoke-Checked 'rolling upgrade availability' { Invoke-HttpsReadiness $caFile }
   $upgradedContainer = (docker compose -f $composeFile ps -q web-1).Trim()
   if ((docker inspect --format '{{.Image}}' $upgradedContainer).Trim() -ne $baselineImageId) { throw 'Rolling upgrade image identity mismatch' }
   $results.upgrade = @{ strategy = 'one-replica-at-a-time'; availability = $true; immutableImage = $baselineImageId }
@@ -106,7 +115,7 @@ try {
   $env:PORTABLE_IMAGE_TAG = 'local'
   Invoke-Checked 'rolling rollback one replica' { docker compose -f $composeFile up -d --no-deps --force-recreate web-1 }
   Wait-ServiceHealthy 'web-1'
-  Invoke-Checked 'rolling rollback availability' { & $curlCommand @curlTlsArgs --cacert $caFile --fail --silent --show-error https://portable-staging.localhost:8443/api/health/ready | Out-Null }
+  Invoke-Checked 'rolling rollback availability' { Invoke-HttpsReadiness $caFile }
   $rolledBackContainer = (docker compose -f $composeFile ps -q web-1).Trim()
   if ((docker inspect --format '{{.Image}}' $rolledBackContainer).Trim() -ne $baselineImageId) { throw 'Rolling rollback image identity mismatch' }
   $results.rollback = @{ strategy = 'retag-and-recreate-one-replica'; availability = $true; migrationHistoryUnchanged = $true }
@@ -116,7 +125,7 @@ try {
     $results["${dependency}OutageFailedClosed"] = $true
   }
 
-  Invoke-Checked 'post-outage readiness recovery' { & $curlCommand @curlTlsArgs --cacert $caFile --retry 20 --retry-delay 2 --retry-all-errors --fail --silent --show-error https://portable-staging.localhost:8443/api/health/ready | Out-Null }
+  Invoke-Checked 'post-outage readiness recovery' { Invoke-HttpsReadiness $caFile -Retry }
   Invoke-Checked 'post-outage integration rerun' { docker compose -f $composeFile run --rm --no-deps runtime-qa }
   $results.result = 'PORTABLE_STACK_QA_PASSED'
   $results.realData = $false

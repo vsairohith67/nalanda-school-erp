@@ -1,0 +1,3 @@
+# REAL-DATA-ONBOARDING-1A — Future Prompt (Do Not Run)
+
+After private staging, privacy approval, source provenance and rollback gates are explicit, run the governed Student/Guardian/Staff onboarding workflow in an isolated approved environment. Hash source files, perform preview-only validation, record duplicates/unsupported fields, obtain named approval, execute the exact plan, reconcile counts/links/statuses, preserve backup/rollback evidence and activate no user automatically. Stop on ambiguous provenance, sensitive unsupported fields, finance opening mismatch or a changed plan. This prompt requires separate written authorization and must never use a public repository artifact.

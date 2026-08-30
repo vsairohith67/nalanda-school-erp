@@ -1,5 +1,19 @@
-import { lstatSync, readFileSync, realpathSync } from "node:fs";
-import path from "node:path";
+type FsModule = typeof import("node:fs");
+type PathModule = typeof import("node:path");
+
+function loadNodeBuiltin<T>(specifier: string) {
+  const loader = process.getBuiltinModule as ((name: string) => unknown) | undefined;
+  if (!loader) throw new PortableSecretError("NODE_BUILTIN_MODULE_LOADER_UNAVAILABLE");
+  return loader(specifier) as T;
+}
+
+function fsModule() {
+  return loadNodeBuiltin<FsModule>("fs");
+}
+
+function pathModule() {
+  return loadNodeBuiltin<PathModule>("path");
+}
 
 export const PORTABLE_SECRET_NAMES = [
   "AUTH_SECRET",
@@ -33,6 +47,7 @@ function configured(environment: NodeJS.ProcessEnv, name: string) {
 }
 
 function allowedSecretRoots(environment: NodeJS.ProcessEnv) {
+  const path = pathModule();
   const roots = [environment.PORTABLE_SECRET_ROOT?.trim() || "/run/secrets"];
   if (environment.NALANDA_SYNTHETIC_STAGING === "true") {
     const synthetic = environment.PORTABLE_SYNTHETIC_SECRET_ROOT?.trim();
@@ -42,6 +57,7 @@ function allowedSecretRoots(environment: NodeJS.ProcessEnv) {
 }
 
 function assertWithinAllowedRoot(filePath: string, environment: NodeJS.ProcessEnv) {
+  const path = pathModule();
   const absolute = path.resolve(filePath);
   const allowed = allowedSecretRoots(environment).some((root) => {
     const relative = path.relative(root, absolute);
@@ -66,13 +82,14 @@ export function readPortableSecret(
   }
 
   const absolute = assertWithinAllowedRoot(fileReference, environment);
-  const stat = lstatSync(absolute);
+  const fs = fsModule();
+  const stat = fs.lstatSync(absolute);
   if (!stat.isFile() || stat.isSymbolicLink() || stat.size < 1 || stat.size > MAX_SECRET_BYTES) {
     throw new PortableSecretError("SECRET_FILE_UNSAFE");
   }
-  const real = realpathSync(absolute);
+  const real = fs.realpathSync(absolute);
   assertWithinAllowedRoot(real, environment);
-  const value = readFileSync(real, "utf8").replace(/[\r\n]+$/, "");
+  const value = fs.readFileSync(real, "utf8").replace(/[\r\n]+$/, "");
   if (!value || Buffer.byteLength(value, "utf8") > MAX_SECRET_BYTES) {
     throw new PortableSecretError("SECRET_FILE_VALUE_INVALID");
   }

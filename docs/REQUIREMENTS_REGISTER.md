@@ -1,5 +1,9 @@
 # Authoritative Requirements Register
 
+## SYNTHETIC-PILOT-READINESS-1A active addendum
+
+Provider-independent operational rehearsal is implemented as an isolated 800-Student/1,200-Guardian/80-Staff fixture, a server-derived machine-readable role/access matrix, cross-module acceptance gate, runbooks, training/quick-reference material, failure/security/recovery drills and explicit future real-pilot gates. It does not change biometric implementation, import real data, activate real users/providers/default-off features, deploy staging or clear OCR. Terminal evidence is in `docs/evidence/SYNTHETIC_PILOT_READINESS_1A_CLEARANCE.md`; status remains non-terminal until exact-head release closure.
+
 ## PORTABLE-STAGING-FOUNDATION-1A
 
 Software-cleared through the repository release gate with a provider-neutral, synthetic-only contract. Public-certificate Browser acceptance and production signing remain external toolchain gates. Provider, account, region, budget, edge, DNS/TLS, legal/DPA, real onboarding, user activation, devices and production are separate gates. Evidence: [portable QA](evidence/PORTABLE_STAGING_FOUNDATION_1A_QA_CLEARANCE.md).

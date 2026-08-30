@@ -1,5 +1,9 @@
 # V1.5 and Post-RC Roadmap
 
+## Active provider-independent operational gate — 28 August 2026
+
+`SYNTHETIC-PILOT-READINESS-1A` rehearses existing software with unmistakably synthetic data, derived roles, operator runbooks, failure/security/backup drills and separate-dimensional launch gates. It may proceed without a provider or physical biometric hardware and must not touch the independent biometric implementation. It authorizes no private staging, real-data import, real-user activation, optional-feature production rollout, native signing/distribution, OCR or cutover. After a terminal synthetic verdict, the next prompts remain separately gated: `OCR-BENCHMARK-1A`, `REAL-DATA-ONBOARDING-1A`, `SUPERVISED-PILOT-1A` and the existing private-staging provider adapter.
+
 Portable staging is the software prerequisite for an owner-approved provider adapter. Generated next phases are `PRIVATE-STAGING-1B-PROVIDER-ADAPTER` and synthetic-only `SYNTHETIC-PILOT-READINESS-1A`; neither is executed here.
 
 - **Prompt:** `V1.5-ROADMAP-1A`

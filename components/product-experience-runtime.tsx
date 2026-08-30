@@ -35,6 +35,15 @@ function labelResponsiveTables(root: ParentNode = document) {
   }
 }
 
+function afterHydration(task: () => void) {
+  if ("requestIdleCallback" in window) {
+    const idle = window.requestIdleCallback(task, { timeout: 2_000 });
+    return () => window.cancelIdleCallback(idle);
+  }
+  const timer = setTimeout(task, 1_500);
+  return () => clearTimeout(timer);
+}
+
 export function ProductExperienceRuntime() {
   const announcementRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -43,14 +52,16 @@ export function ProductExperienceRuntime() {
     // The runtime survives client-side route transitions. Clear transient form
     // announcements so a completed login/save is not repeated on the next page.
     if (announcementRef.current) announcementRef.current.textContent = "";
-    labelResponsiveTables();
+    // Global table decoration must wait until the current React tree has
+    // hydrated. Mutating a later-hydrating route subtree from the root layout
+    // creates an otherwise harmless but release-blocking hydration mismatch.
+    return afterHydration(() => labelResponsiveTables());
   }, [pathname]);
 
   useEffect(() => {
     const announce = (message: string) => {
       if (announcementRef.current) announcementRef.current.textContent = message;
     };
-    labelResponsiveTables();
     const observer = new MutationObserver((records) => {
       for (const record of records) {
         for (const node of record.addedNodes) {
@@ -61,7 +72,10 @@ export function ProductExperienceRuntime() {
         }
       }
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    const cancelHydrationWait = afterHydration(() => {
+      labelResponsiveTables();
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
 
     const onInput = (event: Event) => {
       const target = event.target as HTMLElement | null;
@@ -109,6 +123,7 @@ export function ProductExperienceRuntime() {
     window.addEventListener("beforeunload", beforeUnload);
     window.addEventListener("resize", onResize);
     return () => {
+      cancelHydrationWait();
       observer.disconnect();
       document.removeEventListener("input", onInput, true);
       document.removeEventListener("change", onInput, true);

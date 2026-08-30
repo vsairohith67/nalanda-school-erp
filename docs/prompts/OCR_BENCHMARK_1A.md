@@ -1,0 +1,3 @@
+# OCR-BENCHMARK-1A — Future Prompt (Do Not Run)
+
+Benchmark privacy-preserving local OCR/document-understanding candidates on approved synthetic admission/fee/document images. Compare accuracy by field/script/layout, confidence/calibration, table/handwriting limits, CPU/RAM/runtime, offline packaging, license/supply-chain risk, sandboxing and deletion. Produce a go/no-go architecture decision only. Do not ingest real forms, install a production provider, write ERP records, store biometric/identity data or claim portal automation. OCR remains not software-cleared until a separately authorized implementation and independent QA release passes.
