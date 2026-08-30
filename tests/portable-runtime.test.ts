@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { EventEmitter } from "node:events";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -191,6 +192,38 @@ describe("PORTABLE-STAGING-FOUNDATION-1A runtime contracts", () => {
     expect(serialized).toContain("{nalanda-rate-limit}:v1:");
     expect(serialized).not.toContain("student@example.invalid");
     expect(serialized).not.toContain("raw-session-secret");
+    await store.close();
+  });
+
+  it("shares one Valkey readiness wait across concurrent cold-start calls", async () => {
+    class FakeValkey extends EventEmitter {
+      status = "wait";
+      connectCalls = 0;
+      async connect() {
+        this.connectCalls += 1;
+        this.status = "connecting";
+        await new Promise<void>((resolve) => setTimeout(() => {
+          this.status = "ready";
+          this.emit("ready");
+          resolve();
+        }, 10));
+      }
+      async ping() { return "PONG"; }
+      async quit() { return "OK"; }
+      disconnect() { this.status = "end"; }
+    }
+    const fake = new FakeValkey();
+    const store = createValkeyRateLimitStore({ NODE_ENV: "test" }, { client: fake as unknown as Valkey });
+    const checks = Array.from({ length: 100 }, () => store.healthCheck());
+    await Promise.resolve();
+    expect(fake.connectCalls).toBe(1);
+    expect(fake.listenerCount("ready")).toBeLessThanOrEqual(1);
+    expect(fake.listenerCount("end")).toBeLessThanOrEqual(1);
+    await expect(Promise.all(checks)).resolves.toEqual(Array.from({ length: 100 }, () => ({
+      ready: true,
+      state: "ready",
+      safeCode: "VALKEY_READY"
+    })));
     await store.close();
   });
 

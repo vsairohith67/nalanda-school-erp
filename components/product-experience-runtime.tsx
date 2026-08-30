@@ -35,6 +35,15 @@ function labelResponsiveTables(root: ParentNode = document) {
   }
 }
 
+function afterHydration(task: () => void) {
+  if ("requestIdleCallback" in window) {
+    const idle = window.requestIdleCallback(task, { timeout: 2_000 });
+    return () => window.cancelIdleCallback(idle);
+  }
+  const timer = setTimeout(task, 1_500);
+  return () => clearTimeout(timer);
+}
+
 export function ProductExperienceRuntime() {
   const announcementRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -43,33 +52,30 @@ export function ProductExperienceRuntime() {
     // The runtime survives client-side route transitions. Clear transient form
     // announcements so a completed login/save is not repeated on the next page.
     if (announcementRef.current) announcementRef.current.textContent = "";
-    // App-layout effects can run while a newly streamed client subtree is still
-    // hydrating. Defer enhancement until the next frame so accessibility
-    // metadata never races React's hydration of those tables.
-    const enhancementTimer = window.setTimeout(() => labelResponsiveTables(), 1_000);
-    return () => window.clearTimeout(enhancementTimer);
+    // Global table decoration must wait until the current React tree has
+    // hydrated. Mutating a later-hydrating route subtree from the root layout
+    // creates an otherwise harmless but release-blocking hydration mismatch.
+    return afterHydration(() => labelResponsiveTables());
   }, [pathname]);
 
   useEffect(() => {
     const announce = (message: string) => {
       if (announcementRef.current) announcementRef.current.textContent = message;
     };
-    let observer: MutationObserver | null = null;
-    const observe = () => {
-      labelResponsiveTables();
-      observer = new MutationObserver((records) => {
-        for (const record of records) {
-          for (const node of record.addedNodes) {
-            if (!(node instanceof HTMLElement)) continue;
-            const owningTable = node.closest<HTMLTableElement>(".table-wrap table");
-            if (owningTable) labelResponsiveTables(owningTable);
-            else if (node.matches(".table-wrap, .table-wrap table") || node.querySelector(".table-wrap table")) labelResponsiveTables(node);
-          }
+    const observer = new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (!(node instanceof HTMLElement)) continue;
+          const owningTable = node.closest<HTMLTableElement>(".table-wrap table");
+          if (owningTable) labelResponsiveTables(owningTable);
+          else if (node.matches(".table-wrap, .table-wrap table") || node.querySelector(".table-wrap table")) labelResponsiveTables(node);
         }
-      });
+      }
+    });
+    const cancelHydrationWait = afterHydration(() => {
+      labelResponsiveTables();
       observer.observe(document.body, { childList: true, subtree: true });
-    };
-    const enhancementTimer = window.setTimeout(observe, 1_000);
+    });
 
     const onInput = (event: Event) => {
       const target = event.target as HTMLElement | null;
@@ -117,8 +123,8 @@ export function ProductExperienceRuntime() {
     window.addEventListener("beforeunload", beforeUnload);
     window.addEventListener("resize", onResize);
     return () => {
-      window.clearTimeout(enhancementTimer);
-      observer?.disconnect();
+      cancelHydrationWait();
+      observer.disconnect();
       document.removeEventListener("input", onInput, true);
       document.removeEventListener("change", onInput, true);
       document.removeEventListener("submit", onSubmit, true);

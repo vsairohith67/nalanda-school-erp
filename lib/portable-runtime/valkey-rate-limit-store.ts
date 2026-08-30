@@ -96,8 +96,9 @@ export function createValkeyRateLimitStore(
     }
   });
   client.on("error", () => undefined);
+  let pendingReady: Promise<void> | null = null;
 
-  async function ready() {
+  async function waitUntilReady() {
     if (client.status === "ready") return;
     if (new Set(["wait", "end"]).has(String(client.status))) await client.connect();
     if (String(client.status) === "ready") return;
@@ -116,6 +117,14 @@ export function createValkeyRateLimitStore(
       client.once("end", onEnd);
       if (String(client.status) === "ready") finish();
     });
+  }
+
+  async function ready() {
+    if (client.status === "ready") return;
+    if (!pendingReady) {
+      pendingReady = waitUntilReady().finally(() => { pendingReady = null; });
+    }
+    await pendingReady;
   }
 
   return {
