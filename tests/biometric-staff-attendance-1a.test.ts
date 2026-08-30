@@ -119,4 +119,15 @@ describe("BIOMETRIC-STAFF-ATTENDANCE-1A", () => {
     expect(source("lib/biometric-attendance/reconciliation.ts")).toContain("formulaSafe");
     expect(source("apps/nalanda-biometric-bridge/src/adapters/vendor-disabled.ts")).toContain("VENDOR_PROTOCOL_NOT_VERIFIED");
   });
+
+  it("runs exact-head CI with pinned PDF tooling and a fresh synthetic full-regression baseline", () => {
+    const workflow = source(".github/workflows/biometric-staff-attendance.yml");
+    expect(workflow).toContain("releases/download/v26.02.0-0/Release-26.02.0-0.zip");
+    expect(workflow).toContain("993e4a94376ed712fafc7058d724ea0b943d118bbd2305cd9ed55174eb85cda5");
+    expect(workflow).toContain("REPORT_CARD_PDFTOPPM_PATH");
+    expect(workflow).toContain("name: Refresh isolated full-regression baseline");
+    expect(workflow).toContain('DATABASE_URL: file:../tmp/release-ci/synthetic.db');
+    expect(workflow).toContain('RELEASE_CI_SYNTHETIC_OPT_IN: "true"');
+    expect(workflow).toContain("pnpm exec tsx scripts/prepare-release-ci-synthetic.ts");
+  });
 });
