@@ -16,7 +16,7 @@ import type { IamActor } from "../lib/iam/security";
 import type { Role } from "../lib/permissions";
 
 const WORKSPACE = path.resolve(".");
-const OPERATIONAL_DATABASE = path.join(WORKSPACE, "prisma", "dev.db");
+const OPERATIONAL_DATABASE = path.resolve(process.env.IAM1A_OPERATIONAL_DB ?? path.join(WORKSPACE, "prisma", "dev.db"));
 const TMP_PARENT = path.join(WORKSPACE, "tmp", "iam1aqa");
 const ROOT = path.join(TMP_PARENT, `IAM1AQA-${process.pid}-${randomUUID()}`);
 const DATABASE = path.join(ROOT, "iam1aqa-copied.db");

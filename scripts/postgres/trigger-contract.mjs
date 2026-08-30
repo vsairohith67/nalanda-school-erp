@@ -16,8 +16,8 @@ function sha256(value) {
 function translateCondition(source) {
   return source
     .trim()
-    .replace(/\b((?:NEW|OLD|[A-Za-z][A-Za-z0-9_]*)\."(?:isActive|temporaryReturnRequired)")\s*(=|<>)\s*1\b/g, "$1 $2 TRUE")
-    .replace(/\b((?:NEW|OLD|[A-Za-z][A-Za-z0-9_]*)\."(?:isActive|temporaryReturnRequired)")\s*(=|<>)\s*0\b/g, "$1 $2 FALSE")
+    .replace(/\b((?:NEW|OLD|[A-Za-z][A-Za-z0-9_]*)\."(?:isActive|temporaryReturnRequired|overnightShiftEnabled|splitShiftEnabled)")\s*(=|<>)\s*1\b/g, "$1 $2 TRUE")
+    .replace(/\b((?:NEW|OLD|[A-Za-z][A-Za-z0-9_]*)\."(?:isActive|temporaryReturnRequired|overnightShiftEnabled|splitShiftEnabled)")\s*(=|<>)\s*0\b/g, "$1 $2 FALSE")
     .replace(/\s+IS\s+NOT\s+(?!NULL\b)/gi, " IS DISTINCT FROM ")
     .replace(/\s+IS\s+(?!NOT\b|NULL\b|DISTINCT\b)/gi, " IS NOT DISTINCT FROM ");
 }

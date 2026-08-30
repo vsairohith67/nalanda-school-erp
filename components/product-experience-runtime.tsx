@@ -43,25 +43,33 @@ export function ProductExperienceRuntime() {
     // The runtime survives client-side route transitions. Clear transient form
     // announcements so a completed login/save is not repeated on the next page.
     if (announcementRef.current) announcementRef.current.textContent = "";
-    labelResponsiveTables();
+    // App-layout effects can run while a newly streamed client subtree is still
+    // hydrating. Defer enhancement until the next frame so accessibility
+    // metadata never races React's hydration of those tables.
+    const enhancementTimer = window.setTimeout(() => labelResponsiveTables(), 1_000);
+    return () => window.clearTimeout(enhancementTimer);
   }, [pathname]);
 
   useEffect(() => {
     const announce = (message: string) => {
       if (announcementRef.current) announcementRef.current.textContent = message;
     };
-    labelResponsiveTables();
-    const observer = new MutationObserver((records) => {
-      for (const record of records) {
-        for (const node of record.addedNodes) {
-          if (!(node instanceof HTMLElement)) continue;
-          const owningTable = node.closest<HTMLTableElement>(".table-wrap table");
-          if (owningTable) labelResponsiveTables(owningTable);
-          else if (node.matches(".table-wrap, .table-wrap table") || node.querySelector(".table-wrap table")) labelResponsiveTables(node);
+    let observer: MutationObserver | null = null;
+    const observe = () => {
+      labelResponsiveTables();
+      observer = new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (!(node instanceof HTMLElement)) continue;
+            const owningTable = node.closest<HTMLTableElement>(".table-wrap table");
+            if (owningTable) labelResponsiveTables(owningTable);
+            else if (node.matches(".table-wrap, .table-wrap table") || node.querySelector(".table-wrap table")) labelResponsiveTables(node);
+          }
         }
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    };
+    const enhancementTimer = window.setTimeout(observe, 1_000);
 
     const onInput = (event: Event) => {
       const target = event.target as HTMLElement | null;
@@ -109,7 +117,8 @@ export function ProductExperienceRuntime() {
     window.addEventListener("beforeunload", beforeUnload);
     window.addEventListener("resize", onResize);
     return () => {
-      observer.disconnect();
+      window.clearTimeout(enhancementTimer);
+      observer?.disconnect();
       document.removeEventListener("input", onInput, true);
       document.removeEventListener("change", onInput, true);
       document.removeEventListener("submit", onSubmit, true);

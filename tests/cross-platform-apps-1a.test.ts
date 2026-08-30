@@ -103,8 +103,8 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
     const middleware = source("middleware.ts");
     expect(middleware).toContain('"/api/native-auth/request"');
     expect(middleware).toContain('"/api/native/v1/sync"');
-    expect(middleware).toContain("!isNativeRouteAuthorized && !session");
-    expect(middleware).toContain("!isNativeRouteAuthorized && !unsafeRequestOriginAllowed(request)");
+    expect(middleware).toContain("!isNativeRouteAuthorized && !isSignedMachineRouteAuthorized && !session");
+    expect(middleware).toContain("!isNativeRouteAuthorized && !isSignedMachineRouteAuthorized && !unsafeRequestOriginAllowed(request)");
     expect(source("app/api/native/v1/sync/route.ts")).toContain('resolveNativeSession(request, "offline:sync")');
   });
 

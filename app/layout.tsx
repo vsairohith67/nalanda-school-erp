@@ -18,6 +18,7 @@ import { SecurityDialogProvider } from "@/components/security-dialog-provider";
 import { headers } from "next/headers";
 import { parentMeetingsEnabled } from "@/lib/parent-meeting-feature";
 import { isOfflineSyncEnabled } from "@/lib/offline-sync/feature-flag";
+import { isBiometricAttendanceEnabled } from "@/lib/biometric-attendance/feature-flag";
 import { PRODUCT_BRAND } from "@/config/product-brand";
 import { ProductExperienceRuntime } from "@/components/product-experience-runtime";
 
@@ -112,6 +113,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                 enabledOptionalOperationsFeatures={user ? enabledOptionalOperationsFeatures(user.role) : []}
                 parentMeetingsEnabled={parentMeetingsEnabled()}
                 offlineSyncEnabled={isOfflineSyncEnabled()}
+                biometricAttendanceEnabled={isBiometricAttendanceEnabled()}
               >
                 {children}
               </AppShell>

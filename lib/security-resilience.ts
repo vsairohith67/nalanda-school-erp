@@ -42,6 +42,7 @@ export const RATE_LIMIT_POLICIES: readonly RateLimitPolicy[] = [
   policy("auth.recovery", "MEDIUM", ["POST"], 5, 15 * MINUTE, (path) => path.startsWith("/api/auth/recovery/")),
   policy("auth.otp", "MEDIUM", ["POST"], 6, 10 * MINUTE, (path) => /^\/api\/auth\/(?:otp|verification)(?:\/|$)/i.test(path)),
   policy("native.auth", "HIGH", ["POST"], 12, 10 * MINUTE, (path) => path.startsWith("/api/native-auth/")),
+  policy("biometric.ingest", "HIGH", ["POST"], 60, MINUTE, (path) => path === "/api/biometric/ingest"),
   policy("public.admissions", "MEDIUM", ["POST", "PATCH"], 8, 10 * MINUTE, (path) => path.startsWith("/api/public/admissions/")),
   policy("public.support", "MEDIUM", ["POST"], 6, 10 * MINUTE, (path) => path.startsWith("/api/public/support/")),
   policy("smart-ai", "HIGH", ["POST"], 8, MINUTE, (path) => path === "/api/super-admin/ai" || path.startsWith("/api/ai-assistant/")),

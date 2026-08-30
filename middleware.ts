@@ -57,11 +57,13 @@ const nativeRouteAuthorizedPaths = new Set([
   "/api/native/v1/sync",
   "/api/native/v1/conflicts"
 ]);
+const signedMachineRouteAuthorizedPaths = new Set(["/api/biometric/ingest"]);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isOfflinePublicShell = offlinePublicShellPaths.has(pathname);
   const isNativeRouteAuthorized = nativeRouteAuthorizedPaths.has(pathname);
+  const isSignedMachineRouteAuthorized = signedMachineRouteAuthorizedPaths.has(pathname);
   const nonce = crypto.randomUUID().replaceAll("-", "");
   const applySecurityHeaders = (response: NextResponse) => {
     response.headers.set("content-security-policy", contentSecurityPolicy(nonce));
@@ -99,12 +101,16 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/_next/") ||
     pathname === "/favicon.ico";
   const sessionReference = await verifySessionToken(request.cookies.get(SESSION_COOKIE)?.value);
-  const session = isPublic || isNativeRouteAuthorized ? null : sessionReference;
+  const session = isPublic || isNativeRouteAuthorized || isSignedMachineRouteAuthorized ? null : sessionReference;
+  const signedMachineActor = isSignedMachineRouteAuthorized && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(request.headers.get("x-nalanda-biometric-bridge-id") ?? "")
+    ? request.headers.get("x-nalanda-biometric-bridge-id")!.toLowerCase()
+    : null;
 
   const rateLimit = await enforceOperationRateLimit(pathname, request.method, {
     ...(clientIdentity.trusted ? { ip: clientIdentity.source } : directNativeActor ? { ip: `local-native:${directNativeActor}` } : {}),
-    ...(sessionReference ? { session: sessionReference.sessionId } : {})
-  }, { dimensions: ["ip", "session", "endpoint", "operationCost"] });
+    ...(sessionReference ? { session: sessionReference.sessionId } : {}),
+    ...(signedMachineActor ? { device: `biometric-bridge:${signedMachineActor}` } : {})
+  }, { dimensions: isSignedMachineRouteAuthorized ? ["ip", "device", "endpoint", "operationCost"] : ["ip", "session", "endpoint", "operationCost"] });
   if (!rateLimit.allowed) {
     emitSecurityResilienceEvent("RATE_LIMIT_HIT", {
       policy: rateLimit.policy?.id,
@@ -126,7 +132,7 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(response);
   }
 
-  if (!isPublic && !isNativeRouteAuthorized && !session) {
+  if (!isPublic && !isNativeRouteAuthorized && !isSignedMachineRouteAuthorized && !session) {
     if (pathname.startsWith("/api/")) {
       const response = NextResponse.json({ error: "Authentication required" }, { status: 401 });
       response.headers.set("cache-control", "private, no-store");
@@ -139,10 +145,10 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(response);
   }
 
-  // Native protocol routes authenticate and authorize inside their route handlers
-  // with opaque credentials and device signatures. They do not carry browser
-  // cookies and therefore must not be coupled to the browser CSRF boundary.
-  if (!isNativeRouteAuthorized && !unsafeRequestOriginAllowed(request)) {
+  // Machine protocol routes authenticate and authorize inside their exact route
+  // handlers. They do not carry browser cookies, so they remain outside the
+  // browser CSRF boundary while retaining ingress, body, query, and rate limits.
+  if (!isNativeRouteAuthorized && !isSignedMachineRouteAuthorized && !unsafeRequestOriginAllowed(request)) {
     const response = NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
     response.headers.set("cache-control", "private, no-store");
     return applySecurityHeaders(response);
@@ -201,7 +207,7 @@ export async function middleware(request: NextRequest) {
   if (pathname === "/forgot-password" || pathname === "/reset-password") {
     response.headers.set("cache-control", "private, no-store");
   }
-  if (!isPublic && !isNativeRouteAuthorized && !pathname.startsWith("/_next/")) {
+  if (!isPublic && !isNativeRouteAuthorized && !isSignedMachineRouteAuthorized && !pathname.startsWith("/_next/")) {
     response.headers.set("cache-control", "private, no-store");
   }
   if (isProviderWebhookPath(pathname)) response.headers.set("cache-control", "private, no-store");
