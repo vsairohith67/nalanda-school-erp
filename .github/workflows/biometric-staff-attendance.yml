@@ -125,6 +125,7 @@ jobs:
       CI: "true"
       EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       DATABASE_PROVIDER: postgresql
+      POSTGRES_READINESS_SYNTHETIC_QA: "1"
       POSTGRES_HOST: 127.0.0.1
       POSTGRES_PORT: "5432"
       POSTGRES_USER: nalanda_migrator
