@@ -12,7 +12,7 @@ Can oversee attendance, Staff work, academic configuration, exact marks/report a
 
 ## Director
 
-Can review governed operational and finance summaries, approvals and bounded release state. Principal and Director scopes remain distinct. Do not use a Director summary as full release execution authority. Routes: `/dashboard`, `/daily-collection`, `/expenses`, `/cash-book`, `/academic-reports`, `/release-operations`.
+Can review governed operational and finance summaries, approve and issue report cards under the existing server-owned permission policy, and view bounded release state. Principal and Director scopes remain distinct: Director report authority does not grant Principal marks-entry/moderation or full release execution authority. Routes: `/dashboard`, `/daily-collection`, `/expenses`, `/cash-book`, `/academic-reports`, `/report-cards/publication`, `/release-operations`.
 
 ## Accountant
 

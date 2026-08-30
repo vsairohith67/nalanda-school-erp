@@ -1,6 +1,6 @@
-import { buildSyntheticPilotRoleAccessMatrix } from "../config/synthetic-pilot-role-access-matrix";
+import { assertSyntheticPilotRoleAccessMatrixIntegrity, buildSyntheticPilotRoleAccessMatrix } from "../config/synthetic-pilot-role-access-matrix";
 
-const matrix = buildSyntheticPilotRoleAccessMatrix();
+const matrix = process.argv.includes("--check") ? assertSyntheticPilotRoleAccessMatrixIntegrity() : buildSyntheticPilotRoleAccessMatrix();
 if (process.argv.includes("--check")) {
   if (matrix.roles.length !== 12) throw new Error("SYNTHETIC_PILOT_ROLE_COUNT_MISMATCH");
   for (const role of matrix.roles) {

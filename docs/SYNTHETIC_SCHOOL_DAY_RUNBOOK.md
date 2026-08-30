@@ -44,7 +44,7 @@ Use synthetic/copied data only. Record the operator, time, environment and evide
 
 ## Principal and Director
 
-Principal owns academic and attendance exceptions, marks/report approvals, Staff operations, Parent issues and meetings. Director receives the existing bounded finance/release summaries and governance visibility. Neither role may acquire Super Admin IAM or exact full release authority through navigation.
+Principal owns academic and attendance exceptions, marks entry/moderation, Staff operations, Parent issues and meetings. Director retains the existing governed report approval/issue authority and bounded finance/release summaries, but not Principal marks-entry authority. Neither role may acquire Super Admin IAM or exact full release authority through navigation.
 
 ## Super Admin
 

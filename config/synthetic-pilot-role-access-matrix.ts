@@ -29,7 +29,7 @@ export const SYNTHETIC_PILOT_CRITICAL_SURFACES = [
   { id: "cash-book", route: "/cash-book", permission: "VIEW_CASH_BOOK", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ACCOUNTANT", "VIEWER"] },
   { id: "student-attendance", route: "/attendance/students", permission: "MANAGE_STUDENT_ATTENDANCE", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "TEACHER"] },
   { id: "marks-entry", route: "/marks/entry/[assessmentId]", permission: "ENTER_MARKS", allowedRoles: ["SUPER_ADMIN", "PRINCIPAL"] },
-  { id: "report-issue", route: "/report-cards/publication", permission: "ISSUE_REPORT_CARDS", allowedRoles: ["SUPER_ADMIN", "PRINCIPAL"] },
+  { id: "report-issue", route: "/report-cards/publication", permission: "ISSUE_REPORT_CARDS", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL"] },
   { id: "parent-portal", route: "/parent", permission: "VIEW_PARENT_PLACEHOLDER", allowedRoles: ["SUPER_ADMIN", "PARENT"] },
   { id: "gate-pass", route: "/student-departures/gate", permission: "VERIFY_GATE_PASS", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "GATE_STAFF"] },
   { id: "iam", route: "/iam", permission: "VIEW_IAM_ACCESS", allowedRoles: ["SUPER_ADMIN", "DIRECTOR"] },
@@ -74,4 +74,28 @@ export function buildSyntheticPilotRoleAccessMatrix() {
     ],
     criticalSurfaces: SYNTHETIC_PILOT_CRITICAL_SURFACES
   };
+}
+
+export function assertSyntheticPilotRoleAccessMatrixIntegrity() {
+  const matrix = buildSyntheticPilotRoleAccessMatrix();
+  const baseRoles = matrix.roles.filter((role) => role.authorityKind === "BASE_ROLE");
+
+  for (const surface of matrix.criticalSurfaces) {
+    for (const roleName of surface.allowedRoles) {
+      const role = baseRoles.find((candidate) => candidate.role === roleName);
+      if (!role || !(role.allowedPermissions as readonly string[]).includes(surface.permission)) {
+        throw new Error(`SYNTHETIC_PILOT_CRITICAL_SURFACE_ROLE_MISMATCH:${surface.id}:${roleName}`);
+      }
+    }
+  }
+
+  const reportSurface = matrix.criticalSurfaces.find((surface) => surface.id === "report-issue");
+  const reportIssuers = baseRoles
+    .filter((role) => (role.allowedPermissions as readonly string[]).includes("ISSUE_REPORT_CARDS"))
+    .map((role) => role.role);
+  if (!reportSurface || JSON.stringify(reportSurface.allowedRoles) !== JSON.stringify(reportIssuers)) {
+    throw new Error("SYNTHETIC_PILOT_REPORT_ISSUER_MATRIX_MISMATCH");
+  }
+
+  return matrix;
 }

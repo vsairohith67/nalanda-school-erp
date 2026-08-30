@@ -10,7 +10,7 @@
 
 ## Release
 
-1. Principal or Super Admin issues the approved batch using the existing confirmation.
+1. Principal, Director or Super Admin issues the approved batch using the existing confirmation and current server-owned permission policy.
 2. Record batch/version, count, issuer and timestamp.
 3. Run Parent checks: correct child, sibling, wrong child, inactive link, unpublished report, replaced/frozen report and concurrent sessions.
 4. Confirm downloads are private/no-store and bulk print requires its governed permission.

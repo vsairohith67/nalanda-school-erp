@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { buildSyntheticPilotRoleAccessMatrix, SYNTHETIC_PILOT_CRITICAL_SURFACES } from "@/config/synthetic-pilot-role-access-matrix";
+import { assertSyntheticPilotRoleAccessMatrixIntegrity, buildSyntheticPilotRoleAccessMatrix, SYNTHETIC_PILOT_CRITICAL_SURFACES } from "@/config/synthetic-pilot-role-access-matrix";
 import { MARKS_DELEGATION_PERMISSIONS } from "@/lib/academic-integrity";
 import { releaseFeatureFlags } from "@/lib/release-feature-flags";
 import { SYNTHETIC_PILOT_DATASET_PLAN, SYNTHETIC_PILOT_DIMENSIONS, reconcileDailyCash } from "@/lib/synthetic-pilot-readiness";
@@ -29,6 +29,9 @@ describe("SYNTHETIC-PILOT-READINESS-1A acceptance contracts", () => {
     expect(marksOperator.allowedPermissions).toEqual(MARKS_DELEGATION_PERMISSIONS);
     for (const permission of ["MANAGE_IAM_USERS", "MODERATE_EXAM_MARKS", "ISSUE_REPORT_CARDS"]) expect(marksOperator.allowedPermissions).not.toContain(permission);
     expect(SYNTHETIC_PILOT_CRITICAL_SURFACES).toHaveLength(10);
+    const reportIssue = SYNTHETIC_PILOT_CRITICAL_SURFACES.find((surface) => surface.id === "report-issue")!;
+    expect(reportIssue.allowedRoles).toEqual(["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL"]);
+    expect(assertSyntheticPilotRoleAccessMatrixIntegrity()).toEqual(matrix);
   });
 
   it("keeps optional, offline, native, provider and real-data flags off at zero rollout", () => {

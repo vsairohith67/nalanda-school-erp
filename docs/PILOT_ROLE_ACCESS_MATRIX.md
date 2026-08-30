@@ -6,7 +6,7 @@ The authoritative machine-readable matrix is `config/synthetic-pilot-role-access
 | --- | --- | --- | --- |
 | Super Admin | `/dashboard` | Full governed base-role authority | No AI/provider/real-data bypass; owner isolation remains |
 | Principal | `/dashboard` | Academic, attendance, Staff and report governance | IAM/release-execution boundaries |
-| Director | `/dashboard` | Bounded oversight, finance and release summaries | Full release/IAM and Principal-only workflow boundaries |
+| Director | `/dashboard` | Bounded oversight, finance/release summaries and existing report-card approval/issue authority | Full release/IAM and Principal marks-entry/moderation boundaries |
 | Admin | `/dashboard` | Existing administrative master/workflow scope | Finance/marks/release escalation paths |
 | Accountant | `/dashboard` | Finance and separately activated offline drafts | General Student master, Admissions, exports and Old Due offline |
 | Computer Operator | `/students` | Bounded preparation/import/timetable/documents | Approval/issue/finance escalation |

@@ -23,8 +23,8 @@ This evidence will be sealed only after the final feature head, isolated fixture
 | Browser role/theme/viewport matrix | Passed | five normalized PNG artifacts; 11 active role personas, one disabled persona, desktop/mobile, light/dark, expected denial and clean-console checks |
 | Failure/security drills | Passed | `SYNTHETIC_PILOT_FAILURE_DRILLS.md`; portable dependency outages/recovery, immutable upgrade/rollback, encrypted restore, controlled load and 86 focused security/session/database/offline/native checks |
 | Backup/restore twice and RTO | Passed | `qa:synthetic-pilot:backup-restore`; v44, exact count/total/history reconciliation, private object restored twice, wrong key refused, restored native session revoked; local first restore 8,907 ms (not a production SLA) |
-| Full regression/build | Passed | canonical typecheck; 240 test files passed, one qpdf-dependent file skipped, 2,211 tests passed and three qpdf tests skipped; optimized Next production build passed |
-| Security/secret review | Passed | repository safety/secret scan passed; final sealed diff scan `0418d430-c82f-4cc8-a665-0b6cd0064be6`, digest `cc2261a0e634b71543dc9dd1c67603a8bda5866fc8a43a1b271ff42f53bd80c6`, reviewed 11/11 executable items with zero findings |
+| Full regression/build | Passed | canonical typecheck; 241 test files passed, one qpdf-dependent file skipped, 2,222 tests passed and three qpdf tests skipped; optimized Next production build passed |
+| Security/secret review | Passed | repository safety/secret scan passed; sealed exact-diff scan `7eb40b20-f720-4c22-8db0-da40739da093` reviewed 14 surfaces with complete coverage and zero reportable findings; one non-enforcing evidence mismatch was corrected and is covered by the final correction scan |
 | Operational DB after hash | Passed | original 8,409,088-byte file retained SHA-256 `65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA` and original mtime; no sidecar appeared |
 | Exact-head CI | Pending | exact feature SHA and terminal runner evidence |
 | Merge/tag | Pending | normal merge; annotated `synthetic-pilot-readiness-v44-2026-08-30` |
