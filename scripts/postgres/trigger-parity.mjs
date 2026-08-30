@@ -12,6 +12,8 @@ const relative = path.relative(allowedRoot, temporaryRoot);
 if (!relative || relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) throw new Error("POSTGRES_TRIGGER_PARITY_TMP_INVALID");
 const databasePath = path.join(temporaryRoot, "synthetic-trigger-parity.db");
 const inventoryPath = path.join(temporaryRoot, "inventory.json");
+const mode = process.argv[2] ?? "--check";
+if (!["--check", "--write"].includes(mode)) throw new Error(`POSTGRES_TRIGGER_PARITY_MODE_INVALID:${mode}`);
 
 function run(args, environment = process.env) {
   const result = spawnSync(process.execPath, args, { cwd: workspace, env: environment, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, windowsHide: true });
@@ -26,7 +28,7 @@ try {
   delete environment.DIRECT_URL;
   run(["scripts/postgres/select-provider.mjs", "migrate", "--provider=sqlite"], environment);
   run(["scripts/postgres/sqlite-schema-inventory.mjs", databasePath, `--out=${inventoryPath}`], environment);
-  const output = run(["scripts/postgres/trigger-contract.mjs", inventoryPath, "--check"], environment);
+  const output = run(["scripts/postgres/trigger-contract.mjs", inventoryPath, mode], environment);
   console.log(output);
 } finally {
   rmSync(temporaryRoot, { recursive: true, force: true });

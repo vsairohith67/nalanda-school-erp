@@ -1,10 +1,10 @@
 {
   "contractVersion": 1,
   "source": "synthetic fresh SQLite migration deploy",
-  "sourceSha256": "A584C24ABE5538D4039CB626F9BA3433531FF05573AF7B9AB8044E879E79F311",
+  "sourceSha256": "993B9F9F8FD21213A5C8548B5592EC4C838DA225D2E8129993D0247758A0F67A",
   "views": 0,
-  "triggerCount": 168,
-  "sqlSha256": "8DC922EED0D6FE260D6A2458360DAC6485A8CD19476E683F1CC1F0CC93E01074",
+  "triggerCount": 185,
+  "sqlSha256": "41FC6A97728FB511302C57D7B64264E7E3C493E05E47B715591454EA1243720A",
   "triggers": [
     {
       "name": "academic_calendar_audit_append_only_delete",
@@ -229,6 +229,142 @@
       "columns": null,
       "statementCount": 1,
       "sqliteSqlSha256": "841A484448F1CCC7C1F0987961CC5C07540D3C4FF93289A004A73FAD47297D42"
+    },
+    {
+      "name": "BiometricAttendancePolicy_contract_insert",
+      "table": "BiometricAttendancePolicy",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "4DA4C6DA4594E38C2DDBDE2FEA8E345F96E80E061205125383FB45490CE4C92A"
+    },
+    {
+      "name": "BiometricAttendancePolicy_contract_update",
+      "table": "BiometricAttendancePolicy",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "9D2EDA78A5DC05C37515617E873409FF1D8C9B8FA5F8B615B4F38C51AA6630E2"
+    },
+    {
+      "name": "BiometricAuditEvent_no_delete",
+      "table": "BiometricAuditEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "171D448ACEEE2D99300F17EBB7CB6AB4B8751545851F2337D303780B407EE9A4"
+    },
+    {
+      "name": "BiometricAuditEvent_no_update",
+      "table": "BiometricAuditEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "EF643A0BB83E67B2CFA3246B388E9DE59DA25363667D002D0AE0EB6F048541DC"
+    },
+    {
+      "name": "BiometricBridge_key_rotation",
+      "table": "BiometricBridge",
+      "event": "UPDATE",
+      "columns": "\"publicSigningKey\",\"publicKeyHash\",\"keyAlgorithm\",\"keyVersion\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "87FA5A1442244F9D778A99D595368AAA3C85368B31EDCD68FD6DD5CEF4B06025"
+    },
+    {
+      "name": "BiometricBridge_status_insert",
+      "table": "BiometricBridge",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "AB6EB35DC9DC2AEB3763EA692FDB3D5AB3B13B81E3C07EB7CD7165A601D5650C"
+    },
+    {
+      "name": "BiometricBridge_transition",
+      "table": "BiometricBridge",
+      "event": "UPDATE",
+      "columns": "\"status\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "74DD361002194330CDF28CC1CD139A5015934B9BA1459F2B4EBA4ADC3915E5D2"
+    },
+    {
+      "name": "BiometricCorrection_evidence_immutable",
+      "table": "BiometricCorrection",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "0581D1DE2047FFC061FC9E8154628FC024C6D386AE0DDE52D373E06E86C588A4"
+    },
+    {
+      "name": "BiometricCorrection_no_delete",
+      "table": "BiometricCorrection",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "4E26FBC66A9DFE1761C28A1EB2DD6608AB2785EA2798D241336C6A4EBAF469A3"
+    },
+    {
+      "name": "BiometricDevice_status_insert",
+      "table": "BiometricDevice",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "F23FA22256DE4E97654EF2F6CACE84F505A9DA3BD668A7B0FD9BFF70DCD95B85"
+    },
+    {
+      "name": "BiometricDevice_transition",
+      "table": "BiometricDevice",
+      "event": "UPDATE",
+      "columns": "\"status\",\"protocolProfile\",\"protocolProofStatus\"",
+      "statementCount": 1,
+      "sqliteSqlSha256": "C723E8C0D04117A42FE21D2B043CF401514D7F756A3121EDB3A7EBB6EA836612"
+    },
+    {
+      "name": "BiometricMapping_no_delete",
+      "table": "BiometricStaffMapping",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "E0409CD6594C6AFE47AD086B85BE235BD666E5DB64DB5163457D224C6F0AC2C9"
+    },
+    {
+      "name": "BiometricRawPunch_contract",
+      "table": "BiometricRawPunch",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "B5955D9809DE733AE7316528CE4BC830ECFA79DCE9283AEDCEFEBA95FB7826D3"
+    },
+    {
+      "name": "BiometricRawPunch_evidence_immutable",
+      "table": "BiometricRawPunch",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "F814A8074940D4D1235F37F03C162FF99AB8ADF43F12C32A055CCF0E6ADF1567"
+    },
+    {
+      "name": "BiometricRawPunch_no_delete",
+      "table": "BiometricRawPunch",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "4DAACED29CB8362C89D6CB63954B8EC668AAE910940ADBDFAEE9AE38A8FE1587"
+    },
+    {
+      "name": "BiometricReconciliation_contract_insert",
+      "table": "BiometricReconciliation",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "AA77D6378AC4A6F2C08D7D218F05A466E8FCB56655F0F0E13164FC804417FFD4"
+    },
+    {
+      "name": "BiometricReconciliation_contract_update",
+      "table": "BiometricReconciliation",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "225B94C3C4F8D93FEE46AEC1333EECE605C16AFFF557AFBB7A433FF1067BDE5D"
     },
     {
       "name": "ClassworkAttachment_identity_immutable",

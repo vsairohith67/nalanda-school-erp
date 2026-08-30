@@ -11,6 +11,7 @@ const workspace = path.resolve(".");
 const migrationName = "20260826_postgresql_baseline";
 const migrationPath = path.join(workspace, "prisma", "postgresql", "migrations", migrationName, "migration.sql");
 const triggerPath = path.join(workspace, "prisma", "postgresql", "trigger-equivalents.sql");
+const RELEASED_BASELINE_SHA256 = "B567F7FD126BEB48403A54BF82519C7C1D13DEFC015280E5A02DA81818F6FBAA";
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex").toUpperCase();
@@ -55,16 +56,11 @@ export function baselineContract() {
 
 function main() {
   const mode = process.argv[2] ?? "--check";
-  const contract = baselineContract();
-  if (mode === "--write") {
-    mkdirSync(path.dirname(migrationPath), { recursive: true });
-    writeFileSync(migrationPath, contract.sql, "utf8");
-  } else if (mode === "--check") {
-    if (readFileSync(migrationPath, "utf8").replaceAll("\r\n", "\n") !== contract.sql) throw new Error("POSTGRES_BASELINE_MIGRATION_DRIFT");
-  } else {
-    throw new Error(`POSTGRES_BASELINE_MODE_INVALID:${mode}`);
-  }
-  console.log(JSON.stringify({ result: mode === "--write" ? "POSTGRES_BASELINE_WRITTEN" : "POSTGRES_BASELINE_IN_SYNC", migrationName, sha256: contract.sha256 }));
+  if (mode !== "--check") throw new Error("POSTGRES_RELEASED_BASELINE_IMMUTABLE");
+  const committed = readFileSync(migrationPath, "utf8").replaceAll("\r\n", "\n");
+  const actualSha256 = sha256(committed);
+  if (actualSha256 !== RELEASED_BASELINE_SHA256) throw new Error("POSTGRES_BASELINE_MIGRATION_DRIFT");
+  console.log(JSON.stringify({ result: "POSTGRES_BASELINE_IN_SYNC", migrationName, sha256: actualSha256, policy: "RELEASED_BASELINE_IMMUTABLE" }));
 }
 
 try {

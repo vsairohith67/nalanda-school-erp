@@ -302,6 +302,18 @@
       ]
     },
     {
+      "key": "biometric-staff-attendance-1a",
+      "status": "ENFORCED",
+      "evidencePaths": [
+        "lib/biometric-attendance/feature-flag.ts",
+        "lib/release-feature-flag-runtime.ts",
+        "lib/access-rules.ts",
+        "middleware.ts",
+        "app/api/biometric/ingest/route.ts",
+        "app/attendance/staff/biometric/page.tsx"
+      ]
+    },
+    {
       "key": "cross-platform-apps-1a",
       "status": "ENFORCED",
       "evidencePaths": [

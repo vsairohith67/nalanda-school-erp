@@ -49,6 +49,7 @@ describe("PostgreSQL application regression partition", () => {
     expect(workflow.match(/REPORT_CARD_FONT_DIR: \/usr\/share\/fonts\/truetype\/msttcorefonts/g)).toHaveLength(2);
     expect(crossProviderJob).toContain("restored_table_count=");
     expect(crossProviderJob).toContain("table_schema='public'");
+    expect(crossProviderJob).toContain('test "$restored_table_count" = "341"');
     for (const source of evidenceWriters) {
       expect(source).toMatch(/mkdirSync\(path\.dirname\(output(?:Path)?\), \{ recursive: true \}\)/);
     }

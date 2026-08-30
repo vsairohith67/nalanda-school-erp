@@ -11,8 +11,9 @@ $secretRoot = Join-Path $workspace 'tmp\portable-staging\secrets'
 $qaRoot = Join-Path $workspace 'tmp\portable-staging\qa'
 $originalLocation = Get-Location
 $results = [ordered]@{}
-$curlCommand = if ($IsWindows) { 'curl.exe' } else { 'curl' }
-$curlTlsArgs = if ($IsWindows) { @('--ssl-no-revoke') } else { @() }
+$windowsHost = $env:OS -eq 'Windows_NT'
+$curlCommand = if ($windowsHost) { 'curl.exe' } else { 'curl' }
+$curlTlsArgs = if ($windowsHost) { @('--ssl-no-revoke') } else { @() }
 
 function Invoke-Checked([string]$Label, [scriptblock]$Command) {
   & $Command
@@ -86,7 +87,8 @@ try {
   Invoke-Checked 'local CA extraction' {
     docker compose -f $composeFile exec -T reverse-proxy cat /data/caddy/pki/authorities/local/root.crt | Set-Content -LiteralPath $caFile -Encoding ascii
   }
-  Invoke-Checked 'HTTPS readiness' { & $curlCommand @curlTlsArgs --cacert $caFile --fail --silent --show-error https://portable-staging.localhost:8443/api/health/ready | Out-Null }
+  $portableReadinessCurlArguments = @($curlTlsArgs) + @('--cacert', $caFile, '--fail', '--silent', '--show-error', 'https://portable-staging.localhost:8443/api/health/ready')
+  Invoke-Checked 'HTTPS readiness' { & $curlCommand @portableReadinessCurlArguments | Out-Null }
   foreach ($replica in @('web-1', 'web-2')) {
     Invoke-Checked "$replica readiness" { docker compose -f $composeFile exec -T reverse-proxy wget -T 15 -qO- "http://${replica}:3000/api/health/ready" | Out-Null }
   }
@@ -98,7 +100,7 @@ try {
   $env:PORTABLE_IMAGE_TAG = 'candidate'
   Invoke-Checked 'rolling upgrade one replica' { docker compose -f $composeFile up -d --no-deps --force-recreate web-1 }
   Wait-ServiceHealthy 'web-1'
-  Invoke-Checked 'rolling upgrade availability' { & $curlCommand @curlTlsArgs --cacert $caFile --fail --silent --show-error https://portable-staging.localhost:8443/api/health/ready | Out-Null }
+  Invoke-Checked 'rolling upgrade availability' { & $curlCommand @portableReadinessCurlArguments | Out-Null }
   $upgradedContainer = (docker compose -f $composeFile ps -q web-1).Trim()
   if ((docker inspect --format '{{.Image}}' $upgradedContainer).Trim() -ne $baselineImageId) { throw 'Rolling upgrade image identity mismatch' }
   $results.upgrade = @{ strategy = 'one-replica-at-a-time'; availability = $true; immutableImage = $baselineImageId }
@@ -106,7 +108,7 @@ try {
   $env:PORTABLE_IMAGE_TAG = 'local'
   Invoke-Checked 'rolling rollback one replica' { docker compose -f $composeFile up -d --no-deps --force-recreate web-1 }
   Wait-ServiceHealthy 'web-1'
-  Invoke-Checked 'rolling rollback availability' { & $curlCommand @curlTlsArgs --cacert $caFile --fail --silent --show-error https://portable-staging.localhost:8443/api/health/ready | Out-Null }
+  Invoke-Checked 'rolling rollback availability' { & $curlCommand @portableReadinessCurlArguments | Out-Null }
   $rolledBackContainer = (docker compose -f $composeFile ps -q web-1).Trim()
   if ((docker inspect --format '{{.Image}}' $rolledBackContainer).Trim() -ne $baselineImageId) { throw 'Rolling rollback image identity mismatch' }
   $results.rollback = @{ strategy = 'retag-and-recreate-one-replica'; availability = $true; migrationHistoryUnchanged = $true }
@@ -116,7 +118,8 @@ try {
     $results["${dependency}OutageFailedClosed"] = $true
   }
 
-  Invoke-Checked 'post-outage readiness recovery' { & $curlCommand @curlTlsArgs --cacert $caFile --retry 20 --retry-delay 2 --retry-all-errors --fail --silent --show-error https://portable-staging.localhost:8443/api/health/ready | Out-Null }
+  $portableRecoveryCurlArguments = @($curlTlsArgs) + @('--cacert', $caFile, '--retry', '20', '--retry-delay', '2', '--retry-all-errors', '--fail', '--silent', '--show-error', 'https://portable-staging.localhost:8443/api/health/ready')
+  Invoke-Checked 'post-outage readiness recovery' { & $curlCommand @portableRecoveryCurlArguments | Out-Null }
   Invoke-Checked 'post-outage integration rerun' { docker compose -f $composeFile run --rm --no-deps runtime-qa }
   $results.result = 'PORTABLE_STACK_QA_PASSED'
   $results.realData = $false

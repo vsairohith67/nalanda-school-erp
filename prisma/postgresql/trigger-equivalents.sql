@@ -512,6 +512,307 @@ BEFORE DELETE ON "AdvanceRecoverySchedule"
 FOR EACH ROW
 EXECUTE FUNCTION "nalanda_trigger_6a61202ec326c61404f9"();
 
+-- SQLite trigger parity: BiometricAttendancePolicy_contract_insert
+CREATE FUNCTION "nalanda_trigger_8801361d1098f7165727"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."status" NOT IN ('DRAFT','ACTIVE','RETIRED') OR NEW."workdayBasis" <> 'PUBLISHED_CALENDAR' OR NEW."shiftType" NOT IN ('DAY','OVERNIGHT','SPLIT') OR NEW."overnightShiftEnabled" <> FALSE OR NEW."splitShiftEnabled" <> FALSE OR NEW."halfDayThresholdMinutes" < 1 OR NEW."fullDayThresholdMinutes" < NEW."halfDayThresholdMinutes" OR NEW."fullDayThresholdMinutes" > 1440 OR NEW."halfDayRule" NOT IN ('DURATION_THRESHOLD','CALENDAR_HALF_DAY') OR NEW."missingInBehavior" NOT IN ('EXCEPTION','ABSENT_PENDING_REVIEW') OR NEW."missingOutBehavior" NOT IN ('EXCEPTION','ABSENT_PENDING_REVIEW') OR NEW."multiplePunchStrategy" NOT IN ('FIRST_IN_LAST_OUT_FLAG','ADMIN_REVIEW') OR NEW."leaveInteraction" NOT IN ('APPROVED_LEAVE_GOVERNS','FLAG_PUNCH') OR NEW."holidayInteraction" NOT IN ('FLAG_PUNCH','IGNORE_NO_PUNCH')) THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_POLICY_CONTRACT_INVALID';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricAttendancePolicy_contract_insert"
+BEFORE INSERT ON "BiometricAttendancePolicy"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_8801361d1098f7165727"();
+
+-- SQLite trigger parity: BiometricAttendancePolicy_contract_update
+CREATE FUNCTION "nalanda_trigger_8efeb3a449c693a94188"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."status" NOT IN ('DRAFT','ACTIVE','RETIRED') OR NEW."workdayBasis" <> 'PUBLISHED_CALENDAR' OR NEW."shiftType" NOT IN ('DAY','OVERNIGHT','SPLIT') OR NEW."overnightShiftEnabled" <> FALSE OR NEW."splitShiftEnabled" <> FALSE OR NEW."halfDayThresholdMinutes" < 1 OR NEW."fullDayThresholdMinutes" < NEW."halfDayThresholdMinutes" OR NEW."fullDayThresholdMinutes" > 1440 OR NEW."halfDayRule" NOT IN ('DURATION_THRESHOLD','CALENDAR_HALF_DAY') OR NEW."missingInBehavior" NOT IN ('EXCEPTION','ABSENT_PENDING_REVIEW') OR NEW."missingOutBehavior" NOT IN ('EXCEPTION','ABSENT_PENDING_REVIEW') OR NEW."multiplePunchStrategy" NOT IN ('FIRST_IN_LAST_OUT_FLAG','ADMIN_REVIEW') OR NEW."leaveInteraction" NOT IN ('APPROVED_LEAVE_GOVERNS','FLAG_PUNCH') OR NEW."holidayInteraction" NOT IN ('FLAG_PUNCH','IGNORE_NO_PUNCH')) THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_POLICY_CONTRACT_INVALID';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricAttendancePolicy_contract_update"
+BEFORE UPDATE ON "BiometricAttendancePolicy"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_8efeb3a449c693a94188"();
+
+-- SQLite trigger parity: BiometricAuditEvent_no_delete
+CREATE FUNCTION "nalanda_trigger_fad5633a3f5843e56c45"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_AUDIT_IMMUTABLE';
+  END IF;
+  RETURN OLD;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricAuditEvent_no_delete"
+BEFORE DELETE ON "BiometricAuditEvent"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_fad5633a3f5843e56c45"();
+
+-- SQLite trigger parity: BiometricAuditEvent_no_update
+CREATE FUNCTION "nalanda_trigger_c3cb629ed4e179fad71e"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_AUDIT_IMMUTABLE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricAuditEvent_no_update"
+BEFORE UPDATE ON "BiometricAuditEvent"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_c3cb629ed4e179fad71e"();
+
+-- SQLite trigger parity: BiometricBridge_key_rotation
+CREATE FUNCTION "nalanda_trigger_beb356337f910cd06eaf"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (OLD."status" <> 'ACTIVE' OR NEW."status" <> 'ACTIVE' OR NEW."keyVersion" <> OLD."keyVersion" + 1) THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_BRIDGE_KEY_ROTATION_INVALID';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricBridge_key_rotation"
+BEFORE UPDATE OF "publicSigningKey","publicKeyHash","keyAlgorithm","keyVersion" ON "BiometricBridge"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_beb356337f910cd06eaf"();
+
+-- SQLite trigger parity: BiometricBridge_status_insert
+CREATE FUNCTION "nalanda_trigger_69d04bb8346021f24062"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."status" NOT IN ('PENDING_APPROVAL','ACTIVE','REVOKED','RETIRED') OR NEW."keyAlgorithm" NOT IN ('ED25519','ECDSA_P256_SHA256')) THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_BRIDGE_CONTRACT_INVALID';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricBridge_status_insert"
+BEFORE INSERT ON "BiometricBridge"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_69d04bb8346021f24062"();
+
+-- SQLite trigger parity: BiometricBridge_transition
+CREATE FUNCTION "nalanda_trigger_52b1f5aef9727008e3c5"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."status" NOT IN ('PENDING_APPROVAL','ACTIVE','REVOKED','RETIRED') OR OLD."status" IN ('REVOKED','RETIRED')) THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_BRIDGE_TRANSITION_INVALID';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricBridge_transition"
+BEFORE UPDATE OF "status" ON "BiometricBridge"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_52b1f5aef9727008e3c5"();
+
+-- SQLite trigger parity: BiometricCorrection_evidence_immutable
+CREATE FUNCTION "nalanda_trigger_93b6454c1bc9cb311d51"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."id" <> OLD."id" OR NEW."publicKey" <> OLD."publicKey" OR NEW."reconciliationId" <> OLD."reconciliationId" OR NEW."requestedByUserId" <> OLD."requestedByUserId" OR COALESCE(NEW."preparedByUserId",'') <> COALESCE(OLD."preparedByUserId",'') OR NEW."reason" <> OLD."reason" OR NEW."originalEvidenceJson" <> OLD."originalEvidenceJson" OR NEW."beforeJson" <> OLD."beforeJson" OR NEW."afterJson" <> OLD."afterJson" OR NEW."submittedAt" <> OLD."submittedAt" OR NEW."createdAt" <> OLD."createdAt") THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_CORRECTION_EVIDENCE_IMMUTABLE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricCorrection_evidence_immutable"
+BEFORE UPDATE ON "BiometricCorrection"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_93b6454c1bc9cb311d51"();
+
+-- SQLite trigger parity: BiometricCorrection_no_delete
+CREATE FUNCTION "nalanda_trigger_fb3c70e28bd515493e95"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_CORRECTION_IMMUTABLE';
+  END IF;
+  RETURN OLD;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricCorrection_no_delete"
+BEFORE DELETE ON "BiometricCorrection"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_fb3c70e28bd515493e95"();
+
+-- SQLite trigger parity: BiometricDevice_status_insert
+CREATE FUNCTION "nalanda_trigger_e67d32b6b9775deb0fdf"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."status" NOT IN ('PENDING_APPROVAL','ACTIVE','REVOKED','RETIRED') OR NEW."clockDriftStatus" NOT IN ('HEALTHY','WARNING','UNTRUSTED_TIME','UNKNOWN') OR NEW."protocolProfile" NOT IN ('ESSL_K30_PRO_PUSH','ESSL_ZK_LAN_SDK','ZK_ADMS_PUSH','GENERIC_ADMS_PUSH','GENERIC_LAN_POLL','GENERIC_CSV_IMPORT','SIMULATOR')
+  OR (NEW."protocolProfile" IN ('ESSL_K30_PRO_PUSH','ESSL_ZK_LAN_SDK','ZK_ADMS_PUSH') AND NEW."protocolProofStatus" NOT IN ('NOT_PROVIDED','OFFICIAL_VERIFIED'))
+  OR (NEW."protocolProfile" IN ('GENERIC_ADMS_PUSH','GENERIC_LAN_POLL') AND NEW."protocolProofStatus" NOT IN ('ADAPTER_CONTRACT_PENDING','ADAPTER_CONTRACT_APPROVED'))
+  OR (NEW."protocolProfile" IN ('GENERIC_CSV_IMPORT','SIMULATOR') AND NEW."protocolProofStatus" <> 'NOT_REQUIRED')
+  OR (NEW."status" = 'ACTIVE' AND NEW."protocolProfile" IN ('ESSL_K30_PRO_PUSH','ESSL_ZK_LAN_SDK','ZK_ADMS_PUSH') AND NEW."protocolProofStatus" <> 'OFFICIAL_VERIFIED')
+  OR (NEW."status" = 'ACTIVE' AND NEW."protocolProfile" IN ('GENERIC_ADMS_PUSH','GENERIC_LAN_POLL') AND NEW."protocolProofStatus" <> 'ADAPTER_CONTRACT_APPROVED')) THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_DEVICE_CONTRACT_INVALID';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricDevice_status_insert"
+BEFORE INSERT ON "BiometricDevice"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_e67d32b6b9775deb0fdf"();
+
+-- SQLite trigger parity: BiometricDevice_transition
+CREATE FUNCTION "nalanda_trigger_ad6cfbe0d1159fafd566"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."status" NOT IN ('PENDING_APPROVAL','ACTIVE','REVOKED','RETIRED') OR NEW."clockDriftStatus" NOT IN ('HEALTHY','WARNING','UNTRUSTED_TIME','UNKNOWN') OR OLD."status" IN ('REVOKED','RETIRED')
+  OR NEW."protocolProfile" NOT IN ('ESSL_K30_PRO_PUSH','ESSL_ZK_LAN_SDK','ZK_ADMS_PUSH','GENERIC_ADMS_PUSH','GENERIC_LAN_POLL','GENERIC_CSV_IMPORT','SIMULATOR')
+  OR (NEW."protocolProfile" IN ('ESSL_K30_PRO_PUSH','ESSL_ZK_LAN_SDK','ZK_ADMS_PUSH') AND NEW."protocolProofStatus" NOT IN ('NOT_PROVIDED','OFFICIAL_VERIFIED'))
+  OR (NEW."protocolProfile" IN ('GENERIC_ADMS_PUSH','GENERIC_LAN_POLL') AND NEW."protocolProofStatus" NOT IN ('ADAPTER_CONTRACT_PENDING','ADAPTER_CONTRACT_APPROVED'))
+  OR (NEW."protocolProfile" IN ('GENERIC_CSV_IMPORT','SIMULATOR') AND NEW."protocolProofStatus" <> 'NOT_REQUIRED')
+  OR (NEW."status" = 'ACTIVE' AND NEW."protocolProfile" IN ('ESSL_K30_PRO_PUSH','ESSL_ZK_LAN_SDK','ZK_ADMS_PUSH') AND NEW."protocolProofStatus" <> 'OFFICIAL_VERIFIED')
+  OR (NEW."status" = 'ACTIVE' AND NEW."protocolProfile" IN ('GENERIC_ADMS_PUSH','GENERIC_LAN_POLL') AND NEW."protocolProofStatus" <> 'ADAPTER_CONTRACT_APPROVED')
+  OR ((NEW."protocolProfile" <> OLD."protocolProfile" OR NEW."protocolProofStatus" <> OLD."protocolProofStatus") AND (OLD."status" <> 'PENDING_APPROVAL' OR NEW."status" <> 'PENDING_APPROVAL'))) THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_DEVICE_TRANSITION_INVALID';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricDevice_transition"
+BEFORE UPDATE OF "status","protocolProfile","protocolProofStatus" ON "BiometricDevice"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_ad6cfbe0d1159fafd566"();
+
+-- SQLite trigger parity: BiometricMapping_no_delete
+CREATE FUNCTION "nalanda_trigger_031c0d73d2b4e9ba70f5"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_MAPPING_HISTORY_IMMUTABLE';
+  END IF;
+  RETURN OLD;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricMapping_no_delete"
+BEFORE DELETE ON "BiometricStaffMapping"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_031c0d73d2b4e9ba70f5"();
+
+-- SQLite trigger parity: BiometricRawPunch_contract
+CREATE FUNCTION "nalanda_trigger_0f6379579620972af7ce"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."verificationMethod" NOT IN ('FINGERPRINT','FACE','CARD','PIN','OTHER') OR NEW."punchCode" NOT IN ('IN','OUT','UNKNOWN') OR NEW."clockDriftStatus" NOT IN ('HEALTHY','WARNING','UNTRUSTED_TIME','UNKNOWN') OR NEW."reconciliationStatus" NOT IN ('PENDING','MAPPED_PENDING','RECONCILED','MAPPING_CONFLICT','UNMAPPED_STAFF','INACTIVE_STAFF','DEVICE_EXCEPTION','DEVICE_TIME_UNTRUSTED')) THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_RAW_PUNCH_CONTRACT_INVALID';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricRawPunch_contract"
+BEFORE INSERT ON "BiometricRawPunch"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_0f6379579620972af7ce"();
+
+-- SQLite trigger parity: BiometricRawPunch_evidence_immutable
+CREATE FUNCTION "nalanda_trigger_84cba0972f419d1a8e1d"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."id" <> OLD."id" OR NEW."publicKey" <> OLD."publicKey" OR NEW."eventIdentityHash" <> OLD."eventIdentityHash" OR NEW."eventPayloadHash" <> OLD."eventPayloadHash" OR NEW."batchId" <> OLD."batchId" OR NEW."bridgeId" <> OLD."bridgeId" OR NEW."deviceId" <> OLD."deviceId" OR COALESCE(NEW."mappingId",'') <> COALESCE(OLD."mappingId",'') OR COALESCE(NEW."staffMemberId",'') <> COALESCE(OLD."staffMemberId",'') OR NEW."opaqueDeviceUserId" <> OLD."opaqueDeviceUserId" OR NEW."punchTimestamp" <> OLD."punchTimestamp" OR NEW."bridgeReceivedTimestamp" <> OLD."bridgeReceivedTimestamp" OR NEW."receivedTimestamp" <> OLD."receivedTimestamp" OR NEW."verificationMethod" <> OLD."verificationMethod" OR NEW."punchCode" <> OLD."punchCode" OR COALESCE(NEW."statusCode",'') <> COALESCE(OLD."statusCode",'') OR COALESCE(NEW."sequenceNumber",-1) <> COALESCE(OLD."sequenceNumber",-1) OR NEW."sequenceEpoch" <> OLD."sequenceEpoch" OR COALESCE(NEW."eventReference",'') <> COALESCE(OLD."eventReference",'') OR NEW."protocolProfile" <> OLD."protocolProfile" OR COALESCE(NEW."clockDriftSeconds",2147483647) <> COALESCE(OLD."clockDriftSeconds",2147483647) OR NEW."clockDriftStatus" <> OLD."clockDriftStatus" OR NEW."createdAt" <> OLD."createdAt") THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_RAW_EVIDENCE_IMMUTABLE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricRawPunch_evidence_immutable"
+BEFORE UPDATE ON "BiometricRawPunch"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_84cba0972f419d1a8e1d"();
+
+-- SQLite trigger parity: BiometricRawPunch_no_delete
+CREATE FUNCTION "nalanda_trigger_c885eb0441bc9fdaf5eb"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_RAW_EVIDENCE_IMMUTABLE';
+  END IF;
+  RETURN OLD;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricRawPunch_no_delete"
+BEFORE DELETE ON "BiometricRawPunch"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_c885eb0441bc9fdaf5eb"();
+
+-- SQLite trigger parity: BiometricReconciliation_contract_insert
+CREATE FUNCTION "nalanda_trigger_7c34ef04ff7d7692f113"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."status" NOT IN ('PENDING','READY_FOR_APPROVAL','EXCEPTION','APPROVED','CORRECTED') OR NEW."outcome" NOT IN ('UNRESOLVED','PRESENT','ABSENT_PENDING_REVIEW','LATE','EARLY_DEPARTURE','LATE_AND_EARLY','HALF_DAY','ON_APPROVED_LEAVE','NON_WORKING_DAY','HOLIDAY_PUNCH','MISSING_IN','MISSING_OUT','MULTIPLE_PUNCHES','UNMAPPED_STAFF','DEVICE_TIME_UNTRUSTED','DEVICE_EXCEPTION','EXCEPTION')) THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_RECONCILIATION_CONTRACT_INVALID';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricReconciliation_contract_insert"
+BEFORE INSERT ON "BiometricReconciliation"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_7c34ef04ff7d7692f113"();
+
+-- SQLite trigger parity: BiometricReconciliation_contract_update
+CREATE FUNCTION "nalanda_trigger_c5a55c4197949b57c5c5"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."status" NOT IN ('PENDING','READY_FOR_APPROVAL','EXCEPTION','APPROVED','CORRECTED') OR NEW."outcome" NOT IN ('UNRESOLVED','PRESENT','ABSENT_PENDING_REVIEW','LATE','EARLY_DEPARTURE','LATE_AND_EARLY','HALF_DAY','ON_APPROVED_LEAVE','NON_WORKING_DAY','HOLIDAY_PUNCH','MISSING_IN','MISSING_OUT','MULTIPLE_PUNCHES','UNMAPPED_STAFF','DEVICE_TIME_UNTRUSTED','DEVICE_EXCEPTION','EXCEPTION')) THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'BIOMETRIC_RECONCILIATION_CONTRACT_INVALID';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "BiometricReconciliation_contract_update"
+BEFORE UPDATE ON "BiometricReconciliation"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_c5a55c4197949b57c5c5"();
+
 -- SQLite trigger parity: ClassworkAttachment_identity_immutable
 CREATE FUNCTION "nalanda_trigger_9197b5c8e4f942ba117e"() RETURNS trigger
 LANGUAGE plpgsql

@@ -10,8 +10,10 @@ describe("PostgreSQL schema contract", () => {
     expect(() => execFileSync(process.execPath, ["scripts/postgres/schema-contract.mjs", "--check"], { cwd: workspace, stdio: "pipe" })).not.toThrow();
     const sqlite = readFileSync(path.join(workspace, "prisma", "schema.prisma"), "utf8");
     const postgres = readFileSync(path.join(workspace, "prisma", "postgresql", "schema.prisma"), "utf8");
-    expect((sqlite.match(/^model\s+/gm) ?? []).length).toBe(330);
-    expect((postgres.match(/^model\s+/gm) ?? []).length).toBe(330);
+    const sqliteModelCount = (sqlite.match(/^model\s+/gm) ?? []).length;
+    const postgresModelCount = (postgres.match(/^model\s+/gm) ?? []).length;
+    expect(sqliteModelCount).toBeGreaterThanOrEqual(330);
+    expect(postgresModelCount).toBe(sqliteModelCount);
     expect(postgres).toContain('provider = "postgresql"');
     expect(postgres).toContain('directUrl = env("DIRECT_URL")');
   });

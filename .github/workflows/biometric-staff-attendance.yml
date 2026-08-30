@@ -1,0 +1,183 @@
+name: Biometric Staff Attendance 1A
+
+on:
+  pull_request:
+    paths:
+      - "app/api/attendance/staff/biometric/**"
+      - "app/api/biometric/**"
+      - "app/attendance/staff/biometric/**"
+      - "app/teacher/attendance/**"
+      - "apps/nalanda-biometric-bridge/**"
+      - "components/biometric-attendance-workspace.tsx"
+      - "lib/biometric-attendance/**"
+      - "prisma/**"
+      - "tests/biometric-staff-attendance-1a.test.ts"
+      - "scripts/qa-biometric-staff-attendance-1a-*"
+      - "config/release-feature-flags.json"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/biometric-staff-attendance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: biometric-staff-attendance-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  DATABASE_PROVIDER: sqlite
+  DATABASE_URL: "file:../tmp/biometric-ci/synthetic.db"
+  NALANDA_ENVIRONMENT: "TEST"
+  RELEASE_FEATURE_FLAGS_QA_MODE: "SYNTHETIC_COPY_ONLY"
+  RELEASE_FEATURE_FLAGS_QA_ENABLED: "biometric-staff-attendance-1a"
+  APP_ORIGIN: "http://127.0.0.1:3000"
+  LIVE_PROVIDERS_ENABLED: "false"
+
+jobs:
+  exact-head-software-gate:
+    name: Exact-head software, security and ERP regression
+    runs-on: windows-2025
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify exact source head
+        shell: pwsh
+        run: if ((git rev-parse HEAD).Trim() -ne $env:EXPECTED_SHA) { throw "Exact-head checkout mismatch" }
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - name: Install pinned full-regression tools
+        shell: pwsh
+        run: |
+          choco install ripgrep --version=15.2.0 -y --no-progress
+          rg --version
+          $popplerArchive = Join-Path $env:RUNNER_TEMP 'poppler-26.02.0-0.zip'
+          $popplerExtract = Join-Path $env:RUNNER_TEMP 'poppler-26.02.0-0'
+          Invoke-WebRequest -Uri 'https://github.com/oschwartz10612/poppler-windows/releases/download/v26.02.0-0/Release-26.02.0-0.zip' -OutFile $popplerArchive
+          $expectedPopplerSha256 = '993e4a94376ed712fafc7058d724ea0b943d118bbd2305cd9ed55174eb85cda5'
+          $actualPopplerSha256 = (Get-FileHash -LiteralPath $popplerArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualPopplerSha256 -ne $expectedPopplerSha256) { throw "Pinned Poppler archive checksum mismatch" }
+          Expand-Archive -LiteralPath $popplerArchive -DestinationPath $popplerExtract
+          $pdfToPpm = Get-Item -LiteralPath (Join-Path $popplerExtract 'poppler-26.02.0\Library\bin\pdftoppm.exe') -ErrorAction Stop
+          "REPORT_CARD_PDFTOPPM_PATH=$($pdfToPpm.FullName)" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
+          & $pdfToPpm.FullName -v
+      - run: pnpm install --frozen-lockfile
+      - name: Public-repository source, artifact and secret gate
+        run: pnpm qa:biometric:public-repo-scan && pnpm audit --audit-level high
+      - run: pnpm exec prisma generate --schema prisma/schema.prisma
+      - run: pnpm exec prisma validate --schema prisma/schema.prisma
+      - name: Prepare isolated synthetic database
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path tmp\biometric-ci | Out-Null
+          if (Test-Path -LiteralPath tmp\biometric-ci\synthetic.db) { throw "Synthetic database already exists" }
+          New-Item -ItemType File -Path tmp\biometric-ci\synthetic.db | Out-Null
+          pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          Copy-Item -LiteralPath tmp\biometric-ci\synthetic.db -Destination prisma\dev.db
+      - name: Focused bridge and application contracts
+        run: pnpm test:biometric && pnpm bridge:typecheck && pnpm bridge:build
+      - name: Copied-database simulator, ingestion, reconciliation, security and restore
+        run: pnpm qa:biometric
+      - name: Migration and backup-restore gates
+        run: pnpm migration:fresh-check && pnpm migration:restore-check
+      - name: Security acceptance
+        run: pnpm security:resilience:acceptance
+      - name: Shared foundation regressions
+        run: pnpm qa:product-experience && pnpm qa:portable-runtime && pnpm qa:offline-sync && pnpm exec vitest run tests/iam1a.test.ts tests/offline-sync-1a.test.ts tests/security-resilience.test.ts
+      - name: Read-only operational and release-safety commands
+        shell: pwsh
+        env:
+          BACKUP_DIRECTORY: tmp/biometric-ci/backups
+        run: |
+          pnpm routes:list
+          pnpm lifecycle:backfill
+          pnpm backup
+          pnpm git:safety-check
+      - name: Refresh isolated full-regression baseline
+        shell: pwsh
+        env:
+          DATABASE_URL: file:../tmp/release-ci/synthetic.db
+          NODE_ENV: development
+          RELEASE_CI_SYNTHETIC_OPT_IN: "true"
+        run: |
+          New-Item -ItemType Directory -Force -Path tmp\release-ci | Out-Null
+          if (Test-Path -LiteralPath tmp\release-ci\synthetic.db) { throw "Full-regression synthetic database already exists" }
+          New-Item -ItemType File -Path tmp\release-ci\synthetic.db | Out-Null
+          pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db -Force
+      - name: Full ERP regression
+        env:
+          DATABASE_URL: file:../tmp/release-ci/synthetic.db
+        run: pnpm test && pnpm typecheck && pnpm build
+      - name: Remove ephemeral database, backup and bridge build output
+        if: always()
+        shell: pwsh
+        run: |
+          Remove-Item -LiteralPath tmp\biometric-ci -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath tmp\release-ci -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath prisma\dev.db -Force -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath apps\nalanda-biometric-bridge\dist -Recurse -Force -ErrorAction SilentlyContinue
+
+  postgres-migration-gate:
+    name: Exact-head PostgreSQL biometric migration and parity
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_USER: nalanda_migrator
+          POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-biometric
+          POSTGRES_DB: nalanda_biometric_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nalanda_migrator -d nalanda_biometric_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: "true"
+      EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      DATABASE_PROVIDER: postgresql
+      POSTGRES_READINESS_SYNTHETIC_QA: "1"
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: nalanda_migrator
+      POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-biometric
+      POSTGRES_DB: nalanda_biometric_ci
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify exact source head
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - name: Configure disposable PostgreSQL connection
+        shell: bash
+        run: |
+          database_url=$(printf '%s://%s:%s@%s:%s/%s?schema=public' postgresql "$POSTGRES_USER" "$POSTGRES_PASSWORD" "$POSTGRES_HOST" "$POSTGRES_PORT" "$POSTGRES_DB")
+          echo "DATABASE_URL=$database_url" >> "$GITHUB_ENV"
+          echo "DIRECT_URL=$database_url" >> "$GITHUB_ENV"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate:postgres
+      - name: Fresh baseline, biometric migration, repeat deploy and status
+        run: pnpm db:migrate:postgres && pnpm db:migrate:postgres && pnpm db:status:postgres
+      - name: Cross-provider schema, index, uniqueness, foreign-key and trigger parity
+        run: pnpm qa:postgres:parity && pnpm qa:postgres

@@ -37,9 +37,20 @@ const NON_DELEGABLE_ROLE_DENIALS: Partial<Record<Role, ReadonlySet<CanonicalPerm
   ])
 };
 
+const BIOMETRIC_PERMISSIONS = new Set<CanonicalPermission>(PERMISSIONS.filter((permission) => permission.includes("BIOMETRIC") || permission === "VIEW_OWN_STAFF_ATTENDANCE" || permission === "REQUEST_OWN_ATTENDANCE_CORRECTION"));
+const BIOMETRIC_OWN_PERMISSIONS = new Set<CanonicalPermission>(["VIEW_OWN_STAFF_ATTENDANCE", "REQUEST_OWN_ATTENDANCE_CORRECTION"]);
+const BIOMETRIC_APPROVAL_PERMISSIONS = new Set<CanonicalPermission>(["APPROVE_BIOMETRIC_STAFF_MAPPINGS", "APPROVE_BIOMETRIC_ATTENDANCE"]);
+const BIOMETRIC_PREPARATION_PERMISSIONS = new Set<CanonicalPermission>(["MANAGE_BIOMETRIC_STAFF_MAPPINGS", "RECONCILE_BIOMETRIC_ATTENDANCE"]);
+
 function rolePermissionIsHardDenied(role: Role, permission: CanonicalPermission) {
   if (!(["SUPER_ADMIN", "DIRECTOR"] as Role[]).includes(role) && RELEASE_OPERATIONS_PERMISSIONS.has(permission)) return true;
   if (role === "DIRECTOR" && ["VIEW_RELEASE_OPERATIONS", "EXECUTE_RELEASE", "ROLLBACK_RELEASE", "MANAGE_RELEASE_FEATURE_FLAGS"].includes(permission)) return true;
+  if (permission === "MANAGE_BIOMETRIC_DEVICES" && role !== "SUPER_ADMIN") return true;
+  if (BIOMETRIC_OWN_PERMISSIONS.has(permission) && !(["SUPER_ADMIN", "TEACHER"] as Role[]).includes(role)) return true;
+  if (BIOMETRIC_APPROVAL_PERMISSIONS.has(permission) && !(["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL"] as Role[]).includes(role)) return true;
+  if (BIOMETRIC_PREPARATION_PERMISSIONS.has(permission) && !(["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN"] as Role[]).includes(role)) return true;
+  if (BIOMETRIC_PERMISSIONS.has(permission) && (["ACCOUNTANT", "COMPUTER_OPERATOR", "GATE_STAFF", "PARENT", "STUDENT", "VIEWER"] as Role[]).includes(role)) return true;
+  if (BIOMETRIC_PERMISSIONS.has(permission) && role === "TEACHER" && !BIOMETRIC_OWN_PERMISSIONS.has(permission)) return true;
   return NON_DELEGABLE_ROLE_DENIALS[role]?.has(permission) ?? false;
 }
 
