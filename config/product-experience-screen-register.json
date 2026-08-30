@@ -3,8 +3,8 @@
   "promptId": "PRODUCT-EXPERIENCE-1A",
   "generatedFrom": "app page source tree",
   "completeness": {
-    "pageFiles": 356,
-    "registeredScreens": 356,
+    "pageFiles": 358,
+    "registeredScreens": 358,
     "omittedScreens": 0
   },
   "sharedBaselines": {
@@ -653,6 +653,46 @@
         "SUBMIT_STAFF_ATTENDANCE",
         "VIEW_STAFF_ATTENDANCE",
         "VIEW_STAFF_ATTENDANCE_REPORTS"
+      ]
+    },
+    {
+      "route": "/attendance/staff/biometric",
+      "file": "app/attendance/staff/biometric/page.tsx",
+      "roles": [
+        "SUPER_ADMIN"
+      ],
+      "module": "attendance",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_SERVER_AUTHORISED",
+      "primaryTask": "Biometric Staff Attendance",
+      "risk": "MEDIUM",
+      "states": {
+        "empty": "SHARED_EMPTY_PATTERN_AVAILABLE",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "PRESENT",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "PRESENT",
+        "forms": "NOT_APPLICABLE",
+        "tables": "NOT_APPLICABLE",
+        "manualReviewRequired": false
+      },
+      "permissionRequirements": [
+        "APPROVE_BIOMETRIC_ATTENDANCE",
+        "APPROVE_BIOMETRIC_STAFF_MAPPINGS",
+        "EXPORT_BIOMETRIC_ATTENDANCE_REPORTS",
+        "MANAGE_BIOMETRIC_DEVICES",
+        "MANAGE_BIOMETRIC_STAFF_MAPPINGS",
+        "RECONCILE_BIOMETRIC_ATTENDANCE",
+        "VIEW_BIOMETRIC_ATTENDANCE"
       ]
     },
     {
@@ -11353,6 +11393,40 @@
       },
       "permissionRequirements": [
         "VIEW_OWN_TEACHER_ANALYTICS"
+      ]
+    },
+    {
+      "route": "/teacher/attendance",
+      "file": "app/teacher/attendance/page.tsx",
+      "roles": [
+        "TEACHER"
+      ],
+      "module": "teacher",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_SERVER_AUTHORISED",
+      "primaryTask": "My Staff Attendance",
+      "risk": "MEDIUM",
+      "states": {
+        "empty": "SHARED_EMPTY_PATTERN_AVAILABLE",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "PRESENT",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "PRESENT",
+        "forms": "NOT_APPLICABLE",
+        "tables": "NOT_APPLICABLE",
+        "manualReviewRequired": false
+      },
+      "permissionRequirements": [
+        "VIEW_OWN_STAFF_ATTENDANCE"
       ]
     },
     {

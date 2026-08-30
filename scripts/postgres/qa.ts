@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { resolveDatabaseProvider } from "../../lib/database-provider";
@@ -7,6 +7,7 @@ import { resolveDatabaseProvider } from "../../lib/database-provider";
 const prisma = new PrismaClient();
 const expectedModels = (readFileSync("prisma/schema.prisma", "utf8").match(/^model\s+/gm) ?? []).length;
 const expectedTriggers = JSON.parse(readFileSync("prisma/postgresql/trigger-manifest.json", "utf8")).triggerCount;
+const expectedMigrations = readdirSync("prisma/postgresql/migrations", { withFileTypes: true }).filter((entry) => entry.isDirectory()).length;
 
 async function main() {
   if (resolveDatabaseProvider() !== "postgresql") throw new Error("POSTGRES_QA_REQUIRES_POSTGRESQL");
@@ -20,7 +21,7 @@ async function main() {
     prisma.$queryRaw<Array<{ bytes: bigint }>>`SELECT pg_database_size(current_database())::bigint AS bytes`
   ]);
   const evidence = {
-    result: "POSTGRES_BASELINE_QA_PASSED",
+    result: "POSTGRES_MIGRATION_QA_PASSED",
     serverVersion: version[0]?.version,
     serverMajor: version[0]?.major,
     tables: Number(tables[0]?.count ?? -1),
@@ -30,11 +31,12 @@ async function main() {
     invalidIndexes: Number(invalidIndexes[0]?.count ?? -1),
     unvalidatedConstraints: Number(unvalidatedConstraints[0]?.count ?? -1),
     migrations: Number(migrations[0]?.count ?? -1),
+    expectedMigrations,
     databaseBytes: Number(size[0]?.bytes ?? 0),
     providerFingerprint: createHash("sha256").update(`${version[0]?.major}:${Number(tables[0]?.count)}:${Number(triggers[0]?.count)}:${Number(migrations[0]?.count)}`).digest("hex").toUpperCase()
   };
-  if (evidence.serverMajor !== 17 || evidence.tables !== expectedModels || evidence.activeTriggers !== expectedTriggers || evidence.invalidIndexes !== 0 || evidence.unvalidatedConstraints !== 0 || evidence.migrations !== 1) {
-    throw new Error(`POSTGRES_BASELINE_QA_FAILED:${JSON.stringify(evidence)}`);
+  if (evidence.serverMajor !== 17 || evidence.tables !== expectedModels || evidence.activeTriggers !== expectedTriggers || evidence.invalidIndexes !== 0 || evidence.unvalidatedConstraints !== 0 || evidence.migrations !== expectedMigrations) {
+    throw new Error(`POSTGRES_MIGRATION_QA_FAILED:${JSON.stringify(evidence)}`);
   }
   const output = path.resolve(process.env.POSTGRES_QA_EVIDENCE ?? "tmp/postgres-readiness-1a/baseline-qa.json");
   mkdirSync(path.dirname(output), { recursive: true });

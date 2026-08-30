@@ -12,8 +12,8 @@
       ".next",
       "artifacts"
     ],
-    "discoveredCount": 60,
-    "bulkExportCount": 40,
+    "discoveredCount": 61,
+    "bulkExportCount": 41,
     "notBulkExportCount": 20
   },
   "bulkExportFlag": {
@@ -139,6 +139,32 @@
       "audited": false,
       "featureFlag": null,
       "releaseState": "CLEARED"
+    },
+    {
+      "id": "biometric-staff-attendance-reports",
+      "sourcePath": "app/api/attendance/staff/biometric/reports/export/route.ts",
+      "route": "/api/attendance/staff/biometric/reports/export",
+      "method": "GET",
+      "module": "Biometric Staff Attendance",
+      "format": "CSV",
+      "classification": "BULK_EXPORT",
+      "permission": "EXPORT_BIOMETRIC_ATTENDANCE_REPORTS",
+      "objectScope": "Authorized Staff biometric reconciliation date range",
+      "sensitiveFieldExclusions": [
+        "passwordHash",
+        "sessionToken",
+        "providerCredential",
+        "secret",
+        "biometricTemplate",
+        "biometricImage"
+      ],
+      "maxRows": 10000,
+      "boundedBehavior": "Validated 366-day range and fixed 10,000-row cap",
+      "csvFormulaSafe": true,
+      "noStore": true,
+      "audited": false,
+      "featureFlag": "biometric-staff-attendance-1a",
+      "releaseState": "DEFAULT_OFF"
     },
     {
       "id": "student-attendance-reports",

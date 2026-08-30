@@ -1,4 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
+import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import {
   assertSchemaEquivalent,
@@ -50,7 +51,14 @@ export async function runMigrationFreshInstallCheck() {
     const migrations = Number((db.prepare("SELECT COUNT(*) AS value FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL").get() as { value: number }).value);
     const operationalChecks = Number((db.prepare("SELECT COUNT(*) AS value FROM OperationalCheckDefinition").get() as { value: number }).value);
     db.close();
-    if (users !== 4 || aliases !== 4 || students !== 8 || migrations !== 24 || operationalChecks !== 13) throw new Error("SYNTHETIC_BOOTSTRAP_COUNTS_INVALID");
+    const expectedMigrations = readdirSync(path.join(process.cwd(), "prisma", "migrations"), { withFileTypes: true })
+      .filter(
+        (entry) =>
+          entry.isDirectory() &&
+          existsSync(path.join(process.cwd(), "prisma", "migrations", entry.name, "migration.sql"))
+      )
+      .length;
+    if (users !== 4 || aliases !== 4 || students !== 8 || migrations !== expectedMigrations || operationalChecks !== 13) throw new Error("SYNTHETIC_BOOTSTRAP_COUNTS_INVALID");
     success = true;
     console.log(`Fresh migration check passed: migrations=${migrations} models=${schema.models} tables=${schema.tables}`);
     console.log(`Synthetic bootstrap passed: users=${users} usernameAliases=${aliases} students=${students} operationalChecks=${operationalChecks}; lifecycle backfill remained dry-run.`);

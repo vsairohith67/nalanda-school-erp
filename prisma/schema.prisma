@@ -648,6 +648,9 @@ model StaffMember {
   createdAt                 DateTime                        @default(now())
   updatedAt                 DateTime                        @updatedAt
   attendanceRecords         StaffAttendanceRecord[]
+  biometricMappings         BiometricStaffMapping[]
+  biometricRawPunches       BiometricRawPunch[]
+  biometricReconciliations  BiometricReconciliation[]
   leaveRequests             StaffLeaveRequest[]
   substituteAbsences        SubstituteAssignment[]          @relation("SubstituteAbsentStaff")
   substituteDuties          SubstituteAssignment[]          @relation("SubstituteDutyStaff")
@@ -760,6 +763,310 @@ model StaffAttendanceRecord {
   @@index([staffMemberId])
   @@index([status])
   @@index([source])
+}
+
+// BIOMETRIC-STAFF-ATTENDANCE-1A stores normalized attendance evidence only.
+// Biometric images, templates, vendor databases, card secrets and device
+// administrator credentials are outside this schema by design.
+model BiometricBridge {
+  id               String                 @id @default(cuid())
+  publicBridgeId   String                 @unique @default(uuid())
+  label            String
+  publicSigningKey String
+  publicKeyHash    String
+  keyAlgorithm     String                 @default("ED25519")
+  keyVersion       Int                    @default(1)
+  status           String                 @default("PENDING_APPROVAL")
+  approvedByUserId String?
+  approvedAt       DateTime?
+  revokedByUserId  String?
+  revokedAt        DateTime?
+  revocationReason String?
+  lastSyncAt       DateTime?
+  lastEventAt      DateTime?
+  lastHealthAt     DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  devices          BiometricDevice[]
+  batches          BiometricIngestBatch[]
+  rawPunches       BiometricRawPunch[]
+  replayNonces     BiometricReplayNonce[]
+
+  @@index([status, createdAt])
+  @@index([lastSyncAt])
+}
+
+model BiometricDevice {
+  id                    String                  @id @default(cuid())
+  publicDeviceId        String                  @unique @default(uuid())
+  bridgeId              String
+  bridge                BiometricBridge         @relation(fields: [bridgeId], references: [id], onDelete: Restrict)
+  vendor                String
+  model                 String
+  firmware              String?
+  serialReferenceMasked String?
+  campus                String
+  location              String
+  protocolProfile       String
+  protocolProofStatus   String                  @default("NOT_PROVIDED")
+  status                String                  @default("PENDING_APPROVAL")
+  healthStatus          String                  @default("UNKNOWN")
+  clockDriftSeconds     Int?
+  clockDriftStatus      String                  @default("UNKNOWN")
+  sequenceEpoch         Int                     @default(1)
+  lastSequence          Int?
+  lastEventAt           DateTime?
+  lastSyncAt            DateTime?
+  lastHealthAt          DateTime?
+  approvedByUserId      String?
+  approvedAt            DateTime?
+  revokedByUserId       String?
+  revokedAt             DateTime?
+  revocationReason      String?
+  version               Int                     @default(1)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  mappings              BiometricStaffMapping[]
+  rawPunches            BiometricRawPunch[]
+  sequenceGaps          BiometricSequenceGap[]
+
+  @@index([bridgeId, status])
+  @@index([campus, location])
+  @@index([protocolProfile, status])
+  @@index([lastEventAt])
+}
+
+model BiometricStaffMapping {
+  id                 String              @id @default(cuid())
+  publicKey          String              @unique @default(uuid())
+  deviceId           String
+  device             BiometricDevice     @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  opaqueDeviceUserId String
+  staffMemberId      String
+  staffMember        StaffMember         @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  status             String              @default("PENDING_APPROVAL")
+  effectiveFrom      DateTime
+  effectiveTo        DateTime?
+  preparedByUserId   String
+  preparationReason  String
+  approvedByUserId   String?
+  approvedAt         DateTime?
+  revokedByUserId    String?
+  revokedAt          DateTime?
+  revocationReason   String?
+  version            Int                 @default(1)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  rawPunches         BiometricRawPunch[]
+
+  @@unique([deviceId, opaqueDeviceUserId, effectiveFrom])
+  @@index([deviceId, opaqueDeviceUserId, status])
+  @@index([staffMemberId, status, effectiveFrom])
+  @@index([approvedByUserId, approvedAt])
+}
+
+model BiometricIngestBatch {
+  id             String                 @id @default(cuid())
+  batchReference String
+  bridgeId       String
+  bridge         BiometricBridge        @relation(fields: [bridgeId], references: [id], onDelete: Restrict)
+  requestHash    String
+  nonceHash      String
+  keyVersion     Int
+  eventCount     Int
+  sequenceStart  Int?
+  sequenceEnd    Int?
+  status         String                 @default("RECEIVED")
+  receivedAt     DateTime               @default(now())
+  completedAt    DateTime?
+  createdAt      DateTime               @default(now())
+  rawPunches     BiometricRawPunch[]
+  sequenceGaps   BiometricSequenceGap[]
+
+  @@unique([bridgeId, batchReference])
+  @@unique([bridgeId, nonceHash])
+  @@index([bridgeId, receivedAt])
+  @@index([status, receivedAt])
+}
+
+model BiometricReplayNonce {
+  id        String          @id @default(cuid())
+  bridgeId  String
+  bridge    BiometricBridge @relation(fields: [bridgeId], references: [id], onDelete: Cascade)
+  nonceHash String
+  seenAt    DateTime        @default(now())
+  expiresAt DateTime
+
+  @@unique([bridgeId, nonceHash])
+  @@index([expiresAt])
+}
+
+model BiometricRawPunch {
+  id                      String                 @id @default(cuid())
+  publicKey               String                 @unique @default(uuid())
+  eventIdentityHash       String                 @unique
+  eventPayloadHash        String
+  batchId                 String
+  batch                   BiometricIngestBatch   @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  bridgeId                String
+  bridge                  BiometricBridge        @relation(fields: [bridgeId], references: [id], onDelete: Restrict)
+  deviceId                String
+  device                  BiometricDevice        @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  mappingId               String?
+  mapping                 BiometricStaffMapping? @relation(fields: [mappingId], references: [id], onDelete: SetNull)
+  staffMemberId           String?
+  staffMember             StaffMember?           @relation(fields: [staffMemberId], references: [id], onDelete: SetNull)
+  opaqueDeviceUserId      String
+  punchTimestamp          DateTime
+  bridgeReceivedTimestamp DateTime
+  receivedTimestamp       DateTime               @default(now())
+  verificationMethod      String
+  punchCode               String
+  statusCode              String?
+  sequenceNumber          Int?
+  sequenceEpoch           Int                    @default(1)
+  eventReference          String?
+  protocolProfile         String
+  clockDriftSeconds       Int?
+  clockDriftStatus        String                 @default("UNKNOWN")
+  reconciliationStatus    String                 @default("PENDING")
+  createdAt               DateTime               @default(now())
+
+  @@index([deviceId, punchTimestamp])
+  @@index([staffMemberId, punchTimestamp])
+  @@index([opaqueDeviceUserId, punchTimestamp])
+  @@index([reconciliationStatus, receivedTimestamp])
+  @@index([deviceId, sequenceEpoch, sequenceNumber])
+}
+
+model BiometricSequenceGap {
+  id                   String               @id @default(cuid())
+  deviceId             String
+  device               BiometricDevice      @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  batchId              String
+  batch                BiometricIngestBatch @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  sequenceEpoch        Int
+  expectedSequence     Int
+  receivedSequence     Int
+  status               String               @default("OPEN")
+  detectedAt           DateTime             @default(now())
+  acknowledgedByUserId String?
+  acknowledgedAt       DateTime?
+  acknowledgementNote  String?
+
+  @@unique([deviceId, sequenceEpoch, expectedSequence, receivedSequence])
+  @@index([deviceId, status, detectedAt])
+}
+
+model BiometricAttendancePolicy {
+  id                             String                    @id @default(cuid())
+  publicKey                      String                    @unique @default(uuid())
+  name                           String
+  campus                         String
+  effectiveFrom                  DateTime
+  effectiveTo                    DateTime?
+  shiftStartTime                 String
+  shiftEndTime                   String
+  workdayBasis                   String                    @default("PUBLISHED_CALENDAR")
+  shiftType                      String                    @default("DAY")
+  graceMinutes                   Int                       @default(0)
+  lateThresholdMinutes           Int                       @default(0)
+  earlyDepartureGraceMinutes     Int                       @default(0)
+  earlyDepartureThresholdMinutes Int                       @default(0)
+  fullDayThresholdMinutes        Int                       @default(480)
+  halfDayThresholdMinutes        Int                       @default(240)
+  halfDayRule                    String                    @default("DURATION_THRESHOLD")
+  missingInBehavior              String                    @default("EXCEPTION")
+  missingOutBehavior             String                    @default("EXCEPTION")
+  multiplePunchStrategy          String                    @default("FIRST_IN_LAST_OUT_FLAG")
+  leaveInteraction               String                    @default("APPROVED_LEAVE_GOVERNS")
+  holidayInteraction             String                    @default("FLAG_PUNCH")
+  overnightShiftEnabled          Boolean                   @default(false)
+  splitShiftEnabled              Boolean                   @default(false)
+  status                         String                    @default("DRAFT")
+  preparedByUserId               String
+  approvedByUserId               String?
+  approvedAt                     DateTime?
+  version                        Int                       @default(1)
+  createdAt                      DateTime                  @default(now())
+  updatedAt                      DateTime                  @updatedAt
+  reconciliations                BiometricReconciliation[]
+
+  @@index([campus, status, effectiveFrom])
+}
+
+model BiometricReconciliation {
+  id                    String                     @id @default(cuid())
+  publicKey             String                     @unique @default(uuid())
+  staffMemberId         String
+  staffMember           StaffMember                @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  attendanceDate        DateTime
+  policyId              String?
+  policy                BiometricAttendancePolicy? @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  status                String                     @default("PENDING")
+  outcome               String                     @default("UNRESOLVED")
+  firstPunchId          String?
+  lastPunchId           String?
+  punchCount            Int                        @default(0)
+  checkInTime           String?
+  checkOutTime          String?
+  lateMinutes           Int?
+  earlyDepartureMinutes Int?
+  exceptionCode         String?
+  leaveRequestId        String?
+  calendarDayId         String?
+  attendanceRecordId    String?
+  preparedByUserId      String?
+  preparedAt            DateTime?
+  approvedByUserId      String?
+  approvedAt            DateTime?
+  version               Int                        @default(1)
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  corrections           BiometricCorrection[]
+
+  @@unique([staffMemberId, attendanceDate])
+  @@index([status, attendanceDate])
+  @@index([outcome, attendanceDate])
+}
+
+model BiometricCorrection {
+  id                   String                  @id @default(cuid())
+  publicKey            String                  @unique @default(uuid())
+  reconciliationId     String
+  reconciliation       BiometricReconciliation @relation(fields: [reconciliationId], references: [id], onDelete: Restrict)
+  requestedByUserId    String
+  preparedByUserId     String?
+  approvedByUserId     String?
+  reason               String
+  originalEvidenceJson String
+  beforeJson           String
+  afterJson            String
+  status               String                  @default("SUBMITTED")
+  submittedAt          DateTime                @default(now())
+  approvedAt           DateTime?
+  rejectedAt           DateTime?
+  rejectionReason      String?
+  version              Int                     @default(1)
+  createdAt            DateTime                @default(now())
+
+  @@index([reconciliationId, submittedAt])
+  @@index([status, submittedAt])
+  @@index([requestedByUserId, submittedAt])
+}
+
+model BiometricAuditEvent {
+  id               String   @id @default(cuid())
+  entityType       String
+  entityId         String
+  eventType        String
+  actorUserId      String?
+  safeMetadataJson String?
+  occurredAt       DateTime @default(now())
+
+  @@index([entityType, entityId, occurredAt])
+  @@index([eventType, occurredAt])
+  @@index([actorUserId, occurredAt])
 }
 
 model SubstituteAssignment {

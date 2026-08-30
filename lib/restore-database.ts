@@ -28,6 +28,7 @@ import { EVENT_MEDIA_BACKUP_KEYS, restoreEventMediaBackup, type EventMediaBackup
 import { PARENT_MEETING_BACKUP_KEYS, restoreParentMeetingBackup, type ParentMeetingBackupKey } from "@/lib/parent-meeting-backup";
 import { OFFLINE_SYNC_BACKUP_KEYS, restoreOfflineSyncBackup, type OfflineSyncBackupKey } from "@/lib/offline-sync/backup";
 import { NATIVE_APP_BACKUP_KEYS, restoreNativeAppBackup, type NativeAppBackupKey } from "@/lib/native-app/backup";
+import { BIOMETRIC_ATTENDANCE_BACKUP_KEYS, restoreBiometricAttendanceBackup, type BiometricAttendanceBackupKey } from "@/lib/biometric-attendance/backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -136,6 +137,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(PARENT_MEETING_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<ParentMeetingBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(OFFLINE_SYNC_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<OfflineSyncBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(NATIVE_APP_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<NativeAppBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(BIOMETRIC_ATTENDANCE_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<BiometricAttendanceBackupKey, ReturnType<typeof emptyEntityResult>>),
     technicalOperations: emptyEntityResult(),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
@@ -638,6 +640,11 @@ async function restoreIntoDatabase(
   await restoreTeacherAnalyticsData(client, backup, result);
   await restoreStaffAttendanceData(client, backup, backupUserToLocalUser, result);
   await restoreStaffLeaveData(client, backup, backupUserToLocalUser, result);
+  await restoreBiometricAttendanceBackup(client as unknown as PrismaClient, backup, {
+    users: backupUserToLocalUser,
+    staffMembers: backupStaffLocalIds,
+    restoredBy: restoredBy.id
+  }, result);
   await restoreSubstituteAssignmentData(client, backup, backupUserToLocalUser, result);
 
   result.users.skipped += Math.max(0, backup.users.length - linkedParentUsers);

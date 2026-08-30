@@ -15,6 +15,7 @@ import { EVENT_MEDIA_BACKUP_KEYS, validateEventMediaBackupRows, type EventMediaB
 import { PARENT_MEETING_BACKUP_KEYS, validateParentMeetingBackupRows, type ParentMeetingBackup, type ParentMeetingBackupKey } from "@/lib/parent-meeting-backup";
 import { OFFLINE_SYNC_BACKUP_KEYS, validateOfflineSyncBackupRows, type OfflineSyncBackup, type OfflineSyncBackupKey } from "@/lib/offline-sync/backup";
 import { NATIVE_APP_BACKUP_KEYS, validateNativeAppBackupRows, type NativeAppBackup, type NativeAppBackupKey } from "@/lib/native-app/backup";
+import { BIOMETRIC_ATTENDANCE_BACKUP_KEYS, validateBiometricAttendanceBackupRows, type BiometricAttendanceBackup, type BiometricAttendanceBackupKey } from "@/lib/biometric-attendance/backup";
 import {
   validateExamGovernanceBackup,
   type ExamGovernanceBackup
@@ -43,6 +44,7 @@ const TOP_LEVEL_KEYS = new Set([
   ...PARENT_MEETING_BACKUP_KEYS,
   ...OFFLINE_SYNC_BACKUP_KEYS,
   ...NATIVE_APP_BACKUP_KEYS,
+  ...BIOMETRIC_ATTENDANCE_BACKUP_KEYS,
   "nativeAppPolicy",
   "metadata",
   "technicalOperations",
@@ -133,6 +135,7 @@ const BACKUP_COUNT_KEYS = new Set([
   ...PARENT_MEETING_BACKUP_KEYS,
   ...OFFLINE_SYNC_BACKUP_KEYS,
   ...NATIVE_APP_BACKUP_KEYS,
+  ...BIOMETRIC_ATTENDANCE_BACKUP_KEYS,
   "schoolSettings",
   "technicalOperationsRecords",
   "authSecurityRecords",
@@ -578,7 +581,7 @@ export type ValidatedBackup = {
   timetableDrafts: RestoreRecord[];
   timetableEntries: RestoreRecord[];
   technicalOperations: TechnicalOperationsBackup;
-} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup & OptionalOperationsBackup & EventMediaBackup & ParentMeetingBackup & OfflineSyncBackup & NativeAppBackup;
+} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup & OptionalOperationsBackup & EventMediaBackup & ParentMeetingBackup & OfflineSyncBackup & NativeAppBackup & BiometricAttendanceBackup;
 
 export type EntityRestoreResult = {
   created: number;
@@ -779,7 +782,7 @@ export type RestoreResult = {
   timetableDrafts: EntityRestoreResult;
   timetableEntries: EntityRestoreResult;
   warnings: string[];
-} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey | OptionalOperationsBackupKey | EventMediaBackupKey | ParentMeetingBackupKey | OfflineSyncBackupKey | NativeAppBackupKey, EntityRestoreResult>;
+} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey | OptionalOperationsBackupKey | EventMediaBackupKey | ParentMeetingBackupKey | OfflineSyncBackupKey | NativeAppBackupKey | BiometricAttendanceBackupKey, EntityRestoreResult>;
 
 export function parseAndValidateBackup(input: string | unknown): ValidatedBackup {
   let parsed: unknown = input;
@@ -898,7 +901,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   const staffAttendanceRecords = validateOptionalRows(root.staffAttendanceRecords, "staffAttendanceRecords", STAFF_ATTENDANCE_RECORD_KEYS, ["id", "sessionId", "staffMemberId", "status", "source"]);
   staffAttendanceRecords.forEach((row, index) => {
     if (!["PRESENT", "ABSENT", "LATE", "HALF_DAY", "ON_LEAVE", "EXCUSED"].includes(requireString(row.status, `staffAttendanceRecords[${index}].status`))) throw new Error(`staffAttendanceRecords[${index}].status is not supported`);
-    if (!["MANUAL", "IMPORT", "BIOMETRIC_FUTURE"].includes(requireString(row.source, `staffAttendanceRecords[${index}].source`))) throw new Error(`staffAttendanceRecords[${index}].source is not supported`);
+    if (!["MANUAL", "IMPORT", "BIOMETRIC_FUTURE", "BIOMETRIC"].includes(requireString(row.source, `staffAttendanceRecords[${index}].source`))) throw new Error(`staffAttendanceRecords[${index}].source is not supported`);
     if (hasValue(row.lateMinutes) && (!Number.isInteger(Number(row.lateMinutes)) || Number(row.lateMinutes) < 0 || Number(row.lateMinutes) > 1440)) throw new Error(`staffAttendanceRecords[${index}].lateMinutes is invalid`);
   });
   const staffLeaveRequests = validateOptionalRows(root.staffLeaveRequests, "staffLeaveRequests", STAFF_LEAVE_REQUEST_KEYS, ["id", "staffMemberId", "leaveType", "startDate", "endDate", "totalDays", "status"]);
@@ -1453,6 +1456,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   const parentMeetingData = validateParentMeetingBackupRows(root);
   const offlineSyncData = validateOfflineSyncBackupRows(root);
   const nativeAppData = validateNativeAppBackupRows(root);
+  const biometricAttendanceData = validateBiometricAttendanceBackupRows(root);
   const technicalOperations = validateTechnicalOperationsBackup(root.technicalOperations);
   const counts = validateOptionalBackupCounts(metadata.counts);
 
@@ -1560,6 +1564,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     ...parentMeetingData,
     ...offlineSyncData,
     ...nativeAppData,
+    ...biometricAttendanceData,
     receiptNotes,
     importBatches,
     onboardingBatches,

@@ -1,18 +1,18 @@
-type FsModule = typeof import("node:fs");
-type PathModule = typeof import("node:path");
+type PortableFs = Pick<typeof import("node:fs"), "lstatSync" | "readFileSync" | "realpathSync">;
+type PortablePath = typeof import("node:path");
 
-function loadNodeBuiltin<T>(specifier: string) {
-  const loader = process.getBuiltinModule as ((name: string) => unknown) | undefined;
-  if (!loader) throw new PortableSecretError("NODE_BUILTIN_MODULE_LOADER_UNAVAILABLE");
-  return loader(specifier) as T;
-}
-
-function fsModule() {
-  return loadNodeBuiltin<FsModule>("fs");
-}
-
-function pathModule() {
-  return loadNodeBuiltin<PathModule>("path");
+function nodeBuiltins() {
+  // Next also evaluates the instrumentation module while constructing browser
+  // bundles. Resolve built-ins only when secret-file access actually runs so a
+  // client compilation can never traverse node:fs/node:path.
+  const getBuiltinModule = (process as NodeJS.Process & {
+    getBuiltinModule?: (id: string) => unknown;
+  }).getBuiltinModule;
+  if (!getBuiltinModule) throw new PortableSecretError("NODE_BUILTIN_MODULE_UNAVAILABLE");
+  return {
+    fs: getBuiltinModule("fs") as PortableFs,
+    path: getBuiltinModule("path") as PortablePath
+  };
 }
 
 export const PORTABLE_SECRET_NAMES = [
@@ -47,7 +47,7 @@ function configured(environment: NodeJS.ProcessEnv, name: string) {
 }
 
 function allowedSecretRoots(environment: NodeJS.ProcessEnv) {
-  const path = pathModule();
+  const { path } = nodeBuiltins();
   const roots = [environment.PORTABLE_SECRET_ROOT?.trim() || "/run/secrets"];
   if (environment.NALANDA_SYNTHETIC_STAGING === "true") {
     const synthetic = environment.PORTABLE_SYNTHETIC_SECRET_ROOT?.trim();
@@ -57,7 +57,7 @@ function allowedSecretRoots(environment: NodeJS.ProcessEnv) {
 }
 
 function assertWithinAllowedRoot(filePath: string, environment: NodeJS.ProcessEnv) {
-  const path = pathModule();
+  const { path } = nodeBuiltins();
   const absolute = path.resolve(filePath);
   const allowed = allowedSecretRoots(environment).some((root) => {
     const relative = path.relative(root, absolute);
@@ -82,7 +82,7 @@ export function readPortableSecret(
   }
 
   const absolute = assertWithinAllowedRoot(fileReference, environment);
-  const fs = fsModule();
+  const { fs } = nodeBuiltins();
   const stat = fs.lstatSync(absolute);
   if (!stat.isFile() || stat.isSymbolicLink() || stat.size < 1 || stat.size > MAX_SECRET_BYTES) {
     throw new PortableSecretError("SECRET_FILE_UNSAFE");

@@ -85,6 +85,8 @@ export const NAV_ITEMS = [
   { href: "/student-departures/roster", label: "Live Campus Roster", icon: "attendance", permission: "VIEW_LIVE_CAMPUS_ROSTER", group: "attendance" },
   { href: "/attendance/staff", label: "Staff Attendance", icon: "attendance", permission: "VIEW_STAFF_ATTENDANCE", group: "attendance" },
   { href: "/attendance/staff/reports", label: "Staff Attendance Reports", icon: "collection", permission: "VIEW_STAFF_ATTENDANCE_REPORTS", group: "attendance" },
+  { href: "/attendance/staff/biometric", label: "Biometric Attendance", icon: "attendance", permission: "VIEW_BIOMETRIC_ATTENDANCE", group: "attendance", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN"] as Role[], feature: "BIOMETRIC_STAFF_ATTENDANCE_1A" },
+  { href: "/teacher/attendance", label: "My Attendance", icon: "attendance", permission: "VIEW_OWN_STAFF_ATTENDANCE", group: "attendance", requiredRole: "TEACHER", feature: "BIOMETRIC_STAFF_ATTENDANCE_1A" },
   { href: "/leave/staff", label: "Staff Leave", icon: "leave", permission: "VIEW_STAFF_LEAVE", group: "staffLeave" },
   { href: "/leave/staff/reports", label: "Staff Leave Reports", icon: "collection", permission: "VIEW_STAFF_LEAVE_REPORTS", group: "staffLeave" },
   { href: "/substitutes", label: "Substitute Teachers", icon: "staff", permission: "VIEW_SUBSTITUTES", group: "staffLeave" },
@@ -186,7 +188,7 @@ export const NAV_ITEMS = [
   { href: "/onboarding", label: "Bulk Onboarding", icon: "importExport", permission: "DOWNLOAD_ONBOARDING_TEMPLATE", group: "system", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "COMPUTER_OPERATOR"] as Role[] },
   { href: "/import-verification", label: "Import Verification", icon: "importVerification", permission: "VIEW_IMPORT_VERIFICATION", group: "system" },
   { href: "/pilot-acceptance", label: "Pilot Acceptance", icon: "pilot", permission: "RUN_PILOT_ACCEPTANCE", group: "system" }
-] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role; allowedRoles?: Role[]; featureFlag?: OptionalOperationsFeatureCode; feature?: "PARENT_MEETINGS_V1_5" | "OFFLINE_SYNC_1A" }>;
+] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role; allowedRoles?: Role[]; featureFlag?: OptionalOperationsFeatureCode; feature?: "PARENT_MEETINGS_V1_5" | "OFFLINE_SYNC_1A" | "BIOMETRIC_STAFF_ATTENDANCE_1A" }>;
 
 export type NavigationItem = (typeof NAV_ITEMS)[number];
 
