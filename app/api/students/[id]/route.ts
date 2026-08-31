@@ -1,8 +1,8 @@
 import { safeClientError } from "@/lib/client-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validateStudentPayload } from "@/lib/validation";
 import { requireApiPermission } from "@/lib/auth";
+import { updateStudentRecord } from "@/lib/authoritative-record-services";
 
 export async function GET(_: NextRequest, context: { params: Promise<{ id: string }> }) {
   const auth = await requireApiPermission("VIEW_STUDENTS");
@@ -20,8 +20,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
   if (auth.response) return auth.response;
   try {
     const { id } = await context.params;
-    const payload = validateStudentPayload(await request.json());
-    const student = await prisma.student.update({ where: { id }, data: payload });
+    const student = await updateStudentRecord(prisma, id, await request.json());
     return NextResponse.json(student);
   } catch (error) {
     return NextResponse.json({ error: safeClientError(error, "Unable to update student") }, { status: 400 });

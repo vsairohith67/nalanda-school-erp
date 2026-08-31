@@ -29,6 +29,7 @@ import { PARENT_MEETING_BACKUP_KEYS, restoreParentMeetingBackup, type ParentMeet
 import { OFFLINE_SYNC_BACKUP_KEYS, restoreOfflineSyncBackup, type OfflineSyncBackupKey } from "@/lib/offline-sync/backup";
 import { NATIVE_APP_BACKUP_KEYS, restoreNativeAppBackup, type NativeAppBackupKey } from "@/lib/native-app/backup";
 import { BIOMETRIC_ATTENDANCE_BACKUP_KEYS, restoreBiometricAttendanceBackup, type BiometricAttendanceBackupKey } from "@/lib/biometric-attendance/backup";
+import { OCR_SCANNING_BACKUP_KEYS, restoreOcrScanningBackup, type OcrScanningBackupKey } from "@/lib/ocr-scanning/backup";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -138,6 +139,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(OFFLINE_SYNC_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<OfflineSyncBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(NATIVE_APP_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<NativeAppBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(BIOMETRIC_ATTENDANCE_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<BiometricAttendanceBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(OCR_SCANNING_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<OcrScanningBackupKey, ReturnType<typeof emptyEntityResult>>),
     technicalOperations: emptyEntityResult(),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
@@ -642,6 +644,13 @@ async function restoreIntoDatabase(
   await restoreStaffLeaveData(client, backup, backupUserToLocalUser, result);
   await restoreBiometricAttendanceBackup(client as unknown as PrismaClient, backup, {
     users: backupUserToLocalUser,
+    staffMembers: backupStaffLocalIds,
+    restoredBy: restoredBy.id
+  }, result);
+  await restoreOcrScanningBackup(client as unknown as PrismaClient, backup, {
+    users: backupUserToLocalUser,
+    students: backupStudentLocalIds,
+    guardians: backupGuardianIds,
     staffMembers: backupStaffLocalIds,
     restoredBy: restoredBy.id
   }, result);

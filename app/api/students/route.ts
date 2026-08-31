@@ -1,9 +1,9 @@
 import { safeClientError } from "@/lib/client-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validateStudentPayload } from "@/lib/validation";
 import { requireApiPermission } from "@/lib/auth";
 import { maskPhone } from "@/lib/privacy";
+import { createStudentRecord } from "@/lib/authoritative-record-services";
 
 export async function GET(request: NextRequest) {
   const auth = await requireApiPermission("VIEW_STUDENTS");
@@ -47,8 +47,7 @@ export async function POST(request: NextRequest) {
   const auth = await requireApiPermission("CREATE_STUDENTS");
   if (auth.response) return auth.response;
   try {
-    const payload = validateStudentPayload(await request.json());
-    const student = await prisma.student.create({ data: payload });
+    const student = await createStudentRecord(prisma, await request.json());
     return NextResponse.json(student, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: safeClientError(error, "Unable to save student") }, { status: 400 });

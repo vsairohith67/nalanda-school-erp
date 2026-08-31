@@ -30,6 +30,7 @@ import { emptyParentMeetingBackup, loadParentMeetingBackup, parentMeetingSchemaA
 import { emptyOfflineSyncBackup, loadOfflineSyncBackup, offlineSyncSchemaAvailable, OFFLINE_SYNC_BACKUP_KEYS, validateOfflineSyncBackupRows, type OfflineSyncBackup, type OfflineSyncBackupKey } from "./offline-sync/backup";
 import { emptyNativeAppBackup, loadNativeAppBackup, nativeAppSchemaAvailable, NATIVE_APP_BACKUP_KEYS, validateNativeAppBackupRows, type NativeAppBackup, type NativeAppBackupKey } from "./native-app/backup";
 import { BIOMETRIC_ATTENDANCE_BACKUP_KEYS, biometricAttendanceSchemaAvailable, emptyBiometricAttendanceBackup, loadBiometricAttendanceBackup, validateBiometricAttendanceBackupRows, type BiometricAttendanceBackup, type BiometricAttendanceBackupKey } from "./biometric-attendance/backup";
+import { OCR_SCANNING_BACKUP_KEYS, emptyOcrScanningBackup, loadOcrScanningBackup, ocrScanningSchemaAvailable, validateOcrScanningBackupRows, type OcrScanningBackup, type OcrScanningBackupKey } from "./ocr-scanning/backup";
 import { databaseColumnExists, databaseTableExists } from "./database-capabilities";
 import { PRODUCT_BRAND } from "../config/product-brand";
 
@@ -289,7 +290,7 @@ type BackupDocumentInput = {
   timetableEntries?: readonly unknown[];
   academicYear?: string;
   technicalOperations?: TechnicalOperationsBackup;
-} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup> & Partial<OfflineSyncBackup> & Partial<NativeAppBackup> & Partial<BiometricAttendanceBackup>;
+} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup> & Partial<OfflineSyncBackup> & Partial<NativeAppBackup> & Partial<BiometricAttendanceBackup> & Partial<OcrScanningBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
   const onboardingBatches = sanitizeOnboardingBatches(input.onboardingBatches ?? []);
@@ -402,6 +403,8 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const nativeAppCounts = Object.fromEntries(NATIVE_APP_BACKUP_KEYS.map((key) => [key, nativeAppBackup[key].length])) as Record<NativeAppBackupKey, number>;
   const biometricAttendanceBackup = validateBiometricAttendanceBackupRows(input as unknown as Record<string, unknown>);
   const biometricAttendanceCounts = Object.fromEntries(BIOMETRIC_ATTENDANCE_BACKUP_KEYS.map((key) => [key, biometricAttendanceBackup[key].length])) as Record<BiometricAttendanceBackupKey, number>;
+  const ocrScanningBackup = validateOcrScanningBackupRows(input as unknown as Record<string, unknown>);
+  const ocrScanningCounts = Object.fromEntries(OCR_SCANNING_BACKUP_KEYS.map((key) => [key, ocrScanningBackup[key].length])) as Record<OcrScanningBackupKey, number>;
   const technicalOperations = validateTechnicalOperationsBackup(input.technicalOperations);
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
   const teacherAnalyticsSnapshots = sanitizeActorFields(input.teacherAnalyticsSnapshots ?? []);
@@ -681,6 +684,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
         ...offlineSyncCounts,
         ...nativeAppCounts,
         ...biometricAttendanceCounts,
+        ...ocrScanningCounts,
         timetableTeachers: timetableTeachers.length,
         timetableSubjects: timetableSubjects.length,
         timetableClassSections: timetableClassSections.length,
@@ -702,6 +706,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     ...offlineSyncBackup,
     ...nativeAppBackup,
     ...biometricAttendanceBackup,
+    ...ocrScanningBackup,
     users: sanitizeUsers(input.users),
     authSecurity,
     iamAccess,
@@ -1366,6 +1371,9 @@ export async function generateFullBackup(
   const biometricAttendanceBackup = await biometricAttendanceSchemaAvailable(client as unknown as PrismaClient)
     ? await loadBiometricAttendanceBackup(client as unknown as PrismaClient)
     : emptyBiometricAttendanceBackup();
+  const ocrScanningBackup = await ocrScanningSchemaAvailable(client as unknown as PrismaClient)
+    ? await loadOcrScanningBackup(client as unknown as PrismaClient)
+    : emptyOcrScanningBackup();
   const technicalOperations = await technicalOperationsSchemaAvailable(client as unknown as PrismaClient)
     ? await loadTechnicalOperationsBackup(client as unknown as PrismaClient)
     : emptyTechnicalOperationsBackup();
@@ -1410,6 +1418,7 @@ export async function generateFullBackup(
     ...offlineSyncBackup,
     ...nativeAppBackup,
     ...biometricAttendanceBackup,
+    ...ocrScanningBackup,
     technicalOperations,
     rolePermissions,
     guardians,

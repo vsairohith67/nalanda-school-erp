@@ -19,6 +19,9 @@ const PDF_JOB_BODY_LIMIT_BYTES = 128 * 1024;
 const OFFLINE_SYNC_BODY_LIMIT_BYTES = 512 * 1024;
 const NATIVE_AUTH_BODY_LIMIT_BYTES = 32 * 1024;
 const BIOMETRIC_INGEST_BODY_LIMIT_BYTES = 256 * 1024;
+const OCR_UPLOAD_BODY_LIMIT_BYTES = 26 * 1024 * 1024;
+const OCR_WORKER_RESULT_BODY_LIMIT_BYTES = 51 * 1024 * 1024;
+const OCR_WORKER_RASTER_BODY_LIMIT_BYTES = 3 * 1024 * 1024;
 
 export const SECURITY_RESOURCE_BUDGETS = {
   maximumJsonBytes: DEFAULT_BODY_LIMIT_BYTES,
@@ -47,6 +50,9 @@ export function isProviderWebhookPath(pathname: string) {
 
 export function requestBodyLimitBytes(pathname: string) {
   if (pathname === "/api/biometric/ingest") return BIOMETRIC_INGEST_BODY_LIMIT_BYTES;
+  if (pathname === "/api/ocr/documents") return OCR_UPLOAD_BODY_LIMIT_BYTES;
+  if (/^\/api\/internal\/ocr\/worker\/jobs\/[^/]+\/result$/.test(pathname)) return OCR_WORKER_RESULT_BODY_LIMIT_BYTES;
+  if (/^\/api\/internal\/ocr\/worker\/jobs\/[^/]+\/rasters\/[^/]+$/.test(pathname)) return OCR_WORKER_RASTER_BODY_LIMIT_BYTES;
   if (pathname.startsWith("/api/native-auth/") || pathname.startsWith("/api/native/")) return NATIVE_AUTH_BODY_LIMIT_BYTES;
   if (pathname.startsWith("/api/offline-sync/")) return OFFLINE_SYNC_BODY_LIMIT_BYTES;
   if (pathname.startsWith("/api/auth/")) return AUTH_BODY_LIMIT_BYTES;

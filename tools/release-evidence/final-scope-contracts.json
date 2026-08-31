@@ -323,6 +323,19 @@
         "app/api/native-auth/request/route.ts",
         "app/api/native/v1/context/route.ts"
       ]
+    },
+    {
+      "key": "ocr-scanning-foundation-1b",
+      "status": "ENFORCED",
+      "evidencePaths": [
+        "lib/ocr-scanning/feature-flag.ts",
+        "lib/release-feature-flag-runtime.ts",
+        "lib/access-rules.ts",
+        "middleware.ts",
+        "app/ocr-scanning/page.tsx",
+        "app/api/ocr/documents/route.ts",
+        "app/api/internal/ocr/worker/claim/route.ts"
+      ]
     }
   ],
   "releaseBlockedBranches": []

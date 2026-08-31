@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "nalanda-ocr-scanning-foundation-1b-runtime-evidence-1",
+  "capturedOn": "2026-08-31",
+  "syntheticOnly": true,
+  "realDocuments": false,
+  "operationalActivation": false,
+  "worker": {
+    "image": "nalanda-ocr-worker:1b",
+    "imageId": "sha256:597f0e036869533a6b5c687d4eae1fac2cb3b514d4ec9a4dd6240a4ef5047314",
+    "buildInputSha256": "79a89b7499fa819c9d2949bf2e64eb1629c9e775d2057645cf433b4890c0af13",
+    "baseImage": "python:3.12.10-slim-bookworm@sha256:97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4",
+    "engine": "paddleocr-3.7.0",
+    "runtime": "paddlepaddle-gpu-3.3.1",
+    "publicArtifact": false
+  },
+  "gpuProfiles": [
+    { "profile": "english", "blocks": 14, "engineMs": 1445, "wallMs": 13318, "peakBytes": 2203318223, "pagesPerMinute": 41.52 },
+    { "profile": "hindi", "blocks": 14, "engineMs": 1412, "peakBytes": 470600909, "pagesPerMinute": 42.49 },
+    { "profile": "telugu", "blocks": 14, "engineMs": 1515, "peakBytes": 429706445, "pagesPerMinute": 39.60 },
+    { "profile": "mixed", "blocks": 10, "engineMs": 2151, "peakBytes": 1352914698, "pagesPerMinute": 27.89 }
+  ],
+  "cpuProfile": {
+    "available": false,
+    "controlledResult": "OCR_WORKER_CRASH",
+    "ordinaryOfficeCpuSuitabilityClaimed": false,
+    "classification": "DEPLOYMENT_HARDWARE_EVIDENCE_PENDING"
+  },
+  "failureCases": [
+    "MISSING_MODEL_CONTROLLED_FAILURE",
+    "UNSUPPORTED_LANGUAGE_CONTROLLED_FAILURE",
+    "CORRUPT_MODEL_CACHE_REJECTED",
+    "WORKER_UNAVAILABLE_NO_FALSE_SUCCESS"
+  ],
+  "browser": {
+    "desktop": ["1366x768-light", "1366x768-dark"],
+    "mobile": ["390x844-light", "390x844-dark"],
+    "freshConsoleErrors": 0,
+    "freshConsoleWarnings": 0,
+    "individualHumanDecisions": 8,
+    "explicitFinalConfirmation": true,
+    "authoritativeSubmission": "STUDENTS_COMPLETED",
+    "defaultOffUi": 404,
+    "defaultOffDocumentApi": 404,
+    "defaultOffWorkerApi": 404
+  },
+  "supplyChain": {
+    "sbomPackages": 338,
+    "sbomSha256": "67BE20A3B82B9BD33CA7AF48CEDFEC1D1C5B5022C5D732F2781972081D45CDD3",
+    "scanner": "Docker Scout",
+    "scannerHigh": 6,
+    "scannerCritical": 2,
+    "vendorFixedVersionAvailable": false,
+    "externalToolchainReviewPending": true,
+    "releaseClassification": "OCR_SCANNING_FOUNDATION_1B_PARTIAL_EXTERNAL_TOOLCHAIN_GATE"
+  },
+  "applicationSecurityScan": {
+    "scanId": "470f9127-c794-46ad-b92a-599eb3933761",
+    "changedFileReceipts": 69,
+    "reportableCodeFindings": 0,
+    "coverage": "partial",
+    "deferredCandidate": "candidate-a50826322bbd7aef",
+    "deferredReason": "Unresolved Debian worker-image advisories remain an external supply-chain gate."
+  }
+}

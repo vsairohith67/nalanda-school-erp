@@ -9316,3 +9316,191 @@ model NativeRefreshTokenHistory {
 
   @@index([sessionId, tokenVersion])
 }
+
+// OCR-SCANNING-FOUNDATION-1B stores bounded workflow metadata and human
+// decisions. Source/raster bytes and full raw OCR output remain in governed
+// private object storage and are deliberately absent from the database.
+model OcrDocument {
+  id                      String              @id @default(cuid())
+  publicKey               String              @unique @default(uuid())
+  contextType             String
+  contextId               String
+  uploadIdentityHash      String
+  sourceObjectKey         String              @unique
+  sourceMediaType         String
+  sourceExtension         String
+  safeDisplayName         String
+  byteSize                Int
+  sourceSha256            String
+  duplicateOfDocumentId   String?
+  pageCount               Int
+  aggregatePixels         Int
+  status                  String              @default("UPLOADED")
+  languageProfile         String              @default("ENGLISH")
+  handwritingDeclared     Boolean             @default(false)
+  reviewVersion           Int                 @default(1)
+  targetSnapshotVersion   String
+  retentionPolicyVersion  String              @default("OCR-1B-SYNTHETIC-1")
+  sourceRetentionUntil    DateTime
+  rasterRetentionUntil    DateTime
+  rawOutputRetentionUntil DateTime
+  candidateRetentionUntil DateTime
+  auditRetentionUntil     DateTime
+  purgeStatus             String              @default("NOT_REQUESTED")
+  purgeFailureCode        String?
+  createdByUserId         String
+  submittedAt             DateTime?
+  rejectedAt              DateTime?
+  expiredAt               DateTime?
+  purgedAt                DateTime?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  jobs                    OcrJob[]
+  pages                   OcrPage[]
+  candidates              OcrFieldCandidate[]
+  submissions             OcrSubmission[]
+  events                  OcrWorkflowEvent[]
+
+  @@unique([contextType, contextId, uploadIdentityHash])
+  @@index([contextType, contextId, createdAt])
+  @@index([contextType, contextId, sourceSha256])
+  @@index([status, updatedAt])
+  @@index([sourceRetentionUntil])
+  @@index([purgeStatus, updatedAt])
+}
+
+model OcrJob {
+  id                    String             @id @default(cuid())
+  publicKey             String             @unique @default(uuid())
+  documentId            String
+  document              OcrDocument        @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  idempotencyKeyHash    String
+  status                String             @default("QUEUED")
+  attemptCount          Int                @default(0)
+  maximumAttempts       Int                @default(3)
+  leaseOwner            String?
+  leaseTokenHash        String?
+  leaseExpiresAt        DateTime?
+  heartbeatAt           DateTime?
+  timeoutAt             DateTime
+  cancellationRequested Boolean            @default(false)
+  engineId              String?
+  engineRevision        String?
+  modelReceiptJson      String?
+  resultSha256          String?
+  outputBytes           Int?
+  failureCode           String?
+  queuedAt              DateTime           @default(now())
+  claimedAt             DateTime?
+  completedAt           DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  events                OcrWorkflowEvent[]
+
+  @@unique([documentId, idempotencyKeyHash])
+  @@index([status, queuedAt])
+  @@index([leaseExpiresAt])
+  @@index([documentId, createdAt])
+}
+
+model OcrPage {
+  id                   String              @id @default(cuid())
+  publicKey            String              @unique @default(uuid())
+  documentId           String
+  document             OcrDocument         @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  pageNumber           Int
+  rasterObjectKey      String              @unique
+  rasterSha256         String
+  sourceDigest         String
+  sourceWidth          Int
+  sourceHeight         Int
+  sourceRotation       Int                 @default(0)
+  reviewOrientation    Int                 @default(0)
+  pixelCount           Int
+  ocrState             String              @default("OCR_COMPLETE")
+  processingDurationMs Int
+  retryPreprocessing   Boolean             @default(false)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  candidates           OcrFieldCandidate[]
+
+  @@unique([documentId, pageNumber])
+  @@index([documentId, pageNumber])
+  @@index([ocrState, updatedAt])
+}
+
+model OcrFieldCandidate {
+  id                 String      @id @default(cuid())
+  publicKey          String      @unique @default(uuid())
+  documentId         String
+  document           OcrDocument @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  pageId             String?
+  page               OcrPage?    @relation(fields: [pageId], references: [id], onDelete: Restrict)
+  fieldKey           String
+  candidateText      String
+  candidateSha256    String
+  sourceRegionJson   String?
+  recognitionScore   Float?
+  scriptHint         String
+  validationState    String
+  reviewState        String
+  critical           Boolean     @default(false)
+  retryPreprocessing Boolean     @default(false)
+  decision           String      @default("PENDING")
+  approvedValue      String?
+  editReason         String?
+  reviewedByUserId   String?
+  reviewedAt         DateTime?
+  version            Int         @default(1)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  @@unique([documentId, fieldKey])
+  @@index([documentId, reviewState, decision])
+  @@index([pageId])
+  @@index([reviewedByUserId, reviewedAt])
+}
+
+model OcrSubmission {
+  id                    String      @id @default(cuid())
+  publicKey             String      @unique @default(uuid())
+  documentId            String
+  document              OcrDocument @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  idempotencyKeyHash    String
+  reviewVersion         Int
+  targetSnapshotVersion String
+  payloadSha256         String
+  authoritativeService  String
+  status                String      @default("PENDING")
+  resultReference       String?
+  failureCode           String?
+  submittedByUserId     String
+  completedAt           DateTime?
+  createdAt             DateTime    @default(now())
+
+  @@unique([documentId, idempotencyKeyHash])
+  @@index([documentId, createdAt])
+  @@index([status, createdAt])
+}
+
+model OcrWorkflowEvent {
+  id               String       @id @default(cuid())
+  documentId       String?
+  document         OcrDocument? @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  jobId            String?
+  job              OcrJob?      @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  entityType       String
+  entityId         String
+  eventType        String
+  actorUserId      String?
+  workerId         String?
+  requestNonceHash String?      @unique
+  safeMetadataJson String?
+  occurredAt       DateTime     @default(now())
+
+  @@index([documentId, occurredAt])
+  @@index([jobId, occurredAt])
+  @@index([entityType, entityId, occurredAt])
+  @@index([eventType, occurredAt])
+  @@index([actorUserId, occurredAt])
+}

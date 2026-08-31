@@ -3,8 +3,8 @@
   "promptId": "PRODUCT-EXPERIENCE-1A",
   "generatedFrom": "app page source tree",
   "completeness": {
-    "pageFiles": 358,
-    "registeredScreens": 358,
+    "pageFiles": 360,
+    "registeredScreens": 360,
     "omittedScreens": 0
   },
   "sharedBaselines": {
@@ -7536,6 +7536,84 @@
       },
       "permissionRequirements": [
         "MANAGE_NOTIFICATION_TEMPLATES"
+      ]
+    },
+    {
+      "route": "/ocr-scanning",
+      "file": "app/ocr-scanning/page.tsx",
+      "roles": [
+        "SUPER_ADMIN",
+        "DIRECTOR",
+        "ADMIN"
+      ],
+      "module": "ocr scanning",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_SERVER_AUTHORISED",
+      "primaryTask": "ocr scanning",
+      "risk": "LOW",
+      "states": {
+        "empty": "SHARED_EMPTY_PATTERN_AVAILABLE",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "SHARED_CONTEXT_ONLY",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "DERIVED_FROM_ROUTE_LAYOUT",
+        "forms": "NOT_APPLICABLE",
+        "tables": "NOT_APPLICABLE",
+        "manualReviewRequired": false
+      },
+      "permissionRequirements": [
+        "EDIT_STUDENTS",
+        "MANAGE_ADMISSION_DOCUMENTS",
+        "MANAGE_GUARDIANS",
+        "MANAGE_STAFF"
+      ]
+    },
+    {
+      "route": "/ocr-scanning/[documentKey]",
+      "file": "app/ocr-scanning/[documentKey]/page.tsx",
+      "roles": [
+        "SUPER_ADMIN",
+        "DIRECTOR"
+      ],
+      "module": "ocr scanning",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_SERVER_AUTHORISED",
+      "primaryTask": "[documentKey]",
+      "risk": "LOW",
+      "states": {
+        "empty": "SHARED_EMPTY_PATTERN_AVAILABLE",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "SHARED_CONTEXT_ONLY",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "DERIVED_FROM_ROUTE_LAYOUT",
+        "forms": "NOT_APPLICABLE",
+        "tables": "NOT_APPLICABLE",
+        "manualReviewRequired": false
+      },
+      "permissionRequirements": [
+        "EDIT_STUDENTS",
+        "MANAGE_ADMISSION_APPLICATIONS",
+        "MANAGE_GUARDIANS",
+        "MANAGE_STAFF",
+        "REVIEW_ADMISSION_APPLICATIONS"
       ]
     },
     {

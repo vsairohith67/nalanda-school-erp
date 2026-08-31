@@ -1,0 +1,21 @@
+FROM python:3.12.10-slim-bookworm@sha256:97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4 AS builder
+ENV UV_COMPILE_BYTECODE=1 UV_HTTP_TIMEOUT=1200 UV_LINK_MODE=copy VIRTUAL_ENV=/benchmark/candidates/paddle/.venv PATH=/benchmark/candidates/paddle/.venv/bin:/usr/local/bin:/usr/bin:/bin
+WORKDIR /benchmark
+RUN python -m pip install --no-cache-dir uv==0.12.5
+COPY tools/ocr-benchmark/pyproject.toml tools/ocr-benchmark/uv.lock tools/ocr-benchmark/README.md ./
+COPY tools/ocr-benchmark/src ./src
+COPY tools/ocr-benchmark/candidates/candidate-lock.json ./candidates/candidate-lock.json
+COPY tools/ocr-benchmark/candidates/paddle/pyproject.toml tools/ocr-benchmark/candidates/paddle/uv.lock ./candidates/paddle/
+RUN --mount=type=cache,target=/root/.cache/uv mkdir -p /runtime && uv sync --project candidates/paddle --frozen --no-dev --no-editable && mv candidates/paddle/.venv /runtime/.venv
+
+FROM python:3.12.10-slim-bookworm@sha256:97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 VIRTUAL_ENV=/runtime/.venv PATH=/runtime/.venv/bin:/usr/local/bin:/usr/bin:/bin
+WORKDIR /benchmark
+RUN apt-get update && apt-get install --yes --no-install-recommends libegl1 libgl1 libglib2.0-0 libgomp1 && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /runtime/.venv /runtime/.venv
+COPY tools/ocr-benchmark/src ./src
+COPY tools/ocr-benchmark/candidates/candidate-lock.json ./candidates/candidate-lock.json
+COPY tools/ocr-worker/runtime/main.py /runtime/main.py
+LABEL org.opencontainers.image.title="Nalanda local OCR worker" org.opencontainers.image.version="1b" nalanda.ocr.engine="paddleocr-3.7.0" nalanda.ocr.runtime="paddlepaddle-gpu-3.3.1"
+USER 65532:65532
+ENTRYPOINT ["python", "/runtime/main.py"]

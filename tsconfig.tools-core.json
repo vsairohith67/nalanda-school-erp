@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "plugins": [], "incremental": true, "tsBuildInfoFile": "./tsconfig.tools-core.tsbuildinfo" },
-  "include": ["scripts/**/*.ts", "vitest.config.ts"],
+  "include": ["scripts/**/*.ts", "tools/ocr-worker/**/*.ts", "vitest.config.ts"],
   "exclude": ["node_modules", ".next", "scripts/qa*.ts"]
 }
