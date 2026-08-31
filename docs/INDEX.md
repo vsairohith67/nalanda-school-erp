@@ -1,5 +1,28 @@
 # Documentation Index
 
+## Synthetic pilot readiness
+
+- [Acceptance pack](SYNTHETIC_PILOT_READINESS.md)
+- [Synthetic school-day runbook](SYNTHETIC_SCHOOL_DAY_RUNBOOK.md)
+- [Accountant daily closing](ACCOUNTANT_DAILY_CLOSING_RUNBOOK.md)
+- [Report-card release](REPORT_CARD_RELEASE_RUNBOOK.md)
+- [Support triage](SUPPORT_TRIAGE_RUNBOOK.md)
+- [Security incident first 30 minutes](SECURITY_INCIDENT_FIRST_30_MINUTES.md)
+- [Month-end checklist](MONTH_END_SCHOOL_MANAGEMENT_CHECKLIST.md)
+- [Role training guides](ROLE_TRAINING_GUIDES.md)
+- [Quick-reference sheets](PILOT_QUICK_REFERENCE_SHEETS.md)
+- [Role/access matrix](PILOT_ROLE_ACCESS_MATRIX.md)
+- [Real-pilot go/no-go gates](PILOT_GO_NO_GO_GATES.md)
+- [Real-data precheck](REAL_DATA_ONBOARDING_PRECHECK.md)
+- [Future cutover/rollback plan](PILOT_CUTOVER_ROLLBACK_PLAN.md)
+- [Defect register](SYNTHETIC_PILOT_DEFECT_REGISTER.md)
+- [Clearance evidence](evidence/SYNTHETIC_PILOT_READINESS_1A_CLEARANCE.md)
+- [Browser acceptance evidence](evidence/SYNTHETIC_PILOT_BROWSER_ACCEPTANCE.md)
+- [Backup and restore rehearsal](evidence/SYNTHETIC_PILOT_BACKUP_RESTORE.md)
+- [Failure and security drills](evidence/SYNTHETIC_PILOT_FAILURE_DRILLS.md)
+
+This phase is synthetic-only. It does not deploy private staging, import real data, activate real users/providers, certify biometric hardware or clear OCR.
+
 ## Portable staging foundation
 
 - [Architecture](PORTABLE_STAGING_ARCHITECTURE.md)

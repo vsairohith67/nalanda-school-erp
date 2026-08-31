@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "plugins": [], "incremental": true, "tsBuildInfoFile": "./tsconfig.tools-pilot.tsbuildinfo" },
+  "include": [
+    "scripts/prepare-synthetic-pilot-readiness-1a.ts",
+    "scripts/rehearse-synthetic-pilot-backup-restore.ts",
+    "scripts/print-synthetic-pilot-role-access-matrix.ts",
+    "config/synthetic-pilot-role-access-matrix.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}
