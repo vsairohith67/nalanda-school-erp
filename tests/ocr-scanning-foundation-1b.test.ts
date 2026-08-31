@@ -131,6 +131,7 @@ describe("OCR-SCANNING-FOUNDATION-1B", () => {
     const postgresTriggers = source("prisma/postgresql/trigger-equivalents.sql");
     expect(postgresTriggers).toContain("OcrCandidate_source_evidence_immutable");
     expect(postgresTriggers).toContain("OcrWorkflowEvent_no_delete");
+    expect(source("deploy/portable/compose.yml")).toContain("PORTABLE_EXPECTED_POSTGRES_MIGRATION: 20260831090000_ocr_scanning_foundation_1b");
   });
 
   it("renders raster evidence beside field decisions and requires explicit final confirmation", () => {
