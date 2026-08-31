@@ -112,3 +112,84 @@ CREATE INDEX "OcrWorkflowEvent_jobId_occurredAt_idx" ON "OcrWorkflowEvent"("jobI
 CREATE INDEX "OcrWorkflowEvent_entityType_entityId_occurredAt_idx" ON "OcrWorkflowEvent"("entityType","entityId","occurredAt");
 CREATE INDEX "OcrWorkflowEvent_eventType_occurredAt_idx" ON "OcrWorkflowEvent"("eventType","occurredAt");
 CREATE INDEX "OcrWorkflowEvent_actorUserId_occurredAt_idx" ON "OcrWorkflowEvent"("actorUserId","occurredAt");
+
+-- PostgreSQL equivalents of the five active OCR SQLite immutability triggers.
+CREATE FUNCTION "nalanda_trigger_c075ee6fd7e9ad89e16b"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."documentId" <> OLD."documentId" OR COALESCE(NEW."pageId",'') <> COALESCE(OLD."pageId",'') OR NEW."fieldKey" <> OLD."fieldKey" OR NEW."candidateText" <> OLD."candidateText" OR NEW."candidateSha256" <> OLD."candidateSha256" OR COALESCE(NEW."sourceRegionJson",'') <> COALESCE(OLD."sourceRegionJson",'') OR COALESCE(NEW."recognitionScore",-1.0) <> COALESCE(OLD."recognitionScore",-1.0) OR NEW."scriptHint" <> OLD."scriptHint" OR NEW."validationState" <> OLD."validationState" OR NEW."reviewState" <> OLD."reviewState" OR NEW."critical" <> OLD."critical" OR NEW."retryPreprocessing" <> OLD."retryPreprocessing" OR NEW."createdAt" <> OLD."createdAt") THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'OCR_CANDIDATE_SOURCE_EVIDENCE_IMMUTABLE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "OcrCandidate_source_evidence_immutable"
+BEFORE UPDATE ON "OcrFieldCandidate"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_c075ee6fd7e9ad89e16b"();
+
+CREATE FUNCTION "nalanda_trigger_d69e2ef82c7207c40558"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."sourceObjectKey" <> OLD."sourceObjectKey" OR NEW."sourceMediaType" <> OLD."sourceMediaType" OR NEW."sourceExtension" <> OLD."sourceExtension" OR NEW."byteSize" <> OLD."byteSize" OR NEW."sourceSha256" <> OLD."sourceSha256" OR NEW."contextType" <> OLD."contextType" OR NEW."contextId" <> OLD."contextId") THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'OCR_DOCUMENT_SOURCE_IMMUTABLE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "OcrDocument_source_immutable"
+BEFORE UPDATE ON "OcrDocument"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_d69e2ef82c7207c40558"();
+
+CREATE FUNCTION "nalanda_trigger_5b0c7dd28d32a39b6a48"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (NEW."documentId" <> OLD."documentId" OR NEW."pageNumber" <> OLD."pageNumber" OR NEW."rasterObjectKey" <> OLD."rasterObjectKey" OR NEW."rasterSha256" <> OLD."rasterSha256" OR NEW."sourceDigest" <> OLD."sourceDigest" OR NEW."sourceWidth" <> OLD."sourceWidth" OR NEW."sourceHeight" <> OLD."sourceHeight" OR NEW."sourceRotation" <> OLD."sourceRotation" OR NEW."pixelCount" <> OLD."pixelCount") THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'OCR_PAGE_SOURCE_EVIDENCE_IMMUTABLE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "OcrPage_source_evidence_immutable"
+BEFORE UPDATE ON "OcrPage"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_5b0c7dd28d32a39b6a48"();
+
+CREATE FUNCTION "nalanda_trigger_7f12316dedbcf6cced7a"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'OCR_WORKFLOW_EVENT_IMMUTABLE';
+  END IF;
+  RETURN OLD;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "OcrWorkflowEvent_no_delete"
+BEFORE DELETE ON "OcrWorkflowEvent"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_7f12316dedbcf6cced7a"();
+
+CREATE FUNCTION "nalanda_trigger_4ee935a4740433cf8e3d"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'OCR_WORKFLOW_EVENT_IMMUTABLE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "OcrWorkflowEvent_no_update"
+BEFORE UPDATE ON "OcrWorkflowEvent"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_4ee935a4740433cf8e3d"();

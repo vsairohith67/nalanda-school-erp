@@ -66,7 +66,9 @@ jobs:
           $expected = '993e4a94376ed712fafc7058d724ea0b943d118bbd2305cd9ed55174eb85cda5'
           if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) { throw 'Pinned Poppler archive checksum mismatch' }
           Expand-Archive -LiteralPath $archive -DestinationPath $extract
-          $pdftoppm = Get-Item -LiteralPath (Join-Path $extract 'poppler-26.02.0-0\Library\bin\pdftoppm.exe') -ErrorAction Stop
+          $pdftoppmCandidates = @(Get-ChildItem -LiteralPath $extract -Recurse -File -Filter 'pdftoppm.exe')
+          if ($pdftoppmCandidates.Count -ne 1) { throw "Expected exactly one pdftoppm.exe in the pinned archive; found $($pdftoppmCandidates.Count)" }
+          $pdftoppm = $pdftoppmCandidates[0]
           "REPORT_CARD_PDFTOPPM_PATH=$($pdftoppm.FullName)" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
       - run: pnpm install --frozen-lockfile
       - name: Configure isolated OCR databases and object store
