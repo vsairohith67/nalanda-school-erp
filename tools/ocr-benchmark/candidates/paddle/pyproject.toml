@@ -1,0 +1,18 @@
+[project]
+name = "nalanda-ocr-paddle-runtime"
+version = "1.0.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "nalanda-ocr-benchmark",
+  "paddleocr==3.7.0",
+  "paddlepaddle-gpu==3.3.1",
+]
+
+[tool.uv.sources]
+nalanda-ocr-benchmark = { path = "../..", editable = true }
+paddlepaddle-gpu = { index = "paddle-cu126" }
+
+[[tool.uv.index]]
+name = "paddle-cu126"
+url = "https://www.paddlepaddle.org.cn/packages/stable/cu126/"
+explicit = true

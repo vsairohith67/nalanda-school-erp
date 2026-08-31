@@ -1,0 +1,146 @@
+{
+  "schema_version": "nalanda-ocr-candidate-lock-1.0",
+  "captured_on": "2026-08-30",
+  "candidates": [
+    {
+      "id": "unlimited-ocr",
+      "source": "https://github.com/baidu/Unlimited-OCR",
+      "source_revision": "d49ff64afffc1f47ab563dc1c589bc2f78808fa4",
+      "model": "https://huggingface.co/baidu/Unlimited-OCR",
+      "model_revision": "07dea832e22aefee32ad281d4b80551282e1c168",
+      "code_license": "MIT",
+      "model_weight_license": "MIT",
+      "parameter_class": "3B",
+      "weight_bytes": 6672547120,
+      "weight_sha256": "2bc48a7a110061ea58fff65d3169367eebe3aee371ca6968dc2219c1b2855fc6",
+      "files": {
+        "LICENSE": { "bytes": 1061, "sha256": "d985048c6d69429d685fdbe7557340aa0897c0fd8dc038299b148b9c75dc3383" },
+        "README.md": { "bytes": 11108, "sha256": "4f573db255db5262bfe2ea92e459bfc11635a456f210e3a96289bb9605077a55" },
+        "config.json": { "bytes": 2881, "sha256": "27246d03fd670904ec9601b1cb0861fbb79ec076830771daa8d943d6229946f9" },
+        "configuration_deepseek_v2.py": { "bytes": 10720, "sha256": "b8470dd616ba8745fce6e27b093aef73a098863cc891b2477dcf9326a36000f7" },
+        "conversation.py": { "bytes": 9253, "sha256": "ec7b6ce89bcda643de1f43269ffa66a7b2e65dc3ed30e427958f776546b4ba03" },
+        "deepencoder.py": { "bytes": 38008, "sha256": "0ae2fb6d1e5ae8cf100fc32f854830acd08c821a0a1f23a94a76588c222ddcf2" },
+        "model-00001-of-000001.safetensors": { "bytes": 6672547120, "sha256": "2bc48a7a110061ea58fff65d3169367eebe3aee371ca6968dc2219c1b2855fc6" },
+        "model.safetensors.index.json": { "bytes": 257611, "sha256": "354be1f2dcfb72ebb385e25465522ce5413a77c36f3b35fec088a3162a11af99" },
+        "modeling_deepseekv2.py": { "bytes": 90162, "sha256": "74e36e6bd0ba7bc565ef76464a99baa8e6bccb710ae9c1007b54ac30b855fa4c" },
+        "modeling_unlimitedocr.py": { "bytes": 53431, "sha256": "268bdcbe12cf37bf5a2debb53faf542e56570958a5d9f3314aab3cab2cf6cb48" },
+        "processor_config.json": { "bytes": 466, "sha256": "92588cffb1d7032ec83d0a06c3a5171b41df5cbf432d68765441139a57899328" },
+        "special_tokens_map.json": { "bytes": 801, "sha256": "ab4bd57ce17d62e39e0a39e739de1e407484f090f0b2c7e391312bca7a5b061a" },
+        "tokenizer.json": { "bytes": 9979544, "sha256": "a02f8fd5228c90256bb4f6554c34a579d48f909e5beb232dc4afad870b55a8b4" },
+        "tokenizer_config.json": { "bytes": 165938, "sha256": "a0cbe8464049da1f891b7a12676de06af4cb54c130995d42f71adc1c30c6e9f3" }
+      },
+      "custom_code": true,
+      "trust_remote_code": true,
+      "runtime": "vLLM official image",
+      "runtime_image": "vllm/vllm-openai@sha256:b7a7be708c9a325107cdeddeba095e5637617716b3ab469c19d34759ec1afa39"
+    },
+    {
+      "id": "paddleocr",
+      "source": "https://github.com/PaddlePaddle/PaddleOCR",
+      "source_revision": "2661c7c0ef5c613e8f93c6e93b2e052399f0f854",
+      "package": "paddleocr==3.7.0",
+      "runtime_package": "paddlepaddle-gpu==3.3.1",
+      "code_license": "Apache-2.0",
+      "model_weight_license": "Apache-2.0",
+      "custom_code": false,
+      "container_base": "python:3.12.10-slim-bookworm@sha256:97983fa8cc88343512862c62307159a82261c3528dc025f79e5a3f7af43e50b4",
+      "models": [
+        {
+          "name": "PP-OCRv5_mobile_det",
+          "revision": "0d63e78e2b680928f6b1747d76a08db6e645efb7",
+          "weight_bytes": 4692937,
+          "weight_sha256": "afa1820cb16c1fd0dad589d0f8b389139061c1ef6d68019685fd07be997dda5b",
+          "runtime_files": {
+            "config.json": { "bytes": 2871, "sha256": "7ac1c33f377ba58561f4b89d3180b6add2b7c5c60a4edac90fa4e0ceccdc6665" },
+            "inference.json": { "bytes": 229777, "sha256": "05feef1acb00aa4cd7362b15f7f501fc4f99d7b1fa73c1c871e0c7b1504b0f5c" },
+            "inference.pdiparams": { "bytes": 4692937, "sha256": "afa1820cb16c1fd0dad589d0f8b389139061c1ef6d68019685fd07be997dda5b" },
+            "inference.yml": { "bytes": 903, "sha256": "98069072e1b6b37d727fd9d9f11725faa46d6ea0de012f2ed26caea011c37699" }
+          }
+        },
+        {
+          "name": "en_PP-OCRv5_mobile_rec",
+          "revision": "267c36e24c331595590fe7bd72bde2436fd286f2",
+          "weight_bytes": 7772315,
+          "weight_sha256": "3ec8a97ed6cefe8568d3e2ee90bb193299b566a7661aa4fd52d224b96b59f66b",
+          "runtime_files": {
+            "config.json": { "bytes": 10455, "sha256": "16103ac291a82fca50f0bb000d62a4b8168f6042f03c89c44cf32f241d1eb1f2" },
+            "inference.json": { "bytes": 217712, "sha256": "fd1b6ec722ea841a72d3ba43e527df1d1066d5d7808e0503ee3eec7265188753" },
+            "inference.pdiparams": { "bytes": 7772315, "sha256": "3ec8a97ed6cefe8568d3e2ee90bb193299b566a7661aa4fd52d224b96b59f66b" },
+            "inference.yml": { "bytes": 3964, "sha256": "27e91d0582f40168aa218303c76e184bc78fa7a5d105aad0cfbad8458b441067" }
+          }
+        },
+        {
+          "name": "devanagari_PP-OCRv5_mobile_rec",
+          "revision": "99dcce6d196bd4aaf268c7a5c72c3cc9f3ea4932",
+          "weight_bytes": 7836203,
+          "weight_sha256": "719be7d20bfe9530e2deae324c999e9911087496bce5e70846767c448d023a01",
+          "runtime_files": {
+            "config.json": { "bytes": 12970, "sha256": "b823d922aa6aedc9fda8412b94e2600885bf8442c5d2197f456a4e672d36481c" },
+            "inference.json": { "bytes": 217712, "sha256": "20d3b121184ec6b7de1705015022f4b22117990f6e5728a5d21c314bac9c1444" },
+            "inference.pdiparams": { "bytes": 7836203, "sha256": "719be7d20bfe9530e2deae324c999e9911087496bce5e70846767c448d023a01" },
+            "inference.yml": { "bytes": 5027, "sha256": "9bd172dd26440c8ce94d1cde5d5baea6aefdc7cf3c5c8492e0beedef656d4e54" }
+          }
+        },
+        {
+          "name": "te_PP-OCRv5_mobile_rec",
+          "revision": "151ab3b1c2f2a058f07a944416b92e9eaec6bf36",
+          "weight_bytes": 7822651,
+          "weight_sha256": "45967d00d6b4af590221733bf0d93791babc1feb17b98da401dba53d3cf110c9",
+          "runtime_files": {
+            "config.json": { "bytes": 12430, "sha256": "a068ef1df14b663264a7c23d97b91cbc76b98697d608469a76e167acca860a34" },
+            "inference.json": { "bytes": 217712, "sha256": "ad866e22872fbc0ee498b2c47d9537bd8f49f125353e43d82a4d173b595e6bfb" },
+            "inference.pdiparams": { "bytes": 7822651, "sha256": "45967d00d6b4af590221733bf0d93791babc1feb17b98da401dba53d3cf110c9" },
+            "inference.yml": { "bytes": 4795, "sha256": "acebbe53f1831bf28ddfed75aedf58225d7aa5d09100c1d5a9140a2a53b137ce" }
+          }
+        }
+      ]
+    },
+    {
+      "id": "tesseract",
+      "source": "https://github.com/tesseract-ocr/tesseract",
+      "source_revision": "5.5.3",
+      "current_stable_reviewed": "5.5.3",
+      "benchmark_runtime": "tesseract 5.4.0.20240606",
+      "benchmark_binary_bytes": 1585024,
+      "benchmark_binary_sha256": "babb405f4366b480d02cd8ff2bac8d497170f6c1711ce6f3d5d8bf0fb7fa6ed9",
+      "code_license": "Apache-2.0",
+      "model_weight_license": "Apache-2.0",
+      "custom_code": false,
+      "tessdata_best_revision": "e12c65a",
+      "traineddata": {
+        "eng": "8280aed0782fe27257a68ea10fe7ef324ca0f8d85bd2fd145d1c2b560bcb66ba",
+        "hin": "bd2e65a2184af08a167b0be2439e91fa5edbc4394399ca2f692b843ae26e78d6",
+        "tel": "81b0a1cfaf8bbf0f87da72b8c348264c6f24130766f5c4ade733fc20c05aaccc",
+        "osd": "9cf5d576fcc47564f11265841e5ca839001e7e6f38ff7f7aacf46d15a96b00ff"
+      }
+    },
+    {
+      "id": "surya",
+      "source": "https://github.com/datalab-to/surya",
+      "source_revision": "3a70081f6a60013dab818c82ab99451aa290f389",
+      "source_release": "v0.22.1",
+      "model": "https://huggingface.co/datalab-to/surya-ocr-2-gguf",
+      "model_revision": "6a3a4c30e5e74446d4f8b6afd05b2f2da970f470",
+      "code_license": "Apache-2.0",
+      "model_weight_license": "modified OpenRAIL-M",
+      "commercial_use": "unresolved for Nalanda; published terms limit free commercial use by organization class/revenue",
+      "custom_code": false,
+      "runtime": "llama.cpp build 10679 commit 50f068fff",
+      "runtime_bundle_sha256": "ca151161dfeb83493c54b30dbfafb7d2e605a6ecfbdbfcf7f1cc9710609b7969",
+      "chat_template": {
+        "bytes": 2872,
+        "sha256": "86f17a85672e7f367b5e6c6de6f67f53ede0fba4abb3d67c583a6ef647c1aa85"
+      },
+      "files": {
+        "surya-2.gguf": {
+          "bytes": 1266400864,
+          "sha256": "1f18abe17b1ed8b4e47ee9b1ad0e274c93daf5efbb6b29a04ff1712e37051e05"
+        },
+        "surya-2-mmproj.gguf": {
+          "bytes": 204986688,
+          "sha256": "98c0563673b1657ff6d021d1e5f04af06cbf61bb40c63ac613e8bb71b42fb2c0"
+        }
+      }
+    }
+  ]
+}

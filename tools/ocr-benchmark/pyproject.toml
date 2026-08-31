@@ -1,0 +1,34 @@
+[project]
+name = "nalanda-ocr-benchmark"
+version = "1.0.0"
+description = "Synthetic-only local OCR benchmark for Nalanda School Management System"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "filetype==1.2.0",
+  "numpy==2.3.5",
+  "opencv-python-headless==5.0.0.93",
+  "pillow==12.3.0",
+  "psutil==7.2.2",
+  "pypdf==6.16.2",
+  "pypdfium2==5.13.0",
+  "rapidfuzz==3.14.5",
+  "reportlab==5.0.1",
+  "skia-python==144.0.post2",
+]
+
+[dependency-groups]
+dev = [
+  "pip-audit==2.10.1",
+  "pytest==9.1.1",
+]
+
+[build-system]
+requires = ["hatchling==1.28.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nalanda_ocr_benchmark"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
