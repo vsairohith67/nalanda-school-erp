@@ -850,3 +850,17 @@ This is a default-off, zero-rollout software foundation. It does not activate st
 - [Next private staging prompt](prompts/PRIVATE-STAGING-1B-R1.md)
 
 The provider-dual software contract preserves SQLite as local/default and adds a separate PostgreSQL 17 schema/migration line for later private synthetic staging. It does not deploy, purchase, convert operational data, activate real users, or authorize a pilot.
+
+# OCR-BENCHMARK-1A
+
+- [Benchmark method and result](OCR_BENCHMARK_1A.md)
+- [Candidate, licence and runtime matrix](OCR_CANDIDATE_MATRIX.md)
+- [Synthetic corpus](OCR_SYNTHETIC_CORPUS.md)
+- [Hardware profile](OCR_HARDWARE_PROFILE.md)
+- [Security and privacy](OCR_SECURITY_AND_PRIVACY.md)
+- [Architecture decision](OCR_ARCHITECTURE_DECISION.md)
+- [Future human-review UX](OCR_HUMAN_REVIEW_UX_SPEC.md)
+- [Clearance evidence](evidence/OCR_BENCHMARK_1A_CLEARANCE.md)
+- [Generated, unexecuted OCR Scanning Foundation 1B prompt](prompts/OCR_SCANNING_FOUNDATION_1B.md)
+
+OCR-BENCHMARK-1A selects a local PaddleOCR printed-document primary with mandatory human review and no automatic heavy-model fallback. This is benchmark/architecture clearance only: production OCR, real documents, authoritative writes, cloud OCR and operational activation remain prohibited pending a separate 1B release and later readiness gate.
