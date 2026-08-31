@@ -1,5 +1,7 @@
 # Prompt Ledger — Earliest Recoverable Evidence to Present
 
+| 2026-09-01 | REAL-DATA-ONBOARDING-PREPARATION-1A | Source inventory, provenance, package/mapping contracts, bounded offline validation, synthetic dry run, duplicate/finance/privacy/wave/rollback/operator tooling | `SOFTWARE_PREPARATION_CLEARED` only with exact-head release evidence | No real source received/processed; successor `REAL_DATA_ONBOARDING_1A_R1` is generated but blocked. |
+
 | 2026-08-28 | PORTABLE-STAGING-FOUNDATION-1A | Provider-neutral OCI/PostgreSQL/Valkey/private-object/backup/synthetic staging | `SOFTWARE_CLEARED`; public-certificate Browser acceptance and production signing remain external toolchain gates | Provider/resources/DNS/real users/data remain open or inactive. |
 
 **Ledger ID:** `GOV-RECON-1-LEDGER`<br>

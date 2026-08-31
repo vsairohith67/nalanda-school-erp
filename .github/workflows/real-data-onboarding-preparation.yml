@@ -1,0 +1,178 @@
+name: Real-Data Onboarding Preparation 1A exact-head
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/real-data-onboarding-preparation.yml"
+      - "config/onboarding/**"
+      - "templates/onboarding/**"
+      - "docs/**ONBOARDING**"
+      - "docs/**onboarding**"
+      - "docs/DATA_*"
+      - "docs/FINANCIAL_OPENING_POSITION_AND_RECONCILIATION.md"
+      - "docs/IMPORT_*"
+      - "docs/POST_IMPORT_VALIDATION_CHECKLIST.md"
+      - "docs/PRIVATE_STAGING_IMPORT_RUNBOOK.md"
+      - "docs/REAL_DATA_PRIVACY_AND_RETENTION_GATES.md"
+      - "lib/onboarding-preparation.ts"
+      - "scripts/onboarding-preparation.ts"
+      - "scripts/qa-real-data-onboarding-preparation-1a-public-repo-scan.ts"
+      - "tests/real-data-onboarding-preparation-1a.test.ts"
+      - "package.json"
+      - "pnpm-lock.yaml"
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact feature commit to validate
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: real-data-onboarding-preparation-${{ inputs.expected_sha || github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: false
+
+env:
+  CI: "true"
+  EXPECTED_SHA: ${{ inputs.expected_sha || github.event.pull_request.head.sha || github.sha }}
+  NALANDA_ENVIRONMENT: "TEST"
+  LIVE_PROVIDERS_ENABLED: "false"
+  RELEASE_FEATURE_FLAGS_QA_MODE: "SYNTHETIC_COPY_ONLY"
+
+jobs:
+  exact-head-synthetic-software-gate:
+    name: Exact-head synthetic validation, security and full ERP regression
+    runs-on: windows-2025
+    timeout-minutes: 110
+    env:
+      DATABASE_PROVIDER: sqlite
+      DATABASE_URL: file:../tmp/onboarding-preparation-ci/synthetic.db
+      BACKUP_DIRECTORY: tmp/onboarding-preparation-ci/backups
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Require exact source head
+        shell: pwsh
+        run: if ((git rev-parse HEAD).Trim() -ne $env:EXPECTED_SHA) { throw "Exact-head checkout mismatch" }
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - name: Install exact lockfile and pinned scan utility
+        shell: pwsh
+        run: |
+          choco install ripgrep --version=15.2.0 -y --no-progress
+          pnpm install --frozen-lockfile
+      - name: Generate and validate SQLite client
+        run: pnpm exec prisma generate --schema prisma/schema.prisma && pnpm exec prisma validate --schema prisma/schema.prisma
+      - name: Prepare isolated synthetic database
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path tmp\onboarding-preparation-ci | Out-Null
+          if (Test-Path -LiteralPath tmp\onboarding-preparation-ci\synthetic.db) { throw "Synthetic database already exists" }
+          New-Item -ItemType File -Path tmp\onboarding-preparation-ci\synthetic.db | Out-Null
+          pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          Copy-Item -LiteralPath tmp\onboarding-preparation-ci\synthetic.db -Destination prisma\dev.db
+      - name: Public repository, secret and private-artifact gate
+        run: pnpm qa:onboarding-preparation:public-repo-scan && pnpm audit --audit-level high
+      - name: Preparation mapping, packages, adversarial parser and no-write proof
+        run: pnpm qa:onboarding-preparation
+      - name: Existing governed onboarding, finance and Schoolknot compatibility
+        run: pnpm exec vitest run tests/import-verification.test.ts tests/import-action-state.test.ts tests/student-import.test.ts tests/guardians.test.ts tests/staff.test.ts tests/payment-import.test.ts tests/schoolknot-management-reconciliation.test.ts tests/sec1-import-boundaries.test.ts
+      - name: Governed copied-database import lifecycle
+        env:
+          NODE_ENV: development
+          APP_ORIGIN: http://127.0.0.1:3000
+          RELEASE_FEATURE_FLAGS_QA_ENABLED: real-data-imports
+        run: pnpm qa:import1a
+      - name: Migration and backup-restore compatibility
+        run: pnpm migration:fresh-check && pnpm migration:restore-check
+      - name: Security Resilience and shared software foundations
+        run: pnpm security:resilience:acceptance && pnpm qa:portable-runtime && pnpm qa:synthetic-pilot
+      - name: Read-only release and operational commands on synthetic database
+        shell: pwsh
+        run: |
+          pnpm routes:list
+          pnpm lifecycle:backfill
+          pnpm backup
+          pnpm git:safety-check
+      - name: Refresh isolated full-regression baseline
+        shell: pwsh
+        env:
+          DATABASE_URL: file:../tmp/release-ci/synthetic.db
+          NODE_ENV: development
+          RELEASE_CI_SYNTHETIC_OPT_IN: "true"
+        run: |
+          New-Item -ItemType Directory -Force -Path tmp\release-ci | Out-Null
+          if (Test-Path -LiteralPath tmp\release-ci\synthetic.db) { throw "Full-regression synthetic database already exists" }
+          New-Item -ItemType File -Path tmp\release-ci\synthetic.db | Out-Null
+          pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db -Force
+      - name: Full ERP tests, typecheck and production build
+        env:
+          DATABASE_URL: file:../tmp/release-ci/synthetic.db
+        run: pnpm test && pnpm typecheck && pnpm build
+      - name: Remove synthetic databases and reports
+        if: always()
+        shell: pwsh
+        run: |
+          Remove-Item -LiteralPath tmp\onboarding-preparation-ci -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath tmp\release-ci -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath prisma\dev.db -Force -ErrorAction SilentlyContinue
+
+  exact-head-postgresql-compatibility:
+    name: Exact-head PostgreSQL 17 parity and provider-independent preparation
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    services:
+      postgres:
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_USER: nalanda_migrator
+          POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-onboarding
+          POSTGRES_DB: nalanda_onboarding_preparation_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nalanda_migrator -d nalanda_onboarding_preparation_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_PROVIDER: postgresql
+      POSTGRES_READINESS_SYNTHETIC_QA: "1"
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: nalanda_migrator
+      POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-onboarding
+      POSTGRES_DB: nalanda_onboarding_preparation_ci
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Require exact source head
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - name: Configure disposable PostgreSQL connection
+        shell: bash
+        run: |
+          database_url=$(printf '%s://%s:%s@%s:%s/%s?schema=public' postgresql "$POSTGRES_USER" "$POSTGRES_PASSWORD" "$POSTGRES_HOST" "$POSTGRES_PORT" "$POSTGRES_DB")
+          echo "DATABASE_URL=$database_url" >> "$GITHUB_ENV"
+          echo "DIRECT_URL=$database_url" >> "$GITHUB_ENV"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate:postgres
+      - name: PostgreSQL migrations, schema/trigger parity and readiness QA
+        run: pnpm db:migrate:postgres && pnpm db:migrate:postgres && pnpm db:status:postgres && pnpm qa:postgres:parity && pnpm qa:postgres
+      - name: Provider-independent preparation and no-write proof
+        run: pnpm qa:onboarding-preparation

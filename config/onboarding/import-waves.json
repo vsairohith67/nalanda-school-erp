@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0",
+  "defaultState": "PREPARATION_ONLY_NO_IMPORT",
+  "waves": [
+    {"id":"WAVE_0","name":"Academic reference data","dependsOn":[],"domains":["SCHOOL_ACADEMIC_STRUCTURE"],"requiredGates":["SOURCE_VERIFIED","MAPPING_PREPARED","OWNER_APPROVAL","BACKUP_READY","ROLLBACK_DECISION"]},
+    {"id":"WAVE_1","name":"Students and Guardians","dependsOn":["WAVE_0"],"domains":["STUDENTS","GUARDIANS"],"requiredGates":["DUPLICATES_REVIEWED","PRIVACY_REVIEW","OWNER_APPROVAL","PRIVATE_STAGING_DRY_RUN"]},
+    {"id":"WAVE_2","name":"Staff and assignments","dependsOn":["WAVE_0"],"domains":["STAFF"],"requiredGates":["DUPLICATES_REVIEWED","PRIVACY_REVIEW","IAM_PROPOSALS_SEPARATED","OWNER_APPROVAL"]},
+    {"id":"WAVE_3","name":"Enrolment and lifecycle","dependsOn":["WAVE_1"],"domains":["ENROLMENT_LIFECYCLE"],"requiredGates":["REFERENCES_RESOLVED","NO_PROGRESSION_INFERENCE","OWNER_APPROVAL"]},
+    {"id":"WAVE_4","name":"Fee assignment and opening dues","dependsOn":["WAVE_1","WAVE_3"],"domains":["FINANCE_OPENING"],"requiredGates":["FINANCE_RECONCILED","UNEXPLAINED_DIFFERENCE_ZERO","OWNER_APPROVAL"]},
+    {"id":"WAVE_5","name":"Verified historical payments","dependsOn":["WAVE_4"],"domains":["FINANCE_HISTORY"],"requiredGates":["RECEIPTS_RECONCILED","CONTROL_TOTALS_MATCH","OWNER_APPROVAL"]},
+    {"id":"WAVE_6","name":"Attendance and academic history","dependsOn":["WAVE_1","WAVE_3"],"domains":["ACADEMIC_HISTORY"],"requiredGates":["STRUCTURED_SOURCE_APPROVED","ACADEMIC_INTEGRITY_REVIEW","OWNER_APPROVAL"]},
+    {"id":"WAVE_7","name":"Documents and photographs","dependsOn":["WAVE_1","WAVE_2"],"domains":["DOCUMENTS_MEDIA"],"requiredGates":["PRIVATE_STORAGE_APPROVED","CONSENT_LEGAL_BASIS_APPROVED","RETENTION_APPROVED","OWNER_APPROVAL"]},
+    {"id":"WAVE_8","name":"Optional operational modules","dependsOn":["WAVE_0"],"domains":["OPTIONAL_OPERATIONAL"],"requiredGates":["START_FRESH_DEFAULT_REVIEWED","AUTHORITATIVE_VALUE_JUSTIFIED","OWNER_APPROVAL"]}
+  ]
+}

@@ -1,5 +1,9 @@
 # Authoritative Requirements Register
 
+## REAL-DATA-ONBOARDING-PREPARATION-1A addendum
+
+Preparation/tooling is implemented with source inventory and authority, immutable-source package manifests, 89 service-level mappings, bounded offline CSV/XLSX validation, deterministic synthetic packages, human duplicate/finance review, eight import waves, approval/rollback/privacy/retention runbooks and a future execution prompt. Release status is `REAL_DATA_ONBOARDING_PREPARATION_1A_CLEARED` only with exact-head/merge/tag evidence. Real data was not received or processed. Actual onboarding, private staging, real users, deployment, OCR and production cutover remain blocked/unapproved.
+
 ## SYNTHETIC-PILOT-READINESS-1A active addendum
 
 Provider-independent operational rehearsal is implemented as an isolated 800-Student/1,200-Guardian/80-Staff fixture, a server-derived machine-readable role/access matrix, cross-module acceptance gate, runbooks, training/quick-reference material, failure/security/recovery drills and explicit future real-pilot gates. It does not change biometric implementation, import real data, activate real users/providers/default-off features, deploy staging or clear OCR. Terminal evidence is in `docs/evidence/SYNTHETIC_PILOT_READINESS_1A_CLEARANCE.md`; status remains non-terminal until exact-head release closure.

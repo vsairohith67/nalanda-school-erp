@@ -4,6 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "onboarding:synthetic": "tsx scripts/onboarding-preparation.ts synthetic",
+    "onboarding:package:validate": "tsx scripts/onboarding-preparation.ts package-validate",
+    "onboarding:mapping:validate": "tsx scripts/onboarding-preparation.ts mapping-validate",
+    "onboarding:dry-run": "tsx scripts/onboarding-preparation.ts dry-run",
+    "onboarding:report": "tsx scripts/onboarding-preparation.ts report",
+    "qa:onboarding-preparation": "pnpm onboarding:mapping:validate && vitest run tests/real-data-onboarding-preparation-1a.test.ts tests/onboarding-plan.test.ts tests/onboarding-workbooks.test.ts tests/onboarding-governance.test.ts tests/student-import.test.ts tests/guardians.test.ts tests/staff.test.ts tests/payment-import.test.ts tests/schoolknot-management-reconciliation.test.ts",
+    "qa:onboarding-preparation:public-repo-scan": "tsx scripts/qa-real-data-onboarding-preparation-1a-public-repo-scan.ts",
     "ocr:corpus:generate": "uv run --project tools/ocr-benchmark python -m nalanda_ocr_benchmark corpus-generate",
     "ocr:benchmark:tesseract": "uv run --project tools/ocr-benchmark python -m nalanda_ocr_benchmark benchmark --candidate tesseract",
     "ocr:benchmark:paddle": "node tools/ocr-benchmark/scripts/run-paddle.mjs",

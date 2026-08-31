@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nalandaps.invalid/schemas/onboarding/package-manifest-1.0.json",
+  "title": "Nalanda import package manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "packageId", "sourceId", "sourceOwner", "exportingPerson", "exportTimestamp", "receivedTimestamp", "originalFilename", "fileSize", "sha256", "format", "declaredEncoding", "declaredAcademicYears", "recordDomains", "confidentiality", "transferMethod", "malwareScanResult", "validationResult", "approvalState", "retentionDeadline", "supersededPackageReference", "sourceClassification", "files"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "packageId": { "$ref": "#/$defs/id" }, "sourceId": { "$ref": "#/$defs/id" },
+    "sourceOwner": { "$ref": "#/$defs/text" }, "exportingPerson": { "$ref": "#/$defs/text" },
+    "exportTimestamp": { "type": "string", "format": "date-time" }, "receivedTimestamp": { "type": "string", "format": "date-time" },
+    "originalFilename": { "$ref": "#/$defs/text" }, "fileSize": { "type": "integer", "minimum": 0, "maximum": 335544320 },
+    "sha256": { "$ref": "#/$defs/sha" }, "format": { "$ref": "#/$defs/text" }, "declaredEncoding": { "$ref": "#/$defs/text" },
+    "declaredAcademicYears": { "type": "array", "items": { "type": "string", "maxLength": 32 }, "uniqueItems": true },
+    "recordDomains": { "type": "array", "minItems": 1, "items": { "type": "string", "maxLength": 80 }, "uniqueItems": true },
+    "confidentiality": { "$ref": "#/$defs/text" }, "transferMethod": { "$ref": "#/$defs/text" }, "malwareScanResult": { "$ref": "#/$defs/text" }, "validationResult": { "$ref": "#/$defs/text" },
+    "approvalState": { "enum": ["SOURCE_RECEIVED", "SOURCE_VERIFIED", "MAPPING_PREPARED", "DRY_RUN_COMPLETE", "DATA_OWNER_REVIEW", "PRIVACY_REVIEW", "FINANCE_RECONCILED", "TECHNICAL_APPROVAL", "OWNER_APPROVAL", "READY_FOR_PRIVATE_STAGING_IMPORT", "REJECTED", "SUPERSEDED"] },
+    "retentionDeadline": { "type": ["string", "null"], "format": "date-time" }, "supersededPackageReference": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+    "sourceClassification": { "enum": ["AUTHORITATIVE_PRIMARY", "AUTHORITATIVE_BY_PERIOD", "SUPPORTING_EVIDENCE", "DERIVED", "HISTORICAL_REFERENCE", "UNVERIFIED", "CONFLICTING", "INCOMPLETE", "DO_NOT_IMPORT"] },
+    "files": { "type": "array", "minItems": 1, "maxItems": 32, "items": { "type": "object", "additionalProperties": false, "required": ["fileId", "relativePath", "sha256", "sizeBytes", "format", "domain"], "properties": { "fileId": { "$ref": "#/$defs/id" }, "relativePath": { "type": "string", "pattern": "^[^/\\\\]{1,180}\\.(csv|xlsx)$" }, "sha256": { "$ref": "#/$defs/sha" }, "sizeBytes": { "type": "integer", "minimum": 0, "maximum": 10485760 }, "format": { "enum": ["CSV", "XLSX"] }, "domain": { "$ref": "#/$defs/text" }, "declaredEncoding": { "type": "string", "maxLength": 40 } } } }
+  },
+  "$defs": { "id": { "type": "string", "pattern": "^[A-Z0-9][A-Z0-9._:-]{2,99}$" }, "sha": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }, "text": { "type": "string", "minLength": 1, "maxLength": 240 } }
+}
