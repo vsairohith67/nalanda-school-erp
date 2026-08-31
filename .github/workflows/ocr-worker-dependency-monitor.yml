@@ -1,0 +1,74 @@
+name: OCR worker dependency monitor
+
+on:
+  schedule:
+    - cron: "17 2 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ocr-worker-dependency-monitor
+  cancel-in-progress: false
+
+jobs:
+  rebuild-and-scan:
+    name: Rebuild and scan the current supported worker
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.19.0
+      - name: Fetch the exact public Paddle GPU wheel outside the repository
+        shell: bash
+        run: |
+          wheel="$RUNNER_TEMP/paddlepaddle_gpu-3.3.1-cp312-cp312-linux_x86_64.whl"
+          curl --proto '=https' --tlsv1.2 --fail --location --retry 5 --retry-all-errors \
+            --output "$wheel" \
+            'https://paddle-whl.cdn.bcebos.com/stable/cu126/paddlepaddle-gpu/paddlepaddle_gpu-3.3.1-cp312-cp312-linux_x86_64.whl'
+          test "$(stat --format=%s "$wheel")" = "2021398367"
+          echo 'b1500120002c2bf4542c841e25296cf10c52e0d395053aa395f79bd9c0303cce  '"$wheel" | sha256sum --check --strict
+          echo "NALANDA_OCR_PADDLE_WHEEL=$wheel" >> "$GITHUB_ENV"
+      - name: Rebuild the digest-pinned worker without publishing it
+        shell: bash
+        run: |
+          node tools/ocr-worker/build-image.mjs
+          image_id=$(docker image inspect nalanda-ocr-worker:1b --format '{{.Id}}')
+          test "${image_id#sha256:}" != "$image_id"
+          echo "OCR_WORKER_IMAGE=$image_id" >> "$GITHUB_ENV"
+      - name: Verify runtime minimality and prohibited packages
+        run: node tools/ocr-worker/qa-image-security.mjs
+      - name: Run two unsuppressed scanners against the same image
+        shell: bash
+        run: |
+          set +e
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 \
+            image --timeout 30m --scanners vuln --severity CRITICAL,HIGH --exit-code 1 "$OCR_WORKER_IMAGE"
+          trivy_status=$?
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            anchore/grype@sha256:8a93fc48da96bd6ec5981279d099b69de11541dc68fdf222fb9161f8ff284af7 \
+            "docker:$OCR_WORKER_IMAGE" --fail-on high --output table
+          grype_status=$?
+          {
+            echo "## OCR worker dependency monitor"
+            echo
+            echo "- Exact image: \`$OCR_WORKER_IMAGE\`"
+            echo "- Trivy Critical/High gate: \`$trivy_status\`"
+            echo "- Grype Critical/High gate: \`$grype_status\`"
+            echo "- Image published: \`false\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$trivy_status" -ne 0 ] || [ "$grype_status" -ne 0 ]; then
+            exit 1
+          fi
+      - name: Remove ephemeral local evidence
+        if: always()
+        shell: bash
+        run: |
+          docker image rm nalanda-ocr-worker:1b "$OCR_WORKER_IMAGE" || true
+          rm -f "$NALANDA_OCR_PADDLE_WHEEL"

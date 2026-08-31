@@ -38,6 +38,66 @@ env:
   APP_ORIGIN: http://127.0.0.1:3000
 
 jobs:
+  container-supply-chain-gate:
+    name: Exact-head worker image, SBOM and two-scanner gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify exact source head
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0 }
+      - name: Fetch the exact public Paddle GPU wheel outside the repository
+        shell: bash
+        run: |
+          wheel="$RUNNER_TEMP/paddlepaddle_gpu-3.3.1-cp312-cp312-linux_x86_64.whl"
+          curl --proto '=https' --tlsv1.2 --fail --location --retry 5 --retry-all-errors \
+            --output "$wheel" \
+            'https://paddle-whl.cdn.bcebos.com/stable/cu126/paddlepaddle-gpu/paddlepaddle_gpu-3.3.1-cp312-cp312-linux_x86_64.whl'
+          test "$(stat --format=%s "$wheel")" = "2021398367"
+          echo 'b1500120002c2bf4542c841e25296cf10c52e0d395053aa395f79bd9c0303cce  '"$wheel" | sha256sum --check --strict
+          echo "NALANDA_OCR_PADDLE_WHEEL=$wheel" >> "$GITHUB_ENV"
+      - name: Build the exact digest-pinned worker image
+        shell: bash
+        run: |
+          node tools/ocr-worker/build-image.mjs
+          image_id=$(docker image inspect nalanda-ocr-worker:1b --format '{{.Id}}')
+          test "${image_id#sha256:}" != "$image_id"
+          echo "OCR_WORKER_IMAGE=$image_id" >> "$GITHUB_ENV"
+      - name: Runtime minimality and prohibited-package gate
+        run: node tools/ocr-worker/qa-image-security.mjs
+      - name: Generate a fresh ephemeral SPDX SBOM
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/ocr-image-evidence"
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            --mount "type=bind,src=$RUNNER_TEMP/ocr-image-evidence,dst=/evidence" \
+            aquasec/trivy@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 \
+            image --timeout 30m --scanners vuln --format spdx-json --output /evidence/worker.spdx.json "$OCR_WORKER_IMAGE"
+          sha256sum "$RUNNER_TEMP/ocr-image-evidence/worker.spdx.json"
+      - name: Scanner 1 - Trivy unsuppressed Critical and High gate
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
+          aquasec/trivy@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969
+          image --timeout 30m --scanners vuln --severity CRITICAL,HIGH --exit-code 1 "$OCR_WORKER_IMAGE"
+      - name: Scanner 2 - Grype unsuppressed Critical and High gate
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
+          anchore/grype@sha256:8a93fc48da96bd6ec5981279d099b69de11541dc68fdf222fb9161f8ff284af7
+          "docker:$OCR_WORKER_IMAGE" --fail-on high --output table
+      - name: Remove the ephemeral image, wheel and SBOM
+        if: always()
+        shell: bash
+        run: |
+          docker image rm nalanda-ocr-worker:1b || true
+          rm -f "$NALANDA_OCR_PADDLE_WHEEL"
+          rm -rf "$RUNNER_TEMP/ocr-image-evidence"
+
   exact-head-software-gate:
     name: Exact-head OCR, security and ERP regression
     runs-on: windows-2025

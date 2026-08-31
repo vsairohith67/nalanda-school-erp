@@ -105,10 +105,15 @@ function dockerArgs(input) {
     "--mount", `type=bind,src=${input.input},dst=/work/input/source${extension},readonly`,
     "--mount", `type=bind,src=${input.output},dst=/work/output`
   );
-  for (const model of input.models) args.push("--mount", `type=bind,src=${path.join(modelRoot, "official_models", model)},dst=/paddle-cache/official_models/${model},readonly`);
+  if (input.models.length === modelNames().length) {
+    args.push("--mount", `type=bind,src=${path.join(modelRoot, "official_models")},dst=/model-source,readonly`);
+  } else {
+    for (const model of input.models) args.push("--mount", `type=bind,src=${path.join(modelRoot, "official_models", model)},dst=/model-source/${model},readonly`);
+  }
   args.push(
     "--env", `OCR_PADDLE_DEVICE=${input.device}`, "--env", "OCR_TRUSTED_LAUNCHER=paddle-docker-network-none-v1",
     "--env", `OCR_PADDLE_IMAGE_ID=${imageId}`, "--env", "PADDLE_PDX_CACHE_HOME=/paddle-cache",
+    "--env", "OCR_MODEL_SOURCE_ROOT=/model-source",
     "--env", "PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True", "--env", "HF_HUB_OFFLINE=1", "--env", "TRANSFORMERS_OFFLINE=1",
     imageId, "--source", `/work/input/source${extension}`, "--output", "/work/output", "--language", input.language
   );

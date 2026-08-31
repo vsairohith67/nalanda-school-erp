@@ -25,6 +25,13 @@ LANGUAGE = {
     "ENGLISH_HINDI_TELUGU": "en+hi+te",
 }
 
+MODEL_NAMES = (
+    "PP-OCRv5_mobile_det",
+    "en_PP-OCRv5_mobile_rec",
+    "devanagari_PP-OCRv5_mobile_rec",
+    "te_PP-OCRv5_mobile_rec",
+)
+
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -76,8 +83,17 @@ def run(source: Path, output: Path, language_profile: str) -> None:
     if language_profile not in LANGUAGE:
         raise RuntimeError("OCR_LANGUAGE_UNAVAILABLE")
     model_root = Path(os.environ["PADDLE_PDX_CACHE_HOME"]).resolve()
+    model_source = Path(os.environ["OCR_MODEL_SOURCE_ROOT"]).resolve()
     if not model_root.is_dir():
         raise RuntimeError("OCR_MODEL_MISSING")
+    if str(model_root) != "/paddle-cache" or str(model_source) != "/model-source":
+        raise RuntimeError("OCR_MODEL_MOUNT_INVALID")
+    if not model_source.is_dir() or any(not (model_source / name).is_dir() for name in MODEL_NAMES):
+        raise RuntimeError("OCR_MODEL_MISSING")
+    official_models = model_root / "official_models"
+    if official_models.exists() or official_models.is_symlink():
+        raise RuntimeError("OCR_MODEL_CACHE_STATE_INVALID")
+    official_models.symlink_to(model_source, target_is_directory=True)
     adapter = PaddleOCRAdapter()
     available, reason = adapter.available()
     if not available:

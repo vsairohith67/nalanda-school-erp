@@ -35,6 +35,7 @@
     "qa:biometric:browser:cleanup": "tsx scripts/qa-biometric-staff-attendance-1a-browser-fixtures.ts cleanup",
     "test:ocr-scanning": "vitest run tests/ocr-scanning-foundation-1b.test.ts",
     "qa:ocr-scanning": "tsx scripts/qa-ocr-scanning-foundation-1b.ts",
+    "qa:ocr-scanning:image-security": "node tools/ocr-worker/qa-image-security.mjs",
     "qa:ocr-scanning:runtime": "node tools/ocr-worker/qa-runtime.mjs",
     "qa:ocr-scanning:public-repo-scan": "tsx scripts/qa-ocr-scanning-foundation-1b-public-repo-scan.ts",
     "qa:ocr-scanning:browser:setup": "tsx scripts/qa-ocr-scanning-foundation-1b-browser-fixtures.ts setup",
