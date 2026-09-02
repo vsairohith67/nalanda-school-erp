@@ -1,5 +1,26 @@
 # Documentation Index
 
+## Real-data onboarding preparation
+
+- [Preparation architecture and release boundary](REAL_DATA_ONBOARDING_PREPARATION.md)
+- [Existing onboarding current-state audit](REAL_DATA_ONBOARDING_CURRENT_STATE_AUDIT.md)
+- [Source inventory](DATA_SOURCE_INVENTORY_TEMPLATE.md)
+- [Provenance and chain of custody](DATA_PROVENANCE_AND_CHAIN_OF_CUSTODY.md)
+- [Import package specification](IMPORT_PACKAGE_SPECIFICATION.md)
+- [Mapping catalogue](DATA_MAPPING_CATALOGUE.md)
+- [Validation rules](DATA_VALIDATION_RULES.md)
+- [Duplicate and identity resolution](DUPLICATE_AND_IDENTITY_RESOLUTION.md)
+- [Financial opening and reconciliation](FINANCIAL_OPENING_POSITION_AND_RECONCILIATION.md)
+- [Wave plan](IMPORT_WAVE_PLAN.md)
+- [Privacy and retention gates](REAL_DATA_PRIVACY_AND_RETENTION_GATES.md)
+- [Private-staging runbook](PRIVATE_STAGING_IMPORT_RUNBOOK.md)
+- [Rollback runbook](IMPORT_ROLLBACK_RUNBOOK.md)
+- [Post-import checklist](POST_IMPORT_VALIDATION_CHECKLIST.md)
+- [Preparation clearance contract](evidence/REAL_DATA_ONBOARDING_PREPARATION_1A_CLEARANCE.md)
+- [Future execution prompt — do not run](prompts/REAL_DATA_ONBOARDING_1A_R1.md)
+
+This phase is software/preparation only. Real data was not received or processed; actual onboarding remains blocked by private repository/staging, source, privacy, reconciliation, backup/rollback and owner gates.
+
 ## Synthetic pilot readiness
 
 - [Acceptance pack](SYNTHETIC_PILOT_READINESS.md)

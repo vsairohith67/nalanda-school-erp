@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nalandaps.invalid/schemas/onboarding/source-inventory-1.0.json",
+  "title": "Nalanda source inventory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sources"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sourceId", "sourceSystemName", "owner", "custodian", "exportMethod", "exportDate", "academicYearsCovered", "domainsCovered", "fileFormat", "encoding", "rowCount", "attachmentCount", "originalChecksum", "authorityClassification", "confidentiality", "retentionDecision", "knownLimitations", "requiredApprovals", "migrationWaveEligibility"],
+        "properties": {
+          "sourceId": { "type": "string", "pattern": "^[A-Z0-9][A-Z0-9._:-]{2,99}$" },
+          "sourceSystemName": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "owner": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "custodian": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "exportMethod": { "type": "string", "minLength": 1, "maxLength": 240 },
+          "exportDate": { "type": ["string", "null"], "format": "date-time" },
+          "academicYearsCovered": { "type": "array", "items": { "type": "string", "maxLength": 32 }, "uniqueItems": true },
+          "domainsCovered": { "type": "array", "items": { "type": "string", "maxLength": 80 }, "uniqueItems": true },
+          "fileFormat": { "type": "string", "enum": ["CSV", "XLSX", "PDF_ARCHIVE", "PAPER", "MEDIA_FOLDER", "OTHER", "UNKNOWN"] },
+          "encoding": { "type": ["string", "null"], "maxLength": 40 },
+          "rowCount": { "type": ["integer", "null"], "minimum": 0 },
+          "attachmentCount": { "type": ["integer", "null"], "minimum": 0 },
+          "originalChecksum": { "type": ["string", "null"], "pattern": "^[a-fA-F0-9]{64}$" },
+          "authorityClassification": { "enum": ["AUTHORITATIVE_PRIMARY", "AUTHORITATIVE_BY_PERIOD", "SUPPORTING_EVIDENCE", "DERIVED", "HISTORICAL_REFERENCE", "UNVERIFIED", "CONFLICTING", "INCOMPLETE", "DO_NOT_IMPORT"] },
+          "confidentiality": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "retentionDecision": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "knownLimitations": { "type": "array", "items": { "type": "string", "maxLength": 500 } },
+          "requiredApprovals": { "type": "array", "items": { "type": "string", "maxLength": 160 }, "minItems": 1 },
+          "migrationWaveEligibility": { "type": "array", "items": { "pattern": "^WAVE_[0-8]$" }, "uniqueItems": true }
+        }
+      }
+    }
+  }
+}

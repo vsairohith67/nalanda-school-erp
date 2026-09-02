@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0",
+  "maximumFileBytes": 10485760,
+  "maximumFiles": 32,
+  "maximumSheets": 16,
+  "maximumRowsPerSheet": 10000,
+  "maximumColumns": 128,
+  "maximumCellLength": 8000,
+  "maximumTotalCharacters": 16777216,
+  "maximumFormulaCells": 0,
+  "maximumProcessingMilliseconds": 30000,
+  "maximumReportBytes": 10485760
+}
