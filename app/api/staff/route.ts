@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiPermission } from "@/lib/auth";
-import { buildStaffSearchWhere, friendlyStaffError, validateStaffInput } from "@/lib/staff";
+import { buildStaffSearchWhere, friendlyStaffError } from "@/lib/staff";
+import { createStaffRecord } from "@/lib/authoritative-record-services";
 
 export async function GET(request: NextRequest) {
   const auth = await requireApiPermission("VIEW_STAFF");
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
   const auth = await requireApiPermission("MANAGE_STAFF");
   if (auth.response) return auth.response;
   try {
-    const staff = await prisma.staffMember.create({ data: validateStaffInput(await request.json()) });
+    const staff = await createStaffRecord(prisma, await request.json());
     return NextResponse.json(staff, { status: 201 });
   } catch (error) { return NextResponse.json({ error: friendlyStaffError(error) }, { status: 400 }); }
 }

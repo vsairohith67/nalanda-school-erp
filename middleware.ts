@@ -63,7 +63,8 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isOfflinePublicShell = offlinePublicShellPaths.has(pathname);
   const isNativeRouteAuthorized = nativeRouteAuthorizedPaths.has(pathname);
-  const isSignedMachineRouteAuthorized = signedMachineRouteAuthorizedPaths.has(pathname);
+  const isOcrWorkerRoute = pathname.startsWith("/api/internal/ocr/worker/");
+  const isSignedMachineRouteAuthorized = signedMachineRouteAuthorizedPaths.has(pathname) || isOcrWorkerRoute;
   const nonce = crypto.randomUUID().replaceAll("-", "");
   const applySecurityHeaders = (response: NextResponse) => {
     response.headers.set("content-security-policy", contentSecurityPolicy(nonce));
@@ -102,14 +103,18 @@ export async function middleware(request: NextRequest) {
     pathname === "/favicon.ico";
   const sessionReference = await verifySessionToken(request.cookies.get(SESSION_COOKIE)?.value);
   const session = isPublic || isNativeRouteAuthorized || isSignedMachineRouteAuthorized ? null : sessionReference;
-  const signedMachineActor = isSignedMachineRouteAuthorized && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(request.headers.get("x-nalanda-biometric-bridge-id") ?? "")
-    ? request.headers.get("x-nalanda-biometric-bridge-id")!.toLowerCase()
-    : null;
+  const biometricBridgeId = request.headers.get("x-nalanda-biometric-bridge-id") ?? "";
+  const ocrWorkerId = request.headers.get("x-nalanda-ocr-worker-id") ?? "";
+  const signedMachineActor = pathname === "/api/biometric/ingest" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(biometricBridgeId)
+    ? `biometric-bridge:${biometricBridgeId.toLowerCase()}`
+    : isOcrWorkerRoute && /^[a-z][a-z0-9.-]{2,63}$/.test(ocrWorkerId)
+      ? `ocr-worker:${ocrWorkerId}`
+      : null;
 
   const rateLimit = await enforceOperationRateLimit(pathname, request.method, {
     ...(clientIdentity.trusted ? { ip: clientIdentity.source } : directNativeActor ? { ip: `local-native:${directNativeActor}` } : {}),
     ...(sessionReference ? { session: sessionReference.sessionId } : {}),
-    ...(signedMachineActor ? { device: `biometric-bridge:${signedMachineActor}` } : {})
+    ...(signedMachineActor ? { device: signedMachineActor } : {})
   }, { dimensions: isSignedMachineRouteAuthorized ? ["ip", "device", "endpoint", "operationCost"] : ["ip", "session", "endpoint", "operationCost"] });
   if (!rateLimit.allowed) {
     emitSecurityResilienceEvent("RATE_LIMIT_HIT", {
@@ -181,7 +186,7 @@ export async function middleware(request: NextRequest) {
     response.headers.set("cache-control", "private, no-store");
     return applySecurityHeaders(response);
   }
-  const jsonBudgetIssue = await requestJsonBudgetIssue(request);
+  const jsonBudgetIssue = isOcrWorkerRoute ? null : await requestJsonBudgetIssue(request);
   if (jsonBudgetIssue) {
     if (/(?:import|export)/i.test(pathname)) emitSecurityResilienceEvent("EXCESSIVE_EXPORT_IMPORT", { routeFamily: "api", status: 413 });
     const response = NextResponse.json({ error: jsonBudgetIssue }, { status: 413 });

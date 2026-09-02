@@ -229,7 +229,7 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
 
   it("preserves the Schoolknot checkpoint across additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(341);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(347);
     for (const model of ["NativeAuthRequest", "NativeAuthorizationCode", "NativeSession", "NativeRefreshTokenHistory"]) expect(schema).toContain(`model ${model} {`);
     expect(schema).toContain("model SuperAdminDiaryEntry {");
     expect(schema).toContain("model SuperAdminTask {");
@@ -240,6 +240,9 @@ describe("Prompt 23B final Schoolknot multi-role consolidation", () => {
     expect(schema).toContain("model ExaminationTimetableVersion {");
     expect(schema).toContain("model ExaminationTimetableRow {");
     expect(schema).toContain("model ExaminationTimetableEvent {");
+    for (const model of ["OcrDocument", "OcrJob", "OcrPage", "OcrFieldCandidate", "OcrSubmission", "OcrWorkflowEvent"]) {
+      expect(schema).toContain(`model ${model} {`);
+    }
     expect(createHash("sha256").update(readFileSync("prisma/migrations/20260722_clean_install_baseline/migration.sql")).digest("hex").toUpperCase()).toBe(
       "E6D467206CFA536487C8C63882D13BA489C0235BE74E9E076423323A511C3025",
     );

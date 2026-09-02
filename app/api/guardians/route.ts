@@ -2,7 +2,8 @@ import { safeClientError } from "@/lib/client-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiPermission } from "@/lib/auth";
-import { guardianSearchWhere, validateGuardianPayload } from "@/lib/guardians";
+import { guardianSearchWhere } from "@/lib/guardians";
+import { createGuardianRecord } from "@/lib/authoritative-record-services";
 
 export async function GET(request: NextRequest) {
   const auth = await requireApiPermission("VIEW_GUARDIANS");
@@ -23,8 +24,7 @@ export async function POST(request: NextRequest) {
   const auth = await requireApiPermission("MANAGE_GUARDIANS");
   if (auth.response) return auth.response;
   try {
-    const data = validateGuardianPayload(await request.json());
-    const guardian = await prisma.guardian.create({ data });
+    const guardian = await createGuardianRecord(prisma, await request.json());
     return NextResponse.json({ guardian }, { status: 201 });
   } catch (error) {
     return NextResponse.json(

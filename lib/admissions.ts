@@ -203,6 +203,57 @@ export async function saveInvitedApplication(client: PrismaClient, token: string
   });
 }
 
+export async function applyHumanApprovedOcrAdmissionFields(
+  client: PrismaClient,
+  applicationKey: string,
+  values: Record<string, string>,
+  expectedVersion: number,
+  actor: AuthUser
+) {
+  return client.$transaction((tx) => applyHumanApprovedOcrAdmissionFieldsInTransaction(tx, applicationKey, values, expectedVersion, actor));
+}
+
+export async function applyHumanApprovedOcrAdmissionFieldsInTransaction(
+  client: Prisma.TransactionClient,
+  applicationKey: string,
+  values: Record<string, string>,
+  expectedVersion: number,
+  actor: AuthUser
+) {
+  if (!["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN"].includes(actor.role)) {
+    throw new AdmissionError("This role cannot submit OCR-reviewed admission values.", 403);
+  }
+  const application = await client.admissionApplication.findUnique({
+    where: { publicKey: safeKey(applicationKey) },
+    include: { cycle: true, child: true, guardians: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] } }
+  });
+  if (!application?.child || !application.guardians[0]) throw new AdmissionError("Complete the authoritative application draft before OCR review.", 409);
+  if (application.rowVersion !== expectedVersion) throw new AdmissionError("The application changed. Refresh and review it.", 409, "STALE_VERSION");
+  if (values.applicationNumber && values.applicationNumber !== application.applicationNumber) {
+    throw new AdmissionError("The reviewed application number does not match the authoritative application.", 409, "OCR_TARGET_MISMATCH");
+  }
+  const fullName = values.fullName ? text(values.fullName, "Child full name", 2, 120) : application.child.fullName;
+  const dateOfBirth = values.dateOfBirth ? requiredDate(values.dateOfBirth, "Date of birth") : application.child.dateOfBirth;
+  if (dateOfBirth && (dateOfBirth > new Date() || dateOfBirth < new Date("2000-01-01"))) throw new AdmissionError("Date of birth is outside the supported admission range.");
+  const desiredClass = values.desiredClass ? text(values.desiredClass, "Desired class", 1, 40) : application.child.desiredClass;
+  if (!jsonArray(application.cycle.enabledClassesJson).includes(desiredClass)) throw new AdmissionError("The selected class is not enabled for this cycle.");
+  const previousSchool = Object.prototype.hasOwnProperty.call(values, "previousSchool") ? optionalText(values.previousSchool, "Previous school", 120) : application.child.previousSchool;
+  const guardian = application.guardians[0];
+  const guardianName = values.guardianName ? text(values.guardianName, "Guardian name", 2, 100) : guardian.displayName;
+  const guardianPhone = values.guardianPhone ? normalizedContact("PHONE", values.guardianPhone) : null;
+  const guardianContactMethod = guardianPhone ? "PHONE" : guardian.contactMethod;
+  const guardianContactValue = guardianPhone ?? guardian.contactValue;
+  const now = new Date();
+  await client.applicantChild.update({ where: { id: application.child.id }, data: { fullName, dateOfBirth, desiredClass, previousSchool, version: { increment: 1 } } });
+  await client.prospectiveGuardian.update({ where: { id: guardian.id }, data: { displayName: guardianName, contactMethod: guardianContactMethod, contactValue: guardianContactValue, contactHash: contactHash(guardianContactMethod, guardianContactValue), version: { increment: 1 } } });
+  const changed = await client.admissionApplication.updateMany({ where: { id: application.id, rowVersion: expectedVersion }, data: { rowVersion: { increment: 1 } } });
+  if (changed.count !== 1) throw new AdmissionError("The application changed. Refresh and review it.", 409, "STALE_VERSION");
+  const snapshot = JSON.stringify({ source: "OCR_HUMAN_APPROVED", fullName, dateOfBirth: dateOfBirth?.toISOString().slice(0, 10) ?? null, desiredAcademicYear: application.child.desiredAcademicYear, desiredClass, previousSchool, guardian: { displayName: guardianName, contactMethod: guardianContactMethod, contactValue: guardianContactValue }, status: application.status });
+  await client.admissionApplicationVersion.create({ data: { applicationId: application.id, versionNumber: expectedVersion + 1, source: "OCR_HUMAN_APPROVED", snapshotJson: snapshot, snapshotSha256: sha256(snapshot) } });
+  await event(client, { applicationId: application.id, enquiryId: application.enquiryId, eventType: "OCR_HUMAN_APPROVED_VALUES_APPLIED", previousStatus: application.status, newStatus: application.status, entityVersion: expectedVersion + 1, actor, safeMetadata: { fields: Object.keys(values).sort(), directDatabaseBypass: false } });
+  return { service: "ADMISSIONS", reference: application.publicKey, version: String(expectedVersion + 1), appliedAt: now };
+}
+
 export async function admissionCompleteness(client: PrismaClient, applicationKey: string) {
   const application = await client.admissionApplication.findUnique({ where: { publicKey: safeKey(applicationKey) }, include: { cycle: true, child: true, guardians: true, documents: { where: { status: { not: "REJECTED" } } } } });
   if (!application) throw new AdmissionError("Application not found.", 404);

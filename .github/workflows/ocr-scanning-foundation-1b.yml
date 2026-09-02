@@ -1,0 +1,254 @@
+name: OCR Scanning Foundation 1B
+
+on:
+  pull_request:
+    paths:
+      - "app/api/internal/ocr/**"
+      - "app/api/ocr/**"
+      - "app/ocr-scanning/**"
+      - "components/ocr-**"
+      - "lib/ocr-scanning/**"
+      - "lib/authoritative-record-services.ts"
+      - "lib/portable-runtime/private-object-store.ts"
+      - "prisma/**"
+      - "scripts/qa-ocr-scanning-foundation-1b-*"
+      - "tests/ocr-scanning-foundation-1b.test.ts"
+      - "tools/ocr-worker/**"
+      - "config/release-feature-flags.json"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/ocr-scanning-foundation-1b.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ocr-scanning-foundation-1b-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  DATABASE_PROVIDER: sqlite
+  NALANDA_ENVIRONMENT: TEST
+  RELEASE_FEATURE_FLAGS_QA_MODE: SYNTHETIC_COPY_ONLY
+  RELEASE_FEATURE_FLAGS_QA_ENABLED: ocr-scanning-foundation-1b
+  LIVE_PROVIDERS_ENABLED: "false"
+  APP_ORIGIN: http://127.0.0.1:3000
+
+jobs:
+  container-supply-chain-gate:
+    name: Exact-head worker image, SBOM and two-scanner gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify exact source head
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0 }
+      - name: Fetch the exact public Paddle GPU wheel outside the repository
+        shell: bash
+        run: |
+          wheel="$RUNNER_TEMP/paddlepaddle_gpu-3.3.1-cp312-cp312-linux_x86_64.whl"
+          curl --proto '=https' --tlsv1.2 --fail --location --retry 5 --retry-all-errors \
+            --output "$wheel" \
+            'https://paddle-whl.cdn.bcebos.com/stable/cu126/paddlepaddle-gpu/paddlepaddle_gpu-3.3.1-cp312-cp312-linux_x86_64.whl'
+          test "$(stat --format=%s "$wheel")" = "2021398367"
+          echo 'b1500120002c2bf4542c841e25296cf10c52e0d395053aa395f79bd9c0303cce  '"$wheel" | sha256sum --check --strict
+          echo "NALANDA_OCR_PADDLE_WHEEL=$wheel" >> "$GITHUB_ENV"
+      - name: Build the exact digest-pinned worker image
+        shell: bash
+        run: |
+          node tools/ocr-worker/build-image.mjs
+          image_id=$(docker image inspect nalanda-ocr-worker:1b --format '{{.Id}}')
+          test "${image_id#sha256:}" != "$image_id"
+          echo "OCR_WORKER_IMAGE=$image_id" >> "$GITHUB_ENV"
+      - name: Runtime minimality and prohibited-package gate
+        run: node tools/ocr-worker/qa-image-security.mjs
+      - name: Generate a fresh ephemeral SPDX SBOM
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/ocr-image-evidence"
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            --mount "type=bind,src=$RUNNER_TEMP/ocr-image-evidence,dst=/evidence" \
+            aquasec/trivy@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 \
+            image --timeout 30m --scanners vuln --format spdx-json --output /evidence/worker.spdx.json "$OCR_WORKER_IMAGE"
+          sha256sum "$RUNNER_TEMP/ocr-image-evidence/worker.spdx.json"
+      - name: Scanner 1 - Trivy unsuppressed Critical and High gate
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
+          aquasec/trivy@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969
+          image --timeout 30m --scanners vuln --severity CRITICAL,HIGH --exit-code 1 "$OCR_WORKER_IMAGE"
+      - name: Scanner 2 - Grype unsuppressed Critical and High gate
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
+          anchore/grype@sha256:8a93fc48da96bd6ec5981279d099b69de11541dc68fdf222fb9161f8ff284af7
+          "docker:$OCR_WORKER_IMAGE" --fail-on high --output table
+      - name: Remove the ephemeral image, wheel and SBOM
+        if: always()
+        shell: bash
+        run: |
+          docker image rm nalanda-ocr-worker:1b || true
+          rm -f "$NALANDA_OCR_PADDLE_WHEEL"
+          rm -rf "$RUNNER_TEMP/ocr-image-evidence"
+
+  exact-head-software-gate:
+    name: Exact-head OCR, security and ERP regression
+    runs-on: windows-2025
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify exact source head
+        shell: pwsh
+        run: if ((git rev-parse HEAD).Trim() -ne $env:EXPECTED_SHA) { throw "Exact-head checkout mismatch" }
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - name: Install pinned full-regression tools
+        shell: pwsh
+        run: |
+          choco install ripgrep --version=15.2.0 -y --no-progress
+          rg --version
+          $archive = Join-Path $env:RUNNER_TEMP 'poppler-26.02.0-0.zip'
+          $extract = Join-Path $env:RUNNER_TEMP 'poppler-26.02.0-0'
+          Invoke-WebRequest -Uri 'https://github.com/oschwartz10612/poppler-windows/releases/download/v26.02.0-0/Release-26.02.0-0.zip' -OutFile $archive
+          $expected = '993e4a94376ed712fafc7058d724ea0b943d118bbd2305cd9ed55174eb85cda5'
+          if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) { throw 'Pinned Poppler archive checksum mismatch' }
+          Expand-Archive -LiteralPath $archive -DestinationPath $extract
+          $pdftoppmCandidates = @(Get-ChildItem -LiteralPath $extract -Recurse -File -Filter 'pdftoppm.exe')
+          if ($pdftoppmCandidates.Count -ne 1) { throw "Expected exactly one pdftoppm.exe in the pinned archive; found $($pdftoppmCandidates.Count)" }
+          $pdftoppm = $pdftoppmCandidates[0]
+          "REPORT_CARD_PDFTOPPM_PATH=$($pdftoppm.FullName)" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
+      - run: pnpm install --frozen-lockfile
+      - name: Configure isolated OCR databases and object store
+        shell: pwsh
+        run: |
+          $root = $env:GITHUB_WORKSPACE.Replace('\', '/')
+          New-Item -ItemType Directory -Force -Path tmp\ocr-1b-ci\objects | Out-Null
+          New-Item -ItemType Directory -Force -Path tmp\ocr-1b-ci\backups | Out-Null
+          if (Test-Path -LiteralPath tmp\ocr-1b-ci\primary.db) { throw 'Synthetic primary database already exists' }
+          if (Test-Path -LiteralPath tmp\ocr-1b-ci\restore.db) { throw 'Synthetic restore database already exists' }
+          New-Item -ItemType File -Path tmp\ocr-1b-ci\primary.db | Out-Null
+          New-Item -ItemType File -Path tmp\ocr-1b-ci\restore.db | Out-Null
+          "DATABASE_URL=file:$root/tmp/ocr-1b-ci/primary.db" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
+          "OCR_1B_QA_DATABASE_URL=file:$root/tmp/ocr-1b-ci/primary.db" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
+          "OCR_1B_QA_RESTORE_DATABASE_URL=file:$root/tmp/ocr-1b-ci/restore.db" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
+          "OCR_1B_QA_OBJECT_ROOT=$($env:GITHUB_WORKSPACE)\tmp\ocr-1b-ci\objects" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
+          "PRIVATE_STORAGE_ROOT=$($env:GITHUB_WORKSPACE)\tmp\ocr-1b-ci\objects" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
+          "BACKUP_DIRECTORY=$($env:GITHUB_WORKSPACE)\tmp\ocr-1b-ci\backups" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
+      - run: pnpm exec prisma generate --schema prisma/schema.prisma
+      - run: pnpm exec prisma validate --schema prisma/schema.prisma
+      - name: Deploy matched SQLite migrations twice
+        shell: pwsh
+        run: |
+          pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          $primary = $env:DATABASE_URL
+          $env:DATABASE_URL = $env:OCR_1B_QA_RESTORE_DATABASE_URL
+          pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          $env:DATABASE_URL = $primary
+          Copy-Item -LiteralPath tmp\ocr-1b-ci\primary.db -Destination prisma\dev.db
+      - name: Public repository and dependency gate
+        run: pnpm qa:ocr-scanning:public-repo-scan && pnpm audit --audit-level high
+      - name: Focused OCR, private-object and backup-restore gate
+        run: pnpm test:ocr-scanning && pnpm qa:ocr-scanning
+      - name: Migration and provider parity gate
+        run: pnpm migration:fresh-check && pnpm migration:existing-db-check && pnpm migration:schema-check && pnpm migration:restore-check && pnpm qa:postgres:parity
+      - name: Security and shared foundation regressions
+        run: pnpm security:resilience:acceptance && pnpm qa:portable-runtime && pnpm qa:offline-sync && pnpm test:cross-platform
+      - name: Read-only operational and release-safety commands
+        shell: pwsh
+        run: |
+          pnpm routes:list
+          pnpm lifecycle:backfill
+          pnpm backup
+          pnpm git:safety-check
+      - name: Prepare isolated full-regression database
+        shell: pwsh
+        env:
+          NODE_ENV: development
+          RELEASE_CI_SYNTHETIC_OPT_IN: "true"
+        run: |
+          $root = $env:GITHUB_WORKSPACE.Replace('\', '/')
+          New-Item -ItemType Directory -Force -Path tmp\release-ci | Out-Null
+          if (Test-Path -LiteralPath tmp\release-ci\synthetic.db) { throw 'Full-regression synthetic database already exists' }
+          New-Item -ItemType File -Path tmp\release-ci\synthetic.db | Out-Null
+          $env:DATABASE_URL = "file:$root/tmp/release-ci/synthetic.db"
+          "DATABASE_URL=$env:DATABASE_URL" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
+          pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db -Force
+      - name: Full ERP regression, typecheck and build
+        run: pnpm test && pnpm typecheck && pnpm build
+      - name: Remove ephemeral databases, objects and backups
+        if: always()
+        shell: pwsh
+        run: |
+          Remove-Item -LiteralPath tmp\ocr-1b-ci -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath tmp\release-ci -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath prisma\dev.db -Force -ErrorAction SilentlyContinue
+
+  postgres-migration-gate:
+    name: Exact-head PostgreSQL OCR migration and parity
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    services:
+      postgres:
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_USER: nalanda_migrator
+          POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-ocr
+          POSTGRES_DB: nalanda_ocr_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nalanda_migrator -d nalanda_ocr_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: "true"
+      EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      DATABASE_PROVIDER: postgresql
+      POSTGRES_READINESS_SYNTHETIC_QA: "1"
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: nalanda_migrator
+      POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-ocr
+      POSTGRES_DB: nalanda_ocr_ci
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify exact source head
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - name: Configure disposable PostgreSQL connection
+        shell: bash
+        run: |
+          database_url=$(printf '%s://%s:%s@%s:%s/%s?schema=public' postgresql "$POSTGRES_USER" "$POSTGRES_PASSWORD" "$POSTGRES_HOST" "$POSTGRES_PORT" "$POSTGRES_DB")
+          echo "DATABASE_URL=$database_url" >> "$GITHUB_ENV"
+          echo "DIRECT_URL=$database_url" >> "$GITHUB_ENV"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate:postgres
+      - name: Fresh OCR migration, repeat deploy and status
+        run: pnpm db:migrate:postgres && pnpm db:migrate:postgres && pnpm db:status:postgres
+      - name: Cross-provider schema, index, uniqueness, foreign-key and trigger parity
+        run: pnpm qa:postgres:parity && pnpm qa:postgres

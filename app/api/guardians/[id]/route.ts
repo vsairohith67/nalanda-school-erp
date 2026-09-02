@@ -2,7 +2,7 @@ import { safeClientError } from "@/lib/client-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiPermission } from "@/lib/auth";
-import { validateGuardianPayload } from "@/lib/guardians";
+import { updateGuardianRecord } from "@/lib/authoritative-record-services";
 
 export async function GET(_: NextRequest, context: { params: Promise<{ id: string }> }) {
   const auth = await requireApiPermission("VIEW_GUARDIANS");
@@ -29,8 +29,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
   if (auth.response) return auth.response;
   try {
     const { id } = await context.params;
-    const data = validateGuardianPayload(await request.json());
-    const guardian = await prisma.guardian.update({ where: { id }, data });
+    const guardian = await updateGuardianRecord(prisma, id, await request.json());
     return NextResponse.json({ guardian });
   } catch (error) {
     return NextResponse.json(

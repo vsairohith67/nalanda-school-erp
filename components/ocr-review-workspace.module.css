@@ -1,0 +1,45 @@
+.shell { min-height: 100vh; background: var(--background, #f6f4ee); color: var(--foreground, #17211c); padding: 24px; }
+.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; max-width: 1680px; margin: 0 auto 18px; }
+.header h1, .fieldHeading h2, .modal h2, .processing h1 { margin: 4px 0; font-family: Georgia, serif; }
+.header p, .submitBar p, .warning p, .processing p { margin: 4px 0; color: #59645e; }
+.eyebrow { color: #59645e; font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.headerFacts { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+.statusPill, .stateBadge { border: 1px solid #b9c1bc; border-radius: 999px; padding: 6px 10px; font-size: .72rem; font-weight: 800; letter-spacing: .04em; }
+.warning { max-width: 1680px; margin: 0 auto 12px; display: flex; gap: 12px; align-items: flex-start; border: 1px solid #c47b16; background: #fff6df; color: #5d3905; border-radius: 12px; padding: 12px 16px; }
+.warning svg { flex: 0 0 auto; }
+.summary { max-width: 1680px; margin: 0 auto 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 9px; font-size: .8rem; }
+.green { background: #e8f6ec; border-color: #5c9d70; color: #1d6336; }.amber { background: #fff2d2; border-color: #b37b13; color: #754d00; }.red { background: #fde8e6; border-color: #bb5148; color: #81251f; }
+.workspace { max-width: 1680px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(460px, .92fr); gap: 14px; min-height: 720px; }
+.viewerPanel, .reviewPanel { min-width: 0; border: 1px solid #d4d8d4; border-radius: 16px; background: #fff; box-shadow: 0 8px 30px rgba(30, 42, 35, .07); overflow: hidden; }
+.viewerPanel { display: flex; flex-direction: column; background: #222925; }
+.toolbar { min-height: 54px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; padding: 6px; background: #fff; color: #17211c; border-bottom: 1px solid #d4d8d4; }
+.toolbar button, .cardActions button, .decisions button, .submitButton, .modal button, .processing button { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid #abb4ae; border-radius: 10px; padding: 8px 12px; background: #fff; color: #17211c; font: inherit; font-weight: 700; cursor: pointer; }
+.toolbar svg, .cardActions svg, .decisions svg, .submitButton svg { width: 18px; height: 18px; }
+.shell button:focus-visible, .shell input:focus-visible, .shell textarea:focus-visible, .modal button:focus-visible, .modal input:focus-visible { outline: 3px solid #1e63d1; outline-offset: 2px; }
+.shell button:disabled, .modal button:disabled { cursor: not-allowed; opacity: .5; }
+.canvasScroller { flex: 1; min-height: 550px; overflow: auto; padding: 28px; display: grid; place-items: center; }
+.pageCanvas { position: relative; max-width: none; transform-origin: center; background: #fff; box-shadow: 0 5px 26px #0008; transition: transform .18s ease; }
+.pageCanvas img { display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; }
+.overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.overlay polygon { fill: rgba(255, 206, 45, .27); stroke: #e53226; stroke-width: 4; vector-effect: non-scaling-stroke; }
+.privateNote { margin: 0; padding: 10px 14px; background: #141a17; color: #d5ddd8; font-size: .78rem; text-align: center; }
+.reviewPanel { display: grid; grid-template-columns: 160px minmax(0, 1fr); grid-template-rows: 1fr auto auto; }
+.fieldNavigator { grid-row: 1 / 4; overflow-y: auto; border-right: 1px solid #d4d8d4; background: #f6f7f5; padding: 8px; }
+.fieldNavigator button { width: 100%; min-height: 54px; margin-bottom: 6px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: inherit; text-align: left; padding: 8px; cursor: pointer; }
+.fieldNavigator button span, .fieldNavigator button small { display: block; }.fieldNavigator button small { margin-top: 4px; color: #69736d; }
+.fieldNavigator .activeField { border-color: #1f6841; background: #e8f2ec; box-shadow: inset 3px 0 #1f6841; }
+.fieldCard { padding: 22px; overflow-y: auto; }
+.fieldHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.fieldHeading > div:last-child { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.evidence { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 18px 0; }
+.evidence div { border: 1px solid #dde1de; border-radius: 10px; padding: 10px; min-width: 0; }.evidence dt { color: #69736d; font-size: .75rem; font-weight: 700; }.evidence dd { margin: 5px 0 0; overflow-wrap: anywhere; }
+.decisions { border: 0; padding: 0; margin: 14px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }.decisions legend { grid-column: 1 / -1; margin-bottom: 7px; font-weight: 800; }.decisions .selectedDecision { border-color: #1f6841; background: #e8f2ec; box-shadow: inset 0 0 0 1px #1f6841; }
+.editFields { display: grid; gap: 10px; margin: 14px 0; }.editFields label { display: grid; gap: 6px; font-weight: 700; }.editFields input, .editFields textarea { width: 100%; box-sizing: border-box; border: 1px solid #9ea9a2; border-radius: 9px; padding: 11px; font: inherit; color: inherit; background: #fff; }
+.cardActions { display: flex; justify-content: space-between; gap: 8px; margin-top: 18px; }.cardActions .saveButton, .submitButton { background: #195c39; color: #fff; border-color: #195c39; }.notice { border-radius: 8px; padding: 9px; background: #edf3ff; overflow-wrap: anywhere; }
+.shortcuts { grid-column: 2; display: flex; flex-wrap: wrap; gap: 7px 12px; padding: 9px 18px; border-top: 1px solid #e0e3e1; color: #5d6861; font-size: .72rem; }.shortcuts strong { color: #243029; }
+.submitBar { grid-column: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-top: 1px solid #d4d8d4; background: #f7f8f7; }.submitBar p { font-size: .8rem; }.submitButton { flex: 0 0 auto; }
+.modalBackdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(15, 22, 18, .72); }.modal { width: min(540px, 100%); border-radius: 16px; background: #fff; color: #17211c; padding: 24px; box-shadow: 0 24px 80px #0008; }.modal > div { display: flex; justify-content: flex-end; gap: 9px; margin-top: 20px; }.confirmCheck { display: flex; align-items: flex-start; gap: 10px; margin: 18px 0; padding: 12px; border: 1px solid #c6cdc8; border-radius: 10px; }.confirmCheck input { width: 22px; height: 22px; flex: 0 0 auto; }
+.processing { min-height: 75vh; display: grid; place-items: center; align-content: center; text-align: center; gap: 8px; padding: 24px; }.processing > svg { width: 56px; height: 56px; color: #195c39; }
+@media (prefers-color-scheme: dark) { .shell { background: #101512; color: #eef4f0; }.viewerPanel, .reviewPanel, .toolbar, .fieldCard, .modal { background: #1a211d; color: #eef4f0; }.header p, .submitBar p, .processing p, .eyebrow { color: #b2bdb6; }.fieldNavigator, .submitBar { background: #151b17; }.editFields input, .editFields textarea, .toolbar button, .cardActions button, .decisions button, .modal button { background: #252d28; color: #eef4f0; }.fieldNavigator .activeField, .decisions .selectedDecision { background: #193728; }.warning { background: #392b0e; color: #ffe9b4; }.green { background: #173923; color: #a5e7ba; }.amber { background: #3d2d0b; color: #ffdb83; }.red { background: #3b1b19; color: #ffaaa3; } }
+@media (max-width: 980px) { .shell { padding: 12px; }.header { align-items: flex-start; flex-direction: column; }.headerFacts { justify-content: flex-start; }.workspace { grid-template-columns: 1fr; }.viewerPanel { min-height: 530px; }.reviewPanel { min-height: 660px; }.canvasScroller { min-height: 430px; } }
+@media (max-width: 620px) { .shell { padding: 8px; }.workspace { gap: 8px; }.viewerPanel, .reviewPanel { border-radius: 12px; }.reviewPanel { display: block; }.fieldNavigator { display: flex; overflow-x: auto; border-right: 0; border-bottom: 1px solid #d4d8d4; }.fieldNavigator button { min-width: 145px; }.fieldCard { padding: 16px 12px; }.evidence, .decisions { grid-template-columns: 1fr; }.shortcuts { display: none; }.submitBar { display: grid; }.submitButton { width: 100%; }.canvasScroller { min-height: 390px; padding: 16px; }.toolbar { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; } }

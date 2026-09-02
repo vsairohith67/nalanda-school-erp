@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { link, lstat, mkdir, open, readFile, realpath, rm } from "node:fs/promises";
+import { link, lstat, mkdir, open, readFile, readdir, realpath, rm } from "node:fs/promises";
 import path from "node:path";
 import {
   CopyObjectCommand,
@@ -18,8 +18,8 @@ import { readPortableSecret } from "@/lib/portable-runtime/secrets";
 const MAX_OBJECT_BYTES = 512 * 1024 * 1024;
 const MULTIPART_PART_BYTES = 8 * 1024 * 1024;
 const MAX_LIST_RESULTS = 500;
-const OBJECT_KEY = /^private\/(?:admissions|classwork|support|event-media|payslip|reports|exports|identity-cards|backups|onboarding|fee-register-ocr)\/[a-z0-9][a-z0-9._/-]{0,300}$/;
-const PREFIX = /^private\/(?:admissions|classwork|support|event-media|payslip|reports|exports|identity-cards|backups|onboarding|fee-register-ocr)\/(?:[a-z0-9][a-z0-9._/-]{0,300})?$/;
+const OBJECT_KEY = /^private\/(?:admissions|classwork|support|event-media|payslip|reports|exports|identity-cards|backups|onboarding|fee-register-ocr|ocr)\/[a-z0-9][a-z0-9._/-]{0,300}$/;
+const PREFIX = /^private\/(?:admissions|classwork|support|event-media|payslip|reports|exports|identity-cards|backups|onboarding|fee-register-ocr|ocr)\/(?:[a-z0-9][a-z0-9._/-]{0,300})?$/;
 
 export type PrivateObjectMetadata = {
   key: string;
@@ -198,11 +198,35 @@ export function createFileSystemPrivateObjectStore(rootValue: string): PrivateOb
       return this.putPrivateObject({ key: destinationKey, bytes: source.bytes, sha256: source.metadata.sha256, contentType: source.metadata.contentType });
     },
     async listBoundedPrefix(prefix, limit) {
-      validatePrefix(prefix);
+      const validatedPrefix = validatePrefix(prefix);
       if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIST_RESULTS) throw new PrivateObjectStoreError("PRIVATE_OBJECT_LIST_LIMIT_INVALID", 400);
-      // Filesystem-wide traversal is deliberately omitted. Application callers
-      // list governed database records and resolve exact opaque object keys.
-      return [];
+      const safeRoot = await root();
+      const prefixPath = path.resolve(safeRoot, ...validatedPrefix.split("/"));
+      assertWithin(safeRoot, prefixPath);
+      const prefixStat = await lstat(prefixPath).catch(() => null);
+      if (!prefixStat) return [];
+      if (!prefixStat.isDirectory() || prefixStat.isSymbolicLink()) throw new PrivateObjectStoreError("PRIVATE_OBJECT_PREFIX_UNSAFE");
+      const realPrefix = await realpath(prefixPath);
+      assertWithin(safeRoot, realPrefix);
+      const results: PrivateObjectMetadata[] = [];
+      const pending = [realPrefix];
+      let visited = 0;
+      while (pending.length && results.length < limit) {
+        const directory = pending.pop()!;
+        for (const entry of await readdir(directory, { withFileTypes: true })) {
+          if (++visited > 2_000) throw new PrivateObjectStoreError("PRIVATE_OBJECT_PREFIX_TRAVERSAL_LIMIT", 413);
+          const candidate = path.resolve(directory, entry.name);
+          assertWithin(safeRoot, candidate);
+          if (entry.isSymbolicLink()) throw new PrivateObjectStoreError("PRIVATE_OBJECT_ENTRY_UNSAFE");
+          if (entry.isDirectory()) { pending.push(candidate); continue; }
+          if (!entry.isFile()) throw new PrivateObjectStoreError("PRIVATE_OBJECT_ENTRY_UNSAFE");
+          const relativeKey = path.relative(safeRoot, candidate).split(path.sep).join("/");
+          const object = await metadata(validatePrivateObjectKey(relativeKey));
+          if (object) results.push(object);
+          if (results.length >= limit) break;
+        }
+      }
+      return results;
     },
     async authorizedDownloadUrl() { return null; },
     async verifyChecksum(key, expectedSha256) {
@@ -396,7 +420,7 @@ export function configuredPrivateObjectStore(environment: NodeJS.ProcessEnv = pr
   return globalState.__nalandaPrivateObjectStore = store;
 }
 
-export function modulePrivateObjectKey(module: "admissions" | "classwork" | "support" | "event-media" | "payslip" | "reports" | "exports" | "identity-cards" | "backups" | "onboarding" | "fee-register-ocr", storageKey: string) {
+export function modulePrivateObjectKey(module: "admissions" | "classwork" | "support" | "event-media" | "payslip" | "reports" | "exports" | "identity-cards" | "backups" | "onboarding" | "fee-register-ocr" | "ocr", storageKey: string) {
   if (!/^[a-z0-9][a-z0-9._/-]{0,220}$/i.test(storageKey) || storageKey.includes("..") || storageKey.includes("//") || /[\\{}\s\u0000-\u001f]/.test(storageKey)) {
     throw new PrivateObjectStoreError("MODULE_STORAGE_KEY_INVALID", 404);
   }
@@ -404,7 +428,7 @@ export function modulePrivateObjectKey(module: "admissions" | "classwork" | "sup
 }
 
 export function modulePrivateObjectPrefix(
-  module: "admissions" | "classwork" | "support" | "event-media" | "payslip" | "reports" | "exports" | "identity-cards" | "backups" | "onboarding" | "fee-register-ocr",
+  module: "admissions" | "classwork" | "support" | "event-media" | "payslip" | "reports" | "exports" | "identity-cards" | "backups" | "onboarding" | "fee-register-ocr" | "ocr",
   storagePrefix: string
 ) {
   const normalized = storagePrefix.toLowerCase().replace(/\/$/, "");

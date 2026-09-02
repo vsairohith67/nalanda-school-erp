@@ -1,10 +1,10 @@
 {
   "contractVersion": 1,
   "source": "synthetic fresh SQLite migration deploy",
-  "sourceSha256": "993B9F9F8FD21213A5C8548B5592EC4C838DA225D2E8129993D0247758A0F67A",
+  "sourceSha256": "4078FF0D0FAF1FEB3B8A15177454687DE73283F6047BFE2E32EE960E0E0D38FA",
   "views": 0,
-  "triggerCount": 185,
-  "sqlSha256": "41FC6A97728FB511302C57D7B64264E7E3C493E05E47B715591454EA1243720A",
+  "triggerCount": 190,
+  "sqlSha256": "2E6C33AF07841B13B249565022CC1F2A492C74ACD5A4CCD131440C85852976C9",
   "triggers": [
     {
       "name": "academic_calendar_audit_append_only_delete",
@@ -709,6 +709,46 @@
       "columns": null,
       "statementCount": 1,
       "sqliteSqlSha256": "2CBF2F0BB71D03A593184F2AD3786142ADC3E4D51B154BD4C289B76E6027D040"
+    },
+    {
+      "name": "OcrCandidate_source_evidence_immutable",
+      "table": "OcrFieldCandidate",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "124BCC890E5C31A8C822154DBA69973CC0C9E24B6EF0039734DFBDF2947F1632"
+    },
+    {
+      "name": "OcrDocument_source_immutable",
+      "table": "OcrDocument",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "06897E3FD7FAA9723AC15026F63D1DC5D27355D9638242AE650D66E4220AD7B6"
+    },
+    {
+      "name": "OcrPage_source_evidence_immutable",
+      "table": "OcrPage",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "60B5792BC93C8A9477C8385EB977C3FBC5C6D046D1ECC09DA3F7584502D5C52A"
+    },
+    {
+      "name": "OcrWorkflowEvent_no_delete",
+      "table": "OcrWorkflowEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "79729739608BAA81DF375D2BFD8B0BAF6345CECD84799E63AD06022D7E056CC2"
+    },
+    {
+      "name": "OcrWorkflowEvent_no_update",
+      "table": "OcrWorkflowEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "39B2601A189FCD7F2C12DA4B2944008ADE84B2B6046727B4724FEE7050BB4C89"
     },
     {
       "name": "OfflineSyncConflictReview_no_delete",
