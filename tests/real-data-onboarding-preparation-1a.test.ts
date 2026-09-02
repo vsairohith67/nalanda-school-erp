@@ -152,4 +152,12 @@ describe("REAL-DATA-ONBOARDING-PREPARATION-1A", () => {
     expect(source).not.toMatch(/@prisma\/client|DATABASE_URL|\bfetch\s*\(|child_process/); expect(source).toContain("authoritativeWriteCount: 0");
     for (const schema of ["source-inventory.schema.json", "package-manifest.schema.json", "mapping-catalogue.schema.json", "import-waves.json", "limits.json"]) expect(() => JSON.parse(require("node:fs").readFileSync(path.join(process.cwd(), "config", "onboarding", schema), "utf8"))).not.toThrow();
   });
+
+  it("pins the rendered-PDF validation dependency in the exact-head Windows workflow", async () => {
+    const workflow = await readFile(path.join(process.cwd(), ".github", "workflows", "real-data-onboarding-preparation.yml"), "utf8");
+    expect(workflow).toContain("993e4a94376ed712fafc7058d724ea0b943d118bbd2305cd9ed55174eb85cda5");
+    expect(workflow).toContain("poppler-26.02.0\\Library\\bin\\pdftoppm.exe");
+    expect(workflow).toContain('"REPORT_CARD_PDFTOPPM_PATH=$($pdfToPpm.FullName)"');
+    expect(workflow).toContain("ref: ${{ env.EXPECTED_SHA }}");
+  });
 });
