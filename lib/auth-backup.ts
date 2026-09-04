@@ -1,6 +1,14 @@
+import {
+  REAL_USER_ACCESS_BACKUP_KEYS,
+  realUserAccessRecordCount,
+  sanitizeRealUserAccessBackup,
+  validateRealUserAccessBackup,
+  type RealUserAccessBackup
+} from "@/lib/real-user-access/backup";
+
 export type AuthBackupRecord = Record<string, unknown>;
 
-export type AuthSecurityBackup = {
+export type AuthSecurityBackup = RealUserAccessBackup & {
   aliases: AuthBackupRecord[];
   verificationHistory: AuthBackupRecord[];
   resetHistory: AuthBackupRecord[];
@@ -8,7 +16,7 @@ export type AuthSecurityBackup = {
   events: AuthBackupRecord[];
 };
 
-const AUTH_SECURITY_KEYS = new Set(["aliases", "verificationHistory", "resetHistory", "sessions", "events"]);
+const AUTH_SECURITY_KEYS = new Set(["aliases", "verificationHistory", "resetHistory", "sessions", "events", ...REAL_USER_ACCESS_BACKUP_KEYS]);
 const ALIAS_KEYS = new Set(["id", "userId", "type", "normalizedValue", "displayMasked", "status", "isSchoolGoverned", "admissionStudentId", "verifiedAt", "removedAt", "version", "createdAt", "updatedAt"]);
 const VERIFICATION_KEYS = new Set(["id", "aliasId", "userId", "purpose", "credentialVersion", "attempts", "maxAttempts", "expiresAt", "usedAt", "invalidatedAt", "createdAt"]);
 const RESET_KEYS = new Set(["id", "userId", "aliasId", "channelType", "purpose", "credentialVersion", "attempts", "maxAttempts", "expiresAt", "usedAt", "invalidatedAt", "invalidationReason", "createdAt"]);
@@ -21,13 +29,14 @@ export function createAuthSecurityBackup(input?: Partial<Record<keyof AuthSecuri
     verificationHistory: sanitizeRows(input?.verificationHistory, VERIFICATION_KEYS),
     resetHistory: sanitizeRows(input?.resetHistory, RESET_KEYS),
     sessions: sanitizeRows(input?.sessions, SESSION_KEYS),
-    events: sanitizeRows(input?.events, EVENT_KEYS)
+    events: sanitizeRows(input?.events, EVENT_KEYS),
+    ...sanitizeRealUserAccessBackup(input)
   };
 }
 
 export function validateAuthSecurityBackup(
   input: unknown,
-  references: { userIds: Set<string>; studentIds: Set<string> }
+  references: { userIds: Set<string>; studentIds: Set<string>; guardianIds: Set<string>; staffMemberIds: Set<string> }
 ): AuthSecurityBackup {
   if (input === undefined) return createAuthSecurityBackup();
   const root = record(input, "authSecurity");
@@ -68,11 +77,11 @@ export function validateAuthSecurityBackup(
     if (row.actorUserId != null && !references.userIds.has(text(row.actorUserId, `${prefix}.actorUserId`))) throw new Error(`${prefix}.actorUserId does not match a backup user`);
     text(row.eventType, `${prefix}.eventType`);
   });
-  return { aliases, verificationHistory, resetHistory, sessions, events };
+  return { aliases, verificationHistory, resetHistory, sessions, events, ...validateRealUserAccessBackup(root, references) };
 }
 
 export function authSecurityRecordCount(value: AuthSecurityBackup) {
-  return value.aliases.length + value.verificationHistory.length + value.resetHistory.length + value.sessions.length + value.events.length;
+  return value.aliases.length + value.verificationHistory.length + value.resetHistory.length + value.sessions.length + value.events.length + realUserAccessRecordCount(value);
 }
 
 function sanitizeRows(input: readonly object[] | undefined, allowed: Set<string>) {

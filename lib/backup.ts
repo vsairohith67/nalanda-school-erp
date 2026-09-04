@@ -9,6 +9,7 @@ import {
 } from "./exam-governance-backup";
 import { getSchoolSettings, type SchoolSettingsValue } from "./school-settings";
 import { authSecurityRecordCount, createAuthSecurityBackup, type AuthSecurityBackup } from "./auth-backup";
+import { emptyRealUserAccessBackup, loadRealUserAccessBackup } from "./real-user-access/backup";
 import { createIamAccessBackup, iamAccessRecordCount, type IamAccessBackup } from "./iam/backup";
 import { loadAcademicCalendarBackup } from "./academic-calendar-backup";
 import { loadClassworkBackup, validateClassworkBackupRows, type ClassworkBackup } from "./classwork-backup";
@@ -1298,6 +1299,7 @@ export async function generateFullBackup(
     loadExamGovernanceBackup(client as PrismaClient),
     getSchoolSettings(client)
   ]);
+  const sanitizedStudents = students.map(({ iamPublicKey: _iamPublicKey, userId: _userId, ...row }) => row);
 
   const [iamUserStates, iamRoleAssignments, iamProfiles, iamProfileEntries, iamProfileVersions, iamProfileAssignments, iamOverrides, iamAudits] = await Promise.all([
     client.user.findMany({
@@ -1369,11 +1371,16 @@ export async function generateFullBackup(
   const technicalOperations = await technicalOperationsSchemaAvailable(client as unknown as PrismaClient)
     ? await loadTechnicalOperationsBackup(client as unknown as PrismaClient)
     : emptyTechnicalOperationsBackup();
+  const realUserAccessSchemaAvailable = Boolean((client as any).userAccessRequest?.findMany)
+    && await databaseTableExists(client as unknown as PrismaClient, "UserAccessRequest");
+  const realUserAccessBackup = realUserAccessSchemaAvailable
+    ? await loadRealUserAccessBackup(client as unknown as PrismaClient)
+    : emptyRealUserAccessBackup();
 
   return createBackupDocument({
     generatedAt: options.generatedAt ?? new Date(),
     generatedBy: options.generatedBy,
-    students,
+    students: sanitizedStudents,
     feeStructures,
     payments,
     paymentAudits,
@@ -1383,7 +1390,8 @@ export async function generateFullBackup(
       verificationHistory: authVerificationHistory,
       resetHistory: authResetHistory,
       sessions: authSessions,
-      events: authSecurityEvents
+      events: authSecurityEvents,
+      ...realUserAccessBackup
     },
     iamAccess: {
       userStates: iamUserStates.map(({ id, ...state }) => ({ userId: id, ...state })),

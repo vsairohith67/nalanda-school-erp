@@ -3,8 +3,8 @@
   "promptId": "PRODUCT-EXPERIENCE-1A",
   "generatedFrom": "app page source tree",
   "completeness": {
-    "pageFiles": 358,
-    "registeredScreens": 358,
+    "pageFiles": 360,
+    "registeredScreens": 360,
     "omittedScreens": 0
   },
   "sharedBaselines": {
@@ -13286,6 +13286,66 @@
         "MANAGE_WHATSAPP_TEMPLATE_MAPPINGS",
         "VIEW_WHATSAPP_CENTRE"
       ]
+    },
+    {
+      "route": "/activate",
+      "file": "app/activate/page.tsx",
+      "roles": ["PUBLIC"],
+      "module": "real-user activation",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_INVITATION_AUTHORISED",
+      "primaryTask": "Complete invited account activation",
+      "risk": "HIGH",
+      "states": {
+        "empty": "EXPLICIT_IN_SCREEN",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "PRESENT",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "PRESENT",
+        "forms": "LABEL_AND_DIRTY_STATE_RUNTIME_AUDIT",
+        "tables": "NOT_APPLICABLE",
+        "manualReviewRequired": true
+      },
+      "permissionRequirements": []
+    },
+    {
+      "route": "/user-access-readiness",
+      "file": "app/user-access-readiness/page.tsx",
+      "roles": ["SUPER_ADMIN", "DIRECTOR"],
+      "module": "real-user access readiness",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_SERVER_AUTHORISED",
+      "primaryTask": "Govern real-user access readiness",
+      "risk": "HIGH",
+      "states": {
+        "empty": "EXPLICIT_IN_SCREEN",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "PRESENT",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "PRESENT",
+        "forms": "LABEL_AND_DIRTY_STATE_RUNTIME_AUDIT",
+        "tables": "RESPONSIVE_LABELLED_RUNTIME_AUDIT",
+        "manualReviewRequired": true
+      },
+      "permissionRequirements": ["VIEW_IAM_ACCESS", "MANAGE_IAM_USERS"]
     }
   ]
 }

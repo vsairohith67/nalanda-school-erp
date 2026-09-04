@@ -12,6 +12,7 @@ datasource db {
 
 model Student {
   id                       String                                  @id @default(cuid())
+  iamPublicKey             String?                                 @unique
   academicYear             String                                  @default("2026-27")
   admissionNo              String                                  @unique
   studentName              String
@@ -64,6 +65,9 @@ model Student {
   cafeteriaEnrollments     CafeteriaStudentEnrollment[]
   cafeteriaMealRecords     CafeteriaMealRecord[]
   parentMeetings           ParentMeeting[]
+  userAccessRequests       UserAccessRequest[]
+  userId                   String?                                 @unique
+  user                     User?                                   @relation("StudentUserAccount", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([academicYear])
   @@index([className, section])
@@ -340,6 +344,7 @@ model User {
   noticesUpdated                   Notice[]                            @relation("NoticeUpdatedBy")
   guardianId                       String?                             @unique
   guardian                         Guardian?                           @relation(fields: [guardianId], references: [id], onDelete: SetNull)
+  studentAccount                   Student?                            @relation("StudentUserAccount")
   staffMember                      StaffMember?
   attendanceSessionsTaken          StudentAttendanceSession[]          @relation("AttendanceTakenBy")
   attendanceSessionsSubmitted      StudentAttendanceSession[]          @relation("AttendanceSubmittedBy")
@@ -462,6 +467,28 @@ model User {
   nativeAuthRequests               NativeAuthRequest[]
   nativeAuthorizationCodes         NativeAuthorizationCode[]
   nativeSessions                   NativeSession[]
+  accessRequests                   UserAccessRequest[]                 @relation("UserAccessCandidate")
+  accessRequestsRequested          UserAccessRequest[]                 @relation("UserAccessRequestedBy")
+  accessRequestsReviewed           UserAccessRequest[]                 @relation("UserAccessReviewedBy")
+  accessRequestsApproved           UserAccessRequest[]                 @relation("UserAccessApprovedBy")
+  accessRequestsRejected           UserAccessRequest[]                 @relation("UserAccessRejectedBy")
+  userInvitations                  UserInvitation[]                    @relation("UserInvitationSubject")
+  userInvitationsIssued            UserInvitation[]                    @relation("UserInvitationIssuedBy")
+  activationSessions               UserActivationSession[]
+  mfaAuthenticators                MfaAuthenticator[]                  @relation("MfaAuthenticatorOwner")
+  mfaAuthenticatorsRevoked         MfaAuthenticator[]                  @relation("MfaAuthenticatorRevokedBy")
+  mfaRecoveryCodes                 MfaRecoveryCode[]
+  mfaChallenges                    MfaChallenge[]
+  stepUpGrants                     StepUpGrant[]
+  trainingAcknowledgements         UserTrainingAcknowledgement[]       @relation("TrainingAcknowledgementUser")
+  trainingWaiversApproved          UserTrainingAcknowledgement[]       @relation("TrainingWaiverApprovedBy")
+  policyAcknowledgements           UserPolicyAcknowledgement[]
+  accessCertifications             AccessCertification[]               @relation("AccessCertificationSubject")
+  accessCertificationsReviewed     AccessCertification[]               @relation("AccessCertificationReviewer")
+  mfaRecoveryRequests              MfaRecoveryRequest[]                @relation("MfaRecoverySubject")
+  mfaRecoveryRequestsRequested     MfaRecoveryRequest[]                @relation("MfaRecoveryRequestedBy")
+  mfaRecoveryRequestsReviewed      MfaRecoveryRequest[]                @relation("MfaRecoveryReviewedBy")
+  mfaRecoveryRequestsApproved      MfaRecoveryRequest[]                @relation("MfaRecoveryApprovedBy")
 
   @@index([role])
   @@index([isActive])
@@ -678,6 +705,7 @@ model StaffMember {
   transportAttendantRoutes  TransportRoute[]                @relation("TransportRouteAttendant")
   parentMeetingParticipants ParentMeetingParticipant[]
   parentMeetingFollowUps    ParentMeetingFollowUp[]
+  userAccessRequests        UserAccessRequest[]
 
   @@index([fullName])
   @@index([staffType])
@@ -1165,6 +1193,7 @@ model Guardian {
   departureStandingAuth    StudentStandingDepartureAuthorization[]
   mediaPublicationConsents MediaPublicationConsent[]
   parentMeetings           ParentMeeting[]
+  userAccessRequests       UserAccessRequest[]
 
   @@index([displayName])
   @@index([primaryMobile])
@@ -1463,6 +1492,303 @@ model AuthSecurityEvent {
   @@index([userId, createdAt])
   @@index([actorUserId, createdAt])
   @@index([eventType, createdAt])
+}
+
+model UserAccessRequest {
+  id                       String                        @id @default(cuid())
+  publicKey                String                        @unique @default(uuid())
+  candidateUserId          String?
+  candidateUser            User?                         @relation("UserAccessCandidate", fields: [candidateUserId], references: [id], onDelete: SetNull)
+  personType               String
+  staffMemberId            String?
+  staffMember              StaffMember?                  @relation(fields: [staffMemberId], references: [id], onDelete: Restrict)
+  guardianId               String?
+  guardian                 Guardian?                     @relation(fields: [guardianId], references: [id], onDelete: Restrict)
+  studentId                String?
+  student                  Student?                      @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  requestedName            String
+  requestedUsername        String
+  requestedEmail           String?
+  requestedRolesJson       String
+  requestedScopesJson      String
+  reason                   String
+  status                   String                        @default("PREPARED")
+  identityLinkReviewed     Boolean                       @default(false)
+  roleApproved             Boolean                       @default(false)
+  scopeApproved            Boolean                       @default(false)
+  eligibilityConfirmed     Boolean                       @default(false)
+  mfaRequired              Boolean                       @default(false)
+  trainingRequirementsJson String                        @default("[]")
+  policyRequirementsJson   String                        @default("[]")
+  conflictWarningsJson     String                        @default("[]")
+  requestedByUserId        String
+  requestedBy              User                          @relation("UserAccessRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  reviewedByUserId         String?
+  reviewedBy               User?                         @relation("UserAccessReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: Restrict)
+  approvedByUserId         String?
+  approvedBy               User?                         @relation("UserAccessApprovedBy", fields: [approvedByUserId], references: [id], onDelete: Restrict)
+  rejectedByUserId         String?
+  rejectedBy               User?                         @relation("UserAccessRejectedBy", fields: [rejectedByUserId], references: [id], onDelete: Restrict)
+  requestedValidUntil      DateTime?
+  reviewDueAt              DateTime?
+  decidedAt                DateTime?
+  version                  Int                           @default(1)
+  createdAt                DateTime                      @default(now())
+  updatedAt                DateTime                      @updatedAt
+  invitations              UserInvitation[]
+  activationSessions       UserActivationSession[]
+  trainingAcknowledgements UserTrainingAcknowledgement[]
+  policyAcknowledgements   UserPolicyAcknowledgement[]
+  certifications           AccessCertification[]
+
+  @@index([status, createdAt])
+  @@index([candidateUserId, status])
+  @@index([staffMemberId])
+  @@index([guardianId])
+  @@index([studentId])
+  @@index([reviewDueAt])
+}
+
+model UserInvitation {
+  id                String            @id @default(cuid())
+  publicKey         String            @unique @default(uuid())
+  accessRequestId   String
+  accessRequest     UserAccessRequest @relation(fields: [accessRequestId], references: [id], onDelete: Restrict)
+  userId            String
+  user              User              @relation("UserInvitationSubject", fields: [userId], references: [id], onDelete: Restrict)
+  tokenHash         String            @unique
+  purpose           String            @default("ACCOUNT_ACTIVATION")
+  environment       String
+  roleSnapshotHash  String
+  credentialVersion Int
+  status            String            @default("CREATED")
+  attempts          Int               @default(0)
+  maxAttempts       Int               @default(8)
+  expiresAt         DateTime
+  usedAt            DateTime?
+  revokedAt         DateTime?
+  revocationReason  String?
+  deliveryKind      String            @default("LOCAL_TEST_SINK")
+  deliveredAt       DateTime?
+  issuedByUserId    String
+  issuedBy          User              @relation("UserInvitationIssuedBy", fields: [issuedByUserId], references: [id], onDelete: Restrict)
+  createdAt         DateTime          @default(now())
+
+  @@index([accessRequestId, status])
+  @@index([userId, status])
+  @@index([expiresAt])
+}
+
+model UserActivationSession {
+  id                       String            @id @default(cuid())
+  accessRequestId          String
+  accessRequest            UserAccessRequest @relation(fields: [accessRequestId], references: [id], onDelete: Restrict)
+  userId                   String
+  user                     User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  tokenHash                String            @unique
+  expiresAt                DateTime
+  passwordEstablishedAt    DateTime?
+  primaryFactorSatisfiedAt DateTime?
+  trainingSatisfiedAt      DateTime?
+  policySatisfiedAt        DateTime?
+  roleConfirmedAt          DateTime?
+  usedAt                   DateTime?
+  revokedAt                DateTime?
+  revocationReason         String?
+  createdAt                DateTime          @default(now())
+
+  @@index([userId, expiresAt])
+  @@index([accessRequestId, expiresAt])
+}
+
+model MfaAuthenticator {
+  id                   String            @id @default(cuid())
+  publicKey            String            @unique @default(uuid())
+  userId               String
+  user                 User              @relation("MfaAuthenticatorOwner", fields: [userId], references: [id], onDelete: Restrict)
+  type                 String
+  status               String            @default("PENDING")
+  displayName          String
+  secretEnvelope       String?
+  keyVersion           String?
+  totpAlgorithm        String?
+  totpDigits           Int?
+  totpPeriod           Int?
+  totpLastUsedStep     Int?
+  credentialId         String?           @unique
+  credentialPublicKey  Bytes?
+  credentialCounter    String?
+  credentialDeviceType String?
+  credentialBackedUp   Boolean?
+  transportsJson       String?
+  rpId                 String?
+  verifiedAt           DateTime?
+  lastUsedAt           DateTime?
+  revokedAt            DateTime?
+  revokedByUserId      String?
+  revokedBy            User?             @relation("MfaAuthenticatorRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull)
+  revocationReason     String?
+  version              Int               @default(1)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  recoveryCodes        MfaRecoveryCode[]
+
+  @@index([userId, status, type])
+  @@index([rpId, status])
+}
+
+model MfaRecoveryCode {
+  id              String            @id @default(cuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  authenticatorId String?
+  authenticator   MfaAuthenticator? @relation(fields: [authenticatorId], references: [id], onDelete: SetNull)
+  codeHash        String            @unique
+  status          String            @default("ACTIVE")
+  usedAt          DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime          @default(now())
+
+  @@index([userId, status])
+}
+
+model MfaChallenge {
+  id               String    @id @default(cuid())
+  tokenHash        String    @unique
+  challengeHash    String?
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  sessionId        String?
+  roleAssignmentId String?
+  type             String
+  action           String?
+  environment      String
+  attempts         Int       @default(0)
+  maxAttempts      Int       @default(6)
+  expiresAt        DateTime
+  usedAt           DateTime?
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([userId, type, expiresAt])
+  @@index([sessionId, type, expiresAt])
+}
+
+model StepUpGrant {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  sessionId String
+  action    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, sessionId, action, expiresAt])
+}
+
+model TrainingModuleVersion {
+  id                    String                        @id @default(cuid())
+  publicKey             String                        @unique @default(uuid())
+  moduleKey             String
+  versionNumber         Int
+  title                 String
+  audienceRolesJson     String
+  status                String                        @default("DRAFT")
+  requiredForActivation Boolean                       @default(false)
+  expiresAfterDays      Int?
+  createdAt             DateTime                      @default(now())
+  acknowledgements      UserTrainingAcknowledgement[]
+
+  @@unique([moduleKey, versionNumber])
+  @@index([status, requiredForActivation])
+}
+
+model UserTrainingAcknowledgement {
+  id                     String                @id @default(cuid())
+  userId                 String
+  user                   User                  @relation("TrainingAcknowledgementUser", fields: [userId], references: [id], onDelete: Restrict)
+  moduleVersionId        String
+  moduleVersion          TrainingModuleVersion @relation(fields: [moduleVersionId], references: [id], onDelete: Restrict)
+  accessRequestId        String?
+  accessRequest          UserAccessRequest?    @relation(fields: [accessRequestId], references: [id], onDelete: SetNull)
+  status                 String                @default("ASSIGNED")
+  assignedAt             DateTime              @default(now())
+  completedAt            DateTime?
+  expiresAt              DateTime?
+  acknowledgement        String?
+  waivedAt               DateTime?
+  waiverReason           String?
+  waiverApprovedByUserId String?
+  waiverApprovedBy       User?                 @relation("TrainingWaiverApprovedBy", fields: [waiverApprovedByUserId], references: [id], onDelete: SetNull)
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+
+  @@unique([userId, moduleVersionId])
+  @@index([userId, status, expiresAt])
+}
+
+model UserPolicyAcknowledgement {
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  accessRequestId String?
+  accessRequest   UserAccessRequest? @relation(fields: [accessRequestId], references: [id], onDelete: SetNull)
+  policyKey       String
+  versionNumber   Int
+  acknowledgement String
+  acceptedAt      DateTime           @default(now())
+
+  @@unique([userId, policyKey, versionNumber])
+  @@index([userId, acceptedAt])
+}
+
+model AccessCertification {
+  id                String             @id @default(cuid())
+  publicKey         String             @unique @default(uuid())
+  userId            String
+  user              User               @relation("AccessCertificationSubject", fields: [userId], references: [id], onDelete: Restrict)
+  accessRequestId   String?
+  accessRequest     UserAccessRequest? @relation(fields: [accessRequestId], references: [id], onDelete: SetNull)
+  status            String             @default("REVIEW_DUE")
+  dueAt             DateTime
+  startedAt         DateTime?
+  decidedAt         DateTime?
+  reviewerUserId    String?
+  reviewer          User?              @relation("AccessCertificationReviewer", fields: [reviewerUserId], references: [id], onDelete: SetNull)
+  decision          String?
+  reason            String?
+  scopeSnapshotJson String
+  nextReviewAt      DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([status, dueAt])
+  @@index([userId, dueAt])
+}
+
+model MfaRecoveryRequest {
+  id                String    @id @default(cuid())
+  publicKey         String    @unique @default(uuid())
+  userId            String
+  user              User      @relation("MfaRecoverySubject", fields: [userId], references: [id], onDelete: Restrict)
+  factorType        String
+  status            String    @default("REQUESTED")
+  reason            String
+  evidenceJson      String    @default("[]")
+  requestedByUserId String
+  requestedBy       User      @relation("MfaRecoveryRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  reviewedByUserId  String?
+  reviewedBy        User?     @relation("MfaRecoveryReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: Restrict)
+  approvedByUserId  String?
+  approvedBy        User?     @relation("MfaRecoveryApprovedBy", fields: [approvedByUserId], references: [id], onDelete: Restrict)
+  decidedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([userId, status, createdAt])
 }
 
 model RolePermission {

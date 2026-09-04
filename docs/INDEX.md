@@ -1,5 +1,25 @@
 # Documentation Index
 
+## Real-user access readiness
+
+- [Readiness architecture and release boundary](REAL_USER_ACCESS_READINESS.md)
+- [Current authentication and IAM audit](REAL_USER_ACCESS_CURRENT_STATE_AUDIT.md)
+- [Account and person linking](ACCOUNT_AND_PERSON_LINKING.md)
+- [Role template catalogue](ROLE_TEMPLATE_CATALOGUE.md)
+- [Access approval workflow](USER_ACCESS_APPROVAL_WORKFLOW.md)
+- [Secure invitation and first login](SECURE_INVITATION_AND_FIRST_LOGIN.md)
+- [MFA and passkey architecture](MFA_AND_PASSKEY_ARCHITECTURE.md)
+- [MFA recovery and break-glass](MFA_RECOVERY_AND_BREAK_GLASS.md)
+- [Step-up authentication](STEP_UP_AUTHENTICATION.md)
+- [Session and device management](SESSION_AND_DEVICE_MANAGEMENT.md)
+- [Training and policy acknowledgement](TRAINING_AND_POLICY_ACKNOWLEDGEMENT.md)
+- [Access recertification and offboarding](ACCESS_RECERTIFICATION_AND_OFFBOARDING.md)
+- [Future activation wave plan](REAL_USER_ACTIVATION_WAVE_PLAN.md)
+- [Clearance evidence](evidence/REAL_USER_ACCESS_READINESS_1A_CLEARANCE.md)
+- [Future activation prompt - do not run](prompts/REAL_USER_ACCESS_ACTIVATION_1B.md)
+
+This phase is default-off, synthetic-only software readiness. It creates no real user, sends no real invitation, enrols no real MFA, configures no delivery provider and does not establish or deploy private staging. Every future activation wave requires separate owner approval.
+
 ## Real-data onboarding preparation
 
 - [Preparation architecture and release boundary](REAL_DATA_ONBOARDING_PREPARATION.md)

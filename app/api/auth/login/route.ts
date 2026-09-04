@@ -20,6 +20,8 @@ import {
 } from "@/lib/auth-rate-limit";
 import { assertBoundedJsonValue } from "@/lib/request-security";
 import { emitSecurityResilienceEvent } from "@/lib/security-observability";
+import { isOperationalReleaseFeatureEnabled, REAL_USER_ACCESS_READINESS_FEATURE } from "@/lib/release-feature-flag-runtime";
+import { boundAuthEnvironment, createLoginMfaChallenge } from "@/lib/real-user-access/login-mfa";
 
 const dummyPasswordHash = hashPassword("invalid-login-placeholder");
 const GENERIC_LOGIN_ERROR = "We couldn’t sign you in with those details.";
@@ -83,6 +85,16 @@ export async function POST(request: NextRequest) {
     }
 
     await clearLoginAccountFailures(identifier);
+    if (isOperationalReleaseFeatureEnabled(REAL_USER_ACCESS_READINESS_FEATURE)) {
+      const mfa = await createLoginMfaChallenge(prisma, { userId: user.id, environment: boundAuthEnvironment() });
+      if (mfa.required) {
+        if (!mfa.enrolled) {
+          await recordLoginSecurityEvent("MFA_ENROLLMENT_REQUIRED", user.id, before.accountHash, { blocked: true });
+          return privateJson({ error: "Additional account security setup is required.", code: "MFA_ENROLLMENT_REQUIRED" }, 403);
+        }
+        return privateJson({ mfaRequired: true, challengeToken: mfa.challengeToken, expiresAt: mfa.expiresAt.toISOString(), webauthnOptions: mfa.webauthnOptions }, 202);
+      }
+    }
     const token = await prisma.$transaction(async (tx) => {
       const now = new Date();
       await tx.user.update({ where: { id: user.id }, data: { lastLoginAt: now } });

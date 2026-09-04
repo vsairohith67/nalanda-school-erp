@@ -2015,3 +2015,9 @@ The sequential gate passed 338 page routes, 551 API routes, lifecycle dry run,
 typecheck, 1,950 tests with 3 intentional qpdf-dependent skips, production
 build, backup version 41, and Git safety. A complete security diff scan returned
 zero findings. Status: `WHITEBOARD_BRIDGE_CLEARED`; no deployment was performed.
+
+## REAL-USER-ACCESS-READINESS-1A - governed access and MFA foundation (2026-09-03)
+
+Implemented on a dedicated worktree from `origin/main` `6754f92ab5d8dcb63b80edc42bfb955ad6be832c`: explicit person/account separation and lifecycle, a 14-template permission-derived catalogue, bounded synthetic preparation, separated access approval, hash-only one-time local invitations, atomic first login, encrypted TOTP, WebAuthn/passkeys, recovery codes, action-bound step-up, training/policy gates, access certification/expiry, three-person MFA recovery and complete offboarding. Additive SQLite/PostgreSQL migrations and backup-v44 handling preserve durable state while excluding transient/plaintext secrets.
+
+The feature remains server-side `OFF` at `0%`. Focused copied-database QA passed and left the operational SQLite byte-identical. Independent security/browser/platform/full-regression/exact-head CI, normal merge/tag and tracker readback remain the terminal release gates. No real user/contact/invitation/MFA, live delivery provider, private staging, deployment, OCR change or physical-device certification is included. The generated `REAL-USER-ACCESS-ACTIVATION-1B` prompt is a do-not-run future gate requiring private infrastructure and per-wave owner approval.

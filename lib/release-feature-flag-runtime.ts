@@ -49,6 +49,13 @@ export const BIOMETRIC_STAFF_ATTENDANCE_FEATURE = {
   activationRole: "SUPER_ADMIN"
 } as const satisfies OperationalReleaseFeature;
 
+export const REAL_USER_ACCESS_READINESS_FEATURE = {
+  key: "real-user-access-readiness-1a",
+  environment: "PRODUCTION",
+  expectedVersion: 1,
+  activationRole: "SUPER_ADMIN"
+} as const satisfies OperationalReleaseFeature;
+
 export class ReleaseFeatureUnavailableError extends Error {
   readonly status = 404;
   readonly code = "RELEASE_FEATURE_UNAVAILABLE";

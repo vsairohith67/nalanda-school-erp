@@ -20,6 +20,7 @@ import { parentMeetingsEnabled } from "@/lib/parent-meeting-feature";
 import { isOfflineSyncEnabled } from "@/lib/offline-sync/feature-flag";
 import { isBiometricAttendanceEnabled } from "@/lib/biometric-attendance/feature-flag";
 import { PRODUCT_BRAND } from "@/config/product-brand";
+import { isOperationalReleaseFeatureEnabled, REAL_USER_ACCESS_READINESS_FEATURE } from "@/lib/release-feature-flag-runtime";
 import { ProductExperienceRuntime } from "@/components/product-experience-runtime";
 
 // The shared layout resolves the authenticated user and role permissions.
@@ -114,6 +115,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                 parentMeetingsEnabled={parentMeetingsEnabled()}
                 offlineSyncEnabled={isOfflineSyncEnabled()}
                 biometricAttendanceEnabled={isBiometricAttendanceEnabled()}
+                realUserAccessReadinessEnabled={isOperationalReleaseFeatureEnabled(REAL_USER_ACCESS_READINESS_FEATURE)}
               >
                 {children}
               </AppShell>

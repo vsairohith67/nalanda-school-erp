@@ -1,5 +1,13 @@
 # Authoritative Requirements Register
 
+## REAL-USER-ACCESS-READINESS-1A active addendum
+
+| ID | Requirement | Source | Date | Goal | Programme | Status | Implemented boundary | Evidence | Activation boundary | Next gate | Priority |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| V1.5-IAM-043 | Governed real-user access readiness, invitation, MFA/passkey, training, certification and offboarding foundation | `REAL-USER-ACCESS-READINESS-1A` exact prompt and repository evidence | 2026-09-03 | Make later real-user onboarding safe without activating a real identity | V1.5 | IN_RELEASE_QA | Default-off request/approval, 14 templates, bounded preview, one-use invitation, atomic first login, TOTP/passkey/recovery, step-up, session/device review, training/policy, certification/expiry/offboarding, dual-provider migration and v44 backup | readiness documents, focused tests, copied-DB QA, terminal evidence record | No real roster/user/contact/invitation/MFA/provider/private staging/deployment; every wave separately approved | exact-head QA, normal merge/tag, then separately approved `REAL-USER-ACCESS-ACTIVATION-1B` | Critical |
+
+This active addendum does not alter the historical count table. Software clearance is distinct from operational activation and cannot authorise a real rollout wave.
+
 ## REAL-DATA-ONBOARDING-PREPARATION-1A addendum
 
 Preparation/tooling is implemented with source inventory and authority, immutable-source package manifests, 89 service-level mappings, bounded offline CSV/XLSX validation, deterministic synthetic packages, human duplicate/finance review, eight import waves, approval/rollback/privacy/retention runbooks and a future execution prompt. Release status is `REAL_DATA_ONBOARDING_PREPARATION_1A_CLEARED` only with exact-head/merge/tag evidence. Real data was not received or processed. Actual onboarding, private staging, real users, deployment, OCR and production cutover remain blocked/unapproved.

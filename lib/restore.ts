@@ -1390,7 +1390,9 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   const studentIds=new Set(students.map((row)=>String(row.id??"")).filter(Boolean));const activeEnrollments=academicYearEnrollments.filter((row)=>row.status==="ACTIVE");
   const authSecurity = validateAuthSecurityBackup(root.authSecurity, {
     userIds: new Set(users.map((row) => String(row.id ?? "")).filter(Boolean)),
-    studentIds
+    studentIds,
+    guardianIds: new Set(guardians.map((row) => String(row.id ?? "")).filter(Boolean)),
+    staffMemberIds: new Set(staffMembers.map((row) => String(row.id ?? "")).filter(Boolean))
   });
   const iamAccess = validateIamAccessBackup(
     root.iamAccess,
