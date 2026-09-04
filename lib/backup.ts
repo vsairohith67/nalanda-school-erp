@@ -1299,6 +1299,7 @@ export async function generateFullBackup(
     loadExamGovernanceBackup(client as PrismaClient),
     getSchoolSettings(client)
   ]);
+  const sanitizedStudents = students.map(({ iamPublicKey: _iamPublicKey, userId: _userId, ...row }) => row);
 
   const [iamUserStates, iamRoleAssignments, iamProfiles, iamProfileEntries, iamProfileVersions, iamProfileAssignments, iamOverrides, iamAudits] = await Promise.all([
     client.user.findMany({
@@ -1379,7 +1380,7 @@ export async function generateFullBackup(
   return createBackupDocument({
     generatedAt: options.generatedAt ?? new Date(),
     generatedBy: options.generatedBy,
-    students,
+    students: sanitizedStudents,
     feeStructures,
     payments,
     paymentAudits,
