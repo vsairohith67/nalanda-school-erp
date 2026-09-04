@@ -127,7 +127,7 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
 
   it("preserves the Management checkpoint across additive examination and payroll implementation", () => {
     const schema = read("prisma/schema.prisma");
-    expect((schema.match(/^model /gm) ?? [])).toHaveLength(341);
+    expect((schema.match(/^model /gm) ?? [])).toHaveLength(353);
     for (const model of ["NativeAuthRequest", "NativeAuthorizationCode", "NativeSession", "NativeRefreshTokenHistory"]) expect(schema).toContain(`model ${model} {`);
     expect(schema).toContain("model SuperAdminDiaryEntry {");
     expect(schema).toContain("model SuperAdminTask {");
@@ -166,6 +166,7 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
       "20260825090000_offline_sync_1a",
       "20260826003000_cross_platform_apps_1a",
       "20260828090000_biometric_staff_attendance_1a",
+      "20260902090000_real_user_access_readiness_1a",
     ]);
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);
