@@ -15,7 +15,7 @@ export const PRIVATE_ROBOTS_EXCLUSIONS = [
   "/my-support",
   "/support",
   "/api", "/website-admin", "/access-context", "/access-history", "/account-security", "/academic-reports", "/admission-crm", "/ai-assistant", "/attendance", "/books", "/budgets",
-  "/calendar", "/cash-book", "/certificates", "/change-password", "/class-x-documents",
+  "/activate", "/user-access-readiness", "/calendar", "/cash-book", "/certificates", "/change-password", "/class-x-documents",
   "/cloud-backup", "/daily-collection", "/dashboard", "/exams", "/expenses", "/family-collections",
   "/fee-register-ocr", "/forgot-password", "/guardians", "/homework", "/id-cards", "/import-export", "/onboarding",
   "/import-verification", "/install-app", "/leave", "/ledger", "/library", "/login",

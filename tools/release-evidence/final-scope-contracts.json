@@ -323,6 +323,18 @@
         "app/api/native-auth/request/route.ts",
         "app/api/native/v1/context/route.ts"
       ]
+    },
+    {
+      "key": "real-user-access-readiness-1a",
+      "status": "ENFORCED",
+      "evidencePaths": [
+        "config/release-feature-flags.json",
+        "lib/release-feature-flag-runtime.ts",
+        "lib/real-user-access/activation-api.ts",
+        "middleware.ts",
+        "app/user-access-readiness/page.tsx",
+        "app/api/user-access-readiness/dashboard/route.ts"
+      ]
     }
   ],
   "releaseBlockedBranches": []
