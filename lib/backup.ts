@@ -1370,7 +1370,9 @@ export async function generateFullBackup(
   const technicalOperations = await technicalOperationsSchemaAvailable(client as unknown as PrismaClient)
     ? await loadTechnicalOperationsBackup(client as unknown as PrismaClient)
     : emptyTechnicalOperationsBackup();
-  const realUserAccessBackup = await databaseTableExists(client as unknown as PrismaClient, "UserAccessRequest")
+  const realUserAccessSchemaAvailable = Boolean((client as any).userAccessRequest?.findMany)
+    && await databaseTableExists(client as unknown as PrismaClient, "UserAccessRequest");
+  const realUserAccessBackup = realUserAccessSchemaAvailable
     ? await loadRealUserAccessBackup(client as unknown as PrismaClient)
     : emptyRealUserAccessBackup();
 
