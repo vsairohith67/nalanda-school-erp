@@ -67,7 +67,7 @@ Outcomes are `ACCEPTED`, `DUPLICATE_ACCEPTED`, `CONFLICT`, `REJECTED` or `RETRY_
 
 ## Backup and recovery
 
-Backup v44 includes registered public-device metadata, hash-only mutation ledgers, safe append-only events and conflict reviews. It excludes browser data, offline PIN material, content-encryption keys, private signing keys, challenges and replay nonces. Restore validates links and state, restores terminal ledger states safely, is idempotent, and repeats the exclusion warning.
+Backup v45 includes registered public-device metadata, hash-only mutation ledgers, safe append-only events and conflict reviews, with v44 restore compatibility. It excludes browser data, offline PIN material, content-encryption keys, private signing keys, challenges and replay nonces. Restore validates links and state, restores terminal ledger states safely, is idempotent, and repeats the exclusion warning.
 
 ## API inventory
 

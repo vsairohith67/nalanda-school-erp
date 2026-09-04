@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { processWhatsAppQueue } from "@/lib/whatsapp-worker";
+import { communicationFeatureAvailability } from "@/lib/communication-policy";
 
 async function main() {
+  if (!communicationFeatureAvailability("WHATSAPP").enabled) throw new Error("COMMUNICATION_CHANNEL_DISABLED");
   const limitArg = process.argv.find((value) => value.startsWith("--limit="));
   const limit = limitArg ? Number(limitArg.split("=")[1]) : 25;
   const summary = await processWhatsAppQueue(prisma, { limit });

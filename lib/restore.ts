@@ -16,6 +16,7 @@ import { PARENT_MEETING_BACKUP_KEYS, validateParentMeetingBackupRows, type Paren
 import { OFFLINE_SYNC_BACKUP_KEYS, validateOfflineSyncBackupRows, type OfflineSyncBackup, type OfflineSyncBackupKey } from "@/lib/offline-sync/backup";
 import { NATIVE_APP_BACKUP_KEYS, validateNativeAppBackupRows, type NativeAppBackup, type NativeAppBackupKey } from "@/lib/native-app/backup";
 import { BIOMETRIC_ATTENDANCE_BACKUP_KEYS, validateBiometricAttendanceBackupRows, type BiometricAttendanceBackup, type BiometricAttendanceBackupKey } from "@/lib/biometric-attendance/backup";
+import { COMMUNICATION_BACKUP_KEYS, validateCommunicationBackupRows, type CommunicationBackup, type CommunicationBackupKey } from "@/lib/communication-backup";
 import {
   validateExamGovernanceBackup,
   type ExamGovernanceBackup
@@ -45,6 +46,7 @@ const TOP_LEVEL_KEYS = new Set([
   ...OFFLINE_SYNC_BACKUP_KEYS,
   ...NATIVE_APP_BACKUP_KEYS,
   ...BIOMETRIC_ATTENDANCE_BACKUP_KEYS,
+  ...COMMUNICATION_BACKUP_KEYS,
   "nativeAppPolicy",
   "metadata",
   "technicalOperations",
@@ -136,6 +138,7 @@ const BACKUP_COUNT_KEYS = new Set([
   ...OFFLINE_SYNC_BACKUP_KEYS,
   ...NATIVE_APP_BACKUP_KEYS,
   ...BIOMETRIC_ATTENDANCE_BACKUP_KEYS,
+  ...COMMUNICATION_BACKUP_KEYS,
   "schoolSettings",
   "technicalOperationsRecords",
   "authSecurityRecords",
@@ -581,7 +584,7 @@ export type ValidatedBackup = {
   timetableDrafts: RestoreRecord[];
   timetableEntries: RestoreRecord[];
   technicalOperations: TechnicalOperationsBackup;
-} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup & OptionalOperationsBackup & EventMediaBackup & ParentMeetingBackup & OfflineSyncBackup & NativeAppBackup & BiometricAttendanceBackup;
+} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup & OptionalOperationsBackup & EventMediaBackup & ParentMeetingBackup & OfflineSyncBackup & NativeAppBackup & BiometricAttendanceBackup & CommunicationBackup;
 
 export type EntityRestoreResult = {
   created: number;
@@ -782,7 +785,7 @@ export type RestoreResult = {
   timetableDrafts: EntityRestoreResult;
   timetableEntries: EntityRestoreResult;
   warnings: string[];
-} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey | OptionalOperationsBackupKey | EventMediaBackupKey | ParentMeetingBackupKey | OfflineSyncBackupKey | NativeAppBackupKey | BiometricAttendanceBackupKey, EntityRestoreResult>;
+} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey | OptionalOperationsBackupKey | EventMediaBackupKey | ParentMeetingBackupKey | OfflineSyncBackupKey | NativeAppBackupKey | BiometricAttendanceBackupKey | CommunicationBackupKey, EntityRestoreResult>;
 
 export function parseAndValidateBackup(input: string | unknown): ValidatedBackup {
   let parsed: unknown = input;
@@ -807,7 +810,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     metadata.backupVersion !== undefined &&
     (!Number.isInteger(metadata.backupVersion) ||
       Number(metadata.backupVersion) < 1 ||
-      Number(metadata.backupVersion) > 44)
+      Number(metadata.backupVersion) > 45)
   ) {
     throw new Error("metadata.backupVersion is unsupported");
   }
@@ -1459,6 +1462,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   const offlineSyncData = validateOfflineSyncBackupRows(root);
   const nativeAppData = validateNativeAppBackupRows(root);
   const biometricAttendanceData = validateBiometricAttendanceBackupRows(root);
+  const communicationData = validateCommunicationBackupRows(root);
   const technicalOperations = validateTechnicalOperationsBackup(root.technicalOperations);
   const counts = validateOptionalBackupCounts(metadata.counts);
 
@@ -1567,6 +1571,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     ...offlineSyncData,
     ...nativeAppData,
     ...biometricAttendanceData,
+    ...communicationData,
     receiptNotes,
     importBatches,
     onboardingBatches,

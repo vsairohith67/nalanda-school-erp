@@ -225,7 +225,7 @@ async function main() {
     stage = "backup restore and immutable evidence";
     const meetingBackup = validateParentMeetingBackupRows(await loadParentMeetingBackup(client) as unknown as Record<string, unknown>);
     const logical = createBackupDocument({ generatedAt: new Date(), generatedBy: `${prefix} copied QA`, students: [], feeStructures: [], payments: [], paymentAudits: [], users: [], ...meetingBackup });
-    invariant(logical.metadata.backupVersion === 44 && logical.parentMeetings.length >= 1_015 && logical.parentMeetingNotes.length >= 5, `${prefix}_LOGICAL_BACKUP_INVALID`);
+    invariant(logical.metadata.backupVersion === 45 && logical.parentMeetings.length >= 1_015 && logical.parentMeetingNotes.length >= 5, `${prefix}_LOGICAL_BACKUP_INVALID`);
     const restoreResult = { ...Object.fromEntries(PARENT_MEETING_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])), warnings: [] } as any;
     await restoreParentMeetingBackup(restoreClient, meetingBackup, { students: idMap(base.students.map((row) => row.id)), guardians: idMap(base.guardians.map((row) => row.id)), staffMembers: idMap([...base.staff.values()].map((row) => row.id)), users: idMap([...base.users.values()].map((row) => row.id)), restoredBy: principal.user.id }, restoreResult);
     invariant(PARENT_MEETING_BACKUP_KEYS.every((key) => restoreResult[key].errors.length === 0), `${prefix}_RESTORE_ERRORS`);
@@ -246,7 +246,7 @@ async function main() {
     invariant([browserPast.publicKey, browserNoShow.publicKey].every((publicKey) => boundedLeadershipList.meetings.some((meeting: { publicKey: string }) => meeting.publicKey === publicKey)), `${prefix}_ACTIVE_MEETING_CROWDED_OUT_BY_HISTORY`);
 
     if (keep) writeFileSync(path.join(root, "browser-runtime.json"), JSON.stringify({ databaseUrl: databaseUrl(copied), sessionSecret, flag: "true", password: credential, usernames: { principal: base.users.get("PRINCIPAL")!.username, superAdmin: base.users.get("SUPER_ADMIN")!.username, parentA: base.users.get("PARENT")!.username, parentB: base.users.get("PARENT_B")!.username, teacherA: base.users.get("TEACHER")!.username, teacherB: base.users.get("TEACHER_B")!.username }, meetingKeys: { scheduled: browserPast.publicKey, noShow: browserNoShow.publicKey, completed: scheduled.publicKey } }, null, 2), { flag: "wx" });
-    const evidence = { result: `${prefix}_COPIED_DB_QA_PASSED`, migration: "20260822170000_parent_meetings_v1_5", backupVersion: 44, operationalSha256: operationalBefore[0]?.hash, parentLinkage: "A_ONLY_A1_B_ONLY_B1", teacherScope: "EXPLICIT_PARTICIPANT_ONLY", notifications: "IN_APP_IDEMPOTENT", scaleMeetings: bulk.length, p95Ms: Number(p95.toFixed(1)), featureFlag: "DEFAULT_OFF", kept: keep, ...(keep ? { runtimePath: path.join(root, "browser-runtime.json") } : {}) };
+    const evidence = { result: `${prefix}_COPIED_DB_QA_PASSED`, migration: "20260822170000_parent_meetings_v1_5", backupVersion: 45, operationalSha256: operationalBefore[0]?.hash, parentLinkage: "A_ONLY_A1_B_ONLY_B1", teacherScope: "EXPLICIT_PARTICIPANT_ONLY", notifications: "IN_APP_IDEMPOTENT", scaleMeetings: bulk.length, p95Ms: Number(p95.toFixed(1)), featureFlag: "DEFAULT_OFF", kept: keep, ...(keep ? { runtimePath: path.join(root, "browser-runtime.json") } : {}) };
     console.log(JSON.stringify(evidence, null, 2));
   } finally {
     await client.$disconnect(); await restoreClient.$disconnect(); delete process.env.PARENT_MEETINGS_V1_5; delete process.env.SESSION_SECRET;

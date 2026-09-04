@@ -48,7 +48,7 @@ describe("full backup", () => {
       generatedBy: "Director"
     });
     expect(backup.metadata.appVersion).toBeTruthy();
-    expect(backup.metadata.backupVersion).toBe(44);
+    expect(backup.metadata.backupVersion).toBe(45);
     expect(backup.metadata.counts).toEqual({
       schoolSettings: 0,
       authSecurityRecords: 0,
@@ -148,6 +148,19 @@ describe("full backup", () => {
       cloudBackupVerifications: 0,
       cloudBackupRestoreRehearsals: 0,
       cloudBackupEvents: 0,
+      communicationContactPoints: 0,
+      communicationTemplateDefinitions: 0,
+      communicationTemplateVersions: 0,
+      communicationPreferences: 0,
+      communicationConsents: 0,
+      communicationProviderProfiles: 0,
+      communicationIntents: 0,
+      communicationOutboxItems: 0,
+      communicationAttempts: 0,
+      communicationDeliveryReceipts: 0,
+      communicationWebhookEvents: 0,
+      nativePushEndpoints: 0,
+      communicationAuditEvents: 0,
       publicWebsiteSettings: 0,
       publicWebsitePages: 0,
       publicWebsitePageVersions: 0,

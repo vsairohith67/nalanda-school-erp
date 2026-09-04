@@ -1051,6 +1051,108 @@ BEFORE DELETE ON "ClassworkSubmissionVersion"
 FOR EACH ROW
 EXECUTE FUNCTION "nalanda_trigger_8c0399dae1ba81a23555"();
 
+-- SQLite trigger parity: CommunicationAttempt_no_delete
+CREATE FUNCTION "nalanda_trigger_0cf3272e0e98e0722ee7"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'COMMUNICATION_ATTEMPT_IMMUTABLE';
+  END IF;
+  RETURN OLD;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "CommunicationAttempt_no_delete"
+BEFORE DELETE ON "CommunicationAttempt"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_0cf3272e0e98e0722ee7"();
+
+-- SQLite trigger parity: CommunicationAttempt_no_update
+CREATE FUNCTION "nalanda_trigger_8d83c8bb7aab351d5f7c"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'COMMUNICATION_ATTEMPT_IMMUTABLE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "CommunicationAttempt_no_update"
+BEFORE UPDATE ON "CommunicationAttempt"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_8d83c8bb7aab351d5f7c"();
+
+-- SQLite trigger parity: CommunicationAuditEvent_no_delete
+CREATE FUNCTION "nalanda_trigger_f2dd0cc30415cb7648bb"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'COMMUNICATION_AUDIT_IMMUTABLE';
+  END IF;
+  RETURN OLD;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "CommunicationAuditEvent_no_delete"
+BEFORE DELETE ON "CommunicationAuditEvent"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_f2dd0cc30415cb7648bb"();
+
+-- SQLite trigger parity: CommunicationAuditEvent_no_update
+CREATE FUNCTION "nalanda_trigger_3b889e0bc1b7b95c419b"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'COMMUNICATION_AUDIT_IMMUTABLE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "CommunicationAuditEvent_no_update"
+BEFORE UPDATE ON "CommunicationAuditEvent"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_3b889e0bc1b7b95c419b"();
+
+-- SQLite trigger parity: CommunicationDeliveryReceipt_no_delete
+CREATE FUNCTION "nalanda_trigger_0df99731671c6f9098da"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'COMMUNICATION_RECEIPT_IMMUTABLE';
+  END IF;
+  RETURN OLD;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "CommunicationDeliveryReceipt_no_delete"
+BEFORE DELETE ON "CommunicationDeliveryReceipt"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_0df99731671c6f9098da"();
+
+-- SQLite trigger parity: CommunicationDeliveryReceipt_no_update
+CREATE FUNCTION "nalanda_trigger_02b597e20b3153858dff"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'COMMUNICATION_RECEIPT_IMMUTABLE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "CommunicationDeliveryReceipt_no_update"
+BEFORE UPDATE ON "CommunicationDeliveryReceipt"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_02b597e20b3153858dff"();
+
 -- SQLite trigger parity: EmployeePayrollResult_no_approved_delete
 CREATE FUNCTION "nalanda_trigger_da142127b5837a28ddd6"() RETURNS trigger
 LANGUAGE plpgsql

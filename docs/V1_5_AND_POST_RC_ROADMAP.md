@@ -129,6 +129,12 @@ The exact governed sequence is `POSTGRES-READINESS-1A`, then `PRIVATE-STAGING-1B
 
 The software now has an explicit SQLite-default and PostgreSQL 17 build contract, separate provider migration histories, deterministic model/trigger parity, provider-safe runtime health/backup paths, synthetic backup-v44 transfer, database roles, race/recovery QA, and a four-job exact-head CI design. This phase is software readiness only. `PRIVATE-STAGING-1B-R1` remains the separate provisioning/deployment gate, and real-data migration remains unauthorized.
 
+## COMMUNICATION-DELIVERY-FOUNDATION-1A default-off software foundation
+
+The ERP has one additive provider-neutral contract for server-owned communication intent, authoritative recipient resolution, channel/purpose consent and preferences, immutable multilingual templates, durable leased outbox, delivery attempts/receipts, signed webhook replay protection, a local non-network synthetic sink, in-app inbox and safe operations aggregates. Prompt 19B WhatsApp and source-proven 19C SMS/Email remain preserved behind the new parent/channel gates. Logical backup advances deliberately to v45 with v44 restore compatibility.
+
+All parent and channel flags remain OFF at 0%. Provider selection/order, commercial pricing, contracts, DNS/domain/sender/template registration, credentials, real contacts/messages, private staging, real-user activation, native-device push certification and deployment remain separate roadmap gates. Run the generated current-source provider-selection prompt before any provider choice; certify one provider/channel at a time. OCR PR #19 remains unrelated and blocked on its own evidence.
+
 ## Related reconciliation documents
 
 - [Super Admin Command Center architecture](./SUPER_ADMIN_COMMAND_CENTER_ARCHITECTURE.md)

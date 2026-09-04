@@ -48,6 +48,7 @@ export const RATE_LIMIT_POLICIES: readonly RateLimitPolicy[] = [
   policy("biometric.ingest", "HIGH", ["POST"], 60, MINUTE, (path) => path === "/api/biometric/ingest"),
   policy("public.admissions", "MEDIUM", ["POST", "PATCH"], 8, 10 * MINUTE, (path) => path.startsWith("/api/public/admissions/")),
   policy("public.support", "MEDIUM", ["POST"], 6, 10 * MINUTE, (path) => path.startsWith("/api/public/support/")),
+  policy("communication.webhook", "HIGH", ["POST"], 60, MINUTE, (path) => path.startsWith("/api/communication/webhook/")),
   policy("smart-ai", "HIGH", ["POST"], 8, MINUTE, (path) => path === "/api/super-admin/ai" || path.startsWith("/api/ai-assistant/")),
   policy("universal-search", "MEDIUM", ["POST"], 30, MINUTE, (path) => path === "/api/super-admin/search"),
   policy("pdf-generation", "HIGH", ["POST"], 6, 10 * MINUTE, (path) => /(?:pdf-jobs|\/pdf(?:\/|$))/i.test(path)),

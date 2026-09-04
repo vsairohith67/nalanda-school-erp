@@ -48,6 +48,7 @@ const publicPathPrefixes = [
   "/api/event-media/public/",
   "/api/whatsapp/webhook/",
   "/api/sms-email/webhook/",
+  "/api/communication/webhook/",
   "/icons/"
 ];
 const offlinePublicShellPaths = new Set(["/offline", "/offline/finance"]);

@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import { middleware } from "../middleware";
 import {
   assertBoundedJsonValue,
+  requestBodyLimitBytes,
+  requestBodyTooLarge,
   requestJsonBudgetIssue,
   requestQueryBudgetIssue,
   unsafeRequestOriginAllowed
@@ -27,10 +29,20 @@ describe("SECURITY-RESILIENCE-1A governed controls", () => {
   it("uses endpoint-specific policy instead of one arbitrary global threshold", () => {
     expect(operationPolicy("/api/auth/login", "POST")?.id).toBe("auth.login");
     expect(operationPolicy("/api/public/support/requests", "POST")?.id).toBe("public.support");
+    expect(operationPolicy("/api/communication/webhook/SYNTHETIC_EMAIL", "POST")?.id).toBe("communication.webhook");
     expect(operationPolicy("/api/super-admin/search", "POST")?.id).toBe("universal-search");
     expect(operationPolicy("/api/report-cards/pdf-jobs", "POST")?.cost).toBe("HIGH");
     expect(operationPolicy("/api/health", "GET")).toBeNull();
     expect(new Set(RATE_LIMIT_POLICIES.map((policy) => `${policy.maximum}:${policy.windowMs}`)).size).toBeGreaterThan(5);
+  });
+
+  it("enforces the communication webhook 64 KiB budget for declared and streamed bodies", async () => {
+    expect(requestBodyLimitBytes("/api/communication/webhook/SYNTHETIC_EMAIL")).toBe(64 * 1024);
+    const declared = new NextRequest("https://erp.example.test/api/communication/webhook/SYNTHETIC_EMAIL", { method: "POST", headers: { "content-length": String(64 * 1024 + 1) } });
+    await expect(requestBodyTooLarge(declared)).resolves.toBe(true);
+    const streamedBase = new Request("https://erp.example.test/api/communication/webhook/SYNTHETIC_EMAIL", { method: "POST", body: new Uint8Array(64 * 1024 + 1), duplex: "half" } as RequestInit);
+    const streamed = Object.assign(streamedBase, { nextUrl: new URL(streamedBase.url) });
+    await expect(requestBodyTooLarge(streamed as never)).resolves.toBe(true);
   });
 
   it("keeps actor budgets isolated instead of creating a tiny global endpoint bucket", async () => {

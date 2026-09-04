@@ -686,7 +686,7 @@ async function backupRestore() {
   const serialized = serializeBackup(generated);
   writeFileSync(BACKUP, serialized, { flag: "wx" });
   const validated = parseAndValidateBackup(JSON.parse(serialized));
-  if (validated.metadata.backupVersion !== 44) throw new Error("DATA0AQA_BACKUP_VERSION_CHANGED");
+  if (validated.metadata.backupVersion !== 45) throw new Error("DATA0AQA_BACKUP_VERSION_CHANGED");
   copyFileSync(COPY, RESTORE);
   const target = prismaFor(RESTORE);
   const actor = await target.user.findFirst({

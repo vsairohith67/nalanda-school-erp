@@ -41,7 +41,7 @@ async function createActor(prisma: PrismaClient) {
       id: actor.id,
       name: actor.name,
       username: "devops1b-restore-actor",
-      email: "devops1b-restore@invalid.local",
+      email: "devops1b-restore@invalid.test",
       role: "DIRECTOR",
       isActive: true,
       passwordHash: await hashPassword("DEVOPS1B-local-only-Restore-2026!")
@@ -63,7 +63,7 @@ export async function runMigrationBackupRestoreCheck() {
   const sourcePath = createEmptyIsolatedDatabase("restore", "backup-source");
   const targetPath = createEmptyIsolatedDatabase("restore", "restore-target");
   const collisionPath = createEmptyIsolatedDatabase("restore", "restore-collision");
-  const backupPath = assertIsolatedDatabasePath(path.join(QA_ROOT, "restore", `DEVOPS1B-v44-${process.pid}.backup.json`));
+  const backupPath = assertIsolatedDatabasePath(path.join(QA_ROOT, "restore", `DEVOPS1B-v45-${process.pid}.backup.json`));
   let success = false;
   try {
     for (const databasePath of [sourcePath, targetPath, collisionPath]) {
@@ -85,7 +85,7 @@ export async function runMigrationBackupRestoreCheck() {
     const serialized = serializeBackup(generated);
     writeFileSync(backupPath, serialized, "utf8");
     const validated = parseAndValidateBackup(JSON.parse(serialized));
-    if (validated.metadata.backupVersion !== 44) throw new Error("BACKUP_VERSION_CHANGED");
+    if (validated.metadata.backupVersion !== 45) throw new Error("BACKUP_VERSION_CHANGED");
     if (/passwordHash|DEVOPS1B-local-only-(?:Director|Admin|Accountant|Viewer|Restore)/.test(serialized)) {
       throw new Error("BACKUP_SECRET_OR_PASSWORD_HASH_DETECTED");
     }
@@ -149,9 +149,9 @@ export async function runMigrationBackupRestoreCheck() {
     if (collisionUsers !== 1) throw new Error("RESTORE_COLLISION_IMPORTED_LOGIN_USERS");
 
     success = true;
-    console.log(`Backup/restore passed: version=44 arrays=${arrayEntries.length} students=${firstCounts.students} payments=${firstCounts.payments}`);
+    console.log(`Backup/restore passed: version=45 arrays=${arrayEntries.length} students=${firstCounts.students} payments=${firstCounts.payments}`);
     console.log("Repeated restore remained count-idempotent; local login ownership and Student collision mapping were preserved.");
-    return { version: 44, arrays: arrayEntries.length, firstCounts, firstBusiness };
+    return { version: 45, arrays: arrayEntries.length, firstCounts, firstBusiness };
   } finally {
     if (success) {
       for (const databasePath of [sourcePath, targetPath, collisionPath]) cleanupIsolatedDatabase(databasePath);

@@ -24,7 +24,7 @@ function backup() {
 describe("Prompt 19A backup version 30", () => {
   it("includes all five arrays and excludes passwords, actors, phone numbers, and emails", () => {
     const value = backup();
-    expect(value.metadata.backupVersion).toBe(44);
+    expect(value.metadata.backupVersion).toBe(45);
     for (const key of Object.keys(notificationRows())) expect((value as any)[key]).toHaveLength(1);
     const text = JSON.stringify(value);
     expect(text).not.toContain("passwordHash");

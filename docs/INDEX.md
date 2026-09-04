@@ -905,3 +905,23 @@ The provider-dual software contract preserves SQLite as local/default and adds a
 - [Generated, unexecuted OCR Scanning Foundation 1B prompt](prompts/OCR_SCANNING_FOUNDATION_1B.md)
 
 OCR-BENCHMARK-1A selects a local PaddleOCR printed-document primary with mandatory human review and no automatic heavy-model fallback. This is benchmark/architecture clearance only: production OCR, real documents, authoritative writes, cloud OCR and operational activation remain prohibited pending a separate 1B release and later readiness gate.
+
+# COMMUNICATION-DELIVERY-FOUNDATION-1A
+
+- [Architecture](COMMUNICATION_DELIVERY_ARCHITECTURE.md)
+- [Current-state and module audit](COMMUNICATION_CURRENT_STATE_AUDIT.md)
+- [Purpose and channel policy](COMMUNICATION_PURPOSE_AND_CHANNEL_POLICY.md)
+- [Recipient resolution](COMMUNICATION_RECIPIENT_RESOLUTION.md)
+- [Consent and preferences](COMMUNICATION_CONSENT_AND_PREFERENCES.md)
+- [Template governance](COMMUNICATION_TEMPLATE_GOVERNANCE.md)
+- [Durable outbox and retry](COMMUNICATION_OUTBOX_AND_RETRY.md)
+- [Provider adapters](COMMUNICATION_PROVIDER_ADAPTERS.md)
+- [Webhooks and receipts](COMMUNICATION_WEBHOOK_AND_DELIVERY_RECEIPTS.md)
+- [In-app notification centre](IN_APP_NOTIFICATION_CENTRE.md)
+- [Privacy and content minimisation](COMMUNICATION_PRIVACY_AND_CONTENT_MINIMISATION.md)
+- [Operations runbook](COMMUNICATION_OPERATIONS_RUNBOOK.md)
+- [Provider activation gates](COMMUNICATION_PROVIDER_ACTIVATION_GATES.md)
+- [Clearance evidence](evidence/COMMUNICATION_DELIVERY_FOUNDATION_1A_CLEARANCE.md)
+- Future prompts: [provider selection 1B](prompts/COMMUNICATION_PROVIDER_SELECTION_1B.md), [single-provider certification 1C](prompts/COMMUNICATION_PROVIDER_CERTIFICATION_1C.md), [native push certification 1B](prompts/NATIVE_PUSH_CERTIFICATION_1B.md), and [real-user activation 1B-R1](prompts/REAL_USER_ACCESS_ACTIVATION_1B-R1.md).
+
+This is default-off, zero-rollout software clearance only. Email, SMS, WhatsApp and native push providers are disabled; in-app operates only in copied/synthetic QA until a separate activation decision. No real contacts/messages, provider selection, private staging, deployment, real-user activation, or OCR integration is authorised.

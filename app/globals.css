@@ -2365,6 +2365,11 @@
 .notification-bell span { position: absolute; inset: -5px -5px auto auto; min-width: 20px; height: 20px; padding: 0 5px; display: grid; place-items: center; border-radius: 999px; background: #dc2626; color: #fff; font-size: 11px; font-weight: 800; }
 .notification-page :is(button, .button, input, select, textarea, .notification-bell),
 .parent-notifications :is(button, .button, input, select, textarea, .notification-bell) { min-height: 44px; }
+.communication-page :is(button, .button, input, select, textarea) { min-height: 44px; }
+.communication-page :is(button, .button, input, select, textarea, a):focus-visible { outline: 3px solid var(--focus-ring, #2563eb); outline-offset: 2px; }
+.notification-inbox-stack { display: grid; gap: 1rem; }
+.communication-card.is-unread { border-inline-start: 4px solid var(--accent, #2563eb); }
+@media (max-width: 640px) { .communication-page .page-actions { align-items: stretch; flex-direction: column; } .communication-page .page-actions > * { width: 100%; } }
 @media (max-width: 700px) {
   .notification-form .wide { grid-column: auto; }
   .notification-page .page-actions > *,

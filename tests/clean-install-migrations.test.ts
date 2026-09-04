@@ -79,7 +79,8 @@ describe("DEVOPS-1B clean-install migration repair", () => {
       "20260825090000_offline_sync_1a",
       "20260826003000_cross_platform_apps_1a",
       "20260828090000_biometric_staff_attendance_1a",
-      "20260902090000_real_user_access_readiness_1a"
+      "20260902090000_real_user_access_readiness_1a",
+      "20260904120000_communication_delivery_foundation_1a"
     ]);
     expect(readFileSync(path.join(ACTIVE_MIGRATION_ROOT, BASELINE_MIGRATION, "migration.sql"), "utf8"))
       .toContain('CREATE TABLE "Payment"');
@@ -110,7 +111,7 @@ describe("DEVOPS-1B clean-install migration repair", () => {
 
   it("deploys from empty, reports clean status, matches the schema, and bootstraps synthetic data", async () => {
     const output = await pnpm(["migration:fresh-check"], { MIGRATION_FRESH_CHECK_SKIP_GENERATE: "1" });
-    expect(output).toContain("Fresh migration check passed: migrations=26 models=353 tables=353");
+    expect(output).toContain("Fresh migration check passed: migrations=27 models=366 tables=366");
     expect(output).toContain("Synthetic bootstrap passed");
   }, 600_000);
 
@@ -120,11 +121,11 @@ describe("DEVOPS-1B clean-install migration repair", () => {
     expect(output).toContain("students=0 activeEnrollments=0 payments=0 collected=0");
   }, 300_000);
 
-  it("keeps version-44 restore idempotent and preserves local ownership collisions", async () => {
+  it("keeps version-45 restore idempotent, accepts legacy versions, and preserves local ownership collisions", async () => {
     const output = await pnpm(["migration:restore-check"]);
-    expect(output).toContain("Backup/restore passed: version=44 arrays=285");
+    expect(output).toContain("Backup/restore passed: version=45 arrays=298");
     expect(output).toContain("local login ownership and Student collision mapping were preserved");
-  }, 300_000);
+  }, 600_000);
 
   it("contains no operational fixture values, seeded secret DML, or db-push install dependency", () => {
     const baseline = readFileSync(path.join(ACTIVE_MIGRATION_ROOT, BASELINE_MIGRATION, "migration.sql"), "utf8");

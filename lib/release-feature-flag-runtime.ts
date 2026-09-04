@@ -56,6 +56,21 @@ export const REAL_USER_ACCESS_READINESS_FEATURE = {
   activationRole: "SUPER_ADMIN"
 } as const satisfies OperationalReleaseFeature;
 
+export const COMMUNICATION_DELIVERY_FOUNDATION_FEATURE = {
+  key: "communication-delivery-foundation-1a",
+  environment: "PRODUCTION",
+  expectedVersion: 1,
+  activationRole: "SUPER_ADMIN"
+} as const satisfies OperationalReleaseFeature;
+
+export const COMMUNICATION_CHANNEL_FEATURES = {
+  IN_APP: { key: "communication-channel-in-app", environment: "PRODUCTION", expectedVersion: 1, activationRole: "SUPER_ADMIN" },
+  EMAIL: { key: "communication-channel-email", environment: "PRODUCTION", expectedVersion: 1, activationRole: "SUPER_ADMIN" },
+  SMS: { key: "communication-channel-sms", environment: "PRODUCTION", expectedVersion: 1, activationRole: "SUPER_ADMIN" },
+  WHATSAPP: { key: "communication-channel-whatsapp", environment: "PRODUCTION", expectedVersion: 1, activationRole: "SUPER_ADMIN" },
+  NATIVE_PUSH: { key: "communication-channel-native-push", environment: "PRODUCTION", expectedVersion: 1, activationRole: "SUPER_ADMIN" }
+} as const satisfies Record<string, OperationalReleaseFeature>;
+
 export class ReleaseFeatureUnavailableError extends Error {
   readonly status = 404;
   readonly code = "RELEASE_FEATURE_UNAVAILABLE";

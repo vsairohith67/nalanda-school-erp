@@ -1,5 +1,6 @@
 import type { AuthUser } from "@/lib/auth";
 import { createWhatsAppProvider } from "@/lib/whatsapp-provider";
+import { communicationFeatureAvailability } from "@/lib/communication-policy";
 
 const PROFILE_CODE = /^[A-Z0-9][A-Z0-9_-]{2,39}$/;
 const CLOCK = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -73,6 +74,9 @@ export async function updateWhatsAppCostCapPolicy(client: any, id: string, input
 
 export async function runWhatsAppProfileHealth(client: any, id: string, network = false) {
   const profile = await requiredProfile(client, id);
+  if (profile.mode === "LIVE" && network && !communicationFeatureAvailability("WHATSAPP").enabled) {
+    throw new Error("The unified communication foundation and WhatsApp channel are operationally disabled.");
+  }
   const provider = createWhatsAppProvider(profile.mode);
   const health = await provider.healthCheck({ network: profile.mode === "LIVE" && network });
   await client.whatsAppIntegrationProfile.update({
@@ -97,6 +101,9 @@ export async function activateWhatsAppProfile(client: any, id: string, actor: Au
   if (!health.ok) throw new Error(health.message);
   if (profile.mode === "LIVE" && process.env.WHATSAPP_LIVE_SENDING_ENABLED !== "true") {
     throw new Error("Live sending remains disabled by the environment feature flag.");
+  }
+  if (profile.mode === "LIVE" && !communicationFeatureAvailability("WHATSAPP").enabled) {
+    throw new Error("The unified communication foundation and WhatsApp channel are operationally disabled.");
   }
   return client.$transaction(async (tx: any) => {
     if (profile.mode === "LIVE") {

@@ -324,6 +324,12 @@ Management-only QA result: `MANAGEMENT_RECONCILIATION_CLEARED`. The clearance ap
 
 Current release state in this branch is `READY_FOR_EXACT_HEAD_QA`. Remaining product boundaries are not hidden gaps: private HTTPS staging, PostgreSQL readiness, interactive/physical-device certification, signing, store publication, push, production origins, real users/data, deployment, and operational activation are separately governed and remain inactive.
 
+## Unified communication delivery
+
+`COMMUNICATION-DELIVERY-FOUNDATION-1A` closes the common software-architecture gap with server-owned intents/recipients, consent/preferences, privacy-minimised immutable templates, a leased idempotent outbox, disabled/local-synthetic adapters, monotonic signed receipts, in-app/preference/operations surfaces, SQLite/PostgreSQL parity and logical backup v45. Existing 19A campaigns and 19B/19C channel foundations are preserved as staged compatibility sources; historical records are not rewritten.
+
+This is not operational communication capability. The parent and IN_APP/EMAIL/SMS/WHATSAPP/NATIVE_PUSH controls are all OFF at 0%; no provider is selected or configured, no real contact/message/user is used, and private staging, sender/domain registration, FCM/APNs, DNS, billing, deployment, formal policy approval and live certification remain gaps by design. The exact next evidence gate is current-official-source provider selection followed by certification of exactly one channel/provider.
+
 ## PostgreSQL readiness
 
 `POSTGRES-READINESS-1A` adds the provider-dual software contract without replacing SQLite. The PostgreSQL 17 schema/baseline, active trigger and partial-index equivalents, provider-safe health/backup behavior, logical transfer, least-privilege roles, concurrency, performance, physical restore, and exact-head CI matrix are implemented on the retained feature branch. Local synthetic evidence is green; exact-head CI/release closure is the current gate. Private staging, provider purchase, real data/users, DNS, and migration/pilot activation remain separate and inactive.
