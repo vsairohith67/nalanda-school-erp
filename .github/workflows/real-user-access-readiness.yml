@@ -82,7 +82,8 @@ jobs:
           Invoke-WebRequest -Uri 'https://github.com/oschwartz10612/poppler-windows/releases/download/v26.02.0-0/Release-26.02.0-0.zip' -OutFile $popplerArchive
           if ((Get-FileHash -LiteralPath $popplerArchive -Algorithm SHA256).Hash.ToLowerInvariant() -ne '993e4a94376ed712fafc7058d724ea0b943d118bbd2305cd9ed55174eb85cda5') { throw "Pinned Poppler archive checksum mismatch" }
           Expand-Archive -LiteralPath $popplerArchive -DestinationPath $popplerExtract
-          $pdfToPpm = Get-Item -LiteralPath (Join-Path $popplerExtract 'poppler-26.02.0-0\Library\bin\pdftoppm.exe') -ErrorAction Stop
+          $pdfToPpm = Get-ChildItem -LiteralPath $popplerExtract -Recurse -File -Filter 'pdftoppm.exe' | Select-Object -First 1
+          if ($null -eq $pdfToPpm) { throw "Pinned Poppler archive did not contain pdftoppm.exe" }
           "REPORT_CARD_PDFTOPPM_PATH=$($pdfToPpm.FullName)" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
           pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate --schema prisma/schema.prisma
