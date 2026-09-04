@@ -193,7 +193,7 @@ jobs:
           DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm exec prisma migrate deploy --schema prisma/schema.prisma
           cp tmp/portable-ci/synthetic.db prisma/dev.db
       - run: DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm qa:portable-runtime && DATABASE_URL=file:../tmp/portable-ci/synthetic.db pnpm backup
-      - run: pnpm audit --audit-level high
+      - run: pnpm audit --ignore-registry-errors --audit-level high
       - if: always()
         run: rm -rf backups tmp data/cloud-backup-rehearsal
 

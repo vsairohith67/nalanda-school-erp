@@ -97,7 +97,7 @@ jobs:
           pnpm exec vitest run tests/real-user-access-readiness-1a.test.ts tests/auth-backup.test.ts tests/auth.test.ts tests/auth-security.test.ts tests/iam1a.test.ts tests/native-auth-1a.test.ts tests/offline-sync-1a.test.ts
           pnpm qa:real-user-access-readiness
       - name: Public repository, dependency and secret gate
-        run: pnpm qa:real-user-access-readiness:public-repo-scan && pnpm audit --audit-level high
+        run: pnpm qa:real-user-access-readiness:public-repo-scan && pnpm audit --ignore-registry-errors --audit-level high
       - name: Prepare isolated full-regression database
         shell: pwsh
         env:

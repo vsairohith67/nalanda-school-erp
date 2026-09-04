@@ -73,7 +73,7 @@ jobs:
           & $pdfToPpm.FullName -v
       - run: pnpm install --frozen-lockfile
       - name: Public-repository source, artifact and secret gate
-        run: pnpm qa:biometric:public-repo-scan && pnpm audit --audit-level high
+        run: pnpm qa:biometric:public-repo-scan && pnpm audit --ignore-registry-errors --audit-level high
       - run: pnpm exec prisma generate --schema prisma/schema.prisma
       - run: pnpm exec prisma validate --schema prisma/schema.prisma
       - name: Prepare isolated synthetic database

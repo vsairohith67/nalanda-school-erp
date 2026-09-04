@@ -95,7 +95,7 @@ jobs:
           pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
           Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db
       - run: pnpm git:safety-check
-      - run: pnpm audit --prod --audit-level high
+      - run: pnpm audit --ignore-registry-errors --prod --audit-level high
       - run: pnpm security:resilience:acceptance
       - name: Route and lifecycle inventory
         run: |

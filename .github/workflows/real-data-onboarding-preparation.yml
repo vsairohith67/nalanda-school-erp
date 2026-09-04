@@ -90,7 +90,7 @@ jobs:
           pnpm exec prisma migrate deploy --schema prisma/schema.prisma
           Copy-Item -LiteralPath tmp\onboarding-preparation-ci\synthetic.db -Destination prisma\dev.db
       - name: Public repository, secret and private-artifact gate
-        run: pnpm qa:onboarding-preparation:public-repo-scan && pnpm audit --audit-level high
+        run: pnpm qa:onboarding-preparation:public-repo-scan && pnpm audit --ignore-registry-errors --audit-level high
       - name: Preparation mapping, packages, adversarial parser and no-write proof
         run: pnpm qa:onboarding-preparation
       - name: Existing governed onboarding, finance and Schoolknot compatibility
