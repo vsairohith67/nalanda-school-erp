@@ -41,7 +41,7 @@ async function createActor(prisma: PrismaClient) {
       id: actor.id,
       name: actor.name,
       username: "devops1b-restore-actor",
-      email: "devops1b-restore@invalid.local",
+      email: "devops1b-restore@invalid.test",
       role: "DIRECTOR",
       isActive: true,
       passwordHash: await hashPassword("DEVOPS1B-local-only-Restore-2026!")

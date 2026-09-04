@@ -63,9 +63,9 @@ async function seedWebsiteRows(prisma: PrismaClient) {
   });
   await prisma.publicWebsiteSettings.create({ data: {
     id: "qa20d-settings", settingsCode: "QA20D-SETTINGS", siteName: "Nalanda Public School",
-    shortName: "Nalanda", tagline: "Controlled QA20D restore rehearsal.", publicSiteUrl: "https://nalandaps.com",
+    shortName: "Nalanda", tagline: "Controlled QA20D restore rehearsal.", publicSiteUrl: "https://school.invalid",
     publicAddress: "Approved public office address", publicOfficePhone: "Approved public office phone",
-    publicOfficeEmail: "office@nalandaps.com", publicOfficeHours: "School office hours",
+    publicOfficeEmail: "office@school.invalid", publicOfficeHours: "School office hours",
     portalLoginPath: "/login", defaultSeoTitle: "Nalanda Public School | Learning with purpose",
     defaultSeoDescription: "Leadership-reviewed public information about Nalanda Public School and its secure portal.",
     defaultSocialImageKey: "NALANDA_LOGO", themeConfigJson: "{}", contactConfigJson: "{}",
