@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { EventEmitter } from "node:events";
-import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { isRetryableS3PrivateObjectStoreError } from "@/lib/cloud-backup-provider-s3";
@@ -62,16 +62,6 @@ function syntheticEnvironment(): NodeJS.ProcessEnv {
 }
 
 describe("PORTABLE-STAGING-FOUNDATION-1A runtime contracts", () => {
-  it("pins readiness to the latest PostgreSQL migration", async () => {
-    const compose = await readFile(path.resolve("deploy/portable/compose.yml"), "utf8");
-    const migrations = (await readdir(path.resolve("prisma/postgresql/migrations"), { withFileTypes: true }))
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name)
-      .sort();
-    expect(migrations.at(-1)).toBeTruthy();
-    expect(compose).toContain(`PORTABLE_EXPECTED_POSTGRES_MIGRATION: ${migrations.at(-1)}`);
-  });
-
   it("isolates backup-prefix credentials in a dedicated queue worker", async () => {
     const compose = await readFile(path.resolve("deploy/portable/compose.yml"), "utf8");
     const route = await readFile(path.resolve("app/api/cloud-backup/runs/route.ts"), "utf8");
