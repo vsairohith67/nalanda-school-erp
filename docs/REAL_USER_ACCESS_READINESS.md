@@ -1,6 +1,6 @@
 # Real-User Access Readiness 1A
 
-Status: software foundation in release QA. Feature default: `OFF`; rollout: `0%`.
+Status: software foundation cleared through exact-head CI, normal merge and annotated tag. Feature default: `OFF`; rollout: `0%`.
 
 This phase prepares governed account rollout without creating or activating a real user, sending a real invitation, configuring a live delivery provider, or claiming private staging. Every exercised identity uses reserved synthetic data and every write-capable database check runs against a disposable copy or a fresh synthetic database.
 
@@ -41,4 +41,3 @@ Super Admin has the governed administrative view. Principal and Director receive
 - any Parent, Student, Staff or leadership rollout wave.
 
 The only permitted next execution is the separately approved prompt in `docs/prompts/REAL_USER_ACCESS_ACTIVATION_1B.md`, after every private-infrastructure, roster, policy, approver, provider, rehearsal and owner gate is evidenced.
-
