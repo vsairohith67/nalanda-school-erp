@@ -15,7 +15,7 @@ const required = [
 ];
 const prohibitedExtensions = new Set([".db", ".sqlite", ".sqlite3", ".bak", ".dump", ".zip", ".7z", ".rar", ".pem", ".key", ".pfx", ".p12", ".exe", ".msi", ".msix", ".apk", ".ipa", ".png", ".jpg", ".jpeg", ".gif", ".svg"]);
 const textExtensions = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs", ".json", ".md", ".sql", ".yml", ".yaml", ".toml", ".txt"]);
-const allowedRoots = ["app", "components", "config", "docs", "lib", "prisma", "scripts", "tests", ".github/workflows"];
+const allowedRoots = ["app", "components", "config", "docs", "lib", "prisma", "scripts", "tests", "tools/release-evidence", ".github/workflows"];
 const allowedRootFiles = new Set(["middleware.ts", "package.json", "pnpm-lock.yaml"]);
 const secretPatterns: Array<[string, RegExp]> = [
   ["private-key", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],

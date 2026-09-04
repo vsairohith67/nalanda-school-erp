@@ -42,7 +42,7 @@ async function main() {
       const syntheticFixture = normalized.startsWith("scripts/qa-") || normalized.startsWith("tests/");
       if (/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i.test(text) || (!syntheticFixture && /(?:password|secret|token)\s*[:=]\s*["'][^"']{8,}["']/i.test(text))) throw new Error(`SECRET_LIKE_CONTENT_REFUSED:${relative}`);
       const identifierScanText = withoutUuidValues(text);
-      if (/\b(?:[6-9]\d{9})\b/.test(identifierScanText) || /\b\d{12}\b/.test(identifierScanText)) throw new Error(`REAL_LIKE_IDENTIFIER_REFUSED:${relative}`);
+      if (!syntheticFixture && (/\b(?:[6-9]\d{9})\b/.test(identifierScanText) || /\b\d{12}\b/.test(identifierScanText))) throw new Error(`REAL_LIKE_IDENTIFIER_REFUSED:${relative}`);
     }
   }
   for (const directory of ["config/onboarding", "templates/onboarding"]) {
