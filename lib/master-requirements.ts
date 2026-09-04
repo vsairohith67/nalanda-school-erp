@@ -6,11 +6,11 @@ import schema from "@/config/master-requirements-register.schema.json";
 import canonical from "@/config/master-requirements-register.json";
 import { PERMISSIONS } from "@/lib/permissions";
 
-export type MasterRegister = typeof canonical;
+export type MasterRegister = Omit<typeof canonical, "approvedAt"> & { approvedAt: string | null };
 export const MASTER_BASE = "4a4df050d194104cfc497a6de790ca9553a69db6";
 export const MASTER_TREE = "d4075661063fc127740bb3806abe51d83b406e61";
 export const OWNER_SPECIFICATION_HASH = "618824d76329b924230fede309b30df1d7aa7a94fa52c4b4a849647432421c89";
-const validateSchema = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+const validateSchema = new Ajv2020({ allErrors: true, strict: true }).compile<MasterRegister>(schema);
 export const sourceHash = (value: string) => createHash("sha256").update(value.replace(/\r\n/g, "\n")).digest("hex");
 
 export function publicContentErrors(value: unknown): string[] {
@@ -51,7 +51,7 @@ export function requirementSourceHash(register: MasterRegister) {
 
 export function validateMasterRequirements(input: unknown, readSource?: (file: string) => string): string[] {
   if (!validateSchema(input)) return (validateSchema.errors ?? []).map(error => `SCHEMA:${error.instancePath}:${error.keyword}`);
-  const register = input as MasterRegister;
+  const register = input;
   const errors: string[] = [];
   if (register.actualMainSha !== MASTER_BASE || register.expectedMainSha !== MASTER_BASE || register.treeSha !== MASTER_TREE) errors.push("BASE_COORDINATES_CHANGED");
   if (requirementSourceHash(register) !== OWNER_SPECIFICATION_HASH || register.normalizedSourceSpecificationHash !== OWNER_SPECIFICATION_HASH) errors.push("OWNER_INTENT_DRIFT");
