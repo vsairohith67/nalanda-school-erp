@@ -200,7 +200,8 @@ export function AppShell({
   enabledOptionalOperationsFeatures,
   parentMeetingsEnabled,
   offlineSyncEnabled,
-  biometricAttendanceEnabled
+  biometricAttendanceEnabled,
+  realUserAccessReadinessEnabled
 }: {
   children: React.ReactNode;
   user: AuthUser | null;
@@ -214,6 +215,7 @@ export function AppShell({
   parentMeetingsEnabled: boolean;
   offlineSyncEnabled: boolean;
   biometricAttendanceEnabled: boolean;
+  realUserAccessReadinessEnabled: boolean;
 }) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -343,6 +345,7 @@ export function AppShell({
   if (parentMeetingsEnabled) enabledFeatures.add("PARENT_MEETINGS_V1_5");
   if (offlineSyncEnabled) enabledFeatures.add("OFFLINE_SYNC_1A");
   if (biometricAttendanceEnabled) enabledFeatures.add("BIOMETRIC_STAFF_ATTENDANCE_1A");
+  if (realUserAccessReadinessEnabled) enabledFeatures.add("REAL_USER_ACCESS_READINESS_1A");
   const teacherInternalNavItems = user.role === "TEACHER" ? visibleNavigationItems(permissions, user.role, enabledFeatures) : [];
   if (user.role === "TEACHER" && teacherInternalNavItems.length === 0) {
     return (

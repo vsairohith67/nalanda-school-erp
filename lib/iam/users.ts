@@ -30,6 +30,7 @@ import {
   rolesInput,
   overridesInput
 } from "@/lib/iam/validation";
+import { isOperationalReleaseFeatureEnabled, REAL_USER_ACCESS_READINESS_FEATURE } from "@/lib/release-feature-flag-runtime";
 
 const MAX_TEMPORARY_PASSWORD_DAYS = 7;
 const RESERVED_MARKS_OPERATOR_PROFILE = "marks_entry_operator";
@@ -75,6 +76,7 @@ export async function listNamedUsers(client: PrismaClient, input: { query?: stri
 }
 
 export async function createNamedUser(client: PrismaClient, actor: IamActor, input: Record<string, unknown>) {
+  if (isOperationalReleaseFeatureEnabled(REAL_USER_ACCESS_READINESS_FEATURE)) throw new Error("Use the governed access-request workflow while real-user access readiness is enabled");
   await assertActorPermission(client, actor, "MANAGE_IAM_USERS");
   await requireCriticalReauthentication(client, actor, String(input.reauthPassword ?? ""));
   const name = boundedText(input.name, "Display name", 2, 100);
@@ -84,8 +86,9 @@ export async function createNamedUser(client: PrismaClient, actor: IamActor, inp
   const reason = reasonText(input.reason);
   const roles = rolesInput(input.roles);
   const activationMethod = String(input.activationMethod ?? "PENDING");
+  if (activationMethod !== "PENDING") throw new Error("Direct activation is unavailable; use the governed access-request and one-time invitation workflow");
   const temporaryPassword = String(input.temporaryPassword ?? "");
-  const activateWithTemporaryPassword = activationMethod === "TEMPORARY_PASSWORD";
+  const activateWithTemporaryPassword = false;
   if (actor.user.role === "COMPUTER_OPERATOR" && (roles.some((role) => !["PARENT", "VIEWER"].includes(role)) || activateWithTemporaryPassword)) {
     throw new Error("Computer Operators may create pending Parent or Viewer accounts only");
   }

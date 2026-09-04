@@ -9,6 +9,7 @@ import {
 } from "./exam-governance-backup";
 import { getSchoolSettings, type SchoolSettingsValue } from "./school-settings";
 import { authSecurityRecordCount, createAuthSecurityBackup, type AuthSecurityBackup } from "./auth-backup";
+import { emptyRealUserAccessBackup, loadRealUserAccessBackup } from "./real-user-access/backup";
 import { createIamAccessBackup, iamAccessRecordCount, type IamAccessBackup } from "./iam/backup";
 import { loadAcademicCalendarBackup } from "./academic-calendar-backup";
 import { loadClassworkBackup, validateClassworkBackupRows, type ClassworkBackup } from "./classwork-backup";
@@ -1369,6 +1370,9 @@ export async function generateFullBackup(
   const technicalOperations = await technicalOperationsSchemaAvailable(client as unknown as PrismaClient)
     ? await loadTechnicalOperationsBackup(client as unknown as PrismaClient)
     : emptyTechnicalOperationsBackup();
+  const realUserAccessBackup = await databaseTableExists(client as unknown as PrismaClient, "UserAccessRequest")
+    ? await loadRealUserAccessBackup(client as unknown as PrismaClient)
+    : emptyRealUserAccessBackup();
 
   return createBackupDocument({
     generatedAt: options.generatedAt ?? new Date(),
@@ -1383,7 +1387,8 @@ export async function generateFullBackup(
       verificationHistory: authVerificationHistory,
       resetHistory: authResetHistory,
       sessions: authSessions,
-      events: authSecurityEvents
+      events: authSecurityEvents,
+      ...realUserAccessBackup
     },
     iamAccess: {
       userStates: iamUserStates.map(({ id, ...state }) => ({ userId: id, ...state })),

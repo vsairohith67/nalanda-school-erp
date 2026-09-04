@@ -6,7 +6,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type Alias = { handle: string; type: string; label: string; maskedValue: string; status: string; schoolGoverned: boolean; version: number; verifiedAt: string | null; removedAt: string | null };
 type Session = { handle: string; current: boolean; state: string; device: string; browser: string; network: string; createdAt: string; lastSeenAt: string; expiresAt: string; revokedAt: string | null; revocationReason: string | null; version: number };
-type SecurityData = { aliases: Alias[]; sessions: Session[] };
+type Factor = { handle:string;type:string;status:string;displayName:string;verifiedAt:string|null;lastUsedAt:string|null;revokedAt:string|null;deviceType:string|null;backedUp:boolean|null;remainingRecoveryCodes:number };
+type NativeSession = {handle:string;state:string;device:string;platform:string;deviceHandle:string;lastSeenAt:string;expiresAt:string;revocationReason:string|null};
+type OfflineDevice = {handle:string;label:string;platform:string;status:string;approvedAt:string|null;lastSeenAt:string|null;revokedAt:string|null};
+type SecurityData = { aliases: Alias[]; sessions: Session[]; factors:Factor[];nativeSessions:NativeSession[];offlineDevices:OfflineDevice[] };
 type DialogState = { kind: "alias"; alias: Alias } | { kind: "session"; session: Session } | { kind: "others" } | { kind: "all" };
 
 export function AccountSecurityPanel({ passwordChanged }: { passwordChanged: boolean }) {
@@ -149,6 +152,10 @@ export function AccountSecurityPanel({ passwordChanged }: { passwordChanged: boo
         </article>)}
       </div>
     </section>
+
+    <section className="card card-pad security-section" aria-labelledby="mfa-heading"><div className="section-title"><div><h3 id="mfa-heading"><ShieldCheck size={20} aria-hidden /> Additional verification</h3><p>Passkeys and authenticator secrets remain private. Only safe factor status and remaining one-time recovery-code count are shown.</p></div></div><div className="security-list">{data.factors.map(factor=><article className="security-row" key={factor.handle}><div><strong>{factor.displayName} · {factor.type === "WEBAUTHN" ? "Passkey" : "Authenticator app"}</strong><span>{factor.status.replaceAll("_"," ")}{factor.backedUp===true?" · synced passkey":""}</span><small>{factor.remainingRecoveryCodes} recovery code(s) remaining{factor.lastUsedAt?` · Last used ${dateTime(factor.lastUsedAt)}`:""}</small></div></article>)}{!data.factors.length?<p>No additional verification factor is enrolled.</p>:null}</div></section>
+
+    <section className="card card-pad security-section" aria-labelledby="native-heading"><div className="section-title"><div><h3 id="native-heading"><Smartphone size={20} aria-hidden /> Native and offline devices</h3><p>Windows, Android, iOS and Offline Sync access remains bound to governed public device identities and revocable sessions.</p></div></div><div className="security-list">{data.nativeSessions.map(session=><article className="security-row" key={session.handle}><div><strong>{session.device} · {session.platform}</strong><span>{session.state}</span><small>Last seen {dateTime(session.lastSeenAt)} · expires {dateTime(session.expiresAt)}</small></div></article>)}{data.offlineDevices.map(device=><article className="security-row" key={device.handle}><div><strong>{device.label} · {device.platform}</strong><span>Offline Sync device · {device.status.replaceAll("_"," ")}</span><small>{device.lastSeenAt?`Last seen ${dateTime(device.lastSeenAt)}`:"Never used"}</small></div></article>)}{!data.nativeSessions.length&&!data.offlineDevices.length?<p>No native or offline device is registered.</p>:null}</div></section>
 
     <section className="card card-pad security-section"><div className="section-title"><div><h3><KeyRound size={20} aria-hidden /> Password</h3><p>Changing your password rotates this session and revokes every other active session.</p></div><Link className="button" href="/change-password">Change Password</Link></div></section>
 

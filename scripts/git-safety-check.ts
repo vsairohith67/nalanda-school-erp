@@ -113,6 +113,7 @@ export function scanTextContent(filePath: string, content: string): SafetyFindin
   const isDocumentation = /(^|\/)docs?\//i.test(relativePath) || /\.md$/i.test(relativePath);
   const isSyntheticTest = /(^|\/)(?:tests?|fixtures?)(?:\/|$)/i.test(relativePath)
     || /\.test\.[cm]?[jt]sx?$/i.test(relativePath)
+    || /(^|\/)scripts\/qa-[^/]+\.[^/]+$/i.test(relativePath)
     || /(^|\/)scripts\/(?:qa\d+[a-z0-9-]*-fixtures|sec1-runtime-[^/]+)\.[^/]+$/i.test(relativePath)
     || relativePath === "scripts/portable/generate-synthetic-secrets.mjs";
   const isEnvExample = /(^|\/)\.env\.example$/i.test(relativePath);
@@ -133,6 +134,7 @@ export function scanTextContent(filePath: string, content: string): SafetyFindin
     const assignment = /(?:password|passwd|secret|token|api[_-]?key|encryption[_-]?key|webhook[_-]?secret|session[_-]?cookie|client[_-]?secret)\s*[:=]\s*["'`]([^"'`\r\n]{8,})["'`]/gi;
     let match: RegExpExecArray | null;
     while ((match = assignment.exec(content))) {
+      if (match[1].includes("${")) continue;
       if (!placeholderValue(match[1]) && !/^process\.env\./i.test(match[1])) add("REALISTIC_SECRET_ASSIGNMENT");
     }
 

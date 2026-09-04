@@ -42,7 +42,6 @@ export function UserAdministration({
   const [showCreate, setShowCreate] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedProfiles, setSelectedProfiles] = useState<string[]>([]);
-  const [activationMethod, setActivationMethod] = useState("PENDING");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const filtered = useMemo(() => initialUsers.filter((user) => {
@@ -66,7 +65,7 @@ export function UserAdministration({
         body: JSON.stringify({
           name: form.get("name"), username: form.get("username"), email: form.get("email"), designation: form.get("designation"),
           roles: selectedRoles, profileHandles: selectedProfiles, staffHandle: form.get("staffHandle"), guardianHandle: form.get("guardianHandle"),
-          activationMethod, temporaryPassword: form.get("temporaryPassword"), temporaryPasswordDays: 1,
+          activationMethod: "PENDING",
           reason: form.get("reason"), reauthPassword: form.get("reauthPassword")
         })
       });
@@ -107,7 +106,7 @@ export function UserAdministration({
         <div className="dialog-backdrop" role="presentation">
           <section className="security-dialog iam-dialog" role="dialog" aria-modal="true" aria-labelledby="create-user-title">
             <h2 id="create-user-title">Create a governed named user</h2>
-            <p>The account remains pending unless a temporary password is entered. Temporary passwords are hidden, hashed, expire, and require change at first login.</p>
+            <p>This legacy screen can prepare an inactive account only. Approval, one-time invitation, MFA, training and activation use the governed access-readiness workflow.</p>
             <form onSubmit={createUser} className="iam-form-grid">
               <label>Display name<input name="name" required maxLength={100} autoFocus /></label>
               <label>Username<input name="username" required maxLength={64} autoComplete="off" /></label>
@@ -117,8 +116,7 @@ export function UserAdministration({
               <fieldset className="iam-fieldset"><legend>Permission profiles (optional)</legend>{profiles.length ? profiles.map((profile) => <label className="iam-check" key={profile.handle}><input type="checkbox" checked={selectedProfiles.includes(profile.handle)} onChange={() => toggle(selectedProfiles, profile.handle, setSelectedProfiles)} />{profile.label}</label>) : <span>No active profiles</span>}</fieldset>
               <label>Existing Staff link<select name="staffHandle" defaultValue=""><option value="">Not linked</option>{staff.map((row) => <option key={row.handle} value={row.handle}>{row.label} · {statusLabel(row.status ?? "")}</option>)}</select></label>
               <label>Existing Guardian link<select name="guardianHandle" defaultValue=""><option value="">Not linked</option>{guardians.map((row) => <option key={row.handle} value={row.handle}>{row.label} · {statusLabel(row.status ?? "")}</option>)}</select></label>
-              <label>Activation<select value={activationMethod} onChange={(event) => setActivationMethod(event.target.value)}><option value="PENDING">Keep pending activation</option><option value="TEMPORARY_PASSWORD">Activate with temporary password</option></select></label>
-              {activationMethod === "TEMPORARY_PASSWORD" ? <label>Temporary password<input name="temporaryPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required /></label> : null}
+              <label>Activation state<input value="Pending — governed invitation required" readOnly /></label>
               <label className="full">Bounded reason<textarea name="reason" required minLength={8} maxLength={500} /></label>
               <label className="full">Re-enter your password<input name="reauthPassword" type="password" autoComplete="current-password" required maxLength={1024} /></label>
               <div className="dialog-actions full"><button type="button" className="secondary" onClick={() => setShowCreate(false)} disabled={busy}>Cancel</button><button type="submit" disabled={busy || selectedRoles.length === 0}>{busy ? "Creating…" : "Create named user"}</button></div>

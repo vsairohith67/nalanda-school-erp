@@ -181,6 +181,7 @@ export const NAV_ITEMS = [
   { href: "/technical-operations", label: "Technical Operations", icon: "settings", permission: "VIEW_TECHNICAL_OPERATIONS_SUMMARY", group: "system", allowedRoles: ["SUPER_ADMIN", "DIRECTOR"] as Role[] },
   { href: "/release-operations", label: "Release Operations", icon: "settings", permission: "VIEW_RELEASE_OPERATIONS_SUMMARY", group: "system", allowedRoles: ["SUPER_ADMIN", "DIRECTOR"] as Role[] },
   { href: "/users", label: "Named Users", icon: "users", permission: "VIEW_IAM_ACCESS", group: "administration" },
+  { href: "/user-access-readiness", label: "Access Readiness", icon: "roles", permission: "VIEW_IAM_ACCESS", group: "administration", feature: "REAL_USER_ACCESS_READINESS_1A" },
   { href: "/permission-profiles", label: "Permission Profiles", icon: "roles", permission: "VIEW_IAM_ACCESS", group: "administration" },
   { href: "/access-history", label: "Access History", icon: "audit", permission: "VIEW_IAM_AUDIT", group: "administration" },
   { href: "/roles", label: "Role Permissions", icon: "roles", permission: "MANAGE_ROLE_PERMISSIONS", group: "administration" },
@@ -188,7 +189,7 @@ export const NAV_ITEMS = [
   { href: "/onboarding", label: "Bulk Onboarding", icon: "importExport", permission: "DOWNLOAD_ONBOARDING_TEMPLATE", group: "system", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN", "COMPUTER_OPERATOR"] as Role[] },
   { href: "/import-verification", label: "Import Verification", icon: "importVerification", permission: "VIEW_IMPORT_VERIFICATION", group: "system" },
   { href: "/pilot-acceptance", label: "Pilot Acceptance", icon: "pilot", permission: "RUN_PILOT_ACCEPTANCE", group: "system" }
-] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role; allowedRoles?: Role[]; featureFlag?: OptionalOperationsFeatureCode; feature?: "PARENT_MEETINGS_V1_5" | "OFFLINE_SYNC_1A" | "BIOMETRIC_STAFF_ATTENDANCE_1A" }>;
+] satisfies Array<{ href: string; label: string; icon: NavigationIcon; permission: Permission; group: NavigationGroupId; requiredRole?: Role; allowedRoles?: Role[]; featureFlag?: OptionalOperationsFeatureCode; feature?: "PARENT_MEETINGS_V1_5" | "OFFLINE_SYNC_1A" | "BIOMETRIC_STAFF_ATTENDANCE_1A" | "REAL_USER_ACCESS_READINESS_1A" }>;
 
 export type NavigationItem = (typeof NAV_ITEMS)[number];
 

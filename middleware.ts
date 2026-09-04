@@ -16,6 +16,7 @@ import { nativeDirectIngressAllowed, nativeDirectRateLimitActor, trustedClientId
 
 const publicPaths = [
   "/login",
+  "/activate",
   "/forgot-password",
   "/reset-password",
   "/setup",
@@ -27,6 +28,8 @@ const publicPaths = [
   "/nalanda-logo.jpg",
   "/nalanda-logo-transparent.png",
   "/api/auth/login",
+  "/api/auth/login/mfa",
+  "/api/auth/invitations/accept",
   "/api/auth/recovery/request",
   "/api/auth/recovery/reset",
   "/api/health",
@@ -39,6 +42,7 @@ const publicPaths = [
   "/api/setup"
 ];
 const publicPathPrefixes = [
+  "/api/auth/activation/",
   "/api/public/admissions/",
   "/api/public/support/",
   "/api/event-media/public/",

@@ -29,6 +29,7 @@ import { PARENT_MEETING_BACKUP_KEYS, restoreParentMeetingBackup, type ParentMeet
 import { OFFLINE_SYNC_BACKUP_KEYS, restoreOfflineSyncBackup, type OfflineSyncBackupKey } from "@/lib/offline-sync/backup";
 import { NATIVE_APP_BACKUP_KEYS, restoreNativeAppBackup, type NativeAppBackupKey } from "@/lib/native-app/backup";
 import { BIOMETRIC_ATTENDANCE_BACKUP_KEYS, restoreBiometricAttendanceBackup, type BiometricAttendanceBackupKey } from "@/lib/biometric-attendance/backup";
+import { restoreRealUserAccessBackup } from "@/lib/real-user-access/restore";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
 
@@ -403,6 +404,12 @@ async function restoreIntoDatabase(
     const local = await client.staffMember.findFirst({ where: { OR: [{ id: backupId }, ...(staffCode ? [{ staffCode }] : [])] }, select: { id: true } });
     if (local) backupStaffLocalIds.set(backupId, local.id);
   }
+  await restoreRealUserAccessBackup(client, backup.authSecurity, {
+    users: backupUserToLocalUser,
+    students: backupStudentLocalIds,
+    guardians: backupGuardianIds,
+    staff: backupStaffLocalIds
+  }, result);
   const expenseMasterMaps = await restoreExpenseData(client, backup, backupUserToLocalUser, result);
   await restoreBudgetData(client, backup, backupUserToLocalUser, expenseMasterMaps, result);
   await restoreMiscIncomeAndCashBookData(client, backup, backupStudentLocalIds, backupUserToLocalUser, result);

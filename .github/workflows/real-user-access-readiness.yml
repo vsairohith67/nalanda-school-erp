@@ -1,0 +1,185 @@
+name: Real-User Access Readiness 1A exact-head
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/real-user-access-readiness.yml"
+      - "app/activate/**"
+      - "app/account-security/**"
+      - "app/api/auth/**"
+      - "app/api/user-access-readiness/**"
+      - "app/user-access-readiness/**"
+      - "components/**"
+      - "config/release-feature-flags.json"
+      - "lib/real-user-access/**"
+      - "lib/auth-backup.ts"
+      - "lib/backup.ts"
+      - "lib/restore*.ts"
+      - "lib/access-rules.ts"
+      - "prisma/**"
+      - "scripts/qa-real-user-access-readiness-1a-*"
+      - "tests/real-user-access-readiness-1a.test.ts"
+      - "docs/**REAL_USER_ACCESS**"
+      - "docs/**MFA**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact feature commit to validate
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: real-user-access-${{ inputs.expected_sha || github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: false
+
+env:
+  CI: "true"
+  EXPECTED_SHA: ${{ inputs.expected_sha || github.event.pull_request.head.sha || github.sha }}
+  NALANDA_ENVIRONMENT: "TEST"
+  LIVE_PROVIDERS_ENABLED: "false"
+  RELEASE_FEATURE_FLAGS_QA_MODE: "SYNTHETIC_COPY_ONLY"
+
+jobs:
+  exact-head-synthetic-security-regression:
+    name: Exact-head synthetic identity, security and full ERP regression
+    runs-on: windows-2025
+    timeout-minutes: 120
+    env:
+      DATABASE_PROVIDER: sqlite
+      DATABASE_URL: file:../tmp/release-ci/synthetic.db
+      BACKUP_DIRECTORY: tmp/release-ci/backups
+      APP_ORIGIN: http://127.0.0.1:3000
+      AUTH_BOUND_ENVIRONMENT: SYNTHETIC_QA
+      AUTH_WEBAUTHN_RP_ID: 127.0.0.1
+      AUTH_WEBAUTHN_ORIGIN: http://127.0.0.1:3000
+      SESSION_SECRET: synthetic-real-user-access-ci-session-secret-2026-09-03
+      AUTH_MFA_KEYRING_JSON: '{"active":"CI1","keys":{"CI1":"BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc="}}'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Require exact source head
+        shell: pwsh
+        run: if ((git rev-parse HEAD).Trim() -ne $env:EXPECTED_SHA) { throw "Exact-head checkout mismatch" }
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - name: Install exact lockfile and pinned regression tools
+        shell: pwsh
+        run: |
+          choco install ripgrep --version=15.2.0 -y --no-progress
+          rg --version
+          $popplerArchive = Join-Path $env:RUNNER_TEMP 'poppler-26.02.0-0.zip'
+          $popplerExtract = Join-Path $env:RUNNER_TEMP 'poppler-26.02.0-0'
+          Invoke-WebRequest -Uri 'https://github.com/oschwartz10612/poppler-windows/releases/download/v26.02.0-0/Release-26.02.0-0.zip' -OutFile $popplerArchive
+          if ((Get-FileHash -LiteralPath $popplerArchive -Algorithm SHA256).Hash.ToLowerInvariant() -ne '993e4a94376ed712fafc7058d724ea0b943d118bbd2305cd9ed55174eb85cda5') { throw "Pinned Poppler archive checksum mismatch" }
+          Expand-Archive -LiteralPath $popplerArchive -DestinationPath $popplerExtract
+          $pdfToPpm = Get-Item -LiteralPath (Join-Path $popplerExtract 'poppler-26.02.0-0\Library\bin\pdftoppm.exe') -ErrorAction Stop
+          "REPORT_CARD_PDFTOPPM_PATH=$($pdfToPpm.FullName)" | Out-File -LiteralPath $env:GITHUB_ENV -Append -Encoding utf8
+          pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate --schema prisma/schema.prisma
+      - run: pnpm exec prisma validate --schema prisma/schema.prisma
+      - name: Readiness focused tests and copied-baseline rehearsal
+        shell: pwsh
+        env:
+          REAL_USER_ACCESS_CREATE_CI_BASELINE: "1"
+          RELEASE_CI_SYNTHETIC_OPT_IN: "true"
+        run: |
+          pnpm exec vitest run tests/real-user-access-readiness-1a.test.ts tests/auth-backup.test.ts tests/auth.test.ts tests/auth-security.test.ts tests/iam1a.test.ts tests/native-auth-1a.test.ts tests/offline-sync-1a.test.ts
+          pnpm qa:real-user-access-readiness
+      - name: Public repository, dependency and secret gate
+        run: pnpm qa:real-user-access-readiness:public-repo-scan && pnpm audit --audit-level high
+      - name: Prepare isolated full-regression database
+        shell: pwsh
+        env:
+          NODE_ENV: development
+          RELEASE_CI_SYNTHETIC_OPT_IN: "true"
+        run: |
+          New-Item -ItemType Directory -Force -Path tmp\release-ci | Out-Null
+          if (Test-Path -LiteralPath tmp\release-ci\synthetic.db) { throw "Synthetic database already exists" }
+          New-Item -ItemType File -Path tmp\release-ci\synthetic.db | Out-Null
+          pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db
+      - name: Routes, lifecycle, migrations and backup restore
+        shell: pwsh
+        run: |
+          pnpm routes:list
+          pnpm lifecycle:backfill
+          pnpm migration:fresh-check
+          pnpm migration:restore-check
+          pnpm backup
+          pnpm git:safety-check
+      - name: Affected security and rollout foundations
+        run: pnpm security:resilience:acceptance && pnpm qa:synthetic-pilot && pnpm qa:onboarding-preparation && pnpm qa:product-experience
+      - name: Shared native and browser-platform contracts
+        run: pnpm test:cross-platform && pnpm app:typecheck && pnpm app:build:web && pnpm app:rust:test
+      - name: Full tests, typecheck and production build
+        run: pnpm test && pnpm typecheck && pnpm build
+      - name: Remove all synthetic authentication material
+        if: always()
+        shell: pwsh
+        run: |
+          $targets = @((Join-Path (Get-Location) 'tmp\release-ci'), (Join-Path (Get-Location) 'prisma\dev.db'))
+          foreach ($target in $targets) {
+            $resolvedParent = [IO.Path]::GetFullPath((Split-Path -Parent $target))
+            if (-not $resolvedParent.StartsWith([IO.Path]::GetFullPath((Get-Location).Path), [StringComparison]::OrdinalIgnoreCase)) { throw "Cleanup target escaped workspace" }
+            Remove-Item -LiteralPath $target -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
+  exact-head-postgresql-17:
+    name: Exact-head PostgreSQL 17 migrations, constraints and parity
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    services:
+      postgres:
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_USER: nalanda_migrator
+          POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-access
+          POSTGRES_DB: nalanda_real_user_access_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nalanda_migrator -d nalanda_real_user_access_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_PROVIDER: postgresql
+      POSTGRES_READINESS_SYNTHETIC_QA: "1"
+      POSTGRES_USER: nalanda_migrator
+      POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-access
+      POSTGRES_DB: nalanda_real_user_access_ci
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Require exact source head
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0, cache: pnpm }
+      - name: Configure disposable loopback PostgreSQL
+        shell: bash
+        run: |
+          database_url=$(printf '%s://%s:%s@127.0.0.1:5432/%s?schema=public&application_name=real-user-access-synthetic-ci' postgresql "$POSTGRES_USER" "$POSTGRES_PASSWORD" "$POSTGRES_DB")
+          echo "DATABASE_URL=$database_url" >> "$GITHUB_ENV"
+          echo "DIRECT_URL=$database_url" >> "$GITHUB_ENV"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate:postgres
+      - name: Deploy baseline plus additive migration twice
+        run: pnpm db:migrate:postgres && pnpm db:migrate:postgres && pnpm db:status:postgres
+      - name: Verify schema, indexes, constraints, triggers and provider QA
+        run: pnpm qa:postgres:parity && pnpm qa:postgres
