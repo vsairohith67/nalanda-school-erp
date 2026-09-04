@@ -283,7 +283,13 @@ describe("COMMUNICATION-DELIVERY-FOUNDATION-1A contracts", () => {
     const fixture = path.resolve("tests", "communication-public-scan-synthetic.csv");
     writeFileSync(fixture, ["-----BEGIN", "PRIVATE KEY-----"].join(" "), { flag: "wx" });
     try {
-      const run = spawnSync(process.execPath, [path.resolve("node_modules", "tsx", "dist", "cli.mjs"), "scripts/qa-communication-delivery-foundation-1a-public-repo-scan.ts"], { cwd: process.cwd(), encoding: "utf8", windowsHide: true });
+      const exactHead = spawnSync("git", ["rev-parse", "HEAD"], { cwd: process.cwd(), encoding: "utf8", windowsHide: true }).stdout.trim();
+      const run = spawnSync(process.execPath, [path.resolve("node_modules", "tsx", "dist", "cli.mjs"), "scripts/qa-communication-delivery-foundation-1a-public-repo-scan.ts"], {
+        cwd: process.cwd(),
+        encoding: "utf8",
+        windowsHide: true,
+        env: { ...process.env, COMMUNICATION_DIFF_BASE_SHA: exactHead }
+      });
       expect(run.status).not.toBe(0);
       expect(`${run.stdout}\n${run.stderr}`).toContain("communication-public-scan-synthetic.csv:unreviewed-extension");
     } finally {
