@@ -16,7 +16,7 @@ const allowedRoots = ["config/onboarding", "templates/onboarding", "docs", "lib"
 const onboardingScopedPaths = [
   "config/onboarding", "templates/onboarding", "docs/REAL_DATA_ONBOARDING_PREPARATION.md", "docs/prompts/REAL_DATA_ONBOARDING_1A_R1.md",
   "lib/onboarding-preparation.ts", "scripts/onboarding-preparation.ts",
-  "tests/real-data-onboarding-preparation-1a.test.ts", ".github/workflows/real-data-onboarding-preparation.yml"
+  "tests/real-data-onboarding-preparation-1a.test.ts"
 ];
 const withoutUuidValues = (text: string) => text.replace(/\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b/gi, "");
 
