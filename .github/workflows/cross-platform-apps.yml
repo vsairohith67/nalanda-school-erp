@@ -165,6 +165,40 @@ jobs:
         with: { node-version: 24.19.0, cache: pnpm }
       - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with: { distribution: temurin, java-version: "17" }
+      - name: Prepare hosted Android runner disk capacity
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_ACTIONS:-}" != true || "${RUNNER_ENVIRONMENT:-}" != github-hosted || "${RUNNER_OS:-}" != Linux ]]; then
+            echo "Capacity cleanup is restricted to disposable GitHub-hosted Linux runners" >&2
+            exit 78
+          fi
+          mkdir -p tmp/platform-review
+          capacity_log=tmp/platform-review/android-runner-capacity.txt
+          record_capacity() { df -Pk . "$RUNNER_TEMP"; df -Pi . "$RUNNER_TEMP"; }
+          record_capacity | tee "$capacity_log"
+          disk_before_kib="$(df -Pk . | awk 'NR == 2 { print $4 }')"
+          # Only unused .NET, Haskell and CodeQL installations; retain all Android build tools.
+          for toolchain_dir in /usr/share/dotnet /usr/local/.ghcup /opt/ghc /opt/hostedtoolcache/CodeQL; do
+            if [[ ! -e "$toolchain_dir" && ! -L "$toolchain_dir" ]]; then
+              printf 'Already absent: %s\n' "$toolchain_dir" | tee -a "$capacity_log"
+              continue
+            fi
+            if [[ ! -d "$toolchain_dir" || -L "$toolchain_dir" ]] || mountpoint -q -- "$toolchain_dir"; then
+              echo "Refusing unexpected toolchain path or mountpoint: $toolchain_dir" >&2
+              exit 78
+            fi
+            resolved_toolchain="$(realpath -e -- "$toolchain_dir")"
+            if [[ "$resolved_toolchain" != "$toolchain_dir" ]]; then
+              echo "Refusing toolchain path outside its exact allowlist entry" >&2
+              exit 78
+            fi
+            sudo du -skx -- "$toolchain_dir" | tee -a "$capacity_log"
+            sudo rm -rf --one-file-system -- "$toolchain_dir"
+          done
+          disk_after_kib="$(df -Pk . | awk 'NR == 2 { print $4 }')"
+          printf 'RECLAIMED_KIB=%s\n' "$((disk_after_kib - disk_before_kib))" | tee -a "$capacity_log"
+          record_capacity | tee -a "$capacity_log"
       - run: pnpm install --frozen-lockfile
       - run: rustup toolchain install 1.97.1 --profile minimal
       - run: rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
