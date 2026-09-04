@@ -35,7 +35,7 @@ This record is sealed only when exact feature head, independent security/browser
 | Full regression/platform/security | Passed exact-head CI | focused 48/48 tests, full typecheck, production compile/generate build, copied-DB QA, public scan, safety scan; final security scan `11f3dd21-dcc0-414d-890f-cffe1e3586d8` sealed with 65/65 reviews and zero findings |
 | Exact-head CI | Passed | feature SHA `96add64bf3b881e752f417a46e1a226cc2d253bd`; all required PR checks green |
 | Merge/tag | Passed | normal PR #21 merge `78a889ec5ddf952d507fff4fb47ac38ef207eced`; annotated `real-user-access-readiness-v44-2026-09-04` |
-| Notion/Asana/Canvs | Pending tracker readback | search existing, update once after verdict, read back; disclose unavailable connector |
+| Notion/Asana/Canvs | Passed tracker readback | existing Notion Requirements Register, Asana onboarding/access task, and canonical Canvs Deployment/Staging element updated once after verdict and read back successfully |
 
 ## Current focused copied-database result
 
