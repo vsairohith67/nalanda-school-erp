@@ -6,13 +6,13 @@ Transfer, manifest, and restore-evidence files are created exclusively with owne
 
 ## Format
 
-Nalanda reuses governed logical backup version 44. Provider readiness does not change the backup structure, so its version remains 44. Password hashes, token material, database URLs, and provider credentials are excluded.
+Nalanda uses governed logical backup version 45, including the communication durability records while retaining v44 restore compatibility. Password hashes, token material, database URLs, and provider credentials are excluded.
 
 ## Rehearsed sequence
 
 1. Create and migrate an isolated SQLite database under ignored temporary storage.
 2. Seed synthetic data only.
-3. Export backup v44 and deterministic per-collection counts/checksums.
+3. Export backup v45 and deterministic per-collection counts/checksums.
 4. Deploy the PostgreSQL baseline to an empty disposable database.
 5. Restore through existing provider-neutral restore orchestration.
 6. compare business keys, relationships, money totals, status distributions, and immutable/security state;

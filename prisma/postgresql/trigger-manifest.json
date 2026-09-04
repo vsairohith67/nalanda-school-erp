@@ -1,10 +1,10 @@
 {
   "contractVersion": 1,
   "source": "synthetic fresh SQLite migration deploy",
-  "sourceSha256": "1C5CB92057104776E156706FE1D66BB915DAB51E08026E9C13EF3CFF5717EC20",
+  "sourceSha256": "72C0C563CBFAD0B67132883E694E736981AACD4A0C1E3E45F13383FCF53164C1",
   "views": 0,
-  "triggerCount": 185,
-  "sqlSha256": "41FC6A97728FB511302C57D7B64264E7E3C493E05E47B715591454EA1243720A",
+  "triggerCount": 191,
+  "sqlSha256": "11FA935D830E694199041A4421FD4C7F546DF7F28CD6A3C82F3C8572C195479E",
   "triggers": [
     {
       "name": "academic_calendar_audit_append_only_delete",
@@ -477,6 +477,54 @@
       "columns": null,
       "statementCount": 1,
       "sqliteSqlSha256": "6AE5B5D6123536E839B1623B3F9BF796C390039CF2B501DBD56C90626986B4DA"
+    },
+    {
+      "name": "CommunicationAttempt_no_delete",
+      "table": "CommunicationAttempt",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "49D009BCFF50C26299ACA06EEFEAC6ACE13875B9B51E612C1BA315F96BDFF3F6"
+    },
+    {
+      "name": "CommunicationAttempt_no_update",
+      "table": "CommunicationAttempt",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "D76571F3784A50DBB1E3E9F6574FCA85B0A3D642C8C5151F6CEEBA137ECD8F42"
+    },
+    {
+      "name": "CommunicationAuditEvent_no_delete",
+      "table": "CommunicationAuditEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "8EE56EA50A98EF7EB3A4CD0FF95E6B421E725EEA7599224DF01CE183540E7420"
+    },
+    {
+      "name": "CommunicationAuditEvent_no_update",
+      "table": "CommunicationAuditEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "DA9FC5350EC12588BF058FF96C3C50401836587395A1A8AB37A45BB2023902F9"
+    },
+    {
+      "name": "CommunicationDeliveryReceipt_no_delete",
+      "table": "CommunicationDeliveryReceipt",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "0A133CFFBF6AFB8F93483769923FFD1CF5077D6ED7729C7CDC8B4A35E45448AC"
+    },
+    {
+      "name": "CommunicationDeliveryReceipt_no_update",
+      "table": "CommunicationDeliveryReceipt",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "4CDECE463C1376E241A26031DB46D7F29249EBAD291506F87CBAF21143BA31BB"
     },
     {
       "name": "EmployeePayrollResult_no_approved_delete",

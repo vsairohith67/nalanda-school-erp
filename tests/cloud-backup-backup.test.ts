@@ -28,9 +28,9 @@ function emptyBackup() {
 }
 
 describe("cloud backup metadata backup and restore", () => {
-  it("uses version 44, contains all eight arrays, and excludes secrets", () => {
+  it("uses version 45, contains all eight arrays, and excludes secrets", () => {
     const backup = emptyBackup();
-    expect(backup.metadata.backupVersion).toBe(44);
+    expect(backup.metadata.backupVersion).toBe(45);
     for (const key of cloudKeys) {
       expect(backup[key]).toEqual([]);
       expect(backup.metadata.counts[key]).toBe(0);
@@ -50,7 +50,7 @@ describe("cloud backup metadata backup and restore", () => {
     for (const key of cloudKeys) expect(parsed[key]).toEqual([]);
   });
 
-  it("keeps retained v43 and current v44 cloud artifacts eligible for verification and rehearsal", () => {
+  it("keeps retained v43-v44 and current v45 cloud artifacts eligible for verification and rehearsal", () => {
     const prior = emptyBackup() as Record<string, any>;
     prior.metadata.backupVersion = 43;
     for (const key of ["offlineSyncDevices", "offlineSyncMutations", "offlineSyncEvents", "offlineSyncConflictReviews"]) {
@@ -60,6 +60,7 @@ describe("cloud backup metadata backup and restore", () => {
     expect(parseAndValidateBackup(prior).metadata.backupVersion).toBe(43);
     expect(isSupportedStoredCloudBackupVersion(43)).toBe(true);
     expect(isSupportedStoredCloudBackupVersion(44)).toBe(true);
+    expect(isSupportedStoredCloudBackupVersion(45)).toBe(true);
     expect(isSupportedStoredCloudBackupVersion(42)).toBe(false);
     const verification = readFileSync("lib/cloud-backup-verification.ts", "utf8");
     const rehearsal = readFileSync("lib/cloud-backup-rehearsal.ts", "utf8");
@@ -72,7 +73,7 @@ describe("cloud backup metadata backup and restore", () => {
 
   it("rejects future versions and forbidden credential/key fields", () => {
     const future = emptyBackup() as Record<string, any>;
-    future.metadata.backupVersion = 45;
+    future.metadata.backupVersion = 46;
     expect(() => parseAndValidateBackup(future)).toThrow("unsupported");
 
     const secret = emptyBackup() as Record<string, any>;

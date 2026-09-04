@@ -11,7 +11,7 @@ On the disposable synthetic PostgreSQL database, PostgreSQL 17.11 `pg_dump -Fc` 
 Use three complementary layers:
 
 - managed automated backups and point-in-time recovery when purchased;
-- an encrypted, access-controlled application logical backup using backup v44;
+- an encrypted, access-controlled application logical backup using backup v45 with v44 restore compatibility;
 - scheduled restore rehearsal into an isolated non-production target.
 
 The backup identity is read-only and separate from runtime/migrator. Dumps must never be logged, attached to CI, or uploaded as artifacts. Encryption keys and provider credentials stay in the secret store. Define purchased-provider RPO/RTO before staging activation; software readiness does not claim that any managed backup/PITR service is active.

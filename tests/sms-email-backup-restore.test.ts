@@ -29,7 +29,7 @@ describe("Prompt 19C backup version 33 and aggregate reporting", () => {
       paymentAudits: [], users: [{ passwordHash: "must-not-export" }],
       ...rows(), smsEmailConsents: [{ ...rows().smsEmailConsents[0], collectedByUserId: "actor" }]
     });
-    expect(backup.metadata.backupVersion).toBe(44);
+    expect(backup.metadata.backupVersion).toBe(45);
     for (const key of Object.keys(rows())) expect((backup as any)[key]).toHaveLength(1);
     const json = JSON.stringify(backup);
     expect(json).not.toContain("must-not-export");

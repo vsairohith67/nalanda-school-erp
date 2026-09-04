@@ -1,5 +1,6 @@
 import type { AuthUser } from "@/lib/auth";
 import { createEmailProvider, createSmsProvider, type SmsEmailChannel } from "@/lib/sms-email-provider";
+import { communicationFeatureAvailability } from "@/lib/communication-policy";
 
 const PROFILE_CODE = /^[A-Z0-9][A-Z0-9_-]{2,39}$/;
 const CLOCK = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -127,6 +128,9 @@ export function emailDomainReadiness(profile: any, mapping?: any | null) {
 
 export async function runSmsEmailProfileHealth(client: any, id: string, network = false) {
   const profile = await requiredProfile(client, id);
+  if (profile.mode === "LIVE" && network && !communicationFeatureAvailability(profile.channel).enabled) {
+    throw new Error(`The unified communication foundation and ${profile.channel} channel are operationally disabled.`);
+  }
   const provider = profile.channel === "SMS" ? createSmsProvider(profile.mode) : createEmailProvider(profile.mode);
   const health = await provider.healthCheck({ network: profile.mode === "LIVE" && network });
   await client.smsEmailIntegrationProfile.update({
@@ -149,6 +153,7 @@ export async function activateSmsEmailProfile(client: any, id: string, actor: Au
   const health = await provider.healthCheck({ network: false });
   if (!health.ok) throw new Error(health.message);
   if (profile.mode === "LIVE") {
+    if (!communicationFeatureAvailability(profile.channel).enabled) throw new Error(`The unified communication foundation and ${profile.channel} channel are operationally disabled.`);
     if (process.env.SMS_EMAIL_SUPERVISED_LIVE_ACTIVATION_ENABLED !== "true") throw new Error("Supervised LIVE activation is disabled for Prompt 19C.");
     if (profile.channel === "SMS" && process.env.SMS_EMAIL_SMS_LIVE_ENABLED !== "true") throw new Error("SMS LIVE sending is disabled.");
     if (profile.channel === "EMAIL" && process.env.SMS_EMAIL_EMAIL_LIVE_ENABLED !== "true") throw new Error("Email LIVE sending is disabled.");

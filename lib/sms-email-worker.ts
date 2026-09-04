@@ -34,7 +34,7 @@ export async function recoverStaleSmsEmailClaims(client: any, now = new Date()) 
   return result.count;
 }
 
-export async function processSmsEmailQueue(client: any, options: { limit?: number; now?: Date } = {}) {
+export async function processSmsEmailQueue(client: any, options: { limit?: number; now?: Date; channel?: "SMS" | "EMAIL" } = {}) {
   // Process-local only: multi-instance deployment still requires a shared lease.
   if (smsEmailQueueRunActive) throw new Error("SMS_EMAIL_QUEUE_PROCESSOR_BUSY");
   smsEmailQueueRunActive = true;
@@ -47,12 +47,12 @@ export async function processSmsEmailQueue(client: any, options: { limit?: numbe
 
 let smsEmailQueueRunActive = false;
 
-async function processSmsEmailQueueUnlocked(client: any, options: { limit?: number; now?: Date } = {}) {
+async function processSmsEmailQueueUnlocked(client: any, options: { limit?: number; now?: Date; channel?: "SMS" | "EMAIL" } = {}) {
   const now = options.now ?? new Date();
   await recoverStaleSmsEmailClaims(client, now);
   await client.smsEmailDelivery.updateMany({ where: { status: "QUEUED", nextRetryAt: { gt: now } }, data: {} });
   const due = await client.smsEmailDelivery.findMany({
-    where: { status: "QUEUED", OR: [{ nextRetryAt: null }, { nextRetryAt: { lte: now } }] },
+    where: { status: "QUEUED", ...(options.channel ? { channel: options.channel } : {}), OR: [{ nextRetryAt: null }, { nextRetryAt: { lte: now } }] },
     take: Math.max(1, Math.min(options.limit ?? 25, 100)),
     orderBy: { createdAt: "asc" },
     include: { batch: { include: { integrationProfile: true, templateMapping: true, notificationCampaign: true } }, consent: true }

@@ -21,7 +21,7 @@ describe("report-card permissions and exact Teacher scope",()=>{
 });
 
 describe("backup version 26 and restore validation",()=>{
-  it("writes backup version 43 and all report-card arrays",()=>{const b=emptyBackup();expect(b.metadata.backupVersion).toBe(44);expect(b).toMatchObject({gradingSchemes:[],gradeBands:[],reportCardTemplates:[],reportCardBatches:[],studentReportCards:[],studentReportCardVersions:[],studentReportCardEvents:[]});});
+  it("writes the current backup and all report-card arrays",()=>{const b=emptyBackup();expect(b.metadata.backupVersion).toBe(45);expect(b).toMatchObject({gradingSchemes:[],gradeBands:[],reportCardTemplates:[],reportCardBatches:[],studentReportCards:[],studentReportCardVersions:[],studentReportCardEvents:[]});});
   it("continues excluding password hashes",()=>{const b=createBackupDocument({generatedAt:new Date(),generatedBy:"QA",students:[],feeStructures:[],payments:[],paymentAudits:[],users:[{id:"u",name:"User",passwordHash:"secret"}]});expect(JSON.stringify(b)).not.toContain("passwordHash");expect(JSON.stringify(b)).not.toContain("secret");});
   it("supports older backups without report-card arrays",()=>{const b:any=emptyBackup();for(const key of Object.keys(reportRows()))delete b[key];b.metadata.backupVersion=24;expect(parseAndValidateBackup(b).studentReportCards).toEqual([]);});
   it("validates exact report-card links and immutable versions",()=>expect(()=>validateReportCardBackupRows(reportRows() as any,{studentIds:new Set(["stu"]),examIds:new Set(["e1"]),progressionIds:new Set()})).not.toThrow());

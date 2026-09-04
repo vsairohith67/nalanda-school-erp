@@ -6117,6 +6117,329 @@ model SmsEmailCostRate {
   @@index([channel, status, effectiveFrom])
 }
 
+// COMMUNICATION-DELIVERY-FOUNDATION-1A: additive provider-neutral intent,
+// consent, template, delivery and in-app state. Historical Prompt 19A/19B/19C
+// tables remain authoritative for their existing records and are reconciled by
+// compatibility projections rather than rewritten.
+model CommunicationContactPoint {
+  id                           String   @id @default(cuid())
+  identityKey                  String
+  subjectType                  String
+  subjectReferenceId           String
+  channel                      String
+  contactType                  String
+  version                      Int
+  status                       String   @default("UNVERIFIED")
+  destinationDigest            String
+  destinationMasked            String
+  encryptedDestinationSnapshot String?
+  verifiedAt                   DateTime?
+  invalidatedAt                DateTime?
+  invalidationReason           String?
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+
+  @@unique([identityKey, channel, version])
+  @@index([subjectType, subjectReferenceId, channel, status])
+  @@index([destinationDigest, channel, status])
+}
+
+model CommunicationTemplateDefinition {
+  id             String                         @id @default(cuid())
+  templateKey    String                         @unique
+  purpose        String
+  module         String
+  status         String                         @default("DRAFT")
+  activeVersion  Int?
+  createdAt      DateTime                       @default(now())
+  updatedAt      DateTime                       @updatedAt
+  versions       CommunicationTemplateVersion[]
+
+  @@index([purpose, module, status])
+}
+
+model CommunicationTemplateVersion {
+  id                     String                          @id @default(cuid())
+  templateDefinitionId   String
+  templateDefinition     CommunicationTemplateDefinition @relation(fields: [templateDefinitionId], references: [id], onDelete: Restrict)
+  version                Int
+  locale                 String
+  languageReviewStatus   String                          @default("DRAFT_PENDING_LANGUAGE_REVIEW")
+  channel                 String
+  subjectTemplate        String?
+  titleTemplate          String
+  bodyTemplate           String
+  actionPathTemplate     String?
+  placeholderAllowlistJson String
+  contentClassification  String
+  status                 String                          @default("DRAFT")
+  contentHash            String
+  approvedByUserId       String?
+  approvedAt             DateTime?
+  retiredAt              DateTime?
+  createdAt              DateTime                        @default(now())
+
+  @@unique([templateDefinitionId, version, locale, channel])
+  @@index([channel, locale, status])
+  @@index([contentHash])
+}
+
+model CommunicationPreference {
+  id                String   @id @default(cuid())
+  userId            String
+  category          String
+  channel           String
+  optionalEnabled   Boolean  @default(false)
+  preferred         Boolean  @default(false)
+  locale            String   @default("en-IN")
+  quietHoursStart   String?
+  quietHoursEnd     String?
+  timezone          String   @default("Asia/Kolkata")
+  digestFrequency   String   @default("IMMEDIATE")
+  version           Int      @default(1)
+  updatedByUserId   String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, category, channel])
+  @@index([userId, channel])
+}
+
+model CommunicationConsent {
+  id                    String   @id @default(cuid())
+  identityKey           String
+  subjectType           String
+  subjectReferenceId    String
+  channel               String
+  purpose               String
+  status                String
+  source                String
+  evidenceReference     String?
+  contactVersion        Int?
+  capturedAt            DateTime?
+  expiresAt             DateTime?
+  revokedAt             DateTime?
+  disputedAt            DateTime?
+  supersedesConsentId   String?
+  activeKey             String?  @unique
+  recordedByUserId      String?
+  createdAt             DateTime @default(now())
+
+  @@index([identityKey, channel, purpose, status])
+  @@index([subjectType, subjectReferenceId, channel, status])
+  @@index([expiresAt])
+}
+
+model CommunicationProviderProfile {
+  id                         String   @id @default(cuid())
+  profileCode                String   @unique
+  channel                    String
+  adapterKind                String   @default("DISABLED")
+  environment                String   @default("SYNTHETIC")
+  status                     String   @default("DISABLED")
+  operationalEnabled         Boolean  @default(false)
+  senderLabel                String?
+  region                     String?
+  templateMappingJson        String   @default("{}")
+  ratePolicyJson             String   @default("{}")
+  costPolicyJson             String   @default("{}")
+  circuitState               String   @default("CLOSED")
+  consecutiveFailureCount    Int      @default(0)
+  circuitOpenedAt            DateTime?
+  circuitRetryAt             DateTime?
+  lastHealthAt               DateTime?
+  lastHealthStatus           String?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  @@index([channel, status, operationalEnabled])
+  @@index([adapterKind, circuitState])
+}
+
+model CommunicationIntent {
+  id                       String                    @id @default(cuid())
+  eventType                String
+  purpose                  String
+  module                   String
+  sourceRecordType         String
+  sourceRecordId           String
+  sourceEventId            String
+  recipientPolicy          String
+  recipientPolicyVersion   Int                       @default(1)
+  recipientScopeJson       String
+  eligibleChannelsJson     String
+  templateKey              String
+  templateVersion          Int
+  localePreference         String?
+  priority                 String                    @default("NORMAL")
+  notBefore                DateTime?
+  expiresAt                DateTime?
+  deduplicationKey         String                    @unique
+  idempotencyKey           String                    @unique
+  initiatingActorId        String
+  authorizingContextJson   String
+  audienceSnapshotHash     String?
+  state                    String                    @default("CREATED")
+  cancellationReason       String?
+  cancelledByUserId        String?
+  cancelledAt              DateTime?
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  items                    CommunicationOutboxItem[]
+
+  @@index([module, sourceRecordType, sourceRecordId])
+  @@index([state, notBefore])
+  @@index([purpose, priority, createdAt])
+}
+
+model CommunicationOutboxItem {
+  id                         String                         @id @default(cuid())
+  intentId                   String
+  intent                     CommunicationIntent            @relation(fields: [intentId], references: [id], onDelete: Restrict)
+  recipientUserId            String?
+  recipientSubjectType       String
+  recipientSubjectReferenceId String
+  channel                    String
+  contactPointId             String?
+  contactVersion             Int?
+  destinationDigest          String?
+  destinationMasked          String?
+  locale                     String
+  templateKey                String
+  templateVersion            Int
+  substitutionsJson          String
+  contentHash                String
+  deduplicationKey           String
+  idempotencyKey             String                         @unique
+  state                      String                         @default("QUEUED")
+  priority                   String                         @default("NORMAL")
+  providerProfileCode        String?
+  providerMessageId          String?
+  scheduledAt                DateTime?
+  expiresAt                  DateTime?
+  attemptCount               Int                            @default(0)
+  maximumAttempts            Int                            @default(4)
+  nextAttemptAt              DateTime?
+  leaseOwner                 String?
+  leaseToken                 String?
+  claimedAt                  DateTime?
+  leaseExpiresAt             DateTime?
+  acceptedAt                 DateTime?
+  sentAt                     DateTime?
+  deliveredAt                DateTime?
+  failedAt                   DateTime?
+  cancelledAt                DateTime?
+  inAppReadAt                DateTime?
+  inAppArchivedAt            DateTime?
+  lastSafeErrorCode          String?
+  lastSafeErrorMessage       String?
+  estimatedCostMinor         Int?
+  estimatedCostCurrency      String?
+  createdAt                  DateTime                       @default(now())
+  updatedAt                  DateTime                       @updatedAt
+  attempts                   CommunicationAttempt[]
+  receipts                   CommunicationDeliveryReceipt[]
+
+  @@unique([intentId, recipientSubjectType, recipientSubjectReferenceId, channel])
+  @@index([channel, state, nextAttemptAt, scheduledAt])
+  @@index([recipientUserId, channel, inAppArchivedAt, createdAt])
+  @@index([leaseExpiresAt])
+  @@index([destinationDigest, channel])
+}
+
+model CommunicationAttempt {
+  id                    String                  @id @default(cuid())
+  outboxItemId          String
+  outboxItem            CommunicationOutboxItem @relation(fields: [outboxItemId], references: [id], onDelete: Restrict)
+  attemptNumber         Int
+  adapterKind           String
+  requestHash           String
+  resultState           String
+  providerMessageId     String?
+  retryable             Boolean                 @default(false)
+  safeErrorCode         String?
+  safeErrorMessage      String?
+  retryAfterAt          DateTime?
+  startedAt             DateTime                 @default(now())
+  completedAt           DateTime?
+
+  @@unique([outboxItemId, attemptNumber])
+  @@index([resultState, retryable, startedAt])
+  @@index([providerMessageId])
+}
+
+model CommunicationDeliveryReceipt {
+  id                    String                  @id @default(cuid())
+  outboxItemId          String
+  outboxItem            CommunicationOutboxItem @relation(fields: [outboxItemId], references: [id], onDelete: Restrict)
+  providerEventKey      String                  @unique
+  providerMessageId     String?
+  state                 String
+  occurredAt            DateTime
+  evidenceHash          String
+  safeMetadataJson      String                  @default("{}")
+  createdAt             DateTime                @default(now())
+
+  @@index([outboxItemId, occurredAt])
+  @@index([providerMessageId])
+}
+
+model CommunicationWebhookEvent {
+  id                    String   @id @default(cuid())
+  providerProfileCode   String
+  providerEventKey      String   @unique
+  payloadHash           String
+  signatureVerified     Boolean
+  timestampVerified     Boolean
+  contentTypeVerified   Boolean
+  processingState       String
+  duplicateCount        Int      @default(0)
+  safeMetadataJson      String   @default("{}")
+  receivedAt            DateTime @default(now())
+  processedAt           DateTime?
+
+  @@index([providerProfileCode, receivedAt])
+  @@index([processingState, receivedAt])
+}
+
+model NativePushEndpoint {
+  id                     String   @id @default(cuid())
+  userId                 String
+  nativeDeviceReference  String
+  environment            String
+  platform               String
+  appVersion             String?
+  tokenDigest            String
+  tokenMasked            String
+  encryptedTokenSnapshot String?
+  status                 String   @default("SYNTHETIC_ONLY")
+  verifiedAt             DateTime?
+  revokedAt              DateTime?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@unique([userId, nativeDeviceReference, environment])
+  @@unique([environment, tokenDigest])
+  @@index([userId, status])
+}
+
+model CommunicationAuditEvent {
+  id               String   @id @default(cuid())
+  intentId          String?
+  outboxItemId      String?
+  eventType         String
+  previousState     String?
+  newState          String?
+  actorUserId       String?
+  safeReason        String?
+  safeMetadataJson  String   @default("{}")
+  occurredAt        DateTime @default(now())
+
+  @@index([intentId, occurredAt])
+  @@index([outboxItemId, occurredAt])
+  @@index([eventType, occurredAt])
+}
+
 // Prompt 20A: privacy-safe, leadership-only, read-only AI assistant foundation.
 // Provider credentials, endpoints, prompts, answers and retrieved bodies are intentionally absent.
 model AiAssistantProfile {

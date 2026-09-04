@@ -201,9 +201,9 @@ describe("OFFLINE-SYNC-1A contracts", () => {
     expect(layout.slice(publicShell, privateData)).not.toMatch(/getCurrentUser|getSchoolSettings|effectivePermissions|getSystemHealth|<AppShell/);
   });
 
-  it("backs up only durable public-device and safe ledger state in v44", () => {
+  it("backs up only durable public-device and safe ledger state in the current format", () => {
     const backup = createBackupDocument({ generatedAt: new Date("2026-08-25T00:00:00Z"), generatedBy: "QA", students: [], feeStructures: [], payments: [], paymentAudits: [], users: [], ...emptyOfflineSyncBackup() });
-    expect(backup.metadata.backupVersion).toBe(44); expect(backup).toMatchObject({ offlineSyncDevices: [], offlineSyncMutations: [], offlineSyncEvents: [], offlineSyncConflictReviews: [] });
+    expect(backup.metadata.backupVersion).toBe(45); expect(backup).toMatchObject({ offlineSyncDevices: [], offlineSyncMutations: [], offlineSyncEvents: [], offlineSyncConflictReviews: [] });
     expect(JSON.stringify(backup)).not.toMatch(/offlineSyncChallenges|offlineSyncNonces|wrappedKey|privateKey|offlinePin/i);
     expect(() => validateOfflineSyncBackupRows({ ...emptyOfflineSyncBackup(), offlineSyncDevices: [{ id: "d", publicDeviceId: "p", userId: "u", label: "x", platform: "x", publicSigningKey: "{}", publicKeyHash: "bad", keyVersion: 1, status: "ACTIVE", requestedAt: new Date().toISOString(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }] })).toThrow(/publicKeyHash/);
   });

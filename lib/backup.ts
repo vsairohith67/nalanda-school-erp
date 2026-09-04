@@ -31,6 +31,7 @@ import { emptyParentMeetingBackup, loadParentMeetingBackup, parentMeetingSchemaA
 import { emptyOfflineSyncBackup, loadOfflineSyncBackup, offlineSyncSchemaAvailable, OFFLINE_SYNC_BACKUP_KEYS, validateOfflineSyncBackupRows, type OfflineSyncBackup, type OfflineSyncBackupKey } from "./offline-sync/backup";
 import { emptyNativeAppBackup, loadNativeAppBackup, nativeAppSchemaAvailable, NATIVE_APP_BACKUP_KEYS, validateNativeAppBackupRows, type NativeAppBackup, type NativeAppBackupKey } from "./native-app/backup";
 import { BIOMETRIC_ATTENDANCE_BACKUP_KEYS, biometricAttendanceSchemaAvailable, emptyBiometricAttendanceBackup, loadBiometricAttendanceBackup, validateBiometricAttendanceBackupRows, type BiometricAttendanceBackup, type BiometricAttendanceBackupKey } from "./biometric-attendance/backup";
+import { COMMUNICATION_BACKUP_KEYS, communicationSchemaAvailable, emptyCommunicationBackup, loadCommunicationBackup, validateCommunicationBackupRows, type CommunicationBackup, type CommunicationBackupKey } from "./communication-backup";
 import { databaseColumnExists, databaseTableExists } from "./database-capabilities";
 import { PRODUCT_BRAND } from "../config/product-brand";
 
@@ -113,6 +114,10 @@ type BackupClient = Pick<
   | "cafeteriaCatalogItem" | "cafeteriaMenu" | "cafeteriaMenuItem" | "cafeteriaStudentEnrollment" | "cafeteriaMealRecord" | "cafeteriaAuditEvent"
   | "offlineSyncDevice" | "offlineSyncMutation" | "offlineSyncEvent" | "offlineSyncConflictReview"
   | "nativeSession" | "nativeRefreshTokenHistory"
+  | "communicationContactPoint" | "communicationTemplateDefinition" | "communicationTemplateVersion"
+  | "communicationPreference" | "communicationConsent" | "communicationProviderProfile"
+  | "communicationIntent" | "communicationOutboxItem" | "communicationAttempt"
+  | "communicationDeliveryReceipt" | "communicationWebhookEvent" | "nativePushEndpoint" | "communicationAuditEvent"
 >;
 
 type BackupDocumentInput = {
@@ -290,7 +295,7 @@ type BackupDocumentInput = {
   timetableEntries?: readonly unknown[];
   academicYear?: string;
   technicalOperations?: TechnicalOperationsBackup;
-} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup> & Partial<OfflineSyncBackup> & Partial<NativeAppBackup> & Partial<BiometricAttendanceBackup>;
+} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup> & Partial<OfflineSyncBackup> & Partial<NativeAppBackup> & Partial<BiometricAttendanceBackup> & Partial<CommunicationBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
   const onboardingBatches = sanitizeOnboardingBatches(input.onboardingBatches ?? []);
@@ -403,6 +408,8 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const nativeAppCounts = Object.fromEntries(NATIVE_APP_BACKUP_KEYS.map((key) => [key, nativeAppBackup[key].length])) as Record<NativeAppBackupKey, number>;
   const biometricAttendanceBackup = validateBiometricAttendanceBackupRows(input as unknown as Record<string, unknown>);
   const biometricAttendanceCounts = Object.fromEntries(BIOMETRIC_ATTENDANCE_BACKUP_KEYS.map((key) => [key, biometricAttendanceBackup[key].length])) as Record<BiometricAttendanceBackupKey, number>;
+  const communicationBackup = validateCommunicationBackupRows(input as unknown as Record<string, unknown>);
+  const communicationCounts = Object.fromEntries(COMMUNICATION_BACKUP_KEYS.map((key) => [key, communicationBackup[key].length])) as Record<CommunicationBackupKey, number>;
   const technicalOperations = validateTechnicalOperationsBackup(input.technicalOperations);
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
   const teacherAnalyticsSnapshots = sanitizeActorFields(input.teacherAnalyticsSnapshots ?? []);
@@ -491,7 +498,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
       generatedAt: input.generatedAt.toISOString(),
       generatedBy: input.generatedBy,
       appVersion: packageJson.version,
-      backupVersion: 44,
+      backupVersion: 45,
       counts: {
         schoolSettings: input.schoolSettings ? 1 : 0,
         authSecurityRecords: authSecurityRecordCount(authSecurity),
@@ -682,6 +689,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
         ...offlineSyncCounts,
         ...nativeAppCounts,
         ...biometricAttendanceCounts,
+        ...communicationCounts,
         timetableTeachers: timetableTeachers.length,
         timetableSubjects: timetableSubjects.length,
         timetableClassSections: timetableClassSections.length,
@@ -703,6 +711,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     ...offlineSyncBackup,
     ...nativeAppBackup,
     ...biometricAttendanceBackup,
+    ...communicationBackup,
     users: sanitizeUsers(input.users),
     authSecurity,
     iamAccess,
@@ -1368,6 +1377,9 @@ export async function generateFullBackup(
   const biometricAttendanceBackup = await biometricAttendanceSchemaAvailable(client as unknown as PrismaClient)
     ? await loadBiometricAttendanceBackup(client as unknown as PrismaClient)
     : emptyBiometricAttendanceBackup();
+  const communicationBackup = await communicationSchemaAvailable(client as unknown as PrismaClient)
+    ? await loadCommunicationBackup(client as unknown as PrismaClient)
+    : emptyCommunicationBackup();
   const technicalOperations = await technicalOperationsSchemaAvailable(client as unknown as PrismaClient)
     ? await loadTechnicalOperationsBackup(client as unknown as PrismaClient)
     : emptyTechnicalOperationsBackup();
@@ -1418,6 +1430,7 @@ export async function generateFullBackup(
     ...offlineSyncBackup,
     ...nativeAppBackup,
     ...biometricAttendanceBackup,
+    ...communicationBackup,
     technicalOperations,
     rolePermissions,
     guardians,

@@ -335,6 +335,36 @@
         "app/user-access-readiness/page.tsx",
         "app/api/user-access-readiness/dashboard/route.ts"
       ]
+    },
+    {
+      "key": "communication-delivery-foundation-1a",
+      "status": "ENFORCED",
+      "evidencePaths": ["lib/release-feature-flag-runtime.ts", "lib/communication-policy.ts", "middleware.ts", "app/communication/page.tsx", "app/api/communication/notifications/route.ts"]
+    },
+    {
+      "key": "communication-channel-in-app",
+      "status": "ENFORCED",
+      "evidencePaths": ["lib/release-feature-flag-runtime.ts", "lib/communication-policy.ts", "app/communication/page.tsx", "app/api/communication/notifications/route.ts"]
+    },
+    {
+      "key": "communication-channel-email",
+      "status": "ENFORCED",
+      "evidencePaths": ["lib/release-feature-flag-runtime.ts", "lib/communication-policy.ts", "app/api/communication/outbox/process/route.ts", "lib/sms-email-profiles.ts"]
+    },
+    {
+      "key": "communication-channel-sms",
+      "status": "ENFORCED",
+      "evidencePaths": ["lib/release-feature-flag-runtime.ts", "lib/communication-policy.ts", "app/api/communication/outbox/process/route.ts", "lib/sms-email-profiles.ts"]
+    },
+    {
+      "key": "communication-channel-whatsapp",
+      "status": "ENFORCED",
+      "evidencePaths": ["lib/release-feature-flag-runtime.ts", "lib/communication-policy.ts", "app/api/communication/outbox/process/route.ts", "lib/whatsapp-profiles.ts"]
+    },
+    {
+      "key": "communication-channel-native-push",
+      "status": "ENFORCED",
+      "evidencePaths": ["lib/release-feature-flag-runtime.ts", "lib/communication-policy.ts", "app/api/communication/outbox/process/route.ts", "docs/prompts/NATIVE_PUSH_CERTIFICATION_1B.md"]
     }
   ],
   "releaseBlockedBranches": []

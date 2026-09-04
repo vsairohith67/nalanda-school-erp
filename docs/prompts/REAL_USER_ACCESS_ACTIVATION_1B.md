@@ -2,6 +2,8 @@
 
 **DO NOT RUN. This file is a reviewable future prompt, not activation approval.**
 
+Superseded for future execution by `REAL_USER_ACCESS_ACTIVATION_1B-R1.md`, which requires invitations to consume the cleared unified communication foundation. This historical prompt remains for provenance and must not be run.
+
 ## Objective
 
 Activate the smallest explicitly approved real-user cohort through the already released Real-User Access Readiness foundation. Maintain least privilege, exact person links, multi-person approval, MFA/training gates, safe private delivery, rollback and post-activation review. Do not broaden the cohort or automatically start another wave.
@@ -60,4 +62,3 @@ For each wave: produce a named go/no-go record; securely validate the exact rost
 Capture repository/private-staging/provider evidence, exact release and database hashes, roster custody without roster content, approval references, preparation counts, invitation delivery counts (no token/contact), activation/MFA/training aggregates, permission and linked-child checks, recovery and revocation drills, security findings, rollback outcome, post-activation observations and owner decision.
 
 Terminal statuses: `REAL_USER_ACCESS_ACTIVATION_1B_WAVE_CLEARED`, `REAL_USER_ACCESS_ACTIVATION_1B_REQUIRES_FIXES`, `REAL_USER_ACCESS_ACTIVATION_1B_ROLLED_BACK`, `REAL_USER_ACCESS_ACTIVATION_1B_BLOCKED_PREFLIGHT`, or `REAL_USER_ACCESS_ACTIVATION_1B_BLOCKED_SECURITY`.
-

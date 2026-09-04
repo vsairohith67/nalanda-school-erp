@@ -36,7 +36,7 @@ Objectives are confidentiality at rest, user/device separation, authenticity and
 6. Route handler to durable nonce/device/idempotency tables.
 7. Reference snapshot claims to current server master validation.
 8. Per-item transaction to existing Payment, Expense and Miscellaneous Income services.
-9. Operational database to backup v44 and an isolated restore target.
+9. Operational database to backup v45 and an isolated restore target, retaining v44 restore compatibility.
 
 The service worker may cache only the generic shell and dedicated finance shell plus approved public/static assets. It never caches authenticated HTML, APIs, reference packs, drafts, receipts, backups or exports.
 
@@ -79,7 +79,7 @@ The service worker may cache only the generic shell and dedicated finance shell 
 
 ## Launch blockers and operational prerequisites
 
-Production activation is prohibited until: managed-device/browser policy is approved; HTTPS/HSTS and trusted ingress are live; distributed rate limiting is configured for multi-instance deployment; device approval/revocation ownership and support procedures are trained; clock-skew support is documented; PIN strength/usability is measured; telemetry alerts cover repeated proof failures, nonce replay, idempotency misuse, conflicts and revocation; backup v44 restore is rehearsed; and an explicit activation change sets a governed non-zero rollout. This release satisfies none of those operational activation decisions.
+Production activation is prohibited until: managed-device/browser policy is approved; HTTPS/HSTS and trusted ingress are live; distributed rate limiting is configured for multi-instance deployment; device approval/revocation ownership and support procedures are trained; clock-skew support is documented; PIN strength/usability is measured; telemetry alerts cover repeated proof failures, nonce replay, idempotency misuse, conflicts and revocation; backup v45 restore is rehearsed with v44 compatibility retained; and an explicit activation change sets a governed non-zero rollout. This release satisfies none of those operational activation decisions.
 
 ## Verification map
 

@@ -2,7 +2,7 @@
 
 The portable backup command uses a backup-only object-store identity restricted to `private/backups/*`. The uploaded object version is retained with the run; pruning requires that exact version, deletes that version, verifies it is gone, and only then marks the artifact `PRUNED`. Transient provider-unavailable, throttling and 5xx failures enter the existing bounded retry schedule.
 
-Nalanda backup v44 is serialized, validated, compressed, encrypted with AES-256-GCM, uploaded only as a recognized encrypted container, read back, checksum-verified, decrypted, and schema-validated. The portable destination maps safe backup identities into the private S3-compatible store. Keys are externally mounted and never stored in the artifact or database.
+Nalanda backup v45 is serialized, validated, compressed, encrypted with AES-256-GCM, uploaded only as a recognized encrypted container, read back, checksum-verified, decrypted, and schema-validated. Restore remains backward-compatible with v44. The portable destination maps safe backup identities into the private S3-compatible store. Keys are externally mounted and never stored in the artifact or database.
 
 The synthetic rehearsal restores into disposable PostgreSQL schemas, applies exact migrations first, runs the validated logical restore twice per target, compares bounded counts, repeats in a second target, and drops both schemas. Restore never targets the source database.
 

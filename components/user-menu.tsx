@@ -53,7 +53,7 @@ export function UserMenu({ user }: { user: AuthUser }) {
   }
 
   return (
-    <details className="user-menu">
+    <details className="user-menu" suppressHydrationWarning>
       <summary aria-label={`Account menu for ${user.name}, ${designation}, ${roleContext} context`}>
         <span className="user-avatar" aria-hidden>{userInitials(user.name)}</span>
         <span className="user-menu-summary-copy">

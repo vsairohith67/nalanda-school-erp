@@ -13,7 +13,7 @@ Audit base: `origin/main` at `46cf0c75c71b08ba3f1951090789041a4fd418ee` on 2026-
 | Distributed rate-limit registration | INTERFACE_ONLY | Completed with atomic multi-key Lua and fail-closed registration. |
 | Private file-backed modules | IMPLEMENTED_BUT_LOCAL_ONLY | Routed through the common S3-compatible adapter in governed deployments; filesystem behavior preserved. |
 | Report/PDF generation | IMPLEMENTED_AND_CLEARED | Remains ephemeral generation; governed durable prefixes are defined. |
-| Encrypted backup v44 and provider interface | IMPLEMENTED_AND_CLEARED | Private S3-compatible destination added; provider-specific activation remains gated. |
+| Encrypted backup v45 and provider interface | IMPLEMENTED_AND_CLEARED | Private S3-compatible destination added; v44 restore remains supported and provider-specific activation remains gated. |
 | Google Drive/object provider placeholders | EXAMPLE_ONLY / EXTERNAL_GATE | Not activated and not selected. |
 | Health and deployment checks | IMPLEMENTED_BUT_LOCAL_ONLY | Split into liveness/readiness and token-protected detail/metrics. |
 | Scheduled scripts | IMPLEMENTED_BUT_LOCAL_ONLY | Inventory and locked container command added. |

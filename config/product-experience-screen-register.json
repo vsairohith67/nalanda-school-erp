@@ -3,8 +3,8 @@
   "promptId": "PRODUCT-EXPERIENCE-1A",
   "generatedFrom": "app page source tree",
   "completeness": {
-    "pageFiles": 360,
-    "registeredScreens": 360,
+    "pageFiles": 363,
+    "registeredScreens": 363,
     "omittedScreens": 0
   },
   "sharedBaselines": {
@@ -287,6 +287,48 @@
         "error": "GLOBAL_SAFE_RECOVERY"
       },
       "helpText": "PRESENT",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "PRESENT",
+        "forms": "NOT_APPLICABLE",
+        "tables": "NOT_APPLICABLE",
+        "manualReviewRequired": false
+      },
+      "permissionRequirements": []
+    },
+    {
+      "route": "/activate",
+      "file": "app/activate/page.tsx",
+      "roles": [
+        "SUPER_ADMIN",
+        "DIRECTOR",
+        "PRINCIPAL",
+        "ADMIN",
+        "ACCOUNTANT",
+        "COMPUTER_OPERATOR",
+        "GATE_STAFF",
+        "TEACHER",
+        "PARENT",
+        "STUDENT",
+        "VIEWER"
+      ],
+      "module": "activate",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_SERVER_AUTHORISED",
+      "primaryTask": "Secure account activation",
+      "risk": "LOW",
+      "states": {
+        "empty": "SHARED_EMPTY_PATTERN_AVAILABLE",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "SHARED_CONTEXT_ONLY",
       "accessibility": {
         "status": "SHARED_WCAG_BASELINE_APPLIES",
         "heading": "PRESENT",
@@ -2626,6 +2668,132 @@
       "permissionRequirements": [
         "MANAGE_CLOUD_BACKUP_PROFILES",
         "MANAGE_CLOUD_BACKUP_SCHEDULES"
+      ]
+    },
+    {
+      "route": "/communication",
+      "file": "app/communication/page.tsx",
+      "roles": [
+        "SUPER_ADMIN",
+        "DIRECTOR",
+        "PRINCIPAL",
+        "ADMIN",
+        "ACCOUNTANT",
+        "COMPUTER_OPERATOR",
+        "GATE_STAFF",
+        "TEACHER",
+        "PARENT",
+        "STUDENT",
+        "VIEWER"
+      ],
+      "module": "communication",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_SERVER_AUTHORISED",
+      "primaryTask": "Communication Centre",
+      "risk": "LOW",
+      "states": {
+        "empty": "SHARED_EMPTY_PATTERN_AVAILABLE",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "PRESENT",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "PRESENT",
+        "forms": "NOT_APPLICABLE",
+        "tables": "NOT_APPLICABLE",
+        "manualReviewRequired": false
+      },
+      "permissionRequirements": [
+        "VIEW_OWN_NOTIFICATIONS"
+      ]
+    },
+    {
+      "route": "/communication/operations",
+      "file": "app/communication/operations/page.tsx",
+      "roles": [
+        "SUPER_ADMIN",
+        "DIRECTOR",
+        "PRINCIPAL",
+        "ADMIN",
+        "VIEWER"
+      ],
+      "module": "communication",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_SERVER_AUTHORISED",
+      "primaryTask": "Communication Delivery Operations",
+      "risk": "LOW",
+      "states": {
+        "empty": "EXPLICIT_IN_SCREEN",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "PRESENT",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "PRESENT",
+        "forms": "NOT_APPLICABLE",
+        "tables": "RESPONSIVE_LABELLED_RUNTIME_AUDIT",
+        "manualReviewRequired": false
+      },
+      "permissionRequirements": [
+        "VIEW_NOTIFICATION_REPORTS"
+      ]
+    },
+    {
+      "route": "/communication/preferences",
+      "file": "app/communication/preferences/page.tsx",
+      "roles": [
+        "SUPER_ADMIN",
+        "DIRECTOR",
+        "PRINCIPAL",
+        "ADMIN",
+        "ACCOUNTANT",
+        "COMPUTER_OPERATOR",
+        "GATE_STAFF",
+        "TEACHER",
+        "PARENT",
+        "STUDENT",
+        "VIEWER"
+      ],
+      "module": "communication",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_SERVER_AUTHORISED",
+      "primaryTask": "Communication Preferences",
+      "risk": "LOW",
+      "states": {
+        "empty": "SHARED_EMPTY_PATTERN_AVAILABLE",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "PRESENT",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "PRESENT",
+        "forms": "NOT_APPLICABLE",
+        "tables": "NOT_APPLICABLE",
+        "manualReviewRequired": false
+      },
+      "permissionRequirements": [
+        "VIEW_OWN_NOTIFICATIONS"
       ]
     },
     {
@@ -12426,6 +12594,41 @@
       "permissionRequirements": []
     },
     {
+      "route": "/user-access-readiness",
+      "file": "app/user-access-readiness/page.tsx",
+      "roles": [
+        "SUPER_ADMIN"
+      ],
+      "module": "user access readiness",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_SERVER_AUTHORISED",
+      "primaryTask": "Real-User Access Readiness",
+      "risk": "LOW",
+      "states": {
+        "empty": "SHARED_EMPTY_PATTERN_AVAILABLE",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "PRESENT",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "PRESENT",
+        "forms": "NOT_APPLICABLE",
+        "tables": "NOT_APPLICABLE",
+        "manualReviewRequired": false
+      },
+      "permissionRequirements": [
+        "MANAGE_IAM_USERS",
+        "VIEW_IAM_ACCESS"
+      ]
+    },
+    {
       "route": "/users",
       "file": "app/users/page.tsx",
       "roles": [
@@ -13286,66 +13489,6 @@
         "MANAGE_WHATSAPP_TEMPLATE_MAPPINGS",
         "VIEW_WHATSAPP_CENTRE"
       ]
-    },
-    {
-      "route": "/activate",
-      "file": "app/activate/page.tsx",
-      "roles": ["PUBLIC"],
-      "module": "real-user activation",
-      "availability": {
-        "webDesktop": true,
-        "webMobile": "RESPONSIVE_WEB",
-        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
-        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
-        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
-      },
-      "requirement": "ONLINE_INVITATION_AUTHORISED",
-      "primaryTask": "Complete invited account activation",
-      "risk": "HIGH",
-      "states": {
-        "empty": "EXPLICIT_IN_SCREEN",
-        "loading": "GLOBAL_SAFE_LOADING",
-        "error": "GLOBAL_SAFE_RECOVERY"
-      },
-      "helpText": "PRESENT",
-      "accessibility": {
-        "status": "SHARED_WCAG_BASELINE_APPLIES",
-        "heading": "PRESENT",
-        "forms": "LABEL_AND_DIRTY_STATE_RUNTIME_AUDIT",
-        "tables": "NOT_APPLICABLE",
-        "manualReviewRequired": true
-      },
-      "permissionRequirements": []
-    },
-    {
-      "route": "/user-access-readiness",
-      "file": "app/user-access-readiness/page.tsx",
-      "roles": ["SUPER_ADMIN", "DIRECTOR"],
-      "module": "real-user access readiness",
-      "availability": {
-        "webDesktop": true,
-        "webMobile": "RESPONSIVE_WEB",
-        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
-        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
-        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
-      },
-      "requirement": "ONLINE_SERVER_AUTHORISED",
-      "primaryTask": "Govern real-user access readiness",
-      "risk": "HIGH",
-      "states": {
-        "empty": "EXPLICIT_IN_SCREEN",
-        "loading": "GLOBAL_SAFE_LOADING",
-        "error": "GLOBAL_SAFE_RECOVERY"
-      },
-      "helpText": "PRESENT",
-      "accessibility": {
-        "status": "SHARED_WCAG_BASELINE_APPLIES",
-        "heading": "PRESENT",
-        "forms": "LABEL_AND_DIRTY_STATE_RUNTIME_AUDIT",
-        "tables": "RESPONSIVE_LABELLED_RUNTIME_AUDIT",
-        "manualReviewRequired": true
-      },
-      "permissionRequirements": ["VIEW_IAM_ACCESS", "MANAGE_IAM_USERS"]
     }
   ]
 }

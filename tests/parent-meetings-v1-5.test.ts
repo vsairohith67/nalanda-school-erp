@@ -72,7 +72,7 @@ describe("PARENT-MEETING-V1_5-1A governance", () => {
 
   it("backs up every durable meeting entity in v43 without auth runtime state", () => {
     const backup = createBackupDocument({ generatedAt: new Date("2026-08-22T00:00:00Z"), generatedBy: "PARENTMEETING15 QA", students: [], feeStructures: [], payments: [], paymentAudits: [], users: [], ...emptyParentMeetingBackup() });
-    expect(backup.metadata.backupVersion).toBe(44);
+    expect(backup.metadata.backupVersion).toBe(45);
     expect(backup).toMatchObject({ parentMeetings: [], parentMeetingPreferences: [], parentMeetingParticipants: [], parentMeetingNotes: [], parentMeetingFollowUps: [], parentMeetingEvents: [] });
     expect(JSON.stringify(backup)).not.toMatch(/passwordHash|sessionToken|cookie/i);
   });

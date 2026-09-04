@@ -15,7 +15,7 @@ const fixtureRoot = path.join(workspace, "tmp", "synthetic-pilot-readiness-1a");
 const sourcePath = path.join(fixtureRoot, "synthetic-pilot.db");
 const rehearsalRoot = path.join(fixtureRoot, "backup-restore-rehearsal");
 const evidencePath = path.join(fixtureRoot, "backup-restore-evidence.json");
-const logicalBackupPath = path.join(rehearsalRoot, "synthetic-pilot-v44.json");
+const logicalBackupPath = path.join(rehearsalRoot, "synthetic-pilot-v45.json");
 const assetBackupPath = path.join(rehearsalRoot, "synthetic-event-media.npsbackup");
 
 function invariant(value: unknown, code: string): asserts value {
@@ -151,12 +151,12 @@ async function main() {
     const logicalBackupMs = Math.round(performance.now() - backupStarted);
     invariant(!/passwordHash|SYNPILOT-[A-Z0-9_-]+-[a-f0-9]{20,}!/i.test(serialized), "SYNTHETIC_PILOT_BACKUP_SECRET_DETECTED");
     const backup = parseAndValidateBackup(JSON.parse(serialized));
-    invariant(backup.metadata.backupVersion === 44, "SYNTHETIC_PILOT_BACKUP_VERSION_CHANGED");
+    invariant(backup.metadata.backupVersion === 45, "SYNTHETIC_PILOT_BACKUP_VERSION_CHANGED");
     const sourceSnapshot = await snapshot(source);
     invariant(sourceSnapshot.students === 800 && sourceSnapshot.payments === 801 && sourceSnapshot.nativeSessions === 1 && sourceSnapshot.eventMediaAssets === 1, "SYNTHETIC_PILOT_SOURCE_RECONCILIATION_FAILED");
     invariant(sourceSnapshot.markEvents + sourceSnapshot.reportVersions + sourceSnapshot.reportEvents > 0, "SYNTHETIC_PILOT_IMMUTABLE_HISTORY_MISSING");
 
-    targetPath = createEmptyIsolatedDatabase("restore", "synthetic-pilot-v44");
+    targetPath = createEmptyIsolatedDatabase("restore", "synthetic-pilot-v45");
     const migrationStarted = performance.now();
     runPrisma(["migrate", "deploy", "--schema", "prisma/schema.prisma"], targetPath);
     const migrationMs = Math.round(performance.now() - migrationStarted);
@@ -186,7 +186,7 @@ async function main() {
       const evidence = {
         verdict: "SYNTHETIC_PILOT_BACKUP_RESTORE_PASSED",
         synthetic: true,
-        backupVersion: 44,
+        backupVersion: 45,
         logicalBackupSha256: sha256(serialized),
         encryptedAssetSha256: assetProof.artifactSha256,
         encryptedAssetWrongKeyRefused: wrongKeyRefused,

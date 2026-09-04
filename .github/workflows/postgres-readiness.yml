@@ -217,7 +217,7 @@ jobs:
       POSTGRES_CI_PASSWORD: postgres-ci-local-only
       POSTGRES_CI_DATABASE: nalanda_parity_ci
       SQLITE_URL: file:../tmp/postgres-ci/sqlite.db
-      POSTGRES_TRANSFER_FILE: ${{ github.workspace }}/tmp/postgres-ci/synthetic-transfer-v44.json
+      POSTGRES_TRANSFER_FILE: ${{ github.workspace }}/tmp/postgres-ci/synthetic-transfer-v45.json
       ALLOW_DEMO_USERS: "true"
       ALLOW_DEMO_BUSINESS_DATA: "true"
       DEMO_USER_DATABASE_ROOT: ${{ github.workspace }}/tmp/postgres-ci
@@ -264,5 +264,5 @@ jobs:
           docker exec "$POSTGRES_CONTAINER_ID" createdb -U nalanda_migrator nalanda_parity_restore_ci
           docker exec "$POSTGRES_CONTAINER_ID" pg_restore -U nalanda_migrator -d nalanda_parity_restore_ci --no-owner --exit-on-error /tmp/postgres-readiness-ci.dump
           restored_table_count="$(docker exec "$POSTGRES_CONTAINER_ID" psql -U nalanda_migrator -d nalanda_parity_restore_ci -At -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' AND table_name<>'_prisma_migrations';")"
-          test "$restored_table_count" = "353"
+          test "$restored_table_count" = "366"
           docker exec "$POSTGRES_CONTAINER_ID" rm -f /tmp/postgres-readiness-ci.dump

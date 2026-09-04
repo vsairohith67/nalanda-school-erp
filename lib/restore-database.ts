@@ -29,6 +29,7 @@ import { PARENT_MEETING_BACKUP_KEYS, restoreParentMeetingBackup, type ParentMeet
 import { OFFLINE_SYNC_BACKUP_KEYS, restoreOfflineSyncBackup, type OfflineSyncBackupKey } from "@/lib/offline-sync/backup";
 import { NATIVE_APP_BACKUP_KEYS, restoreNativeAppBackup, type NativeAppBackupKey } from "@/lib/native-app/backup";
 import { BIOMETRIC_ATTENDANCE_BACKUP_KEYS, restoreBiometricAttendanceBackup, type BiometricAttendanceBackupKey } from "@/lib/biometric-attendance/backup";
+import { COMMUNICATION_BACKUP_KEYS, restoreCommunicationBackup, type CommunicationBackupKey } from "@/lib/communication-backup";
 import { restoreRealUserAccessBackup } from "@/lib/real-user-access/restore";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
@@ -108,6 +109,10 @@ type RestoreDatabaseClient = Pick<
   | "transportVehicle" | "transportRoute" | "transportStop" | "transportRouteStop" | "transportStudentAssignment" | "transportAuditEvent"
   | "cafeteriaCatalogItem" | "cafeteriaMenu" | "cafeteriaMenuItem" | "cafeteriaStudentEnrollment" | "cafeteriaMealRecord" | "cafeteriaAuditEvent"
   | "offlineSyncDevice" | "nativeSession" | "nativeRefreshTokenHistory"
+  | "communicationContactPoint" | "communicationTemplateDefinition" | "communicationTemplateVersion"
+  | "communicationPreference" | "communicationConsent" | "communicationProviderProfile"
+  | "communicationIntent" | "communicationOutboxItem" | "communicationAttempt"
+  | "communicationDeliveryReceipt" | "communicationWebhookEvent" | "nativePushEndpoint" | "communicationAuditEvent"
 >;
 
 export async function restoreValidatedBackup(
@@ -139,6 +144,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(OFFLINE_SYNC_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<OfflineSyncBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(NATIVE_APP_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<NativeAppBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(BIOMETRIC_ATTENDANCE_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<BiometricAttendanceBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(COMMUNICATION_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<CommunicationBackupKey, ReturnType<typeof emptyEntityResult>>),
     technicalOperations: emptyEntityResult(),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
@@ -652,6 +658,12 @@ async function restoreIntoDatabase(
     staffMembers: backupStaffLocalIds,
     restoredBy: restoredBy.id
   }, result);
+  await restoreCommunicationBackup(client as unknown as PrismaClient, backup, result, {
+    users: backupUserToLocalUser,
+    guardians: backupGuardianIds,
+    staffMembers: backupStaffLocalIds,
+    restoredBy: restoredBy.id
+  });
   await restoreSubstituteAssignmentData(client, backup, backupUserToLocalUser, result);
 
   result.users.skipped += Math.max(0, backup.users.length - linkedParentUsers);

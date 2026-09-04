@@ -15,7 +15,7 @@ The classifications are `PROVIDER_NEUTRAL`, `SQLITE_ONLY`, `POSTGRESQL_ONLY`, `R
 - All 168 final active SQLite triggers have deterministic PostgreSQL equivalents. Historical replaced trigger declarations are not treated as active.
 - The current schema has no views, enums, or generated columns requiring semantic translation.
 - Existing `Float`, `Decimal`, `Boolean`, `DateTime`, `Json`, `Bytes`, nullability, empty-string behavior, case normalization, and business defaults are preserved. PostgreSQL readiness does not silently perform a financial-type cleanup.
-- Backup v44 remains the provider-neutral logical format; password hashes and runtime secrets remain excluded.
+- Backup v45 is the provider-neutral logical format with v44 restore compatibility; password hashes and runtime secrets remain excluded.
 
 ## Raw SQL rule
 

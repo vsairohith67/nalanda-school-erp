@@ -122,7 +122,7 @@ Assumptions: public traffic must first reach a managed edge; the origin is priva
 
 ## OFFLINE-SYNC-1A extension — 2026-08-25
 
-The earlier “Sync is not introduced” residual-risk entry is superseded for this default-off software foundation only. The new surface is restricted to encrypted Accountant drafts for fee payment, expense and miscellaneous income. The dedicated model in `docs/security/OFFLINE_SYNC_1A_THREAT_MODEL.md` is authoritative for device enrollment, PIN-derived key wrapping, IndexedDB encryption, reference minimization, signed proof/replay control, per-item idempotency, current authorization, conflict handling, PWA shell isolation, backup v44 exclusions and activation blockers.
+The earlier “Sync is not introduced” residual-risk entry is superseded for this default-off software foundation only. The new surface is restricted to encrypted Accountant drafts for fee payment, expense and miscellaneous income. The dedicated model in `docs/security/OFFLINE_SYNC_1A_THREAT_MODEL.md` is authoritative for device enrollment, PIN-derived key wrapping, IndexedDB encryption, reference minimization, signed proof/replay control, per-item idempotency, current authorization, conflict handling, PWA shell isolation, backup v45 exclusions with v44 restore compatibility, and activation blockers.
 
 New trust boundaries are browser PIN to PBKDF2/wrapped content key; non-extractable ECDSA device key to server public-key registry; signed reference snapshot to current finance masters; and per-item sync transaction to existing finance services. Private authenticated HTML/APIs remain network-only in Cache Storage. Browser draft ciphertext is not part of server backup.
 
