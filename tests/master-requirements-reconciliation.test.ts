@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import historical from "@/config/requirements-history/master-register-1.0.0.json";
 import register from "@/config/master-requirements-register.json";
 import audit from "@/config/master-requirements-audit-evidence.json";
 import debt from "@/config/product-experience-debt-register.json";
 import screens from "@/config/product-experience-screen-register.json";
-import { MASTER_BASE, publicContentErrors, repositorySourceReader, sourceHash, validateMasterRequirements } from "@/lib/master-requirements";
+import { MASTER_BASE, PRIOR_REGISTER_HASH, publicContentErrors, repositorySourceReader, sourceHash, validateMasterRequirements } from "@/lib/master-requirements";
 
 const copy = () => structuredClone(register);
 const git = (...args: string[]) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 }).trim();
@@ -76,12 +77,25 @@ describe("Living Master Requirements fail-closed contracts", () => {
     expect(publicContentErrors({ branding: "NALANDA PUBLIC SCHOOL", approvalRole: "Principal" })).toEqual([]);
     expect(publicContentErrors(debt)).toEqual([]);
   });
-  it("keeps production flags, app behavior, schemas, jobs and deployment source unchanged", () => {
+  it("preserves the historical audit and permits only the owner-started portable surfaces", () => {
+    const phaseSurfaces = new Set([
+      "Dockerfile", "deploy/portable/compose.yml", "deploy/portable/Caddyfile", "lib/portable-runtime/secrets.ts",
+      "app/technical-operations/page.tsx", "components/technical-operations-dashboard.tsx",
+      "components/technical-telemetry-panel.tsx", "lib/portable-runtime/operator.ts",
+      "lib/portable-runtime/telemetry.ts", "lib/portable-runtime/public-configuration.ts",
+      "deploy/portable/profiles/local-single-node.json", "deploy/portable/profiles/generic-vps.json",
+      "deploy/portable/profiles/managed-cloud-contract.json"
+    ]);
+    expect(sourceHash(readFileSync("config/requirements-history/master-register-1.0.0.json", "utf8"))).toBe(PRIOR_REGISTER_HASH);
+    expect(register.priorRegisterHash).toBe(PRIOR_REGISTER_HASH);
+    for (const item of historical.requirements) if (!["NPS-REQ-040", "NPS-REQ-041", "NPS-REQ-046"].includes(item.id)) expect(register.requirements.find(r => r.id === item.id)).toEqual(item);
+    expect(register.statusCounts).toEqual(historical.statusCounts);
+    expect(register.approvedAt).toBeNull();
     // Saved baseline digests also work in the inherited shallow-checkout CI jobs.
     const protectedFiles = audit.inventory.filter(f => /^(app|components|prisma|deploy|lib)\//.test(f.path) || f.path === "Dockerfile");
-    for (const file of protectedFiles) expect(sourceHash(readFileSync(file.path, "utf8")), file.path).toBe(file.sha256);
+    for (const file of protectedFiles.filter(f => !phaseSurfaces.has(f.path))) expect(sourceHash(readFileSync(file.path, "utf8")), file.path).toBe(file.sha256);
     const currentFiles = git("ls-files", "--cached", "--others", "--exclude-standard", "--", "app", "components", "prisma", "deploy", "Dockerfile", "lib").split(/\r?\n/).filter(Boolean);
-    expect(currentFiles.filter(f => !protectedFiles.some(p => p.path === f) && f !== "lib/master-requirements.ts")).toEqual([]);
+    expect(currentFiles.filter(f => !protectedFiles.some(p => p.path === f) && f !== "lib/master-requirements.ts" && !phaseSurfaces.has(f))).toEqual([]);
     const current = readFileSync("config/release-feature-flags.json", "utf8");
     expect(sourceHash(current)).toBe(audit.inventory.find(f => f.path === "config/release-feature-flags.json")!.sha256);
     for (const flag of JSON.parse(current)) { expect(flag.defaultState).toBe(false); expect(flag.rolloutPercentage).toBe(0); }
@@ -97,13 +111,14 @@ describe("Living Master Requirements fail-closed contracts", () => {
     expect(debt.screens.every(s => s.roles.length > 0 && Object.keys(s.dimensions).length === 19)).toBe(true);
     expect(debt.auditMode).toContain("NO_CURRENT_BROWSER_CERTIFICATION");
   });
-  it("generates exactly one next prompt and does not execute or activate its scope", () => {
+  it("preserves the historical generated prompt and records its later explicit source-only start", () => {
     const prompt = readFileSync(register.generatedNextPrompt.path, "utf8");
     expect(prompt).toContain("GENERATED_NOT_EXECUTED");
     expect(prompt).toContain("later explicit owner start");
     const generated = git("ls-files", "--cached", "--others", "--exclude-standard", "--", "docs/prompts").split(/\r?\n/).filter(f => f && !audit.priorPromptFiles.includes(f));
     expect(generated.filter(f => f !== register.generatedNextPrompt.path)).toEqual([]);
-    expect(register.generatedNextPrompt.state).toBe("GENERATED_NOT_EXECUTED");
+    expect(historical.generatedNextPrompt.state).toBe("GENERATED_NOT_EXECUTED");
+    expect(register.generatedNextPrompt.state).toBe("STARTED_SOURCE_ONLY");
     expect(register.operationalActivationState).toBe("NOT_AUTHORISED_ALL_EXISTING_FLAGS_UNCHANGED");
     const enabled = copy(); enabled.generatedNextPrompt.state = "EXECUTED"; expect(validateMasterRequirements(enabled).length).toBeGreaterThan(0);
   });

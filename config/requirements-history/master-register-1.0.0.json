@@ -1,13 +1,13 @@
 {
-  "registerVersion": "1.1.0",
+  "registerVersion": "1.0.0",
   "approvedAt": null,
   "approvalState": "RECONCILED_PENDING_RELEASE_GATES",
-  "expectedMainSha": "104aacc7bd314cae82e60bb02b5c8a965c7ffedd",
-  "actualMainSha": "104aacc7bd314cae82e60bb02b5c8a965c7ffedd",
-  "treeSha": "2c7f1a129e6b98abb9689abf7c989b0ed8468561",
+  "expectedMainSha": "4a4df050d194104cfc497a6de790ca9553a69db6",
+  "actualMainSha": "4a4df050d194104cfc497a6de790ca9553a69db6",
+  "treeSha": "d4075661063fc127740bb3806abe51d83b406e61",
   "normalizedSourceSpecificationHash": "618824d76329b924230fede309b30df1d7aa7a94fa52c4b4a849647432421c89",
   "sourceNormalization": "SHA256 UTF-8 JSON.stringify({requirements: ordered sourceIntent array, settledOwnerDecisions: ordered normalized strings}); owner inventory whitespace collapsed during transcription.",
-  "priorRegisterHash": "2e00c1ef24edbf16bb281620a0b341c9c4e36df2d901d828fb953e2d021a773e",
+  "priorRegisterHash": null,
   "requirementCount": 46,
   "statusCounts": {
     "COMPLETE": 9,
@@ -21,7 +21,7 @@
   "generatedNextPrompt": {
     "id": "PORTABLE-DEPLOYMENT-OBSERVABILITY-FOUNDATION-1B",
     "path": "docs/prompts/PORTABLE_DEPLOYMENT_OBSERVABILITY_FOUNDATION_1B.md",
-    "state": "STARTED_SOURCE_ONLY"
+    "state": "GENERATED_NOT_EXECUTED"
   },
   "operationalActivationState": "NOT_AUTHORISED_ALL_EXISTING_FLAGS_UNCHANGED",
   "repositoryVisibility": {
@@ -6615,12 +6615,7 @@
         "scripts/portable/runtime-command.ts",
         "app/api/ai-assistant/profiles/[id]/health/route.ts",
         "app/api/cloud-backup/health/route.ts",
-        "app/api/deployment-health/route.ts",
-        "lib/portable-runtime/operator.ts",
-        "lib/portable-runtime/telemetry.ts",
-        "lib/portable-runtime/public-configuration.ts",
-        "scripts/portable/operator-adapter.ts",
-        "components/technical-telemetry-panel.tsx"
+        "app/api/deployment-health/route.ts"
       ],
       "routes": [
         "/technical-operations"
@@ -6659,13 +6654,10 @@
         "tests/portable-runtime.test.ts",
         "tests/postgresql-schema-contract.test.ts",
         "tests/postgresql-synthetic-qa.test.ts",
-        "tests/postgresql-test-partition.test.ts",
-        "tests/portable-operator-1b.test.ts",
-        "tests/portable-observability-1b.test.ts"
+        "tests/postgresql-test-partition.test.ts"
       ],
       "qaEvidence": [
-        "docs/evidence/PORTABLE_STAGING_FOUNDATION_1A_QA_CLEARANCE.md",
-        "docs/evidence/PORTABLE_DEPLOYMENT_OBSERVABILITY_FOUNDATION_1B.md"
+        "docs/evidence/PORTABLE_STAGING_FOUNDATION_1A_QA_CLEARANCE.md"
       ],
       "pullRequests": [
         {
@@ -6720,20 +6712,19 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary.",
-        "2026-09-05: portable 1B source work is owner-started. Disposable exact-head CI exception is owner-authorized; operational activation remains prohibited. No requirement status is promoted by source-only evidence."
+        "Historical ledgers retain their original scope and status vocabulary."
       ],
       "evidence": [
         {
           "path": "Dockerfile",
           "line": 6,
-          "sha256": "9cd619a5b6ebeba3c14d989a52f756e52dcc3abee252daebfaa19acfafb3c19d",
+          "sha256": "73a5dc136224fcccc5197e8f5e7b7bde655670f28fbc2394c7fdc3bb0b5b2d4d",
           "claim": "A canonical non-root OCI image, synthetic Compose/Caddy, PostgreSQL 17, Valkey, private S3, secret injection, migration/readiness/jobs and recovery foundations are released."
         },
         {
           "path": "deploy/portable/compose.yml",
           "line": 88,
-          "sha256": "ad3cda45fc51ed8123ca9e9852b992821f7e77a3c8049fd844ea3845ff8eec0e",
+          "sha256": "6fdfa08c3932013d2a1fb99bff0acb844e92bde88b16d67f774337985a84beaf",
           "claim": "A canonical non-root OCI image, synthetic Compose/Caddy, PostgreSQL 17, Valkey, private S3, secret injection, migration/readiness/jobs and recovery foundations are released."
         },
         {
@@ -6753,36 +6744,6 @@
           "line": 58,
           "sha256": "5501ce7f229df2b6d631a5abe88e4225c6298122259cc6028ab728a00975913f",
           "claim": "A canonical non-root OCI image, synthetic Compose/Caddy, PostgreSQL 17, Valkey, private S3, secret injection, migration/readiness/jobs and recovery foundations are released."
-        },
-        {
-          "path": "lib/portable-runtime/operator.ts",
-          "line": 1,
-          "sha256": "92afd1f92e9fd75fe1f42744dbbde7ac27b16cdd278d295302f7a29239fd19de",
-          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
-        },
-        {
-          "path": "lib/portable-runtime/telemetry.ts",
-          "line": 1,
-          "sha256": "10291c91335ca73be1a94d15f5827f304326c61608334b57d3e1ed0a33ba2962",
-          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
-        },
-        {
-          "path": "lib/portable-runtime/public-configuration.ts",
-          "line": 1,
-          "sha256": "a827ebb46b82002ea61459048102bb75a3a96d6ac1dccdc9e202298e566cd0be",
-          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
-        },
-        {
-          "path": "scripts/portable/operator-adapter.ts",
-          "line": 1,
-          "sha256": "954e0d3dd31f5111e41475ab1df23c81aafb9bc419f03aeff4c1a6cd9dfdeec4",
-          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
-        },
-        {
-          "path": "components/technical-telemetry-panel.tsx",
-          "line": 1,
-          "sha256": "b99c481b4085ad80e32ce9595d3dcab9eb2f6a92d5601ecf50c5297ba2dd35d8",
-          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
         }
       ],
       "searchEvidence": {
@@ -6836,8 +6797,7 @@
         "lib/backup.ts",
         "app/api/cloud-backup/artifacts/[id]/verify/route.ts",
         "app/api/cloud-backup/health/route.ts",
-        "app/api/cloud-backup/process-due/route.ts",
-        "scripts/portable/operator-recovery.ts"
+        "app/api/cloud-backup/process-due/route.ts"
       ],
       "routes": [
         "/cloud-backup",
@@ -6905,13 +6865,10 @@
         "tests/notification-backup-restore.test.ts",
         "tests/sms-email-backup-restore.test.ts",
         "tests/timetable-backup-restore.test.ts",
-        "tests/whatsapp-backup-restore.test.ts",
-        "tests/portable-operator-1b.test.ts",
-        "tests/portable-observability-1b.test.ts"
+        "tests/whatsapp-backup-restore.test.ts"
       ],
       "qaEvidence": [
-        "docs/PORTABLE_BACKUP_AND_RESTORE.md",
-        "docs/evidence/PORTABLE_DEPLOYMENT_OBSERVABILITY_FOUNDATION_1B.md"
+        "docs/PORTABLE_BACKUP_AND_RESTORE.md"
       ],
       "pullRequests": [
         {
@@ -6966,8 +6923,7 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary.",
-        "2026-09-05: portable 1B source work is owner-started. Disposable exact-head CI exception is owner-authorized; operational activation remains prohibited. No requirement status is promoted by source-only evidence."
+        "Historical ledgers retain their original scope and status vocabulary."
       ],
       "evidence": [
         {
@@ -6999,12 +6955,6 @@
           "line": 300,
           "sha256": "80b5ab5cb92ddaef237fc7d9aa67ad08bd72279a6f34d06437c4518fcbf71c7a",
           "claim": "Encrypted versioned backup scheduling, verification, retention and restoration rehearsal exist; portable backup uses private S3-compatible storage and separate identities. Logical schema stays v45."
-        },
-        {
-          "path": "scripts/portable/operator-recovery.ts",
-          "line": 1,
-          "sha256": "f85f4048e522ea13bf9798efdcae0a55833958f9f1148dc9feb8de9b3cc71e94",
-          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
         }
       ],
       "searchEvidence": {
@@ -7721,8 +7671,7 @@
         "lib/release-operations-view.ts",
         "config/release-feature-flags.json",
         "app/api/release-operations/route.ts",
-        "app/release-operations/page.tsx",
-        "lib/master-requirements.ts"
+        "app/release-operations/page.tsx"
       ],
       "routes": [
         "/release-operations"
@@ -7743,13 +7692,10 @@
       "tests": [
         "tests/final-corrected-scope-acceptance.test.ts",
         "tests/release-operations-ui.test.ts",
-        "tests/release-operations.test.ts",
-        "tests/portable-operator-1b.test.ts",
-        "tests/portable-observability-1b.test.ts"
+        "tests/release-operations.test.ts"
       ],
       "qaEvidence": [
-        "docs/REQUIREMENTS_REGISTER.md",
-        "docs/evidence/PORTABLE_DEPLOYMENT_OBSERVABILITY_FOUNDATION_1B.md"
+        "docs/REQUIREMENTS_REGISTER.md"
       ],
       "pullRequests": [],
       "tags": [
@@ -7794,8 +7740,7 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary.",
-        "2026-09-05: portable 1B source work is owner-started. Disposable exact-head CI exception is owner-authorized; operational activation remains prohibited. No requirement status is promoted by source-only evidence."
+        "Historical ledgers retain their original scope and status vocabulary."
       ],
       "evidence": [
         {
@@ -7815,12 +7760,6 @@
           "line": 6,
           "sha256": "0dd27692665991b1476b9bd12eda12ffa088e1c9363243081928ccb5158872df",
           "claim": "Requirements/prompt ledgers, release manifests, feature gates, migration, security/QA and retained merge/tag history exist. The old ledger has different scope/counts."
-        },
-        {
-          "path": "lib/master-requirements.ts",
-          "line": 1,
-          "sha256": "95f9cf81b8bf6cb7b80564e2ca6bc737d53de444da6752f28ea56ff8d22f05e6",
-          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
         }
       ],
       "searchEvidence": {
