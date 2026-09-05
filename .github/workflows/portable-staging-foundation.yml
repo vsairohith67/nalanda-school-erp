@@ -146,7 +146,7 @@ jobs:
           NODE
       - name: Build-context secret/data assertion
         run: |
-          test -z "$(docker --context default run --rm --name "nalanda-${GITHUB_RUN_ID}-${TARGET_ARCHITECTURE}-context" --label "nalanda.ci.run=${GITHUB_RUN_ID}" --memory 256m --cpus 1 --pids-limit 64 --cap-drop ALL --security-opt no-new-privileges:true --read-only --network none --entrypoint /nodejs/bin/node nalanda-portable-staging:ci -e 'const fs=require(\"fs\"); console.log(fs.existsSync(\"/app/prisma/dev.db\")||fs.existsSync(\"/app/.git\")?\"bad\":\"\")')"
+          docker --context default run --rm --name "nalanda-${GITHUB_RUN_ID}-${TARGET_ARCHITECTURE}-context" --label "nalanda.ci.run=${GITHUB_RUN_ID}" --memory 256m --cpus 1 --pids-limit 64 --cap-drop ALL --security-opt no-new-privileges:true --read-only --network none --entrypoint /nodejs/bin/node nalanda-portable-staging:ci -e 'const fs=require("fs"); if (fs.existsSync("/app/prisma/dev.db") || fs.existsSync("/app/.git")) process.exit(1);'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -166,13 +166,26 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
+          printf '%s\n' '{"state":"FAILED_OR_UNKNOWN","classification":"INTEGRATION_TEST_ENVIRONMENT"}' > oci-cleanup.json
           for suffix in native context; do
             probe="nalanda-${GITHUB_RUN_ID}-${TARGET_ARCHITECTURE}-${suffix}"
-            if test -n "$(docker --context default container ls --all -q --filter "name=^/${probe}$")"; then docker --context default container rm -f "$probe"; fi
-            test -z "$(docker --context default container ls --all -q --filter "name=^/${probe}$")"
+            remaining=$(docker --context default container ls --all -q --filter "name=^/${probe}$")
+            if test -n "$remaining"; then docker --context default container rm -f "$probe"; fi
+            remaining=$(docker --context default container ls --all -q --filter "name=^/${probe}$")
+            test -z "$remaining"
           done
-          if test -n "$(docker --context default image ls -q nalanda-portable-staging:ci)"; then docker --context default image rm nalanda-portable-staging:ci; fi
-          test -z "$(docker --context default image ls -q nalanda-portable-staging:ci)"
+          remaining=$(docker --context default image ls -q nalanda-portable-staging:ci)
+          if test -n "$remaining"; then docker --context default image rm nalanda-portable-staging:ci; fi
+          remaining=$(docker --context default image ls -q nalanda-portable-staging:ci)
+          test -z "$remaining"
+          printf '%s\n' '{"state":"COMPLETE","containersRemaining":0,"imageTagsRemaining":0,"classification":"INTEGRATION_TEST_ENVIRONMENT"}' > oci-cleanup.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: portable-oci-cleanup-${{ env.EXPECTED_SHA }}-${{ matrix.architecture }}
+          path: oci-cleanup.json
+          if-no-files-found: error
+          retention-days: 14
 
   oci-release-index:
     needs: oci-image

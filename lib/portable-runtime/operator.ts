@@ -73,6 +73,8 @@ export async function runPortableOperator(command: OperatorCommand, raw: unknown
   let receipt: OperatorReceipt = { schemaVersion: 1, command, planHash: plan.planHash, state: "IN_PROGRESS", completed: [], uncertain: null, safeCode: "STARTED" };
   let admittedReceipt = false;
   try {
+    // Admission can change while waiting for the mutation lock.
+    await adapter.inspectTarget(plan.manifest, command);
     const old = await adapter.readReceipt();
     if (old) {
       if (!options.resume || old.planHash !== plan.planHash || old.command !== command || old.schemaVersion !== 1) throw new Error("RESUME_PLAN_MISMATCH");

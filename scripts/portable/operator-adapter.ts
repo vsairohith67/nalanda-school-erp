@@ -74,6 +74,7 @@ export class CiOperatorAdapter implements OperatorAdapter {
   private lock: Awaited<ReturnType<typeof open>> | null = null;
   private receiptFile: string;
   private configFile: string;
+  private freshReservation = false;
   private async atomicJson(file: string, value: unknown) {
     const temp = `${file}.${randomUUID()}.pending`;
     const handle = await open(temp, "wx", 0o600);
@@ -134,7 +135,7 @@ export class CiOperatorAdapter implements OperatorAdapter {
         if (name.startsWith(`${m.operationId}.`)) throw new Error("OPERATION_ID_ALREADY_USED");
       }
       const ownReceipt = entries.includes(path.basename(this.receiptFile));
-      if (["install", "initialise"].includes(command) && !ownReceipt && !(this.resume && marker.operationId === m.operationId && marker.initialised === false && (await readdir(m.target)).every(name => name === "owner.json"))) throw new Error("INSTALL_TARGET_NOT_EMPTY");
+      if (["install", "initialise"].includes(command) && !ownReceipt && !((this.resume || this.freshReservation) && marker.operationId === m.operationId && marker.initialised === false && (await readdir(m.target)).every(name => name === "owner.json"))) throw new Error("INSTALL_TARGET_NOT_EMPTY");
       if (!ownReceipt && !["install", "initialise", "restore"].includes(command)) {
         const expectedImage = command === "upgrade" ? m.previous?.image : m.image;
         if (!marker.initialised || marker.image !== expectedImage || marker.migration !== m.migration) throw new Error("INSTALLED_RELEASE_MISMATCH");
@@ -163,7 +164,7 @@ export class CiOperatorAdapter implements OperatorAdapter {
     try {
       await this.lock.writeFile(JSON.stringify({ project: this.manifest.project, operationId: this.manifest.operationId, pid: process.pid })); await this.lock.sync();
       await mkdir(this.manifest.target, { recursive: true, mode: 0o700 });
-      try { const owner = await open(path.join(this.manifest.target, "owner.json"), "wx", 0o600); try { await owner.writeFile(JSON.stringify({ project: this.manifest.project, classification: "INTEGRATION_TEST_ENVIRONMENT", operationId: this.manifest.operationId, initialised: false, image: this.manifest.image, migration: this.manifest.migration })); await owner.sync(); } finally { await owner.close(); } }
+      try { const owner = await open(path.join(this.manifest.target, "owner.json"), "wx", 0o600); try { await owner.writeFile(JSON.stringify({ project: this.manifest.project, classification: "INTEGRATION_TEST_ENVIRONMENT", operationId: this.manifest.operationId, initialised: false, image: this.manifest.image, migration: this.manifest.migration })); await owner.sync(); this.freshReservation = true; } finally { await owner.close(); } }
       catch (e) { if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e; }
     } catch (e) { await this.release(); throw e; }
   }

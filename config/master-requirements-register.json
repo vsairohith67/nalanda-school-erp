@@ -6757,7 +6757,7 @@
         {
           "path": "lib/portable-runtime/operator.ts",
           "line": 1,
-          "sha256": "92afd1f92e9fd75fe1f42744dbbde7ac27b16cdd278d295302f7a29239fd19de",
+          "sha256": "a214fa227684ce27f24a6fae42dcb3bd2d6b12f832cfaf9f54af8276fbe942dd",
           "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
         },
         {
@@ -6775,7 +6775,7 @@
         {
           "path": "scripts/portable/operator-adapter.ts",
           "line": 1,
-          "sha256": "954e0d3dd31f5111e41475ab1df23c81aafb9bc419f03aeff4c1a6cd9dfdeec4",
+          "sha256": "6e6826b8efff336261de58a7a57793db1dcfbbb437560c88045b87e73efa75ba",
           "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
         },
         {

@@ -27,8 +27,8 @@ previous.migration and previous.backupVersion. Only matching schema contracts ca
 Preflight validates runner/target provenance, image identity and native architecture,
 non-root runtime, source/image migration contracts, CPU/memory/free disk and source Compose
 hash. Apply validates owned targets, internal networks, loopback ports, file permissions,
-mount provenance and named resource ownership. Secrets must already be generated inside
-the disposable target by the approved CI fixture. Install never bootstraps demo accounts.
+mount provenance and named resource ownership. Secrets must already be generated under the disposable CI staging root
+(WORKSPACE/tmp/portable-staging), separate from operator state, by the approved fixture. Install never bootstraps demo accounts.
 Fixture identities and backup profiles are created only by the separately explicit synthetic
 CI fixture stage. There is no production credential, account or provider provisioning.
 
@@ -47,7 +47,7 @@ any build-time HSTS choice); changing these requires a new build. NEXT_PUBLIC va
 compiled into browser bundles. They are not provider settings that change on container startup.
 Server runtime secrets use the existing validated *_FILE contract and remain server-only.
 The force-dynamic Technical Operations page projects only the strict public runtime allowlist:
-schema version, profile, telemetry health, externalTransmission=false and certification state.
+schema version, profile, telemetry health, externalTelemetry=false and certification state.
 Unknown optional configuration degrades diagnostics without hiding school health.
 No DSN/key/endpoint/identity field can enter this projection.
 
@@ -65,3 +65,8 @@ SYNTHETIC_FULL_STACK_CI_EXCEPTION = OWNER_AUTHORIZED
 
 Scope: EPHEMERAL_EXACT_HEAD_CI_ONLY. This is INTEGRATION_TEST_ENVIRONMENT,
 not operational deployment, private staging, provider certification or activation.
+
+The full-stack script exercises recovery helpers directly. Complete operator lifecycle and
+partial-failure/resume behavior are verified through isolated filesystem/process adapters;
+that distinction is retained in release evidence. Telemetry remains a library foundation
+and is not automatically wired into live school transactions.

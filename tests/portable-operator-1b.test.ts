@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, readFile, writeFile, readdir, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, writeFile, readdir, rm, realpath } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 import path from "node:path";
@@ -36,6 +36,16 @@ describe("portable executable orchestration", () => {
       });
     }
   }
+  it("rechecks target admission under lock and preserves competing failure evidence", async () => {
+    class ContendedAdapter extends SyntheticAdapter {
+      inspections = 0;
+      async inspectTarget() { this.inspections++; if (this.locked) throw new Error("OTHER_OPERATION_REQUIRES_RECONCILIATION"); }
+    }
+    const adapter = new ContendedAdapter();
+    await expect(runPortableOperator("install", manifest, adapter, { apply: true })).rejects.toThrow("OPERATOR_STEP_FAILED");
+    expect(adapter.inspections).toBe(2); expect(adapter.receipt).toBeNull();
+    expect(adapter.effects).toEqual([]); expect(adapter.locked).toBe(false);
+  });
   it("blocks changed plans, schema downgrade and unclassified effects", async () => {
     expect(() => operatorPlan("rollback", { ...manifest, previous: { ...manifest.previous, migration: "older" } })).toThrow("ROLLBACK_SCHEMA_INCOMPATIBLE");
     const adapter = new SyntheticAdapter(); adapter.fail = "migrate";
@@ -58,7 +68,7 @@ describe("durable filesystem and synthetic process adapter", () => {
       image: "nalanda-portable-staging:test", environment: { NALANDA_SYNTHETIC_STAGING: "true", PORTABLE_EXPECTED_POSTGRES_MIGRATION: manifest.migration }, depends_on: { seed: { condition: "service_completed_successfully" } }
     }])) });
   it("installs, backs up, resumes terminal receipt, diagnoses and uninstalls without removing data", async () => {
-    const workspace = await mkdtemp(path.join(tmpdir(), "nalanda-operator-test-"));
+    const workspace = await realpath(await mkdtemp(path.join(tmpdir(), "nalanda-operator-test-")));
     const target = path.join(workspace, "tmp", "portable-operator", manifest.project);
     const m = { ...manifest, target }; const calls: string[][] = [];
     const processAdapter = async (args: string[]) => {
@@ -101,10 +111,10 @@ describe("durable filesystem and synthetic process adapter", () => {
       expect(await readFile(path.join(target, `${m.operationId}.install.receipt.json`), "utf8")).toBe(terminal);
       expect(calls.flat()).not.toContain("down"); expect(calls.flat()).not.toContain("--volumes");
       expect((await readdir(path.dirname(target))).some(name => name.endsWith(".lock"))).toBe(false);
-    } finally { if (!workspace.startsWith(path.join(tmpdir(), "nalanda-operator-test-"))) throw new Error("TEST_CLEANUP_BOUNDARY"); await rm(workspace, { recursive: true }); }
+    } finally { if (!workspace.startsWith(path.join(await realpath(tmpdir()), "nalanda-operator-test-"))) throw new Error("TEST_CLEANUP_BOUNDARY"); await rm(workspace, { recursive: true }); }
   });
   it.each(["migrate", "start", "readiness"] as const)("recovers real durable receipts after completed %s and receipt-write failure", async failedStep => {
-    const workspace = await mkdtemp(path.join(tmpdir(), "nalanda-operator-test-"));
+    const workspace = await realpath(await mkdtemp(path.join(tmpdir(), "nalanda-operator-test-")));
     const m = { ...manifest, target: path.join(workspace, "tmp", "portable-operator", manifest.project) };
     const calls: string[][] = [];
     const processAdapter = async (args: string[]) => { calls.push(args); return args.includes("config") ? JSON.stringify(config()) : ""; };
@@ -135,7 +145,7 @@ describe("durable filesystem and synthetic process adapter", () => {
       await expect(make().execute("migrate", m)).rejects.toThrow("RESOLVED_CONFIG_PROVENANCE_MISMATCH");
       expect(calls.filter(a => a.includes("run") && a.at(-1) === "migrator")).toHaveLength(1);
 
-    } finally { if (!workspace.startsWith(path.join(tmpdir(), "nalanda-operator-test-"))) throw new Error("TEST_CLEANUP_BOUNDARY"); await rm(workspace, { recursive: true }); }
+    } finally { if (!workspace.startsWith(path.join(await realpath(tmpdir()), "nalanda-operator-test-"))) throw new Error("TEST_CLEANUP_BOUNDARY"); await rm(workspace, { recursive: true }); }
   });
   it("preserves a rejected resume receipt byte-for-byte", async () => {
     const a = new SyntheticAdapter(); a.fail = "migrate";
