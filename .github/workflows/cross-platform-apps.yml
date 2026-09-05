@@ -219,6 +219,15 @@ jobs:
           test -x "$ADB"
           echo no | "$AVDMANAGER" create avd --force --name px1a_phone --package "system-images;android-35;google_apis;x86_64" --device "pixel_6"
           test -f "$ANDROID_AVD_HOME/px1a_phone.ini"
+          AVD_CONFIG="$ANDROID_AVD_HOME/px1a_phone.avd/config.ini"
+          test -f "$AVD_CONFIG"
+          if grep -q '^disk.dataPartition.size=' "$AVD_CONFIG"; then
+            sed -i 's/^disk\.dataPartition\.size=.*/disk.dataPartition.size=2G/' "$AVD_CONFIG"
+          else
+            printf '%s\n' 'disk.dataPartition.size=2G' >> "$AVD_CONFIG"
+          fi
+          grep -Fx 'disk.dataPartition.size=2G' "$AVD_CONFIG" | tee -a tmp/platform-review/android-runner-capacity.txt
+          df -Pk . "$RUNNER_TEMP" | tee -a tmp/platform-review/android-runner-capacity.txt
           "$ANDROID_HOME/emulator/emulator" -list-avds | grep -Fx px1a_phone
           if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
           EMULATOR_LOG="$RUNNER_TEMP/px1a-emulator.log"
