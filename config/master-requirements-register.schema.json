@@ -165,7 +165,7 @@
           "const": "PUBLIC"
         },
         "observed": {
-          "const": "PRIVATE"
+          "const": "PUBLIC"
         },
         "checkedAt": {
           "type": "string",

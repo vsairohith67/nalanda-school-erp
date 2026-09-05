@@ -8,7 +8,7 @@ Source checkpoint: reconciliation and independent corrections are complete. Rele
 - Communication feature: `e2fc3783d111a8b1a719c23dc1c32c5eeddcb209`; PR #22 normal merge equals starting main. Annotated tag `communication-delivery-foundation-v45-2026-09-04`, tag object `63f6fbcaabf87c5dea7d48d0f186b39792353986`, peels to starting main.
 - OCR PR #19: OPEN, unmerged, head `1ba360b123ded770f1554d59fbd21c86b9943427`; unchanged and excluded.
 - Retained branch: `feature/master-requirements-reconciliation-1a`, created only after fresh fetch/base confirmation in a dedicated sibling worktree.
-- Repository observed PRIVATE, versus supplied PUBLIC. No visibility change performed here; public-source restrictions still applied.
+- Repository independently observed PUBLIC at `2026-09-05T08:57:39.589Z`, matching the supplied PUBLIC state. No visibility change performed here; public-source restrictions apply, and private-repository prerequisites for real data, users and staging remain closed.
 - Main checkout and relevant feature checkouts clean. One unrelated historical QA checkout has a CSS edit; isolated and untouched. No stashes were present. Existing branches/tags and merge graph preserved.
 
 ## Method and scope
@@ -17,7 +17,7 @@ Curated requirement-by-requirement service and neighboring-feature review, both 
 
 The retained-history search used `git log --all --name-only -G` for graduation, household income, Director sponsorship, recruitment/probation, social-media survey, marketing lead, DisciplineIncident and section combination across lib/app API/Prisma. It found no matching source changes. Every MISSING row also has inspected neighboring services and retained history commits; the verdict is not derived from route names. The canonical requirement retains original intent and exact missing acceptance. Historical V1 closure vocabulary/counts describe an older scope and do not prove these 46 requirements complete.
 
-Notion Requirements Register/Prompt Ledger and canonical Canvs element were read as supporting release evidence. Their latest communication marker confirms the supplied released foundation while their PUBLIC wording is stale against live GitHub visibility. Asana quick search and a complete 54-task project listing found no exact Living Master Requirements task; an initial network error was resolved. Advanced search requires a paid plan, so the ordinary listing was used. No task write has occurred. Tracker updates are permitted only after verified normal merge/tag and must be read back.
+Notion Requirements Register/Prompt Ledger and canonical Canvs element were read as supporting release evidence. Their latest communication marker confirms the supplied released foundation; live GitHub visibility now matches their PUBLIC wording. Asana quick search and a complete 54-task project listing found no exact Living Master Requirements task; an initial network error was resolved. Advanced search requires a paid plan, so the ordinary listing was used. No task write has occurred. Tracker updates are permitted only after verified normal merge/tag and must be read back.
 
 ## Results
 
@@ -86,7 +86,7 @@ One canonical OCI image, one environment/secrets contract, small local-single-no
 
 UI/UX is a continuous owning-bundle obligation, recorded for 363 routes and nineteen dimensions with inherited role evidence. This phase does not invent fresh Browser/visual certification. No product-wide redesign or Critical UI fix is included. NALANDA PUBLIC SCHOOL remains Georgia Bold in generated documents/images.
 
-External gates include role/policy, privacy/retention, document authority, licensed payments, communication provider/sender/consent, hardware, HR/child-safety/legal review, UDISE portal evidence, lawful Aadhaar verification and actual host/backups. Private repository visibility alone opens none of these gates. Sensitive AI is advisory only; final decisions require authorised humans.
+External gates include role/policy, privacy/retention, document authority, licensed payments, communication provider/sender/consent, hardware, HR/child-safety/legal review, UDISE portal evidence, lawful Aadhaar verification and actual host/backups. Current public visibility keeps every private-repository prerequisite closed; a future verified private state alone would open none of the other gates. Sensitive AI is advisory only; final decisions require authorised humans.
 
 OCR/Hugging Face: retain the cleared printed PaddleOCR candidate direction; handwriting stays manual review. A separate HANDWRITING-OCR-BENCHMARK-1A requires worker security, licence, language accuracy, hallucination, performance and human-review evidence. No model weights downloaded, models executed or PR #19 changed; no community model-card claim was treated as independent proof.
 

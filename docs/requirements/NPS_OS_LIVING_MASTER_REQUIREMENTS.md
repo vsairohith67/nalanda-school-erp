@@ -2,7 +2,7 @@
 
 Version 1.0.0; owner inventory: exactly 46 requirements. `approvedAt: null` records that no separate human approval timestamp was supplied. `RECONCILED_PENDING_RELEASE_GATES` describes this immutable source checkpoint. Terminal clearance under the owner's conditional authorization belongs to the verified annotated release tag, final receipt and tracker readbacks; it is neither a new human approval nor operational authorization. This is a reconciliation of released source at 4a4df050d194104cfc497a6de790ca9553a69db6. The canonical machine record is [the register](../../config/master-requirements-register.json). Its audit inventory records both Prisma schemas, every migration/trigger, application/API files, services, tests and retained refs.
 
-Software completion means the stated implementation and recovery exist. Real use requires the named privacy, policy, provider, hardware and owner gates. The repository is currently PRIVATE (the supplied PUBLIC fact has changed); all source-content restrictions remain. Historical requirement ledgers are evidence with older scopes and are not additional canonical copies of these 46 requirements.
+Software completion means the stated implementation and recovery exist. Real use requires the named privacy, policy, provider, hardware and owner gates. The repository was independently observed PUBLIC on 2026-09-05, matching the supplied fact; all source-content restrictions remain, and private-repository prerequisites for real data, users and staging remain closed. Historical requirement ledgers are evidence with older scopes and are not additional canonical copies of these 46 requirements.
 
 ## Owner decisions
 

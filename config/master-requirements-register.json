@@ -26,9 +26,9 @@
   "operationalActivationState": "NOT_AUTHORISED_ALL_EXISTING_FLAGS_UNCHANGED",
   "repositoryVisibility": {
     "supplied": "PUBLIC",
-    "observed": "PRIVATE",
-    "checkedAt": "2026-09-05",
-    "effect": "Source-only public-content restrictions still apply; no activation authority."
+    "observed": "PUBLIC",
+    "checkedAt": "2026-09-05T08:57:39.589Z",
+    "effect": "Source-only public-content restrictions apply; private-repository prerequisites for real data, users and staging remain closed, with no activation authority."
   },
   "settledOwnerDecisions": [
     "Belts and ties are never anonymous sales. A designated Student-linked item requires an exact Student and may have any valid positive quantity.",
