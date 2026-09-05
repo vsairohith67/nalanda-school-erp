@@ -8,6 +8,7 @@ await mkdir(output, { recursive: true });
 await build({
   entryPoints: {
     "runtime-command": "scripts/portable/runtime-command.ts",
+    "operator-recovery": "scripts/portable/operator-recovery.ts",
     "seed-synthetic": "scripts/portable/seed-synthetic.ts",
     "object-store-init": "scripts/portable/object-store-init.ts",
     "scheduled-job": "scripts/portable/scheduled-job.ts",

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "state": "CAPABILITY_CONTRACT_ONLY",
+  "capabilities": ["linux-oci-amd64-or-arm64", "postgresql-17-with-separate-migrator-runtime-backup-identities", "tls-authenticated-atomic-coordination", "private-s3-compatible-objects-with-separate-backup-identity", "external-secret-files", "trusted-reverse-proxy", "persistent-encrypted-storage", "scheduled-jobs", "off-host-encrypted-backup", "empty-target-restore", "explicit-egress-policy"],
+  "providerSelected": false,
+  "provisioning": false,
+  "localResilient": "SEPARATE_FAILURE_DOMAIN_AND_RECOVERY_APPROVAL_REQUIRED",
+  "kubernetes": "DEFERRED"
+}

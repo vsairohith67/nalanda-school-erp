@@ -84,6 +84,7 @@ export function readPortableSecret(
   const absolute = assertWithinAllowedRoot(fileReference, environment);
   const { fs } = nodeBuiltins();
   const stat = fs.lstatSync(absolute);
+  if (process.platform !== "win32" && (stat.mode & 0o022) !== 0) throw new PortableSecretError("SECRET_FILE_WRITABLE_BY_OTHERS");
   if (!stat.isFile() || stat.isSymbolicLink() || stat.size < 1 || stat.size > MAX_SECRET_BYTES) {
     throw new PortableSecretError("SECRET_FILE_UNSAFE");
   }

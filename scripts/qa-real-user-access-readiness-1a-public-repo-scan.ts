@@ -16,7 +16,7 @@ const required = [
 const prohibitedExtensions = new Set([".db", ".sqlite", ".sqlite3", ".bak", ".dump", ".zip", ".7z", ".rar", ".pem", ".key", ".pfx", ".p12", ".exe", ".msi", ".msix", ".apk", ".ipa", ".png", ".jpg", ".jpeg", ".gif", ".svg"]);
 const textExtensions = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs", ".json", ".md", ".sql", ".yml", ".yaml", ".toml", ".txt"]);
 const allowedRoots = ["app", "components", "config", "deploy/portable", "docs", "lib", "prisma", "scripts", "tests", "tools/release-evidence", ".github/workflows"];
-const allowedRootFiles = new Set(["middleware.ts", "package.json", "pnpm-lock.yaml"]);
+const allowedRootFiles = new Set(["middleware.ts", "package.json", "pnpm-lock.yaml", "Dockerfile", "deploy/portable/Caddyfile"]);
 const secretPatterns: Array<[string, RegExp]> = [
   ["private-key", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
   ["github-token", /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b/],

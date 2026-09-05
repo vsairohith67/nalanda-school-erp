@@ -20,6 +20,7 @@ concurrency:
 env:
   CI: "true"
   NEXT_TELEMETRY_DISABLED: "1"
+  PORTABLE_CI_EXCEPTION: OWNER_AUTHORIZED
   EXPECTED_SHA: ${{ inputs.expected_sha || github.event.pull_request.head.sha }}
 
 jobs:
@@ -61,31 +62,59 @@ jobs:
         run: rm -rf tmp/portable-staging data/cloud-backup-rehearsal
 
   oci-image:
+    needs: server-and-database
     name: 2 - OCI image and supply chain
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - { architecture: amd64, runner: ubuntu-24.04 }
+          - { architecture: arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    env:
+      TARGET_ARCHITECTURE: ${{ matrix.architecture }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false }
       - run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
       - name: Build exact image
-        run: docker build --pull=false --build-arg SOURCE_COMMIT="$EXPECTED_SHA" --build-arg SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" -t nalanda-portable-staging:ci .
+        run: docker --context default build --platform "linux/$TARGET_ARCHITECTURE" --pull=false --build-arg SOURCE_COMMIT="$EXPECTED_SHA" --build-arg SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" -t nalanda-portable-staging:ci .
       - name: Verify configuration and labels
         run: |
-          test "$(docker image inspect nalanda-portable-staging:ci --format '{{.Config.User}}')" = "65532:65532"
-          test "$(docker image inspect nalanda-portable-staging:ci --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')" = "$EXPECTED_SHA"
-          docker image inspect nalanda-portable-staging:ci --format '{{.Id}}' | tee image-digest.txt
-          docker image inspect nalanda-portable-staging:ci --format '{{.Size}}' | tee image-size-bytes.txt
-          docker save nalanda-portable-staging:ci | sha256sum | tee image-archive-sha256.txt
+          test "$(docker --context default image inspect nalanda-portable-staging:ci --format '{{.Config.User}}')" = "65532:65532"
+          test "$(docker --context default image inspect nalanda-portable-staging:ci --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')" = "$EXPECTED_SHA"
+          docker --context default image inspect nalanda-portable-staging:ci --format '{{.Id}}' | tee image-digest.txt
+          docker --context default image inspect nalanda-portable-staging:ci --format '{{.Size}}' | tee image-size-bytes.txt
+          docker --context default save nalanda-portable-staging:ci | sha256sum | tee image-archive-sha256.txt
       - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with: { image: "nalanda-portable-staging:ci", format: "spdx-json", output-file: "sbom.spdx.json", upload-artifact: false }
       - uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
           image-ref: nalanda-portable-staging:ci
-          format: table
+          format: json
+          output: trivy-results.json
           severity: CRITICAL,HIGH
           ignore-unfixed: false
           exit-code: "1"
+      - uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
+        if: ${{ !cancelled() }}
+        with:
+          image: nalanda-portable-staging:ci
+          output-format: json
+          output-file: grype-results.json
+          severity-cutoff: high
+          only-fixed: false
+          fail-build: true
+      - name: Verify native dependencies without application startup or network
+        run: |
+          test "$(docker --context default image inspect nalanda-portable-staging:ci --format '{{.Architecture}}')" = "$TARGET_ARCHITECTURE"
+          test "$(uname -m)" = "$(test "$TARGET_ARCHITECTURE" = arm64 && echo aarch64 || echo x86_64)"
+          docker --context default run --rm --name "nalanda-${GITHUB_RUN_ID}-${TARGET_ARCHITECTURE}-native" --label "nalanda.ci.run=${GITHUB_RUN_ID}" --memory 512m --cpus 1 --pids-limit 64 --cap-drop ALL --security-opt no-new-privileges:true --network none --read-only --entrypoint /nodejs/bin/node --mount type=bind,source="$PWD/scripts/portable/native-probe.cjs",target=/probe.cjs,readonly nalanda-portable-staging:ci /probe.cjs > native-dependencies.json
+          sudo apt-get update
+          sudo apt-get install -y skopeo
+          skopeo copy docker-daemon:nalanda-portable-staging:ci oci:oci-layout:release
       - name: Generate exact-head build provenance
         env:
           SOURCE_REPOSITORY: ${{ github.repository }}
@@ -98,6 +127,10 @@ jobs:
           const sha256 = (path) => crypto.createHash("sha256").update(fs.readFileSync(path)).digest("hex");
           const provenance = {
             schemaVersion: 1,
+            architecture: process.env.TARGET_ARCHITECTURE, emulationUsed: false,
+            nativeDependenciesSha256: sha256("native-dependencies.json"),
+            trivySha256: sha256("trivy-results.json"), grypeSha256: sha256("grype-results.json"),
+            dockerfileSha256: sha256("Dockerfile"), lockfileSha256: sha256("pnpm-lock.yaml"),
             sourceRepository: process.env.SOURCE_REPOSITORY,
             sourceCommit: process.env.EXPECTED_SHA,
             sourceDateEpoch: Number(require("node:child_process").execFileSync("git", ["show", "-s", "--format=%ct", "HEAD"], { encoding: "utf8" }).trim()),
@@ -113,23 +146,71 @@ jobs:
           NODE
       - name: Build-context secret/data assertion
         run: |
-          test -z "$(docker run --rm --entrypoint /nodejs/bin/node nalanda-portable-staging:ci -e 'const fs=require(\"fs\"); console.log(fs.existsSync(\"/app/prisma/dev.db\")||fs.existsSync(\"/app/.git\")?\"bad\":\"\")')"
+          docker --context default run --rm --name "nalanda-${GITHUB_RUN_ID}-${TARGET_ARCHITECTURE}-context" --label "nalanda.ci.run=${GITHUB_RUN_ID}" --memory 256m --cpus 1 --pids-limit 64 --cap-drop ALL --security-opt no-new-privileges:true --read-only --network none --entrypoint /nodejs/bin/node nalanda-portable-staging:ci -e 'const fs=require("fs"); if (fs.existsSync("/app/prisma/dev.db") || fs.existsSync("/app/.git")) process.exit(1);'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
         with:
-          name: portable-oci-evidence-${{ env.EXPECTED_SHA }}
+          name: portable-oci-evidence-${{ env.EXPECTED_SHA }}-${{ matrix.architecture }}
           path: |
             image-digest.txt
             image-size-bytes.txt
             image-archive-sha256.txt
             sbom.spdx.json
             build-provenance.json
+            native-dependencies.json
+            trivy-results.json
+            grype-results.json
+            oci-layout/
           retention-days: 14
           if-no-files-found: error
       - name: Cleanup
         if: always()
-        run: docker image rm -f nalanda-portable-staging:ci || true
+        run: |
+          printf '%s\n' '{"state":"FAILED_OR_UNKNOWN","classification":"INTEGRATION_TEST_ENVIRONMENT"}' > oci-cleanup.json
+          for suffix in native context; do
+            probe="nalanda-${GITHUB_RUN_ID}-${TARGET_ARCHITECTURE}-${suffix}"
+            remaining=$(docker --context default container ls --all -q --filter "name=^/${probe}$")
+            if test -n "$remaining"; then docker --context default container rm -f "$probe"; fi
+            remaining=$(docker --context default container ls --all -q --filter "name=^/${probe}$")
+            test -z "$remaining"
+          done
+          remaining=$(docker --context default image ls -q nalanda-portable-staging:ci)
+          if test -n "$remaining"; then docker --context default image rm nalanda-portable-staging:ci; fi
+          remaining=$(docker --context default image ls -q nalanda-portable-staging:ci)
+          test -z "$remaining"
+          printf '%s\n' '{"state":"COMPLETE","containersRemaining":0,"imageTagsRemaining":0,"classification":"INTEGRATION_TEST_ENVIRONMENT"}' > oci-cleanup.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: portable-oci-cleanup-${{ env.EXPECTED_SHA }}-${{ matrix.architecture }}
+          path: oci-cleanup.json
+          if-no-files-found: error
+          retention-days: 14
+
+  oci-release-index:
+    needs: oci-image
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: portable-oci-evidence-${{ env.EXPECTED_SHA }}-amd64
+          path: oci-input/amd64
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: portable-oci-evidence-${{ env.EXPECTED_SHA }}-arm64
+          path: oci-input/arm64
+      - run: node scripts/portable/oci-index.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: portable-multiplatform-oci-${{ env.EXPECTED_SHA }}
+          path: oci-release/
+          if-no-files-found: error
+          retention-days: 14
 
   portable-stack:
+    needs: oci-release-index
     name: 3 - portable stack
     runs-on: ubuntu-24.04
     timeout-minutes: 75
@@ -142,14 +223,28 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 24.19.0, cache: pnpm }
       - run: pnpm install --frozen-lockfile
+      - name: Persist disposable target coordinates
+        run: |
+          echo "COMPOSE_PROJECT_NAME=nalanda-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-stack" >> "$GITHUB_ENV"
+          echo "PORTABLE_CI_ROOT=$GITHUB_WORKSPACE/tmp/portable-staging/nalanda-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-stack" >> "$GITHUB_ENV"
+          echo "PORTABLE_SYNTHETIC_SECRET_ROOT=$GITHUB_WORKSPACE/tmp/portable-staging/nalanda-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-stack/secrets" >> "$GITHUB_ENV"
       - name: Full synthetic stack
         shell: pwsh
         run: ./scripts/portable/qa-stack.ps1
-      - name: Cleanup
+      - name: Independent disposable teardown and readback
         if: always()
-        run: docker compose -f deploy/portable/compose.yml down --volumes --remove-orphans || true; rm -rf tmp/portable-staging
+        run: pnpm exec tsx scripts/portable/ci-safety.ts cleanup
+      - name: Upload cleanup receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: portable-stack-cleanup-${{ env.EXPECTED_SHA }}
+          path: .qa-artifacts/portable-ci/*.json
+          if-no-files-found: error
+          retention-days: 14
 
   distributed-runtime:
+    needs: portable-stack
     name: 4 - distributed runtime
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -174,6 +269,7 @@ jobs:
         run: rm -rf tmp/portable-staging
 
   object-storage-and-recovery:
+    needs: distributed-runtime
     name: 5 - object storage and recovery
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -198,6 +294,7 @@ jobs:
         run: rm -rf backups tmp data/cloud-backup-rehearsal
 
   full-synthetic-acceptance:
+    needs: object-storage-and-recovery
     name: 6 - full synthetic acceptance
     runs-on: ubuntu-24.04
     timeout-minutes: 90
@@ -242,4 +339,4 @@ jobs:
           pnpm qa:final-scope:focused
       - name: Cleanup
         if: always()
-        run: docker compose -f deploy/portable/compose.yml down --volumes --remove-orphans || true; rm -rf tmp backups data
+        run: rm -rf tmp backups data

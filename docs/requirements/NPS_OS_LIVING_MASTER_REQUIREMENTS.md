@@ -495,3 +495,13 @@ Later roadmap only: CERTIFICATE-GRADUATION-EXIT-1A; STUDENT-ITEMS-CONCESSIONS-1A
 ## Changing this living specification
 
 Keep IDs stable. Each approved intent/status/dependency change requires a new registerVersion, a dated changelog entry with affected IDs and reasons, a priorRegisterHash over the exact previous register bytes, refreshed source/tree evidence and acceptance/security/recovery impact. New requirements need a separately approved inventory version and explicit test/schema count update; never silently reuse or drop an ID. Set approvedAt only with evidenced authorised approval and keep release state separate from operational activation. Preserve old versions through Git history.
+
+
+### Portable foundation 1B source-phase update — 2026-09-05
+
+Current register version: **1.1.0**. The exact prior register is retained and hash-linked;
+NPS-REQ-040/041/046 receive bounded implementation evidence only. Existing dispositions
+and operational gates remain authoritative. Technical Operations retains school-health
+and permissions authority; optional telemetry is disabled and cannot activate features.
+See the dated living changelog and phase evidence for the owner-authorized ephemeral
+synthetic CI exception and terminal verification state.

@@ -10,6 +10,9 @@ export type MasterRegister = Omit<typeof canonical, "approvedAt"> & { approvedAt
 export const MASTER_BASE = "4a4df050d194104cfc497a6de790ca9553a69db6";
 export const MASTER_TREE = "d4075661063fc127740bb3806abe51d83b406e61";
 export const OWNER_SPECIFICATION_HASH = "618824d76329b924230fede309b30df1d7aa7a94fa52c4b4a849647432421c89";
+export const PORTABLE_BASE = "104aacc7bd314cae82e60bb02b5c8a965c7ffedd";
+export const PORTABLE_TREE = "2c7f1a129e6b98abb9689abf7c989b0ed8468561";
+export const PRIOR_REGISTER_HASH = "2e00c1ef24edbf16bb281620a0b341c9c4e36df2d901d828fb953e2d021a773e";
 const validateSchema = new Ajv2020({ allErrors: true, strict: true }).compile<MasterRegister>(schema);
 export const sourceHash = (value: string) => createHash("sha256").update(value.replace(/\r\n/g, "\n")).digest("hex");
 
@@ -53,7 +56,10 @@ export function validateMasterRequirements(input: unknown, readSource?: (file: s
   if (!validateSchema(input)) return (validateSchema.errors ?? []).map(error => `SCHEMA:${error.instancePath}:${error.keyword}`);
   const register = input;
   const errors: string[] = [];
-  if (register.actualMainSha !== MASTER_BASE || register.expectedMainSha !== MASTER_BASE || register.treeSha !== MASTER_TREE) errors.push("BASE_COORDINATES_CHANGED");
+  const expectedBase = register.registerVersion === "1.1.0" ? PORTABLE_BASE : MASTER_BASE;
+  const expectedTree = register.registerVersion === "1.1.0" ? PORTABLE_TREE : MASTER_TREE;
+  if (register.registerVersion === "1.1.0" && register.priorRegisterHash !== PRIOR_REGISTER_HASH) errors.push("PRIOR_REGISTER_HASH_MISMATCH");
+  if (register.actualMainSha !== expectedBase || register.expectedMainSha !== expectedBase || register.treeSha !== expectedTree) errors.push("BASE_COORDINATES_CHANGED");
   if (requirementSourceHash(register) !== OWNER_SPECIFICATION_HASH || register.normalizedSourceSpecificationHash !== OWNER_SPECIFICATION_HASH) errors.push("OWNER_INTENT_DRIFT");
   if ((register.approvalState === "APPROVED") !== (register.approvedAt !== null)) errors.push("APPROVAL_STATE_MISMATCH");
   if (register.approvedAt !== null) {
