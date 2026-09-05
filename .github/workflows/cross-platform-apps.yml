@@ -227,11 +227,12 @@ jobs:
             printf '%s\n' 'disk.dataPartition.size=2G' >> "$AVD_CONFIG"
           fi
           grep -Fx 'disk.dataPartition.size=2G' "$AVD_CONFIG" | tee -a tmp/platform-review/android-runner-capacity.txt
+          printf '%s\n' 'EMULATOR_PARTITION_MIB=2048' | tee -a tmp/platform-review/android-runner-capacity.txt
           df -Pk . "$RUNNER_TEMP" | tee -a tmp/platform-review/android-runner-capacity.txt
           "$ANDROID_HOME/emulator/emulator" -list-avds | grep -Fx px1a_phone
           if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
           EMULATOR_LOG="$RUNNER_TEMP/px1a-emulator.log"
-          nohup "$ANDROID_HOME/emulator/emulator" -avd px1a_phone -no-window -noaudio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > "$EMULATOR_LOG" 2>&1 &
+          nohup "$ANDROID_HOME/emulator/emulator" -avd px1a_phone -partition-size 2048 -wipe-data -no-window -noaudio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > "$EMULATOR_LOG" 2>&1 &
           if ! timeout 240 "$ADB" wait-for-device; then
             cat "$EMULATOR_LOG"
             exit 1
