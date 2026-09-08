@@ -5,7 +5,7 @@ function required(row: Row, key: string, label: string) { const value = String(r
 function unique(values: string[], label: string) { if (new Set(values).size !== values.length) throw new Error(`${label} contains duplicate identities`); }
 export function validateCertificateBackupRows(root: Record<string, unknown>, context: { studentIds: Set<string>; guardianIds: Set<string> }) {
   const certificateNumberSeries=rows(root,"certificateNumberSeries"),certificateTemplates=rows(root,"certificateTemplates"),studentCertificateRequests=rows(root,"studentCertificateRequests"),studentCertificates=rows(root,"studentCertificates"),studentCertificateVersions=rows(root,"studentCertificateVersions"),studentCertificateEvents=rows(root,"studentCertificateEvents");
-  const types=new Set(["BONAFIDE","STUDY","CONDUCT","TRANSFER"]);
+  const types=new Set(["BONAFIDE","STUDY","CONDUCT","TRANSFER","GRADUATION"]);
   unique(certificateNumberSeries.map((r,i)=>required(r,"id",`certificateNumberSeries[${i}]`)),"Certificate series IDs");unique(certificateNumberSeries.map((r,i)=>required(r,"seriesCode",`certificateNumberSeries[${i}]`).toUpperCase()),"Certificate series codes");
   certificateNumberSeries.forEach((r,i)=>{if(!types.has(required(r,"certificateType",`certificateNumberSeries[${i}]`))||Number(r.nextNumber)<1)throw new Error(`certificateNumberSeries[${i}] is invalid`);});
   unique(certificateTemplates.map((r,i)=>required(r,"id",`certificateTemplates[${i}]`)),"Certificate template IDs");unique(certificateTemplates.map((r,i)=>required(r,"templateCode",`certificateTemplates[${i}]`).toUpperCase()),"Certificate template codes");

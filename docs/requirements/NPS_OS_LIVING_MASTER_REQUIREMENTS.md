@@ -31,7 +31,7 @@ Evidence arrays for missing, deferred or blocked workflows identify the existing
 | NPS-REQ-004 | Permission-filtered Universal Search across authorised ERP sources | PARTIAL | SEARCH-GOVERNANCE |
 | NPS-REQ-005 | Digital and printable Student and Staff identity cards | COMPLETE | MAINTAIN-RELEASED |
 | NPS-REQ-006 | Class X exit-document checklist and collection tracking | COMPLETE | MAINTAIN-RELEASED |
-| NPS-REQ-007 | A chargeable school-issued Class X Graduation Certificate that is clearly distinct from statutory Council/Board documents | MISSING | CERTIFICATE-GRADUATION-EXIT-1A |
+| NPS-REQ-007 | A chargeable school-issued Class X Graduation Certificate that is clearly distinct from statutory Council/Board documents | PARTIAL | CERTIFICATE-GRADUATION-EXIT-1A |
 | NPS-REQ-008 | A reusable, versioned certificate engine supporting issue, preview, PDF, print, reprint, reissue, cancellation/void and privacy-safe QR verification | PARTIAL | CERTIFICATE-GRADUATION-EXIT-1A |
 | NPS-REQ-009 | Validated Excel bulk upload, row-error preview and controlled certificate generation | PARTIAL | CERTIFICATE-GRADUATION-EXIT-1A |
 | NPS-REQ-010 | Student-linked miscellaneous sales for belts, ties, documents and future items, with unrestricted positive quantity and academic-year rates | PARTIAL | STUDENT-ITEMS-CONCESSIONS-1A |
@@ -495,3 +495,7 @@ Later roadmap only: CERTIFICATE-GRADUATION-EXIT-1A; STUDENT-ITEMS-CONCESSIONS-1A
 ## Changing this living specification
 
 Keep IDs stable. Each approved intent/status/dependency change requires a new registerVersion, a dated changelog entry with affected IDs and reasons, a priorRegisterHash over the exact previous register bytes, refreshed source/tree evidence and acceptance/security/recovery impact. New requirements need a separately approved inventory version and explicit test/schema count update; never silently reuse or drop an ID. Set approvedAt only with evidenced authorised approval and keep release state separate from operational activation. Preserve old versions through Git history.
+
+## Certificate implementation delta — 2026-09-08
+
+NPS-REQ-007/008/009 now reference the scoped default-OFF implementation and [certificate evidence](../evidence/CERTIFICATE_GRADUATION_EXIT_1A.md). They remain PARTIAL pending acceptance and release. All other dispositions and the original historical audit remain unchanged; the committed source delta ledger verifies authorized evolution without retroactively changing historical evidence. Backup v46 adds certificate durable records while retaining v45 restore compatibility.

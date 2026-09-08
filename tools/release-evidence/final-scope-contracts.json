@@ -365,7 +365,10 @@
       "key": "communication-channel-native-push",
       "status": "ENFORCED",
       "evidencePaths": ["lib/release-feature-flag-runtime.ts", "lib/communication-policy.ts", "app/api/communication/outbox/process/route.ts", "docs/prompts/NATIVE_PUSH_CERTIFICATION_1B.md"]
-    }
+    },
+    {"key": "certificate-graduation-exit-1a", "status": "ENFORCED", "evidencePaths": ["lib/certificate-graduation-policy.ts", "tests/certificate-graduation-exit-1a.test.ts"], "boundary": "Default OFF at zero rollout. Synthetic harness only; no public endpoint or activation."},
+    {"key": "certificate-bulk-issue-1a", "status": "ENFORCED", "evidencePaths": ["lib/certificate-graduation-policy.ts", "tests/certificate-graduation-exit-1a.test.ts"], "boundary": "Default OFF at zero rollout. Synthetic harness only; no public endpoint or activation."},
+    {"key": "certificate-verification-1a", "status": "ENFORCED", "evidencePaths": ["lib/certificate-graduation-policy.ts", "tests/certificate-graduation-exit-1a.test.ts"], "boundary": "Default OFF at zero rollout. Synthetic harness only; no public endpoint or activation."}
   ],
   "releaseBlockedBranches": []
 }

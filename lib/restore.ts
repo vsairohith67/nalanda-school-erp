@@ -1,3 +1,4 @@
+import { validateCertificateExtensionBackup } from "@/lib/certificate-extension-backup";
 import { isRole, normalizePermission } from "@/lib/permissions";
 import { validateReportCardBackupRows } from "@/lib/report-card-backup";
 import { validateTeacherAnalyticsBackupRows } from "@/lib/teacher-analytics-backup";
@@ -95,6 +96,7 @@ const TOP_LEVEL_KEYS = new Set([
   "studentReportCards", "studentReportCardVersions", "studentReportCardEvents",
   "academicCalendarVersions", "operationalCalendarDays", "schoolCalendarEvents", "schoolCalendarEventVersions", "academicCalendarAuditEvents",
   "teacherAnalyticsReviewCycles", "teacherAnalyticsSnapshots", "teacherAnalyticsReviews", "teacherAnalyticsEvents",
+  "certificateRequestCharges", "certificateBulkBatches", "certificateIssueArtifacts",
   "certificateNumberSeries", "certificateTemplates", "studentCertificateRequests", "studentCertificates", "studentCertificateVersions", "studentCertificateEvents",
   "classXPackageTemplates", "classXDocumentPackages", "classXPackageDocumentItems", "classXPackageChargeRules", "classXPackageCharges", "classXPackageHandovers", "classXPackageEvents",
   "identityCardNumberSeries", "identityCardTemplates", "identityCardBatches", "identityCards", "identityCardVersions", "identityCardEvents",
@@ -172,6 +174,7 @@ const BACKUP_COUNT_KEYS = new Set([
   "studentReportCards", "studentReportCardVersions", "studentReportCardEvents",
   "academicCalendarVersions", "operationalCalendarDays", "schoolCalendarEvents", "schoolCalendarEventVersions", "academicCalendarAuditEvents",
   "teacherAnalyticsReviewCycles", "teacherAnalyticsSnapshots", "teacherAnalyticsReviews", "teacherAnalyticsEvents",
+  "certificateRequestCharges", "certificateBulkBatches", "certificateIssueArtifacts",
   "certificateNumberSeries", "certificateTemplates", "studentCertificateRequests", "studentCertificates", "studentCertificateVersions", "studentCertificateEvents",
   "classXPackageTemplates", "classXDocumentPackages", "classXPackageDocumentItems", "classXPackageChargeRules", "classXPackageCharges", "classXPackageHandovers", "classXPackageEvents",
   "identityCardNumberSeries", "identityCardTemplates", "identityCardBatches", "identityCards", "identityCardVersions", "identityCardEvents",
@@ -495,6 +498,9 @@ export type ValidatedBackup = {
   teacherAnalyticsSnapshots: RestoreRecord[];
   teacherAnalyticsReviews: RestoreRecord[];
   teacherAnalyticsEvents: RestoreRecord[];
+  certificateRequestCharges: RestoreRecord[];
+  certificateBulkBatches: RestoreRecord[];
+  certificateIssueArtifacts: RestoreRecord[];
   certificateNumberSeries: RestoreRecord[];
   certificateTemplates: RestoreRecord[];
   studentCertificateRequests: RestoreRecord[];
@@ -696,6 +702,9 @@ export type RestoreResult = {
   teacherAnalyticsSnapshots: EntityRestoreResult;
   teacherAnalyticsReviews: EntityRestoreResult;
   teacherAnalyticsEvents: EntityRestoreResult;
+  certificateRequestCharges: EntityRestoreResult;
+  certificateBulkBatches: EntityRestoreResult;
+  certificateIssueArtifacts: EntityRestoreResult;
   certificateNumberSeries: EntityRestoreResult;
   certificateTemplates: EntityRestoreResult;
   studentCertificateRequests: EntityRestoreResult;
@@ -810,7 +819,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     metadata.backupVersion !== undefined &&
     (!Number.isInteger(metadata.backupVersion) ||
       Number(metadata.backupVersion) < 1 ||
-      Number(metadata.backupVersion) > 45)
+      Number(metadata.backupVersion) > 46)
   ) {
     throw new Error("metadata.backupVersion is unsupported");
   }
@@ -1556,6 +1565,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     ...supportData,
     ...safeExitData,
     ...teacherAnalyticsData,
+    ...validateCertificateExtensionBackup(root),
     ...certificateData,
     ...classXPackageData,
     ...identityCardData,

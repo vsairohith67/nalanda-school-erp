@@ -32,9 +32,9 @@ describe("bulk export governance", () => {
     expect(JSON.parse(output)).toEqual({
       schemaVersion: 1,
       status: "PASS",
-      discoveredCount: 61,
-      bulkExportCount: 41,
-      notBulkExportCount: 20,
+      discoveredCount: 65,
+      bulkExportCount: 42,
+      notBulkExportCount: 23,
       bulkExportFlagMappedSurfaceCount: 0,
       errors: []
     });

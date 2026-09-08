@@ -3,8 +3,8 @@
   "promptId": "PRODUCT-EXPERIENCE-1A",
   "generatedFrom": "app page source tree",
   "completeness": {
-    "pageFiles": 363,
-    "registeredScreens": 363,
+    "pageFiles": 364,
+    "registeredScreens": 364,
     "omittedScreens": 0
   },
   "sharedBaselines": {
@@ -13488,6 +13488,44 @@
       "permissionRequirements": [
         "MANAGE_WHATSAPP_TEMPLATE_MAPPINGS",
         "VIEW_WHATSAPP_CENTRE"
+      ]
+    },
+    {
+      "route": "/certificates/graduation",
+      "file": "app/certificates/graduation/page.tsx",
+      "roles": [
+        "SUPER_ADMIN",
+        "DIRECTOR"
+      ],
+      "module": "certificates",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_SERVER_AUTHORISED",
+      "primaryTask": "Governed Graduation certificate preparation, approval and issue",
+      "risk": "HIGH",
+      "states": {
+        "empty": "EXPLICIT_IN_SCREEN",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "PRESENT",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "PRESENT",
+        "forms": "LABEL_AND_DIRTY_STATE_RUNTIME_AUDIT",
+        "tables": "RESPONSIVE_LABELLED_RUNTIME_AUDIT",
+        "manualReviewRequired": true
+      },
+      "permissionRequirements": [
+        "CREATE_CERTIFICATES",
+        "MANAGE_CERTIFICATE_TEMPLATES",
+        "VIEW_CERTIFICATES",
+        "VIEW_CERTIFICATE_REPORTS"
       ]
     }
   ]
