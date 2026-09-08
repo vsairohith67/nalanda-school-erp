@@ -1,0 +1,300 @@
+{
+  "promptId": "CERTIFICATE-GRADUATION-EXIT-1A",
+  "baseCommit": "104aacc7bd314cae82e60bb02b5c8a965c7ffedd",
+  "baseTree": "2c7f1a129e6b98abb9689abf7c989b0ed8468561",
+  "historicalAuditBase": "4a4df050d194104cfc497a6de790ca9553a69db6",
+  "policy": "Exact reviewed source delta. Retained requirement evidence remains historical; this ledger does not grant requirement completion or release clearance. CI validates and never regenerates this file.",
+  "changed": [
+    {
+      "path": "app/api/certificates/number-series/route.ts",
+      "currentSha256": "ea79864376d54fc2bd6be062a6cbe2c4a596e411fec50fca17409fbd6a80097f",
+      "authorizedBaseSha256": "5c5b9ac7f101746c5482efac57811e0a6b8ca645d33091eb760124c5cc287084",
+      "baselineSha256": "5c5b9ac7f101746c5482efac57811e0a6b8ca645d33091eb760124c5cc287084"
+    },
+    {
+      "path": "app/api/certificates/templates/[id]/route.ts",
+      "currentSha256": "2e50906e5cd8832e8c47f1de54cee220e72e503d78d5735ae1a83216dcee020d",
+      "authorizedBaseSha256": "53eb2ae54ac928aff2441cbbc646065a48cbec20f4a4696ee16b473b22464b06",
+      "baselineSha256": "53eb2ae54ac928aff2441cbbc646065a48cbec20f4a4696ee16b473b22464b06"
+    },
+    {
+      "path": "app/api/certificates/templates/route.ts",
+      "currentSha256": "20523f5dacf244a0426e1c68deb3e3a708323ab9bab8eea56c2978dfd48dd319",
+      "authorizedBaseSha256": "7523d5264a9f20bb73ffa9432430a49b59da169795e4065d5cb849a825ad4c9b",
+      "baselineSha256": "7523d5264a9f20bb73ffa9432430a49b59da169795e4065d5cb849a825ad4c9b"
+    },
+    {
+      "path": "app/certificates/[id]/print/page.tsx",
+      "currentSha256": "abc79b5afe6a9e7b6358cdf72db8634547fbaecd54ab434b2b572eca46101f3e",
+      "authorizedBaseSha256": "45a9ac0b8b3274a7cd917610eb5c88c451a6415efad282b22655f736b5cbe1a4",
+      "baselineSha256": "45a9ac0b8b3274a7cd917610eb5c88c451a6415efad282b22655f736b5cbe1a4"
+    },
+    {
+      "path": "app/certificates/page.tsx",
+      "currentSha256": "5ab74e8a26c5ab239c334d7f89063da4e55e0efcafdd5675b5e3805ba7e8eb8b",
+      "authorizedBaseSha256": "63fba045cebb8c3477c04003ce4444dd316cc72e1c615040e2e2a0c74ee7559b",
+      "baselineSha256": "63fba045cebb8c3477c04003ce4444dd316cc72e1c615040e2e2a0c74ee7559b"
+    },
+    {
+      "path": "app/layout.tsx",
+      "currentSha256": "086302b69f30585c1033b6374d71aaf1b5735d936f74c690cc3640d52047f7f3",
+      "authorizedBaseSha256": "56392e31abf6cce8750f44e5a67569f175b36764318280b8f3662c53294d87ba",
+      "baselineSha256": "56392e31abf6cce8750f44e5a67569f175b36764318280b8f3662c53294d87ba"
+    },
+    {
+      "path": "app/parent/certificates/page.tsx",
+      "currentSha256": "2ce10dd148c41b75c8961a7029002d136506403b3bf45233a845d270e467c9aa",
+      "authorizedBaseSha256": "c94a14ed60dac3536f309eda6953d49988c23771a77981a592729d0f62790c0b",
+      "baselineSha256": "c94a14ed60dac3536f309eda6953d49988c23771a77981a592729d0f62790c0b"
+    },
+    {
+      "path": "components/theme-provider.tsx",
+      "currentSha256": "e1b2f8fd9819e02e663ae582bfdf29a174cd902a28c3944742dcf0829d320aa6",
+      "authorizedBaseSha256": "106af9afae07550c0a86990590875b5192524c95fb066b939fca6d5ceafd533d",
+      "baselineSha256": "106af9afae07550c0a86990590875b5192524c95fb066b939fca6d5ceafd533d"
+    },
+    {
+      "path": "config/release-feature-flags.json",
+      "currentSha256": "5b8c7e6f22754ec29f39acb0593df98029d193eef87c2e07104ee246ad49a43d",
+      "authorizedBaseSha256": "0dd27692665991b1476b9bd12eda12ffa088e1c9363243081928ccb5158872df",
+      "baselineSha256": "0dd27692665991b1476b9bd12eda12ffa088e1c9363243081928ccb5158872df"
+    },
+    {
+      "path": "deploy/portable/compose.yml",
+      "currentSha256": "6c07df9b5676e64d2be06313e079b472805e505498566cf135c65523cb136c59",
+      "authorizedBaseSha256": "6fdfa08c3932013d2a1fb99bff0acb844e92bde88b16d67f774337985a84beaf",
+      "baselineSha256": "6fdfa08c3932013d2a1fb99bff0acb844e92bde88b16d67f774337985a84beaf"
+    },
+    {
+      "path": "lib/backup.ts",
+      "currentSha256": "6b580676de9f0394ae086c3adb3655b30e301f5e8ba8da1b9471aa963b95b90b",
+      "authorizedBaseSha256": "80b5ab5cb92ddaef237fc7d9aa67ad08bd72279a6f34d06437c4518fcbf71c7a",
+      "baselineSha256": "80b5ab5cb92ddaef237fc7d9aa67ad08bd72279a6f34d06437c4518fcbf71c7a"
+    },
+    {
+      "path": "lib/certificate-backup.ts",
+      "currentSha256": "0282d41737a2976a695b0e4747bb010ba4081b23e8b0c8c06edf667b91edb723",
+      "authorizedBaseSha256": "d3d30e2667b8cd32f772291dbf51d3cf3858f9c4a93a8944c50dfc379d2abc3a",
+      "baselineSha256": "d3d30e2667b8cd32f772291dbf51d3cf3858f9c4a93a8944c50dfc379d2abc3a"
+    },
+    {
+      "path": "lib/certificate-numbering.ts",
+      "currentSha256": "ad1d2273598e560c1b19b3cd82c27113f24c31942c529d9b2c53585e670565eb",
+      "authorizedBaseSha256": "44badfcbd59a1f922b4856cc7054e57b7a0ad2a0de6635cc60a189e716374fdf",
+      "baselineSha256": "44badfcbd59a1f922b4856cc7054e57b7a0ad2a0de6635cc60a189e716374fdf"
+    },
+    {
+      "path": "lib/certificate-portals.ts",
+      "currentSha256": "4fed6a2b5be3cc177ae5d5af58de0a0f4207f10214963f3ef10db2040d07c097",
+      "authorizedBaseSha256": "906f4b55e4e8c422c54a8e88655524d5ec07acdb21e84e62e385a7bb76bda05c",
+      "baselineSha256": "906f4b55e4e8c422c54a8e88655524d5ec07acdb21e84e62e385a7bb76bda05c"
+    },
+    {
+      "path": "lib/certificate-requests.ts",
+      "currentSha256": "44dfb4f3e4f70cb2ca6f1477b5c7d7643f8926818f5ced53a82b730cc83192a3",
+      "authorizedBaseSha256": "289e229fc2e7553ebf9cf8fb6e535b39ca6cb789fdd2a38b8604fa09df7d222b",
+      "baselineSha256": "289e229fc2e7553ebf9cf8fb6e535b39ca6cb789fdd2a38b8604fa09df7d222b"
+    },
+    {
+      "path": "lib/certificate-snapshots.ts",
+      "currentSha256": "99ae22b6aa99a8fcc83cb6eef77c9043baee6b6c96a04232672de28053690fef",
+      "authorizedBaseSha256": "01cb72ff48c60659fbea0274d65851a20781c8775cb93587b8a0710097861828",
+      "baselineSha256": "01cb72ff48c60659fbea0274d65851a20781c8775cb93587b8a0710097861828"
+    },
+    {
+      "path": "lib/certificate-templates.ts",
+      "currentSha256": "1635de61414fadc8d62f9bf25554f7ba1b545e3c0d85c1a959da24a30c21f4b1",
+      "authorizedBaseSha256": "9eb9690bb474f18ed1fff23acea1ea66a8da19e27ce6d5aa99ef0854b101878a",
+      "baselineSha256": "9eb9690bb474f18ed1fff23acea1ea66a8da19e27ce6d5aa99ef0854b101878a"
+    },
+    {
+      "path": "lib/cloud-backup-versions.ts",
+      "currentSha256": "f701d527cfbcec1f864114c71fa973485a06042aee4ee59ed9a664749a04a5d7",
+      "authorizedBaseSha256": "df582234f0e337f53779d97ea07271d25326da98a9c173ba7fcb3ae699144a51",
+      "baselineSha256": "df582234f0e337f53779d97ea07271d25326da98a9c173ba7fcb3ae699144a51"
+    },
+    {
+      "path": "lib/cloud-backup-worker.ts",
+      "currentSha256": "5ff35ff88aa078f7e9d24f9fd47c9b7ba0d9b2a88470fdcf7697e39d1f1c3e6b",
+      "authorizedBaseSha256": "1b438c4c0cd872207edb48b7598e6bdd39638e338e692089150ee492364b5927",
+      "baselineSha256": "1b438c4c0cd872207edb48b7598e6bdd39638e338e692089150ee492364b5927"
+    },
+    {
+      "path": "lib/misc-income.ts",
+      "currentSha256": "8b728a1b8527249cdd4a811a981fea0941aed9fb5ecf54ef026881c8e2e25348",
+      "authorizedBaseSha256": "26b8ea67fe30d418749e0f7c7ecae69287abb63079a19125414580b5c480ab71",
+      "baselineSha256": "26b8ea67fe30d418749e0f7c7ecae69287abb63079a19125414580b5c480ab71"
+    },
+    {
+      "path": "lib/report-pdf-jobs.ts",
+      "currentSha256": "0e7b115e592d6c7bdf5291edf53b7275c22f07168fa83258c72312adb98f0a90",
+      "authorizedBaseSha256": "dbb9843a54691c761c921d207fdea51a7744b7c53e76c99696a8ecc8509fe2ea",
+      "baselineSha256": "dbb9843a54691c761c921d207fdea51a7744b7c53e76c99696a8ecc8509fe2ea"
+    },
+    {
+      "path": "lib/request-security.ts",
+      "currentSha256": "f269997445ec0ffa8b9b301c20016b6cfed04424a78b71e27a60882cc6d45dd7",
+      "authorizedBaseSha256": "84be7ebe23311039fa556d637dd485b2cb0a49a7f78735399285575c87a1fa13",
+      "baselineSha256": "84be7ebe23311039fa556d637dd485b2cb0a49a7f78735399285575c87a1fa13"
+    },
+    {
+      "path": "lib/restore-database.ts",
+      "currentSha256": "014b8b11f9179a34bcab544538ac811345cb71126c68231f6629c42dcb4eb155",
+      "authorizedBaseSha256": "5eb6ecec56e2eb927592887999b0f723ffdac69bde49f53c49a5046548673d11",
+      "baselineSha256": "5eb6ecec56e2eb927592887999b0f723ffdac69bde49f53c49a5046548673d11"
+    },
+    {
+      "path": "lib/restore.ts",
+      "currentSha256": "5192c709ab3d57674c34bfb95f22c82e20465cb18d6f85bd6000e855cba2d71e",
+      "authorizedBaseSha256": "47f6a2297e3638ca6efa9035b3de36816d7356391ba1a7ad4707d171e3586509",
+      "baselineSha256": "47f6a2297e3638ca6efa9035b3de36816d7356391ba1a7ad4707d171e3586509"
+    },
+    {
+      "path": "lib/security-resilience.ts",
+      "currentSha256": "b88290189aede821ee0ab7e27ea25f593ebe87b52ff17f0d3ab169e04f1246ba",
+      "authorizedBaseSha256": "014bc336720a0e3365aabf1182ef2b35b83cfaada537e8a22493afee994cf066",
+      "baselineSha256": "014bc336720a0e3365aabf1182ef2b35b83cfaada537e8a22493afee994cf066"
+    },
+    {
+      "path": "lib/student-certificates.ts",
+      "currentSha256": "2229f595ef3d609cf170094d6e8c5f9e21a81940271d626969f492339784354b",
+      "authorizedBaseSha256": "42574f9f10476618addf1257339be4756cc1f70a2e2a384bae13e9958a58e1ed",
+      "baselineSha256": "42574f9f10476618addf1257339be4756cc1f70a2e2a384bae13e9958a58e1ed"
+    },
+    {
+      "path": "prisma/postgresql/schema.prisma",
+      "currentSha256": "8aa0dc6ba9d626cbab76a0cfc4f3ffe3b4f6923f31ea4003818ee844b9ef3a86",
+      "authorizedBaseSha256": "741f5893cb0352a75234de9a430445392897085136c198f5c445e96b2d17e6ff",
+      "baselineSha256": "741f5893cb0352a75234de9a430445392897085136c198f5c445e96b2d17e6ff"
+    },
+    {
+      "path": "prisma/postgresql/trigger-manifest.json",
+      "currentSha256": "988a1a72e3bc12cb24d457b4792e848caf958d3ee63b053b5b77b7462daa5fba",
+      "authorizedBaseSha256": "db931a69a0dccd5f73abac5edc005d825594feb5b653a0740bc7261774ca5ecf",
+      "baselineSha256": "db931a69a0dccd5f73abac5edc005d825594feb5b653a0740bc7261774ca5ecf"
+    },
+    {
+      "path": "prisma/schema.prisma",
+      "currentSha256": "a4e5b4f3c1b150958bd0805388ad8bfba27ebd310c18db504fa0f70a35ebf91d",
+      "authorizedBaseSha256": "e79052c5e9f2620bf3a8e176d3713fc0b5bd83c87f989385429160242f5f98c4",
+      "baselineSha256": "e79052c5e9f2620bf3a8e176d3713fc0b5bd83c87f989385429160242f5f98c4"
+    }
+  ],
+  "added": [
+    {
+      "path": "app/api/certificates/[id]/pdf/route.ts",
+      "currentSha256": "d52568f3000cc654de6ad938301d5739d8139a42a6ff44b45d814f5001a1f3ea",
+      "authorizedBaseSha256": "76e7e80f3cb92841671a38347e0d25c379c45a9d3e1aa17761931143b85966df"
+    },
+    {
+      "path": "app/api/certificates/bulk/[id]/pdf/route.ts",
+      "currentSha256": "439cf5b0cf55c096d3dbe53d0b3aaeca27b21de44195ef022d16dd090975b150",
+      "authorizedBaseSha256": "76e7e80f3cb92841671a38347e0d25c379c45a9d3e1aa17761931143b85966df"
+    },
+    {
+      "path": "app/api/certificates/bulk/[id]/route.ts",
+      "currentSha256": "db3311a46a49b5b657086ced31e41e3d7426668aa1f50f91cd90ec2126b6f842",
+      "authorizedBaseSha256": "76e7e80f3cb92841671a38347e0d25c379c45a9d3e1aa17761931143b85966df"
+    },
+    {
+      "path": "app/api/certificates/bulk/route.ts",
+      "currentSha256": "648a837d6e2b5a691df0b8d3dc291eb985acdbd6e45e7e9712527c2b5e1dd41d",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "app/api/certificates/readiness/route.ts",
+      "currentSha256": "00fc5ee99c272ba260f86adeb5cc9b5d1c94f50d24293d868337056b5ca06c95",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "app/api/certificates/requests/[id]/charge/route.ts",
+      "currentSha256": "c41f3d9382223c77f0a333d914a55e1a75151c81f4eb124a4478c9fb3f1d6f67",
+      "authorizedBaseSha256": "76e7e80f3cb92841671a38347e0d25c379c45a9d3e1aa17761931143b85966df"
+    },
+    {
+      "path": "app/api/certificates/verify/route.ts",
+      "currentSha256": "c0402bb6e30c307cc51bdbbbd724fe65525fcf710aed9a5c7ce4377000e147f1",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "app/api/parent/certificates/[id]/pdf/route.ts",
+      "currentSha256": "5b8033bad0ba9994be7740ff2e0ba49fbfa1a90fabe73a4664e8fa948845d29b",
+      "authorizedBaseSha256": "76e7e80f3cb92841671a38347e0d25c379c45a9d3e1aa17761931143b85966df"
+    },
+    {
+      "path": "app/certificates/graduation/page.tsx",
+      "currentSha256": "7de9a720e521ca9705826fb8055402f5f03289837d26916f0fc73dd7cadd4053",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "components/certificate-graduation-workspace.module.css",
+      "currentSha256": "0b78f70bb121875a6f790c241fc0b54e2277677f9040e28f534a5780f36fe58d",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "components/certificate-graduation-workspace.tsx",
+      "currentSha256": "39d353fb57933a0203330509d4b8f6135fe6fbcad1e914ecce9d88ae9cb51e83",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "lib/certificate-authenticity.ts",
+      "currentSha256": "bc5a08f499b1f6982fe386db9e1ab18d0cce2c7cf8d731c3342d8edbcae94a5d",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "lib/certificate-bulk.ts",
+      "currentSha256": "99a359b3f3e58ef4592005e3aa4cb2ba9c8439b363e674ea221904e6deb54ddb",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "lib/certificate-charges.ts",
+      "currentSha256": "81cb1a4522e0cb07bb9b843b7c2557fc8f91e711d986b604818ee2aa4d65ada8",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "lib/certificate-extension-backup.ts",
+      "currentSha256": "d2e28df221a59a017f782f3c2590109a1f1ddaad36591fa57b582d64f0f8901b",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "lib/certificate-graduation-policy.ts",
+      "currentSha256": "6f409b29758e9b2054024c105d2f85a0897d3e1034812b0aca076fb3779aeccd",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "lib/certificate-http.ts",
+      "currentSha256": "822d5f91fde41f86f4fdf403fba4c271587e74468563dcc6b84cf76d70d9568d",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "lib/certificate-pdf.ts",
+      "currentSha256": "349cb83294d2e3b900be472d2af9234c0d56775d2bb4361fa3c9f933f054976b",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "lib/certificate-template-workflow.ts",
+      "currentSha256": "aac8d61aed6bbe51cf79ba1f8ed191bbb12e44b8a8522b7dd4605d4dff31d3b4",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "lib/certificate-workbooks.ts",
+      "currentSha256": "beea66690db239f90a5442bb8c73ebc71eb57e35b205430b68e5d577f8153131",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "lib/master-requirements.ts",
+      "currentSha256": "9fa823cdf2e40aeebc2e774f522084abb0a79ae0887d06219ae517424e6261a5",
+      "authorizedBaseSha256": "6258246add4ec6d67d2050ddfdd8b150e004f89326ae7330aa70fcb115d74a51"
+    },
+    {
+      "path": "prisma/migrations/20260908120000_certificate_graduation_exit_1a/migration.sql",
+      "currentSha256": "42c6e2bff6e1f352ffdd090736cdbf076607eea5dc2a29e1a941c53ddac37f8b",
+      "authorizedBaseSha256": null
+    },
+    {
+      "path": "prisma/postgresql/migrations/20260908120000_certificate_graduation_exit_1a/migration.sql",
+      "currentSha256": "7505104c9551cae382a44e9ce3c03ac20531ef772163ff91b398eff4fae80019",
+      "authorizedBaseSha256": null
+    }
+  ]
+}

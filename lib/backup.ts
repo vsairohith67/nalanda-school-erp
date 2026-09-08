@@ -1,3 +1,4 @@
+import { validateCertificateExtensionBackup } from "@/lib/certificate-extension-backup";
 import type { PrismaClient } from "@prisma/client";
 import { createHash } from "node:crypto";
 import packageJson from "../package.json";
@@ -205,6 +206,9 @@ type BackupDocumentInput = {
   teacherAnalyticsSnapshots?: readonly object[];
   teacherAnalyticsReviews?: readonly object[];
   teacherAnalyticsEvents?: readonly object[];
+  certificateRequestCharges?: readonly object[];
+  certificateBulkBatches?: readonly object[];
+  certificateIssueArtifacts?: readonly object[];
   certificateNumberSeries?: readonly object[];
   certificateTemplates?: readonly object[];
   studentCertificateRequests?: readonly object[];
@@ -415,6 +419,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const teacherAnalyticsSnapshots = sanitizeActorFields(input.teacherAnalyticsSnapshots ?? []);
   const teacherAnalyticsReviews = sanitizeActorFields(input.teacherAnalyticsReviews ?? []);
   const teacherAnalyticsEvents = sanitizeActorFields(input.teacherAnalyticsEvents ?? []);
+  const { certificateRequestCharges, certificateBulkBatches, certificateIssueArtifacts } = validateCertificateExtensionBackup(input as unknown as Record<string, any>);
   const certificateNumberSeries = sanitizeActorFields(input.certificateNumberSeries ?? []);
   const certificateTemplates = sanitizeActorFields(input.certificateTemplates ?? []);
   const studentCertificateRequests = sanitizeActorFields(input.studentCertificateRequests ?? []);
@@ -498,7 +503,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
       generatedAt: input.generatedAt.toISOString(),
       generatedBy: input.generatedBy,
       appVersion: packageJson.version,
-      backupVersion: 45,
+      backupVersion: 46,
       counts: {
         schoolSettings: input.schoolSettings ? 1 : 0,
         authSecurityRecords: authSecurityRecordCount(authSecurity),
@@ -609,6 +614,9 @@ export function createBackupDocument(input: BackupDocumentInput) {
         teacherAnalyticsSnapshots: teacherAnalyticsSnapshots.length,
         teacherAnalyticsReviews: teacherAnalyticsReviews.length,
         teacherAnalyticsEvents: teacherAnalyticsEvents.length,
+        certificateRequestCharges: certificateRequestCharges.length,
+        certificateBulkBatches: certificateBulkBatches.length,
+        certificateIssueArtifacts: certificateIssueArtifacts.length,
         certificateNumberSeries: certificateNumberSeries.length,
         certificateTemplates: certificateTemplates.length,
         studentCertificateRequests: studentCertificateRequests.length,
@@ -797,6 +805,9 @@ export function createBackupDocument(input: BackupDocumentInput) {
     teacherAnalyticsSnapshots,
     teacherAnalyticsReviews,
     teacherAnalyticsEvents,
+    certificateRequestCharges,
+    certificateBulkBatches,
+    certificateIssueArtifacts,
     certificateNumberSeries,
     certificateTemplates,
     studentCertificateRequests,
@@ -1010,6 +1021,9 @@ export async function generateFullBackup(
     teacherAnalyticsSnapshots,
     teacherAnalyticsReviews,
     teacherAnalyticsEvents,
+    certificateRequestCharges,
+    certificateBulkBatches,
+    certificateIssueArtifacts,
     certificateNumberSeries,
     certificateTemplates,
     studentCertificateRequests,
@@ -1193,6 +1207,9 @@ export async function generateFullBackup(
     (client as any).teacherAnalyticsSnapshot?.findMany ? (client as any).teacherAnalyticsSnapshot.findMany({ orderBy: [{ reviewCycleId: "asc" }, { staffMemberId: "asc" }] }) : Promise.resolve([]),
     (client as any).teacherAnalyticsReview?.findMany ? (client as any).teacherAnalyticsReview.findMany({ orderBy: [{ snapshotId: "asc" }] }) : Promise.resolve([]),
     (client as any).teacherAnalyticsEvent?.findMany ? (client as any).teacherAnalyticsEvent.findMany({ orderBy: [{ reviewCycleId: "asc" }, { eventDate: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
+    (client as any).certificateRequestCharge?.findMany ? (client as any).certificateRequestCharge.findMany({ orderBy: { createdAt: "asc" } }) : Promise.resolve([]),
+    (client as any).certificateBulkBatch?.findMany ? (client as any).certificateBulkBatch.findMany({ orderBy: { createdAt: "asc" } }) : Promise.resolve([]),
+    (client as any).certificateIssueArtifact?.findMany ? (client as any).certificateIssueArtifact.findMany({ orderBy: { createdAt: "asc" } }) : Promise.resolve([]),
     (client as any).certificateNumberSeries?.findMany ? (client as any).certificateNumberSeries.findMany({ orderBy: [{ certificateType: "asc" }, { seriesCode: "asc" }] }) : Promise.resolve([]),
     (client as any).certificateTemplate?.findMany ? (client as any).certificateTemplate.findMany({ orderBy: [{ certificateType: "asc" }, { templateCode: "asc" }] }) : Promise.resolve([]),
     (client as any).studentCertificateRequest?.findMany ? (client as any).studentCertificateRequest.findMany({ orderBy: [{ createdAt: "asc" }, { requestNumber: "asc" }] }) : Promise.resolve([]),
@@ -1501,6 +1518,9 @@ export async function generateFullBackup(
     teacherAnalyticsSnapshots,
     teacherAnalyticsReviews,
     teacherAnalyticsEvents,
+    certificateRequestCharges,
+    certificateBulkBatches,
+    certificateIssueArtifacts,
     certificateNumberSeries,
     certificateTemplates,
     studentCertificateRequests,

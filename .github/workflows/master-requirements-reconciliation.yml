@@ -139,6 +139,8 @@ jobs:
           pnpm exec prisma migrate deploy --schema prisma/schema.prisma
           pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
           Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db
+      - name: Certificate Graduation, reusable PDFs, bulk resume and isolated double restore
+        run: pnpm qa:certificate-graduation
       - name: Routes, lifecycle, SQLite migration and backup restore
         run: pnpm routes:list && pnpm lifecycle:backfill && pnpm migration:fresh-check && pnpm migration:existing-db-check && pnpm migration:restore-check && pnpm backup && pnpm git:safety-check
       - name: Affected identity, security, pilot, onboarding and Product Experience foundations

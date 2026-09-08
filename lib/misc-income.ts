@@ -41,6 +41,7 @@ export function newMiscReceiptNumber(date = new Date()) {
 export function validateMiscItemInput(input: unknown) {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Income item details are required");
   const row = input as Record<string, unknown>;
+  if (String(row.itemCode).toUpperCase() === "GRADUATION" && (row.studentLinkPolicy !== "REQUIRED" || row.category !== "CERTIFICATE")) throw new Error("Graduation is a designated Student-linked certificate item.");
   return {
     itemCode: text(row.itemCode, "Item code", 30)!.toUpperCase(),
     name: text(row.name, "Item name", 120)!,
@@ -108,6 +109,7 @@ export async function validateMiscReceiptInput(client: PrismaClient | Prisma.Tra
   const items = await client.miscIncomeItem.findMany({ where: { id: { in: itemIds }, status: "ACTIVE" }, include: { rates: { where: { academicYear, status: "ACTIVE" } } } });
   if (items.length !== itemIds.length) throw new Error("Every selected income item must be active");
   const itemMap = new Map(items.map((item) => [item.id, item]));
+  if (items.some((item) => item.itemCode === "GRADUATION" && (item.studentLinkPolicy !== "REQUIRED" || item.category !== "CERTIFICATE"))) throw new Error("Graduation item configuration requires correction.");
   if (items.some((item) => item.studentLinkPolicy === "REQUIRED") && !studentId) throw new Error("A student is required for one or more selected items");
   if (items.some((item) => item.studentLinkPolicy === "NOT_REQUIRED") && studentId) throw new Error("An item configured as not requiring a student cannot be issued on a student-linked receipt");
   if (studentId && !(await client.student.findFirst({ where: { id: studentId, deletedAt: null }, select: { id: true } }))) throw new Error("Selected student was not found");

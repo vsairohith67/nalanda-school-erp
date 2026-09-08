@@ -4848,6 +4848,8 @@ model StudentCertificateRequest {
 }
 
 model StudentCertificate {
+  workflowKey String? @unique
+  supersedesCertificateId String?
   id                   String    @id @default(cuid())
   requestId            String?
   studentId            String
@@ -9964,4 +9966,49 @@ model NativeRefreshTokenHistory {
   reusedAt         DateTime?
 
   @@index([sessionId, tokenVersion])
+}
+
+// Certificate Graduation 1A: private durable charge, batch and immutable PDF records.
+model CertificateRequestCharge {
+  id String @id @default(cuid())
+  requestId String @unique
+  studentId String
+  academicYear String
+  snapshotJson String
+  status String @default("PENDING_APPROVAL")
+  receiptId String? @unique
+  preparedBy String
+  approvedBy String?
+  approvedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CertificateBulkBatch {
+  id String @id @default(cuid())
+  batchKey String @unique
+  uploadDigest String
+  templateId String
+  mappingVersion String
+  rowsJson String
+  approvalJson String?
+  preparedBy String
+  approvedBy String?
+  status String @default("VALIDATED")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CertificateIssueArtifact {
+  id String @id @default(cuid())
+  versionId String @unique
+  certificateId String
+  tokenHash String @unique
+  pdfBase64 String
+  pdfHash String
+  renderProvenanceJson String
+  snapshotHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([certificateId])
 }

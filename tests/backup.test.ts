@@ -48,7 +48,7 @@ describe("full backup", () => {
       generatedBy: "Director"
     });
     expect(backup.metadata.appVersion).toBeTruthy();
-    expect(backup.metadata.backupVersion).toBe(45);
+    expect(backup.metadata.backupVersion).toBe(46);
     expect(backup.metadata.counts).toEqual({
       schoolSettings: 0,
       authSecurityRecords: 0,
@@ -107,6 +107,7 @@ describe("full backup", () => {
       teacherAnalyticsReviewCycles: 0, teacherAnalyticsSnapshots: 0, teacherAnalyticsReviews: 0, teacherAnalyticsEvents: 0,
       certificateNumberSeries: 0, certificateTemplates: 0, studentCertificateRequests: 0,
       studentCertificates: 0, studentCertificateVersions: 0, studentCertificateEvents: 0,
+      certificateRequestCharges: 0, certificateBulkBatches: 0, certificateIssueArtifacts: 0,
       classXPackageTemplates: 0, classXDocumentPackages: 0, classXPackageDocumentItems: 0,
       classXPackageChargeRules: 0, classXPackageCharges: 0, classXPackageHandovers: 0, classXPackageEvents: 0,
       identityCardNumberSeries: 0, identityCardTemplates: 0, identityCardBatches: 0,
