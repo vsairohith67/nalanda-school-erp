@@ -184,17 +184,17 @@
     {
       "path": "app/api/certificates/[id]/pdf/route.ts",
       "currentSha256": "d52568f3000cc654de6ad938301d5739d8139a42a6ff44b45d814f5001a1f3ea",
-      "authorizedBaseSha256": "c4854c5564075a3234e08d45bd28f6a25bf7a1d97475ca463d046e45fe826fc8"
+      "authorizedBaseSha256": null
     },
     {
       "path": "app/api/certificates/bulk/[id]/pdf/route.ts",
       "currentSha256": "439cf5b0cf55c096d3dbe53d0b3aaeca27b21de44195ef022d16dd090975b150",
-      "authorizedBaseSha256": "c4854c5564075a3234e08d45bd28f6a25bf7a1d97475ca463d046e45fe826fc8"
+      "authorizedBaseSha256": null
     },
     {
       "path": "app/api/certificates/bulk/[id]/route.ts",
       "currentSha256": "db3311a46a49b5b657086ced31e41e3d7426668aa1f50f91cd90ec2126b6f842",
-      "authorizedBaseSha256": "c4854c5564075a3234e08d45bd28f6a25bf7a1d97475ca463d046e45fe826fc8"
+      "authorizedBaseSha256": null
     },
     {
       "path": "app/api/certificates/bulk/route.ts",
@@ -209,7 +209,7 @@
     {
       "path": "app/api/certificates/requests/[id]/charge/route.ts",
       "currentSha256": "c41f3d9382223c77f0a333d914a55e1a75151c81f4eb124a4478c9fb3f1d6f67",
-      "authorizedBaseSha256": "c4854c5564075a3234e08d45bd28f6a25bf7a1d97475ca463d046e45fe826fc8"
+      "authorizedBaseSha256": null
     },
     {
       "path": "app/api/certificates/verify/route.ts",
@@ -219,7 +219,7 @@
     {
       "path": "app/api/parent/certificates/[id]/pdf/route.ts",
       "currentSha256": "5b8033bad0ba9994be7740ff2e0ba49fbfa1a90fabe73a4664e8fa948845d29b",
-      "authorizedBaseSha256": "c4854c5564075a3234e08d45bd28f6a25bf7a1d97475ca463d046e45fe826fc8"
+      "authorizedBaseSha256": null
     },
     {
       "path": "app/certificates/graduation/page.tsx",

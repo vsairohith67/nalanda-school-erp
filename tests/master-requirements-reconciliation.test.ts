@@ -17,6 +17,21 @@ describe("Living Master Requirements fail-closed contracts", () => {
     expect(register.requirements).toHaveLength(46);
     expect(Object.values(register.statusCounts).reduce((a, b) => a + b, 0)).toBe(46);
   });
+  it("records native Git-proven absence for the new dynamic API paths", () => {
+    // These exact paths were absent in authorized tree 2c7f1a1, verified with
+    // git cat-file --batch. Do not hash git show fallback output for [id] paths.
+    const absentAtAuthorizedBase = [
+      "app/api/certificates/[id]/pdf/route.ts",
+      "app/api/certificates/bulk/[id]/pdf/route.ts",
+      "app/api/certificates/bulk/[id]/route.ts",
+      "app/api/certificates/requests/[id]/charge/route.ts",
+      "app/api/parent/certificates/[id]/pdf/route.ts"
+    ];
+    for (const file of absentAtAuthorizedBase) {
+      const entry = certificateDelta.added.find(item => item.path === file);
+      expect(entry, file).toBeDefined(); expect(entry!.authorizedBaseSha256, file).toBeNull();
+    }
+  });
   it("rejects missing, duplicate and out-of-range IDs", () => {
     const dropped = copy(); dropped.requirements.pop(); expect(validateMasterRequirements(dropped).length).toBeGreaterThan(0);
     const duplicate = copy(); duplicate.requirements[1].id = duplicate.requirements[0].id; expect(validateMasterRequirements(duplicate)).toContain("EXACT_ORDERED_ID_SET_REQUIRED");
