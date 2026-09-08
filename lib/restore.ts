@@ -17,6 +17,7 @@ import { OFFLINE_SYNC_BACKUP_KEYS, validateOfflineSyncBackupRows, type OfflineSy
 import { NATIVE_APP_BACKUP_KEYS, validateNativeAppBackupRows, type NativeAppBackup, type NativeAppBackupKey } from "@/lib/native-app/backup";
 import { BIOMETRIC_ATTENDANCE_BACKUP_KEYS, validateBiometricAttendanceBackupRows, type BiometricAttendanceBackup, type BiometricAttendanceBackupKey } from "@/lib/biometric-attendance/backup";
 import { COMMUNICATION_BACKUP_KEYS, validateCommunicationBackupRows, type CommunicationBackup, type CommunicationBackupKey } from "@/lib/communication-backup";
+import { PRIOR_YEAR_BACKUP_KEYS, PRIOR_YEAR_BACKUP_CONTRACT, validatePriorYearBackup, type PriorYearBackup, type PriorYearBackupKey } from "@/lib/prior-year-concession-backup";
 import {
   validateExamGovernanceBackup,
   type ExamGovernanceBackup
@@ -41,6 +42,7 @@ const ACCEPTED_BACKUP_APP_NAMES = new Set([PRODUCT_BRAND.productName, LEGACY_BAC
 const MAX_ENTITY_ROWS = 100_000;
 
 const TOP_LEVEL_KEYS = new Set([
+  ...PRIOR_YEAR_BACKUP_KEYS,
   ...EVENT_MEDIA_BACKUP_KEYS,
   ...PARENT_MEETING_BACKUP_KEYS,
   ...OFFLINE_SYNC_BACKUP_KEYS,
@@ -130,9 +132,11 @@ const TOP_LEVEL_KEYS = new Set([
 ]);
 
 const METADATA_KEYS = new Set([
+  "schemaContract",
   "appName", "academicYear", "generatedAt", "generatedBy", "appVersion", "backupVersion", "counts"
 ]);
 const BACKUP_COUNT_KEYS = new Set([
+  ...PRIOR_YEAR_BACKUP_KEYS,
   ...EVENT_MEDIA_BACKUP_KEYS,
   ...PARENT_MEETING_BACKUP_KEYS,
   ...OFFLINE_SYNC_BACKUP_KEYS,
@@ -400,6 +404,7 @@ export type ValidatedBackup = {
     generatedBy: string;
     appVersion?: string;
     backupVersion?: number;
+    schemaContract?: string;
     counts?: Record<string, number>;
   };
   schoolSettings: RestoreRecord | null;
@@ -584,7 +589,7 @@ export type ValidatedBackup = {
   timetableDrafts: RestoreRecord[];
   timetableEntries: RestoreRecord[];
   technicalOperations: TechnicalOperationsBackup;
-} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup & OptionalOperationsBackup & EventMediaBackup & ParentMeetingBackup & OfflineSyncBackup & NativeAppBackup & BiometricAttendanceBackup & CommunicationBackup;
+} & AdmissionsBackup & PayrollBackup & PayslipRequestBackup & SupportBackup & SafeExitBackup & FamilyCollectionBackup & OptionalOperationsBackup & EventMediaBackup & ParentMeetingBackup & OfflineSyncBackup & NativeAppBackup & BiometricAttendanceBackup & CommunicationBackup & PriorYearBackup;
 
 export type EntityRestoreResult = {
   created: number;
@@ -785,7 +790,7 @@ export type RestoreResult = {
   timetableDrafts: EntityRestoreResult;
   timetableEntries: EntityRestoreResult;
   warnings: string[];
-} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey | OptionalOperationsBackupKey | EventMediaBackupKey | ParentMeetingBackupKey | OfflineSyncBackupKey | NativeAppBackupKey | BiometricAttendanceBackupKey | CommunicationBackupKey, EntityRestoreResult>;
+} & Record<AdmissionsBackupKey | PayrollBackupKey | PayslipRequestBackupKey | SupportBackupKey | SafeExitBackupKey | OptionalOperationsBackupKey | EventMediaBackupKey | ParentMeetingBackupKey | OfflineSyncBackupKey | NativeAppBackupKey | BiometricAttendanceBackupKey | CommunicationBackupKey | PriorYearBackupKey, EntityRestoreResult>;
 
 export function parseAndValidateBackup(input: string | unknown): ValidatedBackup {
   let parsed: unknown = input;
@@ -810,11 +815,13 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     metadata.backupVersion !== undefined &&
     (!Number.isInteger(metadata.backupVersion) ||
       Number(metadata.backupVersion) < 1 ||
-      Number(metadata.backupVersion) > 45)
+      (Number(metadata.backupVersion) > 45 && Number(metadata.backupVersion) !== 47))
   ) {
     throw new Error("metadata.backupVersion is unsupported");
   }
   const generatedAt = requireString(metadata.generatedAt, "metadata.generatedAt");
+  if (metadata.backupVersion === 47 && metadata.schemaContract !== PRIOR_YEAR_BACKUP_CONTRACT) throw new Error("PRIOR_YEAR_BACKUP_CONTRACT_MISMATCH");
+  if (metadata.backupVersion !== 47 && PRIOR_YEAR_BACKUP_KEYS.some((key) => Array.isArray(root[key]) && (root[key] as unknown[]).length > 0)) throw new Error("PRIOR_YEAR_BACKUP_CONTRACT_MISSING");
   if (Number.isNaN(new Date(generatedAt).getTime())) {
     throw new Error("metadata.generatedAt must be a valid date");
   }
@@ -1463,12 +1470,14 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   const nativeAppData = validateNativeAppBackupRows(root);
   const biometricAttendanceData = validateBiometricAttendanceBackupRows(root);
   const communicationData = validateCommunicationBackupRows(root);
+  const priorYearData = validatePriorYearBackup(root);
   const technicalOperations = validateTechnicalOperationsBackup(root.technicalOperations);
   const counts = validateOptionalBackupCounts(metadata.counts);
 
   return {
     metadata: {
       appName,
+      ...(metadata.schemaContract === PRIOR_YEAR_BACKUP_CONTRACT ? { schemaContract: PRIOR_YEAR_BACKUP_CONTRACT } : {}),
       academicYear: requireString(metadata.academicYear, "metadata.academicYear"),
       generatedAt,
       generatedBy: requireString(metadata.generatedBy, "metadata.generatedBy"),
@@ -1572,6 +1581,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
     ...nativeAppData,
     ...biometricAttendanceData,
     ...communicationData,
+    ...priorYearData,
     receiptNotes,
     importBatches,
     onboardingBatches,

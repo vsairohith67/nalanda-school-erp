@@ -1676,7 +1676,8 @@
         "tests/misc-income.test.ts"
       ],
       "qaEvidence": [
-        "docs/BOOKS_LIBRARY_INCOME_AND_PUBLISHER_PAYMENT_WORKFLOW.md"
+        "docs/BOOKS_LIBRARY_INCOME_AND_PUBLISHER_PAYMENT_WORKFLOW.md",
+        "docs/evidence/STUDENT_ITEMS_PRIOR_YEAR_CONCESSIONS_1A.md"
       ],
       "pullRequests": [],
       "tags": [],
@@ -1710,7 +1711,7 @@
       "missingAcceptanceCriteria": [
         "BELT/TIE defaults are OPTIONAL and quantity is capped at 10000. Require exact Student linkage and any valid positive quantity within explicit numeric-safety limits; preserve receipt history."
       ],
-      "recommendedAction": "BELT/TIE defaults are OPTIONAL and quantity is capped at 10000. Require exact Student linkage and any valid positive quantity within explicit numeric-safety limits; preserve receipt history.",
+      "recommendedAction": "Validate the scoped retained feature PR and resolve recorded runtime/security gates before release. Configure chronology and explicit permissions before any separately authorised activation. AI concession recommendations remain deferred.",
       "recommendedBundle": "STUDENT-ITEMS-CONCESSIONS-1A",
       "priority": "P0",
       "serialLane": 2,
@@ -1723,13 +1724,15 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "2026-09-09 owner-scope correction STUDENT-ITEMS-PRIOR-YEAR-CONCESSIONS-1A: income support and concessions are limited to independently verified immediately previous configured academic-year liabilities; no admissions-wide collection or current/future/all-older relief. Student item sales remain independent of arrears. Historical intent and status are preserved; feature implementation is OFF at 0 percent pending evidence and release gates.",
+        "2026-09-09: evidence hash refreshed for shared source changed by the bounded prior-year feature; released snapshot is preserved in config/requirements-history/master-register-released-104aacc7.json. This does not mark the requirement complete."
       ],
       "evidence": [
         {
           "path": "lib/misc-income.ts",
           "line": 5,
-          "sha256": "26b8ea67fe30d418749e0f7c7ecae69287abb63079a19125414580b5c480ab71",
+          "sha256": "dd40cc4425ff35e61020f40188e02c0d0960004625d623fc32126e42ee6d3125",
           "claim": "Misc income has Student-link policies, year/effective-date rates, receipts, cancellation and exact monetary calculations."
         }
       ],
@@ -2301,7 +2304,8 @@
         "tests/admissions-crm.test.ts"
       ],
       "qaEvidence": [
-        "docs/REQUIREMENTS_REGISTER.md"
+        "docs/REQUIREMENTS_REGISTER.md",
+        "docs/evidence/STUDENT_ITEMS_PRIOR_YEAR_CONCESSIONS_1A.md"
       ],
       "pullRequests": [],
       "tags": [
@@ -2339,7 +2343,7 @@
       "missingAcceptanceCriteria": [
         "Add optional minimised income bands, separate sensitive permission, purpose/retention controls and exclusion from general exports/search/telemetry."
       ],
-      "recommendedAction": "Add optional minimised income bands, separate sensitive permission, purpose/retention controls and exclusion from general exports/search/telemetry.",
+      "recommendedAction": "Validate the scoped retained feature PR and resolve recorded runtime/security gates before release. Configure chronology and explicit permissions before any separately authorised activation. AI concession recommendations remain deferred.",
       "recommendedBundle": "STUDENT-ITEMS-CONCESSIONS-1A",
       "priority": "P1",
       "serialLane": 2,
@@ -2353,7 +2357,8 @@
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
         "Historical ledgers retain their original scope and status vocabulary.",
-        "Route, model, permission and test references identify inspected neighboring foundations; they do not assert that the missing or deferred workflow exists."
+        "Route, model, permission and test references identify inspected neighboring foundations; they do not assert that the missing or deferred workflow exists.",
+        "2026-09-09 owner-scope correction STUDENT-ITEMS-PRIOR-YEAR-CONCESSIONS-1A: income support and concessions are limited to independently verified immediately previous configured academic-year liabilities; no admissions-wide collection or current/future/all-older relief. Student item sales remain independent of arrears. Historical intent and status are preserved; feature implementation is OFF at 0 percent pending evidence and release gates."
       ],
       "evidence": [
         {
@@ -2491,7 +2496,8 @@
         "tests/student-import.test.ts"
       ],
       "qaEvidence": [
-        "docs/REQUIREMENTS_REGISTER.md"
+        "docs/REQUIREMENTS_REGISTER.md",
+        "docs/evidence/STUDENT_ITEMS_PRIOR_YEAR_CONCESSIONS_1A.md"
       ],
       "pullRequests": [],
       "tags": [],
@@ -2525,7 +2531,7 @@
       "missingAcceptanceCriteria": [
         "Add request, recommendation, role-bound approval, evidence, scope, validity, revocation and ledger audit; a discount field is not concession governance."
       ],
-      "recommendedAction": "Add request, recommendation, role-bound approval, evidence, scope, validity, revocation and ledger audit; a discount field is not concession governance.",
+      "recommendedAction": "Validate the scoped retained feature PR and resolve recorded runtime/security gates before release. Configure chronology and explicit permissions before any separately authorised activation. AI concession recommendations remain deferred.",
       "recommendedBundle": "STUDENT-ITEMS-CONCESSIONS-1A",
       "priority": "P0",
       "serialLane": 2,
@@ -2538,7 +2544,8 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "2026-09-09 owner-scope correction STUDENT-ITEMS-PRIOR-YEAR-CONCESSIONS-1A: income support and concessions are limited to independently verified immediately previous configured academic-year liabilities; no admissions-wide collection or current/future/all-older relief. Student item sales remain independent of arrears. Historical intent and status are preserved; feature implementation is OFF at 0 percent pending evidence and release gates."
       ],
       "evidence": [
         {
@@ -2676,7 +2683,8 @@
         "tests/student-import.test.ts"
       ],
       "qaEvidence": [
-        "docs/REQUIREMENTS_REGISTER.md"
+        "docs/REQUIREMENTS_REGISTER.md",
+        "docs/evidence/STUDENT_ITEMS_PRIOR_YEAR_CONCESSIONS_1A.md"
       ],
       "pullRequests": [],
       "tags": [],
@@ -2708,7 +2716,7 @@
       "missingAcceptanceCriteria": [
         "Add explicit funding/classification and approval/audit semantics without duplicating fee collections."
       ],
-      "recommendedAction": "Add explicit funding/classification and approval/audit semantics without duplicating fee collections.",
+      "recommendedAction": "Validate the scoped retained feature PR and resolve recorded runtime/security gates before release. Configure chronology and explicit permissions before any separately authorised activation. AI concession recommendations remain deferred.",
       "recommendedBundle": "STUDENT-ITEMS-CONCESSIONS-1A",
       "priority": "P1",
       "serialLane": 2,
@@ -2722,7 +2730,8 @@
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
         "Historical ledgers retain their original scope and status vocabulary.",
-        "Route, model, permission and test references identify inspected neighboring foundations; they do not assert that the missing or deferred workflow exists."
+        "Route, model, permission and test references identify inspected neighboring foundations; they do not assert that the missing or deferred workflow exists.",
+        "2026-09-09 owner-scope correction STUDENT-ITEMS-PRIOR-YEAR-CONCESSIONS-1A: income support and concessions are limited to independently verified immediately previous configured academic-year liabilities; no admissions-wide collection or current/future/all-older relief. Student item sales remain independent of arrears. Historical intent and status are preserved; feature implementation is OFF at 0 percent pending evidence and release gates."
       ],
       "evidence": [
         {
@@ -4606,7 +4615,8 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "2026-09-09: evidence hash refreshed for shared source changed by the bounded prior-year feature; released snapshot is preserved in config/requirements-history/master-register-released-104aacc7.json. This does not mark the requirement complete."
       ],
       "evidence": [
         {
@@ -4636,7 +4646,7 @@
         {
           "path": "lib/restore-database.ts",
           "line": 2348,
-          "sha256": "5eb6ecec56e2eb927592887999b0f723ffdac69bde49f53c49a5046548673d11",
+          "sha256": "02bd2c3fc1cf0b2488580c8d2a8e9c4d476c2be57f60300a13454ce5a8903f39",
           "claim": "Mapped restore retains Student outcome snapshots and hashes, rejects collisions and preserves repeated restoration ownership."
         }
       ],
@@ -6724,7 +6734,7 @@
         {
           "path": "deploy/portable/compose.yml",
           "line": 88,
-          "sha256": "6fdfa08c3932013d2a1fb99bff0acb844e92bde88b16d67f774337985a84beaf",
+          "sha256": "1639c04c9dae8f08f14863303a065433f5d4c545732bfe5a648725d06bb5b4f4",
           "claim": "A canonical non-root OCI image, synthetic Compose/Caddy, PostgreSQL 17, Valkey, private S3, secret injection, migration/readiness/jobs and recovery foundations are released."
         },
         {
@@ -6923,7 +6933,8 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "2026-09-09: evidence hash refreshed for shared source changed by the bounded prior-year feature; released snapshot is preserved in config/requirements-history/master-register-released-104aacc7.json. This does not mark the requirement complete."
       ],
       "evidence": [
         {
@@ -6953,7 +6964,7 @@
         {
           "path": "lib/backup.ts",
           "line": 300,
-          "sha256": "80b5ab5cb92ddaef237fc7d9aa67ad08bd72279a6f34d06437c4518fcbf71c7a",
+          "sha256": "54c47eba18a5a30427e988d73bf48a1aab714431cc3947f3f8cfb54ff5de7ec2",
           "claim": "Encrypted versioned backup scheduling, verification, retention and restoration rehearsal exist; portable backup uses private S3-compatible storage and separate identities. Logical schema stays v45."
         }
       ],
@@ -7740,7 +7751,8 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "2026-09-09: evidence hash refreshed for shared source changed by the bounded prior-year feature; released snapshot is preserved in config/requirements-history/master-register-released-104aacc7.json. This does not mark the requirement complete."
       ],
       "evidence": [
         {
@@ -7758,7 +7770,7 @@
         {
           "path": "config/release-feature-flags.json",
           "line": 6,
-          "sha256": "0dd27692665991b1476b9bd12eda12ffa088e1c9363243081928ccb5158872df",
+          "sha256": "fbd3cf51786bfd32a0b466a88bbf258e5c1362376b87a58b6306a920c50ecdc7",
           "claim": "Requirements/prompt ledgers, release manifests, feature gates, migration, security/QA and retained merge/tag history exist. The old ledger has different scope/counts."
         }
       ],

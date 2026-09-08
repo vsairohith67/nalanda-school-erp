@@ -495,3 +495,8 @@ Later roadmap only: CERTIFICATE-GRADUATION-EXIT-1A; STUDENT-ITEMS-CONCESSIONS-1A
 ## Changing this living specification
 
 Keep IDs stable. Each approved intent/status/dependency change requires a new registerVersion, a dated changelog entry with affected IDs and reasons, a priorRegisterHash over the exact previous register bytes, refreshed source/tree evidence and acceptance/security/recovery impact. New requirements need a separately approved inventory version and explicit test/schema count update; never silently reuse or drop an ID. Set approvedAt only with evidenced authorised approval and keep release state separate from operational activation. Preserve old versions through Git history.
+
+
+### 2026-09-09 owner scope correction - prior-year concessions
+
+STUDENT-ITEMS-PRIOR-YEAR-CONCESSIONS-1A narrows NPS-REQ-014/015/016 to verified immediately previous configured academic-year liabilities. No current/future/all-older relief or admissions-wide income collection is authorised. NPS-REQ-010 Student item quantities and approved rates remain independent of arrears. All 46 IDs and original intent remain preserved; AI concession recommendations remain deferred. Feature flags stay OFF at 0 percent; implementation and unresolved acceptance/release gates are recorded in `docs/evidence/STUDENT_ITEMS_PRIOR_YEAR_CONCESSIONS_1A.md`.

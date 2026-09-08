@@ -32,8 +32,8 @@ describe("bulk export governance", () => {
     expect(JSON.parse(output)).toEqual({
       schemaVersion: 1,
       status: "PASS",
-      discoveredCount: 61,
-      bulkExportCount: 41,
+      discoveredCount: 62,
+      bulkExportCount: 42,
       notBulkExportCount: 20,
       bulkExportFlagMappedSurfaceCount: 0,
       errors: []
@@ -87,7 +87,7 @@ describe("bulk export governance", () => {
     for (const surface of contract.surfaces.filter((entry) => entry.classification === "BULK_EXPORT")) {
       const source = readFileSync(surface.sourcePath, "utf8");
       expect(source, surface.id).not.toMatch(/(?:get|has)\(["'](?:fields?|select|include)["']\)/);
-      expect(source, surface.id).toMatch(/requireApi|requireAcademicReportAccess|optionalOperationsActor|parentMeetingApiAuth|auth\.|auth=|auth\s*=/);
+      expect(source, surface.id).toMatch(/requireApi|authorizePriorYear|requireAcademicReportAccess|optionalOperationsActor|parentMeetingApiAuth|auth\.|auth=|auth\s*=/);
       expect(source, surface.id).toMatch(/no-store|PRIVATE_HEADERS|privateFinanceJson/i);
     }
   });

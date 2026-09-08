@@ -16075,6 +16075,48 @@
       ],
       "notes": "Prior shared CSS/components and historical evidence are not a new per-route visual or accessibility pass. Verify each changed route/role in its owning bundle; record defects with reproduction, severity and regression evidence.",
       "roleCoverageStatus": "UNVERIFIED_NON_EXHAUSTIVE"
+    },
+    {
+      "route": "/prior-year-concessions",
+      "sourceFile": "app/prior-year-concessions/page.tsx",
+      "roles": [
+        "SUPER_ADMIN",
+        "DIRECTOR"
+      ],
+      "roleEvidence": "INHERITED_HINTS_ONLY_VERIFY_SERVER_GUARD_AND_EFFECTIVE_PERMISSIONS",
+      "owningBundle": "STUDENT-ITEMS-PRIOR-YEAR-CONCESSIONS-1A",
+      "priority": "P1",
+      "dimensions": {
+        "informationHierarchy": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "mobileResponsiveness": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "lightDarkConsistency": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "contrast": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "typography": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "spacing": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "targetSizes": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "keyboardFocus": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "reducedMotion": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "loading": "SHARED_SOURCE_BASELINE_REVIEWED",
+        "empty": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "error": "SHARED_SOURCE_BASELINE_REVIEWED",
+        "permissionDenied": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "blockedFeature": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "offlineDegraded": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "destructiveConfirmation": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "longContent": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "horizontalOverflow": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "hydrationConsole": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW"
+      },
+      "sourceStates": {
+        "empty": "EXPLICIT_IN_SCREEN",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "sourcePermissions": [
+        "VIEW_PRIOR_YEAR_CONCESSIONS"
+      ],
+      "notes": "2026-09-09 independent source review performed. Exact-case binding, request freezing and income isolation corrected. Browser dimensions remain unverified pending admitted EPHEMERAL_EXACT_HEAD_CI_ONLY harness.",
+      "roleCoverageStatus": "UNVERIFIED_NON_EXHAUSTIVE"
     }
   ],
   "criticalDefectsFixed": [],

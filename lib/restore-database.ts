@@ -30,6 +30,7 @@ import { OFFLINE_SYNC_BACKUP_KEYS, restoreOfflineSyncBackup, type OfflineSyncBac
 import { NATIVE_APP_BACKUP_KEYS, restoreNativeAppBackup, type NativeAppBackupKey } from "@/lib/native-app/backup";
 import { BIOMETRIC_ATTENDANCE_BACKUP_KEYS, restoreBiometricAttendanceBackup, type BiometricAttendanceBackupKey } from "@/lib/biometric-attendance/backup";
 import { COMMUNICATION_BACKUP_KEYS, restoreCommunicationBackup, type CommunicationBackupKey } from "@/lib/communication-backup";
+import { PRIOR_YEAR_BACKUP_KEYS, restorePriorYearBackup, type PriorYearBackupKey } from "@/lib/prior-year-concession-backup";
 import { restoreRealUserAccessBackup } from "@/lib/real-user-access/restore";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
@@ -145,6 +146,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(NATIVE_APP_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<NativeAppBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(BIOMETRIC_ATTENDANCE_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<BiometricAttendanceBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(COMMUNICATION_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<CommunicationBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(PRIOR_YEAR_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<PriorYearBackupKey, ReturnType<typeof emptyEntityResult>>),
     technicalOperations: emptyEntityResult(),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
@@ -665,6 +667,7 @@ async function restoreIntoDatabase(
     restoredBy: restoredBy.id
   });
   await restoreSubstituteAssignmentData(client, backup, backupUserToLocalUser, result);
+  await restorePriorYearBackup(client as unknown as PrismaClient, backup, result, { students: backupStudentLocalIds, payments: backupPaymentToLocalId });
 
   result.users.skipped += Math.max(0, backup.users.length - linkedParentUsers);
   if (backup.users.length) {
