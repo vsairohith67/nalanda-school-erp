@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
         const student = await prisma.student.findUniqueOrThrow({ where: { id: selected.liability.studentId } });
         if (student.academicYear !== selected.liability.operatingYear) throw new Error("CURRENT_ENROLLMENT_REVIEW_REQUIRED");
         const fee = await prisma.feeStructure.findUniqueOrThrow({ where: { academicYear_className: { academicYear: student.academicYear, className: student.className } } });
-        const payments = await prisma.payment.findMany({ where: { studentId: student.id, deletedAt: null } });
+        const payments = await prisma.payment.findMany({ where: { admissionNo: student.admissionNo, deletedAt: null } });
         const allocation = allocateFees(student, fee, await effectiveActiveSelectedReceiptPayments(prisma, payments));
         currentYearFees = { status: "EXISTING_LEDGER_UNCHANGED", annual: allocation.annualFeeAfterDiscount.toFixed(2), paid: allocation.totalCurrentYearPaid.toFixed(2), remaining: allocation.totalPending.toFixed(2) };
       } catch { currentYearFees = { status: "LEDGER_ACCESS_OR_CONFIGURATION_REQUIRED" }; }

@@ -51,6 +51,9 @@ jobs:
             printf 'DATABASE_URL=postgresql://%s' "$POSTGRES_CI_USER"
             printf ':%s' "$POSTGRES_CI_PASSWORD"
             printf '@127.0.0.1:5432/%s?schema=public\n' "$POSTGRES_CI_DATABASE"
+            printf 'DIRECT_URL=postgresql://%s' "$POSTGRES_CI_USER"
+            printf ':%s' "$POSTGRES_CI_PASSWORD"
+            printf '@127.0.0.1:5432/%s?schema=public\n' "$POSTGRES_CI_DATABASE"
           } >> "$GITHUB_ENV"
       - name: Verify exact source and paired schema
         run: |

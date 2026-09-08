@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Decimal } from "@prisma/client/runtime/index-browser";
 import { useRouter } from "next/navigation";
 
 type Item = { id: string; itemCode: string; name: string; studentLinkPolicy: string; rates: Array<{ id: string; academicYear: string; amount: string; effectiveFrom: string | null; effectiveTo: string | null }> };

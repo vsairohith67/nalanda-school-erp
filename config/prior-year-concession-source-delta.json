@@ -20,7 +20,7 @@
     {
       "path": "app/api/prior-year-concessions/route.ts",
       "baselineSha256": null,
-      "sha256": "6a2498d7753c865c91b3d947a3f29d355f76999d04d9d46c8bd6203ac211f35b"
+      "sha256": "df20b16c7ac5c4da7c44c98c5edd5ccfc0b04c1907ab33b9391cfb0da1605c88"
     },
     {
       "path": "app/misc-income/[id]/page.tsx",
@@ -50,7 +50,7 @@
     {
       "path": "components/misc-income-form.tsx",
       "baselineSha256": "8cfb8c2f7e2624207d6aff6dee81856dff0499b4d46251ecc20d0f054a9a83f7",
-      "sha256": "c8cbf2f1bdaa8fdc32ccc33caa2a8c2863deb36a249dcbbe08dd86215f1e87cd"
+      "sha256": "a5bb15749606fdafbaa5a1aea65f739b9210b8dc942d6e3dde59861744e4c9be"
     },
     {
       "path": "components/prior-year-case-preparation.tsx",

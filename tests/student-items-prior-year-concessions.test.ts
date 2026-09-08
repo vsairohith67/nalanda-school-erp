@@ -64,7 +64,7 @@ function freshDatabase(label: string) {
   if (postgres) {
     if (process.env.CI !== "true" || process.env.POSTGRES_READINESS_SYNTHETIC_QA !== "1" || !originalUrl) throw new Error("EPHEMERAL_CI_POSTGRES_REQUIRED");
     const url = new URL(originalUrl); url.searchParams.set("schema", `prior_year_${label}_${suffix.replaceAll("-", "")}`);
-    execFileSync(process.execPath, ["node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", "prisma/postgresql/schema.prisma"], { env: { ...process.env, DATABASE_URL: url.toString() }, stdio: "pipe" });
+    execFileSync(process.execPath, ["node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", "prisma/postgresql/schema.prisma"], { env: { ...process.env, DATABASE_URL: url.toString(), DIRECT_URL: url.toString() }, stdio: "pipe" });
     return url.toString();
   }
   const directory = path.resolve("tmp/student-items-concessions", suffix, label); mkdirSync(directory, { recursive: true });
