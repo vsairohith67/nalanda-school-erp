@@ -1,335 +1,79 @@
 "use client";
-
-import { useState } from "react";
-import { readSpreadsheetRows } from "@/lib/client-spreadsheet";
-import type {
-  ImportRow,
-  StudentImportMode,
-  StudentImportPreview
-} from "@/lib/student-import";
-import {
-  canChangeImportInputs,
-  IMPORT_ACTION_COMPLETED_MESSAGE,
-  isImportActionDisabled,
-  type ImportSubmitAction
-} from "@/lib/import-action-state";
-
-type ImportResult = {
-  created: number;
-  updated: number;
-  skipped: number;
-  skippedExisting: number;
-  errors: ErrorRow[];
-  warnings: string[];
-  batchId: string;
-};
-
-type ErrorRow = {
-  rowNumber: number;
-  admissionNo: string;
-  studentName: string;
-  className: string;
-  reason: string;
-  originalValuesJson: string;
-};
-
+import { useEffect, useRef, useState } from "react";
+import { normalizeStudentImportRows, type StudentImportPreview, type StudentImportMode } from "@/lib/student-import";
+import { projectStudentRows, suggestedStudentMapping, STUDENT_IMPORT_FIELDS, STUDENT_MAPPING_VERSION, type StudentMapping } from "@/lib/student-import-contract";
+import { ImportRowErrors } from "@/components/import-row-errors";
 export function StudentImportPanel() {
-  const [rawRows, setRawRows] = useState<ImportRow[]>([]);
-  const [preview, setPreview] = useState<StudentImportPreview | null>(null);
-  const [mode, setMode] = useState<StudentImportMode>("skip");
-  const [confirmed, setConfirmed] = useState(false);
-  const [message, setMessage] = useState("");
-  const [result, setResult] = useState<ImportResult | null>(null);
-  const [fileWorking, setFileWorking] = useState(false);
-  const [pendingAction, setPendingAction] = useState<ImportSubmitAction | null>(null);
-  const [fileName, setFileName] = useState("");
-  const [notes, setNotes] = useState("");
-  const [lastBatchId, setLastBatchId] = useState("");
-
-  async function onFile(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    setPreview(null);
-    setResult(null);
-    setConfirmed(false);
-    if (!file) return;
-    setFileName(file.name);
-    setFileWorking(true);
-    setMessage("");
-    try {
-      const rows = await readSpreadsheetRows<ImportRow>(file);
-      if (!rows.length) throw new Error("The selected file has no student rows");
-      const response = await fetch("/api/import/students", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action: "preview", rows })
-      });
-      const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Unable to preview student import");
-      setRawRows(rows);
-      setPreview(json.preview);
-      setMessage(`Preview ready: ${json.preview.counts.valid} valid of ${json.preview.counts.total} rows.`);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to read import file");
-    } finally {
-      setFileWorking(false);
-    }
+  const [source, setSource] = useState<Record<string, unknown>[]>([]), [mapping, setMapping] = useState<StudentMapping>({});
+  const [preview, setPreview] = useState<StudentImportPreview | null>(null), [payload, setPayload] = useState<Record<string, string>[]>([]);
+  const [mode, setMode] = useState<StudentImportMode>("skip"), [capability, setCapability] = useState<any>(null), [year, setYear] = useState("");
+  const [classChoices, setClassChoices] = useState<Record<string, string>>({}), [message, setMessage] = useState(""), [busy, setBusy] = useState(false);
+  const [approved, setApproved] = useState(false), [serverPreview, setServerPreview] = useState(false), [result, setResult] = useState<any>(null);
+  const receipt = useRef(""), actorContext = useRef("");
+  const generation = useRef(0), worker = useRef<Worker | null>(null), request = useRef<AbortController | null>(null), fileInput = useRef<HTMLInputElement>(null);
+  function invalidate() { receipt.current = ""; generation.current++; request.current?.abort(); worker.current?.terminate(); worker.current = null; setPreview(null); setPayload([]); setApproved(false); setServerPreview(false); setResult(null); setBusy(false); }
+  function reset() { invalidate(); setSource([]); setMapping({}); setClassChoices({}); if (fileInput.current) fileInput.current.value = ""; setMessage("Review cleared. Check saved batches if a request had already been sent."); }
+  useEffect(() => {
+    const controller = new AbortController();
+    const refresh = () => fetch("/api/import/students", { signal: controller.signal, cache: "no-store" }).then(async r => { if (!r.ok) { if ([401,403].includes(r.status)) reset(); throw new Error(); } return r.json(); }).then(c => { if (actorContext.current && actorContext.current !== c.actorContext) reset(); actorContext.current = c.actorContext; setCapability(c); if (!c.import) setApproved(false); }).catch(() => { if (!controller.signal.aborted) { setCapability(null); setApproved(false); } });
+    void refresh(); const timer = setInterval(refresh, 30000); window.addEventListener("focus", refresh);
+    return () => { generation.current++; controller.abort(); request.current?.abort(); worker.current?.terminate(); clearInterval(timer); window.removeEventListener("focus", refresh); };
+  }, []);
+  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; reset(); if (!file) return;
+    const ticket = generation.current; setBusy(true); setMessage("Parsing locally. No source data has been sent.");
+    const parser = new Worker(new URL("../lib/student-source.worker.ts", import.meta.url)); worker.current = parser;
+    const timer = setTimeout(() => { parser.terminate(); if (generation.current === ticket) { setBusy(false); setMessage("Local parsing timed out. Split the source and retry."); } }, 10000);
+    parser.onmessage = ({ data }) => { clearTimeout(timer); parser.terminate(); if (generation.current !== ticket) return; setBusy(false); if (data.error) return setMessage(data.error); setSource(data.rows); setMapping(suggestedStudentMapping(data.headers)); setMessage("Review the mapping before validation. Excluded values remain in this session only."); };
+    parser.onerror = () => { clearTimeout(timer); parser.terminate(); if (generation.current === ticket) { setBusy(false); setMessage("Local parser unavailable. Cancel and retry."); } }; parser.postMessage(file);
   }
-
-  async function importRows() {
-    if (!preview || !confirmed || pendingAction) return;
-    setPendingAction("import");
-    setResult(null);
-    setMessage("");
-    try {
-      const response = await fetch("/api/import/students", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action: "import", rows: rawRows, mode, confirmed: true, fileName, notes })
-      });
-      const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Student import failed");
-      setResult(json.result);
-      setLastBatchId(json.result.batchId);
-      setMessage(`Student import completed. Review the summary below. ${IMPORT_ACTION_COMPLETED_MESSAGE}`);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Student import failed");
-    } finally {
-      setPendingAction(null);
-    }
+  const classes = (capability?.classes ?? []) as { academicYear: string; className: string; section: string }[];
+  const classHeader = Object.keys(mapping).find(k => mapping[k] === "className");
+  const sourceClasses = [...new Set(source.map(r => String(classHeader ? r[classHeader] ?? "" : "")))];
+  function localValidate() {
+    invalidate(); try {
+      if (!year) throw new Error("Select the academic year explicitly.");
+      const clean = projectStudentRows(source, mapping);
+      for (const row of clean) {
+        if (row.academicYear && row.academicYear !== year) throw new Error("Source academic year conflicts with the selected year.");
+        row.academicYear = year;
+        const selected = classChoices[row.className ?? ""];
+        const options = classes.filter(c => c.academicYear === year && c.className === row.className && c.section === (row.section ?? ""));
+        const target = selected ? classes.find(c => JSON.stringify(c) === selected && c.academicYear === year) : options.length === 1 ? options[0] : null;
+        if (!target) throw new Error("Resolve each source class/section against an allowed reference before validation.");
+        row.className = target.className; row.section = target.section;
+      }
+      setPayload(clean); setPreview(normalizeStudentImportRows(clean)); setMessage("Local validation only: no server request or write. Contact omissions remain legacy warnings.");
+    } catch(e) { setMessage(e instanceof Error ? e.message : "Local validation failed."); }
   }
-
-  async function runTrial() {
-    if (!preview || pendingAction) return;
-    setPendingAction("trial");
-    setMessage("");
-    setResult(null);
+  async function call(action: "preview" | "dry-run" | "import") {
+    if (!payload.length || busy || (action !== "preview" && (!serverPreview || !capability?.import))) return;
+    const ticket = generation.current, controller = new AbortController(); request.current = controller; setBusy(true); setApproved(false);
     try {
-      const response = await fetch("/api/import/students", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action: "dry-run", rows: rawRows, mode, fileName, notes })
-      });
-      const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Student trial import failed");
-      setLastBatchId(json.batchId);
-      setMessage([
-        `Trial saved: ${json.summary.createdCount} would be created, ${json.summary.updatedCount} updated, ${json.summary.skippedCount} skipped, ${json.summary.errorCount} errors. No students were changed.`,
-        IMPORT_ACTION_COMPLETED_MESSAGE,
-        json.summary.skippedCount > 0
-          ? "These students already exist in this database. Use Update Existing if you want to update them, or reset pilot sample data before testing again."
-          : ""
-      ].filter(Boolean).join(" "));
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Student trial import failed");
-    } finally {
-      setPendingAction(null);
-    }
+      const response = await fetch("/api/import/students", { method: "POST", signal: controller.signal, headers: { "content-type": "application/json" }, body: JSON.stringify({ action, rows: payload, mode, confirmed: action === "import", fileName: "reviewed-student-import", mappingVersion: STUDENT_MAPPING_VERSION, receipt: receipt.current }) });
+      const data = await response.json(); if (ticket !== generation.current) return;
+      if (!response.ok) { setServerPreview(false); throw new Error(data.error ?? "Request refused. Refresh your session and validate again."); }
+      if (action === "preview") { receipt.current = data.receipt; setPreview(data.preview); setServerPreview(true); setMessage("Server preview complete; no batch or Student write."); }
+      else { setResult(data); setServerPreview(false); setMessage(action === "dry-run" ? "Validation report saved: batch/audit metadata created; Student records unchanged." : "Server execution returned. Reconcile counts and the saved batch below."); }
+    } catch(e) { if (ticket === generation.current) setMessage(e instanceof Error ? e.message : "Request failed; reconcile before retry."); }
+    finally { if (ticket === generation.current) setBusy(false); }
   }
-
-  const previewErrors = preview?.rows.filter((row) => row.errors.length) ?? [];
-  const previewWarnings = preview?.rows.flatMap((row) =>
-    row.warnings.map((warning) => `CSV Row ${row.rowNumber}: ${warning}`)
-  ) ?? [];
-
-  return (
-    <>
-      <section className="card card-pad">
-        <div className="section-title">
-          <div>
-            <h3>Student Master Import</h3>
-            <p>Upload Excel or CSV, normalize inconsistent columns, review issues, then confirm import.</p>
-          </div>
-        </div>
-        <div className="form-grid">
-          <label className="wide">
-            Student Excel / CSV File
-            <input type="file" accept=".xlsx,.xls,.csv" onChange={onFile} disabled={!canChangeImportInputs({ fileWorking })} />
-          </label>
-          <label>
-            Import Mode
-            <select value={mode} onChange={(event) => setMode(event.target.value as StudentImportMode)}>
-              <option value="skip">Skip duplicates</option>
-              <option value="update">Update existing</option>
-              <option value="create-only">Create new only</option>
-            </select>
-            <span className="muted-text">
-              Skip duplicates keeps existing admission numbers unchanged. Update existing edits existing students. Create new only fails or skips existing students.
-            </span>
-          </label>
-          <label className="wide">
-            Batch Notes (optional)
-            <input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Example: Trial against June Student Master" />
-          </label>
-        </div>
-        <p className="notice">
-          sample-students.csv intentionally contains 4 valid rows and 1 invalid row.
-          The invalid row should remain rejected during trial runs and confirmed imports.
-        </p>
-        {preview ? (
-          <>
-            <div className="grid four" style={{ marginTop: 16 }}>
-              <ImportCount label="Total Rows" value={preview.counts.total} />
-              <ImportCount label="Valid Rows" value={preview.counts.valid} />
-              <ImportCount label="Rows with Errors" value={preview.counts.errors} />
-              <ImportCount label="Existing Admissions" value={preview.counts.existing} />
-            </div>
-            {preview.counts.existing ? (
-              <p className="notice">
-                These students already exist in this database. Use Update Existing if you want to update them, or reset pilot sample data before testing again.
-              </p>
-            ) : null}
-            <label className="review-checkbox">
-              <input
-                type="checkbox"
-                checked={confirmed}
-                onChange={(event) => setConfirmed(event.target.checked)}
-              />
-              <span>I reviewed the normalized preview, errors, warnings, and selected import mode.</span>
-            </label>
-            <div className="top-actions" style={{ marginTop: 12 }}>
-              <button
-                className="secondary"
-                type="button"
-                onClick={runTrial}
-                disabled={isImportActionDisabled({ fileWorking, pendingAction })}
-              >
-                {pendingAction === "trial" ? "Saving Trial..." : "Save Trial Run (No Changes)"}
-              </button>
-              <button
-                onClick={importRows}
-                disabled={isImportActionDisabled({
-                  fileWorking,
-                  pendingAction,
-                  baseDisabled: !confirmed || preview.counts.valid === 0
-                })}
-              >
-                {pendingAction === "import" ? "Importing..." : "Confirm Student Import"}
-              </button>
-            </div>
-          </>
-        ) : null}
-        {message ? <p className="notice" role="status">{message}</p> : null}
-        {lastBatchId ? <p><a href={`/import-verification/${lastBatchId}`}>View saved verification batch</a></p> : null}
-      </section>
-
-      {preview ? (
-        <section className="card">
-          <div className="section-title">
-            <h3>Normalized Preview — First 50 Rows</h3>
-            <p className="muted-text">CSV row numbers include the header row, so the first data row is row 2.</p>
-          </div>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>CSV Row</th><th>Adm No</th><th>Student</th><th>Father</th><th>Class</th>
-                  <th>Phone 1</th><th>Phone 2</th><th>Type</th><th>Discount</th><th>Issues</th>
-                </tr>
-              </thead>
-              <tbody>
-                {preview.rows.slice(0, 50).map((row) => (
-                  <tr key={row.rowNumber}>
-                    <td>{row.rowNumber}</td>
-                    <td>{row.normalized.admissionNo || "—"}</td>
-                    <td>{row.normalized.studentName || "—"}</td>
-                    <td>{row.normalized.fatherName || "—"}</td>
-                    <td>{row.normalized.className || "—"}</td>
-                    <td>{row.normalized.phone1 || "—"}</td>
-                    <td>{row.normalized.phone2 || "—"}</td>
-                    <td>{row.normalized.studentType}</td>
-                    <td>{row.normalized.discountPercent}%</td>
-                    <td>
-                      {row.errors.map((error) => <div className="error" key={error}>{error}</div>)}
-                      {row.warnings.map((warning) => <div key={warning}>{warning}</div>)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="card-pad">
-            {preview.fileWarnings.map((warning) => <p className="notice" key={warning}>{warning}</p>)}
-            {previewErrors.length ? <p className="error">{previewErrors.length} row(s) have validation errors and will not import.</p> : null}
-            {previewWarnings.length ? (
-              <details>
-                <summary>{previewWarnings.length} row warning(s)</summary>
-                <ul>{previewWarnings.map((warning, index) => <li key={`${warning}-${index}`}>{warning}</li>)}</ul>
-              </details>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
-
-      {result ? <StudentImportResult result={result} /> : null}
-    </>
-  );
-}
-
-function ImportCount({ label, value }: { label: string; value: number }) {
-  return <div className="card stat"><span>{label}</span><strong>{value}</strong></div>;
-}
-
-function StudentImportResult({ result }: { result: ImportResult }) {
-  return (
-    <section className="card card-pad">
-      <div className="section-title">
-        <div>
-          <h3>Student Import Result</h3>
-          <p>Created {result.created}, updated {result.updated}, skipped because existing {result.skippedExisting ?? result.skipped}, errors {result.errors.length}.</p>
-          <a href={`/import-verification/${result.batchId}`}>View Import Verification</a>
-        </div>
-        {result.errors.length ? (
-          <button className="secondary" onClick={() => downloadErrorCsv(result.errors)}>Download Error CSV</button>
-        ) : null}
-      </div>
-      <div className="grid four">
-        <ImportCount label="Created" value={result.created} />
-        <ImportCount label="Updated" value={result.updated} />
-        <ImportCount label="Skipped Existing" value={result.skippedExisting ?? result.skipped} />
-        <ImportCount label="Errors" value={result.errors.length} />
-      </div>
-      {(result.skippedExisting ?? result.skipped) > 0 ? (
-        <p className="notice">
-          These students already exist in this database. Use Update Existing if you want to update them, or reset pilot sample data before testing again.
-        </p>
-      ) : null}
-      {result.warnings.length ? (
-        <details style={{ marginTop: 16 }}>
-          <summary>{result.warnings.length} warning(s)</summary>
-          <ul>{result.warnings.map((warning, index) => <li key={`${warning}-${index}`}>{warning}</li>)}</ul>
-        </details>
-      ) : null}
-      {result.errors.length ? (
-        <div className="table-wrap" style={{ marginTop: 16 }}>
-          <table>
-            <thead><tr><th>CSV Row</th><th>Adm No</th><th>Student</th><th>Class</th><th>Reason</th></tr></thead>
-            <tbody>{result.errors.map((error, index) => (
-              <tr key={`${error.rowNumber}-${index}`}>
-                <td>{error.rowNumber}</td><td>{error.admissionNo}</td><td>{error.studentName}</td>
-                <td>{error.className}</td><td>{error.reason}</td>
-              </tr>
-            ))}</tbody>
-          </table>
-        </div>
-      ) : null}
-    </section>
-  );
-}
-
-function downloadErrorCsv(errors: ErrorRow[]) {
-  const headers = ["rowNumber", "admissionNo", "studentName", "className", "reason", "originalValuesJson"];
-  const csv = [
-    headers.join(","),
-    ...errors.map((row) => headers.map((header) => csvCell(row[header as keyof ErrorRow])).join(","))
-  ].join("\r\n");
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "student-import-errors.csv";
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-function csvCell(value: unknown) {
-  return `"${String(value ?? "").replace(/"/g, "\"\"")}"`;
+  function template() { const url = URL.createObjectURL(new Blob(["academicYear,admissionNo,studentName,fatherName,motherName,className,section,phone1,phone2,dateOfBirth\r\n"], { type: "text/csv;charset=utf-8" })); const link = document.createElement("a"); link.href = url; link.download = "nalanda-legacy-students-v1.csv"; link.click(); URL.revokeObjectURL(url); }
+  return <section className="card card-pad" style={{ minWidth: 0, overflowWrap: "anywhere" }}>
+    <h3>Student Master Import — reviewed source mapping</h3>
+    <p><a href="/onboarding">Controlled onboarding XLSX template and workflow</a></p><button type="button" className="secondary" onClick={template}>Download supported legacy Student CSV template</button>
+    <p>Legacy required: admission number, Student name and class. Father name and phone omissions warn. Controlled onboarding requires Student father name and phone, and Guardian primary mobile. Never enter dummy contacts. Keep admission numbers as text.</p>
+    <p role="status">{capability ? `Preview available / ${capability.import ? "Import available under current authority" : "Import disabled"}` : "Access denied or capability unavailable"}</p>
+    <label>Academic year<select disabled={busy} value={year} onChange={e => { invalidate(); setYear(e.target.value); setClassChoices({}); }}><option value="">Select year</option>{[...new Set(classes.map(c => c.academicYear))].map(y => <option key={y}>{y}</option>)}</select></label>
+    <label>Source CSV / XLSX<input ref={fileInput} type="file" accept=".csv,.xlsx" disabled={busy} onChange={onFile} /></label><button type="button" className="secondary" onClick={reset}>Cancel / clear review</button>
+    {source.length ? <><p>Mapping {STUDENT_MAPPING_VERSION}. Excluded columns: {Object.values(mapping).filter(v => !v).length}. Their values will not be uploaded.</p>
+      {Object.entries(mapping).map(([header, target]) => <label key={header}>{header}<select disabled={busy} value={target} onChange={e => { invalidate(); setMapping(m => ({ ...m, [header]: e.target.value as any })); }}><option value="">Exclude locally</option>{STUDENT_IMPORT_FIELDS.map(f => <option key={f}>{f}</option>)}</select></label>)}
+      {sourceClasses.map((label, i) => <label key={i}>Class/section mapping: {label || "missing"}<select disabled={busy} value={classChoices[label] ?? ""} onChange={e => { invalidate(); setClassChoices(c => ({ ...c, [label]: e.target.value })); }}><option value="">Use exact separate fields if unambiguous</option>{classes.filter(c => c.academicYear === year).map(c => <option key={JSON.stringify(c)} value={JSON.stringify(c)}>{c.className} / {c.section || "class-wide"}</option>)}</select></label>)}
+      <label>Import mode<select disabled={busy} value={mode} onChange={e => { invalidate(); setMode(e.target.value as StudentImportMode); }}><option value="skip">Skip existing</option><option value="create-only">Create new only</option><option value="update">Update existing</option></select></label><button disabled={busy} onClick={localValidate}>Validate approved fields locally</button></> : null}
+    {preview ? <><p>{preview.counts.total} rows · {preview.counts.valid} valid · {preview.counts.errors} errors</p><ImportRowErrors rows={preview.rows.filter(r => r.errors.length || r.warnings.length).map(r => ({ row: r.rowNumber, messages: [...r.errors, ...r.warnings] }))} />
+      <details><summary>Optional preview table</summary><div className="table-wrap"><table><thead><tr><th>Row</th><th>Admission</th><th>Student</th><th>Class / section</th></tr></thead><tbody>{preview.rows.slice(0, 50).map(r => <tr key={r.rowNumber}><td>{r.rowNumber}</td><td>{r.normalized.admissionNo}</td><td>{r.normalized.studentName}</td><td>{r.normalized.className} / {r.normalized.section}</td></tr>)}</tbody></table></div></details>
+      <button disabled={busy} onClick={() => call("preview")}>Server validation / preview</button><label><input type="checkbox" checked={approved} disabled={!serverPreview || !capability?.import || busy} onChange={e => setApproved(e.target.checked)} />I reviewed this context, mapping, mode, errors and warnings.</label>
+      <button disabled={busy || !serverPreview || !capability?.import} onClick={() => call("dry-run")}>Save validation report — creates batch/audit metadata; does not change Student records</button><button disabled={busy || !approved || !serverPreview || !capability?.import || !preview.counts.valid} onClick={() => call("import")}>Confirm Student import</button></> : null}
+    <p role="status">{message}</p>{result ? <><p>{result.result ? `Created ${result.result.created}; updated ${result.result.updated}; skipped ${result.result.skipped}; errors ${result.result.errors.length}.` : "Validation metadata saved."}</p><a href={`/import-verification/${result.batchId ?? result.result?.batchId}`}>Open authoritative batch reconciliation</a></> : null}
+  </section>;
 }
