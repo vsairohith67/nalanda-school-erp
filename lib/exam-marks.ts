@@ -143,7 +143,7 @@ function serializeEntry(row: {
   };
 }
 
-function parseMarkRow(value: unknown, maximum: Prisma.Decimal, decimalPlaces: number): MarkRowInput {
+export function parseMarkRow(value: unknown, maximum: Prisma.Decimal, decimalPlaces: number): MarkRowInput {
   const row = objectInput(value);
   const studentId = safeId(row.studentId, "Student");
   const entryState = String(row.entryState ?? "NOT_ENTERED").trim().toUpperCase();
