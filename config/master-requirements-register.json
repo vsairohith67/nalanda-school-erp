@@ -1184,7 +1184,12 @@
         "docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md",
         "scripts/qa-certificate-graduation-exit-1a.ts"
       ],
-      "pullRequests": [],
+      "pullRequests": [
+        {
+          "number": 25,
+          "role": "OPEN_EXCLUDED"
+        }
+      ],
       "tags": [],
       "featureFlags": [
         "certificate-graduation-exit-1a: OFF 0%",
@@ -1366,7 +1371,12 @@
         "docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md",
         "scripts/qa-certificate-graduation-exit-1a.ts"
       ],
-      "pullRequests": [],
+      "pullRequests": [
+        {
+          "number": 25,
+          "role": "OPEN_EXCLUDED"
+        }
+      ],
       "tags": [],
       "featureFlags": [
         "certificate-graduation-exit-1a: OFF 0%",
@@ -1559,7 +1569,12 @@
         "docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md",
         "scripts/qa-certificate-graduation-exit-1a.ts"
       ],
-      "pullRequests": [],
+      "pullRequests": [
+        {
+          "number": 25,
+          "role": "OPEN_EXCLUDED"
+        }
+      ],
       "tags": [
         "bulk-onboarding-v41-2026-08-10"
       ],
