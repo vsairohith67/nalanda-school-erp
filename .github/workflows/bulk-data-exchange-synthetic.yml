@@ -1,0 +1,124 @@
+name: Bulk exchange exact-head synthetic acceptance
+on:
+  push:
+    branches: [feature/bulk-data-exchange-ux-1a]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: bulk-exchange-synthetic-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  synthetic-http:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      CI: "true"
+      NALANDA_ENVIRONMENT: TEST
+      DATABASE_PROVIDER: sqlite
+      AUTH_SECRET: synthetic-bulk-ci-auth-secret-not-for-use
+      SESSION_SECRET: synthetic-bulk-ci-session-secret-not-for-use
+      APP_ORIGIN: http://127.0.0.1:47832
+      BULK_EXACT_HEAD: ${{ github.sha }}
+      ONBOARDING_STORAGE_ROOT: ${{ github.workspace }}/tmp/release-ci/private-onboarding
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: Admit isolated exact-head fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          test "$(git rev-parse HEAD)" = "$BULK_EXACT_HEAD"
+          test ! -e prisma/dev.db
+          test ! -e tmp/release-ci/synthetic.db
+          mkdir -p tmp/release-ci
+          touch tmp/release-ci/synthetic.db
+          echo "DATABASE_URL=file:$GITHUB_WORKSPACE/tmp/release-ci/synthetic.db" >> "$GITHUB_ENV"
+      - name: Prepare invented records only
+        run: |
+          pnpm db:generate:sqlite
+          pnpm db:migrate:sqlite
+          NODE_ENV=development RELEASE_CI_SYNTHETIC_OPT_IN=true pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
+          pnpm exec tsx scripts/bulk-data-exchange-e2e.ts prepare
+      - name: Production build with operational flags OFF
+        run: pnpm build
+      - name: Internal HTTP acceptance and verified teardown
+        shell: bash
+        run: |
+          set -euo pipefail
+          server_pid=""
+          stop_owned_server() {
+            if [[ -n "$server_pid" ]]; then
+              kill "$server_pid" 2>/dev/null || true
+              wait "$server_pid" 2>/dev/null || true
+              server_pid=""
+            fi
+            for attempt in $(seq 1 20); do
+              if node -e "const s=require('node:net').connect(47832,'127.0.0.1'); s.on('connect',()=>{s.destroy();process.exit(1)});s.on('error',()=>process.exit(0));s.setTimeout(1000,()=>process.exit(1));"; then return; fi
+              sleep 1
+            done
+            echo "Owned listener teardown failed" >&2
+            return 1
+          }
+          trap stop_owned_server EXIT
+          ready() {
+            for attempt in $(seq 1 120); do
+              if curl -fsS http://127.0.0.1:47832/login >/dev/null; then return; fi
+              kill -0 "$server_pid"
+              sleep 2
+            done
+            return 1
+          }
+          NODE_ENV=production node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 47832 >tmp/release-ci/http-off.log 2>&1 &
+          server_pid=$!
+          ready
+          NODE_ENV=production pnpm exec tsx scripts/bulk-data-exchange-e2e.ts off
+          stop_owned_server
+          NODE_ENV=development RELEASE_FEATURE_FLAGS_QA_MODE=SYNTHETIC_COPY_ONLY RELEASE_FEATURE_FLAGS_QA_ENABLED=real-data-imports,bulk-exports node node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port 47832 >tmp/release-ci/http-on.log 2>&1 &
+          server_pid=$!
+          ready
+          NODE_ENV=development pnpm exec tsx scripts/bulk-data-exchange-e2e.ts on
+          stop_owned_server
+          echo '{"listenerClosed":true,"syntheticOnly":true}' >tmp/release-ci/bulk-teardown-result.json
+      - name: Always verify fixture teardown
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os, pathlib, socket, shutil, json
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          workspace = pathlib.Path(os.environ['GITHUB_WORKSPACE']).resolve()
+          root = workspace / 'tmp' / 'release-ci'
+          assert root.resolve() == root and root.is_relative_to(workspace)
+          probe = socket.socket(); probe.settimeout(2)
+          closed = probe.connect_ex(('127.0.0.1', 47832)) != 0
+          probe.close()
+          removed = []
+          if closed and root.exists():
+              for name in ['synthetic.db', 'synthetic.db-wal', 'synthetic.db-shm', 'synthetic.db-journal', 'bulk-state.json', 'private-onboarding', 'http-off.log', 'http-on.log']:
+                  target = root / name
+                  assert target.resolve().is_relative_to(root)
+                  if target.is_dir(): shutil.rmtree(target)
+                  elif target.exists(): target.unlink()
+                  assert not target.exists()
+                  removed.append(name)
+              (root / 'bulk-teardown-result.json').write_text(json.dumps({'listenerClosed': closed, 'syntheticFixtureRemoved': True, 'removedPaths': removed}))
+          elif root.exists():
+              (root / 'bulk-teardown-result.json').write_text(json.dumps({'listenerClosed': closed, 'syntheticFixtureRemoved': False}))
+          assert closed, 'Owned TCP listener is still open; fixture cleanup refused'
+          PY
+      - name: Retain sanitized assertions only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bulk-exchange-${{ github.sha }}
+          path: tmp/release-ci/bulk-*-result.json
+          if-no-files-found: warn
+          retention-days: 14

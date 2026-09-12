@@ -12,38 +12,72 @@ This task: Student import projection and panels; marks CSV adapters, existing im
 Protected operational DB: C:/Users/rohit/Documents/school software/prisma/dev.db; SHA256 65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA; size 8409088; no sidecars at baseline. Never used as fixture. Local main is 16 commits behind origin/main and was not updated.
 Parked PR19: 1ba360b123ded770f1554d59fbd21c86b9943427; PR24: 5bf70e4c4be07b706224debe01a27c54fd0af096; PR25: 67c504be6230f763663cf19faf50d9bc46dc6902. All verified OPEN; untouched.
 
-## Finding ledger
+## Finding-to-fix-to-test ledger
 
-| Finding | Implementation | Evidence / gate |
+| Original finding | Fix retained | Demonstrated evidence / remaining gate |
 |---|---|---|
-| P1 original legacy Student rows leave browser | New allowlisted object; strict bounded server envelope/row validation; raw Student error metadata removed | Sentinel unit test PASS; actual UI network capture pending |
-| P2 source aliases / class-section | Versioned exact header suggestions, explicit duplicate-target resolution and reference selection | Focused tests PASS; Browser pending |
-| P2 legacy template discovery | Header-only legacy CSV template; controlled XLSX path linked | Browser download pending |
-| P2 generic legacy marks template | Authorised assessment/year-specific roster CSV | Focused API/runtime pending |
-| P2 governed CSV absent | Narrow signed-context adapter through existing draft service; 200-row existing limit | Focused/runtime pending |
-| P2 disabled import feedback | Server-owned capabilities; periodic refresh and boundary checks | Browser/ON-OFF runtime pending |
-| P2 focus/Escape | Native modal dialog with focus restoration and busy-state semantics | Browser pending |
-| P2 stale onboarding bundle eligibility | File/batch/approval reset; late-response epoch; decision edits require revalidation | Browser pending |
-| P2 mobile errors | Wrapped expandable row issue summaries, optional tables | Browser pending |
-| P2 Student export scope | Shared list/export filters and historical enrollment projection, header-only zero result | Actual CSV checks pending |
-| P3 misleading trial wording | Explicit batch/audit metadata wording | Component changed; Browser pending |
+| P1 original Student rows sent | New approved-field projection; independently bounded server envelope and field allowlist | Normal UI request capture excludes forbidden sentinel; forged-field and malformed-JSON tests pass |
+| P2 source aliases/class-section | Versioned deterministic headings; duplicate targets block; explicit class+section pair mapping | Alias/conflict/text-ID tests pass; actual mapping rendered |
+| P2 legacy template discovery | Legacy header-only CSV download; controlled XLSX link and explicit workflow | Actual menu rendered; controlled canonical package roundtrip passes |
+| P2 generic marks template | Exact authorised legacy assessment/year/roster CSV | Source + focused tests; authenticated download pending hosted run |
+| P2 governed import missing | Separate signed CSV/XLSX adapter through existing governed draft save | Blank/zero/states/max/precision tests pass; actual services/retries/concurrency pending hosted run |
+| P2 disabled feedback | Server capabilities before confirmation, refresh on focus/interval, API gates | OFF controls demonstrated; production OFF HTTP pending hosted run |
+| P2 focus/Escape | Existing native dialog with contained focus/Escape/focus return | Browser open, Tab, Escape, restored trigger pass |
+| P2 stale onboarding bundle | New worker-only canonical package; reset eligibility/file/decisions; obsolete requests ignored | Actual XLSX worker, bundle change, same file again and local cancel pass; authority loss clears retained history |
+| P2 mobile errors | Wrapped expandable row/field/reason with optional wide tables | 320/390/768/1440 light/dark layouts and expanded long Unicode errors do not overflow |
+| P2 Student export ignores scope | Shared listing/filter semantics, selected-year enrollments and minimal eight columns | Query/history/invalid-filter tests pass; actual CSV bytes pending hosted run |
+| P3 misleading trial wording | Explicit batch/audit metadata wording | Rendered wording distinguishes local review, server preview, saved report and mutation |
 
-Historical review remains 43 probes, 42 passed/completed and one failed optional-contact expectation. It was not E2E. New tests confirm legacy omissions WARN, controlled omissions BLOCK. Names and admission text are preserved. No real source workbook opened.
+Historical parent review is preserved: 43 probes, 42 passed/completed, one failed optional-contact expectation. This was component evidence, not E2E. Legacy missing father/phone remains WARNING; controlled Student father/phone and Guardian mobile remain BLOCKING. No dummy contacts or real source workbook used.
 
-## Checkpoint evidence
+## Checkpoints and verification
 
-First focused run: 68 passed / 2 failed (new contact assertion used inaccurate legacy issue labels; existing source-markup dialog test did not follow extracted component). Corrected assertions, unchanged policy. Rerun: 5 files / 70 tests passed. Component and library TypeScript partitions passed before later review fixes; final rerun required.
+- Projection checkpoint: cc764128ec56817f51663c7858c911755219417e.
+- Separate marks checkpoint: 2af541af2a8b8b8d88cc93fa0bb883818ca6e239.
+- Canonical onboarding/state/export checkpoint: 8cb1742d31ba7d21e4a8d5890b9fb869e86e3007.
+- Final feature SHA and PR/CI are recorded by the retained Git history and final handoff. This document does not self-certify release.
+- Focused final run: 7 files, 79 tests PASS. Includes unknown values, bounded streams, duplicate mappings, required-field differences, canonical ZIP byte stability across different clocks, independent marks states and enrollment scope.
+- Full regression initial run: 244 files passed, 4 failed, 1 skipped; 2299 tests passed, 4 failed, 16 skipped. Recovery suite setup additionally failed because this worktree has no prisma/dev.db. The operational DB was not copied to satisfy it.
+- Scoped source guard failure was fixed: capability uses read-only availability, and mutation guard remains after preview. Remaining shared failures: source-hash master audit and unclassified governed roster-template route. No shared test/manifest/register was weakened or overwritten.
+- Full pinned typecheck completed PASS. Subsequent changed partitions (API, components, libraries, tools, affected tests) completed PASS; latest acceptance-script correction is checked with final CI.
+- Independent read-only review found and resolved JSON echo, marks projection, enrollment status, onboarding race/history, class/section collapse, canonical ZIP timestamps, status-code assertions and teardown defects. It supports pushing for CI after the optimisticVersion fixture correction; it does not waive release gates.
 
-Independent source review identified malformed JSON error echo, marks pre-upload column admission, historical status mapping, stale onboarding decisions, and local session cleanup. Fixes applied; final review/readback pending. Initial fresh-sheet version concern was withdrawn after tracing existing synthesized row versions.
+## Browser evidence and privacy proof
 
-## Platforms and runtime
+The available Codex Browser tool exercised actual changed React components using scripts/bulk-data-exchange-browser.ts, an isolated loopback static harness on 47831 with no ERP/database. No Playwright fallback. Synthetic fetch replies establish component behavior only.
 
-Responsive Browser: pending. Windows/WebView, Android emulator, iOS simulator, physical devices: UNEXECUTED. Shared native foundations unchanged. Authenticated application E2E: UNEXECUTED; only EPHEMERAL_EXACT_HEAD_CI_ONLY may host full-stack execution. No local production server, public tunnel, operational flag activation or real-data write authorised.
+BULK_DATA_EXCHANGE_UX_1A-network.json contains sanitized actual requests (keys/action/boolean only). A forbidden sentinel in an excluded legacy column was absent from the preview body. A sentinel placed in controlled workbook ancillary instructions was absent from the rebuilt multipart XLSX contents. The harness captured that upload then refused it with 403; no mock success or ERP write was claimed. Legacy marks preview used the exact reconstructed CSV contract. No source values were retained in the capture.
 
-## Proposed register patch (pending serial integration)
+Actual Browser probes: selected mapping; legacy warnings; disabled mutation; import-mode invalidation; controlled worker; changing bundle clears upload; same file reselect; local cancellation; 401/403 handling; modal open/focus/Tab containment/Escape/focus return; Student/marks/onboarding layouts at 320/390/768/1440 in light/dark; expanded long Unicode errors without horizontal overflow; no warning/error console entries during probes. Static harness stopped after capture.
 
-Record reviewed-field Student exchange, separate governed draft CSV adapter, filter-scoped historical Student exports, truthful validation metadata and modal/error improvements only after terminal evidence. Keep runtime/device and release-security gates open. Do not overwrite finance register updates.
+## Formats and paths
 
-## Release gates
+- /import-export: Legacy Student CSV/safe XLSX local source review and mapping; legacy canonical CSV template; controlled source conversion creates a NEW Student/Enrollment XLSX package. Operator must complete real Guardian/link rows in the controlled template before authoritative onboarding validation.
+- /onboarding: Controlled Student/Guardian, Staff and Combined XLSX; local safe parser reconstructs a canonical package before upload; server independently parses/rebuilds before private storage. Original ZIP content is never reused. No XLS/macros/formulas/external links/hidden sheets admitted.
+- /marks: exact legacy nine-column CSV draft import and roster template.
+- /marks/governed: separate governed v1 CSV/safe XLSX, signed assignment/scheme/roster/version context, existing 200-row draft-save limit. Import is not submission/moderation/publication. Signed template and preview expire after 15 minutes.
+- /students: Export all results matching academic year, class, section, status and search; selected-year enrollment fields; private minimal CSV; invalid filters/over-limit exports refuse; empty results retain header.
 
-Exact-head full regression/build/security, admitted authenticated synthetic E2E, affected native checks and separately recorded shared-runtime advisory conflict remain mandatory. No merge/tag before all applicable gates resolve. Controlled source-format conversion to a new canonical package is currently not implemented; canonical controlled template upload remains the supported controlled path. No schema change proposed.
+## Runtime and platform boundaries
+
+Authenticated E2E remains pending until the new exact-head hosted workflow runs. scripts/bulk-data-exchange-e2e.ts is guarded against local execution and requires GitHub-hosted runner, exact head, one absolute synthetic DB path and loopback networking. Proposed assertions include production OFF, controlled upload/approval/execution, Student import, legacy/governed drafts, retries, competing edits, Teacher denial, delegated revocation/expiry/family conflict, actual historical/empty CSV downloads, exam report download and readback. Only successful observed runs may be promoted to evidence.
+
+Responsive browser: demonstrated above. Installed Windows/WebView: UNEXECUTED. Android emulator: UNEXECUTED. iOS simulator: UNEXECUTED. Physical devices: UNEXECUTED. Native file-picker cancel/Back/safe-area/download, keyboard zoom/reduced-motion and disconnected/session-expiry native acceptance remain open. Existing Tauri/encrypted offline finance foundations unchanged. No local production ERP server, public tunnel, real-data write or operational flag activation.
+
+## Proposed serial register/governance patch
+
+Finance PR26 owns concurrent shared requirements/release contracts. Do not apply those updates here. Proposed integration:
+1. Record reviewed-field Student exchange, controlled canonical package boundary, separate governed draft adapter, correct historical Student export and truthful UI modes in NPS-REQ-009/015/016 and affected source evidence.
+2. Reconcile the frozen master source baseline with authorised implementation and new narrow files; preserve historical review and failed probe.
+3. Classify the new governed assignment roster-template download in the shared export manifest; reassess the legacy marks template now containing an authorised roster. Current export inventory reports 62 discovered routes and one unclassified governed route. Reconcile totals through the owner process, without suppressing discovery.
+4. Keep full runtime/native/device and shared OCI advisory gates open; no schema/backup contract change requested.
+
+## Release and tracker gates
+
+No merge or tag authorised by the current evidence. Mandatory exact-head CI, SQLite/PostgreSQL/backup/security/native contracts and the independently recorded shared-runtime advisory conflict must resolve. Green feature runtime CI alone cannot clear those gates. Tracker updates will append terminal results to implementation task 1218286239401466 and parent review 1218294223162480 without modifying finance task 1218283703395328 or completing physical acceptance. Canonical Notion/Canvs query/readback remains part of the final handoff.
+
+### Additional gate results — 12 September 2026
+
+Dependency audit (`pnpm audit --audit-level high`) FAILED: two Critical, one High and two Moderate advisories in unchanged dependencies (Next.js, Sharp, Vitest/mocker). No dependency upgrade, waiver or suppression was attempted in this bounded task. This is additional to the retained shared-runtime OCI advisory conflict.
+
+The existing onboarding public-artifact scanner FAILED at lib/onboarding-workbooks.ts because it scans the whole touched file and finds pre-existing generated-template example contact strings. The sole task edit there exports the existing Georgia cover-style helper. The failure is retained; the scanner was not weakened. All newly published fixture contents are invented and reviewed. No binary/source workbook or DB is staged.
