@@ -16,6 +16,7 @@ type Surface = {
   csvFormulaSafe: boolean | null;
   noStore: boolean;
   featureFlag: string | null;
+  featureFlagScope?: string;
 };
 
 function manifest() {
@@ -29,13 +30,14 @@ function manifest() {
 describe("bulk export governance", () => {
   it("discovers and structurally validates every current export-like API surface", () => {
     const output = execFileSync(process.execPath, ["tools/release-evidence/bulk-export-governance.mjs"], { cwd: process.cwd(), encoding: "utf8" });
+    const contract = manifest();
     expect(JSON.parse(output)).toEqual({
       schemaVersion: 1,
       status: "PASS",
-      discoveredCount: 61,
-      bulkExportCount: 41,
-      notBulkExportCount: 20,
-      bulkExportFlagMappedSurfaceCount: 0,
+      discoveredCount: contract.discovery.discoveredCount,
+      bulkExportCount: contract.discovery.bulkExportCount,
+      notBulkExportCount: contract.discovery.notBulkExportCount,
+      bulkExportFlagMappedSurfaceCount: contract.bulkExportFlag.currentMappedSurfaceCount,
       errors: []
     });
   }, 15_000);
@@ -54,15 +56,20 @@ describe("bulk export governance", () => {
     }
   });
 
-  it("classifies bulk-exports as the real default-off switch for future new surfaces, with none currently mapped", () => {
+  it("maps the default-off switch to Student exports and classifies both roster templates", () => {
     const contract = manifest();
     expect(contract.bulkExportFlag).toMatchObject({
       key: "bulk-exports",
-      currentMappedSurfaceCount: 0,
+      currentMappedSurfaceCount: 1,
       committedDefaultState: false,
       committedRolloutPercentage: 0
     });
-    expect(contract.surfaces.filter((surface) => surface.featureFlag === "bulk-exports")).toEqual([]);
+    const mapped = contract.surfaces.filter(surface => surface.featureFlag === "bulk-exports");
+    expect(mapped.map(s => s.id)).toEqual(["core-dynamic-exports"]);
+    expect(mapped[0].featureFlagScope).toBe("type=students only; finance branches unchanged");
+    for (const id of ["marks-import-template", "governed-marks-sheet-template"]) {
+      expect(contract.surfaces.find(s => s.id === id)).toMatchObject({ classification: "BULK_EXPORT", noStore: true, csvFormulaSafe: true });
+    }
   });
 
   it("neutralises spreadsheet formula prefixes in representative high-risk exports", () => {

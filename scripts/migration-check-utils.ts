@@ -24,8 +24,10 @@ export function resolvePnpmRuntimeEntry(
 ) {
   const candidates = [
     environment.PNPM_RUNTIME_ENTRY,
-    environment.npm_execpath,
+    // pnpm can expose a native ELF/PE executable here; callers launch this entry with Node.
+    environment.npm_execpath && /\.(?:c|m)?js$/i.test(environment.npm_execpath) ? environment.npm_execpath : undefined,
     path.join(path.dirname(nodeExecutable), "node_modules", "corepack", "dist", "pnpm.js"),
+    path.join(path.dirname(nodeExecutable), "..", "lib", "node_modules", "corepack", "dist", "pnpm.js"),
     path.join(environment.APPDATA ?? "", "npm", "node_modules", "pnpm", "bin", "pnpm.cjs"),
     path.join(environment.APPDATA ?? "", "npm", "node_modules", "pnpm", "bin", "pnpm.mjs")
   ].filter((candidate): candidate is string => Boolean(candidate));

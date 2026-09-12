@@ -1576,13 +1576,13 @@
         {
           "path": "lib/student-import.ts",
           "line": 3,
-          "sha256": "3be1b08b336af0acfb8b3b8d79b70203269dc0e81588bd33435dbbd280506b57",
+          "sha256": "3a6a1f5e7ee3b40e2181f471c7f8e8c3dd608c056a24d557276ebb65c158e5f7",
           "claim": "Validated XLSX onboarding provides deterministic row review and import governance; certificate issuance is a separate controlled workflow."
         },
         {
           "path": "lib/onboarding-workbooks.ts",
           "line": 16,
-          "sha256": "b7f2eb5ff89798676443b6830f398763cd53eba9b76410fc3c515a274bfb2020",
+          "sha256": "d006ef3f25e568f84ee474cc8a6021716af50ff8e174e67799b3df11840d9b55",
           "claim": "Validated XLSX onboarding provides deterministic row review and import governance; certificate issuance is a separate controlled workflow."
         },
         {
@@ -2550,7 +2550,7 @@
         {
           "path": "lib/student-import.ts",
           "line": 3,
-          "sha256": "3be1b08b336af0acfb8b3b8d79b70203269dc0e81588bd33435dbbd280506b57",
+          "sha256": "3a6a1f5e7ee3b40e2181f471c7f8e8c3dd608c056a24d557276ebb65c158e5f7",
           "claim": "Existing Student classification/discount handling is a neighboring foundation, not the missing concession approval lifecycle."
         },
         {
@@ -2734,7 +2734,7 @@
         {
           "path": "lib/student-import.ts",
           "line": 3,
-          "sha256": "3be1b08b336af0acfb8b3b8d79b70203269dc0e81588bd33435dbbd280506b57",
+          "sha256": "3a6a1f5e7ee3b40e2181f471c7f8e8c3dd608c056a24d557276ebb65c158e5f7",
           "claim": "Existing Student types and discounts do not represent separate Director sponsorship, scholarship and waiver classifications."
         },
         {

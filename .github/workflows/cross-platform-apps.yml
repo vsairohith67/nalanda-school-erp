@@ -280,8 +280,28 @@ jobs:
           sleep 4
           adb_cmd shell dumpsys activity activities > tmp/platform-review/android-activity-state.txt
           grep -E -m1 '(topResumedActivity=|ResumedActivity:|mResumedActivity:)' tmp/platform-review/android-activity-state.txt | grep -F "$PACKAGE"
-          adb_cmd shell uiautomator dump /sdcard/px1a-window.xml
-          adb_cmd pull /sdcard/px1a-window.xml tmp/platform-review/android-window.xml
+          # A resumed Activity can precede its accessibility root. Require a fresh,
+          # nonempty tree for this package; a dump command's exit code alone is insufficient.
+          ui_ready=0
+          ui_deadline=$((SECONDS + 120))
+          while [ "$SECONDS" -lt "$ui_deadline" ]; do
+            if timeout 5 "$ADB" shell rm -f /sdcard/px1a-window.xml &&
+               rm -f tmp/platform-review/android-window.xml &&
+               timeout 10 "$ADB" shell uiautomator dump /sdcard/px1a-window.xml &&
+               timeout 5 "$ADB" shell test -s /sdcard/px1a-window.xml &&
+               timeout 5 "$ADB" pull /sdcard/px1a-window.xml tmp/platform-review/android-window.xml; then
+              if grep -q '<hierarchy' tmp/platform-review/android-window.xml &&
+                 grep -Fq "package=\"$PACKAGE\"" tmp/platform-review/android-window.xml; then
+                ui_ready=1
+                break
+              fi
+            fi
+            sleep 2
+          done
+          if [ "$ui_ready" -ne 1 ]; then
+            echo 'ANDROID_ACCESSIBILITY_TREE_NOT_READY' >&2
+            exit 1
+          fi
           adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-phone-portrait.png
           cat tmp/platform-review/android-window.xml
           if ! grep -Eq 'Nalanda|Welcome back|App PIN' tmp/platform-review/android-window.xml; then
