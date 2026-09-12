@@ -125,7 +125,7 @@ async function exercise(off:boolean) {
     const expires=await grantMarksDelegation(db,adminActor,{userHandle:expiring.iamPublicKey,kind:"GOVERNED_COMPONENT",targetId:state.assignmentId,reason:"Synthetic exact-scope expiry QA",validUntil:new Date(Date.now()+3600000).toISOString()});
     const expiringCookie=await session(expiring.username!); const expiringCsv=await (await asActor(expiringCookie,endpoint+"?format=csv")).text();
     const expiryPreview=await asActor(expiringCookie,endpoint,{model:"GOVERNED_DRAFT",csv:expiringCsv,action:"preview"});assert.equal(expiryPreview.status,200);const expiryPlan=await expiryPreview.json();
-    await db.userPermissionProfileAssignment.update({where:{publicKey:expires.assignmentHandle},data:{validUntil:new Date(Date.now()-1000)}});
+    await db.userPermissionProfileAssignment.update({where:{publicKey:expires.assignmentHandle},data:{validFrom:new Date(Date.now()-120000),validUntil:new Date(Date.now()-60000)}});
     refused(await asActor(expiringCookie,endpoint,{model:"GOVERNED_DRAFT",csv:expiringCsv,action:"confirm",receipt:expiryPlan.receipt}),[401,403]);
     assert.deepEqual(await db.examMarkEntry.findMany({orderBy:{id:"asc"}}),beforeRevocation);assert.deepEqual(await db.examMarkSheet.findMany({orderBy:{id:"asc"}}),beforeDeniedSheets);checks.push("delegation_expired_before_commit_no_marks_change");
     const exportR=await call("/api/export/students?academicYear=2025-26&className=I&section=A&status=Inactive");assert.equal(exportR.status,200);const bytes=await exportR.text();const exported=parseCsv(bytes);assert.equal(exported.length,2);assert.equal(exported[1][1],"00002");assert.equal(exported[1][0],"2025-26");assert.equal(exported[1][6],"INACTIVE");assert(exportR.headers.get("cache-control")?.includes("no-store"));checks.push("actual_filtered_csv_bytes_and_historical_scope");
@@ -147,5 +147,5 @@ async function exercise(off:boolean) {
   writeFileSync(path.join(root,off?"bulk-off-result.json":"bulk-on-result.json"),JSON.stringify({head:process.env.BULK_EXACT_HEAD,mode:off?"production-OFF":"synthetic-ON",checks, businessCounts:{students:await db.student.count(),legacyMarks:await db.studentMark.count(),governedEntries:await db.examMarkEntry.count(),importBatches:await db.importBatch.count()}},null,2));
   console.log(JSON.stringify({mode:off?"OFF":"ON",checks}));
 }
-async function main(){hostGate();try{if(process.argv[2]==="prepare")await prepare();else await exercise(process.argv[2]==="off");}finally{await db.$disconnect();}}
+async function main(){hostGate();try{if(process.argv[2]==="prepare")await prepare();else await exercise(process.argv[2]==="off");}catch(error){writeFileSync(path.join(root,"bulk-partial-result.json"),JSON.stringify({head:process.env.BULK_EXACT_HEAD,phase:process.argv[2],status:"FAILED",completedAssertions:checks},null,2));throw error;}finally{await db.$disconnect();}}
 void main();
