@@ -6,39 +6,28 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { PDFDocument } from "pdf-lib";
 import * as XLSX from "xlsx";
-import { defaultTemplateDefinition } from "../lib/certificate-templates";
-import { createCertificateRequest, transitionCertificateRequest } from "../lib/certificate-requests";
-import { createStudentCertificateDraft, transitionCertificate, issueCertificate, createCertificateVersion, cancelIssuedCertificate } from "../lib/student-certificates";
-import { prepareCertificateCharge, approveCertificateCharge, collectCertificateCharge } from "../lib/certificate-charges";
-import { graduationReadiness } from "../lib/certificate-graduation-policy";
-import { editCertificateTemplate } from "../lib/certificate-template-workflow";
-import { renderCertificatePdf, sha256Bytes } from "../lib/certificate-pdf";
-import { issuedCertificatePdf, verifyCertificateReference } from "../lib/certificate-authenticity";
-import { certificateWorkbookTemplate } from "../lib/certificate-workbooks";
-import { uploadCertificateBatch, approveCertificateBatch, processCertificateBatchRow, certificateBatchResults } from "../lib/certificate-bulk";
-import { generateFullBackup, createBackupDocument } from "../lib/backup";
-import { parseAndValidateBackup } from "../lib/restore";
-import { restoreValidatedBackup } from "../lib/restore-database";
-import { createPersistedSession } from "../lib/auth-sessions";
-import { assertParentOwnsStudent } from "../lib/certificate-scope";
-import { restoreCertificateExtensions } from "../lib/certificate-extension-backup";
-import { hashPassword } from "../lib/password";
+import { defaultTemplateDefinition } from "../../lib/certificate-templates";
+import { createCertificateRequest, transitionCertificateRequest } from "../../lib/certificate-requests";
+import { createStudentCertificateDraft, transitionCertificate, issueCertificate, createCertificateVersion, cancelIssuedCertificate } from "../../lib/student-certificates";
+import { prepareCertificateCharge, approveCertificateCharge, collectCertificateCharge } from "../../lib/certificate-charges";
+import { graduationReadiness } from "../../lib/certificate-graduation-policy";
+import { editCertificateTemplate } from "../../lib/certificate-template-workflow";
+import { renderCertificatePdf, sha256Bytes } from "../../lib/certificate-pdf";
+import { issuedCertificatePdf, verifyCertificateReference } from "../../lib/certificate-authenticity";
+import { certificateWorkbookTemplate } from "../../lib/certificate-workbooks";
+import { uploadCertificateBatch, approveCertificateBatch, processCertificateBatchRow, certificateBatchResults } from "../../lib/certificate-bulk";
+import { generateFullBackup, createBackupDocument } from "../../lib/backup";
+import { parseAndValidateBackup } from "../../lib/restore";
+import { restoreValidatedBackup } from "../../lib/restore-database";
+import { createPersistedSession } from "../../lib/auth-sessions";
+import { assertParentOwnsStudent } from "../../lib/certificate-scope";
+import { restoreCertificateExtensions } from "../../lib/certificate-extension-backup";
+import { hashPassword } from "../../lib/password";
 
-async function main() {
-  if (process.env.NODE_ENV === "production") throw new Error("SYNTHETIC_QA_ONLY");
-  const root = path.resolve("tmp/certificate-graduation-exit-1a"); mkdirSync(root, { recursive: true });
-  const out = mkdtempSync(path.join(root, "run-"));
-  const baseline = path.resolve("tmp/release-ci/synthetic.db");
-  if (!existsSync(baseline)) throw new Error("Prepare the disposable released CI synthetic baseline first.");
-  const probe = new PrismaClient({ datasourceUrl: `file:${baseline.replaceAll("\\", "/")}` });
-  assert.equal(await probe.student.count(), 0, "Baseline must contain no Students"); await probe.$disconnect();
-  const dbPath = path.join(out, "fixture.db"); copyFileSync(baseline, dbPath);
-  process.env.DATABASE_URL = `file:${dbPath.replaceAll("\\", "/")}`;
-  process.env.APP_ORIGIN = "http://127.0.0.1:3127";
-  process.env.RELEASE_FEATURE_FLAGS_QA_MODE = "SYNTHETIC_COPY_ONLY";
-  process.env.RELEASE_FEATURE_FLAGS_QA_ENABLED = "certificate-graduation-exit-1a,certificate-bulk-issue-1a,certificate-verification-1a";
-  process.env.SESSION_SECRET = randomBytes(48).toString("hex");
-  const db = new PrismaClient({ datasourceUrl: process.env.DATABASE_URL });
+
+// Reuses the retained PR25 service acceptance fixture; this is synthetic database/PDF evidence only.
+export async function populateCertificateRecoveryFixture(db: PrismaClient) {
+ const root=path.resolve("tmp/recovery-certificate-fixture");mkdirSync(root,{recursive:true});const out=mkdtempSync(path.join(root,"run-"));
   let checks = 0;
   const check = (value: unknown, message: string) => { assert.ok(value, message); checks++; };
   const denied = async (work: () => Promise<unknown>, message: string) => { await assert.rejects(work, message); checks++; };
@@ -167,52 +156,6 @@ async function main() {
   await assertParentOwnsStudent(db, { ...actors.PARENT, guardianId: guardian.id }, bulkStudent.id); checks++;
   await denied(() => assertParentOwnsStudent(db, { ...actors.PARENT, guardianId: guardian.id }, student.id), "Unrelated Parent denied");
   const pendingTemplate = await db.certificateTemplate.create({data:{templateCode:"SYNTHETIC-RESTORE-DRAFT",certificateType:"GRADUATION",name:"SYNTHETIC pending template",status:"DRAFT",templateDefinitionJson:JSON.stringify(defaultTemplateDefinition("GRADUATION")),createdByUserId:prep}});
-  const backup = await generateFullBackup(db, { generatedBy: "SYNTHETIC CERTIFICATE QA" });
-  check(backup.metadata.backupVersion === 48, "Integrated extension uses backup v48");
-  const validated = parseAndValidateBackup(JSON.stringify(backup));
-  const legacy = createBackupDocument({ generatedAt: new Date(), users: [], students: [], feeStructures: [], payments: [], paymentAudits: [], generatedBy: "SYNTHETIC v45 COMPATIBILITY" });
-  const relabelled = structuredClone(legacy) as any; relabelled.metadata.backupVersion = 45;
-  assert.throws(() => parseAndValidateBackup(JSON.stringify(relabelled)), /BACKUP_SOURCE_/); checks++; // Genuine legacy adapters are exercised using original exporters in recovery-backup-compatibility.test.ts.
-  const restores: any[] = [];
-  for (let round = 1; round <= 2; round++) {
-    const restorePath = path.join(out, `restore-${round}.db`); copyFileSync(baseline, restorePath);
-    const restored = new PrismaClient({ datasourceUrl: `file:${restorePath.replaceAll("\\", "/")}` });
-    const result = await restoreValidatedBackup(restored, validated, { id: issue, name: "SYNTHETIC RESTORE" });
-    const extensionErrors = [result.certificateRequestCharges, result.certificateBulkBatches, result.certificateIssueArtifacts, result.studentCertificates, result.studentCertificateVersions].flatMap(r => r.errors);
-    check(extensionErrors.length === 0, `Restore ${round}: ${extensionErrors.join("; ")}`);
-    const restoredArtifact = await restored.certificateIssueArtifact.findUniqueOrThrow({ where: { id: artifact.id } });
-    check(restoredArtifact.pdfHash === artifact.pdfHash && restoredArtifact.pdfBase64 === artifact.pdfBase64, `Restore ${round} keeps exact PDF bytes`);
-    check((await restored.studentCertificate.findUniqueOrThrow({ where: { id: cert.id } })).status === "CANCELLED", `Restore ${round} keeps void`);
-    check((await restored.studentCertificate.findUniqueOrThrow({ where: { id: revision.id } })).supersedesCertificateId === cert.id, `Restore ${round} keeps reissue link`);
-    check((await restored.studentCertificate.findUniqueOrThrow({ where: { id: bulkResult.certificateId } })).workflowKey === `graduation:${bulkRequest.id}`, `Restore ${round} keeps row idempotency`);
-    const receiptCount = await restored.miscIncomeReceipt.count(); await restoreValidatedBackup(restored, validated, { id: issue, name: "SYNTHETIC REPEAT RESTORE" });
-    check(await restored.miscIncomeReceipt.count() === receiptCount, `Restore ${round} repeat does not repost finance`);
-    const restoredDraft = await restored.certificateTemplate.findUniqueOrThrow({where:{id:pendingTemplate.id}});
-    await denied(() => editCertificateTemplate(restored, restoredDraft.id, {status:"ACTIVE",expectedUpdatedAt:restoredDraft.updatedAt.toISOString()}, prep), `Restore ${round} requires fresh template preparation`);
-    const restoredStudentMap = new Map<string,string>();
-    for (const student of await db.student.findMany()) { const target = await restored.student.findUniqueOrThrow({where:{admissionNo:student.admissionNo}}); restoredStudentMap.set(student.id,target.id); }
-    const intactResult:any = {certificateRequestCharges:{created:0,skipped:0,errors:[]},certificateBulkBatches:{created:0,skipped:0,errors:[]},certificateIssueArtifacts:{created:0,skipped:0,errors:[]}};
-    await restoreCertificateExtensions(restored,validated,restoredStudentMap,intactResult);
-    check(Object.values(intactResult).every((v:any)=>v.errors.length===0), `Restore ${round} intact target passes ownership/content check`);
-    const targetVersion = await restored.studentCertificateVersion.findUniqueOrThrow({where:{id:artifact.versionId}});
-    await restored.studentCertificateVersion.update({where:{id:targetVersion.id},data:{snapshotJson:"{}"}});
-    const conflictResult:any = {certificateRequestCharges:{created:0,skipped:0,errors:[]},certificateBulkBatches:{created:0,skipped:0,errors:[]},certificateIssueArtifacts:{created:0,skipped:0,errors:[]}};
-    await restoreCertificateExtensions(restored, validated, restoredStudentMap, conflictResult);
-    check(conflictResult.certificateIssueArtifacts.errors.some((e:string)=>e.includes("ownership/content mismatch")), `Restore ${round} rejects conflicting target snapshots`);
-    await restored.studentCertificateVersion.update({where:{id:targetVersion.id},data:{snapshotJson:targetVersion.snapshotJson}});
-    const chargeSource = validated.certificateRequestCharges.find((r:any)=>r.receiptId)!;
-    const originalReceipt = await restored.miscIncomeReceipt.findUniqueOrThrow({where:{id:String(chargeSource.receiptId)}});
-    await restored.miscIncomeReceipt.update({where:{id:originalReceipt.id},data:{netAmount:"777"}});
-    const receiptConflict:any = {certificateRequestCharges:{created:0,skipped:0,errors:[]},certificateBulkBatches:{created:0,skipped:0,errors:[]},certificateIssueArtifacts:{created:0,skipped:0,errors:[]}};
-    await restoreCertificateExtensions(restored,validated,restoredStudentMap,receiptConflict);
-    check(receiptConflict.certificateRequestCharges.errors.some((e:string)=>e.includes("receipt ownership/content")),`Restore ${round} rejects conflicting actual receipt amount`);
-    await restored.miscIncomeReceipt.update({where:{id:originalReceipt.id},data:{netAmount:originalReceipt.netAmount}});
-    restores.push({ round, extensionErrors }); await restored.$disconnect();
-  }
-  for (const [role, user] of Object.entries(actors)) sessions[role] = (await createPersistedSession(db, user, new Headers({ "user-agent": "SYNTHETIC CERTIFICATE BROWSER QA" }))).cookieValue;
-  writeFileSync(path.join(out, "browser-private.json"), JSON.stringify({ dbPath, sessions, sessionSecret: process.env.SESSION_SECRET, studentId: bulkStudent.id, templateId: template.id, requestId: bulkRequest.id, batchId: batch.id, issuedId: bulkResult.certificateId, otherStudentId: student.id, otherCertificateId: cert.id }, null, 2));
-  writeFileSync(path.join(out, "report.json"), JSON.stringify({ status: "PASSED", checks, restores, draftPages: overflow.pages, font: "Georgia Bold", syntheticOnly: true }, null, 2));
-  writeFileSync(path.join(root, "latest.txt"), out);
-  await db.$disconnect(); console.log(JSON.stringify({ status: "PASSED", checks, output: out }));
+
+ return {original:cert.id,replacement:revision.id,artifactId:artifact.id,checks};
 }
-main().catch(error => { console.error(error); process.exitCode = 1; });

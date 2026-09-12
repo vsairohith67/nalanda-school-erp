@@ -38,7 +38,7 @@ async function main() {
       if (result.status !== "VERIFIED") throw new Error("BACKUP_NOT_VERIFIED");
       const artifact = await source.cloudBackupArtifact.findFirst({ where: { runId: run.id, status: "VERIFIED" } });
       if (!artifact || !(await verifyStoredCloudBackupArtifact(source, artifact.id)).verified) throw new Error("BACKUP_READBACK_FAILED");
-      console.log(JSON.stringify({ state: "VERIFIED", operationId, id: artifact.id, ciphertextSha256: artifact.ciphertextSha256, backupVersion: 45 }));
+      console.log(JSON.stringify({ state: "VERIFIED", operationId, id: artifact.id, ciphertextSha256: artifact.ciphertextSha256, backupVersion: 48 }));
       return;
     }
     const [command, id, hash, operationId] = process.argv.slice(2);
@@ -48,7 +48,7 @@ async function main() {
     const decrypted = await decryptCloudBackup(await createCloudBackupProvider(profile).getObject(artifact.objectKeySafe));
     if (decrypted.header.ciphertextSha256 !== hash || decrypted.header.plaintextSha256 !== artifact.plaintextSha256) throw new Error("RESTORE_EXACT_BYTES_MISMATCH");
     const backup = parseAndValidateBackup(decrypted.plaintext.toString("utf8"));
-    if (backup.metadata.backupVersion !== 45) throw new Error("RESTORE_VERSION_INVALID");
+    if (backup.metadata.backupVersion !== 48) throw new Error("RESTORE_VERSION_INVALID");
     const schema = `portable_restore_${operationId}`;
     // CREATE without IF NOT EXISTS is the empty-target reservation. Never clear an existing schema.
     await migrator.$executeRawUnsafe(`CREATE SCHEMA "${schema}" AUTHORIZATION nalanda_migrator`);
@@ -66,7 +66,7 @@ async function main() {
       const restored = await restoreValidatedBackup(client, backup, { id: "portable-synthetic-director", name: "Synthetic recovery actor" });
       const errors = Object.values(restored).flatMap(r => r && typeof r === "object" && "errors" in r ? (r as { errors: string[] }).errors : []);
       if (errors.length) throw new Error("RESTORE_ERRORS");
-      console.log(JSON.stringify({ state: "RESTORED", operationId, ciphertextSha256: hash, backupVersion: 45, emptyTargetReserved: true, existingDataOverwritten: false }));
+      console.log(JSON.stringify({ state: "RESTORED", operationId, ciphertextSha256: hash, backupVersion: 48, emptyTargetReserved: true, existingDataOverwritten: false }));
     } finally { await client.$disconnect(); }
     // Preserve the restored schema, including on partial failure. CI teardown owns its volume.
   } finally { await source.$disconnect(); await migrator.$disconnect(); }

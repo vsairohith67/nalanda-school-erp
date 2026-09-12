@@ -16,6 +16,7 @@ export async function governedImportContext(client: PrismaClient, actor: AuthUse
   const component = selected?.components.find((c: any) => c.assignment.id === assignmentId);
   if (!selected || !component) throw new ExamMarksError("No eligible governed assignment.");
   if (!exact.schemeVersion.frozenAt || exact.schemeVersion.status !== "ACTIVE") throw new ExamMarksError("A current frozen scheme is required.");
+  await assertNoDelegatedFamilyConflict(client, actor, selected.students.map((student: any) => student.studentId), exact._marksAuthority, `governed-import-download:${assignmentId}`);
   return { selected, component, exact };
 }
 function rowBinding(actor: AuthUser, assignment: unknown, row: Record<string, string>) {

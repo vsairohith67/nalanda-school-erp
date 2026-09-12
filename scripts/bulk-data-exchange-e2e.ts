@@ -14,11 +14,11 @@ import * as XLSX from "xlsx";
 const root = path.join(process.cwd(), "tmp", "release-ci");
 const expected = `file:${path.join(root,"database","synthetic.db").replaceAll("\\","/")}`;
 const db = new PrismaClient();
-const password = "Synthetic-Bulk-Only-Password!2026";
+const password = process.env.BULK_SYNTHETIC_PASSWORD ?? "";
 const origin = "http://127.0.0.1:47832";
 const checks: string[] = [];
 const refused = (response: Response, expectedStatuses: number[]) => assert(expectedStatuses.includes(response.status), `Expected refusal ${expectedStatuses.join("/")}, received ${response.status}`);
-function hostGate() { assert.equal(process.env.GITHUB_ACTIONS,"true"); assert.equal(process.env.RUNNER_ENVIRONMENT,"github-hosted"); assert.equal(process.env.DATABASE_URL,expected); assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.BULK_EXACT_HEAD); }
+function hostGate() { assert(password.length >= 48, "Per-run synthetic credential required"); assert.equal(process.env.GITHUB_ACTIONS,"true"); assert.equal(process.env.RUNNER_ENVIRONMENT,"github-hosted"); assert.equal(process.env.DATABASE_URL,expected); assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.BULK_EXACT_HEAD); }
 async function prepare() {
   assert.equal(await db.student.count(),0);
   const admin = await db.user.update({where:{username:"director"},data:{passwordHash:await hashPassword(password),mustChangePassword:false,lifecycleStatus:"ACTIVE"}});
@@ -59,7 +59,7 @@ async function exercise(off:boolean) {
   const rows=[{academicYear:"2026-27",admissionNo:"00009",studentName:"INVENTED Legacy Import",className:"I",section:"A"}];
   const base={rows,mode:"skip",mappingVersion:"student-fields-v1"};
   const preview=await json("/api/import/students",{...base,action:"preview"});assert.equal(await db.student.count(),3);checks.push("student_preview_no_write");
-  const rejected=await call("/api/import/students",{...base,action:"preview",rows:[{...rows[0],secret:"FORBIDDEN_SYNTHETIC_SENTINEL_1A"}]});assert.equal(rejected.status,400);assert(!(await rejected.text()).includes("FORBIDDEN_SYNTHETIC_SENTINEL_1A"));checks.push("forged_fields_rejected");
+  const rejected=await call("/api/import/students",{...base,action:"preview",rows:[{...rows[0],secret:"FORBIDDEN_SYNTHETIC_PLACEHOLDER_1A"}]});assert.equal(rejected.status,400);assert(!(await rejected.text()).includes("FORBIDDEN_SYNTHETIC_PLACEHOLDER_1A"));checks.push("forged_fields_rejected");
   if(off){assert.equal((await call("/api/import/students",{...base,action:"import",confirmed:true,receipt:preview.receipt})).status,404);assert.equal((await call("/api/export/students")).status,404);assert.equal(await db.student.count(),3);checks.push("production_OFF_http_no_business_write");}
   else {
     const trial=await json("/api/import/students",{...base,action:"dry-run",receipt:preview.receipt});assert(trial.batchId);assert.equal(await db.student.count(),3);checks.push("validation_metadata_only");

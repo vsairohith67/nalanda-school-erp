@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import path from "node:path";
 import { operatorPlan, runPortableOperator, OPERATOR_COMMANDS, type OperatorAdapter, type OperatorStep, type OperatorReceipt, type OperatorManifest } from "../lib/portable-runtime/operator";
 import { CiOperatorAdapter, assertEphemeralCi, validateComposeBoundary } from "../scripts/portable/operator-adapter";
-const manifest: OperatorManifest = { schemaVersion: 1, operationId: "aaaaaaaaaaaaaaaa", restoreArtifact: { id: "synthetic-artifact", ciphertextSha256: "c".repeat(64) }, classification: "INTEGRATION_TEST_ENVIRONMENT", profile: "local-single-node", project: "nalanda-ci-123-test", target: path.resolve("tmp/synthetic-operator-target"), image: `sha256:${"a".repeat(64)}`, releaseCommit: "a".repeat(40), composeSha256: "b".repeat(64), architecture: "amd64", postgresMajor: 17, backupVersion: 45, migration: "20260904120000_communication_delivery_foundation_1a", previous: { image: `sha256:${"b".repeat(64)}`, releaseCommit: "b".repeat(40), backupVersion: 45, migration: "20260904120000_communication_delivery_foundation_1a" } };
+const manifest: OperatorManifest = { schemaVersion: 1, operationId: "aaaaaaaaaaaaaaaa", restoreArtifact: { id: "synthetic-artifact", ciphertextSha256: "c".repeat(64) }, classification: "INTEGRATION_TEST_ENVIRONMENT", profile: "local-single-node", project: "nalanda-ci-123-test", target: path.resolve("tmp/synthetic-operator-target"), image: `sha256:${"a".repeat(64)}`, releaseCommit: "a".repeat(40), composeSha256: "b".repeat(64), architecture: "amd64", postgresMajor: 17, backupVersion: 48, migration: "20260904120000_communication_delivery_foundation_1a", previous: { image: `sha256:${"b".repeat(64)}`, releaseCommit: "b".repeat(40), backupVersion: 48, migration: "20260904120000_communication_delivery_foundation_1a" } };
 class SyntheticAdapter implements OperatorAdapter {
   receipt: OperatorReceipt | null = null; effects: OperatorStep[] = []; locked = false; fail: OperatorStep | null = null;
   resources = { data: "synthetic rows", backup: "encrypted bytes", key: "synthetic key" };
@@ -74,7 +74,7 @@ describe("durable filesystem and synthetic process adapter", () => {
     const processAdapter = async (args: string[]) => {
       calls.push(args);
       if (args.includes("config")) return JSON.stringify(config());
-      if (args.includes("dist/portable/operator-recovery.mjs")) return JSON.stringify({ state: "VERIFIED", operationId: args.at(-1), backupVersion: 45, id: "synthetic-artifact", ciphertextSha256: "c".repeat(64) });
+      if (args.includes("dist/portable/operator-recovery.mjs")) return JSON.stringify({ state: "VERIFIED", operationId: args.at(-1), backupVersion: 48, id: "synthetic-artifact", ciphertextSha256: "c".repeat(64) });
       return "";
     };
     class IsolatedAdapter extends CiOperatorAdapter { async preflight() {} }

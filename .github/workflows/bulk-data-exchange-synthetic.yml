@@ -10,6 +10,9 @@ concurrency:
   cancel-in-progress: false
 jobs:
   synthetic-http:
+    # EXTERNAL_RUNTIME_BLOCKED: no substantiated vendor-supported runtime correction.
+    # Reopening requires reviewed source and successful mandatory image gates.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 55
     env:
@@ -45,6 +48,8 @@ jobs:
           mkdir -p tmp/release-ci/{database,provider,temp,rehearsal}
           touch tmp/release-ci/synthetic.db
           echo "DATABASE_URL=file:$GITHUB_WORKSPACE/tmp/release-ci/synthetic.db" >> "$GITHUB_ENV"
+      - name: Generate ephemeral synthetic credential
+        run: node -e 'const key="BULK_SYNTHETIC_PASSWORD"; require("fs").appendFileSync(process.env.GITHUB_ENV, key + "=" + require("crypto").randomBytes(48).toString("hex") + "\n")'
       - name: Prepare invented records only
         run: |
           pnpm db:generate:sqlite

@@ -91,14 +91,14 @@ try {
   $operatorBackupLines = @(& docker --context default compose -f $composeFile run --rm --no-deps -e PORTABLE_OPERATOR_CI=true backup-qa dist/portable/operator-recovery.mjs backup aaaaaaaaaaaaaaaa)
   if ($LASTEXITCODE -ne 0) { throw 'Operator backup process failed' }
   $operatorBackup = ($operatorBackupLines | Select-Object -Last 1) | ConvertFrom-Json
-  if ($operatorBackup.state -ne 'VERIFIED' -or $operatorBackup.backupVersion -ne 45 -or $operatorBackup.ciphertextSha256 -notmatch '^[a-f0-9]{64}$') { throw 'Operator backup verification failed' }
+  if ($operatorBackup.state -ne 'VERIFIED' -or $operatorBackup.backupVersion -ne 48 -or $operatorBackup.ciphertextSha256 -notmatch '^[a-f0-9]{64}$') { throw 'Operator backup verification failed' }
   foreach ($operationId in @('bbbbbbbbbbbbbbbb', 'cccccccccccccccc')) {
     $restoreLines = @(& docker --context default compose -f $composeFile run --rm --no-deps -e PORTABLE_OPERATOR_CI=true backup-qa dist/portable/operator-recovery.mjs restore $operatorBackup.id $operatorBackup.ciphertextSha256 $operationId)
     if ($LASTEXITCODE -ne 0) { throw 'Operator restore process failed' }
     $restored = ($restoreLines | Select-Object -Last 1) | ConvertFrom-Json
     if ($restored.state -ne 'RESTORED' -or -not $restored.emptyTargetReserved -or $restored.existingDataOverwritten) { throw 'Operator restore terminal evidence failed' }
   }
-  $results.operatorRecovery = @{ backup = 'VERIFIED'; emptySchemaRestores = 2; existingDataOverwritten = $false; backupVersion = 45 }
+  $results.operatorRecovery = @{ backup = 'VERIFIED'; emptySchemaRestores = 2; existingDataOverwritten = $false; backupVersion = 48 }
   $retentionPlanLines = @(& docker --context default compose --profile maintenance-plan -f $composeFile run --rm --no-deps backup-maintenance-plan)
   if ($LASTEXITCODE -ne 0) { throw "retention dry-run plan failed with exit code $LASTEXITCODE" }
   $retentionPlanOutput = ($retentionPlanLines | Select-Object -Last 1).Trim()

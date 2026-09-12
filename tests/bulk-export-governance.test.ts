@@ -16,6 +16,7 @@ type Surface = {
   csvFormulaSafe: boolean | null;
   noStore: boolean;
   featureFlag: string | null;
+  conditionalFeatureFlags?: {parameter:string;value:string;featureFlag:string}[];
 };
 
 function manifest() {
@@ -32,10 +33,10 @@ describe("bulk export governance", () => {
     expect(JSON.parse(output)).toEqual({
       schemaVersion: 1,
       status: "PASS",
-      discoveredCount: 66,
-      bulkExportCount: 43,
-      notBulkExportCount: 23,
-      bulkExportFlagMappedSurfaceCount: 0,
+      discoveredCount: 67,
+      bulkExportCount: 45,
+      notBulkExportCount: 22,
+      bulkExportFlagMappedSurfaceCount: 1,
       errors: []
     });
   }, 15_000);
@@ -54,15 +55,16 @@ describe("bulk export governance", () => {
     }
   });
 
-  it("classifies bulk-exports as the real default-off switch for future new surfaces, with none currently mapped", () => {
+  it("classifies bulk-exports as the real default-off switch for future new surfaces, with only the Student variant of the dynamic route mapped", () => {
     const contract = manifest();
     expect(contract.bulkExportFlag).toMatchObject({
       key: "bulk-exports",
-      currentMappedSurfaceCount: 0,
+      currentMappedSurfaceCount: 1,
       committedDefaultState: false,
       committedRolloutPercentage: 0
     });
     expect(contract.surfaces.filter((surface) => surface.featureFlag === "bulk-exports")).toEqual([]);
+    expect(contract.surfaces.filter(s => s.conditionalFeatureFlags).map(s => ({id:s.id, mappings:s.conditionalFeatureFlags}))).toEqual([{id:"core-dynamic-exports",mappings:[{parameter:"type",value:"students",featureFlag:"bulk-exports"}]}]);
   });
 
   it("neutralises spreadsheet formula prefixes in representative high-risk exports", () => {

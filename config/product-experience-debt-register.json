@@ -1,5 +1,5 @@
 {
-  "registerVersion": "1.0.0",
+  "registerVersion": "1.1.0",
   "baseSha": "4a4df050d194104cfc497a6de790ca9553a69db6",
   "auditMode": "SOURCE_AND_PRIOR_EVIDENCE_ONLY_NO_CURRENT_BROWSER_CERTIFICATION",
   "sourceRegister": "config/product-experience-screen-register.json",
@@ -16116,6 +16116,51 @@
         "VIEW_PRIOR_YEAR_CONCESSIONS"
       ],
       "notes": "2026-09-09 independent source review performed. Exact-case binding, request freezing and income isolation corrected. Browser dimensions remain unverified pending admitted EPHEMERAL_EXACT_HEAD_CI_ONLY harness.",
+      "roleCoverageStatus": "UNVERIFIED_NON_EXHAUSTIVE"
+    },
+    {
+      "route": "/certificates/graduation",
+      "sourceFile": "app/certificates/graduation/page.tsx",
+      "roles": [
+        "SUPER_ADMIN",
+        "DIRECTOR"
+      ],
+      "roleEvidence": "INHERITED_HINTS_ONLY_VERIFY_SERVER_GUARD_AND_EFFECTIVE_PERMISSIONS",
+      "owningBundle": "RELEASE-RECOVERY-AND-INTEGRATION-1A",
+      "priority": "P1",
+      "dimensions": {
+        "informationHierarchy": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "mobileResponsiveness": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "lightDarkConsistency": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "contrast": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "typography": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "spacing": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "targetSizes": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "keyboardFocus": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "reducedMotion": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "loading": "SHARED_SOURCE_BASELINE_REVIEWED",
+        "empty": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "error": "SHARED_SOURCE_BASELINE_REVIEWED",
+        "permissionDenied": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "blockedFeature": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "offlineDegraded": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "destructiveConfirmation": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "longContent": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "horizontalOverflow": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "hydrationConsole": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW"
+      },
+      "sourceStates": {
+        "empty": "EXPLICIT_IN_SCREEN",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "sourcePermissions": [
+        "CREATE_CERTIFICATES",
+        "MANAGE_CERTIFICATE_TEMPLATES",
+        "VIEW_CERTIFICATES",
+        "VIEW_CERTIFICATE_REPORTS"
+      ],
+      "notes": "Added to source inventory on 2026-09-12. Integrated Browser acceptance NOT_EXECUTED: EXTERNAL_RUNTIME_BLOCKED. Historical source review is retained and does not establish current visual or accessibility acceptance.",
       "roleCoverageStatus": "UNVERIFIED_NON_EXHAUSTIVE"
     }
   ],

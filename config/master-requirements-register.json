@@ -10,8 +10,8 @@
   "priorRegisterHash": "2e00c1ef24edbf16bb281620a0b341c9c4e36df2d901d828fb953e2d021a773e",
   "requirementCount": 46,
   "statusCounts": {
-    "COMPLETE": 9,
-    "PARTIAL": 24,
+    "COMPLETE": 8,
+    "PARTIAL": 25,
     "MISSING": 7,
     "DEFERRED": 3,
     "BLOCKED": 2,
@@ -1756,7 +1756,7 @@
         "BELT/TIE defaults are OPTIONAL and quantity is capped at 10000. Require exact Student linkage and any valid positive quantity within explicit numeric-safety limits; preserve receipt history."
       ],
       "missingAcceptanceCriteria": [
-        "BELT/TIE defaults are OPTIONAL and quantity is capped at 10000. Require exact Student linkage and any valid positive quantity within explicit numeric-safety limits; preserve receipt history."
+        "Admitted PR26 source requires exact Student linkage, positive bounded quantity, dated approved rates and frozen receipt values. Integrated Browser/receipt and exact-head release acceptance remains NOT_EXECUTED under the external runtime hold."
       ],
       "recommendedAction": "Validate the scoped retained feature PR and resolve recorded runtime/security gates before release. Configure chronology and explicit permissions before any separately authorised activation. AI concession recommendations remain deferred.",
       "recommendedBundle": "STUDENT-ITEMS-CONCESSIONS-1A",
@@ -2576,7 +2576,7 @@
         "Add request, recommendation, role-bound approval, evidence, scope, validity, revocation and ledger audit; a discount field is not concession governance."
       ],
       "missingAcceptanceCriteria": [
-        "Add request, recommendation, role-bound approval, evidence, scope, validity, revocation and ledger audit; a discount field is not concession governance."
+        "Admitted PR26 implements immediately preceding configured-year concession governance. Integrated nonempty restoration, authenticated preparation/approval/application/reversal and final release gates remain required; broader scopes are not implicitly implemented."
       ],
       "recommendedAction": "Validate the scoped retained feature PR and resolve recorded runtime/security gates before release. Configure chronology and explicit permissions before any separately authorised activation. AI concession recommendations remain deferred.",
       "recommendedBundle": "STUDENT-ITEMS-CONCESSIONS-1A",
@@ -6762,7 +6762,7 @@
         "Consolidate portable profiles and operator preflight/doctor/install/upgrade/rollback/restore/uninstall contracts; certify both CPU architectures and avoid provider forks."
       ],
       "missingAcceptanceCriteria": [
-        "Consolidate portable profiles and operator preflight/doctor/install/upgrade/rollback/restore/uninstall contracts; certify both CPU architectures and avoid provider forks."
+        "Portable operator source is admitted. Corrected supported OS and bundled Node zlib, exact amd64/arm64 image/provenance/index gates, and actual exact-scanned-image operator lifecycle remain unresolved."
       ],
       "recommendedAction": "Consolidate portable profiles and operator preflight/doctor/install/upgrade/rollback/restore/uninstall contracts; certify both CPU architectures and avoid provider forks.",
       "recommendedBundle": "PORTABLE-DEPLOYMENT-OBSERVABILITY-FOUNDATION-1B",
@@ -6894,7 +6894,7 @@
       "title": "Automatic, encrypted, versioned and restoration-tested backups",
       "sourceIntent": "Automatic, encrypted, versioned and restoration-tested backups.",
       "category": "backup",
-      "status": "COMPLETE",
+      "status": "PARTIAL",
       "confidence": "HIGH",
       "currentReleaseBoundary": "Encrypted versioned backup scheduling, verification, retention and restoration rehearsal exist; portable backup uses private S3-compatible storage and separate identities. Logical schema stays v45.",
       "sourceFiles": [
@@ -7021,7 +7021,9 @@
         "NPS-REQ-003"
       ],
       "conflicts": [],
-      "missingAcceptanceCriteria": [],
+      "missingAcceptanceCriteria": [
+        "Historical released v45 backup clearance is retained in the immutable register. The integrated v48 contract requires nonempty v45/v46/v47/v48 adapters, SQLite/PostgreSQL restoration, collision/interruption rejection and exact-head operator acceptance before current COMPLETE status."
+      ],
       "recommendedAction": "Retain released lifecycle, permissions and recovery; operational activation remains separately gated.",
       "recommendedBundle": "MAINTAIN-RELEASED",
       "priority": "P1",
@@ -7855,7 +7857,7 @@
         "Establish this exact 46-item versioned canonical register, provenance, dependency checks and future impact/changelog enforcement; retain historical ledgers as evidence."
       ],
       "missingAcceptanceCriteria": [
-        "Establish this exact 46-item versioned canonical register, provenance, dependency checks and future impact/changelog enforcement; retain historical ledgers as evidence."
+        "Recovery source heads, historical deltas and serial merge checkpoints are recorded. Independent integration review, final-head CI and mandatory acceptance remain required; no release or operational activation clearance."
       ],
       "recommendedAction": "Establish this exact 46-item versioned canonical register, provenance, dependency checks and future impact/changelog enforcement; retain historical ledgers as evidence.",
       "recommendedBundle": "MASTER-REQUIREMENTS-RECONCILIATION-1A",

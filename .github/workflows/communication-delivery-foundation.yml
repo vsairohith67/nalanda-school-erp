@@ -101,7 +101,7 @@ jobs:
           pnpm qa:communication-delivery
           pnpm qa:communication-delivery:independent
           pnpm qa:communication-delivery:public-repo-scan
-          pnpm audit --ignore-registry-errors --audit-level high
+          pnpm audit --audit-level high
       - name: Prepare isolated full-regression database
         shell: pwsh
         env:

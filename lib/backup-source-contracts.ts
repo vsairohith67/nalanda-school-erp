@@ -1,4 +1,4 @@
-import contracts from "@/config/backup-source-contracts.json";
+import contracts from "@/config/recovery-source-contracts.json";
 
 export const INTEGRATED_BACKUP_CONTRACT = "NALANDA_RECOVERY_INTEGRATED:v48:certificates-concessions-items";
 const certificateKeys = ["certificateRequestCharges", "certificateBulkBatches", "certificateIssueArtifacts"];
@@ -9,7 +9,7 @@ export function sealIntegratedBackup<T extends { metadata: Record<string, unknow
   const contract = contracts.sources["48"];
   return { ...document, metadata: { ...document.metadata,
     counts: { ...(document.metadata.counts as Record<string, number>),
-      ...Object.fromEntries(Object.entries(document).filter(([, value]) => Array.isArray(value)).map(([key, value]) => [key, (value as unknown[]).length])) },
+      ...Object.fromEntries(Object.entries(document).filter(([, value]) => Array.isArray(value)).map(([key, value]) => [key, (value as unknown as unknown[]).length])) },
     schemaFingerprint: contract.schemaFingerprint,
     migrationIdentity: contract.migrationIdentity,
     declaredCollections: Object.keys(document).filter(key => key !== "metadata").sort(),

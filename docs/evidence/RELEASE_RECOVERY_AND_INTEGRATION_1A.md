@@ -95,6 +95,35 @@ must use synthetic task-owned files. Final readback pending.
 
 ## Remaining acceptance
 
-Source incorporation, combined schema/restore contract, full regression, independent
-integration review, exact-head CI, public-artifact checks and tracker readbacks pending.
+Source incorporation complete; final validation remains in progress. See checkpoint below.
 No operational flags, release markers, provider settings or deployment changed.
+
+## Integration checkpoint - 12 September 2026
+
+All merges are normal two-parent commits on release/recovery-integration-1a:
+
+| Source | Incorporated head | Merge checkpoint |
+|---|---|---|
+| PR24 | 5bf70e4c4be07b706224debe01a27c54fd0af096 | 38dd04dde8c9419fd1984057545871928e2038ac |
+| PR25 | 67c504be6230f763663cf19faf50d9bc46dc6902 | 9243fc327ed51b1ad24ad5e04e72cb674838e88b |
+| PR26 | d784262ccc78ae431a72a3934ced45198e4bfb4c | deb6e9e205f2ccc19732b42ea0b97f9c46c48c37 |
+| PR27 | 283718fb5bedbc505302e55d7bc5214d8fa4d553 | 729df3f85263da5f82603de7d282aaf285452333 |
+
+Dependency repair 9b692bff182f59a00ee86a82a7f17efdb6b448f0 precedes these merges.
+Original feature refs are not written. PR27 uncommitted package/lock divergence was observed in its separate worktree and excluded. OCR PR19 ancestry remains excluded.
+
+Conflict decisions: preserve both certificate and concession models, scripts, flags, middleware/security behavior and historical evidence; retain patched dependency graph. Both original feature migration names and checksum identities remain intact. Paired schemas now contain 375 models, SQLite has 29 migrations and PostgreSQL six; generated trigger parity contains 201 triggers. No historical migration was edited. The integration ledger records original source hashes separately from current reconciliation hashes; generation is not independent-review clearance.
+
+The explicit format is NALANDA_RECOVERY_INTEGRATED:v48:certificates-concessions-items. config/recovery-source-contracts.json records all four source formats, discriminators, schema fingerprints, migration identities and exact collection/count inventories. v48 contains 307 arrays; v45 298, v46 301, v47 304. Legacy payloads did not emit schema fingerprints; registry matching validates the reviewed format and does not authenticate origin of arbitrary bytes. Missing/unknown collections, versions and identities fail before writes. Formats older than v45 require a separately reviewed adapter and are no longer presented as verification-compatible merely by integer comparison.
+
+Nonempty SQLite original-source exports v45/v46/v47 and integrated v48 restored into union targets twice: 4/4 PASS before the additional migration-ledger and adversarial checks. Retained certificate service fixtures cover real generated Georgia Bold PDFs, charges, reissue, void, bulk resume and snapshot hashes. Combined v48 contains those records plus liabilities, payment attribution, active relief, reversal events, encrypted zero-income support and frozen dated item receipts. Additional review required strict scalar-field admission, supersession graph checks, artifact completeness and atomic rollback; those fixes and an expanded Prisma migration-ledger/upgrade/repeat matrix are now under validation. PostgreSQL remains PENDING hosted service CI; this is not Browser/HTTP acceptance.
+
+PR27 source repairs: 67 export-like routes reviewed (45 bulk, 22 non-bulk), Student-only conditional flag mapping retained without gating historical finance; uncapped legacy roster reported honestly; governed roster download now enforces delegated own-child denial and logs the refusal. New guard regression 2 tests PASS; export contracts plus guard 7 PASS. Unsafe example contacts are nonnumeric placeholders; real contact validation remains unchanged. Recovery fixture builds a synthetic schema/users instead of depending on a missing or operational database. Fixture/workbook/export group 25 tests PASS. Master historical evidence now binds to admitted source commits plus the dated integration delta; 15 tests passed before later operator source changes were inventoried.
+
+Independent review found and addressed download enforcement, misleading Student clearance, ungated HTTP, ignored registry errors, incomplete export capability checks and restore collision/timestamp gaps. Latest deeper backup findings are being validated; no final independent security clearance yet.
+
+Runtime hold is explicit and reviewed: oci-image and synthetic-http have job-level false conditions, with a source comment naming EXTERNAL_RUNTIME_BLOCKED. Dependent index/Compose/full-stack jobs remain skipped. Removing the hold requires a reviewed fixed candidate and mandatory scans; it is not a waiver or green acceptance. No automatic rebuild is useful while upstream zlib remains unresolved. The operator v48 protocol has been reconciled, but its harness still rebuilds rather than consuming the exact scanned architecture artifact and has not proved the entire public CLI lifecycle. These remain named acceptance gaps.
+
+Previously pending PR26 iOS job is now terminal SUCCESS: run 34697869406 / job 103564368076, completed 2026-09-12T14:27:01Z. That is historical PR26 simulator evidence, not integrated-candidate or physical-device acceptance.
+
+Full regression, final TypeScript/build, hosted platform/PG results, protected DB final readback and tracker updates remain pending at this checkpoint. No main merge, release tag, deployment, real records, providers, messages, actual payments or operational activation.

@@ -14,7 +14,7 @@ export function portableDiagnosticsConfiguration(environment: Record<string, str
 }
 
 export const PORTABLE_CONFIGURATION_CONTRACT = Object.freeze({
-  schemaVersion: 1, databaseMajor: 17, backupVersion: 45,
+  schemaVersion: 1, databaseMajor: 17, backupVersion: 48,
   build: ["SOURCE_COMMIT", "SOURCE_DATE_EPOCH", "NEXT_PUBLIC_PWA_BUILD_VERSION", "NALANDA_STANDALONE_BUILD"],
   serverRuntime: ["APP_ORIGIN", "DATABASE_URL_FILE", "DIRECT_URL_FILE", "VALKEY_URL_FILE", "S3_ENDPOINT", "S3_PRIVATE_BUCKET", "AUTH_SECRET_FILE", "CLOUD_BACKUP_ENCRYPTION_KEY_V1_FILE"],
   publicRuntime: ["schemaVersion", "profile", "telemetry", "externalTelemetry", "deploymentCertification"],

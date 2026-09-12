@@ -151,7 +151,7 @@ async function main() {
     const logicalBackupMs = Math.round(performance.now() - backupStarted);
     invariant(!/passwordHash|SYNPILOT-[A-Z0-9_-]+-[a-f0-9]{20,}!/i.test(serialized), "SYNTHETIC_PILOT_BACKUP_SECRET_DETECTED");
     const backup = parseAndValidateBackup(JSON.parse(serialized));
-    invariant(backup.metadata.backupVersion === 46, "SYNTHETIC_PILOT_BACKUP_VERSION_CHANGED");
+    invariant(backup.metadata.backupVersion === 48, "SYNTHETIC_PILOT_BACKUP_VERSION_CHANGED");
     const sourceSnapshot = await snapshot(source);
     invariant(sourceSnapshot.students === 800 && sourceSnapshot.payments === 801 && sourceSnapshot.nativeSessions === 1 && sourceSnapshot.eventMediaAssets === 1, "SYNTHETIC_PILOT_SOURCE_RECONCILIATION_FAILED");
     invariant(sourceSnapshot.markEvents + sourceSnapshot.reportVersions + sourceSnapshot.reportEvents > 0, "SYNTHETIC_PILOT_IMMUTABLE_HISTORY_MISSING");
@@ -186,7 +186,7 @@ async function main() {
       const evidence = {
         verdict: "SYNTHETIC_PILOT_BACKUP_RESTORE_PASSED",
         synthetic: true,
-        backupVersion: 46,
+        backupVersion: 48,
         logicalBackupSha256: sha256(serialized),
         encryptedAssetSha256: assetProof.artifactSha256,
         encryptedAssetWrongKeyRefused: wrongKeyRefused,

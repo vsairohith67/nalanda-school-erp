@@ -918,6 +918,13 @@ export async function generateFullBackup(
   client: BackupClient,
   options: { generatedBy: string; generatedAt?: Date; excludeCloudBackupRunId?: string }
 ) {
+  if (typeof (client as any).$queryRaw !== "function") throw new Error("INTEGRATED_BACKUP_SCHEMA_PROBE_REQUIRED");
+  for (const delegate of ["certificateRequestCharge", "certificateBulkBatch", "certificateIssueArtifact", "priorYearLiability", "priorYearPaymentAttribution", "priorYearConcessionCase", "priorYearIncomeSupport", "priorYearConcessionEvent", "studentItemReceiptSnapshot"]) {
+    if (typeof (client as any)[delegate]?.findMany !== "function") throw new Error("INTEGRATED_BACKUP_CLIENT_INCOMPLETE");
+  }
+  for (const column of ["workflowKey", "supersedesCertificateId"]) {
+    if (!await databaseColumnExists(client as unknown as PrismaClient, "StudentCertificate", column)) throw new Error("INTEGRATED_BACKUP_SCHEMA_INCOMPLETE");
+  }
   for (const table of ["CertificateRequestCharge", "CertificateBulkBatch", "CertificateIssueArtifact", "PriorYearLiability", "PriorYearPaymentAttribution", "PriorYearConcessionCase", "PriorYearIncomeSupport", "PriorYearConcessionEvent", "StudentItemReceiptSnapshot"]) {
     if (!await databaseTableExists(client as unknown as PrismaClient, table)) throw new Error("INTEGRATED_BACKUP_SCHEMA_INCOMPLETE");
   }

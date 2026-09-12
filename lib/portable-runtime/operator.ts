@@ -4,8 +4,8 @@ import path from "node:path";
 export const OPERATOR_COMMANDS = ["preflight", "doctor", "install", "initialise", "migrate", "backup", "restore", "upgrade", "rollback", "uninstall"] as const;
 export type OperatorCommand = typeof OPERATOR_COMMANDS[number];
 export const PORTABLE_PROFILES = Object.freeze({
-  "local-single-node": { replicas: 1, minCpu: 4, minMemoryMiB: 8192, minFreeMiB: 20480, postgresMajor: 17, backupVersion: 45 },
-  "generic-vps": { replicas: 2, minCpu: 4, minMemoryMiB: 8192, minFreeMiB: 40960, postgresMajor: 17, backupVersion: 45 }
+  "local-single-node": { replicas: 1, minCpu: 4, minMemoryMiB: 8192, minFreeMiB: 20480, postgresMajor: 17, backupVersion: 48 },
+  "generic-vps": { replicas: 2, minCpu: 4, minMemoryMiB: 8192, minFreeMiB: 40960, postgresMajor: 17, backupVersion: 48 }
 });
 export type OperatorManifest = {
   schemaVersion: 1; classification: "INTEGRATION_TEST_ENVIRONMENT";
@@ -13,8 +13,8 @@ export type OperatorManifest = {
   image: string; releaseCommit: string; composeSha256: string; architecture: "amd64" | "arm64";
   operationId: string;
   restoreArtifact?: { id: string; ciphertextSha256: string };
-  postgresMajor: 17; backupVersion: 45; migration: string;
-  previous?: { image: string; releaseCommit: string; migration: string; backupVersion: 45 };
+  postgresMajor: 17; backupVersion: 48; migration: string;
+  previous?: { image: string; releaseCommit: string; migration: string; backupVersion: 48 };
 };
 export type OperatorStep = "validate" | "dependencies" | "migration-status" | "backup" | "migrate" | "start" | "readiness" | "restore" | "stop-app" | "remove-app";
 export type OperatorReceipt = { schemaVersion: 1; planHash: string; command: OperatorCommand; state: "IN_PROGRESS" | "FAILED" | "COMPLETE"; completed: OperatorStep[]; uncertain: OperatorStep | null; safeCode: string };
@@ -37,9 +37,9 @@ export function validateOperatorManifest(raw: unknown): OperatorManifest {
     || !Object.hasOwn(PORTABLE_PROFILES, m.profile) || !/^nalanda-ci-[a-z0-9-]{3,64}$/.test(m.project)
     || typeof m.target !== "string" || !path.isAbsolute(m.target) || path.normalize(m.target) !== m.target || m.target === path.parse(m.target).root
     || !image.test(m.image) || !sha.test(m.releaseCommit) || !/^[a-f0-9]{64}$/.test(m.composeSha256)
-    || !/^[a-f0-9]{16}$/.test(m.operationId) || !["amd64", "arm64"].includes(m.architecture) || m.postgresMajor !== 17 || m.backupVersion !== 45 || !/^\d{14}_[a-z0-9_]+$/.test(m.migration)) throw new Error("OPERATOR_MANIFEST_INVALID");
+    || !/^[a-f0-9]{16}$/.test(m.operationId) || !["amd64", "arm64"].includes(m.architecture) || m.postgresMajor !== 17 || m.backupVersion !== 48 || !/^\d{14}_[a-z0-9_]+$/.test(m.migration)) throw new Error("OPERATOR_MANIFEST_INVALID");
   if (m.restoreArtifact && (Object.keys(m.restoreArtifact).sort().join() !== "ciphertextSha256,id" || !/^[a-z0-9-]{8,64}$/.test(m.restoreArtifact.id) || !/^[a-f0-9]{64}$/.test(m.restoreArtifact.ciphertextSha256))) throw new Error("RESTORE_ARTIFACT_INVALID");
-  if (m.previous && (Object.keys(m.previous).sort().join() !== "backupVersion,image,migration,releaseCommit" || !image.test(m.previous.image) || !sha.test(m.previous.releaseCommit) || m.previous.migration !== m.migration || m.previous.backupVersion !== 45)) throw new Error("ROLLBACK_SCHEMA_INCOMPATIBLE");
+  if (m.previous && (Object.keys(m.previous).sort().join() !== "backupVersion,image,migration,releaseCommit" || !image.test(m.previous.image) || !sha.test(m.previous.releaseCommit) || m.previous.migration !== m.migration || m.previous.backupVersion !== 48)) throw new Error("ROLLBACK_SCHEMA_INCOMPATIBLE");
   return structuredClone(m);
 }
 export function operatorPlan(command: OperatorCommand, raw: unknown) {

@@ -101,7 +101,12 @@ export function validateBulkExportGovernance() {
 
   const bulk = surfaces.filter((surface) => surface.classification === "BULK_EXPORT");
   const nonBulk = surfaces.filter((surface) => surface.classification === "NOT_A_BULK_EXPORT");
-  const mappedBulkFlag = bulk.filter((surface) => surface.featureFlag === "bulk-exports");
+  const mappedBulkFlag = bulk.filter((surface) => surface.featureFlag === "bulk-exports" || surface.conditionalFeatureFlags?.some(mapping => mapping.featureFlag === "bulk-exports"));
+  for (const surface of surfaces.filter(s => s.conditionalFeatureFlags)) {
+    if (surface.id !== "core-dynamic-exports" || JSON.stringify(surface.conditionalFeatureFlags) !== JSON.stringify([{ parameter: "type", value: "students", featureFlag: "bulk-exports" }])) errors.push("CONDITIONAL_BULK_MAPPING_UNREVIEWED");
+    const source = readBounded(path.join(workspaceRoot, surface.sourcePath));
+    if (!source.includes('type === "students"') || !source.includes('requireOperationalReleaseFeatureForApi(BULK_EXPORTS_FEATURE)')) errors.push("CONDITIONAL_BULK_MAPPING_SOURCE_MISSING");
+  }
   const releaseFlag = manifest.bulkExportFlag;
   if (releaseFlag?.key !== "bulk-exports" || releaseFlag.committedDefaultState !== false || releaseFlag.committedRolloutPercentage !== 0) errors.push("BULK_EXPORT_FLAG_CONTRACT_INVALID");
   if (releaseFlag?.currentMappedSurfaceCount !== mappedBulkFlag.length) errors.push("BULK_EXPORT_FLAG_MAPPING_COUNT_MISMATCH");

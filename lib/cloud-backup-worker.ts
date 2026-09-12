@@ -119,7 +119,7 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
     const plaintext = Buffer.from(serializeBackup(backup), "utf8");
     const validated = parseAndValidateBackup(plaintext.toString("utf8"));
     if (validated.metadata.backupVersion !== CURRENT_CLOUD_BACKUP_VERSION) throw new Error("BACKUP_VERSION_INVALID");
-    await event(prisma, { profileId: run.profileId, runId, eventType: "BACKUP_VALIDATED", safeMetadataJson: JSON.stringify({ backupVersion: 46 }) });
+    await event(prisma, { profileId: run.profileId, runId, eventType: "BACKUP_VALIDATED", safeMetadataJson: JSON.stringify({ backupVersion: validated.metadata.backupVersion }) });
 
     await transition(prisma, runId, "VALIDATING", "COMPRESSING");
     await transition(prisma, runId, "COMPRESSING", "ENCRYPTING");

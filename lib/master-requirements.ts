@@ -1,3 +1,4 @@
+import recoveryDelta from "@/config/recovery-integration-source-delta.json";
 import { createHash } from "node:crypto";
 import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
@@ -96,7 +97,8 @@ export function validateMasterRequirements(input: unknown, readSource?: (file: s
       if (readSource) {
         try {
           const source = readSource(item.path);
-          const retainedHistorical = certificateDelta.changed.some(d => d.path === item.path && d.baselineSha256 === item.sha256 && d.currentSha256 === sourceHash(source)) && historicalAudit.inventory.some(d => d.path === item.path && d.sha256 === item.sha256);
+          const retainedRecovery = recoveryDelta.files.some(d => d.path === item.path && d.currentSha256 === sourceHash(source) && [d.baseSha256, d.historicalSha256, ...d.sources.map(s => s.sha256)].includes(item.sha256));
+          const retainedHistorical = retainedRecovery || certificateDelta.changed.some(d => d.path === item.path && d.baselineSha256 === item.sha256 && d.currentSha256 === sourceHash(source)) && historicalAudit.inventory.some(d => d.path === item.path && d.sha256 === item.sha256);
           if (!retainedHistorical && (sourceHash(source) !== item.sha256 || item.line > source.split("\n").length)) errors.push(`EVIDENCE_DRIFT:${req.id}:${item.path}`);
         } catch { errors.push(`EVIDENCE_NOT_FOUND:${req.id}:${item.path}`); }
       }

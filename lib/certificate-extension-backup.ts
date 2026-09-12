@@ -1,3 +1,4 @@
+import { assertCertificateBackupFields } from "./certificate-backup-fields";
 import { createHash } from "node:crypto";
 export const CERTIFICATE_EXTENSION_KEYS = ["certificateRequestCharges", "certificateBulkBatches", "certificateIssueArtifacts"] as const;
 const hex = (value: unknown) => /^[a-f0-9]{64}$/.test(String(value ?? ""));
@@ -8,6 +9,7 @@ export function validateCertificateExtensionBackup(root: Record<string, any>) {
     const rows = root[key] ?? [];
     if (!Array.isArray(rows) || rows.length > 100000 || rows.some(r => !r || typeof r !== "object" || typeof r.id !== "string" || !r.id)) throw new Error(`Invalid ${key}`);
     if (new Set(rows.map(r => r.id)).size !== rows.length) throw new Error(`Duplicate ${key}`);
+    assertCertificateBackupFields(key, rows);
     result[key] = rows;
   }
   const requests = new Map((root.studentCertificateRequests ?? []).map((r: any) => [r.id, r]));
@@ -17,7 +19,10 @@ export function validateCertificateExtensionBackup(root: Record<string, any>) {
   const receipts = new Map((root.miscIncomeReceipts ?? []).map((r: any) => [r.id, r]));
   const seenRequests = new Set(), seenReceipts = new Set(), seenTokens = new Set(), seenVersions = new Set();
   for (const certificate of root.studentCertificates ?? []) {
-    if (certificate.certificateType !== "GRADUATION" || !certificate.workflowKey) continue;
+    const snapshot = JSON.parse(String(certificate.draftDataJson ?? "{}"));
+    if (certificate.certificateType !== "GRADUATION" && snapshot.certificateType !== "GRADUATION" && !snapshot.graduation) continue;
+    const expectedWorkflow = certificate.supersedesCertificateId ? `graduation-revision:${certificate.supersedesCertificateId}` : `graduation:${certificate.requestId}`;
+    if (certificate.certificateType !== "GRADUATION" || !certificate.requestId || certificate.workflowKey !== expectedWorkflow) throw new Error("Required Graduation workflow identity missing");
     for (const version of root.studentCertificateVersions ?? []) {
       if (version.certificateId === certificate.id && !result.certificateIssueArtifacts.some(artifact => artifact.versionId === version.id)) throw new Error("Required certificate artifact missing");
     }

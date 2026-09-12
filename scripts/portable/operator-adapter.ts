@@ -237,7 +237,7 @@ export class CiOperatorAdapter implements OperatorAdapter {
     if (step === "migrate") await this.atomicJson(path.join(m.target, `${m.operationId}.migrate.result.json`), { state: "MIGRATED", planHash: operatorPlan(this.command, this.manifest).planHash, command: this.command, operationId: m.operationId, migration: m.migration });
     if (step === "backup" || step === "restore") {
       const result = JSON.parse(output.trim().split(/\r?\n/).at(-1) ?? "{}");
-      if (result.operationId !== m.operationId || result.state !== (step === "backup" ? "VERIFIED" : "RESTORED") || result.backupVersion !== 45) throw new Error("RECOVERY_TERMINAL_RESULT_INVALID");
+      if (result.operationId !== m.operationId || result.state !== (step === "backup" ? "VERIFIED" : "RESTORED") || result.backupVersion !== 48) throw new Error("RECOVERY_TERMINAL_RESULT_INVALID");
       if (step === "backup" && (!/^[a-z0-9-]{8,64}$/.test(result.id) || !/^[a-f0-9]{64}$/.test(result.ciphertextSha256))) throw new Error("BACKUP_RESULT_INVALID");
       const f = await open(path.join(m.target, `${m.operationId}.${step}.result.json`), "wx", 0o600); try { await f.writeFile(JSON.stringify({ ...result, command: this.command, planHash: operatorPlan(this.command, this.manifest).planHash })); await f.sync(); } finally { await f.close(); }
     }
@@ -246,7 +246,7 @@ export class CiOperatorAdapter implements OperatorAdapter {
     if (step === "backup" || step === "restore" || step === "migrate") {
       try {
         const result = await this.ownedJson(path.join(this.manifest.target, `${this.manifest.operationId}.${step}.result.json`));
-        if (result.command === this.command && result.planHash === operatorPlan(this.command, this.manifest).planHash && result.operationId === this.manifest.operationId && (step === "migrate" ? result.state === "MIGRATED" && result.migration === this.manifest.migration : result.state === (step === "backup" ? "VERIFIED" : "RESTORED") && result.backupVersion === 45)) return "COMPLETE";
+        if (result.command === this.command && result.planHash === operatorPlan(this.command, this.manifest).planHash && result.operationId === this.manifest.operationId && (step === "migrate" ? result.state === "MIGRATED" && result.migration === this.manifest.migration : result.state === (step === "backup" ? "VERIFIED" : "RESTORED") && result.backupVersion === 48)) return "COMPLETE";
       } catch { /* Missing or ambiguous terminal evidence is a gate. */ }
     }
     // Read-only and convergent operations are safe to repeat. A possibly committed
