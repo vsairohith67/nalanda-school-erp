@@ -68,6 +68,10 @@ async function exercise(off:boolean) {
     const legacy={model:"LEGACY_ASSESSMENT",assessmentId:state.assessmentId,academicYear:"2026-27",csv};
     // Separate named Principal exercises legacy authority within the unchanged per-session import limit.
     const legacyCookie=await session("bulk-principal");
+    const legacyTemplate=await asActor(legacyCookie,`/api/marks/import/template?assessmentId=${state.assessmentId}&academicYear=2026-27`);
+    assert.equal(legacyTemplate.status,200);assert(legacyTemplate.headers.get("cache-control")?.includes("no-store"));
+    const legacyRoster=parseCsv(await legacyTemplate.text());assert.deepEqual(legacyRoster[0],MARKS_IMPORT_COLUMNS);
+    assert(legacyRoster.slice(1).some(r=>r[5]==="00001"));assert(legacyRoster.slice(1).every(r=>r[0]==="BULK-SYNTH" && r[1]==="I" && r[2]==="A" && r[3]===state.subjectName && r[4]==="Theory" && r[5]!=="00003" && r[6]==="" && r[7]==="PRESENT"));checks.push("legacy_selected_roster_template_bytes");
     const legacyJson=async(body:unknown)=>{const r=await asActor(legacyCookie,"/api/marks/import",body);const d=await r.json();assert.equal(r.status,200,d.error);return d;};
     const p=await legacyJson({...legacy,action:"preview"});await legacyJson({...legacy,action:"confirm",receipt:p.receipt});assert.equal((await db.studentMark.findFirstOrThrow({where:{assessmentId:state.assessmentId}})).marksObtained?.toString(),"0");checks.push("legacy_marks_readback");
     const stale=await asActor(legacyCookie,"/api/marks/import",{...legacy,action:"confirm",receipt:p.receipt});refused(stale,[400,409]);checks.push("legacy_stale_preview_rejected");
@@ -94,7 +98,7 @@ async function exercise(off:boolean) {
     }
     const admin=await db.user.findUniqueOrThrow({where:{id:state.adminId}});
     const adminActor={id:admin.id,name:admin.name,role:"SUPER_ADMIN" as const,guardianId:null};
-    async function inventedActor(username:string,role:"TEACHER"|"COMPUTER_OPERATOR") {
+    async function inventedActor(username:string,role:"TEACHER"|"COMPUTER_OPERATOR"|"PARENT"|"VIEWER") {
       const user=await db.user.create({data:{username,name:"INVENTED "+username,role,iamPublicKey:randomUUID(),passwordHash:await hashPassword(password),isActive:true,mustChangePassword:false,lifecycleStatus:"ACTIVE"}});
       await db.userRoleAssignment.create({data:{userId:user.id,role,reason:"Synthetic hosted QA only",assignedByUserId:admin.id,activeKey:`${user.id}:${role}`}});
       await db.authLoginAlias.create({data:{userId:user.id,type:"USERNAME",normalizedValue:username,displayMasked:username,status:"VERIFIED",verifiedAt:new Date()}});
@@ -128,7 +132,18 @@ async function exercise(off:boolean) {
     await db.userPermissionProfileAssignment.update({where:{publicKey:expires.assignmentHandle},data:{validFrom:new Date(Date.now()-120000),validUntil:new Date(Date.now()-60000)}});
     refused(await asActor(expiringCookie,endpoint,{model:"GOVERNED_DRAFT",csv:expiringCsv,action:"confirm",receipt:expiryPlan.receipt}),[401,403]);
     assert.deepEqual(await db.examMarkEntry.findMany({orderBy:{id:"asc"}}),beforeRevocation);assert.deepEqual(await db.examMarkSheet.findMany({orderBy:{id:"asc"}}),beforeDeniedSheets);checks.push("delegation_expired_before_commit_no_marks_change");
+    for (const role of ["PARENT","VIEWER"] as const) {
+      const denied=await inventedActor(`bulk-denied-${role.toLowerCase()}`,role);
+      if(role==="PARENT") {
+        const parentGuardian=await db.guardian.create({data:{displayName:"INVENTED export Parent",primaryMobile:"9000000089"}});
+        await db.studentGuardian.create({data:{guardianId:parentGuardian.id,studentId:state.studentId}});
+        await db.user.update({where:{id:denied.id},data:{guardianId:parentGuardian.id}});
+      }
+      const deniedCookie=await session(denied.username!);refused(await asActor(deniedCookie,"/api/export/students?academicYear=2026-27&className=I&section=A"),[401,403]);
+    }
+    checks.push("linked_Parent_and_Viewer_export_denied");
     const exportR=await call("/api/export/students?academicYear=2025-26&className=I&section=A&status=Inactive");assert.equal(exportR.status,200);const bytes=await exportR.text();const exported=parseCsv(bytes);assert.equal(exported.length,2);assert.equal(exported[1][1],"00002");assert.equal(exported[1][0],"2025-26");assert.equal(exported[1][6],"INACTIVE");assert(exportR.headers.get("cache-control")?.includes("no-store"));checks.push("actual_filtered_csv_bytes_and_historical_scope");
+    const searched=await call("/api/export/students?academicYear=2026-27&className=I&section=A&status=Active&q=00001");assert.equal(searched.status,200);const searchedRows=parseCsv(await searched.text());assert.equal(searchedRows.length,2);assert.equal(searchedRows[1][1],"00001");checks.push("all_five_visible_filters_actual_csv");
     const empty=await call("/api/export/students?q=NO_SYNTHETIC_MATCH");assert.equal(parseCsv(await empty.text()).length,1);checks.push("header_only_zero_results");
     assert.equal((await call("/api/export/students?unknown=1")).status,400);checks.push("invalid_export_filter_rejected");
     assert.equal((await call("/api/marks/reports/export?academicYear=2026-27&examCode=BULK-SYNTH")).status,200);checks.push("authorised_exam_report_download");
@@ -142,7 +157,7 @@ async function exercise(off:boolean) {
     const duplicateUpload=await fetch(origin+"/api/onboarding/batches",{method:"POST",headers:{cookie,origin},body:form});assert.equal(duplicateUpload.status,200);assert.equal((await duplicateUpload.json()).batch.batchReference,up.batch.batchReference);checks.push("canonical_duplicate_upload_same_batch");
     const validated=await json(batchPath+"/validate",{resolutions:{}});assert.equal(validated.batch.status,"APPROVAL_REQUIRED");
     const approval={reason:"Synthetic exact-head acceptance only",reauthPassword:password,planHash:validated.batch.planHash,workbookHash:validated.batch.workbookHash};await json(batchPath+"/approve",approval);await json(batchPath+"/execute",{...approval,idempotencyKey:"bulk-synthetic-execution-0001"});assert(await db.student.findUnique({where:{admissionNo:"00010"}}));checks.push("controlled_bundle_validate_approve_execute_readback");
-    await db.user.update({where:{id:state.adminId},data:{isActive:false}});assert.equal((await call(endpoint,{...governed,action:"confirm",receipt:gp.receipt})).status,401);checks.push("revoked_actor_rejected");
+    await db.user.update({where:{username:"bulk-principal"},data:{isActive:false}});assert.equal((await asActor(legacyCookie,"/api/marks/import",{...legacy,action:"confirm",receipt:p.receipt})).status,401);checks.push("revoked_actor_rejected");
   }
   writeFileSync(path.join(root,off?"bulk-off-result.json":"bulk-on-result.json"),JSON.stringify({head:process.env.BULK_EXACT_HEAD,mode:off?"production-OFF":"synthetic-ON",checks, businessCounts:{students:await db.student.count(),legacyMarks:await db.studentMark.count(),governedEntries:await db.examMarkEntry.count(),importBatches:await db.importBatch.count()}},null,2));
   console.log(JSON.stringify({mode:off?"OFF":"ON",checks}));
