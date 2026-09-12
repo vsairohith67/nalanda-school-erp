@@ -1,8 +1,10 @@
+import { buildControlledSourcePackage } from "@/lib/onboarding-source-package";
 import * as XLSX from "xlsx";
 import { inspectXlsxContainer } from "@/lib/onboarding-workbooks";
 
-self.onmessage = async (event: MessageEvent<File>) => {
+self.onmessage = async (event: MessageEvent<File | { action: "controlled"; rows: Record<string, string>[] }>) => {
   try {
+    if (!(event.data instanceof File)) { self.postMessage({ package: buildControlledSourcePackage(event.data.rows) }); return; }
     const file = event.data;
     if (file.size < 1 || file.size > 5 * 1024 * 1024 || file.name.length > 180) throw new Error("Choose a non-empty file of at most 5 MB with a shorter name.");
     const extension = file.name.toLowerCase().match(/\.[^.]+$/)?.[0];

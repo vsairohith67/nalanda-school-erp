@@ -172,7 +172,7 @@ function hardenGeneratedTemplate(bytes: Buffer, input: { bundle: OnboardingBundl
   return Buffer.from(zipSync(files, { level: 6 }));
 }
 
-function applyCoverStyle(files: Record<string, Uint8Array>) {
+export function applyCoverStyle(files: Record<string, Uint8Array>) {
   const stylesKey = "xl/styles.xml";
   let styles = decode(files[stylesKey]);
   styles = styles.replace(/<fonts count="(\d+)">/, (_match, count) => `<fonts count="${Number(count) + 1}">`);

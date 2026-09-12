@@ -6,11 +6,11 @@ import { legacyImportChoices, legacyImportContext, assertLegacyCsvContext } from
 import { readImportJson } from "@/lib/import-request";
 import { issueImportReceipt, requireImportReceipt, importDigest } from "@/lib/import-preview-receipt";
 import { marksError } from "@/lib/marks-api";
-import { REAL_DATA_IMPORTS_FEATURE, requireOperationalReleaseFeatureForApi } from "@/lib/release-feature-flag-runtime";
+import { REAL_DATA_IMPORTS_FEATURE, isOperationalReleaseFeatureEnabled, requireOperationalReleaseFeatureForApi } from "@/lib/release-feature-flag-runtime";
 const privateHeaders = { "cache-control": "private, no-store" };
 export async function GET() {
   const auth = await requireApiPermission("ENTER_MARKS"); if (auth.response || !auth.user) return auth.response;
-  try { return NextResponse.json({ actorContext: importDigest([auth.user.id, auth.user.role, auth.user.roleAssignmentId]), model: "LEGACY_ASSESSMENT", choices: await legacyImportChoices(prisma, auth.user), preview: true, import: !requireOperationalReleaseFeatureForApi(REAL_DATA_IMPORTS_FEATURE) }, { headers: privateHeaders }); }
+  try { return NextResponse.json({ actorContext: importDigest([auth.user.id, auth.user.role, auth.user.roleAssignmentId]), model: "LEGACY_ASSESSMENT", choices: await legacyImportChoices(prisma, auth.user), preview: true, import: isOperationalReleaseFeatureEnabled(REAL_DATA_IMPORTS_FEATURE) }, { headers: privateHeaders }); }
   catch { return NextResponse.json({ error: "Access denied for marks import." }, { status: 403, headers: privateHeaders }); }
 }
 export async function POST(request: NextRequest) {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const context = await legacyImportContext(prisma, auth.user, body.assessmentId, body.academicYear);
     assertLegacyCsvContext(body.csv, context);
     const binding = { model: body.model, actor: auth.user.id, role: auth.user.role, csv: body.csv, context };
-    if (body.action === "preview") return NextResponse.json({ preview: await previewMarksImport(prisma, auth.user, body.csv), receipt: issueImportReceipt(binding), import: !requireOperationalReleaseFeatureForApi(REAL_DATA_IMPORTS_FEATURE) }, { headers: privateHeaders });
+    if (body.action === "preview") return NextResponse.json({ preview: await previewMarksImport(prisma, auth.user, body.csv), receipt: issueImportReceipt(binding), import: isOperationalReleaseFeatureEnabled(REAL_DATA_IMPORTS_FEATURE) }, { headers: privateHeaders });
     const denied = requireOperationalReleaseFeatureForApi(REAL_DATA_IMPORTS_FEATURE); if (denied) return denied;
     requireImportReceipt(body.receipt, binding);
     if (body.action !== "confirm") throw new Error("Choose preview or confirm.");
