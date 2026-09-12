@@ -1,0 +1,15 @@
+# Proposed serial integration patch — BULK-DATA-EXCHANGE-UX-1A
+
+PROPOSED_ONLY — not applied to shared files. Base main 104aacc7bd314cae82e60bb02b5c8a965c7ffedd. Apply only through the register/release owner after reconciling finance PR26 and PR27. Do not replace current owner edits with this base snapshot.
+
+| Shared target | Proposed change | Preserve |
+|---|---|---|
+| config/master-requirements-register.json, NPS-REQ-009 | Append PR27 and docs/evidence/BULK_DATA_EXCHANGE_UX_1A.md to evidence; describe approved-field mapping, canonical onboarding packages, contact-policy distinction and wrapped row review; refresh reviewed source references/digests after integration | PARTIAL status until all requirement and release gates are met; separate certificate boundary |
+| NPS-REQ-015 and NPS-REQ-016 | Refresh only the shared lib/student-import.ts evidence digest when the owner reconciles authorised source | All concession requirements, status, owner changes and business claims belong to finance; this task does not implement these requirements |
+| config/master-requirements-audit-evidence.json and frozen source audit test | Regenerate the source inventory for the authorised integrated implementation and its narrow new files using the existing owner process | Historical source-only reconciliation evidence; do not simply remove freeze assertions or accept arbitrary drift |
+| tools/release-evidence/bulk-export-contracts.json, marks-import-template | Reclassify the legacy template from blank artifact to authorised assessment roster CSV; record exact year/class/section/subject/component scope, permission, private/no-store, formula-safe output and actual bounded behavior | It is legacy assessment data, not a governed marks sheet; no broader field set |
+| Same manifest, new governed sheet GET | Classify /api/exam-marks/sheets/[assignmentId]?format=csv or xlsx as exact authorised governed roster/template export, maximum 200 rows, signed context/version, no-store, formula-safe CSV; import remains draft save only | Existing marks authority, scheme/lock/family restrictions and default-off production settings |
+| Same manifest, core-dynamic-exports | Record Student-only five-filter/history semantics, bulk-exports runtime gate, export-purpose audit, minimal eight columns, limit-plus-one refusal and header-only zero results; retain separate finance dispatcher behavior | Payment/dues/collection branch classifications and finance ownership |
+| Same manifest discovery totals | Regenerate discovery after serial integration; this branch discovers 62 routes rather than released 61, including the newly detected governed sheet route | No discovery suppression, hard-coded historical pass count or skip-as-pass |
+
+Do not mark academic analytics, native-device acceptance, deployment, finance or operational activation complete from this implementation. Record marks workflow evidence in its existing domain ledger through the canonical owner process; do not invent a new master requirement ID. No schema, migration or backup-version patch is requested.

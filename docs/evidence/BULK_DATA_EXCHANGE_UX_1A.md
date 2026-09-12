@@ -1,6 +1,6 @@
 # BULK-DATA-EXCHANGE-UX-1A
 
-Status: IMPLEMENTATION_IN_PROGRESS. No release or operational clearance.
+Status: BULK_DATA_EXCHANGE_UX_1A_IMPLEMENTED_PENDING_RELEASE_GATE. Implementation and hosted synthetic acceptance complete; no release or operational clearance.
 
 Base: origin/main 104aacc7bd314cae82e60bb02b5c8a965c7ffedd; tree 2c7f1a129e6b98abb9689abf7c989b0ed8468561; backup v45.
 Dedicated retained worktree: bulk-data-exchange-ux-1a; branch feature/bulk-data-exchange-ux-1a.
@@ -19,13 +19,13 @@ Parked PR19: 1ba360b123ded770f1554d59fbd21c86b9943427; PR24: 5bf70e4c4be07b70622
 | P1 original Student rows sent | New approved-field projection; independently bounded server envelope and field allowlist | Normal UI request capture excludes forbidden sentinel; forged-field and malformed-JSON tests pass |
 | P2 source aliases/class-section | Versioned deterministic headings; duplicate targets block; explicit class+section pair mapping | Alias/conflict/text-ID tests pass; actual mapping rendered |
 | P2 legacy template discovery | Legacy header-only CSV download; controlled XLSX link and explicit workflow | Actual menu rendered; controlled canonical package roundtrip passes |
-| P2 generic marks template | Exact authorised legacy assessment/year/roster CSV | Source + focused tests; authenticated download pending hosted run |
-| P2 governed import missing | Separate signed CSV/XLSX adapter through existing governed draft save | Blank/zero/states/max/precision tests pass; actual services/retries/concurrency pending hosted run |
-| P2 disabled feedback | Server capabilities before confirmation, refresh on focus/interval, API gates | OFF controls demonstrated; production OFF HTTP pending hosted run |
+| P2 generic marks template | Exact authorised legacy assessment/year/roster CSV | Source + focused tests; authenticated roster-template bytes PASS in hosted run 34700775013 |
+| P2 governed import missing | Separate signed CSV/XLSX adapter through existing governed draft save | Blank/zero/states/max/precision tests pass; actual services, retries, concurrency, stale authority and readback PASS in hosted run 34700775013 |
+| P2 disabled feedback | Server capabilities before confirmation, refresh on focus/interval, API gates | OFF controls demonstrated; production OFF HTTP PASS in hosted run 34700775013 |
 | P2 focus/Escape | Existing native dialog with contained focus/Escape/focus return | Browser open, Tab, Escape, restored trigger pass |
 | P2 stale onboarding bundle | New worker-only canonical package; reset eligibility/file/decisions; obsolete requests ignored | Actual XLSX worker, bundle change, same file again and local cancel pass; authority loss clears retained history |
 | P2 mobile errors | Wrapped expandable row/field/reason with optional wide tables | 320/390/768/1440 light/dark layouts and expanded long Unicode errors do not overflow |
-| P2 Student export ignores scope | Shared listing/filter semantics, selected-year enrollments and minimal eight columns | Query/history/invalid-filter tests pass; actual CSV bytes pending hosted run |
+| P2 Student export ignores scope | Shared listing/filter semantics, selected-year enrollments and minimal eight columns | Query/history/invalid-filter tests pass; actual historical/empty/five-filter CSV bytes and Teacher/Parent/Viewer refusals PASS in hosted run 34700775013 |
 | P3 misleading trial wording | Explicit batch/audit metadata wording | Rendered wording distinguishes local review, server preview, saved report and mutation |
 
 Historical parent review is preserved: 43 probes, 42 passed/completed, one failed optional-contact expectation. This was component evidence, not E2E. Legacy missing father/phone remains WARNING; controlled Student father/phone and Guardian mobile remain BLOCKING. No dummy contacts or real source workbook used.
@@ -60,24 +60,37 @@ Actual Browser probes: selected mapping; legacy warnings; disabled mutation; imp
 
 ## Runtime and platform boundaries
 
-Authenticated E2E remains pending until the new exact-head hosted workflow runs. scripts/bulk-data-exchange-e2e.ts is guarded against local execution and requires GitHub-hosted runner, exact head, one absolute synthetic DB path and loopback networking. Proposed assertions include production OFF, controlled upload/approval/execution, Student import, legacy/governed drafts, retries, competing edits, Teacher denial, delegated revocation/expiry/family conflict, actual historical/empty CSV downloads, exam report download and readback. Only successful observed runs may be promoted to evidence.
+Authenticated synthetic E2E PASSED at source/acceptance head 62be2ebba4dad1e1144e35bf20da61c17e87d2af, hosted run 34700775013, job 103572024677. Sanitized immutable results are in BULK_DATA_EXCHANGE_UX_1A-hosted.json. scripts/bulk-data-exchange-e2e.ts is guarded against local execution and requires GitHub-hosted runner, exact head, one absolute synthetic DB path and loopback networking. Observed assertions: production OFF, controlled upload/approval/execution and Student readback, metadata-only saved validation, Student legacy execution, legacy roster template and zero marks, governed draft retry and single-winner concurrent edit with version readback, changed-content/stale receipts, Teacher denial, delegated revocation/expiry/family conflict with unchanged marks/sheets and audit checks, actual historical/empty/all-five-filter CSV downloads, linked Parent/Viewer export denial, exam report download and disabled Principal session rejection. OFF retained 3 invented Students and zero marks/batches; ON ended with 5 invented Students, 1 legacy mark, 2 governed entries and 2 legacy import batches. Draft entries were not submitted, moderated, locked or published. Teardown verified TCP listener closed and every owned synthetic database/private-upload directory removed.
 
 Responsive browser: demonstrated above. Installed Windows/WebView: UNEXECUTED. Android emulator: UNEXECUTED. iOS simulator: UNEXECUTED. Physical devices: UNEXECUTED. Native file-picker cancel/Back/safe-area/download, keyboard zoom/reduced-motion and disconnected/session-expiry native acceptance remain open. Existing Tauri/encrypted offline finance foundations unchanged. No local production ERP server, public tunnel, real-data write or operational flag activation.
 
 ## Proposed serial register/governance patch
 
 Finance PR26 owns concurrent shared requirements/release contracts. Do not apply those updates here. Proposed integration:
-1. Record reviewed-field Student exchange, controlled canonical package boundary, separate governed draft adapter, correct historical Student export and truthful UI modes in NPS-REQ-009/015/016 and affected source evidence.
+1. Apply the task-local proposal in BULK_DATA_EXCHANGE_UX_1A-register.patch.md through serial integration. NPS-REQ-009 receives import evidence; NPS-REQ-015/016 only need shared source-digest reconciliation, with all finance requirements and statuses preserved.
 2. Reconcile the frozen master source baseline with authorised implementation and new narrow files; preserve historical review and failed probe.
 3. Classify the new governed assignment roster-template download in the shared export manifest; reassess the legacy marks template now containing an authorised roster. Current export inventory reports 62 discovered routes and one unclassified governed route. Reconcile totals through the owner process, without suppressing discovery.
 4. Keep full runtime/native/device and shared OCI advisory gates open; no schema/backup contract change requested.
 
 ## Release and tracker gates
 
-No merge or tag authorised by the current evidence. Mandatory exact-head CI, SQLite/PostgreSQL/backup/security/native contracts and the independently recorded shared-runtime advisory conflict must resolve. Green feature runtime CI alone cannot clear those gates. Tracker updates will append terminal results to implementation task 1218286239401466 and parent review 1218294223162480 without modifying finance task 1218283703395328 or completing physical acceptance. Canonical Notion/Canvs query/readback remains part of the final handoff.
+No merge or tag authorised by the current evidence. Mandatory exact-head CI, SQLite/PostgreSQL/backup/security/native contracts and the independently recorded shared-runtime advisory conflict must resolve. Green feature runtime CI alone cannot clear those gates. Tracker updates append terminal results to implementation task 1218286239401466 and parent review 1218294223162480 without modifying finance task 1218283703395328 or completing physical acceptance. Canonical Notion/Canvs query/readback remains part of the final handoff.
 
 ### Additional gate results — 12 September 2026
 
 Dependency audit (`pnpm audit --audit-level high`) FAILED: two Critical, one High and two Moderate advisories in unchanged dependencies (Next.js, Sharp, Vitest/mocker). No dependency upgrade, waiver or suppression was attempted in this bounded task. This is additional to the retained shared-runtime OCI advisory conflict.
 
 The existing onboarding public-artifact scanner FAILED at lib/onboarding-workbooks.ts because it scans the whole touched file and finds pre-existing generated-template example contact strings. The sole task edit there exports the existing Georgia cover-style helper. The failure is retained; the scanner was not weakened. All newly published fixture contents are invented and reviewed. No binary/source workbook or DB is staged.
+
+
+### Terminal evidence — 12 September 2026
+
+PR27: https://github.com/vsairohith67/nalanda-school-erp/pull/27. Retained source/acceptance head: 62be2ebba4dad1e1144e35bf20da61c17e87d2af. Subsequent evidence-only head and its exact checks are recorded on PR27 and in the handoff. Main remains 104aacc7bd314cae82e60bb02b5c8a965c7ffedd. Finance PR26 remains separate at d784262ccc78ae431a72a3934ced45198e4bfb4c.
+
+Earlier hosted attempts remain failures: 34699378071 failed a UTF-8 build input, corrected before later successful builds; 34699518385 reached login503 with missing production limiter configuration; 34700216559 passed OFF and stopped at the synthetic expiry date constraint; 34700562973 completed 20 ON assertions then the protected last-Super-Admin constraint refused the final fixture step. Neither guard was weakened: the released complete rehearsal isolation contract was supplied, valid expiry dates were used and the final disabled-account probe targets the synthetic Principal. All runs retained verified teardown. These partial attempts are not relabelled passes.
+
+Native/shared software checks: 22 ERP contracts, 6 app tests and 7 Rust tests PASS; app typecheck and web build PASS. Installed Windows/WebView, Android emulator, iOS simulator and physical devices remain UNEXECUTED. adb/emulator/xcrun/xcodebuild are unavailable on this Windows host. Browser keyboard zoom shortcuts had no measurable effect; reduced-motion emulation is not exposed by the available Browser API; file chooser empty selection is unsupported. These remain explicit gates, not passes. The latest actual-component harness additionally verified source/preview clear on component unmount/remount, no console warnings/errors, and a fresh allowlisted Student preview capture. Its own loopback listener was stopped.
+
+Full regression omissions are explicit: 13 recovery tests skipped after missing-worktree-DB setup failure and 3 governed qpdf tests skipped. No operational DB was copied. The corrected marks-source guard and 53 focused import/flag/security-resilience assertions subsequently passed. Mandatory exact-head Real-User Access CI on 62be2eb failed the dependency/security gate; downstream full regression, backup/restore and shared-platform steps were skipped. PostgreSQL17 migrations/constraints/parity passed. Cross-provider CI is separately tracked on the PR; no unexecuted job is a pass.
+
+Remaining release blockers: two Critical and one High dependency advisories (plus two Moderate), the separate shared-runtime OCI advisory conflict, shared frozen source/register and export-manifest reconciliation, the public-artifact scanner refusal in a touched file containing unchanged template examples, and all remaining mandatory exact-head checks. No waiver, suppression, default change, merge, tag, deployment or operational activation. Physical/native acceptance is not closed by software evidence. Protected DB hash/size/mtime and absence of sidecars match; parked PR19/24/25, review worktree, schema and backup v45 remain unchanged.
