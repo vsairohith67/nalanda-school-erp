@@ -14,6 +14,10 @@ jobs:
     timeout-minutes: 55
     env:
       CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Existing isolated rehearsal limiter remains active; no production policy change.
+      NALANDA_LOCAL_SECURITY_REHEARSAL: "true"
+      SECURITY_RATE_LIMIT_MODE: single-process-rehearsal
       NALANDA_ENVIRONMENT: TEST
       DATABASE_PROVIDER: sqlite
       AUTH_SECRET: synthetic-bulk-ci-auth-secret-not-for-use
@@ -38,7 +42,7 @@ jobs:
           test "$(git rev-parse HEAD)" = "$BULK_EXACT_HEAD"
           test ! -e prisma/dev.db
           test ! -e tmp/release-ci/synthetic.db
-          mkdir -p tmp/release-ci
+          mkdir -p tmp/release-ci/{database,provider,temp,rehearsal}
           touch tmp/release-ci/synthetic.db
           echo "DATABASE_URL=file:$GITHUB_WORKSPACE/tmp/release-ci/synthetic.db" >> "$GITHUB_ENV"
       - name: Prepare invented records only
@@ -46,7 +50,25 @@ jobs:
           pnpm db:generate:sqlite
           pnpm db:migrate:sqlite
           NODE_ENV=development RELEASE_CI_SYNTHETIC_OPT_IN=true pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
-          pnpm exec tsx scripts/bulk-data-exchange-e2e.ts prepare
+      - name: Admit complete isolated rehearsal layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e tmp/release-ci/database/synthetic.db
+          test ! -e prisma/dev.db
+          test ! -e tmp/release-ci/synthetic.db-wal
+          test ! -e tmp/release-ci/synthetic.db-shm
+          test ! -e tmp/release-ci/synthetic.db-journal
+          mv tmp/release-ci/synthetic.db tmp/release-ci/database/synthetic.db
+          echo "DATABASE_URL=file:$GITHUB_WORKSPACE/tmp/release-ci/database/synthetic.db" >> "$GITHUB_ENV"
+          echo "QA20C_ISOLATED_DATABASE=true" >> "$GITHUB_ENV"
+          echo "QA20C_ISOLATED_ROOT=$GITHUB_WORKSPACE/tmp/release-ci" >> "$GITHUB_ENV"
+          echo "QA20C_OPERATIONAL_DATABASE_PATH=$GITHUB_WORKSPACE/prisma/dev.db" >> "$GITHUB_ENV"
+          echo "CLOUD_BACKUP_LOCAL_FOLDER=$GITHUB_WORKSPACE/tmp/release-ci/provider" >> "$GITHUB_ENV"
+          echo "CLOUD_BACKUP_TEMP_DIR=$GITHUB_WORKSPACE/tmp/release-ci/temp" >> "$GITHUB_ENV"
+          echo "CLOUD_BACKUP_REHEARSAL_DIR=$GITHUB_WORKSPACE/tmp/release-ci/rehearsal" >> "$GITHUB_ENV"
+      - name: Prepare task records under the isolation assertion
+        run: pnpm exec tsx scripts/bulk-data-exchange-e2e.ts prepare
       - name: Production build with operational flags OFF
         run: pnpm build
       - name: Internal HTTP acceptance and verified teardown
@@ -102,7 +124,7 @@ jobs:
           probe.close()
           removed = []
           if closed and root.exists():
-              for name in ['synthetic.db', 'synthetic.db-wal', 'synthetic.db-shm', 'synthetic.db-journal', 'bulk-state.json', 'private-onboarding', 'http-off.log', 'http-on.log']:
+              for name in ['synthetic.db', 'synthetic.db-wal', 'synthetic.db-shm', 'synthetic.db-journal', 'database', 'provider', 'temp', 'rehearsal', 'bulk-state.json', 'private-onboarding', 'http-off.log', 'http-on.log']:
                   target = root / name
                   assert target.resolve().is_relative_to(root)
                   if target.is_dir(): shutil.rmtree(target)

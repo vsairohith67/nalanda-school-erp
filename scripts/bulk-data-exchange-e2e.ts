@@ -12,7 +12,7 @@ import { generateOnboardingTemplate } from "../lib/onboarding-workbooks";
 import { STUDENT_HEADERS, GUARDIAN_HEADERS, LINK_HEADERS, ENROLLMENT_HEADERS } from "../lib/onboarding-types";
 import * as XLSX from "xlsx";
 const root = path.join(process.cwd(), "tmp", "release-ci");
-const expected = `file:${path.join(root,"synthetic.db").replaceAll("\\","/")}`;
+const expected = `file:${path.join(root,"database","synthetic.db").replaceAll("\\","/")}`;
 const db = new PrismaClient();
 const password = "Synthetic-Bulk-Only-Password!2026";
 const origin = "http://127.0.0.1:47832";
@@ -23,6 +23,9 @@ async function prepare() {
   assert.equal(await db.student.count(),0);
   const admin = await db.user.update({where:{username:"director"},data:{passwordHash:await hashPassword(password),mustChangePassword:false,lifecycleStatus:"ACTIVE"}});
   assert.equal(admin.role,"SUPER_ADMIN");
+  const principal = await db.user.create({data:{username:"bulk-principal",name:"INVENTED Bulk Principal",role:"PRINCIPAL",passwordHash:await hashPassword(password),isActive:true,mustChangePassword:false,lifecycleStatus:"ACTIVE"}});
+  await db.userRoleAssignment.create({data:{userId:principal.id,role:"PRINCIPAL",reason:"Synthetic legacy marks acceptance",assignedByUserId:admin.id,activeKey:`${principal.id}:PRINCIPAL`}});
+  await db.authLoginAlias.create({data:{userId:principal.id,type:"USERNAME",normalizedValue:"bulk-principal",displayMasked:"bulk-principal",status:"VERIFIED",verifiedAt:new Date()}});
   const cls = await db.timetableClassSection.upsert({where:{academicYear_className_section:{academicYear:"2026-27",className:"I",section:"A"}},update:{isActive:true},create:{academicYear:"2026-27",className:"I",section:"A",displayName:"Synthetic I A",groupName:"Synthetic",isActive:true}});
   const students=[];
   for(let i=1;i<=3;i++) {const s=await db.student.create({data:{admissionNo:`0000${i}`,studentName:`INVENTED Bulk Student ${i}`,fatherName:"INVENTED Parent",phone1:`900000000${i}`,academicYear:"2026-27",className:i===3?"II":"I",section:i===3?"B":"A",status:"Active"}});students.push(s);await db.academicYearEnrollment.create({data:{studentId:s.id,academicYear:"2026-27",className:s.className,section:s.section,status:"ACTIVE"}});await db.academicYearEnrollment.create({data:{studentId:s.id,academicYear:"2025-26",className:"I",section:i===3?"B":"A",status:i===2?"INACTIVE":"ACTIVE"}});}
@@ -63,8 +66,11 @@ async function exercise(off:boolean) {
     const imported=await json("/api/import/students",{...base,action:"import",confirmed:true,receipt:preview.receipt});assert.equal(imported.result.created,1);assert.equal((await db.student.findUniqueOrThrow({where:{admissionNo:"00009"}})).studentName,"INVENTED Legacy Import");checks.push("student_import_readback");
     const csv=MARKS_IMPORT_COLUMNS.join(",")+`\nBULK-SYNTH,I,A,${state.subjectName},Theory,00001,0,PRESENT,`;
     const legacy={model:"LEGACY_ASSESSMENT",assessmentId:state.assessmentId,academicYear:"2026-27",csv};
-    const p=await json("/api/marks/import",{...legacy,action:"preview"});await json("/api/marks/import",{...legacy,action:"confirm",receipt:p.receipt});assert.equal((await db.studentMark.findFirstOrThrow({where:{assessmentId:state.assessmentId}})).marksObtained?.toString(),"0");checks.push("legacy_marks_readback");
-    const stale=await call("/api/marks/import",{...legacy,action:"confirm",receipt:p.receipt});refused(stale,[400,409]);checks.push("legacy_stale_preview_rejected");
+    // Separate named Principal exercises legacy authority within the unchanged per-session import limit.
+    const legacyCookie=await session("bulk-principal");
+    const legacyJson=async(body:unknown)=>{const r=await asActor(legacyCookie,"/api/marks/import",body);const d=await r.json();assert.equal(r.status,200,d.error);return d;};
+    const p=await legacyJson({...legacy,action:"preview"});await legacyJson({...legacy,action:"confirm",receipt:p.receipt});assert.equal((await db.studentMark.findFirstOrThrow({where:{assessmentId:state.assessmentId}})).marksObtained?.toString(),"0");checks.push("legacy_marks_readback");
+    const stale=await asActor(legacyCookie,"/api/marks/import",{...legacy,action:"confirm",receipt:p.receipt});refused(stale,[400,409]);checks.push("legacy_stale_preview_rejected");
     const endpoint=`/api/exam-marks/sheets/${state.assignmentId}`;
     const template=await call(endpoint+"?format=csv");assert.equal(template.status,200);const table=parseCsv(await template.text());table[1][7]="0";table[1][8]="PRESENT";
     const governedCsv=table.map(r=>r.map(c=>`"${c.replaceAll('"','""')}"`).join(",")).join("\r\n");
