@@ -1,3 +1,4 @@
+import { assertGraduationEnabled } from "@/lib/certificate-graduation-policy";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { PrintButton } from "@/components/print-button";
@@ -24,13 +25,15 @@ export default async function CertificatePrintPage({ params, searchParams }: { p
   const query = await searchParams;
   const [row, settings] = await Promise.all([prisma.studentCertificate.findUnique({ where: { id } }), getSchoolSettings(prisma)]);
   if (!row) notFound();
+  assertGraduationEnabled(row.certificateType);
+  if (row.certificateType === "GRADUATION") return <main className="page"><h1>Governed Graduation document</h1><p>School-issued institutional recognition; it does not replace statutory Board or Council documents.</p>{row.status === "ISSUED" ? <a className="button" href={`/api/certificates/${id}/pdf`}>Open saved issued PDF for reprint</a> : <p>DRAFT – NOT OFFICIAL. Preview from the Graduation workspace.</p>}<a href="/certificates/graduation">Return to Graduation workspace</a></main>;
   const requestedVersion = Number(query.version ?? row.currentVersionNumber);
   const version = requestedVersion ? await prisma.studentCertificateVersion.findUnique({ where: { certificateId_versionNumber: { certificateId: id, versionNumber: requestedVersion } } }) : null;
   const snapshot = version ? parseCertificateSnapshot(version.snapshotJson) : parseCertificateSnapshot(row.draftDataJson);
   const definition = snapshot.template?.definition ?? {};
   const enabledFields = new Set<string>(Array.isArray(definition.enabledFields) ? definition.enabledFields : []);
   const enabled = (field: string) => enabledFields.has(field);
-  const baseLabel = version ? snapshot.versionLabel ?? (version.versionType === "ORIGINAL" ? "ORIGINAL" : version.versionType) : "DRAFT PREVIEW";
+  const baseLabel = version ? snapshot.versionLabel ?? (version.versionType === "ORIGINAL" ? "ORIGINAL" : version.versionType) : "DRAFT – NOT OFFICIAL";
   const label = row.status === "CANCELLED" ? "CANCELLED" : version && version.versionNumber < row.currentVersionNumber ? `SUPERSEDED · ${baseLabel}` : baseLabel;
   const history = Array.isArray(snapshot.enrollmentHistory) ? snapshot.enrollmentHistory : [];
   const firstEnrollment = history[0];
@@ -42,7 +45,7 @@ export default async function CertificatePrintPage({ params, searchParams }: { p
       {label !== "ORIGINAL" ? <div className="certificate-watermark">{label}</div> : null}
       <header>
         <img src={settings.logoPath} alt="School logo" />
-        <h1>{settings.schoolName}</h1>
+        <h1>{snapshot.school?.name ?? settings.schoolName}</h1>
         <p>{settings.addressLine1}, {settings.city}</p>
         <h2>{definition.heading ?? `${row.certificateType} CERTIFICATE`}</h2>
       </header>

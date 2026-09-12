@@ -12,9 +12,9 @@
       ".next",
       "artifacts"
     ],
-    "discoveredCount": 61,
-    "bulkExportCount": 41,
-    "notBulkExportCount": 20
+    "discoveredCount": 65,
+    "bulkExportCount": 42,
+    "notBulkExportCount": 23
   },
   "bulkExportFlag": {
     "key": "bulk-exports",
@@ -1409,6 +1409,106 @@
       "audited": false,
       "featureFlag": null,
       "releaseState": "CLEARED"
+    },
+    {
+      "method": "GET",
+      "module": "Certificates",
+      "format": "PDF",
+      "sensitiveFieldExclusions": [
+        "Parent names",
+        "contacts",
+        "DOB",
+        "marks",
+        "source documents"
+      ],
+      "noStore": true,
+      "audited": false,
+      "csvFormulaSafe": null,
+      "maxRows": 1,
+      "releaseState": "DEFAULT_OFF_SYNTHETIC_ONLY",
+      "featureFlag": "certificate-graduation-exit-1a",
+      "id": "certificate-issued-pdf",
+      "sourcePath": "app/api/certificates/[id]/pdf/route.ts",
+      "route": "/api/certificates/[id]/pdf",
+      "classification": "NOT_A_BULK_EXPORT",
+      "permission": "VIEW_CERTIFICATES",
+      "objectScope": "One authorized issued certificate",
+      "boundedBehavior": "One retained private PDF, or separately watermarked draft"
+    },
+    {
+      "method": "GET",
+      "module": "Certificates",
+      "format": "PDF",
+      "sensitiveFieldExclusions": [
+        "Parent names",
+        "contacts",
+        "DOB",
+        "marks",
+        "source documents"
+      ],
+      "noStore": true,
+      "audited": false,
+      "csvFormulaSafe": null,
+      "maxRows": 100,
+      "releaseState": "DEFAULT_OFF_SYNTHETIC_ONLY",
+      "featureFlag": "certificate-bulk-issue-1a",
+      "id": "certificate-reviewed-bulk-pdf",
+      "sourcePath": "app/api/certificates/bulk/[id]/pdf/route.ts",
+      "route": "/api/certificates/bulk/[id]/pdf",
+      "classification": "BULK_EXPORT",
+      "permission": "EXPORT_CERTIFICATE_REPORTS",
+      "objectScope": "Approved successful rows bound to uploaded digest and batch approval",
+      "boundedBehavior": "At most 100 saved PDFs, shared bounded PDF capacity"
+    },
+    {
+      "method": "GET",
+      "module": "Certificates",
+      "format": "XLSX",
+      "sensitiveFieldExclusions": [
+        "Parent names",
+        "contacts",
+        "DOB",
+        "marks",
+        "source documents"
+      ],
+      "noStore": true,
+      "audited": false,
+      "csvFormulaSafe": null,
+      "maxRows": 1,
+      "releaseState": "DEFAULT_OFF_SYNTHETIC_ONLY",
+      "featureFlag": "certificate-graduation-exit-1a",
+      "id": "certificate-workbook-template",
+      "sourcePath": "app/api/certificates/bulk/route.ts",
+      "route": "/api/certificates/bulk",
+      "classification": "NOT_A_BULK_EXPORT",
+      "permission": "CREATE_CERTIFICATES",
+      "objectScope": "Empty synthetic workbook template only",
+      "boundedBehavior": "No Student data in downloaded template"
+    },
+    {
+      "method": "GET",
+      "module": "Certificates",
+      "format": "PDF",
+      "sensitiveFieldExclusions": [
+        "Parent names",
+        "contacts",
+        "DOB",
+        "marks",
+        "source documents"
+      ],
+      "noStore": true,
+      "audited": false,
+      "csvFormulaSafe": null,
+      "maxRows": 1,
+      "releaseState": "DEFAULT_OFF_SYNTHETIC_ONLY",
+      "featureFlag": "certificate-graduation-exit-1a",
+      "id": "parent-certificate-pdf",
+      "sourcePath": "app/api/parent/certificates/[id]/pdf/route.ts",
+      "route": "/api/parent/certificates/[id]/pdf",
+      "classification": "NOT_A_BULK_EXPORT",
+      "permission": "VIEW_OWN_CHILD_CERTIFICATES",
+      "objectScope": "Exact linked child and active issue",
+      "boundedBehavior": "One retained PDF"
     }
   ]
 }

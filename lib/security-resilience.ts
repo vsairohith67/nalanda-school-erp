@@ -38,6 +38,9 @@ const MINUTE = 60_000;
 const dimensions = ["ip", "account", "role", "session", "device", "endpoint", "operationCost"] as const;
 
 export const RATE_LIMIT_POLICIES: readonly RateLimitPolicy[] = [
+  policy("certificate.verify", "MEDIUM", ["POST"], 20, MINUTE, (path) => path === "/api/certificates/verify"),
+  policy("certificate.bulk", "HIGH", ["GET", "POST"], 10, MINUTE, (path) => path.startsWith("/api/certificates/bulk")),
+  policy("certificate.pdf", "HIGH", ["GET", "POST"], 10, MINUTE, (path) => /^\/api\/(?:parent\/)?certificates\/[^/]+\/pdf$/.test(path)),
   policy("auth.login", "MEDIUM", ["POST"], 30, MINUTE, (path) => path === "/api/auth/login"),
   policy("auth.recovery", "MEDIUM", ["POST"], 5, 15 * MINUTE, (path) => path.startsWith("/api/auth/recovery/")),
   policy("auth.otp", "MEDIUM", ["POST"], 6, 10 * MINUTE, (path) => /^\/api\/auth\/(?:otp|verification)(?:\/|$)/i.test(path)),

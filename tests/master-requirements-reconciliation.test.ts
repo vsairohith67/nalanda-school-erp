@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import historical from "@/config/requirements-history/master-register-1.0.0.json";
 import register from "@/config/master-requirements-register.json";
 import audit from "@/config/master-requirements-audit-evidence.json";
+import certificateDelta from "@/config/certificate-graduation-source-delta.json";
 import debt from "@/config/product-experience-debt-register.json";
 import screens from "@/config/product-experience-screen-register.json";
 import { MASTER_BASE, PRIOR_REGISTER_HASH, publicContentErrors, repositorySourceReader, sourceHash, validateMasterRequirements } from "@/lib/master-requirements";
@@ -16,6 +17,21 @@ describe("Living Master Requirements fail-closed contracts", () => {
     expect(validateMasterRequirements(register, repositorySourceReader())).toEqual([]);
     expect(register.requirements).toHaveLength(46);
     expect(Object.values(register.statusCounts).reduce((a, b) => a + b, 0)).toBe(46);
+  });
+  it("records native Git-proven absence for the new dynamic API paths", () => {
+    // These exact paths were absent in authorized tree 2c7f1a1, verified with
+    // git cat-file --batch. Do not hash git show fallback output for [id] paths.
+    const absentAtAuthorizedBase = [
+      "app/api/certificates/[id]/pdf/route.ts",
+      "app/api/certificates/bulk/[id]/pdf/route.ts",
+      "app/api/certificates/bulk/[id]/route.ts",
+      "app/api/certificates/requests/[id]/charge/route.ts",
+      "app/api/parent/certificates/[id]/pdf/route.ts"
+    ];
+    for (const file of absentAtAuthorizedBase) {
+      const entry = certificateDelta.added.find(item => item.path === file);
+      expect(entry, file).toBeDefined(); expect(entry!.authorizedBaseSha256, file).toBeNull();
+    }
   });
   it("rejects missing, duplicate and out-of-range IDs", () => {
     const dropped = copy(); dropped.requirements.pop(); expect(validateMasterRequirements(dropped).length).toBeGreaterThan(0);
@@ -96,8 +112,22 @@ describe("Living Master Requirements fail-closed contracts", () => {
     for (const file of protectedFiles.filter(f => !phaseSurfaces.has(f.path))) expect(sourceHash(readFileSync(file.path, "utf8")), file.path).toBe(file.sha256);
     const currentFiles = git("ls-files", "--cached", "--others", "--exclude-standard", "--", "app", "components", "prisma", "deploy", "Dockerfile", "lib").split(/\r?\n/).filter(Boolean);
     expect(currentFiles.filter(f => !protectedFiles.some(p => p.path === f) && f !== "lib/master-requirements.ts" && !phaseSurfaces.has(f))).toEqual([]);
+  });
+  it("enforces historical source plus the exact owner-authorized certificate delta", () => {
+    // Saved baseline digests also work in the inherited shallow-checkout CI jobs.
+    const protectedFiles = audit.inventory.filter(f => /^(app|components|prisma|deploy|lib)\//.test(f.path) || f.path === "Dockerfile");
+    expect(certificateDelta.baseCommit).toBe("104aacc7bd314cae82e60bb02b5c8a965c7ffedd");
+    expect(certificateDelta.baseTree).toBe("2c7f1a129e6b98abb9689abf7c989b0ed8468561");
+    const entries = [...certificateDelta.changed, ...certificateDelta.added];
+    expect(new Set(entries.map(e => e.path)).size).toBe(entries.length);
+    for (const entry of certificateDelta.changed) expect(audit.inventory.find(f => f.path === entry.path)?.sha256, entry.path).toBe(entry.baselineSha256);
+    for (const entry of certificateDelta.added) expect(audit.inventory.some(f => f.path === entry.path), entry.path).toBe(false);
+    for (const entry of entries) expect(sourceHash(readFileSync(entry.path, "utf8")), entry.path).toBe(entry.currentSha256);
+    for (const file of protectedFiles) expect(sourceHash(readFileSync(file.path, "utf8")), file.path).toBe(certificateDelta.changed.find(e => e.path === file.path)?.currentSha256 ?? file.sha256);
+    const currentFiles = git("ls-files", "--cached", "--others", "--exclude-standard", "--", "app", "components", "prisma", "deploy", "Dockerfile", "lib").split(/\r?\n/).filter(Boolean);
+    expect(currentFiles.filter(f => !protectedFiles.some(p => p.path === f) && f !== "lib/master-requirements.ts" && !certificateDelta.added.some(e => e.path === f))).toEqual([]);
     const current = readFileSync("config/release-feature-flags.json", "utf8");
-    expect(sourceHash(current)).toBe(audit.inventory.find(f => f.path === "config/release-feature-flags.json")!.sha256);
+    expect(sourceHash(current)).toBe(certificateDelta.changed.find(f => f.path === "config/release-feature-flags.json")!.currentSha256);
     for (const flag of JSON.parse(current)) { expect(flag.defaultState).toBe(false); expect(flag.rolloutPercentage).toBe(0); }
     const packageNow = JSON.parse(readFileSync("package.json", "utf8"));
     expect(packageNow.dependencies).toEqual(audit.productionDependencies);
@@ -106,8 +136,11 @@ describe("Living Master Requirements fail-closed contracts", () => {
   it("records every schema/migration and every source screen without inventing Browser passes", () => {
     expect(audit.schemaFiles).toEqual(["prisma/schema.prisma", "prisma/postgresql/schema.prisma"]);
     const files = git("ls-files", "--", "prisma").split(/\r?\n/);
-    expect(audit.migrationFiles.map(f => f.path)).toEqual(files.filter(f => /^prisma\/(postgresql\/)?migrations\/.*\.sql$/.test(f)));
-    expect(debt.screens.map(s => s.sourceFile).sort()).toEqual(screens.screens.map(s => s.file).sort());
+    const additions = certificateDelta.added.filter(f => /^prisma\/(postgresql\/)?migrations\/.*\.sql$/.test(f.path));
+    expect(additions.map(f => f.path).sort()).toEqual(["prisma/migrations/20260908120000_certificate_graduation_exit_1a/migration.sql", "prisma/postgresql/migrations/20260908120000_certificate_graduation_exit_1a/migration.sql"]);
+    for (const old of audit.migrationFiles) expect(sourceHash(readFileSync(old.path, "utf8"))).toBe(old.sha256);
+    expect([...audit.migrationFiles.map(f => f.path), ...additions.map(f => f.path)].sort()).toEqual(git("ls-files", "--cached", "--others", "--exclude-standard", "--", "prisma").split(/\r?\n/).filter(f => /^prisma\/(postgresql\/)?migrations\/.*\.sql$/.test(f)).sort());
+    expect(debt.screens.map(s => s.sourceFile).sort()).toEqual(screens.screens.filter(s => s.file !== "app/certificates/graduation/page.tsx").map(s => s.file).sort());
     expect(debt.screens.every(s => s.roles.length > 0 && Object.keys(s.dimensions).length === 19)).toBe(true);
     expect(debt.auditMode).toContain("NO_CURRENT_BROWSER_CERTIFICATION");
   });

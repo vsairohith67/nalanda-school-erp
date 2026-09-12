@@ -22,3 +22,7 @@ source remain protected by the original audit digests.
 This permits disposable synthetic integration CI and does not permit operational deployment,
 private staging, provider certification, hardware certification or production activation.
 Terminal source release gates are tracked in `docs/evidence/PORTABLE_DEPLOYMENT_OBSERVABILITY_FOUNDATION_1B.md`.
+
+## Certificate scope — 2026-09-08
+
+NPS-REQ-007 moves from MISSING to PARTIAL; NPS-REQ-008/009 remain PARTIAL. Add only current certificate implementation/recovery evidence, pending final QA and release gates. Other dispositions and owner intent are unchanged. No operational activation.

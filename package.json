@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "qa:certificate-graduation": "vitest run tests/certificate-graduation-exit-1a.test.ts tests/student-certificates.test.ts tests/student-certificates-security-backup.test.ts && tsx scripts/qa-certificate-graduation-exit-1a.ts",
     "onboarding:synthetic": "tsx scripts/onboarding-preparation.ts synthetic",
     "onboarding:package:validate": "tsx scripts/onboarding-preparation.ts package-validate",
     "onboarding:mapping:validate": "tsx scripts/onboarding-preparation.ts mapping-validate",
