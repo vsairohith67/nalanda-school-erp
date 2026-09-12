@@ -43,7 +43,7 @@ export default async function StudentsPage({
           </select>
         </label>
         <button>Apply</button>
-        {permissionSetCan(permissions, "EXPORT_STUDENTS") ? <Link className="button secondary" href={`/api/export/students?${query.toString()}`}>Export CSV — all results matching these filters</Link> : null}
+        {permissionSetCan(permissions, "EXPORT_STUDENTS") ? <Link className="button secondary" href={`/api/export/students?${query.toString()}`}>Export CSV â€” all results matching these filters</Link> : null}
       </form>
       <section className="card">
         <div className="section-title"><h3>{students.length} Students</h3></div>
