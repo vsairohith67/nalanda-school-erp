@@ -78,7 +78,7 @@ function validateSurface(surface, errors) {
   const routeSource = sources[0] ?? "";
   const joined = sources.join("\n");
   if (!new RegExp(`export\\s+async\\s+function\\s+${surface.method}\\b`).test(routeSource)) errors.push(`${label}:HTTP_METHOD_NOT_EXPORTED`);
-  if (!/(?:requireApi|requireAcademicReportAccess|optionalOperationsActor|parentMeetingApiAuth|auth\.|auth=|auth\s*=)/.test(routeSource)) errors.push(`${label}:SERVER_AUTH_EVIDENCE_MISSING`);
+  if (!/(?:requireApi|authorizePriorYear|requireAcademicReportAccess|optionalOperationsActor|parentMeetingApiAuth|auth\.|auth=|auth\s*=)/.test(routeSource)) errors.push(`${label}:SERVER_AUTH_EVIDENCE_MISSING`);
   if (!/(?:private[^\n"']*no-store|no-store|PRIVATE_HEADERS|privateFinanceJson)/i.test(routeSource)) errors.push(`${label}:NO_STORE_SOURCE_EVIDENCE_MISSING`);
   const formulaSafeEvidence = /(?:csvCell|safeCsv|csvEscape|formulaSafe|formulaNeutral|spreadsheetFormula|DANGEROUS_CSV|FORMULA_PREFIX)/i.test(joined)
     || joined.includes("/^[=+\\-@]/");

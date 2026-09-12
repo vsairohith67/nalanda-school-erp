@@ -7,6 +7,9 @@ import type { ReleaseEnvironment } from "@/lib/release-operations-types";
 
 export const RELEASE_FEATURE_FLAG_QA_MODE = "SYNTHETIC_COPY_ONLY" as const;
 
+export const STUDENT_LINKED_ITEMS_FEATURE = { key: "student-linked-items-1a", environment: "PRODUCTION", expectedVersion: 1, activationRole: "SUPER_ADMIN" } as const;
+export const PRIOR_YEAR_CONCESSIONS_FEATURE = { key: "prior-year-concessions-1a", environment: "PRODUCTION", expectedVersion: 1, activationRole: "SUPER_ADMIN" } as const;
+
 export type OperationalReleaseFeature = {
   key: string;
   environment: ReleaseEnvironment;

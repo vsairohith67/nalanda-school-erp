@@ -12,8 +12,8 @@
       ".next",
       "artifacts"
     ],
-    "discoveredCount": 61,
-    "bulkExportCount": 41,
+    "discoveredCount": 62,
+    "bulkExportCount": 42,
     "notBulkExportCount": 20
   },
   "bulkExportFlag": {
@@ -1409,6 +1409,30 @@
       "audited": false,
       "featureFlag": null,
       "releaseState": "CLEARED"
+    },
+    {
+      "id": "prior-year-concessions-export",
+      "sourcePath": "app/api/prior-year-concessions/export/route.ts",
+      "route": "/api/prior-year-concessions/export",
+      "method": "POST",
+      "module": "Previous-year concessions",
+      "format": "CSV",
+      "classification": "BULK_EXPORT",
+      "permission": "EXPORT_PRIOR_YEAR_CONCESSIONS",
+      "objectScope": "Explicit selected case IDs; income requires separate export and view permissions",
+      "sensitiveFieldExclusions": [
+        "passwordHash",
+        "sessionToken",
+        "providerCredential",
+        "secret"
+      ],
+      "maxRows": 50,
+      "boundedBehavior": "Maximum 50 explicit cases; no unbounded export; every case export audited",
+      "csvFormulaSafe": true,
+      "noStore": true,
+      "audited": true,
+      "featureFlag": "prior-year-concessions-1a",
+      "releaseState": "DEFAULT_OFF_PENDING_RELEASE"
     }
   ]
 }

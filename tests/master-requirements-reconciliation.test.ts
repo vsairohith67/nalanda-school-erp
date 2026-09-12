@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import register from "@/config/master-requirements-register.json";
 import audit from "@/config/master-requirements-audit-evidence.json";
+import featureDelta from "@/config/prior-year-concession-source-delta.json";
 import debt from "@/config/product-experience-debt-register.json";
 import screens from "@/config/product-experience-screen-register.json";
 import { MASTER_BASE, publicContentErrors, repositorySourceReader, sourceHash, validateMasterRequirements } from "@/lib/master-requirements";
@@ -76,14 +77,19 @@ describe("Living Master Requirements fail-closed contracts", () => {
     expect(publicContentErrors({ branding: "NALANDA PUBLIC SCHOOL", approvalRole: "Principal" })).toEqual([]);
     expect(publicContentErrors(debt)).toEqual([]);
   });
-  it("keeps production flags, app behavior, schemas, jobs and deployment source unchanged", () => {
+  it("preserves immutable baseline evidence outside the explicitly inventoried prior-year feature delta", () => {
     // Saved baseline digests also work in the inherited shallow-checkout CI jobs.
     const protectedFiles = audit.inventory.filter(f => /^(app|components|prisma|deploy|lib)\//.test(f.path) || f.path === "Dockerfile");
-    for (const file of protectedFiles) expect(sourceHash(readFileSync(file.path, "utf8")), file.path).toBe(file.sha256);
+    for (const file of protectedFiles) {
+      const delta = featureDelta.files.find((entry) => entry.path === file.path);
+      if (delta) expect(delta.baselineSha256, file.path).toBe(file.sha256);
+      expect(sourceHash(readFileSync(file.path, "utf8")), file.path).toBe(delta?.sha256 ?? file.sha256);
+    }
     const currentFiles = git("ls-files", "--cached", "--others", "--exclude-standard", "--", "app", "components", "prisma", "deploy", "Dockerfile", "lib").split(/\r?\n/).filter(Boolean);
-    expect(currentFiles.filter(f => !protectedFiles.some(p => p.path === f) && f !== "lib/master-requirements.ts")).toEqual([]);
+    expect(currentFiles.filter(f => !protectedFiles.some(p => p.path === f) && f !== "lib/master-requirements.ts" && !featureDelta.files.some(p => p.path === f))).toEqual([]);
+    for (const file of featureDelta.files) expect(sourceHash(readFileSync(file.path, "utf8")), file.path).toBe(file.sha256);
     const current = readFileSync("config/release-feature-flags.json", "utf8");
-    expect(sourceHash(current)).toBe(audit.inventory.find(f => f.path === "config/release-feature-flags.json")!.sha256);
+    expect(sourceHash(current)).toBe(featureDelta.files.find(f => f.path === "config/release-feature-flags.json")!.sha256);
     for (const flag of JSON.parse(current)) { expect(flag.defaultState).toBe(false); expect(flag.rolloutPercentage).toBe(0); }
     const packageNow = JSON.parse(readFileSync("package.json", "utf8"));
     expect(packageNow.dependencies).toEqual(audit.productionDependencies);
@@ -92,7 +98,7 @@ describe("Living Master Requirements fail-closed contracts", () => {
   it("records every schema/migration and every source screen without inventing Browser passes", () => {
     expect(audit.schemaFiles).toEqual(["prisma/schema.prisma", "prisma/postgresql/schema.prisma"]);
     const files = git("ls-files", "--", "prisma").split(/\r?\n/);
-    expect(audit.migrationFiles.map(f => f.path)).toEqual(files.filter(f => /^prisma\/(postgresql\/)?migrations\/.*\.sql$/.test(f)));
+    expect(audit.migrationFiles.map(f => f.path)).toEqual(files.filter(f => /^prisma\/(postgresql\/)?migrations\/.*\.sql$/.test(f) && !featureDelta.files.some(delta => delta.path === f && delta.baselineSha256 === null)));
     expect(debt.screens.map(s => s.sourceFile).sort()).toEqual(screens.screens.map(s => s.file).sort());
     expect(debt.screens.every(s => s.roles.length > 0 && Object.keys(s.dimensions).length === 19)).toBe(true);
     expect(debt.auditMode).toContain("NO_CURRENT_BROWSER_CERTIFICATION");

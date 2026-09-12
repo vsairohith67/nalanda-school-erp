@@ -125,7 +125,7 @@ describe("FINAL-SCOPE-QA-1A corrected-scope contract acceptance", () => {
     const backup = readFileSync("lib/backup.ts", "utf8");
     const restore = readFileSync("lib/restore.ts", "utf8");
     const backupVersion = Number(backup.match(/backupVersion:\s*(\d+)/)?.[1] ?? 0);
-    const restoreMaximum = Number(restore.match(/Number\(metadata\.backupVersion\)\s*>\s*(\d+)/)?.[1] ?? 0);
+    const restoreMaximum = Math.max(Number(restore.match(/Number\(metadata\.backupVersion\)\s*>\s*(\d+)/)?.[1] ?? 0), ...[...restore.matchAll(/Number\(metadata\.backupVersion\)\s*!==\s*(\d+)/g)].map((match) => Number(match[1])));
     expect(backupVersion).toBeGreaterThan(0);
     expect(restoreMaximum).toBe(backupVersion);
   });

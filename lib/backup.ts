@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { PRIOR_YEAR_BACKUP_KEYS, PRIOR_YEAR_BACKUP_VERSION, PRIOR_YEAR_BACKUP_CONTRACT, validatePriorYearBackup, loadPriorYearBackup, type PriorYearBackup } from "./prior-year-concession-backup";
 import { createHash } from "node:crypto";
 import packageJson from "../package.json";
 import {
@@ -295,7 +296,7 @@ type BackupDocumentInput = {
   timetableEntries?: readonly unknown[];
   academicYear?: string;
   technicalOperations?: TechnicalOperationsBackup;
-} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup> & Partial<OfflineSyncBackup> & Partial<NativeAppBackup> & Partial<BiometricAttendanceBackup> & Partial<CommunicationBackup>;
+} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup> & Partial<OfflineSyncBackup> & Partial<NativeAppBackup> & Partial<BiometricAttendanceBackup> & Partial<CommunicationBackup> & Partial<PriorYearBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
   const onboardingBatches = sanitizeOnboardingBatches(input.onboardingBatches ?? []);
@@ -409,6 +410,8 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const biometricAttendanceBackup = validateBiometricAttendanceBackupRows(input as unknown as Record<string, unknown>);
   const biometricAttendanceCounts = Object.fromEntries(BIOMETRIC_ATTENDANCE_BACKUP_KEYS.map((key) => [key, biometricAttendanceBackup[key].length])) as Record<BiometricAttendanceBackupKey, number>;
   const communicationBackup = validateCommunicationBackupRows(input as unknown as Record<string, unknown>);
+  const priorYearBackup = validatePriorYearBackup(input as unknown as Record<string, unknown>);
+  const priorYearCounts = Object.fromEntries(PRIOR_YEAR_BACKUP_KEYS.map((key) => [key, priorYearBackup[key].length]));
   const communicationCounts = Object.fromEntries(COMMUNICATION_BACKUP_KEYS.map((key) => [key, communicationBackup[key].length])) as Record<CommunicationBackupKey, number>;
   const technicalOperations = validateTechnicalOperationsBackup(input.technicalOperations);
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
@@ -498,7 +501,8 @@ export function createBackupDocument(input: BackupDocumentInput) {
       generatedAt: input.generatedAt.toISOString(),
       generatedBy: input.generatedBy,
       appVersion: packageJson.version,
-      backupVersion: 45,
+      backupVersion: 47,
+      schemaContract: PRIOR_YEAR_BACKUP_CONTRACT,
       counts: {
         schoolSettings: input.schoolSettings ? 1 : 0,
         authSecurityRecords: authSecurityRecordCount(authSecurity),
@@ -690,6 +694,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
         ...nativeAppCounts,
         ...biometricAttendanceCounts,
         ...communicationCounts,
+        ...priorYearCounts,
         timetableTeachers: timetableTeachers.length,
         timetableSubjects: timetableSubjects.length,
         timetableClassSections: timetableClassSections.length,
@@ -712,6 +717,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     ...nativeAppBackup,
     ...biometricAttendanceBackup,
     ...communicationBackup,
+    ...priorYearBackup,
     users: sanitizeUsers(input.users),
     authSecurity,
     iamAccess,
@@ -1377,6 +1383,7 @@ export async function generateFullBackup(
   const biometricAttendanceBackup = await biometricAttendanceSchemaAvailable(client as unknown as PrismaClient)
     ? await loadBiometricAttendanceBackup(client as unknown as PrismaClient)
     : emptyBiometricAttendanceBackup();
+  const priorYearBackup = await loadPriorYearBackup(client as unknown as PrismaClient);
   const communicationBackup = await communicationSchemaAvailable(client as unknown as PrismaClient)
     ? await loadCommunicationBackup(client as unknown as PrismaClient)
     : emptyCommunicationBackup();
@@ -1431,6 +1438,7 @@ export async function generateFullBackup(
     ...nativeAppBackup,
     ...biometricAttendanceBackup,
     ...communicationBackup,
+    ...priorYearBackup,
     technicalOperations,
     rolePermissions,
     guardians,

@@ -365,7 +365,9 @@
       "key": "communication-channel-native-push",
       "status": "ENFORCED",
       "evidencePaths": ["lib/release-feature-flag-runtime.ts", "lib/communication-policy.ts", "app/api/communication/outbox/process/route.ts", "docs/prompts/NATIVE_PUSH_CERTIFICATION_1B.md"]
-    }
+    },
+    {"key": "student-linked-items-1a", "status": "ENFORCED", "evidencePaths": ["lib/release-feature-flag-runtime.ts", "lib/misc-income.ts", "docs/evidence/STUDENT_ITEMS_PRIOR_YEAR_CONCESSIONS_1A.md"]},
+    {"key": "prior-year-concessions-1a", "status": "ENFORCED", "evidencePaths": ["lib/release-feature-flag-runtime.ts", "lib/prior-year-concessions.ts", "docs/evidence/STUDENT_ITEMS_PRIOR_YEAR_CONCESSIONS_1A.md"]}
   ],
   "releaseBlockedBranches": []
 }
