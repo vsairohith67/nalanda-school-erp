@@ -12,6 +12,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/nalanda-cross-platform/package.json apps/nalanda-cross-platform/package.json
 COPY apps/portable-migrator/package.json apps/portable-migrator/package.json
+COPY apps/nalanda-biometric-bridge/package.json apps/nalanda-biometric-bridge/package.json
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lockfile
 
 FROM dependencies AS builder

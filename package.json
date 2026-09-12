@@ -265,7 +265,9 @@
     "portable:secrets:generate": "node scripts/portable/generate-synthetic-secrets.mjs",
     "portable:secrets:cleanup": "node scripts/portable/cleanup-synthetic.mjs",
     "qa:portable-runtime": "vitest run tests/portable-runtime.test.ts",
-    "qa:portable-stack": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/portable/qa-stack.ps1"
+    "qa:portable-stack": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/portable/qa-stack.ps1",
+    "portable:operator": "tsx scripts/portable/operator.ts",
+    "qa:portable-1b": "vitest run tests/portable-operator-1b.test.ts tests/portable-observability-1b.test.ts tests/portable-oci-1b.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1114.0",
