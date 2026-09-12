@@ -146,6 +146,80 @@
           "http-on.log"
         ]
       }
+    },
+    {
+      "run": "https://github.com/vsairohith67/nalanda-school-erp/actions/runs/34703700234",
+      "sourceHead": "2d40a7c7b14c2d3b857768dc208d7dcb0034abc1",
+      "off": {
+        "head": "2d40a7c7b14c2d3b857768dc208d7dcb0034abc1",
+        "mode": "production-OFF",
+        "checks": [
+          "actual_login",
+          "student_preview_no_write",
+          "forged_fields_rejected",
+          "production_OFF_http_no_business_write"
+        ],
+        "businessCounts": {
+          "students": 3,
+          "legacyMarks": 0,
+          "governedEntries": 0,
+          "importBatches": 0
+        }
+      },
+      "on": {
+        "head": "2d40a7c7b14c2d3b857768dc208d7dcb0034abc1",
+        "mode": "synthetic-ON",
+        "checks": [
+          "actual_login",
+          "student_preview_no_write",
+          "forged_fields_rejected",
+          "validation_metadata_only",
+          "student_import_readback",
+          "legacy_selected_roster_template_bytes",
+          "legacy_marks_readback",
+          "legacy_stale_preview_rejected",
+          "governed_draft_readback_and_idempotent_retry",
+          "changed_content_reused_receipt_rejected",
+          "governed_simultaneous_edit_and_stale_preview_refused",
+          "Teacher_marks_and_export_denied",
+          "delegation_revoked_before_commit_no_marks_change",
+          "linked_child_added_after_preview_refused",
+          "delegation_expired_before_commit_no_marks_change",
+          "linked_Parent_and_Viewer_export_denied",
+          "actual_filtered_csv_bytes_and_historical_scope",
+          "all_five_visible_filters_actual_csv",
+          "header_only_zero_results",
+          "invalid_export_filter_rejected",
+          "authorised_exam_report_download",
+          "canonical_duplicate_upload_same_batch",
+          "controlled_bundle_validate_approve_execute_readback",
+          "revoked_actor_rejected"
+        ],
+        "businessCounts": {
+          "students": 5,
+          "legacyMarks": 1,
+          "governedEntries": 2,
+          "importBatches": 2
+        }
+      },
+      "teardown": {
+        "listenerClosed": true,
+        "syntheticFixtureRemoved": true,
+        "removedPaths": [
+          "synthetic.db",
+          "synthetic.db-wal",
+          "synthetic.db-shm",
+          "synthetic.db-journal",
+          "database",
+          "provider",
+          "temp",
+          "rehearsal",
+          "bulk-state.json",
+          "private-onboarding",
+          "http-off.log",
+          "http-on.log"
+        ]
+      }
     }
   ]
 }
