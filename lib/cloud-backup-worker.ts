@@ -119,7 +119,7 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
     const plaintext = Buffer.from(serializeBackup(backup), "utf8");
     const validated = parseAndValidateBackup(plaintext.toString("utf8"));
     if (validated.metadata.backupVersion !== CURRENT_CLOUD_BACKUP_VERSION) throw new Error("BACKUP_VERSION_INVALID");
-    await event(prisma, { profileId: run.profileId, runId, eventType: "BACKUP_VALIDATED", safeMetadataJson: JSON.stringify({ backupVersion: 45 }) });
+    await event(prisma, { profileId: run.profileId, runId, eventType: "BACKUP_VALIDATED", safeMetadataJson: JSON.stringify({ backupVersion: validated.metadata.backupVersion }) });
 
     await transition(prisma, runId, "VALIDATING", "COMPRESSING");
     await transition(prisma, runId, "COMPRESSING", "ENCRYPTING");
@@ -195,7 +195,7 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
     await verification(prisma, runId, artifact.id, "PLAINTEXT_HASH", "PASSED", "Decrypted exact-byte SHA-256 matches the validated source.");
     const readbackBackup = parseAndValidateBackup(decrypted.plaintext.toString("utf8"));
     if (readbackBackup.metadata.backupVersion !== CURRENT_CLOUD_BACKUP_VERSION) throw new Error("BACKUP_SCHEMA_INVALID");
-    await verification(prisma, runId, artifact.id, "BACKUP_SCHEMA", "PASSED", "Read-back payload is a supported Nalanda backup version 45.");
+    await verification(prisma, runId, artifact.id, "BACKUP_SCHEMA", "PASSED", "Read-back payload is a supported Nalanda backup version 46.");
     await verification(prisma, runId, artifact.id, "RESTORE_COMPATIBILITY", "PASSED", "Backup passed schema and link validation required before restore rehearsal.");
 
     const completedAt = new Date();

@@ -202,7 +202,7 @@ async function main() {
       concurrency: { workers: 2, duplicateSends: 0, priorityStarvation: false },
       performance: { audienceResolutionMs: Math.round(audienceDurationMs), workerBatchP50Ms: Math.round(percentile(timings, 0.50)), workerBatchP95Ms: Math.round(percentile(timings, 0.95)), rssMiB: Math.round(memory.rss / 1024 / 1024) },
       failureScenarios: { timeoutBeforeAcceptance: "FAILED_RETRYABLE", rateLimitAtMaximumAttempts: "DEAD_LETTER", providerDisabled: "FAILED_PERMANENT", expired: "EXPIRED", signedWebhook: "DELIVERED", duplicateWebhook: "IGNORED", restoredInflight: "DEAD_LETTER_REQUIRES_REVIEW" },
-      backup: { version: 45, arrays: COMMUNICATION_BACKUP_KEYS.length, firstRestore: "PASS", secondRestore: "PASS", providersRemainDisabled: true, appendOnlyEvidenceTriggers: 6 },
+      backup: { version: 46, arrays: COMMUNICATION_BACKUP_KEYS.length, firstRestore: "PASS", secondRestore: "PASS", providersRemainDisabled: true, appendOnlyEvidenceTriggers: 6 },
       networkCalls: 0,
       realRecipients: 0,
       realMessages: 0

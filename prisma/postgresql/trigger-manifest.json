@@ -1,10 +1,10 @@
 {
   "contractVersion": 1,
   "source": "synthetic fresh SQLite migration deploy",
-  "sourceSha256": "72C0C563CBFAD0B67132883E694E736981AACD4A0C1E3E45F13383FCF53164C1",
+  "sourceSha256": "D7AA133ECA217429A1F5F8151E0FD90EA5583B650B7C28DBD352CA28C4F50B6E",
   "views": 0,
-  "triggerCount": 191,
-  "sqlSha256": "11FA935D830E694199041A4421FD4C7F546DF7F28CD6A3C82F3C8572C195479E",
+  "triggerCount": 201,
+  "sqlSha256": "D6CE9824A0D9E036723DAE066895CD1EFAD3DB3AC4343B5361C3D960A3EB49B7",
   "triggers": [
     {
       "name": "academic_calendar_audit_append_only_delete",
@@ -1055,6 +1055,30 @@
       "sqliteSqlSha256": "7D4BC789AD66EF685240A35C51A668133AE881912884B74B4294FF86FB4848BE"
     },
     {
+      "name": "Payment_prior_year_version_delete",
+      "table": "Payment",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "EC48B4AD8CEAD31CC1B486BDD41722363F5EB411ECC2F87B48BBBA492E13DDDA"
+    },
+    {
+      "name": "Payment_prior_year_version_insert",
+      "table": "Payment",
+      "event": "INSERT",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "4B364330287F4E3C653B4873EFAFE51E92295E2CDE9B07DD9BE68AE7380BF86B"
+    },
+    {
+      "name": "Payment_prior_year_version_update",
+      "table": "Payment",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "2A79B4E51D3745A3810103638CFB8A66006EED022D1C33CC0AF53FEAC99C9724"
+    },
+    {
       "name": "PayrollComponentResult_no_approved_delete",
       "table": "PayrollComponentResult",
       "event": "DELETE",
@@ -1109,6 +1133,46 @@
       "columns": null,
       "statementCount": 1,
       "sqliteSqlSha256": "EEC8175B23C1DF6CA59A8ABF589DA7872FC7D0D4DB86CE4C21AB0A3FABFD8249"
+    },
+    {
+      "name": "PriorYearConcessionEvent_delete_immutable",
+      "table": "PriorYearConcessionEvent",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "8DFBF0C9FCA023E2902030404C38A8C11DD3BC02059F5B61BD6BBBF84418AFEE"
+    },
+    {
+      "name": "PriorYearConcessionEvent_update_immutable",
+      "table": "PriorYearConcessionEvent",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "F3DF4332F025A93A692C7D89D902C9864B8E7F1C3CFD631B9E32AFD6755A6F73"
+    },
+    {
+      "name": "PriorYearLiability_verified_identity",
+      "table": "PriorYearLiability",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "2835D856D712511C7C55C325B40A2DBBB861512E973EDDB6E6E5F5B69CBD01C7"
+    },
+    {
+      "name": "PriorYearPaymentAttribution_delete_immutable",
+      "table": "PriorYearPaymentAttribution",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "D4618B972877E41A99167127F1937A068C1C5D69744D8B0DFB25D0EBFC454A04"
+    },
+    {
+      "name": "PriorYearPaymentAttribution_update_immutable",
+      "table": "PriorYearPaymentAttribution",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "00898792E1ED0D254577142419ACAF6C84F44287155101476F178F509575E8CF"
     },
     {
       "name": "safe_exit_consent_no_delete",
@@ -1533,6 +1597,22 @@
       "columns": null,
       "statementCount": 1,
       "sqliteSqlSha256": "4FCDC1ABD137F917E3F03E2BEEF40DE2975D20D5FF3DAA748E2D347BDD138FE8"
+    },
+    {
+      "name": "StudentItemReceiptSnapshot_delete_immutable",
+      "table": "StudentItemReceiptSnapshot",
+      "event": "DELETE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "3E945F07C255C62354A2F1F71BCF656459A2FC6932C60C568D25A905EF2191A3"
+    },
+    {
+      "name": "StudentItemReceiptSnapshot_update_immutable",
+      "table": "StudentItemReceiptSnapshot",
+      "event": "UPDATE",
+      "columns": null,
+      "statementCount": 1,
+      "sqliteSqlSha256": "47D70B5FFA4AF5987C254A479169C2A042A5DEA40B879645947F23904E20DC38"
     }
   ]
 }

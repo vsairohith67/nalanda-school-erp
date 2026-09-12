@@ -1,3 +1,4 @@
+import { assertCertificateBackupFields } from "./certificate-backup-fields";
 type Row = Record<string, unknown>;
 const arrays = ["certificateNumberSeries","certificateTemplates","studentCertificateRequests","studentCertificates","studentCertificateVersions","studentCertificateEvents"] as const;
 function rows(root: Record<string, unknown>, key: typeof arrays[number]) { const value = root[key]; if (value == null) return [] as Row[]; if (!Array.isArray(value) || value.length > 100000 || value.some(r => !r || typeof r !== "object" || Array.isArray(r))) throw new Error(`${key} must be an array of objects`); return value as Row[]; }
@@ -5,7 +6,8 @@ function required(row: Row, key: string, label: string) { const value = String(r
 function unique(values: string[], label: string) { if (new Set(values).size !== values.length) throw new Error(`${label} contains duplicate identities`); }
 export function validateCertificateBackupRows(root: Record<string, unknown>, context: { studentIds: Set<string>; guardianIds: Set<string> }) {
   const certificateNumberSeries=rows(root,"certificateNumberSeries"),certificateTemplates=rows(root,"certificateTemplates"),studentCertificateRequests=rows(root,"studentCertificateRequests"),studentCertificates=rows(root,"studentCertificates"),studentCertificateVersions=rows(root,"studentCertificateVersions"),studentCertificateEvents=rows(root,"studentCertificateEvents");
-  const types=new Set(["BONAFIDE","STUDY","CONDUCT","TRANSFER"]);
+  for (const key of arrays) assertCertificateBackupFields(key, rows(root,key));
+  const types=new Set(["BONAFIDE","STUDY","CONDUCT","TRANSFER","GRADUATION"]);
   unique(certificateNumberSeries.map((r,i)=>required(r,"id",`certificateNumberSeries[${i}]`)),"Certificate series IDs");unique(certificateNumberSeries.map((r,i)=>required(r,"seriesCode",`certificateNumberSeries[${i}]`).toUpperCase()),"Certificate series codes");
   certificateNumberSeries.forEach((r,i)=>{if(!types.has(required(r,"certificateType",`certificateNumberSeries[${i}]`))||Number(r.nextNumber)<1)throw new Error(`certificateNumberSeries[${i}] is invalid`);});
   unique(certificateTemplates.map((r,i)=>required(r,"id",`certificateTemplates[${i}]`)),"Certificate template IDs");unique(certificateTemplates.map((r,i)=>required(r,"templateCode",`certificateTemplates[${i}]`).toUpperCase()),"Certificate template codes");
@@ -17,5 +19,14 @@ export function validateCertificateBackupRows(root: Record<string, unknown>, con
   unique(studentCertificateVersions.map((r,i)=>required(r,"id",`studentCertificateVersions[${i}]`)),"Certificate version IDs");const versionIds=new Set(studentCertificateVersions.map(r=>String(r.id))),versionKeys=studentCertificateVersions.map(r=>`${r.certificateId}|${r.versionNumber}`);unique(versionKeys,"Certificate version numbers");
   studentCertificateVersions.forEach((r,i)=>{if(!certificateIds.has(required(r,"certificateId",`studentCertificateVersions[${i}]`)))throw new Error(`studentCertificateVersions[${i}] has an invalid certificate link`);JSON.parse(required(r,"snapshotJson",`studentCertificateVersions[${i}]`));});
   unique(studentCertificateEvents.map((r,i)=>required(r,"id",`studentCertificateEvents[${i}]`)),"Certificate event IDs");studentCertificateEvents.forEach((r,i)=>{if(r.requestId&&!requestIds.has(String(r.requestId))||r.certificateId&&!certificateIds.has(String(r.certificateId))||r.versionId&&!versionIds.has(String(r.versionId)))throw new Error(`studentCertificateEvents[${i}] has an invalid link`);});
+  const byCertificate=new Map(studentCertificates.map(row=>[String(row.id),row])), byVersion=new Map(studentCertificateVersions.map(row=>[String(row.id),row]));
+  const sameOwner=(left:Row,right:Row)=>["studentId","academicYear","certificateType"].every(key=>left[key]===right[key]);
+  const checkGraph=(records:Row[],edge:string,index:Map<string,Row>,owner:(row:Row)=>Row|undefined)=>{
+    const done=new Set<string>();
+    for(const row of records){if(!row[edge])continue;const previous=index.get(String(row[edge]));const currentOwner=owner(row),previousOwner=previous&&owner(previous);if(!previous||!currentOwner||!previousOwner||!sameOwner(currentOwner,previousOwner))throw new Error("CERTIFICATE_SUPERSESSION_OWNERSHIP_INVALID");}
+    for(const row of records){const trail=new Set<string>();let current:Row|undefined=row;while(current&&!done.has(String(current.id))){const id=String(current.id);if(trail.has(id))throw new Error("CERTIFICATE_SUPERSESSION_CYCLE");trail.add(id);current=current[edge]?index.get(String(current[edge])):undefined;}for(const id of trail)done.add(id);}
+  };
+  checkGraph(studentCertificates,"supersedesCertificateId",byCertificate,row=>row);
+  checkGraph(studentCertificateVersions,"supersedesVersionId",byVersion,row=>byCertificate.get(String(row.certificateId)));
   return {certificateNumberSeries,certificateTemplates,studentCertificateRequests,studentCertificates,studentCertificateVersions,studentCertificateEvents};
 }

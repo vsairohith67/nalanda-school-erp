@@ -76,7 +76,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <html lang="en" suppressHydrationWarning>
         <body>
           {syntheticBanner ? <div className="staging-environment-banner" role="status">SYNTHETIC REVIEW · No real records · No live providers</div> : null}
-          <ThemeProvider>
+          <ThemeProvider nonce={requestHeaders.get("x-nonce") ?? undefined}>
             <ModalAccessibilityGuard />
             <SecurityDialogProvider>
               <PwaRuntime>{children}</PwaRuntime>
@@ -97,7 +97,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="en" suppressHydrationWarning>
       <body>
         {syntheticBanner ? <div className="staging-environment-banner" role="status">SYNTHETIC REVIEW · No real records · No live providers</div> : null}
-        <ThemeProvider>
+        <ThemeProvider nonce={requestHeaders.get("x-nonce") ?? undefined}>
           <ModalAccessibilityGuard />
           <ProductExperienceRuntime />
           <SecurityDialogProvider>

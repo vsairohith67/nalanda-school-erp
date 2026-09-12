@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "qa:certificate-graduation": "vitest run tests/certificate-graduation-exit-1a.test.ts tests/student-certificates.test.ts tests/student-certificates-security-backup.test.ts && tsx scripts/qa-certificate-graduation-exit-1a.ts",
     "onboarding:synthetic": "tsx scripts/onboarding-preparation.ts synthetic",
     "onboarding:package:validate": "tsx scripts/onboarding-preparation.ts package-validate",
     "onboarding:mapping:validate": "tsx scripts/onboarding-preparation.ts mapping-validate",
@@ -265,7 +266,9 @@
     "portable:secrets:generate": "node scripts/portable/generate-synthetic-secrets.mjs",
     "portable:secrets:cleanup": "node scripts/portable/cleanup-synthetic.mjs",
     "qa:portable-runtime": "vitest run tests/portable-runtime.test.ts",
-    "qa:portable-stack": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/portable/qa-stack.ps1"
+    "qa:portable-stack": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/portable/qa-stack.ps1",
+    "portable:operator": "tsx scripts/portable/operator.ts",
+    "qa:portable-1b": "vitest run tests/portable-operator-1b.test.ts tests/portable-observability-1b.test.ts tests/portable-oci-1b.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1114.0",
@@ -278,14 +281,14 @@
     "fflate": "^0.8.3",
     "iovalkey": "0.4.0",
     "lucide-react": "^0.468.0",
-    "next": "15.5.21",
+    "next": "15.5.25",
     "next-themes": "^0.4.6",
     "otpauth": "9.5.1",
     "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "sharp": "0.35.2",
+    "sharp": "0.35.4",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
@@ -298,7 +301,7 @@
     "prisma": "6.19.3",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^3.2.6"
+    "vitest": "4.1.11"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

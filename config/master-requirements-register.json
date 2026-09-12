@@ -1,18 +1,18 @@
 {
-  "registerVersion": "1.0.0",
+  "registerVersion": "1.1.0",
   "approvedAt": null,
   "approvalState": "RECONCILED_PENDING_RELEASE_GATES",
-  "expectedMainSha": "4a4df050d194104cfc497a6de790ca9553a69db6",
-  "actualMainSha": "4a4df050d194104cfc497a6de790ca9553a69db6",
-  "treeSha": "d4075661063fc127740bb3806abe51d83b406e61",
+  "expectedMainSha": "104aacc7bd314cae82e60bb02b5c8a965c7ffedd",
+  "actualMainSha": "104aacc7bd314cae82e60bb02b5c8a965c7ffedd",
+  "treeSha": "2c7f1a129e6b98abb9689abf7c989b0ed8468561",
   "normalizedSourceSpecificationHash": "618824d76329b924230fede309b30df1d7aa7a94fa52c4b4a849647432421c89",
   "sourceNormalization": "SHA256 UTF-8 JSON.stringify({requirements: ordered sourceIntent array, settledOwnerDecisions: ordered normalized strings}); owner inventory whitespace collapsed during transcription.",
-  "priorRegisterHash": null,
+  "priorRegisterHash": "2e00c1ef24edbf16bb281620a0b341c9c4e36df2d901d828fb953e2d021a773e",
   "requirementCount": 46,
   "statusCounts": {
-    "COMPLETE": 9,
-    "PARTIAL": 23,
-    "MISSING": 8,
+    "COMPLETE": 8,
+    "PARTIAL": 25,
+    "MISSING": 7,
     "DEFERRED": 3,
     "BLOCKED": 2,
     "NEEDS_CONFIRMATION": 1,
@@ -21,7 +21,7 @@
   "generatedNextPrompt": {
     "id": "PORTABLE-DEPLOYMENT-OBSERVABILITY-FOUNDATION-1B",
     "path": "docs/prompts/PORTABLE_DEPLOYMENT_OBSERVABILITY_FOUNDATION_1B.md",
-    "state": "GENERATED_NOT_EXECUTED"
+    "state": "STARTED_SOURCE_ONLY"
   },
   "operationalActivationState": "NOT_AUTHORISED_ALL_EXISTING_FLAGS_UNCHANGED",
   "repositoryVisibility": {
@@ -1105,16 +1105,18 @@
       "title": "A chargeable school-issued Class X Graduation Certificate that is clearly distinct from statutory Council/Board documents",
       "sourceIntent": "A chargeable school-issued Class X Graduation Certificate that is clearly distinct from statutory Council/Board documents.",
       "category": "cert",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "confidence": "HIGH",
-      "currentReleaseBoundary": "The reusable certificate engine supports BONAFIDE, STUDY, CONDUCT and TRANSFER only; Class X packages link existing school issues or external Board custody.",
+      "currentReleaseBoundary": "CERTIFICATE-GRADUATION-EXIT-1A implementation under focused QA and exact-head release gates; default OFF. No release or operational clearance.",
       "sourceFiles": [
         "lib/student-certificates.ts",
         "lib/certificate-templates.ts",
         "lib/certificate-backup.ts",
         "app/api/certificates/[id]/route.ts",
         "app/api/certificates/[id]/versions/[version]/route.ts",
-        "app/api/certificates/[id]/workflow/route.ts"
+        "app/api/certificates/[id]/workflow/route.ts",
+        "lib/certificate-graduation-policy.ts",
+        "lib/certificate-charges.ts"
       ],
       "routes": [
         "/certificates/[id]",
@@ -1126,7 +1128,8 @@
         "/certificates/requests/new",
         "/certificates/requests",
         "/certificates/templates",
-        "/parent/certificates"
+        "/parent/certificates",
+        "/certificates/graduation"
       ],
       "apiRoutes": [
         "/api/certificates/[id]",
@@ -1152,12 +1155,16 @@
       ],
       "migrations": [
         "prisma/migrations/20260722_clean_install_baseline/migration.sql",
-        "prisma/postgresql/migrations/20260826_postgresql_baseline/migration.sql"
+        "prisma/postgresql/migrations/20260826_postgresql_baseline/migration.sql",
+        "prisma/migrations/20260908120000_certificate_graduation_exit_1a/migration.sql",
+        "prisma/postgresql/migrations/20260908120000_certificate_graduation_exit_1a/migration.sql"
       ],
       "services": [
         "lib/student-certificates.ts",
         "lib/certificate-templates.ts",
-        "lib/certificate-backup.ts"
+        "lib/certificate-backup.ts",
+        "lib/certificate-graduation-policy.ts",
+        "lib/certificate-charges.ts"
       ],
       "permissions": [
         "VIEW_CERTIFICATES",
@@ -1169,15 +1176,25 @@
       ],
       "tests": [
         "tests/student-certificates-security-backup.test.ts",
-        "tests/student-certificates.test.ts"
+        "tests/student-certificates.test.ts",
+        "tests/certificate-graduation-exit-1a.test.ts"
       ],
       "qaEvidence": [
-        "docs/STUDENT_CERTIFICATES_TC_AND_BONAFIDE_WORKFLOW.md"
+        "docs/STUDENT_CERTIFICATES_TC_AND_BONAFIDE_WORKFLOW.md",
+        "docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md",
+        "scripts/qa-certificate-graduation-exit-1a.ts"
       ],
-      "pullRequests": [],
+      "pullRequests": [
+        {
+          "number": 25,
+          "role": "OPEN_EXCLUDED"
+        }
+      ],
       "tags": [],
       "featureFlags": [
-        "config/release-feature-flags.json: unchanged; all relevant default-off controls retained"
+        "certificate-graduation-exit-1a: OFF 0%",
+        "certificate-bulk-issue-1a: OFF 0%",
+        "certificate-verification-1a: OFF 0%"
       ],
       "backupRestoreCoverage": {
         "state": "FOUNDATION_MAPPED",
@@ -1185,9 +1202,10 @@
           "lib/certificate-backup.ts",
           "lib/backup.ts",
           "lib/restore.ts",
-          "lib/restore-database.ts"
+          "lib/restore-database.ts",
+          "lib/certificate-extension-backup.ts"
         ],
-        "notes": "Released foundations only; absent enhancements have no restore coverage. Schema version 45 unchanged; full current regression required."
+        "notes": "Backup v46 adds durable charge, bulk and retained PDF provenance. v45 accepted; isolated repeated restore and conflict checks are required by the synthetic QA harness."
       },
       "securityPrivacyClassification": [
         "SOURCE_ONLY",
@@ -1205,9 +1223,9 @@
         "Add GRADUATION through this engine, configurable school-issued disclaimer and audited charge linkage; no statutory replacement claim."
       ],
       "missingAcceptanceCriteria": [
-        "Add GRADUATION through this engine, configurable school-issued disclaimer and audited charge linkage; no statutory replacement claim."
+        "Final focused, browser, PDF, full-regression and exact-head mandatory gates must pass; inherited shared-runtime advisory gate remains unresolved. No COMPLETE disposition before acceptance and release."
       ],
-      "recommendedAction": "Add GRADUATION through this engine, configurable school-issued disclaimer and audited charge linkage; no statutory replacement claim.",
+      "recommendedAction": "Finish the authorized certificate bundle gates; retain implementation and PR if an external release gate remains unresolved. No operational activation.",
       "recommendedBundle": "CERTIFICATE-GRADUATION-EXIT-1A",
       "priority": "P0",
       "serialLane": 2,
@@ -1221,26 +1239,21 @@
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
         "Historical ledgers retain their original scope and status vocabulary.",
-        "Route, model, permission and test references identify inspected neighboring foundations; they do not assert that the missing or deferred workflow exists."
+        "Route, model, permission and test references identify inspected neighboring foundations; they do not assert that the missing or deferred workflow exists.",
+        "Historical source/search evidence remains explicitly historical. Current scoped source evidence follows; all other requirement dispositions are unchanged."
       ],
       "evidence": [
         {
-          "path": "lib/student-certificates.ts",
-          "line": 10,
-          "sha256": "42574f9f10476618addf1257339be4756cc1f70a2e2a384bae13e9958a58e1ed",
-          "claim": "The reusable certificate engine supports BONAFIDE, STUDY, CONDUCT and TRANSFER only; Class X packages link existing school issues or external Board custody."
-        },
-        {
-          "path": "lib/certificate-templates.ts",
+          "path": "lib/certificate-graduation-policy.ts",
           "line": 1,
-          "sha256": "9eb9690bb474f18ed1fff23acea1ea66a8da19e27ce6d5aa99ef0854b101878a",
-          "claim": "The reusable certificate engine supports BONAFIDE, STUDY, CONDUCT and TRANSFER only; Class X packages link existing school issues or external Board custody."
+          "sha256": "6f409b29758e9b2054024c105d2f85a0897d3e1034812b0aca076fb3779aeccd",
+          "claim": "Current scoped implementation; acceptance and release remain governed by docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md."
         },
         {
-          "path": "lib/certificate-backup.ts",
-          "line": 6,
-          "sha256": "d3d30e2667b8cd32f772291dbf51d3cf3858f9c4a93a8944c50dfc379d2abc3a",
-          "claim": "The reusable certificate engine supports BONAFIDE, STUDY, CONDUCT and TRANSFER only; Class X packages link existing school issues or external Board custody."
+          "path": "lib/certificate-charges.ts",
+          "line": 1,
+          "sha256": "81cb1a4522e0cb07bb9b843b7c2557fc8f91e711d986b604818ee2aa4d65ada8",
+          "claim": "Current scoped implementation; acceptance and release remain governed by docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md."
         }
       ],
       "searchEvidence": {
@@ -1279,14 +1292,17 @@
       "category": "cert",
       "status": "PARTIAL",
       "confidence": "HIGH",
-      "currentReleaseBoundary": "Request, draft, approval, issue, immutable issued snapshots, reissue/correction, cancellation and browser print are implemented.",
+      "currentReleaseBoundary": "CERTIFICATE-GRADUATION-EXIT-1A implementation under focused QA and exact-head release gates; default OFF. No release or operational clearance.",
       "sourceFiles": [
         "lib/student-certificates.ts",
         "lib/certificate-templates.ts",
         "lib/certificate-backup.ts",
         "app/api/certificates/[id]/route.ts",
         "app/api/certificates/[id]/versions/[version]/route.ts",
-        "app/api/certificates/[id]/workflow/route.ts"
+        "app/api/certificates/[id]/workflow/route.ts",
+        "lib/certificate-pdf.ts",
+        "lib/certificate-authenticity.ts",
+        "lib/certificate-template-workflow.ts"
       ],
       "routes": [
         "/certificates/[id]",
@@ -1298,7 +1314,8 @@
         "/certificates/requests/new",
         "/certificates/requests",
         "/certificates/templates",
-        "/parent/certificates"
+        "/parent/certificates",
+        "/certificates/graduation"
       ],
       "apiRoutes": [
         "/api/certificates/[id]",
@@ -1324,12 +1341,17 @@
       ],
       "migrations": [
         "prisma/migrations/20260722_clean_install_baseline/migration.sql",
-        "prisma/postgresql/migrations/20260826_postgresql_baseline/migration.sql"
+        "prisma/postgresql/migrations/20260826_postgresql_baseline/migration.sql",
+        "prisma/migrations/20260908120000_certificate_graduation_exit_1a/migration.sql",
+        "prisma/postgresql/migrations/20260908120000_certificate_graduation_exit_1a/migration.sql"
       ],
       "services": [
         "lib/student-certificates.ts",
         "lib/certificate-templates.ts",
-        "lib/certificate-backup.ts"
+        "lib/certificate-backup.ts",
+        "lib/certificate-pdf.ts",
+        "lib/certificate-authenticity.ts",
+        "lib/certificate-template-workflow.ts"
       ],
       "permissions": [
         "VIEW_CERTIFICATES",
@@ -1341,15 +1363,25 @@
       ],
       "tests": [
         "tests/student-certificates-security-backup.test.ts",
-        "tests/student-certificates.test.ts"
+        "tests/student-certificates.test.ts",
+        "tests/certificate-graduation-exit-1a.test.ts"
       ],
       "qaEvidence": [
-        "docs/STUDENT_CERTIFICATES_TC_AND_BONAFIDE_WORKFLOW.md"
+        "docs/STUDENT_CERTIFICATES_TC_AND_BONAFIDE_WORKFLOW.md",
+        "docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md",
+        "scripts/qa-certificate-graduation-exit-1a.ts"
       ],
-      "pullRequests": [],
+      "pullRequests": [
+        {
+          "number": 25,
+          "role": "OPEN_EXCLUDED"
+        }
+      ],
       "tags": [],
       "featureFlags": [
-        "config/release-feature-flags.json: unchanged; all relevant default-off controls retained"
+        "certificate-graduation-exit-1a: OFF 0%",
+        "certificate-bulk-issue-1a: OFF 0%",
+        "certificate-verification-1a: OFF 0%"
       ],
       "backupRestoreCoverage": {
         "state": "FOUNDATION_MAPPED",
@@ -1357,9 +1389,10 @@
           "lib/certificate-backup.ts",
           "lib/backup.ts",
           "lib/restore.ts",
-          "lib/restore-database.ts"
+          "lib/restore-database.ts",
+          "lib/certificate-extension-backup.ts"
         ],
-        "notes": "Released foundations only; absent enhancements have no restore coverage. Schema version 45 unchanged; full current regression required."
+        "notes": "Backup v46 adds durable charge, bulk and retained PDF provenance. v45 accepted; isolated repeated restore and conflict checks are required by the synthetic QA harness."
       },
       "securityPrivacyClassification": [
         "SOURCE_ONLY",
@@ -1376,9 +1409,9 @@
         "Add privacy-safe certificate QR verification and dedicated PDF acceptance; approved-template edits must create new immutable versions while old issues retain originals."
       ],
       "missingAcceptanceCriteria": [
-        "Add privacy-safe certificate QR verification and dedicated PDF acceptance; approved-template edits must create new immutable versions while old issues retain originals."
+        "Final focused, browser, PDF, full-regression and exact-head mandatory gates must pass; inherited shared-runtime advisory gate remains unresolved. No COMPLETE disposition before acceptance and release."
       ],
-      "recommendedAction": "Add privacy-safe certificate QR verification and dedicated PDF acceptance; approved-template edits must create new immutable versions while old issues retain originals.",
+      "recommendedAction": "Finish the authorized certificate bundle gates; retain implementation and PR if an external release gate remains unresolved. No operational activation.",
       "recommendedBundle": "CERTIFICATE-GRADUATION-EXIT-1A",
       "priority": "P0",
       "serialLane": 2,
@@ -1391,26 +1424,27 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "Historical source/search evidence remains explicitly historical. Current scoped source evidence follows; all other requirement dispositions are unchanged."
       ],
       "evidence": [
         {
-          "path": "lib/student-certificates.ts",
-          "line": 10,
-          "sha256": "42574f9f10476618addf1257339be4756cc1f70a2e2a384bae13e9958a58e1ed",
-          "claim": "Request, draft, approval, issue, immutable issued snapshots, reissue/correction, cancellation and browser print are implemented."
-        },
-        {
-          "path": "lib/certificate-templates.ts",
+          "path": "lib/certificate-pdf.ts",
           "line": 1,
-          "sha256": "9eb9690bb474f18ed1fff23acea1ea66a8da19e27ce6d5aa99ef0854b101878a",
-          "claim": "Request, draft, approval, issue, immutable issued snapshots, reissue/correction, cancellation and browser print are implemented."
+          "sha256": "349cb83294d2e3b900be472d2af9234c0d56775d2bb4361fa3c9f933f054976b",
+          "claim": "Current scoped implementation; acceptance and release remain governed by docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md."
         },
         {
-          "path": "lib/certificate-backup.ts",
-          "line": 6,
-          "sha256": "d3d30e2667b8cd32f772291dbf51d3cf3858f9c4a93a8944c50dfc379d2abc3a",
-          "claim": "Request, draft, approval, issue, immutable issued snapshots, reissue/correction, cancellation and browser print are implemented."
+          "path": "lib/certificate-authenticity.ts",
+          "line": 1,
+          "sha256": "bc5a08f499b1f6982fe386db9e1ab18d0cce2c7cf8d731c3342d8edbcae94a5d",
+          "claim": "Current scoped implementation; acceptance and release remain governed by docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md."
+        },
+        {
+          "path": "lib/certificate-template-workflow.ts",
+          "line": 1,
+          "sha256": "aac8d61aed6bbe51cf79ba1f8ed191bbb12e44b8a8522b7dd4605d4dff31d3b4",
+          "claim": "Current scoped implementation; acceptance and release remain governed by docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md."
         }
       ],
       "searchEvidence": {
@@ -1449,14 +1483,16 @@
       "category": "bulk",
       "status": "PARTIAL",
       "confidence": "HIGH",
-      "currentReleaseBoundary": "Validated XLSX onboarding provides deterministic row review and import governance; certificate issuance is a separate controlled workflow.",
+      "currentReleaseBoundary": "CERTIFICATE-GRADUATION-EXIT-1A implementation under focused QA and exact-head release gates; default OFF. No release or operational clearance.",
       "sourceFiles": [
         "lib/student-import.ts",
         "lib/onboarding-workbooks.ts",
         "lib/student-certificates.ts",
         "app/api/certificates/[id]/route.ts",
         "app/api/certificates/[id]/versions/[version]/route.ts",
-        "app/api/certificates/[id]/workflow/route.ts"
+        "app/api/certificates/[id]/workflow/route.ts",
+        "lib/certificate-bulk.ts",
+        "lib/certificate-workbooks.ts"
       ],
       "routes": [
         "/certificates/[id]",
@@ -1469,7 +1505,8 @@
         "/certificates/requests",
         "/certificates/templates",
         "/onboarding",
-        "/parent/certificates"
+        "/parent/certificates",
+        "/certificates/graduation"
       ],
       "apiRoutes": [
         "/api/certificates/[id]",
@@ -1502,12 +1539,16 @@
       "migrations": [
         "prisma/migrations/20260722_clean_install_baseline/migration.sql",
         "prisma/migrations/20260810184500_governed_bulk_onboarding/migration.sql",
-        "prisma/postgresql/migrations/20260826_postgresql_baseline/migration.sql"
+        "prisma/postgresql/migrations/20260826_postgresql_baseline/migration.sql",
+        "prisma/migrations/20260908120000_certificate_graduation_exit_1a/migration.sql",
+        "prisma/postgresql/migrations/20260908120000_certificate_graduation_exit_1a/migration.sql"
       ],
       "services": [
         "lib/student-import.ts",
         "lib/onboarding-workbooks.ts",
-        "lib/student-certificates.ts"
+        "lib/student-certificates.ts",
+        "lib/certificate-bulk.ts",
+        "lib/certificate-workbooks.ts"
       ],
       "permissions": [
         "VIEW_CERTIFICATES",
@@ -1520,26 +1561,37 @@
       "tests": [
         "tests/onboarding-governance.test.ts",
         "tests/onboarding-workbooks.test.ts",
-        "tests/student-import.test.ts"
+        "tests/student-import.test.ts",
+        "tests/certificate-graduation-exit-1a.test.ts"
       ],
       "qaEvidence": [
-        "docs/REQUIREMENTS_REGISTER.md"
+        "docs/REQUIREMENTS_REGISTER.md",
+        "docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md",
+        "scripts/qa-certificate-graduation-exit-1a.ts"
       ],
-      "pullRequests": [],
+      "pullRequests": [
+        {
+          "number": 25,
+          "role": "OPEN_EXCLUDED"
+        }
+      ],
       "tags": [
         "bulk-onboarding-v41-2026-08-10"
       ],
       "featureFlags": [
-        "config/release-feature-flags.json: unchanged; all relevant default-off controls retained"
+        "certificate-graduation-exit-1a: OFF 0%",
+        "certificate-bulk-issue-1a: OFF 0%",
+        "certificate-verification-1a: OFF 0%"
       ],
       "backupRestoreCoverage": {
         "state": "FOUNDATION_MAPPED",
         "sourceFiles": [
           "lib/backup.ts",
           "lib/restore.ts",
-          "lib/restore-database.ts"
+          "lib/restore-database.ts",
+          "lib/certificate-extension-backup.ts"
         ],
-        "notes": "Released foundations only; absent enhancements have no restore coverage. Schema version 45 unchanged; full current regression required."
+        "notes": "Backup v46 adds durable charge, bulk and retained PDF provenance. v45 accepted; isolated repeated restore and conflict checks are required by the synthetic QA harness."
       },
       "securityPrivacyClassification": [
         "SOURCE_ONLY",
@@ -1555,9 +1607,9 @@
         "Add certificate-specific row-error preview, exact Student resolution, approval and resumable idempotent batch issuance using immutable template versions."
       ],
       "missingAcceptanceCriteria": [
-        "Add certificate-specific row-error preview, exact Student resolution, approval and resumable idempotent batch issuance using immutable template versions."
+        "Final focused, browser, PDF, full-regression and exact-head mandatory gates must pass; inherited shared-runtime advisory gate remains unresolved. No COMPLETE disposition before acceptance and release."
       ],
-      "recommendedAction": "Add certificate-specific row-error preview, exact Student resolution, approval and resumable idempotent batch issuance using immutable template versions.",
+      "recommendedAction": "Finish the authorized certificate bundle gates; retain implementation and PR if an external release gate remains unresolved. No operational activation.",
       "recommendedBundle": "CERTIFICATE-GRADUATION-EXIT-1A",
       "priority": "P1",
       "serialLane": 2,
@@ -1570,26 +1622,21 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "Historical source/search evidence remains explicitly historical. Current scoped source evidence follows; all other requirement dispositions are unchanged."
       ],
       "evidence": [
         {
-          "path": "lib/student-import.ts",
-          "line": 3,
-          "sha256": "3be1b08b336af0acfb8b3b8d79b70203269dc0e81588bd33435dbbd280506b57",
-          "claim": "Validated XLSX onboarding provides deterministic row review and import governance; certificate issuance is a separate controlled workflow."
+          "path": "lib/certificate-bulk.ts",
+          "line": 1,
+          "sha256": "99a359b3f3e58ef4592005e3aa4cb2ba9c8439b363e674ea221904e6deb54ddb",
+          "claim": "Current scoped implementation; acceptance and release remain governed by docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md."
         },
         {
-          "path": "lib/onboarding-workbooks.ts",
-          "line": 16,
-          "sha256": "b7f2eb5ff89798676443b6830f398763cd53eba9b76410fc3c515a274bfb2020",
-          "claim": "Validated XLSX onboarding provides deterministic row review and import governance; certificate issuance is a separate controlled workflow."
-        },
-        {
-          "path": "lib/student-certificates.ts",
-          "line": 10,
-          "sha256": "42574f9f10476618addf1257339be4756cc1f70a2e2a384bae13e9958a58e1ed",
-          "claim": "Validated XLSX onboarding provides deterministic row review and import governance; certificate issuance is a separate controlled workflow."
+          "path": "lib/certificate-workbooks.ts",
+          "line": 1,
+          "sha256": "beea66690db239f90a5442bb8c73ebc71eb57e35b205430b68e5d577f8153131",
+          "claim": "Current scoped implementation; acceptance and release remain governed by docs/evidence/CERTIFICATE_GRADUATION_EXIT_1A.md."
         }
       ],
       "searchEvidence": {
@@ -1676,7 +1723,8 @@
         "tests/misc-income.test.ts"
       ],
       "qaEvidence": [
-        "docs/BOOKS_LIBRARY_INCOME_AND_PUBLISHER_PAYMENT_WORKFLOW.md"
+        "docs/BOOKS_LIBRARY_INCOME_AND_PUBLISHER_PAYMENT_WORKFLOW.md",
+        "docs/evidence/STUDENT_ITEMS_PRIOR_YEAR_CONCESSIONS_1A.md"
       ],
       "pullRequests": [],
       "tags": [],
@@ -1708,9 +1756,9 @@
         "BELT/TIE defaults are OPTIONAL and quantity is capped at 10000. Require exact Student linkage and any valid positive quantity within explicit numeric-safety limits; preserve receipt history."
       ],
       "missingAcceptanceCriteria": [
-        "BELT/TIE defaults are OPTIONAL and quantity is capped at 10000. Require exact Student linkage and any valid positive quantity within explicit numeric-safety limits; preserve receipt history."
+        "Admitted PR26 source requires exact Student linkage, positive bounded quantity, dated approved rates and frozen receipt values. Integrated Browser/receipt and exact-head release acceptance remains NOT_EXECUTED under the external runtime hold."
       ],
-      "recommendedAction": "BELT/TIE defaults are OPTIONAL and quantity is capped at 10000. Require exact Student linkage and any valid positive quantity within explicit numeric-safety limits; preserve receipt history.",
+      "recommendedAction": "Validate the scoped retained feature PR and resolve recorded runtime/security gates before release. Configure chronology and explicit permissions before any separately authorised activation. AI concession recommendations remain deferred.",
       "recommendedBundle": "STUDENT-ITEMS-CONCESSIONS-1A",
       "priority": "P0",
       "serialLane": 2,
@@ -1723,13 +1771,15 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "2026-09-09 owner-scope correction STUDENT-ITEMS-PRIOR-YEAR-CONCESSIONS-1A: income support and concessions are limited to independently verified immediately previous configured academic-year liabilities; no admissions-wide collection or current/future/all-older relief. Student item sales remain independent of arrears. Historical intent and status are preserved; feature implementation is OFF at 0 percent pending evidence and release gates.",
+        "2026-09-09: evidence hash refreshed for shared source changed by the bounded prior-year feature; released snapshot is preserved in config/requirements-history/master-register-released-104aacc7.json. This does not mark the requirement complete."
       ],
       "evidence": [
         {
           "path": "lib/misc-income.ts",
           "line": 5,
-          "sha256": "26b8ea67fe30d418749e0f7c7ecae69287abb63079a19125414580b5c480ab71",
+          "sha256": "dd40cc4425ff35e61020f40188e02c0d0960004625d623fc32126e42ee6d3125",
           "claim": "Misc income has Student-link policies, year/effective-date rates, receipts, cancellation and exact monetary calculations."
         }
       ],
@@ -2301,7 +2351,8 @@
         "tests/admissions-crm.test.ts"
       ],
       "qaEvidence": [
-        "docs/REQUIREMENTS_REGISTER.md"
+        "docs/REQUIREMENTS_REGISTER.md",
+        "docs/evidence/STUDENT_ITEMS_PRIOR_YEAR_CONCESSIONS_1A.md"
       ],
       "pullRequests": [],
       "tags": [
@@ -2339,7 +2390,7 @@
       "missingAcceptanceCriteria": [
         "Add optional minimised income bands, separate sensitive permission, purpose/retention controls and exclusion from general exports/search/telemetry."
       ],
-      "recommendedAction": "Add optional minimised income bands, separate sensitive permission, purpose/retention controls and exclusion from general exports/search/telemetry.",
+      "recommendedAction": "Validate the scoped retained feature PR and resolve recorded runtime/security gates before release. Configure chronology and explicit permissions before any separately authorised activation. AI concession recommendations remain deferred.",
       "recommendedBundle": "STUDENT-ITEMS-CONCESSIONS-1A",
       "priority": "P1",
       "serialLane": 2,
@@ -2353,7 +2404,8 @@
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
         "Historical ledgers retain their original scope and status vocabulary.",
-        "Route, model, permission and test references identify inspected neighboring foundations; they do not assert that the missing or deferred workflow exists."
+        "Route, model, permission and test references identify inspected neighboring foundations; they do not assert that the missing or deferred workflow exists.",
+        "2026-09-09 owner-scope correction STUDENT-ITEMS-PRIOR-YEAR-CONCESSIONS-1A: income support and concessions are limited to independently verified immediately previous configured academic-year liabilities; no admissions-wide collection or current/future/all-older relief. Student item sales remain independent of arrears. Historical intent and status are preserved; feature implementation is OFF at 0 percent pending evidence and release gates."
       ],
       "evidence": [
         {
@@ -2491,7 +2543,8 @@
         "tests/student-import.test.ts"
       ],
       "qaEvidence": [
-        "docs/REQUIREMENTS_REGISTER.md"
+        "docs/REQUIREMENTS_REGISTER.md",
+        "docs/evidence/STUDENT_ITEMS_PRIOR_YEAR_CONCESSIONS_1A.md"
       ],
       "pullRequests": [],
       "tags": [],
@@ -2523,9 +2576,9 @@
         "Add request, recommendation, role-bound approval, evidence, scope, validity, revocation and ledger audit; a discount field is not concession governance."
       ],
       "missingAcceptanceCriteria": [
-        "Add request, recommendation, role-bound approval, evidence, scope, validity, revocation and ledger audit; a discount field is not concession governance."
+        "Admitted PR26 implements immediately preceding configured-year concession governance. Integrated nonempty restoration, authenticated preparation/approval/application/reversal and final release gates remain required; broader scopes are not implicitly implemented."
       ],
-      "recommendedAction": "Add request, recommendation, role-bound approval, evidence, scope, validity, revocation and ledger audit; a discount field is not concession governance.",
+      "recommendedAction": "Validate the scoped retained feature PR and resolve recorded runtime/security gates before release. Configure chronology and explicit permissions before any separately authorised activation. AI concession recommendations remain deferred.",
       "recommendedBundle": "STUDENT-ITEMS-CONCESSIONS-1A",
       "priority": "P0",
       "serialLane": 2,
@@ -2538,7 +2591,8 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "2026-09-09 owner-scope correction STUDENT-ITEMS-PRIOR-YEAR-CONCESSIONS-1A: income support and concessions are limited to independently verified immediately previous configured academic-year liabilities; no admissions-wide collection or current/future/all-older relief. Student item sales remain independent of arrears. Historical intent and status are preserved; feature implementation is OFF at 0 percent pending evidence and release gates."
       ],
       "evidence": [
         {
@@ -2676,7 +2730,8 @@
         "tests/student-import.test.ts"
       ],
       "qaEvidence": [
-        "docs/REQUIREMENTS_REGISTER.md"
+        "docs/REQUIREMENTS_REGISTER.md",
+        "docs/evidence/STUDENT_ITEMS_PRIOR_YEAR_CONCESSIONS_1A.md"
       ],
       "pullRequests": [],
       "tags": [],
@@ -2708,7 +2763,7 @@
       "missingAcceptanceCriteria": [
         "Add explicit funding/classification and approval/audit semantics without duplicating fee collections."
       ],
-      "recommendedAction": "Add explicit funding/classification and approval/audit semantics without duplicating fee collections.",
+      "recommendedAction": "Validate the scoped retained feature PR and resolve recorded runtime/security gates before release. Configure chronology and explicit permissions before any separately authorised activation. AI concession recommendations remain deferred.",
       "recommendedBundle": "STUDENT-ITEMS-CONCESSIONS-1A",
       "priority": "P1",
       "serialLane": 2,
@@ -2722,7 +2777,8 @@
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
         "Historical ledgers retain their original scope and status vocabulary.",
-        "Route, model, permission and test references identify inspected neighboring foundations; they do not assert that the missing or deferred workflow exists."
+        "Route, model, permission and test references identify inspected neighboring foundations; they do not assert that the missing or deferred workflow exists.",
+        "2026-09-09 owner-scope correction STUDENT-ITEMS-PRIOR-YEAR-CONCESSIONS-1A: income support and concessions are limited to independently verified immediately previous configured academic-year liabilities; no admissions-wide collection or current/future/all-older relief. Student item sales remain independent of arrears. Historical intent and status are preserved; feature implementation is OFF at 0 percent pending evidence and release gates."
       ],
       "evidence": [
         {
@@ -4606,7 +4662,8 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "2026-09-09: evidence hash refreshed for shared source changed by the bounded prior-year feature; released snapshot is preserved in config/requirements-history/master-register-released-104aacc7.json. This does not mark the requirement complete."
       ],
       "evidence": [
         {
@@ -4636,7 +4693,7 @@
         {
           "path": "lib/restore-database.ts",
           "line": 2348,
-          "sha256": "5eb6ecec56e2eb927592887999b0f723ffdac69bde49f53c49a5046548673d11",
+          "sha256": "02bd2c3fc1cf0b2488580c8d2a8e9c4d476c2be57f60300a13454ce5a8903f39",
           "claim": "Mapped restore retains Student outcome snapshots and hashes, rejects collisions and preserves repeated restoration ownership."
         }
       ],
@@ -6615,7 +6672,12 @@
         "scripts/portable/runtime-command.ts",
         "app/api/ai-assistant/profiles/[id]/health/route.ts",
         "app/api/cloud-backup/health/route.ts",
-        "app/api/deployment-health/route.ts"
+        "app/api/deployment-health/route.ts",
+        "lib/portable-runtime/operator.ts",
+        "lib/portable-runtime/telemetry.ts",
+        "lib/portable-runtime/public-configuration.ts",
+        "scripts/portable/operator-adapter.ts",
+        "components/technical-telemetry-panel.tsx"
       ],
       "routes": [
         "/technical-operations"
@@ -6654,10 +6716,13 @@
         "tests/portable-runtime.test.ts",
         "tests/postgresql-schema-contract.test.ts",
         "tests/postgresql-synthetic-qa.test.ts",
-        "tests/postgresql-test-partition.test.ts"
+        "tests/postgresql-test-partition.test.ts",
+        "tests/portable-operator-1b.test.ts",
+        "tests/portable-observability-1b.test.ts"
       ],
       "qaEvidence": [
-        "docs/evidence/PORTABLE_STAGING_FOUNDATION_1A_QA_CLEARANCE.md"
+        "docs/evidence/PORTABLE_STAGING_FOUNDATION_1A_QA_CLEARANCE.md",
+        "docs/evidence/PORTABLE_DEPLOYMENT_OBSERVABILITY_FOUNDATION_1B.md"
       ],
       "pullRequests": [
         {
@@ -6697,7 +6762,7 @@
         "Consolidate portable profiles and operator preflight/doctor/install/upgrade/rollback/restore/uninstall contracts; certify both CPU architectures and avoid provider forks."
       ],
       "missingAcceptanceCriteria": [
-        "Consolidate portable profiles and operator preflight/doctor/install/upgrade/rollback/restore/uninstall contracts; certify both CPU architectures and avoid provider forks."
+        "Portable operator source is admitted. Corrected supported OS and bundled Node zlib, exact amd64/arm64 image/provenance/index gates, and actual exact-scanned-image operator lifecycle remain unresolved."
       ],
       "recommendedAction": "Consolidate portable profiles and operator preflight/doctor/install/upgrade/rollback/restore/uninstall contracts; certify both CPU architectures and avoid provider forks.",
       "recommendedBundle": "PORTABLE-DEPLOYMENT-OBSERVABILITY-FOUNDATION-1B",
@@ -6712,19 +6777,20 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "2026-09-05: portable 1B source work is owner-started. Disposable exact-head CI exception is owner-authorized; operational activation remains prohibited. No requirement status is promoted by source-only evidence."
       ],
       "evidence": [
         {
           "path": "Dockerfile",
           "line": 6,
-          "sha256": "73a5dc136224fcccc5197e8f5e7b7bde655670f28fbc2394c7fdc3bb0b5b2d4d",
+          "sha256": "9cd619a5b6ebeba3c14d989a52f756e52dcc3abee252daebfaa19acfafb3c19d",
           "claim": "A canonical non-root OCI image, synthetic Compose/Caddy, PostgreSQL 17, Valkey, private S3, secret injection, migration/readiness/jobs and recovery foundations are released."
         },
         {
           "path": "deploy/portable/compose.yml",
           "line": 88,
-          "sha256": "6fdfa08c3932013d2a1fb99bff0acb844e92bde88b16d67f774337985a84beaf",
+          "sha256": "ad3cda45fc51ed8123ca9e9852b992821f7e77a3c8049fd844ea3845ff8eec0e",
           "claim": "A canonical non-root OCI image, synthetic Compose/Caddy, PostgreSQL 17, Valkey, private S3, secret injection, migration/readiness/jobs and recovery foundations are released."
         },
         {
@@ -6743,6 +6809,48 @@
           "path": "scripts/portable/runtime-command.ts",
           "line": 58,
           "sha256": "5501ce7f229df2b6d631a5abe88e4225c6298122259cc6028ab728a00975913f",
+          "claim": "A canonical non-root OCI image, synthetic Compose/Caddy, PostgreSQL 17, Valkey, private S3, secret injection, migration/readiness/jobs and recovery foundations are released."
+        },
+        {
+          "path": "lib/portable-runtime/operator.ts",
+          "line": 1,
+          "sha256": "a214fa227684ce27f24a6fae42dcb3bd2d6b12f832cfaf9f54af8276fbe942dd",
+          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
+        },
+        {
+          "path": "lib/portable-runtime/telemetry.ts",
+          "line": 1,
+          "sha256": "10291c91335ca73be1a94d15f5827f304326c61608334b57d3e1ed0a33ba2962",
+          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
+        },
+        {
+          "path": "lib/portable-runtime/public-configuration.ts",
+          "line": 1,
+          "sha256": "a827ebb46b82002ea61459048102bb75a3a96d6ac1dccdc9e202298e566cd0be",
+          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
+        },
+        {
+          "path": "scripts/portable/operator-adapter.ts",
+          "line": 1,
+          "sha256": "6e6826b8efff336261de58a7a57793db1dcfbbb437560c88045b87e73efa75ba",
+          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
+        },
+        {
+          "path": "components/technical-telemetry-panel.tsx",
+          "line": 1,
+          "sha256": "b99c481b4085ad80e32ce9595d3dcab9eb2f6a92d5601ecf50c5297ba2dd35d8",
+          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
+        },
+        {
+          "path": "Dockerfile",
+          "line": 6,
+          "sha256": "73a5dc136224fcccc5197e8f5e7b7bde655670f28fbc2394c7fdc3bb0b5b2d4d",
+          "claim": "A canonical non-root OCI image, synthetic Compose/Caddy, PostgreSQL 17, Valkey, private S3, secret injection, migration/readiness/jobs and recovery foundations are released."
+        },
+        {
+          "path": "deploy/portable/compose.yml",
+          "line": 88,
+          "sha256": "1639c04c9dae8f08f14863303a065433f5d4c545732bfe5a648725d06bb5b4f4",
           "claim": "A canonical non-root OCI image, synthetic Compose/Caddy, PostgreSQL 17, Valkey, private S3, secret injection, migration/readiness/jobs and recovery foundations are released."
         }
       ],
@@ -6786,7 +6894,7 @@
       "title": "Automatic, encrypted, versioned and restoration-tested backups",
       "sourceIntent": "Automatic, encrypted, versioned and restoration-tested backups.",
       "category": "backup",
-      "status": "COMPLETE",
+      "status": "PARTIAL",
       "confidence": "HIGH",
       "currentReleaseBoundary": "Encrypted versioned backup scheduling, verification, retention and restoration rehearsal exist; portable backup uses private S3-compatible storage and separate identities. Logical schema stays v45.",
       "sourceFiles": [
@@ -6797,7 +6905,8 @@
         "lib/backup.ts",
         "app/api/cloud-backup/artifacts/[id]/verify/route.ts",
         "app/api/cloud-backup/health/route.ts",
-        "app/api/cloud-backup/process-due/route.ts"
+        "app/api/cloud-backup/process-due/route.ts",
+        "scripts/portable/operator-recovery.ts"
       ],
       "routes": [
         "/cloud-backup",
@@ -6865,10 +6974,13 @@
         "tests/notification-backup-restore.test.ts",
         "tests/sms-email-backup-restore.test.ts",
         "tests/timetable-backup-restore.test.ts",
-        "tests/whatsapp-backup-restore.test.ts"
+        "tests/whatsapp-backup-restore.test.ts",
+        "tests/portable-operator-1b.test.ts",
+        "tests/portable-observability-1b.test.ts"
       ],
       "qaEvidence": [
-        "docs/PORTABLE_BACKUP_AND_RESTORE.md"
+        "docs/PORTABLE_BACKUP_AND_RESTORE.md",
+        "docs/evidence/PORTABLE_DEPLOYMENT_OBSERVABILITY_FOUNDATION_1B.md"
       ],
       "pullRequests": [
         {
@@ -6909,7 +7021,9 @@
         "NPS-REQ-003"
       ],
       "conflicts": [],
-      "missingAcceptanceCriteria": [],
+      "missingAcceptanceCriteria": [
+        "Historical released v45 backup clearance is retained in the immutable register. The integrated v48 contract requires nonempty v45/v46/v47/v48 adapters, SQLite/PostgreSQL restoration, collision/interruption rejection and exact-head operator acceptance before current COMPLETE status."
+      ],
       "recommendedAction": "Retain released lifecycle, permissions and recovery; operational activation remains separately gated.",
       "recommendedBundle": "MAINTAIN-RELEASED",
       "priority": "P1",
@@ -6923,7 +7037,9 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "2026-09-05: portable 1B source work is owner-started. Disposable exact-head CI exception is owner-authorized; operational activation remains prohibited. No requirement status is promoted by source-only evidence.",
+        "2026-09-09: evidence hash refreshed for shared source changed by the bounded prior-year feature; released snapshot is preserved in config/requirements-history/master-register-released-104aacc7.json. This does not mark the requirement complete."
       ],
       "evidence": [
         {
@@ -6954,6 +7070,18 @@
           "path": "lib/backup.ts",
           "line": 300,
           "sha256": "80b5ab5cb92ddaef237fc7d9aa67ad08bd72279a6f34d06437c4518fcbf71c7a",
+          "claim": "Encrypted versioned backup scheduling, verification, retention and restoration rehearsal exist; portable backup uses private S3-compatible storage and separate identities. Logical schema stays v45."
+        },
+        {
+          "path": "scripts/portable/operator-recovery.ts",
+          "line": 1,
+          "sha256": "f85f4048e522ea13bf9798efdcae0a55833958f9f1148dc9feb8de9b3cc71e94",
+          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
+        },
+        {
+          "path": "lib/backup.ts",
+          "line": 300,
+          "sha256": "54c47eba18a5a30427e988d73bf48a1aab714431cc3947f3f8cfb54ff5de7ec2",
           "claim": "Encrypted versioned backup scheduling, verification, retention and restoration rehearsal exist; portable backup uses private S3-compatible storage and separate identities. Logical schema stays v45."
         }
       ],
@@ -7671,7 +7799,8 @@
         "lib/release-operations-view.ts",
         "config/release-feature-flags.json",
         "app/api/release-operations/route.ts",
-        "app/release-operations/page.tsx"
+        "app/release-operations/page.tsx",
+        "lib/master-requirements.ts"
       ],
       "routes": [
         "/release-operations"
@@ -7692,10 +7821,13 @@
       "tests": [
         "tests/final-corrected-scope-acceptance.test.ts",
         "tests/release-operations-ui.test.ts",
-        "tests/release-operations.test.ts"
+        "tests/release-operations.test.ts",
+        "tests/portable-operator-1b.test.ts",
+        "tests/portable-observability-1b.test.ts"
       ],
       "qaEvidence": [
-        "docs/REQUIREMENTS_REGISTER.md"
+        "docs/REQUIREMENTS_REGISTER.md",
+        "docs/evidence/PORTABLE_DEPLOYMENT_OBSERVABILITY_FOUNDATION_1B.md"
       ],
       "pullRequests": [],
       "tags": [
@@ -7725,7 +7857,7 @@
         "Establish this exact 46-item versioned canonical register, provenance, dependency checks and future impact/changelog enforcement; retain historical ledgers as evidence."
       ],
       "missingAcceptanceCriteria": [
-        "Establish this exact 46-item versioned canonical register, provenance, dependency checks and future impact/changelog enforcement; retain historical ledgers as evidence."
+        "Recovery source heads, historical deltas and serial merge checkpoints are recorded. Independent integration review, final-head CI and mandatory acceptance remain required; no release or operational activation clearance."
       ],
       "recommendedAction": "Establish this exact 46-item versioned canonical register, provenance, dependency checks and future impact/changelog enforcement; retain historical ledgers as evidence.",
       "recommendedBundle": "MASTER-REQUIREMENTS-RECONCILIATION-1A",
@@ -7740,7 +7872,9 @@
       },
       "notes": [
         "Verdict describes the exact starting main; later reconciliation artifacts do not retroactively complete missing product features.",
-        "Historical ledgers retain their original scope and status vocabulary."
+        "Historical ledgers retain their original scope and status vocabulary.",
+        "2026-09-05: portable 1B source work is owner-started. Disposable exact-head CI exception is owner-authorized; operational activation remains prohibited. No requirement status is promoted by source-only evidence.",
+        "2026-09-09: evidence hash refreshed for shared source changed by the bounded prior-year feature; released snapshot is preserved in config/requirements-history/master-register-released-104aacc7.json. This does not mark the requirement complete."
       ],
       "evidence": [
         {
@@ -7759,6 +7893,18 @@
           "path": "config/release-feature-flags.json",
           "line": 6,
           "sha256": "0dd27692665991b1476b9bd12eda12ffa088e1c9363243081928ccb5158872df",
+          "claim": "Requirements/prompt ledgers, release manifests, feature gates, migration, security/QA and retained merge/tag history exist. The old ledger has different scope/counts."
+        },
+        {
+          "path": "lib/master-requirements.ts",
+          "line": 1,
+          "sha256": "95f9cf81b8bf6cb7b80564e2ca6bc737d53de444da6752f28ea56ff8d22f05e6",
+          "claim": "Bounded portable 1B source implementation; terminal release and provider certification are separate gates."
+        },
+        {
+          "path": "config/release-feature-flags.json",
+          "line": 6,
+          "sha256": "fbd3cf51786bfd32a0b466a88bbf258e5c1362376b87a58b6306a920c50ecdc7",
           "claim": "Requirements/prompt ledgers, release manifests, feature gates, migration, security/QA and retained merge/tag history exist. The old ledger has different scope/counts."
         }
       ],
