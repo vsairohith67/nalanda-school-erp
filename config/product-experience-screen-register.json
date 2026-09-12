@@ -6977,7 +6977,7 @@
       "primaryTask": "[id]",
       "risk": "LOW",
       "states": {
-        "empty": "SHARED_EMPTY_PATTERN_AVAILABLE",
+        "empty": "EXPLICIT_IN_SCREEN",
         "loading": "GLOBAL_SAFE_LOADING",
         "error": "GLOBAL_SAFE_RECOVERY"
       },
@@ -9176,6 +9176,41 @@
       },
       "permissionRequirements": [
         "RUN_PILOT_ACCEPTANCE"
+      ]
+    },
+    {
+      "route": "/prior-year-concessions",
+      "file": "app/prior-year-concessions/page.tsx",
+      "roles": [
+        "SUPER_ADMIN",
+        "DIRECTOR"
+      ],
+      "module": "prior year concessions",
+      "availability": {
+        "webDesktop": true,
+        "webMobile": "RESPONSIVE_WEB",
+        "windowsInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "androidInstalled": "SYSTEM_BROWSER_HANDOFF",
+        "iosInstalled": "SYSTEM_BROWSER_HANDOFF"
+      },
+      "requirement": "ONLINE_SERVER_AUTHORISED",
+      "primaryTask": "Previous-year outstanding",
+      "risk": "LOW",
+      "states": {
+        "empty": "SHARED_EMPTY_PATTERN_AVAILABLE",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "helpText": "PRESENT",
+      "accessibility": {
+        "status": "SHARED_WCAG_BASELINE_APPLIES",
+        "heading": "PRESENT",
+        "forms": "NOT_APPLICABLE",
+        "tables": "NOT_APPLICABLE",
+        "manualReviewRequired": false
+      },
+      "permissionRequirements": [
+        "VIEW_PRIOR_YEAR_CONCESSIONS"
       ]
     },
     {

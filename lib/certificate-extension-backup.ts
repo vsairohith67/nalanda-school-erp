@@ -16,6 +16,12 @@ export function validateCertificateExtensionBackup(root: Record<string, any>) {
   const templates = new Set((root.certificateTemplates ?? []).map((r: any) => r.id));
   const receipts = new Map((root.miscIncomeReceipts ?? []).map((r: any) => [r.id, r]));
   const seenRequests = new Set(), seenReceipts = new Set(), seenTokens = new Set(), seenVersions = new Set();
+  for (const certificate of root.studentCertificates ?? []) {
+    if (certificate.certificateType !== "GRADUATION" || !certificate.workflowKey) continue;
+    for (const version of root.studentCertificateVersions ?? []) {
+      if (version.certificateId === certificate.id && !result.certificateIssueArtifacts.some(artifact => artifact.versionId === version.id)) throw new Error("Required certificate artifact missing");
+    }
+  }
   for (const charge of result.certificateRequestCharges) {
     const request: any = requests.get(charge.requestId), receipt: any = receipts.get(charge.receiptId);
     if (!request || request.studentId !== charge.studentId || request.academicYear !== charge.academicYear || seenRequests.has(charge.requestId)) throw new Error("Certificate charge ownership invalid");

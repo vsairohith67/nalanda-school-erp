@@ -31,6 +31,7 @@ import { OFFLINE_SYNC_BACKUP_KEYS, restoreOfflineSyncBackup, type OfflineSyncBac
 import { NATIVE_APP_BACKUP_KEYS, restoreNativeAppBackup, type NativeAppBackupKey } from "@/lib/native-app/backup";
 import { BIOMETRIC_ATTENDANCE_BACKUP_KEYS, restoreBiometricAttendanceBackup, type BiometricAttendanceBackupKey } from "@/lib/biometric-attendance/backup";
 import { COMMUNICATION_BACKUP_KEYS, restoreCommunicationBackup, type CommunicationBackupKey } from "@/lib/communication-backup";
+import { PRIOR_YEAR_BACKUP_KEYS, restorePriorYearBackup, type PriorYearBackupKey } from "@/lib/prior-year-concession-backup";
 import { restoreRealUserAccessBackup } from "@/lib/real-user-access/restore";
 
 function hasValue(value: unknown) { return value !== null && value !== undefined && value !== ""; }
@@ -122,7 +123,12 @@ export async function restoreValidatedBackup(
   restoredBy: { id: string; name: string }
 ) {
   return prisma.$transaction(
-    (tx) => restoreIntoDatabase(tx, backup, restoredBy),
+    async (tx) => {
+      const result = await restoreIntoDatabase(tx, backup, restoredBy);
+      const failed = Object.entries(result).filter(([, value]) => value && typeof value === "object" && "errors" in value && Array.isArray(value.errors) && value.errors.length > 0).map(([key]) => key);
+      if (failed.length) throw new Error(`BACKUP_RESTORE_ATOMIC_FAILURE:${failed.join(",")}`);
+      return result;
+    },
     { maxWait: 5_000, timeout: 60_000 }
   );
 }
@@ -146,6 +152,7 @@ async function restoreIntoDatabase(
     ...(Object.fromEntries(NATIVE_APP_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<NativeAppBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(BIOMETRIC_ATTENDANCE_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<BiometricAttendanceBackupKey, ReturnType<typeof emptyEntityResult>>),
     ...(Object.fromEntries(COMMUNICATION_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<CommunicationBackupKey, ReturnType<typeof emptyEntityResult>>),
+    ...(Object.fromEntries(PRIOR_YEAR_BACKUP_KEYS.map((key) => [key, emptyEntityResult()])) as Record<PriorYearBackupKey, ReturnType<typeof emptyEntityResult>>),
     technicalOperations: emptyEntityResult(),
     schoolSettings: emptyEntityResult(),
     students: emptyEntityResult(),
@@ -670,6 +677,7 @@ async function restoreIntoDatabase(
     restoredBy: restoredBy.id
   });
   await restoreSubstituteAssignmentData(client, backup, backupUserToLocalUser, result);
+  await restorePriorYearBackup(client as unknown as PrismaClient, backup, result, { students: backupStudentLocalIds, payments: backupPaymentToLocalId });
 
   result.users.skipped += Math.max(0, backup.users.length - linkedParentUsers);
   if (backup.users.length) {
@@ -2390,6 +2398,33 @@ export async function restoreCertificateData(
   backupStudentLocalIds: Map<string, string>,
   result: Pick<RestoreResult, "certificateNumberSeries" | "certificateTemplates" | "studentCertificateRequests" | "studentCertificates" | "studentCertificateVersions" | "studentCertificateEvents" | "warnings">
 ) {
+  // Identity collisions must abort the surrounding transaction, including when
+  // an old source format legitimately has no extension artifact to cross-check.
+  const models = { certificateNumberSeries: "certificateNumberSeries", certificateTemplates: "certificateTemplate", studentCertificateRequests: "studentCertificateRequest", studentCertificates: "studentCertificate", studentCertificateVersions: "studentCertificateVersion", studentCertificateEvents: "studentCertificateEvent" } as const;
+  const uniqueFields = { certificateNumberSeries: "seriesCode", certificateTemplates: "templateCode", studentCertificateRequests: "requestNumber", studentCertificates: "certificateNumber" } as const;
+  const canonical = (value: any) => value instanceof Date ? value.toISOString() : value && typeof value === "object" && typeof value.toFixed === "function" ? value.toString() : value ?? null;
+  for (const [key, model] of Object.entries(models)) for (const source of backup[key as keyof typeof models]) {
+    const delegate = (client as any)[model];
+    const existing = await delegate.findUnique({ where: { id: requiredText(source.id, "Certificate restore identity") } });
+    const uniqueField = uniqueFields[key as keyof typeof uniqueFields];
+    if (uniqueField && source[uniqueField]) {
+      const collision = await delegate.findUnique({ where: { [uniqueField]: source[uniqueField] } });
+      if (collision && collision.id !== source.id) throw new Error("CERTIFICATE_RESTORE_IDENTITY_COLLISION");
+    }
+    if (source.studentId && !backupStudentLocalIds.has(String(source.studentId))) throw new Error("CERTIFICATE_RESTORE_STUDENT_MISSING");
+    if (!existing) continue;
+    for (const [field, raw] of Object.entries(source)) {
+      if (/^(?:createdByUserId|updatedByUserId|activatedByUserId|issuedByUserId|recordedByUserId|approvedByUserId|rejectedByUserId|cancelledByUserId|deliveredByUserId)$/.test(field)) continue;
+      let expected = field === "studentId" ? backupStudentLocalIds.get(String(raw)) : raw;
+      let actual = existing[field];
+      if (key === "certificateTemplates" && field === "printSettingsJson" && source.status === "DRAFT" && source.certificateType === "GRADUATION") {
+        const original = JSON.parse(String(expected ?? "{}")), restored = JSON.parse(String(actual ?? "{}"));
+        delete original.restoredNeedsPreparation; delete restored.restoredNeedsPreparation;
+        expected = JSON.stringify(original); actual = JSON.stringify(restored);
+      }
+      if (JSON.stringify(canonical(actual)) !== JSON.stringify(canonical(expected))) throw new Error(`CERTIFICATE_RESTORE_CONTENT_COLLISION:${key}:${field}`);
+    }
+  }
   const db = client as any, seriesMap=new Map<string,string>(),templateMap=new Map<string,string>(),requestMap=new Map<string,string>(),certificateMap=new Map<string,string>(),versionMap=new Map<string,string>();
   for(const[index,row]of backup.certificateNumberSeries.entries())try{const id=requiredText(row.id,"Certificate series ID"),seriesCode=requiredText(row.seriesCode,"Certificate series code");const[byId,byCode]=await Promise.all([db.certificateNumberSeries.findUnique({where:{id}}),db.certificateNumberSeries.findUnique({where:{seriesCode}})]);if((byId&&byId.seriesCode!==seriesCode)||(byCode&&byCode.id!==id)){result.certificateNumberSeries.skipped++;result.warnings.push(`Certificate series ${seriesCode} collided with a different local identity and was isolated.`);continue;}if(byId){seriesMap.set(id,id);result.certificateNumberSeries.skipped++;continue;}await db.certificateNumberSeries.create({data:{id,seriesCode,certificateType:requiredText(row.certificateType,"Certificate series type"),academicYear:nullableText(row.academicYear),prefix:String(row.prefix??""),nextNumber:positiveInteger(row.nextNumber,"Certificate next number"),paddingLength:positiveInteger(row.paddingLength,"Certificate padding"),suffix:nullableText(row.suffix),resetPolicy:requiredText(row.resetPolicy,"Certificate reset policy"),status:requiredText(row.status,"Certificate series status"),isDefault:Boolean(row.isDefault),createdByUserId:null,...createdAtData(row,index,"certificateNumberSeries")}});seriesMap.set(id,id);result.certificateNumberSeries.created++;}catch(error){result.certificateNumberSeries.errors.push(rowError("Certificate series",index,error));}
   for(const[index,row]of backup.certificateTemplates.entries())try{const id=requiredText(row.id,"Certificate template ID"),templateCode=requiredText(row.templateCode,"Certificate template code");const[byId,byCode]=await Promise.all([db.certificateTemplate.findUnique({where:{id}}),db.certificateTemplate.findUnique({where:{templateCode}})]);if((byId&&byId.templateCode!==templateCode)||(byCode&&byCode.id!==id)){result.certificateTemplates.skipped++;result.warnings.push(`Certificate template ${templateCode} collided with a different local identity and was isolated.`);continue;}if(byId){templateMap.set(id,id);result.certificateTemplates.skipped++;continue;}await db.certificateTemplate.create({data:{id,templateCode,certificateType:requiredText(row.certificateType,"Certificate template type"),name:requiredText(row.name,"Certificate template name"),academicYear:nullableText(row.academicYear),status:requiredText(row.status,"Certificate template status"),versionNumber:positiveInteger(row.versionNumber,"Certificate template version"),templateDefinitionJson:requiredText(row.templateDefinitionJson,"Certificate template JSON"),printSettingsJson:row.certificateType === "GRADUATION" && row.status === "DRAFT" ? JSON.stringify({...JSON.parse(String(row.printSettingsJson ?? "{}")), restoredNeedsPreparation:true}) : nullableText(row.printSettingsJson),createdByUserId:null,activatedByUserId:null,...createdAtData(row,index,"certificateTemplates")}});templateMap.set(id,id);result.certificateTemplates.created++;}catch(error){result.certificateTemplates.errors.push(rowError("Certificate template",index,error));}

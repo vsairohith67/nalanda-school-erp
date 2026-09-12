@@ -8,6 +8,7 @@ datasource db {
 }
 
 model Student {
+  priorYearLiabilities PriorYearLiability[]
   id                       String                                  @id @default(cuid())
   iamPublicKey             String?                                 @unique
   academicYear             String                                  @default("2026-27")
@@ -89,6 +90,7 @@ model FeeStructure {
 }
 
 model Payment {
+  priorYearAttribution PriorYearPaymentAttribution?
   id                 String                      @id @default(cuid())
   date               DateTime
   receiptNo          String
@@ -2080,6 +2082,7 @@ model MiscIncomeRate {
 }
 
 model MiscIncomeReceipt {
+  studentSnapshot StudentItemReceiptSnapshot?
   id                   String                  @id @default(cuid())
   receiptNumber        String                  @unique
   receiptDate          DateTime
@@ -10008,4 +10011,120 @@ model CertificateIssueArtifact {
   expiresAt DateTime
   createdAt DateTime @default(now())
   @@index([certificateId])
+}
+
+model PriorYearLiability {
+  id                   String                        @id @default(cuid())
+  studentId            String
+  operatingYear        String
+  sourceYear           String
+  sourceEnrollmentId   String
+  openingAmount        Decimal
+  existingCredits      Decimal                       @default(0)
+  sourceReferencesJson String
+  provenance           String
+  preparerId           String
+  verifierId           String?
+  verifiedAt           DateTime?
+  status               String                        @default("SOURCE_YEAR_UNVERIFIED")
+  version              Int                           @default(1)
+  createdAt            DateTime                      @default(now())
+  student              Student                       @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  cases                PriorYearConcessionCase[]
+  paymentLinks         PriorYearPaymentAttribution[]
+  events               PriorYearConcessionEvent[]
+
+  @@unique([studentId, sourceYear])
+}
+
+model PriorYearPaymentAttribution {
+  id           String              @id @default(cuid())
+  liabilityId  String?
+  paymentId    String              @unique
+  sourceYear   String
+  recordedById String
+  reviewedById String
+  provenance   String
+  createdAt    DateTime            @default(now())
+  liability    PriorYearLiability? @relation(fields: [liabilityId], references: [id], onDelete: Restrict)
+  payment      Payment             @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+}
+
+model PriorYearConcessionCase {
+  id                 String                     @id @default(cuid())
+  liabilityId        String
+  status             String                     @default("DRAFT")
+  kind               String
+  requestedAmount    Decimal
+  approvedAmount     Decimal?
+  reason             String
+  scopeJson          String
+  preparerId         String
+  reviewerId         String?
+  approverId         String?
+  applicantReference String
+  validFrom          DateTime
+  validTo            DateTime
+  balanceHash        String?
+  balanceVersion     Int?
+  appliedBalanceHash String?
+  appliedVersion     Int?
+  version            Int                        @default(1)
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+  liability          PriorYearLiability         @relation(fields: [liabilityId], references: [id], onDelete: Restrict)
+  events             PriorYearConcessionEvent[]
+  income             PriorYearIncomeSupport?
+
+  @@index([status, createdAt])
+}
+
+model PriorYearIncomeSupport {
+  id                  String                  @id @default(cuid())
+  caseId              String                  @unique
+  status              String
+  bandId              String?
+  exactAmountEnvelope String?
+  expiresAt           DateTime?
+  recordedById        String
+  updatedAt           DateTime                @updatedAt
+  case                PriorYearConcessionCase @relation(fields: [caseId], references: [id], onDelete: Restrict)
+}
+
+model PriorYearConcessionEvent {
+  id              String                   @id @default(cuid())
+  liabilityId     String
+  caseId          String?
+  eventType       String
+  referenceId     String?
+  actorId         String
+  previousState   String?
+  newState        String?
+  amount          Decimal                  @default(0)
+  reason          String
+  balanceHash     String?
+  balanceVersion  Int?
+  requestKey      String                   @unique
+  requestHash     String
+  reversesEventId String?                  @unique
+  createdAt       DateTime                 @default(now())
+  liability       PriorYearLiability       @relation(fields: [liabilityId], references: [id], onDelete: Restrict)
+  case            PriorYearConcessionCase? @relation(fields: [caseId], references: [id], onDelete: Restrict)
+
+  @@index([liabilityId, createdAt])
+  @@index([caseId, createdAt])
+}
+
+model StudentItemReceiptSnapshot {
+  id           String            @id @default(cuid())
+  receiptId    String            @unique
+  studentId    String
+  academicYear String
+  admissionNo  String
+  studentName  String
+  className    String
+  section      String?
+  linesJson    String
+  createdAt    DateTime          @default(now())
+  receipt      MiscIncomeReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict)
 }

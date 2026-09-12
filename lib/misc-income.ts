@@ -1,6 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { csvCell, localDate, moneyDecimal } from "@/lib/expenses";
+import { isOperationalReleaseFeatureEnabled, STUDENT_LINKED_ITEMS_FEATURE } from "@/lib/release-feature-flag-runtime";
+
+export const STUDENT_ITEM_MAX_QUANTITY = 10_000;
+export const STUDENT_ITEM_MAX_RECEIPT_AMOUNT = new Prisma.Decimal(10).pow(10).sub("0.01").toFixed(2);
+export const DESIGNATED_STUDENT_ITEM_CODES = new Set(["BELT", "TIE"]);
+
+export function studentItemReceiptIdentity(row: { studentSnapshot?: { admissionNo: string; studentName: string; className: string; section: string | null } | null; student?: unknown }) {
+  return row.studentSnapshot ?? row.student ?? null;
+}
 
 export const MISC_ITEM_CATEGORIES = ["UNIFORM_ACCESSORY", "CERTIFICATE", "STUDENT_DOCUMENT", "ACADEMIC_SERVICE", "LIBRARY_CHARGE", "OTHER"] as const;
 export const STUDENT_LINK_POLICIES = ["REQUIRED", "OPTIONAL", "NOT_REQUIRED"] as const;
@@ -110,6 +119,14 @@ export async function validateMiscReceiptInput(client: PrismaClient | Prisma.Tra
   if (items.length !== itemIds.length) throw new Error("Every selected income item must be active");
   const itemMap = new Map(items.map((item) => [item.id, item]));
   if (items.some((item) => item.itemCode === "GRADUATION" && (item.studentLinkPolicy !== "REQUIRED" || item.category !== "CERTIFICATE"))) throw new Error("Graduation item configuration requires correction.");
+
+  const studentItemsEnabled = isOperationalReleaseFeatureEnabled(STUDENT_LINKED_ITEMS_FEATURE);
+  const designated = studentItemsEnabled && items.some((item) => DESIGNATED_STUDENT_ITEM_CODES.has(item.itemCode));
+  if (designated && !studentId) throw new Error("An exact Student is required for designated Student items");
+  if (designated && studentId) {
+    const eligibleStudent = await client.student.findFirst({ where: { id: studentId, deletedAt: null, status: "Active", academicYearEnrollments: { some: { academicYear, status: "ACTIVE" } } }, select: { id: true } });
+    if (!eligibleStudent) throw new Error("Student is not eligible in the selected academic year");
+  }
   if (items.some((item) => item.studentLinkPolicy === "REQUIRED") && !studentId) throw new Error("A student is required for one or more selected items");
   if (items.some((item) => item.studentLinkPolicy === "NOT_REQUIRED") && studentId) throw new Error("An item configured as not requiring a student cannot be issued on a student-linked receipt");
   if (studentId && !(await client.student.findFirst({ where: { id: studentId, deletedAt: null }, select: { id: true } }))) throw new Error("Selected student was not found");
@@ -118,7 +135,7 @@ export async function validateMiscReceiptInput(client: PrismaClient | Prisma.Tra
   const lines = row.lines.map((rawLine, index) => {
     if (!rawLine || typeof rawLine !== "object" || Array.isArray(rawLine)) throw new Error(`Line ${index + 1} is invalid`);
     const line = rawLine as Record<string, unknown>; const itemId = text(line.itemId, "Item", 80)!; const item = itemMap.get(itemId)!;
-    const quantity = Number(line.quantity); if (!Number.isInteger(quantity) || quantity <= 0 || quantity > 10000) throw new Error(`Line ${index + 1} quantity must be a positive whole number`);
+    const quantity = Number(line.quantity); if (!Number.isInteger(quantity) || quantity <= 0 || quantity > STUDENT_ITEM_MAX_QUANTITY || (studentItemsEnabled && !(typeof line.quantity === "number" || (typeof line.quantity === "string" && /^\d+$/.test(line.quantity))))) throw new Error(`Line ${index + 1} quantity must be a positive whole number`);
     const availableRates = item.rates.filter((rate) => rate.academicYear === academicYear && (!rate.effectiveFrom || rate.effectiveFrom <= receiptDate) && (!rate.effectiveTo || rate.effectiveTo >= receiptDate));
     if (availableRates.length !== 1) throw new Error(`Line ${index + 1} must resolve to exactly one active academic-year rate`);
     const rate = availableRates[0];
@@ -131,6 +148,7 @@ export async function validateMiscReceiptInput(client: PrismaClient | Prisma.Tra
     const unitAmount = rate.amount; const gross = unitAmount.mul(quantity); const discount = moneyDecimal(line.discountAmount ?? 0, `Line ${index + 1} discount`);
     if (discount.gt(gross)) throw new Error(`Line ${index + 1} discount cannot exceed its gross amount`);
     grossAmount = grossAmount.add(gross); discountAmount = discountAmount.add(discount);
+    if (studentItemsEnabled && (!unitAmount.isFinite() || unitAmount.lt(0) || unitAmount.decimalPlaces() > 2 || grossAmount.gt(STUDENT_ITEM_MAX_RECEIPT_AMOUNT))) throw new Error("Student item receipt exceeds the exact monetary safety bound");
     return { itemId, itemNameSnapshot: item.name, rateId: rate.id, quantity, unitAmount, discountAmount: discount, lineTotal: gross.sub(discount), notes: text(line.notes, `Line ${index + 1} notes`, 500, false) };
   });
   const netAmount = grossAmount.sub(discountAmount); if (netAmount.lte(0)) throw new Error("Receipt net amount must be greater than zero");
@@ -143,7 +161,14 @@ export async function createMiscReceipt(client: PrismaClient, input: unknown, ac
 
 export async function createMiscReceiptInTransaction(tx: Prisma.TransactionClient, input: unknown, actorId: string, options: MiscReceiptValidationOptions = {}) {
   const data = await validateMiscReceiptInput(tx, input, options);
-  return tx.miscIncomeReceipt.create({ data: { ...data, lines: { create: data.lines }, receiptNumber: newMiscReceiptNumber(data.receiptDate), createdByUserId: actorId }, include: miscReceiptInclude });
+  const receipt = await tx.miscIncomeReceipt.create({ data: { ...data, lines: { create: data.lines }, receiptNumber: newMiscReceiptNumber(data.receiptDate), createdByUserId: actorId }, include: miscReceiptInclude });
+  if (isOperationalReleaseFeatureEnabled(STUDENT_LINKED_ITEMS_FEATURE) && data.studentId) {
+    const student = await tx.student.findUniqueOrThrow({ where: { id: data.studentId } });
+    const enrollment = await tx.academicYearEnrollment.findUnique({ where: { studentId_academicYear: { studentId: data.studentId, academicYear: data.academicYear } } });
+    await tx.studentItemReceiptSnapshot.create({ data: { receiptId: receipt.id, studentId: student.id, academicYear: data.academicYear, admissionNo: student.admissionNo, studentName: student.studentName, className: enrollment?.className ?? student.className, section: enrollment?.section ?? student.section, linesJson: JSON.stringify(data.lines.map((line) => ({ itemId: line.itemId, itemName: line.itemNameSnapshot, rateId: line.rateId, quantity: line.quantity, unitAmount: line.unitAmount.toFixed(2), amount: line.lineTotal.toFixed(2) }))) } });
+    return tx.miscIncomeReceipt.findUniqueOrThrow({ where: { id: receipt.id }, include: miscReceiptInclude });
+  }
+  return receipt;
 }
 
 export async function cancelMiscReceipt(client: PrismaClient, id: string, reason: unknown, actorId: string) {
@@ -157,10 +182,10 @@ export async function cancelMiscReceipt(client: PrismaClient, id: string, reason
   });
 }
 
-export const miscReceiptInclude = { student: { select: { admissionNo: true, studentName: true, className: true, section: true } }, lines: { include: { item: { select: { itemCode: true, category: true, studentLinkPolicy: true } } }, orderBy: { createdAt: "asc" as const } }, createdBy: { select: { name: true } }, cancelledBy: { select: { name: true } } };
+export const miscReceiptInclude = { studentSnapshot: true, student: { select: { admissionNo: true, studentName: true, className: true, section: true } }, lines: { include: { item: { select: { itemCode: true, category: true, studentLinkPolicy: true } } }, orderBy: { createdAt: "asc" as const } }, createdBy: { select: { name: true } }, cancelledBy: { select: { name: true } } };
 
 export function serializeMiscReceipt(row: any, sensitive = true) {
-  const result: Record<string, unknown> = { id: row.id, receiptNumber: row.receiptNumber, receiptDate: row.receiptDate, academicYear: row.academicYear, student: row.student, payerName: row.payerName, paymentMethod: row.paymentMethod, receivedAccount: publicAccountLabel(row.receivedAccount), grossAmount: row.grossAmount.toString(), discountAmount: row.discountAmount.toString(), netAmount: row.netAmount.toString(), status: row.status, cancelledAt: row.cancelledAt, createdAt: row.createdAt, lines: row.lines.map((line: any) => ({ id: line.id, itemCode: line.item?.itemCode, itemName: line.itemNameSnapshot, category: line.item?.category, quantity: line.quantity, unitAmount: line.unitAmount.toString(), discountAmount: line.discountAmount.toString(), lineTotal: line.lineTotal.toString(), notes: line.notes })) };
+  const result: Record<string, unknown> = { id: row.id, receiptNumber: row.receiptNumber, receiptDate: row.receiptDate, academicYear: row.academicYear, student: studentItemReceiptIdentity(row), historicalLinkage: row.studentSnapshot ? "FROZEN" : "HISTORICAL_LINKAGE_UNVERIFIED", payerName: row.payerName, paymentMethod: row.paymentMethod, receivedAccount: publicAccountLabel(row.receivedAccount), grossAmount: row.grossAmount.toString(), discountAmount: row.discountAmount.toString(), netAmount: row.netAmount.toString(), status: row.status, cancelledAt: row.cancelledAt, createdAt: row.createdAt, lines: row.lines.map((line: any) => ({ id: line.id, itemCode: line.item?.itemCode, itemName: line.itemNameSnapshot, category: line.item?.category, quantity: line.quantity, unitAmount: line.unitAmount.toString(), discountAmount: line.discountAmount.toString(), lineTotal: line.lineTotal.toString(), notes: line.notes })) };
   if (sensitive) Object.assign(result, { transactionReference: row.transactionReference, chequeNumber: row.chequeNumber, chequeDate: row.chequeDate, remarks: row.remarks, cancellationReason: row.cancellationReason, createdBy: row.createdBy?.name ?? null, cancelledBy: row.cancelledBy?.name ?? null });
   return result;
 }
@@ -200,5 +225,5 @@ export function miscIncomeReport(rows: any[]) {
 
 export function miscIncomeCsv(rows: any[]) {
   const headers = ["Receipt Number", "Date", "Status", "Student", "Admission Number", "Payer", "Payment Method", "Received Account", "Items", "Gross", "Discount", "Net"];
-  return [headers, ...rows.map((row) => [row.receiptNumber, row.receiptDate.toISOString().slice(0, 10), row.status, row.student?.studentName ?? "", row.student?.admissionNo ?? "", row.payerName ?? "", row.paymentMethod, publicAccountLabel(row.receivedAccount) ?? "", row.lines.map((line: any) => line.itemNameSnapshot).join("; "), row.grossAmount.toFixed(2), row.discountAmount.toFixed(2), row.netAmount.toFixed(2)])].map((line) => line.map(csvCell).join(",")).join("\r\n") + "\r\n";
+  return [headers, ...rows.map((row) => [row.receiptNumber, row.receiptDate.toISOString().slice(0, 10), row.status, (studentItemReceiptIdentity(row) as any)?.studentName ?? "", (studentItemReceiptIdentity(row) as any)?.admissionNo ?? "", row.payerName ?? "", row.paymentMethod, publicAccountLabel(row.receivedAccount) ?? "", row.lines.map((line: any) => line.itemNameSnapshot).join("; "), row.grossAmount.toFixed(2), row.discountAmount.toFixed(2), row.netAmount.toFixed(2)])].map((line) => line.map(csvCell).join(",")).join("\r\n") + "\r\n";
 }
