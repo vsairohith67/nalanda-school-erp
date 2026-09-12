@@ -68,7 +68,7 @@ jobs:
           echo "CLOUD_BACKUP_TEMP_DIR=$GITHUB_WORKSPACE/tmp/release-ci/temp" >> "$GITHUB_ENV"
           echo "CLOUD_BACKUP_REHEARSAL_DIR=$GITHUB_WORKSPACE/tmp/release-ci/rehearsal" >> "$GITHUB_ENV"
       - name: Prepare task records under the isolation assertion
-        run: pnpm exec tsx scripts/bulk-data-exchange-e2e.ts prepare
+        run: pnpm exec tsx scripts/qa-ux-bulk-data-exchange-e2e.ts prepare
       - name: Production build with operational flags OFF
         run: pnpm build
       - name: Internal HTTP acceptance and verified teardown
@@ -101,12 +101,12 @@ jobs:
           NODE_ENV=production node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 47832 >tmp/release-ci/http-off.log 2>&1 &
           server_pid=$!
           ready
-          NODE_ENV=production pnpm exec tsx scripts/bulk-data-exchange-e2e.ts off
+          NODE_ENV=production pnpm exec tsx scripts/qa-ux-bulk-data-exchange-e2e.ts off
           stop_owned_server
           NODE_ENV=development RELEASE_FEATURE_FLAGS_QA_MODE=SYNTHETIC_COPY_ONLY RELEASE_FEATURE_FLAGS_QA_ENABLED=real-data-imports,bulk-exports node node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port 47832 >tmp/release-ci/http-on.log 2>&1 &
           server_pid=$!
           ready
-          NODE_ENV=development pnpm exec tsx scripts/bulk-data-exchange-e2e.ts on
+          NODE_ENV=development pnpm exec tsx scripts/qa-ux-bulk-data-exchange-e2e.ts on
           stop_owned_server
           echo '{"listenerClosed":true,"syntheticOnly":true}' >tmp/release-ci/bulk-teardown-result.json
       - name: Always verify fixture teardown
