@@ -21,6 +21,16 @@ export function validateCertificateBackupRows(root: Record<string, unknown>, con
   unique(studentCertificateEvents.map((r,i)=>required(r,"id",`studentCertificateEvents[${i}]`)),"Certificate event IDs");studentCertificateEvents.forEach((r,i)=>{if(r.requestId&&!requestIds.has(String(r.requestId))||r.certificateId&&!certificateIds.has(String(r.certificateId))||r.versionId&&!versionIds.has(String(r.versionId)))throw new Error(`studentCertificateEvents[${i}] has an invalid link`);});
   const byCertificate=new Map(studentCertificates.map(row=>[String(row.id),row])), byVersion=new Map(studentCertificateVersions.map(row=>[String(row.id),row]));
   const sameOwner=(left:Row,right:Row)=>["studentId","academicYear","certificateType"].every(key=>left[key]===right[key]);
+  const guardianEdges = Array.isArray(root.studentGuardians) ? root.studentGuardians as Row[] : [];
+  for (const request of studentCertificateRequests) {
+    if (request.applicantGuardianId && !guardianEdges.some(edge => edge.studentId === request.studentId && edge.guardianId === request.applicantGuardianId)) {
+      throw new Error("CERTIFICATE_REQUEST_GUARDIAN_OWNERSHIP_INVALID");
+    }
+  }
+  const byRequest = new Map(studentCertificateRequests.map(row => [String(row.id), row]));
+  for (const certificate of studentCertificates) {
+    if (certificate.requestId && !sameOwner(certificate, byRequest.get(String(certificate.requestId))!)) throw new Error("CERTIFICATE_REQUEST_OWNERSHIP_INVALID");
+  }
   const checkGraph=(records:Row[],edge:string,index:Map<string,Row>,owner:(row:Row)=>Row|undefined)=>{
     const done=new Set<string>();
     for(const row of records){if(!row[edge])continue;const previous=index.get(String(row[edge]));const currentOwner=owner(row),previousOwner=previous&&owner(previous);if(!previous||!currentOwner||!previousOwner||!sameOwner(currentOwner,previousOwner))throw new Error("CERTIFICATE_SUPERSESSION_OWNERSHIP_INVALID");}

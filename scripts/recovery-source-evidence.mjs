@@ -22,7 +22,7 @@ const blob=(head,path)=>{
  }
  return sourceCaches.get(head).get(path)??null;
 };
-const protectedPath = p => /^(app|components|prisma|deploy|lib|scripts|\.github\/workflows)\//.test(p) || ['config/release-feature-flags.json','Dockerfile','package.json','pnpm-lock.yaml','pnpm-workspace.yaml','middleware.ts','next.config.ts'].includes(p);
+const protectedPath = p => /^(app|components|prisma|deploy|lib|scripts|\.github\/workflows)\//.test(p) || ['config/release-feature-flags.json','Dockerfile','package.json','pnpm-lock.yaml','pnpm-workspace.yaml','middleware.ts','next.config.ts','vitest.config.ts'].includes(p);
 const files = [...new Set(git('ls-files','--cached','--others','--exclude-standard').trim().split(/\r?\n/))].filter(protectedPath).sort();
 if (process.argv[2] === '--write') {
   const historical = JSON.parse(readFileSync('config/master-requirements-audit-evidence.json','utf8'));

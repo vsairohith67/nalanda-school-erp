@@ -1831,7 +1831,7 @@
           "sha256": "d3d30e2667b8cd32f772291dbf51d3cf3858f9c4a93a8944c50dfc379d2abc3a"
         }
       ],
-      "currentSha256": "8ad3185916f15f7fb5352cadd031180a1651bd03cd25b5b69bb89108c825e748",
+      "currentSha256": "f8318509b8d03d5aa6c897e503b68049e6a8edbede1017809f8ba236d470fbbe",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -2881,7 +2881,7 @@
           "sha256": "5eb6ecec56e2eb927592887999b0f723ffdac69bde49f53c49a5046548673d11"
         }
       ],
-      "currentSha256": "172fd041b13ebca879a92a9cf938a2f0fd02a7e5f351b6110ccf857dd387f86a",
+      "currentSha256": "bf9bc2631b988f4d9720fb9b8a6e790bcfc6c61f83a7fc591355ffb03895039b",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -3482,6 +3482,31 @@
         }
       ],
       "currentSha256": "42095db44c3126b0ab88c647b748fbe58cec92be9f144e6b77302bec48daf632",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/local-staging-rehearsal.ps1",
+      "baseSha256": "cbe0c66cf9864cdb62c409b24defae086ab9d80ec22edd5858f7d9bd737599d0",
+      "historicalSha256": "cbe0c66cf9864cdb62c409b24defae086ab9d80ec22edd5858f7d9bd737599d0",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "cbe0c66cf9864cdb62c409b24defae086ab9d80ec22edd5858f7d9bd737599d0"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "cbe0c66cf9864cdb62c409b24defae086ab9d80ec22edd5858f7d9bd737599d0"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "cbe0c66cf9864cdb62c409b24defae086ab9d80ec22edd5858f7d9bd737599d0"
+        },
+        {
+          "head": "1abdb0e46173ab5cd4fab6eda0b1ec0f79c8378c",
+          "sha256": "cbe0c66cf9864cdb62c409b24defae086ab9d80ec22edd5858f7d9bd737599d0"
+        }
+      ],
+      "currentSha256": "23d47c680a37b26e155ded7499de49d1d047496166f74da720ec7b389bb02556",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4231,7 +4256,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "624a73ebd7dab1b6d36b7a82f4b9b416d2ad9ef744e04c6177716f1ce9f752ae",
+      "currentSha256": "068f8ab55a05c9f1088ee5abfeadcb1e7e65863b87843f316b2c9c561d2dfd52",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4282,6 +4307,31 @@
         }
       ],
       "currentSha256": "06c620d8c75b01e93d9bb65f2110ce1fc31d2df66f9cc7204fc385b0eda24499",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "vitest.config.ts",
+      "baseSha256": "ccaf918de08649928f363662ef097c69415957445efa159c0d8b0b8e77d16c6d",
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "ccaf918de08649928f363662ef097c69415957445efa159c0d8b0b8e77d16c6d"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "ccaf918de08649928f363662ef097c69415957445efa159c0d8b0b8e77d16c6d"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "ccaf918de08649928f363662ef097c69415957445efa159c0d8b0b8e77d16c6d"
+        },
+        {
+          "head": "1abdb0e46173ab5cd4fab6eda0b1ec0f79c8378c",
+          "sha256": "ccaf918de08649928f363662ef097c69415957445efa159c0d8b0b8e77d16c6d"
+        }
+      ],
+      "currentSha256": "6b5e21cc2cacb1d51f37aaa13f0dde9d20ffb71807a607545128c2dde578b6d9",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     }
   ]

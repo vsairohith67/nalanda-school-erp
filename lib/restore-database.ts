@@ -632,6 +632,14 @@ async function restoreIntoDatabase(
   result.technicalOperations = { ...technicalOperationsResult, warnings: [] };
   await restoreAcademicCalendarData(client, backup, restoredBy, result);
   await restoreCertificateData(client, backup, backupStudentLocalIds, result);
+  // Older contracts have no extension artifacts to detect a skipped history row.
+  // Missing required history must abort this transaction; same-ID repeats are valid.
+  const certificateModels = { certificateNumberSeries: "certificateNumberSeries", certificateTemplates: "certificateTemplate", studentCertificateRequests: "studentCertificateRequest", studentCertificates: "studentCertificate", studentCertificateVersions: "studentCertificateVersion", studentCertificateEvents: "studentCertificateEvent" } as const;
+  for (const [collection, model] of Object.entries(certificateModels)) {
+    for (const row of backup[collection as keyof typeof certificateModels]) {
+      if (!await (client as any)[model].findUnique({ where: { id: String(row.id) } })) throw new Error(`CERTIFICATE_RESTORE_INCOMPLETE:${collection}`);
+    }
+  }
   await restoreCertificateExtensions(client, backup, backupStudentLocalIds, result);
   await restoreClassXPackageData(client, backup, backupStudentLocalIds, result);
   await restoreIdentityCardData(client, backup, backupStudentLocalIds, result);
@@ -2412,6 +2420,10 @@ export async function restoreCertificateData(
       if (collision && collision.id !== source.id) throw new Error("CERTIFICATE_RESTORE_IDENTITY_COLLISION");
     }
     if (source.studentId && !backupStudentLocalIds.has(String(source.studentId))) throw new Error("CERTIFICATE_RESTORE_STUDENT_MISSING");
+    if (key === "studentCertificateVersions") {
+      const collision = await delegate.findUnique({ where: { certificateId_versionNumber: { certificateId: source.certificateId, versionNumber: source.versionNumber } } });
+      if (collision && collision.id !== source.id) throw new Error("CERTIFICATE_RESTORE_IDENTITY_COLLISION");
+    }
     if (!existing) continue;
     for (const [field, raw] of Object.entries(source)) {
       if (/^(?:createdByUserId|updatedByUserId|activatedByUserId|issuedByUserId|recordedByUserId|approvedByUserId|rejectedByUserId|cancelledByUserId|deliveredByUserId)$/.test(field)) continue;

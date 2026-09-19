@@ -26,7 +26,7 @@ probes; `283718f` retained acceptance evidence. Student page delta is line endin
 only. These changes are within requested acceptance scope. PR27 has uncommitted
 package.json and pnpm-lock.yaml changes in its own worktree: not read, copied or
 admitted. That outstanding divergence must be rechecked before any release.
-PR26 iOS job 103564368076 in run 34697869406 completed SUCCESS at
+PR26 iOS iOS simulator build and shared UI gate in run 34697869406 completed SUCCESS at
 2026-09-12T14:27:01Z; the earlier pending snapshot is superseded. This is source
 branch simulator evidence, not integrated or physical-device acceptance.
 
@@ -124,7 +124,7 @@ Independent review found and addressed download enforcement, misleading Student 
 
 Runtime hold is explicit and reviewed: oci-image and synthetic-http have job-level false conditions, with a source comment naming EXTERNAL_RUNTIME_BLOCKED. Dependent index/Compose/full-stack jobs remain skipped. Removing the hold requires a reviewed fixed candidate and mandatory scans; it is not a waiver or green acceptance. No automatic rebuild is useful while upstream zlib remains unresolved. The operator v48 protocol has been reconciled, but its harness still rebuilds rather than consuming the exact scanned architecture artifact and has not proved the entire public CLI lifecycle. These remain named acceptance gaps.
 
-Previously pending PR26 iOS job is now terminal SUCCESS: run 34697869406 / job 103564368076, completed 2026-09-12T14:27:01Z. That is historical PR26 simulator evidence, not integrated-candidate or physical-device acceptance.
+Previously pending PR26 iOS job is now terminal SUCCESS: run 34697869406 / iOS simulator build and shared UI gate, completed 2026-09-12T14:27:01Z. That is historical PR26 simulator evidence, not integrated-candidate or physical-device acceptance.
 
 Full regression, final TypeScript/build, hosted platform/PG results, protected DB final readback and tracker updates remain pending at this checkpoint. No main merge, release tag, deployment, real records, providers, messages, actual payments or operational activation.
 
@@ -145,3 +145,14 @@ Runtime recheck: EXTERNAL_RUNTIME_BLOCKED, now UPSTREAM_FIX_AVAILABLE_VENDOR_AND
 Operational DB read-only hash and size on September19 still match the specified 65F47EFA37DA321023439303770645F8D656F2BE58458C1A03B341408EF9A6FA / 8,409,088-byte baseline. Final metadata/sidecar readback and tracker reconciliation remain required. No main merge/tag or activation.
 
 PR27 refreshed-head admission decisions: preserve integrated Next15.5.25 and Vitest4.1.11 lock graph; add its matching pnpm11.21.0 manifest pin. Admit native-pnpm/Corepack resolution and fresh Android accessibility waiting, with focused scanner/runtime tests. Keep nonnumeric example contacts and reconcile explanatory wording. Preserve the integrated 67-route inventory, conditional Student-only flag, certificate/concession register coverage and default-OFF runtime holds. Retain PR27's new source inventory as historical evidence bound to 1abdb0e, separately tested against that committed head. Its new evidence is not integration clearance. E2E rename retains per-run random credentials. Focused merged delta: 4 actual files/30 tests PASS; frozen install across all four workspaces PASS; native Sharp image/PDF probe PASS. The earlier resumed restore run passed v45-v47 but v48 was interrupted by this owner's concurrent package merge markers; that run is invalid for final v48 proof and will be rerun on stable source. No runtime/application defect is inferred from that harness interruption.
+
+
+## Reviewed recovery safeguards - 19 September 2026
+
+Stable checkpoint 5d39f23 passed the full local regression: 2,451 tests, zero failures, three existing governed skips. Hosted SQLite/PostgreSQL financial and genuine v45-v48 restore matrices, PostgreSQL application regression, Windows unsigned installer, Android emulator and iOS simulator passed at that checkpoint. Hosted TypeScript exposed two fixture typing errors; public-source scanning mistook a historical numeric GitHub job identifier for a private identifier. Both are repaired without weakening validation. The local redundant TypeScript run was stopped after the same failure was established in hosted logs; it is not claimed as a pass.
+
+Independent review then found that base certificate history could be silently omitted when an old v45/v47 payload lacked extension artifacts. The parser now requires the exact Guardian-Student relationship and binds non-null requests to the same Student/year/type. Compound version identity collisions abort; a transaction postcondition requires all supplied certificate-history IDs. Genuine historical BONAFIDE fixtures test repeat restore, immutable snapshots, mapped ownership, rollback on collision, injected missing ownership and retry. Historical ownership omissions now require explicit reconciliation; no relationship is invented. These directly seeded records establish restoration behavior, not authenticated certificate issuance. The first focused run passed 33 tests with two new fixture assertions incorrectly comparing source IDs with remapped target Student IDs; the assertions now use authoritative admission-number lookup and verify the exact restored Guardian edge.
+
+Windows hosted full-regression fixtures also hit resource timeouts while running concurrently. Hosted tests are now serialized, with all tests, assertions, coverage and timeouts retained; local workers are bounded at two. This needs final-head execution and is not inferred to pass from configuration. The dormant local rehearsal script now validates v48 and reports the actual backup version; it was not launched. Independent read-only review found no further material defect in the bounded certificate patch. Final exact-head results are recorded in PR28 and canonical trackers after execution. Runtime/Browser/operator holds and all production default-OFF settings remain unchanged.
+
+Legacy restore follow-up: genuine v45 and v47 cases now PASS, including exact mapped ownership, collision rollback with existing history preserved, injected missing-ownership rollback and retry. Original legacy formats did not declare a students count; the negative fixture preserves that exact envelope instead of adding a new count key. v46/v48 and the 31 lightweight focused tests passed in the preceding focused run; full final-head validation remains mandatory.
