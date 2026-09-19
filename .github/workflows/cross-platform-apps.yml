@@ -307,25 +307,35 @@ jobs:
             echo 'ANDROID_PIN_CONTENT_NOT_READY' >&2
             exit 1
           fi
-          # Nonblank captures supplement the PIN accessibility assertion. They do
-          # not certify file-picker, keyboard, authenticated import or device UX.
+          # FLAG_SECURE deliberately masks screenshot pixels. Keep it enabled;
+          # assert live PIN content in every state and portrait masking before opening the OS keyboard.
           capture_android() {
-            local output="$1"
+            local output="$1" xml="${1%.png}.xml"
             local deadline=$((SECONDS + 60))
             while [ "$SECONDS" -lt "$deadline" ]; do
-              rm -f "$output"
-              if adb_cmd exec-out screencap -p > "$output" &&
-                 node node_modules/tsx/dist/cli.mjs scripts/qa-ux-native-screen-content.ts "$output"; then
+              rm -f "$output" "$xml"
+              if timeout 5 "$ADB" shell rm -f /sdcard/px1a-capture.xml &&
+                 timeout 10 "$ADB" shell uiautomator dump /sdcard/px1a-capture.xml &&
+                 timeout 5 "$ADB" pull /sdcard/px1a-capture.xml "$xml" &&
+                 grep -Fq "package=\"$PACKAGE\"" "$xml" &&
+                 grep -Eq 'Welcome back|App PIN' "$xml" &&
+                 adb_cmd exec-out screencap -p > "$output"; then
+                if [[ "$output" == *phone-portrait.png ]]; then
+                  node node_modules/tsx/dist/cli.mjs scripts/qa-ux-native-screen-content.ts "$output" protected || return 1
+                fi
+                # The OS keyboard may legitimately appear in subsequent protected captures.
                 return 0
               fi
               sleep 2
             done
-            echo 'ANDROID_NONBLANK_CAPTURE_NOT_READY' >&2
+            echo 'ANDROID_PIN_OR_PROTECTED_CAPTURE_NOT_READY' >&2
             return 1
           }
           capture_android tmp/platform-review/android-synthetic-phone-portrait.png
           cat tmp/platform-review/android-window.xml
-          adb_cmd shell input tap 540 900
+          # Tap the observed PIN input, not a guessed screen coordinate.
+          read PIN_X PIN_Y < <(python3 -c 'import re,sys,xml.etree.ElementTree as E; n=next(n for n in E.parse(sys.argv[1]).iter("node") if n.get("class")=="android.widget.EditText" and n.get("password")=="true"); x1,y1,x2,y2=map(int,re.findall(r"\d+",n.attrib["bounds"])); print((x1+x2)//2,(y1+y2)//2)' tmp/platform-review/android-synthetic-phone-portrait.xml)
+          adb_cmd shell input tap "$PIN_X" "$PIN_Y"
           sleep 1
           capture_android tmp/platform-review/android-synthetic-soft-keyboard.png
           adb_cmd shell settings put system accelerometer_rotation 0
