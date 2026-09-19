@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, lstatSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 const base = '104aacc7bd314cae82e60bb02b5c8a965c7ffedd';
-const heads = ['5bf70e4c4be07b706224debe01a27c54fd0af096','67c504be6230f763663cf19faf50d9bc46dc6902','d784262ccc78ae431a72a3934ced45198e4bfb4c','283718fb5bedbc505302e55d7bc5214d8fa4d553'];
+const heads = ['5bf70e4c4be07b706224debe01a27c54fd0af096','67c504be6230f763663cf19faf50d9bc46dc6902','d784262ccc78ae431a72a3934ced45198e4bfb4c','1abdb0e46173ab5cd4fab6eda0b1ec0f79c8378c'];
 const ledgerPath = 'config/recovery-integration-source-delta.json';
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore','pipe','pipe'] });
 const hash = value => createHash('sha256').update(value.replaceAll('\r\n','\n')).digest('hex');
@@ -36,7 +36,7 @@ if (process.argv[2] === '--write') {
     records.push({ path, baseSha256, historicalSha256, sources, currentSha256,
       reconciliation: sources.some(s => s.sha256 === currentSha256) ? 'ADMITTED_COMMITTED_SOURCE' : 'RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW' });
   }
-  writeFileSync(ledgerPath, JSON.stringify({ version:1, date:'2026-09-12', base, heads, files:records },null,2)+'\n');
+  writeFileSync(ledgerPath, JSON.stringify({ version:1, date:'2026-09-19', base, heads, files:records },null,2)+'\n');
   console.log(JSON.stringify({status:'GENERATED_NOT_REVIEW_CLEARANCE',files:records.length}));
 } else {
   const ledger = JSON.parse(readFileSync(ledgerPath,'utf8'));

@@ -96,13 +96,14 @@ async function originalExporter(version:number){
  writeFileSync(path.join(root,"fixture.ts"),readFileSync("tests/helpers/recovery-certificate-fixture.ts","utf8").replaceAll('"../../lib/','"@/lib/'));writeFileSync(path.join(root,"entry.ts"),'export * from "./lib/backup";'+(version===46?' export * from "./fixture";':''));
  const testOnlyFlagAdapter=postgres&&version===46;
  if(testOnlyFlagAdapter){const url=new URL(process.env.DATABASE_URL!);if(process.env.CI!=="true"||process.env.NODE_ENV!=="test"||process.env.POSTGRES_READINESS_SYNTHETIC_QA!=="1"||!/^recovery_source46_[a-f0-9]+$/.test(url.searchParams.get("schema")??""))throw Error("TEST_ONLY_FLAG_ADAPTER_SCOPE_DENIED");}
- const bundlePath=path.join(root,"backup.cjs");
- await require("esbuild").build({entryPoints:[path.join(root,"entry.ts")],outfile:bundlePath,bundle:true,platform:"node",format:"cjs",packages:"external",alias:{"@":root},logLevel:"silent",plugins:testOnlyFlagAdapter?[{name:"isolated-service-test-flags",setup(build:any){build.onResolve({filter:/release-feature-flag-runtime(?:\.ts)?$/},()=>({path:"nalanda-recovery-test-flags",external:true}));}}]:[]});
+ const bundlePath=path.join(root,"backup.cjs");let adapterResolutions=0,adapterLoads=0;
+ await require("esbuild").build({entryPoints:[path.join(root,"entry.ts")],outfile:bundlePath,bundle:true,platform:"node",format:"cjs",packages:"external",alias:{"@":root},logLevel:"silent",plugins:testOnlyFlagAdapter?[{name:"isolated-service-test-flags",setup(build:any){build.onResolve({filter:/release-feature-flag-runtime(?:\.ts)?$/},(args:any)=>{const imported=args.path.startsWith("@/")?path.join(root,args.path.slice(2)):path.resolve(args.resolveDir,args.path);if(!path.resolve(args.importer).startsWith(path.resolve(root)+path.sep)||imported.replace(/\.ts$/, "")!==path.join(root,"lib","release-feature-flag-runtime"))throw Error("TEST_ONLY_FLAG_IMPORT_DENIED");adapterResolutions++;return {path:"nalanda-recovery-test-flags",external:true};});}}]:[]});
  if(!testOnlyFlagAdapter)return require(bundlePath);
  const flags=await import("@/lib/release-feature-flag-runtime"),fallback=createRequire(bundlePath),module={exports:{}};
  // Per-load facade for the admitted service-test seam; source bytes and global module cache are unchanged.
  const invoke=require("node:vm").compileFunction(readFileSync(bundlePath,"utf8"),["module","exports","require","__dirname","__filename"],{filename:bundlePath});
- invoke(module,module.exports,(id:string)=>id==="nalanda-recovery-test-flags"?flags:fallback(id),root,bundlePath);
+ invoke(module,module.exports,(id:string)=>{if(id==="nalanda-recovery-test-flags"){adapterLoads++;return flags;}return fallback(id);},root,bundlePath);
+ if(adapterResolutions===0||adapterLoads===0)throw Error("TEST_ONLY_FLAG_ADAPTER_NOT_USED");
  console.log("TEST_ONLY_FLAG_ADAPTER: isolated original v46 PostgreSQL service fixture; no HTTP acceptance");return module.exports;
 }
 function originalReadClient(version:number){

@@ -64,6 +64,7 @@ describe("bulk export governance", () => {
       committedRolloutPercentage: 0
     });
     expect(contract.surfaces.filter((surface) => surface.featureFlag === "bulk-exports")).toEqual([]);
+    for (const id of ["marks-import-template", "governed-marks-roster-template"]) expect(contract.surfaces.find(s => s.id === id)).toMatchObject({classification:"BULK_EXPORT",noStore:true,csvFormulaSafe:true});
     expect(contract.surfaces.filter(s => s.conditionalFeatureFlags).map(s => ({id:s.id, mappings:s.conditionalFeatureFlags}))).toEqual([{id:"core-dynamic-exports",mappings:[{parameter:"type",value:"students",featureFlag:"bulk-exports"}]}]);
   });
 

@@ -63,7 +63,7 @@ jobs:
         run: rm -rf tmp/portable-staging data/cloud-backup-rehearsal
 
   oci-image:
-    # EXTERNAL_RUNTIME_BLOCKED: no substantiated vendor-supported runtime correction.
+    # EXTERNAL_RUNTIME_BLOCKED: upstream zlib fix exists; corrected vendor/Node24 releases pending.
     # Reopening requires reviewed source and successful mandatory image gates.
     if: ${{ false }}
     needs: server-and-database

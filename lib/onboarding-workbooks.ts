@@ -30,7 +30,7 @@ export function generateOnboardingTemplate(input: {
     ["Privacy classification", "PRIVATE - authorised school operators only"],
     ["Mode", "CREATE_AND_LINK. Existing records are never silently overwritten."],
     ["Dates", "Use YYYY-MM-DD or DD/MM/YYYY. Phone numbers must be entered as text."],
-    ["Examples", "Rows marked YES in Example Row are instructions only and are excluded from import."],
+    ["Examples", "Rows marked YES in Example Row are instructions only and are excluded from import. Example contacts are nonnumeric placeholders; required contacts must be supplied in real entry rows."],
     ["Accounts", "Parent and Staff account flags create proposals only; no password or active account is created."],
     ["Prohibited data", "Do not add payments, balances, marks, attendance, payroll, Aadhaar, PAN, UAN, medical, bank, coordinates, transport or cafeteria data."],
     ["Languages", "Unicode names are supported, including English, Hindi, Urdu and Telugu."],

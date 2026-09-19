@@ -1,3 +1,4 @@
+import reviewedBulk from "@/config/requirements-history/bulk-data-exchange-reviewed-source.json";
 import { describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -102,6 +103,10 @@ describe("Living Master Requirements fail-closed contracts", () => {
     expect(register.approvedAt).toBeNull();
     const portableHead = "5bf70e4c4be07b706224debe01a27c54fd0af096";
     const certificateHead = "67c504be6230f763663cf19faf50d9bc46dc6902";
+    const bulkHead = "1abdb0e46173ab5cd4fab6eda0b1ec0f79c8378c";
+    expect(sourceHash(readFileSync("config/requirements-history/bulk-data-exchange-reviewed-source.json","utf8"))).toBe(sourceHash(at(bulkHead,"config/requirements-history/bulk-data-exchange-reviewed-source.json")));
+    expect(reviewedBulk.historicalAuditSha256).toBe(sourceHash(readFileSync("config/master-requirements-audit-evidence.json","utf8")));
+    for(const entry of reviewedBulk.changes) expect(sourceHash(at(bulkHead,entry.path)),entry.path).toBe(entry.sha256);
     const concessionHead = "d784262ccc78ae431a72a3934ced45198e4bfb4c";
     for (const path of ["config/master-requirements-audit-evidence.json", "config/requirements-history/master-register-1.0.0.json"]) expect(sourceHash(readFileSync(path,"utf8"))).toBe(sourceHash(at(portableHead,path)));
     expect(sourceHash(readFileSync("config/certificate-graduation-source-delta.json","utf8"))).toBe(sourceHash(at(certificateHead,"config/certificate-graduation-source-delta.json")));
