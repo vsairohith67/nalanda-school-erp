@@ -54,6 +54,18 @@ describe("bulk exchange CI pnpm runtime compatibility", () => {
       expect(secret.status).not.toBe(0);
       expect(secret.stderr).toContain("pnpm-workspace.yaml:private-key");
       writeFileSync(config, "packages: []\n");
+      const vitestConfig = path.join(root, "vitest.config.ts");
+      writeFileSync(vitestConfig, "export default { test: { maxWorkers: 1 } };\n");
+      expect(run().status).toBe(0);
+      writeFileSync(vitestConfig, ["// -----BEGIN", "PRIVATE KEY-----\n"].join(" "));
+      const vitestSecret = run();
+      expect(vitestSecret.status).not.toBe(0);
+      expect(vitestSecret.stderr).toContain("vitest.config.ts:private-key");
+      writeFileSync(vitestConfig, "export default { test: { maxWorkers: 1 } };\n");
+      writeFileSync(path.join(root, "vitest.unreviewed.ts"), "export default {};\n");
+      const sibling = run();
+      expect(sibling.status).not.toBe(0);
+      expect(sibling.stderr).toContain("vitest.unreviewed.ts:out-of-scope");
       writeFileSync(path.join(root, "unreviewed.yaml"), "example: true\n");
       const unknown = run();
       expect(unknown.status).not.toBe(0);

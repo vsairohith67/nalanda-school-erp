@@ -17,7 +17,7 @@ function validBackup(): {
   goLiveChecklist?: RestoreRecord[];
 } {
   const backup = createBackupDocument({ generatedAt: new Date("2026-06-18T12:00:00.000Z"), generatedBy: "Director", students: [], feeStructures: [], payments: [], paymentAudits: [], users: [] });
-  return { ...backup, metadata: { ...backup.metadata, appName: "Nalanda Fee Control" }, students: [], feeStructures: [], payments: [], paymentAudits: [], users: [] };
+  return { ...backup, metadata: { ...backup.metadata, appName: "Nalanda Fee Control" }, students: [], feeStructures: [], payments: [], paymentAudits: [], users: [], rolePermissions: [], receiptNotes: [], importBatches: [], goLiveChecklist: [] };
 }
 
 describe("backup restore validation", () => {
