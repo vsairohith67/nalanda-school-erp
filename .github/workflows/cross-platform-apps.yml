@@ -17,6 +17,8 @@ on:
       - "lib/security-resilience.ts"
       - "lib/trusted-client.ts"
       - "scripts/harden-cross-platform-generated-project.mjs"
+      - "scripts/qa-ux-native-screen-content.ts"
+      - "tests/bulk-ci-runtime.test.ts"
       - "config/release-feature-flags.json"
       - ".env.example"
       - "package.json"
@@ -267,6 +269,8 @@ jobs:
             exit 1
           fi
           adb_cmd() { timeout 60 "$ADB" "$@"; }
+          # Retain synthetic launch diagnostics even when readiness fails early.
+          trap 'timeout 10 "$ADB" logcat -d -t 800 AndroidRuntime:E chromium:E "*:S" > tmp/platform-review/android-launch-errors.txt || true' EXIT
           for attempt in $(seq 1 90); do
             if [ "$(adb_cmd shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then break; fi
             if [ "$attempt" = "90" ]; then cat "$EMULATOR_LOG"; exit 1; fi
@@ -291,7 +295,8 @@ jobs:
                timeout 5 "$ADB" shell test -s /sdcard/px1a-window.xml &&
                timeout 5 "$ADB" pull /sdcard/px1a-window.xml tmp/platform-review/android-window.xml; then
               if grep -q '<hierarchy' tmp/platform-review/android-window.xml &&
-                 grep -Fq "package=\"$PACKAGE\"" tmp/platform-review/android-window.xml; then
+                 grep -Fq "package=\"$PACKAGE\"" tmp/platform-review/android-window.xml &&
+                 grep -Eq 'Welcome back|App PIN' tmp/platform-review/android-window.xml; then
                 ui_ready=1
                 break
               fi
@@ -299,21 +304,34 @@ jobs:
             sleep 2
           done
           if [ "$ui_ready" -ne 1 ]; then
-            echo 'ANDROID_ACCESSIBILITY_TREE_NOT_READY' >&2
+            echo 'ANDROID_PIN_CONTENT_NOT_READY' >&2
             exit 1
           fi
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-phone-portrait.png
+          # Nonblank captures supplement the PIN accessibility assertion. They do
+          # not certify file-picker, keyboard, authenticated import or device UX.
+          capture_android() {
+            local output="$1"
+            local deadline=$((SECONDS + 60))
+            while [ "$SECONDS" -lt "$deadline" ]; do
+              rm -f "$output"
+              if adb_cmd exec-out screencap -p > "$output" &&
+                 node node_modules/tsx/dist/cli.mjs scripts/qa-ux-native-screen-content.ts "$output"; then
+                return 0
+              fi
+              sleep 2
+            done
+            echo 'ANDROID_NONBLANK_CAPTURE_NOT_READY' >&2
+            return 1
+          }
+          capture_android tmp/platform-review/android-synthetic-phone-portrait.png
           cat tmp/platform-review/android-window.xml
-          if ! grep -Eq 'Nalanda|Welcome back|App PIN' tmp/platform-review/android-window.xml; then
-            grep -F 'android.webkit.WebView' tmp/platform-review/android-window.xml
-          fi
           adb_cmd shell input tap 540 900
           sleep 1
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-soft-keyboard.png
+          capture_android tmp/platform-review/android-synthetic-soft-keyboard.png
           adb_cmd shell settings put system accelerometer_rotation 0
           adb_cmd shell settings put system user_rotation 1
           sleep 2
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-landscape.png
+          capture_android tmp/platform-review/android-synthetic-landscape.png
           adb_cmd shell input keyevent KEYCODE_HOME
           adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
           adb_cmd shell input keyevent KEYCODE_BACK
@@ -325,13 +343,13 @@ jobs:
           adb_cmd shell wm density 160
           adb_cmd shell settings put system user_rotation 0
           sleep 2
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-tablet.png
+          capture_android tmp/platform-review/android-synthetic-tablet.png
           adb_cmd shell svc wifi disable
           adb_cmd shell svc data disable || true
           adb_cmd shell am force-stop "$PACKAGE"
           adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
           sleep 2
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-offline.png
+          capture_android tmp/platform-review/android-synthetic-offline.png
           adb_cmd shell svc wifi enable
           adb_cmd shell svc data enable || true
           adb_cmd shell wm size reset
@@ -391,17 +409,34 @@ jobs:
           xcrun simctl list devices available -j > "$RUNNER_TEMP/px1a-devices.json"
           IPHONE_UDID="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next(x["udid"] for xs in d["devices"].values() for x in xs if x.get("isAvailable") and x["name"].startswith("iPhone")))' "$RUNNER_TEMP/px1a-devices.json")"
           IPAD_UDID="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next(x["udid"] for xs in d["devices"].values() for x in xs if x.get("isAvailable") and x["name"].startswith("iPad")))' "$RUNNER_TEMP/px1a-devices.json")"
+          # simctl launch reports process launch, not completed WebView rendering.
+          # Reject the observed blank captures; visual/content review stays required.
+          capture_ios() {
+            local udid="$1" output="$2"
+            local deadline=$((SECONDS + 60))
+            while [ "$SECONDS" -lt "$deadline" ]; do
+              rm -f "$output"
+              if xcrun simctl io "$udid" screenshot "$output" &&
+                 node node_modules/tsx/dist/cli.mjs scripts/qa-ux-native-screen-content.ts "$output"; then
+                return 0
+              fi
+              sleep 2
+            done
+            echo 'IOS_NONBLANK_CAPTURE_NOT_READY' >&2
+            return 1
+          }
           for UDID in "$IPHONE_UDID" "$IPAD_UDID"; do
             xcrun simctl boot "$UDID" 2>/dev/null || true
             xcrun simctl bootstatus "$UDID" -b
             xcrun simctl install "$UDID" "$APP_PATH"
+            xcrun simctl ui "$UDID" appearance light
             xcrun simctl launch --terminate-running-process "$UDID" com.nalandaps.erp
             sleep 3
-            xcrun simctl io "$UDID" screenshot "tmp/platform-review/ios-synthetic-$UDID-light.png"
+            capture_ios "$UDID" "tmp/platform-review/ios-synthetic-$UDID-light.png"
             xcrun simctl ui "$UDID" appearance dark
             xcrun simctl launch --terminate-running-process "$UDID" com.nalandaps.erp
             sleep 2
-            xcrun simctl io "$UDID" screenshot "tmp/platform-review/ios-synthetic-$UDID-dark.png"
+            capture_ios "$UDID" "tmp/platform-review/ios-synthetic-$UDID-dark.png"
             xcrun simctl openurl "$UDID" 'nalandaps-erp://auth/callback?code=invalid&state=invalid&request_id=invalid'
             xcrun simctl terminate "$UDID" com.nalandaps.erp
             xcrun simctl launch "$UDID" com.nalandaps.erp

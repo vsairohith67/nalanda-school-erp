@@ -4,8 +4,24 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { resolvePnpmRuntimeEntry } from "../scripts/migration-check-utils";
+import sharp from "sharp";
+import { assertNonblankNativeCapture } from "../scripts/qa-ux-native-screen-content";
 
 describe("bulk exchange CI pnpm runtime compatibility", () => {
+  it("rejects blank native captures even with visible OS bars", async () => {
+    for (const background of ["white", "black"]) {
+      const png = await sharp({ create: { width: 400, height: 800, channels: 3, background } })
+        .composite([{ input: Buffer.from('<svg width="400" height="40"><rect width="400" height="40" fill="red"/></svg>'), top: 0, left: 0 }])
+        .png().toBuffer();
+      await expect(assertNonblankNativeCapture(png)).rejects.toThrow("NATIVE_CAPTURE_BLANK_CONTENT");
+    }
+    const nonblank = await sharp({ create: { width: 400, height: 800, channels: 3, background: "black" } })
+      .composite([{ input: Buffer.from('<svg width="200" height="300"><rect width="200" height="300" fill="white"/></svg>'), top: 250, left: 100 }])
+      .png().toBuffer();
+    await expect(assertNonblankNativeCapture(nonblank)).resolves.toBeUndefined();
+    await expect(assertNonblankNativeCapture(Buffer.from("invalid"))).rejects.toThrow();
+  });
+
   it.each([
     "qa-real-user-access-readiness-1a-public-repo-scan.ts",
     "qa-communication-delivery-foundation-1a-public-repo-scan.ts"
