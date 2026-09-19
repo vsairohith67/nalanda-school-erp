@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, lstatSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 const base = '104aacc7bd314cae82e60bb02b5c8a965c7ffedd';
-const heads = ['5bf70e4c4be07b706224debe01a27c54fd0af096','67c504be6230f763663cf19faf50d9bc46dc6902','d784262ccc78ae431a72a3934ced45198e4bfb4c','1abdb0e46173ab5cd4fab6eda0b1ec0f79c8378c'];
+const heads = ['5bf70e4c4be07b706224debe01a27c54fd0af096','67c504be6230f763663cf19faf50d9bc46dc6902','d784262ccc78ae431a72a3934ced45198e4bfb4c','05e6b5c6021d57f6081f2df692a8d29dd9e784f9'];
 const ledgerPath = 'config/recovery-integration-source-delta.json';
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore','pipe','pipe'] });
 const hash = value => createHash('sha256').update(value.replaceAll('\r\n','\n')).digest('hex');
