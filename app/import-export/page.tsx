@@ -31,7 +31,7 @@ export default async function ImportExportPage() {
       />
       {!operationalImportsEnabled ? <p className="notice warning">Operational imports are not active. Existing exports, backup tools and zero-write preview contracts remain separate.</p> : null}
       <ImportExport
-        canImportStudents={canImportStudents && operationalImportsEnabled}
+        canImportStudents={canImportStudents}
         canImportGuardians={canImportGuardians && operationalImportsEnabled}
         canImportStaff={canImportStaff && operationalImportsEnabled}
         canImportPayments={canImportPayments && operationalImportsEnabled}

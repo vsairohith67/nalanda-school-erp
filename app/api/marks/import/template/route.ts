@@ -1,7 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireApiPermission } from "@/lib/auth";
-import { marksImportTemplate } from "@/lib/marks-import";
-import { resolveMarksWriteAuthority } from "@/lib/academic-integrity";
-import { resolveMarksScope } from "@/lib/marks-scope";
 import { prisma } from "@/lib/prisma";
-export async function GET() { const auth = await requireApiPermission("ENTER_MARKS"); if (auth.response || !auth.user) return auth.response; try { await resolveMarksWriteAuthority(prisma, auth.user); const scope = await resolveMarksScope(prisma, auth.user, undefined, "WRITE"); if (!scope.broad && !scope.targets.length) throw new Error("No legacy import scope"); return new NextResponse(marksImportTemplate(), { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": "attachment; filename=marks-import-template.csv" } }); } catch { return NextResponse.json({ error: "You do not have an active legacy marks-import scope." }, { status: 403 }); } }
+import { legacyImportContext, legacyContextTemplate } from "@/lib/legacy-marks-import-context";
+export async function GET(request: NextRequest) {
+  const auth = await requireApiPermission("ENTER_MARKS"); if (auth.response || !auth.user) return auth.response;
+  try {
+    const context = await legacyImportContext(prisma, auth.user, request.nextUrl.searchParams.get("assessmentId") ?? "", request.nextUrl.searchParams.get("academicYear") ?? "");
+    return new NextResponse(legacyContextTemplate(context), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": "attachment; filename=nalanda-legacy-marks-v1.csv", "cache-control": "private, no-store", "x-content-type-options": "nosniff" } });
+  } catch { return NextResponse.json({ error: "Select an authorised legacy assessment context." }, { status: 403 }); }
+}

@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import register from "@/config/master-requirements-register.json";
 import audit from "@/config/master-requirements-audit-evidence.json";
+import reviewed from "@/config/requirements-history/bulk-data-exchange-reviewed-source.json";
 import debt from "@/config/product-experience-debt-register.json";
 import screens from "@/config/product-experience-screen-register.json";
 import { MASTER_BASE, publicContentErrors, repositorySourceReader, sourceHash, validateMasterRequirements } from "@/lib/master-requirements";
@@ -76,17 +77,37 @@ describe("Living Master Requirements fail-closed contracts", () => {
     expect(publicContentErrors({ branding: "NALANDA PUBLIC SCHOOL", approvalRole: "Principal" })).toEqual([]);
     expect(publicContentErrors(debt)).toEqual([]);
   });
-  it("keeps production flags, app behavior, schemas, jobs and deployment source unchanged", () => {
+  it("preserves the historical audit and admits only exact reviewed implementation changes", () => {
     // Saved baseline digests also work in the inherited shallow-checkout CI jobs.
     const protectedFiles = audit.inventory.filter(f => /^(app|components|prisma|deploy|lib)\//.test(f.path) || f.path === "Dockerfile");
-    for (const file of protectedFiles) expect(sourceHash(readFileSync(file.path, "utf8")), file.path).toBe(file.sha256);
+    expect(sourceHash(readFileSync("config/master-requirements-audit-evidence.json", "utf8"))).toBe(reviewed.historicalAuditSha256);
+    expect(reviewed.task).toBe("BULK-DATA-EXCHANGE-UX-1A");
+    expect(reviewed.sourceBase).toBe("104aacc7bd314cae82e60bb02b5c8a965c7ffedd");
+    expect(new Set(reviewed.changes.map(f => f.path)).size).toBe(reviewed.changes.length);
+    for (const change of reviewed.changes) {
+      expect(change.path).toMatch(/^(app|components|lib)\//);
+      expect(change.path).not.toContain("..");
+      expect(change.previousSha256).toBe(protectedFiles.find(f => f.path === change.path)?.sha256 ?? null);
+      expect(sourceHash(readFileSync(change.path, "utf8")), change.path).toBe(change.sha256);
+    }
+    for (const file of protectedFiles) {
+      const expected = reviewed.changes.find(f => f.path === file.path)?.sha256 ?? file.sha256;
+      expect(sourceHash(readFileSync(file.path, "utf8")), file.path).toBe(expected);
+    }
     const currentFiles = git("ls-files", "--cached", "--others", "--exclude-standard", "--", "app", "components", "prisma", "deploy", "Dockerfile", "lib").split(/\r?\n/).filter(Boolean);
-    expect(currentFiles.filter(f => !protectedFiles.some(p => p.path === f) && f !== "lib/master-requirements.ts")).toEqual([]);
+    expect(currentFiles.filter(f => !protectedFiles.some(p => p.path === f) && f !== "lib/master-requirements.ts" && !reviewed.changes.some(p => p.path === f && p.previousSha256 === null))).toEqual([]);
     const current = readFileSync("config/release-feature-flags.json", "utf8");
     expect(sourceHash(current)).toBe(audit.inventory.find(f => f.path === "config/release-feature-flags.json")!.sha256);
     for (const flag of JSON.parse(current)) { expect(flag.defaultState).toBe(false); expect(flag.rolloutPercentage).toBe(0); }
     const packageNow = JSON.parse(readFileSync("package.json", "utf8"));
-    expect(packageNow.dependencies).toEqual(audit.productionDependencies);
+    const expectedDependencies = { ...audit.productionDependencies };
+    for (const [name, change] of Object.entries(reviewed.productionDependencyChanges)) {
+      expect(["next", "sharp"]).toContain(name);
+      const key = name as keyof typeof expectedDependencies;
+      expect(expectedDependencies[key]).toBe(change.previous);
+      expectedDependencies[key] = change.current;
+    }
+    expect(packageNow.dependencies).toEqual(expectedDependencies);
     expect(Object.keys(packageNow.dependencies).some(k => /opentelemetry|sentry|posthog/i.test(k))).toBe(false);
   });
   it("records every schema/migration and every source screen without inventing Browser passes", () => {

@@ -12,14 +12,14 @@
       ".next",
       "artifacts"
     ],
-    "discoveredCount": 61,
-    "bulkExportCount": 41,
-    "notBulkExportCount": 20
+    "discoveredCount": 62,
+    "bulkExportCount": 43,
+    "notBulkExportCount": 19
   },
   "bulkExportFlag": {
     "key": "bulk-exports",
     "semantics": "DEFAULT_OFF_RUNTIME_SWITCH_FOR_NEWLY_RELEASED_BULK_EXPORT_SURFACES",
-    "currentMappedSurfaceCount": 0,
+    "currentMappedSurfaceCount": 1,
     "committedDefaultState": false,
     "committedRolloutPercentage": 0
   },
@@ -483,8 +483,10 @@
       "csvFormulaSafe": true,
       "noStore": true,
       "audited": false,
-      "featureFlag": null,
-      "releaseState": "CLEARED"
+      "featureFlag": "bulk-exports",
+      "releaseState": "STUDENT_IMPLEMENTED_PENDING_RELEASE_GATE_FINANCE_PRIOR_STATE_UNCHANGED",
+      "featureFlagScope": "type=students only; finance branches unchanged",
+      "studentScope": "All matching academic-year enrollment, class, section, status and search filters; eight approved columns; 10000 rows with overflow refusal; header-only empty results; export-purpose audit"
     },
     {
       "id": "fee-register-ocr-reports",
@@ -768,19 +770,25 @@
       "route": "/api/marks/import/template",
       "method": "GET",
       "module": "Marks",
-      "format": "TEMPLATE",
-      "classification": "NOT_A_BULK_EXPORT",
-      "classificationReason": "Blank governed marks template",
-      "permission": "PER_SURFACE_AUTHORIZATION",
-      "objectScope": "Blank governed marks template",
-      "sensitiveFieldExclusions": [],
-      "maxRows": 1,
-      "boundedBehavior": "Single artifact, blank template, or governed recovery artifact",
-      "csvFormulaSafe": null,
+      "format": "CSV",
+      "classification": "BULK_EXPORT",
+      "classificationReason": "Selected legacy assessment roster template contains admission references",
+      "permission": "ENTER_MARKS_AND_EXACT_ASSESSMENT_AUTHORITY",
+      "objectScope": "Authorised academic year, legacy assessment and eligible class/section roster",
+      "sensitiveFieldExclusions": [
+        "studentName",
+        "guardianContacts",
+        "passwordHash",
+        "sessionToken",
+        "providerCredential"
+      ],
+      "maxRows": null,
+      "boundedBehavior": "Selected assessment roster; no explicit query row cap",
+      "csvFormulaSafe": true,
       "noStore": true,
       "audited": false,
       "featureFlag": null,
-      "releaseState": "NOT_A_BULK_EXPORT"
+      "releaseState": "IMPLEMENTED_PENDING_RELEASE_GATE"
     },
     {
       "id": "marks-reports",
@@ -1409,6 +1417,30 @@
       "audited": false,
       "featureFlag": null,
       "releaseState": "CLEARED"
+    },
+    {
+      "id": "governed-marks-sheet-template",
+      "sourcePath": "app/api/exam-marks/sheets/[assignmentId]/route.ts",
+      "route": "/api/exam-marks/sheets/[assignmentId]",
+      "method": "GET",
+      "module": "Governed Marks",
+      "format": "CSV/XLSX",
+      "classification": "BULK_EXPORT",
+      "permission": "ENTER_ASSIGNED_EXAM_MARKS_AND_EXACT_ASSIGNMENT_AUTHORITY",
+      "objectScope": "Eligible governed assignment, frozen scheme, roster and current draft versions",
+      "sensitiveFieldExclusions": [
+        "passwordHash",
+        "sessionToken",
+        "providerCredential",
+        "secret"
+      ],
+      "maxRows": 200,
+      "boundedBehavior": "At most 200 eligible assignment rows; signed scope and current versions",
+      "csvFormulaSafe": true,
+      "noStore": true,
+      "audited": false,
+      "featureFlag": null,
+      "releaseState": "IMPLEMENTED_PENDING_RELEASE_GATE"
     }
   ]
 }

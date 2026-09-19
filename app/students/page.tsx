@@ -1,3 +1,4 @@
+import { studentExchangeScope, scopedStudentRow } from "@/lib/student-export-scope";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
@@ -9,30 +10,16 @@ import { STUDENT_STATUS_FILTERS, studentStatusWhere } from "@/lib/student-filter
 export default async function StudentsPage({
   searchParams
 }: {
-  searchParams: Promise<{ q?: string; className?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; className?: string; status?: string; academicYear?: string; section?: string }>;
 }) {
   const sp = await searchParams;
   const user = await requirePermission("VIEW_STUDENTS");
   const permissions = await getCurrentUserEffectivePermissions();
-  const q = sp.q?.trim();
-  const students = await prisma.student.findMany({
-    where: {
-      deletedAt: null,
-      ...(sp.className ? { className: sp.className } : {}),
-      ...studentStatusWhere(sp.status),
-      ...(q
-        ? {
-            OR: [
-              { admissionNo: { contains: q } },
-              { studentName: { contains: q } },
-              { fatherName: { contains: q } },
-              { phone1: { contains: q } }
-            ]
-          }
-        : {})
-    },
-    orderBy: [{ className: "asc" }, { section: "asc" }, { studentName: "asc" }]
-  });
+  const query = new URLSearchParams(Object.entries(sp).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
+  const scope = studentExchangeScope(query);
+  const records = await prisma.student.findMany({ where: scope.where, include: { academicYearEnrollments: scope.academicYear ? { where: { academicYear: scope.academicYear } } : false }, orderBy: [{ studentName: "asc" }, { admissionNo: "asc" }] });
+  const students = records.map(student => scopedStudentRow(student, scope.academicYear));
+  const years = await prisma.academicYearEnrollment.findMany({ distinct: ["academicYear"], select: { academicYear: true }, orderBy: { academicYear: "desc" } });
   return (
     <div className="page">
       <PageHeader
@@ -42,6 +29,8 @@ export default async function StudentsPage({
       />
       <form className="card card-pad filters">
         <label>Search<input name="q" defaultValue={sp.q ?? ""} placeholder="Adm no, name, phone" /></label>
+        <label>Academic year<select name="academicYear" defaultValue={sp.academicYear ?? ""}><option value="">All master records</option>{years.map(y => <option key={y.academicYear}>{y.academicYear}</option>)}</select></label>
+        <label>Section<input name="section" defaultValue={sp.section ?? ""} maxLength={20} /></label>
         <label>Class
           <select name="className" defaultValue={sp.className ?? ""}>
             <option value="">All classes</option>
@@ -54,7 +43,7 @@ export default async function StudentsPage({
           </select>
         </label>
         <button>Apply</button>
-        {permissionSetCan(permissions, "EXPORT_STUDENTS") ? <Link className="button secondary" href="/api/export/students">Export CSV</Link> : null}
+        {permissionSetCan(permissions, "EXPORT_STUDENTS") ? <Link className="button secondary" href={`/api/export/students?${query.toString()}`}>Export CSV — all results matching these filters</Link> : null}
       </form>
       <section className="card">
         <div className="section-title"><h3>{students.length} Students</h3></div>
