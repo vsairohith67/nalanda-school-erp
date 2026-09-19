@@ -297,19 +297,20 @@ describe("COMMUNICATION-DELIVERY-FOUNDATION-1A contracts", () => {
     }
   });
 
-  it("keeps v44 backups restorable with empty communication collections", () => {
+  it("restores empty communication collections and rejects an unsupported relabelled v44 payload", () => {
     const legacy = createBackupDocument({
       generatedAt: new Date("2026-09-04T00:00:00.000Z"),
       generatedBy: "COMMUNICATION_SYNTHETIC_QA",
       students: [], feeStructures: [], payments: [], paymentAudits: [], users: []
     }) as any;
+    const restored = parseAndValidateBackup(legacy);
+    for (const key of COMMUNICATION_BACKUP_KEYS) expect(restored[key]).toEqual([]);
     legacy.metadata.backupVersion = 44;
     for (const key of COMMUNICATION_BACKUP_KEYS) {
       delete legacy[key];
       delete legacy.metadata.counts[key];
     }
-    const restored = parseAndValidateBackup(legacy);
-    for (const key of COMMUNICATION_BACKUP_KEYS) expect(restored[key]).toEqual([]);
+    expect(() => parseAndValidateBackup(legacy)).toThrow("BACKUP_SOURCE_CONTRACT_UNSUPPORTED");
   });
 
   it("maintains SQLite/PostgreSQL model parity without touching OCR schemas", () => {

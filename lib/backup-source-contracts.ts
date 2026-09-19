@@ -27,7 +27,7 @@ export function admitBackupSource(root: Record<string, unknown>) {
   if (metadata.schemaContract !== (source.discriminator ?? undefined)) throw new Error("BACKUP_SOURCE_DISCRIMINATOR_MISMATCH");
   const declared = Object.keys(root).filter(key => key !== "metadata").sort();
   if (!same(declared, source.collections)) throw new Error("BACKUP_SOURCE_COLLECTIONS_MISMATCH");
-  for (const key of source.arrayCollections) if (!Array.isArray(root[key])) throw new Error("BACKUP_SOURCE_COLLECTION_TYPE_MISMATCH");
+  for (const key of source.arrayCollections) if (!Array.isArray(root[key])) throw new Error(`BACKUP_SOURCE_COLLECTION_TYPE_MISMATCH: ${key} must be an array`);
   if (version !== 48 && ["schemaFingerprint", "migrationIdentity", "declaredCollections", "artifactRequirements"].some(key => key in metadata)) throw new Error("BACKUP_LEGACY_METADATA_MISMATCH");
   if (version === 48 && (!same(metadata.schemaFingerprint, source.schemaFingerprint) ||
     metadata.migrationIdentity !== source.migrationIdentity || !same(metadata.declaredCollections, source.collections) ||

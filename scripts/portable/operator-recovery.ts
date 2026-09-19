@@ -37,8 +37,10 @@ async function main() {
       }
       if (result.status !== "VERIFIED") throw new Error("BACKUP_NOT_VERIFIED");
       const artifact = await source.cloudBackupArtifact.findFirst({ where: { runId: run.id, status: "VERIFIED" } });
-      if (!artifact || !(await verifyStoredCloudBackupArtifact(source, artifact.id)).verified) throw new Error("BACKUP_READBACK_FAILED");
-      console.log(JSON.stringify({ state: "VERIFIED", operationId, id: artifact.id, ciphertextSha256: artifact.ciphertextSha256, backupVersion: 48 }));
+      if (!artifact) throw new Error("BACKUP_READBACK_FAILED");
+      const verification = await verifyStoredCloudBackupArtifact(source, artifact.id);
+      if (!verification.verified || verification.backupVersion !== 48) throw new Error("BACKUP_READBACK_FAILED");
+      console.log(JSON.stringify({ state: "VERIFIED", operationId, id: artifact.id, ciphertextSha256: artifact.ciphertextSha256, backupVersion: verification.backupVersion }));
       return;
     }
     const [command, id, hash, operationId] = process.argv.slice(2);

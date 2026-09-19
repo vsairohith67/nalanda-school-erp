@@ -24,7 +24,13 @@ export function validateCertificateExtensionBackup(root: Record<string, any>) {
     const expectedWorkflow = certificate.supersedesCertificateId ? `graduation-revision:${certificate.supersedesCertificateId}` : `graduation:${certificate.requestId}`;
     if (certificate.certificateType !== "GRADUATION" || !certificate.requestId || certificate.workflowKey !== expectedWorkflow) throw new Error("Required Graduation workflow identity missing");
     for (const version of root.studentCertificateVersions ?? []) {
-      if (version.certificateId === certificate.id && !result.certificateIssueArtifacts.some(artifact => artifact.versionId === version.id)) throw new Error("Required certificate artifact missing");
+      if (version.certificateId !== certificate.id) continue;
+      if (!result.certificateIssueArtifacts.some(artifact => artifact.versionId === version.id)) throw new Error("Required certificate artifact missing");
+      const proof = JSON.parse(version.snapshotJson).charge;
+      const charge = result.certificateRequestCharges.find(row => row.id === proof?.chargeId);
+      if (!charge || charge.requestId !== certificate.requestId || charge.studentId !== certificate.studentId || charge.academicYear !== certificate.academicYear || charge.receiptId !== proof.receiptId || charge.status !== proof.status || JSON.stringify(JSON.parse(charge.snapshotJson)) !== JSON.stringify(proof.rate)) throw new Error("Required certificate charge proof missing or mismatched");
+      const chargeApproval = new Date(charge.approvedAt).getTime(), proofApproval = new Date(proof.approvedAt).getTime();
+      if (charge.approvedBy !== proof.approvedBy || !Number.isFinite(chargeApproval) || chargeApproval !== proofApproval) throw new Error("Certificate charge approval proof mismatched");
     }
   }
   for (const charge of result.certificateRequestCharges) {

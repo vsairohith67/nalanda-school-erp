@@ -41,9 +41,9 @@ describe("Prompt 18C backup version 29", () => {
     const photo: any = rows(); photo.identityCards[0].draftDataJson = JSON.stringify({ photoUrl: "https://example.test/p.jpg" });
     expect(() => validateIdentityCardBackupRows(photo, { studentIds: new Set(["stu"]), staffMemberIds: new Set() })).toThrow(/photo path|remote URL/);
   });
-  it("keeps older version-28 backups compatible when all ID-card arrays are absent", () => {
-    const old: any = backup(); old.metadata.backupVersion = 28;
-    for (const key of Object.keys(rows())) { delete old[key]; delete old.metadata.counts[key]; }
+  it("restores empty module collections in v48 and rejects unsupported historical format (id-card-backup-restore)", () => {
+    const old: any = backup(); expect(() => parseAndValidateBackup({ ...old, metadata: { ...old.metadata, backupVersion: 28 } })).toThrow("BACKUP_SOURCE_CONTRACT_UNSUPPORTED");
+    for (const key of Object.keys(rows())) { old[key] = []; old.metadata.counts[key] = 0; }
     const parsed = parseAndValidateBackup(old);
     expect(parsed.identityCards).toEqual([]); expect(parsed.identityCardVersions).toEqual([]);
   });

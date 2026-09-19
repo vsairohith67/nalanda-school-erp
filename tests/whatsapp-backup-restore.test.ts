@@ -41,19 +41,19 @@ describe("Prompt 19B recovery backup version 33", () => {
     const phone: any = rows(); phone.whatsAppDeliveries[0].safeContextJson = JSON.stringify({ value: "+919876543210" });
     expect(() => validateWhatsAppBackupRows(phone, refs)).toThrow(/E.164/);
   });
-  it("keeps version 30 backups compatible when WhatsApp arrays are absent", () => {
+  it("restores empty module collections in v48 and rejects unsupported historical format (whatsapp-backup-restore)", () => {
     const old: any = createBackupDocument({ generatedAt: new Date(), generatedBy: "QA", students: [], feeStructures: [], payments: [], paymentAudits: [], users: [] });
-    old.metadata.backupVersion = 30;
-    for (const key of Object.keys(rows())) { delete old[key]; delete old.metadata.counts[key]; }
+    expect(() => parseAndValidateBackup({ ...old, metadata: { ...old.metadata, backupVersion: 30 } })).toThrow("BACKUP_SOURCE_CONTRACT_UNSUPPORTED");
+    for (const key of Object.keys(rows())) { old[key] = []; old.metadata.counts[key] = 0; }
     const parsed = parseAndValidateBackup(old);
     expect(parsed.whatsAppIntegrationProfiles).toEqual([]);
     expect(parsed.whatsAppWebhookEvents).toEqual([]);
   });
-  it("keeps version 31 backups compatible when operational events are absent", () => {
+  it("restores empty module collections in v48 and rejects unsupported historical format (whatsapp-backup-restore)", () => {
     const old: any = createBackupDocument({ generatedAt: new Date(), generatedBy: "QA", students: [], feeStructures: [], payments: [], paymentAudits: [], users: [] });
-    old.metadata.backupVersion = 31;
-    delete old.whatsAppOperationalEvents;
-    delete old.metadata.counts.whatsAppOperationalEvents;
+    expect(() => parseAndValidateBackup({ ...old, metadata: { ...old.metadata, backupVersion: 31 } })).toThrow("BACKUP_SOURCE_CONTRACT_UNSUPPORTED");
+    old.whatsAppOperationalEvents = [];
+    old.metadata.counts.whatsAppOperationalEvents = 0;
     const parsed = parseAndValidateBackup(old);
     expect(parsed.whatsAppOperationalEvents).toEqual([]);
     expect(parsed.whatsAppIntegrationProfiles).toEqual([]);

@@ -47,10 +47,10 @@ describe("Prompt 19C backup version 33 and aggregate reporting", () => {
     expect(() => validateSmsEmailBackupRows(credential, refs)).toThrow(/unsupported field|credential field/);
   });
 
-  it("keeps version 32 backups compatible when Prompt 19C arrays are absent", () => {
+  it("restores empty module collections in v48 and rejects unsupported historical format (sms-email-backup-restore)", () => {
     const old: any = createBackupDocument({ generatedAt: new Date(now), generatedBy: "QA", students: [], feeStructures: [], payments: [], paymentAudits: [], users: [] });
-    old.metadata.backupVersion = 32;
-    for (const key of Object.keys(rows())) { delete old[key]; delete old.metadata.counts[key]; }
+    expect(() => parseAndValidateBackup({ ...old, metadata: { ...old.metadata, backupVersion: 32 } })).toThrow("BACKUP_SOURCE_CONTRACT_UNSUPPORTED");
+    for (const key of Object.keys(rows())) { old[key] = []; old.metadata.counts[key] = 0; }
     const parsed = parseAndValidateBackup(old);
     expect(parsed.smsEmailIntegrationProfiles).toEqual([]);
     expect(parsed.smsEmailWebhookEvents).toEqual([]);

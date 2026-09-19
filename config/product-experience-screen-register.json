@@ -3,8 +3,8 @@
   "promptId": "PRODUCT-EXPERIENCE-1A",
   "generatedFrom": "app page source tree",
   "completeness": {
-    "pageFiles": 364,
-    "registeredScreens": 364,
+    "pageFiles": 365,
+    "registeredScreens": 365,
     "omittedScreens": 0
   },
   "sharedBaselines": {

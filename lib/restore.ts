@@ -819,6 +819,7 @@ export function parseAndValidateBackup(input: string | unknown): ValidatedBackup
   }
 
   const originalRoot = requireRecord(parsed, "Backup");
+  requireRecord(originalRoot.metadata, "Backup metadata");
   const admission = admitBackupSource(originalRoot);
   const root = admission.adapted;
   rejectUnknownKeys(root, TOP_LEVEL_KEYS, "Backup");
