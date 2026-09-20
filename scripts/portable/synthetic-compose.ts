@@ -1,3 +1,4 @@
+import { syntheticEvidenceRoot } from "./synthetic-build-lifecycle";
 import assert from "node:assert/strict";
 import {execFileSync} from "node:child_process";
 import {readFileSync,writeFileSync,mkdirSync,realpathSync,lstatSync} from "node:fs";
@@ -34,7 +35,7 @@ async function main(){
  const expected=path.resolve("tmp/portable-staging",`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-qaon`);
  assert.equal(root,expected);assert.equal(realpathSync(root),root);assert(!lstatSync(root).isSymbolicLink());
  const trust=readFileSync(path.resolve("tmp/portable-staging",`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-capability`,"trust.json"));
- const artifact=admitSyntheticArtifact(path.resolve("artifact-evidence-synthetic"),trust);
+ const artifact=admitSyntheticArtifact(syntheticEvidenceRoot(),trust);
  const base=JSON.parse(execFileSync("docker",["--context","default","compose","-f","deploy/portable/compose.yml","config","--format","json"],{encoding:"utf8",env:{...process.env,PORTABLE_IMAGE_ID:artifact.imageConfigDigest},stdio:"pipe"}));
  for(const name of ["web-1","web-2"]){mkdirSync(path.join(root,name),{mode:0o700});writeFileSync(path.join(root,name,"capability.json"),"{}",{flag:"wx",mode:0o444});}
  mkdirSync(path.join(root,"qa-ca"),{mode:0o700});writeFileSync(path.join(root,"qa-ca","root.crt"),"",{flag:"wx",mode:0o444});

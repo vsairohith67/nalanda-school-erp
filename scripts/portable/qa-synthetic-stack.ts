@@ -1,3 +1,4 @@
+import { syntheticEvidenceRoot } from "./synthetic-build-lifecycle";
 import assert from "node:assert/strict";
 import {execFileSync} from "node:child_process";
 import {mkdirSync,readFileSync,writeFileSync,lstatSync,realpathSync} from "node:fs";
@@ -12,7 +13,7 @@ async function main(){
  const trustPath=path.resolve("tmp/portable-staging",`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-capability`,"trust.json");
  const trust=readFileSync(trustPath);
  const production=admitArtifact(path.resolve("artifact-evidence"));
- const qa=admitSyntheticArtifact(path.resolve("artifact-evidence-synthetic"),trust);
+ const qa=admitSyntheticArtifact(syntheticEvidenceRoot(),trust);
  assert.notEqual(production.imageConfigDigest,qa.imageConfigDigest,"DISTINCT_QA_ARTIFACT_REQUIRED");
  const project=`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-qaon`,root=path.resolve("tmp/portable-staging",project);
  const env:NodeJS.ProcessEnv={...process.env,PORTABLE_ACCEPTANCE_PHASE:"synthetic-ON",COMPOSE_PROJECT_NAME:project,PORTABLE_CI_ROOT:root,PORTABLE_SYNTHETIC_SECRET_ROOT:path.join(root,"secrets"),PORTABLE_SOURCE_SHA:qa.source,NALANDA_SYNTHETIC_STAGING:"true",PORTABLE_IMAGE_ID:qa.imageConfigDigest};

@@ -1,3 +1,4 @@
+import { syntheticEvidenceRoot } from "./synthetic-build-lifecycle";
 import {execFileSync} from "node:child_process";
 import {mkdirSync,readFileSync,writeFileSync} from "node:fs";
 import path from "node:path";
@@ -7,12 +8,12 @@ import {hashBytes} from "./artifact-handoff";
 // No application rebuild/pull. Only the inherited exact infrastructure references are loaded.
 const synthetic=process.argv[2]==="--synthetic";
 if(process.argv[2]&&!synthetic)throw Error("INFRASTRUCTURE_PHASE_INVALID");
-const receipt=synthetic?admitSyntheticArtifact(path.resolve("artifact-evidence-synthetic"),readFileSync(path.resolve("tmp/portable-staging",`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-capability`,"trust.json"))):admitArtifact(path.resolve("artifact-evidence"));
+const receipt=synthetic?admitSyntheticArtifact(syntheticEvidenceRoot(),readFileSync(path.resolve("tmp/portable-staging",`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-capability`,"trust.json"))):admitArtifact(path.resolve("artifact-evidence"));
 const run=(tool:string,args:string[])=>execFileSync(tool,args,{encoding:"utf8",timeout:10*60_000,maxBuffer:32*1024*1024,stdio:["ignore","pipe","pipe"]});
 const config=JSON.parse(run("docker",["--context","default","compose","-f","deploy/portable/compose.yml","config","--format","json"]));
 const references=[...new Set<string>(Object.values(config.services).map((s:any)=>s.image))].filter(image=>image!==receipt.imageConfigDigest);
 assert.equal(references.length,5);
-const root=path.resolve(synthetic?"artifact-evidence-synthetic/infrastructure":"artifact-evidence/infrastructure");mkdirSync(root,{mode:0o700});
+const root=synthetic?path.join(syntheticEvidenceRoot(),"infrastructure"):path.resolve("artifact-evidence/infrastructure");mkdirSync(root,{mode:0o700});
 const results=[];
 for(const reference of references){
  assert(/^[^\s]+@sha256:[a-f0-9]{64}$/.test(reference));

@@ -1,3 +1,4 @@
+import { syntheticEvidenceRoot } from "./synthetic-build-lifecycle";
 import assert from "node:assert/strict";
 import {execFileSync} from "node:child_process";
 import {randomBytes} from "node:crypto";
@@ -9,7 +10,7 @@ import {integratedBrowser} from "./integrated-browser";
 
 export async function integratedOn(containerId:string){
  const trust=readFileSync(path.resolve("tmp/portable-staging",`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-capability`,"trust.json"));
- const artifact=admitSyntheticArtifact(path.resolve("artifact-evidence-synthetic"),trust);
+ const artifact=admitSyntheticArtifact(syntheticEvidenceRoot(),trust);
  const target=inspectTarget(artifact,containerId),password=randomBytes(48).toString("base64url");
  const command=(script:string,args:string[]=[],input?:string)=>execFileSync("docker",["--context","default","exec","-i","-e","PORTABLE_ACCEPTANCE_FIXTURE=synthetic-ON",containerId,"/nodejs/bin/node",`dist/portable/${script}.mjs`,...args],{encoding:"utf8",input,stdio:["pipe","pipe","pipe"],timeout:30*60_000,maxBuffer:128*1024});
  const report=JSON.parse(command("integrated-bulk",[],JSON.stringify({password})).trim().split(/\r?\n/).at(-1)!);

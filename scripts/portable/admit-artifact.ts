@@ -23,6 +23,7 @@ function qualify(root: string, historicalSource?: string, syntheticTrustBytes?:B
     const trust=JSON.parse(syntheticTrustBytes.toString());
     if(historicalSource||trust.contract!=="NALANDA_SYNTHETIC_BUILD_V1"||trust.source!==source||trust.runId!==process.env.GITHUB_RUN_ID||trust.attempt!==process.env.GITHUB_RUN_ATTEMPT)throw Error("SYNTHETIC_TRUST_CONTEXT_MISMATCH");
     inputs["synthetic-build-trust.json"]=hashBytes(syntheticTrustBytes);
+  inputs["config/qa-build-tools.json"]=hashBytes(input("config/qa-build-tools.json"));
   }
   const receipt=verifyArtifactEvidence(loadEvidence(root),{source,architecture,runId:process.env.GITHUB_RUN_ID!,attempt:process.env.GITHUB_RUN_ATTEMPT!,now:Date.now(),inputs,baseImages:resolveBaseImages(input("Dockerfile").toString()),...(syntheticTrustBytes?{purpose:"SYNTHETIC_ACCEPTANCE_ONLY" as const}:{})});
   assertRuntimeAdmission(receipt); // before Docker probes, target creation, secrets or server launch

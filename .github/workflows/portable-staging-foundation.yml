@@ -161,6 +161,7 @@ jobs:
         run: |
           docker --context default run --rm --name "nalanda-${GITHUB_RUN_ID}-${TARGET_ARCHITECTURE}-context" --label "nalanda.ci.run=${GITHUB_RUN_ID}" --memory 256m --cpus 1 --pids-limit 64 --cap-drop ALL --security-opt no-new-privileges:true --read-only --network none --entrypoint /nodejs/bin/node nalanda-portable-staging:ci -e 'const fs=require("fs"); if (fs.existsSync("/app/prisma/dev.db") || fs.existsSync("/app/.git")) process.exit(1);'
       - name: Bind scanner databases and immutable local artifact
+        id: production_artifact
         env:
           TRIVY_ACTION_OUTCOME: ${{ steps.trivy.outcome }}
           GRYPE_ACTION_OUTCOME: ${{ steps.grype.outcome }}
@@ -181,7 +182,27 @@ jobs:
           sudo apt-get install -y poppler-utils ttf-mscorefonts-installer
           test -f /usr/share/fonts/truetype/msttcorefonts/Georgia_Bold.ttf
           echo "CERTIFICATE_GEORGIA_BOLD_PATH=/usr/share/fonts/truetype/msttcorefonts/Georgia_Bold.ttf" >> "$GITHUB_ENV"
+      - name: Prepare existing QA caller tools
+        run: |
+          sudo apt-get install -y libnss3-tools uidmap
+          pnpm exec playwright install-deps chromium
+          for tool in docker syft trivy grype skopeo certutil pnpm; do command -v "$tool"; done
+      - name: Produce and admit separate same-run QA artifact, call QA and clean signing inputs
+        run: pnpm exec tsx scripts/portable/qa-artifact-producer-cli.ts run
+      - name: Independent QA producer and signing-root recovery cleanup
+        id: qa_producer_cleanup
+        if: always()
+        run: pnpm exec tsx scripts/portable/qa-artifact-producer-cli.ts cleanup
+      - name: Upload allowlisted QA producer metadata only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: qa-producer-result-${{ env.EXPECTED_SHA }}-${{ matrix.architecture }}
+          path: qa-producer-result.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Same-runner immutable stack acceptance and teardown
+        if: ${{ !cancelled() && steps.production_artifact.outcome == 'success' && steps.qa_producer_cleanup.outcome == 'success' }}
         shell: pwsh
         run: ./scripts/portable/qa-stack.ps1
       - name: Independent stack teardown and readback
@@ -195,6 +216,7 @@ jobs:
           fi
       - name: Upload exact metadata-only stack receipt
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: ${{ !cancelled() && steps.production_artifact.outcome == 'success' && steps.qa_producer_cleanup.outcome == 'success' }}
         with:
           name: portable-stack-result-${{ env.EXPECTED_SHA }}-${{ matrix.architecture }}
           path: stack-result.json

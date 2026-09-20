@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 const read=(p:string)=>readFileSync(p,"utf8");
-const publicPaths=new Set(["stack-result.json","public-evidence.json","public-index-evidence.json","oci-cleanup.json",".qa-artifacts/portable-ci/cleanup.json"]);
+const publicPaths=new Set(["qa-producer-result.json","stack-result.json","public-evidence.json","public-index-evidence.json","oci-cleanup.json",".qa-artifacts/portable-ci/cleanup.json"]);
 function audit(source:string,visibility:boolean|undefined,event:string,helpers:Record<string,string>={},visited=new Set<string>()){
  if(!["pull_request","push","workflow_dispatch"].includes(event))throw Error("EVENT_UNKNOWN");
  if(/cache-to:|cache-from:|docker\s+(?:--\S+\s+)*push|gh\s+release\s+upload|uses:\s*actions\/cache/.test(source))throw Error("UNREVIEWED_BINARY_FALLBACK");

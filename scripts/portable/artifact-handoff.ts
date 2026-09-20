@@ -43,20 +43,11 @@ export function verifyArtifactEvidence(files: EvidenceFiles, context: ArtifactCo
   check(manifest.layers.every((l:any)=>digest.test(l.digest)&&Number.isSafeInteger(l.size)&&l.size>=0),"ARTIFACT_LAYER_INVALID");
   check(config.os==="linux"&&config.architecture===context.architecture&&config.config?.User==="65532:65532"&&config.config?.Labels?.["org.opencontainers.image.revision"]===context.source,"ARTIFACT_CONFIG_IDENTITY");
   const purpose=config.config?.Labels?.["io.nalanda.artifact-purpose"];
-  if(context.purpose==="SYNTHETIC_ACCEPTANCE_ONLY")check(purpose===context.purpose&&sha.test(context.inputs["synthetic-build-trust.json"]??""),"SYNTHETIC_ARTIFACT_IDENTITY");
+  if(context.purpose==="SYNTHETIC_ACCEPTANCE_ONLY")check(purpose===context.purpose&&sha.test(context.inputs["synthetic-build-trust.json"]??"")&&config.config.Labels["io.nalanda.synthetic-trust-sha256"]===context.inputs["synthetic-build-trust.json"],"SYNTHETIC_ARTIFACT_IDENTITY");
   else check(purpose===undefined||purpose==="PRODUCTION_DEFAULT_OFF","PRODUCTION_ARTIFACT_REQUIRED");
   const configDigest=manifest.config.digest;
-  check(trivy.SchemaVersion===2&&trivy.Metadata?.ImageID===configDigest&&Array.isArray(trivy.Results)&&trivy.Results.length>0,"TRIVY_REPORT_INVALID");
-  check(trivy.Results.some((r:any)=>r.Class==="os-pkgs"&&typeof r.Type==="string")&&trivy.Results.some((r:any)=>r.Class==="lang-pkgs"&&r.Type==="node-pkg"),"TRIVY_COVERAGE_MISSING");
-  for(const result of trivy.Results){check(!result.ModifiedFindings?.length,"TRIVY_SUPPRESSED_FINDINGS");check(typeof result.Target==="string"&&typeof result.Class==="string","TRIVY_RESULT_INVALID");check(result.Vulnerabilities===undefined||Array.isArray(result.Vulnerabilities),"TRIVY_FINDINGS_INVALID");for(const finding of result.Vulnerabilities??[])check(["LOW","MEDIUM","NEGLIGIBLE"].includes(finding.Severity),"UNRESOLVED_SCAN_FINDING");}
-  check(grype.source?.target?.imageID===configDigest&&Array.isArray(grype.matches)&&typeof grype.descriptor?.version==="string","GRYPE_REPORT_INVALID");
-  check(grype.ignoredMatches===undefined||Array.isArray(grype.ignoredMatches),"GRYPE_IGNORED_INVALID");
-  for(const match of [...grype.matches,...(grype.ignoredMatches??[])])check(["Low","Medium","Negligible"].includes(match.vulnerability?.severity),"UNRESOLVED_SCAN_FINDING");
-  check(sbom.spdxVersion?.startsWith("SPDX-")&&Array.isArray(sbom.packages)&&sbom.packages.length>0,"SBOM_INVALID");
+  verifyImageSecurityReports(files,configDigest,context.now,p.scannerVersions?.trivy);
   check(native.architecture===context.architecture&&native.imageConfigDigest===configDigest&&native.result==="PASSED","NATIVE_EVIDENCE_INVALID");
-  for(const tool of ["trivy","grype"]){const m=metadata[tool];const updated=Date.parse(m?.databaseUpdatedAt);check(m&&typeof m.version==="string"&&m.version.length>0&&sha.test(m.databaseSha256??"")&&Number.isFinite(updated)&&updated<=context.now&&context.now-updated<=72*3600_000&&m.ignoreUnfixed===false&&m.severityThreshold==="HIGH"&&m.exitCode===0,"SCANNER_METADATA_INVALID");}
-  check(metadata.trivy.version===trivy.ArtifactTypeVersion||metadata.trivy.version===p.scannerVersions?.trivy,"TRIVY_VERSION_MISMATCH");
-  check(metadata.grype.version===grype.descriptor.version,"GRYPE_VERSION_MISMATCH");
   return Object.freeze({contract:ARTIFACT_CONTRACT,classification:p.classification,source:context.source,architecture:context.architecture,runId:context.runId,attempt:context.attempt,imageConfigDigest:configDigest,architectureManifestDigest:index.manifests[0].digest,architectureIndexDigest:`sha256:${hashBytes(files['index.json'])}`,provenanceSha256:hashBytes(files['provenance.json']),sbomSha256:hashBytes(files['sbom.json']),scanSha256:{trivy:hashBytes(files['trivy.json']),grype:hashBytes(files['grype.json'])},baseImages:p.baseImages,inputs:p.inputs});
 }
 export function assertRuntimeAdmission(receipt: ReturnType<typeof verifyArtifactEvidence>) {
@@ -70,4 +61,20 @@ export function assertLocalImage(receipt: ReturnType<typeof verifyArtifactEviden
 export function assertRunningImage(receipt: ReturnType<typeof verifyArtifactEvidence>, container: any) {
   check(container.Image===receipt.imageConfigDigest&&container.Config?.Image===receipt.imageConfigDigest&&container.State?.Running===true,"RUNNING_IMAGE_SUBSTITUTED");
   check(!(container.Mounts??[]).some((m:any)=>/^\/app(?:\/|$)|^\/nodejs(?:\/|$)/.test(m.Destination)),"RUNNING_CODE_MOUNT_FORBIDDEN");
+}
+
+/** Same mandatory raw-report validation used before native probing and final admission. */
+export function verifyImageSecurityReports(files:EvidenceFiles,configDigest:string,now:number,trivyVersion:unknown){
+  const read=(name:string)=>JSON.parse(files[name].toString("utf8"));
+  const trivy=read("trivy.json"),grype=read("grype.json"),sbom=read("sbom.json"),metadata=read("scanner-metadata.json");
+  check(trivy.SchemaVersion===2&&trivy.Metadata?.ImageID===configDigest&&Array.isArray(trivy.Results)&&trivy.Results.length>0,"TRIVY_REPORT_INVALID");
+  check(trivy.Results.some((r:any)=>r.Class==="os-pkgs"&&typeof r.Type==="string")&&trivy.Results.some((r:any)=>r.Class==="lang-pkgs"&&r.Type==="node-pkg"),"TRIVY_COVERAGE_MISSING");
+  for(const result of trivy.Results){check(!result.ModifiedFindings?.length,"TRIVY_SUPPRESSED_FINDINGS");check(typeof result.Target==="string"&&typeof result.Class==="string","TRIVY_RESULT_INVALID");check(result.Vulnerabilities===undefined||Array.isArray(result.Vulnerabilities),"TRIVY_FINDINGS_INVALID");for(const finding of result.Vulnerabilities??[])check(["LOW","MEDIUM","NEGLIGIBLE"].includes(finding.Severity),"UNRESOLVED_SCAN_FINDING");}
+  check(grype.source?.target?.imageID===configDigest&&Array.isArray(grype.matches)&&typeof grype.descriptor?.version==="string","GRYPE_REPORT_INVALID");
+  check(grype.ignoredMatches===undefined||Array.isArray(grype.ignoredMatches),"GRYPE_IGNORED_INVALID");
+  for(const match of [...grype.matches,...(grype.ignoredMatches??[])])check(["Low","Medium","Negligible"].includes(match.vulnerability?.severity),"UNRESOLVED_SCAN_FINDING");
+  check(sbom.spdxVersion?.startsWith("SPDX-")&&Array.isArray(sbom.packages)&&sbom.packages.length>0,"SBOM_INVALID");
+  for(const tool of ["trivy","grype"]){const m=metadata[tool];const updated=Date.parse(m?.databaseUpdatedAt);check(m&&typeof m.version==="string"&&m.version.length>0&&sha.test(m.databaseSha256??"")&&Number.isFinite(updated)&&updated<=now&&now-updated<=72*3600_000&&m.ignoreUnfixed===false&&m.severityThreshold==="HIGH"&&m.exitCode===0,"SCANNER_METADATA_INVALID");}
+  check(metadata.trivy.version===trivy.ArtifactTypeVersion||metadata.trivy.version===trivyVersion,"TRIVY_VERSION_MISMATCH");
+  check(metadata.grype.version===grype.descriptor.version,"GRYPE_VERSION_MISMATCH");
 }

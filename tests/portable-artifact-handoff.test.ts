@@ -5,7 +5,7 @@ const context:ArtifactContext={source:"a".repeat(40),architecture:"amd64",runId:
 function fixture(inputContext=context,purpose?:string){
  const context=inputContext;
  const files:EvidenceFiles={};const put=(name:string,value:unknown)=>files[name]=Buffer.from(JSON.stringify(value));
- put("config.json",{architecture:"amd64",os:"linux",config:{User:"65532:65532",Labels:{"org.opencontainers.image.revision":context.source,...(purpose?{"io.nalanda.artifact-purpose":purpose}:{})}}});
+ put("config.json",{architecture:"amd64",os:"linux",config:{User:"65532:65532",Labels:{"org.opencontainers.image.revision":context.source,...(purpose?{"io.nalanda.artifact-purpose":purpose,"io.nalanda.synthetic-trust-sha256":context.inputs["synthetic-build-trust.json"]}:{})}}});
  const image=`sha256:${hashBytes(files['config.json'])}`;
  put("manifest.json",{schemaVersion:2,config:{digest:image,size:files['config.json'].length},layers:[{digest:"sha256:"+"e".repeat(64),size:27}]});
  put("index.json",{schemaVersion:2,manifests:[{digest:`sha256:${hashBytes(files['manifest.json'])}`,size:files['manifest.json'].length}]});

@@ -1,13 +1,14 @@
-import { generateKeyPairSync, randomBytes, sign, createPrivateKey, createPublicKey } from "node:crypto";
+import { syntheticEvidenceRoot, producerIdentity, createProducerRoot, prepareSigningRoot, readSigningRoot, cleanupProducerRoot } from "./synthetic-build-lifecycle";
+import { sign, createPrivateKey, createPublicKey } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync, readFileSync, lstatSync, realpathSync, chmodSync } from "node:fs";
+import { writeFileSync, readFileSync, lstatSync, realpathSync, chmodSync } from "node:fs";
 import path from "node:path";
 import { assertEphemeralCi } from "./operator-adapter";
 import { admitSyntheticArtifact } from "./admit-artifact";
 import { inspectTarget } from "./integrated-acceptance";
 import { hashBytes } from "./artifact-handoff";
 import { releaseFeatureFlags } from "../../lib/release-feature-flags";
-import { verifySyntheticCapability, type SyntheticBuildTrust, type SyntheticCapability } from "../../lib/portable-runtime/synthetic-capability";
+import { verifySyntheticCapability, type SyntheticCapability } from "../../lib/portable-runtime/synthetic-capability";
 
 function privateFile(file:string,root:string){
  if(!file.startsWith(root+path.sep)||realpathSync(file)!==file)throw Error("CAPABILITY_FILE_OUTSIDE_RUN");
@@ -17,16 +18,14 @@ function main(){
  assertEphemeralCi();const source=execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim();if(source!==process.env.EXPECTED_SHA)throw Error("EXACT_HEAD_REQUIRED");
  const root=path.resolve("tmp/portable-staging",`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-capability`);
  if(process.argv[2]==="prepare-build"){
-  mkdirSync(path.dirname(root),{recursive:true,mode:0o700});if(realpathSync(path.dirname(root))!==path.dirname(root))throw Error("CAPABILITY_PARENT_UNSAFE");mkdirSync(root,{mode:0o700});
-  const pair=generateKeyPairSync("ed25519");const trust:SyntheticBuildTrust={contract:"NALANDA_SYNTHETIC_BUILD_V1",buildId:randomBytes(32).toString("hex"),source,runId:process.env.GITHUB_RUN_ID!,attempt:process.env.GITHUB_RUN_ATTEMPT!,publicKey:pair.publicKey.export({format:"pem",type:"spki"}).toString()};
-  writeFileSync(path.join(root,"private-key.pem"),pair.privateKey.export({format:"pem",type:"pkcs8"}),{flag:"wx",mode:0o600});
-  writeFileSync(path.join(root,"trust.json"),JSON.stringify(trust),{flag:"wx",mode:0o400});
-  console.log(JSON.stringify({state:"SYNTHETIC_BUILD_INPUT_PREPARED",source,buildId:trust.buildId,productionAcceptance:false}));return;
+  const identity=producerIdentity();createProducerRoot(process.cwd(),identity,"signing");
+  try{const trust=prepareSigningRoot(process.cwd(),identity);console.log(JSON.stringify({state:"SYNTHETIC_BUILD_INPUT_PREPARED",source,buildId:trust.buildId,productionAcceptance:false}));}
+  catch(error){cleanupProducerRoot(process.cwd(),identity,"signing");throw error;}return;
  }
  if(process.argv[2]!=="issue"||!/^[a-f0-9]{64}$/.test(process.argv[3]??""))throw Error("CAPABILITY_ARGUMENT_INVALID");
  if(realpathSync(root)!==root||lstatSync(root).isSymbolicLink())throw Error("CAPABILITY_ROOT_UNSAFE");
- const trustBytes=privateFile(path.join(root,"trust.json"),root),trust=JSON.parse(trustBytes.toString()) as SyntheticBuildTrust;
- const artifact=admitSyntheticArtifact(path.resolve("artifact-evidence-synthetic"),trustBytes); // before Docker, credential access or any capability write
+ const {bytes:trustBytes,trust}=readSigningRoot(process.cwd(),producerIdentity());
+ const artifact=admitSyntheticArtifact(syntheticEvidenceRoot(),trustBytes); // before Docker, credential access or any capability write
  const target=inspectTarget(artifact,process.argv[3]);
  const key=createPrivateKey(privateFile(path.join(root,"private-key.pem"),root));
  if(createPublicKey(key).export({type:"spki",format:"pem"}).toString()!==trust.publicKey)throw Error("CAPABILITY_SIGNER_MISMATCH");
