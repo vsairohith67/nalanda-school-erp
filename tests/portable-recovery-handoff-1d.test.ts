@@ -2,10 +2,23 @@ import { randomBytes } from "node:crypto";
 import { mkdtemp, writeFile, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { createBackupDocument } from "../lib/backup";
 import { encryptCloudBackup } from "../lib/cloud-backup-container";
 import { makeRecoveryHandoff, readPrivateRecoveryFile, recoveryHash, validateRecoveryHandoff } from "../lib/portable-runtime/recovery-handoff";
+import {assertRecoveryPrivacyKeys} from "../lib/portable-runtime/recovery-readback";
+import {encryptMfaSecret,serializeMfaSecretEnvelope} from "../lib/real-user-access/crypto";
+
+it("requires the genuine private-data key before accepting preserved income ciphertext",()=>{
+ const original={active:"SOURCE",keys:{SOURCE:randomBytes(32).toString("base64")}};
+ const envelope=serializeMfaSecretEnvelope(encryptMfaSecret("0.00","prior-year-income:synthetic-case",{AUTH_MFA_KEYRING_JSON:JSON.stringify(original)}));
+ const backup={priorYearIncomeSupports:[{caseId:"synthetic-case",exactAmountEnvelope:envelope}]} as Parameters<typeof assertRecoveryPrivacyKeys>[0];
+ try{
+  vi.stubEnv("AUTH_MFA_KEYRING_JSON",JSON.stringify(original));expect(()=>assertRecoveryPrivacyKeys(backup)).not.toThrow();
+  vi.stubEnv("AUTH_MFA_KEYRING_JSON",JSON.stringify({active:"SOURCE",keys:{SOURCE:randomBytes(32).toString("base64")}}));expect(()=>assertRecoveryPrivacyKeys(backup)).toThrow("RECOVERY_PRIVATE_DATA_KEY_CUSTODY_REQUIRED");
+  vi.stubEnv("AUTH_MFA_KEYRING_JSON","");expect(()=>assertRecoveryPrivacyKeys(backup)).toThrow("RECOVERY_PRIVATE_DATA_KEY_CUSTODY_REQUIRED");
+ }finally{vi.unstubAllEnvs();}
+});
 
 async function transfer() {
   const key = randomBytes(32);

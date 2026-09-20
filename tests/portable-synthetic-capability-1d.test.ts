@@ -22,7 +22,7 @@ it("rejects copied, stale, missing, tampered, future and wrongly targeted capabi
   expect(verifySyntheticCapability({...trust,publicKey:other.publicKey.export({type:"spki",format:"pem"}).toString()},signed(capability),binding,now)).toBeNull();
 });
 it("production source has no trust key and cannot change feature flags or the MFA/step-up QA boolean",()=>{
-  const env={NODE_ENV:"production",NALANDA_ENVIRONMENT:"synthetic-staging",DATABASE_PROVIDER:"postgresql",DATABASE_URL:"postgresql://postgres/nalanda_portable_synthetic?schema=public",APP_ORIGIN:binding.origin,CI:"true",RELEASE_FEATURE_FLAGS_QA_MODE:"SYNTHETIC_COPY_ONLY",RELEASE_FEATURE_FLAGS_QA_ENABLED:PRIOR_YEAR_CONCESSIONS_FEATURE.key,SYNTHETIC_CAPABILITY:JSON.stringify(signed(capability))};
+  const env:NodeJS.ProcessEnv={NODE_ENV:"production",NALANDA_ENVIRONMENT:"synthetic-staging",DATABASE_PROVIDER:"postgresql",DATABASE_URL:"postgresql://postgres/nalanda_portable_synthetic?schema=public",APP_ORIGIN:binding.origin,CI:"true",RELEASE_FEATURE_FLAGS_QA_MODE:"SYNTHETIC_COPY_ONLY",RELEASE_FEATURE_FLAGS_QA_ENABLED:PRIOR_YEAR_CONCESSIONS_FEATURE.key,SYNTHETIC_CAPABILITY:JSON.stringify(signed(capability))};
   expect(syntheticFeatureCapability(env)).toBeNull();
   expect(isSyntheticReleaseFeatureQaMode(env)).toBe(false);
   expect(operationalReleaseFeatureAvailability(PRIOR_YEAR_CONCESSIONS_FEATURE,{environment:env}).enabled).toBe(false);

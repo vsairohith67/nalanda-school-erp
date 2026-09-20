@@ -1,3 +1,4 @@
+import { initializeSyntheticFoundation } from "./synthetic-foundation";
 import { createHash, randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { assertPortableRuntimeConfiguration } from "@/lib/portable-runtime/config";
@@ -54,64 +55,7 @@ async function seed() {
   const configuration = assertPortableRuntimeConfiguration(process.env, "seed-synthetic");
   assertSyntheticTarget(configuration);
   await assertEmptyOrMarked();
-  const directorPassword = readPortableSecret("STAGING_SYNTHETIC_DIRECTOR_PASSWORD", process.env, { required: true });
-  if (directorPassword.length < 24) throw new Error("PORTABLE_SYNTHETIC_PASSWORD_INVALID");
-  const passwordHash = await hashPassword(directorPassword);
-  const disabledPasswordHash = await hashPassword(randomBytes(48).toString("base64url"));
-
-  await prisma.schoolSettings.upsert({
-    where: { id: markerId },
-    update: { schoolName: "PORTABLE SYNTHETIC STAGING - NO REAL DATA", academicYear: "2026-27" },
-    create: { id: markerId, schoolName: "PORTABLE SYNTHETIC STAGING - NO REAL DATA", academicYear: "2026-27", phone: "0000000000", addressLine1: "Synthetic staging only", city: "Test City" }
-  });
-  await prisma.schoolSettings.upsert({
-    where: { id: "school" },
-    update: { schoolName: "Nalanda Portable Synthetic School", academicYear: "2026-27" },
-    create: { id: "school", schoolName: "Nalanda Portable Synthetic School", academicYear: "2026-27", phone: "0000000000", addressLine1: "Synthetic staging only", city: "Test City" }
-  });
-  await prisma.user.upsert({
-    where: { id: actorId },
-    update: { passwordHash, isActive: true, role: "DIRECTOR", mustChangePassword: true },
-    create: { id: actorId, name: "Portable Synthetic Director", username: "portable-synthetic-director", email: "director@portable.invalid", role: "DIRECTOR", isActive: true, mustChangePassword: true, passwordHash }
-  });
-  await prisma.user.upsert({
-    where: { id: "portable-synthetic-structural-actor" },
-    update: { passwordHash: disabledPasswordHash, isActive: false, mustChangePassword: true },
-    create: { id: "portable-synthetic-structural-actor", name: "Portable Synthetic Structural Actor", username: "portable-synthetic-structural-actor", email: "structural@portable.invalid", role: "DIRECTOR", isActive: false, mustChangePassword: true, passwordHash: disabledPasswordHash }
-  });
-  await ensureDefaultRolePermissions(prisma);
-
-  const backupProfile = await prisma.cloudBackupProfile.upsert({
-    where: { profileCode: "PORTABLE-SYNTHETIC-S3" },
-    update: { status: "ACTIVE", liveUseEnabled: true, providerKind: "OBJECT_STORAGE", destinationLabel: "Private synthetic S3-compatible destination" },
-    create: {
-      id: "portable-synthetic-backup-profile",
-      profileCode: "PORTABLE-SYNTHETIC-S3",
-      name: "Portable Synthetic S3-Compatible Backup",
-      providerKind: "OBJECT_STORAGE",
-      status: "ACTIVE",
-      liveUseEnabled: true,
-      destinationLabel: "Private synthetic S3-compatible destination",
-      destinationReferenceMasked: "nalanda-portable-synthetic-private/private/backups/***",
-      encryptionKeyVersion: "V1",
-      verificationRequired: true,
-      privateAssetsIncluded: false,
-      activatedByUserId: actorId
-    }
-  });
-  await prisma.cloudBackupRetentionPolicy.upsert({
-    where: { profileId: backupProfile.id },
-    update: { keepLatestVerifiedCount: 2, minimumVerifiedCopies: 2, autoPruneEnabled: false },
-    create: {
-      id: "portable-synthetic-retention-policy",
-      policyCode: "PORTABLE-SYNTHETIC-RETENTION",
-      profileId: backupProfile.id,
-      keepLatestVerifiedCount: 2,
-      minimumVerifiedCopies: 2,
-      autoPruneEnabled: false,
-      createdByUserId: actorId
-    }
-  });
+  await initializeSyntheticFoundation(prisma);
 
   const students = Array.from({ length: 800 }, (_, index) => ({
     id: `portable-student-${String(index).padStart(4, "0")}`,

@@ -2,6 +2,17 @@ import assert from "node:assert/strict";
 import { Prisma, type PrismaClient } from "@prisma/client";
 import type { ValidatedBackup } from "../restore";
 import { recoveryHash } from "./recovery-handoff";
+import {decryptMfaSecret} from "../real-user-access/crypto";
+
+/** Check decryptability before any database/object-store writes. Equality of
+ * ciphertext alone cannot establish usable recovery of private income data. */
+export function assertRecoveryPrivacyKeys(backup:ValidatedBackup){
+ for(const row of backup.priorYearIncomeSupports){
+  if(!row.exactAmountEnvelope)continue;
+  try{assert(typeof row.exactAmountEnvelope==="string");const amount=decryptMfaSecret(row.exactAmountEnvelope,`prior-year-income:${row.caseId}`);const number=new Prisma.Decimal(amount);assert(number.isFinite()&&number.gte(0)&&number.decimalPlaces()<=2);}
+  catch{throw Error("RECOVERY_PRIVATE_DATA_KEY_CUSTODY_REQUIRED");}
+ }
+}
 
 export async function assertEmptyRecoveryDatabase(db: PrismaClient) {
   // PostgreSQL migrations create no reference rows. Inspect every model, not
@@ -13,6 +24,7 @@ export async function assertEmptyRecoveryDatabase(db: PrismaClient) {
 }
 
 export async function assertRecoveryReadback(db: PrismaClient, backup: ValidatedBackup) {
+  assertRecoveryPrivacyKeys(backup);
   const data = backup as unknown as Record<string, any>;
   const number = (value: unknown) => new Prisma.Decimal(String(value ?? 0));
   const total = (rows: any[], key: string) => rows.reduce((sum, row) => sum.plus(number(row[key])), new Prisma.Decimal(0)).toFixed(2);

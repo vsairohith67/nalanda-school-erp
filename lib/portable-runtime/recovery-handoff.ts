@@ -44,7 +44,7 @@ export async function validateRecoveryHandoff(bytes: Buffer, manifestBytes: Buff
   return { manifest: m, backup };
 }
 /** Paths are fixed by the image; neither requests nor the manifest select files. */
-export async function readPrivateRecoveryFile(root: string, name: "backup.npsbackup" | "manifest.json" | "recovery-key", maximum: number) {
+export async function readPrivateRecoveryFile(root: string, name: "backup.npsbackup" | "manifest.json" | "recovery-key" | "source-v48.json" | "operator-fixture.json", maximum: number) {
   const directory = await lstat(root);
   if (!directory.isDirectory() || directory.isSymbolicLink() || await realpath(root) !== root) throw Error("RECOVERY_ROOT_UNSAFE");
   const file = path.join(root, name), info = await lstat(file);

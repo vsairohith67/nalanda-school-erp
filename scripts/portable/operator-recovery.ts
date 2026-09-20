@@ -5,19 +5,33 @@ import { createCloudBackupProvider } from "../../lib/cloud-backup-provider";
 import { restoreValidatedBackup } from "../../lib/restore-database";
 import { hydratePortableRuntimeSecrets, readPortableSecret } from "../../lib/portable-runtime/secrets";
 import { makeRecoveryHandoff, readPrivateRecoveryFile, recoveryHash, validateRecoveryHandoff, type RecoveryExpectation } from "../../lib/portable-runtime/recovery-handoff";
-import { assertEmptyRecoveryDatabase, assertRecoveryReadback } from "../../lib/portable-runtime/recovery-readback";
+import { assertEmptyRecoveryDatabase, assertRecoveryReadback, assertRecoveryPrivacyKeys } from "../../lib/portable-runtime/recovery-readback";
 import { generateFullBackup } from "../../lib/backup";
+import {validateOperatorFixture} from "../../lib/portable-runtime/operator-fixture";
+import {initializeSyntheticFoundation} from "./synthetic-foundation";
 
 async function main() {
   if (process.env.NALANDA_SYNTHETIC_STAGING !== "true" || process.env.PORTABLE_OPERATOR_CI !== "true") throw Error("SYNTHETIC_RECOVERY_ONLY");
   hydratePortableRuntimeSecrets();
   const [command, operationId, encoded] = process.argv.slice(2);
   if (!/^[a-f0-9]{16}$/.test(operationId ?? "")) throw Error("RECOVERY_OPERATION_INVALID");
-  const connection = readPortableSecret(command === "restore" || command === "empty" ? "DIRECT_URL" : "DATABASE_URL", process.env, { required: true });
+  const connection = readPortableSecret(["restore","empty","seed-fixture"].includes(command) ? "DIRECT_URL" : "DATABASE_URL", process.env, { required: true });
   const url = new URL(connection);
   if (url.protocol !== "postgresql:" || url.hostname !== "postgres" || url.pathname !== "/nalanda_portable_synthetic" || url.searchParams.get("schema") !== "public") throw Error("SYNTHETIC_DATABASE_REQUIRED");
   const db = new PrismaClient({ datasourceUrl: connection });
   try {
+    if(command==="seed-fixture"){
+      const expected=JSON.parse(Buffer.from(encoded??"","base64url").toString());
+      const bytes=await readPrivateRecoveryFile("/run/operator-fixture","source-v48.json",16*1024*1024);
+      const receipt=JSON.parse((await readPrivateRecoveryFile("/run/operator-fixture","operator-fixture.json",2048)).toString());
+      const backup=validateOperatorFixture(bytes,receipt,expected);
+      assertRecoveryPrivacyKeys(backup);
+      await assertEmptyRecoveryDatabase(db);
+      await restoreValidatedBackup(db,backup,{id:"portable-synthetic-director",name:"SYNTHETIC operator fixture preparation"});
+      const readback=await assertRecoveryReadback(db,backup);
+      await initializeSyntheticFoundation(db);
+      console.log(JSON.stringify({state:"GENUINE_NONEMPTY_FIXTURE_INITIALISED",source:expected.source,readback}));return;
+    }
     if(command==="empty"){
       await assertEmptyRecoveryDatabase(db);
       const expected=JSON.parse(Buffer.from(encoded??"","base64url").toString());
@@ -73,6 +87,7 @@ async function main() {
     const key = Buffer.from(keyText, "base64");
     let validated;
     try { validated = await validateRecoveryHandoff(bytes, manifest, key, expected); } finally { key.fill(0); }
+    assertRecoveryPrivacyKeys(validated.backup);
     await assertEmptyRecoveryDatabase(db);
     // Destination S3 credentials only: no source connection or fake catalogue.
     const provider = createCloudBackupProvider({ providerKind: "OBJECT_STORAGE", liveUseEnabled: true, requestTimeoutMs: 30_000 });
