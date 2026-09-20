@@ -11,8 +11,8 @@ import {encryptMfaSecret,serializeMfaSecretEnvelope} from "../lib/real-user-acce
 
 it("requires the genuine private-data key before accepting preserved income ciphertext",()=>{
  const original={active:"SOURCE",keys:{SOURCE:randomBytes(32).toString("base64")}};
- const envelope=serializeMfaSecretEnvelope(encryptMfaSecret("0.00","prior-year-income:synthetic-case",{AUTH_MFA_KEYRING_JSON:JSON.stringify(original)}));
- const backup={priorYearIncomeSupports:[{caseId:"synthetic-case",exactAmountEnvelope:envelope}]} as Parameters<typeof assertRecoveryPrivacyKeys>[0];
+ const envelope=serializeMfaSecretEnvelope(encryptMfaSecret("0.00","prior-year-income:synthetic-case",{NODE_ENV:"test",AUTH_MFA_KEYRING_JSON:JSON.stringify(original)}));
+ const backup={priorYearIncomeSupports:[{caseId:"synthetic-case",exactAmountEnvelope:envelope}]};
  try{
   vi.stubEnv("AUTH_MFA_KEYRING_JSON",JSON.stringify(original));expect(()=>assertRecoveryPrivacyKeys(backup)).not.toThrow();
   vi.stubEnv("AUTH_MFA_KEYRING_JSON",JSON.stringify({active:"SOURCE",keys:{SOURCE:randomBytes(32).toString("base64")}}));expect(()=>assertRecoveryPrivacyKeys(backup)).toThrow("RECOVERY_PRIVATE_DATA_KEY_CUSTODY_REQUIRED");

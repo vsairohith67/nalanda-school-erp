@@ -6,7 +6,7 @@ import {decryptMfaSecret} from "../real-user-access/crypto";
 
 /** Check decryptability before any database/object-store writes. Equality of
  * ciphertext alone cannot establish usable recovery of private income data. */
-export function assertRecoveryPrivacyKeys(backup:ValidatedBackup){
+export function assertRecoveryPrivacyKeys(backup:Pick<ValidatedBackup,"priorYearIncomeSupports">){
  for(const row of backup.priorYearIncomeSupports){
   if(!row.exactAmountEnvelope)continue;
   try{assert(typeof row.exactAmountEnvelope==="string");const amount=decryptMfaSecret(row.exactAmountEnvelope,`prior-year-income:${row.caseId}`);const number=new Prisma.Decimal(amount);assert(number.isFinite()&&number.gte(0)&&number.decimalPlaces()<=2);}

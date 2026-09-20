@@ -39,6 +39,14 @@ const s3BackupSecret = token(36);
 const s3BackupMaintenanceAccess = randomBytes(12).toString("hex");
 const s3BackupMaintenanceSecret = token(36);
 const databaseName = "nalanda_portable_synthetic";
+const databaseUrl = (username, password, connectionLimit) => {
+  const url = new URL(`postgresql://postgres:5432/${databaseName}`);
+  url.username = username; url.password = password;
+  url.searchParams.set("schema", "public");
+  if (connectionLimit) { url.searchParams.set("connection_limit", String(connectionLimit)); url.searchParams.set("pool_timeout", "20"); }
+  url.searchParams.set("connect_timeout", "10");
+  return url.toString();
+};
 const files = new Map([
   ["postgres_runtime_password", postgresRuntime],
   ["postgres_migrator_password", postgresMigrator],
@@ -62,10 +70,10 @@ const files = new Map([
   ["internal_health_token", token(48)],
   ["backup_encryption_key", randomBytes(32).toString("base64")],
   ["synthetic_director_password", token(24)],
-  ["database_url", `postgresql://nalanda_runtime:${encodeURIComponent(postgresRuntime)}@postgres:5432/${databaseName}?schema=public&connection_limit=20&pool_timeout=20&connect_timeout=10`],
-  ["backup_database_url", `postgresql://nalanda_backup:${encodeURIComponent(postgresBackup)}@postgres:5432/${databaseName}?schema=public&connection_limit=4&pool_timeout=20&connect_timeout=10`],
-  ["backup_maintenance_database_url", `postgresql://nalanda_backup_maintenance:${encodeURIComponent(postgresBackupMaintenance)}@postgres:5432/${databaseName}?schema=public&connection_limit=2&pool_timeout=20&connect_timeout=10`],
-  ["direct_url", `postgresql://nalanda_migrator:${encodeURIComponent(postgresMigrator)}@postgres:5432/${databaseName}?schema=public&connect_timeout=10`],
+  ["database_url", databaseUrl("nalanda_runtime", postgresRuntime, 20)],
+  ["backup_database_url", databaseUrl("nalanda_backup", postgresBackup, 4)],
+  ["backup_maintenance_database_url", databaseUrl("nalanda_backup_maintenance", postgresBackupMaintenance, 2)],
+  ["direct_url", databaseUrl("nalanda_migrator", postgresMigrator)],
   ["valkey_url", `redis://:${encodeURIComponent(valkeyPassword)}@valkey:6379/0`]
 ]);
 
