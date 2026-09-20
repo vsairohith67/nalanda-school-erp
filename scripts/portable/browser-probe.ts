@@ -1,0 +1,19 @@
+import assert from "node:assert/strict";
+import {PrismaClient} from "@prisma/client";
+import {assertSyntheticServingTarget,nextTotp} from "./acceptance-http";
+async function main(){
+ assertSyntheticServingTarget();const [operation,encoded]=process.argv.slice(2);assert(encoded&&encoded.length<1024);
+ const input=JSON.parse(Buffer.from(encoded,"base64url").toString()),db=new PrismaClient();
+ try{
+  if(operation==="totp"){
+   assert.equal(input.username,"director");const user=await db.user.findUniqueOrThrow({where:{username:input.username}});
+   assert.equal(user.name,"SYNTHETIC acceptance administrator");
+   // Private parent pipe only. The driver never persists this response.
+   console.log(JSON.stringify({token:await nextTotp(db,user.id)}));return;
+  }
+  assert.equal(operation,"student");assert(/^SYNTHETIC-BROWSER-[a-f0-9-]{36}$/.test(input.admission));
+  const student=await db.student.findUnique({where:{admissionNo:input.admission}});
+  console.log(JSON.stringify({count:student?1:0,academicYear:student?.academicYear??null,className:student?.className??null,section:student?.section??null,nameMatches:student?.studentName==="SYNTHETIC Browser Student"}));
+ }finally{await db.$disconnect();}
+}
+main().catch(()=>{console.error("BROWSER_PRIVATE_PROBE_FAILED");process.exitCode=1;});

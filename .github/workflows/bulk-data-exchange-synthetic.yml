@@ -108,12 +108,12 @@ jobs:
           ready
           NODE_ENV=production pnpm exec tsx scripts/qa-ux-bulk-data-exchange-e2e.ts off
           stop_owned_server
-          NODE_ENV=development RELEASE_FEATURE_FLAGS_QA_MODE=SYNTHETIC_COPY_ONLY RELEASE_FEATURE_FLAGS_QA_ENABLED=real-data-imports,bulk-exports node node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port 47832 >tmp/release-ci/http-on.log 2>&1 &
-          server_pid=$!
-          ready
-          NODE_ENV=development pnpm exec tsx scripts/qa-ux-bulk-data-exchange-e2e.ts on
-          stop_owned_server
-          echo '{"listenerClosed":true,"syntheticOnly":true}' >tmp/release-ci/bulk-teardown-result.json
+          # The old SQLite/development ON runner is retired. Syntax-valid private
+          # contacts require the signed PostgreSQL test artifact/internal network.
+          # PR28's --run-on entrypoint owns replacement acceptance. Do not reopen
+          # this historical job as a substitute for that integrated matrix.
+          echo "LEGACY_ON_RETIRED_USE_ADMITTED_INTEGRATED_RUN_ON" >&2
+          exit 1
       - name: Always verify fixture teardown
         if: always()
         shell: bash

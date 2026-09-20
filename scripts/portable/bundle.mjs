@@ -7,6 +7,8 @@ await mkdir(output, { recursive: true });
 
 await build({
   entryPoints: {
+    "integrated-bulk": "scripts/portable/integrated-bulk.ts",
+    "browser-probe": "scripts/portable/browser-probe.ts",
     "acceptance-readback": "scripts/portable/acceptance-readback.ts",
     "acceptance-fixture": "scripts/portable/acceptance-fixture.ts",
     "runtime-command": "scripts/portable/runtime-command.ts",

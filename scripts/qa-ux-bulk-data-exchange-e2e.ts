@@ -1,4 +1,6 @@
 // Only this script may prepare/exercise the task's admitted hosted synthetic HTTP runtime.
+import { pathToFileURL } from "node:url";
+import { privateSyntheticContact } from "./portable/private-fixtures";
 import { randomUUID } from "node:crypto";
 import { grantMarksDelegation, revokeMarksDelegation } from "../lib/academic-integrity";
 import assert from "node:assert/strict";
@@ -11,14 +13,12 @@ import { parseCsv, MARKS_IMPORT_COLUMNS } from "../lib/marks-import-csv";
 import { generateOnboardingTemplate } from "../lib/onboarding-workbooks";
 import { STUDENT_HEADERS, GUARDIAN_HEADERS, LINK_HEADERS, ENROLLMENT_HEADERS } from "../lib/onboarding-types";
 import * as XLSX from "xlsx";
-const root = path.join(process.cwd(), "tmp", "release-ci");
-const expected = `file:${path.join(root,"database","synthetic.db").replaceAll("\\","/")}`;
-const db = new PrismaClient();
-const password = process.env.BULK_SYNTHETIC_PASSWORD ?? "";
-const origin = "http://127.0.0.1:47832";
-const checks: string[] = [];
-const refused = (response: Response, expectedStatuses: number[]) => assert(expectedStatuses.includes(response.status), `Expected refusal ${expectedStatuses.join("/")}, received ${response.status}`);
-function hostGate() { assert(password.length >= 48, "Per-run synthetic credential required"); assert.equal(process.env.GITHUB_ACTIONS,"true"); assert.equal(process.env.RUNNER_ENVIRONMENT,"github-hosted"); assert.equal(process.env.DATABASE_URL,expected); assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.BULK_EXACT_HEAD); }
+export type BulkAcceptanceOptions={root:string;db:PrismaClient;password:string;origin:string;source:string;phase:"prepare"|"off"|"on";guard:()=>void;http:typeof fetch;login?:(username:string)=>Promise<string>};
+export async function runBulkAcceptance(options:BulkAcceptanceOptions){
+const {root,db,password,origin}=options; const fetch=options.http;
+const checks:string[]=[];
+const refused=(response:Response,statuses:number[])=>assert(statuses.includes(response.status),"EXPECTED_AUTHORITY_REFUSAL");
+function hostGate(){options.guard();assert(password.length>=48);}
 async function prepare() {
   assert.equal(await db.student.count(),0);
   const admin = await db.user.update({where:{username:"director"},data:{passwordHash:await hashPassword(password),mustChangePassword:false,lifecycleStatus:"ACTIVE"}});
@@ -28,7 +28,7 @@ async function prepare() {
   await db.authLoginAlias.create({data:{userId:principal.id,type:"USERNAME",normalizedValue:"bulk-principal",displayMasked:"bulk-principal",status:"VERIFIED",verifiedAt:new Date()}});
   const cls = await db.timetableClassSection.upsert({where:{academicYear_className_section:{academicYear:"2026-27",className:"I",section:"A"}},update:{isActive:true},create:{academicYear:"2026-27",className:"I",section:"A",displayName:"Synthetic I A",groupName:"Synthetic",isActive:true}});
   const students=[];
-  for(let i=1;i<=3;i++) {const s=await db.student.create({data:{admissionNo:`0000${i}`,studentName:`INVENTED Bulk Student ${i}`,fatherName:"INVENTED Parent",phone1:`900000000${i}`,academicYear:"2026-27",className:i===3?"II":"I",section:i===3?"B":"A",status:"Active"}});students.push(s);await db.academicYearEnrollment.create({data:{studentId:s.id,academicYear:"2026-27",className:s.className,section:s.section,status:"ACTIVE"}});await db.academicYearEnrollment.create({data:{studentId:s.id,academicYear:"2025-26",className:"I",section:i===3?"B":"A",status:i===2?"INACTIVE":"ACTIVE"}});}
+  for(let i=1;i<=3;i++) {const s=await db.student.create({data:{admissionNo:`0000${i}`,studentName:`INVENTED Bulk Student ${i}`,fatherName:"INVENTED Parent",phone1:"SYNTHETIC-NO-CONTACT",academicYear:"2026-27",className:i===3?"II":"I",section:i===3?"B":"A",status:"Active"}});students.push(s);await db.academicYearEnrollment.create({data:{studentId:s.id,academicYear:"2026-27",className:s.className,section:s.section,status:"ACTIVE"}});await db.academicYearEnrollment.create({data:{studentId:s.id,academicYear:"2025-26",className:"I",section:i===3?"B":"A",status:i===2?"INACTIVE":"ACTIVE"}});}
   const subject=await db.timetableSubject.create({data:{name:"Synthetic Bulk Math",shortName:"SBM",department:"Synthetic",isActive:true}});
   const legacy=await db.examCycle.create({data:{examCode:"BULK-SYNTH",academicYear:"2026-27",name:"Synthetic bulk legacy",examType:"TERM",startDate:new Date("2026-09-01"),endDate:new Date("2026-09-30"),status:"OPEN_FOR_ENTRY"}});
   const assessment=await db.examAssessment.create({data:{examCycleId:legacy.id,academicYear:"2026-27",className:"I",section:"A",subjectName:subject.name,timetableSubjectId:subject.id,componentName:"Theory",assessmentType:"WRITTEN",maxMarks:10,entryStatus:"OPEN"}});
@@ -47,6 +47,7 @@ async function prepare() {
 async function exercise(off:boolean) {
   const state=JSON.parse(readFileSync(path.join(root,"bulk-state.json"),"utf8"));
   async function session(username: string) {
+    if(options.login)return options.login(username);
     const login = await fetch(origin+"/api/auth/login",{method:"POST",headers:{"content-type":"application/json",origin},body:JSON.stringify({identifier:username,password})});
     assert.equal(login.status,200,"Synthetic actual login");
     const cookie=login.headers.getSetCookie().map(v=>v.split(";")[0]).join("; "); assert(cookie); return cookie;
@@ -121,7 +122,7 @@ async function exercise(off:boolean) {
     await grantMarksDelegation(db,adminActor,{userHandle:linked.iamPublicKey,kind:"GOVERNED_COMPONENT",targetId:state.assignmentId,reason:"Synthetic exact-scope conflict QA",validUntil:new Date(Date.now()+3600000).toISOString()});
     const linkedCookie=await session(linked.username!); const linkedCsv=await (await asActor(linkedCookie,endpoint+"?format=csv")).text();
     const linkedPreview=await asActor(linkedCookie,endpoint,{model:"GOVERNED_DRAFT",csv:linkedCsv,action:"preview"});assert.equal(linkedPreview.status,200);const linkedPlan=await linkedPreview.json();
-    const guardian=await db.guardian.create({data:{displayName:"INVENTED linked guardian",primaryMobile:"9000000088"}});
+    const guardian=await db.guardian.create({data:{displayName:"INVENTED linked guardian",primaryMobile:"SYNTHETIC-LINKED-NO-CONTACT"}});
     await db.studentGuardian.create({data:{guardianId:guardian.id,studentId:state.studentId}}); await db.user.update({where:{id:linked.id},data:{guardianId:guardian.id}});
     refused(await asActor(linkedCookie,endpoint,{model:"GOVERNED_DRAFT",csv:linkedCsv,action:"confirm",receipt:linkedPlan.receipt}),[401,403]);
     assert.deepEqual(await db.examMarkEntry.findMany({orderBy:{id:"asc"}}),beforeRevocation);assert.deepEqual(await db.examMarkSheet.findMany({orderBy:{id:"asc"}}),beforeDeniedSheets);assert.equal(await db.authSecurityEvent.count({where:{eventType:"MARKS_DELEGATION_FAMILY_CONFLICT_DENIED",userId:linked.id}}),1);checks.push("linked_child_added_after_preview_refused");
@@ -135,7 +136,7 @@ async function exercise(off:boolean) {
     for (const role of ["PARENT","VIEWER"] as const) {
       const denied=await inventedActor(`bulk-denied-${role.toLowerCase()}`,role);
       if(role==="PARENT") {
-        const parentGuardian=await db.guardian.create({data:{displayName:"INVENTED export Parent",primaryMobile:"9000000089"}});
+        const parentGuardian=await db.guardian.create({data:{displayName:"INVENTED export Parent",primaryMobile:"SYNTHETIC-PARENT-NO-CONTACT"}});
         await db.studentGuardian.create({data:{guardianId:parentGuardian.id,studentId:state.studentId}});
         await db.user.update({where:{id:denied.id},data:{guardianId:parentGuardian.id}});
       }
@@ -147,9 +148,10 @@ async function exercise(off:boolean) {
     const empty=await call("/api/export/students?q=NO_SYNTHETIC_MATCH");assert.equal(parseCsv(await empty.text()).length,1);checks.push("header_only_zero_results");
     assert.equal((await call("/api/export/students?unknown=1")).status,400);checks.push("invalid_export_filter_rejected");
     assert.equal((await call("/api/marks/reports/export?academicYear=2026-27&examCode=BULK-SYNTH")).status,200);checks.push("authorised_exam_report_download");
+    const privateContact=privateSyntheticContact();
     const workbook=XLSX.read(generateOnboardingTemplate({bundle:"STUDENT_GUARDIAN",academicYears:["2026-27"],classes:[{academicYear:"2026-27",className:"I",section:"A"}]}),{type:"buffer"});
-    workbook.Sheets.Students=XLSX.utils.aoa_to_sheet([STUDENT_HEADERS,["ROW-ONBOARD","00010","INVENTED Controlled","INVENTED Guardian","","9000000010","","","2026-27","I","A","","ACTIVE","","NO"]]);
-    workbook.Sheets.Guardians=XLSX.utils.aoa_to_sheet([GUARDIAN_HEADERS,["GUARDIAN-ONBOARD","INVENTED Guardian","Father","9000000010","","","MOBILE","NO","NO"]]);
+    workbook.Sheets.Students=XLSX.utils.aoa_to_sheet([STUDENT_HEADERS,["ROW-ONBOARD","00010","INVENTED Controlled","INVENTED Guardian","",privateContact,"","","2026-27","I","A","","ACTIVE","","NO"]]);
+    workbook.Sheets.Guardians=XLSX.utils.aoa_to_sheet([GUARDIAN_HEADERS,["GUARDIAN-ONBOARD","INVENTED Guardian","Father",privateContact,"","","MOBILE","NO","NO"]]);
     workbook.Sheets["Student-Guardian Links"]=XLSX.utils.aoa_to_sheet([LINK_HEADERS,["LINK-ONBOARD","ROW-ONBOARD","GUARDIAN-ONBOARD","Father","YES","YES","YES","NO"]]);
     workbook.Sheets.Enrollments=XLSX.utils.aoa_to_sheet([ENROLLMENT_HEADERS,["ENROLL-ONBOARD","ROW-ONBOARD","2026-27","I","A","","","ACTIVE","NO"]]);
     const form=new FormData();form.set("bundle","STUDENT_GUARDIAN");form.set("workbook",new Blob([XLSX.write(workbook,{type:"buffer",bookType:"xlsx"})], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"synthetic-controlled.xlsx");
@@ -159,8 +161,16 @@ async function exercise(off:boolean) {
     const approval={reason:"Synthetic exact-head acceptance only",reauthPassword:password,planHash:validated.batch.planHash,workbookHash:validated.batch.workbookHash};await json(batchPath+"/approve",approval);await json(batchPath+"/execute",{...approval,idempotencyKey:"bulk-synthetic-execution-0001"});assert(await db.student.findUnique({where:{admissionNo:"00010"}}));checks.push("controlled_bundle_validate_approve_execute_readback");
     await db.user.update({where:{username:"bulk-principal"},data:{isActive:false}});assert.equal((await asActor(legacyCookie,"/api/marks/import",{...legacy,action:"confirm",receipt:p.receipt})).status,401);checks.push("revoked_actor_rejected");
   }
-  writeFileSync(path.join(root,off?"bulk-off-result.json":"bulk-on-result.json"),JSON.stringify({head:process.env.BULK_EXACT_HEAD,mode:off?"production-OFF":"synthetic-ON",checks, businessCounts:{students:await db.student.count(),legacyMarks:await db.studentMark.count(),governedEntries:await db.examMarkEntry.count(),importBatches:await db.importBatch.count()}},null,2));
+  writeFileSync(path.join(root,off?"bulk-off-result.json":"bulk-on-result.json"),JSON.stringify({head:options.source,mode:off?"production-OFF":"synthetic-ON",checks, businessCounts:{students:await db.student.count(),legacyMarks:await db.studentMark.count(),governedEntries:await db.examMarkEntry.count(),importBatches:await db.importBatch.count()}},null,2));
   console.log(JSON.stringify({mode:off?"OFF":"ON",checks}));
 }
-async function main(){hostGate();try{if(process.argv[2]==="prepare")await prepare();else await exercise(process.argv[2]==="off");}catch(error){writeFileSync(path.join(root,"bulk-partial-result.json"),JSON.stringify({head:process.env.BULK_EXACT_HEAD,phase:process.argv[2],status:"FAILED",completedAssertions:checks},null,2));throw error;}finally{await db.$disconnect();}}
-void main();
+async function main(){hostGate();try{if(options.phase==="prepare")await prepare();else await exercise(options.phase==="off");}catch(error){writeFileSync(path.join(root,"bulk-partial-result.json"),JSON.stringify({head:options.source,phase:options.phase,status:"FAILED",completedAssertions:checks},null,2));throw Error("BULK_ACCEPTANCE_FAILED_PRIVATE_DETAILS_WITHHELD");}}
+await main();
+}
+
+if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
+ const root=path.join(process.cwd(),"tmp","release-ci"),db=new PrismaClient();
+ const source=process.env.BULK_EXACT_HEAD??"",password=process.env.BULK_SYNTHETIC_PASSWORD??"";
+ const guard=()=>{assert.equal(process.env.GITHUB_ACTIONS,"true");assert.equal(process.env.RUNNER_ENVIRONMENT,"github-hosted");assert.equal(process.env.DATABASE_URL,`file:${path.join(root,"database","synthetic.db").replaceAll("\\","/")}`);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),source);};
+ void runBulkAcceptance({root,db,source,password,origin:"http://127.0.0.1:47832",phase:process.argv[2] as "prepare"|"off"|"on",guard,http:fetch}).catch(()=>{console.error("BULK_ACCEPTANCE_FAILED");process.exitCode=1;}).finally(()=>db.$disconnect());
+}
