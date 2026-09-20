@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -65,7 +65,12 @@ import { createRequire } from "node:module";
 import { populateCertificateRecoveryFixture } from "./helpers/recovery-certificate-fixture";
 import contracts from "@/config/recovery-source-contracts.json";
 const require=createRequire(import.meta.url);
-const owned=path.resolve("tmp/recovery-compatibility",suffix);
+// New run-owned fixtures never reuse or clean the retained 1A compatibility residue.
+const owned=path.resolve("tmp/recovery-1c-restores",suffix);
+const digest=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).digest("hex");
+const matrixReceipts: Record<string,unknown>[]=[];
+const databaseIdentities=new Set<string>();
+async function sourceSnapshot(client:PrismaClient){return digest(await Promise.all([client.student.findMany({orderBy:{id:"asc"}}),client.payment.findMany({orderBy:{id:"asc"}}),client.studentCertificate.findMany({orderBy:{id:"asc"}}),client.studentCertificateVersion.findMany({orderBy:{id:"asc"}}),client.certificateIssueArtifact.findMany({orderBy:{id:"asc"}}),client.priorYearConcessionEvent.findMany({orderBy:{id:"asc"}}),client.authSession.findMany({orderBy:{id:"asc"}})]));}
 const gitText=(head:string,file:string)=>execFileSync("git",["show",head+":"+file],{encoding:"utf8",maxBuffer:64*1024*1024});
 async function freshDatabase(label:string,version=48){
  const source=contracts.sources[String(version) as keyof typeof contracts.sources],directory=path.join(owned,label);mkdirSync(directory,{recursive:true});
@@ -75,6 +80,7 @@ async function freshDatabase(label:string,version=48){
  const prefix=postgres?"prisma/postgresql/":"prisma/",schemaPath=path.join(directory,"schema.prisma");
  writeFileSync(schemaPath,version===48?readFileSync(prefix+"schema.prisma","utf8"):gitText(source.sourceHead!,prefix+"schema.prisma"));
  for(const migration of source.migrations.filter(m=>m.path.startsWith(prefix+"migrations/"))){const file=path.join(directory,migration.path.slice(prefix.length));mkdirSync(path.dirname(file),{recursive:true});writeFileSync(file,version===48?readFileSync(migration.path,"utf8"):gitText(source.sourceHead!,migration.path));}
+ if(databaseIdentities.has(url))throw Error("RECOVERY_TARGET_REUSED");databaseIdentities.add(url);
  execFileSync(process.execPath,["node_modules/prisma/build/index.js","migrate","deploy","--schema",schemaPath],{env:{...process.env,DATABASE_URL:url,DIRECT_URL:url},stdio:"pipe"});return url;
 }
 async function initialise(url:string){
@@ -124,12 +130,13 @@ function originalReadClient(version:number){
  return new Proxy(db,{get(target,key){if(key==="studentCertificate")return {findMany:(args:any={})=>target.studentCertificate.findMany({...args,select})};const value=Reflect.get(target,key);return typeof value==="function"?value.bind(target):value;}});
 }
 beforeAll(()=>{vi.stubEnv("NODE_ENV","test");vi.stubEnv("APP_ORIGIN","http://127.0.0.1:3000");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_MODE","SYNTHETIC_COPY_ONLY");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED","prior-year-concessions-1a,student-linked-items-1a,certificate-graduation-exit-1a,certificate-bulk-issue-1a,certificate-verification-1a");vi.stubEnv("AUTH_SECRET","SYNTHETIC-only-recovery-test-secret-000000");vi.stubEnv("AUTH_MFA_KEYRING_JSON",JSON.stringify({active:"SYNTHETIC",keys:{SYNTHETIC:Buffer.alloc(32,7).toString("base64")}}));});
-afterAll(async()=>{await db?.$disconnect();vi.unstubAllEnvs();});
+afterAll(async()=>{await db?.$disconnect();mkdirSync(owned,{recursive:true});writeFileSync(path.join(owned,"matrix.json"),JSON.stringify({classification:"SYNTHETIC_DATABASE_EVIDENCE",provider:postgres?"postgresql":"sqlite",targets:matrixReceipts},null,2));mkdirSync("tmp/recovery-1c",{recursive:true});writeFileSync("tmp/recovery-1c/restore-matrix-"+(postgres?"postgresql":"sqlite")+".json",JSON.stringify({contract:"NALANDA_RESTORE_MATRIX_1C",source:execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),provider:postgres?"postgresql":"sqlite",targets:matrixReceipts,complete:matrixReceipts.length===8,freshRestores:matrixReceipts.reduce((n,r)=>n+Number(r.freshRestores),0),repeatRestores:matrixReceipts.reduce((n,r)=>n+Number(r.repeatRestores),0)},null,2));console.log("RECOVERY_1C_MATRIX "+JSON.stringify(matrixReceipts));vi.unstubAllEnvs();});
 describe("explicit nonempty source-contract restoration",()=>{
- it.each([45,46,47,48])("restores genuine source v%i into v48 without record or artifact loss, twice",async(version)=>{
+ it.each([45,46,47,48])("restores genuine source v%i into two independent empty v48 targets, then repeats each",async(version)=>{
   vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED",version===46?"certificate-graduation-exit-1a,certificate-bulk-issue-1a,certificate-verification-1a":"prior-year-concessions-1a,student-linked-items-1a,certificate-graduation-exit-1a,certificate-bulk-issue-1a,certificate-verification-1a");
   const sourceUrl=await freshDatabase("source"+version,version);await initialise(sourceUrl);
   const baseline=await makeStudent();await makePayment(baseline.student.id,"20");
+  const sourceSession=await db.authSession.create({data:{userId:prep.userId,tokenHash:digest(randomUUID()),credentialVersion:1,expiresAt:new Date("2090-01-01Z"),deviceSummary:"SYNTHETIC",browserSummary:"SYNTHETIC",networkEvidenceMasked:"SYNTHETIC-NETWORK"}});
   const legacy=version===45||version===47?await legacyCertificate(baseline.student.id):null;
   const original=version!==48?await originalExporter(version):null;
   const certificate=version===46?await original.populateCertificateRecoveryFixture(db):version===48?await populateCertificateRecoveryFixture(db):null;
@@ -159,10 +166,33 @@ describe("explicit nonempty source-contract restoration",()=>{
   const migrationPrefix=postgres?"prisma/postgresql/migrations/":"prisma/migrations/";
   for(const migration of contracts.sources["48"].migrations.filter(m=>m.path.startsWith(migrationPrefix)))expect(migrationRows.find(row=>row.migration_name===migration.path.split("/").at(-2))?.checksum,migration.path).toBe(migration.sha256);
 
-  const target=new PrismaClient({datasourceUrl:await freshDatabase("target"+version)});
+  const payloadDigest=digest(payload);
+  const sourceBefore=await sourceSnapshot(db),fixturePath=path.join(owned,"source-v"+version+".json");writeFileSync(fixturePath,JSON.stringify(payload),{flag:"wx"});
+  const missingCollection=JSON.parse(JSON.stringify(payload));delete missingCollection.payments;expect(()=>parseAndValidateBackup(JSON.stringify(missingCollection))).toThrow();
+  if(certificate){const altered=JSON.parse(JSON.stringify(payload));altered.certificateIssueArtifacts[0].pdfHash="0".repeat(64);expect(()=>parseAndValidateBackup(JSON.stringify(altered))).toThrow();}
+  const completedRecords:typeof matrixReceipts=[];
+  const targets=[];for(const label of ["A","B"])targets.push({label,url:await freshDatabase("target"+version+label)});
+  expect(targets[0].url).not.toBe(targets[1].url);
+  const sibling=new PrismaClient({datasourceUrl:targets[1].url});
+  for(const selected of targets){
+  const target=new PrismaClient({datasourceUrl:selected.url});
   try{
+   // These exact SQLite reference rows are authored by historical migrations, not restored data.
+   // PostgreSQL's baseline has no seeded rows. Every business/security table must be empty.
+   const migrationReferenceCounts:Record<string,number>=postgres?{}:{IamSafetyLock:1,SupportQueue:8,SupportCategoryPolicy:18,OperationalCheckDefinition:13};
+   for(const model of Prisma.dmmf.datamodel.models){const delegate=(target as any)[model.name[0].toLowerCase()+model.name.slice(1)];expect(await delegate.count(),model.name+" fresh baseline "+selected.label).toBe(migrationReferenceCounts[model.name]??0);}
+   const isolationId=postgres?new URL(selected.url).searchParams.get("schema"):path.relative(owned,selected.url.slice(5)).replaceAll("\\","/");
+   const record={version,provider:postgres?"postgresql":"sqlite",target:selected.label,identity:isolationId,emptyBusinessTablesBefore:true,migrationReferenceCounts,freshRestores:0,repeatRestores:0,sourceSha256:payloadDigest,artifactStorage:"inline-per-database-no-shared-object-namespace",sourceUnchanged:false,siblingIsolated:false};
    for(let round=0;round<2;round++){
     await restoreValidatedBackup(target,validated,{id:prep.userId,name:"SYNTHETIC RESTORE"});
+    expect(digest(payload)).toBe(payloadDigest);
+    expect(await target.student.count()).toBe(await db.student.count());
+    expect(await target.studentGuardian.count()).toBe(payload.studentGuardians.length);
+    expect(await target.studentCertificateVersion.count()).toBe(payload.studentCertificateVersions.length);
+    expect(await target.studentCertificateEvent.count()).toBe(payload.studentCertificateEvents.length);
+    // Fresh targets have no pre-existing login accounts: credentials must not be recreated.
+    expect(await target.authSession.findUnique({where:{id:sourceSession.id}})).toBeNull();expect(await target.user.count()).toBe(0);expect(await target.authSession.count({where:{revokedAt:null}})).toBe(0);
+    expect(await target.whatsAppIntegrationProfile.count({where:{liveSendingEnabled:true}})).toBe(0);
     expect(await target.payment.count()).toBe(await db.payment.count());expect((await target.payment.aggregate({_sum:{amountPaid:true}}))._sum.amountPaid).toEqual((await db.payment.aggregate({_sum:{amountPaid:true}}))._sum.amountPaid);
     if(legacy){
      const mappedStudent=await target.student.findUniqueOrThrow({where:{admissionNo:baseline.student.admissionNo}});
@@ -173,8 +203,15 @@ describe("explicit nonempty source-contract restoration",()=>{
     }
     if(certificate){for(const row of payload.certificateIssueArtifacts){const restored=await target.certificateIssueArtifact.findUniqueOrThrow({where:{id:row.id}});expect(restored.pdfHash).toBe(row.pdfHash);expect(restored.pdfBase64).toBe(row.pdfBase64);expect(restored.snapshotHash).toBe(row.snapshotHash);}expect((await target.studentCertificate.findUniqueOrThrow({where:{id:certificate.original}})).status).toBe("CANCELLED");expect((await target.studentCertificate.findUniqueOrThrow({where:{id:certificate.replacement}})).supersedesCertificateId).toBe(certificate.original);expect(await target.miscIncomeReceipt.count()).toBe(await db.miscIncomeReceipt.count());}
     if(concession){expect((await priorYearBalance(target,concession.liabilityId,policy)).totals.remaining.toFixed(2)).toBe("650.00");expect(await target.priorYearConcessionEvent.count()).toBe(await db.priorYearConcessionEvent.count());expect(await target.studentItemReceiptSnapshot.count()).toBe(await db.studentItemReceiptSnapshot.count());expect((await target.priorYearIncomeSupport.findMany()).map(r=>r.exactAmountEnvelope)).toEqual((await db.priorYearIncomeSupport.findMany()).map(r=>r.exactAmountEnvelope));}
+    if(selected.label==="A")expect(await sibling.student.count()).toBe(0);
+    if(round===0)record.freshRestores++;else record.repeatRestores++;
    }
-   if(legacy){
+   completedRecords.push(record);
+   // Separate mapped-account probe after both fresh/repeat checks; never counted as a fresh restore.
+   await target.user.create({data:{id:prep.userId,username:prep.userId,name:"SYNTHETIC RESTORE ACCOUNT",passwordHash:"SYNTHETIC-NONLOGIN",role:"ACCOUNTANT"}});
+   await restoreValidatedBackup(target,validated,{id:prep.userId,name:"SYNTHETIC REVOCATION PROBE"});
+   const restoredSession=await target.authSession.findUniqueOrThrow({where:{id:sourceSession.id}});expect(restoredSession.revokedAt).not.toBeNull();expect(restoredSession.tokenHash).not.toBe(sourceSession.tokenHash);expect(await target.authSession.count({where:{revokedAt:null}})).toBe(0);
+   if(legacy&&selected.label==="A"){
     const beforeStudents=await target.student.count(),beforePayments=await target.payment.count();
     const collision=JSON.parse(JSON.stringify(payload)),oldVersion=collision.studentCertificateVersions[0].id;
     collision.studentCertificateVersions[0].id="SYNTHETIC-COLLIDING-VERSION";
@@ -196,7 +233,7 @@ describe("explicit nonempty source-contract restoration",()=>{
      expect(await isolated.studentCertificateVersion.findUniqueOrThrow({where:{id:legacy.version.id}})).toMatchObject({snapshotJson:legacy.version.snapshotJson});
     } finally {await isolated.$disconnect();}
    }
-   if(version===48){
+   if(version===48&&selected.label==="A"){
     const failing=new PrismaClient({datasourceUrl:await freshDatabase("collision_and_interruption")});
     try{
      const series=payload.certificateNumberSeries[0];const collision=await failing.certificateNumberSeries.create({data:{id:"synthetic-collision",seriesCode:series.seriesCode,certificateType:series.certificateType,prefix:"SYNTHETIC",nextNumber:1}});
@@ -212,6 +249,10 @@ describe("explicit nonempty source-contract restoration",()=>{
    }
    const roundtrip=await generateFullBackup(target,{generatedBy:"SYNTHETIC ROUNDTRIP"});expect(roundtrip.metadata.backupVersion).toBe(48);expect(()=>parseAndValidateBackup(JSON.stringify(roundtrip))).not.toThrow();
    for(const change of [(p:any)=>p.metadata.schemaContract="unknown",(p:any)=>p.metadata.schemaFingerprint.sqlite="0".repeat(64),(p:any)=>p.metadata.backupVersion=49]){const invalid=JSON.parse(JSON.stringify(roundtrip));change(invalid);expect(()=>parseAndValidateBackup(JSON.stringify(invalid))).toThrow();}
-  }finally{await target.$disconnect();await db.$disconnect();}
- },240000);
+  }finally{await target.$disconnect();}
+  }
+  // A write on A must not appear on populated B or the source; remove only this synthetic sentinel.
+  const first=new PrismaClient({datasourceUrl:targets[0].url});
+  try{const marker="SYNTHETIC-ISOLATION-"+version;const inserted=await first.student.create({data:{admissionNo:marker,studentName:marker,fatherName:"SYNTHETIC",phone1:"NO-CONTACT",className:"I",academicYear:"2026-27"}});expect(await sibling.student.findUnique({where:{admissionNo:marker}})).toBeNull();expect(await db.student.findUnique({where:{admissionNo:marker}})).toBeNull();await first.student.delete({where:{id:inserted.id}});expect(digest(payload)).toBe(payloadDigest);expect(digest(JSON.parse(readFileSync(fixturePath,"utf8")))).toBe(payloadDigest);expect(await sourceSnapshot(db)).toBe(sourceBefore);for(const record of completedRecords){record.sourceUnchanged=true;record.siblingIsolated=true;matrixReceipts.push(record);}}finally{await first.$disconnect();await sibling.$disconnect();await db.$disconnect();}
+ },480000);
 });

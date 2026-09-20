@@ -83,6 +83,11 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false, fetch-depth: 0 }
       - run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: { node-version: 24.19.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
       - name: Build exact image
         run: docker --context default build --platform "linux/$TARGET_ARCHITECTURE" --pull=false --build-arg SOURCE_COMMIT="$EXPECTED_SHA" --build-arg SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" -t nalanda-portable-staging:ci .
       - name: Verify configuration and labels
@@ -94,15 +99,19 @@ jobs:
           docker --context default save nalanda-portable-staging:ci | sha256sum | tee image-archive-sha256.txt
       - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with: { image: "nalanda-portable-staging:ci", format: "spdx-json", output-file: "sbom.spdx.json", upload-artifact: false }
-      - uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+      - id: trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: nalanda-portable-staging:ci
           format: json
           output: trivy-results.json
           severity: CRITICAL,HIGH
+          list-all-pkgs: true
+          cache-dir: ${{ github.workspace }}/.cache/trivy
           ignore-unfixed: false
           exit-code: "1"
-      - uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
+      - id: grype
+        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
         if: ${{ !cancelled() }}
         with:
           image: nalanda-portable-staging:ci
@@ -151,20 +160,47 @@ jobs:
       - name: Build-context secret/data assertion
         run: |
           docker --context default run --rm --name "nalanda-${GITHUB_RUN_ID}-${TARGET_ARCHITECTURE}-context" --label "nalanda.ci.run=${GITHUB_RUN_ID}" --memory 256m --cpus 1 --pids-limit 64 --cap-drop ALL --security-opt no-new-privileges:true --read-only --network none --entrypoint /nodejs/bin/node nalanda-portable-staging:ci -e 'const fs=require("fs"); if (fs.existsSync("/app/prisma/dev.db") || fs.existsSync("/app/.git")) process.exit(1);'
+      - name: Bind scanner databases and immutable local artifact
+        env:
+          TRIVY_ACTION_OUTCOME: ${{ steps.trivy.outcome }}
+          GRYPE_ACTION_OUTCOME: ${{ steps.grype.outcome }}
+          TRIVY_CACHE_DIR: ${{ github.workspace }}/.cache/trivy
+        run: |
+          node scripts/portable/scanner-metadata.mjs
+          pnpm exec tsx scripts/portable/capture-artifact-evidence.ts
+      - name: Persist owned stack coordinates for independent teardown
+        run: |
+          echo "COMPOSE_PROJECT_NAME=nalanda-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-stack" >> "$GITHUB_ENV"
+          echo "PORTABLE_CI_ROOT=$GITHUB_WORKSPACE/tmp/portable-staging/nalanda-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-stack" >> "$GITHUB_ENV"
+          echo "PORTABLE_SYNTHETIC_SECRET_ROOT=$GITHUB_WORKSPACE/tmp/portable-staging/nalanda-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-stack/secrets" >> "$GITHUB_ENV"
+          echo "PORTABLE_IMAGE_ID=$(cat image-digest.txt)" >> "$GITHUB_ENV"
+      - name: Same-runner immutable stack acceptance and teardown
+        shell: pwsh
+        run: ./scripts/portable/qa-stack.ps1
+      - name: Independent stack teardown and readback
+        if: always()
+        run: |
+          receipt=".qa-artifacts/portable-ci/${COMPOSE_PROJECT_NAME}.admission.json"
+          if test -f "$receipt"; then
+            pnpm exec tsx scripts/portable/ci-safety.ts cleanup
+          else
+            echo 'No stack target was admitted; no cleanup authority inferred.'
+          fi
+      - name: Upload exact metadata-only stack receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: portable-stack-result-${{ env.EXPECTED_SHA }}-${{ matrix.architecture }}
+          path: stack-result.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Project reviewed public metadata
+        if: always()
+        run: node scripts/portable/public-evidence.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: portable-oci-evidence-${{ env.EXPECTED_SHA }}-${{ matrix.architecture }}
-          path: |
-            image-digest.txt
-            image-size-bytes.txt
-            image-archive-sha256.txt
-            sbom.spdx.json
-            build-provenance.json
-            native-dependencies.json
-            trivy-results.json
-            grype-results.json
-            oci-layout/
+          path: public-evidence.json
           retention-days: 14
           if-no-files-found: error
       - name: Cleanup
@@ -205,47 +241,28 @@ jobs:
         with:
           name: portable-oci-evidence-${{ env.EXPECTED_SHA }}-arm64
           path: oci-input/arm64
-      - run: node scripts/portable/oci-index.mjs
+      - run: node scripts/portable/public-evidence.mjs aggregate
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: portable-multiplatform-oci-${{ env.EXPECTED_SHA }}
-          path: oci-release/
+          path: public-index-evidence.json
           if-no-files-found: error
           retention-days: 14
 
   portable-stack:
+    # Compatibility job: stack execution moved into each architecture's image runner.
+    # This verifies metadata only; it does not transfer or retain a deployable image.
     needs: oci-release-index
     name: 3 - portable stack
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false, fetch-depth: 0 }
-      - run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-        with: { version: 11.21.0 }
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with: { node-version: 24.19.0, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - name: Persist disposable target coordinates
-        run: |
-          echo "COMPOSE_PROJECT_NAME=nalanda-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-stack" >> "$GITHUB_ENV"
-          echo "PORTABLE_CI_ROOT=$GITHUB_WORKSPACE/tmp/portable-staging/nalanda-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-stack" >> "$GITHUB_ENV"
-          echo "PORTABLE_SYNTHETIC_SECRET_ROOT=$GITHUB_WORKSPACE/tmp/portable-staging/nalanda-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-stack/secrets" >> "$GITHUB_ENV"
-      - name: Full synthetic stack
-        shell: pwsh
-        run: ./scripts/portable/qa-stack.ps1
-      - name: Independent disposable teardown and readback
-        if: always()
-        run: pnpm exec tsx scripts/portable/ci-safety.ts cleanup
-      - name: Upload cleanup receipt
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: portable-stack-cleanup-${{ env.EXPECTED_SHA }}
-          path: .qa-artifacts/portable-ci/*.json
-          if-no-files-found: error
-          retention-days: 14
+          pattern: portable-stack-result-${{ env.EXPECTED_SHA }}-*
+          path: stack-evidence
+      - run: node scripts/portable/verify-stack-receipts.mjs
 
   distributed-runtime:
     needs: portable-stack

@@ -57,14 +57,8 @@ x-app-secrets: &app-secrets
   - internal_health_token
 
 x-app-service: &app-service
-  image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
-  build:
-    context: ../..
-    dockerfile: Dockerfile
-    args:
-      SOURCE_COMMIT: ${PORTABLE_SOURCE_SHA:-unknown}
-      SOURCE_DATE_EPOCH: ${PORTABLE_SOURCE_DATE_EPOCH:-0}
-      IMAGE_VERSION: portable-staging-foundation-1a
+  image: ${PORTABLE_IMAGE_ID:?Immutable admitted image config digest required}
+  pull_policy: never
   restart: unless-stopped
   read_only: true
   init: true
@@ -200,7 +194,7 @@ services:
     restart: "no"
 
   object-init:
-    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    image: ${PORTABLE_IMAGE_ID:?Immutable admitted image config digest required}
     command: [dist/portable/object-store-init.mjs]
     environment:
       NALANDA_SYNTHETIC_STAGING: "true"
@@ -221,7 +215,7 @@ services:
     restart: "no"
 
   migrator:
-    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    image: ${PORTABLE_IMAGE_ID:?Immutable admitted image config digest required}
     command: [dist/portable/runtime-command.mjs, migrate]
     environment:
       <<: *app-environment
@@ -251,7 +245,7 @@ services:
     restart: "no"
 
   seed:
-    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    image: ${PORTABLE_IMAGE_ID:?Immutable admitted image config digest required}
     command: [dist/portable/runtime-command.mjs, seed-synthetic]
     environment:
       <<: *app-environment
@@ -277,7 +271,7 @@ services:
     restart: "no"
 
   runtime-qa:
-    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    image: ${PORTABLE_IMAGE_ID:?Immutable admitted image config digest required}
     command: [dist/portable/integration-qa.mjs]
     environment: *app-environment
     secrets: *app-secrets
@@ -292,7 +286,7 @@ services:
     restart: "no"
 
   backup-qa:
-    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    image: ${PORTABLE_IMAGE_ID:?Immutable admitted image config digest required}
     command: [dist/portable/backup-qa.mjs]
     environment:
       <<: *app-environment
@@ -324,7 +318,7 @@ services:
     restart: "no"
 
   backup-worker:
-    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    image: ${PORTABLE_IMAGE_ID:?Immutable admitted image config digest required}
     command: [dist/portable/runtime-command.mjs, backup-worker]
     restart: unless-stopped
     environment:
@@ -361,7 +355,7 @@ services:
 
   backup-maintenance:
     profiles: [maintenance]
-    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    image: ${PORTABLE_IMAGE_ID:?Immutable admitted image config digest required}
     command: [dist/portable/runtime-command.mjs, backup-maintenance]
     environment:
       <<: *app-environment
@@ -394,7 +388,7 @@ services:
 
   backup-maintenance-plan:
     profiles: [maintenance-plan]
-    image: nalanda-portable-staging:${PORTABLE_IMAGE_TAG:-local}
+    image: ${PORTABLE_IMAGE_ID:?Immutable admitted image config digest required}
     command: [dist/portable/runtime-command.mjs, backup-maintenance-plan]
     environment:
       <<: *app-environment

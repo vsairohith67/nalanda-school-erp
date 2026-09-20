@@ -73,6 +73,14 @@ jobs:
           echo "REPORT_CARD_FONT_DIR=/usr/share/fonts/truetype/msttcorefonts" >> "$GITHUB_ENV"
       - name: Synthetic financial transactions and nonempty source-contract restores
         run: pnpm exec vitest run tests/student-items-prior-year-concessions.test.ts tests/prior-year-concession-api.test.ts tests/recovery-backup-compatibility.test.ts
+      - name: Retain reviewed restore-matrix metadata only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: recovery-1c-restore-matrix-${{ matrix.provider }}-${{ github.event.pull_request.head.sha || github.sha }}
+          path: tmp/recovery-1c/restore-matrix-${{ matrix.provider }}.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Preserve exact-head coordinates
         if: always()
         run: git show -s --format='commit=%H tree=%T'

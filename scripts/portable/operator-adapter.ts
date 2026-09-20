@@ -10,7 +10,7 @@ export async function docker(args: string[], cwd: string): Promise<string> {
     const child = spawn("docker", ["--context", "default", ...args], { cwd, shell: false, windowsHide: true, stdio: ["ignore", "pipe", "pipe"],
       env: { NODE_ENV: process.env.NODE_ENV ?? "test", PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, HOME: process.env.HOME,
         PORTABLE_CI_ROOT: process.env.PORTABLE_CI_ROOT, PORTABLE_SOURCE_SHA: process.env.PORTABLE_SOURCE_SHA,
-        PORTABLE_SOURCE_DATE_EPOCH: process.env.PORTABLE_SOURCE_DATE_EPOCH, PORTABLE_IMAGE_TAG: process.env.PORTABLE_IMAGE_TAG } });
+        PORTABLE_SOURCE_DATE_EPOCH: process.env.PORTABLE_SOURCE_DATE_EPOCH, PORTABLE_IMAGE_TAG: process.env.PORTABLE_IMAGE_TAG, PORTABLE_IMAGE_ID: process.env.PORTABLE_IMAGE_ID } });
     let output = ""; let size = 0; let failed = false;
     const timer = setTimeout(() => { failed = true; child.kill("SIGKILL"); reject(new Error("OPERATOR_PROCESS_TIMEOUT")); }, 15 * 60_000);
     for (const stream of [child.stdout, child.stderr]) stream.on("data", (data: Buffer) => {
@@ -180,10 +180,10 @@ export class CiOperatorAdapter implements OperatorAdapter {
     await validateComposeFiles(config, this.workspace, path.join(this.workspace, "tmp", "portable-staging"));
       // No implicit demo-account bootstrap. Explicit CI fixture setup owns identities.
       delete config.services.seed;
-      for (const service of Object.values(config.services) as any[]) {
-        delete service.build;
+      for (const [name,service] of Object.entries(config.services) as [string,any][]) {
+        if(service.build)throw Error("RUNTIME_REBUILD_FORBIDDEN");
         if (service.depends_on?.seed) { delete service.depends_on.seed; service.depends_on.migrator = { condition: "service_completed_successfully", required: true }; }
-        if (String(service.image).startsWith("nalanda-portable-staging:")) service.image = m.image;
+        if (["web-1","web-2","backup-worker","migrator","backup-qa","runtime-qa","object-init","backup-maintenance","backup-maintenance-plan"].includes(name)) { service.image = m.image; service.pull_policy="never"; }
       }
       config.services["reverse-proxy"].environment ??= {};
       config.services["reverse-proxy"].environment.PORTABLE_UPSTREAMS = m.profile === "local-single-node" ? "web-1:3000" : "web-1:3000 web-2:3000";
@@ -229,6 +229,8 @@ export class CiOperatorAdapter implements OperatorAdapter {
       await this.atomicJson(this.configFile, config);
       if (m.profile === "local-single-node") commands.start = ["up", "-d", "--wait", "--no-deps", "web-1", "reverse-proxy", "backup-worker"];
     }
+    if(commands[step][0]==="up")commands[step].splice(1,0,"--no-build","--pull","never");
+    if(commands[step][0]==="run")commands[step].splice(1,0,"--pull","never");
     const output = await this.executeProcess(this.args(commands[step]), this.workspace);
     if (step === "readiness" && this.command !== "doctor") {
       const owner = await this.ownedJson(path.join(m.target, "owner.json"));

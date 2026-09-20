@@ -45,6 +45,11 @@ async function main() {
     catch { failures.push("RESOURCE_INVENTORY_UNAVAILABLE"); return { container: null, network: null, volume: null }; }
   };
   const before = await inventory();
+  if(!await lstat(root).catch(missingOnly)&&Object.values(before).every(v=>Array.isArray(v)&&v.length===0)){
+    const prior=JSON.parse(await readFile(path.join(receiptRoot,"cleanup.json"),"utf8"));
+    if(prior.sourceCommit!==process.env.EXPECTED_SHA||prior.result!=="CLEANUP_VERIFIED")throw Error("CI_PRIOR_CLEANUP_UNVERIFIED");
+    return; // Verified idempotent second readback; do not recreate a removed secret tree.
+  }
   try { await docker(["compose", "--project-name", project, "--profile", "maintenance", "--profile", "maintenance-plan", "-f", compose, "down", "--volumes", "--remove-orphans"], workspace); } catch { failures.push("COMPOSE_TEARDOWN_FAILED"); }
   for (const suffix of [project, `${project}-candidate`]) {
     const tag = `nalanda-portable-staging:${suffix}`;
@@ -58,6 +63,7 @@ async function main() {
     if (await lstat(root).catch(missingOnly)) failures.push("CI_FILES_REMAIN");
   } catch { failures.push("CI_FILES_CLEANUP_FAILED"); }
   await mkdir(receiptRoot, { recursive: true });
+  await writeFile(path.join(receiptRoot,"cleanup.json"),JSON.stringify({contract:"NALANDA_PUBLIC_CLEANUP_V1",sourceCommit:process.env.EXPECTED_SHA,result:failures.length?"CLEANUP_FAILED":"CLEANUP_VERIFIED",resourcesRemaining:Object.fromEntries(Object.entries(after).map(([kind,items])=>[kind,items===null?null:items.length]))}));
   await writeFile(path.join(receiptRoot, `${project}.${randomUUID()}.cleanup.json`), JSON.stringify({ schemaVersion: 1, classification: "INTEGRATION_TEST_ENVIRONMENT", sourceCommit: process.env.EXPECTED_SHA,
     ownerException: "EPHEMERAL_EXACT_HEAD_CI_ONLY", countsBefore: Object.fromEntries(Object.entries(before).map(([k,v]) => [k,v === null ? null : v.length])), countsAfter: Object.fromEntries(Object.entries(after).map(([k,v]) => [k,v === null ? null : v.length])),
     generatedSecretsCertificatesAndTemporaryFilesRemoved: !failures.includes("CI_FILES_CLEANUP_FAILED") && !failures.includes("CI_FILES_REMAIN"), tlsContainerTmpfsRemoved: after.container !== null && after.container.length === 0,
