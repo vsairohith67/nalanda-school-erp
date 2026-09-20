@@ -36,7 +36,7 @@ if (process.argv[2] === '--write') {
     records.push({ path, baseSha256, historicalSha256, sources, currentSha256,
       reconciliation: sources.some(s => s.sha256 === currentSha256) ? 'ADMITTED_COMMITTED_SOURCE' : 'RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW' });
   }
-  writeFileSync(ledgerPath, JSON.stringify({ version:1, date:'2026-09-19', base, heads, files:records },null,2)+'\n');
+  writeFileSync(ledgerPath, JSON.stringify({ version:1, date:new Date().toISOString().slice(0,10), base, heads, files:records },null,2)+'\n');
   console.log(JSON.stringify({status:'GENERATED_NOT_REVIEW_CLEARANCE',files:records.length}));
 } else {
   const ledger = JSON.parse(readFileSync(ledgerPath,'utf8'));
