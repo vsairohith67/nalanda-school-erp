@@ -7,6 +7,8 @@ await mkdir(output, { recursive: true });
 
 await build({
   entryPoints: {
+    "acceptance-readback": "scripts/portable/acceptance-readback.ts",
+    "acceptance-fixture": "scripts/portable/acceptance-fixture.ts",
     "runtime-command": "scripts/portable/runtime-command.ts",
     "operator-recovery": "scripts/portable/operator-recovery.ts",
     "seed-synthetic": "scripts/portable/seed-synthetic.ts",

@@ -147,6 +147,10 @@ try {
 
   Invoke-Checked 'post-outage readiness recovery' { Invoke-HttpsReadiness $caFile -Retry }
   Invoke-Checked 'post-outage integration rerun' { docker --context default compose -f $composeFile run --pull never --rm --no-deps runtime-qa }
+  $env:NODE_EXTRA_CA_CERTS = $caFile
+  $httpContainer = (docker --context default compose -f $composeFile ps -q web-1).Trim()
+  Invoke-Checked 'authenticated production OFF mutations and authoritative readback' { pnpm exec tsx scripts/portable/integrated-acceptance.ts --run-off (Join-Path $qaRoot 'integrated-off-fixture.json') $httpContainer }
+  $results.productionOffHttp = 'PASSED_WITH_SAME_CONTAINER_READBACK'
   $results.result = 'PORTABLE_STACK_QA_PASSED'
   $results.realData = $false
 }
