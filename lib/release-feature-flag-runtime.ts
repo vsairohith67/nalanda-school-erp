@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { evaluateReleaseFeatureFlagConfig, parseReleaseFeatureFlags, releaseFeatureFlags, type ReleaseFeatureFlag } from "@/lib/release-feature-flags";
 import type { ReleaseEnvironment } from "@/lib/release-operations-types";
+import { syntheticFeatureCapability } from "./portable-runtime/synthetic-capability";
 
 export const RELEASE_FEATURE_FLAG_QA_MODE = "SYNTHETIC_COPY_ONLY" as const;
 
@@ -146,6 +147,14 @@ export function operationalReleaseFeatureAvailability(
     expectedVersion: feature.expectedVersion
   }, flags);
   if (governed.enabled) return governed;
+  // This purpose-specific path does not enable the legacy QA boolean used by
+  // MFA, invitations or step-up. All normal permission checks still execute.
+  if (["DEFAULT_OFF","ROLLOUT_DISABLED"].includes(governed.reason)) {
+    const capability=syntheticFeatureCapability(environment);
+    if(capability?.features.some(entry=>entry.key===feature.key&&entry.version===feature.expectedVersion&&entry.environment===feature.environment&&entry.activationRole===feature.activationRole)) {
+      return {enabled:true,reason:"SIGNED_SYNTHETIC_BUILD_QA",version:flag.version} as const;
+    }
+  }
   if (!isSyntheticReleaseFeatureQaMode(environment)) return governed;
   const enabledKeys = qaEnabledKeys(environment, flags);
   if (!enabledKeys) return { enabled: false, reason: "MALFORMED_QA_OVERRIDE", version: flag.version } as const;

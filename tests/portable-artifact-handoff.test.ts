@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import { ARTIFACT_CONTRACT, EVIDENCE_NAMES, hashBytes, verifyArtifactEvidence, assertRuntimeAdmission, assertLocalImage, assertRunningImage, resolveBaseImages, type ArtifactContext, type EvidenceFiles } from "../scripts/portable/artifact-handoff";
 const now=Date.parse("2026-09-20T00:00:00Z");
 const context:ArtifactContext={source:"a".repeat(40),architecture:"amd64",runId:"123",attempt:"1",now,baseImages:["fixture-build@sha256:"+"a".repeat(64),"fixture-runtime@sha256:"+"b".repeat(64)],inputs:{"Dockerfile":"b".repeat(64),"pnpm-lock.yaml":"c".repeat(64),"package.json":"d".repeat(64)}};
-function fixture(){
+function fixture(inputContext=context,purpose?:string){
+ const context=inputContext;
  const files:EvidenceFiles={};const put=(name:string,value:unknown)=>files[name]=Buffer.from(JSON.stringify(value));
- put("config.json",{architecture:"amd64",os:"linux",config:{User:"65532:65532",Labels:{"org.opencontainers.image.revision":context.source}}});
+ put("config.json",{architecture:"amd64",os:"linux",config:{User:"65532:65532",Labels:{"org.opencontainers.image.revision":context.source,...(purpose?{"io.nalanda.artifact-purpose":purpose}:{})}}});
  const image=`sha256:${hashBytes(files['config.json'])}`;
  put("manifest.json",{schemaVersion:2,config:{digest:image,size:files['config.json'].length},layers:[{digest:"sha256:"+"e".repeat(64),size:27}]});
  put("index.json",{schemaVersion:2,manifests:[{digest:`sha256:${hashBytes(files['manifest.json'])}`,size:files['manifest.json'].length}]});
@@ -19,6 +20,14 @@ function fixture(){
 import {readFileSync} from "node:fs";
 it("resolves the actual pinned ARG-based Dockerfile",()=>{expect(resolveBaseImages(readFileSync("Dockerfile","utf8"))).toHaveLength(2);});
 describe("immutable raw-evidence boundary; fixtures never qualify runtime",()=>{
+ it("keeps synthetic build identity and trust input distinct from production acceptance",()=>{
+  const synthetic:ArtifactContext={...context,purpose:"SYNTHETIC_ACCEPTANCE_ONLY",inputs:{...context.inputs,"synthetic-build-trust.json":"e".repeat(64)}};
+  const f=fixture(synthetic,"SYNTHETIC_ACCEPTANCE_ONLY");
+  expect(verifyArtifactEvidence(f.files,synthetic).inputs).toEqual(synthetic.inputs);
+  expect(()=>verifyArtifactEvidence(f.files,{...synthetic,purpose:undefined})).toThrow("PRODUCTION_ARTIFACT_REQUIRED");
+  expect(()=>verifyArtifactEvidence(fixture(synthetic,"PRODUCTION_DEFAULT_OFF").files,synthetic)).toThrow("SYNTHETIC_ARTIFACT_IDENTITY");
+  expect(()=>assertRuntimeAdmission(verifyArtifactEvidence(f.files,synthetic))).toThrow("HARNESS_FIXTURE_CANNOT_QUALIFY_RUNTIME");
+ });
  it("binds separate config, manifest, index, SBOM, source/lock and provenance identities",()=>{const f=fixture(),r=verifyArtifactEvidence(f.files,context);expect(r.imageConfigDigest).toBe(f.image);expect(r.architectureManifestDigest).not.toBe(r.architectureIndexDigest);expect(()=>assertRuntimeAdmission(r)).toThrow("HARNESS_FIXTURE_CANNOT_QUALIFY_RUNTIME");});
  it.each(["source","architecture","stale","contract","duplicate","conflicting","missing-provenance","missing-scan","malformed","changed-image","finding","unknown-severity","missing-db","stale-db","changed-lock","retarget","suppressed-high","irrelevant-report","filtered-trivy"])("fails closed: %s",mode=>{
   const f=fixture();

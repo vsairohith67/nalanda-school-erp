@@ -3,6 +3,7 @@ import { authHashSecret } from "@/lib/auth-security";
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { evaluateEffectivePermission } from "@/lib/iam/effective-access";
 import { consumeStepUpGrant } from "@/lib/real-user-access/step-up";
+import { boundAuthEnvironment } from "@/lib/real-user-access/login-mfa";
 import { decryptMfaSecret, encryptMfaSecret } from "@/lib/real-user-access/crypto";
 import { assertOperationalReleaseFeature, PRIOR_YEAR_CONCESSIONS_FEATURE } from "@/lib/release-feature-flag-runtime";
 import { localDate } from "@/lib/expenses";
@@ -89,7 +90,7 @@ export async function mutatePriorYear(client: PrismaClient, actor: ConcessionAct
     return eventResult(original);
   }
   const now = new Date();
-  if (terminalPrivilege.has(action) && !await consumeStepUpGrant(client, { stepUpToken: String(input.stepUpToken ?? ""), userId: actor.userId, sessionId: actor.sessionId, action: `PRIOR_YEAR_${action}`, environment: process.env.NALANDA_ENVIRONMENT ?? "PRODUCTION", now })) throw new Error("PRIOR_YEAR_STEP_UP_REQUIRED");
+  if (terminalPrivilege.has(action) && !await consumeStepUpGrant(client, { stepUpToken: String(input.stepUpToken ?? ""), userId: actor.userId, sessionId: actor.sessionId, action: `PRIOR_YEAR_${action}`, environment: boundAuthEnvironment(), now })) throw new Error("PRIOR_YEAR_STEP_UP_REQUIRED");
   try {
     return await client.$transaction(async (tx) => {
       await authorizePriorYear(tx, actor, permission);

@@ -57,6 +57,7 @@ const files = new Map([
   ["s3_backup_maintenance_secret_access_key", s3BackupMaintenanceSecret],
   ["auth_secret", token(48)],
   ["auth_verification_secret", token(48)],
+  ["auth_mfa_keyring_json", JSON.stringify({active:"SYNTHETIC",keys:{SYNTHETIC:randomBytes(32).toString("base64")}})],
   ["proxy_shared_secret", token(48)],
   ["internal_health_token", token(48)],
   ["backup_encryption_key", randomBytes(32).toString("base64")],
