@@ -97,6 +97,26 @@ export async function operatorAcceptance(){
   const sourceVolumes=docker(["volume","ls","-q","--filter",`label=com.docker.compose.project=${project}`]).trim().split(/\s+/),destVolumes=docker(["volume","ls","-q","--filter",`label=com.docker.compose.project=${destination.project}`]).trim().split(/\s+/);
   if(!sourceVolumes.length||!destVolumes.length||sourceVolumes.some(v=>destVolumes.includes(v)))throw Error("RECOVERY_VOLUMES_NOT_INDEPENDENT");
   records.push({scenario:"initialise-independent-project-encrypted-restore",state:"PASSED",classification:"PUBLIC_CLI_DEPLOYED_ACCEPTANCE",sourcePreserved:true,destinationOwnKeyPreserved:true});
+  // Each refusal owns a separate disposable destination. A failed durable
+  // operation is never erased or retried under a different identity.
+  for(const fault of ["wrong-key","corrupted-object","missing-object","mismatched-manifest"]){
+   const broken=bootstrap(`${project}-${fault}`),m={...base,project:broken.project,target:broken.target,operationId:randomBytes(8).toString("hex")};
+   const initFile=path.join(root,`${fault}-initialise.json`);writeFileSync(initFile,JSON.stringify(m),{flag:"wx",mode:0o600});invokePublicOperator("initialise",initFile,broken.target,true);compose(broken,["stop","web-1","web-2","reverse-proxy","backup-worker"]);
+   mkdirSync(path.join(broken.privateRoot,"handoff"),{mode:0o700});mkdirSync(path.join(broken.privateRoot,"recovery-key"),{mode:0o700});
+   for(const name of ["backup.npsbackup","manifest.json"]){if(fault==="missing-object"&&name==="backup.npsbackup")continue;const bytes=readFileSync(path.join(source.privateRoot,`backup-${backupOperation}`,name));
+    if(fault==="corrupted-object"&&name==="backup.npsbackup")bytes[bytes.length-1]^=1;
+    if(fault==="mismatched-manifest"&&name==="manifest.json"){const value=JSON.parse(bytes.toString());value.sourceProject=broken.project;writeFileSync(path.join(broken.privateRoot,"handoff",name),JSON.stringify(value),{flag:"wx",mode:0o444});}
+    else writeFileSync(path.join(broken.privateRoot,"handoff",name),bytes,{flag:"wx",mode:0o444});
+   }
+   writeFileSync(path.join(broken.privateRoot,"recovery-key","recovery-key"),fault==="wrong-key"?randomBytes(32).toString("base64"):readFileSync(path.join(source.privateRoot,"secrets","backup_encryption_key")),{flag:"wx",mode:0o444});
+   const brokenRestore={...restore,project:broken.project,target:broken.target,operationId:randomBytes(8).toString("hex"),recoveryTransfer:{...restore.recoveryTransfer,destinationProject:broken.project}};
+   const file=path.join(root,`${fault}-restore.json`);writeFileSync(file,JSON.stringify(brokenRestore),{flag:"wx",mode:0o600});activate(broken);
+   let refused=false;try{invokePublicOperator("restore",file,broken.target,true);}catch{refused=true;}if(!refused)throw Error("INVALID_RECOVERY_WAS_ACCEPTED");
+   const resultFile=path.join(broken.target,`${brokenRestore.operationId}.restore.result.json`);if(existsSync(resultFile))throw Error("FAILED_RESTORE_APPEARED_COMPLETE");
+   const empty=JSON.parse(compose(broken,["run","--pull","never","--rm","--no-deps","-e","PORTABLE_OPERATOR_CI=true","backup-qa","dist/portable/operator-recovery.mjs","empty",randomBytes(8).toString("hex"),Buffer.from(JSON.stringify(backupManifest)).toString("base64url")]).trim().split(/\r?\n/).at(-1)!);
+   if(empty.state!=="EMPTY_DATABASE_AND_OBJECT_ABSENT"||JSON.stringify(inspect(source))!==JSON.stringify(sourceSnapshot))throw Error("REJECTED_RESTORE_MUTATED_DATA");
+   records.push({scenario:fault,state:"PASSED",classification:"PUBLIC_CLI_DEPLOYED_NEGATIVE_ACCEPTANCE",businessWrites:0});
+  }
   const destinationBefore={database:inspect(destination),key:keyIdentity(destination)};
   const uninstall={...fresh,operationId:randomBytes(8).toString("hex")},uninstallFile=path.join(root,"destination-uninstall.json");writeFileSync(uninstallFile,JSON.stringify(uninstall),{flag:"wx",mode:0o600});activate(destination);
   invokePublicOperator("uninstall",uninstallFile,destination.target,true);
@@ -146,7 +166,7 @@ export async function operatorAcceptance(){
   rmSync(privateRoot,{recursive:true});if(existsSync(privateRoot))throw Error("SECRET_CLEANUP_RESIDUE");
   }catch{cleanupFailures.push(project);}
   }
-  writeFileSync(path.join(root,"result.json"),JSON.stringify({source:artifact.source,records,cleanup:cleanupFailures.length?"FAILED":cleanup,cleanupFailures,pending:["certificate-concession-nonempty-operator-fixture","deployed-negative-recovery-inputs"]},null,2),{flag:"wx"});
+  writeFileSync(path.join(root,"result.json"),JSON.stringify({source:artifact.source,records,cleanup:cleanupFailures.length?"FAILED":cleanup,cleanupFailures,pending:["certificate-concession-nonempty-operator-fixture","historical-business-readback-and-incompatible-rollback-subprocess"]},null,2),{flag:"wx"});
   if(cleanupFailures.length)throw Error("OPERATOR_TEARDOWN_INCOMPLETE");
  }
  // Partial scenario coverage cannot accidentally satisfy the canonical operator gate.

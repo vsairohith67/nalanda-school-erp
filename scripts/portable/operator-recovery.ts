@@ -13,11 +13,18 @@ async function main() {
   hydratePortableRuntimeSecrets();
   const [command, operationId, encoded] = process.argv.slice(2);
   if (!/^[a-f0-9]{16}$/.test(operationId ?? "")) throw Error("RECOVERY_OPERATION_INVALID");
-  const connection = readPortableSecret(command === "restore" ? "DIRECT_URL" : "DATABASE_URL", process.env, { required: true });
+  const connection = readPortableSecret(command === "restore" || command === "empty" ? "DIRECT_URL" : "DATABASE_URL", process.env, { required: true });
   const url = new URL(connection);
   if (url.protocol !== "postgresql:" || url.hostname !== "postgres" || url.pathname !== "/nalanda_portable_synthetic" || url.searchParams.get("schema") !== "public") throw Error("SYNTHETIC_DATABASE_REQUIRED");
   const db = new PrismaClient({ datasourceUrl: connection });
   try {
+    if(command==="empty"){
+      await assertEmptyRecoveryDatabase(db);
+      const expected=JSON.parse(Buffer.from(encoded??"","base64url").toString());
+      const provider=createCloudBackupProvider({providerKind:"OBJECT_STORAGE",liveUseEnabled:true,requestTimeoutMs:30_000});
+      if(await provider.headObject(expected.objectKey))throw Error("FAILED_RECOVERY_OBJECT_REMAINS");
+      console.log(JSON.stringify({state:"EMPTY_DATABASE_AND_OBJECT_ABSENT"}));return;
+    }
     if (command === "inspect") {
       const expected = JSON.parse(Buffer.from(encoded ?? "", "base64url").toString());
       const profile = await db.cloudBackupProfile.findUnique({where:{profileCode:"PORTABLE-SYNTHETIC-S3"}});

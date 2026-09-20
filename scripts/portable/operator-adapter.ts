@@ -126,8 +126,14 @@ export class CiOperatorAdapter implements OperatorAdapter {
     }
   }
   async inspectTarget(m: OperatorManifest, command: OperatorCommand) {
-    if (command === "restore") for (const service of ["web-1","web-2","backup-worker","migrator","seed","runtime-qa"]) {
-      if ((await this.executeProcess(["ps","-q","--filter",`label=com.docker.compose.project=${m.project}`,"--filter",`label=com.docker.compose.service=${service}`],this.workspace)).trim()) throw Error("RESTORE_ACTIVE_WRITER_FORBIDDEN");
+    if (command === "restore") {
+      const output=await this.executeProcess(["ps","--filter",`label=com.docker.compose.project=${m.project}`,"--format",'{{.ID}}:{{.Label "com.docker.compose.service"}}'],this.workspace);
+      const active=output.trim()?output.trim().split(/\r?\n/).map(row=>{
+        const match=/^[a-f0-9]{12,64}:([a-z][a-z0-9-]*)$/.exec(row);
+        if(!match)throw Error("RESTORE_ACTIVE_WRITER_FORBIDDEN");return match[1];
+      }):[];
+      const infrastructure=new Set(["postgres","valkey","object-store","reverse-proxy"]);
+      if(active.some(service=>!infrastructure.has(service)))throw Error("RESTORE_ACTIVE_WRITER_FORBIDDEN");
     }
     const existing = await lstat(m.target).catch((e: NodeJS.ErrnoException) => { if (e.code === "ENOENT") return null; throw e; });
     if (existing && (!existing.isDirectory() || existing.isSymbolicLink() || await realpath(m.target) !== m.target)) throw new Error("TARGET_SYMLINK_FORBIDDEN");
