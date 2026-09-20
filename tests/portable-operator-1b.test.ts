@@ -2,6 +2,9 @@ import { mkdtemp, mkdir, readFile, writeFile, readdir, rm, realpath } from "node
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 import path from "node:path";
+import { randomBytes } from "node:crypto";
+import { encryptCloudBackup } from "../lib/cloud-backup-container";
+import { makeRecoveryHandoff } from "../lib/portable-runtime/recovery-handoff";
 import { operatorPlan, runPortableOperator, OPERATOR_COMMANDS, type OperatorAdapter, type OperatorStep, type OperatorReceipt, type OperatorManifest } from "../lib/portable-runtime/operator";
 import { CiOperatorAdapter, assertEphemeralCi, validateComposeBoundary } from "../scripts/portable/operator-adapter";
 const manifest: OperatorManifest = { schemaVersion: 1, operationId: "aaaaaaaaaaaaaaaa", restoreArtifact: { id: "synthetic-artifact", ciphertextSha256: "c".repeat(64) }, classification: "INTEGRATION_TEST_ENVIRONMENT", profile: "local-single-node", project: "nalanda-ci-123-test", target: path.resolve("tmp/synthetic-operator-target"), image: `sha256:${"a".repeat(64)}`, releaseCommit: "a".repeat(40), composeSha256: "b".repeat(64), architecture: "amd64", postgresMajor: 17, backupVersion: 48, migration: "20260904120000_communication_delivery_foundation_1a", previous: { image: `sha256:${"b".repeat(64)}`, releaseCommit: "b".repeat(40), backupVersion: 48, migration: "20260904120000_communication_delivery_foundation_1a" } };
@@ -74,12 +77,17 @@ describe("durable filesystem and synthetic process adapter", () => {
     const processAdapter = async (args: string[]) => {
       calls.push(args);
       if (args.includes("config")) return JSON.stringify(config());
-      if (args.includes("dist/portable/operator-recovery.mjs")) return JSON.stringify({ state: "VERIFIED", operationId: args.at(-1), backupVersion: 48, id: "synthetic-artifact", ciphertextSha256: "c".repeat(64) });
+      if (args.includes("dist/portable/operator-recovery.mjs")) {
+        const encrypted = await encryptCloudBackup(Buffer.from("{}"), {backupFormatVersion:48,createdAt:new Date(),encryptionKeyVersion:"V1",key:randomBytes(32)});
+        const handoff = makeRecoveryHandoff(encrypted.bytes,{sourceProject:m.project,sourceCommit:m.releaseCommit,runId:"123",attempt:"1",artifactId:"synthetic-artifact",objectKey:`cloud-backup/${"a".repeat(24)}/${"b".repeat(24)}.npsbackup`});
+        return JSON.stringify({ state: "VERIFIED", operationId: args.at(-2), backupVersion: 48, id: "synthetic-artifact", ciphertextSha256: handoff.ciphertextSha256,transfer:{manifest:handoff,container:encrypted.bytes.toString("base64")} });
+      }
       return "";
     };
     class IsolatedAdapter extends CiOperatorAdapter { async preflight() {} }
     const adapter = (command: any, selected = m, resume = false) => new IsolatedAdapter(workspace, selected, path.join(workspace, "deploy/portable/compose.yml"), command, processAdapter, resume);
     try {
+      await mkdir(path.join(workspace,"tmp","portable-staging",m.project),{recursive:true,mode:0o700});
       await runPortableOperator("install", m, adapter("install"), { apply: true });
       const resolved = JSON.parse(await readFile(path.join(target, "compose.json"), "utf8"));
       expect(resolved.services.seed).toBeUndefined();
@@ -95,6 +103,8 @@ describe("durable filesystem and synthetic process adapter", () => {
       const next = { ...m, operationId: "bbbbbbbbbbbbbbbb" };
       await runPortableOperator("backup", next, adapter("backup", next), { apply: true });
       expect(JSON.parse(await readFile(path.join(target, `${next.operationId}.backup.result.json`), "utf8")).state).toBe("VERIFIED");
+      expect(await readFile(path.join(target, `${next.operationId}.backup.result.json`), "utf8")).not.toContain('"container"');
+      expect((await readFile(path.join(workspace,"tmp","portable-staging",m.project,`backup-${next.operationId}`,"backup.npsbackup"))).length).toBeGreaterThan(100);
       await expect(runPortableOperator("uninstall", next, adapter("uninstall", next), { apply: true })).rejects.toThrow("OPERATION_ID_ALREADY_USED");
       const pending = { schemaVersion: 1, command: "upgrade", planHash: "f".repeat(64), state: "FAILED", completed: ["validate"], uncertain: "backup", safeCode: "OPERATOR_STEP_FAILED" };
       const pendingFile = path.join(target, "dddddddddddddddd.upgrade.receipt.json");

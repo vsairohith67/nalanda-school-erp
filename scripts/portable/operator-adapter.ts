@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { lstat, realpath, readdir, mkdir, open, readFile, rename, unlink, statfs } from "node:fs/promises";
 import path from "node:path";
+import { recoveryHash } from "../../lib/portable-runtime/recovery-handoff";
 import { cpus, totalmem } from "node:os";
 import { operatorPlan, PORTABLE_PROFILES, type OperatorAdapter, type OperatorManifest, type OperatorReceipt, type OperatorStep, type OperatorCommand } from "../../lib/portable-runtime/operator";
 
@@ -93,8 +94,11 @@ export class CiOperatorAdapter implements OperatorAdapter {
   private args(args: string[]) { return ["compose", "--project-name", this.manifest.project, "-f", this.configFile, ...args]; }
   async preflight(m: OperatorManifest) {
     assertEphemeralCi();
+    const privateRoot = path.join(this.workspace, "tmp", "portable-staging", m.project);
+    if (process.env.PORTABLE_CI_ROOT !== privateRoot || await realpath(privateRoot) !== privateRoot) throw Error("PROJECT_SECRET_ROOT_MISMATCH");
+    if (this.command === "restore" && (!m.recoveryTransfer || m.recoveryTransfer.runId !== process.env.GITHUB_RUN_ID || m.recoveryTransfer.attempt !== process.env.GITHUB_RUN_ATTEMPT)) throw Error("INDEPENDENT_RECOVERY_TRANSFER_REQUIRED");
     if (m.migration !== (await readdir(path.join(this.workspace, "prisma", "postgresql", "migrations"))).filter(name => /^\d{14}_/.test(name)).sort().at(-1)) throw new Error("MIGRATION_PROVENANCE_MISMATCH");
-    if (m.releaseCommit !== process.env.EXPECTED_SHA || !m.project.startsWith(`nalanda-ci-${process.env.GITHUB_RUN_ID}-`)) throw new Error("OPERATOR_EXACT_HEAD_REQUIRED");
+    if (m.releaseCommit !== process.env.PORTABLE_QUALIFIED_SOURCE_SHA || !m.project.startsWith(`nalanda-ci-${process.env.GITHUB_RUN_ID}-`)) throw new Error("OPERATOR_EXACT_HEAD_REQUIRED");
     const root = path.join(this.workspace, "tmp", "portable-operator", m.project);
     if (m.target !== root || this.composeFile !== path.join(this.workspace, "deploy", "portable", "compose.yml")) throw new Error("OPERATOR_TARGET_INVALID");
     const profile = PORTABLE_PROFILES[m.profile];
@@ -122,9 +126,12 @@ export class CiOperatorAdapter implements OperatorAdapter {
     }
   }
   async inspectTarget(m: OperatorManifest, command: OperatorCommand) {
+    if (command === "restore") for (const service of ["web-1","web-2","backup-worker","migrator","seed","runtime-qa"]) {
+      if ((await this.executeProcess(["ps","-q","--filter",`label=com.docker.compose.project=${m.project}`,"--filter",`label=com.docker.compose.service=${service}`],this.workspace)).trim()) throw Error("RESTORE_ACTIVE_WRITER_FORBIDDEN");
+    }
     const existing = await lstat(m.target).catch((e: NodeJS.ErrnoException) => { if (e.code === "ENOENT") return null; throw e; });
     if (existing && (!existing.isDirectory() || existing.isSymbolicLink() || await realpath(m.target) !== m.target)) throw new Error("TARGET_SYMLINK_FORBIDDEN");
-    if (!existing && !["install", "initialise", "restore"].includes(command)) throw new Error("TARGET_NOT_INITIALISED");
+    if (!existing && !["install", "initialise"].includes(command)) throw new Error("TARGET_NOT_INITIALISED");
     if (existing) {
       const marker = await this.ownedJson(path.join(m.target, "owner.json"));
       if (marker.project !== m.project || marker.classification !== "INTEGRATION_TEST_ENVIRONMENT") throw new Error("TARGET_OWNERSHIP_MISMATCH");
@@ -136,7 +143,7 @@ export class CiOperatorAdapter implements OperatorAdapter {
       }
       const ownReceipt = entries.includes(path.basename(this.receiptFile));
       if (["install", "initialise"].includes(command) && !ownReceipt && !((this.resume || this.freshReservation) && marker.operationId === m.operationId && marker.initialised === false && (await readdir(m.target)).every(name => name === "owner.json"))) throw new Error("INSTALL_TARGET_NOT_EMPTY");
-      if (!ownReceipt && !["install", "initialise", "restore"].includes(command)) {
+      if (!ownReceipt && !["install", "initialise"].includes(command)) {
         const expectedImage = command === "upgrade" ? m.previous?.image : m.image;
         if (!marker.initialised || marker.image !== expectedImage || marker.migration !== m.migration) throw new Error("INSTALLED_RELEASE_MISMATCH");
       }
@@ -177,7 +184,8 @@ export class CiOperatorAdapter implements OperatorAdapter {
   }
   private async canonicalConfig(m: OperatorManifest) {
     const config = JSON.parse(await this.executeProcess(["compose", "--project-name", m.project, "-f", this.composeFile, "config", "--format", "json"], this.workspace));
-    await validateComposeFiles(config, this.workspace, path.join(this.workspace, "tmp", "portable-staging"));
+    const privateRoot = path.join(this.workspace, "tmp", "portable-staging", m.project);
+    await validateComposeFiles(config, this.workspace, privateRoot);
       // No implicit demo-account bootstrap. Explicit CI fixture setup owns identities.
       delete config.services.seed;
       for (const [name,service] of Object.entries(config.services) as [string,any][]) {
@@ -201,7 +209,7 @@ export class CiOperatorAdapter implements OperatorAdapter {
       return;
     }
     const saved = await this.ownedJson(this.configFile);
-    await validateComposeFiles(saved, this.workspace, path.join(this.workspace, "tmp", "portable-staging"));
+    await validateComposeFiles(saved, this.workspace, path.join(this.workspace, "tmp", "portable-staging", m.project));
     const allowedImages = new Set([this.manifest.image, this.manifest.previous?.image]);
     for (const name of ["web-1", "web-2", "backup-worker", "migrator", "backup-qa"]) {
       if (!allowedImages.has(saved.services[name]?.image) || saved.services[name]?.environment?.PORTABLE_EXPECTED_POSTGRES_MIGRATION !== m.migration) throw new Error("RESOLVED_IMAGE_PROVENANCE_MISMATCH");
@@ -215,11 +223,11 @@ export class CiOperatorAdapter implements OperatorAdapter {
     const commands: Record<Exclude<OperatorStep, "validate">, string[]> = {
       dependencies: ["up", "-d", "--wait", "postgres", "valkey", "object-init"],
       "migration-status": ["run", "--rm", "--no-deps", "migrator", "dist/portable/runtime-command.mjs", "migration-status"],
-      backup: ["run", "--rm", "--no-deps", "-e", "PORTABLE_OPERATOR_CI=true", "backup-qa", "dist/portable/operator-recovery.mjs", "backup", m.operationId],
+      backup: ["run", "--rm", "--no-deps", "-e", "PORTABLE_OPERATOR_CI=true", "backup-qa", "dist/portable/operator-recovery.mjs", "backup", m.operationId, Buffer.from(JSON.stringify({sourceProject:m.project,sourceCommit:m.releaseCommit,runId:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT})).toString("base64url")],
       migrate: ["run", "--rm", "--no-deps", "migrator"],
       start: ["up", "-d", "--wait", "--no-deps", "web-1", "web-2", "reverse-proxy", "backup-worker"],
       readiness: ["exec", "-T", "web-1", "/nodejs/bin/node", "dist/portable/runtime-command.mjs", "health-probe"],
-      restore: ["run", "--rm", "--no-deps", "-e", "PORTABLE_OPERATOR_CI=true", "backup-qa", "dist/portable/operator-recovery.mjs", "restore", m.restoreArtifact?.id ?? "", m.restoreArtifact?.ciphertextSha256 ?? "", m.operationId],
+      restore: ["run", "--rm", "--no-deps", "-e", "PORTABLE_OPERATOR_CI=true", "backup-qa", "dist/portable/operator-recovery.mjs", "restore", m.operationId, Buffer.from(JSON.stringify(m.recoveryTransfer ?? null)).toString("base64url")],
       "stop-app": ["stop", "web-1", "web-2", "reverse-proxy", "backup-worker"],
       "remove-app": ["rm", "-f", "web-1", "web-2", "reverse-proxy", "backup-worker"]
     };
@@ -228,6 +236,14 @@ export class CiOperatorAdapter implements OperatorAdapter {
       for (const name of ["web-1", "web-2", "backup-worker"]) config.services[name].image = m.image;
       await this.atomicJson(this.configFile, config);
       if (m.profile === "local-single-node") commands.start = ["up", "-d", "--wait", "--no-deps", "web-1", "reverse-proxy", "backup-worker"];
+    }
+    if (step === "restore") {
+      const privateRoot = path.join(this.workspace,"tmp","portable-staging",m.project);
+      const mounts = [["handoff/backup.npsbackup", "/run/recovery/backup.npsbackup"], ["handoff/manifest.json", "/run/recovery/manifest.json"], ["recovery-key/recovery-key", "/run/recovery-key/recovery-key"]];
+      const transient = structuredClone(saved);
+      transient.services["backup-qa"].volumes = [...(transient.services["backup-qa"].volumes??[]),...mounts.map(([source,target])=>({type:"bind",source:path.join(privateRoot,source),target,read_only:true}))];
+      await validateComposeFiles(transient,this.workspace,privateRoot);
+      commands.restore.splice(1,0,...mounts.flatMap(([source,target])=>["--volume",`${path.join(privateRoot,source)}:${target}:ro`]));
     }
     if(commands[step][0]==="up")commands[step].splice(1,0,"--no-build","--pull","never");
     if(commands[step][0]==="run")commands[step].splice(1,0,"--pull","never");
@@ -241,6 +257,18 @@ export class CiOperatorAdapter implements OperatorAdapter {
       const result = JSON.parse(output.trim().split(/\r?\n/).at(-1) ?? "{}");
       if (result.operationId !== m.operationId || result.state !== (step === "backup" ? "VERIFIED" : "RESTORED") || result.backupVersion !== 48) throw new Error("RECOVERY_TERMINAL_RESULT_INVALID");
       if (step === "backup" && (!/^[a-z0-9-]{8,64}$/.test(result.id) || !/^[a-f0-9]{64}$/.test(result.ciphertextSha256))) throw new Error("BACKUP_RESULT_INVALID");
+      if (step === "backup") {
+        const bytes = Buffer.from(result.transfer?.container ?? "", "base64"), manifestBytes = Buffer.from(JSON.stringify(result.transfer?.manifest));
+        if (bytes.length === 0 || bytes.length > 2 * 1024 * 1024 || recoveryHash(bytes) !== result.transfer.manifest.objectSha256 || result.transfer.manifest.artifactId !== result.id || result.transfer.manifest.ciphertextSha256 !== result.ciphertextSha256) throw Error("BACKUP_HANDOFF_INVALID");
+        const root = path.join(this.workspace,"tmp","portable-staging",m.project,`backup-${m.operationId}`);
+        await mkdir(root,{mode:0o700});
+        for (const [name,data] of [["backup.npsbackup",bytes],["manifest.json",manifestBytes]] as const) {
+          const handle = await open(path.join(root,name),"wx",0o444);try {await handle.writeFile(data);await handle.sync();}finally{await handle.close();}
+        }
+        result.objectSha256 = recoveryHash(bytes);result.manifestSha256 = recoveryHash(manifestBytes);
+        delete result.transfer;
+      }
+      if (step === "restore" && (result.ciphertextSha256 !== m.restoreArtifact?.ciphertextSha256 || result.objectSha256 !== m.recoveryTransfer?.objectSha256)) throw Error("RESTORE_RESULT_IDENTITY_MISMATCH");
       const f = await open(path.join(m.target, `${m.operationId}.${step}.result.json`), "wx", 0o600); try { await f.writeFile(JSON.stringify({ ...result, command: this.command, planHash: operatorPlan(this.command, this.manifest).planHash })); await f.sync(); } finally { await f.close(); }
     }
   }

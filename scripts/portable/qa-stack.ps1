@@ -91,17 +91,7 @@ try {
   }
   Invoke-Checked 'two-replica dependency integration' { docker --context default compose -f $composeFile run --pull never --rm --no-deps runtime-qa }
   Invoke-Checked 'encrypted backup and repeated restore' { docker --context default compose -f $composeFile run --pull never --rm --no-deps backup-qa }
-  $operatorBackupLines = @(& docker --context default compose -f $composeFile run --pull never --rm --no-deps -e PORTABLE_OPERATOR_CI=true backup-qa dist/portable/operator-recovery.mjs backup aaaaaaaaaaaaaaaa)
-  if ($LASTEXITCODE -ne 0) { throw 'Operator backup process failed' }
-  $operatorBackup = ($operatorBackupLines | Select-Object -Last 1) | ConvertFrom-Json
-  if ($operatorBackup.state -ne 'VERIFIED' -or $operatorBackup.backupVersion -ne 48 -or $operatorBackup.ciphertextSha256 -notmatch '^[a-f0-9]{64}$') { throw 'Operator backup verification failed' }
-  foreach ($operationId in @('bbbbbbbbbbbbbbbb', 'cccccccccccccccc')) {
-    $restoreLines = @(& docker --context default compose -f $composeFile run --pull never --rm --no-deps -e PORTABLE_OPERATOR_CI=true backup-qa dist/portable/operator-recovery.mjs restore $operatorBackup.id $operatorBackup.ciphertextSha256 $operationId)
-    if ($LASTEXITCODE -ne 0) { throw 'Operator restore process failed' }
-    $restored = ($restoreLines | Select-Object -Last 1) | ConvertFrom-Json
-    if ($restored.state -ne 'RESTORED' -or -not $restored.emptyTargetReserved -or $restored.existingDataOverwritten) { throw 'Operator restore terminal evidence failed' }
-  }
-  $results.operatorRecovery = @{ backup = 'VERIFIED'; emptySchemaRestores = 2; existingDataOverwritten = $false; backupVersion = 48 }
+  # Independent public-CLI recovery runs after this stack releases its proxy port.
   $retentionPlanLines = @(& docker --context default compose --profile maintenance-plan -f $composeFile run --pull never --rm --no-deps backup-maintenance-plan)
   if ($LASTEXITCODE -ne 0) { throw "retention dry-run plan failed with exit code $LASTEXITCODE" }
   $retentionPlanOutput = ($retentionPlanLines | Select-Object -Last 1).Trim()
@@ -158,6 +148,8 @@ finally {
   if ($admitted) { Invoke-Checked 'complete ephemeral cleanup and readback' { pnpm exec tsx scripts/portable/ci-safety.ts cleanup } }
   Set-Location $originalLocation
 }
+& pnpm exec tsx scripts/portable/operator-acceptance.ts
+if ($LASTEXITCODE -ne 0) { throw 'Independent operator lifecycle acceptance failed' }
 $publicReceipt = [ordered]@{ contract = 'NALANDA_SAME_RUNNER_STACK_V1'; source = $env:EXPECTED_SHA; architecture = $env:TARGET_ARCHITECTURE; imageConfigDigest = $admittedImage; state = 'PASSED'; cleanup = 'VERIFIED'; historicalUpgradeRollback = 'NOT_EXECUTED' }
 $publicReceipt | ConvertTo-Json -Compress | Set-Content -LiteralPath (Join-Path $workspace 'stack-result.json') -Encoding utf8
 [ordered]@{ result = 'PORTABLE_STACK_QA_PASSED'; classification = 'INTEGRATION_TEST_ENVIRONMENT'; cleanup = 'VERIFIED'; checks = $results } | ConvertTo-Json -Depth 5 -Compress

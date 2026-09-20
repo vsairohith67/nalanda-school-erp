@@ -12,6 +12,7 @@ import { emptyPriorYearBackup, loadPriorYearBackup, restorePriorYearBackup, vali
 import { createBackupDocument, generateFullBackup } from "@/lib/backup";
 import { parseAndValidateBackup } from "@/lib/restore";
 import { restoreValidatedBackup } from "@/lib/restore-database";
+import { assertRecoveryReadback } from "@/lib/portable-runtime/recovery-readback";
 
 // Authentication/step-up are isolated at their service boundaries in these database tests.
 // Existing IAM and real-user-access suites separately exercise signed sessions and one-time grants.
@@ -185,6 +186,7 @@ describe("explicit nonempty source-contract restoration",()=>{
    const record={version,provider:postgres?"postgresql":"sqlite",target:selected.label,identity:isolationId,emptyBusinessTablesBefore:true,migrationReferenceCounts,freshRestores:0,repeatRestores:0,sourceSha256:payloadDigest,artifactStorage:"inline-per-database-no-shared-object-namespace",sourceUnchanged:false,siblingIsolated:false};
    for(let round=0;round<2;round++){
     await restoreValidatedBackup(target,validated,{id:prep.userId,name:"SYNTHETIC RESTORE"});
+    if(version===48)await assertRecoveryReadback(target,validated);
     expect(digest(payload)).toBe(payloadDigest);
     expect(await target.student.count()).toBe(await db.student.count());
     expect(await target.studentGuardian.count()).toBe(payload.studentGuardians.length);

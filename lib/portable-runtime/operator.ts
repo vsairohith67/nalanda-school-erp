@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
+import type { RecoveryExpectation } from "./recovery-handoff";
 
 export const OPERATOR_COMMANDS = ["preflight", "doctor", "install", "initialise", "migrate", "backup", "restore", "upgrade", "rollback", "uninstall"] as const;
 export type OperatorCommand = typeof OPERATOR_COMMANDS[number];
@@ -13,6 +14,7 @@ export type OperatorManifest = {
   image: string; releaseCommit: string; composeSha256: string; architecture: "amd64" | "arm64";
   operationId: string;
   restoreArtifact?: { id: string; ciphertextSha256: string };
+  recoveryTransfer?: RecoveryExpectation;
   postgresMajor: 17; backupVersion: 48; migration: string;
   previous?: { image: string; releaseCommit: string; migration: string; backupVersion: 48 };
 };
@@ -32,13 +34,20 @@ const sha = /^[a-f0-9]{40}$/;
 const image = /^sha256:[a-f0-9]{64}$/;
 export function validateOperatorManifest(raw: unknown): OperatorManifest {
   const m = raw as OperatorManifest;
-  const allowed = ["schemaVersion", "classification", "profile", "project", "target", "image", "releaseCommit", "composeSha256", "architecture", "postgresMajor", "backupVersion", "migration", "previous", "operationId", "restoreArtifact"];
+  const allowed = ["schemaVersion", "classification", "profile", "project", "target", "image", "releaseCommit", "composeSha256", "architecture", "postgresMajor", "backupVersion", "migration", "previous", "operationId", "restoreArtifact", "recoveryTransfer"];
   if (!m || typeof m !== "object" || Array.isArray(m) || Object.keys(m).some(k => !allowed.includes(k)) || m.schemaVersion !== 1 || m.classification !== "INTEGRATION_TEST_ENVIRONMENT"
     || !Object.hasOwn(PORTABLE_PROFILES, m.profile) || !/^nalanda-ci-[a-z0-9-]{3,64}$/.test(m.project)
     || typeof m.target !== "string" || !path.isAbsolute(m.target) || path.normalize(m.target) !== m.target || m.target === path.parse(m.target).root
     || !image.test(m.image) || !sha.test(m.releaseCommit) || !/^[a-f0-9]{64}$/.test(m.composeSha256)
     || !/^[a-f0-9]{16}$/.test(m.operationId) || !["amd64", "arm64"].includes(m.architecture) || m.postgresMajor !== 17 || m.backupVersion !== 48 || !/^\d{14}_[a-z0-9_]+$/.test(m.migration)) throw new Error("OPERATOR_MANIFEST_INVALID");
   if (m.restoreArtifact && (Object.keys(m.restoreArtifact).sort().join() !== "ciphertextSha256,id" || !/^[a-z0-9-]{8,64}$/.test(m.restoreArtifact.id) || !/^[a-f0-9]{64}$/.test(m.restoreArtifact.ciphertextSha256))) throw new Error("RESTORE_ARTIFACT_INVALID");
+  if (m.recoveryTransfer) {
+    const r = m.recoveryTransfer;
+    if (Object.keys(r).sort().join() !== "artifactId,attempt,destinationProject,manifestSha256,objectSha256,runId,sourceCommit,sourceProject"
+      || !/^nalanda-ci-[a-z0-9-]{3,64}$/.test(r.sourceProject) || r.destinationProject !== m.project || r.sourceProject === m.project
+      || !sha.test(r.sourceCommit) || !/^\d+$/.test(r.runId) || !/^\d+$/.test(r.attempt)
+      || !/^[a-f0-9]{64}$/.test(r.manifestSha256) || !/^[a-f0-9]{64}$/.test(r.objectSha256) || r.artifactId !== m.restoreArtifact?.id) throw Error("RECOVERY_TRANSFER_INVALID");
+  }
   if (m.previous && (Object.keys(m.previous).sort().join() !== "backupVersion,image,migration,releaseCommit" || !image.test(m.previous.image) || !sha.test(m.previous.releaseCommit) || m.previous.migration !== m.migration || m.previous.backupVersion !== 48)) throw new Error("ROLLBACK_SCHEMA_INCOMPATIBLE");
   return structuredClone(m);
 }
@@ -51,7 +60,7 @@ export function operatorPlan(command: OperatorCommand, raw: unknown) {
     preflight: ["validate"], doctor: ["validate", "migration-status", "readiness"],
     install: ["validate", "dependencies", "migrate", "start", "readiness"], initialise: ["validate", "dependencies", "migrate", "start", "readiness"],
     migrate: ["validate", "migration-status", "backup", "stop-app", "migrate", "start", "readiness"],
-    backup: ["validate", "backup"], restore: ["validate", "restore"],
+    backup: ["validate", "backup"], restore: ["validate", "migration-status", "restore"],
     upgrade: ["validate", "migration-status", "backup", "stop-app", "migrate", "start", "readiness"],
     rollback: ["validate", "migration-status", "stop-app", "start", "readiness"],
     uninstall: ["validate", "stop-app", "remove-app"]

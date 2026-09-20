@@ -3,14 +3,20 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { OPERATOR_COMMANDS, runPortableOperator, validateOperatorManifest, type OperatorCommand, type OperatorAdapter, type OperatorManifest } from "../../lib/portable-runtime/operator";
 import { CiOperatorAdapter } from "./operator-adapter";
-import { admitArtifact } from "./admit-artifact";
+import { admitArtifact, admitHistoricalArtifact } from "./admit-artifact";
 
 type CliDependencies = { qualify: (manifest:OperatorManifest)=>void; adapter:(workspace:string,manifest:OperatorManifest,command:OperatorCommand,resume:boolean)=>OperatorAdapter };
 const productionDependencies:CliDependencies={qualify(manifest){
-  const receipt=admitArtifact(path.resolve("artifact-evidence"));
+  const current=admitArtifact(path.resolve("artifact-evidence"));
+  const receipt=manifest.releaseCommit===current.source?current:admitHistoricalArtifact(path.resolve("artifact-evidence-history"),manifest.releaseCommit);
   if(manifest.image!==receipt.imageConfigDigest||manifest.releaseCommit!==receipt.source||manifest.architecture!==receipt.architecture)throw Error("OPERATOR_ARTIFACT_MISMATCH");
   process.env.PORTABLE_IMAGE_ID=receipt.imageConfigDigest;
-  if(manifest.previous){if(manifest.previous.image===manifest.image||manifest.previous.releaseCommit===manifest.releaseCommit)throw Error("DISTINCT_HISTORICAL_TARGET_REQUIRED");throw Error("QUALIFIED_HISTORICAL_PAIR_NOT_AVAILABLE");}
+  process.env.PORTABLE_QUALIFIED_SOURCE_SHA=receipt.source;
+  if(manifest.previous){
+    if(manifest.previous.image===manifest.image||manifest.previous.releaseCommit===manifest.releaseCommit)throw Error("DISTINCT_HISTORICAL_TARGET_REQUIRED");
+    const previous=admitHistoricalArtifact(path.resolve("artifact-evidence-history"),manifest.previous.releaseCommit);
+    if(previous.imageConfigDigest!==manifest.previous.image||previous.architecture!==manifest.architecture)throw Error("HISTORICAL_ARTIFACT_MISMATCH");
+  }
 },adapter:(workspace,manifest,command,resume)=>new CiOperatorAdapter(workspace,manifest,path.join(workspace,"deploy","portable","compose.yml"),command,undefined,resume)};
 // The public parser and dispatcher share this entrypoint with in-process adapter tests.
 // There is deliberately no command-line/environment option for injecting an adapter.

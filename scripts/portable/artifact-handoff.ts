@@ -8,7 +8,7 @@ const sha = /^[a-f0-9]{64}$/;
 const digest = /^sha256:[a-f0-9]{64}$/;
 export const hashBytes = (bytes: string | Buffer) => createHash("sha256").update(bytes).digest("hex");
 export type EvidenceFiles = Record<string, Buffer>;
-export type ArtifactContext = {source: string; architecture: "amd64"|"arm64"; runId: string; attempt: string; now: number; inputs: Record<string,string>; baseImages:string[]};
+export type ArtifactContext = {source: string; architecture: "amd64"|"arm64"; runId: string; attempt: string; now: number; inputs: Record<string,string>; baseImages:string[]; purpose?:"SYNTHETIC_ACCEPTANCE_ONLY"};
 export function resolveBaseImages(dockerfile:string){
  const args=Object.fromEntries([...dockerfile.matchAll(/^ARG ([A-Z_]+)=(\S+)\s*$/gm)].map(m=>[m[1],m[2]])),stages=new Set<string>(),bases:string[]=[];
  for(const match of dockerfile.matchAll(/^FROM (\S+)(?: AS (\S+))?\s*$/gmi)){const raw=match[1],reference=raw.replace(/^\$\{([A-Z_]+)\}$/,(_s,key)=>args[key]??"UNRESOLVED");if(!stages.has(reference)){check(/^[^\s]+@sha256:[a-f0-9]{64}$/.test(reference),"BUILD_BASE_UNPINNED");bases.push(reference);}if(match[2])stages.add(match[2]);}
@@ -42,6 +42,9 @@ export function verifyArtifactEvidence(files: EvidenceFiles, context: ArtifactCo
   check(manifest.schemaVersion===2&&manifest.config?.digest===`sha256:${hashBytes(files['config.json'])}`&&manifest.config.size===files['config.json'].length&&Array.isArray(manifest.layers)&&manifest.layers.length>0,"ARTIFACT_CONFIG_SUBSTITUTED");
   check(manifest.layers.every((l:any)=>digest.test(l.digest)&&Number.isSafeInteger(l.size)&&l.size>=0),"ARTIFACT_LAYER_INVALID");
   check(config.os==="linux"&&config.architecture===context.architecture&&config.config?.User==="65532:65532"&&config.config?.Labels?.["org.opencontainers.image.revision"]===context.source,"ARTIFACT_CONFIG_IDENTITY");
+  const purpose=config.config?.Labels?.["io.nalanda.artifact-purpose"];
+  if(context.purpose==="SYNTHETIC_ACCEPTANCE_ONLY")check(purpose===context.purpose&&sha.test(context.inputs["synthetic-build-trust.json"]??""),"SYNTHETIC_ARTIFACT_IDENTITY");
+  else check(purpose===undefined||purpose==="PRODUCTION_DEFAULT_OFF","PRODUCTION_ARTIFACT_REQUIRED");
   const configDigest=manifest.config.digest;
   check(trivy.SchemaVersion===2&&trivy.Metadata?.ImageID===configDigest&&Array.isArray(trivy.Results)&&trivy.Results.length>0,"TRIVY_REPORT_INVALID");
   check(trivy.Results.some((r:any)=>r.Class==="os-pkgs"&&typeof r.Type==="string")&&trivy.Results.some((r:any)=>r.Class==="lang-pkgs"&&r.Type==="node-pkg"),"TRIVY_COVERAGE_MISSING");
