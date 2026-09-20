@@ -5,6 +5,8 @@ import type {PrismaClient} from "@prisma/client";
 import {hashPassword} from "../../lib/password";
 import {defaultTemplateDefinition,GRADUATION_DISCLAIMER} from "../../lib/certificate-templates";
 import {priorYearBalance} from "../../lib/prior-year-concessions";
+import {allocateFees} from "../../lib/fee-allocation";
+import {effectiveActiveSelectedReceiptPayments} from "../../lib/receipt-integrity";
 import {assertSyntheticServingTarget,privateHttp,syntheticOrigin,realLogin,realStepUp,provisionSyntheticMfa} from "./acceptance-http";
 
 const hash=(b:Uint8Array|string)=>createHash("sha256").update(b).digest("hex");
@@ -22,6 +24,14 @@ export async function integratedBusiness(db:PrismaClient,password:string){
   await provisionSyntheticMfa(db,u.id);actors.push(await realLogin(db,username,password));
  }
  const [prep,review,approve,apply]=actors;
+ const parentActor=async(linkedStudentId?:string)=>{
+  const guardian=await db.guardian.create({data:{displayName:"SYNTHETIC private guardian",primaryMobile:"SYNTHETIC-NO-CONTACT",...(linkedStudentId?{students:{create:{studentId:linkedStudentId}}}:{})}});
+  const username=`synthetic-parent-${randomUUID()}`;
+  const user=await db.user.create({data:{username,name:"SYNTHETIC Parent",guardianId:guardian.id,role:"PARENT",passwordHash:await hashPassword(password),isActive:true,lifecycleStatus:"ACTIVE",mustChangePassword:false}});
+  await db.userRoleAssignment.create({data:{userId:user.id,role:"PARENT",reason:"SYNTHETIC isolated own-child acceptance",activeKey:`${user.id}:PARENT`}});
+  await db.authLoginAlias.create({data:{userId:user.id,type:"USERNAME",normalizedValue:username,displayMasked:username,status:"VERIFIED",verifiedAt:new Date()}});
+  await provisionSyntheticMfa(db,user.id);return realLogin(db,username,password);
+ };
  const call=(actor:Actor,url:string,body?:unknown)=>privateHttp(syntheticOrigin+url,{method:body===undefined?"GET":"POST",headers:{cookie:actor.cookie,"content-type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});
  const json=async(actor:Actor,url:string,body?:unknown)=>{const r=await call(actor,url,body);assert([200,201].includes(r.status),"BUSINESS_HTTP_REFUSED");return r.json();};
  const denied=async(actor:Actor,url:string,body?:unknown)=>{const r=await call(actor,url,body);assert([400,401,403,404,409].includes(r.status),"EXPECTED_BUSINESS_REFUSAL");};
@@ -29,6 +39,16 @@ export async function integratedBusiness(db:PrismaClient,password:string){
  const enrollment=await db.academicYearEnrollment.create({data:{studentId:student.id,academicYear:"2026-27",className:"X",section:"A",status:"PASSED_OUT"}});
  const old=await db.academicYearEnrollment.create({data:{studentId:student.id,academicYear:"2025-26",className:"IX",section:"A",status:"ACTIVE"}});
  const initialStudent=await db.student.findUniqueOrThrow({where:{id:student.id}});
+ const unrelatedChild=await db.student.create({data:{admissionNo:`SYNTHETIC-OTHER-CHILD-${randomUUID()}`,studentName:"SYNTHETIC different family",fatherName:"SYNTHETIC other guardian",phone1:"SYNTHETIC-NO-CONTACT",academicYear:"2026-27",className:"VI"}});
+ const ownParent=await parentActor(student.id),otherParent=await parentActor(unrelatedChild.id);
+ assert.notEqual((await db.user.findUniqueOrThrow({where:{id:ownParent.userId}})).guardianId,(await db.user.findUniqueOrThrow({where:{id:otherParent.userId}})).guardianId);
+ // Existing nonzero current-year obligations/payment are preconditions, never
+ // the relief outcome under test. The canonical allocator validates their use.
+ const fee=await db.feeStructure.findUnique({where:{academicYear_className:{academicYear:"2026-27",className:"X"}}})??await db.feeStructure.create({data:{academicYear:"2026-27",className:"X",termAmount:500,term1Month:"April",term2Month:"July",term3Month:"October",term4Month:"January"}});
+ assert(fee.termAmount>0);
+ await db.payment.create({data:{date:new Date("2026-09-01Z"),receiptNo:`SYNTHETIC-EXISTING-${randomUUID()}`,admissionNo:student.admissionNo,studentId:student.id,studentName:student.studentName,className:"X",amountPaid:50,paymentMode:"Cash",receivedAccount:"Cash",feeType:"Current Year Fee"}});
+ const currentFeeState=async()=>{const row=await db.student.findUniqueOrThrow({where:{id:student.id}}),payments=await db.payment.findMany({where:{studentId:student.id}});const state=allocateFees(row,fee,await effectiveActiveSelectedReceiptPayments(db,payments));return {annual:state.annualFeeAfterDiscount.toFixed(2),paid:state.totalCurrentYearPaid.toFixed(2),remaining:state.totalPending.toFixed(2)};};
+ const startingFeeState=await currentFeeState();assert.equal(startingFeeState.paid,"50.00");
  // Reviewed source evidence is a fixture precondition; issue/charge/relief is not.
  await db.studentProgressionDecision.create({data:{studentId:student.id,sourceEnrollmentId:enrollment.id,academicYear:"2026-27",decisionType:"PASSED_OUT",fromClass:"X",toStatus:"Passed Out",status:"FINALIZED",evidenceNotes:"SYNTHETIC school completion, no Board qualification",finalizedByUserId:review.userId,finalizedAt:new Date(),effectiveDate:new Date()}});
  const template=await db.certificateTemplate.create({data:{templateCode:`SYNTHETIC-${randomUUID()}`,certificateType:"GRADUATION",name:"SYNTHETIC recognition",status:"ACTIVE",academicYear:"2026-27",templateDefinitionJson:JSON.stringify(defaultTemplateDefinition("GRADUATION")),createdByUserId:prep.userId,activatedByUserId:review.userId}});
@@ -62,6 +82,12 @@ export async function integratedBusiness(db:PrismaClient,password:string){
  assert.equal(JSON.parse(artifact.renderProvenanceJson).fontFamily,"Georgia Bold");
  const download=await call(prep,cp+"/pdf");assert.equal(download.status,200);const bytes=Buffer.from(await download.arrayBuffer());assert.equal(hash(bytes),artifact.pdfHash);assert((await PDFDocument.load(bytes)).getPageCount()>0);
  const again=await call(prep,cp+"/pdf");assert.equal(again.status,200);assert.equal(hash(Buffer.from(await again.arrayBuffer())),artifact.pdfHash);assert.equal(await db.miscIncomeReceipt.count(),receipts);
+ const parentPath=`/api/parent/certificates/${certificate.id}/pdf`,ownDownload=await call(ownParent,parentPath);
+ assert.equal(ownDownload.status,200);assert.equal(hash(Buffer.from(await ownDownload.arrayBuffer())),artifact.pdfHash);
+ await denied(otherParent,parentPath);await denied(ownParent,cp+"/workflow",{action:"issue"});
+ const unauthenticated=await privateHttp(syntheticOrigin+parentPath,{method:"GET"});assert.equal(unauthenticated.status,401);
+ assert.equal(await db.miscIncomeReceipt.count(),receipts);assert.equal(await db.studentCertificateVersion.count({where:{certificateId:certificate.id}}),1);
+ checks.push("certificate-parent-own-child-exact-bytes-cross-child-and-anonymous-denial");
  const revision=(await json(prep,cp+"/workflow",{action:"reissue",reason:"SYNTHETIC replacement with governed review"})).result;
  assert.equal(revision.supersedesCertificateId,certificate.id);assert.equal(revision.status,"DRAFT");
  await json(prep,`/api/certificates/${revision.id}/workflow`,{action:"submit"});await json(review,`/api/certificates/${revision.id}/workflow`,{action:"approve"});await json(approve,`/api/certificates/${revision.id}/workflow`,{action:"issue"});
@@ -106,12 +132,33 @@ export async function integratedBusiness(db:PrismaClient,password:string){
  const makeCase=async(kind:string)=>action(prep,"PREPARE",{liabilityId:proposed.liabilityId,kind,requestedAmount:"100",validFrom:today,validTo:tomorrow,applicantReference:"SYNTHETIC governed case"});
  const versionOf=async(id:string)=>(await db.priorYearConcessionCase.findUniqueOrThrow({where:{id}})).version;
  const caseResult=await makeCase("SCHOOL_WAIVER"),caseId=caseResult.caseId;assert(caseId);
+ await action(prep,"INCOME",{caseId,expectedVersion:await versionOf(caseId),income:{status:"PROVIDED",exactAnnualAmount:"0.00",period:"ANNUAL",currency:"INR"}});
+ const incomePath=`${endpoint}/${caseId}/income`,incomeAuditBefore=await db.priorYearConcessionEvent.count({where:{caseId,eventType:"EXACT_INCOME_VIEWED"}});
+ const ordinaryIncome=await json(review,incomePath);assert.equal(ordinaryIncome.exactAnnualAmount,null);
+ const exactIncome=await json(approve,incomePath+"?exact=true");assert.equal(exactIncome.exactAnnualAmount,"0.00");
+ assert.equal(await db.priorYearConcessionEvent.count({where:{caseId,eventType:"EXACT_INCOME_VIEWED"}}),incomeAuditBefore+1);
+ await denied(ownParent,incomePath+"?exact=true");await denied(otherParent,incomePath);
+ const restrictedName=`synthetic-income-reviewer-${randomUUID()}`,restrictedUser=await db.user.create({data:{username:restrictedName,name:"SYNTHETIC general income reviewer",role:"ACCOUNTANT",passwordHash:await hashPassword(password),isActive:true,lifecycleStatus:"ACTIVE",mustChangePassword:false}});
+ await db.userRoleAssignment.create({data:{userId:restrictedUser.id,role:"ACCOUNTANT",reason:"SYNTHETIC bounded income access",activeKey:`${restrictedUser.id}:ACCOUNTANT`}});
+ await db.authLoginAlias.create({data:{userId:restrictedUser.id,type:"USERNAME",normalizedValue:restrictedName,displayMasked:restrictedName,status:"VERIFIED",verifiedAt:new Date()}});
+ for(const [permission,effect] of [["VIEW_PRIOR_YEAR_INCOME","ALLOW"],["VIEW_EXACT_PRIOR_YEAR_INCOME","DENY"]])await db.userPermissionOverride.create({data:{userId:restrictedUser.id,permission,effect,reason:"SYNTHETIC exact income boundary",createdByUserId:approve.userId,activeKey:`${restrictedUser.id}:${permission}`}});
+ await provisionSyntheticMfa(db,restrictedUser.id);const restricted=await realLogin(db,restrictedName,password);
+ assert.equal((await json(restricted,incomePath)).exactAnnualAmount,null);
+ const deniedAuditBefore=await db.priorYearConcessionEvent.count({where:{caseId,eventType:"EXACT_INCOME_VIEWED"}});await denied(restricted,incomePath+"?exact=true");assert.equal(await db.priorYearConcessionEvent.count({where:{caseId,eventType:"EXACT_INCOME_VIEWED"}}),deniedAuditBefore);
+ const list=await json(prep,endpoint+"?id="+caseId);assert(!JSON.stringify(list).includes("exactAmountEnvelope"));assert(!JSON.stringify(list).includes("exactAnnualAmount"));
  await action(prep,"SUBMIT",{caseId,expectedVersion:await versionOf(caseId)});await action(review,"REVIEW",{caseId,expectedVersion:await versionOf(caseId)});
  let balance=await priorYearBalance(db,proposed.liabilityId);
  const approval={caseId,expectedVersion:await versionOf(caseId),balanceHash:balance.hash,balanceVersion:balance.liability.version,approvedAmount:"100"};
+ for(const state of ["expired","revoked"]){
+  const token=await realStepUp(db,approve,"PRIOR_YEAR_APPROVE"),id=token.split(".")[0],before=await db.priorYearConcessionCase.findUniqueOrThrow({where:{id:caseId}});
+  await db.stepUpGrant.update({where:{id},data:state==="expired"?{expiresAt:new Date(Date.now()-1)}:{revokedAt:new Date()}});
+  const requestKey=randomUUID();await denied(approve,endpoint,{...approval,action:"APPROVE",requestKey,reason:"SYNTHETIC stale authority refusal",stepUpToken:token});
+  assert.deepEqual(await db.priorYearConcessionCase.findUniqueOrThrow({where:{id:caseId}}),before);assert.equal(await db.priorYearConcessionEvent.count({where:{requestKey}}),0);
+ }
  await denied(prep,endpoint,{...approval,action:"APPROVE",reason:"SYNTHETIC self approval refused",requestKey:randomUUID(),stepUpToken:await realStepUp(db,prep,"PRIOR_YEAR_APPROVE")});
  await action(approve,"APPROVE",approval);
- const financialBefore={payments:await db.payment.count(),receipts:await db.miscIncomeReceipt.count(),student:JSON.stringify(await db.student.findUniqueOrThrow({where:{id:student.id}}))};
+ const financialSnapshot=async()=>({payments:hash(JSON.stringify(await db.payment.findMany({orderBy:{id:"asc"}}))),receipts:hash(JSON.stringify(await db.miscIncomeReceipt.findMany({orderBy:{id:"asc"}}))),cash:hash(JSON.stringify(await db.cashBookMovement.findMany({orderBy:{id:"asc"}}))),fees:hash(JSON.stringify(await db.feeStructure.findMany({orderBy:{id:"asc"}}))),student:JSON.stringify(await db.student.findUniqueOrThrow({where:{id:student.id}}))});
+ const financialBefore=await financialSnapshot();
  const applyBody={action:"APPLY",requestKey:randomUUID(),reason:"SYNTHETIC single relief under retry",caseId,expectedVersion:await versionOf(caseId),stepUpToken:await realStepUp(db,apply,"PRIOR_YEAR_APPLY")};
  const results=await Promise.all([call(apply,endpoint,applyBody),call(apply,endpoint,applyBody)]);assert(results.some(r=>r.status===200));await json(apply,endpoint,applyBody);
  assert.equal(await db.priorYearConcessionEvent.count({where:{caseId,eventType:"RELIEF_APPLIED"}}),1);
@@ -120,8 +167,18 @@ export async function integratedBusiness(db:PrismaClient,password:string){
  await action(approve,"REVERSE",{caseId,expectedVersion:await versionOf(caseId)});
  const events=await db.priorYearConcessionEvent.findMany({where:{caseId,eventType:{in:["RELIEF_APPLIED","RELIEF_REVERSED"]}}});assert.equal(events.length,2);assert.equal(events.find(e=>e.eventType==="RELIEF_REVERSED")!.reversesEventId,events.find(e=>e.eventType==="RELIEF_APPLIED")!.id);
  assert.equal((await priorYearBalance(db,proposed.liabilityId)).totals.remaining.toFixed(2),"950.00");
- assert.deepEqual({payments:await db.payment.count(),receipts:await db.miscIncomeReceipt.count(),student:JSON.stringify(await db.student.findUniqueOrThrow({where:{id:student.id}}))},financialBefore);
+ assert.deepEqual(await financialSnapshot(),financialBefore);
+ assert.deepEqual(await currentFeeState(),startingFeeState);
  assert.equal((await db.student.findUniqueOrThrow({where:{id:student.id}})).discountPercent,initialStudent.discountPercent);
  checks.push("prior-year-http-source-scope-stepup-separation-apply-concurrency-retry-compensating-reversal-no-cash");
+ const promise=await makeCase("SPONSORSHIP_PROMISE"),promiseId=promise.caseId;assert(promiseId);
+ await action(prep,"SUBMIT",{caseId:promiseId,expectedVersion:await versionOf(promiseId)});await action(review,"REVIEW",{caseId:promiseId,expectedVersion:await versionOf(promiseId)});
+ balance=await priorYearBalance(db,proposed.liabilityId);
+ await action(approve,"APPROVE",{caseId:promiseId,expectedVersion:await versionOf(promiseId),balanceHash:balance.hash,balanceVersion:balance.liability.version,approvedAmount:"100"});
+ await denied(apply,endpoint,{action:"APPLY",caseId:promiseId,expectedVersion:await versionOf(promiseId),requestKey:randomUUID(),reason:"SYNTHETIC promise is not received money",stepUpToken:await realStepUp(db,apply,"PRIOR_YEAR_APPLY")});
+ assert.equal((await db.priorYearConcessionCase.findUniqueOrThrow({where:{id:promiseId}})).status,"APPROVED");assert.equal(await db.priorYearConcessionEvent.count({where:{caseId:promiseId,eventType:"RELIEF_APPLIED"}}),0);
+ assert.deepEqual(await financialSnapshot(),financialBefore);assert.equal((await priorYearBalance(db,proposed.liabilityId)).totals.remaining.toFixed(2),"950.00");
+ assert.deepEqual(await currentFeeState(),startingFeeState);
+ checks.push("restricted-exact-income-audit-expired-revoked-stepup-promises-no-fee-cash-payment-mutation");
  assertSyntheticServingTarget();return checks;
 }

@@ -9,6 +9,7 @@ import {interruptPublicInitialise} from "./operator-interruption";
 import {hashBytes,assertRunningImage} from "./artifact-handoff";
 import {operatorPlan,type OperatorCommand,type OperatorManifest} from "../../lib/portable-runtime/operator";
 import {validateOperatorFixture} from "../../lib/portable-runtime/operator-fixture";
+import {mergeHistoricalIncomeKeys} from "../../lib/portable-runtime/recovery-key-custody";
 import {validateComposeFiles} from "./operator-adapter";
 
 export const OPERATOR_SCENARIOS=Object.freeze([
@@ -20,6 +21,8 @@ export const OPERATOR_SCENARIOS=Object.freeze([
  {id:"backup",command:"backup",apply:true},
  {id:"uninstall-preserves-resources",command:"uninstall",apply:true},
 ] as const);
+export const REQUIRED_OPERATOR_SCENARIOS=Object.freeze([...OPERATOR_SCENARIOS.map(s=>s.id),"certificate-concession-nonempty-operator-fixture","initialise-independent-project-encrypted-restore","wrong-key","corrupted-object","missing-object","mismatched-manifest","restored-uninstall-preserves-data-keys-and-objects","deployed-interruption-durable-resume-stale-lock","incompatible-historical-rollback-refused","distinct-qualified-historical-upgrade-compatible-rollback"]);
+export function missingOperatorScenarios(records:readonly {scenario:string;state:string}[]){return REQUIRED_OPERATOR_SCENARIOS.filter(id=>!records.some(r=>r.scenario===id&&r.state==="PASSED"));}
 /** Real subprocess entrypoint. No process adapter or qualification override is exposed. */
 export function invokePublicOperator(command:OperatorCommand,manifestPath:string,target:string,apply:boolean,resume=false){
  const args=["--import","tsx",path.resolve("scripts/portable/operator.ts"),command,"--manifest",manifestPath,"--target",target,...(apply?["--apply"]:[]),...(resume?["--resume"]:[])];
@@ -30,17 +33,19 @@ export async function operatorAcceptance(){
  const artifact=admitArtifact(path.resolve("artifact-evidence")); // before filesystem/deployment mutations
  const fixtureRoot=path.resolve(process.env.PORTABLE_OPERATOR_FIXTURE_ROOT??"");
  if(!fixtureRoot.startsWith(path.resolve("tmp/recovery-1c-restores")+path.sep)||lstatSync(fixtureRoot).isSymbolicLink()||realpathSync(fixtureRoot)!==fixtureRoot)throw Error("PRIVATE_OPERATOR_FIXTURE_REQUIRED");
- for(const [name,maximum] of [["source-v48.json",16*1024*1024],["operator-fixture.json",2048]] as const){const file=path.join(fixtureRoot,name),stat=lstatSync(file);if(!stat.isFile()||stat.isSymbolicLink()||realpathSync(file)!==file||stat.size>maximum)throw Error("PRIVATE_OPERATOR_FIXTURE_UNSAFE");}
+ for(const [name,maximum] of [["source-v48.json",16*1024*1024],["operator-fixture.json",2048],["historical-income-keys.json",32768]] as const){const file=path.join(fixtureRoot,name),stat=lstatSync(file);if(!stat.isFile()||stat.isSymbolicLink()||realpathSync(file)!==file||stat.size>maximum)throw Error("PRIVATE_OPERATOR_FIXTURE_UNSAFE");}
  const fixtureBytes=readFileSync(path.join(fixtureRoot,"source-v48.json")),fixtureReceipt=readFileSync(path.join(fixtureRoot,"operator-fixture.json"));
  const fixtureIdentity={source:artifact.source,runId:process.env.GITHUB_RUN_ID!,attempt:process.env.GITHUB_RUN_ATTEMPT!};
- validateOperatorFixture(fixtureBytes,JSON.parse(fixtureReceipt.toString()),fixtureIdentity);
+ const fixture=validateOperatorFixture(fixtureBytes,JSON.parse(fixtureReceipt.toString()),fixtureIdentity);
+ const custodyBytes=readFileSync(path.join(fixtureRoot,"historical-income-keys.json"));
+ if(hashBytes(custodyBytes)!==JSON.parse(fixtureReceipt.toString()).custodySha256)throw Error("PRIVATE_CUSTODY_HASH_MISMATCH");
  process.env.PORTABLE_IMAGE_ID=artifact.imageConfigDigest;
  const project=`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-operator`;
  const target=path.resolve("tmp/portable-operator",project),root=path.resolve("tmp/recovery-1c-operator",project);
  if(existsSync(target)||existsSync(root))throw Error("OPERATOR_ACCEPTANCE_TARGET_NOT_FRESH");
  mkdirSync(root,{recursive:true,mode:0o700});
  const base:OperatorManifest={schemaVersion:1,classification:"INTEGRATION_TEST_ENVIRONMENT",profile:"local-single-node",project,target,image:artifact.imageConfigDigest,releaseCommit:artifact.source,composeSha256:hashBytes(readFileSync("deploy/portable/compose.yml")),architecture:artifact.architecture,operationId:randomBytes(8).toString("hex"),postgresMajor:17,backupVersion:48,migration:readdirSync("prisma/postgresql/migrations").filter(x=>/^\d{14}_/.test(x)).sort().at(-1)!};
- const records:unknown[]=[];let cleanup="NOT_STARTED";
+ const records:({scenario:string;state:string}&Record<string,unknown>)[]=[];let cleanup="NOT_STARTED";
  const docker=(args:string[])=>execFileSync("docker",["--context","default",...args],{encoding:"utf8",timeout:120_000,maxBuffer:2*1024*1024});
  const volumes=()=>docker(["volume","ls","-q","--filter",`label=com.docker.compose.project=${project}`]).trim().split(/\s+/).filter(Boolean).sort();
  const privateRoot=path.resolve("tmp/portable-staging",project);
@@ -52,10 +57,17 @@ export async function operatorAcceptance(){
   for(const kind of ["container","network","volume"])if(docker([kind,"ls",...(kind==="container"?["--all"]:[]),"-q","--filter",`label=com.docker.compose.project=${name}`]).trim())throw Error("PROJECT_RESOURCES_EXIST");
   mkdirSync(entry.privateRoot,{recursive:true,mode:0o700});if(realpathSync(entry.privateRoot)!==entry.privateRoot)throw Error("PROJECT_ROOT_UNSAFE");
   writeFileSync(path.join(entry.privateRoot,"owner.json"),JSON.stringify({project:name,source:artifact.source,runId:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT}),{flag:"wx",mode:0o600});projects.push(entry);activate(entry);
-  execFileSync(process.execPath,["scripts/portable/generate-synthetic-secrets.mjs"],{env:{...process.env,NALANDA_SYNTHETIC_STAGING:"true",PORTABLE_SYNTHETIC_SECRET_ROOT:path.join(entry.privateRoot,"secrets")},stdio:"pipe",timeout:30_000});return entry;
+  execFileSync(process.execPath,["scripts/portable/generate-synthetic-secrets.mjs"],{env:{...process.env,NALANDA_SYNTHETIC_STAGING:"true",PORTABLE_SYNTHETIC_SECRET_ROOT:path.join(entry.privateRoot,"secrets")},stdio:"pipe",timeout:30_000});
+  const ringFile=path.join(entry.privateRoot,"secrets","auth_mfa_keyring_json"),activeText=readFileSync(ringFile,"utf8");
+  const combined=mergeHistoricalIncomeKeys(activeText,custodyBytes.toString(),fixture,{...fixtureIdentity,backupSha256:hashBytes(fixtureBytes)});
+  // Before the first container exists: no cached environment or mounted inode is replaced.
+  writeFileSync(path.join(entry.privateRoot,"original-auth-keyring.json"),activeText,{flag:"wx",mode:0o400});
+  chmodSync(ringFile,0o600);writeFileSync(ringFile,combined);chmodSync(ringFile,0o444);
+  if(readFileSync(ringFile,"utf8")!==combined)throw Error("PRIVATE_CUSTODY_WRITE_FAILED");
+  return entry;
  };
  const compose=(entry:typeof projects[number],args:string[])=>{activate(entry);return docker(["compose","--project-name",entry.project,"-f",path.join(entry.target,"compose.json"),...args]);};
- const keyIdentity=(entry:typeof projects[number])=>hashBytes(readFileSync(path.join(entry.privateRoot,"secrets","backup_encryption_key")));
+ const keyIdentity=(entry:typeof projects[number])=>hashBytes(Buffer.concat([readFileSync(path.join(entry.privateRoot,"secrets","backup_encryption_key")),readFileSync(path.join(entry.privateRoot,"secrets","auth_mfa_keyring_json"))]));
  let backupManifest:any,backupResult:any,backupOperation:string|undefined;
  const inspect=(entry:typeof projects[number])=>JSON.parse(compose(entry,["run","--pull","never","--rm","--no-deps","-e","PORTABLE_OPERATOR_CI=true","backup-qa","dist/portable/operator-recovery.mjs","inspect",randomBytes(8).toString("hex"),Buffer.from(JSON.stringify(backupManifest)).toString("base64url")]).trim().split(/\r?\n/).at(-1)!);
  try{
@@ -81,6 +93,7 @@ export async function operatorAcceptance(){
      writeFileSync(path.join(inputs,"source-v48.json"),fixtureBytes,{flag:"wx",mode:0o444});writeFileSync(path.join(inputs,"operator-fixture.json"),fixtureReceipt,{flag:"wx",mode:0o444});
      const cfg=JSON.parse(docker(["compose","--project-name",project,"-f",path.resolve("deploy/portable/compose.yml"),"config","--format","json"]));
      const seed=cfg.services.seed;seed.environment.DIRECT_URL_FILE="/run/secrets/direct_url";seed.environment.PORTABLE_OPERATOR_CI="true";seed.secrets.push({source:"direct_url",target:"direct_url"});
+     seed.environment.AUTH_MFA_KEYRING_JSON_FILE="/run/secrets/auth_mfa_keyring_json";seed.secrets.push({source:"auth_mfa_keyring_json",target:"auth_mfa_keyring_json"});
      seed.volumes=[...(seed.volumes??[]),...["source-v48.json","operator-fixture.json"].map(name=>({type:"bind",source:path.join(inputs,name),target:`/run/operator-fixture/${name}`,read_only:true,bind:{create_host_path:false}}))];
      await validateComposeFiles(cfg,process.cwd(),source.privateRoot);
      const file=path.join(source.privateRoot,"fixture-compose.json");writeFileSync(file,JSON.stringify(cfg),{flag:"wx",mode:0o600});
@@ -144,6 +157,7 @@ export async function operatorAcceptance(){
   const uninstall={...fresh,operationId:randomBytes(8).toString("hex")},uninstallFile=path.join(root,"destination-uninstall.json");writeFileSync(uninstallFile,JSON.stringify(uninstall),{flag:"wx",mode:0o600});activate(destination);
   invokePublicOperator("uninstall",uninstallFile,destination.target,true);
   if(JSON.stringify(destinationBefore)!==JSON.stringify({database:inspect(destination),key:keyIdentity(destination),recoveryKey:hashBytes(readFileSync(recoveryKey))}))throw Error("RESTORED_UNINSTALL_CHANGED_DATA");
+  records.push({scenario:"restored-uninstall-preserves-data-keys-and-objects",state:"PASSED",classification:"PUBLIC_CLI_DEPLOYED_ACCEPTANCE"});
   const interrupted=bootstrap(`${project}-interrupted`),interruptedManifest={...base,project:interrupted.project,target:interrupted.target,operationId:randomBytes(8).toString("hex")},interruptedFile=path.join(root,"interrupted.json");
   writeFileSync(interruptedFile,JSON.stringify(interruptedManifest),{flag:"wx",mode:0o600});await interruptPublicInitialise(interruptedManifest,interruptedFile);
   invokePublicOperator("initialise",interruptedFile,interrupted.target,true,true);invokePublicOperator("initialise",interruptedFile,interrupted.target,true,true);
@@ -199,9 +213,10 @@ export async function operatorAcceptance(){
   rmSync(privateRoot,{recursive:true});if(existsSync(privateRoot))throw Error("SECRET_CLEANUP_RESIDUE");
   }catch{cleanupFailures.push(project);}
   }
-  writeFileSync(path.join(root,"result.json"),JSON.stringify({source:artifact.source,records,cleanup:cleanupFailures.length?"FAILED":cleanup,cleanupFailures,requiredScenarios:OPERATOR_SCENARIOS.map(s=>s.id),pending:["historical-income-key-custody","same-runner-genuine-fixture-preparation"]},null,2),{flag:"wx"});
+  writeFileSync(path.join(root,"result.json"),JSON.stringify({source:artifact.source,records,cleanup:cleanupFailures.length?"FAILED":cleanup,cleanupFailures,requiredScenarios:REQUIRED_OPERATOR_SCENARIOS,pending:missingOperatorScenarios(records)},null,2),{flag:"wx"});
   if(cleanupFailures.length)throw Error("OPERATOR_TEARDOWN_INCOMPLETE");
  }
- throw Error("OPERATOR_REQUIRED_SCENARIOS_INCOMPLETE");
+ if(missingOperatorScenarios(records).length)throw Error("OPERATOR_REQUIRED_SCENARIOS_INCOMPLETE");
+ return {contract:"NALANDA_OPERATOR_ACCEPTANCE_V1",source:artifact.source,state:"PASSED",cleanup,historicalUpgradeRollback:"PASSED",requiredScenarios:REQUIRED_OPERATOR_SCENARIOS.length};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){if(process.argv[2]==="--discover")console.log(JSON.stringify(OPERATOR_SCENARIOS));else void operatorAcceptance().catch(()=>{console.error("OPERATOR_ACCEPTANCE_FAILED");process.exitCode=1;});}

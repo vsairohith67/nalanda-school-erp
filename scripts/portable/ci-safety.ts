@@ -3,12 +3,13 @@ import { mkdir, lstat, realpath, rm, writeFile, readFile } from "node:fs/promise
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { assertEphemeralCi, docker, validateComposeFiles } from "./operator-adapter";
+import {ciProject} from "./ci-project";
 
 async function main() {
   assertEphemeralCi();
   const workspace = await realpath(process.cwd());
-  const project = `nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-stack`;
-  if (!/^nalanda-ci-\d+-\d+-stack$/.test(project) || process.env.COMPOSE_PROJECT_NAME !== project) throw new Error("CI_PROJECT_INVALID");
+  const project = ciProject(process.env);
+  if (process.env.COMPOSE_PROJECT_NAME !== project) throw new Error("CI_PROJECT_INVALID");
   if (execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim() !== process.env.EXPECTED_SHA) throw new Error("EXACT_HEAD_REQUIRED");
   const root = path.join(workspace, "tmp", "portable-staging", project);
   if (process.env.PORTABLE_CI_ROOT !== root || process.env.PORTABLE_SYNTHETIC_SECRET_ROOT !== path.join(root, "secrets")) throw new Error("CI_ROOT_INVALID");
@@ -17,9 +18,10 @@ async function main() {
   const resources = async (): Promise<Record<string, string[]>> => Object.fromEntries(await Promise.all(["container", "network", "volume"].map(async kind => [kind, (await docker([kind, "ls", ...(kind === "container" ? ["--all"] : []), "-q", "--filter", `label=com.docker.compose.project=${project}`], workspace)).trim().split(/\s+/).filter(Boolean)])));
   const missingOnly = (e: NodeJS.ErrnoException) => { if (e.code === "ENOENT") return null; throw e; };
   const admissionPath = path.join(receiptRoot, `${project}.admission.json`);
+  const cleanupPath=path.join(receiptRoot,process.env.PORTABLE_ACCEPTANCE_PHASE==="synthetic-ON"?"cleanup-qaon.json":"cleanup.json");
   const action = process.argv[2];
   if (action === "prepare") {
-    if (await lstat(root).catch(missingOnly) || Object.values(await resources()).some(v => v.length)) throw new Error("CI_TARGET_NOT_FRESH");
+    if (await lstat(admissionPath).catch(missingOnly) || await lstat(root).catch(missingOnly) || Object.values(await resources()).some(v => v.length)) throw new Error("CI_TARGET_NOT_FRESH");
     await mkdir(root, { recursive: true, mode: 0o700 });
     if (await realpath(root) !== root) throw new Error("CI_ROOT_SYMLINK_FORBIDDEN");
     await mkdir(receiptRoot, { recursive: true });
@@ -46,7 +48,7 @@ async function main() {
   };
   const before = await inventory();
   if(!await lstat(root).catch(missingOnly)&&Object.values(before).every(v=>Array.isArray(v)&&v.length===0)){
-    const prior=JSON.parse(await readFile(path.join(receiptRoot,"cleanup.json"),"utf8"));
+    const prior=JSON.parse(await readFile(cleanupPath,"utf8"));
     if(prior.sourceCommit!==process.env.EXPECTED_SHA||prior.result!=="CLEANUP_VERIFIED")throw Error("CI_PRIOR_CLEANUP_UNVERIFIED");
     return; // Verified idempotent second readback; do not recreate a removed secret tree.
   }
@@ -63,7 +65,7 @@ async function main() {
     if (await lstat(root).catch(missingOnly)) failures.push("CI_FILES_REMAIN");
   } catch { failures.push("CI_FILES_CLEANUP_FAILED"); }
   await mkdir(receiptRoot, { recursive: true });
-  await writeFile(path.join(receiptRoot,"cleanup.json"),JSON.stringify({contract:"NALANDA_PUBLIC_CLEANUP_V1",sourceCommit:process.env.EXPECTED_SHA,result:failures.length?"CLEANUP_FAILED":"CLEANUP_VERIFIED",resourcesRemaining:Object.fromEntries(Object.entries(after).map(([kind,items])=>[kind,items===null?null:items.length]))}));
+  await writeFile(cleanupPath,JSON.stringify({contract:"NALANDA_PUBLIC_CLEANUP_V1",sourceCommit:process.env.EXPECTED_SHA,result:failures.length?"CLEANUP_FAILED":"CLEANUP_VERIFIED",resourcesRemaining:Object.fromEntries(Object.entries(after).map(([kind,items])=>[kind,items===null?null:items.length]))}));
   await writeFile(path.join(receiptRoot, `${project}.${randomUUID()}.cleanup.json`), JSON.stringify({ schemaVersion: 1, classification: "INTEGRATION_TEST_ENVIRONMENT", sourceCommit: process.env.EXPECTED_SHA,
     ownerException: "EPHEMERAL_EXACT_HEAD_CI_ONLY", countsBefore: Object.fromEntries(Object.entries(before).map(([k,v]) => [k,v === null ? null : v.length])), countsAfter: Object.fromEntries(Object.entries(after).map(([k,v]) => [k,v === null ? null : v.length])),
     generatedSecretsCertificatesAndTemporaryFilesRemoved: !failures.includes("CI_FILES_CLEANUP_FAILED") && !failures.includes("CI_FILES_REMAIN"), tlsContainerTmpfsRemoved: after.container !== null && after.container.length === 0,

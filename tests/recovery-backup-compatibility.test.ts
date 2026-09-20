@@ -1,4 +1,4 @@
-import { randomUUID, createHash } from "node:crypto";
+import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -14,6 +14,7 @@ import { parseAndValidateBackup } from "@/lib/restore";
 import { restoreValidatedBackup } from "@/lib/restore-database";
 import { assertRecoveryReadback } from "@/lib/portable-runtime/recovery-readback";
 import {validateOperatorFixture} from "@/lib/portable-runtime/operator-fixture";
+import {historicalIncomeKeys} from "@/lib/portable-runtime/recovery-key-custody";
 
 // Authentication/step-up are isolated at their service boundaries in these database tests.
 // Existing IAM and real-user-access suites separately exercise signed sessions and one-time grants.
@@ -32,7 +33,8 @@ const policy: PriorYearPolicy = { contract: "NALANDA_PRIOR_YEAR_CONCESSIONS_1A",
 let db: PrismaClient;
 const postgres = process.env.DATABASE_PROVIDER === "postgresql";
 const originalUrl = process.env.DATABASE_URL;
-const suffix = randomUUID();
+const suffix = process.env.PORTABLE_OPERATOR_MATRIX_ID ?? randomUUID();
+if (!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(suffix)) throw Error("RECOVERY_MATRIX_ID_INVALID");
 const actor = (role: string): ConcessionActor => ({ userId: `${role}-${suffix}`, sessionId: `session-${role}`, roleAssignmentId: `assignment-${role}` });
 const prep = actor("preparer"), reviewer = actor("reviewer"), approver = actor("approver"), applier = actor("applier");
 const request = (action: string, extra: Record<string, unknown> = {}) => ({ action, requestKey: randomUUID(), reason: "Wholly invented finance review evidence", stepUpToken: "synthetic-step-up-proof", ...extra });
@@ -131,8 +133,16 @@ function originalReadClient(version:number){
  if("workflowKey" in select||"supersedesCertificateId" in select)throw Error("SOURCE_SCHEMA_UNEXPECTED_COLUMNS");
  return new Proxy(db,{get(target,key){if(key==="studentCertificate")return {findMany:(args:any={})=>target.studentCertificate.findMany({...args,select})};const value=Reflect.get(target,key);return typeof value==="function"?value.bind(target):value;}});
 }
-beforeAll(()=>{vi.stubEnv("NODE_ENV","test");vi.stubEnv("APP_ORIGIN","http://127.0.0.1:3000");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_MODE","SYNTHETIC_COPY_ONLY");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED","prior-year-concessions-1a,student-linked-items-1a,certificate-graduation-exit-1a,certificate-bulk-issue-1a,certificate-verification-1a");vi.stubEnv("AUTH_SECRET","SYNTHETIC-only-recovery-test-secret-000000");vi.stubEnv("AUTH_MFA_KEYRING_JSON",JSON.stringify({active:"SYNTHETIC",keys:{SYNTHETIC:Buffer.alloc(32,7).toString("base64")}}));});
-afterAll(async()=>{await db?.$disconnect();mkdirSync(owned,{recursive:true});writeFileSync(path.join(owned,"matrix.json"),JSON.stringify({classification:"SYNTHETIC_DATABASE_EVIDENCE",provider:postgres?"postgresql":"sqlite",targets:matrixReceipts},null,2));mkdirSync("tmp/recovery-1c",{recursive:true});writeFileSync("tmp/recovery-1c/restore-matrix-"+(postgres?"postgresql":"sqlite")+".json",JSON.stringify({contract:"NALANDA_RESTORE_MATRIX_1C",source:execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),provider:postgres?"postgresql":"sqlite",targets:matrixReceipts,complete:matrixReceipts.length===8,freshRestores:matrixReceipts.reduce((n,r)=>n+Number(r.freshRestores),0),repeatRestores:matrixReceipts.reduce((n,r)=>n+Number(r.repeatRestores),0)},null,2));if(matrixReceipts.length===8){const bytes=readFileSync(path.join(owned,"source-v48.json"));const receipt={contract:"NALANDA_OPERATOR_FIXTURE_V1",complete:true,source:execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),runId:process.env.GITHUB_RUN_ID??"LOCAL_CONTRACT",attempt:process.env.GITHUB_RUN_ATTEMPT??"1",sha256:createHash("sha256").update(bytes).digest("hex")};validateOperatorFixture(bytes,receipt,receipt);expect(()=>validateOperatorFixture(Buffer.concat([bytes,Buffer.from(" ")]),receipt,receipt)).toThrow("OPERATOR_FIXTURE_HASH");expect(()=>validateOperatorFixture(bytes,receipt,{...receipt,source:"0".repeat(40)})).toThrow("OPERATOR_FIXTURE_PROVENANCE");writeFileSync(path.join(owned,"operator-fixture.json"),JSON.stringify(receipt),{flag:"wx",mode:0o400});} console.log("RECOVERY_1C_MATRIX "+JSON.stringify(matrixReceipts));vi.unstubAllEnvs();});
+beforeAll(()=>{vi.stubEnv("NODE_ENV","test");vi.stubEnv("APP_ORIGIN","http://127.0.0.1:3000");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_MODE","SYNTHETIC_COPY_ONLY");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED","prior-year-concessions-1a,student-linked-items-1a,certificate-graduation-exit-1a,certificate-bulk-issue-1a,certificate-verification-1a");vi.stubEnv("AUTH_SECRET","SYNTHETIC-only-recovery-test-secret-000000");vi.stubEnv("AUTH_MFA_KEYRING_JSON",JSON.stringify({active:"HISTORICAL_FIXTURE",keys:{HISTORICAL_FIXTURE:randomBytes(32).toString("base64")}}));});
+afterAll(async()=>{await db?.$disconnect();mkdirSync(owned,{recursive:true});writeFileSync(path.join(owned,"matrix.json"),JSON.stringify({classification:"SYNTHETIC_DATABASE_EVIDENCE",provider:postgres?"postgresql":"sqlite",targets:matrixReceipts},null,2));mkdirSync("tmp/recovery-1c",{recursive:true});writeFileSync("tmp/recovery-1c/restore-matrix-"+(postgres?"postgresql":"sqlite")+".json",JSON.stringify({contract:"NALANDA_RESTORE_MATRIX_1C",source:execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),provider:postgres?"postgresql":"sqlite",targets:matrixReceipts,complete:matrixReceipts.length===8,freshRestores:matrixReceipts.reduce((n,r)=>n+Number(r.freshRestores),0),repeatRestores:matrixReceipts.reduce((n,r)=>n+Number(r.repeatRestores),0)},null,2));if(matrixReceipts.length===8){const bytes=readFileSync(path.join(owned,"source-v48.json"));const receipt={contract:"NALANDA_OPERATOR_FIXTURE_V1",complete:true,source:execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),runId:process.env.GITHUB_RUN_ID??"LOCAL_CONTRACT",attempt:process.env.GITHUB_RUN_ATTEMPT??"1",sha256:createHash("sha256").update(bytes).digest("hex")};validateOperatorFixture(bytes,receipt,receipt);expect(()=>validateOperatorFixture(Buffer.concat([bytes,Buffer.from(" ")]),receipt,receipt)).toThrow("OPERATOR_FIXTURE_HASH");expect(()=>validateOperatorFixture(bytes,receipt,{...receipt,source:"0".repeat(40)})).toThrow("OPERATOR_FIXTURE_PROVENANCE");const custody={contract:"NALANDA_PRIVATE_INCOME_CUSTODY_V1",source:receipt.source,runId:receipt.runId,attempt:receipt.attempt,backupSha256:receipt.sha256,...historicalIncomeKeys(parseAndValidateBackup(bytes.toString()),process.env.AUTH_MFA_KEYRING_JSON!)};
+writeFileSync(path.join(owned,"historical-income-keys.json"),JSON.stringify(custody),{flag:"wx",mode:0o400});
+writeFileSync(path.join(owned,"operator-fixture.json"),JSON.stringify({...receipt,custodySha256:createHash("sha256").update(JSON.stringify(custody)).digest("hex")}),{flag:"wx",mode:0o400});
+if(process.env.PORTABLE_OPERATOR_FIXTURE_LOCATOR){
+ const locator=path.resolve(process.env.PORTABLE_OPERATOR_FIXTURE_LOCATOR);
+ const expected=path.resolve("tmp/recovery-1d-operator-fixture",`${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}`,"locator.json");
+ if(locator!==expected||process.env.GITHUB_ACTIONS!=="true"||process.env.RUNNER_ENVIRONMENT!=="github-hosted")throw Error("OPERATOR_FIXTURE_LOCATOR_DENIED");
+ writeFileSync(locator,JSON.stringify({root:owned,...receipt}),{flag:"wx",mode:0o600});
+}} console.log("RECOVERY_1C_MATRIX "+JSON.stringify(matrixReceipts));vi.unstubAllEnvs();});
 describe("explicit nonempty source-contract restoration",()=>{
  it.each([45,46,47,48])("restores genuine source v%i into two independent empty v48 targets, then repeats each",async(version)=>{
   vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED",version===46?"certificate-graduation-exit-1a,certificate-bulk-issue-1a,certificate-verification-1a":"prior-year-concessions-1a,student-linked-items-1a,certificate-graduation-exit-1a,certificate-bulk-issue-1a,certificate-verification-1a");

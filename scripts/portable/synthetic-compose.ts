@@ -31,7 +31,7 @@ export function syntheticCompose(base:any,root:string,image:string){
 }
 async function main(){
  const root=path.resolve(process.env.PORTABLE_CI_ROOT??"");
- const expected=path.resolve("tmp/portable-staging",`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-stack`);
+ const expected=path.resolve("tmp/portable-staging",`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-qaon`);
  assert.equal(root,expected);assert.equal(realpathSync(root),root);assert(!lstatSync(root).isSymbolicLink());
  const trust=readFileSync(path.resolve("tmp/portable-staging",`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-capability`,"trust.json"));
  const artifact=admitSyntheticArtifact(path.resolve("artifact-evidence-synthetic"),trust);

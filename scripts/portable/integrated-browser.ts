@@ -23,10 +23,17 @@ export async function integratedBrowser(browser:any,input:{origin:string;passwor
   input.bind();const context=await browser.newContext({viewport:matrix.viewport,colorScheme:matrix.colorScheme,reducedMotion:"reduce",acceptDownloads:true,ignoreHTTPSErrors:false,serviceWorkers:"block"});
   const errors:string[]=[],uploads:string[]=[];
   try{
+   await context.addInitScript(()=>{
+    if(sessionStorage.getItem("qa-private-observation-complete"))return;
+    const check=()=>{if(Array.from(document.querySelectorAll("h3")).some(e=>e.textContent?.includes("Student Master Import"))||document.body?.innerText.includes("SYNTHETIC Browser Student"))sessionStorage.setItem("qa-private-flash","true");};
+    const observer=new MutationObserver(check);observer.observe(document,{childList:true,subtree:true,characterData:true});check();
+    (window as any).__stopPrivateObservation=()=>{check();observer.disconnect();sessionStorage.setItem("qa-private-observation-complete","true");return sessionStorage.getItem("qa-private-flash")!=="true";};
+   });
    const page=await context.newPage();page.on("pageerror",()=>errors.push("PAGE_ERROR"));page.on("console",(m:any)=>{if(m.type()==="error")errors.push("CONSOLE_ERROR");});
    page.on("request",(r:any)=>{if(new URL(r.url()).pathname==="/api/import/students"&&r.method()==="POST"){try{uploads.push(assertProjectedUpload(r.postData()??""));}catch{errors.push("PRIVATE_UPLOAD_BOUNDARY");}}});
    await page.goto(input.origin+"/import-export");await page.waitForURL("**/login**");
    assert.equal(await page.getByRole("heading",{name:"Student Master Import — reviewed source mapping"}).count(),0,"PRIVATE_DATA_FLASH");
+   assert(await page.evaluate(()=>(window as any).__stopPrivateObservation()),"PRIVATE_DATA_FLASH_DURING_UNAUTHENTICATED_NAVIGATION");
    await page.getByLabel("Username or verified login identifier").fill("director");await page.locator('input[name="password"]').fill(input.password);await page.getByRole("button",{name:"Sign in",exact:true}).click();
    await page.getByLabel("Six-digit authenticator code").waitFor();await page.getByLabel("Six-digit authenticator code").fill(await input.totp());await page.getByRole("button",{name:"Verify and sign in",exact:true}).click();await page.waitForURL((u:URL)=>u.pathname!=="/login");
    await page.goto(input.origin+"/import-export");
@@ -48,6 +55,16 @@ export async function integratedBrowser(browser:any,input:{origin:string;passwor
    await panel.getByRole("button",{name:"Cancel / clear review",exact:true}).click();assert.equal(await file.inputValue(),"");assert.equal(await panel.getByRole("button",{name:"Confirm Student import",exact:true}).count(),0);
    // Cancellation is a genuine empty file selection, with no upload.
    const prior=uploads.length;await file.setInputFiles([]);assert.equal(uploads.length,prior);
+   // Keep actual locally parsed errors visible at the narrow viewport. Neither
+   // server responses nor component error text are replaced by the driver.
+   const longHeader="SYNTHETIC_UNMAPPED_COLUMN_".repeat(12);
+   await file.setInputFiles({name:"synthetic-errors.csv",mimeType:"text/csv",buffer:Buffer.from(`admissionNo,studentName,className,section,${longHeader}\r\nSYNTHETIC-ERROR,,I,A,excluded\r\n`)});
+   await panel.getByLabel(longHeader,{exact:true}).waitFor();await panel.getByRole("button",{name:"Validate approved fields locally",exact:true}).click();
+   await panel.getByText("1 rows need review.",{exact:true}).waitFor();await panel.locator("details").filter({has:page.locator("summary",{hasText:/issue\(s\)/})}).locator("summary").click();
+   assert(await panel.getByText("Missing studentName",{exact:true}).isVisible());assert.equal(uploads.length,prior);
+   assert.equal(await panel.getByRole("button",{name:"Confirm Student import",exact:true}).count(),0);
+   if(matrix.viewport.width===320)assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),"VISIBLE_IMPORT_ERROR_REFLOW_OVERFLOW");
+   await panel.getByRole("button",{name:"Cancel / clear review",exact:true}).click();
    await page.keyboard.press("Tab");assert(await page.evaluate(()=>document.activeElement!==document.body));
    await page.evaluate(()=>{document.documentElement.style.zoom="2";});
    assert(await page.evaluate(()=>matchMedia("(prefers-reduced-motion: reduce)").matches));

@@ -467,6 +467,7 @@ volumes:
   object-data: {}
 
 secrets:
+  auth_mfa_keyring_json: { file: "${PORTABLE_CI_ROOT:-../../tmp/portable-staging}/secrets/auth_mfa_keyring_json" }
   minio_root_access_key: { file: "${PORTABLE_CI_ROOT:-../../tmp/portable-staging}/secrets/minio_root_access_key" }
   minio_root_secret_key: { file: "${PORTABLE_CI_ROOT:-../../tmp/portable-staging}/secrets/minio_root_secret_key" }
   minio_kms_secret_key: { file: "${PORTABLE_CI_ROOT:-../../tmp/portable-staging}/secrets/minio_kms_secret_key" }

@@ -75,6 +75,9 @@ export async function assertRecoveryReadback(db: PrismaClient, backup: Validated
         assert.equal(normalize(restored[field]), normalize(expected[field]), "RECOVERY_HISTORY_CHANGED");
       }
       if (collection === "certificateIssueArtifacts") assert.equal(recoveryHash(Buffer.from(restored.pdfBase64, "base64")), restored.pdfHash, "RECOVERY_PDF_HASH");
+      if (collection === "priorYearIncomeSupports" && expected.exactAmountEnvelope) {
+        assert.equal(decryptMfaSecret(restored.exactAmountEnvelope,`prior-year-income:${restored.caseId}`),decryptMfaSecret(expected.exactAmountEnvelope,`prior-year-income:${expected.caseId}`),"RECOVERY_PERSISTED_PRIVATE_INCOME");
+      }
     }
     counts[collection] = rows.length;
   }

@@ -150,9 +150,11 @@ finally {
 }
 try {
   Set-Location $workspace
-  & pnpm exec tsx scripts/portable/operator-acceptance.ts
+  $operatorLines = @(& pnpm exec tsx scripts/portable/prepare-operator-fixture.ts)
   if ($LASTEXITCODE -ne 0) { throw 'Independent operator lifecycle acceptance failed' }
+  $operatorResult = ($operatorLines | Select-Object -Last 1) | ConvertFrom-Json
+  if ($operatorResult.contract -ne 'NALANDA_OPERATOR_ACCEPTANCE_V1' -or $operatorResult.source -ne $env:EXPECTED_SHA -or $operatorResult.state -ne 'PASSED' -or $operatorResult.cleanup -ne 'VERIFIED' -or $operatorResult.historicalUpgradeRollback -ne 'PASSED') { throw 'Operator acceptance receipt incomplete' }
 } finally { Set-Location $originalLocation }
-$publicReceipt = [ordered]@{ contract = 'NALANDA_SAME_RUNNER_STACK_V1'; source = $env:EXPECTED_SHA; architecture = $env:TARGET_ARCHITECTURE; imageConfigDigest = $admittedImage; state = 'PASSED'; cleanup = 'VERIFIED'; historicalUpgradeRollback = 'NOT_EXECUTED' }
+$publicReceipt = [ordered]@{ contract = 'NALANDA_SAME_RUNNER_STACK_V1'; source = $env:EXPECTED_SHA; architecture = $env:TARGET_ARCHITECTURE; imageConfigDigest = $admittedImage; state = 'PASSED'; cleanup = 'VERIFIED'; historicalUpgradeRollback = $operatorResult.historicalUpgradeRollback }
 $publicReceipt | ConvertTo-Json -Compress | Set-Content -LiteralPath (Join-Path $workspace 'stack-result.json') -Encoding utf8
 [ordered]@{ result = 'PORTABLE_STACK_QA_PASSED'; classification = 'INTEGRATION_TEST_ENVIRONMENT'; cleanup = 'VERIFIED'; checks = $results } | ConvertTo-Json -Depth 5 -Compress

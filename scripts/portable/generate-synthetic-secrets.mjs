@@ -23,6 +23,7 @@ if (existing) {
 await mkdir(root, { recursive: false, mode: 0o700 });
 
 const token = (bytes = 36) => randomBytes(bytes).toString("base64url");
+const activeMfaVersion = `CI_${randomBytes(12).toString("hex").toUpperCase()}`;
 const postgresRuntime = token(30);
 const postgresMigrator = token(30);
 const postgresBootstrap = token(30);
@@ -65,7 +66,7 @@ const files = new Map([
   ["s3_backup_maintenance_secret_access_key", s3BackupMaintenanceSecret],
   ["auth_secret", token(48)],
   ["auth_verification_secret", token(48)],
-  ["auth_mfa_keyring_json", JSON.stringify({active:"SYNTHETIC",keys:{SYNTHETIC:randomBytes(32).toString("base64")}})],
+  ["auth_mfa_keyring_json", JSON.stringify({active:activeMfaVersion,keys:{[activeMfaVersion]:randomBytes(32).toString("base64")}})],
   ["proxy_shared_secret", token(48)],
   ["internal_health_token", token(48)],
   ["backup_encryption_key", randomBytes(32).toString("base64")],

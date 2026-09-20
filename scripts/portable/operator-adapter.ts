@@ -197,6 +197,10 @@ export class CiOperatorAdapter implements OperatorAdapter {
       for (const [name,service] of Object.entries(config.services) as [string,any][]) {
         if(service.build)throw Error("RUNTIME_REBUILD_FORBIDDEN");
         if (service.depends_on?.seed) { delete service.depends_on.seed; service.depends_on.migrator = { condition: "service_completed_successfully", required: true }; }
+        if (["web-1","web-2","backup-qa"].includes(name) && config.secrets?.auth_mfa_keyring_json) {
+          service.environment.AUTH_MFA_KEYRING_JSON_FILE = "/run/secrets/auth_mfa_keyring_json";
+          service.secrets.push({source:"auth_mfa_keyring_json",target:"auth_mfa_keyring_json"});
+        }
         if (["web-1","web-2","backup-worker","migrator","backup-qa","runtime-qa","object-init","backup-maintenance","backup-maintenance-plan"].includes(name)) { service.image = m.image; service.pull_policy="never"; }
       }
       config.services["reverse-proxy"].environment ??= {};

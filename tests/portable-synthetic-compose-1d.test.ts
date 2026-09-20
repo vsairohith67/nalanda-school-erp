@@ -2,6 +2,14 @@ import {expect,it} from "vitest";
 import path from "node:path";
 import {syntheticCompose} from "../scripts/portable/synthetic-compose";
 import {CiOperatorAdapter} from "../scripts/portable/operator-adapter";
+import {ciProject} from "../scripts/portable/ci-project";
+it("separates phase ownership without accepting arbitrary project identities",()=>{
+ const run={GITHUB_RUN_ID:"123",GITHUB_RUN_ATTEMPT:"2"};
+ expect(ciProject(run)).toBe("nalanda-ci-123-2-stack");
+ expect(ciProject({...run,PORTABLE_ACCEPTANCE_PHASE:"synthetic-ON"})).toBe("nalanda-ci-123-2-qaon");
+ for(const phase of ["../stack","production","qa","", "synthetic-ON-other"])expect(()=>ciProject({...run,PORTABLE_ACCEPTANCE_PHASE:phase})).toThrow("CI_PHASE_INVALID");
+ expect(()=>ciProject({...run,GITHUB_RUN_ID:"other-task"})).toThrow("CI_RUN_IDENTITY_REQUIRED");
+});
 it("keeps production configuration immutable and binds separate read-only capability mounts",()=>{
  const service={read_only:true,environment:{NODE_ENV:"production"},secrets:[],volumes:[],depends_on:{seed:{condition:"service_completed_successfully"}}};
  const base={services:{seed:{},"web-1":structuredClone(service),"web-2":structuredClone(service)},networks:{application:{internal:true},data:{internal:true},"backup-data":{internal:true}},secrets:{}};

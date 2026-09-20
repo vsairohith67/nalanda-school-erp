@@ -156,7 +156,7 @@
           "sha256": "9d1e34ea325f94f57ab2ff51fbef03fe1368c7760a6e719a5d4eb9b09c8ea95c"
         }
       ],
-      "currentSha256": "4a0bad23c74ba6f78dd8a202804ba90e7f291f86f8324c7a9ac626450a28f03f",
+      "currentSha256": "cf16491ab0f280a731bbb6c9ea7485647352fed180c9af26df2ff36deadbc1a5",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -1631,7 +1631,7 @@
           "sha256": "6fdfa08c3932013d2a1fb99bff0acb844e92bde88b16d67f774337985a84beaf"
         }
       ],
-      "currentSha256": "bce6a55576bac95bd497be102c78f1ea609fd9e73e84b3c99f40fd3ca3d0d789",
+      "currentSha256": "e302973d9387660599d515fd6e8f24ef64458df292baf3e98a5156690342b2db",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -2710,6 +2710,31 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "lib/portable-runtime/recovery-key-custody.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "201dc3e796883a0d11ecef1cd75844d19bf5c277e2a600d83571a72f7f9babe7",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "lib/portable-runtime/recovery-readback.ts",
       "baseSha256": null,
       "historicalSha256": null,
@@ -2731,7 +2756,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "a43de2e26407cf372e3387fc59a240cfc9333e67027d3117df3bb16eea89cfc2",
+      "currentSha256": "67e4e0c797a499cae0b216bebeb0af0d5aeacdfd17b60796375c0f410b5937f7",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -3935,6 +3960,31 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "scripts/portable/ci-project.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "74d19541c5074a32768182d8a9353ef95242e0b641c2f159de51f32374bfab1a",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "scripts/portable/ci-safety.ts",
       "baseSha256": null,
       "historicalSha256": null,
@@ -3956,7 +4006,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "28ce23d04826afbe768940b1391020a7640e8793a09cf7a10145a03046350800",
+      "currentSha256": "314f567ca828d0a580c232f6f35b4c1013bb2440b49ef001887ed4c6ce901cb9",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -3981,7 +4031,7 @@
           "sha256": "b999c800e1556e031b03a265ab5236f84b742145d9867dc11947d0a23516d73d"
         }
       ],
-      "currentSha256": "9ceb70a09ab42aada2e98c54e2602f0734fa268e0245d48efa0f3b20f2fcbc5d",
+      "currentSha256": "26b5c16370de8e2aff6f979d852ecabe19c27073acea16e4838c11209c570775",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4056,7 +4106,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "70ab0d5a5e51957fe6a675a4a727c255e18ee36c8e5ba9d4a7f1a2c2045864aa",
+      "currentSha256": "f3ceda85700a9af7fec987554a9522e50d23f98d9b220c4607a5f38c51e321ac",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4106,7 +4156,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "1e75c612a70e1aa18e99ff3c00ad65a8621267c910140ad78928a7d5bca0a5f0",
+      "currentSha256": "a90d98fdf0e9a1735eec564a2c68b625a33ea3b999dd71c5b3a6217c3ae1385d",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4231,7 +4281,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "2263480339a57caef22ed6090bf99a304ef5de55f15252bc9f65d5bff9c1cfeb",
+      "currentSha256": "d7152115bccca8ff7da82a352936ada1876638947185db1a026f48428b020ceb",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4256,7 +4306,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "2ef56ee7c7d03d53a193e1882d80cede6f7360f257767a7bebc0311ec7fb01bb",
+      "currentSha256": "f406a02249814f6cd0b18a607b9fb0c8db46596a189ce230d30572ad8bf18908",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4356,7 +4406,32 @@
           "sha256": null
         }
       ],
-      "currentSha256": "0e9e49367cb22cd9a8386175e97c3a53507d3d6e7ce901d6ebd38aacf6d48e47",
+      "currentSha256": "44c5d507a519e1da448236dc6799a5c4e38b03c1b3f150193c565c4e99c7d008",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/prepare-operator-fixture.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "d5d48ac5396f9abbb5037f030eae531028b1c9fb4e7ea348099da59962422477",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4456,7 +4531,32 @@
           "sha256": "c9b184a80daf85b7cdb23881f4f43877c7dd8ef32e2afa385c64211cbb1382d7"
         }
       ],
-      "currentSha256": "2d64b2ada39c312bcc6edb86bd430da931e9c0a700e5c4f5500d68743ffeb7e3",
+      "currentSha256": "5610a9dce4bfd47dafedbaef9a8dff8ab00943ffa9c6e256000acec6b65f537d",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/qa-synthetic-stack.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "e36bfedfa2d4a1dd25e6f54ea1dc235e86c1a04a3f2cc8644f43674c124dc591",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4556,7 +4656,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "7cca92e50467110b5347a64a13434aadb7651cb2fd94616e6b704f465a1b41ee",
+      "currentSha256": "0596bb43b9d93b204c545965f318b873e830774bd97b9ba1a4b8215256f17535",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
