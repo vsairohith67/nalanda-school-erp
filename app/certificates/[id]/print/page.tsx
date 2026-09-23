@@ -26,7 +26,7 @@ export default async function CertificatePrintPage({ params, searchParams }: { p
   const [row, settings] = await Promise.all([prisma.studentCertificate.findUnique({ where: { id } }), getSchoolSettings(prisma)]);
   if (!row) notFound();
   assertGraduationEnabled(row.certificateType);
-  if (row.certificateType === "GRADUATION") return <main className="page"><h1>Governed Graduation document</h1><p>School-issued institutional recognition; it does not replace statutory Board or Council documents.</p>{row.status === "ISSUED" ? <a className="button" href={`/api/certificates/${id}/pdf`}>Open saved issued PDF for reprint</a> : <p>DRAFT – NOT OFFICIAL. Preview from the Graduation workspace.</p>}<a href="/certificates/graduation">Return to Graduation workspace</a></main>;
+  if (row.certificateType === "GRADUATION") return <main className="page"><h1>Governed Graduation document</h1><p>School-issued institutional recognition; it does not replace statutory Board or Council documents.</p>{row.status === "ISSUED" ? <a className="button" href={`/api/certificates/${id}/pdf`}>Open saved issued PDF for reprint</a> : row.status === "CANCELLED" ? <p>VOID - history retained. This certificate is no longer valid.</p> : <p>DRAFT – NOT OFFICIAL. Preview from the Graduation workspace.</p>}<a href="/certificates/graduation">Return to Graduation workspace</a></main>;
   const requestedVersion = Number(query.version ?? row.currentVersionNumber);
   const version = requestedVersion ? await prisma.studentCertificateVersion.findUnique({ where: { certificateId_versionNumber: { certificateId: id, versionNumber: requestedVersion } } }) : null;
   const snapshot = version ? parseCertificateSnapshot(version.snapshotJson) : parseCertificateSnapshot(row.draftDataJson);
