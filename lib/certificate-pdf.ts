@@ -11,7 +11,7 @@ export const CERTIFICATE_PDF_MAX_BYTES = 2 * 1024 * 1024;
 export const sha256Bytes = (bytes: Uint8Array | string) => createHash("sha256").update(bytes).digest("hex");
 export const newCertificateToken = () => randomBytes(32).toString("base64url");
 
-function georgiaBold() {
+export function georgiaBold() {
   const filename = process.env.CERTIFICATE_GEORGIA_BOLD_PATH ?? (process.platform === "win32" ? path.join(process.env.WINDIR ?? "C:/Windows", "Fonts/georgiab.ttf") : "");
   if (!filename || !path.isAbsolute(filename)) throw new Error("GEORGIA_BOLD_UNAVAILABLE: configure a locally licensed Georgia Bold font.");
   let bytes: Buffer;

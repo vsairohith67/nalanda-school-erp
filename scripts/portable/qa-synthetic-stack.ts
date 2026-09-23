@@ -17,7 +17,10 @@ async function main(){
  assert.notEqual(production.imageConfigDigest,qa.imageConfigDigest,"DISTINCT_QA_ARTIFACT_REQUIRED");
  const project=`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-qaon`,root=path.resolve("tmp/portable-staging",project);
  const env:NodeJS.ProcessEnv={...process.env,PORTABLE_ACCEPTANCE_PHASE:"synthetic-ON",COMPOSE_PROJECT_NAME:project,PORTABLE_CI_ROOT:root,PORTABLE_SYNTHETIC_SECRET_ROOT:path.join(root,"secrets"),PORTABLE_SOURCE_SHA:qa.source,NALANDA_SYNTHETIC_STAGING:"true",PORTABLE_IMAGE_ID:qa.imageConfigDigest};
- const run=(exe:string,args:string[],overrides:NodeJS.ProcessEnv={NODE_ENV:process.env.NODE_ENV})=>execFileSync(exe,args,{env:{...env,...overrides},encoding:"utf8",stdio:["ignore","pipe","pipe"],maxBuffer:4*1024*1024,timeout:20*60_000});
+ // Existing 20-minute action budget plus one genuine 15-minute marks receipt
+ // expiry. Other commands retain their bound; the outer producer still bounds
+ // the whole stack to 40 minutes and cleanup remains in finally.
+ const run=(exe:string,args:string[],overrides:NodeJS.ProcessEnv={NODE_ENV:process.env.NODE_ENV})=>execFileSync(exe,args,{env:{...env,...overrides},encoding:"utf8",stdio:["ignore","pipe","pipe"],maxBuffer:4*1024*1024,timeout:args.includes("scripts/portable/integrated-acceptance.ts")?35*60_000:20*60_000});
  const node=(script:string,args:string[]=[],overrides?:NodeJS.ProcessEnv)=>run(process.execPath,["--import","tsx",`scripts/portable/${script}.ts`,...args],overrides);
  let admitted=false;
  try{

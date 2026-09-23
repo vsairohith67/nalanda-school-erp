@@ -1185,6 +1185,31 @@
       "reconciliation": "ADMITTED_COMMITTED_SOURCE"
     },
     {
+      "path": "components/academic-reporting-workspace.tsx",
+      "baseSha256": "0f42d295b42913ed63f7e7f96f41dc788c0409c114d76384ea783501d3f04ba8",
+      "historicalSha256": "0f42d295b42913ed63f7e7f96f41dc788c0409c114d76384ea783501d3f04ba8",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "0f42d295b42913ed63f7e7f96f41dc788c0409c114d76384ea783501d3f04ba8"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "0f42d295b42913ed63f7e7f96f41dc788c0409c114d76384ea783501d3f04ba8"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "0f42d295b42913ed63f7e7f96f41dc788c0409c114d76384ea783501d3f04ba8"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "0f42d295b42913ed63f7e7f96f41dc788c0409c114d76384ea783501d3f04ba8"
+        }
+      ],
+      "currentSha256": "9e8fb3f139bf3e69a09a6729a07ba64ae01fc135957299ce70294268f5bd5d7f",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "components/certificate-forms.tsx",
       "baseSha256": "e0457a3dfac63966592ff683c806a4017b0c4a2023aad06f86609d0bb3d80365",
       "historicalSha256": "e0457a3dfac63966592ff683c806a4017b0c4a2023aad06f86609d0bb3d80365",
@@ -1356,8 +1381,8 @@
           "sha256": "90bcfb01b343af428f4cc9d0b6ee08928b0312eac34ed4201f09b124695fb640"
         }
       ],
-      "currentSha256": "90bcfb01b343af428f4cc9d0b6ee08928b0312eac34ed4201f09b124695fb640",
-      "reconciliation": "ADMITTED_COMMITTED_SOURCE"
+      "currentSha256": "0a7b5f71502457ccce8b4e1d12a6b7dacd9b1e76a0b1f1e9a2a1089e2e367b20",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
       "path": "components/misc-income-form.tsx",
@@ -1735,6 +1760,31 @@
       "reconciliation": "ADMITTED_COMMITTED_SOURCE"
     },
     {
+      "path": "lib/academic-report-pdf.ts",
+      "baseSha256": "1d13de3bae429522bd2a8084147e676a275ecb4101e49f32d5f7caebdc63d69a",
+      "historicalSha256": "1d13de3bae429522bd2a8084147e676a275ecb4101e49f32d5f7caebdc63d69a",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "1d13de3bae429522bd2a8084147e676a275ecb4101e49f32d5f7caebdc63d69a"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "1d13de3bae429522bd2a8084147e676a275ecb4101e49f32d5f7caebdc63d69a"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "1d13de3bae429522bd2a8084147e676a275ecb4101e49f32d5f7caebdc63d69a"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "1d13de3bae429522bd2a8084147e676a275ecb4101e49f32d5f7caebdc63d69a"
+        }
+      ],
+      "currentSha256": "03c52229cceffcad18a49b7c7c66ac01e57d11d527784684952d1c7d905a5236",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "lib/backup-source-contracts.ts",
       "baseSha256": null,
       "historicalSha256": null,
@@ -2031,8 +2081,8 @@
           "sha256": null
         }
       ],
-      "currentSha256": "349cb83294d2e3b900be472d2af9234c0d56775d2bb4361fa3c9f933f054976b",
-      "reconciliation": "ADMITTED_COMMITTED_SOURCE"
+      "currentSha256": "6df5d3b1b774d6abc1280de492b253084bad6833d127e01e1a9d69b6bbcb84e1",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
       "path": "lib/certificate-portals.ts",
@@ -3931,7 +3981,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "d9c6e02e47c9aa369cb68b06ed916cbbc8aedd2f0931138c99f1efdba3a0a976",
+      "currentSha256": "aff32885a9e95d4a5b7e3140be46a1e62a5c8f571c5dd3f620ba95b3ca0dd9e8",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4431,7 +4481,132 @@
           "sha256": null
         }
       ],
-      "currentSha256": "d460245e9ec1b2f9207a13a861e0a666078a15a1b2637c2c48fb332858602899",
+      "currentSha256": "34cd6faf5c0a0c258b63ae51e6170aa4999f6d1d2624c76407299c8a422085c2",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/marks-browser-assertions.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "9cc0e1e245d2b8324f6cd54d6943f0291f0c17987f53ca9dfb793a2403281e3a",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/marks-browser-document.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "545ab668955041bac5524ba0813eaf51f906c7dec55339ce18fd0ce542c5e666",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/marks-browser-history.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "3c807b85fdd4965f4a159654f20911730c3a07130fa53a045d04b28d2361ac40",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/marks-browser-probe.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "5c50504b232980da938ac744216ccc00bd024b84af928df9516ff6dbfd508c45",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/marks-browser.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "87a3406d50c2da6753183f7548f0a46d5c86b33d1ee21a3bc94bc17b17b49410",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4931,7 +5106,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "0b62b2257d6931865c962945acc074cae2cb1b07f049e81ad970241318e48cbb",
+      "currentSha256": "60e2b8f761a79e54cc4806738c33b00d4e35e8f8c82aa83988a2c6a35977210e",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {

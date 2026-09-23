@@ -50,6 +50,6 @@ export function MarksImporter({ governedAssignments }: { governedAssignments?: a
     {preview ? <><p>{preview.totalRows} rows · {preview.validRows} valid · {preview.errorRows} errors</p><ImportRowErrors rows={(preview.errors ?? []).map((r: any) => ({ row: r.rowNumber, messages: [r.message] }))} />
       <details><summary>Reviewed marks</summary>{preview.rows.map((r: any, i: number) => <p key={i}>{r.admissionNumber ?? r.studentId}: {r.entryStatus ?? r.entryState} / {r.marksObtained ?? "blank"}</p>)}</details>
       <button disabled={busy || !enabled || preview.errorRows !== 0 || !preview.validRows} onClick={() => setConfirming(true)}>Review and confirm draft import</button></> : null}
-    <p role="status">{message}</p>{confirming ? <ImportReviewDialog title="Confirm exact marks draft" busy={busy} onClose={() => setConfirming(false)}><p>Save only the previewed component draft. Current permissions, locks, roster and versions are checked again.</p><button disabled={busy || !enabled} onClick={() => call("confirm")}>Confirm draft import</button></ImportReviewDialog> : null}
+    {!confirming ? <p role="status">{message}</p> : null}{confirming ? <ImportReviewDialog title="Confirm exact marks draft" busy={busy} onClose={() => setConfirming(false)}>{message ? <p role="alert">{message}</p> : null}<p>Save only the previewed component draft. Current permissions, locks, roster and versions are checked again.</p><button disabled={busy || !enabled} onClick={() => call("confirm")}>Confirm draft import</button></ImportReviewDialog> : null}
   </section>;
 }
