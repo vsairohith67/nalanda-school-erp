@@ -8,6 +8,7 @@ import {pathToFileURL} from "node:url";
 import {admitArtifact} from "./admit-artifact";
 import {assertRunningImage,hashBytes} from "./artifact-handoff";
 import {assertHttpTarget} from "./http-target";
+import {HTTP_PRIVACY_SCENARIOS} from "./http-assertions";
 
 export const BROWSER_MATRIX=[{width:1366,height:768},{width:390,height:844},{width:320,height:844}].flatMap(viewport=>["light","dark"].map(colorScheme=>({viewport,colorScheme,reducedMotion:"reduce",zoom:2})));
 export const INTEGRATED_SCENARIOS=Object.freeze({
@@ -80,7 +81,7 @@ export async function integratedProductionOff(fixturePath:string){
   writeFileSync("integrated-off-result.json",JSON.stringify({source:artifact.source,imageConfigDigest:artifact.imageConfigDigest,classification:"AUTHENTICATED_PRODUCTION_HTTP",completed,businessMutation:"NONE",readback:"SAME_ADMITTED_REPLICAS_READ_ONLY_TRANSACTION",project:target.project,beforeMetadata:initial.metadata,afterMetadata:final.metadata,metadata:"Authentication/security audit and import-batch metadata counts are recorded separately from unchanged business rows."}),{flag:"wx"});
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
- if(process.argv[2]==="--discover")console.log(JSON.stringify({scenarios:INTEGRATED_SCENARIOS,browserMatrix:BROWSER_MATRIX,implemented:["productionOff","productionOffFixture","sameContainerReadback","separate-signed-PostgreSQL-test-build","real-MFA-HTTP-bulk-certificate-item-concession-actions","browser-login-student-import-download-matrix"],pending:["QA-ON-host-orchestration-and-guaranteed-teardown","remaining-business-authority-privacy-scenarios","remaining-browser-modal-marks-receipt-scenarios","native-owned-platform-orchestration-and-lifecycle"]}));
+ if(process.argv[2]==="--discover")console.log(JSON.stringify({scenarios:INTEGRATED_SCENARIOS,browserMatrix:BROWSER_MATRIX,implemented:["productionOff","productionOffFixture","sameContainerReadback","separate-signed-PostgreSQL-test-build","real-MFA-HTTP-bulk-certificate-item-concession-actions","browser-login-student-import-download-matrix",...HTTP_PRIVACY_SCENARIOS],pending:["QA-ON-host-orchestration-and-guaranteed-teardown","remaining-browser-modal-marks-receipt-scenarios","native-owned-platform-orchestration-and-lifecycle"]}));
  else if(process.argv[2]==="--run-off"&&path.isAbsolute(process.argv[3]??"")){process.env.INTEGRATED_SYNTHETIC_PASSWORD=randomBytes(48).toString("base64url");prepareProductionOff(process.argv[3],process.argv[4]??"");void integratedProductionOff(process.argv[3]);}
  else if(process.argv[2]==="--off"&&path.isAbsolute(process.argv[3]??""))void integratedProductionOff(process.argv[3]);
  else if(process.argv[2]==="--run-on"&&/^[a-f0-9]{64}$/.test(process.argv[3]??""))void import("./integrated-on").then(m=>m.integratedOn(process.argv[3])).catch(()=>{console.error("INTEGRATED_ON_FAILED_OR_INCOMPLETE");process.exitCode=1;});

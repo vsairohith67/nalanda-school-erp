@@ -7,6 +7,7 @@ import {ensureDefaultRolePermissions} from "../../lib/role-permissions";
 import {hashPassword} from "../../lib/password";
 import {syntheticFeatureCapability} from "../../lib/portable-runtime/synthetic-capability";
 import {integratedBusiness} from "./integrated-business";
+import {HTTP_PRIVACY_SCENARIOS} from "./http-assertions";
 
 async function main(){
  assertSyntheticServingTarget();const capability=syntheticFeatureCapability()!;
@@ -34,6 +35,9 @@ async function main(){
   const report=JSON.parse(readFileSync(root+"/bulk-on-result.json","utf8"));
   assert(report.checks.includes("controlled_bundle_validate_approve_execute_readback"));
   report.businessChecks=await integratedBusiness(db,password);
+  const completed=new Set([...report.checks,...report.businessChecks]);
+  assert(HTTP_PRIVACY_SCENARIOS.every(id=>completed.has(id)),"HTTP_PRIVACY_SCENARIOS_INCOMPLETE");
+  report.httpPrivacyScenarios=HTTP_PRIVACY_SCENARIOS;
   assertSyntheticServingTarget();
   console.log(JSON.stringify({...report,classification:"AUTHENTICATED_SYNTHETIC_TEST_IMAGE_HTTP",productionImageAcceptance:false,readback:"SAME_SERVING_CONTAINER_STARTUP_DATABASE",contacts:"PRIVATE_NOT_EXPORTED"}));
  }finally{

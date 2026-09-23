@@ -1,6 +1,7 @@
 // Only this script may prepare/exercise the task's admitted hosted synthetic HTTP runtime.
 import { pathToFileURL } from "node:url";
 import { privateSyntheticContact } from "./portable/private-fixtures";
+import {assertDenial,assertEventDelta,checkedRead} from "./portable/http-assertions";
 import { randomUUID } from "node:crypto";
 import { grantMarksDelegation, revokeMarksDelegation } from "../lib/academic-integrity";
 import assert from "node:assert/strict";
@@ -23,7 +24,7 @@ async function prepare() {
   assert.equal(await db.student.count(),0);
   const admin = await db.user.update({where:{username:"director"},data:{passwordHash:await hashPassword(password),mustChangePassword:false,lifecycleStatus:"ACTIVE"}});
   assert.equal(admin.role,"SUPER_ADMIN");
-  const principal = await db.user.create({data:{username:"bulk-principal",name:"INVENTED Bulk Principal",role:"PRINCIPAL",passwordHash:await hashPassword(password),isActive:true,mustChangePassword:false,lifecycleStatus:"ACTIVE"}});
+  const principal = await db.user.create({data:{username:"bulk-principal",iamPublicKey:randomUUID(),name:"INVENTED Bulk Principal",role:"PRINCIPAL",passwordHash:await hashPassword(password),isActive:true,mustChangePassword:false,lifecycleStatus:"ACTIVE"}});
   await db.userRoleAssignment.create({data:{userId:principal.id,role:"PRINCIPAL",reason:"Synthetic legacy marks acceptance",assignedByUserId:admin.id,activeKey:`${principal.id}:PRINCIPAL`}});
   await db.authLoginAlias.create({data:{userId:principal.id,type:"USERNAME",normalizedValue:"bulk-principal",displayMasked:"bulk-principal",status:"VERIFIED",verifiedAt:new Date()}});
   const cls = await db.timetableClassSection.upsert({where:{academicYear_className_section:{academicYear:"2026-27",className:"I",section:"A"}},update:{isActive:true},create:{academicYear:"2026-27",className:"I",section:"A",displayName:"Synthetic I A",groupName:"Synthetic",isActive:true}});
@@ -112,27 +113,52 @@ async function exercise(off:boolean) {
     const operator=await inventedActor("bulk-delegated-operator","COMPUTER_OPERATOR");
     const grant=await grantMarksDelegation(db,adminActor,{userHandle:operator.iamPublicKey,kind:"GOVERNED_COMPONENT",targetId:state.assignmentId,reason:"Synthetic exact-scope QA only",validUntil:new Date(Date.now()+3600000).toISOString()});
     const operatorCookie=await session(operator.username!);
+    const marksState=()=>checkedRead(options.guard,async()=>({entries:await db.examMarkEntry.findMany({where:{sheet:{primaryAssignmentId:state.assignmentId}},orderBy:{id:"asc"}}),sheets:await db.examMarkSheet.findMany({where:{primaryAssignmentId:state.assignmentId},orderBy:{id:"asc"}}),events:await db.examinationSchemeAudit.findMany({where:{assignmentId:state.assignmentId},orderBy:{id:"asc"}})}));
+    // Confirm a valid draft, then generate an unconsumed preview at the new
+    // version. Revocation is the only change between that preview and refusal.
+    const positiveDraft=async(actorCookie:string)=>{
+      const template=await asActor(actorCookie,endpoint+"?format=csv");assert.equal(template.status,200);const csv=await template.text();
+      const plan=await asActor(actorCookie,endpoint,{model:"GOVERNED_DRAFT",csv,action:"preview"});assert.equal(plan.status,200);
+      const confirmed=await asActor(actorCookie,endpoint,{model:"GOVERNED_DRAFT",csv,action:"confirm",receipt:(await plan.json()).receipt});assert.equal(confirmed.status,200);
+      const result=await confirmed.json(),actual=await marksState();assert.equal(actual.sheets.length,1);assert.equal(actual.sheets[0].optimisticVersion,result.result.sheetVersion);
+      assert.equal(actual.sheets[0].status,actual.entries.length>0&&actual.entries.every(e=>e.entryState!=="NOT_ENTERED")?"READY_TO_SUBMIT":"DRAFT");
+      assert.equal(actual.sheets[0].submittedAt,null);assert.equal(actual.sheets[0].lockedAt,null);
+    };
+    await positiveDraft(operatorCookie);
     const operatorTemplate=await asActor(operatorCookie,endpoint+"?format=csv");assert.equal(operatorTemplate.status,200);const operatorCsv=await operatorTemplate.text();
     const operatorPreview=await asActor(operatorCookie,endpoint,{model:"GOVERNED_DRAFT",csv:operatorCsv,action:"preview"});assert.equal(operatorPreview.status,200);const operatorPlan=await operatorPreview.json();
     const beforeRevocation=await db.examMarkEntry.findMany({orderBy:{id:"asc"}}); const beforeDeniedSheets=await db.examMarkSheet.findMany({orderBy:{id:"asc"}});
+    const delegationAudit=()=>checkedRead(options.guard,()=>db.userAudit.findMany({where:{targetUserId:operator.id,action:"MARKS_ENTRY_DELEGATION_REVOKED"},orderBy:{id:"asc"}})),beforeDelegationAudit=await delegationAudit();
     await revokeMarksDelegation(db,adminActor,{assignmentHandle:grant.assignmentHandle,scopeKey:grant.scopeKey,reason:"Synthetic revocation before confirmation"});
-    refused(await asActor(operatorCookie,endpoint,{model:"GOVERNED_DRAFT",csv:operatorCsv,action:"confirm",receipt:operatorPlan.receipt}),[401,403]);
-    assert.deepEqual(await db.examMarkEntry.findMany({orderBy:{id:"asc"}}),beforeRevocation);assert.deepEqual(await db.examMarkSheet.findMany({orderBy:{id:"asc"}}),beforeDeniedSheets);assert.equal(await db.userAudit.count({where:{action:"MARKS_ENTRY_DELEGATION_REVOKED",targetUserId:operator.id}}),1);checks.push("delegation_revoked_before_commit_no_marks_change");
+    assertEventDelta(beforeDelegationAudit,await delegationAudit(),[{actorUserId:admin.id,targetUserId:operator.id,action:"MARKS_ENTRY_DELEGATION_REVOKED"}]);
+    const revocationEvent=(await delegationAudit()).find(e=>!beforeDelegationAudit.some(old=>old.id===e.id))!;assert.equal(JSON.parse(revocationEvent.detailsJson!).scopeKey,grant.scopeKey);
+    const revokedState=await marksState(),revokedBody={model:"GOVERNED_DRAFT",csv:operatorCsv,action:"confirm",receipt:operatorPlan.receipt};
+    await assertDenial(await asActor(operatorCookie,endpoint,revokedBody),401,{error:"Authentication required"});
+    await assertDenial(await asActor(await session(operator.username!),endpoint,revokedBody),403,{error:"You do not have permission for this action"});
+    assert.deepEqual(await marksState(),revokedState);
+    assert.deepEqual(await db.examMarkEntry.findMany({orderBy:{id:"asc"}}),beforeRevocation);assert.deepEqual(await db.examMarkSheet.findMany({orderBy:{id:"asc"}}),beforeDeniedSheets);checks.push("delegation_revoked_before_commit_no_marks_change");
     const linked=await inventedActor("bulk-linked-operator","COMPUTER_OPERATOR");
     await grantMarksDelegation(db,adminActor,{userHandle:linked.iamPublicKey,kind:"GOVERNED_COMPONENT",targetId:state.assignmentId,reason:"Synthetic exact-scope conflict QA",validUntil:new Date(Date.now()+3600000).toISOString()});
-    const linkedCookie=await session(linked.username!); const linkedCsv=await (await asActor(linkedCookie,endpoint+"?format=csv")).text();
+    const linkedCookie=await session(linked.username!);await positiveDraft(linkedCookie);
+    const linkedCsv=await (await asActor(linkedCookie,endpoint+"?format=csv")).text();
     const linkedPreview=await asActor(linkedCookie,endpoint,{model:"GOVERNED_DRAFT",csv:linkedCsv,action:"preview"});assert.equal(linkedPreview.status,200);const linkedPlan=await linkedPreview.json();
     const guardian=await db.guardian.create({data:{displayName:"INVENTED linked guardian",primaryMobile:"SYNTHETIC-LINKED-NO-CONTACT"}});
     await db.studentGuardian.create({data:{guardianId:guardian.id,studentId:state.studentId}}); await db.user.update({where:{id:linked.id},data:{guardianId:guardian.id}});
-    refused(await asActor(linkedCookie,endpoint,{model:"GOVERNED_DRAFT",csv:linkedCsv,action:"confirm",receipt:linkedPlan.receipt}),[401,403]);
-    assert.deepEqual(await db.examMarkEntry.findMany({orderBy:{id:"asc"}}),beforeRevocation);assert.deepEqual(await db.examMarkSheet.findMany({orderBy:{id:"asc"}}),beforeDeniedSheets);assert.equal(await db.authSecurityEvent.count({where:{eventType:"MARKS_DELEGATION_FAMILY_CONFLICT_DENIED",userId:linked.id}}),1);checks.push("linked_child_added_after_preview_refused");
+    const linkedState=await marksState();
+    const familyEvents=()=>checkedRead(options.guard,()=>db.authSecurityEvent.findMany({where:{userId:linked.id,eventType:"MARKS_DELEGATION_FAMILY_CONFLICT_DENIED"},orderBy:{id:"asc"}})),beforeFamily=await familyEvents();
+    await assertDenial(await asActor(linkedCookie,endpoint,{model:"GOVERNED_DRAFT",csv:linkedCsv,action:"confirm",receipt:linkedPlan.receipt}),403,{error:"Delegated operators cannot edit marks for their own linked child.",code:"ACADEMIC_INTEGRITY_FAMILY_CONFLICT"});
+    assert.deepEqual(await marksState(),linkedState);
+    assertEventDelta(beforeFamily,await familyEvents(),[{userId:linked.id,actorUserId:linked.id,eventType:"MARKS_DELEGATION_FAMILY_CONFLICT_DENIED",subjectType:"STUDENT_MARK_SCOPE",subjectId:state.studentId,detailsJson:JSON.stringify({policy:"ACADEMIC_INTEGRITY_V1_1",scope:`governed-import-download:${state.assignmentId}`,result:"DENIED"})}]);checks.push("linked_child_added_after_preview_refused");
     const expiring=await inventedActor("bulk-expiring-operator","COMPUTER_OPERATOR");
     const expires=await grantMarksDelegation(db,adminActor,{userHandle:expiring.iamPublicKey,kind:"GOVERNED_COMPONENT",targetId:state.assignmentId,reason:"Synthetic exact-scope expiry QA",validUntil:new Date(Date.now()+3600000).toISOString()});
-    const expiringCookie=await session(expiring.username!); const expiringCsv=await (await asActor(expiringCookie,endpoint+"?format=csv")).text();
+    const expiringCookie=await session(expiring.username!);await positiveDraft(expiringCookie);
+    const expiringCsv=await (await asActor(expiringCookie,endpoint+"?format=csv")).text();
     const expiryPreview=await asActor(expiringCookie,endpoint,{model:"GOVERNED_DRAFT",csv:expiringCsv,action:"preview"});assert.equal(expiryPreview.status,200);const expiryPlan=await expiryPreview.json();
+    const expiryState=await marksState();
+    // Controlled out-of-band clock transition, not an expiry governance API.
     await db.userPermissionProfileAssignment.update({where:{publicKey:expires.assignmentHandle},data:{validFrom:new Date(Date.now()-120000),validUntil:new Date(Date.now()-60000)}});
-    refused(await asActor(expiringCookie,endpoint,{model:"GOVERNED_DRAFT",csv:expiringCsv,action:"confirm",receipt:expiryPlan.receipt}),[401,403]);
-    assert.deepEqual(await db.examMarkEntry.findMany({orderBy:{id:"asc"}}),beforeRevocation);assert.deepEqual(await db.examMarkSheet.findMany({orderBy:{id:"asc"}}),beforeDeniedSheets);checks.push("delegation_expired_before_commit_no_marks_change");
+    await assertDenial(await asActor(expiringCookie,endpoint,{model:"GOVERNED_DRAFT",csv:expiringCsv,action:"confirm",receipt:expiryPlan.receipt}),403,{error:"You do not have permission for this action"});
+    assert.deepEqual(await marksState(),expiryState);checks.push("delegation_expired_before_commit_no_marks_change");
     for (const role of ["PARENT","VIEWER"] as const) {
       const denied=await inventedActor(`bulk-denied-${role.toLowerCase()}`,role);
       if(role==="PARENT") {
@@ -159,7 +185,27 @@ async function exercise(off:boolean) {
     const duplicateUpload=await fetch(origin+"/api/onboarding/batches",{method:"POST",headers:{cookie,origin},body:form});assert.equal(duplicateUpload.status,200);assert.equal((await duplicateUpload.json()).batch.batchReference,up.batch.batchReference);checks.push("canonical_duplicate_upload_same_batch");
     const validated=await json(batchPath+"/validate",{resolutions:{}});assert.equal(validated.batch.status,"APPROVAL_REQUIRED");
     const approval={reason:"Synthetic exact-head acceptance only",reauthPassword:password,planHash:validated.batch.planHash,workbookHash:validated.batch.workbookHash};await json(batchPath+"/approve",approval);await json(batchPath+"/execute",{...approval,idempotencyKey:"bulk-synthetic-execution-0001"});assert(await db.student.findUnique({where:{admissionNo:"00010"}}));checks.push("controlled_bundle_validate_approve_execute_readback");
-    await db.user.update({where:{username:"bulk-principal"},data:{isActive:false}});assert.equal((await asActor(legacyCookie,"/api/marks/import",{...legacy,action:"confirm",receipt:p.receipt})).status,401);checks.push("revoked_actor_rejected");
+    const principal=await db.user.findUniqueOrThrow({where:{username:"bulk-principal"}});
+    const role=await db.userRoleAssignment.findFirstOrThrow({where:{userId:principal.id,status:"ACTIVE",role:"PRINCIPAL"}});
+    assert.equal(await db.userRoleAssignment.count({where:{userId:principal.id,status:"ACTIVE"}}),1);
+    assert.equal(await db.userPermissionProfileAssignment.count({where:{userId:principal.id,status:"ACTIVE"}}),0);
+    assert.equal(await db.userPermissionOverride.count({where:{userId:principal.id,status:"ACTIVE"}}),0);
+    // The governance END_ROLE path requires a retained base role. This VIEWER
+    // fixture grants no marks authority; it is not a second privileged grant.
+    await db.userRoleAssignment.create({data:{userId:principal.id,role:"VIEWER",activeKey:`${principal.id}:VIEWER`,reason:"Synthetic retained low-privilege base role"}});
+    const freshLegacy=await legacyJson({...legacy,action:"preview"});
+    const validReplay={...legacy,action:"confirm",receipt:freshLegacy.receipt};
+    const legacyState=()=>checkedRead(options.guard,async()=>({marks:await db.studentMark.findMany({where:{assessmentId:state.assessmentId},orderBy:{id:"asc"}}),events:await db.studentMarkEvent.findMany({where:{assessmentId:state.assessmentId},orderBy:{id:"asc"}})}));
+    const beforeRoleEnd=await legacyState();
+    const roleAudit=()=>checkedRead(options.guard,()=>db.userAudit.findMany({where:{targetUserId:principal.id,action:"IAM_ROLE_ENDED"},orderBy:{id:"asc"}})),beforeRoleAudit=await roleAudit();
+    const ended=await fetch(origin+`/api/iam/users/${principal.iamPublicKey}`,{method:"PATCH",headers:{cookie,origin,"content-type":"application/json"},body:JSON.stringify({action:"END_ROLE",assignmentHandle:role.publicKey,expectedVersion:principal.version,reason:"Synthetic actual role revocation acceptance",reauthPassword:password})});assert.equal(ended.status,200);
+    const endedGrant=await db.userRoleAssignment.findUniqueOrThrow({where:{id:role.id}});assert.equal(endedGrant.status,"ENDED");assert.equal(endedGrant.activeKey,null);
+    await assertDenial(await asActor(legacyCookie,"/api/marks/import",validReplay),401,{error:"Authentication required"});
+    const lowerCookie=await session("bulk-principal");
+    await assertDenial(await asActor(lowerCookie,"/api/marks/import",validReplay),403,{error:"You do not have permission for this action"});
+    assert.deepEqual(await legacyState(),beforeRoleEnd);
+    assertEventDelta(beforeRoleAudit,await roleAudit(),[{action:"IAM_ROLE_ENDED",actorUserId:admin.id,targetUserId:principal.id}]);
+    checks.push("revoked_actor_rejected","H2-role-assignment-ended-valid-preview-stale-session-and-fresh-low-role","H2-exact-delegation-revoked-expired-valid-confirm");
   }
   writeFileSync(path.join(root,off?"bulk-off-result.json":"bulk-on-result.json"),JSON.stringify({head:options.source,mode:off?"production-OFF":"synthetic-ON",checks, businessCounts:{students:await db.student.count(),legacyMarks:await db.studentMark.count(),governedEntries:await db.examMarkEntry.count(),importBatches:await db.importBatch.count()}},null,2));
   console.log(JSON.stringify({mode:off?"OFF":"ON",checks}));
