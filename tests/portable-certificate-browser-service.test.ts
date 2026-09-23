@@ -1,7 +1,8 @@
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {PrismaClient} from "@prisma/client";
 import {randomUUID} from "node:crypto";
-import {mkdtempSync,rmSync,writeFileSync,lstatSync,existsSync} from "node:fs";
+import {mkdtempSync,rmSync,readFileSync,readdirSync,lstatSync,existsSync} from "node:fs";
+import {DatabaseSync,backup} from "node:sqlite";
 import {tmpdir} from "node:os";
 import path from "node:path";
 import {execFileSync} from "node:child_process";
@@ -25,8 +26,18 @@ const bound={source:"a".repeat(40),runId:"123",attempt:"1",iteration:randomUUID(
 beforeAll(async()=>{
  let url="file:"+path.join(root,"synthetic.db").replaceAll("\\","/");
  if(postgres){expect(process.env.CI).toBe("true");expect(process.env.POSTGRES_READINESS_SYNTHETIC_QA).toBe("1");const target=new URL(process.env.DATABASE_URL!);target.searchParams.set("schema",schema);url=target.toString();}
- if(!postgres)writeFileSync(path.join(root,"synthetic.db"),"",{flag:"wx"});
- execFileSync(process.execPath,["node_modules/prisma/build/index.js","migrate","deploy","--schema",postgres?"prisma/postgresql/schema.prisma":"prisma/schema.prisma"],{env:{...process.env,DATABASE_URL:url,DIRECT_URL:url},stdio:"pipe"});
+ if(postgres)execFileSync(process.execPath,["node_modules/prisma/build/index.js","migrate","deploy","--schema","prisma/postgresql/schema.prisma"],{env:{...process.env,DATABASE_URL:url,DIRECT_URL:url},stdio:"pipe"});
+ else{
+  // Service fixture, not a second migration-runner acceptance test. Apply every
+  // unchanged active migration to a fresh memory database, then snapshot once
+  // into this run's new file. This avoids hundreds of durable DDL flushes on
+  // hosted Windows; no timeout, migration content or assertion is relaxed.
+  const sql=new DatabaseSync(":memory:");try{
+   for(const migration of readdirSync("prisma/migrations",{withFileTypes:true}).filter(e=>e.isDirectory()).map(e=>e.name).sort())sql.exec(readFileSync(path.join("prisma/migrations",migration,"migration.sql"),"utf8"));
+   expect(sql.prepare("PRAGMA foreign_key_check").all()).toEqual([]);expect(Object.values(sql.prepare("PRAGMA integrity_check").get()!)).toEqual(["ok"]);
+   expect(existsSync(path.join(root,"synthetic.db"))).toBe(false);await backup(sql,path.join(root,"synthetic.db"));
+  }finally{sql.close();}
+ }
  db=new PrismaClient({datasourceUrl:url});vi.stubEnv("DATABASE_URL",url);vi.stubEnv("NODE_ENV","test");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_MODE","SYNTHETIC_COPY_ONLY");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED","certificate-graduation-exit-1a");
  await db.rolePermission.createMany({data:Object.entries(defaultPermissionMatrix()).flatMap(([role,entries])=>Object.entries(entries).map(([permission,enabled])=>({role,permission,enabled})))});
  await db.schoolSettings.create({data:{id:"school",schoolName:"NALANDA PUBLIC SCHOOL",academicYear:"2026-27",addressLine1:"SYNTHETIC",city:"SYNTHETIC",phone:"SYNTHETIC-NO-CONTACT"}});
