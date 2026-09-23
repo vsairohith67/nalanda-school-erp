@@ -1031,8 +1031,8 @@
           "sha256": "54b95a8c0ac70b26e4ac2b6828edff7e2def10f80433733665d589d85793bad3"
         }
       ],
-      "currentSha256": "40bef81f25194a0e73fc1a16207a03c6336af3addd438f233b818d5fd76e3b6c",
-      "reconciliation": "ADMITTED_COMMITTED_SOURCE"
+      "currentSha256": "e7bf033eff923d90ffa06593d3469c50b57d97c4d8c29d3554e457e2bba85dc3",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
       "path": "app/misc-income/new/page.tsx",
@@ -1481,8 +1481,8 @@
           "sha256": null
         }
       ],
-      "currentSha256": "bd89c45da4a4eceb6f08c717ef9ba98d1ab1f9f9e37a924111d5588e51e5e813",
-      "reconciliation": "ADMITTED_COMMITTED_SOURCE"
+      "currentSha256": "ce245472a75edd285e66df229d2581cc067f8c6a8557851a6c27da1ad0bddf3b",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
       "path": "components/student-import-panel.tsx",
@@ -3931,7 +3931,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "f4417540192df9d5588330603ccd55f1ae51c515aabf255d1af5c98e422bfbcb",
+      "currentSha256": "d9c6e02e47c9aa369cb68b06ed916cbbc8aedd2f0931138c99f1efdba3a0a976",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4160,6 +4160,81 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "scripts/portable/finance-browser-assertions.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "5e272d2fe1af1e27ca9a85ce69aa9fba31d01ed4191066e714a83f75dfac6d9c",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/finance-browser-probe.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "0727699ab717b1093e8796a86459b8433097bfd06e27f44bc3f2bf1585049693",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/finance-browser.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "c043ed8e325475902ad5e80b3d5fc49172a837ba5cc276d5a111d7875837ac65",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "scripts/portable/generate-synthetic-secrets.mjs",
       "baseSha256": "b999c800e1556e031b03a265ab5236f84b742145d9867dc11947d0a23516d73d",
       "historicalSha256": "b999c800e1556e031b03a265ab5236f84b742145d9867dc11947d0a23516d73d",
@@ -4356,7 +4431,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "24a17e10b1bdb310d3754d2ba6deffb24a90f7697f8e9fbfdf31054fa89d2bef",
+      "currentSha256": "d460245e9ec1b2f9207a13a861e0a666078a15a1b2637c2c48fb332858602899",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {

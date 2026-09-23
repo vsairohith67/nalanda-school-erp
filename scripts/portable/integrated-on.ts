@@ -8,6 +8,7 @@ import {admitSyntheticArtifact} from "./admit-artifact";
 import {inspectTarget} from "./integrated-acceptance";
 import {integratedBrowser} from "./integrated-browser";
 import {certificateBrowser} from "./certificate-browser";
+import {financeBrowser} from "./finance-browser";
 
 export async function integratedOn(containerId:string){
  const trust=readFileSync(path.resolve("tmp/portable-staging",`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-capability`,"trust.json"));
@@ -26,7 +27,8 @@ export async function integratedOn(containerId:string){
  try{
   const rendered=await integratedBrowser(browser,{origin:"https://portable-staging.localhost:8443",password,totp:async()=>probe("totp",{username:"director"}).token,snapshot:async admission=>probe("student",{admission}),bind:target.bind});
   const certificates=await certificateBrowser(browser,{origin:"https://portable-staging.localhost:8443",password,source:artifact.source,runId:process.env.GITHUB_RUN_ID!,attempt:process.env.GITHUB_RUN_ATTEMPT!,bind:target.bind,probe:async input=>JSON.parse(command("browser-probe",["certificate"],JSON.stringify(input)))});
-  writeFileSync("integrated-on-browser-result.json",JSON.stringify({source:artifact.source,imageConfigDigest:artifact.imageConfigDigest,rendered,certificates,mandatoryCoverage:"PARTIAL",productionImageAcceptance:false}),{flag:"wx"});
+  const finance=await financeBrowser(browser,{origin:"https://portable-staging.localhost:8443",password,source:artifact.source,runId:process.env.GITHUB_RUN_ID!,attempt:process.env.GITHUB_RUN_ATTEMPT!,bind:target.bind,probe:async input=>JSON.parse(command("browser-probe",["finance"],JSON.stringify(input)))});
+  writeFileSync("integrated-on-browser-result.json",JSON.stringify({source:artifact.source,imageConfigDigest:artifact.imageConfigDigest,rendered,certificates,finance,mandatoryCoverage:"PARTIAL",productionImageAcceptance:false}),{flag:"wx"});
  }catch{throw Error("INTEGRATED_BROWSER_FAILED_PRIVATE_DETAILS_WITHHELD");}
  finally{try{await browser.close();}catch{throw Error("INTEGRATED_BROWSER_CLEANUP_FAILED");}}
  // Remaining required scenarios are deliberately ineligible, even if this

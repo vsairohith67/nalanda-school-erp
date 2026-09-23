@@ -45,7 +45,7 @@ export function PriorYearConcessionsWorkspace() {
     try {
       const response = await fetch("/api/prior-year-concessions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(request) });
       const data = await response.json();
-      if (!response.ok) { setPending(null); setChallenge(null); throw new Error(data.error); }
+      if (!response.ok) { setPending(null); setChallenge(null); await refresh(); throw new Error(data.error); }
       setIncome(null); setSaved(data.eventId ?? ""); setPending(null); setChallenge(null); await refresh();
     } catch (e) { setError(e instanceof Error ? e.message : "No response received. Recover the original decision before continuing."); } finally { setBusy(false); }
   }
@@ -87,7 +87,7 @@ export function PriorYearConcessionsWorkspace() {
     {saved && <p role="status">Saved event reference: {saved}</p>}
     {pending && <p role="status">A decision may have committed. <button disabled={busy} onClick={() => void send(pending)}>Recover original decision</button></p>}
     <section className="card"><h2>Eligible-case queue</h2><p>Only verified source-year liabilities can progress. Name-only rows and unknown balances require office review.</p>
-      {!queue.cases.length ? <p>No prepared cases on this page.</p> : <div className={styles.queue}>{queue.cases.map((item) => <button key={item.id} disabled={locked} aria-pressed={selected === item.id} onClick={() => { setSelected(item.id); setReason(""); setAmount(""); }}><strong>{item.liability.studentId}</strong><span>{item.liability.sourceYear} · {item.status.replaceAll("_", " ")}</span><span>Requested INR {item.requestedAmount}</span></button>)}</div>}
+      {!queue.cases.length ? <p>No prepared cases on this page.</p> : <div className={styles.queue}>{queue.cases.map((item) => <button key={item.id} data-case-id={item.id} disabled={locked} aria-pressed={selected === item.id} onClick={() => { setIncome(null); setSelected(item.id); setReason(""); setAmount(""); }}><strong>{item.liability.studentId}</strong><span>{item.liability.sourceYear} · {item.status.replaceAll("_", " ")}</span><span>Requested INR {item.requestedAmount}</span></button>)}</div>}
       <button disabled={locked || page === 0} onClick={() => setPage(page - 1)}>Previous page</button><button disabled={locked || !queue.hasMore} onClick={() => setPage(page + 1)}>Next page</button>
     </section>
     <PriorYearCasePreparation liabilities={queue.liabilities} busy={locked} submit={act} />
