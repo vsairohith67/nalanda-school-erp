@@ -5,7 +5,7 @@ const elementKey="element-6066-11e4-a52e-4f735466cecf";
  * UiAutomator2/XCUITest on Android/iOS. It adds no app IPC or TLS privileges. */
 export class NativeWebDriver {
  constructor(readonly endpoint:string,readonly session:string,private readonly transport:typeof fetch=fetch){
-  const url=new URL(endpoint);assert.equal(url.protocol,"http:");assert(["127.0.0.1","[::1]"].includes(url.hostname));assert(!url.username&&!url.password&&!url.search&&!url.hash);assert(/^[a-zA-Z0-9-]{8,80}$/.test(session));
+  const url=new URL(endpoint);assert.equal(url.protocol,"http:");assert(["127.0.0.1","[::1]"].includes(url.hostname));assert(!url.username&&!url.password&&!url.search&&!url.hash);assert(typeof session==="string"&&/^[a-zA-Z0-9-]{8,80}$/.test(session));
  }
  async command(method:string,route:string,body?:unknown){
   assert(/^\/[a-zA-Z0-9_/-]*$/.test(route));
@@ -16,6 +16,19 @@ export class NativeWebDriver {
  async clickText(text:string){assert(!text.includes("'"));const e=await this.element("xpath",`//button[normalize-space(.)='${text}']`);await this.command("POST",`/element/${e}/click`,{});}
  async fill(css:string,text:string){const e=await this.element("css selector",css);await this.command("POST",`/element/${e}/clear`,{});await this.command("POST",`/element/${e}/value`,{text});}
  async body(){const e=await this.element("css selector","body");return await this.command("GET",`/element/${e}/text`) as string;}
+ async observeLockedPrivacy(canaries:string[]){
+  assert(canaries.length>0&&canaries.every(c=>typeof c==="string"&&c.length>=8&&c.length<=200));
+  await this.command("POST","/execute/sync",{script:`
+   if (window.__nalandaLockObserver) throw new Error('Observer already owned');
+   const canaries=arguments[0];const state={leaked:false};
+   const check=()=>{if(document.querySelector('.lock-screen')){const text=document.body.textContent||'';if(canaries.some(c=>text.includes(c))||document.querySelector('.workspace'))state.leaked=true;}};
+   const observer=new MutationObserver(check);observer.observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true});
+   window.__nalandaLockObserver={state,observer};check();return true;`,args:[canaries]});
+ }
+ async closeLockedPrivacy(){
+  const leaked=await this.command("POST","/execute/sync",{script:"if(!window.__nalandaLockObserver)throw new Error('Observer missing');const leaked=window.__nalandaLockObserver.state.leaked;window.__nalandaLockObserver.observer.disconnect();delete window.__nalandaLockObserver;return leaked;",args:[]});
+  assert.equal(leaked,false,"NATIVE_LOCK_TRANSITION_PRIVACY_FAILED");
+ }
  async waitText(text:string){for(let i=0;i<30;i++){if((await this.body()).includes(text))return;await new Promise(r=>setTimeout(r,500));}throw Error("NATIVE_EXPECTED_STATE_MISSING");}
  async select(label:string,value:string){assert(!label.includes("'")&&!value.includes("'"));const e=await this.element("xpath",`//label[contains(.,'${label}')]/select/option[@value='${value}']`);await this.command("POST",`/element/${e}/click`,{});}
  async switchMobileWebview(expected:string){const contexts=await this.command("GET","/contexts");assert(Array.isArray(contexts)&&contexts.filter(c=>c===expected).length===1&&expected.startsWith("WEBVIEW"));await this.command("POST","/context",{name:expected});}
@@ -51,7 +64,7 @@ export async function assertAuthenticatedReferenceAndLock(driver:NativeWebDriver
  if((await driver.body()).includes("Welcome back")){
   assert(/^\d{8,12}$/.test(input.pin));await driver.fill('input[type="password"][autocomplete="off"]',input.pin);await driver.clickText("Unlock app");
  }
- await driver.clickText("Security");await driver.waitText("compatibility READY");
+ await driver.clickText("Security");await driver.waitText("Current server reference data is encrypted on this device and ready for offline drafts.");
  await driver.clickText("Refresh encrypted reference data");await driver.waitText("Current server reference data is encrypted on this device and ready for offline drafts.");await driver.clickText("Workspace");
  const student=await driver.element("xpath",`//label[contains(.,'Student reference')]/select/option[@value='${input.expectedStudent}']`);assert(student);
  const lock=await driver.element("css selector",".top-actions button.secondary");await driver.command("POST",`/element/${lock}/click`,{});await driver.waitText("Welcome back");

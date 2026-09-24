@@ -238,8 +238,13 @@ class MainActivity : TauriActivity() {
     expect(rust).toContain("failed_attempts = 0");
     expect(app).toContain("Too many failed attempts");
     expect(app).toContain('minLength={8}');
-    expect(app.indexOf("await current?.lock()")).toBeLessThan(app.indexOf("setVault(null); setTokens(null); setReferencePack(null); setLocked(true)"));
+    expect(app.indexOf("setVault(null); setTokens(null); setReferencePack(null); setLocked(true)")).toBeLessThan(app.indexOf("const pendingLock = current.lock()"));
+    expect(app).toContain("if (lockPending.current) await lockPending.current");
+    expect(app).toContain("generation !== vaultGeneration.current");
     expect(app).toContain("APP_LOCK_FAILED");
+    expect(app).toContain('className="secondary" onClick={requestLock}><LogOut />Lock');
+    expect(app).not.toContain('onClick={() => void lockNow()}');
+    expect(app).toContain('disabled={lockFailure || pin.length < 8 || busy || retryAfter > 0}');
     expect(app).toContain("LOCAL_RESET_FAILED");
     const auth = source("apps/nalanda-cross-platform/src/auth.ts");
     expect(auth).toContain("getCurrent");

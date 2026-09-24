@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "date": "2026-09-23",
+  "date": "2026-09-24",
   "base": "104aacc7bd314cae82e60bb02b5c8a965c7ffedd",
   "heads": [
     "5bf70e4c4be07b706224debe01a27c54fd0af096",
@@ -4656,7 +4656,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "8c138f5a86d2dcf55ab91122ff63dafed16f563a6991098ae60ed5c8121edaab",
+      "currentSha256": "e9474f93648c0ba0f569fb43c8427436b5a43601b64f689eedeb4f7bf287a900",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5310,6 +5310,81 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "scripts/portable/windows-auth-lifecycle.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "f834bcbaf6d5c5ab809eec2c734068e51dcf7a673974741888c8ad9ef3d72400",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/windows-host.ps1",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "52d56d964d390bf93423bced0f97b859f7c419fca166adf3741dd012736b2429",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/windows-webdriver-host.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "efcc4fc2d02494d68e488515e51c7719ec231066be19042cc44f5af62a06d7c2",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "scripts/postgres/trigger-contract.mjs",
       "baseSha256": "833e4948ede35b62d40dcb3a9eae1fd522d699e1a343bad1c21dd62f2891eca2",
       "historicalSha256": "833e4948ede35b62d40dcb3a9eae1fd522d699e1a343bad1c21dd62f2891eca2",
@@ -5656,7 +5731,7 @@
           "sha256": "11981ba3744060c4976ec1b6c0038085739ca0b24d248ce50349b897decd5d3a"
         }
       ],
-      "currentSha256": "473f686a829b4924b76516ee442a22afbda95c63248808001d5742b97e3b2e61",
+      "currentSha256": "fb39529cbf3a67a3836f431a6dc9752d598d3da53299cccf0bb1aae416cd3635",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
