@@ -174,7 +174,7 @@ export async function exchangeNativeAuthorization(value: unknown, now = new Date
     const session = await tx.nativeSession.create({ data: { userId: authorization.userId, deviceId: authorization.deviceId, roleAssignmentId: authorization.roleAssignmentId, accessTokenHash: secretHash(accessToken, "access"), refreshTokenHash: secretHash(refreshToken, "refresh"), credentialVersion: authorization.credentialVersion, authorizationVersion: authorization.authorizationVersion, scopesJson: JSON.stringify(NATIVE_SCOPES), accessExpiresAt: new Date(now.getTime() + ACCESS_TTL_MS), refreshExpiresAt: new Date(now.getTime() + REFRESH_TTL_MS), absoluteExpiresAt: new Date(now.getTime() + ABSOLUTE_TTL_MS) } });
     await tx.nativeAuthorizationCode.update({ where: { id: authorization.id }, data: { usedAt: now } });
     await tx.nativeAuthRequest.update({ where: { id: authorization.requestId }, data: { status: "CONSUMED", consumedAt: now } });
-    await logAuthSecurityEvent(tx, { eventType: "NATIVE_SESSION_CREATED", userId: authorization.userId, subjectType: "NATIVE_SESSION", subjectId: session.publicSessionId, details: { rotationVersion: 1, keyVersion: authorization.device.keyVersion } });
+    await logAuthSecurityEvent(tx, { eventType: "NATIVE_SESSION_CREATED", userId: authorization.userId, subjectType: "NATIVE_SESSION", subjectId: session.publicSessionId, details: { requestId: authorization.request.publicRequestId, rotationVersion: 1, keyVersion: authorization.device.keyVersion } });
     return tokenResponse(session.publicSessionId, accessToken, refreshToken, now, 1, authorization.device.keyVersion);
   });
 }
