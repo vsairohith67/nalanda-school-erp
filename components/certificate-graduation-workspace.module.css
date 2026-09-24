@@ -1,0 +1,11 @@
+.workspace { display: grid; gap: 1rem; min-width: 0; }
+.workspace > section { min-width: 0; }
+.workspace label { min-width: 0; }
+.workspace input, .workspace select, .workspace textarea { max-width: 100%; min-width: 0; }
+.workspace textarea { min-height: 8rem; }
+.workspace td { overflow-wrap: anywhere; }
+.workspace button, .workspace a { white-space: normal; }
+.workspace :focus-visible { outline: 3px solid var(--primary, #476ca5); outline-offset: 3px; }
+@media (max-width: 600px) { .workspace form { display: grid; grid-template-columns: minmax(0, 1fr); } }
+
+.workspace section { padding: 1.25rem; }

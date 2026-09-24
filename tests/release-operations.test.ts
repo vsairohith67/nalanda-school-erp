@@ -100,6 +100,33 @@ describe("release environment and feature gates", () => {
 });
 
 describe("release lock, audit, candidate and client contract", () => {
+  describe.each(["enter-maintenance", "complete"] as const)("%s prerequisites", (phase) => {
+  it.each(["PENDING", "FAILED", "WAIVED", "SKIPPED", "MISSING", "DUPLICATE", "DUPLICATE_PASSED", "EMPTY"])("refuses a %s mandatory security gate", (condition) => {
+    const candidate = createReleaseCandidate({ releaseId: "release-incomplete-1", environment: "STAGING", expectedCurrentRelease: "known-good-1", expectedTargetRelease: "release-incomplete-1", previousKnownGoodRelease: "known-good-1" });
+    for (const gate of candidate.gates) {
+      gate.status = "PASSED";
+      gate.evidenceSafe = "Synthetic exact-candidate acceptance evidence.";
+      gate.checkedAt = new Date(0).toISOString();
+    }
+    candidate.rollback = { ...candidate.rollback, ready: true, owner: "operator-one", deadline: "2099-01-01T00:00:00.000Z" };
+    candidate.maintenance.active = true;
+    candidate.phase = "smoke-test";
+    candidate.pointOfNoReturnReached = true;
+    if (condition === "EMPTY") candidate.gates = [];
+    else if (condition === "MISSING") candidate.gates = candidate.gates.filter((gate) => gate.key !== "security-scan");
+    else if (condition === "DUPLICATE") candidate.gates.push({ key: "security-scan", status: "FAILED", checkedAt: null, evidenceSafe: null });
+    else if (condition === "DUPLICATE_PASSED") candidate.gates.push({ ...candidate.gates.find((gate) => gate.key === "security-scan")! });
+    else {
+      // Saved JSON may contain an unrecognised status even when the TypeScript type cannot.
+      const invalidState = JSON.parse(JSON.stringify(candidate)) as typeof candidate;
+      Object.assign(invalidState.gates.find((gate) => gate.key === "security-scan")!, { status: condition });
+      expect(() => assertReleasePhaseAllowed(invalidState, phase)).toThrow("RELEASE_REQUIRED_GATES_INCOMPLETE");
+      return;
+    }
+    expect(() => assertReleasePhaseAllowed(candidate, phase)).toThrow("RELEASE_REQUIRED_GATES_INCOMPLETE");
+  });
+  });
+
   it("blocks release transitions until every prerequisite gate is resolved", () => {
     const candidate = createReleaseCandidate({ releaseId: "release-gates-1", environment: "STAGING", expectedCurrentRelease: "known-good-1", expectedTargetRelease: "release-gates-1", previousKnownGoodRelease: "known-good-1", migrationClassification: "NONE" });
     expect(() => assertReleasePhaseAllowed(candidate, "enter-maintenance")).toThrow("RELEASE_REQUIRED_GATES_INCOMPLETE");

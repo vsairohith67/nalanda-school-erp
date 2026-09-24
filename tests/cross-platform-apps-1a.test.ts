@@ -143,6 +143,20 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
     expect(source("apps/nalanda-cross-platform/src-tauri/tauri.conf.json")).toContain('"scheme": ["nalandaps-erp"]');
   });
 
+  it("retains app packages only in explicitly private repositories while keeping public checksum receipts", () => {
+    const steps = source(".github/workflows/cross-platform-apps.yml").split(/\n      - /).filter((step) => step.startsWith("uses: actions/upload-artifact@"));
+    const packageSteps = steps.filter((step) => /\*\.exe|\*\.apk|path: apps\/nalanda-cross-platform\/src-tauri\/gen\/apple\/build\s*\n/.test(step));
+    expect(packageSteps).toHaveLength(3);
+    for (const step of packageSteps) expect(step).toContain("if: ${{ github.event.repository.private == true }}");
+    const receipts = steps.filter((step) => /name: (windows|android|ios)-package-checksums\b/.test(step));
+    expect(receipts).toHaveLength(3);
+    for (const step of receipts) {
+      expect(step).toMatch(/path: apps\/[^\n*]+\/SHA256SUMS\.txt\s*\n/);
+      expect(step).not.toContain("if:");
+      expect(step).toContain("if-no-files-found: error");
+    }
+  });
+
   it("hardens generated mobile projects before compilation", () => {
     const hardener = source("scripts/harden-cross-platform-generated-project.mjs");
     expect(hardener).toContain('android:allowBackup="false"');
@@ -224,8 +238,13 @@ class MainActivity : TauriActivity() {
     expect(rust).toContain("failed_attempts = 0");
     expect(app).toContain("Too many failed attempts");
     expect(app).toContain('minLength={8}');
-    expect(app.indexOf("await current?.lock()")).toBeLessThan(app.indexOf("setVault(null); setTokens(null); setReferencePack(null); setLocked(true)"));
+    expect(app.indexOf("setVault(null); setTokens(null); setReferencePack(null); setLocked(true)")).toBeLessThan(app.indexOf("const pendingLock = current.lock()"));
+    expect(app).toContain("if (lockPending.current) await lockPending.current");
+    expect(app).toContain("generation !== vaultGeneration.current");
     expect(app).toContain("APP_LOCK_FAILED");
+    expect(app).toContain('className="secondary" onClick={requestLock}><LogOut />Lock');
+    expect(app).not.toContain('onClick={() => void lockNow()}');
+    expect(app).toContain('disabled={lockFailure || pin.length < 8 || busy || retryAfter > 0}');
     expect(app).toContain("LOCAL_RESET_FAILED");
     const auth = source("apps/nalanda-cross-platform/src/auth.ts");
     expect(auth).toContain("getCurrent");

@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { AlertTriangle, CheckCircle2, CloudOff, FileClock, IndianRupee, LayoutDashboard, LockKeyhole, LogOut, RefreshCcw, ReceiptText, Settings2, ShieldCheck, Wifi } from "lucide-react";
 import { formatCurrency, stateForServerOutcome, syncGuidance, validateDraft, type LocalDraft } from "./domain";
 import { appProfile, exportDiagnostics, isNativeRuntime, openOnlineErp, recordDiagnostic, resetLocalCache, VaultSession, type AppProfile, type DiagnosticEvent } from "./native";
-import { APP_VERSION, listenForNativeAuthorization, nativeSessionRequest, refreshNativeTokens, sha256Hex, startNativeAuthorization, versionAtLeast, type NativeTokens } from "./auth";
+import { APP_VERSION, listenForNativeAuthorization, nativeSessionRequest, refreshNativeTokens, sha256Hex, startNativeAuthorization, usableNativeAccess, versionAtLeast, type NativeTokens } from "./auth";
 import { NativeOfflineStorageAdapter, type OfflineMutationEnvelope, type ReferencePack } from "./offline-adapter";
 import { PRODUCT_BRAND } from "../../../config/product-brand";
 
@@ -19,6 +19,9 @@ export function App() {
   const [locked, setLocked] = useState(isNativeRuntime());
   const [vault, setVault] = useState<VaultSession | null>(null);
   const [tokens, setTokens] = useState<NativeTokens | null>(null);
+  const vaultGeneration = useRef(0);
+  const lockPending = useRef<Promise<void> | null>(null);
+  const callbackLifetime = useRef<AbortController | null>(null);
   const [referencePack, setReferencePack] = useState<ReferencePack | null>(null);
   const [online, setOnline] = useState(navigator.onLine);
   const [active, setActive] = useState("workspace");
@@ -44,11 +47,16 @@ export function App() {
     let dispose: (() => void) | undefined;
     let inactivityTimer = window.setTimeout(requestLock, 5 * 60 * 1000);
     const resetInactivity = () => { window.clearTimeout(inactivityTimer); inactivityTimer = window.setTimeout(requestLock, 5 * 60 * 1000); };
-    listenForNativeAuthorization(vault, (nextTokens) => { setTokens(nextTokens); setNotice("Server authorization completed. Refreshing encrypted reference data…"); void refreshReferenceData(nextTokens); }, setNotice).then((unlisten) => { dispose = unlisten; });
+    const lifetime = new AbortController(); callbackLifetime.current = lifetime;
+    listenForNativeAuthorization(vault, (nextTokens) => {
+      if (lifetime.signal.aborted) return;
+      setTokens(nextTokens); setNotice("Server authorization completed. Refreshing encrypted reference data…");
+      void refreshReferenceData(nextTokens).catch(() => { if (!lifetime.signal.aborted) setNotice("Reference data refresh failed. Retry through Security."); });
+    }, (message) => { if (!lifetime.signal.aborted) setNotice(message); }, lifetime.signal).then((unlisten) => { if (lifetime.signal.aborted) unlisten(); else dispose = unlisten; }).catch(() => { if (!lifetime.signal.aborted) setNotice("Native callback observation failed."); });
     const backgroundLock = () => { if (document.visibilityState === "hidden") requestLock(); else resetInactivity(); };
     document.addEventListener("visibilitychange", backgroundLock);
     for (const event of ["pointerdown", "keydown"] as const) window.addEventListener(event, resetInactivity);
-    return () => { dispose?.(); window.clearTimeout(inactivityTimer); document.removeEventListener("visibilitychange", backgroundLock); for (const event of ["pointerdown", "keydown"] as const) window.removeEventListener(event, resetInactivity); };
+    return () => { lifetime.abort(); dispose?.(); window.clearTimeout(inactivityTimer); document.removeEventListener("visibilitychange", backgroundLock); for (const event of ["pointerdown", "keydown"] as const) window.removeEventListener(event, resetInactivity); };
   }, [vault]);
 
   async function saveDraft() {
@@ -69,6 +77,7 @@ export function App() {
 
   async function unlock(pin: string) {
     if (!isNativeRuntime()) { setLocked(false); return; }
+    if (lockPending.current) await lockPending.current;
     const session = await VaultSession.unlock(pin);
     if (!session) throw new Error("Native secret storage is unavailable.");
     await session.initialize();
@@ -78,10 +87,16 @@ export function App() {
   }
 
   async function lockNow() {
+    if (lockPending.current) return lockPending.current;
     const current = vault;
     if (!current) return;
-    await current?.lock();
+    vaultGeneration.current += 1; callbackLifetime.current?.abort();
     setVault(null); setTokens(null); setReferencePack(null); setLocked(true); setDrafts([]); setNotice("");
+    setCompatibility("UNKNOWN");
+    // Mask synchronously; failed persistence must never keep private UI open.
+    // A failed lock remains a rejected barrier: a PIN cannot race the unload.
+    const pendingLock = current.lock(); lockPending.current = pendingLock;
+    await pendingLock; lockPending.current = null;
     await recordDiagnostic("VAULT_LOCKED").catch(() => undefined);
   }
 
@@ -99,9 +114,13 @@ export function App() {
 
   async function refreshReferenceData(providedTokens?: NativeTokens) {
     if (!vault || !adapter) throw new Error("Unlock the encrypted workspace first.");
-    const activeTokens = providedTokens ?? tokens ?? await refreshNativeTokens(vault);
+    const generation = vaultGeneration.current;
+    const requireCurrent = () => { if (generation !== vaultGeneration.current) throw new Error("App locked during reference refresh."); };
+    const activeTokens = providedTokens ?? (usableNativeAccess(tokens) ? tokens! : await refreshNativeTokens(vault));
+    requireCurrent();
     setTokens(activeTokens);
     const contextResponse = await nativeSessionRequest(vault, activeTokens, "CONTEXT");
+    requireCurrent();
     const context = JSON.parse(contextResponse.body) as { code?: string; serverVersion?: string; nativeApiVersion?: number; currentSyncSchemaVersion?: number; minimumSupportedSyncSchema?: number; minimumSupportedAppVersion?: string; maintenanceState?: string; featureAvailability?: { crossPlatformApps?: boolean; offlineSync?: boolean } };
     if (contextResponse.status !== 200 || context.nativeApiVersion !== 1 || !context.serverVersion || !context.minimumSupportedAppVersion) throw new Error(context.code ?? "Server compatibility check failed.");
     if (context.maintenanceState === "ACTIVE") { setCompatibility("MAINTENANCE"); throw new Error("Server maintenance is active. Local encrypted drafts are preserved."); }
@@ -110,10 +129,13 @@ export function App() {
     if (!versionAtLeast(context.serverVersion, profile.minimumServerVersion) || context.currentSyncSchemaVersion !== 1 || context.minimumSupportedSyncSchema !== 1) { setCompatibility("SERVER_INCOMPATIBLE"); throw new Error("Server version is incompatible. Sync is blocked and local drafts are preserved."); }
     setCompatibility("READY");
     const response = await nativeSessionRequest(vault, activeTokens, "REFERENCE_PACK");
+    requireCurrent();
     const pack = JSON.parse(response.body) as ReferencePack & { code?: string };
     if (response.status !== 200 || pack.schemaVersion !== 1 || !pack.snapshotVersion || !pack.hardExpiresAt) throw new Error(pack.code ?? "Reference pack refresh failed.");
     await Promise.all([adapter.references.put(pack), adapter.cursors.put(pack.cursor)]);
+    requireCurrent();
     await recordDiagnostic("REFERENCE_REFRESHED").catch(() => undefined);
+    requireCurrent();
     setReferencePack(pack);
     setNotice("Current server reference data is encrypted on this device and ready for offline drafts.");
     return { activeTokens, pack };
@@ -163,7 +185,7 @@ export function App() {
     setVault(null); setTokens(null); setReferencePack(null); setDrafts([]); setLocked(true); setNotice("");
   }
 
-  if (locked) return <LockScreen onUnlock={unlock} />;
+  if (locked) return <LockScreen onUnlock={unlock} lockFailure={lockPending.current !== null && notice.startsWith("APP_LOCK_FAILED:")} />;
 
   return (
     <div className="app-frame">
@@ -180,7 +202,7 @@ export function App() {
       </aside>
 
       <main>
-        <header className="topbar"><div><p className="eyebrow">ACCOUNTANT WORKSPACE</p><h1>{active === "workspace" ? PRODUCT_BRAND.productName : sectionTitle(active)}</h1></div><div className="top-actions"><span className={online ? "network online" : "network offline"}>{online ? <Wifi /> : <CloudOff />}{online ? "Network available" : "Offline"}</span><button className="secondary" onClick={() => void lockNow()}><LogOut />Lock</button></div></header>
+        <header className="topbar"><div><p className="eyebrow">ACCOUNTANT WORKSPACE</p><h1>{active === "workspace" ? PRODUCT_BRAND.productName : sectionTitle(active)}</h1></div><div className="top-actions"><span className={online ? "network online" : "network offline"}>{online ? <Wifi /> : <CloudOff />}{online ? "Network available" : "Offline"}</span><button className="secondary" onClick={requestLock}><LogOut />Lock</button></div></header>
 
         {!online || !profile.remoteConfigured ? <div className="offline-banner"><CloudOff /><div><strong>{!online ? "You are offline." : "No remote server is configured."}</strong><span>Drafts stay encrypted on this device and sync only after server permission, device and business-rule checks.</span></div></div> : null}
         {compatibility !== "UNKNOWN" && compatibility !== "READY" ? <div className="offline-banner" role="alert"><AlertTriangle /><div><strong>{compatibility.replaceAll("_", " ")}</strong><span>Server mutation is blocked. Local encrypted drafts are preserved for review after the condition is resolved.</span></div></div> : null}
@@ -285,7 +307,7 @@ function InfoSection({ active, openOnline, connect, refresh, wipe, diagnosticExp
   return <section className="panel info-panel"><ShieldCheck /><p className="eyebrow">DEVICE SECURITY</p><h2>The server still decides</h2><p>App unlock protects local encrypted data. Server access additionally requires an active user, current role assignment, approved device, current authorization versions and both release flags.</p><div className="security-list"><span><CheckCircle2 />App {appVersion} · compatibility {compatibility.replaceAll("_", " ")}</span><span><CheckCircle2 />No password stored in this app</span><span><CheckCircle2 />Rotating, revocable native session</span><span><CheckCircle2 />Background, inactivity and failed-attempt lock</span></div><button className="primary" disabled={!remoteConfigured} onClick={connect}>{remoteConfigured ? "Connect through system browser" : "No remote server configured"}</button><button className="secondary" disabled={!remoteConfigured} onClick={refresh} style={{ marginTop: 12 }}>{referenceReady ? "Refresh encrypted reference data" : "Download encrypted reference data"}</button><button className="secondary" style={{ marginTop: 12 }} onClick={() => void diagnosticExport().then((report) => setDiagnostics(JSON.stringify(report, null, 2)))}>Prepare redacted diagnostics</button>{diagnostics ? <label>Opt-in diagnostic report (contains no draft payload)<textarea readOnly rows={8} value={diagnostics} /></label> : null}{resetArmed ? <div className="reset-boundary"><p>This permanently erases encrypted local drafts, outbox, cached references, device key and session material. Unsynced drafts cannot be recovered.</p><label>Type ERASE LOCAL DRAFTS<input value={confirmation} onChange={(event) => setConfirmation(event.target.value)} /></label><button className="danger" disabled={confirmation !== "ERASE LOCAL DRAFTS"} onClick={() => wipe(confirmation)}>Erase this app's local data</button><button className="secondary" onClick={() => { setResetArmed(false); setConfirmation(""); }}>Cancel</button></div> : <button className="danger" style={{ marginTop: 12 }} onClick={() => setResetArmed(true)}>Reset app data</button>}</section>;
 }
 
-function LockScreen({ onUnlock }: { onUnlock: (pin: string) => Promise<void> }) {
+function LockScreen({ onUnlock, lockFailure = false }: { onUnlock: (pin: string) => Promise<void>; lockFailure?: boolean }) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState(""); const [busy, setBusy] = useState(false); const [retryAfter, setRetryAfter] = useState(0);
   useEffect(() => { if (retryAfter < 1) return; const timer = window.setInterval(() => setRetryAfter((value) => Math.max(0, value - 1)), 1000); return () => window.clearInterval(timer); }, [retryAfter > 0]);
@@ -300,5 +322,5 @@ function LockScreen({ onUnlock }: { onUnlock: (pin: string) => Promise<void> }) 
       else setError(message);
     } finally { setBusy(false); }
   };
-  return <main className="lock-screen"><div className="lock-card"><img src={PRODUCT_BRAND.logoPath} alt="Nalanda Public School emblem" /><p className="eyebrow">{PRODUCT_BRAND.technicalDescriptor.toUpperCase()}</p><h1>Welcome back</h1><p>Unlock local encrypted drafts. This does not sign you into the school server.</p><label>App PIN<input type="password" inputMode="numeric" autoComplete="off" minLength={8} maxLength={12} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, ""))} placeholder="8–12 digits" /></label>{error ? <p role="alert">{retryAfter > 0 ? `Too many failed attempts. Try again in ${retryAfter} seconds.` : error}</p> : null}<button className="primary" disabled={pin.length < 8 || busy || retryAfter > 0} onClick={() => void submit()}><LockKeyhole />{busy ? "Unlocking…" : retryAfter > 0 ? `Wait ${retryAfter}s` : "Unlock app"}</button><span className="reset-boundary">Forgot the PIN? An owner-authorized reset erases this app's encrypted local data and requires fresh device approval.</span></div></main>;
+  return <main className="lock-screen"><div className="lock-card"><img src={PRODUCT_BRAND.logoPath} alt="Nalanda Public School emblem" /><p className="eyebrow">{PRODUCT_BRAND.technicalDescriptor.toUpperCase()}</p><h1>Welcome back</h1><p>Unlock local encrypted drafts. This does not sign you into the school server.</p><label>App PIN<input type="password" inputMode="numeric" autoComplete="off" minLength={8} maxLength={12} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, ""))} placeholder="8–12 digits" /></label>{error ? <p role="alert">{retryAfter > 0 ? `Too many failed attempts. Try again in ${retryAfter} seconds.` : error}</p> : null}<button className="primary" disabled={lockFailure || pin.length < 8 || busy || retryAfter > 0} onClick={() => void submit()}><LockKeyhole />{busy ? "Unlocking…" : retryAfter > 0 ? `Wait ${retryAfter}s` : "Unlock app"}</button>{lockFailure ? <p role="alert">App lock could not finish. Close the app and contact the owner before unlocking again.</p> : null}<span className="reset-boundary">Forgot the PIN? An owner-authorized reset erases this app's encrypted local data and requires fresh device approval.</span></div></main>;
 }

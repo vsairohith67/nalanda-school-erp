@@ -36,6 +36,8 @@ function parseStatement(statement, triggerName) {
 }
 
 function parseTrigger(trigger) {
+  const after = trigger.sql.trim().match(/^CREATE\s+TRIGGER\s+"(Payment_prior_year_version_(?:insert|update|delete))"\s+AFTER\s+(INSERT|UPDATE|DELETE)\s+ON\s+"Payment"\s+BEGIN\s+(UPDATE\s+"PriorYearLiability"\s+SET\s+version\s*=\s*version\s*\+\s*1\s+WHERE\s+"studentId"\s*=\s*(?:NEW|OLD)\."studentId"(?:\s+OR\s+"studentId"\s*=\s*NEW\."studentId")?)\s*;\s*END$/i);
+  if (after) return { name: after[1], event: after[2].toUpperCase(), timing: "AFTER", table: "Payment", columns: null, headerCondition: null, statements: [{ updateSql: after[3] }] };
   const match = trigger.sql.trim().match(/^CREATE\s+TRIGGER\s+"([^"]+)"\s+BEFORE\s+(INSERT|UPDATE|DELETE)(?:\s+OF\s+([\s\S]*?))?\s+ON\s+"([^"]+)"(?:\s+FOR\s+EACH\s+ROW)?(?:\s+WHEN\s+([\s\S]*?))?\s+BEGIN\s+([\s\S]*?)\s+END$/i);
   if (!match) throw new Error(`POSTGRES_TRIGGER_HEADER_UNSUPPORTED:${trigger.name}`);
   const [, name, event, columns, table, headerCondition, body] = match;
@@ -49,6 +51,7 @@ function renderTrigger(trigger) {
   const functionName = `nalanda_trigger_${sha256(trigger.name).slice(0, 20).toLowerCase()}`;
   const returnValue = trigger.event === "DELETE" ? "OLD" : "NEW";
   const checks = trigger.statements.map((statement) => {
+    if (statement.updateSql) return `  ${statement.updateSql};`;
     const condition = [trigger.headerCondition, statement.condition === "TRUE" ? null : statement.condition]
       .filter(Boolean)
       .map((value) => `(${translateCondition(value)})`)
@@ -68,7 +71,7 @@ function renderTrigger(trigger) {
     "$nalanda_trigger$;",
     "",
     `CREATE TRIGGER "${trigger.name}"`,
-    `BEFORE ${trigger.event}${columns} ON "${trigger.table}"`,
+    `${trigger.timing ?? "BEFORE"} ${trigger.event}${columns} ON "${trigger.table}"`,
     "FOR EACH ROW",
     `EXECUTE FUNCTION "${functionName}"();`
   ].join("\n");

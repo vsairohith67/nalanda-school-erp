@@ -1,0 +1,222 @@
+import {execFileSync} from "node:child_process";
+import {mkdirSync,readFileSync,writeFileSync,existsSync,readdirSync,rmSync,lstatSync,realpathSync,copyFileSync,chmodSync} from "node:fs";
+import {randomBytes} from "node:crypto";
+import path from "node:path";
+import {pathToFileURL} from "node:url";
+import {admitArtifact} from "./admit-artifact";
+import {admitHistoricalArtifact} from "./admit-artifact";
+import {interruptPublicInitialise} from "./operator-interruption";
+import {hashBytes,assertRunningImage} from "./artifact-handoff";
+import {operatorPlan,type OperatorCommand,type OperatorManifest} from "../../lib/portable-runtime/operator";
+import {validateOperatorFixture} from "../../lib/portable-runtime/operator-fixture";
+import {mergeHistoricalIncomeKeys} from "../../lib/portable-runtime/recovery-key-custody";
+import {validateComposeFiles} from "./operator-adapter";
+
+export const OPERATOR_SCENARIOS=Object.freeze([
+ {id:"preflight",command:"preflight",apply:false},
+ {id:"install-dry-run",command:"install",apply:false},
+ {id:"install",command:"install",apply:true},
+ {id:"doctor",command:"doctor",apply:false},
+ {id:"migrate",command:"migrate",apply:true},
+ {id:"backup",command:"backup",apply:true},
+ {id:"uninstall-preserves-resources",command:"uninstall",apply:true},
+] as const);
+export const REQUIRED_OPERATOR_SCENARIOS=Object.freeze([...OPERATOR_SCENARIOS.map(s=>s.id),"certificate-concession-nonempty-operator-fixture","initialise-independent-project-encrypted-restore","wrong-key","corrupted-object","missing-object","mismatched-manifest","restored-uninstall-preserves-data-keys-and-objects","deployed-interruption-durable-resume-stale-lock","incompatible-historical-rollback-refused","distinct-qualified-historical-upgrade-compatible-rollback"]);
+export function missingOperatorScenarios(records:readonly {scenario:string;state:string}[]){return REQUIRED_OPERATOR_SCENARIOS.filter(id=>!records.some(r=>r.scenario===id&&r.state==="PASSED"));}
+/** Real subprocess entrypoint. No process adapter or qualification override is exposed. */
+export function invokePublicOperator(command:OperatorCommand,manifestPath:string,target:string,apply:boolean,resume=false){
+ const args=["--import","tsx",path.resolve("scripts/portable/operator.ts"),command,"--manifest",manifestPath,"--target",target,...(apply?["--apply"]:[]),...(resume?["--resume"]:[])];
+ const output=execFileSync(process.execPath,args,{encoding:"utf8",timeout:18*60_000,maxBuffer:1024*1024,windowsHide:true,stdio:["ignore","pipe","pipe"]});
+ return JSON.parse(output.trim().split(/\r?\n/).at(-1)!);
+}
+export async function operatorAcceptance(){
+ const artifact=admitArtifact(path.resolve("artifact-evidence")); // before filesystem/deployment mutations
+ const fixtureRoot=path.resolve(process.env.PORTABLE_OPERATOR_FIXTURE_ROOT??"");
+ if(!fixtureRoot.startsWith(path.resolve("tmp/recovery-1c-restores")+path.sep)||lstatSync(fixtureRoot).isSymbolicLink()||realpathSync(fixtureRoot)!==fixtureRoot)throw Error("PRIVATE_OPERATOR_FIXTURE_REQUIRED");
+ for(const [name,maximum] of [["source-v48.json",16*1024*1024],["operator-fixture.json",2048],["historical-income-keys.json",32768]] as const){const file=path.join(fixtureRoot,name),stat=lstatSync(file);if(!stat.isFile()||stat.isSymbolicLink()||realpathSync(file)!==file||stat.size>maximum)throw Error("PRIVATE_OPERATOR_FIXTURE_UNSAFE");}
+ const fixtureBytes=readFileSync(path.join(fixtureRoot,"source-v48.json")),fixtureReceipt=readFileSync(path.join(fixtureRoot,"operator-fixture.json"));
+ const fixtureIdentity={source:artifact.source,runId:process.env.GITHUB_RUN_ID!,attempt:process.env.GITHUB_RUN_ATTEMPT!};
+ const fixture=validateOperatorFixture(fixtureBytes,JSON.parse(fixtureReceipt.toString()),fixtureIdentity);
+ const custodyBytes=readFileSync(path.join(fixtureRoot,"historical-income-keys.json"));
+ if(hashBytes(custodyBytes)!==JSON.parse(fixtureReceipt.toString()).custodySha256)throw Error("PRIVATE_CUSTODY_HASH_MISMATCH");
+ process.env.PORTABLE_IMAGE_ID=artifact.imageConfigDigest;
+ const project=`nalanda-ci-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-operator`;
+ const target=path.resolve("tmp/portable-operator",project),root=path.resolve("tmp/recovery-1c-operator",project);
+ if(existsSync(target)||existsSync(root))throw Error("OPERATOR_ACCEPTANCE_TARGET_NOT_FRESH");
+ mkdirSync(root,{recursive:true,mode:0o700});
+ const base:OperatorManifest={schemaVersion:1,classification:"INTEGRATION_TEST_ENVIRONMENT",profile:"local-single-node",project,target,image:artifact.imageConfigDigest,releaseCommit:artifact.source,composeSha256:hashBytes(readFileSync("deploy/portable/compose.yml")),architecture:artifact.architecture,operationId:randomBytes(8).toString("hex"),postgresMajor:17,backupVersion:48,migration:readdirSync("prisma/postgresql/migrations").filter(x=>/^\d{14}_/.test(x)).sort().at(-1)!};
+ const records:({scenario:string;state:string}&Record<string,unknown>)[]=[];let cleanup="NOT_STARTED";
+ const docker=(args:string[])=>execFileSync("docker",["--context","default",...args],{encoding:"utf8",timeout:120_000,maxBuffer:2*1024*1024});
+ const volumes=()=>docker(["volume","ls","-q","--filter",`label=com.docker.compose.project=${project}`]).trim().split(/\s+/).filter(Boolean).sort();
+ const privateRoot=path.resolve("tmp/portable-staging",project);
+ const projects:{project:string;target:string;privateRoot:string}[]=[];
+ const activate=(entry:{project:string;privateRoot:string})=>{process.env.PORTABLE_CI_ROOT=entry.privateRoot;process.env.PORTABLE_SOURCE_SHA=artifact.source;};
+ const bootstrap=(name:string)=>{
+  const entry={project:name,target:path.resolve("tmp/portable-operator",name),privateRoot:path.resolve("tmp/portable-staging",name)};
+  if(existsSync(entry.privateRoot)||existsSync(entry.target))throw Error("PROJECT_NOT_FRESH");
+  for(const kind of ["container","network","volume"])if(docker([kind,"ls",...(kind==="container"?["--all"]:[]),"-q","--filter",`label=com.docker.compose.project=${name}`]).trim())throw Error("PROJECT_RESOURCES_EXIST");
+  mkdirSync(entry.privateRoot,{recursive:true,mode:0o700});if(realpathSync(entry.privateRoot)!==entry.privateRoot)throw Error("PROJECT_ROOT_UNSAFE");
+  writeFileSync(path.join(entry.privateRoot,"owner.json"),JSON.stringify({project:name,source:artifact.source,runId:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT}),{flag:"wx",mode:0o600});projects.push(entry);activate(entry);
+  execFileSync(process.execPath,["scripts/portable/generate-synthetic-secrets.mjs"],{env:{...process.env,NALANDA_SYNTHETIC_STAGING:"true",PORTABLE_SYNTHETIC_SECRET_ROOT:path.join(entry.privateRoot,"secrets")},stdio:"pipe",timeout:30_000});
+  const ringFile=path.join(entry.privateRoot,"secrets","auth_mfa_keyring_json"),activeText=readFileSync(ringFile,"utf8");
+  const combined=mergeHistoricalIncomeKeys(activeText,custodyBytes.toString(),fixture,{...fixtureIdentity,backupSha256:hashBytes(fixtureBytes)});
+  // Before the first container exists: no cached environment or mounted inode is replaced.
+  writeFileSync(path.join(entry.privateRoot,"original-auth-keyring.json"),activeText,{flag:"wx",mode:0o400});
+  chmodSync(ringFile,0o600);writeFileSync(ringFile,combined);chmodSync(ringFile,0o444);
+  if(readFileSync(ringFile,"utf8")!==combined)throw Error("PRIVATE_CUSTODY_WRITE_FAILED");
+  return entry;
+ };
+ const compose=(entry:typeof projects[number],args:string[])=>{activate(entry);return docker(["compose","--project-name",entry.project,"-f",path.join(entry.target,"compose.json"),...args]);};
+ const keyIdentity=(entry:typeof projects[number])=>hashBytes(Buffer.concat([readFileSync(path.join(entry.privateRoot,"secrets","backup_encryption_key")),readFileSync(path.join(entry.privateRoot,"secrets","auth_mfa_keyring_json"))]));
+ let backupManifest:any,backupResult:any,backupOperation:string|undefined;
+ const inspect=(entry:typeof projects[number])=>JSON.parse(compose(entry,["run","--pull","never","--rm","--no-deps","-e","PORTABLE_OPERATOR_CI=true","backup-qa","dist/portable/operator-recovery.mjs","inspect",randomBytes(8).toString("hex"),Buffer.from(JSON.stringify(backupManifest)).toString("base64url")]).trim().split(/\r?\n/).at(-1)!);
+ try{
+  const source=bootstrap(project);
+  for(const scenario of OPERATOR_SCENARIOS){
+   const manifest={...base,operationId:randomBytes(8).toString("hex")},file=path.join(root,scenario.id+".json");writeFileSync(file,JSON.stringify(manifest),{flag:"wx",mode:0o600});
+   const beforeVolumes=volumes(),existed=existsSync(target);
+   const beforePreserved=scenario.command==="uninstall"?{database:inspect(source),key:keyIdentity(source)}:null;
+   const result=invokePublicOperator(scenario.command,file,target,scenario.apply);
+   if(result.state!==(scenario.apply?"COMPLETE":"DRY_RUN"))throw Error("OPERATOR_RESULT_STATE");
+   if(!scenario.apply){if(existsSync(target)!==existed||JSON.stringify(volumes())!==JSON.stringify(beforeVolumes))throw Error("DRY_RUN_MUTATED_RESOURCES");}
+   else{
+    const receiptFile=path.join(target,`${manifest.operationId}.${scenario.command}.receipt.json`),receipt=JSON.parse(readFileSync(receiptFile,"utf8"));
+    if(receipt.state!=="COMPLETE"||receipt.planHash!==operatorPlan(scenario.command,manifest).planHash)throw Error("OPERATOR_DURABLE_RECEIPT_MISMATCH");
+    const before=hashBytes(readFileSync(receiptFile));invokePublicOperator(scenario.command,file,target,true,true);if(hashBytes(readFileSync(receiptFile))!==before)throw Error("OPERATOR_REPEAT_CHANGED_RECEIPT");
+    if(scenario.command==="install"||scenario.command==="migrate"){
+     const ids=docker(["ps","-q","--filter",`label=com.docker.compose.project=${project}`,"--filter","label=com.docker.compose.service=web-1"]).trim().split(/\s+/).filter(Boolean);if(ids.length!==1)throw Error("OPERATOR_WEB_IDENTITY_MISSING");assertRunningImage(artifact,JSON.parse(docker(["inspect",ids[0]]))[0]);
+    }
+    if(scenario.command==="uninstall"&&(JSON.stringify(volumes())!==JSON.stringify(beforeVolumes)||!existsSync(path.join(target,"owner.json"))))throw Error("UNINSTALL_REMOVED_PRESERVED_RESOURCES");
+    if(scenario.command==="install"){
+     compose(source,["stop","web-1","web-2","reverse-proxy","backup-worker"]);
+     const inputs=path.join(source.privateRoot,"fixture");mkdirSync(inputs,{mode:0o700});
+     writeFileSync(path.join(inputs,"source-v48.json"),fixtureBytes,{flag:"wx",mode:0o444});writeFileSync(path.join(inputs,"operator-fixture.json"),fixtureReceipt,{flag:"wx",mode:0o444});
+     const cfg=JSON.parse(docker(["compose","--project-name",project,"-f",path.resolve("deploy/portable/compose.yml"),"config","--format","json"]));
+     const seed=cfg.services.seed;seed.environment.DIRECT_URL_FILE="/run/secrets/direct_url";seed.environment.PORTABLE_OPERATOR_CI="true";seed.secrets.push({source:"direct_url",target:"direct_url"});
+     seed.environment.AUTH_MFA_KEYRING_JSON_FILE="/run/secrets/auth_mfa_keyring_json";seed.secrets.push({source:"auth_mfa_keyring_json",target:"auth_mfa_keyring_json"});
+     seed.volumes=[...(seed.volumes??[]),...["source-v48.json","operator-fixture.json"].map(name=>({type:"bind",source:path.join(inputs,name),target:`/run/operator-fixture/${name}`,read_only:true,bind:{create_host_path:false}}))];
+     await validateComposeFiles(cfg,process.cwd(),source.privateRoot);
+     const file=path.join(source.privateRoot,"fixture-compose.json");writeFileSync(file,JSON.stringify(cfg),{flag:"wx",mode:0o600});
+     const result=JSON.parse(docker(["compose","--project-name",project,"-f",file,"run","--pull","never","--rm","--no-deps","seed","dist/portable/operator-recovery.mjs","seed-fixture",randomBytes(8).toString("hex"),Buffer.from(JSON.stringify(fixtureIdentity)).toString("base64url")]).trim().split(/\r?\n/).at(-1)!);
+     if(result.state!=="GENUINE_NONEMPTY_FIXTURE_INITIALISED"||result.source!==artifact.source)throw Error("OPERATOR_FIXTURE_FAILED");
+     records.push({scenario:"certificate-concession-nonempty-operator-fixture",state:"PASSED",classification:"GENUINE_EXPORTER_SERVICE_FIXTURE_WITH_AUTHORITATIVE_READBACK",readback:result.readback});
+     compose(source,["up","--no-build","--pull","never","-d","--wait","--no-deps","web-1","reverse-proxy","backup-worker"]);
+    }
+    if(scenario.command==="backup"){
+     backupOperation=manifest.operationId;backupResult=JSON.parse(readFileSync(path.join(target,`${backupOperation}.backup.result.json`),"utf8"));
+     backupManifest=JSON.parse(readFileSync(path.join(privateRoot,`backup-${backupOperation}`,"manifest.json"),"utf8"));
+    }
+    if(beforePreserved&&JSON.stringify(beforePreserved)!==JSON.stringify({database:inspect(source),key:keyIdentity(source)}))throw Error("UNINSTALL_CHANGED_DATA_BACKUP_OR_KEY");
+   }
+   records.push({scenario:scenario.id,state:"PASSED",classification:"PUBLIC_CLI_DEPLOYED_ACCEPTANCE",repeat:scenario.apply?"PASSED":"NOT_APPLICABLE"});
+  }
+  if(!backupOperation)throw Error("SOURCE_BACKUP_REQUIRED");
+  const sourceSnapshot=inspect(source),destination=bootstrap(`${project}-destination`),destinationKey=keyIdentity(destination);
+  if(destinationKey===keyIdentity(source))throw Error("RECOVERY_PROJECT_KEYS_NOT_DISTINCT");
+  const fresh={...base,project:destination.project,target:destination.target,operationId:randomBytes(8).toString("hex")};
+  const freshFile=path.join(root,"destination-initialise.json");writeFileSync(freshFile,JSON.stringify(fresh),{flag:"wx",mode:0o600});
+  invokePublicOperator("initialise",freshFile,destination.target,true);invokePublicOperator("initialise",freshFile,destination.target,true,true);
+  compose(destination,["stop","web-1","web-2","reverse-proxy","backup-worker"]);
+  mkdirSync(path.join(destination.privateRoot,"handoff"),{mode:0o700});mkdirSync(path.join(destination.privateRoot,"recovery-key"),{mode:0o700});
+  for(const name of ["backup.npsbackup","manifest.json"]){const output=path.join(destination.privateRoot,"handoff",name);copyFileSync(path.join(source.privateRoot,`backup-${backupOperation}`,name),output);chmodSync(output,0o444);}
+  const recoveryKey=path.join(destination.privateRoot,"recovery-key","recovery-key");copyFileSync(path.join(source.privateRoot,"secrets","backup_encryption_key"),recoveryKey);chmodSync(recoveryKey,0o444);
+  const restore={...fresh,operationId:randomBytes(8).toString("hex"),restoreArtifact:{id:backupResult.id,ciphertextSha256:backupResult.ciphertextSha256},recoveryTransfer:{sourceProject:project,destinationProject:destination.project,sourceCommit:artifact.source,runId:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT,artifactId:backupResult.id,objectSha256:backupResult.objectSha256,manifestSha256:backupResult.manifestSha256}};
+  const restoreFile=path.join(root,"independent-restore.json");writeFileSync(restoreFile,JSON.stringify(restore),{flag:"wx",mode:0o600});activate(destination);
+  invokePublicOperator("restore",restoreFile,destination.target,true);invokePublicOperator("restore",restoreFile,destination.target,true,true);
+  if(keyIdentity(destination)!==destinationKey||JSON.stringify(inspect(source))!==JSON.stringify(sourceSnapshot))throw Error("INDEPENDENT_RESTORE_MUTATED_SOURCE_OR_KEY");
+  const sourceVolumes=docker(["volume","ls","-q","--filter",`label=com.docker.compose.project=${project}`]).trim().split(/\s+/),destVolumes=docker(["volume","ls","-q","--filter",`label=com.docker.compose.project=${destination.project}`]).trim().split(/\s+/);
+  if(!sourceVolumes.length||!destVolumes.length||sourceVolumes.some(v=>destVolumes.includes(v)))throw Error("RECOVERY_VOLUMES_NOT_INDEPENDENT");
+  for(const service of ["postgres","object-store"]){
+   const sourceId=compose(source,["ps","-q",service]).trim(),destinationId=compose(destination,["ps","-q",service]).trim();
+   if(!sourceId||!destinationId||sourceId===destinationId)throw Error("RECOVERY_SERVICES_NOT_INDEPENDENT");
+  }
+  const destinationSnapshot=inspect(destination),sourceAgain={...base,operationId:randomBytes(8).toString("hex")},sourceAgainFile=path.join(root,"source-after-destination-backup.json");writeFileSync(sourceAgainFile,JSON.stringify(sourceAgain),{flag:"wx",mode:0o600});activate(source);invokePublicOperator("backup",sourceAgainFile,source.target,true);
+  if(JSON.stringify(inspect(destination))!==JSON.stringify(destinationSnapshot))throw Error("SOURCE_OPERATION_MUTATED_DESTINATION");
+  records.push({scenario:"initialise-independent-project-encrypted-restore",state:"PASSED",classification:"PUBLIC_CLI_DEPLOYED_ACCEPTANCE",sourcePreserved:true,destinationOwnKeyPreserved:true});
+  // Each refusal owns a separate disposable destination. A failed durable
+  // operation is never erased or retried under a different identity.
+  for(const fault of ["wrong-key","corrupted-object","missing-object","mismatched-manifest"]){
+   const broken=bootstrap(`${project}-${fault}`),m={...base,project:broken.project,target:broken.target,operationId:randomBytes(8).toString("hex")};
+   const initFile=path.join(root,`${fault}-initialise.json`);writeFileSync(initFile,JSON.stringify(m),{flag:"wx",mode:0o600});invokePublicOperator("initialise",initFile,broken.target,true);compose(broken,["stop","web-1","web-2","reverse-proxy","backup-worker"]);
+   mkdirSync(path.join(broken.privateRoot,"handoff"),{mode:0o700});mkdirSync(path.join(broken.privateRoot,"recovery-key"),{mode:0o700});
+   for(const name of ["backup.npsbackup","manifest.json"]){if(fault==="missing-object"&&name==="backup.npsbackup")continue;const bytes=readFileSync(path.join(source.privateRoot,`backup-${backupOperation}`,name));
+    if(fault==="corrupted-object"&&name==="backup.npsbackup")bytes[bytes.length-1]^=1;
+    if(fault==="mismatched-manifest"&&name==="manifest.json"){const value=JSON.parse(bytes.toString());value.sourceProject=broken.project;writeFileSync(path.join(broken.privateRoot,"handoff",name),JSON.stringify(value),{flag:"wx",mode:0o444});}
+    else writeFileSync(path.join(broken.privateRoot,"handoff",name),bytes,{flag:"wx",mode:0o444});
+   }
+   writeFileSync(path.join(broken.privateRoot,"recovery-key","recovery-key"),fault==="wrong-key"?randomBytes(32).toString("base64"):readFileSync(path.join(source.privateRoot,"secrets","backup_encryption_key")),{flag:"wx",mode:0o444});
+   const brokenRestore={...restore,project:broken.project,target:broken.target,operationId:randomBytes(8).toString("hex"),recoveryTransfer:{...restore.recoveryTransfer,destinationProject:broken.project}};
+   const file=path.join(root,`${fault}-restore.json`);writeFileSync(file,JSON.stringify(brokenRestore),{flag:"wx",mode:0o600});activate(broken);
+   let refused=false;try{invokePublicOperator("restore",file,broken.target,true);}catch{refused=true;}if(!refused)throw Error("INVALID_RECOVERY_WAS_ACCEPTED");
+   const resultFile=path.join(broken.target,`${brokenRestore.operationId}.restore.result.json`);if(existsSync(resultFile))throw Error("FAILED_RESTORE_APPEARED_COMPLETE");
+   const empty=JSON.parse(compose(broken,["run","--pull","never","--rm","--no-deps","-e","PORTABLE_OPERATOR_CI=true","backup-qa","dist/portable/operator-recovery.mjs","empty",randomBytes(8).toString("hex"),Buffer.from(JSON.stringify(backupManifest)).toString("base64url")]).trim().split(/\r?\n/).at(-1)!);
+   if(empty.state!=="EMPTY_DATABASE_AND_OBJECT_ABSENT"||JSON.stringify(inspect(source))!==JSON.stringify(sourceSnapshot))throw Error("REJECTED_RESTORE_MUTATED_DATA");
+   records.push({scenario:fault,state:"PASSED",classification:"PUBLIC_CLI_DEPLOYED_NEGATIVE_ACCEPTANCE",businessWrites:0});
+  }
+  const destinationBefore={database:inspect(destination),key:keyIdentity(destination),recoveryKey:hashBytes(readFileSync(recoveryKey))};
+  const uninstall={...fresh,operationId:randomBytes(8).toString("hex")},uninstallFile=path.join(root,"destination-uninstall.json");writeFileSync(uninstallFile,JSON.stringify(uninstall),{flag:"wx",mode:0o600});activate(destination);
+  invokePublicOperator("uninstall",uninstallFile,destination.target,true);
+  if(JSON.stringify(destinationBefore)!==JSON.stringify({database:inspect(destination),key:keyIdentity(destination),recoveryKey:hashBytes(readFileSync(recoveryKey))}))throw Error("RESTORED_UNINSTALL_CHANGED_DATA");
+  records.push({scenario:"restored-uninstall-preserves-data-keys-and-objects",state:"PASSED",classification:"PUBLIC_CLI_DEPLOYED_ACCEPTANCE"});
+  const interrupted=bootstrap(`${project}-interrupted`),interruptedManifest={...base,project:interrupted.project,target:interrupted.target,operationId:randomBytes(8).toString("hex")},interruptedFile=path.join(root,"interrupted.json");
+  writeFileSync(interruptedFile,JSON.stringify(interruptedManifest),{flag:"wx",mode:0o600});await interruptPublicInitialise(interruptedManifest,interruptedFile);
+  invokePublicOperator("initialise",interruptedFile,interrupted.target,true,true);invokePublicOperator("initialise",interruptedFile,interrupted.target,true,true);
+  const stale=readdirSync(path.dirname(interrupted.target)).filter(n=>n.startsWith(interrupted.project+".lock.")&&n.endsWith(".stale"));
+  if(stale.length!==1)throw Error("STALE_LOCK_RECONCILIATION_MISSING");
+  const lock=JSON.parse(readFileSync(path.join(path.dirname(interrupted.target),stale[0]),"utf8"));if(lock.project!==interrupted.project||lock.operationId!==interruptedManifest.operationId)throw Error("STALE_LOCK_IDENTITY_MISMATCH");
+  compose(interrupted,["stop","web-1","web-2","reverse-proxy","backup-worker"]);
+  records.push({scenario:"deployed-interruption-durable-resume-stale-lock",state:"PASSED",classification:"PUBLIC_CLI_DEPLOYED_ACCEPTANCE"});
+  // The historical pair has independent raw scans and source-bound inputs.
+  // Missing artifacts are explicit execution prerequisites, never tag aliases.
+  const historicalRoot=path.resolve("artifact-evidence-history"),historicalSource=JSON.parse(readFileSync(path.join(historicalRoot,"provenance.json"),"utf8")).source;
+  const historical=admitHistoricalArtifact(historicalRoot,historicalSource);
+  if(historical.imageConfigDigest===artifact.imageConfigDigest)throw Error("DISTINCT_HISTORICAL_TARGET_REQUIRED");
+  const history=bootstrap(`${project}-history`),old={...base,image:historical.imageConfigDigest,releaseCommit:historical.source,project:history.project,target:history.target,operationId:randomBytes(8).toString("hex")};
+  const oldFile=path.join(root,"historical-install.json");writeFileSync(oldFile,JSON.stringify(old),{flag:"wx",mode:0o600});invokePublicOperator("install",oldFile,history.target,true);
+  process.env.PORTABLE_IMAGE_ID=historical.imageConfigDigest;
+  docker(["compose","--project-name",history.project,"-f",path.resolve("deploy/portable/compose.yml"),"run","--pull","never","--rm","--no-deps","seed"]);
+  const historyBackup={...old,operationId:randomBytes(8).toString("hex")},historyBackupFile=path.join(root,"historical-backup.json");writeFileSync(historyBackupFile,JSON.stringify(historyBackup),{flag:"wx",mode:0o600});invokePublicOperator("backup",historyBackupFile,history.target,true);
+  backupManifest=JSON.parse(readFileSync(path.join(history.privateRoot,`backup-${historyBackup.operationId}`,"manifest.json"),"utf8"));
+  const historicalBefore=inspect(history);
+  const upgrade={...old,image:artifact.imageConfigDigest,releaseCommit:artifact.source,operationId:randomBytes(8).toString("hex"),previous:{image:historical.imageConfigDigest,releaseCommit:historical.source,migration:base.migration,backupVersion:48 as const}};
+  const upgradeFile=path.join(root,"historical-upgrade.json");writeFileSync(upgradeFile,JSON.stringify(upgrade),{flag:"wx",mode:0o600});invokePublicOperator("upgrade",upgradeFile,history.target,true);invokePublicOperator("upgrade",upgradeFile,history.target,true,true);
+  if(JSON.stringify(inspect(history))!==JSON.stringify(historicalBefore))throw Error("HISTORICAL_UPGRADE_CHANGED_BUSINESS_OR_BACKUP");
+  const incompatible={...upgrade,operationId:randomBytes(8).toString("hex"),previous:{...upgrade.previous,migration:"20260908220001_synthetic_incompatible"}};
+  const incompatibleFile=path.join(root,"incompatible-rollback.json");writeFileSync(incompatibleFile,JSON.stringify(incompatible),{flag:"wx",mode:0o600});
+  let rollbackRefused=false;try{invokePublicOperator("rollback",incompatibleFile,history.target,true);}catch{rollbackRefused=true;}
+  if(!rollbackRefused||JSON.stringify(inspect(history))!==JSON.stringify(historicalBefore))throw Error("INCOMPATIBLE_ROLLBACK_NOT_SAFELY_REFUSED");
+  records.push({scenario:"incompatible-historical-rollback-refused",state:"PASSED",classification:"PUBLIC_CLI_DEPLOYED_NEGATIVE_ACCEPTANCE"});
+  const rollback={...upgrade,operationId:randomBytes(8).toString("hex")},rollbackFile=path.join(root,"historical-rollback.json");writeFileSync(rollbackFile,JSON.stringify(rollback),{flag:"wx",mode:0o600});invokePublicOperator("rollback",rollbackFile,history.target,true);invokePublicOperator("rollback",rollbackFile,history.target,true,true);
+  if(JSON.stringify(inspect(history))!==JSON.stringify(historicalBefore))throw Error("HISTORICAL_ROLLBACK_CHANGED_BUSINESS_OR_BACKUP");
+  records.push({scenario:"distinct-qualified-historical-upgrade-compatible-rollback",state:"PASSED",classification:"PUBLIC_CLI_DEPLOYED_ACCEPTANCE",historicalSource:historical.source,historicalImage:historical.imageConfigDigest});
+ }finally{
+  const cleanupFailures:string[]=[];
+  for(const owned of [...projects].reverse()){
+  const {project,target,privateRoot}=owned;activate(owned);
+  try{
+  // Intentionally separate from data-preserving uninstall. Never tear down an unowned target.
+  if(existsSync(path.join(target,"owner.json"))){
+   const owner=JSON.parse(readFileSync(path.join(target,"owner.json"),"utf8"));if(owner.project!==project||owner.classification!=="INTEGRATION_TEST_ENVIRONMENT"||lstatSync(target).isSymbolicLink()||realpathSync(target)!==target)throw Error("OPERATOR_TEARDOWN_OWNERSHIP_MISMATCH");
+   const config=path.join(target,"compose.json");
+   if(existsSync(config)){if(lstatSync(config).isSymbolicLink()||realpathSync(config)!==config)throw Error("OPERATOR_TEARDOWN_CONFIG_UNSAFE");docker(["compose","--project-name",project,"-f",config,"down","--volumes","--remove-orphans"]);}
+   for(const kind of ["container","network","volume"]){if(docker([kind,"ls",...(kind==="container"?["--all"]:[]),"-q","--filter",`label=com.docker.compose.project=${project}`]).trim())throw Error("OPERATOR_TEARDOWN_RESIDUE");}
+   for(const name of readdirSync(path.dirname(target)).filter(n=>n.startsWith(project+".lock.")&&n.endsWith(".stale"))){
+    const file=path.join(path.dirname(target),name),info=lstatSync(file);if(!info.isFile()||info.isSymbolicLink()||info.size>1024||realpathSync(file)!==file)throw Error("STALE_LOCK_CLEANUP_UNSAFE");
+    const lock=JSON.parse(readFileSync(file,"utf8"));if(lock.project!==project||lock.operationId!==owner.operationId||!Number.isSafeInteger(lock.pid)||lock.pid<1)throw Error("STALE_LOCK_CLEANUP_OWNERSHIP");
+    try{process.kill(lock.pid,0);throw Error("STALE_LOCK_PID_ACTIVE");}catch(error){if((error as NodeJS.ErrnoException).code!=="ESRCH")throw error;}
+    rmSync(file);if(existsSync(file))throw Error("STALE_LOCK_CLEANUP_RESIDUE");
+   }
+   if(!target.startsWith(path.resolve("tmp/portable-operator")+path.sep))throw Error("OPERATOR_TEARDOWN_PATH");rmSync(target,{recursive:true});if(existsSync(target))throw Error("OPERATOR_TEARDOWN_FILES_REMAIN");cleanup="VERIFIED";
+  }else if(existsSync(target))throw Error("OPERATOR_TEARDOWN_UNOWNED_RESIDUE");else cleanup="NO_TARGET_CREATED";
+  const owner=JSON.parse(readFileSync(path.join(privateRoot,"owner.json"),"utf8"));
+  if(owner.project!==project||owner.source!==artifact.source||owner.runId!==process.env.GITHUB_RUN_ID||owner.attempt!==process.env.GITHUB_RUN_ATTEMPT||lstatSync(privateRoot).isSymbolicLink()||realpathSync(privateRoot)!==privateRoot||!privateRoot.startsWith(path.resolve("tmp/portable-staging")+path.sep))throw Error("SECRET_CLEANUP_OWNERSHIP_MISMATCH");
+  rmSync(privateRoot,{recursive:true});if(existsSync(privateRoot))throw Error("SECRET_CLEANUP_RESIDUE");
+  }catch{cleanupFailures.push(project);}
+  }
+  writeFileSync(path.join(root,"result.json"),JSON.stringify({source:artifact.source,records,cleanup:cleanupFailures.length?"FAILED":cleanup,cleanupFailures,requiredScenarios:REQUIRED_OPERATOR_SCENARIOS,pending:missingOperatorScenarios(records)},null,2),{flag:"wx"});
+  if(cleanupFailures.length)throw Error("OPERATOR_TEARDOWN_INCOMPLETE");
+ }
+ if(missingOperatorScenarios(records).length)throw Error("OPERATOR_REQUIRED_SCENARIOS_INCOMPLETE");
+ return {contract:"NALANDA_OPERATOR_ACCEPTANCE_V1",source:artifact.source,state:"PASSED",cleanup,historicalUpgradeRollback:"PASSED",requiredScenarios:REQUIRED_OPERATOR_SCENARIOS.length};
+}
+if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){if(process.argv[2]==="--discover")console.log(JSON.stringify(OPERATOR_SCENARIOS));else void operatorAcceptance().catch(()=>{console.error("OPERATOR_ACCEPTANCE_FAILED");process.exitCode=1;});}

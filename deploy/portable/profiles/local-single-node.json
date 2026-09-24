@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "profile": "local-single-node",
+  "applicationArchitecture": "canonical-oci",
+  "platforms": ["linux/amd64", "linux/arm64"],
+  "webReplicas": 1,
+  "postgresMajor": 17,
+  "coordination": "valkey-compatible-atomic",
+  "objects": "private-s3-compatible",
+  "secrets": "external-files",
+  "minimum": {"cpu": 4, "memoryMiB": 8192, "freeStorageMiB": 20480},
+  "capacityEvidence": "REQUIRES_TARGET_MEASUREMENT",
+  "operationalActivation": false
+}

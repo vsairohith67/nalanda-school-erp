@@ -1,0 +1,171 @@
+{
+  "promptId": "STUDENT-ITEMS-PRIOR-YEAR-CONCESSIONS-1A",
+  "baseline": "104aacc7bd314cae82e60bb02b5c8a965c7ffedd",
+  "files": [
+    {
+      "path": "app/api/backup/route.ts",
+      "baselineSha256": "695cba2a63358e96c4e016be751bdf7db2ad7bb8057f87c6690012090bfd8605",
+      "sha256": "0bd16eaebcaec07f9aa356f35b5d388487750bf1fd2c15bc46b5d629ba5218f0"
+    },
+    {
+      "path": "app/api/prior-year-concessions/[id]/income/route.ts",
+      "baselineSha256": null,
+      "sha256": "f17607e57455c45e444e878bc11f145949d62e83bad6e4b5bf411ff2f6fb60a0"
+    },
+    {
+      "path": "app/api/prior-year-concessions/export/route.ts",
+      "baselineSha256": null,
+      "sha256": "98f28190d5dc72c36f87374c2d002ade44a29cb8358038e205715732abd792af"
+    },
+    {
+      "path": "app/api/prior-year-concessions/route.ts",
+      "baselineSha256": null,
+      "sha256": "df20b16c7ac5c4da7c44c98c5edd5ccfc0b04c1907ab33b9391cfb0da1605c88"
+    },
+    {
+      "path": "app/misc-income/[id]/page.tsx",
+      "baselineSha256": "62cb6564d7b67f1de6db8e30d396f16237e5fce7d86304a5e4b9c6d707b752a5",
+      "sha256": "886ed1e4e53198d21dab6f66b4ca2f1745f27768b633aeefd0f369e758dce8f0"
+    },
+    {
+      "path": "app/misc-income/[id]/print/page.tsx",
+      "baselineSha256": "54b95a8c0ac70b26e4ac2b6828edff7e2def10f80433733665d589d85793bad3",
+      "sha256": "40bef81f25194a0e73fc1a16207a03c6336af3addd438f233b818d5fd76e3b6c"
+    },
+    {
+      "path": "app/misc-income/new/page.tsx",
+      "baselineSha256": "28f8e5709f975ff689a19a3a4326a07becf979a783c0a09f765b2ca2eed60e6a",
+      "sha256": "a1b630fea5beb0697bd881df04dc2c266fc15468b5f54472a4ab3a73044e8077"
+    },
+    {
+      "path": "app/misc-income/page.tsx",
+      "baselineSha256": "ce1d06ec79c1688bfa21eacd728d4888b27f49fb98cdc9554921e148aef7af85",
+      "sha256": "652e59acdd374ce5f354761e7c560685af45620ea1b099a4200e39e8ce9d74a4"
+    },
+    {
+      "path": "app/prior-year-concessions/page.tsx",
+      "baselineSha256": null,
+      "sha256": "81f93ee013687e7997bfa4bd77b8b00a481d2b8f15fd0aa0526e450dd271bc99"
+    },
+    {
+      "path": "components/misc-income-form.tsx",
+      "baselineSha256": "8cfb8c2f7e2624207d6aff6dee81856dff0499b4d46251ecc20d0f054a9a83f7",
+      "sha256": "a5bb15749606fdafbaa5a1aea65f739b9210b8dc942d6e3dde59861744e4c9be"
+    },
+    {
+      "path": "components/prior-year-case-preparation.tsx",
+      "baselineSha256": null,
+      "sha256": "fa6ace840a07e9fe1468bae21b822fb11c281d2324a96c9fddfed246b779953b"
+    },
+    {
+      "path": "components/prior-year-concessions-workspace.module.css",
+      "baselineSha256": null,
+      "sha256": "3691b2fd2b06e26476d50d262af1b48f36ba8356a1ddb22b23559c862e860dcb"
+    },
+    {
+      "path": "components/prior-year-concessions-workspace.tsx",
+      "baselineSha256": null,
+      "sha256": "bd89c45da4a4eceb6f08c717ef9ba98d1ab1f9f9e37a924111d5588e51e5e813"
+    },
+    {
+      "path": "config/release-feature-flags.json",
+      "baselineSha256": "0dd27692665991b1476b9bd12eda12ffa088e1c9363243081928ccb5158872df",
+      "sha256": "fbd3cf51786bfd32a0b466a88bbf258e5c1362376b87a58b6306a920c50ecdc7"
+    },
+    {
+      "path": "deploy/portable/compose.yml",
+      "baselineSha256": "6fdfa08c3932013d2a1fb99bff0acb844e92bde88b16d67f774337985a84beaf",
+      "sha256": "1639c04c9dae8f08f14863303a065433f5d4c545732bfe5a648725d06bb5b4f4"
+    },
+    {
+      "path": "lib/backup.ts",
+      "baselineSha256": "80b5ab5cb92ddaef237fc7d9aa67ad08bd72279a6f34d06437c4518fcbf71c7a",
+      "sha256": "54c47eba18a5a30427e988d73bf48a1aab714431cc3947f3f8cfb54ff5de7ec2"
+    },
+    {
+      "path": "lib/cloud-backup-versions.ts",
+      "baselineSha256": "df582234f0e337f53779d97ea07271d25326da98a9c173ba7fcb3ae699144a51",
+      "sha256": "ffd3bf4c399c1ab4b2fe7a5f93fd60b79b5db0b9e99c6555f7aebe5792a0579f"
+    },
+    {
+      "path": "lib/iam/permission-governance.ts",
+      "baselineSha256": "486f742ad9adf49d8b8116eaee51984eb040080920c8797db6381db3aa920434",
+      "sha256": "58113eb5237efa0d9e2ec3e0a07316f0d97c10e7b6b8cc27a7837418c22b8537"
+    },
+    {
+      "path": "lib/misc-income.ts",
+      "baselineSha256": "26b8ea67fe30d418749e0f7c7ecae69287abb63079a19125414580b5c480ab71",
+      "sha256": "dd40cc4425ff35e61020f40188e02c0d0960004625d623fc32126e42ee6d3125"
+    },
+    {
+      "path": "lib/permissions.ts",
+      "baselineSha256": "15e7eef98984e365280ad681306e36205edf0e6998c34669f8f6b8bb1d4c30ad",
+      "sha256": "bf073448147d21fbf73ece034e690d06d6d6755e8914b4d2cb1bf2a75b02c807"
+    },
+    {
+      "path": "lib/prior-year-concession-backup.ts",
+      "baselineSha256": null,
+      "sha256": "cf75bfcb60a98435a8e9e25fb91242d6f857b0cdc2f95970ec96db4de5b3a133"
+    },
+    {
+      "path": "lib/prior-year-concession-policy.ts",
+      "baselineSha256": null,
+      "sha256": "995a6e46f6e64996193acdf140b1d1fe9a292faf4a738c504f6728f398e37b33"
+    },
+    {
+      "path": "lib/prior-year-concessions.ts",
+      "baselineSha256": null,
+      "sha256": "c20aa17af5859a3ff7edd3b6fcd87047d6d06041ca766ff0fb9ffda4e040c4d5"
+    },
+    {
+      "path": "lib/public-website-routing.ts",
+      "baselineSha256": "d82ee83b1afea042abce1211c540822c7fde5ec9465f47d7fcfa9d9106161a32",
+      "sha256": "9ebadbd2d6204bc4fa99e8e14edeea23610ac29a50adb27d34fa6147b81052f1"
+    },
+    {
+      "path": "lib/release-feature-flag-runtime.ts",
+      "baselineSha256": "2aee26d6cfafa142d66f0ad7068371d7b9f9e6340334978f44c4f7b2e59ce757",
+      "sha256": "eb25176f3d3f8142f0e27c092a21bef9bc8fb4342eb839a38e20c3cd5e318359"
+    },
+    {
+      "path": "lib/restore-database.ts",
+      "baselineSha256": "5eb6ecec56e2eb927592887999b0f723ffdac69bde49f53c49a5046548673d11",
+      "sha256": "02bd2c3fc1cf0b2488580c8d2a8e9c4d476c2be57f60300a13454ce5a8903f39"
+    },
+    {
+      "path": "lib/restore.ts",
+      "baselineSha256": "47f6a2297e3638ca6efa9035b3de36816d7356391ba1a7ad4707d171e3586509",
+      "sha256": "4592cef1b962835a1cbb262f02c37394e4816c7a7a7793a153847f6ff985262a"
+    },
+    {
+      "path": "prisma/migrations/20260908220000_student_items_prior_year_concessions_1a/migration.sql",
+      "baselineSha256": null,
+      "sha256": "bc5c479f4f5b48d0c2f921182123f09669684a2230cc239a864570236746f23e"
+    },
+    {
+      "path": "prisma/postgresql/migrations/20260908220000_student_items_prior_year_concessions_1a/migration.sql",
+      "baselineSha256": null,
+      "sha256": "7872c21c78b9a75cad3966059ded4490e656ed43b066e1b6e5128a35f4767999"
+    },
+    {
+      "path": "prisma/postgresql/schema.prisma",
+      "baselineSha256": "741f5893cb0352a75234de9a430445392897085136c198f5c445e96b2d17e6ff",
+      "sha256": "8e9871caa91b30da7665945b84ac2ab75fa768e843c4d03c2d01280c2f9e2679"
+    },
+    {
+      "path": "prisma/postgresql/trigger-equivalents.sql",
+      "baselineSha256": "11fa935d830e694199041a4421fd4c7f546df7f28cd6a3c82f3c8572c195479e",
+      "sha256": "d6ce9824a0d9e036723dae066895cd1efad3db3ac4343b5361c3d960a3eb49b7"
+    },
+    {
+      "path": "prisma/postgresql/trigger-manifest.json",
+      "baselineSha256": "db931a69a0dccd5f73abac5edc005d825594feb5b653a0740bc7261774ca5ecf",
+      "sha256": "0f44a56781fd9f145168a76193f34581f7a803342575356b31d4d8b707ce6d13"
+    },
+    {
+      "path": "prisma/schema.prisma",
+      "baselineSha256": "e79052c5e9f2620bf3a8e176d3713fc0b5bd83c87f989385429160242f5f98c4",
+      "sha256": "3beea193a4d2b9ec7264c8bd6a23bdfa9a095d295235b3e541285fe47d526490"
+    }
+  ]
+}

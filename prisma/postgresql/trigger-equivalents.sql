@@ -2370,6 +2370,51 @@ BEFORE UPDATE ON "ParentMeetingPreference"
 FOR EACH ROW
 EXECUTE FUNCTION "nalanda_trigger_12b1f4c2ff276554e6f0"();
 
+-- SQLite trigger parity: Payment_prior_year_version_delete
+CREATE FUNCTION "nalanda_trigger_cfae9b61f472806e8cc1"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  UPDATE "PriorYearLiability" SET version = version + 1 WHERE "studentId" = OLD."studentId";
+  RETURN OLD;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "Payment_prior_year_version_delete"
+AFTER DELETE ON "Payment"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_cfae9b61f472806e8cc1"();
+
+-- SQLite trigger parity: Payment_prior_year_version_insert
+CREATE FUNCTION "nalanda_trigger_7c2bfb7fc6a50befba9a"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  UPDATE "PriorYearLiability" SET version = version + 1 WHERE "studentId" = NEW."studentId";
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "Payment_prior_year_version_insert"
+AFTER INSERT ON "Payment"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_7c2bfb7fc6a50befba9a"();
+
+-- SQLite trigger parity: Payment_prior_year_version_update
+CREATE FUNCTION "nalanda_trigger_10c2e2012bdfc984a544"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  UPDATE "PriorYearLiability" SET version = version + 1 WHERE "studentId" = OLD."studentId" OR "studentId" = NEW."studentId";
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "Payment_prior_year_version_update"
+AFTER UPDATE ON "Payment"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_10c2e2012bdfc984a544"();
+
 -- SQLite trigger parity: PayrollComponentResult_no_approved_delete
 CREATE FUNCTION "nalanda_trigger_cc297c78a74ba0c55846"() RETURNS trigger
 LANGUAGE plpgsql
@@ -2488,6 +2533,91 @@ CREATE TRIGGER "PayslipVersion_no_update"
 BEFORE UPDATE ON "PayslipVersion"
 FOR EACH ROW
 EXECUTE FUNCTION "nalanda_trigger_634d2050225eb450414a"();
+
+-- SQLite trigger parity: PriorYearConcessionEvent_delete_immutable
+CREATE FUNCTION "nalanda_trigger_f898de2a5d5638e95462"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'PRIOR_YEAR_IMMUTABLE_EVIDENCE';
+  END IF;
+  RETURN OLD;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "PriorYearConcessionEvent_delete_immutable"
+BEFORE DELETE ON "PriorYearConcessionEvent"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_f898de2a5d5638e95462"();
+
+-- SQLite trigger parity: PriorYearConcessionEvent_update_immutable
+CREATE FUNCTION "nalanda_trigger_43a734641050862a82e6"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'PRIOR_YEAR_IMMUTABLE_EVIDENCE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "PriorYearConcessionEvent_update_immutable"
+BEFORE UPDATE ON "PriorYearConcessionEvent"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_43a734641050862a82e6"();
+
+-- SQLite trigger parity: PriorYearLiability_verified_identity
+CREATE FUNCTION "nalanda_trigger_8120cf3a2e6fc125e866"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF (OLD."status" = 'VERIFIED' AND (NEW."studentId" IS DISTINCT FROM OLD."studentId" OR NEW."sourceYear" IS DISTINCT FROM OLD."sourceYear" OR NEW."operatingYear" IS DISTINCT FROM OLD."operatingYear" OR NEW."openingAmount" IS DISTINCT FROM OLD."openingAmount" OR NEW."existingCredits" IS DISTINCT FROM OLD."existingCredits" OR NEW."sourceEnrollmentId" IS DISTINCT FROM OLD."sourceEnrollmentId" OR NEW."sourceReferencesJson" IS DISTINCT FROM OLD."sourceReferencesJson" OR NEW."provenance" IS DISTINCT FROM OLD."provenance" OR NEW."preparerId" IS DISTINCT FROM OLD."preparerId" OR NEW."verifierId" IS DISTINCT FROM OLD."verifierId" OR NEW."verifiedAt" IS DISTINCT FROM OLD."verifiedAt" OR NEW."status" IS DISTINCT FROM OLD."status")) THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'VERIFIED_LIABILITY_IMMUTABLE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "PriorYearLiability_verified_identity"
+BEFORE UPDATE ON "PriorYearLiability"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_8120cf3a2e6fc125e866"();
+
+-- SQLite trigger parity: PriorYearPaymentAttribution_delete_immutable
+CREATE FUNCTION "nalanda_trigger_db18b365d7bf40e9dd6a"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'PRIOR_YEAR_IMMUTABLE_EVIDENCE';
+  END IF;
+  RETURN OLD;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "PriorYearPaymentAttribution_delete_immutable"
+BEFORE DELETE ON "PriorYearPaymentAttribution"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_db18b365d7bf40e9dd6a"();
+
+-- SQLite trigger parity: PriorYearPaymentAttribution_update_immutable
+CREATE FUNCTION "nalanda_trigger_0d42fc1fa9659655d0e7"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'PRIOR_YEAR_IMMUTABLE_EVIDENCE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "PriorYearPaymentAttribution_update_immutable"
+BEFORE UPDATE ON "PriorYearPaymentAttribution"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_0d42fc1fa9659655d0e7"();
 
 -- SQLite trigger parity: safe_exit_consent_no_delete
 CREATE FUNCTION "nalanda_trigger_5094c673cd61c94b2dc3"() RETURNS trigger
@@ -3438,3 +3568,37 @@ CREATE TRIGGER "StaffPayslipRequestMonth_no_delete"
 BEFORE DELETE ON "StaffPayslipRequestMonth"
 FOR EACH ROW
 EXECUTE FUNCTION "nalanda_trigger_d180f7a115aa74e3fc6d"();
+
+-- SQLite trigger parity: StudentItemReceiptSnapshot_delete_immutable
+CREATE FUNCTION "nalanda_trigger_d551d4c0c9ca00062e9b"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'PRIOR_YEAR_IMMUTABLE_EVIDENCE';
+  END IF;
+  RETURN OLD;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "StudentItemReceiptSnapshot_delete_immutable"
+BEFORE DELETE ON "StudentItemReceiptSnapshot"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_d551d4c0c9ca00062e9b"();
+
+-- SQLite trigger parity: StudentItemReceiptSnapshot_update_immutable
+CREATE FUNCTION "nalanda_trigger_53f0664d476eb58a6ef6"() RETURNS trigger
+LANGUAGE plpgsql
+AS $nalanda_trigger$
+BEGIN
+  IF TRUE THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'PRIOR_YEAR_IMMUTABLE_EVIDENCE';
+  END IF;
+  RETURN NEW;
+END;
+$nalanda_trigger$;
+
+CREATE TRIGGER "StudentItemReceiptSnapshot_update_immutable"
+BEFORE UPDATE ON "StudentItemReceiptSnapshot"
+FOR EACH ROW
+EXECUTE FUNCTION "nalanda_trigger_53f0664d476eb58a6ef6"();

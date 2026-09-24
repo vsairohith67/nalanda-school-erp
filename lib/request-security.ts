@@ -101,6 +101,32 @@ export async function requestBodyTooLarge(request: BodyLimitedRequest) {
   }
 }
 
+// Admit the certificate workbook before Next's route adapter receives a partial stream.
+// This does not relax the shared JSON budget or any other upload surface.
+export async function certificateUploadAdmission(request: BodyLimitedRequest): Promise<{ status: number; error: string } | null> {
+  if (request.method !== "POST" || request.nextUrl.pathname !== "/api/certificates/bulk" || !request.headers.get("content-type")?.toLowerCase().startsWith("multipart/form-data;")) return null;
+  const maximum = 1024 * 1024 + 16 * 1024;
+  const length = request.headers.get("content-length");
+  if (length && (!/^\d{1,12}$/.test(length) || Number(length) > maximum)) return { status: 413, error: "Workbook upload exceeds the size limit." };
+  const reader = request.clone().body?.getReader();
+  if (!reader) return { status: 400, error: "Workbook upload is empty." };
+  let timer: ReturnType<typeof setTimeout> | undefined, size = 0;
+  try {
+    return await Promise.race([
+      (async () => {
+        while (true) {
+          const part = await reader.read();
+          if (part.done) return length && Number(length) !== size ? { status: 400, error: "Workbook upload is incomplete." } : null;
+          size += part.value.byteLength;
+          if (size > maximum) return { status: 413, error: "Workbook upload exceeds the size limit." };
+        }
+      })(),
+      new Promise<{ status: number; error: string }>(resolve => { timer = setTimeout(() => resolve({ status: 408, error: "Workbook upload timed out." }), 10_000); })
+    ]);
+  } catch { return { status: 400, error: "Workbook upload could not be read." }; }
+  finally { clearTimeout(timer); void reader.cancel().catch(() => undefined); }
+}
+
 export async function requestJsonBudgetIssue(request: BodyLimitedRequest) {
   if (!isUnsafeMethod(request.method)) return null;
   const type = request.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase();

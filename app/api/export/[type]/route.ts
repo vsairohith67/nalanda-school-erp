@@ -1,3 +1,5 @@
+import { studentExchangeScope, scopedStudentRow, STUDENT_MASTER_COLUMNS } from "@/lib/student-export-scope";
+import { BULK_EXPORTS_FEATURE, requireOperationalReleaseFeatureForApi } from "@/lib/release-feature-flag-runtime";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getPendingDues } from "@/lib/data";
@@ -64,6 +66,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ typ
   const contract = EXPORTS[type];
   const auth = await requireApiPermission(contract.permission);
   if (auth.response) return auth.response;
+  if (type === "students") {
+    if (["PARENT", "TEACHER", "VIEWER", "ACCOUNTANT"].includes(auth.user.role)) return privateFinanceJson({ error: "Student master export scope unavailable." }, { status: 403 });
+    const denied = requireOperationalReleaseFeatureForApi(BULK_EXPORTS_FEATURE); if (denied) return denied;
+  }
   const sp = request.nextUrl.searchParams;
   try {
     const settings = await getSchoolSettings(prisma);
@@ -74,8 +80,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ typ
       }, { status: 409 });
     }
     const dateKey = new Date().toISOString().slice(0, 10);
-    const filename = `nalanda-${contract.filename}-${scope || dateKey}.csv`;
-    const fields = rows.length ? Object.keys(rows[0]) : [];
+    const filename = type === "students" ? `nalanda-student-master-${sp.get("academicYear") || "all-years"}-${dateKey}.csv` : `nalanda-${contract.filename}-${scope || dateKey}.csv`;
+    const fields = rows.length ? Object.keys(rows[0]) : type === "students" ? STUDENT_MASTER_COLUMNS : [];
     await logFinanceExport(prisma, {
       actor: auth.user,
       exportType: type,
@@ -86,7 +92,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ typ
       scope,
       filename
     });
-    return new NextResponse(toCsv(rows), {
+    return new NextResponse(type === "students" && !rows.length ? STUDENT_MASTER_COLUMNS.join(",") + "\r\n" : toCsv(rows), {
       headers: {
         "content-type": "text/csv; charset=utf-8",
         "content-disposition": `attachment; filename="${filename}"`,
@@ -111,8 +117,9 @@ async function buildExportRows(
   settings: Awaited<ReturnType<typeof getSchoolSettings>>
 ) {
   if (type === "students") {
+    const filter = studentExchangeScope(sp);
     const rows = await prisma.student.findMany({
-      where: { deletedAt: null },
+      where: filter.where,
       select: {
         academicYear: true,
         admissionNo: true,
@@ -121,14 +128,15 @@ async function buildExportRows(
         section: true,
         rollNo: true,
         status: true,
-        studentType: true
+        studentType: true,
+        academicYearEnrollments: { where: filter.academicYear ? { academicYear: filter.academicYear } : { id: "__NO_HISTORY_REQUESTED__" }, select: { academicYear: true, className: true, section: true, rollNo: true, status: true } }
       },
-      orderBy: { studentName: "asc" },
+      orderBy: [{ studentName: "asc" }, { admissionNo: "asc" }],
       take: FINANCE_EXPORT_ROW_LIMIT + 1
     });
     return {
-      scope: settings.academicYear,
-      rows: rows.map(studentMasterExportRow)
+      scope: filter.auditScope,
+      rows: rows.map(row => studentMasterExportRow(scopedStudentRow(row, filter.academicYear)))
     };
   }
 

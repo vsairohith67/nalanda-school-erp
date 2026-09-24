@@ -50,6 +50,11 @@ function client(options: { existingStudent?: boolean; possibleStudents?: number 
 const batch = { workbookSha256: "a".repeat(64), templateVersion: "1.0" };
 
 describe("governed onboarding dry-run planning", () => {
+  it("does not let a country prefix bypass national mobile validation", async () => {
+    const input=rows(); input.students[0].Phone="+91 12345 67890";
+    const plan=await createDryRunPlan(client(),batch,input);
+    expect(plan.issues.some(i=>i.code==="PHONE_INVALID"&&i.sheet==="Students")).toBe(true);
+  });
   it("builds a deterministic, all-or-nothing plan without activating accounts", async () => {
     const first = await createDryRunPlan(client(), batch, rows());
     const second = await createDryRunPlan(client(), batch, rows());

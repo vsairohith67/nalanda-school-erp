@@ -17,6 +17,8 @@ on:
       - "lib/security-resilience.ts"
       - "lib/trusted-client.ts"
       - "scripts/harden-cross-platform-generated-project.mjs"
+      - "scripts/qa-ux-native-screen-content.ts"
+      - "tests/bulk-ci-runtime.test.ts"
       - "config/release-feature-flags.json"
       - ".env.example"
       - "package.json"
@@ -61,6 +63,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with: { version: 11.21.0 }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -95,7 +98,7 @@ jobs:
           pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
           Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db
       - run: pnpm git:safety-check
-      - run: pnpm audit --ignore-registry-errors --prod --audit-level high
+      - run: pnpm audit --prod --audit-level high
       - run: pnpm security:resilience:acceptance
       - name: Route and lifecycle inventory
         run: |
@@ -124,6 +127,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with: { version: 11.21.0 }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -143,11 +147,18 @@ jobs:
         working-directory: apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis
         run: Get-Content SHA256SUMS.txt | ForEach-Object { $parts = $_ -split ' \*', 2; if ((Get-FileHash -Algorithm SHA256 -LiteralPath $parts[1]).Hash -ne $parts[0]) { throw "Windows package checksum mismatch" } }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ github.event.repository.private == true }}
         with:
           name: unsigned-windows-nsis
           path: |
             apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/*.exe
             apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-package-checksums
+          path: apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 7
 
@@ -159,6 +170,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with: { version: 11.21.0 }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -267,6 +279,8 @@ jobs:
             exit 1
           fi
           adb_cmd() { timeout 60 "$ADB" "$@"; }
+          # Retain synthetic launch diagnostics even when readiness fails early.
+          trap 'timeout 10 "$ADB" logcat -d -t 800 AndroidRuntime:E chromium:E "*:S" > tmp/platform-review/android-launch-errors.txt || true' EXIT
           for attempt in $(seq 1 90); do
             if [ "$(adb_cmd shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then break; fi
             if [ "$attempt" = "90" ]; then cat "$EMULATOR_LOG"; exit 1; fi
@@ -280,20 +294,64 @@ jobs:
           sleep 4
           adb_cmd shell dumpsys activity activities > tmp/platform-review/android-activity-state.txt
           grep -E -m1 '(topResumedActivity=|ResumedActivity:|mResumedActivity:)' tmp/platform-review/android-activity-state.txt | grep -F "$PACKAGE"
-          adb_cmd shell uiautomator dump /sdcard/px1a-window.xml
-          adb_cmd pull /sdcard/px1a-window.xml tmp/platform-review/android-window.xml
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-phone-portrait.png
-          cat tmp/platform-review/android-window.xml
-          if ! grep -Eq 'Nalanda|Welcome back|App PIN' tmp/platform-review/android-window.xml; then
-            grep -F 'android.webkit.WebView' tmp/platform-review/android-window.xml
+          # A resumed Activity can precede its accessibility root. Require a fresh,
+          # nonempty tree for this package; a dump command's exit code alone is insufficient.
+          ui_ready=0
+          ui_deadline=$((SECONDS + 120))
+          while [ "$SECONDS" -lt "$ui_deadline" ]; do
+            if timeout 5 "$ADB" shell rm -f /sdcard/px1a-window.xml &&
+               rm -f tmp/platform-review/android-window.xml &&
+               timeout 10 "$ADB" shell uiautomator dump /sdcard/px1a-window.xml &&
+               timeout 5 "$ADB" shell test -s /sdcard/px1a-window.xml &&
+               timeout 5 "$ADB" pull /sdcard/px1a-window.xml tmp/platform-review/android-window.xml; then
+              if grep -q '<hierarchy' tmp/platform-review/android-window.xml &&
+                 grep -Fq "package=\"$PACKAGE\"" tmp/platform-review/android-window.xml &&
+                 grep -Eq 'Welcome back|App PIN' tmp/platform-review/android-window.xml; then
+                ui_ready=1
+                break
+              fi
+            fi
+            sleep 2
+          done
+          if [ "$ui_ready" -ne 1 ]; then
+            echo 'ANDROID_PIN_CONTENT_NOT_READY' >&2
+            exit 1
           fi
-          adb_cmd shell input tap 540 900
+          # FLAG_SECURE deliberately masks screenshot pixels. Keep it enabled;
+          # assert live PIN content in every state and portrait masking before opening the OS keyboard.
+          capture_android() {
+            local output="$1" xml="${1%.png}.xml"
+            local deadline=$((SECONDS + 60))
+            while [ "$SECONDS" -lt "$deadline" ]; do
+              rm -f "$output" "$xml"
+              if timeout 5 "$ADB" shell rm -f /sdcard/px1a-capture.xml &&
+                 timeout 10 "$ADB" shell uiautomator dump /sdcard/px1a-capture.xml &&
+                 timeout 5 "$ADB" pull /sdcard/px1a-capture.xml "$xml" &&
+                 grep -Fq "package=\"$PACKAGE\"" "$xml" &&
+                 grep -Eq 'Welcome back|App PIN' "$xml" &&
+                 adb_cmd exec-out screencap -p > "$output"; then
+                if [[ "$output" == *phone-portrait.png ]]; then
+                  node node_modules/tsx/dist/cli.mjs scripts/qa-ux-native-screen-content.ts "$output" protected || return 1
+                fi
+                # The OS keyboard may legitimately appear in subsequent protected captures.
+                return 0
+              fi
+              sleep 2
+            done
+            echo 'ANDROID_PIN_OR_PROTECTED_CAPTURE_NOT_READY' >&2
+            return 1
+          }
+          capture_android tmp/platform-review/android-synthetic-phone-portrait.png
+          cat tmp/platform-review/android-window.xml
+          # Tap the observed PIN input, not a guessed screen coordinate.
+          read PIN_X PIN_Y < <(python3 -c 'import re,sys,xml.etree.ElementTree as E; n=next(n for n in E.parse(sys.argv[1]).iter("node") if n.get("class")=="android.widget.EditText" and n.get("password")=="true"); x1,y1,x2,y2=map(int,re.findall(r"\d+",n.attrib["bounds"])); print((x1+x2)//2,(y1+y2)//2)' tmp/platform-review/android-synthetic-phone-portrait.xml)
+          adb_cmd shell input tap "$PIN_X" "$PIN_Y"
           sleep 1
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-soft-keyboard.png
+          capture_android tmp/platform-review/android-synthetic-soft-keyboard.png
           adb_cmd shell settings put system accelerometer_rotation 0
           adb_cmd shell settings put system user_rotation 1
           sleep 2
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-landscape.png
+          capture_android tmp/platform-review/android-synthetic-landscape.png
           adb_cmd shell input keyevent KEYCODE_HOME
           adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
           adb_cmd shell input keyevent KEYCODE_BACK
@@ -305,13 +363,13 @@ jobs:
           adb_cmd shell wm density 160
           adb_cmd shell settings put system user_rotation 0
           sleep 2
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-tablet.png
+          capture_android tmp/platform-review/android-synthetic-tablet.png
           adb_cmd shell svc wifi disable
           adb_cmd shell svc data disable || true
           adb_cmd shell am force-stop "$PACKAGE"
           adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
           sleep 2
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-offline.png
+          capture_android tmp/platform-review/android-synthetic-offline.png
           adb_cmd shell svc wifi enable
           adb_cmd shell svc data enable || true
           adb_cmd shell wm size reset
@@ -326,11 +384,18 @@ jobs:
         working-directory: apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk
         run: sha256sum --check SHA256SUMS.txt
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ github.event.repository.private == true }}
         with:
           name: unsigned-android-debug-apk
           path: |
             apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
             apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-package-checksums
+          path: apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 7
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -349,6 +414,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with: { version: 11.21.0 }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -371,17 +437,34 @@ jobs:
           xcrun simctl list devices available -j > "$RUNNER_TEMP/px1a-devices.json"
           IPHONE_UDID="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next(x["udid"] for xs in d["devices"].values() for x in xs if x.get("isAvailable") and x["name"].startswith("iPhone")))' "$RUNNER_TEMP/px1a-devices.json")"
           IPAD_UDID="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next(x["udid"] for xs in d["devices"].values() for x in xs if x.get("isAvailable") and x["name"].startswith("iPad")))' "$RUNNER_TEMP/px1a-devices.json")"
+          # simctl launch reports process launch, not completed WebView rendering.
+          # Reject the observed blank captures; visual/content review stays required.
+          capture_ios() {
+            local udid="$1" output="$2"
+            local deadline=$((SECONDS + 60))
+            while [ "$SECONDS" -lt "$deadline" ]; do
+              rm -f "$output"
+              if xcrun simctl io "$udid" screenshot "$output" &&
+                 node node_modules/tsx/dist/cli.mjs scripts/qa-ux-native-screen-content.ts "$output"; then
+                return 0
+              fi
+              sleep 2
+            done
+            echo 'IOS_NONBLANK_CAPTURE_NOT_READY' >&2
+            return 1
+          }
           for UDID in "$IPHONE_UDID" "$IPAD_UDID"; do
             xcrun simctl boot "$UDID" 2>/dev/null || true
             xcrun simctl bootstatus "$UDID" -b
             xcrun simctl install "$UDID" "$APP_PATH"
+            xcrun simctl ui "$UDID" appearance light
             xcrun simctl launch --terminate-running-process "$UDID" com.nalandaps.erp
             sleep 3
-            xcrun simctl io "$UDID" screenshot "tmp/platform-review/ios-synthetic-$UDID-light.png"
+            capture_ios "$UDID" "tmp/platform-review/ios-synthetic-$UDID-light.png"
             xcrun simctl ui "$UDID" appearance dark
             xcrun simctl launch --terminate-running-process "$UDID" com.nalandaps.erp
             sleep 2
-            xcrun simctl io "$UDID" screenshot "tmp/platform-review/ios-synthetic-$UDID-dark.png"
+            capture_ios "$UDID" "tmp/platform-review/ios-synthetic-$UDID-dark.png"
             xcrun simctl openurl "$UDID" 'nalandaps-erp://auth/callback?code=invalid&state=invalid&request_id=invalid'
             xcrun simctl terminate "$UDID" com.nalandaps.erp
             xcrun simctl launch "$UDID" com.nalandaps.erp
@@ -396,9 +479,16 @@ jobs:
         working-directory: apps/nalanda-cross-platform/src-tauri/gen/apple/build
         run: shasum -a 256 --check SHA256SUMS.txt
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ github.event.repository.private == true }}
         with:
           name: unsigned-ios-simulator
           path: apps/nalanda-cross-platform/src-tauri/gen/apple/build
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ios-package-checksums
+          path: apps/nalanda-cross-platform/src-tauri/gen/apple/build/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 7
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

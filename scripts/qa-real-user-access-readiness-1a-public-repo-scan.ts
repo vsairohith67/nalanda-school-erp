@@ -14,9 +14,12 @@ const required = [
   "tests/real-user-access-readiness-1a.test.ts"
 ];
 const prohibitedExtensions = new Set([".db", ".sqlite", ".sqlite3", ".bak", ".dump", ".zip", ".7z", ".rar", ".pem", ".key", ".pfx", ".p12", ".exe", ".msi", ".msix", ".apk", ".ipa", ".png", ".jpg", ".jpeg", ".gif", ".svg"]);
-const textExtensions = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs", ".json", ".md", ".sql", ".yml", ".yaml", ".toml", ".txt"]);
+const textExtensions = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs", ".json", ".md", ".sql", ".yml", ".yaml", ".toml", ".txt", ".ps1"]);
 const allowedRoots = ["app", "components", "config", "deploy/portable", "docs", "lib", "prisma", "scripts", "tests", "tools/release-evidence", ".github/workflows"];
-const allowedRootFiles = new Set(["middleware.ts", "package.json", "pnpm-lock.yaml"]);
+const allowedRootFiles = new Set(["apps/nalanda-biometric-bridge/package.json","apps/nalanda-cross-platform/package.json","middleware.ts","package.json","pnpm-lock.yaml","Dockerfile","deploy/portable/Caddyfile","next.config.ts","tsconfig.tools-qa-support.json","pnpm-workspace.yaml","vitest.config.ts"]);
+// RECOVERY-WINDOWS-AUTH-LIFECYCLE-1A admits these exact reviewed source files.
+// Binary/secret/contact checks below still apply; no package/cache subtree is admitted.
+for (const file of ["src-tauri/Cargo.lock", "src-tauri/Cargo.toml", "src/App.tsx", "src/auth.ts", "src/auth-lifecycle.test.ts"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
 const secretPatterns: Array<[string, RegExp]> = [
   ["private-key", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
   ["github-token", /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b/],

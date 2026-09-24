@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PageHeader, StatusBadge } from "@/components/ui";
+import { TechnicalTelemetryPanel } from "@/components/technical-telemetry-panel";
 import type { TechnicalOperationsDashboard as Dashboard, OperationalStatus } from "@/lib/technical-operations-types";
 
 type Permissions = { full: boolean; runChecks: boolean; manageAlerts: boolean; manageIncidents: boolean; manageMaintenance: boolean; manageClientPolicy: boolean };
@@ -9,7 +10,7 @@ type AlertRow = { publicKey: string; domain: string; severity: string; status: s
 type IncidentRow = { publicKey: string; incidentNumber: string; severity: string; status: string; titleSafe: string; summarySafe: string; updatedAt: string; version: number };
 type MaintenanceRow = { publicKey: string; domain: string; status: string; reasonSafe: string; expectedImpactSafe: string; plannedStartAt: string; plannedEndAt: string; version: number };
 
-export function TechnicalOperationsDashboard({ dashboard, permissions }: { dashboard: Dashboard; permissions: Permissions }) {
+export function TechnicalOperationsDashboard({ dashboard, permissions, runtimeConfiguration }: { dashboard: Dashboard; permissions: Permissions; runtimeConfiguration?: { telemetry: "PROVIDER_DISABLED" | "DEGRADED" | "LOCAL_ONLY" } }) {
   const alerts = dashboard.alerts as unknown as AlertRow[];
   const incidents = dashboard.incidents as unknown as IncidentRow[];
   const maintenance = dashboard.maintenanceWindows as unknown as MaintenanceRow[];
@@ -39,6 +40,7 @@ export function TechnicalOperationsDashboard({ dashboard, permissions }: { dashb
         <Conclusion title="Deployment readiness" status={dashboard.conclusions.deploymentReadiness} />
         <Conclusion title="Optional providers" status={dashboard.conclusions.optionalProviders} />
       </section>
+      <TechnicalTelemetryPanel full={permissions.full && !dashboard.summaryOnly} state={runtimeConfiguration?.telemetry ?? "PROVIDER_DISABLED"} />
       <section className="card card-pad ops-explanation" aria-labelledby="ops-separation-title">
         <h2 id="ops-separation-title">Why these statuses differ</h2>
         <p>{dashboard.conclusions.explanation}</p>

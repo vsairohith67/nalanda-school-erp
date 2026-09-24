@@ -78,7 +78,7 @@ function validateSurface(surface, errors) {
   const routeSource = sources[0] ?? "";
   const joined = sources.join("\n");
   if (!new RegExp(`export\\s+async\\s+function\\s+${surface.method}\\b`).test(routeSource)) errors.push(`${label}:HTTP_METHOD_NOT_EXPORTED`);
-  if (!/(?:requireApi|requireAcademicReportAccess|optionalOperationsActor|parentMeetingApiAuth|auth\.|auth=|auth\s*=)/.test(routeSource)) errors.push(`${label}:SERVER_AUTH_EVIDENCE_MISSING`);
+  if (!/(?:requireApi|authorizePriorYear|requireAcademicReportAccess|optionalOperationsActor|parentMeetingApiAuth|auth\.|auth=|auth\s*=)/.test(routeSource)) errors.push(`${label}:SERVER_AUTH_EVIDENCE_MISSING`);
   if (!/(?:private[^\n"']*no-store|no-store|PRIVATE_HEADERS|privateFinanceJson)/i.test(routeSource)) errors.push(`${label}:NO_STORE_SOURCE_EVIDENCE_MISSING`);
   const formulaSafeEvidence = /(?:csvCell|safeCsv|csvEscape|formulaSafe|formulaNeutral|spreadsheetFormula|DANGEROUS_CSV|FORMULA_PREFIX)/i.test(joined)
     || joined.includes("/^[=+\\-@]/");
@@ -101,7 +101,12 @@ export function validateBulkExportGovernance() {
 
   const bulk = surfaces.filter((surface) => surface.classification === "BULK_EXPORT");
   const nonBulk = surfaces.filter((surface) => surface.classification === "NOT_A_BULK_EXPORT");
-  const mappedBulkFlag = bulk.filter((surface) => surface.featureFlag === "bulk-exports");
+  const mappedBulkFlag = bulk.filter((surface) => surface.featureFlag === "bulk-exports" || surface.conditionalFeatureFlags?.some(mapping => mapping.featureFlag === "bulk-exports"));
+  for (const surface of surfaces.filter(s => s.conditionalFeatureFlags)) {
+    if (surface.id !== "core-dynamic-exports" || JSON.stringify(surface.conditionalFeatureFlags) !== JSON.stringify([{ parameter: "type", value: "students", featureFlag: "bulk-exports" }])) errors.push("CONDITIONAL_BULK_MAPPING_UNREVIEWED");
+    const source = readBounded(path.join(workspaceRoot, surface.sourcePath));
+    if (!source.includes('type === "students"') || !source.includes('requireOperationalReleaseFeatureForApi(BULK_EXPORTS_FEATURE)')) errors.push("CONDITIONAL_BULK_MAPPING_SOURCE_MISSING");
+  }
   const releaseFlag = manifest.bulkExportFlag;
   if (releaseFlag?.key !== "bulk-exports" || releaseFlag.committedDefaultState !== false || releaseFlag.committedRolloutPercentage !== 0) errors.push("BULK_EXPORT_FLAG_CONTRACT_INVALID");
   if (releaseFlag?.currentMappedSurfaceCount !== mappedBulkFlag.length) errors.push("BULK_EXPORT_FLAG_MAPPING_COUNT_MISMATCH");

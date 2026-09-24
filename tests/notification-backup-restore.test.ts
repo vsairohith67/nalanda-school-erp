@@ -24,7 +24,7 @@ function backup() {
 describe("Prompt 19A backup version 30", () => {
   it("includes all five arrays and excludes passwords, actors, phone numbers, and emails", () => {
     const value = backup();
-    expect(value.metadata.backupVersion).toBe(45);
+    expect(value.metadata.backupVersion).toBe(48);
     for (const key of Object.keys(notificationRows())) expect((value as any)[key]).toHaveLength(1);
     const text = JSON.stringify(value);
     expect(text).not.toContain("passwordHash");
@@ -49,14 +49,14 @@ describe("Prompt 19A backup version 30", () => {
     expect(() => validateNotificationBackupRows(unsafe, { userIds: new Set(["user"]) })).toThrow(/forbidden contact/);
   });
 
-  it("parses version-30 data and keeps version-29 backups compatible without notification arrays", () => {
+  it("restores empty module collections in v48 and rejects unsupported historical format (notification-backup-restore)", () => {
     const current = parseAndValidateBackup(backup());
     expect(current.notificationCampaigns).toHaveLength(1);
     const old: any = backup();
-    old.metadata.backupVersion = 29;
+    expect(() => parseAndValidateBackup({ ...old, metadata: { ...old.metadata, backupVersion: 29 } })).toThrow("BACKUP_SOURCE_CONTRACT_UNSUPPORTED");
     for (const key of Object.keys(notificationRows())) {
-      delete old[key];
-      delete old.metadata.counts[key];
+      old[key] = [];
+      old.metadata.counts[key] = 0;
     }
     const parsed = parseAndValidateBackup(old);
     expect(parsed.notificationTemplates).toEqual([]);

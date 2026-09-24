@@ -16,6 +16,10 @@ type PendingAuthorization = {
 export type NativeTokens = { tokenType: "Bearer"; sessionId: string; tokenVersion: number; deviceKeyVersion: number; accessToken: string; accessExpiresAt: string; refreshToken: string; refreshExpiresAt: string; scopes: string[] };
 export type NativeDataOperation = "CONTEXT" | "REFERENCE_PACK" | "SYNC" | "CONFLICTS" | "LOGOUT";
 
+export function usableNativeAccess(tokens: NativeTokens | null, now = Date.now()) {
+  return tokens !== null && Number.isFinite(Date.parse(tokens.accessExpiresAt)) && Date.parse(tokens.accessExpiresAt) > now;
+}
+
 export const APP_VERSION = "0.1.0";
 const NATIVE_PATHS: Record<NativeDataOperation, string> = {
   CONTEXT: "/api/native/v1/context",
@@ -82,24 +86,39 @@ export async function startNativeAuthorization(vault: VaultSession, deviceLabel:
   await openSystemAuthorization(`${profile.origin}${payload.authorizePath}${separator}proof=${encodeURIComponent(proof)}`);
 }
 
-export async function exchangeNativeCallback(vault: VaultSession, rawUrl: string) {
+export async function exchangeNativeCallback(vault: VaultSession, rawUrl: string, signal?: AbortSignal) {
+  const current = () => { if (signal?.aborted) throw new Error("App locked during authorization. Reconcile before reconnecting."); };
+  current();
   const url = new URL(rawUrl);
   if (url.protocol !== "nalandaps-erp:" || url.hostname !== "auth" || url.pathname !== "/callback") throw new Error("Native callback URL is invalid.");
   const pending = await vault.getSecureJson<PendingAuthorization>(PENDING_KEY);
+  current();
   if (!pending || Date.now() - new Date(pending.createdAt).getTime() > 10 * 60 * 1000) throw new Error("Authorization request has expired.");
   const code = url.searchParams.get("code") ?? ""; const state = url.searchParams.get("state") ?? ""; const requestId = url.searchParams.get("request") ?? "";
   if (!/^[A-Za-z0-9_-]{43}$/.test(code) || state !== pending.state || requestId !== pending.requestId) throw new Error("Authorization callback did not match this app request.");
   const proof = await vault.sign(exchangeProofMessage({ requestId, codeHash: await sha256Hex(code), verifierHash: await sha256Hex(pending.verifier), nonce: pending.nonce, publicDeviceId: pending.publicDeviceId }));
+  current();
   const response = await nativeRequest("AUTH_EXCHANGE", JSON.stringify({ code, verifier: pending.verifier, requestId, nonce: pending.nonce, publicDeviceId: pending.publicDeviceId, proof }), { "x-offline-device-id": pending.publicDeviceId });
+  current();
   const payload = JSON.parse(response.body) as NativeTokens & { code?: string };
   if (response.status !== 200 || !payload.accessToken || !payload.refreshToken) throw new Error(payload.code ?? "Authorization exchange was refused.");
   await vault.setRefreshToken(payload.refreshToken);
+  current();
   await vault.setSecureJson(SESSION_META_KEY, { sessionId: payload.sessionId, tokenVersion: payload.tokenVersion, deviceKeyVersion: payload.deviceKeyVersion, publicDeviceId: pending.publicDeviceId });
+  current();
   await vault.removeSecureJson(PENDING_KEY);
+  current();
   return payload;
 }
 
-export async function refreshNativeTokens(vault: VaultSession) {
+const refreshing = new WeakMap<VaultSession, Promise<NativeTokens>>();
+export function refreshNativeTokens(vault: VaultSession) {
+  const active = refreshing.get(vault); if (active) return active;
+  const request = performNativeRefresh(vault); refreshing.set(vault, request);
+  void request.finally(() => { if (refreshing.get(vault) === request) refreshing.delete(vault); }).catch(() => undefined);
+  return request;
+}
+async function performNativeRefresh(vault: VaultSession) {
   const refreshToken = await vault.refreshToken();
   const meta = await vault.getSecureJson<{ sessionId: string; tokenVersion: number; deviceKeyVersion: number; publicDeviceId: string }>(SESSION_META_KEY);
   if (!refreshToken || !meta) throw new Error("No refreshable native session is available.");
@@ -135,20 +154,27 @@ export async function nativeSessionRequest(vault: VaultSession, tokens: NativeTo
   });
 }
 
-export async function listenForNativeAuthorization(vault: VaultSession, onTokens: (tokens: NativeTokens) => void, onError: (message: string) => void) {
+export async function listenForNativeAuthorization(vault: VaultSession, onTokens: (tokens: NativeTokens) => void, onError: (message: string) => void, signal?: AbortSignal) {
   let inFlight: string | null = null;
   const handleUrls = async (urls: string[] | null) => {
-    if (!urls) return;
+    if (!urls || signal?.aborted) return;
     const target = urls.find((url) => url.startsWith("nalandaps-erp://auth/callback"));
-    if (!target || inFlight === target || !(await vault.getSecureJson<PendingAuthorization>(PENDING_KEY))) return;
+    if (!target || inFlight) return;
     inFlight = target;
-    try { onTokens(await exchangeNativeCallback(vault, target)); }
-    catch (error) { onError(error instanceof Error ? error.message : "Authorization callback failed."); }
+    try {
+      if (signal?.aborted || !(await vault.getSecureJson<PendingAuthorization>(PENDING_KEY)) || signal?.aborted) return;
+      const tokens = await exchangeNativeCallback(vault, target, signal);
+      if (!signal?.aborted) onTokens(tokens);
+    }
+    catch (error) { if (!signal?.aborted) onError(error instanceof Error ? error.message : "Authorization callback failed."); }
     finally { inFlight = null; }
   };
   const unlisten = await onOpenUrl((urls) => {
     void handleUrls(urls);
   });
-  await handleUrls(await getCurrent());
-  return unlisten;
+  if (signal?.aborted) { unlisten(); return () => {}; }
+  signal?.addEventListener("abort", unlisten, { once: true });
+  try { await handleUrls(await getCurrent()); }
+  catch { unlisten(); signal?.removeEventListener("abort", unlisten); throw new Error("Native callback observation failed."); }
+  return () => { signal?.removeEventListener("abort", unlisten); unlisten(); };
 }

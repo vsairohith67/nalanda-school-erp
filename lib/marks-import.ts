@@ -6,29 +6,8 @@ import { resolveMarksScope, requireMarksTarget } from "@/lib/marks-scope";
 import { validateMarkRow } from "@/lib/marks";
 import { assertNoDelegatedFamilyConflict, marksAuthorityAuditContext, resolveMarksWriteAuthority } from "@/lib/academic-integrity";
 
-export const MARKS_IMPORT_COLUMNS = ["examCode", "className", "section", "subjectName", "componentName", "admissionNumber", "marksObtained", "entryStatus", "remarks"] as const;
-type ParsedRow = Record<(typeof MARKS_IMPORT_COLUMNS)[number], string> & { rowNumber: number };
-
-function parseCsv(text: string) {
-  const rows: string[][] = []; let row: string[] = []; let cell = ""; let quoted = false;
-  for (let index = 0; index < text.length; index += 1) {
-    const char = text[index];
-    if (quoted) { if (char === '"' && text[index + 1] === '"') { cell += '"'; index += 1; } else if (char === '"') quoted = false; else cell += char; continue; }
-    if (char === '"') quoted = true; else if (char === ',') { row.push(cell); cell = ""; } else if (char === '\n') { row.push(cell.replace(/\r$/, "")); rows.push(row); row = []; cell = ""; } else cell += char;
-  }
-  if (quoted) throw new Error("CSV contains an unclosed quoted value.");
-  if (cell || row.length) { row.push(cell.replace(/\r$/, "")); rows.push(row); }
-  return rows.filter((item) => item.some((value) => value.trim()));
-}
-
-export function parseMarksCsv(textValue: unknown): ParsedRow[] {
-  const text = String(textValue ?? "").replace(/^\uFEFF/, "");
-  if (!text.trim()) throw new Error("Choose a non-empty marks CSV file.");
-  if (text.length > 2_000_000) throw new Error("Marks CSV is too large. Split it into smaller files.");
-  const rows = parseCsv(text); const header = rows.shift()?.map((value) => value.trim()) ?? [];
-  if (header.join("|") !== MARKS_IMPORT_COLUMNS.join("|")) throw new Error(`CSV columns must be exactly: ${MARKS_IMPORT_COLUMNS.join(", ")}.`);
-  return rows.map((values, index) => Object.assign(Object.fromEntries(MARKS_IMPORT_COLUMNS.map((column, columnIndex) => [column, String(values[columnIndex] ?? "").trim()])), { rowNumber: index + 2 }) as unknown as ParsedRow);
-}
+export { MARKS_IMPORT_COLUMNS, parseCsv, parseMarksCsv } from "@/lib/marks-import-csv";
+import { MARKS_IMPORT_COLUMNS, parseMarksCsv, type ParsedRow } from "@/lib/marks-import-csv";
 
 async function resolveRows(client: PrismaClient | Prisma.TransactionClient, user: AuthUser, parsed: ParsedRow[]) {
   const output: Array<{ rowNumber: number; row: ParsedRow; assessment: any; student: { id: string; admissionNo: string; studentName: string }; entryStatus: string; marksObtained: Prisma.Decimal | null; remarks: string | null }> = [];
@@ -58,7 +37,7 @@ export async function previewMarksImport(prisma: PrismaClient, user: AuthUser, t
   return { totalRows: parsed.length, validRows: resolved.output.length, errorRows: resolved.errors.length, duplicateRows: resolved.duplicateCount, errors: resolved.errors, rows: resolved.output.map((item) => ({ rowNumber: item.rowNumber, examCode: item.row.examCode, className: item.row.className, section: item.row.section || "Class-wide", subjectName: item.row.subjectName, componentName: item.row.componentName || "Main", admissionNumber: item.student.admissionNo, studentName: item.student.studentName, marksObtained: item.marksObtained?.toString() ?? null, entryStatus: item.entryStatus, remarks: item.remarks })) };
 }
 
-export async function applyMarksImport(prisma: PrismaClient, user: AuthUser, text: unknown, actor: { id: string; name: string }, now = new Date()) {
+export async function applyMarksImport(prisma: PrismaClient, user: AuthUser, text: unknown, actor: { id: string; name: string }, now = new Date(), binding?: { assessmentId: string; academicYear: string; expectedUpdatedAt: string }) {
   const parsed = parseMarksCsv(text);
   const preflight = await resolveRows(prisma, user, parsed);
   if (preflight.errors.length) throw new Error(`Import blocked: ${preflight.errors.length} row(s) failed preview validation.`);
@@ -78,6 +57,15 @@ export async function applyMarksImport(prisma: PrismaClient, user: AuthUser, tex
   return prisma.$transaction(async (tx) => {
     const resolved = await resolveRows(tx, user, parsed);
     if (resolved.errors.length) throw new Error(`Import blocked: ${resolved.errors.length} row(s) failed preview validation.`);
+    if (binding) {
+      if (resolved.output.some(item => item.assessment.id !== binding.assessmentId || item.assessment.academicYear !== binding.academicYear)) throw new Error("Import context mismatch.");
+      const changed = await tx.examAssessment.updateMany({ where: { id: binding.assessmentId, updatedAt: new Date(binding.expectedUpdatedAt), entryStatus: "OPEN" }, data: { updatedAt: now } });
+      if (changed.count !== 1) throw new Error("Assessment changed after preview. Validate again.");
+      for (const item of resolved.output) {
+        const authority = await resolveMarksWriteAuthority(tx, user, { kind: "LEGACY_ASSESSMENT", assessmentId: item.assessment.id, examId: item.assessment.examCycleId, academicYear: item.assessment.academicYear, className: item.assessment.className, section: item.assessment.section, subjectId: item.assessment.timetableSubjectId, subjectName: item.assessment.subjectName, componentName: item.assessment.componentName }, "ENTER_MARKS");
+        await assertNoDelegatedFamilyConflict(tx, user, [item.student.id], authority, `legacy-import:${item.assessment.id}`);
+      }
+    }
     let created = 0; let updated = 0; let unchanged = 0;
     for (const item of resolved.output) {
       const before = await tx.studentMark.findUnique({ where: { assessmentId_studentId: { assessmentId: item.assessment.id, studentId: item.student.id } } });

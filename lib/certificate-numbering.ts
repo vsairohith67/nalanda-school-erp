@@ -32,7 +32,7 @@ export async function allocateCertificateNumber(client: Client, certificateType:
 
 export function validateNumberSeriesInput(input: any) {
   const certificateType = String(input?.certificateType ?? "").toUpperCase() as CertificateType;
-  if (!["BONAFIDE", "STUDY", "CONDUCT", "TRANSFER"].includes(certificateType)) throw new Error("Unsupported certificate type.");
+  if (!["BONAFIDE", "STUDY", "CONDUCT", "TRANSFER", "GRADUATION"].includes(certificateType)) throw new Error("Unsupported certificate type.");
   const nextNumber = Number(input?.nextNumber ?? 1), paddingLength = Number(input?.paddingLength ?? 4);
   if (!Number.isInteger(nextNumber) || nextNumber < 1) throw new Error("Next number must be a positive integer.");
   if (!Number.isInteger(paddingLength) || paddingLength < 1 || paddingLength > 10) throw new Error("Padding length must be from 1 to 10.");

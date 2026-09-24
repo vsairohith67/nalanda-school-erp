@@ -174,7 +174,7 @@ export async function exchangeNativeAuthorization(value: unknown, now = new Date
     const session = await tx.nativeSession.create({ data: { userId: authorization.userId, deviceId: authorization.deviceId, roleAssignmentId: authorization.roleAssignmentId, accessTokenHash: secretHash(accessToken, "access"), refreshTokenHash: secretHash(refreshToken, "refresh"), credentialVersion: authorization.credentialVersion, authorizationVersion: authorization.authorizationVersion, scopesJson: JSON.stringify(NATIVE_SCOPES), accessExpiresAt: new Date(now.getTime() + ACCESS_TTL_MS), refreshExpiresAt: new Date(now.getTime() + REFRESH_TTL_MS), absoluteExpiresAt: new Date(now.getTime() + ABSOLUTE_TTL_MS) } });
     await tx.nativeAuthorizationCode.update({ where: { id: authorization.id }, data: { usedAt: now } });
     await tx.nativeAuthRequest.update({ where: { id: authorization.requestId }, data: { status: "CONSUMED", consumedAt: now } });
-    await logAuthSecurityEvent(tx, { eventType: "NATIVE_SESSION_CREATED", userId: authorization.userId, subjectType: "NATIVE_SESSION", subjectId: session.publicSessionId, details: { rotationVersion: 1, keyVersion: authorization.device.keyVersion } });
+    await logAuthSecurityEvent(tx, { eventType: "NATIVE_SESSION_CREATED", userId: authorization.userId, subjectType: "NATIVE_SESSION", subjectId: session.publicSessionId, details: { requestId: authorization.request.publicRequestId, rotationVersion: 1, keyVersion: authorization.device.keyVersion } });
     return tokenResponse(session.publicSessionId, accessToken, refreshToken, now, 1, authorization.device.keyVersion);
   });
 }
@@ -241,7 +241,8 @@ export async function refreshNativeSession(value: unknown, now = new Date()) {
       const reused = await tx.nativeRefreshTokenHistory.findUnique({ where: { refreshTokenHash: tokenHash } });
       if (reused?.sessionId === row.id) {
         await tx.nativeRefreshTokenHistory.update({ where: { id: reused.id }, data: { status: "REUSED", reusedAt: now } });
-        await tx.nativeSession.update({ where: { id: row.id }, data: { revokedAt: now, revocationReason: "ROTATED_REFRESH_TOKEN_REUSED" } });
+        const revoked = await tx.nativeSession.updateMany({ where: { id: row.id, revokedAt: null }, data: { revokedAt: now, revocationReason: "ROTATED_REFRESH_TOKEN_REUSED" } });
+        if (revoked.count !== 1) throw new NativeAuthError("NATIVE_REFRESH_INVALID_OR_EXPIRED", 401);
         await logAuthSecurityEvent(tx, { eventType: "NATIVE_REFRESH_REUSE_DETECTED", userId: row.userId, subjectType: "NATIVE_SESSION", subjectId: row.publicSessionId, details: { rotationVersion: row.tokenVersion } });
         return { reuseDetected: true as const };
       }
@@ -251,7 +252,8 @@ export async function refreshNativeSession(value: unknown, now = new Date()) {
     const accessToken = opaque(); const nextRefreshToken = opaque(); const nextVersion = row.tokenVersion + 1;
     await tx.nativeRefreshTokenHistory.create({ data: { sessionId: row.id, refreshTokenHash: row.refreshTokenHash, tokenVersion: row.tokenVersion } });
     const refreshExpiresAt = new Date(Math.min(now.getTime() + REFRESH_TTL_MS, row.absoluteExpiresAt.getTime()));
-    await tx.nativeSession.update({ where: { id: row.id }, data: { accessTokenHash: secretHash(accessToken, "access"), refreshTokenHash: secretHash(nextRefreshToken, "refresh"), tokenVersion: nextVersion, accessExpiresAt: new Date(now.getTime() + ACCESS_TTL_MS), refreshExpiresAt, lastSeenAt: now } });
+    const rotated = await tx.nativeSession.updateMany({ where: { id: row.id, revokedAt: null, tokenVersion: row.tokenVersion, refreshTokenHash: row.refreshTokenHash }, data: { accessTokenHash: secretHash(accessToken, "access"), refreshTokenHash: secretHash(nextRefreshToken, "refresh"), tokenVersion: nextVersion, accessExpiresAt: new Date(now.getTime() + ACCESS_TTL_MS), refreshExpiresAt, lastSeenAt: now } });
+    if (rotated.count !== 1) throw new NativeAuthError("NATIVE_REFRESH_INVALID_OR_EXPIRED", 401);
     return { reuseDetected: false as const, tokens: tokenResponse(row.publicSessionId, accessToken, nextRefreshToken, now, nextVersion, row.device.keyVersion, refreshExpiresAt) };
   });
   if (result.reuseDetected) throw new NativeAuthError("NATIVE_REFRESH_REUSE_DETECTED", 401);

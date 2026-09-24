@@ -1,0 +1,24 @@
+.workspace { display: grid; gap: 1.25rem; min-width: 0; }
+.workspace nav, .actions { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+.workspace section { padding: 1.25rem; min-width: 0; }
+.workspace h2 { margin-top: 0; }
+.workspace form, .workspace label { display: grid; gap: .65rem; }
+.workspace form { gap: 1rem; }
+.workspace input, .workspace textarea { width: 100%; max-width: 100%; color: inherit; background: transparent; border: 1px solid currentColor; border-radius: .5rem; padding: .7rem; }
+.workspace button { font: inherit; color: inherit; background: transparent; border: 1px solid currentColor; border-radius: .5rem; padding: .7rem 1rem; min-height: 44px; cursor: pointer; }
+.workspace button:disabled { opacity: .55; cursor: wait; }
+.workspace :focus-visible { outline: 3px solid var(--color-primary, #2563eb); outline-offset: 3px; }
+.workspace dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .75rem; }
+.workspace dd { margin: 0; overflow-wrap: anywhere; }
+.queue { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.queue button { text-align: left; display: grid; gap: .45rem; }
+.queue button[aria-pressed="true"] { outline: 2px solid currentColor; }
+.financialAreas { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1rem; }
+.error { border: 2px solid currentColor; padding: 1rem; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .financialAreas { grid-template-columns: 1fr; } .workspace dl { grid-template-columns: 1fr; } .workspace dd { padding-bottom: .5rem; } .actions button { width: 100%; } }
+
+.workspace dialog:not([open]) { display: none; }
+.workspace dialog { max-width: min(36rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; color: var(--text); background: var(--surface); }
+.workspace dialog::backdrop { background: rgba(0, 0, 0, .55); }
+.workspace input[type="checkbox"] { width: auto; }
+.workspace select { max-width: 100%; min-width: 0; }

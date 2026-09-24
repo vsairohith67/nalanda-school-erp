@@ -2,6 +2,7 @@ import { requirePermission, hasUserPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getTechnicalOperationsDashboard } from "@/lib/technical-operations";
 import { TechnicalOperationsDashboard } from "@/components/technical-operations-dashboard";
+import { portableDiagnosticsConfiguration } from "@/lib/portable-runtime/public-configuration";
 
 export const dynamic = "force-dynamic";
 
@@ -16,5 +17,5 @@ export default async function TechnicalOperationsPage() {
     hasUserPermission(user, "MANAGE_CLIENT_VERSION_POLICY")
   ]);
   const dashboard = await getTechnicalOperationsDashboard(prisma, { summaryOnly: !full });
-  return <TechnicalOperationsDashboard dashboard={dashboard} permissions={{ full, runChecks, manageAlerts, manageIncidents, manageMaintenance, manageClientPolicy }} />;
+  return <TechnicalOperationsDashboard dashboard={dashboard} runtimeConfiguration={portableDiagnosticsConfiguration(process.env)} permissions={{ full, runChecks, manageAlerts, manageIncidents, manageMaintenance, manageClientPolicy }} />;
 }
