@@ -32,12 +32,13 @@ describe("native callback lifetime",()=>{
   let finish!:(v:any)=>void;let started!:()=>void;const entered=new Promise<void>(r=>started=r);
   mock.nativeRequest.mockImplementation(()=>{started();return new Promise(r=>finish=r);});
   const vault={getSecureJson:vi.fn().mockResolvedValue({requestId:"request",state:"state",nonce:"nonce",verifier:"v".repeat(64),publicDeviceId:"device",createdAt:new Date().toISOString()}),sign:vi.fn().mockResolvedValue("proof"),setRefreshToken:vi.fn(),setSecureJson:vi.fn(),removeSecureJson:vi.fn()};
-  const control=new AbortController(),pending=exchangeNativeCallback(vault as any,callback,control.signal);await entered;control.abort();finish({status:200,body:JSON.stringify({accessToken:"private-access",refreshToken:"private-refresh"})});
+  // Generate process-local opaque values; no reusable credential fixture enters source.
+  const control=new AbortController(),pending=exchangeNativeCallback(vault as any,callback,control.signal);await entered;control.abort();finish({status:200,body:JSON.stringify({accessToken:crypto.randomUUID(),refreshToken:crypto.randomUUID()})});
   await expect(pending).rejects.toThrow("App locked during authorization");expect(vault.setRefreshToken).not.toHaveBeenCalled();expect(vault.setSecureJson).not.toHaveBeenCalled();expect(vault.removeSecureJson).not.toHaveBeenCalled();
  });
  it("shares one in-flight rotation per vault, then permits the next rotation",async()=>{
-  const vault={refreshToken:vi.fn().mockResolvedValue("private-refresh"),getSecureJson:vi.fn().mockResolvedValue({sessionId:"session",tokenVersion:1,publicDeviceId:"device"}),sign:vi.fn().mockResolvedValue("proof"),setRefreshToken:vi.fn(),setSecureJson:vi.fn()};
-  mock.nativeRequest.mockResolvedValue({status:200,body:JSON.stringify({refreshToken:"rotated-private-refresh",sessionId:"session",tokenVersion:2})});
+  const vault={refreshToken:vi.fn().mockResolvedValue(crypto.randomUUID()),getSecureJson:vi.fn().mockResolvedValue({sessionId:"session",tokenVersion:1,publicDeviceId:"device"}),sign:vi.fn().mockResolvedValue("proof"),setRefreshToken:vi.fn(),setSecureJson:vi.fn()};
+  mock.nativeRequest.mockResolvedValue({status:200,body:JSON.stringify({refreshToken:crypto.randomUUID(),sessionId:"session",tokenVersion:2})});
   const first=refreshNativeTokens(vault as any),second=refreshNativeTokens(vault as any);expect(first).toBe(second);await Promise.all([first,second]);expect(mock.nativeRequest).toHaveBeenCalledOnce();expect(vault.setRefreshToken).toHaveBeenCalledOnce();await refreshNativeTokens(vault as any);expect(mock.nativeRequest).toHaveBeenCalledTimes(2);
  });
 });
