@@ -710,6 +710,31 @@
       "reconciliation": "ADMITTED_COMMITTED_SOURCE"
     },
     {
+      "path": "app/api/native-auth/sessions/[id]/revoke/route.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "9f7bf9aacfe212f84578ecceec0fd8bd733effeac4d71a538c535f99f4af4584",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "app/api/onboarding/batches/route.ts",
       "baseSha256": "fd3f0446bf20090409f09f52c9085da37cb775f29dbbdfbe3c841df99c10cb00",
       "historicalSha256": "fd3f0446bf20090409f09f52c9085da37cb775f29dbbdfbe3c841df99c10cb00",
@@ -2556,7 +2581,32 @@
           "sha256": "a8b363f3ff9c26d21b3668fa3c2f9dbbaad121af94b811dec12c297eb7bb170b"
         }
       ],
-      "currentSha256": "ca0e156eb12525b75b39245e951debf53c118389258e455935af05d6a9c37169",
+      "currentSha256": "8f3c56d256d47dd3eaaf8e592958d0ae0898c714b014175eaf9d9b386aed94d9",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "lib/native-app/session-governance.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "96808f6baa90da763b0de655a7ef51089d2719ab0b82c1683bc9a0494680c07e",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -3033,6 +3083,31 @@
       ],
       "currentSha256": "9ebadbd2d6204bc4fa99e8e14edeea23610ac29a50adb27d34fa6147b81052f1",
       "reconciliation": "ADMITTED_COMMITTED_SOURCE"
+    },
+    {
+      "path": "lib/real-user-access/step-up.ts",
+      "baseSha256": "91ed2ca496b1e2cf4a32b7bc49e8b7be5429479f53987d971bef07d8e8886de8",
+      "historicalSha256": "91ed2ca496b1e2cf4a32b7bc49e8b7be5429479f53987d971bef07d8e8886de8",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "91ed2ca496b1e2cf4a32b7bc49e8b7be5429479f53987d971bef07d8e8886de8"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "91ed2ca496b1e2cf4a32b7bc49e8b7be5429479f53987d971bef07d8e8886de8"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "91ed2ca496b1e2cf4a32b7bc49e8b7be5429479f53987d971bef07d8e8886de8"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "91ed2ca496b1e2cf4a32b7bc49e8b7be5429479f53987d971bef07d8e8886de8"
+        }
+      ],
+      "currentSha256": "6a6e1673a16ae8017a08cf5fd2637291d8b56ebbbcc9aebfa81ca92342550cce",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
       "path": "lib/release-feature-flag-runtime.ts",
@@ -5406,7 +5481,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "17751c46f5f1b12242e8705681aa843c4362564904d652d27daed88904eb505b",
+      "currentSha256": "2ac50649cc7447cec4cfb214998329d80652628dba1ee3a1a1942004b8bbb1a3",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5431,7 +5506,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "e7464344670fcb357188886001e9fae069f5d19db4376e711dd972bf948287c3",
+      "currentSha256": "1dd992a5c616815c5626c61ed6298107368a7c0a7bd033c106a821d283c48061",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5456,7 +5531,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "b9da096c9e47538b397c3a3ba97c3f21e69d7ffd42c64245132dc69ecf167523",
+      "currentSha256": "c0198c159fd50529118398717ac34c6a890b6cebc5729e5d9f1e91815dfb2a82",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
