@@ -51,7 +51,10 @@ afterAll(async () => {
 });
 async function user(role = "SUPER_ADMIN") {
   const u = await db.user.create({ data: { username: `synthetic-${randomUUID()}`, name: "SYNTHETIC service actor", role, passwordHash: "UNUSABLE_SYNTHETIC_NO_LOGIN", isActive: true, lifecycleStatus: "ACTIVE", mustChangePassword: false } });
-  const assignment = await db.userRoleAssignment.create({ data: { userId: u.id, role, reason: "SYNTHETIC service preparation", activeKey: `${u.id}:${role}` } });
+  // Establish already-effective fixture authority explicitly, rather than race
+  // the database-generated validFrom against the application's sign-in clock.
+  const assignment = await db.userRoleAssignment.create({ data: { userId: u.id, role, validFrom: new Date(Date.now() - 60_000), reason: "SYNTHETIC service preparation", activeKey: `${u.id}:${role}` } });
+  expect(assignment.validFrom.getTime() <= Date.now()).toBe(true);
   const web = await createPersistedSession(db, u, new Headers());
   const enrollment = await beginTotpEnrollment(db, { userId: u.id, displayName: "SYNTHETIC factor", accountLabel: "synthetic@example.invalid" });
   const factor = await db.mfaAuthenticator.findUniqueOrThrow({ where: { publicKey: enrollment.factorHandle } });

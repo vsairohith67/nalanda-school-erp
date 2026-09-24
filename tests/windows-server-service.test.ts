@@ -1,4 +1,4 @@
-import {beforeAll,afterAll,it,expect,vi} from "vitest";
+import {beforeAll,afterAll,describe,it,expect,vi} from "vitest";
 import {PrismaClient} from "@prisma/client";
 import {randomUUID,randomBytes,generateKeyPairSync,sign} from "node:crypto";
 import {mkdtempSync,rmSync,readFileSync,readdirSync,lstatSync,existsSync} from "node:fs";
@@ -60,31 +60,56 @@ it("disconnects owned clients on operation failure and does not construct after 
  await expect(executeWindowsProbe({...bound,operation:"totp"},factory)).rejects.toThrow("OWNED_FIXTURE_MISSING");expect(disconnect).toHaveBeenCalledOnce();
  harness.admitted=false;await expect(executeWindowsProbe({...bound,operation:"totp"},factory)).rejects.toThrow("TARGET_DENIED");expect(factory).toHaveBeenCalledOnce();harness.admitted=true;
 });
-it("actual pending/approval/exchange/rotation/governed revocation/fresh authentication preserve precise private readback",async()=>{
- const password=randomBytes(48).toString("base64url"),f=await probe("prepare",{password,governancePassword:password});
- await expect(probe("prepare",{password,governancePassword:password})).rejects.toThrow();
- const user=await db.user.findUniqueOrThrow({where:{id:f.userId}}),assignment=await db.userRoleAssignment.findFirstOrThrow({where:{userId:user.id}}),web=await createPersistedSession(db,user,new Headers());
- const actor={...user,roleAssignmentId:assignment.id} as any;
+// This is one ordered service journey, split at authoritative state boundaries.
+// Hosted regression exceeded the old single 15-second budget after real MFA and
+// step-up were added. Each phase retains that budget and every original assertion;
+// a failed predecessor causes a prerequisite failure, never a skipped/pass result.
+describe.sequential("private Windows service journey",()=>{
+ let phase=0,f:any,user:any,actor:any,web:Awaited<ReturnType<typeof createPersistedSession>>;
+ const password=randomBytes(48).toString("base64url");
  const request=async()=>{const state=opaque(),nonce=opaque(),verifier=opaque();const made=await createNativeAuthRequest({appId:"com.nalandaps.erp",appVersion:"0.1.0",redirectUri:"nalandaps-erp://auth/callback",platform:"WINDOWS",deviceLabel:"SYNTHETIC Windows service",publicDeviceId:bound.publicDeviceId,publicSigningKey,state,nonce,pkceChallenge:pkceChallenge(verifier)});const proof=signature(nativeBrowserProofMessage({publicRequestId:made.requestId,challenge:made.challenge,state,publicDeviceId:bound.publicDeviceId,publicKeyHash:bound.publicKeyHash}));const original=`https://portable-staging.localhost:8443${made.authorizePath}&proof=${proof}`;return {...made,state,nonce,verifier,proof,original};};
  const authorize=(r:Awaited<ReturnType<typeof request>>)=>authorizeNativeRequest({requestId:r.requestId,state:r.state,challenge:r.challenge,proof:r.proof,user:actor,webSessionId:web.sessionId});
- const pending=await request();let snapshot=await probe("read",{original:pending.original});expect(snapshot).toMatchObject({userId:null,sessionId:null,deviceId:null,tokenVersion:null,sessionRevoked:null,activeSessions:0,mfaUsed:null});
+ const exchange=async(r:Awaited<ReturnType<typeof request>>)=>{const result=await authorize(r);if(!("redirectUrl" in result))throw Error("NO_REAL_CALLBACK");const code=new URL(result.redirectUrl!).searchParams.get("code")!;return exchangeNativeAuthorization({requestId:r.requestId,code,verifier:r.verifier,nonce:r.nonce,publicDeviceId:bound.publicDeviceId,proof:signature(nativeExchangeProofMessage({requestId:r.requestId,code,verifier:r.verifier,nonce:r.nonce,publicDeviceId:bound.publicDeviceId}))});};
+ let pending:Awaited<ReturnType<typeof request>>,consumed:Awaited<ReturnType<typeof request>>,tokens:Awaited<ReturnType<typeof exchange>>,rotated:Awaited<ReturnType<typeof refreshNativeSession>>;
+ it("prepares owned MFA fixtures and reads genuine pending request/device states",async()=>{
+ expect(phase).toBe(0);f=await probe("prepare",{password,governancePassword:password});
+ await expect(probe("prepare",{password,governancePassword:password})).rejects.toThrow();
+ user=await db.user.findUniqueOrThrow({where:{id:f.userId}});const assignment=await db.userRoleAssignment.findFirstOrThrow({where:{userId:user.id}});web=await createPersistedSession(db,user,new Headers());actor={...user,roleAssignmentId:assignment.id};
+ pending=await request();let snapshot=await probe("read",{original:pending.original});expect(snapshot).toMatchObject({userId:null,sessionId:null,deviceId:null,tokenVersion:null,sessionRevoked:null,activeSessions:0,mfaUsed:null});
  expect(await db.nativeSession.count()).toBe(0);await authorize(pending);snapshot=await probe("read",{original:pending.original});expect(snapshot).toMatchObject({userId:user.id,deviceStatus:"PENDING_APPROVAL",sessionId:null,activeSessions:0});
  for(const drift of [{publicDeviceId:randomUUID()},{publicKeyHash:"d".repeat(64)},{iteration:randomUUID()}])await expect(windowsServerProbe(db,{...bound,...drift,operation:"read",original:pending.original})).rejects.toThrow();
  await expect(probe("read",{original:pending.original.replace("proof=","proof=x")})).rejects.toThrow();
+ phase=1;
+ },15_000);
+ it("applies real device governance and rejects denied/repeated approvals",async()=>{
+ expect(phase).toBe(1);
  const deniedGrant=await db.userPermissionOverride.create({data:{userId:f.governanceUserId,permission:"MANAGE_OFFLINE_SYNC_DEVICES",effect:"DENY",reason:"SYNTHETIC negative-authority fixture",createdByUserId:f.governanceUserId,activeKey:`${f.governanceUserId}:MANAGE_OFFLINE_SYNC_DEVICES`}});await expect(probe("approve",{original:pending.original,governancePassword:password})).rejects.toThrow();expect(await db.offlineSyncEvent.count({where:{eventType:"DEVICE_APPROVED"}})).toBe(0);await db.userPermissionOverride.update({where:{id:deniedGrant.id},data:{status:"REVOKED",revokedAt:new Date(),activeKey:null}});
  expect(await probe("approve",{original:pending.original,governancePassword:password})).toMatchObject({evidenceClass:"SERVICE_GOVERNANCE",eventCount:1});await expect(probe("approve",{original:pending.original,governancePassword:password})).rejects.toThrow();
- const exchange=async(r:Awaited<ReturnType<typeof request>>)=>{const result=await authorize(r);if(!("redirectUrl" in result))throw Error("NO_REAL_CALLBACK");const code=new URL(result.redirectUrl!).searchParams.get("code")!;return exchangeNativeAuthorization({requestId:r.requestId,code,verifier:r.verifier,nonce:r.nonce,publicDeviceId:bound.publicDeviceId,proof:signature(nativeExchangeProofMessage({requestId:r.requestId,code,verifier:r.verifier,nonce:r.nonce,publicDeviceId:bound.publicDeviceId}))});};
- const consumed=await request(),tokens=await exchange(consumed);snapshot=await probe("read",{original:consumed.original});expect(snapshot).toMatchObject({sessionId:tokens.sessionId,activeSessions:1,tokenVersion:1,mfaUsed:null,referenceObservation:"AVAILABLE_POPULATION_ONLY_NOT_REFRESH_PROOF"});expect(snapshot.referenceStudents).toEqual([...f.expectedStudents].sort());
- const timestamp=String(Date.now()),proofNonce=opaque(),rotated=await refreshNativeSession({sessionId:tokens.sessionId,refreshToken:tokens.refreshToken,publicDeviceId:bound.publicDeviceId,timestamp,proofNonce,proof:signature(nativeRefreshProofMessage({sessionId:tokens.sessionId,timestamp,proofNonce,refreshTokenHash:sha256Hex(tokens.refreshToken),publicDeviceId:bound.publicDeviceId,tokenVersion:1}))});
+ phase=2;
+ },15_000);
+ it("exchanges and rotates actual native authority with scoped reference readback",async()=>{
+ expect(phase).toBe(2);
+ consumed=await request();tokens=await exchange(consumed);const snapshot=await probe("read",{original:consumed.original});expect(snapshot).toMatchObject({sessionId:tokens.sessionId,activeSessions:1,tokenVersion:1,mfaUsed:null,referenceObservation:"AVAILABLE_POPULATION_ONLY_NOT_REFRESH_PROOF"});expect(snapshot.referenceStudents).toEqual([...f.expectedStudents].sort());
+ const timestamp=String(Date.now()),proofNonce=opaque();rotated=await refreshNativeSession({sessionId:tokens.sessionId,refreshToken:tokens.refreshToken,publicDeviceId:bound.publicDeviceId,timestamp,proofNonce,proof:signature(nativeRefreshProofMessage({sessionId:tokens.sessionId,timestamp,proofNonce,refreshTokenHash:sha256Hex(tokens.refreshToken),publicDeviceId:bound.publicDeviceId,tokenVersion:1}))});
  expect(await probe("read",{original:consumed.original})).toMatchObject({tokenVersion:2,rotatedTokenVersions:[1]});
+ phase=3;
+ },15_000);
+ it("revokes exactly the observed session through real step-up/route/audit and verifies retry",async()=>{
+ expect(phase).toBe(3);
  await expect(probe("revoke-session",{original:consumed.original,sessionId:randomUUID(),governancePassword:password})).rejects.toThrow("OWNERSHIP");
  expect((await probe("read",{original:consumed.original})).sessionRevoked).toBe(false);
  expect(await probe("revoke-session",{original:consumed.original,sessionId:tokens.sessionId,governancePassword:password})).toMatchObject({sessionId:tokens.sessionId,eventCount:1,status:"REVOKED"});
  expect(await probe("revoke-session",{original:consumed.original,sessionId:tokens.sessionId,governancePassword:password})).toMatchObject({eventCount:1,status:"ALREADY_REVOKED"});
+ phase=4;
+ },15_000);
+ it("keeps old authority revoked after fresh login and rejects private/foreign readback",async()=>{
+ expect(phase).toBe(4);
  const fresh=await request(),newTokens=await exchange(fresh);expect(newTokens.sessionId).not.toBe(tokens.sessionId);expect(await probe("read",{original:consumed.original})).toMatchObject({sessionRevoked:true,activeSessions:0});expect(await probe("read",{original:fresh.original})).toMatchObject({sessionRevoked:false,activeSessions:1});
  const text=JSON.stringify(await probe("read",{original:fresh.original}));for(const privateValue of [password,tokens.accessToken,tokens.refreshToken,rotated.accessToken,newTokens.accessToken,web.cookieValue])expect(text.includes(privateValue)).toBe(false);for(const forbidden of ["passwordHash","secretEnvelope","accessTokenHash","refreshTokenHash","publicSigningKey","detailsJson"])expect(text).not.toContain(forbidden);
  // Explicit negative fixture corruption, not an approval/authentication outcome.
  const freshRow=await db.nativeAuthRequest.findUniqueOrThrow({where:{publicRequestId:fresh.requestId}});await db.nativeAuthRequest.update({where:{id:freshRow.id},data:{userId:f.governanceUserId}});await expect(probe("read",{original:fresh.original})).rejects.toThrow("OWNERSHIP");await db.nativeAuthRequest.update({where:{id:freshRow.id},data:{userId:user.id}});
  const excluded=await db.student.findFirstOrThrow({where:{status:"Inactive"}});await db.student.update({where:{id:excluded.id},data:{status:"Active"}});await expect(probe("read",{original:fresh.original})).rejects.toThrow("OWNERSHIP");await db.student.update({where:{id:excluded.id},data:{status:"Inactive"}});
  const duplicate=await request();await exchange(duplicate);await expect(probe("read",{original:fresh.original})).rejects.toThrow("OWNERSHIP");
+ phase=5;
 },15_000);
+});
