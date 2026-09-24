@@ -87,7 +87,7 @@ async function native(actor: Actor, existing?: { keys: ReturnType<typeof generat
   return { keys, deviceId, tokens, signature };
 }
 type Native = Awaited<ReturnType<typeof native>>;
-const access = (n: Native, tokens = n.tokens) => resolveNativeSession(new Request("https://synthetic.invalid/api/native/v1/context", { headers: { "x-native-session": tokens.sessionId, authorization: `Bearer ${tokens.accessToken}` } }));
+const access = (n: Native, tokens = n.tokens) => resolveNativeSession(new Request("https://synthetic.invalid/api/native/v1/context", { headers: { "x-native-session": tokens.sessionId, authorization: `Bearer ${tokens.accessToken}` } })).then(() => true);
 async function refresh(n: Native, tokens = n.tokens) {
   const timestamp = String(Date.now()), proofNonce = opaque();
   return refreshNativeSession({ sessionId: tokens.sessionId, refreshToken: tokens.refreshToken, publicDeviceId: n.deviceId, timestamp, proofNonce, proof: n.signature(nativeRefreshProofMessage({ sessionId: tokens.sessionId, timestamp, proofNonce, refreshTokenHash: sha256Hex(tokens.refreshToken), publicDeviceId: n.deviceId, tokenVersion: tokens.tokenVersion })) });
@@ -110,12 +110,12 @@ it("revokes only the selected real session, preserves controls, first audit/reas
   await access(target, rotated);
   expect(await revoke(admin, target)).toEqual({ status: "REVOKED" });
   const first = await db.nativeSession.findUniqueOrThrow({ where: { publicSessionId: target.tokens.sessionId } });
-  for (const credential of [target.tokens, rotated]) { await expect(access(target, credential)).rejects.toThrow("NATIVE_ACCESS_INVALID"); await expect(refresh(target, credential)).rejects.toThrow("NATIVE_REFRESH_INVALID"); }
+  for (const credential of [target.tokens, rotated]) { await expect(access(target, credential)).rejects.toThrow("NATIVE_ACCESS_INVALID"); await expect(refresh(target, credential).then(() => true)).rejects.toThrow("NATIVE_REFRESH_INVALID"); }
   expect(await revoke(admin, target)).toEqual({ status: "ALREADY_REVOKED" });
-  expect(await db.nativeSession.findUniqueOrThrow({ where: { id: first.id } })).toEqual(first);
+  expect(JSON.stringify(await db.nativeSession.findUniqueOrThrow({ where: { id: first.id } })) === JSON.stringify(first)).toBe(true);
   const audit = await events(target.tokens.sessionId); expect(audit).toHaveLength(1); expect(audit[0]).toMatchObject({ actorUserId: admin.u.id, userId: owner.u.id }); expect(JSON.parse(audit[0].detailsJson!)).toMatchObject({ reason: first.revocationReason, outcome: "REVOKED", revokedAt: first.revokedAt!.toISOString(), actingSessionId: admin.web.sessionId });
   await access(control); expect(await resolvePersistedSession(db, owner.web.cookieValue)).not.toBeNull();
-  expect(await db.offlineSyncDevice.findUniqueOrThrow({ where: { id: deviceBefore.id } })).toEqual(deviceBefore); expect(await db.user.findUniqueOrThrow({ where: { id: owner.u.id } })).toEqual(userBefore);
+  expect(JSON.stringify(await db.offlineSyncDevice.findUniqueOrThrow({ where: { id: deviceBefore.id } })) === JSON.stringify(deviceBefore)).toBe(true); expect(JSON.stringify(await db.user.findUniqueOrThrow({ where: { id: owner.u.id } })) === JSON.stringify(userBefore)).toBe(true);
   const fresh = await native(owner, target); expect(fresh.tokens.sessionId).not.toBe(target.tokens.sessionId); await access(fresh); expect((await db.nativeSession.findUniqueOrThrow({ where: { id: first.id } })).revokedAt).toEqual(first.revokedAt);
   const publicText = JSON.stringify(audit.map(e => JSON.parse(e.detailsJson!))); for (const secret of [target.tokens.accessToken, target.tokens.refreshToken, rotated.accessToken, admin.web.cookieValue]) expect(publicText.includes(secret)).toBe(false);
 });
@@ -152,7 +152,7 @@ it("concurrent revocation has one durable transition; revoke-first refresh canno
   const results = await Promise.allSettled([revoke(admin, target, a), revoke(admin, target, b)]);
   expect(results.filter(r => r.status === "fulfilled" && r.value.status === "REVOKED")).toHaveLength(1);
   for (const r of results) if (r.status === "rejected") expect(String(r.reason)).toMatch(/P2034|write conflict|database is locked|NATIVE_SESSION_CHANGED|Transaction/);
-  expect(await events(target.tokens.sessionId)).toHaveLength(1); await expect(refresh(target)).rejects.toThrow("NATIVE_REFRESH_INVALID"); await expect(access(target)).rejects.toThrow("NATIVE_ACCESS_INVALID");
+  expect(await events(target.tokens.sessionId)).toHaveLength(1); await expect(refresh(target).then(() => true)).rejects.toThrow("NATIVE_REFRESH_INVALID"); await expect(access(target)).rejects.toThrow("NATIVE_ACCESS_INVALID");
   const row = await db.nativeSession.findUniqueOrThrow({ where: { publicSessionId: target.tokens.sessionId } }); expect(row.tokenVersion).toBe(1); expect(await db.nativeRefreshTokenHistory.count({ where: { sessionId: row.id } })).toBe(0);
 });
 it("overlapping refresh/revoke cannot leave usable successor credentials or duplicate audit", async () => {
@@ -161,7 +161,7 @@ it("overlapping refresh/revoke cannot leave usable successor credentials or dupl
   // Serialization can refuse a participant; only an authorized explicit retry
   // of an uncommitted revoke is allowed. It uses the still-unused grant.
   if (results[1].status === "rejected") await revoke(admin, target, token);
-  if (results[0].status === "fulfilled") { await expect(access(target, results[0].value)).rejects.toThrow("NATIVE_ACCESS_INVALID"); await expect(refresh(target, results[0].value)).rejects.toThrow("NATIVE_REFRESH_INVALID"); }
+  if (results[0].status === "fulfilled") { await expect(access(target, results[0].value)).rejects.toThrow("NATIVE_ACCESS_INVALID"); await expect(refresh(target, results[0].value).then(() => true)).rejects.toThrow("NATIVE_REFRESH_INVALID"); }
   else expect(String(results[0].reason)).toMatch(/NATIVE_REFRESH_INVALID|P2034|write conflict|database is locked|Transaction/);
   expect(await events(target.tokens.sessionId)).toHaveLength(1); await expect(access(target)).rejects.toThrow("NATIVE_ACCESS_INVALID");
 });
