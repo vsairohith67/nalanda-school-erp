@@ -15,6 +15,16 @@ it("private output projection rejects extra credential fields and invented succe
  expect(()=>validateWindowsProbeResult("revoke-session",{revoked:true})).toThrow("OUTPUT_REFUSED");
  expect(()=>validateWindowsProbeResult("prepare",{password:secret()})).toThrow("OUTPUT_REFUSED");
 });
+it("revocation adapter binds the observed request/session and carries governance input only in private stdin",async()=>{
+ const requestId=randomUUID(),sessionId=randomUUID(),governancePassword=secret();
+ const original=`https://portable-staging.localhost:8443/native/authorize?request=${requestId}&state=${"s".repeat(43)}&challenge=${"c".repeat(43)}&proof=${"p".repeat(86)}`;
+ const readback={...binding,requestId,userId:"synthetic-user",deviceId:"synthetic-device",requestStatus:"CONSUMED",deviceStatus:"ACTIVE",sessionId,sessionRevoked:false,activeSessions:1,role:"ACCOUNTANT",authorityActive:true,mfaUsed:null,mfaObservation:"NO_SESSION_CHALLENGE_LINK_RECORDED",referenceStudents:[],referenceVersion:"d".repeat(64),referenceObservation:"AVAILABLE_POPULATION_ONLY_NOT_REFRESH_PROOF",tokenVersion:1,rotatedTokenVersions:[]};
+ const {iteration:_iteration,phase:_phase,publicKeyHash:_key,...projected}=readback;
+ const invoke=vi.fn(async(raw:string)=>{const input=parseWindowsProbe(raw);if(input.operation==="read")return JSON.stringify(projected);expect(input).toMatchObject({operation:"revoke-session",original,sessionId,governancePassword});return JSON.stringify({evidenceClass:"SERVICE_GOVERNANCE",sessionId,eventCount:1,status:"REVOKED"});});
+ const ports=new WindowsServerPorts(binding,invoke,()=>{},secret(),governancePassword);ports.observe(original);await ports.read(requestId);await ports.revokeSession(sessionId);
+ invoke.mockResolvedValueOnce(JSON.stringify({evidenceClass:"SERVICE_GOVERNANCE",sessionId:randomUUID(),eventCount:1,status:"REVOKED"}));await expect(ports.revokeSession(sessionId)).rejects.toThrow("TARGET_MISMATCH");
+ invoke.mockResolvedValueOnce(JSON.stringify({evidenceClass:"SERVICE_GOVERNANCE",sessionId,eventCount:1,status:"REVOKED",accessToken:"private"}));await expect(ports.revokeSession(sessionId)).rejects.toThrow("PRIVATE_DETAILS_WITHHELD");ports.clear();
+});
 it("adapter sends private stdin only, binds before and after and sanitises transport failures",async()=>{
  const invoke=vi.fn(async(raw:string)=>{expect(JSON.parse(raw)).toMatchObject({...binding,operation:"totp"});return JSON.stringify({token:"123456"});}),bind=vi.fn(),ports=new WindowsServerPorts(binding,invoke,bind,secret(),secret());
  expect(await ports.totp()).toBe("123456");expect(bind).toHaveBeenCalledTimes(2);

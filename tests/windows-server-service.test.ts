@@ -9,20 +9,34 @@ import {execFileSync} from "node:child_process";
 import {defaultPermissionMatrix} from "../lib/role-permissions";
 import {windowsServerProbe,validateWindowsProbeTarget,executeWindowsProbe} from "../scripts/portable/windows-server-probe";
 import {publicJwkHash} from "../lib/offline-sync/device-trust";
-import {createNativeAuthRequest,authorizeNativeRequest,nativeBrowserProofMessage,pkceChallenge,exchangeNativeAuthorization,nativeExchangeProofMessage,refreshNativeSession,nativeRefreshProofMessage,revokeNativeSession} from "../lib/native-app/auth";
+import {createNativeAuthRequest,authorizeNativeRequest,nativeBrowserProofMessage,pkceChallenge,exchangeNativeAuthorization,nativeExchangeProofMessage,refreshNativeSession,nativeRefreshProofMessage} from "../lib/native-app/auth";
 import {sha256Hex} from "../lib/offline-sync/device-trust";
 import {createPersistedSession} from "../lib/auth-sessions";
 import {evaluateEffectivePermission} from "../lib/iam/effective-access";
+import {NextRequest} from "next/server";
+import {POST as revokeRoute} from "../app/api/native-auth/sessions/[id]/revoke/route";
+import {beginTotpEnrollment,confirmTotpEnrollment} from "../lib/real-user-access/mfa-service";
+import {generateTotpForSyntheticQa} from "../lib/real-user-access/totp";
+import {createStepUpChallenge,completeStepUpChallenge} from "../lib/real-user-access/step-up";
+import {boundAuthEnvironment} from "../lib/real-user-access/login-mfa";
 import {PATCH} from "../app/api/offline-sync/devices/[id]/route";
 // ISOLATED_SERVICE: actual native protocol, permission evaluator, approval route,
-// audit and database. Admission, HTTP transport, web login and MFA prep are
+// audit, MFA and step-up services and database. Admission, HTTP transport and web login are
 // harness doubles. Nothing here is an observed Windows request or OS callback.
-const harness=vi.hoisted(()=>({db:null as any,governance:null as any,admitted:true}));
+const harness=vi.hoisted(()=>({db:null as any,governance:null as any,cookie:"",webId:"",admitted:true}));
 vi.mock("../lib/prisma",()=>({prisma:new Proxy({}, {get:(_t,key)=>{const value=harness.db[key];return typeof value==="function"?value.bind(harness.db):value;}})}));
 vi.mock("../lib/native-app/feature-flag",()=>({NATIVE_APP_ID:"com.nalandaps.erp",NATIVE_REDIRECT_URI:"nalandaps-erp://auth/callback",nativeAppEnabled:()=>true}));
 vi.mock("../lib/offline-sync/feature-flag",()=>({requireOfflineSyncForApi:()=>null,offlineSyncRoleAllowed:(role:string)=>["ACCOUNTANT","SUPER_ADMIN"].includes(role),OFFLINE_SYNC_SCHEMA_VERSION:1}));
 vi.mock("../lib/portable-runtime/synthetic-capability",()=>({syntheticFeatureCapability:()=>({source:"a".repeat(40),runId:"123",attempt:"1",databaseSha256:"b".repeat(64)})}));
-vi.mock("../scripts/portable/acceptance-http",()=>({syntheticOrigin:"https://portable-staging.localhost:8443",assertSyntheticServingTarget:()=>{if(!harness.admitted)throw Error("HARNESS_TARGET_DENIED");},provisionSyntheticMfa:async()=>{},nextTotp:async()=>{throw Error("HARNESS_MFA_NOT_EXECUTED");},realLogin:async(db:any,username:string)=>{harness.governance=await db.user.findUniqueOrThrow({where:{username}});return {userId:harness.governance.id,cookie:"HARNESS_ONLY"};},privateHttp:async(url:string,init:any)=>PATCH(new Request(url,init),{params:Promise.resolve({id:new URL(url).pathname.split("/").at(-1)!})})}));
+vi.mock("next/headers",()=>({cookies:async()=>({get:()=>({value:harness.cookie})})}));
+vi.mock("../scripts/portable/acceptance-http",()=>({
+ syntheticOrigin:"https://portable-staging.localhost:8443",assertSyntheticServingTarget:()=>{if(!harness.admitted)throw Error("HARNESS_TARGET_DENIED");},
+ provisionSyntheticMfa:async(db:any,userId:string)=>{const e=await beginTotpEnrollment(db,{userId,displayName:"SYNTHETIC factor",accountLabel:"synthetic@example.invalid"});const f=await db.mfaAuthenticator.findUniqueOrThrow({where:{publicKey:e.factorHandle}});await confirmTotpEnrollment(db,{userId,factorHandle:e.factorHandle,token:generateTotpForSyntheticQa({userId,authenticatorId:f.id,secretEnvelope:f.secretEnvelope}),environment:boundAuthEnvironment()});},
+ nextTotp:async()=>{throw Error("HARNESS_BROWSER_MFA_NOT_EXECUTED");},
+ realLogin:async(db:any,username:string)=>{harness.governance=await db.user.findUniqueOrThrow({where:{username}});const web=await createPersistedSession(db,harness.governance,new Headers());harness.cookie=web.cookieValue;harness.webId=web.sessionId;return {userId:harness.governance.id,cookie:web.cookieValue};},
+ realStepUp:async(db:any,actor:any,action:string)=>{const input={userId:actor.userId,sessionId:harness.webId,action,environment:boundAuthEnvironment()};const c=await createStepUpChallenge(db,input);const f=await db.mfaAuthenticator.findFirstOrThrow({where:{userId:actor.userId,type:"TOTP",status:"ACTIVE"}});const timestamp=Math.max(Date.now(),(f.totpLastUsedStep+1)*30_000);return(await completeStepUpChallenge(db,{...input,challengeToken:c.challengeToken,factor:"TOTP",timestamp,response:generateTotpForSyntheticQa({userId:actor.userId,authenticatorId:f.id,secretEnvelope:f.secretEnvelope,timestamp})})).stepUpToken;},
+ privateHttp:async(url:string,init:any)=>{const req=new NextRequest(url,{...init,headers:{...init.headers,origin:"https://portable-staging.localhost:8443"}}),parts=new URL(url).pathname.split("/");return parts.at(-1)==="revoke"?revokeRoute(req,{params:Promise.resolve({id:parts.at(-2)!})}):PATCH(req,{params:Promise.resolve({id:parts.at(-1)!})});}
+}));
 vi.mock("../lib/auth",()=>({requireApiPermission:async(permission:string)=>{const u=harness.governance,assignment=await harness.db.userRoleAssignment.findFirst({where:{userId:u.id,status:"ACTIVE"}}),decision=await evaluateEffectivePermission(harness.db,{userId:u.id,roleAssignmentId:assignment?.id,permission});return decision.allowed?{user:u}:{response:Response.json({error:"Denied"},{status:403})};}}));
 const root=mkdtempSync(path.join(tmpdir(),"nalanda-windows-server-service-")),identity=lstatSync(root),schema=`wsp_${randomUUID().replaceAll("-","")}`,postgres=process.env.DATABASE_PROVIDER==="postgresql";let db:PrismaClient;
 const keys=generateKeyPairSync("ed25519"),publicSigningKey=keys.publicKey.export({format:"jwk"}),bound={source:"a".repeat(40),runId:"123",attempt:"1",iteration:randomUUID(),phase:"synthetic-ON",databaseIdentitySha256:"b".repeat(64),publicDeviceId:randomUUID(),publicKeyHash:publicJwkHash(publicSigningKey)},opaque=()=>randomBytes(32).toString("base64url"),signature=(s:string)=>sign(null,Buffer.from(s),keys.privateKey).toString("base64url");
@@ -32,6 +46,7 @@ beforeAll(async()=>{
  if(postgres){expect(process.env.CI).toBe("true");expect(process.env.POSTGRES_READINESS_SYNTHETIC_QA).toBe("1");const target=new URL(process.env.DATABASE_URL!);target.searchParams.set("schema",schema);url=target.toString();execFileSync(process.execPath,["node_modules/prisma/build/index.js","migrate","deploy","--schema","prisma/postgresql/schema.prisma"],{env:{...process.env,DATABASE_URL:url,DIRECT_URL:url},stdio:"pipe"});}
  else{const sql=new DatabaseSync(":memory:");try{for(const migration of readdirSync("prisma/migrations",{withFileTypes:true}).filter(e=>e.isDirectory()).map(e=>e.name).sort())sql.exec(readFileSync(path.join("prisma/migrations",migration,"migration.sql"),"utf8"));expect(sql.prepare("PRAGMA foreign_key_check").all()).toEqual([]);await backup(sql,path.join(root,"synthetic.db"));}finally{sql.close();}}
  db=new PrismaClient({datasourceUrl:url});harness.db=db;vi.stubEnv("DATABASE_URL",url);vi.stubEnv("AUTH_SECRET",randomBytes(48).toString("base64url"));
+ vi.stubEnv("AUTH_MFA_KEYRING_JSON",JSON.stringify({active:"QA",keys:{QA:randomBytes(32).toString("base64")}}));vi.stubEnv("APP_ORIGIN","https://portable-staging.localhost:8443");
  await db.rolePermission.createMany({data:Object.entries(defaultPermissionMatrix()).flatMap(([role,entries])=>Object.entries(entries).map(([permission,enabled])=>({role,permission,enabled})))});
 },60_000);
 afterAll(async()=>{if(db){if(postgres)await db.$executeRawUnsafe(`DROP SCHEMA "${schema}" CASCADE`);await db.$disconnect();}const current=lstatSync(root);expect(current.isSymbolicLink()).toBe(false);expect(current.ino).toBe(identity.ino);expect(current.dev).toBe(identity.dev);expect(path.dirname(path.resolve(root))).toBe(path.resolve(tmpdir()));rmSync(root,{recursive:true});expect(existsSync(root)).toBe(false);vi.unstubAllEnvs();});
@@ -45,7 +60,7 @@ it("disconnects owned clients on operation failure and does not construct after 
  await expect(executeWindowsProbe({...bound,operation:"totp"},factory)).rejects.toThrow("OWNED_FIXTURE_MISSING");expect(disconnect).toHaveBeenCalledOnce();
  harness.admitted=false;await expect(executeWindowsProbe({...bound,operation:"totp"},factory)).rejects.toThrow("TARGET_DENIED");expect(factory).toHaveBeenCalledOnce();harness.admitted=true;
 });
-it("actual pending/approval/exchange/rotation/self-logout/fresh authentication preserve precise private readback",async()=>{
+it("actual pending/approval/exchange/rotation/governed revocation/fresh authentication preserve precise private readback",async()=>{
  const password=randomBytes(48).toString("base64url"),f=await probe("prepare",{password,governancePassword:password});
  await expect(probe("prepare",{password,governancePassword:password})).rejects.toThrow();
  const user=await db.user.findUniqueOrThrow({where:{id:f.userId}}),assignment=await db.userRoleAssignment.findFirstOrThrow({where:{userId:user.id}}),web=await createPersistedSession(db,user,new Headers());
@@ -62,10 +77,10 @@ it("actual pending/approval/exchange/rotation/self-logout/fresh authentication p
  const consumed=await request(),tokens=await exchange(consumed);snapshot=await probe("read",{original:consumed.original});expect(snapshot).toMatchObject({sessionId:tokens.sessionId,activeSessions:1,tokenVersion:1,mfaUsed:null,referenceObservation:"AVAILABLE_POPULATION_ONLY_NOT_REFRESH_PROOF"});expect(snapshot.referenceStudents).toEqual([...f.expectedStudents].sort());
  const timestamp=String(Date.now()),proofNonce=opaque(),rotated=await refreshNativeSession({sessionId:tokens.sessionId,refreshToken:tokens.refreshToken,publicDeviceId:bound.publicDeviceId,timestamp,proofNonce,proof:signature(nativeRefreshProofMessage({sessionId:tokens.sessionId,timestamp,proofNonce,refreshTokenHash:sha256Hex(tokens.refreshToken),publicDeviceId:bound.publicDeviceId,tokenVersion:1}))});
  expect(await probe("read",{original:consumed.original})).toMatchObject({tokenVersion:2,rotatedTokenVersions:[1]});
- await expect(probe("revoke-session",{original:consumed.original,sessionId:randomUUID()})).rejects.toThrow("OWNERSHIP");await expect(probe("revoke-session",{original:consumed.original,sessionId:tokens.sessionId})).rejects.toThrow("GOVERNANCE_NOT_IMPLEMENTED");
+ await expect(probe("revoke-session",{original:consumed.original,sessionId:randomUUID(),governancePassword:password})).rejects.toThrow("OWNERSHIP");
  expect((await probe("read",{original:consumed.original})).sessionRevoked).toBe(false);
- // Actual native self-logout service evidence, explicitly NOT administrator revocation.
- await revokeNativeSession(new Request("https://synthetic.invalid/api/native-auth/logout",{headers:{"x-native-session":rotated.sessionId,authorization:`Bearer ${rotated.accessToken}`}}));
+ expect(await probe("revoke-session",{original:consumed.original,sessionId:tokens.sessionId,governancePassword:password})).toMatchObject({sessionId:tokens.sessionId,eventCount:1,status:"REVOKED"});
+ expect(await probe("revoke-session",{original:consumed.original,sessionId:tokens.sessionId,governancePassword:password})).toMatchObject({eventCount:1,status:"ALREADY_REVOKED"});
  const fresh=await request(),newTokens=await exchange(fresh);expect(newTokens.sessionId).not.toBe(tokens.sessionId);expect(await probe("read",{original:consumed.original})).toMatchObject({sessionRevoked:true,activeSessions:0});expect(await probe("read",{original:fresh.original})).toMatchObject({sessionRevoked:false,activeSessions:1});
  const text=JSON.stringify(await probe("read",{original:fresh.original}));for(const privateValue of [password,tokens.accessToken,tokens.refreshToken,rotated.accessToken,newTokens.accessToken,web.cookieValue])expect(text.includes(privateValue)).toBe(false);for(const forbidden of ["passwordHash","secretEnvelope","accessTokenHash","refreshTokenHash","publicSigningKey","detailsJson"])expect(text).not.toContain(forbidden);
  // Explicit negative fixture corruption, not an approval/authentication outcome.

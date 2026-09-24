@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
 import type {PrismaClient} from "@prisma/client";
 import {windowsProbeInput,validateWindowsProbeResult,type WindowsProbeInput} from "./windows-server-contract";
-import {assertSyntheticServingTarget,nextTotp,provisionSyntheticMfa,realLogin,privateHttp,syntheticOrigin} from "./acceptance-http";
+import {assertSyntheticServingTarget,nextTotp,provisionSyntheticMfa,realLogin,realStepUp,privateHttp,syntheticOrigin} from "./acceptance-http";
 import {syntheticFeatureCapability} from "../../lib/portable-runtime/synthetic-capability";
 import {hashPassword} from "../../lib/password";
 import {PERMISSIONS} from "../../lib/permissions";
@@ -103,8 +103,36 @@ export async function windowsServerProbe(db:PrismaClient,value:unknown){
    if(session)requireTrue(r.status==="CONSUMED"&&r.authorizationCode?.usedAt&&session.userId===u.id&&session.deviceId===device?.id&&session.roleAssignmentId===r.roleAssignmentId);
    if(r.status==="CONSUMED")requireTrue(session); // Historical uncorrelated sessions fail closed.
    if(input.operation==="revoke-session"){
-    requireTrue(session?.publicSessionId===input.sessionId);
-    throw Error("WINDOWS_EXACT_SESSION_GOVERNANCE_NOT_IMPLEMENTED");
+    requireTrue(session?.publicSessionId===input.sessionId&&device);
+    const {nativeSessionRevocationAction,NATIVE_ADMIN_REVOCATION_EVENT}=await import("../../lib/native-app/session-governance");
+    const gov=await actor(true);requireTrue(gov.isActive&&gov.lifecycleStatus==="ACTIVE");
+    // Snapshot safe state only. Real login/step-up are deliberate auth metadata
+    // writes; neither supplies an expected revocation outcome.
+    const others=()=>db.nativeSession.findMany({where:{userId:u.id,id:{not:session!.id}},select:{id:true,revokedAt:true,tokenVersion:true},orderBy:{id:"asc"}});
+    const webState=()=>db.authSession.findMany({where:{userId:u.id},select:{id:true,revokedAt:true,credentialVersion:true,authorizationVersion:true},orderBy:{id:"asc"}});
+    const beforeOthers=await others(),beforeWeb=await webState();
+    const auditState=()=>db.authSecurityEvent.findMany({where:{eventType:NATIVE_ADMIN_REVOCATION_EVENT,subjectType:"NATIVE_SESSION",subjectId:input.sessionId},select:{id:true,userId:true,actorUserId:true,detailsJson:true},take:2});
+    const beforeAudit=await auditState();requireTrue(beforeAudit.length===(session!.revokedAt?1:0));
+    const login=await realLogin(db,gov.username,input.governancePassword);requireTrue(login.userId===gov.id);
+    const stepUpToken=await realStepUp(db,login,nativeSessionRevocationAction(input.sessionId));
+    const grantId=stepUpToken.split(".")[0];
+    const grant=await db.stepUpGrant.findUniqueOrThrow({where:{id:grantId},select:{userId:true,sessionId:true,action:true,usedAt:true}});
+    requireTrue(grant.userId===gov.id&&grant.action===nativeSessionRevocationAction(input.sessionId)&&!grant.usedAt);
+    validateWindowsProbeTarget(input);
+    const response=await privateHttp(syntheticOrigin+`/api/native-auth/sessions/${input.sessionId}/revoke`,{method:"POST",headers:{cookie:login.cookie,"content-type":"application/json"},body:JSON.stringify({stepUpToken,reason:"SYNTHETIC owned Windows exact-session acceptance"})});
+    requireTrue(response.status===200&&response.headers.get("cache-control")==="private, no-store");
+    const body=await response.json();requireTrue(Object.keys(body).join(",")==="status"&&["REVOKED","ALREADY_REVOKED"].includes(body.status));
+    const after=await db.nativeSession.findUniqueOrThrow({where:{id:session!.id},select:{revokedAt:true,revocationReason:true}});
+    requireTrue(after.revokedAt&&after.revocationReason==="SYNTHETIC owned Windows exact-session acceptance");
+    const events=await auditState();requireTrue(events.length===1&&events[0].userId===u.id&&events[0].actorUserId===gov.id);
+    const details=JSON.parse(events[0].detailsJson??"{}");requireTrue(details.outcome==="REVOKED"&&details.reason===after.revocationReason&&details.revokedAt===after.revokedAt!.toISOString());
+    requireTrue((await db.stepUpGrant.findUniqueOrThrow({where:{id:grantId},select:{usedAt:true}})).usedAt);
+    if(body.status==="REVOKED")requireTrue(!session!.revokedAt&&details.operationId===grantId&&details.actingSessionId===grant.sessionId);
+    else requireTrue(session!.revokedAt&&JSON.stringify(events)===JSON.stringify(beforeAudit));
+    const deviceAfter=await db.offlineSyncDevice.findUniqueOrThrow({where:{id:device!.id},select:{id:true,userId:true,status:true,publicKeyHash:true,keyVersion:true,approvedByUserId:true}});
+    requireTrue(JSON.stringify(deviceAfter)===JSON.stringify(device)&&JSON.stringify(await others())===JSON.stringify(beforeOthers)&&JSON.stringify(await webState())===JSON.stringify(beforeWeb));
+    validateWindowsProbeTarget(input);
+    return validateWindowsProbeResult(input.operation,{evidenceClass:"SERVICE_GOVERNANCE",sessionId:input.sessionId,eventCount:1,status:body.status});
    }
    const assignments=await db.userRoleAssignment.findMany({where:{userId:u.id,status:"ACTIVE",validFrom:{lte:new Date()},OR:[{validUntil:null},{validUntil:{gt:new Date()}}]},select:{id:true,role:true},take:3});
    const role=assignments.find(a=>a.id===r.roleAssignmentId);

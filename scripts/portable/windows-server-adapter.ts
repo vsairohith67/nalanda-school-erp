@@ -35,7 +35,7 @@ export class WindowsServerPorts {
   if(r.sessionId){assert(!this.sessions.has(r.sessionId)||this.sessions.get(r.sessionId)===requestId,"WINDOWS_SESSION_REBOUND");this.sessions.set(r.sessionId,requestId);}return r;
  }
  async approvePendingDevice(requestId:string){await this.call("approve",{original:this.original(requestId),governancePassword:this.governancePassword});}
- async revokeSession(sessionId:string){const requestId=this.sessions.get(sessionId);assert(requestId,"WINDOWS_UNOBSERVED_SESSION");await this.call("revoke-session",{original:this.original(requestId),sessionId});}
+ async revokeSession(sessionId:string){const requestId=this.sessions.get(sessionId);assert(requestId,"WINDOWS_UNOBSERVED_SESSION");const result=await this.call("revoke-session",{original:this.original(requestId),sessionId,governancePassword:this.governancePassword}) as {sessionId:string};assert.equal(result.sessionId,sessionId,"WINDOWS_REVOCATION_TARGET_MISMATCH");}
  clear(){this.closed=true;this.originals.clear();this.sessions.clear();this.password="";this.governancePassword="";}
 }
 
