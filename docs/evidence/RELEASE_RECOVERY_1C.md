@@ -297,7 +297,7 @@ Focused validation at this checkpoint: 98 tests in eight files PASS, zero skips,
 
 ### 2026-09-24 — RECOVERY-NATIVE-SESSION-REVOCATION-1A delta
 
-This dated delta supersedes only the missing exact-session operation in SP3 above. The original checkpoint and its other gaps remain historical evidence. Starting source `b08ef2d3670c65f37d5c5d736dfd279bb9bf1e21`, tree `9556b3c4a8cdb4597ba66de49e62c00a291d013b`; same owned branch/worktree and draft PR28. The iPad unchanged-source retry already passed (run 35952178501 attempt 2/job 107529684236); no further retry or durable-fix claim is made here.
+This dated delta supersedes only the missing exact-session operation in SP3 above. The original checkpoint and its other gaps remain historical evidence. Starting source `b08ef2d3670c65f37d5c5d736dfd279bb9bf1e21`, tree `9556b3c4a8cdb4597ba66de49e62c00a291d013b`; same owned branch/worktree and draft PR28. The iPad unchanged-source retry already passed (run35952178501 attempt2/job107529684236); no further retry or durable-fix claim is made here.
 
 | Bounded gap | Implementation | Evidence / execution |
 | --- | --- | --- |
