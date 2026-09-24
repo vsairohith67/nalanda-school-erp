@@ -2535,6 +2535,31 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "lib/native-app/auth.ts",
+      "baseSha256": "a8b363f3ff9c26d21b3668fa3c2f9dbbaad121af94b811dec12c297eb7bb170b",
+      "historicalSha256": "a8b363f3ff9c26d21b3668fa3c2f9dbbaad121af94b811dec12c297eb7bb170b",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "a8b363f3ff9c26d21b3668fa3c2f9dbbaad121af94b811dec12c297eb7bb170b"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "a8b363f3ff9c26d21b3668fa3c2f9dbbaad121af94b811dec12c297eb7bb170b"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "a8b363f3ff9c26d21b3668fa3c2f9dbbaad121af94b811dec12c297eb7bb170b"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "a8b363f3ff9c26d21b3668fa3c2f9dbbaad121af94b811dec12c297eb7bb170b"
+        }
+      ],
+      "currentSha256": "ca0e156eb12525b75b39245e951debf53c118389258e455935af05d6a9c37169",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "lib/onboarding-canonical-package.ts",
       "baseSha256": null,
       "historicalSha256": null,
@@ -3981,7 +4006,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "aff32885a9e95d4a5b7e3140be46a1e62a5c8f571c5dd3f620ba95b3ca0dd9e8",
+      "currentSha256": "1f4ac9d70dd9717c25b2cbf013d6d0de9a808aed848fa0d9c2a1257adfe0aaf1",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5331,7 +5356,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "f834bcbaf6d5c5ab809eec2c734068e51dcf7a673974741888c8ad9ef3d72400",
+      "currentSha256": "8588f228113e8db7eee967fc6681b49d82f9e1de70b354dc3ba3bfd86ae710f3",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5357,6 +5382,81 @@
         }
       ],
       "currentSha256": "52d56d964d390bf93423bced0f97b859f7c419fca166adf3741dd012736b2429",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/windows-server-adapter.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "17751c46f5f1b12242e8705681aa843c4362564904d652d27daed88904eb505b",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/windows-server-contract.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "e7464344670fcb357188886001e9fae069f5d19db4376e711dd972bf948287c3",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/windows-server-probe.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "b9da096c9e47538b397c3a3ba97c3f21e69d7ffd42c64245132dc69ecf167523",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
