@@ -1,4 +1,4 @@
-import { beforeAll, afterAll, it, expect, vi } from "vitest";
+import { beforeAll, beforeEach, afterAll, describe, it, expect, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import { randomUUID, randomBytes, generateKeyPairSync, sign } from "node:crypto";
 import { mkdtempSync, rmSync, readFileSync, readdirSync, lstatSync, existsSync } from "node:fs";
@@ -105,8 +105,14 @@ it("binds exact opaque targets, input allowlist and inherited rate/CSRF boundary
   expect(operationPolicy(`/api/native-auth/sessions/${id}/revoke`, "POST")?.id).toBe("native.auth");
   const middleware = readFileSync("middleware.ts", "utf8"); expect(middleware.slice(middleware.indexOf("const nativeRouteAuthorizedPaths"), middleware.indexOf("export async function"))).not.toContain("/revoke");
 });
+describe.sequential("governed native-session service", () => {
+let admin: Actor, owner: Actor, target: Native;
+// Real session/MFA/native-protocol preparation establishes each independent
+// precondition, not the revocation or audit outcome being asserted. Give setup
+// the same bounded budget as schema setup; retain the 15s action-test budget.
+beforeEach(async () => { admin = await user(); owner = await user("ACCOUNTANT"); target = await native(owner); }, 60_000);
 it("revokes only the selected real session, preserves controls, first audit/reason, and fresh login cannot revive it", async () => {
-  const admin = await user(), owner = await user("ACCOUNTANT"), target = await native(owner), control = await native(owner);
+  const control = await native(owner);
   const deviceBefore = await db.offlineSyncDevice.findUniqueOrThrow({ where: { publicDeviceId: target.deviceId } });
   const userBefore = await db.user.findUniqueOrThrow({ where: { id: owner.u.id } });
   const rotated = await refresh(target); // refresh commits FIRST
@@ -123,7 +129,7 @@ it("revokes only the selected real session, preserves controls, first audit/reas
   const publicText = JSON.stringify(audit.map(e => JSON.parse(e.detailsJson!))); for (const secret of [target.tokens.accessToken, target.tokens.refreshToken, rotated.accessToken, admin.web.cookieValue]) expect(publicText.includes(secret)).toBe(false);
 });
 it("reauthorizes absent/inactive/wrong selected role/explicit deny even on retries", async () => {
-  const admin = await user(), owner = await user("ACCOUNTANT"), target = await native(owner), token = await grant(admin, target.tokens.sessionId);
+  const token = await grant(admin, target.tokens.sessionId);
   const body = { stepUpToken: token, reason: "SYNTHETIC denial control" };
   await expect(revokeGovernedNativeSession(db, undefined, target.tokens.sessionId, body)).rejects.toThrow("AUTHENTICATION_REQUIRED");
   await db.user.update({ where: { id: admin.u.id }, data: { isActive: false } }); await expect(revoke(admin, target, token)).rejects.toThrow("AUTHENTICATION_REQUIRED"); await db.user.update({ where: { id: admin.u.id }, data: { isActive: true } });
@@ -133,16 +139,25 @@ it("reauthorizes absent/inactive/wrong selected role/explicit deny even on retri
   await db.userPermissionOverride.update({ where: { id: deny.id }, data: { status: "REVOKED", revokedAt: new Date() } }); await revoke(admin, target, token);
   await db.userRoleAssignment.update({ where: { id: admin.assignment.id }, data: { status: "REVOKED", endedAt: new Date(), activeKey: null } }); await expect(revoke(admin, target, token)).rejects.toThrow("AUTHENTICATION_REQUIRED"); expect(await events(target.tokens.sessionId)).toHaveLength(1);
 });
-it("rejects missing/expired/revoked/replayed and wrong action/actor/web-session/target/environment step-up", async () => {
-  const admin = await user(), other = await user(), owner = await user("ACCOUNTANT"), target = await native(owner);
-  await expect(revoke(admin, target, "missing")).rejects.toThrow("STEP_UP_REQUIRED");
-  for (const change of [{ expiresAt: new Date(0) }, { revokedAt: new Date() }, { usedAt: new Date() }]) { const t = await grant(admin, target.tokens.sessionId); await db.stepUpGrant.update({ where: { id: t.split(".")[0] }, data: change }); await expect(revoke(admin, target, t)).rejects.toThrow("STEP_UP_REQUIRED"); }
-  for (const t of [await grant(admin, randomUUID()), await grant(admin, target.tokens.sessionId, "OTHER_GOVERNED_ACTION"), await grant(other, target.tokens.sessionId), await grant(admin, target.tokens.sessionId, undefined, (await createPersistedSession(db, admin.u, new Headers())).sessionId)]) await expect(revoke(admin, target, t)).rejects.toThrow("STEP_UP_REQUIRED");
-  const t = await grant(admin, target.tokens.sessionId); vi.stubEnv("AUTH_BOUND_ENVIRONMENT", "OTHER_ENVIRONMENT"); await expect(revoke(admin, target, t)).rejects.toThrow("STEP_UP_REQUIRED"); vi.stubEnv("AUTH_BOUND_ENVIRONMENT", "SYNTHETIC_SERVICE");
+it.each(["missing", "expired", "revoked", "replayed", "wrong-target", "wrong-action", "wrong-actor", "wrong-web-session", "wrong-environment"] as const)("rejects %s step-up on an independently authorized native target", async (scenario) => {
+  let token = "missing";
+  if (scenario === "wrong-target") token = await grant(admin, randomUUID());
+  else if (scenario === "wrong-action") token = await grant(admin, target.tokens.sessionId, "OTHER_GOVERNED_ACTION");
+  else if (scenario === "wrong-actor") token = await grant(await user(), target.tokens.sessionId);
+  else if (scenario === "wrong-web-session") token = await grant(admin, target.tokens.sessionId, undefined, (await createPersistedSession(db, admin.u, new Headers())).sessionId);
+  else if (scenario !== "missing") {
+    token = await grant(admin, target.tokens.sessionId);
+    const change = scenario === "expired" ? { expiresAt: new Date(0) } : scenario === "revoked" ? { revokedAt: new Date() } : scenario === "replayed" ? { usedAt: new Date() } : null;
+    if (change) await db.stepUpGrant.update({ where: { id: token.split(".")[0] }, data: change });
+  }
+  try {
+    if (scenario === "wrong-environment") vi.stubEnv("AUTH_BOUND_ENVIRONMENT", "OTHER_ENVIRONMENT");
+    await expect(revoke(admin, target, token)).rejects.toThrow("STEP_UP_REQUIRED");
+  } finally { vi.stubEnv("AUTH_BOUND_ENVIRONMENT", "SYNTHETIC_SERVICE"); }
   expect(await events(target.tokens.sessionId)).toHaveLength(0); await access(target);
 });
 it("conceals unknown or corrupted relationships without consuming a grant or transitioning", async () => {
-  const admin = await user(), owner = await user("ACCOUNTANT"), foreign = await user("ACCOUNTANT"), target = await native(owner);
+  const foreign = await user("ACCOUNTANT");
   const unknown = randomUUID(), token = await grant(admin, unknown);
   await expect(revokeGovernedNativeSession(db, admin.web.cookieValue, unknown, { reason: "SYNTHETIC unknown", stepUpToken: token })).rejects.toThrow("NATIVE_SESSION_NOT_FOUND"); expect((await db.stepUpGrant.findUniqueOrThrow({ where: { id: token.split(".")[0] } })).usedAt).toBeNull();
   const device = await db.offlineSyncDevice.findUniqueOrThrow({ where: { publicDeviceId: target.deviceId } });
@@ -150,7 +165,6 @@ it("conceals unknown or corrupted relationships without consuming a grant or tra
   await db.nativeSession.update({ where: { publicSessionId: target.tokens.sessionId }, data: { roleAssignmentId: foreign.assignment.id } }); await expect(revoke(admin, target)).rejects.toThrow("NATIVE_SESSION_NOT_FOUND"); expect(await events(target.tokens.sessionId)).toHaveLength(0);
 });
 it("concurrent revocation has one durable transition; revoke-first refresh cannot issue authority", async () => {
-  const admin = await user(), owner = await user("ACCOUNTANT"), target = await native(owner);
   const a = await grant(admin, target.tokens.sessionId), b = await grant(admin, target.tokens.sessionId);
   const results = await Promise.allSettled([revoke(admin, target, a), revoke(admin, target, b)]);
   expect(results.filter(r => r.status === "fulfilled" && r.value.status === "REVOKED")).toHaveLength(1);
@@ -159,7 +173,7 @@ it("concurrent revocation has one durable transition; revoke-first refresh canno
   const row = await db.nativeSession.findUniqueOrThrow({ where: { publicSessionId: target.tokens.sessionId } }); expect(row.tokenVersion).toBe(1); expect(await db.nativeRefreshTokenHistory.count({ where: { sessionId: row.id } })).toBe(0);
 });
 it("overlapping refresh/revoke cannot leave usable successor credentials or duplicate audit", async () => {
-  const admin = await user(), owner = await user("ACCOUNTANT"), target = await native(owner), token = await grant(admin, target.tokens.sessionId);
+  const token = await grant(admin, target.tokens.sessionId);
   const results = await Promise.allSettled([refresh(target), revoke(admin, target, token)]);
   // Serialization can refuse a participant; only an authorized explicit retry
   // of an uncommitted revoke is allowed. It uses the still-unused grant.
@@ -169,7 +183,7 @@ it("overlapping refresh/revoke cannot leave usable successor credentials or dupl
   expect(await events(target.tokens.sessionId)).toHaveLength(1); await expect(access(target)).rejects.toThrow("NATIVE_ACCESS_INVALID");
 });
 it("audit failure rolls back revocation and grant; route responses are private and fail closed", async () => {
-  const admin = await user(), owner = await user("ACCOUNTANT"), target = await native(owner), token = await grant(admin, target.tokens.sessionId);
+  const token = await grant(admin, target.tokens.sessionId);
   // Inject at the real transaction's audit boundary; all other delegates/commit
   // remain real. Never seed an expected audit or revocation.
   const failing = new Proxy(db, { get(client, key) { if (key === "$transaction") return (fn: any, options: any) => client.$transaction(tx => fn(new Proxy(tx, { get(t, k) { if (k === "authSecurityEvent") return { create: async () => { throw Error("PRIVATE_AUDIT_STORAGE_FAILURE"); } }; return Reflect.get(t, k); } })), options); const v = Reflect.get(client, key); return typeof v === "function" ? v.bind(client) : v; } });
@@ -182,4 +196,5 @@ it("audit failure rolls back revocation and grant; route responses are private a
   harness.db = failing; const failed = await call(body); expect(failed.status).toBe(500); expect(await failed.text()).not.toContain("PRIVATE_AUDIT_STORAGE_FAILURE"); harness.db = db;
   harness.enabled = false; expect((await call(body)).status).toBe(404); harness.enabled = true;
   const result = await call(body); expect(result.status).toBe(200); expect(await result.json()).toEqual({ status: "REVOKED" }); expect(result.headers.get("cache-control")).toBe("private, no-store"); expect(result.headers.get("x-content-type-options")).toBe("nosniff");
+});
 });
