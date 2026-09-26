@@ -1,3 +1,4 @@
+import type {NativeMfaEvidence} from "../../lib/real-user-access/native-mfa-evidence";
 import assert from "node:assert/strict";
 import path from "node:path";
 import {NativeWebDriver,authenticateNativeBrowser} from "./native-webdriver";
@@ -40,11 +41,15 @@ export function assertOwnedProcess(actual:ProcessIdentity,owned:ProcessIdentity)
  assert(Number.isSafeInteger(owned.pid)&&owned.pid>0&&sha.test(owned.sha256)&&owned.created.length>0,"WINDOWS_PROCESS_IDENTITY_REQUIRED");
  for(const k of ["pid","created","sha256","userSid"] as const)assert.equal(actual[k],owned[k],"WINDOWS_FOREIGN_PROCESS");assert(samePath(actual.executable,owned.executable),"WINDOWS_FOREIGN_EXECUTABLE");
 }
-export type NativeIdentity={source:string;runId:string;attempt:string;databaseIdentitySha256:string;userId:string|null;deviceId:string|null;publicDeviceId:string;sessionId:string|null;requestId:string;requestStatus:string;deviceStatus:string|null;sessionRevoked:boolean|null;activeSessions:number;role:string|null;mfaUsed:boolean|null;referenceStudents:string[];referenceVersion:string;tokenVersion:number|null;rotatedTokenVersions:number[]};
+export type NativeIdentity={source:string;runId:string;attempt:string;databaseIdentitySha256:string;userId:string|null;deviceId:string|null;publicDeviceId:string;sessionId:string|null;requestId:string;requestStatus:string;deviceStatus:string|null;sessionRevoked:boolean|null;activeSessions:number;role:string|null;mfaUsed:boolean|null;mfaEvidence:NativeMfaEvidence;referenceStudents:string[];referenceVersion:string;tokenVersion:number|null;rotatedTokenVersions:number[]};
 export function assertNativeIdentity(actual:NativeIdentity,expected:NativeIdentity):asserts actual is NativeIdentity&{sessionId:string;tokenVersion:number}{
  assert(typeof actual.sessionId==="string"&&typeof actual.tokenVersion==="number","WINDOWS_CONSUMED_SESSION_REQUIRED");
  for(const k of ["source","runId","attempt","databaseIdentitySha256","userId","deviceId","publicDeviceId","sessionId","requestId","role"] as const)assert.equal(actual[k],expected[k],"WINDOWS_NATIVE_IDENTITY_MISMATCH");
  assert.equal(actual.requestStatus,"CONSUMED");assert.equal(actual.deviceStatus,"ACTIVE");assert.equal(actual.sessionRevoked,false);assert.equal(actual.activeSessions,1);assert.equal(actual.mfaUsed,true);
+ const evidence=actual.mfaEvidence;
+ assert(evidence?.status==="VERIFIED","WINDOWS_EXPLICIT_MFA_LINK_REQUIRED");
+ assert.equal(evidence.userId,expected.userId,"WINDOWS_MFA_USER_MISMATCH");assert.equal(evidence.requestId,expected.requestId,"WINDOWS_MFA_REQUEST_MISMATCH");assert.equal(evidence.nativeSessionId,actual.sessionId,"WINDOWS_MFA_SESSION_MISMATCH");
+ assert(["TOTP","RECOVERY_CODE","WEBAUTHN"].includes(evidence.factor)&&uuid.test(evidence.challengeId)&&evidence.webSessionId.length>0&&Number.isFinite(Date.parse(evidence.verifiedAt)),"WINDOWS_MFA_LINK_INVALID");
  assert(actual.referenceVersion.length>0);assert.deepEqual([...actual.referenceStudents].sort(),[...expected.referenceStudents].sort(),"WINDOWS_REFERENCE_SCOPE");assert(new Set(actual.referenceStudents).size===actual.referenceStudents.length);
  assert(Number.isSafeInteger(actual.tokenVersion)&&actual.tokenVersion>=1);assert.deepEqual(actual.rotatedTokenVersions,Array.from({length:actual.tokenVersion-1},(_,i)=>i+1),"WINDOWS_ROTATION_HISTORY");
 }

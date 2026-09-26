@@ -18,7 +18,7 @@ import {POST as revokeRoute} from "../app/api/native-auth/sessions/[id]/revoke/r
 import {beginTotpEnrollment,confirmTotpEnrollment} from "../lib/real-user-access/mfa-service";
 import {generateTotpForSyntheticQa} from "../lib/real-user-access/totp";
 import {createStepUpChallenge,completeStepUpChallenge} from "../lib/real-user-access/step-up";
-import {boundAuthEnvironment} from "../lib/real-user-access/login-mfa";
+import {boundAuthEnvironment,createLoginMfaChallenge,completeLoginMfaSignIn} from "../lib/real-user-access/login-mfa";
 import {PATCH} from "../app/api/offline-sync/devices/[id]/route";
 // ISOLATED_SERVICE: actual native protocol, permission evaluator, approval route,
 // audit, MFA and step-up services and database. Admission, HTTP transport and web login are
@@ -74,7 +74,10 @@ describe.sequential("private Windows service journey",()=>{
  it("prepares owned MFA fixtures and reads genuine pending request/device states",async()=>{
  expect(phase).toBe(0);f=await probe("prepare",{password,governancePassword:password});
  await expect(probe("prepare",{password,governancePassword:password})).rejects.toThrow();
- user=await db.user.findUniqueOrThrow({where:{id:f.userId}});const assignment=await db.userRoleAssignment.findFirstOrThrow({where:{userId:user.id}});web=await createPersistedSession(db,user,new Headers());actor={...user,roleAssignmentId:assignment.id};
+ user=await db.user.findUniqueOrThrow({where:{id:f.userId}});const assignment=await db.userRoleAssignment.findFirstOrThrow({where:{userId:user.id}});const challenge=await createLoginMfaChallenge(db,{userId:user.id,environment:boundAuthEnvironment()});
+ const factor=await db.mfaAuthenticator.findFirstOrThrow({where:{userId:user.id,type:"TOTP",status:"ACTIVE"}});const timestamp=Math.max(Date.now(),(factor.totpLastUsedStep!+1)*30_000);
+ const login=await completeLoginMfaSignIn(db,{challengeToken:challenge.challengeToken!,environment:boundAuthEnvironment(),factor:"TOTP",timestamp,response:generateTotpForSyntheticQa({userId:user.id,authenticatorId:factor.id,secretEnvelope:factor.secretEnvelope!,timestamp})},new Headers());
+ if(!login.verified||!login.session)throw Error("SYNTHETIC_LOGIN_REQUIRED");web=login.session;actor={...user,roleAssignmentId:assignment.id};
  pending=await request();let snapshot=await probe("read",{original:pending.original});expect(snapshot).toMatchObject({userId:null,sessionId:null,deviceId:null,tokenVersion:null,sessionRevoked:null,activeSessions:0,mfaUsed:null});
  expect(await db.nativeSession.count()).toBe(0);await authorize(pending);snapshot=await probe("read",{original:pending.original});expect(snapshot).toMatchObject({userId:user.id,deviceStatus:"PENDING_APPROVAL",sessionId:null,activeSessions:0});
  for(const drift of [{publicDeviceId:randomUUID()},{publicKeyHash:"d".repeat(64)},{iteration:randomUUID()}])await expect(windowsServerProbe(db,{...bound,...drift,operation:"read",original:pending.original})).rejects.toThrow();
@@ -89,9 +92,9 @@ describe.sequential("private Windows service journey",()=>{
  },15_000);
  it("exchanges and rotates actual native authority with scoped reference readback",async()=>{
  expect(phase).toBe(2);
- consumed=await request();tokens=await exchange(consumed);const snapshot=await probe("read",{original:consumed.original});expect(snapshot).toMatchObject({sessionId:tokens.sessionId,activeSessions:1,tokenVersion:1,mfaUsed:null,referenceObservation:"AVAILABLE_POPULATION_ONLY_NOT_REFRESH_PROOF"});expect(snapshot.referenceStudents).toEqual([...f.expectedStudents].sort());
+ consumed=await request();tokens=await exchange(consumed);const snapshot=await probe("read",{original:consumed.original});expect(snapshot).toMatchObject({sessionId:tokens.sessionId,activeSessions:1,tokenVersion:1,mfaUsed:true,mfaEvidence:{status:"VERIFIED",factor:"TOTP",userId:f.userId,requestId:consumed.requestId,webSessionId:web.sessionId,nativeSessionId:tokens.sessionId},referenceObservation:"AVAILABLE_POPULATION_ONLY_NOT_REFRESH_PROOF"});expect(snapshot.referenceStudents).toEqual([...f.expectedStudents].sort());
  const timestamp=String(Date.now()),proofNonce=opaque();rotated=await refreshNativeSession({sessionId:tokens.sessionId,refreshToken:tokens.refreshToken,publicDeviceId:bound.publicDeviceId,timestamp,proofNonce,proof:signature(nativeRefreshProofMessage({sessionId:tokens.sessionId,timestamp,proofNonce,refreshTokenHash:sha256Hex(tokens.refreshToken),publicDeviceId:bound.publicDeviceId,tokenVersion:1}))});
- expect(await probe("read",{original:consumed.original})).toMatchObject({tokenVersion:2,rotatedTokenVersions:[1]});
+ expect(await probe("read",{original:consumed.original})).toMatchObject({tokenVersion:2,rotatedTokenVersions:[1],mfaEvidence:snapshot.mfaEvidence});
  phase=3;
  },15_000);
  it("revokes exactly the observed session through real step-up/route/audit and verifies retry",async()=>{

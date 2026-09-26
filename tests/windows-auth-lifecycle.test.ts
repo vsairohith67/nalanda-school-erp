@@ -3,7 +3,7 @@ import {validateWindowsTarget,validateOriginalAuthorization,assertNativeIdentity
 
 const hash="a".repeat(64),source="b".repeat(40);
 import {windowsTarget} from "./fixtures/windows-auth";
-const identity={source,runId:"123",attempt:"1",databaseIdentitySha256:hash,userId:"synthetic-user",deviceId:"synthetic-device",publicDeviceId:"00000000-0000-4000-8000-000000000001",sessionId:"00000000-0000-4000-8000-000000000002",requestId:"00000000-0000-4000-8000-000000000003",requestStatus:"CONSUMED",deviceStatus:"ACTIVE",sessionRevoked:false,activeSessions:1,role:"ACCOUNTANT",mfaUsed:true,referenceStudents:["SYNTHETIC-1"],referenceVersion:"synthetic-version",tokenVersion:1,rotatedTokenVersions:[] as number[]};
+const identity={source,runId:"123",attempt:"1",databaseIdentitySha256:hash,userId:"synthetic-user",deviceId:"synthetic-device",publicDeviceId:"00000000-0000-4000-8000-000000000001",sessionId:"00000000-0000-4000-8000-000000000002",requestId:"00000000-0000-4000-8000-000000000003",requestStatus:"CONSUMED",deviceStatus:"ACTIVE",sessionRevoked:false,activeSessions:1,role:"ACCOUNTANT",mfaUsed:true,mfaEvidence:{status:"VERIFIED" as const,factor:"TOTP" as const,challengeId:"00000000-0000-4000-8000-000000000004",verifiedAt:"2026-09-24T00:00:00.000Z",webSessionId:"synthetic-web",userId:"synthetic-user",requestId:"00000000-0000-4000-8000-000000000003",nativeSessionId:"00000000-0000-4000-8000-000000000002"},referenceStudents:["SYNTHETIC-1"],referenceVersion:"synthetic-version",tokenVersion:1,rotatedTokenVersions:[] as number[]};
 describe("Windows lifecycle admission assertions (contract evidence only)",()=>{
  it("binds different Edge browser and WebView versions independently",()=>{expect(validateWindowsTarget(windowsTarget(),{source,runId:"123",attempt:"1"})).toEqual(windowsTarget());});
  it.each(["source","runId","attempt","architecture","appId","profile","origin","artifactSha256","tauriDriverVersion"])("refuses substituted %s",key=>{const t:any=windowsTarget();t[key]="foreign";expect(()=>validateWindowsTarget(t,{source,runId:"123",attempt:"1"})).toThrow();});
@@ -32,4 +32,8 @@ describe("Windows lifecycle admission assertions (contract evidence only)",()=>{
   const events:string[]=[];const host:any={admit:async()=>{events.push("admit");throw Error("EXTERNAL_RUNTIME_BLOCKED");},cleanup:async()=>events.push("cleanup")};
   await expect(runWindowsAuthentication(host,{} as any)).rejects.toThrow("WINDOWS_AUTH_LIFECYCLE_FAILED");expect(events).toEqual(["admit","cleanup"]);
  });
+ it("requires explicit MFA identity independently bound to expected fixture and observed request",()=>{
+  for(const change of [{status:"NOT_RECORDED"},{...identity.mfaEvidence,userId:"other-user"},{...identity.mfaEvidence,requestId:"00000000-0000-4000-8000-000000000005"},{...identity.mfaEvidence,nativeSessionId:"00000000-0000-4000-8000-000000000006"},{...identity.mfaEvidence,factor:"PASSWORD"}])expect(()=>assertNativeIdentity({...identity,mfaEvidence:change as any},identity)).toThrow();
+ });
+
 });

@@ -18,7 +18,7 @@ it("private output projection rejects extra credential fields and invented succe
 it("revocation adapter binds the observed request/session and carries governance input only in private stdin",async()=>{
  const requestId=randomUUID(),sessionId=randomUUID(),governancePassword=secret();
  const original=`https://portable-staging.localhost:8443/native/authorize?request=${requestId}&state=${"s".repeat(43)}&challenge=${"c".repeat(43)}&proof=${"p".repeat(86)}`;
- const readback={...binding,requestId,userId:"synthetic-user",deviceId:"synthetic-device",requestStatus:"CONSUMED",deviceStatus:"ACTIVE",sessionId,sessionRevoked:false,activeSessions:1,role:"ACCOUNTANT",authorityActive:true,mfaUsed:null,mfaObservation:"NO_SESSION_CHALLENGE_LINK_RECORDED",referenceStudents:[],referenceVersion:"d".repeat(64),referenceObservation:"AVAILABLE_POPULATION_ONLY_NOT_REFRESH_PROOF",tokenVersion:1,rotatedTokenVersions:[]};
+ const readback={...binding,requestId,userId:"synthetic-user",deviceId:"synthetic-device",requestStatus:"CONSUMED",deviceStatus:"ACTIVE",sessionId,sessionRevoked:false,activeSessions:1,role:"ACCOUNTANT",authorityActive:true,mfaUsed:null,mfaObservation:"NO_SESSION_CHALLENGE_LINK_RECORDED",mfaEvidence:{status:"NOT_RECORDED"},referenceStudents:[],referenceVersion:"d".repeat(64),referenceObservation:"AVAILABLE_POPULATION_ONLY_NOT_REFRESH_PROOF",tokenVersion:1,rotatedTokenVersions:[]};
  const {iteration:_iteration,phase:_phase,publicKeyHash:_key,...projected}=readback;
  const invoke=vi.fn(async(raw:string)=>{const input=parseWindowsProbe(raw);if(input.operation==="read")return JSON.stringify(projected);expect(input).toMatchObject({operation:"revoke-session",original,sessionId,governancePassword});return JSON.stringify({evidenceClass:"SERVICE_GOVERNANCE",sessionId,eventCount:1,status:"REVOKED"});});
  const ports=new WindowsServerPorts(binding,invoke,()=>{},secret(),governancePassword);ports.observe(original);await ports.read(requestId);await ports.revokeSession(sessionId);
@@ -46,4 +46,15 @@ it("dispatcher validates Windows input before dynamically constructing its sole 
  expect(source.indexOf("validateWindowsProbeTarget(parseWindowsProbe(raw))")).toBeLessThan(source.indexOf('await executeWindowsProbe(input)'));
  expect(source).toContain('finally{await db.$disconnect();}');expect(source).not.toMatch(/^import .*BrowserProbe/m);
  expect(probe).not.toMatch(/^import .*device-trust/m);expect(probe).toContain('await import("../../lib/offline-sync/device-trust")');
+});
+
+it("strict MFA readback projection rejects contradictory, private and malformed evidence",()=>{
+ const requestId=randomUUID(),sessionId=randomUUID(),proof={status:"VERIFIED",factor:"TOTP",challengeId:randomUUID(),verifiedAt:"2026-09-27T00:00:00.000Z",webSessionId:"synthetic-web",userId:"synthetic-user",requestId,nativeSessionId:sessionId};
+ const row={source:binding.source,runId:binding.runId,attempt:binding.attempt,databaseIdentitySha256:binding.databaseIdentitySha256,publicDeviceId:binding.publicDeviceId,requestId,userId:"synthetic-user",deviceId:"synthetic-device",requestStatus:"CONSUMED",deviceStatus:"ACTIVE",sessionId,sessionRevoked:false,activeSessions:1,role:"ACCOUNTANT",authorityActive:true,mfaUsed:true,mfaObservation:"EXPLICIT_SESSION_CHALLENGE_LINK",mfaEvidence:proof,referenceStudents:[],referenceVersion:"d".repeat(64),referenceObservation:"AVAILABLE_POPULATION_ONLY_NOT_REFRESH_PROOF",tokenVersion:1,rotatedTokenVersions:[]};
+ expect(validateWindowsProbeResult("read",row)).toEqual(row);
+ for(const extra of [{secretEnvelope:"PRIVATE"},{version:99},{status:"UNKNOWN"},{verifiedAt:"yesterday"},{verifiedAt:"2026-09-27"},{factor:"PASSWORD"},{userId:"foreign"},{requestId:randomUUID()},{nativeSessionId:randomUUID()}])expect(()=>validateWindowsProbeResult("read",{...row,mfaEvidence:{...proof,...extra}})).toThrow("OUTPUT_REFUSED");
+ for(const change of [{mfaUsed:false},{mfaUsed:null},{mfaObservation:"NO_SESSION_CHALLENGE_LINK_RECORDED"},{sessionId:null},{requestStatus:"PENDING_BROWSER_AUTH"}])expect(()=>validateWindowsProbeResult("read",{...row,...change})).toThrow("OUTPUT_REFUSED");
+ for(const status of ["NOT_RECORDED","CONFLICT"]){const unknown={...row,mfaUsed:null,mfaObservation:status==="CONFLICT"?"SESSION_CHALLENGE_LINK_CONFLICT":"NO_SESSION_CHALLENGE_LINK_RECORDED",mfaEvidence:{status}};expect(validateWindowsProbeResult("read",unknown)).toEqual(unknown);}
+ const pending={...row,userId:null,deviceId:null,sessionId:null,sessionRevoked:null,activeSessions:0,role:null,tokenVersion:null,requestStatus:"PENDING_BROWSER_AUTH",mfaUsed:null,mfaObservation:"NO_SESSION_CHALLENGE_LINK_RECORDED",mfaEvidence:{status:"NOT_YET_ISSUED"}};expect(validateWindowsProbeResult("read",pending)).toEqual(pending);
+ expect(()=>validateWindowsProbeResult("read",{...pending,sessionId})).toThrow("OUTPUT_REFUSED");
 });

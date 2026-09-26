@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import {readNativeMfaEvidence} from "../../lib/real-user-access/native-mfa-evidence";
+import {boundAuthEnvironment} from "../../lib/real-user-access/login-mfa";
 import {createHash} from "node:crypto";
 import type {PrismaClient} from "@prisma/client";
 import {windowsProbeInput,validateWindowsProbeResult,type WindowsProbeInput} from "./windows-server-contract";
@@ -146,7 +148,8 @@ export async function windowsServerProbe(db:PrismaClient,value:unknown){
    const expected=[scope+"-one",scope+"-two"];requireTrue(students.length===2&&students.every(s=>expected.includes(s.admissionNo)));
    const history=session?.refreshHistory??[];requireTrue(history.length<=100&&history.every(h=>h.status==="ROTATED"&&!h.reusedAt));
    if(session){requireTrue(session.tokenVersion>=1&&session.tokenVersion<=101);requireTrue(JSON.stringify(history.map(h=>h.tokenVersion))===JSON.stringify(Array.from({length:session.tokenVersion-1},(_,i)=>i+1)));}
-   result={source:input.source,runId:input.runId,attempt:input.attempt,databaseIdentitySha256:input.databaseIdentitySha256,userId:r.userId,deviceId:device?.id??null,publicDeviceId:input.publicDeviceId,requestId,requestStatus:r.status,deviceStatus:device?.status??null,sessionId:session?.publicSessionId??null,sessionRevoked:session?Boolean(session.revokedAt):null,activeSessions:session&&!session.revokedAt&&session.refreshExpiresAt>new Date()&&session.absoluteExpiresAt>new Date()&&device?.status==="ACTIVE"&&authorityActive?1:0,role:role?.role??null,authorityActive,mfaUsed:null,mfaObservation:"NO_SESSION_CHALLENGE_LINK_RECORDED",referenceStudents:students.map(s=>s.admissionNo).sort(),referenceVersion:digest(JSON.stringify(students.map(s=>[s.admissionNo,s.updatedAt.toISOString()]).sort())),referenceObservation:"AVAILABLE_POPULATION_ONLY_NOT_REFRESH_PROOF",tokenVersion:session?.tokenVersion??null,rotatedTokenVersions:history.map(h=>h.tokenVersion)};
+   const mfaEvidence=await readNativeMfaEvidence(db,{userId:u.id,requestId,nativeSessionId:session?.publicSessionId??null,environment:boundAuthEnvironment()});
+   result={source:input.source,runId:input.runId,attempt:input.attempt,databaseIdentitySha256:input.databaseIdentitySha256,userId:r.userId,deviceId:device?.id??null,publicDeviceId:input.publicDeviceId,requestId,requestStatus:r.status,deviceStatus:device?.status??null,sessionId:session?.publicSessionId??null,sessionRevoked:session?Boolean(session.revokedAt):null,activeSessions:session&&!session.revokedAt&&session.refreshExpiresAt>new Date()&&session.absoluteExpiresAt>new Date()&&device?.status==="ACTIVE"&&authorityActive?1:0,role:role?.role??null,authorityActive,mfaUsed:mfaEvidence.status==="VERIFIED"?true:null,mfaObservation:mfaEvidence.status==="VERIFIED"?"EXPLICIT_SESSION_CHALLENGE_LINK":mfaEvidence.status==="CONFLICT"?"SESSION_CHALLENGE_LINK_CONFLICT":"NO_SESSION_CHALLENGE_LINK_RECORDED",mfaEvidence,referenceStudents:students.map(s=>s.admissionNo).sort(),referenceVersion:digest(JSON.stringify(students.map(s=>[s.admissionNo,s.updatedAt.toISOString()]).sort())),referenceObservation:"AVAILABLE_POPULATION_ONLY_NOT_REFRESH_PROOF",tokenVersion:session?.tokenVersion??null,rotatedTokenVersions:history.map(h=>h.tokenVersion)};
   }
  }
  validateWindowsProbeTarget(input);

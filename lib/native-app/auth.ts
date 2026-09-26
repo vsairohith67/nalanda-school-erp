@@ -1,5 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { Prisma } from "@prisma/client";
+import { boundAuthEnvironment } from "@/lib/real-user-access/login-mfa";
 import { prisma } from "@/lib/prisma";
 import { authHashSecret, logAuthSecurityEvent } from "@/lib/auth-security";
 import { evaluateEffectivePermission } from "@/lib/iam/effective-access";
@@ -127,6 +128,7 @@ export async function authorizeNativeRequest(input: { requestId: string; state: 
   if (!user?.isActive || user.lifecycleStatus !== "ACTIVE" || user.authorizationVersion !== input.user.authorizationVersion) throw new NativeAuthError("ACCOUNT_STATE_CHANGED", 403);
 
   return prisma.$transaction(async (tx) => {
+    await assertNativeWebSession(tx, input.webSessionId, input.user.id, input.user.roleAssignmentId, user.credentialVersion, user.authorizationVersion, now);
     let device = await tx.offlineSyncDevice.findUnique({ where: { publicDeviceId: row.publicDeviceId } });
     if (!device) {
       device = await tx.offlineSyncDevice.create({ data: { publicDeviceId: row.publicDeviceId, userId: input.user.id, label: row.deviceLabel, platform: row.platform, publicSigningKey: row.publicSigningKey, publicKeyHash: row.publicKeyHash, keyAlgorithm: "ED25519", status: "PENDING_APPROVAL" } });
@@ -170,13 +172,20 @@ export async function exchangeNativeAuthorization(value: unknown, now = new Date
     const message = nativeExchangeProofMessage({ requestId, code, verifier, nonce, publicDeviceId });
     if (!(await verifyDeviceSignature(authorization.device, message, proof))) throw new NativeAuthError("DEVICE_PROOF_INVALID", 401);
     await assertNativeAccountState(tx, authorization, now);
+    await assertNativeWebSession(tx, authorization.request.webSessionId, authorization.userId, authorization.roleAssignmentId, authorization.credentialVersion, authorization.authorizationVersion, now);
+    const consumed = await tx.nativeAuthorizationCode.updateMany({ where: { id: authorization.id, usedAt: null, expiresAt: { gt: now } }, data: { usedAt: now } });
+    if (consumed.count !== 1) throw new NativeAuthError("CODE_INVALID_OR_EXPIRED", 401);
     const accessToken = opaque(); const refreshToken = opaque();
     const session = await tx.nativeSession.create({ data: { userId: authorization.userId, deviceId: authorization.deviceId, roleAssignmentId: authorization.roleAssignmentId, accessTokenHash: secretHash(accessToken, "access"), refreshTokenHash: secretHash(refreshToken, "refresh"), credentialVersion: authorization.credentialVersion, authorizationVersion: authorization.authorizationVersion, scopesJson: JSON.stringify(NATIVE_SCOPES), accessExpiresAt: new Date(now.getTime() + ACCESS_TTL_MS), refreshExpiresAt: new Date(now.getTime() + REFRESH_TTL_MS), absoluteExpiresAt: new Date(now.getTime() + ABSOLUTE_TTL_MS) } });
-    await tx.nativeAuthorizationCode.update({ where: { id: authorization.id }, data: { usedAt: now } });
     await tx.nativeAuthRequest.update({ where: { id: authorization.requestId }, data: { status: "CONSUMED", consumedAt: now } });
-    await logAuthSecurityEvent(tx, { eventType: "NATIVE_SESSION_CREATED", userId: authorization.userId, subjectType: "NATIVE_SESSION", subjectId: session.publicSessionId, details: { requestId: authorization.request.publicRequestId, rotationVersion: 1, keyVersion: authorization.device.keyVersion } });
+    await logAuthSecurityEvent(tx, { eventType: "NATIVE_SESSION_CREATED", userId: authorization.userId, subjectType: "NATIVE_SESSION", subjectId: session.publicSessionId, details: { requestId: authorization.request.publicRequestId, rotationVersion: 1, keyVersion: authorization.device.keyVersion, lineageVersion: 1, webSessionId: authorization.request.webSessionId, environment: boundAuthEnvironment() } });
     return tokenResponse(session.publicSessionId, accessToken, refreshToken, now, 1, authorization.device.keyVersion);
   });
+}
+
+async function assertNativeWebSession(tx: Prisma.TransactionClient, id: string | null, userId: string, roleId: string, credentialVersion: number, authorizationVersion: number, now: Date) {
+  const web = id ? await tx.authSession.findUnique({ where: { id }, select: { userId: true, activeRoleAssignmentId: true, credentialVersion: true, authorizationVersion: true, revokedAt: true, expiresAt: true } }) : null;
+  if (!web || web.userId !== userId || web.activeRoleAssignmentId !== roleId || web.credentialVersion !== credentialVersion || web.authorizationVersion !== authorizationVersion || web.revokedAt || web.expiresAt <= now) throw new NativeAuthError("BROWSER_AUTHENTICATION_REQUIRED", 401);
 }
 
 async function assertNativeAccountState(tx: Prisma.TransactionClient, row: { userId: string; roleAssignmentId: string; credentialVersion: number; authorizationVersion: number; user: { isActive: boolean; lifecycleStatus: string; credentialVersion: number; authorizationVersion: number }; device: { status: string } }, now: Date) {
