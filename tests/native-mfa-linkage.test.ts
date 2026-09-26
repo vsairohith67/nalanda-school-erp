@@ -99,7 +99,16 @@ async function login(actor:Actor, factor:"TOTP"|"RECOVERY_CODE"="TOTP", recovery
 }
 const evidence=(actor:Actor,n:Awaited<ReturnType<typeof native>>, extra:Record<string,any>={})=>readNativeMfaEvidence(db,{userId:actor.u.id,requestId:n.requestId,nativeSessionId:n.tokens.sessionId,environment:boundAuthEnvironment(),...extra});
 let actor:Actor;
-beforeEach(async()=>{actor=await user("ACCOUNTANT");harness.passkeyValid=true;},60_000);
+let projectionSetup:{login:Awaited<ReturnType<typeof login>>;native:Awaited<ReturnType<typeof native>>}|undefined;
+beforeEach(async context=>{
+ actor=await user("ACCOUNTANT");harness.passkeyValid=true;projectionSetup=undefined;
+ if(context.task.name==="projection excludes credentials and readback never manufactures events"){
+  // Real service-created precondition, never inserted proof. Hosted Windows
+  // job108498097645's whole-test timeout included this real-service setup.
+  // Keep this under the existing 60s setup bound; the read/assertion retains 15s.
+  const authenticated=await login(actor);projectionSetup={login:authenticated,native:await native(authenticated.actor)};
+ }
+},60_000);
 describe.sequential("MFA issuance and exact native lineage (isolated services)",()=>{
  it.each(["TOTP","RECOVERY_CODE"] as const)("records the actual %s factor, exact challenge and session",async factor=>{
   const l=await login(actor,factor),n=await native(l.actor),e=await evidence(l.actor,n);
@@ -203,7 +212,8 @@ describe.sequential("MFA issuance and exact native lineage (isolated services)",
   const l=await login(actor),n=await native(l.actor);await db.authSecurityEvent.deleteMany({where:{userId:actor.u.id,eventType}});expect(await evidence(l.actor,n)).toEqual({status:"NOT_RECORDED"});
  });
  it("projection excludes credentials and readback never manufactures events",async()=>{
-  const l=await login(actor),n=await native(l.actor),count=await db.authSecurityEvent.count({where:{userId:actor.u.id}}),e=await evidence(l.actor,n);
+  expect(projectionSetup).toBeDefined();
+  const {login:l,native:n}=projectionSetup!,count=await db.authSecurityEvent.count({where:{userId:actor.u.id}}),e=await evidence(l.actor,n);
   expect(Object.keys(e).sort()).toEqual(["status","factor","challengeId","verifiedAt","webSessionId","userId","requestId","nativeSessionId"].sort());
   const serialized=JSON.stringify(e);expect(serialized.length<1024).toBe(true);for(const secret of [n.tokens.accessToken,n.tokens.refreshToken,l.actor.web.cookieValue,l.input.response,actor.factor.secretEnvelope!])expect(serialized.includes(secret)).toBe(false);
   expect(await db.authSecurityEvent.count({where:{userId:actor.u.id}})).toBe(count);
