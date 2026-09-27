@@ -25,7 +25,7 @@ import {PATCH} from "../app/api/offline-sync/devices/[id]/route";
 // harness doubles. Nothing here is an observed Windows request or OS callback.
 const harness=vi.hoisted(()=>({db:null as any,governance:null as any,cookie:"",webId:"",admitted:true}));
 vi.mock("../lib/prisma",()=>({prisma:new Proxy({}, {get:(_t,key)=>{const value=harness.db[key];return typeof value==="function"?value.bind(harness.db):value;}})}));
-vi.mock("../lib/native-app/feature-flag",()=>({NATIVE_APP_ID:"com.nalandaps.erp",NATIVE_REDIRECT_URI:"nalandaps-erp://auth/callback",nativeAppEnabled:()=>true}));
+vi.mock("../lib/native-app/feature-flag",()=>({NATIVE_APP_ID:"com.nalandaps.erp",NATIVE_REDIRECT_URI:"nalandaps-erp://auth/callback",nativeAppEnabled:()=>true,nativeDataScopeEnabled:()=>true,operationalNativeAppEnabled:()=>true}));
 vi.mock("../lib/offline-sync/feature-flag",()=>({requireOfflineSyncForApi:()=>null,offlineSyncRoleAllowed:(role:string)=>["ACCOUNTANT","SUPER_ADMIN"].includes(role),OFFLINE_SYNC_SCHEMA_VERSION:1}));
 vi.mock("../lib/portable-runtime/synthetic-capability",()=>({syntheticFeatureCapability:()=>({source:"a".repeat(40),runId:"123",attempt:"1",databaseSha256:"b".repeat(64)})}));
 vi.mock("next/headers",()=>({cookies:async()=>({get:()=>({value:harness.cookie})})}));

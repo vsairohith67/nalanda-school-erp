@@ -19,7 +19,7 @@ export function insideWindowsRoot(root:string,file:string){
 export function validateWindowsTarget(t:WindowsTarget,expected:{source:string;runId:string;attempt:string}){
  for(const key of ["source","runId","attempt"] as const)assert.equal(t[key],expected[key],"WINDOWS_RUN_BINDING");
  assert(/^[a-f0-9]{40}$/.test(t.source)&&/^\d+$/.test(t.runId)&&/^\d+$/.test(t.attempt));
- assert.equal(t.architecture,"x64");assert.equal(t.appId,"com.nalandaps.erp");assert.equal(t.profile,"PRIVATE_STAGING");
+ assert.equal(t.architecture,"x64");assert.equal(t.appId,"com.nalandaps.erp");assert(["PRIVATE_STAGING","SYNTHETIC_QA"].includes(t.profile),"WINDOWS_PROFILE_UNSUPPORTED");
  assert.equal(t.origin,"https://portable-staging.localhost:8443");assert(sha.test(t.artifactSha256));assert(/^S-1-5-21-(?:\d+-){3}\d+$/.test(t.userSid));
  assert.equal(path.win32.basename(t.root),`run-${t.runId}-${t.attempt}`);
  for(const key of ["executable","userProfile","roaming","local","browserData","appData","webviewData"] as const)insideWindowsRoot(t.root,t[key]);

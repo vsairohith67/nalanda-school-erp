@@ -21,6 +21,8 @@ for (const file of ["src-tauri/Cargo.lock", "src-tauri/Cargo.toml", "src/App.tsx
 // Reviewed reference-observation source/tests only; no native binary, cache,
 // vault, reference payload, or broader subtree publication is admitted.
 for (const file of ["src/offline-adapter.ts", "src/reference-refresh.ts", "src/reference-refresh.test.ts"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
+// W1B's reviewed native trust consumer; still scanned as text for every secret/contact rule.
+for (const file of ["src-tauri/build.rs", "src-tauri/src/lib.rs", "src-tauri/src/qa_profile.rs"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
 const secretPatterns: Array<[string, RegExp]> = [
   ["private-key", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
   ["github-token", /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b/],

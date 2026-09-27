@@ -22,7 +22,7 @@ import { publicJwkHash, sha256Hex } from "../lib/offline-sync/device-trust";
 // admitted image, observed OS callback or Windows execution is claimed.
 const harness = vi.hoisted(() => ({ passkeyValid: true, db: null as any, cookie: undefined as string | undefined, enabled: true }));
 vi.mock("../lib/prisma", () => ({ prisma: new Proxy({}, { get: (_t, key) => { const v = harness.db[key]; return typeof v === "function" ? v.bind(harness.db) : v; } }) }));
-vi.mock("../lib/native-app/feature-flag", () => ({ NATIVE_APP_ID: "com.nalandaps.erp", NATIVE_REDIRECT_URI: "nalandaps-erp://auth/callback", nativeAppEnabled: () => harness.enabled }));
+vi.mock("../lib/native-app/feature-flag", () => ({ NATIVE_APP_ID: "com.nalandaps.erp", NATIVE_REDIRECT_URI: "nalandaps-erp://auth/callback", nativeAppEnabled: () => harness.enabled, nativeDataScopeEnabled: () => harness.enabled, operationalNativeAppEnabled: () => harness.enabled }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => ({ value: harness.cookie }) }) }));
 const root = mkdtempSync(path.join(tmpdir(), "nalanda-reference-observation-")), identity = lstatSync(root), schema = `rfo_${randomUUID().replaceAll("-", "")}`, postgres = process.env.DATABASE_PROVIDER === "postgresql";
 let db: PrismaClient;

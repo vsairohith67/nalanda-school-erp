@@ -1,8 +1,6 @@
 use argon2::{Algorithm, Argon2, Params, Version};
 use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue},
-    redirect::Policy,
-    Client,
 };
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
@@ -15,7 +13,7 @@ use std::{
     io::Write,
     path::{Path, PathBuf},
     str::FromStr,
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::{SystemTime, UNIX_EPOCH},
 };
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_opener::OpenerExt;
@@ -163,7 +161,14 @@ struct DiagnosticExport {
     safe_events: Vec<DiagnosticLogEntry>,
 }
 
+mod qa_profile;
+
 fn configured_profile() -> AppProfile {
+    if cfg!(feature = "synthetic-qa") {
+        let origin = qa_profile::current().ok().flatten().map(|p| p.origin);
+        return AppProfile { name: "SYNTHETIC_QA".into(), remote_configured: origin.is_some(), origin,
+            minimum_server_version: "0.1.0".into(), app_version: env!("CARGO_PKG_VERSION") };
+    }
     let name = option_env!("NALANDA_NATIVE_PROFILE").unwrap_or("NO_REMOTE_SERVER_CONFIGURED");
     let origin = match name {
         "LOCAL_DEVELOPMENT" => option_env!("NALANDA_NATIVE_LOCAL_ORIGIN"),
@@ -556,6 +561,9 @@ async fn native_api_request(
     body: Option<String>,
     headers: HashMap<String, String>,
 ) -> Result<NativeApiResponse, String> {
+    if qa_profile::current().map_err(str::to_string)?.is_some() && !qa_profile::PATHS.contains(&operation.path()) {
+        return Err("QA_OPERATION_UNAVAILABLE".into());
+    }
     let origin = configured_profile()
         .origin
         .ok_or_else(|| "REMOTE_SERVER_NOT_CONFIGURED".to_string())?;
@@ -589,11 +597,7 @@ async fn native_api_request(
         );
     }
     let url = format!("{}{}", origin, operation.path());
-    let client = Client::builder()
-        .redirect(Policy::none())
-        .timeout(Duration::from_secs(20))
-        .build()
-        .map_err(|_| "NETWORK_SETUP_FAILED")?;
+    let client = qa_profile::client()?;
     let mut request = client
         .request(operation.method(), url)
         .headers(safe_headers)
@@ -692,6 +696,9 @@ pub fn run() {
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            // Fail before native storage/client setup. Expiry is also rechecked
+            // before every authenticated native request and navigation.
+            qa_profile::current().map_err(std::io::Error::other)?;
             let data_dir = app
                 .path()
                 .app_data_dir()

@@ -10,7 +10,10 @@ export type SyntheticCapability = {
   buildId:string; source:string; runId:string; attempt:string; hostname:string;
   databaseSha256:string; origin:string; issuedAt:number; expiresAt:number;
   features:Array<{key:string;version:number;environment:string;activationRole:string}>;
+  native?: { phase:"windows-auth"; profileSha256:string; nativeBuildId:string; caSha256:string; operations:NativeQaOperation[] };
 };
+export const NATIVE_QA_OPERATIONS = ["AUTH", "CONTEXT", "REFERENCE", "DEVICE_APPROVE", "SESSION_REVOKE"] as const;
+export type NativeQaOperation = typeof NATIVE_QA_OPERATIONS[number];
 export type SyntheticBinding = {hostname:string;databaseSha256:string;origin:string;deploymentEnvironment:string;provider:string;nodeEnvironment:string};
 const sha=/^[a-f0-9]{64}$/, id=/^[a-f0-9]{40}$/;
 const allowed=new Set(["certificate-graduation-exit-1a","certificate-bulk-issue-1a","certificate-verification-1a","student-linked-items-1a","prior-year-concessions-1a","real-data-imports","bulk-exports","real-user-access-readiness-1a"]);
@@ -22,13 +25,25 @@ export function verifySyntheticCapability(trust:SyntheticBuildTrust|null, envelo
     if(!e||Object.keys(e).sort().join()!=="payload,signature"||typeof e.payload!=="string"||e.payload.length>8192||!/^[A-Za-z0-9_-]+$/.test(e.payload)||typeof e.signature!=="string"||!/^[A-Za-z0-9_-]{86}$/.test(e.signature))return null;
     const key=createPublicKey(trust.publicKey);if(key.asymmetricKeyType!=="ed25519"||!verify(null,Buffer.from(e.payload,"base64url"),key,Buffer.from(e.signature,"base64url")))return null;
     const c=JSON.parse(Buffer.from(e.payload,"base64url").toString()) as SyntheticCapability;
-    if(Object.keys(c).sort().join()!=="attempt,buildId,contract,databaseSha256,expiresAt,features,hostname,issuedAt,origin,purpose,runId,source"||c.contract!=="NALANDA_SYNTHETIC_FEATURE_CAPABILITY_V1"||c.purpose!=="RELEASE_ACCEPTANCE_FEATURES")return null;
+    const keys="attempt,buildId,contract,databaseSha256,expiresAt,features,hostname,issuedAt,"+(c.native?"native,":"")+"origin,purpose,runId,source";
+    if(Object.keys(c).sort().join()!==keys||c.contract!=="NALANDA_SYNTHETIC_FEATURE_CAPABILITY_V1"||c.purpose!=="RELEASE_ACCEPTANCE_FEATURES")return null;
     if(["buildId","source","runId","attempt"].some(k=>c[k as keyof SyntheticCapability]!==trust[k as keyof SyntheticBuildTrust]))return null;
     if(c.hostname!==binding.hostname||c.databaseSha256!==binding.databaseSha256||c.origin!==binding.origin||!Number.isSafeInteger(c.issuedAt)||!Number.isSafeInteger(c.expiresAt)||c.issuedAt>now||c.expiresAt<=now||c.expiresAt-c.issuedAt>3600_000||c.expiresAt<=c.issuedAt)return null;
     if(!Array.isArray(c.features)||c.features.length===0||c.features.length>allowed.size||new Set(c.features.map(f=>f.key)).size!==c.features.length)return null;
     for(const f of c.features)if(!f||Object.keys(f).sort().join()!=="activationRole,environment,key,version"||!allowed.has(f.key)||f.version!==1||f.activationRole!=="SUPER_ADMIN"||f.environment!==(f.key==="bulk-exports"?"STAGING":"PRODUCTION"))return null;
+    if(c.native) {
+      const n=c.native;
+      if(Object.keys(n).sort().join()!=="caSha256,nativeBuildId,operations,phase,profileSha256"||n.phase!=="windows-auth"||![n.profileSha256,n.nativeBuildId,n.caSha256].every(v=>typeof v==="string"&&sha.test(v))||JSON.stringify(n.operations)!==JSON.stringify(NATIVE_QA_OPERATIONS))return null;
+      // This phase admits login and these native operations, never business imports,
+      // payment posting, or the general offline-sync feature.
+      if(c.features.length!==1||c.features[0].key!=="real-user-access-readiness-1a")return null;
+    }
     return c;
   }catch{return null;}
+}
+
+export function syntheticNativeOperation(operation:NativeQaOperation, environment:NodeJS.ProcessEnv=process.env) {
+  return syntheticFeatureCapability(environment)?.native?.operations.includes(operation)===true;
 }
 
 /** Only this runtime wrapper is used by routes. No request, header, role or

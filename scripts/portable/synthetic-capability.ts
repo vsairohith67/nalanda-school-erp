@@ -9,6 +9,8 @@ import { inspectTarget } from "./integrated-acceptance";
 import { hashBytes } from "./artifact-handoff";
 import { releaseFeatureFlags } from "../../lib/release-feature-flags";
 import { verifySyntheticCapability, type SyntheticCapability } from "../../lib/portable-runtime/synthetic-capability";
+import { NATIVE_QA_OPERATIONS } from "../../lib/portable-runtime/synthetic-capability";
+import { prepareNativeQaInputs } from "./native-qa-profile";
 
 function privateFile(file:string,root:string){
  if(!file.startsWith(root+path.sep)||realpathSync(file)!==file)throw Error("CAPABILITY_FILE_OUTSIDE_RUN");
@@ -22,7 +24,8 @@ function main(){
   try{const trust=prepareSigningRoot(process.cwd(),identity);console.log(JSON.stringify({state:"SYNTHETIC_BUILD_INPUT_PREPARED",source,buildId:trust.buildId,productionAcceptance:false}));}
   catch(error){cleanupProducerRoot(process.cwd(),identity,"signing");throw error;}return;
  }
- if(process.argv[2]!=="issue"||!/^[a-f0-9]{64}$/.test(process.argv[3]??""))throw Error("CAPABILITY_ARGUMENT_INVALID");
+ const native=process.argv[2]==="issue-native";
+ if((process.argv[2]!=="issue"&&!native)||!/^[a-f0-9]{64}$/.test(process.argv[3]??""))throw Error("CAPABILITY_ARGUMENT_INVALID");
  if(realpathSync(root)!==root||lstatSync(root).isSymbolicLink())throw Error("CAPABILITY_ROOT_UNSAFE");
  const {bytes:trustBytes,trust}=readSigningRoot(process.cwd(),producerIdentity());
  const artifact=admitSyntheticArtifact(syntheticEvidenceRoot(),trustBytes); // before Docker, credential access or any capability write
@@ -37,12 +40,20 @@ function main(){
  const caFile=path.join(projectRoot,"qa-ca","root.crt");if(privateFile(caFile,projectRoot).length)throw Error("SYNTHETIC_CA_ALREADY_SET");
  chmodSync(caFile,0o600);writeFileSync(caFile,ca);chmodSync(caFile,0o444);
  const features=releaseFeatureFlags().filter(f=>new Set(["certificate-graduation-exit-1a","certificate-bulk-issue-1a","certificate-verification-1a","student-linked-items-1a","prior-year-concessions-1a","real-data-imports","bulk-exports","real-user-access-readiness-1a"]).has(f.key)).map(f=>({key:f.key,version:f.version,environment:f.environment,activationRole:"SUPER_ADMIN"}));
+ let nativeInputs:ReturnType<typeof prepareNativeQaInputs>|undefined;
  for(const replica of target.target.replicas){
   const mount=replica.Mounts.find((m:any)=>m.Destination==="/run/qa-capability/capability.json"),database=replica.Mounts.find((m:any)=>m.Destination==="/run/secrets/database_url");
   if(!mount||mount.RW||!database||database.RW||replica.Config.Hostname!==replica.Id.slice(0,12))throw Error("CAPABILITY_TARGET_MOUNT_INVALID");
   const previous=privateFile(mount.Source,projectRoot);if(previous.toString().trim()!=="{}")throw Error("CAPABILITY_ALREADY_ISSUED");
   const databaseSha256=hashBytes(privateFile(database.Source,projectRoot).toString().replace(/[\r\n]+$/,"")),now=Date.now();
   const capability:SyntheticCapability={contract:"NALANDA_SYNTHETIC_FEATURE_CAPABILITY_V1",purpose:"RELEASE_ACCEPTANCE_FEATURES",buildId:trust.buildId,source,runId:trust.runId,attempt:trust.attempt,hostname:replica.Config.Hostname,databaseSha256,origin:"https://portable-staging.localhost:8443",issuedAt:now,expiresAt:now+3600_000,features};
+  if(native){
+   nativeInputs??=prepareNativeQaInputs(process.cwd(),producerIdentity(),ca,databaseSha256,key,now);
+   if(nativeInputs.profile.databaseSha256!==databaseSha256)throw Error("NATIVE_QA_REPLICA_DATABASE_MISMATCH");
+   capability.issuedAt=nativeInputs.profile.issuedAt;capability.expiresAt=nativeInputs.profile.expiresAt;
+   capability.features=features.filter(f=>f.key==="real-user-access-readiness-1a");
+   capability.native={phase:"windows-auth",profileSha256:nativeInputs.profileSha256,nativeBuildId:nativeInputs.profile.nativeBuildId,caSha256:nativeInputs.profile.caSha256,operations:[...NATIVE_QA_OPERATIONS]};
+  }
   const payload=Buffer.from(JSON.stringify(capability)),envelope={payload:payload.toString("base64url"),signature:sign(null,payload,key).toString("base64url")};
   if(!verifySyntheticCapability(trust,envelope,{hostname:capability.hostname,databaseSha256,origin:capability.origin,provider:"postgresql",deploymentEnvironment:"synthetic-staging",nodeEnvironment:"production"},now))throw Error("CAPABILITY_SELF_VERIFICATION_FAILED");
   // Keep the existing inode mounted read-only in the container. A partial read

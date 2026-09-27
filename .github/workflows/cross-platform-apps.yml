@@ -138,6 +138,8 @@ jobs:
         shell: pwsh
         run: node --version; pnpm --version; rustc --version; cargo --version; Get-ComputerInfo -Property WindowsProductName,WindowsVersion,OsArchitecture
       - run: pnpm app:rust:test
+      - name: Compile separate QA profile and reject substituted or production inputs
+        run: pnpm exec tsx scripts/portable/qa-native-profile-compile.ts
       - run: pnpm app:windows:build
       - name: Write Windows package checksum
         shell: pwsh
