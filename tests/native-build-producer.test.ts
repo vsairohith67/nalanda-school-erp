@@ -38,7 +38,7 @@ import {signNativeInventory,verifyNativeOutputs,removeNativeScratch} from "../sc
 import {signNativeQaProfile,NATIVE_QA_PATHS,NATIVE_QA_ORIGIN} from "../scripts/portable/native-qa-profile";
 import {producerPaths} from "../scripts/portable/synthetic-build-lifecycle";
 const pair=generateKeyPairSync("ed25519"),source="a".repeat(40),id={source,runId:"123",attempt:"1",architecture:"amd64" as const};
-let parent:string,config:any,inputs:string,platform:PropertyDescriptor|undefined;
+let parent:string,config:any,inputs:string,platform:PropertyDescriptor|undefined,nodeVersion:PropertyDescriptor|undefined;
 beforeAll(()=>{
  parent=mkdtempSync(path.join(tmpdir(),"nalanda-native-producer-contract-"));
  const openssl=process.platform==="win32"?"C:/Program Files/Git/usr/bin/openssl.exe":"openssl";
@@ -52,9 +52,12 @@ beforeEach(()=>{
  for(const name of ["trust","profile"])writeFileSync(path.join(inputs,name+".json"),JSON.stringify(state.context[name]));
  config={...id,root:state.directory,userSid:"synthetic-adapter-only"};state.fault="";state.calls=[];state.gitHashes=0;state.sealed=null;
  platform=Object.getOwnPropertyDescriptor(process,"platform");Object.defineProperty(process,"platform",{value:"win32",configurable:true});
+ // The labelled external-tool double models the pinned Windows compiler job,
+ // independently of the Node version running provider contract tests.
+ nodeVersion=Object.getOwnPropertyDescriptor(process,"version");Object.defineProperty(process,"version",{value:"v24.19.0",configurable:true});
  for(const [k,v] of Object.entries({GITHUB_EVENT_NAME:"workflow_dispatch",GITHUB_SHA:source,EXPECTED_SHA:source,GITHUB_RUN_ID:"123",GITHUB_RUN_ATTEMPT:"1",GITHUB_ACTIONS:"true",RUNNER_ENVIRONMENT:"github-hosted",PORTABLE_CI_EXCEPTION:"OWNER_AUTHORIZED"}))vi.stubEnv(k,v);
 });
-afterEach(()=>{if(platform)Object.defineProperty(process,"platform",platform);vi.unstubAllEnvs();const work=producerPaths(state.directory,id).work;if(existsSync(path.join(work,"cargo")))removeNativeScratch(work);});
+afterEach(()=>{if(platform)Object.defineProperty(process,"platform",platform);if(nodeVersion)Object.defineProperty(process,"version",nodeVersion);vi.unstubAllEnvs();const work=producerPaths(state.directory,id).work;if(existsSync(path.join(work,"cargo")))removeNativeScratch(work);});
 afterAll(()=>{expect(path.basename(parent).startsWith("nalanda-native-producer-contract-")).toBe(true);rmSync(parent,{recursive:true});});
 it("UNIT_OR_CONTRACT: actual producer control flow with explicit process/SSH/OIDC doubles inventories private files",async()=>{
  const result=await buildNativeQa(inputs,config);expect(result.state).toBe("QA_NATIVE_EVIDENCE_SEALED_BACKEND_RECHECK_REQUIRED");
@@ -70,6 +73,10 @@ it("rejects unreviewed compiler/config overrides before building",async()=>{
 });
 it("standalone cleanup refuses changed PowerShell source before any OS call",()=>{
  state.fault="cleanup-script";expect(()=>cleanupNativeBuild(config)).toThrow("WINDOWS_HOST_SOURCE_CHANGED");expect(state.calls).not.toContain("private-os");
+});
+it("refuses an unsupported compiler Node version instead of weakening the production pin",async()=>{
+ Object.defineProperty(process,"version",{value:"v22.0.0",configurable:true});
+ await expect(buildNativeQa(inputs,config)).rejects.toThrow("NATIVE_QA_BUILD_OR_EVIDENCE_REFUSED");expect(existsSync(producerPaths(state.directory,id).work)).toBe(false);
 });
 it.each(["build","timeout","overflow"])("producer %s failure preserves ambiguous process residue and refuses cleanup",async fault=>{
  state.fault=fault;await expect(buildNativeQa(inputs,config)).rejects.toThrow("NATIVE_BUILD_PROCESS_STATE_UNRECONCILED");
