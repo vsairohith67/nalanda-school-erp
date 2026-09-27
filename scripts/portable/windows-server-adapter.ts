@@ -29,8 +29,8 @@ export class WindowsServerPorts {
  observe(original:string){assert(!this.closed,"WINDOWS_SERVER_PORTS_CLOSED");const {requestId}=validateOriginalAuthorization(original,"https://portable-staging.localhost:8443");assert(this.originals.size<16,"WINDOWS_REQUEST_BOUND");const previous=this.originals.get(requestId);assert(!previous||previous===original,"WINDOWS_REQUEST_SUBSTITUTED");this.originals.set(requestId,original);}
  private original(requestId:string){const original=this.originals.get(requestId);assert(original,"WINDOWS_ORIGINAL_REQUEST_NOT_OBSERVED");return original;}
  async totp(){const r=await this.call("totp") as {token:string};return r.token;}
- async read(requestId:string){
-  const r=windowsReadback.parse(await this.call("read",{original:this.original(requestId)}));
+ async read(requestId:string,responseId?:string){
+  const r=windowsReadback.parse(await this.call("read",{original:this.original(requestId),...(responseId?{responseId}:{})}));
   assert(r.source===this.binding.source&&r.runId===this.binding.runId&&r.attempt===this.binding.attempt&&r.databaseIdentitySha256===this.binding.databaseIdentitySha256&&r.publicDeviceId===this.binding.publicDeviceId&&r.requestId===requestId,"WINDOWS_READBACK_SUBSTITUTED");
   if(r.sessionId){assert(!this.sessions.has(r.sessionId)||this.sessions.get(r.sessionId)===requestId,"WINDOWS_SESSION_REBOUND");this.sessions.set(r.sessionId,requestId);}return r;
  }
@@ -61,7 +61,7 @@ export async function runWindowsWithServerPorts(platform:Omit<WindowsLifecycleHo
   const host:WindowsLifecycleHost={
    admit:()=>platform.admit(),launch:()=>platform.launch(),bind:p=>platform.bind(p),
    observeOriginalAuthorization:async browser=>{const original=await platform.observeOriginalAuthorization(browser);server.observe(original);return original;},
-   totp:()=>server.totp(),read:id=>server.read(id),approvePendingDevice:id=>server.approvePendingDevice(id),revokeSession:id=>server.revokeSession(id),
+   totp:()=>server.totp(),read:(id,responseId)=>server.read(id,responseId),approvePendingDevice:id=>server.approvePendingDevice(id),revokeSession:id=>server.revokeSession(id),
    observeCallback:(p,id)=>platform.observeCallback(p,id),restart:p=>platform.restart(p),background:p=>platform.background(p),foreground:p=>platform.foreground(p),assertProfilePreserved:()=>platform.assertProfilePreserved(),cleanup:()=>platform.cleanup(),
   };
   enteredLifecycle=true;return await runWindowsAuthentication(host,{...local,...f});

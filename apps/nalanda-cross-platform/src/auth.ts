@@ -3,6 +3,19 @@ import { appProfile, nativeRequest, openSystemAuthorization, type VaultSession }
 
 const PENDING_KEY = "native-pending-auth";
 const SESSION_META_KEY = "native-session-meta";
+const credentialEpoch = new WeakMap<VaultSession, number>();
+const credentialWrites = new WeakMap<VaultSession, Promise<unknown>>();
+export const nativeCredentialGeneration = (vault: VaultSession) => credentialEpoch.get(vault) ?? 0;
+export async function invalidateNativeCredentialWork(vault: VaultSession) {
+  const epoch = (credentialEpoch.get(vault) ?? 0) + 1;
+  credentialEpoch.set(vault, epoch);
+  await credentialWrites.get(vault)?.catch(() => undefined);
+  return epoch;
+}
+function writeCredentials(vault: VaultSession, action: () => Promise<void>) {
+  const pending = (credentialWrites.get(vault) ?? Promise.resolve()).catch(() => undefined).then(action);
+  credentialWrites.set(vault, pending); return pending;
+}
 
 type PendingAuthorization = {
   requestId: string;
@@ -96,18 +109,23 @@ export async function exchangeNativeCallback(vault: VaultSession, rawUrl: string
   if (!pending || Date.now() - new Date(pending.createdAt).getTime() > 10 * 60 * 1000) throw new Error("Authorization request has expired.");
   const code = url.searchParams.get("code") ?? ""; const state = url.searchParams.get("state") ?? ""; const requestId = url.searchParams.get("request") ?? "";
   if (!/^[A-Za-z0-9_-]{43}$/.test(code) || state !== pending.state || requestId !== pending.requestId) throw new Error("Authorization callback did not match this app request.");
+  const epoch = await invalidateNativeCredentialWork(vault); current();
+  const owned = () => { current(); if (credentialEpoch.get(vault) !== epoch) throw Error("NATIVE_CREDENTIAL_WORK_CANCELLED"); };
+  owned();
   const proof = await vault.sign(exchangeProofMessage({ requestId, codeHash: await sha256Hex(code), verifierHash: await sha256Hex(pending.verifier), nonce: pending.nonce, publicDeviceId: pending.publicDeviceId }));
   current();
   const response = await nativeRequest("AUTH_EXCHANGE", JSON.stringify({ code, verifier: pending.verifier, requestId, nonce: pending.nonce, publicDeviceId: pending.publicDeviceId, proof }), { "x-offline-device-id": pending.publicDeviceId });
   current();
   const payload = JSON.parse(response.body) as NativeTokens & { code?: string };
   if (response.status !== 200 || !payload.accessToken || !payload.refreshToken) throw new Error(payload.code ?? "Authorization exchange was refused.");
-  await vault.setRefreshToken(payload.refreshToken);
-  current();
-  await vault.setSecureJson(SESSION_META_KEY, { sessionId: payload.sessionId, tokenVersion: payload.tokenVersion, deviceKeyVersion: payload.deviceKeyVersion, publicDeviceId: pending.publicDeviceId });
-  current();
-  await vault.removeSecureJson(PENDING_KEY);
-  current();
+  await writeCredentials(vault, async () => {
+    owned(); await vault.setRefreshToken(payload.refreshToken);
+    // Once mutation starts, complete the tuple before a lock/replacement drains
+    // this queue. Cancellation must not leave a rotated token with old metadata.
+    await vault.setSecureJson(SESSION_META_KEY, { sessionId: payload.sessionId, tokenVersion: payload.tokenVersion, deviceKeyVersion: payload.deviceKeyVersion, publicDeviceId: pending.publicDeviceId });
+    await vault.removeSecureJson(PENDING_KEY);
+  });
+  owned();
   return payload;
 }
 
@@ -119,6 +137,8 @@ export function refreshNativeTokens(vault: VaultSession) {
   return request;
 }
 async function performNativeRefresh(vault: VaultSession) {
+  const epoch = credentialEpoch.get(vault) ?? 0;
+  const current = () => { if ((credentialEpoch.get(vault) ?? 0) !== epoch) throw Error("NATIVE_CREDENTIAL_WORK_CANCELLED"); };
   const refreshToken = await vault.refreshToken();
   const meta = await vault.getSecureJson<{ sessionId: string; tokenVersion: number; deviceKeyVersion: number; publicDeviceId: string }>(SESSION_META_KEY);
   if (!refreshToken || !meta) throw new Error("No refreshable native session is available.");
@@ -127,8 +147,13 @@ async function performNativeRefresh(vault: VaultSession) {
   const response = await nativeRequest("AUTH_REFRESH", JSON.stringify({ sessionId: meta.sessionId, refreshToken, publicDeviceId: meta.publicDeviceId, timestamp, proofNonce, proof: canonicalProof }), { "x-offline-device-id": meta.publicDeviceId });
   const payload = JSON.parse(response.body) as NativeTokens & { code?: string };
   if (response.status !== 200 || !payload.refreshToken) throw new Error(payload.code ?? "Native session refresh was refused.");
-  await vault.setRefreshToken(payload.refreshToken);
-  await vault.setSecureJson(SESSION_META_KEY, { sessionId: payload.sessionId, tokenVersion: payload.tokenVersion, deviceKeyVersion: payload.deviceKeyVersion, publicDeviceId: meta.publicDeviceId });
+  await writeCredentials(vault, async () => {
+    current();
+    const active = await vault.getSecureJson<typeof meta>(SESSION_META_KEY); current();
+    if (!active || active.sessionId !== meta.sessionId || active.publicDeviceId !== meta.publicDeviceId || active.tokenVersion !== meta.tokenVersion || payload.sessionId !== meta.sessionId) throw Error("NATIVE_CREDENTIAL_SESSION_CHANGED");
+    await vault.setRefreshToken(payload.refreshToken);
+    await vault.setSecureJson(SESSION_META_KEY, { sessionId: payload.sessionId, tokenVersion: payload.tokenVersion, deviceKeyVersion: payload.deviceKeyVersion, publicDeviceId: meta.publicDeviceId }); current();
+  });
   return payload;
 }
 
@@ -141,7 +166,7 @@ export async function nativeSessionRequest(vault: VaultSession, tokens: NativeTo
   const timestamp = String(Date.now()); const nonce = randomBase64Url(24);
   const publicDeviceId = await vault.deviceId();
   const signature = await vault.sign(nativeRequestProofMessage({ method, path, timestamp, nonce, bodyHash, publicDeviceId, keyVersion: tokens.deviceKeyVersion }));
-  return nativeRequest(operation, body || null, {
+  const response = await nativeRequest(operation, body || null, {
     authorization: `Bearer ${tokens.accessToken}`,
     "x-native-session": tokens.sessionId,
     "x-offline-device-id": publicDeviceId,
@@ -152,6 +177,7 @@ export async function nativeSessionRequest(vault: VaultSession, tokens: NativeTo
     "x-offline-sync-schema": "1",
     "x-offline-signature": signature
   });
+  return { ...response, requestHash: await sha256Hex(nonce) };
 }
 
 export async function listenForNativeAuthorization(vault: VaultSession, onTokens: (tokens: NativeTokens) => void, onError: (message: string) => void, signal?: AbortSignal) {

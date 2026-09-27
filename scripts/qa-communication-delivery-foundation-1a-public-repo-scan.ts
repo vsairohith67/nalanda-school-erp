@@ -18,6 +18,9 @@ const allowedRootFiles = new Set(["apps/nalanda-biometric-bridge/package.json","
 // Reviewed Windows auth-lifecycle source only; the native subtree and binaries
 // remain denied. Explicit files, including Cargo.lock, still receive all scans.
 for (const file of ["src-tauri/Cargo.lock", "src-tauri/Cargo.toml", "src/App.tsx", "src/auth.ts", "src/auth-lifecycle.test.ts"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
+// Reviewed reference-observation source/tests only; no native binary, cache,
+// vault, reference payload, or broader subtree publication is admitted.
+for (const file of ["src/offline-adapter.ts", "src/reference-refresh.ts", "src/reference-refresh.test.ts"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
 const secretPatterns: Array<[string, RegExp]> = [
   ["private-key", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
   ["github-token", /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b/],

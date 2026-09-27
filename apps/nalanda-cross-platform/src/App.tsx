@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateActio
 import { AlertTriangle, CheckCircle2, CloudOff, FileClock, IndianRupee, LayoutDashboard, LockKeyhole, LogOut, RefreshCcw, ReceiptText, Settings2, ShieldCheck, Wifi } from "lucide-react";
 import { formatCurrency, stateForServerOutcome, syncGuidance, validateDraft, type LocalDraft } from "./domain";
 import { appProfile, exportDiagnostics, isNativeRuntime, openOnlineErp, recordDiagnostic, resetLocalCache, VaultSession, type AppProfile, type DiagnosticEvent } from "./native";
-import { APP_VERSION, listenForNativeAuthorization, nativeSessionRequest, refreshNativeTokens, sha256Hex, startNativeAuthorization, usableNativeAccess, versionAtLeast, type NativeTokens } from "./auth";
+import { APP_VERSION, invalidateNativeCredentialWork, nativeCredentialGeneration, listenForNativeAuthorization, nativeSessionRequest, refreshNativeTokens, sha256Hex, startNativeAuthorization, usableNativeAccess, versionAtLeast, type NativeTokens } from "./auth";
 import { NativeOfflineStorageAdapter, type OfflineMutationEnvelope, type ReferencePack } from "./offline-adapter";
+import { ReferenceRefresh, type RefreshState } from "./reference-refresh";
 import { PRODUCT_BRAND } from "../../../config/product-brand";
 
 function previewDraft(id: string, type: LocalDraft["type"], summary: string, amountPaise: number, state: LocalDraft["state"], updatedAt: string): LocalDraft {
@@ -20,6 +21,9 @@ export function App() {
   const [vault, setVault] = useState<VaultSession | null>(null);
   const [tokens, setTokens] = useState<NativeTokens | null>(null);
   const vaultGeneration = useRef(0);
+  const referenceSuspended = useRef(false);
+  const refreshController = useRef(new ReferenceRefresh());
+  const [refreshState, setRefreshState] = useState<RefreshState | null>(null);
   const lockPending = useRef<Promise<void> | null>(null);
   const callbackLifetime = useRef<AbortController | null>(null);
   const [referencePack, setReferencePack] = useState<ReferencePack | null>(null);
@@ -50,8 +54,9 @@ export function App() {
     const lifetime = new AbortController(); callbackLifetime.current = lifetime;
     listenForNativeAuthorization(vault, (nextTokens) => {
       if (lifetime.signal.aborted) return;
+      vaultGeneration.current++; referenceSuspended.current = false; refreshController.current.cancel(); setReferencePack(null); setRefreshState(null); setCompatibility("UNKNOWN");
       setTokens(nextTokens); setNotice("Server authorization completed. Refreshing encrypted reference data…");
-      void refreshReferenceData(nextTokens).catch(() => { if (!lifetime.signal.aborted) setNotice("Reference data refresh failed. Retry through Security."); });
+      void refreshReferenceData(nextTokens, "AUTOMATIC").catch(error => { if (!lifetime.signal.aborted && error?.message !== "REFERENCE_REFRESH_CANCELLED") setNotice("Reference data refresh failed. Retry through Security."); });
     }, (message) => { if (!lifetime.signal.aborted) setNotice(message); }, lifetime.signal).then((unlisten) => { if (lifetime.signal.aborted) unlisten(); else dispose = unlisten; }).catch(() => { if (!lifetime.signal.aborted) setNotice("Native callback observation failed."); });
     const backgroundLock = () => { if (document.visibilityState === "hidden") requestLock(); else resetInactivity(); };
     document.addEventListener("visibilitychange", backgroundLock);
@@ -82,20 +87,25 @@ export function App() {
     if (!session) throw new Error("Native secret storage is unavailable.");
     await session.initialize();
     const storage = new NativeOfflineStorageAdapter(session);
-    const [restored, references] = await Promise.all([storage.drafts.list(), storage.references.current()]);
-    setDrafts(restored); setReferencePack(references); setVault(session); setLocked(false);
+    const [restored, references, saved, meta, deviceId] = await Promise.all([storage.drafts.list(), storage.references.current(), storage.referenceCommit.read(), session.getSecureJson<{ sessionId: string; publicDeviceId: string }>("native-session-meta"), session.deviceId()]);
+    // Historical records remain stored without claiming delivery history. A new
+    // observed cache may only be exposed to the session/profile that stored it.
+    const allowed = !saved || (meta && saved.binding.sessionId === meta.sessionId && saved.binding.publicDeviceId === deviceId && meta.publicDeviceId === deviceId && saved.binding.profile === `${profile.name}:${profile.origin ?? ""}`);
+    referenceSuspended.current = false;
+    setDrafts(restored); setReferencePack(allowed ? references : null); setVault(session); setLocked(false);
   }
 
   async function lockNow() {
     if (lockPending.current) return lockPending.current;
     const current = vault;
     if (!current) return;
-    vaultGeneration.current += 1; callbackLifetime.current?.abort();
+    referenceSuspended.current = true;
+    vaultGeneration.current += 1; refreshController.current.cancel(); setRefreshState(null); callbackLifetime.current?.abort();
     setVault(null); setTokens(null); setReferencePack(null); setLocked(true); setDrafts([]); setNotice("");
     setCompatibility("UNKNOWN");
     // Mask synchronously; failed persistence must never keep private UI open.
     // A failed lock remains a rejected barrier: a PIN cannot race the unload.
-    const pendingLock = current.lock(); lockPending.current = pendingLock;
+    const pendingLock = Promise.all([refreshController.current.drain(), invalidateNativeCredentialWork(current)]).then(() => current.lock()); lockPending.current = pendingLock;
     await pendingLock; lockPending.current = null;
     await recordDiagnostic("VAULT_LOCKED").catch(() => undefined);
   }
@@ -112,33 +122,41 @@ export function App() {
     await adapter?.drafts.put(next);
   }
 
-  async function refreshReferenceData(providedTokens?: NativeTokens) {
+  async function refreshReferenceData(providedTokens?: NativeTokens, source: RefreshState["source"] = "MANUAL") {
+    if (referenceSuspended.current) throw Error("REFERENCE_REFRESH_CANCELLED");
     if (!vault || !adapter) throw new Error("Unlock the encrypted workspace first.");
     const generation = vaultGeneration.current;
-    const requireCurrent = () => { if (generation !== vaultGeneration.current) throw new Error("App locked during reference refresh."); };
-    const activeTokens = providedTokens ?? (usableNativeAccess(tokens) ? tokens! : await refreshNativeTokens(vault));
-    requireCurrent();
-    setTokens(activeTokens);
-    const contextResponse = await nativeSessionRequest(vault, activeTokens, "CONTEXT");
-    requireCurrent();
-    const context = JSON.parse(contextResponse.body) as { code?: string; serverVersion?: string; nativeApiVersion?: number; currentSyncSchemaVersion?: number; minimumSupportedSyncSchema?: number; minimumSupportedAppVersion?: string; maintenanceState?: string; featureAvailability?: { crossPlatformApps?: boolean; offlineSync?: boolean } };
+    const credentialGeneration = nativeCredentialGeneration(vault);
+    const bindingGuard = () => { if (referenceSuspended.current || generation !== vaultGeneration.current || credentialGeneration !== nativeCredentialGeneration(vault)) throw Error("REFERENCE_REFRESH_CANCELLED"); };
+    let activeTokens: NativeTokens;
+    const stored = await refreshController.current.run(source, async current => {
+      const guard = () => { current(); bindingGuard(); };
+      activeTokens = providedTokens ?? (usableNativeAccess(tokens) ? tokens! : await refreshNativeTokens(vault)); guard();
+      const meta = await vault.getSecureJson<{ sessionId: string; publicDeviceId: string }>("native-session-meta"); guard();
+      const publicDeviceId = await vault.deviceId(); guard();
+      if (!meta || meta.sessionId !== activeTokens.sessionId || meta.publicDeviceId !== publicDeviceId) throw Error("REFERENCE_SESSION_MISMATCH");
+      setTokens(activeTokens);
+      const contextResponse = await nativeSessionRequest(vault, activeTokens, "CONTEXT"); guard();
+      const context = JSON.parse(contextResponse.body);
     if (contextResponse.status !== 200 || context.nativeApiVersion !== 1 || !context.serverVersion || !context.minimumSupportedAppVersion) throw new Error(context.code ?? "Server compatibility check failed.");
     if (context.maintenanceState === "ACTIVE") { setCompatibility("MAINTENANCE"); throw new Error("Server maintenance is active. Local encrypted drafts are preserved."); }
     if (!context.featureAvailability?.crossPlatformApps || !context.featureAvailability.offlineSync) { setCompatibility("FEATURE_DISABLED"); throw new Error("FEATURE_DISABLED"); }
     if (!versionAtLeast(APP_VERSION, context.minimumSupportedAppVersion)) { setCompatibility("UPDATE_REQUIRED"); throw new Error("Update required. Sync is blocked and local drafts are preserved."); }
     if (!versionAtLeast(context.serverVersion, profile.minimumServerVersion) || context.currentSyncSchemaVersion !== 1 || context.minimumSupportedSyncSchema !== 1) { setCompatibility("SERVER_INCOMPATIBLE"); throw new Error("Server version is incompatible. Sync is blocked and local drafts are preserved."); }
-    setCompatibility("READY");
-    const response = await nativeSessionRequest(vault, activeTokens, "REFERENCE_PACK");
-    requireCurrent();
-    const pack = JSON.parse(response.body) as ReferencePack & { code?: string };
-    if (response.status !== 200 || pack.schemaVersion !== 1 || !pack.snapshotVersion || !pack.hardExpiresAt) throw new Error(pack.code ?? "Reference pack refresh failed.");
-    await Promise.all([adapter.references.put(pack), adapter.cursors.put(pack.cursor)]);
-    requireCurrent();
-    await recordDiagnostic("REFERENCE_REFRESHED").catch(() => undefined);
-    requireCurrent();
-    setReferencePack(pack);
+      if (!context.user?.id || !context.device?.id || context.device.publicDeviceId !== publicDeviceId) throw Error("REFERENCE_CONTEXT_MISMATCH");
+      const response = await nativeSessionRequest(vault, activeTokens, "REFERENCE_PACK"); guard();
+      if (response.status !== 200) {
+        const code = JSON.parse(response.body)?.code;
+        throw Error(typeof code === "string" && /^NATIVE_[A-Z_]+$/.test(code) ? code : "REFERENCE_REQUEST_REFUSED");
+      }
+      return { body: response.body, requestHash: response.requestHash, binding: { userId: context.user.id, deviceId: context.device.id, publicDeviceId, sessionId: activeTokens.sessionId, profile: `${profile.name}:${profile.origin ?? ""}` } };
+    }, { commit: (value, current) => adapter.referenceCommit.commit(value, () => { current(); bindingGuard(); }), read: () => adapter.referenceCommit.read() }, state => { setRefreshState(state); if (state.stage === "REQUESTING") setNotice(""); });
+    bindingGuard();
+    refreshController.current.assertCurrent(stored.operationId);
+    setCompatibility("READY"); setReferencePack(stored.pack);
     setNotice("Current server reference data is encrypted on this device and ready for offline drafts.");
-    return { activeTokens, pack };
+    void recordDiagnostic("REFERENCE_REFRESHED").catch(() => undefined);
+    return { activeTokens: activeTokens!, pack: stored.pack };
   }
 
   async function stageSync(id: string) {
@@ -152,7 +170,7 @@ export function App() {
     if (!draft || !draft.referenceSnapshotVersion || !Object.keys(draft.payload).length) { await persistState(id, "NEEDS_REVIEW"); setNotice("This preview or legacy draft needs review before server sync."); return; }
     try {
       await persistState(id, "QUEUED");
-      const { activeTokens } = await refreshReferenceData();
+      const { activeTokens } = await refreshReferenceData(undefined, "SYNC");
       const mutation: OfflineMutationEnvelope = { clientMutationId: draft.clientMutationId, localDraftId: draft.id, operationType: draft.type, payload: draft.payload, payloadHash: await sha256Hex(stableJson(draft.payload)), createdClientAt: draft.createdClientAt, referenceSnapshotVersion: draft.referenceSnapshotVersion, baseEntityVersion: draft.baseEntityVersion };
       await adapter.outbox.put(mutation);
       await persistState(id, "SYNCING");
@@ -177,12 +195,28 @@ export function App() {
     }
   }
 
+  async function connectNative() {
+    if (!vault) throw Error("Unlock the app before connecting to the server.");
+    referenceSuspended.current = true;
+    vaultGeneration.current++; refreshController.current.cancel();
+    const generation = vaultGeneration.current;
+    setReferencePack(null); setRefreshState(null); setCompatibility("UNKNOWN"); setTokens(null);
+    await Promise.all([refreshController.current.drain(), invalidateNativeCredentialWork(vault)]);
+    if (generation !== vaultGeneration.current) throw Error("REFERENCE_REFRESH_CANCELLED");
+    await startNativeAuthorization(vault, PRODUCT_BRAND.nativeShortName);
+  }
+
   async function wipeLocalData(confirmation: string) {
     if (!vault || confirmation !== "ERASE LOCAL DRAFTS") throw new Error("Type the exact confirmation phrase.");
-    if (tokens) await nativeSessionRequest(vault, tokens, "LOGOUT").catch(() => undefined);
-    await vault.wipe();
-    await resetLocalCache(confirmation);
+    referenceSuspended.current = true;
+    vaultGeneration.current++; refreshController.current.cancel(); callbackLifetime.current?.abort(); setReferencePack(null); setRefreshState(null); setCompatibility("UNKNOWN");
     setVault(null); setTokens(null); setReferencePack(null); setDrafts([]); setLocked(true); setNotice("");
+    const pending = (async () => {
+      await Promise.all([refreshController.current.drain(), invalidateNativeCredentialWork(vault)]);
+      if (tokens) await nativeSessionRequest(vault, tokens, "LOGOUT").catch(() => undefined);
+      await vault.wipe(); await resetLocalCache(confirmation);
+    })();
+    lockPending.current = pending; await pending; lockPending.current = null;
   }
 
   if (locked) return <LockScreen onUnlock={unlock} lockFailure={lockPending.current !== null && notice.startsWith("APP_LOCK_FAILED:")} />;
@@ -206,6 +240,7 @@ export function App() {
 
         {!online || !profile.remoteConfigured ? <div className="offline-banner"><CloudOff /><div><strong>{!online ? "You are offline." : "No remote server is configured."}</strong><span>Drafts stay encrypted on this device and sync only after server permission, device and business-rule checks.</span></div></div> : null}
         {compatibility !== "UNKNOWN" && compatibility !== "READY" ? <div className="offline-banner" role="alert"><AlertTriangle /><div><strong>{compatibility.replaceAll("_", " ")}</strong><span>Server mutation is blocked. Local encrypted drafts are preserved for review after the condition is resolved.</span></div></div> : null}
+        {refreshState ? <div role="status" aria-live="polite" data-reference-refresh={JSON.stringify(refreshState)}>Reference refresh: {refreshState.stage.toLowerCase().replaceAll("_", " ")}</div> : null}
         {notice ? <div className="notice" role="status">{notice}<button aria-label="Dismiss message" onClick={() => setNotice("")}>×</button></div> : null}
 
         {active === "workspace" || active === "drafts" ? <>
@@ -231,7 +266,7 @@ export function App() {
               <div className="draft-list">{drafts.map((draft) => <div className="draft-row" key={draft.id}><span className={`state-dot ${draft.state.toLowerCase()}`} /><div className="draft-copy"><strong>{draft.summary}</strong><span>{draft.type.replaceAll("_", " ")} · {syncGuidance(draft.state)}</span></div><div className="draft-amount"><strong>{formatCurrency(draft.amountPaise)}</strong><button onClick={() => void stageSync(draft.id)} disabled={draft.state === "SYNCED" || draft.state === "SYNCING"}>{draft.state === "DRAFT_SAVED_LOCALLY" ? "Queue" : draft.state.replaceAll("_", " ")}</button></div></div>)}</div>
             </article>
           </section>
-        </> : <InfoSection active={active} remoteConfigured={profile.remoteConfigured} referenceReady={Boolean(referencePack)} appVersion={profile.appVersion} compatibility={compatibility} openOnline={() => openOnlineErp().catch((error) => setNotice(error instanceof Error ? error.message : "Online ERP unavailable."))} connect={() => vault ? startNativeAuthorization(vault, PRODUCT_BRAND.nativeShortName).catch((error) => { void recordDiagnostic("AUTHORIZATION_FAILED"); setNotice(error instanceof Error ? error.message : "Authorization could not start."); }) : setNotice("Unlock the app before connecting to the server.")} refresh={() => refreshReferenceData().catch((error) => { void recordDiagnostic("REFERENCE_REFRESH_FAILED"); setNotice(error instanceof Error ? error.message : "Reference data refresh failed."); })} wipe={(confirmation) => wipeLocalData(confirmation).catch((error) => setNotice(`LOCAL_RESET_FAILED: ${error instanceof Error ? error.message : "Close the app and contact the owner."}`))} diagnosticExport={exportDiagnostics} />}
+        </> : <InfoSection active={active} remoteConfigured={profile.remoteConfigured} referenceReady={Boolean(referencePack)} appVersion={profile.appVersion} compatibility={compatibility} openOnline={() => openOnlineErp().catch((error) => setNotice(error instanceof Error ? error.message : "Online ERP unavailable."))} connect={() => vault ? connectNative().catch((error) => { void recordDiagnostic("AUTHORIZATION_FAILED"); setNotice(error instanceof Error ? error.message : "Authorization could not start."); }) : setNotice("Unlock the app before connecting to the server.")} refresh={() => refreshReferenceData().catch((error) => { if (error?.message === "REFERENCE_REFRESH_CANCELLED") return; void recordDiagnostic("REFERENCE_REFRESH_FAILED"); setNotice(error instanceof Error ? error.message : "Reference data refresh failed."); })} wipe={(confirmation) => wipeLocalData(confirmation).catch((error) => setNotice(`LOCAL_RESET_FAILED: ${error instanceof Error ? error.message : "Close the app and contact the owner."}`))} diagnosticExport={exportDiagnostics} />}
       </main>
     </div>
   );

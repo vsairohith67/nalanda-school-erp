@@ -2,11 +2,45 @@ import {beforeEach,describe,expect,it,vi} from "vitest";
 const mock=vi.hoisted(()=>({onOpenUrl:vi.fn(),getCurrent:vi.fn(),nativeRequest:vi.fn(),unlisten:vi.fn(),handler:null as null|((urls:string[])=>void)}));
 vi.mock("@tauri-apps/plugin-deep-link",()=>({onOpenUrl:mock.onOpenUrl,getCurrent:mock.getCurrent}));
 vi.mock("./native",()=>({nativeRequest:mock.nativeRequest}));
-import {exchangeNativeCallback,listenForNativeAuthorization,refreshNativeTokens,usableNativeAccess,type NativeTokens} from "./auth";
+import {exchangeNativeCallback,listenForNativeAuthorization,refreshNativeTokens,usableNativeAccess,invalidateNativeCredentialWork,type NativeTokens} from "./auth";
 const callback="nalandaps-erp://auth/callback?code="+"c".repeat(43)+"&state=state&request=request";
 beforeEach(()=>{vi.resetAllMocks();mock.handler=null;mock.getCurrent.mockResolvedValue(null);mock.onOpenUrl.mockImplementation(async fn=>{mock.handler=fn;return mock.unlisten;});});
 const drain=async()=>{for(let i=0;i<10;i++)await Promise.resolve();};
 describe("native callback lifetime",()=>{
+ it("a callback superseded during its tuple finishes storage but cannot publish tokens",async()=>{
+  let finish!:()=>void;let began!:()=>void;const entered=new Promise<void>(r=>began=r);let meta:any=null;
+  const pending={requestId:"request",state:"state",nonce:"nonce",verifier:"v".repeat(64),publicDeviceId:"device",createdAt:new Date().toISOString()};
+  const vault={getSecureJson:async()=>pending,sign:async()=>"proof",setRefreshToken:async()=>{began();await new Promise<void>(r=>finish=r);},setSecureJson:async(_k:string,v:any)=>{meta=v;},removeSecureJson:async()=>{}};
+  mock.nativeRequest.mockResolvedValue({status:200,body:JSON.stringify({accessToken:crypto.randomUUID(),refreshToken:crypto.randomUUID(),sessionId:"new",tokenVersion:1})});
+  const run=exchangeNativeCallback(vault as any,callback),refused=expect(run).rejects.toThrow("CANCELLED");await entered;
+  const replacement=invalidateNativeCredentialWork(vault as any);finish();await refused;await replacement;expect(meta.sessionId).toBe("new");
+ });
+ it("invalidation during a dispatched write drains a coherent rotated tuple",async()=>{
+  let finish!:()=>void;let began!:()=>void;const entered=new Promise<void>(r=>began=r);let meta:any={sessionId:"session",tokenVersion:1,publicDeviceId:"device"};let token:string=crypto.randomUUID();
+  const next=crypto.randomUUID();
+  const vault={refreshToken:async()=>token,getSecureJson:async()=>meta,sign:async()=>"proof",setRefreshToken:async(v:string)=>{token=v;began();await new Promise<void>(r=>finish=r);},setSecureJson:async(_k:string,v:any)=>{meta=v;}};
+  mock.nativeRequest.mockResolvedValue({status:200,body:JSON.stringify({refreshToken:next,sessionId:"session",tokenVersion:2})});
+  const run=refreshNativeTokens(vault as any),refusal=expect(run).rejects.toThrow("CANCELLED");await entered;let drained=false;const lock=invalidateNativeCredentialWork(vault as any).then(()=>{drained=true;});await drain();expect(drained).toBe(false);finish();await refusal;await lock;expect(token).toBe(next);expect(meta.tokenVersion).toBe(2);
+ });
+ it("a late rotation cannot overwrite a newer callback's credentials",async()=>{
+  let finish!:(v:any)=>void;let started!:()=>void;const entered=new Promise<void>(r=>started=r);
+  const pendingAuth={requestId:"request",state:"state",nonce:"nonce",verifier:"v".repeat(64),publicDeviceId:"device",createdAt:new Date().toISOString()};
+  let meta:any={sessionId:"old",tokenVersion:1,publicDeviceId:"device"};let refresh:string=crypto.randomUUID();
+  const vault={getSecureJson:vi.fn(async(k:string)=>k==="native-pending-auth"?pendingAuth:meta),refreshToken:async()=>refresh,sign:async()=>"proof",setRefreshToken:vi.fn(async(v:string)=>{refresh=v;}),setSecureJson:vi.fn(async(_k:string,v:any)=>{meta=v;}),removeSecureJson:async()=>{}};
+  const next=crypto.randomUUID();
+  mock.nativeRequest.mockImplementation(async(operation:string)=>operation==="AUTH_REFRESH"?(started(),new Promise(r=>finish=r)):{status:200,body:JSON.stringify({accessToken:crypto.randomUUID(),refreshToken:next,sessionId:"new",tokenVersion:1})});
+  const old=refreshNativeTokens(vault as any),refusal=expect(old).rejects.toThrow("CANCELLED");await entered;
+  await exchangeNativeCallback(vault as any,callback);
+  finish({status:200,body:JSON.stringify({refreshToken:crypto.randomUUID(),sessionId:"old",tokenVersion:2})});await refusal;
+  expect(meta.sessionId).toBe("new");expect(refresh).toBe(next);expect(vault.setRefreshToken).toHaveBeenCalledOnce();
+ });
+ it("lock/reset invalidates in-flight credential writes",async()=>{
+  let finish!:(v:any)=>void;let started!:()=>void;const entered=new Promise<void>(r=>started=r);
+  const vault={refreshToken:async()=>crypto.randomUUID(),getSecureJson:async()=>({sessionId:"old",tokenVersion:1,publicDeviceId:"device"}),sign:async()=>"proof",setRefreshToken:vi.fn(),setSecureJson:vi.fn()};
+  mock.nativeRequest.mockImplementation(()=>{started();return new Promise(r=>finish=r);});
+  const run=refreshNativeTokens(vault as any),refusal=expect(run).rejects.toThrow("CANCELLED");await entered;await invalidateNativeCredentialWork(vault as any);
+  finish({status:200,body:JSON.stringify({refreshToken:crypto.randomUUID(),sessionId:"old",tokenVersion:2})});await refusal;expect(vault.setRefreshToken).not.toHaveBeenCalled();
+ });
  it("unsubscribes registration that completes after lock",async()=>{
   let finish!:(v:()=>void)=>void;mock.onOpenUrl.mockImplementation(()=>new Promise(r=>finish=r));const controller=new AbortController();
   const listening=listenForNativeAuthorization({} as any,vi.fn(),vi.fn(),controller.signal);controller.abort();finish(mock.unlisten);await listening;
