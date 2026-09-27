@@ -4,6 +4,12 @@ try {
   $request = [Console]::In.ReadToEnd() | ConvertFrom-Json
   if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted' -or $env:RUNNER_OS -ne 'Windows') { throw 'WINDOWS_DISPOSABLE_RUNNER_REQUIRED' }
   $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+  if ($request.operation -eq 'file-security') {
+    $acl = Get-Acl -LiteralPath $request.file
+    $rules = @($acl.GetAccessRules($true, $true, [Security.Principal.SecurityIdentifier]) | ForEach-Object { @{sid=$_.IdentityReference.Value; type=$_.AccessControlType.ToString(); inherited=$_.IsInherited} })
+    @{userSid=$identity.User.Value; owner=$acl.GetOwner([Security.Principal.SecurityIdentifier]).Value; protected=$acl.AreAccessRulesProtected; rules=$rules} | ConvertTo-Json -Depth 4 -Compress
+    exit 0
+  }
   if ($request.operation -eq 'listeners') {
     $listeners = @(Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object { $_.LocalPort -eq [int]$request.port } | ForEach-Object { @{address=$_.LocalAddress; port=[int]$_.LocalPort; pid=[int]$_.OwningProcess} })
     ConvertTo-Json -InputObject $listeners -Compress

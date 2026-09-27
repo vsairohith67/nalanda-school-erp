@@ -3,13 +3,14 @@ import {PrismaClient} from "@prisma/client";
 import {assertSyntheticServingTarget,nextTotp} from "./acceptance-http";
 import {parseWindowsProbe} from "./windows-server-contract";
 import {validateWindowsProbeTarget,executeWindowsProbe} from "./windows-server-probe";
+import {windowsProbeProcess} from "./windows-probe-process";
 async function main(){
  assertSyntheticServingTarget();const [operation,encoded]=process.argv.slice(2);
  let input:any;
  if(operation==="certificate"||operation==="finance"||operation==="marks"||operation==="windows-native"){
-  assert(!encoded);let raw="";for await(const chunk of process.stdin){raw+=chunk;assert(Buffer.byteLength(raw)<=4096);}input=operation==="windows-native"?validateWindowsProbeTarget(parseWindowsProbe(raw)):JSON.parse(raw);
+  assert(!encoded||(operation==="windows-native"&&encoded==="--windows-native-worker"));assert(process.argv.length<=4);let raw="";for await(const chunk of process.stdin){raw+=chunk;assert(Buffer.byteLength(raw)<=4096);}input=operation==="windows-native"?validateWindowsProbeTarget(parseWindowsProbe(raw)):JSON.parse(raw);
  }else{assert(encoded&&encoded.length<1024);input=JSON.parse(Buffer.from(encoded,"base64url").toString());}
- if(operation==="windows-native"){console.log(JSON.stringify(await executeWindowsProbe(input)));return;}
+ if(operation==="windows-native"){console.log(JSON.stringify(encoded==="--windows-native-worker"?await executeWindowsProbe(input):await windowsProbeProcess(JSON.stringify(input))));return;}
  const db=new PrismaClient();
  try{
   if(operation==="certificate"){console.log(JSON.stringify(await (await import("./certificate-browser-probe")).certificateBrowserProbe(db,input)));return;}

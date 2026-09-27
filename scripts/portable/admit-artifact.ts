@@ -34,7 +34,7 @@ function qualify(root: string, historicalSource?: string, syntheticTrustBytes?:B
 export const admitArtifact=(root:string)=>qualify(root);
 export const admitHistoricalArtifact=(root:string,source:string)=>qualify(root,source);
 export const admitSyntheticArtifact=(root:string,trustBytes:Buffer)=>qualify(root,undefined,trustBytes);
-if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
+if(process.argv[1]&&["admit-artifact.ts","admit-artifact.mjs"].includes(path.basename(process.argv[1]))&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
   try { const receipt=admitArtifact(path.resolve("artifact-evidence"));writeFileSync("admitted-artifact.json",JSON.stringify(receipt),{flag:"wx",mode:0o600});console.log(receipt.imageConfigDigest); }
   catch(error){console.error(error instanceof Error?error.message:"ARTIFACT_ADMISSION_FAILED");process.exitCode=1;}
 }

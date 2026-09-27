@@ -22,7 +22,10 @@ export class WindowsServerPorts {
    this.bind();const raw=JSON.stringify({...this.binding,operation,...extra}),input=parseWindowsProbe(raw);
    const text=await this.invoke(raw);assert(Buffer.byteLength(text)<=16_384);
    this.bind();return validateWindowsProbeResult(input.operation,JSON.parse(text));
-  }catch{throw Error("WINDOWS_SERVER_OPERATION_FAILED_PRIVATE_DETAILS_WITHHELD");}
+  }catch(error){
+   if(error instanceof Error&&error.message==="WINDOWS_PRIVATE_TRANSPORT_UNCERTAIN_OUTCOME_RECONCILE")throw Error("WINDOWS_SERVER_UNCERTAIN_OUTCOME_RECONCILE");
+   throw Error("WINDOWS_SERVER_OPERATION_FAILED_PRIVATE_DETAILS_WITHHELD");
+  }
  }
  async prepare(){const f=windowsFixtureResult.parse(await this.call("prepare",{password:this.password,governancePassword:this.governancePassword}));assert(f.databaseIdentitySha256===this.binding.databaseIdentitySha256,"WINDOWS_FIXTURE_TARGET");return {...f,password:this.password};}
  assertPlatform(target:{source:string;runId:string;attempt:string;origin:string}){assert(target.source===this.binding.source&&target.runId===this.binding.runId&&target.attempt===this.binding.attempt&&target.origin==="https://portable-staging.localhost:8443","WINDOWS_PLATFORM_SERVER_BINDING");}

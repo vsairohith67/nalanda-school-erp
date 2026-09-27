@@ -7,6 +7,7 @@ await mkdir(output, { recursive: true });
 
 await build({
   entryPoints: {
+    "windows-controller": "scripts/portable/windows-controller.ts",
     "integrated-bulk": "scripts/portable/integrated-bulk.ts",
     "browser-probe": "scripts/portable/browser-probe.ts",
     "acceptance-readback": "scripts/portable/acceptance-readback.ts",
