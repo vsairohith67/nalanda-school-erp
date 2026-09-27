@@ -238,7 +238,11 @@ class MainActivity : TauriActivity() {
     expect(rust).toContain("failed_attempts = 0");
     expect(app).toContain("Too many failed attempts");
     expect(app).toContain('minLength={8}');
-    expect(app.indexOf("setVault(null); setTokens(null); setReferencePack(null); setLocked(true)")).toBeLessThan(app.indexOf("const pendingLock = current.lock()"));
+    const lock = app.slice(app.indexOf("async function lockNow()"), app.indexOf("function requestLock()"));
+    const masked = lock.indexOf("setVault(null); setTokens(null); setReferencePack(null); setLocked(true)");
+    const drained = lock.indexOf("Promise.all([refreshController.current.drain(), invalidateNativeCredentialWork(current)])");
+    const unloaded = lock.indexOf(".then(() => current.lock())");
+    expect(masked).toBeGreaterThanOrEqual(0); expect(drained).toBeGreaterThan(masked); expect(unloaded).toBeGreaterThan(drained);
     expect(app).toContain("if (lockPending.current) await lockPending.current");
     expect(app).toContain("generation !== vaultGeneration.current");
     expect(app).toContain("APP_LOCK_FAILED");
