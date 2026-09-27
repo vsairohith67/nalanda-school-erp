@@ -4,8 +4,8 @@ import {createHash} from "node:crypto";
 import {lstatSync,readFileSync,realpathSync,existsSync,readdirSync} from "node:fs";
 import path from "node:path";
 import {NativeWebDriver} from "./native-webdriver";
-import {admitSyntheticArtifact} from "./admit-artifact";
-import {syntheticEvidenceRoot} from "./synthetic-build-lifecycle";
+import {admitWindowsNativeLaunch} from "./native-launch-admission";
+import type {WindowsPrivateTransport} from "./windows-private-transport";
 import {assertOwnedProcess,insideWindowsRoot,validateOriginalAuthorization,type ProcessIdentity,type WindowsTarget} from "./windows-auth-lifecycle";
 
 type Tool={path:string;sha256:string;version:string};
@@ -50,8 +50,7 @@ export async function observeOriginalWindowsAuthorization(browser:NativeWebDrive
  }
  throw Error("WINDOWS_ORIGINAL_APP_REQUEST_NOT_OBSERVED");
 }
-/** Platform mechanics only. This class does not admit the application/backend.
- * Its caller MUST perform the existing runtime/image admission before start().
+/** Native bytes and the independently admitted backend are both required.
  * No OS profile creation, protocol registration, CA installation or downloads. */
 export class OwnedWindowsWebDriver {
  private processes:ProcessIdentity[]=[];
@@ -60,7 +59,8 @@ export class OwnedWindowsWebDriver {
  private appSession:NativeWebDriver|undefined;
  private saltHash:string|undefined;
  private seenRequests=new Set<string>();
- constructor(readonly target:WindowsTarget,readonly tools:WindowsTools,private readonly os:WindowsOs=privateWindowsOs,private readonly transport:Transport=fetch){}
+ constructor(readonly target:WindowsTarget,readonly tools:WindowsTools,private readonly os:WindowsOs=privateWindowsOs,private readonly transport:Transport=fetch,private readonly admission?:WindowsPrivateTransport){}
+ private async admit(){assert(this.admission,"WINDOWS_NATIVE_AND_BACKEND_ADMISSION_INPUT_REQUIRED");return admitWindowsNativeLaunch(this.target,this.admission);}
  private endpoint(port:number){return `http://127.0.0.1:${port}`;}
  private artifacts(){return [{path:this.target.executable,sha256:this.target.artifactSha256,version:"0.1.0"},...Object.values(this.tools).filter((v):v is Tool=>typeof v!=="number")];}
  private captureDescendants(){
@@ -82,7 +82,7 @@ export class OwnedWindowsWebDriver {
   assert.equal(process.platform,"win32");assert.equal(process.env.GITHUB_ACTIONS,"true");assert.equal(process.env.RUNNER_ENVIRONMENT,"github-hosted");assert.equal(process.env.PORTABLE_CI_EXCEPTION,"OWNER_AUTHORIZED");
   assert.equal(process.env.GITHUB_RUN_ID,this.target.runId);assert.equal(process.env.GITHUB_RUN_ATTEMPT,this.target.attempt);assert.equal(process.env.EXPECTED_SHA,this.target.source);
   assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),this.target.source);
-  assert.equal(hash(readFileSync("scripts/portable/windows-host.ps1")),hash(execFileSync("git",["show",`${this.target.source}:scripts/portable/windows-host.ps1`])),"WINDOWS_HOST_SOURCE_CHANGED");
+  assert.equal(execFileSync("git",["hash-object","--path=scripts/portable/windows-host.ps1","scripts/portable/windows-host.ps1"],{encoding:"utf8"}).trim(),execFileSync("git",["rev-parse",`${this.target.source}:scripts/portable/windows-host.ps1`],{encoding:"utf8"}).trim(),"WINDOWS_HOST_SOURCE_CHANGED");
   assertWindowsEnvironment(this.os({operation:"environment"}),this.target);
   assertWindowsFile(this.target.executable,this.target.root,this.target.artifactSha256);
   const ports=[this.tools.tauriPort,this.tools.nativePort,this.tools.browserPort];assert(new Set(ports).size===3&&ports.every(p=>Number.isSafeInteger(p)&&p>=1024&&p<=65535));
@@ -99,10 +99,9 @@ export class OwnedWindowsWebDriver {
   throw Error("WINDOWS_DRIVER_START_NOT_OBSERVED");
  }
  async start(){
-  // Preserve the existing admission boundary. It currently requires the Linux
-  // hosted target; a reviewed Windows-to-serving-target connection is still an
-  // engineering gap, not permission to accept an editable passed receipt.
-  admitSyntheticArtifact(syntheticEvidenceRoot(),readFileSync(path.resolve("tmp/portable-staging",`nalanda-ci-${this.target.runId}-${this.target.attempt}-capability`,"trust.json")));
+  // Native evidence is checked on Windows; backend admission remains on the
+  // pinned private Linux controller. Neither can stand in for the other.
+  await this.admit();
   await this.preflight();
   await this.startDriver(this.tools.tauri,["--host","127.0.0.1","--port",String(this.tools.tauriPort),"--native-port",String(this.tools.nativePort),"--native-driver",this.tools.webviewDriver.path]);
   await this.startDriver(this.tools.browserDriver,["--port="+this.tools.browserPort,"--allowed-ips=127.0.0.1","--allowed-origins=http://127.0.0.1"]);
@@ -113,8 +112,11 @@ export class OwnedWindowsWebDriver {
   const app=await this.launchApp();return {...app,browser:browserSession.driver};
  }
  private async launchApp(){
+  await this.admit(); // restart repeats both admissions too
   assertWindowsFile(this.target.executable,this.target.root,this.target.artifactSha256);
   await this.listener(this.tools.tauriPort,this.tools.tauri);await this.listener(this.tools.nativePort,this.tools.webviewDriver);
+  const current=await this.admit(); // profile expiry/backend changes during readiness
+  current.verifyFiles(); // rehash exact launch/support bytes immediately before request
   const session=await createWindowsSession(this.endpoint(this.tools.tauriPort),{"tauri:options":{application:this.target.executable,webviewOptions:{browserExecutableFolder:path.dirname(this.tools.webview.path),userDataFolder:this.target.webviewData}}},this.transport);this.sessions.push(session.driver);this.appSession=session.driver;
   assert.equal(session.capabilities.browserVersion,this.target.webviewVersion,"WINDOWS_ACTUAL_WEBVIEW_VERSION");
   const rows=this.os({operation:"processes",executable:this.target.executable}) as ProcessIdentity[];assert.equal(rows.length,1,"WINDOWS_APP_INSTANCE_AMBIGUOUS");const instance=rows[0];assert.equal(instance.sha256,this.target.artifactSha256);assert.equal(instance.userSid,this.target.userSid);this.processes.push(instance);return {app:session.driver,instance};

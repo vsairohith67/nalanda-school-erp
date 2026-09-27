@@ -9,6 +9,8 @@ import {WindowsServerPorts} from "./windows-server-adapter";
 import {insideWindowsRoot} from "./windows-auth-lifecycle";
 import {parseWindowsProbe,validateWindowsProbeResult,windowsProbeBinding,type WindowsProbeBinding} from "./windows-server-contract";
 import type {WindowsControllerTarget} from "./windows-controller";
+import {assertNativeContext,parseNativeControl} from "./native-controller";
+import {verifyNativeReceipt,type NativeInventory} from "./native-artifact";
 
 export type WindowsPrivateTransport={
  contract:"NALANDA_WINDOWS_PRIVATE_SSH_V1";root:string;userSid:string;
@@ -57,13 +59,13 @@ export function validateWindowsControllerEnvelope(text:string,input:string,expec
 /** Real Windows OpenSSH stdin transport. It needs an already authorised private
  * route and pinned controller account; it does not create either. No files are
  * uploaded and neither SSH diagnostics nor private probe output is logged. */
-export function createPrivateWindowsServerPorts(config:WindowsPrivateTransport,binding:WindowsProbeBinding){
- windowsProbeBinding.parse(binding);const v=Object.freeze({...validateWindowsPrivateTransport(config,binding)});
+export function createPrivateWindowsChannel(config:WindowsPrivateTransport,binding:Pick<WindowsProbeBinding,"source"|"runId"|"attempt">){
+ const v=Object.freeze({...validateWindowsPrivateTransport(config,binding)});
  const bind=()=>{
   assert.equal(process.platform,"win32");assert.equal(process.env.GITHUB_ACTIONS,"true");assert.equal(process.env.RUNNER_ENVIRONMENT,"github-hosted");assert.equal(process.env.RUNNER_OS,"Windows");assert.equal(process.env.PORTABLE_CI_EXCEPTION,"OWNER_AUTHORIZED");
   assert.equal(process.env.GITHUB_REPOSITORY,"vsairohith67/nalanda-school-erp");assert.equal(process.env.EXPECTED_SHA,v.source);assert.equal(process.env.GITHUB_RUN_ID,v.runId);assert.equal(process.env.GITHUB_RUN_ATTEMPT,v.attempt);
   assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),v.source);
-  assert.equal(hashBytes(readFileSync("scripts/portable/windows-host.ps1")),hashBytes(execFileSync("git",["show",`${v.source}:scripts/portable/windows-host.ps1`])),"WINDOWS_HOST_SOURCE_CHANGED");
+  assert.equal(execFileSync("git",["hash-object","--path=scripts/portable/windows-host.ps1","scripts/portable/windows-host.ps1"],{encoding:"utf8"}).trim(),execFileSync("git",["rev-parse",`${v.source}:scripts/portable/windows-host.ps1`],{encoding:"utf8"}).trim(),"WINDOWS_HOST_SOURCE_CHANGED");
   for(const file of [v.sshExecutable,v.knownHosts,v.identityFile]){assertWindowsFile(file,v.root);const s=lstatSync(file);assert(s.isFile()&&s.nlink===1&&s.size>0&&s.size<20*1024*1024);}
   assert.equal(hashBytes(readFileSync(v.sshExecutable)),v.sshSha256);assert.equal(hashBytes(readFileSync(v.identityFile)),v.identitySha256);
   const host=v.controllerPort===22?v.controllerAddress:`[${v.controllerAddress}]:${v.controllerPort}`;
@@ -71,16 +73,26 @@ export function createPrivateWindowsServerPorts(config:WindowsPrivateTransport,b
   for(const file of [v.root,v.sshExecutable,v.identityFile,v.knownHosts])assertPrivateWindowsAcl(privateWindowsOs({operation:"file-security",file}),v.userSid);
  };
  bind();
- const invoke=async(raw:string)=>{
-  // Both the parent and fixed remote dispatcher parse before execution.
-  parseWindowsProbe(raw);bind();
+ const exchange=(raw:string,maxBuffer:number)=>{
+  bind();
   try{
-   const text=execFileSync(v.sshExecutable,windowsPrivateSshArguments(v),{input:JSON.stringify({containerId:v.containerId,imageConfigDigest:v.imageConfigDigest,input:raw}),encoding:"utf8",stdio:["pipe","pipe","pipe"],windowsHide:true,timeout:120_000,maxBuffer:20_480,
+   const text=execFileSync(v.sshExecutable,windowsPrivateSshArguments(v),{input:raw,encoding:"utf8",stdio:["pipe","pipe","pipe"],windowsHide:true,timeout:120_000,maxBuffer,
     env:{NODE_ENV:process.env.NODE_ENV,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,TEMP:process.env.TEMP,TMP:process.env.TMP}});
-   bind();return JSON.stringify(validateWindowsControllerEnvelope(text,raw,v));
+   bind();return text;
   }catch{throw Error("WINDOWS_PRIVATE_TRANSPORT_UNCERTAIN_OUTCOME_RECONCILE");}
  };
- return new WindowsServerPorts(binding,invoke,bind,randomBytes(48).toString("base64url"),randomBytes(48).toString("base64url"));
+ const invoke=async(raw:string)=>{parseWindowsProbe(raw);return JSON.stringify(validateWindowsControllerEnvelope(exchange(JSON.stringify({containerId:v.containerId,imageConfigDigest:v.imageConfigDigest,input:raw}),20480),raw,v));};
+ const native=(inventory?:NativeInventory,buildToken?:string)=>{
+  const raw=JSON.stringify({kind:"native-artifact",source:v.source,runId:v.runId,attempt:v.attempt,containerId:v.containerId,imageConfigDigest:v.imageConfigDigest,...(inventory?{operation:"seal",inventory,buildToken}:{operation:"context"})});parseNativeControl(raw);
+  const e=JSON.parse(exchange(raw,98304));assert.deepEqual(Object.keys(e).sort(),(inventory?["contract","context","receipt"]:["contract","context"]).sort());assert.equal(e.contract,"NALANDA_NATIVE_CONTROL_V1");
+  const context=assertNativeContext(e.context,v);if(inventory)assert.deepEqual(verifyNativeReceipt(e.receipt,context),inventory);
+  return {context,receipt:e.receipt};
+ };
+ return {bind,invoke,native};
+}
+export function createPrivateWindowsServerPorts(config:WindowsPrivateTransport,binding:WindowsProbeBinding){
+ windowsProbeBinding.parse(binding);const channel=createPrivateWindowsChannel(config,binding);
+ return new WindowsServerPorts(binding,channel.invoke,channel.bind,randomBytes(48).toString("base64url"),randomBytes(48).toString("base64url"));
 }
 export function assertPrivateWindowsAcl(value:{userSid:string;owner:string;protected:boolean;rules:Array<{sid:string;type:string;inherited:boolean}>},sid:string){
  assert(value.userSid===sid&&value.owner===sid&&value.protected===true,"WINDOWS_PRIVATE_FILE_OWNER");

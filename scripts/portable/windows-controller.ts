@@ -6,6 +6,7 @@ import {admitSyntheticArtifact} from "./admit-artifact";
 import {producerIdentity,readSigningRoot,syntheticEvidenceRoot} from "./synthetic-build-lifecycle";
 import {inspectTarget} from "./integrated-acceptance";
 import {parseWindowsProbe,validateWindowsProbeResult} from "./windows-server-contract";
+import {nativeController} from "./native-controller";
 
 export type WindowsControllerTarget={source:string;runId:string;attempt:string;containerId:string;imageConfigDigest:string};
 type ControllerPort={admit():WindowsControllerTarget;bind():void;invoke(containerId:string,input:string):string};
@@ -57,7 +58,7 @@ function servingControllerPort():ControllerPort {
  * before constructing Prisma. This command never accepts a remote command. */
 export async function readWindowsControllerInput(stdin:AsyncIterable<Buffer|string>){
  let raw="";
- for await(const part of stdin){raw+=part.toString();assert(Buffer.byteLength(raw)<=5120,"WINDOWS_CONTROLLER_INPUT_BOUND");}
+ for await(const part of stdin){raw+=part.toString();assert(Buffer.byteLength(raw)<=(raw.startsWith('{"kind":"native-artifact",')?81920:5120),"WINDOWS_CONTROLLER_INPUT_BOUND");}
  return raw;
 }
 /** GNU timeout owns its new process group and bounds synchronous Docker/git
@@ -70,14 +71,14 @@ export async function superviseWindowsController(raw:string){
 /** Process-adapter seam only; invoking it cannot skip the worker's own actual
  * Linux/exact-head/runtime/target admission. */
 export function controllerDeadlineProcess(raw:string,start:typeof spawn=spawn){
- assert(Buffer.byteLength(raw)<=5120);
+ const native=raw.startsWith('{"kind":"native-artifact",');assert(Buffer.byteLength(raw)<=(native?81920:5120));
  return new Promise<string>((resolve,reject)=>{
   const child=start("/usr/bin/timeout",["--signal=TERM","--kill-after=5s","100s",process.execPath,path.resolve(process.argv[1]),"--controller-worker"],{shell:false,stdio:["pipe","pipe","ignore"]});
   let output="",size=0,failed=false;
   const stop=()=>{failed=true;if(child.exitCode===null&&!child.killed)child.kill("SIGTERM");};
   const signals=["SIGTERM","SIGINT","SIGHUP"] as const;for(const signal of signals)process.once(signal,stop);
   const close=()=>{for(const signal of signals)process.removeListener(signal,stop);};
-  child.stdout!.on("data",(chunk:Buffer)=>{size+=chunk.length;if(size>20_480)stop();else output+=chunk.toString();});
+  child.stdout!.on("data",(chunk:Buffer)=>{size+=chunk.length;if(size>(native?98_304:20_480))stop();else output+=chunk.toString();});
   child.stdin!.on("error",stop);
   child.once("error",()=>{close();reject(Error("WINDOWS_CONTROLLER_SUPERVISOR_UNAVAILABLE"));});
   child.once("close",code=>{close();if(failed||code!==0)reject(Error("WINDOWS_CONTROLLER_UNCERTAIN_OUTCOME_RECONCILE"));else resolve(output);});
@@ -91,7 +92,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
  try{
   assert(process.argv.length===2||(process.argv.length===3&&process.argv[2]==="--controller-worker"));
   const raw=await readWindowsControllerInput(process.stdin);clearTimeout(timer);
-  const result=process.argv[2]==="--controller-worker"?JSON.stringify(dispatchWindowsController(raw,servingControllerPort())):await superviseWindowsController(raw);
+  const result=process.argv[2]==="--controller-worker"?JSON.stringify(JSON.parse(raw).kind==="native-artifact"?await nativeController(raw):dispatchWindowsController(raw,servingControllerPort())):await superviseWindowsController(raw);
   process.stdout.write(result);
  }
  catch{process.stderr.write("WINDOWS_CONTROLLER_REFUSED_PRIVATE_DETAILS_WITHHELD\n");process.exitCode=1;}
