@@ -82,5 +82,42 @@ Final worktree QA, build, typecheck and tracker readback results are appended be
 
 - PASS: `pnpm.cmd build` (SQLite own generated client, task-owned synthetic build URL, telemetry disabled, existing one-CPU configuration). Initial build caught a Windows mixed-encoding component; normalized to UTF-8 and complete compile/generate rerun exited 0. No application server launched.
 - PASS: `pnpm.cmd audit --prod` - no known vulnerabilities found. This does not clear inherited bundled-runtime/OCI gates.
-- PASS: updated UI/API typecheck partitions after final functional edits. Full repository typecheck result pending.
+- PASS: updated UI/API typecheck partitions after final functional edits. PASS: full repository `pnpm.cmd typecheck` completed with exit 0 across all 20 configured partitions.
 - Inherited creation-base-to-product-base history: **70 commits / 409 changed paths**. Those are excluded from P1 contribution.
+
+## Worktree QA handoff
+
+Product implementation commit: `1dec5ab3f6ba73265fc03fde303055fcb52248b0`; tree `d476d733418728ed7b6e89d07123407d2998880c`. Exactly 22 P1 paths, 946 inserted lines at that commit; no merge commits above approved product base. Subsequent evidence-only commits do not change that product source.
+
+Unchanged helper `prepare-qa feature/intelligent-reports-1a --json` returned **BLOCKED** on the clean committed branch. Tool shell exit was 1; helper JSON declared exitCode 2. originMain/mergeBase remain 104aacc7; branchAhead 71 (70 inherited + 1 P1), mainAhead 0, upstream null. Its no-upstream warning does not override the blocking gate; no push performed.
+
+The 18 dirty-overlap paths below are **all inherited candidate paths, zero new P1 paths**, in the protected recovery-integration-1a worktree. Path lists were read; no W1 contents copied, corrected, cleaned or staged.
+
+- `.github/workflows/cross-platform-apps.yml`
+- `apps/nalanda-cross-platform/src-tauri/Cargo.lock`
+- `apps/nalanda-cross-platform/src-tauri/Cargo.toml`
+- `apps/nalanda-cross-platform/src/App.tsx`
+- `docs/evidence/RELEASE_RECOVERY_1C.md`
+- `lib/native-app/auth.ts`
+- `lib/native-app/session-governance.ts`
+- `lib/portable-runtime/synthetic-capability.ts`
+- `scripts/portable/synthetic-capability.ts`
+- `scripts/portable/windows-auth-lifecycle.ts`
+- `scripts/qa-communication-delivery-foundation-1a-public-repo-scan.ts`
+- `scripts/qa-real-user-access-readiness-1a-public-repo-scan.ts`
+- `tests/cross-platform-apps-1a.test.ts`
+- `tests/native-mfa-linkage.test.ts`
+- `tests/native-reference-observation.test.ts`
+- `tests/native-session-governance.test.ts`
+- `tests/windows-auth-lifecycle.test.ts`
+- `tests/windows-server-service.test.ts`
+
+No retries, altered helper/policy/manifest, merged W1 changes, or manufactured SAFE result. Push/draft review and runtime activation remain deferred.
+
+Final status: **INTELLIGENT_REPORTS_1A_PARTIAL_WITH_EXACT_GAPS**. Connected source implementation, meaningful permitted tests and independent source review are complete; source admission, worktree overlap, full authenticated runtime/browser and PostgreSQL execution gates remain open. No release or activation clearance.
+
+## Tracker readback and measured work interval
+
+At 2026-09-27 09:04:09 UTC, all three final tracker readbacks succeeded: Asana 1218898133561602 contains the exact partial status and product SHA and remains incomplete; Notion register P1 section contains final R1 handoff and retains previous history; Canvs only Mymz5BQXjvPKbZcYrKiHQ matches the final rich text, with geometry x=9009.5/y=48/881x1004 and original container unchanged. Parent and W1 records were not edited.
+
+Measured R1 work interval through tracker readback: 08:12:12 to 09:04:09 UTC, **51 minutes 57 seconds**. Task-specific token/cost usage was not observed and is not estimated. Final source/evidence commit coordinates are provided in the user handoff; tracker product SHA stays pinned to the tested implementation commit.
