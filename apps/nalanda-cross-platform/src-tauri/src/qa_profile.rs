@@ -208,8 +208,16 @@ mod tests {
     }
     fn fixture() -> (tempfile::TempDir, String) {
         let dir = tempfile::tempdir().unwrap();
+        // Do not inherit platform OpenSSL configuration/extensions. The macOS
+        // runner rejected the generated root with ExtensionValueInvalid before
+        // any handshake; all fixture extensions must be explicit and portable.
+        fs::write(dir.path().join("request.cnf"), "[req]\ndistinguished_name=dn\n[dn]\n[ca]\nbasicConstraints=critical,CA:TRUE\nkeyUsage=critical,keyCertSign,cRLSign\nsubjectKeyIdentifier=hash\n").unwrap();
         openssl(&[
             "req",
+            "-config",
+            dir.path().join("request.cnf").to_str().unwrap(),
+            "-extensions",
+            "ca",
             "-x509",
             "-newkey",
             "rsa:2048",
@@ -222,13 +230,11 @@ mod tests {
             "1",
             "-subj",
             "/CN=Nalanda synthetic TLS fixture",
-            "-addext",
-            "basicConstraints=critical,CA:TRUE",
-            "-addext",
-            "subjectAltName=DNS:portable-staging.localhost",
         ]);
         openssl(&[
             "req",
+            "-config",
+            dir.path().join("request.cnf").to_str().unwrap(),
             "-new",
             "-newkey",
             "rsa:2048",
