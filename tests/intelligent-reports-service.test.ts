@@ -1,6 +1,8 @@
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {PrismaClient} from "@prisma/client";
-import {mkdtempSync,readFileSync,readdirSync} from "node:fs";
+import {mkdtempSync,readFileSync,readdirSync,lstatSync,existsSync,realpathSync} from "node:fs";
+import {randomUUID} from "node:crypto";
+import {execFileSync} from "node:child_process";
 import {DatabaseSync,backup} from "node:sqlite";
 import {tmpdir} from "node:os";
 import path from "node:path";
@@ -10,17 +12,31 @@ import {execute,readReport,pageReport,reportCsv,options} from "../lib/intelligen
 import type {Query} from "../lib/intelligent-reports/contract";
 import {NextRequest} from "next/server";
 import {resetAcademicCalendarExportRateLimitForTests} from "../lib/academic-calendar-export-rate-limit";
-// Only the HTTP identity adapter and Prisma singleton are doubled. The session,
-// grants, feature policy, source reads, transaction and audit remain real.
+// HTTP identity and Prisma singleton adapters are doubled. PostgreSQL additionally
+// supplies an in-memory feature CONFIG fixture: the actual runtime deliberately
+// admits only SQLite QA overrides. This proves readers/IAM, not PG activation.
 const transport=vi.hoisted(()=>({db:null as any,context:null as any}));
 vi.mock("../lib/auth",()=>({getCurrentAuthContext:async()=>transport.context}));
 vi.mock("../lib/prisma",()=>({get prisma(){return transport.db;}}));
+vi.mock("../lib/release-feature-flag-runtime",async(importOriginal)=>{
+  const actual=await importOriginal<typeof import("../lib/release-feature-flag-runtime")>();
+  const {releaseFeatureFlags}=await import("../lib/release-feature-flags");
+  return {...actual,operationalReleaseFeatureAvailability:(feature:Parameters<typeof actual.operationalReleaseFeatureAvailability>[0])=>{
+    if(process.env.DATABASE_PROVIDER!=="postgresql")return actual.operationalReleaseFeatureAvailability(feature);
+    // Restricted to the two P1 test dependencies. No persisted flag is changed.
+    const enabled=new Set((process.env.RELEASE_FEATURE_FLAGS_QA_ENABLED??"").split(","));
+    const config=releaseFeatureFlags().map(flag=>["intelligent-reports-1a","bulk-exports"].includes(flag.key)&&enabled.has(flag.key)?{...flag,defaultState:true,rolloutPercentage:100}:flag);
+    return actual.operationalReleaseFeatureAvailability(feature,{config});
+  }};
+});
 import {handle} from "../lib/intelligent-reports/api";
 import {previewFamilyCollection,confirmFamilyCollection,reverseFamilyCollection} from "../lib/family-collections";
+import {assertSyntheticPostgresQa} from "../scripts/postgres/synthetic-qa";
 
-// Actual migrated, newly generated SQLite and actual IAM/source/feature services.
+// Same assertions/readers/routes on both providers; unique migrated fixture only.
 // No authority doubles, copied database, server, runtime admission or login claim.
 const root=mkdtempSync(path.join(tmpdir(),"nalanda-intelligent-reports-1a-"));
+const postgres=process.env.DATABASE_PROVIDER==="postgresql",schema=`ir1_${randomUUID().replaceAll("-","")}`;
 let db:PrismaClient,actor:Identity,queries=0;
 const year="2026-27",now=new Date("2026-09-27T00:00:00Z"),date=(s:string)=>new Date(s+"T00:00:00Z");
 const q:Query={family:"ACADEMIC",schoolId:"school",academicYear:year,targets:[{id:"scope7",examId:"exam7"}],sourceState:"ISSUED",comparator:"LT",threshold:60,sort:"NAME",direction:"ASC",page:1,pageSize:25};
@@ -41,10 +57,20 @@ async function publication(index:number,percentage:string,state="PRESENT") {
   await db.studentReportCardVersion.create({data:{reportCardId:`card-${id}`,versionNumber:1,versionType:"ORIGINAL",snapshotJson:JSON.stringify(published),issuedAt:now}});
 }
 beforeAll(async()=>{
-  expect(process.env.DATABASE_PROVIDER??"sqlite").toBe("sqlite");
-  const sql=new DatabaseSync(":memory:");
-  try {for(const folder of readdirSync("prisma/migrations",{withFileTypes:true}).filter(e=>e.isDirectory()).map(e=>e.name).sort())sql.exec(readFileSync(path.join("prisma/migrations",folder,"migration.sql"),"utf8"));expect(sql.prepare("PRAGMA foreign_key_check").all()).toEqual([]);await backup(sql,path.join(root,"synthetic.db"));}finally{sql.close();}
-  const url="file:"+path.join(root,"synthetic.db").replaceAll("\\","/");
+  expect(["sqlite","postgresql"]).toContain(process.env.DATABASE_PROVIDER??"sqlite");
+  let url="file:"+path.join(root,"synthetic.db").replaceAll("\\","/");
+  if(postgres){
+    // Existing hosted database-only job, never infer authority from a local URL.
+    expect(process.env.CI).toBe("true");assertSyntheticPostgresQa();
+    const target=new URL(process.env.DATABASE_URL!);target.searchParams.set("schema",schema);url=target.toString();
+    execFileSync(process.execPath,["node_modules/prisma/build/index.js","migrate","deploy","--schema","prisma/postgresql/schema.prisma"],{env:{...process.env,DATABASE_URL:url,DIRECT_URL:url},stdio:"pipe",timeout:60000});
+  }else{
+    expect(lstatSync(root).isSymbolicLink()).toBe(false);expect(realpathSync(root)).toBe(root);
+    expect(existsSync(path.join(root,"synthetic.db"))).toBe(false);
+    const sql=new DatabaseSync(":memory:");
+    try {for(const folder of readdirSync("prisma/migrations",{withFileTypes:true}).filter(e=>e.isDirectory()).map(e=>e.name).sort())sql.exec(readFileSync(path.join("prisma/migrations",folder,"migration.sql"),"utf8"));expect(sql.prepare("PRAGMA foreign_key_check").all()).toEqual([]);await backup(sql,path.join(root,"synthetic.db"));}finally{sql.close();}
+    const file=lstatSync(path.join(root,"synthetic.db"));expect(file.isSymbolicLink()).toBe(false);expect(file.nlink).toBe(1);
+  }
   vi.stubEnv("NODE_ENV","test");vi.stubEnv("DATABASE_URL",url);vi.stubEnv("APP_ORIGIN","http://127.0.0.1:4179");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_MODE","SYNTHETIC_COPY_ONLY");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED","intelligent-reports-1a,bulk-exports");
   db=new PrismaClient({datasourceUrl:url,log:[{emit:"event",level:"query"}]});(db as any).$on("query",()=>queries++);actor=await identity("SUPER_ADMIN");
   transport.db=db;transport.context={user:{id:actor.userId,name:"SYNTHETIC",role:"SUPER_ADMIN",roleAssignmentId:actor.roleAssignmentId,mustChangePassword:false},sessionId:actor.sessionId};
@@ -72,11 +98,14 @@ beforeAll(async()=>{
   await db.payment.createMany({data:[{studentId:"s0",admissionNo:"SYN-0",amountPaid:25000},{studentId:"s1",admissionNo:"SYN-1",amountPaid:15000}].map((v,i)=>({...v,id:`payment${i}`,receiptNo:`SYN-FAMILY-${i}`,date:date("2026-06-01"),studentName:"SYNTHETIC",className:"7",paymentMode:"CASH",receivedAccount:"SYNTHETIC",feeType:"Current Year Fee"}))});
   await db.payment.create({data:{id:"old",studentId:"s0",admissionNo:"SYN-0",amountPaid:9000,receiptNo:"SYN-OLD",date:date("2026-06-01"),studentName:"SYNTHETIC",className:"7",paymentMode:"CASH",receivedAccount:"SYNTHETIC",feeType:"Old Due"}});
 },60000);
-afterAll(async()=>{await db?.$disconnect();vi.unstubAllEnvs();/* Task-owned synthetic fixture retained for evidence; no historical artifact cleanup. */});
+afterAll(async()=>{await db?.$disconnect();vi.unstubAllEnvs();/* Unique synthetic fixture retained; hosted schema dies with the job's disposable service. No shared cleanup. */});
 
 it("classifies exact issued Decimal sources, preserves zero/incomplete and historical enrolment",async()=>{
   const report=await execute(db,actor,q);expect(report.summary).toMatchObject({population:800,meets:3,doesNotMeet:2,unresolved:795});
   expect(report.rows.find(r=>r.admission==="SYN-0")?.metric).toBe(0);expect(report.rows.find(r=>r.admission==="SYN-6")?.classification).toBe("MEETS");
+  expect((await db.studentResultSnapshot.findUniqueOrThrow({where:{id:"result-s1"}})).percentage.toString()).toBe("59.999999");
+  expect((await execute(db,actor,{...q,comparator:"LT",threshold:59.999999})).rows.find(r=>r.admission==="SYN-1")?.classification).toBe("DOES_NOT_MEET");
+  expect((await execute(db,actor,{...q,comparator:"LTE",threshold:59.999999})).rows.find(r=>r.admission==="SYN-1")?.classification).toBe("MEETS");
   const json=JSON.stringify(report);expect(json).not.toContain("PRIVATE-PHONE");expect(json).not.toContain("PRIVATE-FATHER");
   expect(pageReport(report).rows).toHaveLength(25);expect(pageReport(report).rows[0]).not.toHaveProperty("href");
   expect(report.rows.find(r=>r.admission==="SYN-0")?.href).toBe("/report-cards/card-s0");
@@ -100,11 +129,15 @@ it("refuses forged scope, changed revision and historical fee reconstruction",as
   await expect(readReport(db,actor,{...fees,academicYear:"2025-26",targets:[{id:"scope7"}]})).rejects.toMatchObject({code:"SCOPE_UNAVAILABLE"});
 });
 it("enforces production OFF, role OFF, user deny, export OFF and stale sessions",async()=>{
+  const realRuntime=await vi.importActual<typeof import("../lib/release-feature-flag-runtime")>("../lib/release-feature-flag-runtime");
+  expect(realRuntime.operationalReleaseFeatureAvailability({key:"intelligent-reports-1a",environment:"PRODUCTION",expectedVersion:1,activationRole:"SUPER_ADMIN"},{environment:{NODE_ENV:"production"}}).enabled).toBe(false);
+  if(postgres)expect(realRuntime.operationalReleaseFeatureAvailability({key:"intelligent-reports-1a",environment:"PRODUCTION",expectedVersion:1,activationRole:"SUPER_ADMIN"}).enabled).toBe(false);
   vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED","");await expect(authorize(db,actor)).rejects.toMatchObject({code:"MODULE_OFF"});
   vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED","intelligent-reports-1a");await expect(authorize(db,actor,"ACADEMIC",true)).rejects.toMatchObject({code:"EXPORT_OFF"});
   vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED","intelligent-reports-1a,bulk-exports");await authorize(db,actor,"ACADEMIC",true);
   const off=await db.rolePermission.create({data:{role:"SUPER_ADMIN",permission:"USE_INTELLIGENT_REPORTS",enabled:false}});await expect(options(db,actor,"ACADEMIC",year)).rejects.toMatchObject({code:"ROLE_OFF"});await db.rolePermission.delete({where:{id:off.id}});
   const deny=await grant(actor,"USE_INTELLIGENT_REPORTS","DENY");await expect(authorize(db,actor)).rejects.toMatchObject({code:"ACCESS_DENIED"});await db.userPermissionOverride.delete({where:{id:deny.id}});
+  const domainDeny=await grant(actor,"USE_IR_ACADEMIC","DENY");await expect(authorize(db,actor,"ACADEMIC")).rejects.toMatchObject({code:"ACCESS_DENIED"});await authorize(db,actor,"FEES");await db.userPermissionOverride.delete({where:{id:domainDeny.id}});
   await db.authSession.update({where:{id:actor.sessionId},data:{authorizationVersion:0}});await expect(authorize(db,actor)).rejects.toMatchObject({code:"ACCESS_DENIED"});await db.authSession.update({where:{id:actor.sessionId},data:{authorizationVersion:1}});
 });
 it("eligible leadership needs module grants; Accountant academics require explicit underlying grant",async()=>{
@@ -115,7 +148,7 @@ it("eligible leadership needs module grants; Accountant academics require explic
       await authorize(db,who,"FEES");
       if(role==="ACCOUNTANT")await expect(authorize(db,who,"ACADEMIC")).rejects.toMatchObject({code:"ACCESS_DENIED"});
       await grant(who,"VIEW_EXAM_REPORTS");await authorize(db,who,"ACADEMIC");
-      if(role==="ACCOUNTANT"){await grant(who,"USE_IR_ATTENDANCE");await grant(who,"VIEW_STUDENT_ATTENDANCE_REPORTS");await expect(authorize(db,who,"ATTENDANCE")).rejects.toMatchObject({code:"ACCESS_DENIED"});}
+      if(role==="ACCOUNTANT"){await grant(who,"USE_IR_ATTENDANCE");await grant(who,"VIEW_STUDENT_ATTENDANCE_REPORTS");await expect(authorize(db,who,"ATTENDANCE")).rejects.toMatchObject({code:"ACCESS_DENIED"});await grant(who,"EXPORT_INTELLIGENT_REPORTS");await grant(who,"EXPORT_EXAM_REPORTS");await expect(authorize(db,who,"ACADEMIC",true)).rejects.toMatchObject({code:"ACCESS_DENIED"});}
     }else await expect(authorize(db,who,"FEES")).rejects.toMatchObject({code:"ACCESS_DENIED"});
   }
   await expect(identity("CUSTOM")).rejects.toThrow("UserRoleAssignment_role_check");
@@ -125,7 +158,7 @@ it("measures 800-student complete scope, pagination parity and business read-onl
   const before=await business();
   for(const query of [q,attendance,fees]){
     const startQueries=queries,start=performance.now(),r=await execute(db,actor,query);const count=queries-startQueries;
-    console.info(JSON.stringify({evidence:"INTELLIGENT_REPORTS_1A_SYNTHETIC_SQLITE",family:query.family,population:r.summary.population,elapsedMs:Math.round(performance.now()-start),queryCount:count}));
+    console.info(JSON.stringify({evidence:"INTELLIGENT_REPORTS_1A_SYNTHETIC_PROVIDER",provider:postgres?"postgresql":"sqlite",family:query.family,population:r.summary.population,elapsedMs:Math.round(performance.now()-start),queryCount:count}));
     expect(r.summary.population).toBe(800);expect(count).toBeLessThan(100);
     const p2=await execute(db,actor,{...query,page:2},{expectedRevision:r.sourceRevision});expect(p2.summary).toEqual(r.summary);expect(pageReport(p2).rows.map(r=>r.key)).toEqual(r.rows.slice(25,50).map(r=>r.key));
   }
@@ -159,7 +192,7 @@ it("ROUTE_IN_PROCESS: independent reauthorization, metadata, interpretation, det
   const deny=await grant(actor,"USE_INTELLIGENT_REPORTS","DENY");
   for(const action of ["access","options","interpret","run","source","export"] as const)expect((await call(action,action==="access"?undefined:{query:q,expectedRevision:report.sourceRevision})).status).toBe(403);
   await db.userPermissionOverride.delete({where:{id:deny.id}});
-  const audit=await db.userAudit.findMany();expect(audit.map(v=>v.action)).toEqual(["INTELLIGENT_REPORT_READ","INTELLIGENT_REPORT_EXPORTED"]);expect(JSON.stringify(audit)).not.toContain("students below");expect(JSON.stringify(audit)).not.toContain("SYN-0");
+  const audit=await db.userAudit.findMany();expect(audit.map(v=>v.action).sort()).toEqual(["INTELLIGENT_REPORT_EXPORTED","INTELLIGENT_REPORT_READ"]);expect(JSON.stringify(audit)).not.toContain("students below");expect(JSON.stringify(audit)).not.toContain("SYN-0");
   const saved=transport.context;transport.context=null;expect((await call("access")).status).toBe(401);transport.context=saved;
 });
 it("preserves a real 40000 family master, 25000/15000 shares, exact later-term allocation and reversal",async()=>{
@@ -190,4 +223,34 @@ it("excludes valid previous-year family allocations and refuses conflicting odd-
   await db.feeStructure.create({data:{academicYear:year,className:"8",termAmount:2.01,term1Month:"June",term2Month:"September",term3Month:"December",term4Month:"March"}});
   await issue("SYN-ODD",year,100,"SYNTHETIC-IR-ODD");
   const odd=await execute(db,actor,{...fees,term:1,targets:[{id:"odd"}]});expect(odd.rows[0]).toMatchObject({metric:null,state:"UNRECONCILED",classification:"UNRESOLVED"});expect(odd.rows[0].explanation).toContain("rounding");
+});
+it("does not borrow another class calendar even when its date and version overlap",async()=>{
+  await db.academicCalendarVersion.create({data:{id:"calendar9",publicKey:"calendar9-key",academicYear:year,versionNumber:2,status:"DRAFT",effectiveScope:"CLASS_SECTION",className:"9",section:"B",scopeKey:"CLASS_SECTION:9:B",title:"SYNTHETIC other scope",createdByUserId:actor.userId}});
+  await db.operationalCalendarDay.create({data:{publicKey:"day9-key",calendarVersionId:"calendar9",dayDate:date("2026-06-01"),dayType:"NON_WORKING_DAY",scopeType:"CLASS_SECTION",className:"9",section:"B",scopeKey:"CLASS_SECTION:9:B",title:"SYNTHETIC other scope",contentHash:"synthetic9"}});
+  await db.academicCalendarVersion.update({where:{id:"calendar9"},data:{status:"READY_FOR_REVIEW",submittedAt:now}});
+  await db.academicCalendarVersion.update({where:{id:"calendar9"},data:{status:"PUBLISHED",approvedAt:now,publishedAt:now,publicationReason:"SYNTHETIC",currentPublicationKey:"SYNTHETIC-OTHER-SCOPE"}});
+  const report=await execute(db,actor,attendance);expect(report.rows.find(r=>r.admission==="SYN-0")).toMatchObject({numerator:2,denominator:3});
+});
+it("all three in-process route families preserve business data and reconcile private exports",async()=>{
+  const business=async()=>JSON.stringify(await Promise.all([
+    db.student.findMany({orderBy:{id:"asc"}}),db.academicYearEnrollment.findMany({orderBy:{id:"asc"}}),
+    db.studentAttendanceSession.findMany({orderBy:{id:"asc"}}),db.studentAttendanceRecord.findMany({orderBy:{id:"asc"}}),
+    db.studentResultSnapshot.findMany({orderBy:{id:"asc"}}),db.studentReportCardVersion.findMany({orderBy:{id:"asc"}}),
+    db.payment.findMany({orderBy:{id:"asc"}}),db.feeStructure.findMany({orderBy:{id:"asc"}}),
+    db.familyCollection.findMany({orderBy:{id:"asc"}}),db.familyStudentAllocation.findMany({orderBy:{id:"asc"}})
+  ]));
+  const before=await business(),audits=await db.userAudit.count();
+  const call=(action:"run"|"export",body:unknown)=>handle(new NextRequest(`http://127.0.0.1:4179/api/intelligent-reports/${action}`,{method:"POST",headers:{origin:"http://127.0.0.1:4179","content-type":"application/json"},body:JSON.stringify(body)}),action);
+  resetAcademicCalendarExportRateLimitForTests();
+  for(const query of [q,attendance,fees]){
+    const run=await call("run",{query}),page=await run.json();expect(run.status).toBe(200);expect(page.summary.population).toBe(800);expect(page.rows).toHaveLength(25);
+    const exported=await call("export",{query,expectedRevision:page.sourceRevision});expect(exported.status).toBe(200);expect(exported.headers.get("cache-control")).toContain("no-store");expect(exported.headers.get("content-disposition")).toContain("attachment");
+    const csv=await exported.text();expect(csv.split("\r\n")).toHaveLength(807);expect(csv).toContain(page.sourceRevision);expect(csv).not.toContain("PRIVATE-");
+    if(query.family==="FEES")expect(csv).toContain('"Outstanding paise","797500000"');
+  }
+  expect(await business()).toBe(before);expect(await db.userAudit.count()).toBe(audits+6);
+  const records=await db.userAudit.findMany();for(const record of records){expect(["INTELLIGENT_REPORT_READ","INTELLIGENT_REPORT_EXPORTED"]).toContain(record.action);expect(JSON.stringify(record)).not.toContain("SYN-");expect(JSON.stringify(record)).not.toContain("PRIVATE-");}
+  const prior=await execute(db,actor,fees);await db.feeStructure.update({where:{id:"fee7"},data:{termAmount:10001}});
+  const rejected=await call("export",{query:fees,expectedRevision:prior.sourceRevision});expect(rejected.status).toBe(409);expect((await rejected.json()).code).toBe("SOURCE_CHANGED");expect(await db.userAudit.count()).toBe(audits+6);
+  await db.feeStructure.update({where:{id:"fee7"},data:{termAmount:10000}});
 });

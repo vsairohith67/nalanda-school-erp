@@ -121,3 +121,49 @@ Final status: **INTELLIGENT_REPORTS_1A_PARTIAL_WITH_EXACT_GAPS**. Connected sour
 At 2026-09-27 09:04:09 UTC, all three final tracker readbacks succeeded: Asana 1218898133561602 contains the exact partial status and product SHA and remains incomplete; Notion register P1 section contains final R1 handoff and retains previous history; Canvs only Mymz5BQXjvPKbZcYrKiHQ matches the final rich text, with geometry x=9009.5/y=48/881x1004 and original container unchanged. Parent and W1 records were not edited.
 
 Measured R1 work interval through tracker readback: 08:12:12 to 09:04:09 UTC, **51 minutes 57 seconds**. Task-specific token/cost usage was not observed and is not estimated. Final source/evidence commit coordinates are provided in the user handoff; tracker product SHA stays pinned to the tested implementation commit.
+
+## R2 — reviewed source admission and provider validation
+
+R2 started 2026-09-27 10:06:14 UTC. Exact starting HEAD `31c98594a2f362217968ef909544185d23c32c95`, tree `13c862a0daeba2c116608fcbc09d080df79255d6`, clean owned feature branch/path. Ancestry from the pinned a4d59b4 product base exits 0. Product app/components/lib/release flags remain byte-identical to tested `1dec5ab`; its tree is not substituted for the evidence HEAD. No initial setup repeated.
+
+### Current handoff and failure history
+
+First unchanged prepare-qa recheck: **SAFE**, native exit 0; clean, no dirty overlap, upstream null, originMain/mergeBase104aacc7, branchAhead72/mainAhead0. The earlier18-path BLOCKED result above remains historical. W1 remote ref observed1c2e1a3; not adopted. Final committed handoff is recorded separately below.
+
+First unchanged source check again failed with `RECOVERY_SOURCE_DRIFT:app/api/intelligent-reports/access/route.ts`, exit1. R2 expressly authorises the manifest correction; checker and helper were not changed. The generator returned `GENERATED_NOT_REVIEW_CLEARANCE`,270 records. Independent review was then performed against actual content, not inferred from generation.
+
+### Exact reviewed registration
+
+`config/recovery-integration-source-delta.json`:254 to270 records.252 old records remain structurally identical;16 added (15 feature source files plus existing shared navigation `lib/access-rules.ts`); only the two existing records for `lib/permissions.ts` and `config/release-feature-flags.json` changed. No removals, base/head/date changes, historical hash rewrites or wildcard admissions. New P1 records retain `RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW`, never mislabelled as a historical admitted source. All270 normalized current hashes independently checked.
+
+The existing `PRODUCT-EXPERIENCE-1A` completeness contract also required the new page. Narrow `config/product-experience-screen-register.json` registration adds only `/intelligent-reports` with four eligible roles, module permission, HIGH risk and manual accessibility review required;365 previous rows/order preserved, counts366. Its generator/checker and general role inference were not changed. Conditional domain/export restrictions remain in the actual service, not overridden by this inventory.
+
+One independent reviewer found no remaining material R2 finding and reused verified unchanged product evidence. Frozen normalized LF SHA256:
+
+| Reviewed file | SHA256 |
+| --- | --- |
+| config/recovery-integration-source-delta.json | f7c41e9823b57fb54d0963110c16b130928e1ebdcda277f210a32bb168a955ba |
+| config/product-experience-screen-register.json | c7a9766b55e13d311e6108a41c2149e126111fe1053936a1307f017bf1de56b9 |
+| tests/intelligent-reports-service.test.ts | 29202602b31fc6fd8a93976ac3128135a6454a2b6efef545e9b6bf0b23a912d2 |
+
+Unchanged final-content source checker: **PASS**,270 records/four source heads/four backup contracts, exit0. This is register consistency; the separate reviewer verdict above is limited source review, not runtime/security certification.
+
+### Provider-connected tests and explicit doubles
+
+Same feature service suite now selects SQLite or PostgreSQL from the actual configured provider. SQLite remains a freshly migrated in-memory database saved to a unique task-owned temporary directory, absence checked before creation, real-path/symlink/hardlink checks, no replacement or shared cleanup. PostgreSQL requires CI=true plus unchanged `assertSyntheticPostgresQa` (opt-in, loopback, synthetic database name, non-production); it uses a unique `ir1_<UUID>` schema and existing PostgreSQL migrate-deploy. Hosted disposable service owns its lifecycle. No operational database or another worktree database is accessed.
+
+The existing hosted `postgres-readiness.yml` application-regression job uses PostgreSQL17.11-bookworm and `pnpm test:postgres`, which automatically includes this test file. No workflow or full ERP harness modification is needed. Local Docker database daemon inspection failed (missing desktop-linux pipe); no local admitted target exists and no server/container was launched.
+
+Doubles: transport identity and Prisma singleton adapters remain in-process. PostgreSQL additionally uses an explicitly disclosed in-memory configuration fixture for exactly the module and bulk-export flags, evaluated by the real flag evaluator. The unmodified runtime admits SQLite QA only; separate assertions prove actual PostgreSQL runtime and production config stay OFF. The database URL/provider is never disguised as SQLite. No persisted flags or activation/runtime policy change. Reader, session, permission, transaction, fee engine and audit queries remain actual provider execution when run.
+
+Fixtures cover800 students; Decimal0/59.999999 and exact LT/LTE boundaries; historical enrolment vs current class; issued/missing/incomplete results; dated calendars, another-class calendar exclusion, missing/partial records; actual40000 master with25000/15000 allocations; year/term separation/reversal/rounding conflict; pagination and stale-source export rejection; module/domain/user/role DENY and stale authority; all three routes' business-record equality and exactly six minimal new run/export audits; privacy canaries absent from CSV. Expectations are specified independently; no provider-result normalization or lossy Decimal/date conversion was introduced.
+
+Initial added-calendar test failed its actual database constraint because fixture used unsupported HOLIDAY. Corrected to existing NON_WORKING_DAY; no schema/policy/assertion/timeout change. Final focused run **147 tests/12 files PASS**,20.69seconds, including28 feature contract and14 real SQLite service/route tests. Static provider contracts **7 tests/3 files PASS**, schema parity,201-trigger parity and immutable baseline PASS. Static checks are not PostgreSQL execution.
+
+### Local validation and retained limits
+
+PASS: complete production compile/generate build; both existing publication scans (429 main-relative paths), Git safety, full and production dependency audits (no findings), route inventory (P1page+six APIs;366pages/659APIs),46-requirement register, unchanged25 flags and newOFF/0%, diff whitespace check. Full20-partition typecheck PASS, exit0. Final committed handoff and hosted execution are appended after their actual results.
+
+Leadership roles require effective module/domain/export permissions and flags. Accountant fee reports remain permission-gated; academic read requires explicit underlying user/profile grant. Accountant attendance and academic export remain unavailable under unchanged global policy: this is an **unresolved original capability requirement**, not simply Browser execution pending. Other roles are excluded. Issued/locked governed academics, unresolved ambiguous attendance, no historical fee reconstruction and no allocation of unassigned family credit remain unchanged.
+
+Browser/UI/native/device execution is NOT_EXECUTED; existing connected UI and real browser driver retained. In-process routes do not prove login/middleware/rendering/dark mode/keyboard/download/cross-session race. EXTERNAL_RUNTIME_BLOCKED and EPHEMERAL_EXACT_HEAD_CI_ONLY remain. W1, native/auth/runtime tools, operational database, v48/migrations/schema/history/46 requirement IDs/OCR exclusion preserved; no model/provider activation, deployment, merge or release tag.
