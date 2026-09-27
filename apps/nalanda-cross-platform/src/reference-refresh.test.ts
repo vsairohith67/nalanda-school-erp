@@ -48,7 +48,7 @@ describe("reference completion contracts and encrypted file readback",()=>{
  it.each(["userId","deviceId","sessionId","publicDeviceId"] as const)("refuses foreign %s",async key=>{const i=await input();await expect(validateReferenceResponse(i.body,{...binding,[key]:"foreign"},i.requestHash)).rejects.toThrow("BINDING");});
  it.each(["truncated","malformed","content","request","version","private-metadata"])("fails closed on %s",async kind=>{
   const i=await input(),v=JSON.parse(i.body);
-  if(kind==="truncated")v.truncated=true;if(kind==="content")v.students[0].name="changed";if(kind==="version")v.schemaVersion=2;if(kind==="private-metadata")v.observation.secret="PRIVATE_CANARY";
+  if(kind==="truncated")v.truncated=true;if(kind==="content")v.students[0].name="changed";if(kind==="version")v.schemaVersion=2;if(kind==="private-metadata")v.observation.secret=crypto.randomUUID();
   await expect(validateReferenceResponse(kind==="malformed"?"{":JSON.stringify(v),binding,kind==="request"?"0".repeat(64):i.requestHash)).rejects.toThrow();
  });
  it("older automatic response cannot complete a manual operation or overwrite it",async()=>{
