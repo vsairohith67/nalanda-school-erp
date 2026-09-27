@@ -30,6 +30,8 @@ vi.mock("../lib/release-feature-flag-runtime",async(importOriginal)=>{
   }};
 });
 import {handle} from "../lib/intelligent-reports/api";
+import {POST as exportRoute} from "../app/api/intelligent-reports/export/route";
+const dispatch=(action:Parameters<typeof handle>[1],request:NextRequest)=>action==="export"?exportRoute(request):handle(request,action);
 import {previewFamilyCollection,confirmFamilyCollection,reverseFamilyCollection} from "../lib/family-collections";
 import {assertSyntheticPostgresQa} from "../scripts/postgres/synthetic-qa";
 
@@ -151,7 +153,10 @@ it("eligible leadership needs module grants; Accountant academics require explic
       if(role==="ACCOUNTANT"){await grant(who,"USE_IR_ATTENDANCE");await grant(who,"VIEW_STUDENT_ATTENDANCE_REPORTS");await expect(authorize(db,who,"ATTENDANCE")).rejects.toMatchObject({code:"ACCESS_DENIED"});await grant(who,"EXPORT_INTELLIGENT_REPORTS");await grant(who,"EXPORT_EXAM_REPORTS");await expect(authorize(db,who,"ACADEMIC",true)).rejects.toMatchObject({code:"ACCESS_DENIED"});}
     }else await expect(authorize(db,who,"FEES")).rejects.toMatchObject({code:"ACCESS_DENIED"});
   }
-  await expect(identity("CUSTOM")).rejects.toThrow("UserRoleAssignment_role_check");
+  // Existing provider schemas differ on insertion; the reporting boundary must
+  // still deny an unsupported role even if the database accepts its assignment.
+  if(postgres){const custom=await identity("CUSTOM");await grant(custom,"USE_INTELLIGENT_REPORTS");await expect(authorize(db,custom)).rejects.toMatchObject({code:"ACCESS_DENIED"});}
+  else await expect(identity("CUSTOM")).rejects.toThrow("UserRoleAssignment_role_check");
 });
 it("measures 800-student complete scope, pagination parity and business read-only behavior",async()=>{
   const business=async()=>JSON.stringify(await Promise.all([db.student.findMany({orderBy:{id:"asc"}}),db.payment.findMany({orderBy:{id:"asc"}}),db.studentAttendanceRecord.findMany({orderBy:{id:"asc"}}),db.studentResultSnapshot.findMany({orderBy:{id:"asc"}})]));
@@ -177,7 +182,7 @@ it("rejects historical fee balance after valid historical metadata resolution",a
   await expect(execute(db,actor,{...fees,academicYear:"2025-26",targets:[{id:"past7"}]})).rejects.toMatchObject({code:"HISTORICAL_BALANCE_UNSUPPORTED"});
 });
 it("ROUTE_IN_PROCESS: independent reauthorization, metadata, interpretation, details, export and minimal audit",async()=>{
-  const call=(action:Parameters<typeof handle>[1],body?:unknown,origin="http://127.0.0.1:4179")=>handle(new NextRequest(`http://127.0.0.1:4179/api/intelligent-reports/${action}`,{method:body===undefined?"GET":"POST",headers:{origin,"content-type":"application/json"},...(body===undefined?{}:{body:JSON.stringify(body)})}),action);
+  const call=(action:Parameters<typeof handle>[1],body?:unknown,origin="http://127.0.0.1:4179")=>dispatch(action,new NextRequest(`http://127.0.0.1:4179/api/intelligent-reports/${action}`,{method:body===undefined?"GET":"POST",headers:{origin,"content-type":"application/json"},...(body===undefined?{}:{body:JSON.stringify(body)})}));
   resetAcademicCalendarExportRateLimitForTests();
   const access=await call("access");expect(access.status).toBe(200);expect((await access.json()).families).toHaveLength(3);
   expect((await call("options",{family:"ACADEMIC",academicYear:year})).status).toBe(200);
@@ -193,7 +198,7 @@ it("ROUTE_IN_PROCESS: independent reauthorization, metadata, interpretation, det
   for(const action of ["access","options","interpret","run","source","export"] as const)expect((await call(action,action==="access"?undefined:{query:q,expectedRevision:report.sourceRevision})).status).toBe(403);
   await db.userPermissionOverride.delete({where:{id:deny.id}});
   const audit=await db.userAudit.findMany();expect(audit.map(v=>v.action).sort()).toEqual(["INTELLIGENT_REPORT_EXPORTED","INTELLIGENT_REPORT_READ"]);expect(JSON.stringify(audit)).not.toContain("students below");expect(JSON.stringify(audit)).not.toContain("SYN-0");
-  const saved=transport.context;transport.context=null;expect((await call("access")).status).toBe(401);transport.context=saved;
+  const saved=transport.context;transport.context=null;expect((await call("access")).status).toBe(401);const deniedExport=await call("export",{query:q,expectedRevision:report.sourceRevision});expect(deniedExport.status).toBe(401);expect(deniedExport.headers.get("cache-control")).toContain("private, no-store");transport.context=saved;
 });
 it("preserves a real 40000 family master, 25000/15000 shares, exact later-term allocation and reversal",async()=>{
   vi.stubEnv("AUTH_SECRET","SYNTHETIC-IR-TEST-SECRET-NEVER-DEPLOY-000000");
@@ -240,7 +245,7 @@ it("all three in-process route families preserve business data and reconcile pri
     db.familyCollection.findMany({orderBy:{id:"asc"}}),db.familyStudentAllocation.findMany({orderBy:{id:"asc"}})
   ]));
   const before=await business(),audits=await db.userAudit.count();
-  const call=(action:"run"|"export",body:unknown)=>handle(new NextRequest(`http://127.0.0.1:4179/api/intelligent-reports/${action}`,{method:"POST",headers:{origin:"http://127.0.0.1:4179","content-type":"application/json"},body:JSON.stringify(body)}),action);
+  const call=(action:"run"|"export",body:unknown)=>dispatch(action,new NextRequest(`http://127.0.0.1:4179/api/intelligent-reports/${action}`,{method:"POST",headers:{origin:"http://127.0.0.1:4179","content-type":"application/json"},body:JSON.stringify(body)}));
   resetAcademicCalendarExportRateLimitForTests();
   for(const query of [q,attendance,fees]){
     const run=await call("run",{query}),page=await run.json();expect(run.status).toBe(200);expect(page.summary.population).toBe(800);expect(page.rows).toHaveLength(25);

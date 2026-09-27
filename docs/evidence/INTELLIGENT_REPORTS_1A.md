@@ -176,3 +176,26 @@ Hosted master run36312335723/job108600560371 failed unchanged `tests/master-requ
 
 The corrected debt row is non-runtime inventory. Prior product build/full20-partition typecheck/147 feature and regression tests remain valid for identical product bytes. The affected master/product contract tests and tests-m-r typecheck are rerun on the actual correction. Subsequent final head, prepare-qa and hosted results are recorded in PR29 and existing P1 trackers without a cosmetic report-only push loop.
 Independent debt-row review found no material issue; LF SHA256 `ace4f129124d420b215aff5f7761910d6a3e81e5a1dec74ac89224d77f2820df`. Corrected master/product contracts28 PASS and affected tests-m-r typecheck PASS, exit0.
+
+### First hosted provider failures and reviewed corrective candidate
+
+At ba0f54fa5310c3508803b87c1ad1713a46e88ba8, PostgreSQL run36312335595/job108600560063 executed the real readers and routes: 13/14 P1 service tests passed,28/28 P1 contract tests passed; full suite2850 passed,5 failed,3 skipped. This is execution evidence, not a provider PASS. Failure at service.test.ts:154 assumed CUSTOM role insertion fails identically: existing PostgreSQL schema accepts it, SQLite rejects UserRoleAssignment_role_check. The correction asserts the actual P1 authorization rejects an accepted PostgreSQL custom role even with module grant; SQLite retains the insertion-constraint assertion. No schema, IAM or assertion relaxation.
+
+The four wider failures were missing P1 entries in debt, bulk-export, feature runtime-contract and private robots inventories. First Windows biometric suite2881 passed/4 failed/3 skipped corroborated those four inventory gaps; communication corrected-scope gate found the runtime-contract gap. Original failed runs are retained.
+
+The debt correction was committed separately at73b4284be94c9665f1f914dce41ce7d6a83449e8. Further narrow registrations use the existing bulk/final-scope schemas and private path list. Prior entries remain equivalent; discovery totals now68 surfaces/46 bulk/22 nonbulk,2 bulk-flag mappings. Existing scanner and historical final-scope contracts remain unchanged. P1 export route now exposes a real transport authentication guard and private error/header handling; the existing handler independently reauthorizes session/module/domain/export/revision. Its service import uses the absolute existing path so the unchanged scanner follows the actual CSV sanitizer. All three family export assertions now invoke the actual Next route; null-context exports assert401/private headers. No source semantics or role capability broadened.
+
+Unchanged source generator produces270 records. Compared with the prior reviewed P1 ledger, only current hashes for export route, API import and private-routing source change; the private-routing record moves from historical admitted source to requires-independent-review. All base/source/historical hashes remain intact. Unchanged checker PASS270/4sourceHeads/4backupContracts.
+
+Focused independent reviewer: no remaining material finding. Final LF-normalized SHA256 binding:
+- export route e808f39b42b74528159e328579a47f960eb60679de919424f338b77b65b41092
+- API a9e0d692adf1c720fb5253cd3f226a41b50203229cc33bdbc944eace0ef101b1
+- private routing df6b1d08880ac8b5dd5ff4d1f7d44ddef97b277e495fac38e485d45b94c2473e
+- source ledger 08ca680fea310995b39b9572bbdfeff3b2f87f021a884bcd24f048ece062e65f
+- service tests a36f8679322b8847d3484502d7e3d4c13548d59a99a399110d2f0d06934d95c7
+- bulk tests c9fe6694bbf59bc7c3c804d5b25f032f56802595ea5a8cc5638aa5e038568a6c
+- bulk contracts d2b6c25104e297bb6dfdfdb917b642b8d2c8f63bf57787718ff2c17ec309ba73
+- scope contracts 20aa7bc2c1c6b575350a2d33e898e46dd21302934e4b5db5f646b71c0a69dce5
+
+Corrected SQLite/focused registration suite96 tests/6 files PASS in23.01seconds. These results do not yet claim corrected hosted PostgreSQL PASS. Subsequent exact-head provider/full-workflow results, clean handoff and final SHA are recorded in PR29 and P1 trackers without cosmetic report-only pushes. Original R1 commits and all failure history remain retained.
+Corrected candidate additional local verification: affected API/lib/test typecheck partitions PASS exit0; full production compile/generate build PASS exit0; both unchanged publication scans PASS. Complete 20-partition typecheck and dependency audits passed earlier in R2; dependencies unchanged.

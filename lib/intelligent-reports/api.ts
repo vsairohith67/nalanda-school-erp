@@ -8,7 +8,7 @@ import { logUserAction } from "@/lib/user-audit";
 import { readImportBytes, ImportRequestError } from "@/lib/import-request";
 import { authorize } from "./access";
 import { ReportError,object,keys,interpretQuestion,parseQuery,type Family } from "./contract";
-import { options,availability,execute,pageReport,reportCsv } from "./service";
+import { options,availability,execute,pageReport,reportCsv } from "@/lib/intelligent-reports/service";
 import { resolvedTargets } from "./readers";
 
 export const HEADERS={"Cache-Control":"private, no-store, max-age=0","Pragma":"no-cache","X-Content-Type-Options":"nosniff","Referrer-Policy":"no-referrer","Vary":"Cookie","X-Robots-Tag":"noindex, nofollow, noarchive"};
