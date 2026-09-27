@@ -140,7 +140,7 @@ export function App() {
       const context = JSON.parse(contextResponse.body);
     if (contextResponse.status !== 200 || context.nativeApiVersion !== 1 || !context.serverVersion || !context.minimumSupportedAppVersion) throw new Error(context.code ?? "Server compatibility check failed.");
     if (context.maintenanceState === "ACTIVE") { setCompatibility("MAINTENANCE"); throw new Error("Server maintenance is active. Local encrypted drafts are preserved."); }
-    if (!context.featureAvailability?.crossPlatformApps || !context.featureAvailability.offlineSync) { setCompatibility("FEATURE_DISABLED"); throw new Error("FEATURE_DISABLED"); }
+    if (!context.featureAvailability?.crossPlatformApps || !(context.featureAvailability.offlineSync || (profile.name === "SYNTHETIC_QA" && context.featureAvailability.nativeReference === true))) { setCompatibility("FEATURE_DISABLED"); throw new Error("FEATURE_DISABLED"); }
     if (!versionAtLeast(APP_VERSION, context.minimumSupportedAppVersion)) { setCompatibility("UPDATE_REQUIRED"); throw new Error("Update required. Sync is blocked and local drafts are preserved."); }
     if (!versionAtLeast(context.serverVersion, profile.minimumServerVersion) || context.currentSyncSchemaVersion !== 1 || context.minimumSupportedSyncSchema !== 1) { setCompatibility("SERVER_INCOMPATIBLE"); throw new Error("Server version is incompatible. Sync is blocked and local drafts are preserved."); }
       if (!context.user?.id || !context.device?.id || context.device.publicDeviceId !== publicDeviceId) throw Error("REFERENCE_CONTEXT_MISMATCH");

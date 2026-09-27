@@ -30,7 +30,8 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
   it("uses fixed native network operations, exact origins, no redirects and bounded responses", () => {
     const rust = source("apps/nalanda-cross-platform/src-tauri/src/lib.rs");
     expect(rust).toContain("enum NativeApiOperation");
-    expect(rust).toContain("Policy::none()");
+    expect(rust).toContain("qa_profile::client()?");
+    expect(source("apps/nalanda-cross-platform/src-tauri/src/qa_profile.rs")).toContain("Policy::none()");
     expect(rust).toContain("MAX_RESPONSE_BYTES");
     expect(rust).toMatch(/response\s*\.chunk\(\)/);
     expect(rust.indexOf("append_bounded_response_chunk(&mut bytes, &chunk)")).toBeLessThan(rust.indexOf("String::from_utf8(bytes)"));

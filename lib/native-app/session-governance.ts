@@ -5,7 +5,8 @@ import { evaluateEffectivePermission } from "@/lib/iam/effective-access";
 import { consumeStepUpGrant } from "@/lib/real-user-access/step-up";
 import { boundAuthEnvironment } from "@/lib/real-user-access/login-mfa";
 import { withDatabaseRetry } from "@/lib/database-retry";
-import { nativeAppEnabled } from "./feature-flag";
+import { operationalNativeAppEnabled } from "./feature-flag";
+import { syntheticNativeOperation } from "../portable-runtime/synthetic-capability";
 import { NativeAuthError } from "./auth";
 
 const publicId = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
@@ -33,7 +34,7 @@ export function parseNativeSessionRevocation(value: unknown) {
  * database is its school/environment boundary; no external database is selected.
  * Already-authorized in-flight requests and local offline data are unaffected. */
 export async function revokeGovernedNativeSession(client: PrismaClient, sessionCookie: string | undefined, sessionId: string, value: unknown) {
-  if (!nativeAppEnabled()) throw new NativeAuthError("NATIVE_APP_UNAVAILABLE", 404);
+  if (!operationalNativeAppEnabled() && !syntheticNativeOperation("SESSION_REVOKE")) throw new NativeAuthError("NATIVE_APP_UNAVAILABLE", 404);
   const action = nativeSessionRevocationAction(sessionId), input = parseNativeSessionRevocation(value);
   return withDatabaseRetry(() => client.$transaction(async tx => {
     const now = new Date();

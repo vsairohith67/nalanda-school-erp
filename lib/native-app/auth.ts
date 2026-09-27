@@ -13,7 +13,7 @@ import {
   verifyDeviceSignature,
   verifyEd25519Signature
 } from "@/lib/offline-sync/device-trust";
-import { NATIVE_APP_ID, NATIVE_REDIRECT_URI, nativeAppEnabled } from "@/lib/native-app/feature-flag";
+import { NATIVE_APP_ID, NATIVE_REDIRECT_URI, nativeAppEnabled, nativeDataScopeEnabled } from "@/lib/native-app/feature-flag";
 
 const REQUEST_TTL_MS = 5 * 60 * 1000;
 const CODE_TTL_MS = 90 * 1000;
@@ -212,6 +212,7 @@ function storedNativeScopes(value: string): NativeScope[] {
 }
 
 export async function resolveNativeSession(request: Request, requiredScope?: NativeScope, now = new Date()) {
+  if (!nativeDataScopeEnabled(requiredScope)) throw new NativeAuthError("NATIVE_APP_UNAVAILABLE", 404);
   if (!nativeAppEnabled()) throw new NativeAuthError("NATIVE_APP_UNAVAILABLE", 404);
   const sessionId = bounded(request.headers.get("x-native-session"), /^[0-9a-f-]{36}$/i, "NATIVE_SESSION_REQUIRED");
   const match = request.headers.get("authorization")?.match(/^Bearer ([A-Za-z0-9_-]{43})$/);

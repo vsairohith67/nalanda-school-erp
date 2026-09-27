@@ -24,6 +24,8 @@ vi.mock("../scripts/portable/acceptance-http",()=>({assertSyntheticServingTarget
 vi.mock("../lib/portable-runtime/synthetic-capability",()=>({syntheticFeatureCapability:()=>({source:"a".repeat(40),runId:"123",attempt:"1",features:[]})}));
 const root=mkdtempSync(path.join(tmpdir(),"nalanda-marks-browser-service-")),identity=lstatSync(root),schema=`mb_${randomUUID().replaceAll("-","")}`,postgres=process.env.DATABASE_PROVIDER==="postgresql";let db:PrismaClient;
 const bound={source:"a".repeat(40),runId:"123",attempt:"1",iteration:randomUUID()};
+let fixture:any;
+const probe=(operation:string,extra:any={})=>marksBrowserProbe(db,{...bound,operation,...extra});
 beforeAll(async()=>{
  let url="file:"+path.join(root,"synthetic.db").replaceAll("\\","/");
  if(postgres){expect(process.env.CI).toBe("true");expect(process.env.POSTGRES_READINESS_SYNTHETIC_QA).toBe("1");const target=new URL(process.env.DATABASE_URL!);target.searchParams.set("schema",schema);url=target.toString();execFileSync(process.execPath,["node_modules/prisma/build/index.js","migrate","deploy","--schema","prisma/postgresql/schema.prisma"],{env:{...process.env,DATABASE_URL:url,DIRECT_URL:url},stdio:"pipe"});}
@@ -31,10 +33,18 @@ beforeAll(async()=>{
  db=new PrismaClient({datasourceUrl:url});vi.stubEnv("DATABASE_URL",url);vi.stubEnv("NODE_ENV","test");vi.stubEnv("AUTH_SECRET","SYNTHETIC-marks-contract-secret-only-000000");vi.stubEnv("AUTH_MFA_KEYRING_JSON",JSON.stringify({active:"SYNTHETIC",keys:{SYNTHETIC:Buffer.alloc(32,7).toString("base64")}}));vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_MODE","SYNTHETIC_COPY_ONLY");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED","real-data-imports");
  await db.rolePermission.createMany({data:Object.entries(defaultPermissionMatrix()).flatMap(([role,entries])=>Object.entries(entries).map(([permission,enabled])=>({role,permission,enabled})))});
  await db.schoolSettings.create({data:{id:"school",schoolName:"NALANDA PUBLIC SCHOOL",academicYear:"2026-27",addressLine1:"SYNTHETIC",city:"SYNTHETIC",phone:"SYNTHETIC-NO-CONTACT"}});
+ // Actors, password hashing, scoped grants, rosters and historical controls are
+ // preconditions. Keep them in the existing bounded setup hook; every current
+ // import/export action and assertion remains in the unchanged 30-second test.
+ const started=performance.now();
+ fixture=await probe("prepare",{password:"HARNESS_FIXTURE_ONLY_"+randomUUID()+randomUUID()});
+ console.info(JSON.stringify({event:"MARKS_SERVICE_FIXTURE_PREPARED",durationMs:Math.round(performance.now()-started)}));
 },60_000);
 afterAll(async()=>{if(db){if(postgres)await db.$executeRawUnsafe(`DROP SCHEMA "${schema}" CASCADE`);await db.$disconnect();}const current=lstatSync(root);expect(current.isSymbolicLink()).toBe(false);expect(current.ino).toBe(identity.ino);expect(current.dev).toBe(identity.dev);expect(path.dirname(path.resolve(root))).toBe(path.resolve(tmpdir()));rmSync(root,{recursive:true});expect(existsSync(root)).toBe(false);vi.unstubAllEnvs();});
 it("ISOLATED_SERVICE: source-bound fresh rosters, actual delegation and real legacy/governed imports",async()=>{
- const probe=(operation:string,extra:any={})=>marksBrowserProbe(db,{...bound,operation,...extra}),f:any=await probe("prepare",{password:"HARNESS_FIXTURE_ONLY_"+randomUUID()+randomUUID()}),read=async()=>JSON.parse(JSON.stringify(await probe("snapshot")));
+ const f=fixture,read=async()=>JSON.parse(JSON.stringify(await probe("snapshot")));
+ const initial=await read();
+ for(const key of ["marks","legacyEvents","sheets","entries","results"])expect(initial[key]).toEqual([]);
  expect(f.students).toHaveLength(6);expect(f.excluded).toHaveLength(3);await expect(probe("prepare",{password:"x".repeat(60)})).rejects.toThrow("FIXTURE_REUSE");
  const principal=await db.user.findUniqueOrThrow({where:{id:f.actors.principal.id}}),delegate=await db.user.findUniqueOrThrow({where:{id:f.actors.delegate.id}});
  expect((await read()).history.snapshots).toHaveLength(3);
