@@ -6610,6 +6610,31 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "scripts/qa-real-data-onboarding-preparation-1a-public-repo-scan.ts",
+      "baseSha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc",
+      "historicalSha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc"
+        }
+      ],
+      "currentSha256": "4ee35f2d15dfa7395408d05db2411c912fa87528d366ada99e070569145ea909",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "scripts/qa-real-user-access-readiness-1a-public-repo-scan.ts",
       "baseSha256": "72e2ee81f41705a039f9d7ea573beb52e7141cfe0b0ebc990786a8ec4ed3bc91",
       "historicalSha256": "72e2ee81f41705a039f9d7ea573beb52e7141cfe0b0ebc990786a8ec4ed3bc91",
