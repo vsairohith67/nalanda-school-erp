@@ -109,9 +109,12 @@ namespace Nalanda.Biometric
             try
             {
                 using var bridge = JsonDocument.Parse(File.ReadAllText(settings.BridgeConfig));
-                var queuePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(settings.BridgeConfig)!, bridge.RootElement.GetProperty("queuePath").GetString()!));
-                var configRoot = Path.GetDirectoryName(settings.BridgeConfig)! + Path.DirectorySeparatorChar;
-                if (!queuePath.StartsWith(configRoot, StringComparison.OrdinalIgnoreCase) || Path.GetDirectoryName(queuePath) == Path.GetDirectoryName(settings.BridgeConfig)) throw new InvalidOperationException("HOST_RUNTIME_PATH_INVALID");
+                stage = "QUEUE_PATH_ADMISSION";
+                var configDirectory = Path.GetDirectoryName(Path.GetFullPath(settings.BridgeConfig))!;
+                var queuePath = Path.GetFullPath(Path.Combine(configDirectory, bridge.RootElement.GetProperty("queuePath").GetString()!));
+                var configRoot = configDirectory + Path.DirectorySeparatorChar;
+                if (!queuePath.StartsWith(configRoot, StringComparison.OrdinalIgnoreCase) || Path.GetDirectoryName(queuePath) == configDirectory) throw new InvalidOperationException("HOST_RUNTIME_PATH_INVALID");
+                stage = "QUEUE_LOCK";
                 Directory.CreateDirectory(Path.GetDirectoryName(queuePath)!);
                 using var ownership = new FileStream(queuePath + ".host.lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
                 for (var restart = 0; restart <= settings.MaxRestarts && !stoppingToken.IsCancellationRequested; restart++)

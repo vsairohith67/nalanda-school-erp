@@ -22,7 +22,9 @@ mkdirSync(path.join(dir,'private'));mkdirSync(path.join(dir,'data'));
 const config=path.join(dir,'bridge.json'),hostConfig=path.join(dir,'host.json'),secret=path.join(dir,'private','secrets.dpapi'),agent=path.join(root,'dist','agent.js');
 writeFileSync(config,JSON.stringify({bridgeId:'00000000-0000-4000-8000-000000000001',erpUrl:'https://erp.example.invalid',privateKeyPath:'private/unused.jwk',queuePath:'data/queue.enc',healthPath:'data/health.json',pollIntervalMs:60000,transportEnabled:false,syntheticOnly:true,devices:[{deviceId:'00000000-0000-4000-8000-000000000002',host:'127.0.0.1',port:1,profile:'SIMULATOR'}]}));
 const hash=f=>createHash('sha256').update(readFileSync(f)).digest('hex');
-writeFileSync(hostConfig,JSON.stringify({serviceName:'NalandaBiometricSynthetic',nodeExe:process.execPath,agentPath:agent,bridgeConfig:config,secretPath:secret,workingDirectory:path.dirname(agent),nodeSha256:hash(process.execPath),agentSha256:hash(agent),startupMs:10000,stopMs:3000,maxRestarts:2}));
+// An absolute noncanonical spelling must be normalized before queue containment checks.
+const configSpelling=dir+path.sep+'private'+path.sep+'..'+path.sep+'bridge.json';
+writeFileSync(hostConfig,JSON.stringify({serviceName:'NalandaBiometricSynthetic',nodeExe:process.execPath,agentPath:agent,bridgeConfig:configSpelling,secretPath:secret,workingDirectory:path.dirname(agent),nodeSha256:hash(process.execPath),agentSha256:hash(agent),startupMs:10000,stopMs:3000,maxRestarts:2}));
 try{
   const provision=start(['--provision',secret]);provision.stdin.end(JSON.stringify({queueKey:randomBytes(32).toString('base64url'),keyVersion:1})+'\n');assert.equal(await exit(provision),0);assert(!readFileSync(secret).includes(Buffer.from('queueKey')));
   const replacement=start(['--provision',secret]);replacement.stdin.end('{}\n');assert.equal(await exit(replacement),1);
