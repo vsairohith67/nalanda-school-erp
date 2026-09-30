@@ -105,6 +105,7 @@ namespace Nalanda.Biometric
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            var stage = "QUEUE_LOCK";
             try
             {
                 using var bridge = JsonDocument.Parse(File.ReadAllText(settings.BridgeConfig));
@@ -115,16 +116,24 @@ namespace Nalanda.Biometric
                 using var ownership = new FileStream(queuePath + ".host.lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
                 for (var restart = 0; restart <= settings.MaxRestarts && !stoppingToken.IsCancellationRequested; restart++)
                 {
+                    stage = "CONFIG_REVALIDATE";
                     HostSettings.Load(location.ConfigPath);
+                    stage = "CHILD_START";
                     using var child = OwnedProcess.Start(settings);
                     try
                     {
+                        stage = "SECRET_HANDOFF";
                         await child.Input.WriteLineAsync(SecretStore.Load(settings.SecretPath)); await child.Input.FlushAsync();
+                        stage = "CHILD_READY";
                         using var startup = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken); startup.CancelAfter(settings.StartupMs);
-                        if (await child.Output.ReadLineAsync(startup.Token) != "READY") throw new InvalidOperationException("HOST_CHILD_STARTUP_FAILED");
+                        var readiness = await child.Output.ReadLineAsync(startup.Token);
+                        if (readiness != "READY") {
+                            if (readiness is not null && System.Text.RegularExpressions.Regex.IsMatch(readiness, "^(BRIDGE_|NORMALIZED_|CSV_|VENDOR_|K30_|GENERIC_)[A-Z0-9_:.-]{1,130}$")) Console.Error.WriteLine("HOST_CHILD_CODE:" + readiness);
+                            throw new InvalidOperationException("HOST_CHILD_STARTUP_FAILED");
+                        }
                         Console.WriteLine("HOST_CHILD_READY");
                         // Bounded output is ignored. The worker only emits startup readiness and safe codes.
-                        await child.WaitAsync(stoppingToken);
+                        stage = "CHILD_WAIT"; await child.WaitAsync(stoppingToken);
                         if (!stoppingToken.IsCancellationRequested) Console.WriteLine("HOST_CHILD_EXITED");
                     }
                     finally
@@ -138,7 +147,7 @@ namespace Nalanda.Biometric
                 if (!stoppingToken.IsCancellationRequested) { Environment.ExitCode = 1; Console.Error.WriteLine("HOST_RESTART_LIMIT"); lifetime.StopApplication(); }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
-            catch { Environment.ExitCode = 1; Console.Error.WriteLine("HOST_SUPERVISOR_FAILED_CLOSED"); lifetime.StopApplication(); }
+            catch (Exception error) { Environment.ExitCode = 1; Console.Error.WriteLine("HOST_SUPERVISOR_FAILED_CLOSED:" + stage + ":" + (error is System.ComponentModel.Win32Exception native ? native.NativeErrorCode : error.HResult)); lifetime.StopApplication(); }
         }
     }
 }
