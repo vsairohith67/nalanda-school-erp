@@ -147,8 +147,28 @@ jobs:
         run: pnpm security:resilience:acceptance && pnpm qa:synthetic-pilot && pnpm qa:onboarding-preparation && pnpm qa:product-experience
       - name: Shared Windows, Android, iOS and browser-platform contracts
         run: pnpm test:cross-platform && pnpm app:typecheck && pnpm app:build:web && pnpm app:rust:test
+      - name: Prepare owned service metadata recorders
+        id: service_trace_prepare
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts prepare
       - name: Corrected-scope regression, full tests, typecheck and production build
+        env:
+          NALANDA_SERVICE_TRACE_DIR: tmp/ci-service-traces
         run: pnpm exec vitest run tests/final-corrected-scope-acceptance.test.ts && pnpm test && pnpm typecheck && pnpm build
+      - name: Validate bounded service metadata even after test failure
+        id: service_trace_finalize
+        if: always() && steps.service_trace_prepare.outcome == 'success'
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts finalize
+      - name: Retain exact allowlisted service metadata
+        if: always() && steps.service_trace_finalize.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: service-metadata-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            tmp/ci-service-trace-public/finance.json
+            tmp/ci-service-trace-public/native.json
+            tmp/ci-service-trace-public/manifest.json
       - name: Remove synthetic databases, backups and sink material
         if: always()
         shell: pwsh

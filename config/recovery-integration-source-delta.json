@@ -31,7 +31,7 @@
           "sha256": "b2a05ac9e62d0cac97f80f69894b8c4e48b1961a8ed399d59d2f6a9ec5866b6b"
         }
       ],
-      "currentSha256": "7de90a88fc0cad549949b15c18f31fcf80fec7702802d597d45833d1a1ea0e7f",
+      "currentSha256": "fcd6b009b4b3640e0da19f44173b16c1294b457793195ffaa4194e3fdd1b75b5",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -131,8 +131,8 @@
           "sha256": "2bdf4c58081df83d82e7393bf3e78c24ca0d9b625142d3f50a81695179bf7912"
         }
       ],
-      "currentSha256": "e9f5274fb5381f0082e26332ebecfecbf9574f5d9d7a92146cb9bb6652ec3158",
-      "reconciliation": "ADMITTED_COMMITTED_SOURCE"
+      "currentSha256": "9fbed3c75f0f72f98c39a3ffd143f6a4f7c5a43e4eba542beff62669efb7ed32",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
       "path": ".github/workflows/portable-staging-foundation.yml",
@@ -181,7 +181,7 @@
           "sha256": "205c1855fdc9944d5567f58832cb94e61d52458f699a6a5cd05aa29e3adf5e45"
         }
       ],
-      "currentSha256": "3d3fbdc0fca5fab645f6fce1e165b03f75b7b0c979f861148ef0f440d095764d",
+      "currentSha256": "03be65438360326c6883bbaaf680361851c6310669ebee9a94303c2520fb4b73",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6632,6 +6632,31 @@
         }
       ],
       "currentSha256": "4ec357f49eec71c149b53f53f1f88d53bcfcdfd5cf69f08a86301a902a176b1f",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/qa-recovery-service-traces.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "9eed9ff10f8b9aaceaa9d35f85e88495935b841668fcb2faca64b99c8fbf4a0b",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {

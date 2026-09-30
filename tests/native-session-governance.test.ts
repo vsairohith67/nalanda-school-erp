@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, afterAll, describe, it, expect, vi } from "vitest";
+import { beforeAll, beforeEach, afterEach, afterAll, describe, it, expect, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import { randomUUID, randomBytes, generateKeyPairSync, sign } from "node:crypto";
 import { mkdtempSync, rmSync, readFileSync, readdirSync, lstatSync, existsSync } from "node:fs";
@@ -17,19 +17,43 @@ import { nativeSessionRevocationAction, revokeGovernedNativeSession, parseNative
 import { createNativeAuthRequest, authorizeNativeRequest, exchangeNativeAuthorization, refreshNativeSession, resolveNativeSession, pkceChallenge, nativeBrowserProofMessage, nativeExchangeProofMessage, nativeRefreshProofMessage } from "../lib/native-app/auth";
 import { publicJwkHash, sha256Hex } from "../lib/offline-sync/device-trust";
 import { POST } from "../app/api/native-auth/sessions/[id]/revoke/route";
+import { configuredTrace } from "./helpers/service-trace";
+import { mutateNamedUser } from "../lib/iam/users";
+import { hashPassword } from "../lib/password";
 import { operationPolicy } from "../lib/security-resilience";
 
 // ISOLATED_SERVICE_OR_ROUTE: generated protocol inputs, real crypto, sessions,
 // MFA, step-up, permission, credential validators and transactions. No server,
 // admitted image, observed OS callback or Windows execution is claimed.
-const harness = vi.hoisted(() => ({ db: null as any, cookie: undefined as string | undefined, enabled: true }));
+const harness = vi.hoisted(() => ({ db: null as any, cookie: undefined as string | undefined, enabled: true, trace: null as any }));
 vi.mock("../lib/prisma", () => ({ prisma: new Proxy({}, { get: (_t, key) => { const v = harness.db[key]; return typeof v === "function" ? v.bind(harness.db) : v; } }) }));
 vi.mock("../lib/native-app/feature-flag", () => ({ NATIVE_APP_ID: "com.nalandaps.erp", NATIVE_REDIRECT_URI: "nalandaps-erp://auth/callback", nativeAppEnabled: () => harness.enabled, nativeDataScopeEnabled: () => harness.enabled, operationalNativeAppEnabled: () => harness.enabled }));
+// Observers delegate every actual query/transaction/decision unchanged.
+vi.mock("../lib/native-app/session-governance", async importOriginal => {
+  const actual = await importOriginal<typeof import("../lib/native-app/session-governance")>();
+  const { observeRevocation } = await import("./helpers/native-decision-trace");
+  return { ...actual, revokeGovernedNativeSession: (client: any, ...args: any[]) => observeRevocation(harness.trace, actual.revokeGovernedNativeSession, client, ...args) };
+});
+vi.mock("../lib/iam/effective-access", async importOriginal => {
+  const actual = await importOriginal<typeof import("../lib/iam/effective-access")>();
+  const { observeDecision } = await import("./helpers/native-decision-trace");
+  return { ...actual, evaluateEffectivePermission: (client: any, input: any) => observeDecision(actual.evaluateEffectivePermission, client, input) };
+});
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => ({ value: harness.cookie }) }) }));
+const trace = configuredTrace("native"); harness.trace = trace;
 const root = mkdtempSync(path.join(tmpdir(), "nalanda-session-governance-")), identity = lstatSync(root), schema = `nsg_${randomUUID().replaceAll("-", "")}`, postgres = process.env.DATABASE_PROVIDER === "postgresql";
 let db: PrismaClient;
+let caseSpan = 0;
+beforeEach(context => {
+  caseSpan = trace.begin("test_case");
+  const purpose = context.task.name.startsWith("audit failure rolls back") ? "DECLARED_ROLLBACK_AND_ROUTE_CONTROL" : context.task.name.startsWith("reauthorizes absent/inactive") ? "EXPLICIT_DENY_CONTROL" : "GOVERNANCE_CONTROLS";
+  trace.emit("TEST_CONTRACT", "test_case", caseSpan, 0, null, { case: trace.label(context.task.id), purpose });
+});
+afterEach(context => { trace.end(caseSpan, context.task.result?.state === "fail"); trace.result(context.task.result?.state); });
 const opaque = () => randomBytes(32).toString("base64url");
 beforeAll(async () => {
+  const span = trace.begin("setup");
+  try {
   let url = "file:" + path.join(root, "synthetic.db").replaceAll("\\", "/");
   if (postgres) {
     expect(process.env.CI).toBe("true"); expect(process.env.POSTGRES_READINESS_SYNTHETIC_QA).toBe("1");
@@ -44,10 +68,15 @@ beforeAll(async () => {
   vi.stubEnv("AUTH_BOUND_ENVIRONMENT", "SYNTHETIC_SERVICE");
   vi.stubEnv("AUTH_MFA_KEYRING_JSON", JSON.stringify({ active: "QA", keys: { QA: randomBytes(32).toString("base64") } }));
   await db.rolePermission.createMany({ data: Object.entries(defaultPermissionMatrix()).flatMap(([role, entries]) => Object.entries(entries).map(([permission, enabled]) => ({ role, permission, enabled }))) });
+  trace.end(span);
+  } catch (error) { trace.end(span, true); trace.result("fail"); throw error; }
 }, 60_000);
 afterAll(async () => {
+  const span = trace.begin("cleanup");
+  try {
   if (db) { if (postgres) await db.$executeRawUnsafe(`DROP SCHEMA "${schema}" CASCADE`); await db.$disconnect(); }
-  const current = lstatSync(root); expect(current.isSymbolicLink()).toBe(false); expect(current.ino).toBe(identity.ino); expect(current.dev).toBe(identity.dev); expect(path.dirname(path.resolve(root))).toBe(path.resolve(tmpdir())); rmSync(root, { recursive: true }); expect(existsSync(root)).toBe(false); vi.unstubAllEnvs();
+  const current = lstatSync(root); expect(current.isSymbolicLink()).toBe(false); expect(current.ino).toBe(identity.ino); expect(current.dev).toBe(identity.dev); expect(path.dirname(path.resolve(root))).toBe(path.resolve(tmpdir())); rmSync(root, { recursive: true }); expect(existsSync(root)).toBe(false); trace.end(span);
+  } catch (error) { trace.end(span, true); trace.result("fail"); throw error; } finally { vi.useRealTimers(); vi.unstubAllEnvs(); trace.close(); }
 });
 async function user(role = "SUPER_ADMIN") {
   const u = await db.user.create({ data: { username: `synthetic-${randomUUID()}`, name: "SYNTHETIC service actor", role, passwordHash: "UNUSABLE_SYNTHETIC_NO_LOGIN", isActive: true, lifecycleStatus: "ACTIVE", mustChangePassword: false } });
@@ -105,6 +134,16 @@ it("binds exact opaque targets, input allowlist and inherited rate/CSRF boundary
   expect(operationPolicy(`/api/native-auth/sessions/${id}/revoke`, "POST")?.id).toBe("native.auth");
   const middleware = readFileSync("middleware.ts", "utf8"); expect(middleware.slice(middleware.indexOf("const nativeRouteAuthorizedPaths"), middleware.indexOf("export async function"))).not.toContain("/revoke");
 });
+it("real last-active-Super-Admin protection rejects suspension and role end", async () => {
+  // Runs before any journey fixtures in a fresh file-owned database. It is also
+  // independently selectable. The repaired case does not depend on this row.
+  const last = await user();
+  expect(await db.userRoleAssignment.count({ where: { role: "SUPER_ADMIN", status: "ACTIVE", user: { isActive: true, lifecycleStatus: "ACTIVE" } } })).toBe(1);
+  await expect(db.user.update({ where: { id: last.u.id }, data: { isActive: false } })).rejects.toThrow();
+  await expect(db.userRoleAssignment.update({ where: { id: last.assignment.id }, data: { status: "ENDED", activeKey: null } })).rejects.toThrow();
+  expect((await db.user.findUniqueOrThrow({ where: { id: last.u.id } })).isActive).toBe(true);
+  expect((await db.userRoleAssignment.findUniqueOrThrow({ where: { id: last.assignment.id } })).status).toBe("ACTIVE");
+});
 describe.sequential("governed native-session service", () => {
 let admin: Actor, owner: Actor, target: Native;
 // Real session/MFA/native-protocol preparation establishes each independent
@@ -129,15 +168,35 @@ it("revokes only the selected real session, preserves controls, first audit/reas
   const publicText = JSON.stringify(audit.map(e => JSON.parse(e.detailsJson!))); for (const secret of [target.tokens.accessToken, target.tokens.refreshToken, rotated.accessToken, admin.web.cookieValue]) expect(publicText.includes(secret)).toBe(false);
 });
 it("reauthorizes absent/inactive/wrong selected role/explicit deny even on retries", async () => {
+  // Independent last-admin safety precondition. No earlier test is required,
+  // and the tested actor gets no additional grants or role changes.
+  const controlAdmin = await db.user.create({ data: { username: `synthetic-control-${randomUUID()}`, name: "SYNTHETIC independent safety admin", role: "SUPER_ADMIN", passwordHash: "UNUSABLE_SYNTHETIC_NO_LOGIN", isActive: true, lifecycleStatus: "ACTIVE" } });
+  const controlRole = await db.userRoleAssignment.create({ data: { userId: controlAdmin.id, role: "SUPER_ADMIN", status: "ACTIVE", validFrom: new Date(Date.now() - 60_000), reason: "SYNTHETIC last-admin safety precondition", activeKey: `${controlAdmin.id}:SUPER_ADMIN` } });
+  expect(controlAdmin.isActive && controlAdmin.lifecycleStatus === "ACTIVE").toBe(true);
+  expect(controlRole.status).toBe("ACTIVE"); expect(controlRole.validFrom.getTime()).toBeLessThanOrEqual(Date.now());
   const token = await grant(admin, target.tokens.sessionId);
   const body = { stepUpToken: token, reason: "SYNTHETIC denial control" };
   await expect(revokeGovernedNativeSession(db, undefined, target.tokens.sessionId, body)).rejects.toThrow("AUTHENTICATION_REQUIRED");
   await db.user.update({ where: { id: admin.u.id }, data: { isActive: false } }); await expect(revoke(admin, target, token)).rejects.toThrow("AUTHENTICATION_REQUIRED"); await db.user.update({ where: { id: admin.u.id }, data: { isActive: true } });
   await db.userRoleAssignment.update({ where: { id: admin.assignment.id }, data: { role: "ACCOUNTANT" } }); await expect(revoke(admin, target, token)).rejects.toThrow("GOVERNANCE_DENIED"); await db.userRoleAssignment.update({ where: { id: admin.assignment.id }, data: { role: "SUPER_ADMIN" } });
   const deny = await db.userPermissionOverride.create({ data: { userId: admin.u.id, permission: "MANAGE_OFFLINE_SYNC_DEVICES", effect: "DENY", reason: "SYNTHETIC explicit deny", createdByUserId: admin.u.id } });
+  trace.emit("OVERRIDE", "fixture", 0, 0, null, trace.override(deny));
   await expect(revoke(admin, target, token)).rejects.toThrow("GOVERNANCE_DENIED"); expect(await events(target.tokens.sessionId)).toHaveLength(0); await access(target);
   await db.userPermissionOverride.update({ where: { id: deny.id }, data: { status: "REVOKED", revokedAt: new Date() } }); await revoke(admin, target, token);
   await db.userRoleAssignment.update({ where: { id: admin.assignment.id }, data: { status: "REVOKED", endedAt: new Date(), activeKey: null } }); await expect(revoke(admin, target, token)).rejects.toThrow("AUTHENTICATION_REQUIRED"); expect(await events(target.tokens.sessionId)).toHaveLength(1);
+  expect((await db.userRoleAssignment.findUniqueOrThrow({ where: { id: controlRole.id } })).status).toBe("ACTIVE");
+  expect((await db.user.findUniqueOrThrow({ where: { id: controlAdmin.id } })).isActive).toBe(true);
+  // Control history is retained until this file's owned DB teardown. Never
+  // resurrect the tested actor or bypass the last-admin trigger for cleanup.
+});
+it("normal IAM refuses individual override of the reserved native permission without invalidating sessions", async () => {
+  const governor = await user(), password = `Synthetic-${randomUUID()}-A1!`;
+  const targetUser = await db.user.update({ where: { id: admin.u.id }, data: { iamPublicKey: randomUUID() } });
+  await db.user.update({ where: { id: governor.u.id }, data: { passwordHash: await hashPassword(password) } });
+  await expect(mutateNamedUser(db, { user: { ...governor.u, roleAssignmentId: governor.assignment.id } as any, sessionId: governor.web.sessionId }, targetUser.iamPublicKey!, { action: "SET_OVERRIDE", permission: "MANAGE_OFFLINE_SYNC_DEVICES", effect: "DENY", expectedVersion: targetUser.version, reauthPassword: password, reason: "SYNTHETIC normal IAM restriction" })).rejects.toThrow("cannot be changed by an individual override");
+  expect(await db.userPermissionOverride.count({ where: { userId: admin.u.id } })).toBe(0);
+  expect((await db.user.findUniqueOrThrow({ where: { id: admin.u.id } })).authorizationVersion).toBe(targetUser.authorizationVersion);
+  expect(await resolvePersistedSession(db, admin.web.cookieValue)).not.toBeNull(); await access(target);
 });
 it.each(["missing", "expired", "revoked", "replayed", "wrong-target", "wrong-action", "wrong-actor", "wrong-web-session", "wrong-environment"] as const)("rejects %s step-up on an independently authorized native target", async (scenario) => {
   let token = "missing";

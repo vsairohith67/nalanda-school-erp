@@ -74,7 +74,32 @@ jobs:
       - run: pnpm routes:list
       - run: pnpm lifecycle:backfill
       - run: pnpm typecheck
+      - name: Prepare owned service metadata recorders
+        id: service_trace_prepare
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts prepare
       - run: pnpm test
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          NALANDA_SERVICE_TRACE_DIR: tmp/ci-service-traces
+      - name: Validate bounded service metadata even after test failure
+        id: service_trace_finalize
+        if: always() && steps.service_trace_prepare.outcome == 'success'
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts finalize
+      - name: Retain exact allowlisted service metadata
+        if: always() && steps.service_trace_finalize.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: service-metadata-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            tmp/ci-service-trace-public/finance.json
+            tmp/ci-service-trace-public/native.json
+            tmp/ci-service-trace-public/manifest.json
       - run: pnpm build
       - run: pnpm backup
       - run: pnpm git:safety-check
@@ -210,7 +235,32 @@ jobs:
       - run: pnpm db:migrate:postgres
       - run: pnpm qa:postgres:performance
       - run: pnpm qa:postgres:concurrency
+      - name: Prepare owned service metadata recorders
+        id: service_trace_prepare
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts prepare
       - run: pnpm test:postgres
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          NALANDA_SERVICE_TRACE_DIR: tmp/ci-service-traces
+      - name: Validate bounded service metadata even after test failure
+        id: service_trace_finalize
+        if: always() && steps.service_trace_prepare.outcome == 'success'
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts finalize
+      - name: Retain exact allowlisted service metadata
+        if: always() && steps.service_trace_finalize.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: service-metadata-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            tmp/ci-service-trace-public/finance.json
+            tmp/ci-service-trace-public/native.json
+            tmp/ci-service-trace-public/manifest.json
       - run: pnpm build
 
   cross-provider-parity-recovery:
