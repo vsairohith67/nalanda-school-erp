@@ -5,12 +5,12 @@ import path from "node:path";
 
 export const phases = ["setup", "migration", "seed", "fixture", "actor_setup", "snapshot", "sale", "prior_year", "income", "finance_journey", "client_call", "transaction_wait", "transaction_action", "native_call", "native_attempt", "evaluator", "cleanup", "assertion", "test_case", "recorder_selftest"] as const;
 export type Phase = typeof phases[number];
-export type TraceKind = "START" | "END" | "ERROR" | "RESULT" | "TEST_CONTRACT" | "DECISION_INPUT" | "RETURNED_ROWS" | "DECISION" | "OVERRIDE" | "OUTCOME" | "MEASUREMENT";
+export type TraceKind = "START" | "END" | "ERROR" | "RESULT" | "TEST_CONTRACT" | "LINK" | "DECISION_INPUT" | "RETURNED_ROWS" | "DECISION" | "OVERRIDE" | "OUTCOME" | "MEASUREMENT";
 const states = ["PASS", "FAIL", "UNKNOWN", "REVOKED", "ALREADY_REVOKED", "REJECTED"];
 const sources = ["ACCOUNT", "SESSION", "ROLE_ASSIGNMENT", "SYSTEM_RESTRICTION", "OBJECT_SCOPE", "USER_DENY", "PROFILE_DENY", "USER_ALLOW", "PROFILE_ALLOW", "BASE_ROLE", "DEFAULT_DENY"];
 export type OverrideMetadata = { label: string; actor: string; effect: string; status: string; validFromMs: number; validUntilMs: number | null; revokedAtMs: number | null };
 export type DecisionMetadata = { actor: string; session: string; role: string; actorRole: string | null; cutoffMs: number; attempt: number; allowed: boolean; source: string; rows: OverrideMetadata[] };
-export type TraceEvent = { seq: number; elapsedMs: number; kind: TraceKind; phase: Phase; span: number; attempt: number; status: string | null; detail: DecisionMetadata | OverrideMetadata | { case: string; purpose: string } | { actor: string; session: string; role: string; cutoffMs: number; attempt: number } | { rows: OverrideMetadata[] } | { recorderMs: number; events: number } | null };
+export type TraceEvent = { seq: number; elapsedMs: number; kind: TraceKind; phase: Phase; span: number; attempt: number; status: string | null; detail: DecisionMetadata | OverrideMetadata | { parentSpan: number } | { case: string; purpose: string } | { actor: string; session: string; role: string; cutoffMs: number; attempt: number } | { rows: OverrideMetadata[] } | { recorderMs: number; events: number } | null };
 const fail = () => { throw Error("SERVICE_TRACE_SCHEMA_INVALID"); };
 export function checkedDirectory(directory: string) {
   let current = path.resolve(directory);
@@ -29,9 +29,10 @@ export function validateOverride(value: any) {
 export function validateEvent(value: any): asserts value is TraceEvent {
   exact(value, ["seq", "elapsedMs", "kind", "phase", "span", "attempt", "status", "detail"]);
   integer(value.seq); number(value.elapsedMs); if (value.elapsedMs < 0) fail(); integer(value.span); integer(value.attempt);
-  if (!["START", "END", "ERROR", "RESULT", "TEST_CONTRACT", "DECISION_INPUT", "RETURNED_ROWS", "DECISION", "OVERRIDE", "OUTCOME", "MEASUREMENT"].includes(value.kind) || !phases.includes(value.phase)) fail();
+  if (!["START", "END", "ERROR", "RESULT", "TEST_CONTRACT", "LINK", "DECISION_INPUT", "RETURNED_ROWS", "DECISION", "OVERRIDE", "OUTCOME", "MEASUREMENT"].includes(value.kind) || !phases.includes(value.phase)) fail();
   if (value.status !== null && !states.includes(value.status)) fail();
-  if (value.kind === "OVERRIDE") validateOverride(value.detail);
+  if (value.kind === "LINK") { exact(value.detail, ["parentSpan"]); integer(value.detail.parentSpan); if (value.span === 0 || value.detail.parentSpan === 0 || !["native_attempt", "evaluator"].includes(value.phase)) fail(); }
+  else if (value.kind === "OVERRIDE") validateOverride(value.detail);
   else if (value.kind === "DECISION") {
     const d = value.detail; exact(d, ["actor", "session", "role", "actorRole", "cutoffMs", "attempt", "allowed", "source", "rows"]);
     label(d.actor); label(d.session); label(d.role); date(d.cutoffMs); integer(d.attempt);
@@ -48,7 +49,12 @@ export function readTrace(file: string) {
   const st = lstatSync(file); if (!st.isFile() || st.isSymbolicLink() || st.nlink !== 1 || st.size > 2_000_000 || st.size === 0) fail();
   const text = readFileSync(file, "utf8"); if (!text.endsWith("\n")) fail();
   const lines = text.trimEnd().split("\n"); if (lines.length > 6000) fail();
-  return lines.map((line, index) => { if (line.length > 16000) fail(); const value = JSON.parse(line); validateEvent(value); if (value.seq !== index + 1 || JSON.stringify(value) !== line) fail(); return value; });
+  const active = new Set<number>(), linked = new Set<number>();
+  return lines.map((line, index) => { if (line.length > 16000) fail(); const value = JSON.parse(line); validateEvent(value); if (value.seq !== index + 1 || JSON.stringify(value) !== line) fail();
+    if (value.kind === "START") active.add(value.span);
+    if (value.kind === "LINK") { const parent = (value.detail as { parentSpan: number }).parentSpan; if (!active.has(value.span) || !active.has(parent) || parent >= value.span || linked.has(value.span)) fail(); linked.add(value.span); }
+    if (value.kind === "END" || value.kind === "ERROR") active.delete(value.span);
+    return value; });
 }
 
 export class ServiceTrace {

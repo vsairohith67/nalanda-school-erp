@@ -85,4 +85,59 @@ describe("HARNESS_ONLY service recorder retention and publication", () => {
     expect(trace.events.filter(e => e.kind === "OUTCOME").map(e => e.status)).toEqual(["REJECTED"]);
     trace.close();
   });
+  it("correlates deliberately interleaved calls with identical actors and attempt numbers", async () => {
+    const resource = owned(), file = path.join(resource.root, "interleaved.jsonl"), trace = new ServiceTrace(file);
+    try {
+      let ready!: () => void, resume!: () => void;
+      const firstReady = new Promise<void>(resolve => { ready = resolve; }), releaseFirst = new Promise<void>(resolve => { resume = resolve; });
+      const input = { userId: "private-same-actor", sessionId: "private-same-web", roleAssignmentId: "private-same-role", now: new Date(100) };
+      const row = { id: "private-deny", userId: input.userId, effect: "DENY", status: "ACTIVE", validFrom: new Date(99), validUntil: null, revokedAt: null };
+      let queries = 0, transactions = 0;
+      const options = { isolationLevel: "Serializable" }, accepted = { status: "REVOKED" }, refusal = Error("PRIVATE_REFUSAL");
+      const client = (first: boolean) => ({ $transaction: async (fn: any, received: any) => { expect(received).toBe(options); transactions++; return fn({ userPermissionOverride: { findMany: async (args: any) => { expect(args.now).toBe(input.now); queries++; if (first) { ready(); await releaseFirst; return []; } return [row]; } }, userRoleAssignment: { findFirst: async () => ({ role: "SUPER_ADMIN" }) } }); } });
+      const evaluate = async (db: any, args: any) => { await db.userRoleAssignment.findFirst({}); const rows = await db.userPermissionOverride.findMany({ now: args.now }); return rows.length ? { allowed: false, source: "USER_DENY" } : { allowed: true, source: "BASE_ROLE" }; };
+      const service = (db: any) => db.$transaction(async (tx: any) => { const decision = await observeDecision(evaluate, tx, input); if (!decision.allowed) throw refusal; return accepted; }, options);
+      const first = observeRevocation(trace, service, client(true)); await firstReady;
+      await expect(observeRevocation(trace, service, client(false))).rejects.toBe(refusal);
+      resume(); expect(await first).toBe(accepted);
+      expect(queries).toBe(2); expect(transactions).toBe(2); trace.result("pass"); trace.close();
+      const events = readTrace(file), parents = new Map(events.filter(e => e.kind === "LINK").map(e => [e.span, (e.detail as any).parentSpan]));
+      const outcomes = events.filter(e => e.kind === "OUTCOME"); expect(outcomes.map(e => e.status)).toEqual(["REJECTED", "REVOKED"]);
+      const decisions = events.filter(e => e.kind === "DECISION"); expect(decisions.map(e => e.attempt)).toEqual([1, 1]);
+      for (const decision of decisions) {
+        const call = parents.get(parents.get(decision.span)!);
+        const outcome = outcomes.find(e => e.span === call)!;
+        expect(outcome.status).toBe((decision.detail as any).allowed ? "REVOKED" : "REJECTED");
+        expect(events.find(e => e.kind === "RETURNED_ROWS" && e.span === decision.span)?.detail).toEqual({ rows: (decision.detail as any).rows });
+        expect(events.find(e => e.kind === "DECISION_INPUT" && e.span === decision.span)).toBeDefined();
+      }
+      expect(new Set(outcomes.map(e => e.span)).size).toBe(2); expect(JSON.stringify(events)).not.toContain("private-");
+    } finally { trace.close(); resource.cleanup(); }
+  });
+  it("retains an attributed attempt when transaction acquisition fails before evaluation", async () => {
+    const trace = new ServiceTrace(), failure = Error("PRIVATE_ACQUISITION_FAILURE");
+    const client = { $transaction: async () => { throw failure; } };
+    await expect(observeRevocation(trace, (db: any) => db.$transaction(() => { throw Error("CALLBACK_MUST_NOT_RUN"); }), client)).rejects.toBe(failure);
+    const attempt = trace.events.find(e => e.kind === "START" && e.phase === "native_attempt")!;
+    const link = trace.events.find(e => e.kind === "LINK" && e.span === attempt.span)!;
+    expect(trace.events.find(e => e.kind === "OUTCOME")?.span).toBe((link.detail as any).parentSpan);
+    expect(trace.events.some(e => e.kind === "ERROR" && e.span === attempt.span)).toBe(true);
+    expect(trace.events.some(e => e.kind === "DECISION_INPUT")).toBe(false); trace.close();
+  });
+  it.each(["missing-parent", "self-link", "backward-cycle", "duplicate-link"])("refuses %s in a retained link graph", kind => {
+    const resource = owned();
+    try {
+      const file = path.join(resource.root, "links.jsonl"), trace = new ServiceTrace(file);
+      const parent = trace.begin("native_call"), child = trace.begin("native_attempt");
+      trace.emit("LINK", "native_attempt", child, 1, null, { parentSpan: parent }); trace.result("pass"); trace.close();
+      const events = readTrace(file);
+      const link = events.find(e => e.kind === "LINK")!;
+      if (kind === "missing-parent") (link.detail as any).parentSpan = 999;
+      if (kind === "self-link") (link.detail as any).parentSpan = child;
+      if (kind === "backward-cycle") { link.span = parent; (link.detail as any).parentSpan = child; }
+      if (kind === "duplicate-link") events.splice(3, 0, { ...link });
+      writeFileSync(file, events.map((e, i) => JSON.stringify({ ...e, seq: i + 1 })).join("\n") + "\n");
+      expect(() => readTrace(file)).toThrow("SCHEMA_INVALID");
+    } finally { resource.cleanup(); }
+  });
 });
