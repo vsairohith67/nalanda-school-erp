@@ -4,11 +4,14 @@ export type NormalizedEvent = { deviceId: string; opaqueDeviceUserId: string; pu
 export type QueueStateName = "RECEIVED_FROM_DEVICE" | "QUEUED" | "SENDING" | "ACKNOWLEDGED" | "DUPLICATE_ACKNOWLEDGED" | "REJECTED" | "NEEDS_ADMIN_REVIEW";
 export type QueueEvent = NormalizedEvent & { queuedAt: string; localState: QueueStateName; attemptCount: number; acknowledgedAt?: string; lastErrorCode?: string };
 export type IngestEnvelope = { schemaVersion: 1; batchReference: string; bridgeTime: string; events: NormalizedEvent[] };
-export type BridgeConfig = { bridgeId: string; erpUrl: string; privateKeyPath: string; queuePath: string; healthPath: string; pollIntervalMs: number; devices: Array<{ deviceId: string; host: string; port: number; profile: Profile; csvInbox?: string }> };
+export type BridgeConfig = { bridgeId: string; erpUrl: string; privateKeyPath: string; queuePath: string; healthPath: string; pollIntervalMs: number; transportEnabled?: boolean; syntheticOnly?: boolean; devices: Array<{ deviceId: string; host: string; port: number; profile: Profile; csvInbox?: string }> };
 export const VENDOR_PROFILES = new Set<Profile>(["ESSL_K30_PRO_PUSH", "ESSL_ZK_LAN_SDK", "ZK_ADMS_PUSH"]);
 export const GENERIC_PENDING_PROFILES = new Set<Profile>(["GENERIC_ADMS_PUSH", "GENERIC_LAN_POLL"]);
 
 export function validateNormalizedEvent(value: NormalizedEvent) {
+  if (!value || typeof value !== "object") throw new Error("NORMALIZED_EVENT_INVALID");
+  const allowed = new Set([...EVENT_FIELDS, "queuedAt", "localState", "attemptCount", "acknowledgedAt", "lastErrorCode", "reviewReference"]);
+  if (Object.keys(value).some(key => !allowed.has(key))) throw new Error("NORMALIZED_EVENT_PRIVACY_BOUNDARY_FAILED");
   if (!/^[0-9a-f-]{36}$/i.test(value.deviceId) || !/^[A-Za-z0-9._:@/-]{1,128}$/.test(value.opaqueDeviceUserId)) throw new Error("NORMALIZED_EVENT_ID_INVALID");
   if (!PROFILES.includes(value.protocolProfile)) throw new Error("NORMALIZED_EVENT_PROFILE_INVALID");
   if (!(["FINGERPRINT", "FACE", "CARD", "PIN", "OTHER"] as const).includes(value.verificationMethod)) throw new Error("NORMALIZED_EVENT_METHOD_INVALID");
@@ -22,6 +25,12 @@ export function validateNormalizedEvent(value: NormalizedEvent) {
   validateMetadata(value.eventReference, 160);
   if (/(template|image|secret|password)/i.test(JSON.stringify(Object.keys(value)))) throw new Error("NORMALIZED_EVENT_PRIVACY_BOUNDARY_FAILED");
   return value;
+}
+
+export const EVENT_FIELDS = ["deviceId", "opaqueDeviceUserId", "punchTimestamp", "bridgeReceivedTimestamp", "estimatedClockDriftSeconds", "verificationMethod", "punchCode", "statusCode", "sequenceNumber", "sequenceEpoch", "eventReference", "protocolProfile"] as const;
+export function normalizedEvent(event: NormalizedEvent): NormalizedEvent {
+  validateNormalizedEvent(event);
+  return Object.fromEntries(EVENT_FIELDS.map(key => [key, event[key]])) as NormalizedEvent;
 }
 
 function validateMetadata(value: string | null, max: number) {
