@@ -42,7 +42,21 @@ export async function windowsServerProbe(db:PrismaClient,value:unknown){
   // of scope. This driver needs its own fresh admitted synthetic target phase.
   requireTrue(await db.student.count({where:{deletedAt:null,status:"Active"}})===0);
   requireTrue(await db.user.count({where:{OR:[{username:{startsWith:scope}},{name:marker}]}})===0);
-  requireTrue(await db.nativeAuthRequest.count({where:{publicDeviceId:input.publicDeviceId}})===0);
+  const requestCount=await db.nativeAuthRequest.count({where:{publicDeviceId:input.publicDeviceId}});
+  if(input.original){
+   // Fresh-vault bootstrap produces its own key and request BEFORE fixture users
+   // exist. Only its exact still-unconsumed, cryptographically proven request is
+   // permitted here. This does not approve a device or authenticate a session.
+   const {validateOriginalAuthorization}=await import("./windows-auth-lifecycle");
+   const {verifyEd25519Signature,publicJwkHash}=await import("../../lib/offline-sync/device-trust");
+   const {requestId,state}=validateOriginalAuthorization(input.original,syntheticOrigin),url=new URL(input.original);
+   const challenge=url.searchParams.get("challenge")!,proof=url.searchParams.get("proof")!;
+   const r=await db.nativeAuthRequest.findUniqueOrThrow({where:{publicRequestId:requestId},select:{id:true,publicDeviceId:true,publicKeyHash:true,publicSigningKey:true,platform:true,appId:true,status:true,userId:true,webSessionId:true,roleAssignmentId:true,expiresAt:true,stateHash:true,challengeHash:true}});
+   requireTrue(requestCount===1&&r.publicDeviceId===input.publicDeviceId&&r.publicKeyHash===input.publicKeyHash&&r.platform==="WINDOWS"&&r.appId==="com.nalandaps.erp"&&r.status==="PENDING_BROWSER_AUTH"&&!r.userId&&!r.webSessionId&&!r.roleAssignmentId&&r.expiresAt>new Date());
+   requireTrue(publicJwkHash(JSON.parse(r.publicSigningKey))===input.publicKeyHash&&authSecretMatches(state,"native-app-v1:state",r.stateHash)&&authSecretMatches(challenge,"native-app-v1:challenge",r.challengeHash));
+   requireTrue(await verifyEd25519Signature(r.publicSigningKey,["native-auth-browser-v1",requestId,challenge,state,input.publicDeviceId,input.publicKeyHash].join("\n"),proof));
+   requireTrue(await db.nativeAuthorizationCode.count({where:{requestId:r.id}})===0);
+  }else requireTrue(requestCount===0);
   requireTrue(await db.offlineSyncDevice.count({where:{publicDeviceId:input.publicDeviceId}})===0);
   const users=[];
   for(const governance of [false,true]){
@@ -58,6 +72,12 @@ export async function windowsServerProbe(db:PrismaClient,value:unknown){
   }
   for(const suffix of ["one","two","excluded"])await db.student.create({data:{admissionNo:`${scope}-${suffix}`,studentName:`SYNTHETIC Windows ${suffix}`,fatherName:"SYNTHETIC",phone1:"SYNTHETIC-NO-CONTACT",academicYear:"2026-27",className:"VI",status:suffix==="excluded"?"Inactive":"Active"}});
   result={userId:users[0].id,username:users[0].username,governanceUserId:users[1].id,expectedStudents:[scope+"-one",scope+"-two"],databaseIdentitySha256:input.databaseIdentitySha256};
+ }else if(input.operation==="prepare-control"||input.operation==="read-control"||input.operation==="close-control"){
+  const u=await actor(),gov=await actor(true);requireTrue(u.isActive&&gov.isActive);
+  const label="SYNTHETIC Windows control "+scope;
+  const {prepareWindowsControl,assertWindowsControl,closeWindowsControl}=await import("./windows-control-session");
+  if(input.operation==="prepare-control")result=await prepareWindowsControl(db,u,gov,input.password,input.governancePassword,label);
+  else{requireTrue(input.control.userId===u.id&&input.control.publicDeviceId!==input.publicDeviceId);if(input.operation==="close-control"){await closeWindowsControl(db,input.control,label,gov,input.governancePassword);result={state:"CONTROL_SESSION_REVOKED"};}else{await assertWindowsControl(db,input.control,label);result=input.control;}}
  }else if(input.operation==="totp"){
   const u=await actor();requireTrue(u.isActive&&u.lifecycleStatus==="ACTIVE");
   requireTrue(await db.mfaAuthenticator.count({where:{userId:u.id,type:"TOTP",status:"ACTIVE",verifiedAt:{not:null},revokedAt:null}})===1);

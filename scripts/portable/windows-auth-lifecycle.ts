@@ -81,6 +81,10 @@ export interface WindowsLifecycleHost {
  approvePendingDevice(requestId:string):Promise<void>; // labelled governance/test-preparation evidence
  revokeSession(sessionId:string):Promise<void>;
  observeCallback(instance:ProcessIdentity,requestId:string):Promise<void>;
+ assertCallbackProcessed(instance:ProcessIdentity,requestId:string):Promise<void>;
+ beforeCallbackLaunch():Promise<void>;
+ closeForCallback(instance:ProcessIdentity):Promise<void>;
+ observeColdCallback(requestId:string):Promise<{app:NativeWebDriver;instance:ProcessIdentity}>;
  restart(instance:ProcessIdentity):Promise<{app:NativeWebDriver;instance:ProcessIdentity}>;
  background(instance:ProcessIdentity):Promise<void>;
  foreground(instance:ProcessIdentity):Promise<void>;
@@ -88,8 +92,8 @@ export interface WindowsLifecycleHost {
  cleanup():Promise<void>;
 }
 const pinField='input[type="password"][autocomplete="off"]';
-export async function unlockWindows(app:NativeWebDriver,pin:string){await app.waitText("Welcome back");await app.fill(pinField,pin);await app.clickText("Unlock app");await app.waitText("Workspace");}
-export async function lockWindows(app:NativeWebDriver,canaries:string[]){const button=await app.element("css selector",".top-actions button.secondary");await app.command("POST",`/element/${button}/click`,{});await app.waitText("Welcome back");assertLockedView(await app.body(),canaries);}
+export async function unlockWindows(app:NativeWebDriver,pin:string){await app.waitText("Welcome back");await app.earlyPrivacy?.("allowUnlock");await app.fill(pinField,pin);await app.clickText("Unlock app");await app.waitText("Workspace");}
+export async function lockWindows(app:NativeWebDriver,canaries:string[]){const button=await app.element("css selector",".top-actions button.secondary");await app.earlyPrivacy?.("expectLocked");await app.command("POST",`/element/${button}/click`,{});await app.waitText("Welcome back");assertLockedView(await app.body(),canaries);}
 async function wrongPin(app:NativeWebDriver,f:WindowsFixture){await app.fill(pinField,f.wrongPin);await app.clickText("Unlock app");await app.waitText("App PIN was not accepted.");assertLockedView(await app.body(),f.canaries);}
 /** Actions are rendered W3C interactions; read/approve/revoke are private,
  * signed serving-target connections. Cancellation navigates away BEFORE confirm. */
@@ -107,17 +111,18 @@ export async function runWindowsAuthentication(host:WindowsLifecycleHost,f:Windo
   const cancelled=await host.observeOriginalAuthorization(browser),cancelId=validateOriginalAuthorization(cancelled,target.origin).requestId;
   await browser.command("POST","/url",{url:target.origin+"/login"});const cancelledState=await host.read(cancelId);assert.equal(cancelledState.requestStatus,"PENDING_BROWSER_AUTH");assert.equal(cancelledState.activeSessions,0,"WINDOWS_CANCELLED_AUTH_CONNECTED");
   await app.waitText("Welcome back");assertLockedView(await app.body(),f.canaries);await unlockWindows(app,f.pin);
-  const authorize=async(first:boolean)=>{
+  const authorize=async(first:boolean,cold=false)=>{
    await host.bind(instance);await app.clickText("Security");await app.clickText("Connect through system browser");
    await host.background(instance);
    const original=await host.observeOriginalAuthorization(browser),request=validateOriginalAuthorization(original,target.origin);
-   if(first)await authenticateNativeBrowser(browser,{authorizationUrl:original,username:f.username,password:f.password,totp:()=>host.totp()});
-   else{await browser.command("POST","/url",{url:original});await browser.waitText("Connect this ERP app?");await browser.clickText("Confirm this device");}
+   if(cold){await app.closeLockedPrivacy();await host.closeForCallback(instance);}
+   if(first)await authenticateNativeBrowser(browser,{authorizationUrl:original,username:f.username,password:f.password,totp:()=>host.totp(),beforeConfirm:()=>host.beforeCallbackLaunch()});
+   else{await browser.command("POST","/url",{url:original});await browser.waitText("Connect this ERP app?");await host.beforeCallbackLaunch();await browser.clickText("Confirm this device");}
    return request.requestId;
   };
   const pending=await authorize(true);await browser.waitText("Device approval required");const pendingState=await host.read(pending);assert.equal(pendingState.userId,f.userId);assert.equal(pendingState.deviceStatus,"PENDING_APPROVAL");assert.equal(pendingState.activeSessions,0);
   await host.approvePendingDevice(pending);await app.waitText("Welcome back");await unlockWindows(app,f.pin);
-  const requestId=await authorize(false);await host.observeCallback(instance,requestId);await app.waitText("Welcome back");assertLockedView(await app.body(),f.canaries);await unlockWindows(app,f.pin);
+  const requestId=await authorize(false);await host.observeCallback(instance,requestId);await app.waitText("Welcome back");assertLockedView(await app.body(),f.canaries);await unlockWindows(app,f.pin);await host.assertCallbackProcessed(instance,requestId);
   const firstReceipt=await refreshWindowsReferences(app,f.expectedStudents);const initial=await host.read(requestId,firstReceipt.observation.responseId);
   const expected={...initial,source:target.source,runId:target.runId,attempt:target.attempt,userId:f.userId,databaseIdentitySha256:f.databaseIdentitySha256,requestId,deviceId:pendingState.deviceId,publicDeviceId:pendingState.publicDeviceId,role:"ACCOUNTANT",referenceStudents:f.expectedStudents};assertNativeIdentity(initial,expected);const assertRefresh=(receipt:Awaited<ReturnType<typeof refreshWindowsReferences>>,readback:NativeIdentity)=>assertReferenceCorrelated(receipt,readback.referenceResponse,{userId:f.userId,sessionId:readback.sessionId!,deviceId:pendingState.deviceId!,publicDeviceId:pendingState.publicDeviceId,profile:`${target.profile}:${target.origin}`,students:f.expectedStudents});assertRefresh(firstReceipt,initial);completed.push("WD2","WD3");
   await lockWindows(app,f.canaries);await unlockWindows(app,f.pin);await host.background(instance);await app.waitText("Welcome back");assertLockedView(await app.body(),f.canaries);await host.foreground(instance);assertLockedView(await app.body(),f.canaries);await unlockWindows(app,f.pin);
@@ -125,7 +130,10 @@ export async function runWindowsAuthentication(host:WindowsLifecycleHost,f:Windo
   await host.revokeSession(initial.sessionId);
   const refused=async()=>{await app.clickText("Security");await app.clickText("Refresh encrypted reference data");await app.waitText("NATIVE_");const body=await app.body(),denial=body.match(/NATIVE_(?:SESSION_REVOKED|ACCESS_INVALID_OR_EXPIRED|REFRESH_INVALID_OR_EXPIRED)/)?.[0];assert(denial,"WINDOWS_REVOCATION_DENIAL_MISSING");assertRevokedReadback(await host.read(requestId),initial,denial);};
   await refused();await lockWindows(app,f.canaries);await app.closeLockedPrivacy();({app,instance}=await host.restart(instance));await host.bind(instance);await app.observeLockedPrivacy(f.canaries);await app.waitText("Welcome back");assertLockedView(await app.body(),f.canaries);await unlockWindows(app,f.pin);await refused();
-  const newRequest=await authorize(false);assert.notEqual(newRequest,requestId);await host.observeCallback(instance,newRequest);await app.waitText("Welcome back");await unlockWindows(app,f.pin);const renewedReceipt=await refreshWindowsReferences(app,f.expectedStudents);
+  // A fresh web login and actual MFA, not reuse of the prior browser session.
+  await browser.command("POST","/url",{url:target.origin+"/account-security"});
+  const menu=await browser.element("css selector",'summary[aria-label^="Account menu for "]');await browser.command("POST",`/element/${menu}/click`,{});await browser.clickText("Logout");await browser.waitText("Sign in");
+  const newRequest=await authorize(true,true);assert.notEqual(newRequest,requestId);({app,instance}=await host.observeColdCallback(newRequest));await host.bind(instance);await app.observeLockedPrivacy(f.canaries);await app.waitText("Welcome back");assertLockedView(await app.body(),f.canaries);await unlockWindows(app,f.pin);await host.assertCallbackProcessed(instance,newRequest);const renewedReceipt=await refreshWindowsReferences(app,f.expectedStudents);
   const renewed=await host.read(newRequest,renewedReceipt.observation.responseId);assertRefresh(renewedReceipt,renewed);assert.notEqual(renewed.sessionId,initial.sessionId,"WINDOWS_OLD_SESSION_REVIVED");assertNativeIdentity(renewed,{...expected,sessionId:renewed.sessionId,requestId:newRequest});assert.equal((await host.read(requestId)).sessionRevoked,true);await app.closeLockedPrivacy();completed.push("WD5");
  }catch(error){failure=error;}
  finally{try{await host.cleanup();}catch{throw Error("WINDOWS_AUTH_CLEANUP_FAILED_RESIDUE_REQUIRES_RECONCILIATION");}}

@@ -6,7 +6,7 @@ import path from "node:path";
 import {admitSyntheticArtifact} from "./admit-artifact";
 import {syntheticEvidenceRoot} from "./synthetic-build-lifecycle";
 import {inspectTarget} from "./integrated-acceptance";
-import {windowsProbeBinding,parseWindowsProbe,validateWindowsProbeResult,windowsFixtureResult,windowsReadback,type WindowsProbeBinding} from "./windows-server-contract";
+import {windowsProbeBinding,parseWindowsProbe,validateWindowsProbeResult,windowsFixtureResult,windowsReadback,parseWindowsControl,type WindowsProbeBinding} from "./windows-server-contract";
 import {runWindowsAuthentication,validateOriginalAuthorization,type WindowsLifecycleHost,type WindowsFixture} from "./windows-auth-lifecycle";
 
 type Invocation=(input:string)=>Promise<string>;
@@ -14,7 +14,7 @@ type ServerMethods="totp"|"read"|"approvePendingDevice"|"revokeSession";
 /** Contract-test injectable transport; constructing this class does NOT admit a
  * target. Production orchestration must use createAdmittedWindowsServerPorts. */
 export class WindowsServerPorts {
- private originals=new Map<string,string>();private sessions=new Map<string,string>();private closed=false;
+ private originals=new Map<string,string>();private sessions=new Map<string,string>();private closed=false;private controlAttempted=false;private control:ReturnType<typeof parseWindowsControl>|undefined;
  constructor(private readonly binding:WindowsProbeBinding,private readonly invoke:Invocation,private readonly bind:()=>void,private password:string,private governancePassword:string){this.binding=Object.freeze({...windowsProbeBinding.parse(binding)});}
  private async call(operation:string,extra:Record<string,unknown>={}){
   try{
@@ -27,7 +27,17 @@ export class WindowsServerPorts {
    throw Error("WINDOWS_SERVER_OPERATION_FAILED_PRIVATE_DETAILS_WITHHELD");
   }
  }
- async prepare(){const f=windowsFixtureResult.parse(await this.call("prepare",{password:this.password,governancePassword:this.governancePassword}));assert(f.databaseIdentitySha256===this.binding.databaseIdentitySha256,"WINDOWS_FIXTURE_TARGET");return {...f,password:this.password};}
+ async prepare(original?:string){if(original)validateOriginalAuthorization(original,"https://portable-staging.localhost:8443");const f=windowsFixtureResult.parse(await this.call("prepare",{password:this.password,governancePassword:this.governancePassword,...(original?{original}:{})}));assert(f.databaseIdentitySha256===this.binding.databaseIdentitySha256,"WINDOWS_FIXTURE_TARGET");return {...f,password:this.password};}
+ async prepareControl(userId:string){assert(!this.controlAttempted);this.controlAttempted=true;const c=parseWindowsControl(await this.call("prepare-control",{password:this.password,governancePassword:this.governancePassword}));assert(c.userId===userId&&c.publicDeviceId!==this.binding.publicDeviceId);this.control=c;}
+ async assertControl(){assert(this.control,"WINDOWS_NONEMPTY_CONTROL_REQUIRED");assert.deepEqual(await this.call("read-control",{control:this.control}),this.control,"WINDOWS_CONTROL_CHANGED");}
+ async cleanupGoverned(){
+  // Reconcile every observed request before closing only its exact live session.
+  // Uncertain or foreign state is reported as residue, never blindly replayed.
+  let failed=this.controlAttempted&&!this.control;
+  for(const id of this.originals.keys())try{const r=await this.read(id);if(r.sessionId&&!r.sessionRevoked)await this.revokeSession(r.sessionId);}catch{failed=true;}
+  if(this.control)try{await this.call("close-control",{control:this.control,governancePassword:this.governancePassword});this.control=undefined;this.controlAttempted=false;}catch{failed=true;}
+  if(failed)throw Error("WINDOWS_SERVER_CLEANUP_REQUIRES_RECONCILIATION");
+ }
  assertPlatform(target:{source:string;runId:string;attempt:string;origin:string}){assert(target.source===this.binding.source&&target.runId===this.binding.runId&&target.attempt===this.binding.attempt&&target.origin==="https://portable-staging.localhost:8443","WINDOWS_PLATFORM_SERVER_BINDING");}
  observe(original:string){assert(!this.closed,"WINDOWS_SERVER_PORTS_CLOSED");const {requestId}=validateOriginalAuthorization(original,"https://portable-staging.localhost:8443");assert(this.originals.size<16,"WINDOWS_REQUEST_BOUND");const previous=this.originals.get(requestId);assert(!previous||previous===original,"WINDOWS_REQUEST_SUBSTITUTED");this.originals.set(requestId,original);}
  private original(requestId:string){const original=this.originals.get(requestId);assert(original,"WINDOWS_ORIGINAL_REQUEST_NOT_OBSERVED");return original;}
@@ -65,7 +75,7 @@ export async function runWindowsWithServerPorts(platform:Omit<WindowsLifecycleHo
    admit:()=>platform.admit(),launch:()=>platform.launch(),bind:p=>platform.bind(p),
    observeOriginalAuthorization:async browser=>{const original=await platform.observeOriginalAuthorization(browser);server.observe(original);return original;},
    totp:()=>server.totp(),read:(id,responseId)=>server.read(id,responseId),approvePendingDevice:id=>server.approvePendingDevice(id),revokeSession:id=>server.revokeSession(id),
-   observeCallback:(p,id)=>platform.observeCallback(p,id),restart:p=>platform.restart(p),background:p=>platform.background(p),foreground:p=>platform.foreground(p),assertProfilePreserved:()=>platform.assertProfilePreserved(),cleanup:()=>platform.cleanup(),
+   beforeCallbackLaunch:()=>platform.beforeCallbackLaunch(),observeCallback:(p,id)=>platform.observeCallback(p,id),assertCallbackProcessed:(p,id)=>platform.assertCallbackProcessed(p,id),closeForCallback:p=>platform.closeForCallback(p),observeColdCallback:id=>platform.observeColdCallback(id),restart:p=>platform.restart(p),background:p=>platform.background(p),foreground:p=>platform.foreground(p),assertProfilePreserved:()=>platform.assertProfilePreserved(),cleanup:()=>platform.cleanup(),
   };
   enteredLifecycle=true;return await runWindowsAuthentication(host,{...local,...f});
  }finally{try{if(admitted&&!enteredLifecycle)await platform.cleanup();}finally{server.clear();}}

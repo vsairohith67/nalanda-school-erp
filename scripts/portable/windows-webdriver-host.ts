@@ -9,7 +9,7 @@ import type {WindowsPrivateTransport} from "./windows-private-transport";
 import {assertOwnedProcess,insideWindowsRoot,validateOriginalAuthorization,type ProcessIdentity,type WindowsTarget} from "./windows-auth-lifecycle";
 
 type Tool={path:string;sha256:string;version:string};
-export type WindowsTools={tauri:Tool;webviewDriver:Tool;browserDriver:Tool;browser:Tool;webview:Tool;tauriPort:number;nativePort:number;browserPort:number};
+export type WindowsTools={tauri:Tool;webviewDriver:Tool;browserDriver:Tool;browser:Tool;webview:Tool;tauriPort:number;nativePort:number;browserPort:number;debugPort:number};
 type Transport=typeof fetch;
 export type WindowsOs=(input:unknown)=>any;
 const hash=(bytes:Buffer)=>createHash("sha256").update(bytes).digest("hex");
@@ -23,13 +23,32 @@ export function privateWindowsOs(input:unknown){
  assert.equal(process.platform,"win32");
  return JSON.parse(execFileSync("powershell.exe",["-NoProfile","-NonInteractive","-File",path.resolve("scripts/portable/windows-host.ps1")],{input:JSON.stringify(input),encoding:"utf8",windowsHide:true,stdio:["pipe","pipe","pipe"],timeout:30_000,maxBuffer:1024*1024}));
 }
-export function assertWindowsEnvironment(actual:any,t:WindowsTarget){
+export function assertWindowsEnvironment(actual:any,t:WindowsTarget,browser?:string){
  for(const k of ["userSid","userProfile","roaming","local"] as const)assert.equal(actual[k].toLowerCase(),t[k].toLowerCase(),"WINDOWS_DISPOSABLE_PROFILE_MISMATCH");
  assert.equal(actual.browserProgId,"MSEdgeHTM","WINDOWS_PRECONFIGURED_SYSTEM_BROWSER_REQUIRED");
  assert.equal(actual.protocolCommand,`"${t.executable}" "%1"`,"WINDOWS_OWNED_PROTOCOL_HANDLER_REQUIRED");
+ if(browser)assert([`"${browser}" --single-argument %1`,`"${browser}" --single-argument "%1"`].includes(actual.browserCommand),"WINDOWS_OWNED_SYSTEM_BROWSER_REQUIRED");
+}
+/** Supported unattended topology requires a pre-authorised, exact-origin Edge
+ * protocol policy. Read only: no prompts/default-browser/policy mutation. */
+export function assertBrowserProtocolPolicy(actual:any,t:WindowsTarget){
+ assert.deepEqual(Object.keys(actual).sort(),["machineOverride","value"]);
+ assert(actual.machineOverride===false&&typeof actual.value==="string"&&actual.value.length<=1024,"WINDOWS_PROTOCOL_POLICY_REQUIRED");
+ const origin=new URL(t.origin);
+ assert.deepEqual(JSON.parse(actual.value),[{protocol:"nalandaps-erp",allowed_origins:[`${origin.protocol}//.${origin.hostname}:${origin.port}`]}],"WINDOWS_PROTOCOL_POLICY_OVERBROAD_OR_MISSING");
 }
 export function assertOwnedWindowsListener(rows:{address:string;port:number;pid:number}[],port:number,processIds:number[]){
  assert(rows.length===1&&rows[0].address==="127.0.0.1"&&rows[0].port===port&&processIds.includes(rows[0].pid),"WINDOWS_FOREIGN_AUTOMATION_LISTENER");
+}
+/** Read-only prerequisite for an OS-launched WebView. These three app-specific
+ * HKCU overrides must belong to the pre-authorised disposable identity. The host
+ * never writes browser policy, protocol handlers or the owner's profile. */
+export function assertColdWebViewPolicy(actual:any,t:WindowsTarget,tools:WindowsTools){
+ assert.deepEqual(Object.keys(actual).sort(),["arguments","folder","userData","machineOverride","wildcardOverride","environmentOverride"].sort());
+ assert(!actual.machineOverride&&!actual.wildcardOverride&&!actual.environmentOverride,"WINDOWS_WEBVIEW_AMBIGUOUS_POLICY");
+ assert.equal(actual.arguments,`--remote-debugging-port=${tools.debugPort} --remote-debugging-address=127.0.0.1`,"WINDOWS_COLD_DEBUG_POLICY_REQUIRED");
+ assert.equal(actual.folder.toLowerCase(),path.win32.dirname(tools.webview.path).toLowerCase(),"WINDOWS_COLD_RUNTIME_CHANGED");
+ assert.equal(actual.userData.toLowerCase(),t.webviewData.toLowerCase(),"WINDOWS_COLD_PROFILE_CHANGED");
 }
 async function protocol(endpoint:string,method:string,route:string,body:unknown,transport:Transport){
  const u=new URL(endpoint);assert.equal(u.protocol,"http:");assert.equal(u.hostname,"127.0.0.1");assert.equal(u.pathname,"/");assert(!u.username&&!u.password&&!u.search&&!u.hash);
@@ -83,14 +102,23 @@ export class OwnedWindowsWebDriver {
   assert.equal(process.env.GITHUB_RUN_ID,this.target.runId);assert.equal(process.env.GITHUB_RUN_ATTEMPT,this.target.attempt);assert.equal(process.env.EXPECTED_SHA,this.target.source);
   assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),this.target.source);
   assert.equal(execFileSync("git",["hash-object","--path=scripts/portable/windows-host.ps1","scripts/portable/windows-host.ps1"],{encoding:"utf8"}).trim(),execFileSync("git",["rev-parse",`${this.target.source}:scripts/portable/windows-host.ps1`],{encoding:"utf8"}).trim(),"WINDOWS_HOST_SOURCE_CHANGED");
-  assertWindowsEnvironment(this.os({operation:"environment"}),this.target);
+  assertWindowsEnvironment(this.os({operation:"environment"}),this.target,this.tools.browser.path);
   assertWindowsFile(this.target.executable,this.target.root,this.target.artifactSha256);
-  const ports=[this.tools.tauriPort,this.tools.nativePort,this.tools.browserPort];assert(new Set(ports).size===3&&ports.every(p=>Number.isSafeInteger(p)&&p>=1024&&p<=65535));
+  const ports=[this.tools.tauriPort,this.tools.nativePort,this.tools.browserPort,this.tools.debugPort];assert(new Set(ports).size===4&&ports.every(p=>Number.isSafeInteger(p)&&p>=1024&&p<=65535));
+  assertColdWebViewPolicy(this.os({operation:"webview-policy"}),this.target,this.tools);
+  assertBrowserProtocolPolicy(this.os({operation:"browser-protocol-policy"}),this.target);
   for(const port of ports)assert.equal(this.os({operation:"listeners",port}).length,0,"WINDOWS_PORT_ALREADY_OWNED");
   assert.equal(this.tools.tauri.version,this.target.tauriDriverVersion);assert.equal(this.tools.webviewDriver.version,this.target.webviewDriverVersion);assert.equal(this.tools.browserDriver.version,this.target.browserDriverVersion);assert.equal(this.tools.browser.version,this.target.browserVersion);assert.equal(this.tools.webview.version,this.target.webviewVersion);
   for(const [key,tool] of Object.entries(this.tools)){if(typeof tool==="number")continue;assertWindowsFile(tool.path,this.target.root,tool.sha256);assert(tool.version.length>0);if(["tauri","webviewDriver","browserDriver"].includes(key)){const version=execFileSync(tool.path,["--version"],{encoding:"utf8",timeout:10_000,windowsHide:true,stdio:["ignore","pipe","pipe"]}).trim();assert(version.includes(tool.version),"WINDOWS_TOOL_VERSION_CHANGED");}}
   for(const dir of [this.target.appData,this.target.webviewData,this.target.browserData]){assertWindowsFile(dir,this.target.root);assert(!existsSync(dir)||readdirSync(dir).length===0,"WINDOWS_EXISTING_PROFILE_REFUSED");}
   for(const tool of this.artifacts())assert.equal(this.os({operation:"processes",executable:tool.path}).length,0,"WINDOWS_OWNED_BINARY_ALREADY_RUNNING");
+ }
+ async verifyCallbackEnvironment(){
+  assertWindowsEnvironment(this.os({operation:"environment"}),this.target,this.tools.browser.path);
+  assertColdWebViewPolicy(this.os({operation:"webview-policy"}),this.target,this.tools);
+  assertBrowserProtocolPolicy(this.os({operation:"browser-protocol-policy"}),this.target);
+  for(const tool of Object.values(this.tools)){if(typeof tool!=="number")assertWindowsFile(tool.path,this.target.root,tool.sha256);}
+  await this.profilePreserved();
  }
  private async startDriver(tool:Tool,args:string[]){
   assert.equal(this.os({operation:"processes",executable:tool.path}).length,0,"WINDOWS_DRIVER_ALREADY_RUNNING");
@@ -121,27 +149,48 @@ export class OwnedWindowsWebDriver {
   assert.equal(session.capabilities.browserVersion,this.target.webviewVersion,"WINDOWS_ACTUAL_WEBVIEW_VERSION");
   const rows=this.os({operation:"processes",executable:this.target.executable}) as ProcessIdentity[];assert.equal(rows.length,1,"WINDOWS_APP_INSTANCE_AMBIGUOUS");const instance=rows[0];assert.equal(instance.sha256,this.target.artifactSha256);assert.equal(instance.userSid,this.target.userSid);this.processes.push(instance);return {app:session.driver,instance};
  }
- async bind(instance:ProcessIdentity){assertWindowsEnvironment(this.os({operation:"environment"}),this.target);const current=this.os({operation:"processes",executable:instance.executable});assert.equal(current.length,1);assertOwnedProcess(current[0],instance);this.captureDescendants();await this.listener(this.tools.tauriPort,this.tools.tauri);await this.listener(this.tools.browserPort,this.tools.browserDriver);}
+ async bind(instance:ProcessIdentity){assertWindowsEnvironment(this.os({operation:"environment"}),this.target,this.tools.browser.path);const current=this.os({operation:"processes",executable:instance.executable});assert.equal(current.length,1);assertOwnedProcess(current[0],instance);this.captureDescendants();await this.listener(this.tools.tauriPort,this.tools.tauri);await this.listener(this.tools.browserPort,this.tools.browserDriver);}
  async profilePreserved(){
   for(const file of ["native-cache-v1.sqlite3","nalanda-native-v1.hold","nalanda-native-v1.salt"]){const full=path.join(this.target.appData,file);assertWindowsFile(full,this.target.root);assert(lstatSync(full).isFile()&&lstatSync(full).size>0,"WINDOWS_PROFILE_NOT_PRESERVED");}
   const salt=hash(readFileSync(path.join(this.target.appData,"nalanda-native-v1.salt")));if(this.saltHash)assert.equal(salt,this.saltHash,"WINDOWS_PROFILE_REPLACED");else this.saltHash=salt;
  }
- async restart(instance:ProcessIdentity){
+ async closeForCallback(instance:ProcessIdentity){
   await this.bind(instance);await this.profilePreserved();assert(this.appSession);
   await protocol(this.appSession.endpoint,"DELETE",`/session/${this.appSession.session}`,undefined,this.transport);
   this.sessions=this.sessions.filter(s=>s!==this.appSession);this.appSession=undefined;
   const remaining=this.os({operation:"processes",executable:instance.executable}) as ProcessIdentity[];
   if(remaining.length){assert.equal(remaining.length,1);assertOwnedProcess(remaining[0],instance);this.os({operation:"stop",process:instance});}
-  this.processes=this.processes.filter(p=>p!==instance);assert.equal(this.os({operation:"processes",executable:instance.executable}).length,0);const next=await this.launchApp();await this.profilePreserved();return next;
+  this.processes=this.processes.filter(p=>p!==instance);assert.equal(this.os({operation:"processes",executable:instance.executable}).length,0);
+  for(let n=0;n<40;n++){if(this.os({operation:"listeners",port:this.tools.debugPort}).length===0)return;await new Promise(r=>setTimeout(r,250));}
+  throw Error("WINDOWS_COLD_PREVIOUS_WEBVIEW_REMAINS");
+ }
+ async attachCold(instance:ProcessIdentity){
+  const admitted=await this.admit();admitted.verifyFiles();
+  assertColdWebViewPolicy(this.os({operation:"webview-policy"}),this.target,this.tools);
+  assertBrowserProtocolPolicy(this.os({operation:"browser-protocol-policy"}),this.target);
+  const rows=this.os({operation:"processes",executable:this.target.executable}) as ProcessIdentity[];
+  assert.equal(rows.length,1);assertOwnedProcess(rows[0],instance);assert.equal(instance.userSid,this.target.userSid);assert.equal(instance.sha256,this.target.artifactSha256);
+  this.processes.push(instance); // Caller proved OS/browser ancestry before adoption.
+  await this.listener(this.tools.debugPort,this.tools.webview);
+  await this.listener(this.tools.nativePort,this.tools.webviewDriver);
+  const session=await createWindowsSession(this.endpoint(this.tools.nativePort),{browserName:"webview2","ms:edgeOptions":{debuggerAddress:`127.0.0.1:${this.tools.debugPort}`}},this.transport);
+  this.sessions.push(session.driver);this.appSession=session.driver;
+  assert.equal(session.capabilities.browserVersion,this.target.webviewVersion,"WINDOWS_COLD_WEBVIEW_VERSION");
+  await this.bind(instance);await this.profilePreserved();return {app:session.driver,instance};
+ }
+ async restart(instance:ProcessIdentity){
+  await this.closeForCallback(instance);const next=await this.launchApp();await this.profilePreserved();return next;
  }
  async background(instance:ProcessIdentity){await this.bind(instance);this.os({operation:"background",process:instance});}
  async foreground(instance:ProcessIdentity){await this.bind(instance);this.os({operation:"foreground",process:instance});}
  original(browser:NativeWebDriver){return observeOriginalWindowsAuthorization(browser,this.target.origin,this.seenRequests);}
+ browserProcesses(){this.captureDescendants();return this.processes.filter(p=>p.executable.toLowerCase()===this.tools.browser.path.toLowerCase());}
+ currentBrowserProcesses(){return this.os({operation:"processes",executable:this.tools.browser.path}) as ProcessIdentity[];}
  async cleanup(){
   let refused=false;
   try{this.captureDescendants();}catch{refused=true;}
   if(!refused)for(const session of [...this.sessions].reverse()){
-   try{const port=Number(new URL(session.endpoint).port),tool=port===this.tools.tauriPort?this.tools.tauri:this.tools.browserDriver;await this.listener(port,tool);await protocol(session.endpoint,"DELETE",`/session/${session.session}`,undefined,this.transport);}catch{refused=true;}
+   try{const port=Number(new URL(session.endpoint).port),tool=port===this.tools.tauriPort?this.tools.tauri:port===this.tools.nativePort?this.tools.webviewDriver:this.tools.browserDriver;await this.listener(port,tool);await protocol(session.endpoint,"DELETE",`/session/${session.session}`,undefined,this.transport);}catch{refused=true;}
   }
   // Never DELETE an unverified stale WebDriver session: it could close a foreign
   // re-used process. Verify the owned processes first, then stop by identity.

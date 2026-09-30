@@ -31,6 +31,10 @@ on:
         description: Produce private connected QA evidence only with an already admitted controller and disposable target
         type: boolean
         default: false
+      connected_windows_acceptance:
+        description: Run connected WD1-WD5 only with admitted same-run artifacts and an authorised disposable private Windows environment
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -46,7 +50,7 @@ env:
 jobs:
   native-evidence:
     name: Same-run private Windows QA artifact evidence
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.connected_native_evidence && github.ref == 'refs/heads/release/recovery-integration-1a' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.connected_native_evidence || inputs.connected_windows_acceptance) && github.ref == 'refs/heads/release/recovery-integration-1a' }}
     runs-on: windows-2025
     timeout-minutes: 50
     permissions:
@@ -74,6 +78,13 @@ jobs:
           $PSNativeCommandUseErrorActionPreference = $true
           $inputRoot = Join-Path $env:RUNNER_TEMP 'nalanda-native-admission'
           pnpm exec tsx scripts/portable/build-native-qa.ts (Join-Path $inputRoot 'inputs') (Join-Path $inputRoot 'transport.json')
+      - name: Execute the admitted connected Windows journey
+        if: ${{ inputs.connected_windows_acceptance }}
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $recipe = Join-Path $env:RUNNER_TEMP 'nalanda-native-admission/windows-connected.json'
+          Get-Content -Raw -LiteralPath $recipe | pnpm exec tsx scripts/portable/integrated-acceptance.ts --windows
       - name: Clean only owned same-run native outputs
         if: always()
         shell: pwsh

@@ -7,6 +7,7 @@ await mkdir(output, { recursive: true });
 
 await build({
   entryPoints: {
+    "windows-connected-host": "scripts/portable/windows-connected-host.ts",
     "build-native-qa": "scripts/portable/build-native-qa.ts",
     "windows-controller": "scripts/portable/windows-controller.ts",
     "integrated-bulk": "scripts/portable/integrated-bulk.ts",

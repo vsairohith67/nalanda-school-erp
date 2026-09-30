@@ -4,6 +4,12 @@ const elementKey="element-6066-11e4-a52e-4f735466cecf";
 /** Direct W3C transport: tauri-driver/EdgeDriver on Windows; Appium
  * UiAutomator2/XCUITest on Android/iOS. It adds no app IPC or TLS privileges. */
 export class NativeWebDriver {
+ requireEarlyPrivacy=false;
+ async earlyPrivacy(action:"read"|"allowUnlock"|"expectLocked"="read"){
+  if(!this.requireEarlyPrivacy)return;
+  const state=await this.command("POST","/execute/sync",{script:"const o=window.__nalandaEarlyPrivacy;if(!o)throw Error('Early observer missing');if(arguments[0]!=='read')o[arguments[0]]();return o.read();",args:[action]});
+  assert(state?.early===true&&state.failed===false&&state.samples>0&&state.boundary==="DOCUMENT_CREATION_DOM_AND_RAF_NOT_COMPOSITOR_FRAMES","NATIVE_EARLY_PRIVACY_FAILED");
+ }
  constructor(readonly endpoint:string,readonly session:string,private readonly transport:typeof fetch=fetch){
   const url=new URL(endpoint);assert.equal(url.protocol,"http:");assert(["127.0.0.1","[::1]"].includes(url.hostname));assert(!url.username&&!url.password&&!url.search&&!url.hash);assert(typeof session==="string"&&/^[a-zA-Z0-9-]{8,80}$/.test(session));
  }
@@ -17,6 +23,7 @@ export class NativeWebDriver {
  async fill(css:string,text:string){const e=await this.element("css selector",css);await this.command("POST",`/element/${e}/clear`,{});await this.command("POST",`/element/${e}/value`,{text});}
  async body(){const e=await this.element("css selector","body");return await this.command("GET",`/element/${e}/text`) as string;}
  async observeLockedPrivacy(canaries:string[]){
+  await this.earlyPrivacy();
   assert(canaries.length>0&&canaries.every(c=>typeof c==="string"&&c.length>=8&&c.length<=200));
   await this.command("POST","/execute/sync",{script:`
    if (window.__nalandaLockObserver) throw new Error('Observer already owned');
@@ -26,6 +33,7 @@ export class NativeWebDriver {
    window.__nalandaLockObserver={state,observer};check();return true;`,args:[canaries]});
  }
  async closeLockedPrivacy(){
+  await this.earlyPrivacy();
   const leaked=await this.command("POST","/execute/sync",{script:"if(!window.__nalandaLockObserver)throw new Error('Observer missing');const leaked=window.__nalandaLockObserver.state.leaked;window.__nalandaLockObserver.observer.disconnect();delete window.__nalandaLockObserver;return leaked;",args:[]});
   assert.equal(leaked,false,"NATIVE_LOCK_TRANSITION_PRIVACY_FAILED");
  }
@@ -47,14 +55,18 @@ export async function unlockAndRequestAuthorization(driver:NativeWebDriver,input
 
 /** Run in the actual system browser's owned automation context after the app
  * opened its signed PKCE link. Never supplies a callback/code or a session cookie. */
-export async function authenticateNativeBrowser(driver:NativeWebDriver,input:{username:string;password:string;totp:()=>Promise<string>;authorizationUrl:string}){
+export async function authenticateNativeBrowser(driver:NativeWebDriver,input:{username:string;password:string;totp:()=>Promise<string>;authorizationUrl:string;beforeConfirm?:()=>Promise<void>}){
  const url=new URL(input.authorizationUrl);assert.equal(url.origin,"https://portable-staging.localhost:8443");assert.equal(url.pathname,"/native/authorize");
  for(const key of ["request","state","challenge","proof"])assert(url.searchParams.get(key));
  await driver.command("POST","/url",{url:url.origin+"/login"});
  await driver.fill('input[name="identifier"]',input.username);await driver.fill('input[name="password"]',input.password);await driver.clickText("Sign in");
  await driver.waitText("Six-digit authenticator code");await driver.fill('input[name="mfaResponse"]',await input.totp());await driver.clickText("Verify and sign in");
+ // React's login request/navigation completes asynchronously after the click.
+ // Wait for the real authenticated layout before navigating the original link.
+ let signedIn=false;for(let n=0;n<30;n++){try{await driver.element("css selector",'summary[aria-label^="Account menu for "]');signedIn=true;break;}catch{await new Promise(r=>setTimeout(r,500));}}
+ assert(signedIn,"NATIVE_BROWSER_LOGIN_NOT_COMPLETED");
  // The original unmodified app-generated link carries the signed request.
- await driver.command("POST","/url",{url:url.toString()});await driver.waitText("Connect this ERP app?");await driver.clickText("Confirm this device");
+ await driver.command("POST","/url",{url:url.toString()});await driver.waitText("Connect this ERP app?");await input.beforeConfirm?.();await driver.clickText("Confirm this device");
 }
 
 export async function assertAuthenticatedReferenceAndLock(driver:NativeWebDriver,input:{platform:"WINDOWS"|"ANDROID"|"IOS";appContext?:string;expectedStudent:string;pin:string}){

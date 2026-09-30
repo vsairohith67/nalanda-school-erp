@@ -20,10 +20,13 @@ import {generateTotpForSyntheticQa} from "../lib/real-user-access/totp";
 import {createStepUpChallenge,completeStepUpChallenge} from "../lib/real-user-access/step-up";
 import {boundAuthEnvironment,createLoginMfaChallenge,completeLoginMfaSignIn} from "../lib/real-user-access/login-mfa";
 import {PATCH} from "../app/api/offline-sync/devices/[id]/route";
+import {POST as requestRoute} from "../app/api/native-auth/request/route";
+import {POST as authorizeRoute} from "../app/api/native-auth/authorize/route";
+import {POST as exchangeRoute} from "../app/api/native-auth/exchange/route";
 // ISOLATED_SERVICE: actual native protocol, permission evaluator, approval route,
 // audit, MFA and step-up services and database. Admission, HTTP transport and web login are
 // harness doubles. Nothing here is an observed Windows request or OS callback.
-const harness=vi.hoisted(()=>({db:null as any,governance:null as any,cookie:"",webId:"",admitted:true}));
+const harness=vi.hoisted(()=>({db:null as any,governance:null as any,cookie:"",webId:"",admitted:true,logins:new Map<string,{user:any;sessionId:string}>()}));
 vi.mock("../lib/prisma",()=>({prisma:new Proxy({}, {get:(_t,key)=>{const value=harness.db[key];return typeof value==="function"?value.bind(harness.db):value;}})}));
 vi.mock("../lib/native-app/feature-flag",()=>({NATIVE_APP_ID:"com.nalandaps.erp",NATIVE_REDIRECT_URI:"nalandaps-erp://auth/callback",nativeAppEnabled:()=>true,nativeDataScopeEnabled:()=>true,operationalNativeAppEnabled:()=>true}));
 vi.mock("../lib/offline-sync/feature-flag",()=>({requireOfflineSyncForApi:()=>null,offlineSyncRoleAllowed:(role:string)=>["ACCOUNTANT","SUPER_ADMIN"].includes(role),OFFLINE_SYNC_SCHEMA_VERSION:1}));
@@ -33,11 +36,11 @@ vi.mock("../scripts/portable/acceptance-http",()=>({
  syntheticOrigin:"https://portable-staging.localhost:8443",assertSyntheticServingTarget:()=>{if(!harness.admitted)throw Error("HARNESS_TARGET_DENIED");},
  provisionSyntheticMfa:async(db:any,userId:string)=>{const e=await beginTotpEnrollment(db,{userId,displayName:"SYNTHETIC factor",accountLabel:"synthetic@example.invalid"});const f=await db.mfaAuthenticator.findUniqueOrThrow({where:{publicKey:e.factorHandle}});await confirmTotpEnrollment(db,{userId,factorHandle:e.factorHandle,token:generateTotpForSyntheticQa({userId,authenticatorId:f.id,secretEnvelope:f.secretEnvelope}),environment:boundAuthEnvironment()});},
  nextTotp:async()=>{throw Error("HARNESS_BROWSER_MFA_NOT_EXECUTED");},
- realLogin:async(db:any,username:string)=>{harness.governance=await db.user.findUniqueOrThrow({where:{username}});const web=await createPersistedSession(db,harness.governance,new Headers());harness.cookie=web.cookieValue;harness.webId=web.sessionId;return {userId:harness.governance.id,cookie:web.cookieValue};},
+ realLogin:async(db:any,username:string)=>{harness.governance=await db.user.findUniqueOrThrow({where:{username}});const assignment=await db.userRoleAssignment.findFirstOrThrow({where:{userId:harness.governance.id,status:"ACTIVE"}});harness.governance={...harness.governance,roleAssignmentId:assignment.id};const web=await createPersistedSession(db,harness.governance,new Headers());harness.cookie=web.cookieValue;harness.webId=web.sessionId;harness.logins.set(web.cookieValue,{user:harness.governance,sessionId:web.sessionId});return {userId:harness.governance.id,cookie:web.cookieValue};},
  realStepUp:async(db:any,actor:any,action:string)=>{const input={userId:actor.userId,sessionId:harness.webId,action,environment:boundAuthEnvironment()};const c=await createStepUpChallenge(db,input);const f=await db.mfaAuthenticator.findFirstOrThrow({where:{userId:actor.userId,type:"TOTP",status:"ACTIVE"}});const timestamp=Math.max(Date.now(),(f.totpLastUsedStep+1)*30_000);return(await completeStepUpChallenge(db,{...input,challengeToken:c.challengeToken,factor:"TOTP",timestamp,response:generateTotpForSyntheticQa({userId:actor.userId,authenticatorId:f.id,secretEnvelope:f.secretEnvelope,timestamp})})).stepUpToken;},
- privateHttp:async(url:string,init:any)=>{const req=new NextRequest(url,{...init,headers:{...init.headers,origin:"https://portable-staging.localhost:8443"}}),parts=new URL(url).pathname.split("/");return parts.at(-1)==="revoke"?revokeRoute(req,{params:Promise.resolve({id:parts.at(-2)!})}):PATCH(req,{params:Promise.resolve({id:parts.at(-1)!})});}
+ privateHttp:async(url:string,init:any)=>{const login=harness.logins.get(init.headers?.cookie);if(login){harness.governance=login.user;harness.cookie=init.headers.cookie;harness.webId=login.sessionId;}const req=new NextRequest(url,{...init,headers:{...init.headers,origin:"https://portable-staging.localhost:8443"}}),parts=new URL(url).pathname.split("/");if(parts.at(-1)==="request")return requestRoute(req);if(parts.at(-1)==="authorize")return authorizeRoute(req);if(parts.at(-1)==="exchange")return exchangeRoute(req);return parts.at(-1)==="revoke"?revokeRoute(req,{params:Promise.resolve({id:parts.at(-2)!})}):PATCH(req,{params:Promise.resolve({id:parts.at(-1)!})});}
 }));
-vi.mock("../lib/auth",()=>({requireApiPermission:async(permission:string)=>{const u=harness.governance,assignment=await harness.db.userRoleAssignment.findFirst({where:{userId:u.id,status:"ACTIVE"}}),decision=await evaluateEffectivePermission(harness.db,{userId:u.id,roleAssignmentId:assignment?.id,permission});return decision.allowed?{user:u}:{response:Response.json({error:"Denied"},{status:403})};}}));
+vi.mock("../lib/auth",()=>({getCurrentAuthContext:async()=>({user:harness.governance,sessionId:harness.webId}),requireApiPermission:async(permission:string)=>{const u=harness.governance,assignment=await harness.db.userRoleAssignment.findFirst({where:{userId:u.id,status:"ACTIVE"}}),decision=await evaluateEffectivePermission(harness.db,{userId:u.id,roleAssignmentId:assignment?.id,permission});return decision.allowed?{user:u}:{response:Response.json({error:"Denied"},{status:403})};}}));
 const root=mkdtempSync(path.join(tmpdir(),"nalanda-windows-server-service-")),identity=lstatSync(root),schema=`wsp_${randomUUID().replaceAll("-","")}`,postgres=process.env.DATABASE_PROVIDER==="postgresql";let db:PrismaClient;
 const keys=generateKeyPairSync("ed25519"),publicSigningKey=keys.publicKey.export({format:"jwk"}),bound={source:"a".repeat(40),runId:"123",attempt:"1",iteration:randomUUID(),phase:"synthetic-ON",databaseIdentitySha256:"b".repeat(64),publicDeviceId:randomUUID(),publicKeyHash:publicJwkHash(publicSigningKey)},opaque=()=>randomBytes(32).toString("base64url"),signature=(s:string)=>sign(null,Buffer.from(s),keys.privateKey).toString("base64url");
 const probe=(operation:string,extra:Record<string,unknown>={})=>windowsServerProbe(db,{...bound,operation,...extra}) as Promise<any>;
@@ -65,14 +68,19 @@ it("disconnects owned clients on operation failure and does not construct after 
 // step-up were added. Each phase retains that budget and every original assertion;
 // a failed predecessor causes a prerequisite failure, never a skipped/pass result.
 describe.sequential("private Windows service journey",()=>{
- let phase=0,f:any,user:any,actor:any,web:Awaited<ReturnType<typeof createPersistedSession>>;
+ let phase=0,f:any,user:any,actor:any,control:any,web:Awaited<ReturnType<typeof createPersistedSession>>;
  const password=randomBytes(48).toString("base64url");
  const request=async()=>{const state=opaque(),nonce=opaque(),verifier=opaque();const made=await createNativeAuthRequest({appId:"com.nalandaps.erp",appVersion:"0.1.0",redirectUri:"nalandaps-erp://auth/callback",platform:"WINDOWS",deviceLabel:"SYNTHETIC Windows service",publicDeviceId:bound.publicDeviceId,publicSigningKey,state,nonce,pkceChallenge:pkceChallenge(verifier)});const proof=signature(nativeBrowserProofMessage({publicRequestId:made.requestId,challenge:made.challenge,state,publicDeviceId:bound.publicDeviceId,publicKeyHash:bound.publicKeyHash}));const original=`https://portable-staging.localhost:8443${made.authorizePath}&proof=${proof}`;return {...made,state,nonce,verifier,proof,original};};
  const authorize=(r:Awaited<ReturnType<typeof request>>)=>authorizeNativeRequest({requestId:r.requestId,state:r.state,challenge:r.challenge,proof:r.proof,user:actor,webSessionId:web.sessionId});
  const exchange=async(r:Awaited<ReturnType<typeof request>>)=>{const result=await authorize(r);if(!("redirectUrl" in result))throw Error("NO_REAL_CALLBACK");const code=new URL(result.redirectUrl!).searchParams.get("code")!;return exchangeNativeAuthorization({requestId:r.requestId,code,verifier:r.verifier,nonce:r.nonce,publicDeviceId:bound.publicDeviceId,proof:signature(nativeExchangeProofMessage({requestId:r.requestId,code,verifier:r.verifier,nonce:r.nonce,publicDeviceId:bound.publicDeviceId}))});};
  let pending:Awaited<ReturnType<typeof request>>,consumed:Awaited<ReturnType<typeof request>>,tokens:Awaited<ReturnType<typeof exchange>>,rotated:Awaited<ReturnType<typeof refreshNativeSession>>;
  it("prepares owned MFA fixtures and reads genuine pending request/device states",async()=>{
- expect(phase).toBe(0);f=await probe("prepare",{password,governancePassword:password});
+ expect(phase).toBe(0);
+ const bootstrap=await request();
+ await expect(probe("prepare",{password,governancePassword:password,original:bootstrap.original.replace("proof=","proof=x")})).rejects.toThrow();
+ expect(await db.nativeSession.count()).toBe(0);expect(await db.offlineSyncDevice.count()).toBe(0);
+ f=await probe("prepare",{password,governancePassword:password,original:bootstrap.original});
+ expect(await db.nativeSession.count()).toBe(0);expect(await db.offlineSyncDevice.count()).toBe(0);
  await expect(probe("prepare",{password,governancePassword:password})).rejects.toThrow();
  user=await db.user.findUniqueOrThrow({where:{id:f.userId}});const assignment=await db.userRoleAssignment.findFirstOrThrow({where:{userId:user.id}});const challenge=await createLoginMfaChallenge(db,{userId:user.id,environment:boundAuthEnvironment()});
  const factor=await db.mfaAuthenticator.findFirstOrThrow({where:{userId:user.id,type:"TOTP",status:"ACTIVE"}});const timestamp=Math.max(Date.now(),(factor.totpLastUsedStep!+1)*30_000);
@@ -97,12 +105,19 @@ describe.sequential("private Windows service journey",()=>{
  expect(await probe("read",{original:consumed.original})).toMatchObject({tokenVersion:2,rotatedTokenVersions:[1],mfaEvidence:snapshot.mfaEvidence});
  phase=3;
  },15_000);
+ it("creates a distinct control through real protocol/governance routes and rejects substituted control scope",async()=>{
+ expect(phase).toBe(3);control=await probe("prepare-control",{password,governancePassword:password});expect(control.userId).toBe(user.id);expect(control.publicDeviceId).not.toBe(bound.publicDeviceId);expect(control.sessionId).not.toBe(tokens.sessionId);
+ expect(await probe("read-control",{control})).toEqual(control);
+ await expect(probe("prepare-control",{password,governancePassword:password})).rejects.toThrow();
+ for(const edit of [{userId:f.governanceUserId},{sessionId:tokens.sessionId},{publicDeviceId:bound.publicDeviceId},{webSessionId:web.sessionId}])await expect(probe("read-control",{control:{...control,...edit}})).rejects.toThrow();
+ },15_000);
  it("revokes exactly the observed session through real step-up/route/audit and verifies retry",async()=>{
  expect(phase).toBe(3);
  await expect(probe("revoke-session",{original:consumed.original,sessionId:randomUUID(),governancePassword:password})).rejects.toThrow("OWNERSHIP");
  expect((await probe("read",{original:consumed.original})).sessionRevoked).toBe(false);
  expect(await probe("revoke-session",{original:consumed.original,sessionId:tokens.sessionId,governancePassword:password})).toMatchObject({sessionId:tokens.sessionId,eventCount:1,status:"REVOKED"});
  expect(await probe("revoke-session",{original:consumed.original,sessionId:tokens.sessionId,governancePassword:password})).toMatchObject({eventCount:1,status:"ALREADY_REVOKED"});
+ expect(await probe("read-control",{control})).toEqual(control);
  phase=4;
  },15_000);
  it("keeps old authority revoked after fresh login and rejects private/foreign readback",async()=>{
@@ -113,6 +128,7 @@ describe.sequential("private Windows service journey",()=>{
  const freshRow=await db.nativeAuthRequest.findUniqueOrThrow({where:{publicRequestId:fresh.requestId}});await db.nativeAuthRequest.update({where:{id:freshRow.id},data:{userId:f.governanceUserId}});await expect(probe("read",{original:fresh.original})).rejects.toThrow("OWNERSHIP");await db.nativeAuthRequest.update({where:{id:freshRow.id},data:{userId:user.id}});
  const excluded=await db.student.findFirstOrThrow({where:{status:"Inactive"}});await db.student.update({where:{id:excluded.id},data:{status:"Active"}});await expect(probe("read",{original:fresh.original})).rejects.toThrow("OWNERSHIP");await db.student.update({where:{id:excluded.id},data:{status:"Inactive"}});
  const duplicate=await request();await exchange(duplicate);await expect(probe("read",{original:fresh.original})).rejects.toThrow("OWNERSHIP");
+ expect(await probe("close-control",{control,governancePassword:password})).toEqual({state:"CONTROL_SESSION_REVOKED"});await expect(probe("read-control",{control})).rejects.toThrow();
  phase=5;
 },15_000);
 });
