@@ -27,22 +27,7 @@ function Inside([string]$Child,[string]$Parent) {
   $c=[IO.Path]::GetFullPath($Child); $p=[IO.Path]::GetFullPath($Parent).TrimEnd('\')+'\'
   return $c.StartsWith($p,[StringComparison]::OrdinalIgnoreCase)
 }
-function Private-Acl([string]$Directory,[string]$Identity,[string]$Rights) {
-  $acl=New-Object Security.AccessControl.DirectorySecurity
-  $acl.SetAccessRuleProtection($true,$false)
-  $administrators=New-Object Security.Principal.SecurityIdentifier('S-1-5-32-544')
-  $acl.SetOwner($administrators)
-  foreach ($entry in @(@('S-1-5-18','FullControl'),@('S-1-5-32-544','FullControl'),@($Identity,$Rights))) {
-    $sid=New-Object Security.Principal.SecurityIdentifier($entry[0])
-    $rule=New-Object Security.AccessControl.FileSystemAccessRule($sid,$entry[1],'ContainerInherit,ObjectInherit','None','Allow')
-    $acl.AddAccessRule($rule)
-  }
-  Set-Acl -LiteralPath $Directory -AclObject $acl
-  # Existing protected descendants must inherit only these explicit roots.
-  Invoke-Checked "$env:SystemRoot\System32\icacls.exe" @($Directory,'/setowner','*S-1-5-32-544','/T')
-  Invoke-Checked "$env:SystemRoot\System32\icacls.exe" @($Directory,'/reset','/T')
-  Set-Acl -LiteralPath $Directory -AclObject $acl
-}
+Import-Module (Join-Path $PSScriptRoot 'security.psm1') -Force
 function Wait-State([string]$Name,[string]$State) {
   $service=Get-Service -Name $Name
   $service.WaitForStatus([ServiceProcess.ServiceControllerStatus]::$State,[TimeSpan]::FromSeconds(30))
@@ -132,7 +117,7 @@ if ($Action -eq 'Install' -or $Action -eq 'Upgrade') {
   Invoke-Checked $sc @('sidtype',$name,'unrestricted')
   Invoke-Checked $sc @('failure',$name,'reset=','86400','actions=','restart/5000/restart/15000/restart/60000')
   Invoke-Checked $sc @('failureflag',$name,'1')
-  Invoke-Checked $sc @('sdset',$name,'D:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)')
+  Protect-CompanionService $name
   $sid=(New-Object Security.Principal.NTAccount("NT SERVICE\$name")).Translate([Security.Principal.SecurityIdentifier]).Value
   Private-Acl $binRoot $sid 'ReadAndExecute'
   Private-Acl $dataRoot $sid 'ReadAndExecute'

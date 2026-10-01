@@ -55,4 +55,10 @@ try {
   if($registered){ if((Get-Service $name).Status -ne 'Stopped'){Stop-Service $name}; Checked @('delete',$name) }
   if((Owned-Children).Count -ne 0){throw 'SCM_CLEANUP_ORPHAN'}
   if(Get-Service $name -ErrorAction SilentlyContinue){throw 'SCM_CLEANUP_SERVICE_REMAINS'}
+  $full=[IO.Path]::GetFullPath($dir)
+  if((Split-Path -Parent $full) -ne $env:RUNNER_TEMP -or (Split-Path -Leaf $full) -ne $name){throw 'SCM_FIXTURE_OWNERSHIP_GATE'}
+  if((Get-Item -LiteralPath $full).Attributes -band [IO.FileAttributes]::ReparsePoint -or @(Get-ChildItem -LiteralPath $full -Recurse -Force | Where-Object {$_.Attributes -band [IO.FileAttributes]::ReparsePoint}).Count){throw 'SCM_FIXTURE_REPARSE_GATE'}
+  Remove-Item -LiteralPath $full -Recurse -Force
+  if(Test-Path -LiteralPath $full){throw 'SCM_CLEANUP_FIXTURE_REMAINS'}
+  Write-Output 'SCM_CLEANUP_SERVICE_PROCESSES_FIXTURE_VERIFIED'
 }

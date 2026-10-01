@@ -1,5 +1,11 @@
 # BIOMETRIC-DESKTOP-COMPANION-1A implementation
 
+## R1 continuation
+
+Same physical worktree/branch and draft PR30, preserved final 1A head d63c2351 and released base. [SDK_ADMISSION_R1.md](SDK_ADMISSION_R1.md) replaces the earlier unavailable-archive observation with successful official acquisition and method-level assessment. Native attendance adapter remains explicitly unavailable: internal usage terms, firmware-family mapping and remaining COM/error/time/identity contract questions are open. Both x86 and x64 SDK files exist; no unverified x86 broker was added.
+
+Production ACL functions were moved without policy redesign into windows/security.psm1 so the disposable hosted acceptance harness exercises the identical file/service policy. New standard-account and service-identity probes are CI fixtures, not production listeners or administration endpoints. Queue, report renderer, actual service host and ERP integration are unchanged. Genuine-account denied operations and positive controls require the focused workflow's execution evidence; authored probes alone are not acceptance. See EVIDENCE.md for source/run checkpoints and SCHOOL_PC_ACCEPTANCE.md for separate school gates.
+
 Status: source implemented; vendor and deployment gates remain. This is integration-review material, not hardware or deployment clearance.
 
 ## Admission and ownership

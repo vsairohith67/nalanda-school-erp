@@ -1,6 +1,8 @@
 # School-PC acceptance
 **NOT EXECUTED — REQUIRES SEPARATE OWNER APPROVAL.**
 
+R1 adds genuine standard-account isolation acceptance on an admitted disposable hosted runner only. It does not change the school-PC status above. The synthetic readonly health/aggregate-report export policy tested there requires explicit school approval; no real staff/report output is admitted. The actual accountant's membership, school boot/logoff/reboot, signed deployment package, device ownership/firmware/SDK usage rights, controlled single-collector hardware retrieval and approved ERP report source/order remain serial preflight gates. Current package assessment is in SDK_ADMISSION_R1.md; exact executed runner evidence is in EVIDENCE.md.
+
 This runbook is preparation only. Do not execute it on the owner's MSI laptop or school PC as part of 1A.
 
 ## Prerequisites and stop gates

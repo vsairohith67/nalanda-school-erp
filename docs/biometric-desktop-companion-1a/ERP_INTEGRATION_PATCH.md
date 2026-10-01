@@ -1,5 +1,7 @@
 # Smallest serial ERP integration patch
 
+R1 leaves this integration patch and all live summary/Staff mapping/final approval gates unchanged. Its public report-access fixture is an invented nonsensitive aggregate, not a real approved-summary adapter or regenerated Excel renderer.
+
 No ERP source, schema, permission, endpoint, migration, v45 backup contract or unreleased recovery work was changed here. The released Staff mapping, biometric ingestion and reconciliation/report services were inspected read-only. Existing biometricReportRows/daily CSV do not expose the requested approved monthly leave/late summaries with the owner's explicit report ordering.
 
 ## Approved monthly source adapter

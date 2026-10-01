@@ -1,5 +1,15 @@
 # BIOMETRIC-DESKTOP-COMPANION-1A evidence
 
+## R1 continuation checkpoint
+
+Preserved final 1A source `d63c2351f2761b4faaf4665797a530fb731463c2`: [run 36786458187](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36786458187), job `110128903788`, was verified PASS with its exact head before editing. This adds the final-head reference without replacing historical 76fc8a6 evidence below or rerunning unchanged code for that reference. Released base remains `104aacc7bd314cae82e60bb02b5c8a965c7ffedd`; branch/worktree/PR30 retained, PR28 untouched.
+
+SDK acquisition/contract/provenance/usage/architecture results are independently recorded in [SDK_ADMISSION_R1.md](SDK_ADMISSION_R1.md). Both official communication downloads succeeded HTTP 200 and match the supplied archives. Licence, firmware-family and remaining contract gates prevent native adapter admission; no DLL was invoked. A simulator is still a simulator.
+
+R1 local affected checks: 23 component tests PASS (queue, recovery and approved-summary Excel regressions retained), component typecheck/build PASS, authored JS syntax/PowerShell parsing PASS. Excel source/output was not regenerated. Hosted isolation results must come from the exact changed-source focused workflow; authored coverage is not yet execution evidence.
+
+The new disposable-runner harness shares the production ACL policy, uses a genuinely nonadministrator token, checks denial codes rather than arbitrary failures, and exercises required virtual-service reads/runtime writes, encrypted fresh polling, administrative restart, child crash recovery and same-body held-batch resume. Its approved nonsensitive health/report access is a readonly synthetic export policy; private runtime health/queue stay protected. It makes no hostile-local-administrator, signing, school-account, boot/logoff or hardware claim. Cleanup checks account, physical profile, protected service, Job Object descendants and all task-created fixtures; any cleanup failure fails acceptance.
+
 Evidence categories are independent. No MSI/school service was registered or started. No operational DB access performed; this is not a fresh before/after DB hash check. No live terminal, private LAN, vendor MDB, saved credential, template or real staff report was accessed. Production transport remains OFF.
 
 ## Executed locally, synthetic inputs only

@@ -39,4 +39,7 @@ jobs:
       - name: Disposable runner SCM with verified cleanup
         shell: pwsh
         run: apps/nalanda-biometric-bridge/scripts/scm-smoke.ps1 -HostExe (Join-Path (Get-Location) 'tmp/biometric-companion-publish/Nalanda.Biometric.Service.exe') -BridgeRoot (Join-Path (Get-Location) 'apps/nalanda-biometric-bridge')
+      - name: Genuine standard-account isolation and service positive controls
+        shell: pwsh
+        run: apps/nalanda-biometric-bridge/scripts/isolation-smoke.ps1 -HostExe (Join-Path (Get-Location) 'tmp/biometric-companion-publish/Nalanda.Biometric.Service.exe') -BridgeRoot (Join-Path (Get-Location) 'apps/nalanda-biometric-bridge')
       # No artifact upload, package publication, production secrets or deployment.
