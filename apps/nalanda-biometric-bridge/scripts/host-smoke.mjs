@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn, execFileSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
-import { mkdtempSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, existsSync, lstatSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -38,4 +38,11 @@ try{
   const crash=start(['--console',hostConfig]);await ready(crash);crash.kill();await exit(crash);await noChildren();
   const damaged=readFileSync(secret);writeFileSync(secret,Buffer.from('wrong DPAPI data'));const wrong=start(['--console',hostConfig]);assert.equal(await exit(wrong),1);await noChildren();writeFileSync(secret,damaged);
   console.log(JSON.stringify({result:'PASS',category:'WINDOWS_CONSOLE_NOT_SCM',tests:['DPAPI-machine-scope-same-identity','no-secret-replacement','duplicate-host-denied','single-owned-child','child-crash-restart','graceful-stop-during-60s-wait','queue-restart','host-crash-job-cleanup','wrong-DPAPI-fails-closed'],syntheticDirectory:dir}));
-}finally{for(const p of children)p.kill();await noChildren();}
+}finally{
+  const hosts=[...children];for(const p of hosts)p.kill();await Promise.all(hosts.map(exit));await noChildren();
+  const target=path.resolve(dir),anchor=path.resolve(tmpdir());
+  if(path.dirname(target)!==anchor || !/^Nalanda companion synthetic [A-Za-z0-9]{6}$/.test(path.basename(target)))throw new Error('HOST_FIXTURE_OWNERSHIP_GATE');
+  function noLinks(file){const stat=lstatSync(file);if(stat.isSymbolicLink())throw new Error('HOST_FIXTURE_REPARSE_GATE');if(stat.isDirectory())for(const child of readdirSync(file))noLinks(path.join(file,child));}
+  noLinks(target);rmSync(target,{recursive:true,force:true});if(existsSync(target))throw new Error('HOST_FIXTURE_CLEANUP_FAILED');
+  console.log('CONSOLE_HOST_WORKERS_AND_SYNTHETIC_FIXTURE_CLEANUP_VERIFIED');
+}
