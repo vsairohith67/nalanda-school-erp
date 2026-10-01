@@ -156,7 +156,7 @@
           "sha256": "9d1e34ea325f94f57ab2ff51fbef03fe1368c7760a6e719a5d4eb9b09c8ea95c"
         }
       ],
-      "currentSha256": "ee2e82bd57e999a94b4745549aeded1d07160f573b2ed95f347b63a69a580ab7",
+      "currentSha256": "c15be90123c26ecfd7eeedefce4123212286a82323eded5434b3329f13fb269c",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -181,7 +181,7 @@
           "sha256": "205c1855fdc9944d5567f58832cb94e61d52458f699a6a5cd05aa29e3adf5e45"
         }
       ],
-      "currentSha256": "03be65438360326c6883bbaaf680361851c6310669ebee9a94303c2520fb4b73",
+      "currentSha256": "d17bd6d220b5311dded3bee3cdb098284039f86d4aaf50c3040515883b9577d3",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -281,7 +281,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "c0a175142b4445919d21d6af225390fa5773868cfd7ecdc841bf61f89674314d",
+      "currentSha256": "36bdcfd7b77c80a4d506345d21afc6e85f1ed310ab5337f1344c55bef319a31f",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -3985,6 +3985,31 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "scripts/bootstrap-document-fonts.py",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "60876bfe14243e8378bad813b80cfeda9719a99f0360cf7c9185f96964a545ec",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "scripts/bulk-data-exchange-browser.ts",
       "baseSha256": null,
       "historicalSha256": null,
@@ -6707,6 +6732,31 @@
         }
       ],
       "currentSha256": "d22848848076cfe2bd55f1b574834877ebd09dac5eddb34b8d106d0d0679d859",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/qa-shared-document-fonts.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "682ba6dc44adb0f9dc01f72f50a3077b698c42100c4457eeead3eb9f19bc3086",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {

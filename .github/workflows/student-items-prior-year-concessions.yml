@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         provider: [sqlite, postgresql]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     services:
       postgres:
@@ -63,14 +63,16 @@ jobs:
           node scripts/postgres/trigger-parity.mjs --check
           pnpm db:generate
       - name: Install genuine document font and PostgreSQL client
+        id: document_fonts
+        env:
+          FONT_EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           sudo apt-get update
           echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | sudo debconf-set-selections
-          sudo apt-get install -y ttf-mscorefonts-installer postgresql-client
-          fc-cache -f
-          test -f /usr/share/fonts/truetype/msttcorefonts/Georgia_Bold.ttf
-          echo "CERTIFICATE_GEORGIA_BOLD_PATH=/usr/share/fonts/truetype/msttcorefonts/Georgia_Bold.ttf" >> "$GITHUB_ENV"
-          echo "REPORT_CARD_FONT_DIR=/usr/share/fonts/truetype/msttcorefonts" >> "$GITHUB_ENV"
+          sudo apt-get install -y cabextract fontconfig curl postgresql-client
+          sudo -n python3 tests/document-font-bootstrap.test.py
+          sudo -n --preserve-env=GITHUB_ACTIONS,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,GITHUB_JOB,RUNNER_TEMP,GITHUB_ENV,FONT_EXPECTED_SHA python3 scripts/bootstrap-document-fonts.py prepare
+      - run: pnpm exec tsx scripts/qa-shared-document-fonts.ts
       - name: Synthetic financial transactions and nonempty source-contract restores
         run: pnpm exec vitest run tests/student-items-prior-year-concessions.test.ts tests/prior-year-concession-api.test.ts tests/recovery-backup-compatibility.test.ts
       - name: Retain reviewed restore-matrix metadata only
@@ -84,3 +86,8 @@ jobs:
       - name: Preserve exact-head coordinates
         if: always()
         run: git show -s --format='commit=%H tree=%T'
+      - name: Verify owned document-font cleanup
+        if: always() && steps.document_fonts.outcome != 'skipped'
+        env:
+          FONT_EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: sudo -n --preserve-env=GITHUB_ACTIONS,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,GITHUB_JOB,RUNNER_TEMP,GITHUB_ENV,FONT_EXPECTED_SHA python3 scripts/bootstrap-document-fonts.py cleanup

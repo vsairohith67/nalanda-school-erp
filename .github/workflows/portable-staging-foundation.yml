@@ -38,15 +38,17 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 24.19.0, cache: pnpm }
       - name: Install inherited PDF and source-scan test tools
+        id: document_fonts
+        env:
+          FONT_EXPECTED_SHA: ${{ env.EXPECTED_SHA }}
         run: |
           sudo apt-get update
           echo 'ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true' | sudo debconf-set-selections
-          sudo apt-get install -y poppler-utils ripgrep ttf-mscorefonts-installer
-          fc-cache -f
-          test -f /usr/share/fonts/truetype/msttcorefonts/Georgia_Bold.ttf
-          echo "CERTIFICATE_GEORGIA_BOLD_PATH=/usr/share/fonts/truetype/msttcorefonts/Georgia_Bold.ttf" >> "$GITHUB_ENV"
-          echo 'REPORT_CARD_FONT_DIR=/usr/share/fonts/truetype/msttcorefonts' >> "$GITHUB_ENV"
+          sudo apt-get install -y poppler-utils ripgrep cabextract fontconfig curl
+          sudo -n python3 tests/document-font-bootstrap.test.py
+          sudo -n --preserve-env=GITHUB_ACTIONS,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,GITHUB_JOB,RUNNER_TEMP,GITHUB_ENV,FONT_EXPECTED_SHA python3 scripts/bootstrap-document-fonts.py prepare
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsx scripts/qa-shared-document-fonts.ts
       - run: pnpm db:generate:postgres && pnpm qa:postgres:parity
       - run: pnpm db:generate:sqlite
       - name: Prepare isolated SQLite database for inherited copied-database tests
@@ -61,6 +63,11 @@ jobs:
       - name: Cleanup
         if: always()
         run: rm -rf tmp/portable-staging data/cloud-backup-rehearsal
+      - name: Verify owned document-font cleanup
+        if: always() && steps.document_fonts.outcome != 'skipped'
+        env:
+          FONT_EXPECTED_SHA: ${{ env.EXPECTED_SHA }}
+        run: sudo -n --preserve-env=GITHUB_ACTIONS,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,GITHUB_JOB,RUNNER_TEMP,GITHUB_ENV,FONT_EXPECTED_SHA python3 scripts/bootstrap-document-fonts.py cleanup
 
   oci-image:
     # EXTERNAL_RUNTIME_BLOCKED: upstream zlib fix exists; corrected vendor/Node24 releases pending.
