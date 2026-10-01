@@ -3,7 +3,8 @@ import { performance } from "node:perf_hooks";
 import { mkdirSync, lstatSync, openSync, closeSync, writeSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-export const phases = ["setup", "migration", "seed", "fixture", "actor_setup", "snapshot", "sale", "prior_year", "income", "finance_journey", "client_call", "transaction_wait", "transaction_action", "native_call", "native_attempt", "evaluator", "cleanup", "assertion", "test_case", "recorder_selftest"] as const;
+export const mfaPhases = ["mfa_journey", "mfa_totp", "mfa_recovery", "mfa_challenge", "mfa_factor_lookup", "mfa_verify", "native_initial", "native_replacement", "native_request", "native_authorize", "device_fixture", "native_exchange", "native_refresh", "lineage_read", "revocation_fixture", "cleanup_wait"] as const;
+export const phases = ["setup", "migration", "seed", "fixture", "actor_setup", "snapshot", "sale", "prior_year", "income", "finance_journey", "client_call", "transaction_wait", "transaction_action", "native_call", "native_attempt", "evaluator", "cleanup", "assertion", "test_case", "recorder_selftest", ...mfaPhases] as const;
 export type Phase = typeof phases[number];
 export type TraceKind = "START" | "END" | "ERROR" | "RESULT" | "TEST_CONTRACT" | "LINK" | "DECISION_INPUT" | "RETURNED_ROWS" | "DECISION" | "OVERRIDE" | "OUTCOME" | "MEASUREMENT";
 const states = ["PASS", "FAIL", "UNKNOWN", "REVOKED", "ALREADY_REVOKED", "REJECTED"];
@@ -31,7 +32,7 @@ export function validateEvent(value: any): asserts value is TraceEvent {
   integer(value.seq); number(value.elapsedMs); if (value.elapsedMs < 0) fail(); integer(value.span); integer(value.attempt);
   if (!["START", "END", "ERROR", "RESULT", "TEST_CONTRACT", "LINK", "DECISION_INPUT", "RETURNED_ROWS", "DECISION", "OVERRIDE", "OUTCOME", "MEASUREMENT"].includes(value.kind) || !phases.includes(value.phase)) fail();
   if (value.status !== null && !states.includes(value.status)) fail();
-  if (value.kind === "LINK") { exact(value.detail, ["parentSpan"]); integer(value.detail.parentSpan); if (value.span === 0 || value.detail.parentSpan === 0 || !["native_attempt", "evaluator"].includes(value.phase)) fail(); }
+  if (value.kind === "LINK") { exact(value.detail, ["parentSpan"]); integer(value.detail.parentSpan); if (value.span === 0 || value.detail.parentSpan === 0 || !["native_attempt", "evaluator", "transaction_wait", "transaction_action", ...mfaPhases].includes(value.phase)) fail(); }
   else if (value.kind === "OVERRIDE") validateOverride(value.detail);
   else if (value.kind === "DECISION") {
     const d = value.detail; exact(d, ["actor", "session", "role", "actorRole", "cutoffMs", "attempt", "allowed", "source", "rows"]);
@@ -39,7 +40,7 @@ export function validateEvent(value: any): asserts value is TraceEvent {
     if (d.actorRole !== null && !["SUPER_ADMIN", "ACCOUNTANT", "DIRECTOR", "PRINCIPAL", "VIEWER", "TEACHER", "PARENT", "COMPUTER_OPERATOR"].includes(d.actorRole)) fail();
     if (typeof d.allowed !== "boolean" || !sources.includes(d.source) || !Array.isArray(d.rows) || d.rows.length > 32) fail();
     for (const row of d.rows) validateOverride(row);
-  } else if (value.kind === "TEST_CONTRACT") { const d = value.detail; exact(d, ["case", "purpose"]); label(d.case); if (!["BUSINESS_AND_REFUSAL_CONTROLS", "DECLARED_ROLLBACK_AND_ROUTE_CONTROL", "EXPLICIT_DENY_CONTROL", "GOVERNANCE_CONTROLS"].includes(d.purpose)) fail(); }
+  } else if (value.kind === "TEST_CONTRACT") { const d = value.detail; exact(d, ["case", "purpose"]); label(d.case); if (!["BUSINESS_AND_REFUSAL_CONTROLS", "DECLARED_ROLLBACK_AND_ROUTE_CONTROL", "EXPLICIT_DENY_CONTROL", "GOVERNANCE_CONTROLS", "MFA_LINEAGE_CONTROLS", "MFA_ROTATION_HISTORY_JOURNEY"].includes(d.purpose)) fail(); }
   else if (value.kind === "DECISION_INPUT") { const d = value.detail; exact(d, ["actor", "session", "role", "cutoffMs", "attempt"]); label(d.actor); label(d.session); label(d.role); date(d.cutoffMs); integer(d.attempt); }
   else if (value.kind === "RETURNED_ROWS") { exact(value.detail, ["rows"]); if (!Array.isArray(value.detail.rows) || value.detail.rows.length > 32) fail(); for (const row of value.detail.rows) validateOverride(row); }
   else if (value.kind === "MEASUREMENT") { exact(value.detail, ["recorderMs", "events"]); number(value.detail.recorderMs); if (value.detail.recorderMs < 0) fail(); integer(value.detail.events); }
@@ -80,7 +81,7 @@ export class ServiceTrace {
   result(state: string | undefined) { this.emit("RESULT", "assertion", 0, 0, state === "pass" ? "PASS" : state === "fail" ? "FAIL" : "UNKNOWN"); }
   close() { if (this.closed) return; this.emit("MEASUREMENT", "assertion", 0, 0, null, { recorderMs: Math.round(this.recorderMs * 1000) / 1000, events: this.seq }); if (this.fd !== undefined) { closeSync(this.fd); this.fd = undefined; } this.ids.clear(); this.closed = true; }
 }
-export function configuredTrace(kind: "native" | "finance") {
+export function configuredTrace(kind: "native" | "finance" | "mfa") {
   const dir = process.env.NALANDA_SERVICE_TRACE_DIR;
   if (!dir) return new ServiceTrace();
   // Explicitly prepared test-only directory. Never use an application database

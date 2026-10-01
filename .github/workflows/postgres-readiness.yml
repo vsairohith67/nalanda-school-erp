@@ -101,6 +101,7 @@ jobs:
           path: |
             tmp/ci-service-trace-public/finance.json
             tmp/ci-service-trace-public/native.json
+            tmp/ci-service-trace-public/mfa.json
             tmp/ci-service-trace-public/manifest.json
       - run: pnpm build
       - run: pnpm backup
@@ -269,6 +270,7 @@ jobs:
           path: |
             tmp/ci-service-trace-public/finance.json
             tmp/ci-service-trace-public/native.json
+            tmp/ci-service-trace-public/mfa.json
             tmp/ci-service-trace-public/manifest.json
       - run: pnpm build
       - name: Verify owned document-font cleanup

@@ -14,7 +14,7 @@ function owned() {
 const owner = { contract: "NALANDA_SERVICE_TRACE_V1", source: "a".repeat(40), run: "1", attempt: "1", job: "HARNESS_ONLY", provider: "sqlite", node: process.version, image: "unavailable", runner: "unavailable" };
 function files(root: string) {
   mkdirSync(root); writeFileSync(path.join(root, "ownership.json"), JSON.stringify(owner) + "\n");
-  for (const kind of ["finance", "native"]) { const trace = new ServiceTrace(path.join(root, `${kind}.jsonl`)); const span = trace.begin("setup"); trace.end(span); trace.result("pass"); trace.close(); }
+  for (const kind of ["finance", "native", "mfa"]) { const trace = new ServiceTrace(path.join(root, `${kind}.jsonl`)); const span = trace.begin("setup"); trace.end(span); trace.result("pass"); trace.close(); }
 }
 describe("HARNESS_ONLY service recorder retention and publication", () => {
   it.each(["fail", "timeout", "setup-fail"])("retains %s child evidence and verifies nonzero exit without reclassifying acceptance", mode => {
@@ -37,9 +37,9 @@ describe("HARNESS_ONLY service recorder retention and publication", () => {
       // An unexpected input is refusal, not an extra file in an upload glob.
       expect(() => finalize(root, dest, owner)).toThrow("HANDOFF_INVALID"); expect(existsSync(dest)).toBe(false);
       const data = readFileSync(path.join(root, "unfinished.jsonl")); rmSync(path.join(root, "unfinished.jsonl")); writeFileSync(path.join(root, "finance.jsonl"), data);
-      expect(finalize(root, dest, owner).map(f => f.file)).toEqual(["finance.json", "native.json"]);
+      expect(finalize(root, dest, owner).map(f => f.file)).toEqual(["finance.json", "native.json", "mfa.json"]);
       expect(JSON.parse(readFileSync(path.join(dest, "finance.json"), "utf8")).unfinished).toEqual([{ span: 1, phase: "snapshot" }]);
-      expect(JSON.parse(readFileSync(path.join(dest, "manifest.json"), "utf8")).files).toHaveLength(2);
+      expect(JSON.parse(readFileSync(path.join(dest, "manifest.json"), "utf8")).files).toHaveLength(3);
       expect(() => finalize(root, dest, owner)).toThrow();
     } finally { resource.cleanup(); }
   });

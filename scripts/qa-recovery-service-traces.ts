@@ -10,7 +10,7 @@ import { opensslTraceRoot, opensslPublicRoot, validateOpenSslMetadata } from "..
 
 export const privateRoot = path.resolve("tmp/ci-service-traces");
 export const publicRoot = path.resolve("tmp/ci-service-trace-public");
-export const outputFiles = ["finance.json", "native.json", "manifest.json"] as const;
+export const outputFiles = ["finance.json", "native.json", "mfa.json", "manifest.json"] as const;
 function check(value: unknown, valid: boolean) { if (!valid) throw Error("SERVICE_TRACE_HANDOFF_INVALID"); return value; }
 export function ownerFromEnvironment() {
   const source = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
@@ -32,11 +32,11 @@ export function prepare() {
 export function finalize(root = privateRoot, destination = publicRoot, expected = ownerFromEnvironment()) {
   checkedDirectory(root); checkedDirectory(path.dirname(destination));
   const directory = lstatSync(root); check(null, directory.isDirectory() && !directory.isSymbolicLink());
-  const names = readdirSync(root).sort(); check(null, names.join() === ["finance.jsonl", "native.jsonl", "ownership.json"].sort().join());
+  const names = readdirSync(root).sort(); check(null, names.join() === ["finance.jsonl", "native.jsonl", "mfa.jsonl", "ownership.json"].sort().join());
   const ownerFile = path.join(root, "ownership.json"), st = lstatSync(ownerFile);
   check(null, st.isFile() && !st.isSymbolicLink() && st.nlink === 1 && st.size <= 2048);
   const raw = readFileSync(ownerFile, "utf8"); check(null, raw === JSON.stringify(expected) + "\n");
-  const projections = ["finance", "native"].map(kind => {
+  const projections = ["finance", "native", "mfa"].map(kind => {
     const events = readTrace(path.join(root, `${kind}.jsonl`));
     const active = new Map<number, string>();
     for (const event of events) { if (event.kind === "START") active.set(event.span, event.phase); if (event.kind === "END" || event.kind === "ERROR") active.delete(event.span); }
@@ -45,7 +45,7 @@ export function finalize(root = privateRoot, destination = publicRoot, expected 
     // are never converted into success because cleanup happened later.
     return { file: `${kind}.json`, bytes: JSON.stringify({ contract: "NALANDA_SERVICE_TRACE_V1", evidence: "ISOLATED_SERVICE_OR_CONTRACT", owner: expected, events, unfinished: [...active].map(([span, phase]) => ({ span, phase })) }) + "\n" };
   });
-  // Validate BOTH projections before making any public directory/file.
+  // Validate ALL projections before making any public directory/file.
   mkdirSync(destination, { mode: 0o700 });
   const files = projections.map(({ file, bytes }) => { writeFileSync(path.join(destination, file), bytes, { flag: "wx", mode: 0o600 }); return { file, size: Buffer.byteLength(bytes), sha256: createHash("sha256").update(bytes).digest("hex") }; });
   writeFileSync(path.join(destination, "manifest.json"), JSON.stringify({ contract: "NALANDA_SERVICE_TRACE_MANIFEST_V1", owner: expected, files }) + "\n", { flag: "wx", mode: 0o600 });

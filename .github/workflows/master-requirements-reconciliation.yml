@@ -168,6 +168,7 @@ jobs:
           path: |
             tmp/ci-service-trace-public/finance.json
             tmp/ci-service-trace-public/native.json
+            tmp/ci-service-trace-public/mfa.json
             tmp/ci-service-trace-public/manifest.json
       - name: Remove synthetic databases, backups and sink material
         if: always()
