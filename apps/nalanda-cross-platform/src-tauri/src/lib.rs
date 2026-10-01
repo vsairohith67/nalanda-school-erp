@@ -770,6 +770,53 @@ mod tests {
     use super::*;
 
     #[test]
+    fn upstream_acl_url_patterns_preserve_exact_origin_and_encoded_path_boundaries() {
+        // Exercise the actual Tauri ACL wrapper used by the resolved urlpattern
+        // dependency. This fixture grants no application capability.
+        let pattern: tauri::utils::acl::RemoteUrlPattern =
+            "https://erp.example.test/api/native-auth/exchange".parse().unwrap();
+        assert!(pattern.test(&url::Url::parse(
+            "https://erp.example.test/api/native-auth/exchange").unwrap()));
+        for raw in [
+            "https://foreign.invalid/api/native-auth/exchange",
+            "https://erp.example.test.foreign.invalid/api/native-auth/exchange",
+            "http://erp.example.test/api/native-auth/exchange",
+            "https://erp.example.test:8443/api/native-auth/exchange",
+            "https://erp.example.test/api/native-auth%2Fexchange",
+            "https://erp.example.test/api/native-auth/exchange/other",
+            "nalandaps-erp://auth/callback",
+        ] {
+            assert!(!pattern.test(&url::Url::parse(raw).unwrap()), "accepted {raw}");
+        }
+        assert!("https://[".parse::<tauri::utils::acl::RemoteUrlPattern>().is_err());
+        assert!(url::Url::parse("https://[invalid").is_err());
+    }
+
+    #[test]
+    fn upstream_acl_unicode_identifier_matching_keeps_foreign_origins_denied() {
+        // UNIC -> ICU changes the tokenizer's identifier tables. Retain a
+        // non-ASCII named segment through the real upstream parser/matcher.
+        let pattern: tauri::utils::acl::RemoteUrlPattern =
+            "https://erp.example.test/api/:नाम".parse().unwrap();
+        assert!(pattern.test(&url::Url::parse("https://erp.example.test/api/student").unwrap()));
+        assert!(!pattern.test(&url::Url::parse("https://foreign.invalid/api/student").unwrap()));
+        assert!(!pattern.test(&url::Url::parse("https://erp.example.test/api/student/extra").unwrap()));
+        assert!("https://erp.example.test/api/:1invalid"
+            .parse::<tauri::utils::acl::RemoteUrlPattern>().is_err());
+    }
+
+    #[test]
+    fn production_capability_keeps_remote_permissions_absent() {
+        let capability: serde_json::Value = serde_json::from_str(include_str!(
+            "../capabilities/local-main.json")).unwrap();
+        assert_eq!(capability["local"], true);
+        assert!(capability.get("remote").is_none());
+        assert_eq!(capability["windows"], serde_json::json!(["main"]));
+        assert!(!capability["permissions"].as_array().unwrap().iter()
+            .any(|permission| permission.as_str().is_some_and(|p| p.starts_with("opener:"))));
+    }
+
+    #[test]
     fn profile_origins_fail_closed() {
         assert_eq!(
             normalize_origin("https://erp.example.test"),

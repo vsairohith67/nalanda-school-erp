@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Nalanda School - Secure School ERP & Operations Platform"
 authors = ["Nalanda Public School"]
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.90"
 
 [lib]
 name = "nalanda_cross_platform_lib"
