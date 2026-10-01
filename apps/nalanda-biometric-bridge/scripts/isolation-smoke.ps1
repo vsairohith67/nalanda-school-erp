@@ -29,7 +29,7 @@ function Wait-Healthy([datetime]$Since) {
   while ((Get-Date) -lt $deadline) {
     if (Test-Path -LiteralPath $health) {
       try {$h=Get-Content -LiteralPath $health -Raw | ConvertFrom-Json
-        if($h.status -eq 'HEALTHY' -and $h.processRunning -and $h.lastPollAt -and ([datetime]$h.lastPollAt).ToUniversalTime() -ge $Since -and ([datetime]$h.updatedAt).ToUniversalTime() -ge $Since -and $h.queueDepth -gt 0 -and -not $h.adapterUnavailable -and (Owned-Children).Count -eq 1){return}
+        if($h.status -eq 'HEALTHY' -and $h.processRunning -and $h.lastPollAt -and ([datetime]$h.lastPollAt).ToUniversalTime() -ge $Since -and ([datetime]$h.updatedAt).ToUniversalTime() -ge $Since -and $h.queueDepth -gt 0 -and -not $h.adapterUnavailable -and @(Owned-Children).Count -eq 1){return}
       } catch { }
     }
     Start-Sleep -Milliseconds 100
@@ -106,7 +106,8 @@ try {
   if($probe.ExitCode -ne 0){
     # Only this authored probe emits safe labels. Never output arbitrary vendor/secret content.
     $probeError=Get-Content -LiteralPath (Join-Path $scratch 'stderr.txt') -Raw
-    $safe=[regex]::Match($probeError,'ISOLATION_[A-Z_]+(?::[A-Za-z_]+)?').Value
+    $safeMatches=[regex]::Matches($probeError,'ISOLATION_[A-Z_]+(?::[A-Za-z0-9_]+)*')
+    $safe=if($safeMatches.Count){$safeMatches[$safeMatches.Count-1].Value}else{'NO_SAFE_CODE'}
     throw ('ISOLATION_STANDARD_PROBE_FAILED:'+$(if($safe){$safe}else{'NO_SAFE_CODE'}))
   }
   $standard=Get-Content -LiteralPath (Join-Path $scratch 'result.json') -Raw | ConvertFrom-Json
@@ -119,7 +120,7 @@ try {
   Wait-Healthy $since
   $since=(Get-Date).ToUniversalTime();Stop-Process -Id (Owned-Children)[0].ProcessId -Force;Wait-Healthy $since
   Stop-Service $name;(Get-Service $name).WaitForStatus('Stopped',[TimeSpan]::FromSeconds(20))
-  if((Owned-Children).Count -ne 0){throw 'ISOLATION_STOP_ORPHAN'}
+  if(@(Owned-Children).Count -ne 0){throw 'ISOLATION_STOP_ORPHAN'}
   # Hold an existing synthetic batch through the public queue API, then prove the
   # authorised recovery command preserves its body and releases that exact batch.
   $helper=Join-Path $bin 'held-control.mjs'
@@ -155,7 +156,7 @@ finally {
     if($registered){$s=Get-Service $name;if($s.Status -ne 'Stopped'){Stop-Service $name;$s.WaitForStatus('Stopped',[TimeSpan]::FromSeconds(20))};Checked @('delete',$name)}
     if(Get-Service $name -ErrorAction SilentlyContinue){throw 'SERVICE_REMAINS'}
   } catch {$cleanupErrors.Add('SERVICE')}
-  try {if($registered -and (Owned-Children).Count -ne 0){throw 'WORKER_REMAINS'}} catch {$cleanupErrors.Add('WORKER')}
+  try {if($registered -and @(Owned-Children).Count -ne 0){throw 'WORKER_REMAINS'}} catch {$cleanupErrors.Add('WORKER')}
   try {
     if($createdUser){
       # Profile deletion is keyed to the created SID and its checked exact user path.

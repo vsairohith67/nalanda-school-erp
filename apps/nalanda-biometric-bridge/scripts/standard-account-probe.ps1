@@ -11,9 +11,13 @@ $results=[ordered]@{genuineStandardToken=$true}
 function Denied([string]$Label,[scriptblock]$Operation) {
   try { & $Operation | Out-Null; throw "ISOLATION_UNEXPECTED_ACCESS:$Label" }
   catch {
-    $e=$_.Exception; $accessDenied=$false
-    while ($e) {if ($e -is [UnauthorizedAccessException] -or ($e.HResult -band 0xffff) -eq 5 -or ($e -is [ComponentModel.Win32Exception] -and $e.NativeErrorCode -eq 5)) {$accessDenied=$true};$e=$e.InnerException}
-    if (-not $accessDenied) {throw "ISOLATION_NOT_ACCESS_DENIED:$Label"}
+    $e=$_.Exception; $accessDenied=$false;$codes=[Collections.Generic.List[string]]::new()
+    while ($e) {
+      $codes.Add(('H'+$e.HResult.ToString('X8')))
+      if ($e -is [ComponentModel.Win32Exception]) {$codes.Add(('W'+$e.NativeErrorCode))}
+      if ($e -is [UnauthorizedAccessException] -or ($e.HResult -band 0xffff) -eq 5 -or ($e -is [ComponentModel.Win32Exception] -and $e.NativeErrorCode -eq 5)) {$accessDenied=$true};$e=$e.InnerException
+    }
+    if (-not $accessDenied) {throw ('ISOLATION_NOT_ACCESS_DENIED:'+${Label}+':'+($codes -join '_'))}
     $results[$Label]=$true
   }
 }
@@ -45,6 +49,7 @@ Sc-Denied 'serviceCommandLine' @('config',$case.name,'binPath=',$case.binary)
 Sc-Denied 'serviceIdentity' @('config',$case.name,'obj=',("NT SERVICE\"+$case.name))
 Sc-Denied 'serviceStart' @('start',$case.name)
 Sc-Denied 'serviceStop' @('stop',$case.name)
+Denied 'serviceRestart' {Restart-Service -Name $case.name -Force}
 Sc-Denied 'serviceReconfigure' @('failure',$case.name,'reset=','0','actions=','restart/1000')
 Sc-Denied 'servicePermissions' @('sdset',$case.name,'D:(A;;GA;;;WD)')
 Denied 'serviceProcessTermination' {Stop-Process -Id $case.servicePid -Force}
