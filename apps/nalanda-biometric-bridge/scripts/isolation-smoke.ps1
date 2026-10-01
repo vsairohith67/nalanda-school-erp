@@ -14,7 +14,8 @@ $dataParent=Join-Path $env:ProgramData $name
 $public=Join-Path $env:RUNNER_TEMP ($name+'Public')
 $scratch=Join-Path $env:RUNNER_TEMP ($name+'Scratch')
 $roots=@($binParent,$dataParent,$public,$scratch)
-foreach ($root in $roots) {if(Test-Path -LiteralPath $root){throw 'ISOLATION_FIXTURE_ALREADY_EXISTS'}}
+$renameRoots=@(($binParent+'.unauthorised'),($dataParent+'.unauthorised'))
+foreach ($root in ($roots+$renameRoots)) {if(Test-Path -LiteralPath $root){throw 'ISOLATION_FIXTURE_ALREADY_EXISTS'}}
 if ((Get-Service $name -ErrorAction SilentlyContinue) -or (Get-LocalUser $user -ErrorAction SilentlyContinue)) {throw 'ISOLATION_IDENTITY_ALREADY_EXISTS'}
 $sc="$env:SystemRoot\System32\sc.exe"
 $pwsh=(Get-Command pwsh.exe).Source
@@ -94,6 +95,9 @@ try {
   $aclPaths=@(@{label='secret';path=$secret;directory=$false},@{label='queue';path=$queue;directory=$false},@{label='binary';path=$hostPath;directory=$false})
   $directories=@(@{label='package';path=$bin},@{label='private';path=$private},@{label='runtime';path=$runtime},@{label='binaryAncestor';path=$binParent},@{label='dataAncestor';path=$dataParent})
   foreach($d in $directories){$aclPaths+=@{label=$d.label;path=$d.path;directory=$true}}
+  # An administrator confirms sources exist before the standard token's native
+  # operations; missing sources, sharing errors and arbitrary failures never pass.
+  foreach($item in ($replace+$configs+$aclPaths+$directories)){if(-not (Test-Path -LiteralPath $item.path)){throw 'ISOLATION_PROBE_SOURCE_MISSING'}}
   $startGate=Join-Path $public 'job-assigned'
   Json-File @{userSid=$userSid;startGate=$startGate;name=$name;sc=$sc;pwsh=$pwsh;binary=$binary;host=$hostPath;privateHostConfig=$hostConfig;publicHostConfig=(Join-Path $public 'host.json');management=(Join-Path $public 'companion.ps1');secret=$secret;queue=$queue;replaceFiles=$replace;configFiles=$configs;aclPaths=$aclPaths;renameDirectories=$directories;servicePid=(Get-CimInstance Win32_Service -Filter "Name='$name'").ProcessId;workerPid=(Owned-Children)[0].ProcessId;health=(Join-Path $public 'health.json');report=(Join-Path $public 'report.txt');dpapiControl=(Join-Path $public 'dpapi-control.bin')} (Join-Path $public 'cases.json')
   Fixture-Acl $public $userSid 'ReadAndExecute';Fixture-Acl $scratch $userSid 'Modify'
@@ -173,9 +177,9 @@ finally {
     }
   } catch {$cleanupErrors.Add('ACCOUNT_PROFILE')}
   if(Get-Variable password -ErrorAction SilentlyContinue){$password.Dispose()}
-  foreach($root in $roots){
+  foreach($root in ($roots+$renameRoots)){
     try {
-      $anchor=if($root -eq $binParent){$env:ProgramFiles}elseif($root -eq $dataParent){$env:ProgramData}else{$env:RUNNER_TEMP}
+      $anchor=if($root -in @($binParent,$renameRoots[0])){$env:ProgramFiles}elseif($root -in @($dataParent,$renameRoots[1])){$env:ProgramData}else{$env:RUNNER_TEMP}
       $full=[IO.Path]::GetFullPath($root)
       if((Split-Path -Parent $full) -ne $anchor -or (Split-Path -Leaf $full) -notlike ($name+'*')){throw 'FIXTURE_OWNERSHIP_GATE'}
       if(Test-Path -LiteralPath $full){

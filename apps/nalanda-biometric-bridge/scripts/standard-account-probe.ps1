@@ -7,7 +7,31 @@ $principal=[Security.Principal.WindowsPrincipal]::new($identity)
 if ($identity.User.Value -ne $case.userSid -or $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -or 'S-1-5-32-544' -in @($identity.Groups | ForEach-Object Value)) {throw 'ISOLATION_GENUINE_STANDARD_TOKEN_REQUIRED'}
 $deadline=(Get-Date).AddSeconds(30)
 while(-not (Test-Path -LiteralPath $case.startGate)) {if((Get-Date) -ge $deadline){throw 'ISOLATION_JOB_ASSIGNMENT_GATE_TIMEOUT'};Start-Sleep -Milliseconds 50}
+Add-Type -TypeDefinition @'
+using System.Runtime.InteropServices;
+public static class BiometricFileProbe {
+    public static int Rename(string source,string destination) {return MoveFileExW(source,destination,0) ? 0 : Marshal.GetLastWin32Error();}
+    public static int Dacl(string path,byte[] descriptor) {
+        var p=Marshal.AllocHGlobal(descriptor.Length);
+        try {Marshal.Copy(descriptor,0,p,descriptor.Length);bool present,defaults;System.IntPtr acl;
+            if(!GetSecurityDescriptorDacl(p,out present,out acl,out defaults))return Marshal.GetLastWin32Error();
+            if(!present || acl==System.IntPtr.Zero)return 1338;
+            return (int)SetNamedSecurityInfoW(path,1,0x80000004u,System.IntPtr.Zero,System.IntPtr.Zero,acl,System.IntPtr.Zero);
+        } finally {Marshal.FreeHGlobal(p);}
+    }
+    [DllImport("kernel32.dll",CharSet=CharSet.Unicode,ExactSpelling=true,SetLastError=true)] static extern bool MoveFileExW(string source,string destination,uint flags);
+    [DllImport("advapi32.dll",ExactSpelling=true,SetLastError=true)] static extern bool GetSecurityDescriptorDacl(System.IntPtr descriptor,out bool present,out System.IntPtr acl,out bool defaults);
+    [DllImport("advapi32.dll",CharSet=CharSet.Unicode,ExactSpelling=true)] static extern uint SetNamedSecurityInfoW(string path,int kind,uint information,System.IntPtr owner,System.IntPtr group,System.IntPtr acl,System.IntPtr sacl);
+}
+'@
 $results=[ordered]@{genuineStandardToken=$true}
+function Native-Denied([string]$Label,[int]$Code) {if($Code -ne 5){throw "ISOLATION_NATIVE_NOT_ACCESS_DENIED:${Label}:W$Code"};$results[$Label]=$true}
+function Test-Dacl([bool]$Directory) {
+  $acl=if($Directory){[Security.AccessControl.DirectorySecurity]::new()}else{[Security.AccessControl.FileSecurity]::new()}
+  $acl.SetAccessRuleProtection($true,$false)
+  foreach($sid in @($identity.User.Value,'S-1-5-18','S-1-5-32-544')){$acl.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new([Security.Principal.SecurityIdentifier]::new($sid),'FullControl','Allow'))}
+  return ,$acl.GetSecurityDescriptorBinaryForm()
+}
 function Denied([string]$Label,[scriptblock]$Operation) {
   try { & $Operation | Out-Null; throw "ISOLATION_UNEXPECTED_ACCESS:$Label" }
   catch {
@@ -30,19 +54,14 @@ Denied 'secretRead' {[IO.File]::ReadAllBytes($case.secret)}
 Denied 'queueRead' {[IO.File]::ReadAllBytes($case.queue)}
 foreach ($item in $case.replaceFiles) {
   Denied ('replace_'+$item.label) {[IO.File]::WriteAllText($item.path,'unauthorised')}
-  Denied ('rename_'+$item.label) {[IO.File]::Move($item.path,$item.path+'.unauthorised')}
+  Native-Denied ('rename_'+$item.label) ([BiometricFileProbe]::Rename($item.path,$item.path+'.unauthorised'))
 }
 foreach ($item in $case.configFiles) {Denied ('configuration_'+$item.label) {[IO.File]::WriteAllText($item.path,'{}')}}
 foreach ($item in $case.aclPaths) {
-  Denied ('permissions_'+$item.label) {
-    $acl=if ($item.directory) {[Security.AccessControl.DirectorySecurity]::new()} else {[Security.AccessControl.FileSecurity]::new()}
-    $acl.SetAccessRuleProtection($true,$false)
-    $acl.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new($identity.User,'FullControl','Allow'))
-    Set-Acl -LiteralPath $item.path -AclObject $acl
-  }
+  Native-Denied ('permissions_'+$item.label) ([BiometricFileProbe]::Dacl($item.path,(Test-Dacl $item.directory)))
 }
 foreach ($item in $case.renameDirectories) {
-  Denied ('directoryRename_'+$item.label) {[IO.Directory]::Move($item.path,$item.path+'.unauthorised')}
+  Native-Denied ('directoryRename_'+$item.label) ([BiometricFileProbe]::Rename($item.path,$item.path+'.unauthorised'))
   Denied ('directoryCreate_'+$item.label) {[IO.Directory]::CreateDirectory((Join-Path $item.path 'unauthorised'))}
 }
 Sc-Denied 'serviceCommandLine' @('config',$case.name,'binPath=',$case.binary)
@@ -67,9 +86,13 @@ $scratch=Join-Path (Split-Path -Parent $Output) 'positive.txt'
 [IO.File]::WriteAllText($scratch,'synthetic')
 if ([IO.File]::ReadAllText($scratch) -ne 'synthetic') {throw 'ISOLATION_SCRATCH_CONTROL_FAILED'}
 $results.scratchReadWrite=$true
+if([BiometricFileProbe]::Rename($scratch,$scratch+'.renamed') -ne 0 -or [IO.File]::ReadAllText($scratch+'.renamed') -ne 'synthetic'){throw 'ISOLATION_NATIVE_RENAME_CONTROL_FAILED'}
+if([BiometricFileProbe]::Dacl($scratch+'.renamed',(Test-Dacl $false)) -ne 0){throw 'ISOLATION_NATIVE_DACL_CONTROL_FAILED'}
+$results.nativeRenameDaclPositiveControls=$true
 foreach ($item in @($case.health,$case.report)) {
   if ([IO.File]::ReadAllText($item).Length -lt 1) {throw 'ISOLATION_PUBLIC_READ_CONTROL_FAILED'}
-  Denied ('publicWrite_'+[IO.Path]::GetFileName($item)) {[IO.File]::WriteAllText($item,'unauthorised')}
+  $label=if($item -eq $case.health){'publicWrite_health'}else{'publicWrite_report'}
+  Denied $label {[IO.File]::WriteAllText($item,'unauthorised')}
 }
 $results.approvedHealthReportRead=$true
 Add-Type -AssemblyName System.Security.Cryptography.ProtectedData
