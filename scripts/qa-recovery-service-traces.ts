@@ -6,6 +6,7 @@ import { mkdirSync, writeFileSync, readFileSync, lstatSync, readdirSync } from "
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readTrace, checkedDirectory } from "../tests/helpers/service-trace";
+import { opensslTraceRoot, opensslPublicRoot, validateOpenSslMetadata } from "../tests/helpers/openssl-fixture";
 
 export const privateRoot = path.resolve("tmp/ci-service-traces");
 export const publicRoot = path.resolve("tmp/ci-service-trace-public");
@@ -50,7 +51,24 @@ export function finalize(root = privateRoot, destination = publicRoot, expected 
   writeFileSync(path.join(destination, "manifest.json"), JSON.stringify({ contract: "NALANDA_SERVICE_TRACE_MANIFEST_V1", owner: expected, files }) + "\n", { flag: "wx", mode: 0o600 });
   return files;
 }
+export function prepareOpenSsl() {
+  const owner = ownerFromEnvironment(); checkedDirectory(path.dirname(opensslTraceRoot));
+  mkdirSync(opensslTraceRoot, { mode: 0o700 });
+  writeFileSync(path.join(opensslTraceRoot, "ownership.json"), JSON.stringify(owner) + "\n", { flag: "wx", mode: 0o600 });
+}
+export function finalizeOpenSsl(root=opensslTraceRoot,destination=opensslPublicRoot,expected=ownerFromEnvironment()) {
+  checkedDirectory(root);checkedDirectory(path.dirname(destination));
+  check(null,readdirSync(root).sort().join()===["openssl.json","ownership.json"].sort().join());
+  const read=(name:string,limit:number)=>{const f=path.join(root,name),s=lstatSync(f);check(null,s.isFile()&&!s.isSymbolicLink()&&s.nlink===1&&s.size<=limit);return readFileSync(f,"utf8");};
+  check(null,read("ownership.json",2048)===JSON.stringify(expected)+"\n");
+  const raw=read("openssl.json",16000),v=validateOpenSslMetadata(JSON.parse(raw));
+  check(null,raw===JSON.stringify(v)+"\n"&&JSON.stringify(v.owner)===JSON.stringify(expected));
+  // Both schema and source/run ownership are checked BEFORE publication.
+  mkdirSync(destination,{mode:0o700});writeFileSync(path.join(destination,"openssl.json"),raw,{flag:"wx",mode:0o600});
+  const files=[{file:"openssl.json",size:Buffer.byteLength(raw),sha256:createHash("sha256").update(raw).digest("hex")}];
+  writeFileSync(path.join(destination,"manifest.json"),JSON.stringify({contract:"NALANDA_OPENSSL_METADATA_MANIFEST_V1",owner:expected,files})+"\n",{flag:"wx",mode:0o600});return files;
+}
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  try { if (process.argv.length !== 3) throw Error("SERVICE_TRACE_COMMAND_INVALID"); if (process.argv[2] === "prepare") prepare(); else if (process.argv[2] === "finalize") finalize(); else throw Error("SERVICE_TRACE_COMMAND_INVALID"); }
+  try { if (process.argv.length !== 3) throw Error("SERVICE_TRACE_COMMAND_INVALID"); if (process.argv[2] === "prepare") prepare(); else if (process.argv[2] === "finalize") finalize(); else if (process.argv[2] === "openssl-prepare") prepareOpenSsl(); else if (process.argv[2] === "openssl-finalize") finalizeOpenSsl(); else throw Error("SERVICE_TRACE_COMMAND_INVALID"); }
   catch { process.stderr.write("SERVICE_TRACE_HANDOFF_FAILED\n"); process.exitCode = 1; }
 }

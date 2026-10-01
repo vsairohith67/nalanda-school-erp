@@ -1,6 +1,5 @@
-import {beforeAll,afterAll,describe,it,expect,vi} from "vitest";
+import {beforeAll,beforeEach,afterAll,describe,it,expect,vi} from "vitest";
 import {generateKeyPairSync,sign,X509Certificate} from "node:crypto";
-import {execFileSync} from "node:child_process";
 import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,rmSync,linkSync,unlinkSync,symlinkSync} from "node:fs";
 import {tmpdir} from "node:os";
 import path from "node:path";
@@ -11,24 +10,26 @@ import {nativeAudience,verifyNativeBuildToken} from "../scripts/portable/native-
 import {dispatchNativeControl,parseNativeControl} from "../scripts/portable/native-controller";
 import {OwnedWindowsWebDriver} from "../scripts/portable/windows-webdriver-host";
 import {windowsTarget} from "./fixtures/windows-auth";
+import {OpenSslFixture} from "./helpers/openssl-fixture";
 
 const pair=generateKeyPairSync("ed25519"),oidc=generateKeyPairSync("rsa",{modulusLength:2048});
 let root:string,context:NativeContext,inventory:NativeInventory,profile:NativeQaProfile;
+let caFixture:OpenSslFixture,caseIndex=0;
+beforeEach(context=>{const index=caseIndex++;context.onTestFinished(({task})=>caFixture.caseResult(index,task.result?.state));});
 const pe=(machine=0x8664)=>{const b=Buffer.alloc(512,0);b.write("MZ");b.writeUInt32LE(128,0x3c);b.writeUInt32LE(0x4550,128);b.writeUInt16LE(machine,132);return b;};
 const json=(v:unknown)=>Buffer.from(JSON.stringify(v));
 const audit=json({metadata:{vulnerabilities:{high:0,critical:0}}});
 const rust=json({vulnerabilities:{found:false,count:0,list:[]},database:{"last-commit":"a".repeat(40)},lockfile:{"dependency-count":500},warnings:{}});
 beforeAll(()=>{
  root=mkdtempSync(path.join(tmpdir(),"nalanda-native-inventory-contract-"));for(const d of ["launch","package"])mkdirSync(path.join(root,d));
- const openssl=process.platform==="win32"?"C:/Program Files/Git/usr/bin/openssl.exe":"openssl";
- execFileSync(openssl,["req","-x509","-newkey","rsa:2048","-nodes","-keyout",path.join(root,"ca-key.pem"),"-out",path.join(root,"ca.pem"),"-days","1","-subj","/CN=Synthetic native contract CA","-addext","basicConstraints=critical,CA:TRUE"],{stdio:"pipe",timeout:20000});
+ caFixture=new OpenSslFixture(root);caFixture.generate();
  const now=Date.now(),caPem=readFileSync(path.join(root,"ca.pem"),"utf8"),trust={contract:"NALANDA_SYNTHETIC_BUILD_V1" as const,source:"a".repeat(40),runId:"123",attempt:"1",buildId:"b".repeat(64),publicKey:pair.publicKey.export({type:"spki",format:"pem"}).toString()};
  profile={contract:"NALANDA_NATIVE_QA_PROFILE_V1",source:trust.source,runId:trust.runId,attempt:trust.attempt,buildId:trust.buildId,nativeBuildId:"c".repeat(64),databaseSha256:"d".repeat(64),origin:NATIVE_QA_ORIGIN,environment:"synthetic-staging",phase:"windows-auth",appId:"com.nalandaps.erp",architecture:"x64",issuedAt:now-1000,expiresAt:now+600000,caPem,caSha256:hashBytes(new X509Certificate(caPem).raw),paths:[...NATIVE_QA_PATHS]};
  context={source:trust.source,runId:trust.runId,attempt:trust.attempt,containerId:"e".repeat(64),imageConfigDigest:"sha256:"+"f".repeat(64),trust,profile:signNativeQaProfile(profile,trust,pair.privateKey)};
  for(const file of NATIVE_OUTPUTS)writeFileSync(path.join(root,file),pe(file.startsWith("package/")?0x14c:0x8664));
  inventory={contract:"NALANDA_WINDOWS_NATIVE_INVENTORY_V1",classification:"HOSTED_EXACT_NATIVE_BUILD",source:trust.source,tree:"b".repeat(40),runId:trust.runId,attempt:trust.attempt,nativeBuildId:profile.nativeBuildId,profile:"SYNTHETIC_QA",appId:profile.appId,version:"0.1.0",architecture:"x64",backendBuildId:trust.buildId,backendImage:context.imageConfigDigest,containerId:context.containerId,profileSha256:hashBytes(JSON.stringify(context.profile)),trustSha256:hashBytes(JSON.stringify(trust)),createdAt:now,expiresAt:profile.expiresAt,inputs:Object.fromEntries(NATIVE_INPUTS.map(n=>[n,{gitBlob:"1".repeat(40),sha256:"2".repeat(64)}])),tools:{node:"v24.19.0",pnpm:"11.21.0",rustc:"rustc 1.97.1 (abcdef 2026-09-01)",cargo:"cargo 1.97.1 (abcdef 2026-09-01)",tauri:"2.11.4",cargoAudit:"cargo-audit 0.22.2"},toolSha256:{node:"1".repeat(64),pnpm:"2".repeat(64),rustc:"3".repeat(64),cargo:"4".repeat(64),tauri:"5".repeat(64),cargoAudit:"6".repeat(64)},outputs:NATIVE_OUTPUTS.map(f=>inventoryNativeFile(root,f)),security:{rootAudit:hashBytes(audit),appAudit:hashBytes(audit),rustAudit:hashBytes(rust)}};
 },30000);
-afterAll(()=>{if(root){expect(path.basename(root).startsWith("nalanda-native-inventory-contract-")).toBe(true);rmSync(root,{recursive:true});}});
+afterAll(()=>{if(caFixture)caFixture.cleanup();else if(root){expect(path.basename(root).startsWith("nalanda-native-inventory-contract-")).toBe(true);rmSync(root,{recursive:true});}});
 const clone=()=>structuredClone(inventory);
 const signed=(v:unknown,key=pair.privateKey)=>({payload:json(v).toString("base64url"),signature:sign(null,json(v),key).toString("base64url")});
 describe("UNIT_OR_CONTRACT: native inventory, signatures and exact binary identity (not runtime admission)",()=>{
