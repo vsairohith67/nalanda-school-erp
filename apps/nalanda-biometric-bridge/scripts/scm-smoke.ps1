@@ -55,6 +55,9 @@ try {
   if($registered){ if((Get-Service $name).Status -ne 'Stopped'){Stop-Service $name}; Checked @('delete',$name) }
   if((Owned-Children).Count -ne 0){throw 'SCM_CLEANUP_ORPHAN'}
   if(Get-Service $name -ErrorAction SilentlyContinue){throw 'SCM_CLEANUP_SERVICE_REMAINS'}
+  $deadline=(Get-Date).AddSeconds(10)
+  do {$hosts=@(Get-CimInstance Win32_Process | Where-Object {$_.ExecutablePath -eq $HostExe -and $_.CommandLine -like "*$hostConfig*"});if(-not $hosts.Count){break};Start-Sleep -Milliseconds 100} while((Get-Date) -lt $deadline)
+  if($hosts.Count){throw 'SCM_CLEANUP_HOST_PROCESS_REMAINS'}
   $full=[IO.Path]::GetFullPath($dir)
   if((Split-Path -Parent $full) -ne $env:RUNNER_TEMP -or (Split-Path -Leaf $full) -ne $name){throw 'SCM_FIXTURE_OWNERSHIP_GATE'}
   if((Get-Item -LiteralPath $full).Attributes -band [IO.FileAttributes]::ReparsePoint -or @(Get-ChildItem -LiteralPath $full -Recurse -Force | Where-Object {$_.Attributes -band [IO.FileAttributes]::ReparsePoint}).Count){throw 'SCM_FIXTURE_REPARSE_GATE'}

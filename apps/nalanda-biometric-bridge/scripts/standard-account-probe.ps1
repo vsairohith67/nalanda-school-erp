@@ -68,12 +68,21 @@ Sc-Denied 'serviceCommandLine' @('config',$case.name,'binPath=',$case.binary)
 Sc-Denied 'serviceIdentity' @('config',$case.name,'obj=',("NT SERVICE\"+$case.name))
 Sc-Denied 'serviceStart' @('start',$case.name)
 Sc-Denied 'serviceStop' @('stop',$case.name)
-Denied 'serviceRestart' {Restart-Service -Name $case.name -Force}
+Add-Type -AssemblyName System.ServiceProcess.ServiceController
+Denied 'serviceRestart' {
+  $controller=[ServiceProcess.ServiceController]::new($case.name)
+  try {$controller.Stop();$controller.WaitForStatus('Stopped',[TimeSpan]::FromSeconds(20));$controller.Start()} finally {$controller.Dispose()}
+}
 Sc-Denied 'serviceReconfigure' @('failure',$case.name,'reset=','0','actions=','restart/1000')
 Sc-Denied 'servicePermissions' @('sdset',$case.name,'D:(A;;GA;;;WD)')
-Denied 'serviceProcessTermination' {Stop-Process -Id $case.servicePid -Force}
-Denied 'workerProcessTermination' {Stop-Process -Id $case.workerPid -Force}
-Denied 'directPrivilegedRecovery' {Start-Process -FilePath $case.host -ArgumentList @('--resume',('"'+$case.privateHostConfig+'"')) -PassThru -Wait}
+Denied 'serviceProcessTermination' {$p=[Diagnostics.Process]::GetProcessById($case.servicePid);try{$p.Kill()}finally{$p.Dispose()}}
+Denied 'workerProcessTermination' {$p=[Diagnostics.Process]::GetProcessById($case.workerPid);try{$p.Kill()}finally{$p.Dispose()}}
+Denied 'directPrivilegedRecovery' {
+  $info=[Diagnostics.ProcessStartInfo]::new();$info.FileName=$case.host;$info.UseShellExecute=$false;$info.CreateNoWindow=$true
+  $info.ArgumentList.Add('--resume');$info.ArgumentList.Add($case.privateHostConfig)
+  $p=[Diagnostics.Process]::Start($info)
+  try{if(-not $p.WaitForExit(30000)){throw 'ISOLATION_UNEXPECTED_RECOVERY_HANG'}}finally{$p.Dispose()}
+}
 foreach ($action in @('Restart','Resume')) {
   # Public nonsensitive config lets the caller reach the actual administrative guard.
   $administrationError=& $case.pwsh -NoProfile -NonInteractive -File $case.management -Action $action -HostConfig $case.publicHostConfig -Apply -TargetComputer $env:COMPUTERNAME -ConfirmApply ("APPLY:"+$env:COMPUTERNAME) 2>&1 | Out-String

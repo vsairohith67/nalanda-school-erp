@@ -25,6 +25,11 @@ Import-Module (Join-Path $BridgeRoot 'windows/security.psm1') -Force
 function Checked([string[]]$Arguments) {& $sc @Arguments | Out-Null;if($LASTEXITCODE -ne 0){throw "ISOLATION_SCM_FAILED:$LASTEXITCODE"}}
 function Fixture-Acl([string]$Directory,[string]$Identity,[string]$Rights) {Private-Acl $Directory $Identity $Rights}
 function Owned-Children { @(Get-CimInstance Win32_Process | Where-Object {$_.ExecutablePath -eq $node -and $_.CommandLine -like "*$config*"}) }
+function Owned-PackageProcesses {
+  @(Get-CimInstance Win32_Process | Where-Object {
+    $_.ExecutablePath -and ($_.ExecutablePath.StartsWith($binParent+'\',[StringComparison]::OrdinalIgnoreCase) -or $_.ExecutablePath.StartsWith($renameRoots[0]+'\',[StringComparison]::OrdinalIgnoreCase))
+  })
+}
 function Wait-Healthy([datetime]$Since) {
   $deadline=(Get-Date).AddSeconds(30)
   while ((Get-Date) -lt $deadline) {
@@ -162,18 +167,21 @@ finally {
   } catch {$cleanupErrors.Add('SERVICE')}
   try {if($registered -and @(Owned-Children).Count -ne 0){throw 'WORKER_REMAINS'}} catch {$cleanupErrors.Add('WORKER')}
   try {
+    if($registered){$deadline=(Get-Date).AddSeconds(10);while(@(Owned-PackageProcesses).Count -and (Get-Date) -lt $deadline){Start-Sleep -Milliseconds 100};if(@(Owned-PackageProcesses).Count){throw 'PACKAGE_PROCESS_REMAINS'}}
+  } catch {$cleanupErrors.Add('PACKAGE_PROCESSES')}
+  try {
     if($createdUser){
       # Profile deletion is keyed to the created SID and its checked exact user path.
       $deadline=(Get-Date).AddSeconds(10)
       while(@(Get-CimInstance Win32_UserProfile -Filter "SID='$userSid'" | Where-Object Loaded).Count -and (Get-Date) -lt $deadline){Start-Sleep -Milliseconds 100}
+      $expected=Join-Path (Split-Path -Parent $env:USERPROFILE) $user
       foreach($profile in @(Get-CimInstance Win32_UserProfile -Filter "SID='$userSid'")){
-        $expected=Join-Path (Split-Path -Parent $env:USERPROFILE) $user
         if($profile.Loaded -or $profile.LocalPath -ne $expected){throw 'PROFILE_OWNERSHIP_GATE'}
         Remove-CimInstance -InputObject $profile
         if(Test-Path -LiteralPath $expected){throw 'PROFILE_DIRECTORY_REMAINS'}
       }
       Remove-LocalUser -SID $userSid
-      if((Get-LocalUser $user -ErrorAction SilentlyContinue) -or (Get-CimInstance Win32_UserProfile -Filter "SID='$userSid'")){throw 'ACCOUNT_OR_PROFILE_REMAINS'}
+      if((Get-LocalUser $user -ErrorAction SilentlyContinue) -or (Get-CimInstance Win32_UserProfile -Filter "SID='$userSid'") -or (Test-Path -LiteralPath $expected)){throw 'ACCOUNT_OR_PROFILE_REMAINS'}
     }
   } catch {$cleanupErrors.Add('ACCOUNT_PROFILE')}
   if(Get-Variable password -ErrorAction SilentlyContinue){$password.Dispose()}
