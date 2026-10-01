@@ -44,6 +44,12 @@ class Bootstrap(unittest.TestCase):
                 self.assertEqual(list(Path(directory).iterdir()), [])
 
     def test_redirect_bound_and_tls_refusal(self):
+        valid = "https://zenlayer.dl.sourceforge.net/project/corefonts/the%20fonts/final/andale32.exe"
+        fonts.archive_url(valid + "?viasf=1&fid=12345&e=123456&st=synthetic-delivery-signature", "andale32.exe")
+        for query in ("?viasf=1&unknown=1", "?viasf=1&viasf=1", "?viasf=2", "?viasf=1&st=missing-chain",
+                      "?viasf=1&fid=1&e=1&st=" + "x" * 129):
+            with self.assertRaises(fonts.Refusal):
+                fonts.archive_url(valid + query, "andale32.exe")
         for url in ("http://downloads.sourceforge.net/project/corefonts/the%20fonts/final/andale32.exe",
                     "https://foreign.example/project/corefonts/the%20fonts/final/andale32.exe",
                     "https://downloads.sourceforge.net:444/project/corefonts/the%20fonts/final/andale32.exe",

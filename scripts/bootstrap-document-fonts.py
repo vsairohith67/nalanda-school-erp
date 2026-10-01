@@ -17,7 +17,7 @@ import sys
 import tarfile
 import threading
 import time
-from urllib.parse import urlsplit, unquote, urljoin
+from urllib.parse import urlsplit, unquote, urljoin, parse_qsl
 
 PACKAGE = "ttf-mscorefonts-installer"
 VERSION = "3.8.1ubuntu1"
@@ -145,8 +145,15 @@ def archive_url(url, filename):
     # SourceForge's owned download namespace, including its selected official mirror.
     require(parsed.hostname == "downloads.sourceforge.net" or
             re.fullmatch(r"[a-z0-9-]+\.dl\.sourceforge\.net", parsed.hostname or ""), "URL_HOST")
-    require(unquote(parsed.path) == "/project/corefonts/the fonts/final/" + filename and
-            parsed.query in ("", "viasf=1"), "URL_ARCHIVE")
+    require(unquote(parsed.path) == "/project/corefonts/the fonts/final/" + filename, "URL_ARCHIVE")
+    # Observed official SourceForge mirror redirects carry opaque delivery values.
+    # Preserve them unchanged, never log them; they confer no font integrity trust.
+    require(len(parsed.query) <= 1024, "URL_QUERY_BOUND")
+    query = parse_qsl(parsed.query, keep_blank_values=True, strict_parsing=True)
+    keys = [key for key, value in query]
+    require(len(keys) == len(set(keys)) and set(keys) in (set(), {"viasf"}, {"viasf", "fid", "e", "st"}) and
+            all(re.fullmatch(r"[A-Za-z0-9_-]{1,128}", value) for key, value in query) and
+            (not query or dict(query)["viasf"] == "1"), "URL_DELIVERY_QUERY")
 
 
 def verify_archive(data, expected):
