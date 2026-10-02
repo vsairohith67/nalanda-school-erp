@@ -4,8 +4,10 @@ import { normalizedEvent, validateNormalizedEvent, type IngestEnvelope, type Que
 import { atomicWrite } from "./atomic-file.js";
 import { runtimeSecrets } from "./runtime-secrets.js";
 
-export type PreparedBatch = { reference: string; body: string; identities: string[]; attempts: number; nextAttemptAt: number; held?: boolean };
-type State = { version: 1; events: QueueEvent[]; batch?: PreparedBatch; retired?: Record<string, string> };
+import { applyExport, emptyExportLedger, validateExportLedger, type ExportLedger, type AcquiredExport } from "./export-ledger.js";
+
+export type PreparedBatch = { reference: string; body: string; identities: string[]; attempts: number; nextAttemptAt: number; held?: boolean; sourceReviewRequired?: boolean };
+type State = { version: 1; events: QueueEvent[]; batch?: PreparedBatch; retired?: Record<string, string>; exports?: ExportLedger; exportScan?: number };
 const PENDING = new Set<QueueStateName>(["RECEIVED_FROM_DEVICE", "QUEUED", "SENDING"]);
 const ACKED = new Set<QueueStateName>(["ACKNOWLEDGED", "DUPLICATE_ACKNOWLEDGED"]);
 const STATES = new Set<QueueStateName>([...PENDING, ...ACKED, "REJECTED", "NEEDS_ADMIN_REVIEW"]);
@@ -30,6 +32,8 @@ export class EncryptedDurableQueue {
       const state = JSON.parse(plaintext.toString("utf8")) as State;
       if (state.version !== 1 || !Array.isArray(state.events) || state.events.length > 100_000) throw new Error();
       if (state.retired && (Object.keys(state.retired).length > 100_000 || Object.entries(state.retired).some(([id, hash]) => id.length > 400 || typeof hash !== "string" || !/^[a-f0-9]{64}$/.test(hash)))) throw new Error();
+      if (state.exports) validateExportLedger(state.exports);
+      if (state.exportScan !== undefined && (!Number.isSafeInteger(state.exportScan) || state.exportScan < 0 || state.exportScan > 255)) throw new Error();
       for (const event of state.events) {
         validateNormalizedEvent(event);
         if (!STATES.has(event.localState) || !Number.isSafeInteger(event.attemptCount) || event.attemptCount < 0 || typeof event.queuedAt !== "string" || Number.isNaN(Date.parse(event.queuedAt))) throw new Error();
@@ -44,29 +48,53 @@ export class EncryptedDurableQueue {
     } catch { throw new Error("BRIDGE_QUEUE_AUTH_OR_CORRUPTION_FAILED"); }
   }
   load() { return this.state().events; }
+  exportLedger() { return this.state().exports ?? emptyExportLedger(); }
+  exportScan() { return this.state().exportScan ?? 0; }
+  setExportScan(value: number) { const state=this.state(); state.exportScan=value; this.save(state); }
+  recordExportRefusal(sourceKey:string,code?:string) {
+    const state=this.state(); state.exports??=emptyExportLedger(); state.exports.refusals??={};
+    if (code) { if (state.exports.refusals[sourceKey]?.code===code) return; state.exports.refusals[sourceKey]={code,observedAt:new Date().toISOString()}; }
+    else { if (!state.exports.refusals[sourceKey]) return; delete state.exports.refusals[sourceKey]; }
+    validateExportLedger(state.exports); this.save(state);
+  }
+  commitExport(snapshot: AcquiredExport) {
+    const state=this.state(); state.exports ??= emptyExportLedger();
+    const result=applyExport(state.exports,state.events,snapshot);
+    if (state.events.length>100_000) throw new Error("BRIDGE_QUEUE_CAPACITY_EXCEEDED");
+    if (result.changed) {
+      if (state.batch && state.events.some(e=>state.batch!.identities.includes(queueIdentity(e)) && !!e.eventReference && !!result.conflictReferences?.has(e.eventReference))) { state.batch.held=true; state.batch.sourceReviewRequired=true; }
+      this.save(state);
+    }
+    return result;
+  }
   append(events: QueueEvent[]) {
     const state = this.state();
+    // Preserve first-observation semantics with a bounded linear identity index.
+    // Repeated linear scans made large durable imports quadratic.
+    const byIdentity=new Map<string,QueueEvent>();
+    for(const event of state.events)if(!byIdentity.has(queueIdentity(event)))byIdentity.set(queueIdentity(event),event);
+    const push=(event:QueueEvent)=>{state.events.push(event);const identity=queueIdentity(event);if(!byIdentity.has(identity))byIdentity.set(identity,event);};
     for (const raw of events) {
       const event = normalizedEvent(raw);
       if (event.sequenceNumber === null && !event.eventReference) {
         // Preserve every observation. A reviewer must distinguish repeated downloads from valid same-second punches.
-        state.events.push({ ...event, queuedAt: raw.queuedAt, localState: "NEEDS_ADMIN_REVIEW", attemptCount: 0, lastErrorCode: "DEVICE_IDENTITY_AMBIGUOUS" });
+        push({ ...event, queuedAt: raw.queuedAt, localState: "NEEDS_ADMIN_REVIEW", attemptCount: 0, lastErrorCode: "DEVICE_IDENTITY_AMBIGUOUS" });
         continue;
       }
-      const identity = queueIdentity(event), existing = state.events.find(e => queueIdentity(e) === identity);
+      const identity = queueIdentity(event), existing = byIdentity.get(identity);
       const retiredHash = state.retired?.[identity];
       if (!existing && retiredHash) {
-        if (retiredHash !== payloadHash(event)) state.events.push({ ...event, queuedAt: raw.queuedAt, localState: "NEEDS_ADMIN_REVIEW", attemptCount: 0, lastErrorCode: "DEVICE_RETIRED_IDENTITY_CONFLICT", reviewReference: payloadHash(event) } as QueueEvent);
+        if (retiredHash !== payloadHash(event)) push({ ...event, queuedAt: raw.queuedAt, localState: "NEEDS_ADMIN_REVIEW", attemptCount: 0, lastErrorCode: "DEVICE_RETIRED_IDENTITY_CONFLICT", reviewReference: payloadHash(event) } as QueueEvent);
         continue;
       }
       if (existing) {
         if (devicePayload(existing) !== devicePayload(event)) {
           const reviewReference = createHash("sha256").update(devicePayload(event)).digest("hex");
-          if (!state.events.some(e => (e as QueueEvent & { reviewReference?: string }).reviewReference === reviewReference)) state.events.push({ ...event, queuedAt: raw.queuedAt, localState: "NEEDS_ADMIN_REVIEW", attemptCount: 0, lastErrorCode: "DEVICE_IDENTITY_PAYLOAD_CONFLICT", reviewReference } as QueueEvent);
+          if (!state.events.some(e => (e as QueueEvent & { reviewReference?: string }).reviewReference === reviewReference)) push({ ...event, queuedAt: raw.queuedAt, localState: "NEEDS_ADMIN_REVIEW", attemptCount: 0, lastErrorCode: "DEVICE_IDENTITY_PAYLOAD_CONFLICT", reviewReference } as QueueEvent);
         }
         continue;
       }
-      state.events.push({ ...event, queuedAt: raw.queuedAt, localState: event.sequenceNumber === null && !event.eventReference ? "NEEDS_ADMIN_REVIEW" : "QUEUED", attemptCount: 0, ...(event.sequenceNumber === null && !event.eventReference ? { lastErrorCode: "DEVICE_IDENTITY_AMBIGUOUS" } : {}) });
+      push({ ...event, queuedAt: raw.queuedAt, localState: event.sequenceNumber === null && !event.eventReference ? "NEEDS_ADMIN_REVIEW" : "QUEUED", attemptCount: 0, ...(event.sequenceNumber === null && !event.eventReference ? { lastErrorCode: "DEVICE_IDENTITY_AMBIGUOUS" } : {}) });
     }
     if (state.events.length > 100_000) throw new Error("BRIDGE_QUEUE_CAPACITY_EXCEEDED");
     if (events.length) this.save(state);
@@ -98,6 +126,7 @@ export class EncryptedDurableQueue {
   resumeHeldBatch() {
     const state = this.state(), b = state.batch;
     if (!b?.held) throw new Error("BRIDGE_QUEUE_HELD_BATCH_REQUIRED");
+    if (b.sourceReviewRequired) throw new Error("BRIDGE_QUEUE_SOURCE_REVIEW_REQUIRED");
     // Administrator explicitly revalidates transport/credential gates before this local operation.
     // Never rebuild the request body or reset identity/arrival timestamps.
     b.held = false; b.attempts = 0; b.nextAttemptAt = 0;
@@ -114,7 +143,8 @@ export class EncryptedDurableQueue {
     const state = this.state(); if (state.batch) throw new Error("BRIDGE_QUEUE_BATCH_ACTIVE");
     const selected = state.events.filter(e => PENDING.has(e.localState)).slice(0, count);
     if (!Number.isInteger(count) || count < 0 || selected.length !== count) throw new Error("BRIDGE_QUEUE_ACK_INVALID");
-    state.events = state.events.map(e => selected.includes(e) ? fn(e) : e); this.save(state);
+    const selection=new Set(selected);
+    state.events = state.events.map(e => selection.has(e) ? fn(e) : e); this.save(state);
   }
   private save(state: State) {
     const cutoff = Date.now() - 7 * 86_400_000;

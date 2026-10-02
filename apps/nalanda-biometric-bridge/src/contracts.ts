@@ -1,10 +1,11 @@
-export const PROFILES = ["ESSL_K30_PRO_PUSH", "ESSL_ZK_LAN_SDK", "ZK_ADMS_PUSH", "GENERIC_ADMS_PUSH", "GENERIC_LAN_POLL", "GENERIC_CSV_IMPORT", "SIMULATOR"] as const;
+import type { ExportInput } from "./export-profile.js";
+export const PROFILES = ["ESSL_K30_PRO_PUSH", "ESSL_ZK_LAN_SDK", "ZK_ADMS_PUSH", "GENERIC_ADMS_PUSH", "GENERIC_LAN_POLL", "GENERIC_CSV_IMPORT", "ETIMETRACKLITE_RAW_EXPORT_V1", "SIMULATOR"] as const;
 export type Profile = (typeof PROFILES)[number];
 export type NormalizedEvent = { deviceId: string; opaqueDeviceUserId: string; punchTimestamp: string; bridgeReceivedTimestamp: string; estimatedClockDriftSeconds: number | null; verificationMethod: "FINGERPRINT" | "FACE" | "CARD" | "PIN" | "OTHER"; punchCode: "IN" | "OUT" | "UNKNOWN"; statusCode: string | null; sequenceNumber: number | null; sequenceEpoch: number; eventReference: string | null; protocolProfile: Profile };
 export type QueueStateName = "RECEIVED_FROM_DEVICE" | "QUEUED" | "SENDING" | "ACKNOWLEDGED" | "DUPLICATE_ACKNOWLEDGED" | "REJECTED" | "NEEDS_ADMIN_REVIEW";
 export type QueueEvent = NormalizedEvent & { queuedAt: string; localState: QueueStateName; attemptCount: number; acknowledgedAt?: string; lastErrorCode?: string };
 export type IngestEnvelope = { schemaVersion: 1; batchReference: string; bridgeTime: string; events: NormalizedEvent[] };
-export type BridgeConfig = { bridgeId: string; erpUrl: string; privateKeyPath: string; queuePath: string; healthPath: string; pollIntervalMs: number; transportEnabled?: boolean; syntheticOnly?: boolean; devices: Array<{ deviceId: string; host: string; port: number; profile: Profile; csvInbox?: string }> };
+export type BridgeConfig = { bridgeId: string; erpUrl: string; privateKeyPath: string; queuePath: string; healthPath: string; pollIntervalMs: number; transportEnabled?: boolean; syntheticOnly?: boolean; devices: Array<{ deviceId: string; host: string; port: number; profile: Profile; csvInbox?: string; exportInput?: ExportInput }> };
 export const VENDOR_PROFILES = new Set<Profile>(["ESSL_K30_PRO_PUSH", "ESSL_ZK_LAN_SDK", "ZK_ADMS_PUSH"]);
 export const GENERIC_PENDING_PROFILES = new Set<Profile>(["GENERIC_ADMS_PUSH", "GENERIC_LAN_POLL"]);
 

@@ -1,5 +1,7 @@
 import { loadBridgeConfig } from "./config.js";
 import { EncryptedDurableQueue } from "./encrypted-queue.js";
+import { EtimetrackLiteExportAdapter, type ExportHealth } from "./adapters/etimetracklite.js";
+import { EXPORT_PROFILE } from "./export-profile.js";
 import { GenericCsvAdapter } from "./adapters/csv.js";
 import { SimulatorAdapter } from "./adapters/simulator.js";
 import { VendorProtocolDisabledAdapter } from "./adapters/vendor-disabled.js";
@@ -20,10 +22,18 @@ import { K30UnavailableAdapter } from "./adapters/k30.js";
 export async function runBridgeCycle(config = loadBridgeConfig(), signal?: AbortSignal, factory = adapterFor, queueFactory = (file: string) => new EncryptedDurableQueue(file)) {
   const queue = queueFactory(config.queuePath); queue.load();
   let lastErrorCode: string | undefined, lastPollAt: string | undefined, lastPunchAt: string | undefined, lastSyncAt: string | undefined, unavailable = false;
+  const exportSources: ExportHealth[] = [];
   for (const device of config.devices) {
     if (signal?.aborted) break;
     try {
-      const adapter = factory(device.profile), normalized = (await adapter.poll(device)).map(event => {
+      const adapter = factory(device.profile);
+      if (adapter instanceof EtimetrackLiteExportAdapter) {
+        const health=adapter.ingest(device,queue,!!config.transportEnabled); exportSources.push(health);
+        lastPollAt=new Date().toISOString();
+        if (health.acceptedRows) lastPunchAt=new Date().toISOString();
+        continue;
+      }
+      const normalized = (await adapter.poll(device)).map(event => {
         if (Object.keys(event).some(key => !(EVENT_FIELDS as readonly string[]).includes(key))) throw new Error("NORMALIZED_EVENT_PRIVACY_BOUNDARY_FAILED");
         if (event.deviceId !== device.deviceId || event.protocolProfile !== device.profile) throw new Error("NORMALIZED_EVENT_DEVICE_BINDING_FAILED");
         return validateNormalizedEvent(event);
@@ -32,18 +42,20 @@ export async function runBridgeCycle(config = loadBridgeConfig(), signal?: Abort
       const events = normalized.map(event => ({ ...event, queuedAt: new Date().toISOString(), localState: "RECEIVED_FROM_DEVICE" as const, attemptCount: 0 }));
       if (events.length) { queue.append(events); await adapter.acknowledgePoll?.(device, normalized); lastPunchAt = new Date().toISOString(); }
       lastPollAt = new Date().toISOString();
-    } catch (error) { lastErrorCode = safeCode(error); unavailable ||= /UNAVAILABLE|NOT_VERIFIED|NOT_CONFIGURED/.test(lastErrorCode); }
+    } catch (error) { lastErrorCode = safeCode(error);
+      if (device.profile===EXPORT_PROFILE) exportSources.push({state:/PROFILE|HEADER|ENCODING|COLUMN/.test(lastErrorCode)?"PROFILE_MISMATCH":/QUEUE|ENOSPC/.test(lastErrorCode)?"QUEUE_HELD":"SOURCE_UNAVAILABLE",acceptedRows:0,rejectedRows:0,reviewRows:0,replayedRows:0,deferredFiles:0});
+      unavailable ||= /UNAVAILABLE|NOT_VERIFIED|NOT_CONFIGURED/.test(lastErrorCode); }
   }
   if (config.transportEnabled && !signal?.aborted) {
     const batch = queue.prepareBatch();
     if (batch) { try { const ack = await syncPreparedBatch(config, batch, signal); queue.confirmBatch(batch.reference, ack.duplicate); lastSyncAt = new Date().toISOString(); } catch (error) { lastErrorCode = safeCode(error); queue.batchFailed(lastErrorCode); } }
   }
   const reviewCount = queue.load().filter(e => ["NEEDS_ADMIN_REVIEW", "REJECTED"].includes(e.localState)).length;
-  writeLocalHealth(config.healthPath, { status: lastErrorCode || reviewCount ? "DEGRADED" : "HEALTHY", queueDepth: queue.size(), configuredDevices: config.devices.length, lastPollAt, lastSyncAt, lastPunchAt, lastErrorCode, adapterUnavailable: unavailable, processRunning: true, reviewCount, transportEnabled: !!config.transportEnabled });
+  writeLocalHealth(config.healthPath, { status: lastErrorCode || reviewCount || exportSources.some(s=>!["HEALTHY_INGESTION","QUEUE_HELD"].includes(s.state)) ? "DEGRADED" : "HEALTHY", queueDepth: queue.size(), configuredDevices: config.devices.length, lastPollAt, lastSyncAt, lastPunchAt, lastErrorCode, adapterUnavailable: unavailable, processRunning: true, reviewCount, transportEnabled: !!config.transportEnabled, exportSources });
   return { queueDepth: queue.size(), lastErrorCode };
 }
-function adapterFor(profile: Profile): DeviceAdapter { if (profile === "SIMULATOR") return new SimulatorAdapter(); if (profile === "GENERIC_CSV_IMPORT") return new GenericCsvAdapter(); if (profile === "ESSL_ZK_LAN_SDK") return new K30UnavailableAdapter(); if (GENERIC_PENDING_PROFILES.has(profile)) return new GenericContractPendingAdapter(profile); return new VendorProtocolDisabledAdapter(profile); }
-export function safeCode(error: unknown) { const code = error instanceof Error ? error.message : ""; return /^(BRIDGE_|NORMALIZED_|CSV_|VENDOR_|K30_|GENERIC_)[A-Z0-9_:.-]{1,130}$/.test(code) ? code : "BRIDGE_OPERATION_FAILED"; }
+export function adapterFor(profile: Profile): DeviceAdapter { if (profile === EXPORT_PROFILE) return new EtimetrackLiteExportAdapter(); if (profile === "SIMULATOR") return new SimulatorAdapter(); if (profile === "GENERIC_CSV_IMPORT") return new GenericCsvAdapter(); if (profile === "ESSL_ZK_LAN_SDK") return new K30UnavailableAdapter(); if (GENERIC_PENDING_PROFILES.has(profile)) return new GenericContractPendingAdapter(profile); return new VendorProtocolDisabledAdapter(profile); }
+export function safeCode(error: unknown) { const code = error instanceof Error ? error.message : ""; return /^(BRIDGE_|NORMALIZED_|CSV_|EXPORT_|VENDOR_|K30_|GENERIC_)[A-Z0-9_:.-]{1,130}$/.test(code) ? code : "BRIDGE_OPERATION_FAILED"; }
 
 export async function runWorker(configFile?: string, signal = new AbortController().signal, resumeHeld = false) {
   const config = loadBridgeConfig(configFile), release = instanceLock(config.queuePath);

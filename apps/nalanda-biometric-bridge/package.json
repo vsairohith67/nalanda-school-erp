@@ -11,7 +11,8 @@
     "start": "node dist/agent.js",
     "credentials": "tsx src/credentials.ts",
     "report:monthly": "tsx src/monthly-report.ts",
-    "config:validate": "tsx src/validate-config.ts"
+    "config:validate": "tsx src/validate-config.ts",
+    "export:preview": "tsx src/export-preview.ts"
   },
   "devDependencies": {
     "@types/node": "^22.19.21",
