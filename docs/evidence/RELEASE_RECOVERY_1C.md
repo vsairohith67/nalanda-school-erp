@@ -1097,3 +1097,63 @@ Exact milestone files: .github/workflows/{biometric-staff-attendance,master-requ
 Protected scope: rustls0.23.45/chacha20.10.2 and9Rust warnings retained; prior complete audit/verifier refusal is REUSED unchanged-input evidence, not a new scan or artifact clearance. Backend EXTERNAL_RUNTIME_BLOCKED, controller/host UNVERIFIED, authenticated Windows NOT_EXECUTED, installation/release NOT_CLEARED. Six mandatory runtime jobs plus optional private producer remain separate gated skips. P1/PR29/Ask Nalanda/K30/PR30/main/FA1–FA4/v48/migrations/46IDs/25OFFflags untouched. Operational DB/vault never accessed/copied/hashed/cleaned; historical fingerprint only. Private diagnostics retained ignored; no artifact production/public font/package/key/private report, controller/trust/DNS/profile change, provider activation, merge/tag/deployment/install or waiver.
 
 Historical MFA/finance/DENY/OpenSSL/network causes remain independently unresolved. After one normal candidate cycle, append exact workflow/job/provider/trace receipts and tracker readbacks UNSTAGED; no cosmetic second push. No monitoring or next milestone started. Measured task start18:56:03UTC; scoped work/CI/handoff intervals are recorded separately at terminal observation, not described as uninterrupted engineering. Account usage not measured.
+
+### Terminal candidate observation — 2026-10-01 UTC / 2026-10-02 IST
+
+NATIVE_MFA_TRACE_VALIDATED_CAUSE_UNRESOLVED. Necessary observation is validated on the actual previously failing hosted configuration; no natural application failure captured. No demonstrated causal timeout correction. Original failed run/job and historical finance/DENY/OpenSSL/network causes remain independently unresolved. Later passing samples do not recover their missing transaction values.
+
+Final source29db9c61c82f43ecf263cf72c03896f18af92695 / treec211a43c663ecb31332dfa9c09a524665a1393d6; one reviewed13-file commit/push. PR28 OPEN/DRAFT, remote owned branch matches, no staged files. The initial45-line evidence and47-line pre-CI task record are committed with their stated provenance. This terminal append is intentionally UNSTAGED; no cosmetic second push. Exact file manifest above is unchanged.
+
+Normal exact-head CI:9SUCCESS/0FAIL/0SKIPPED/0PENDING/0MISSING workflows;21SUCCESS/0FAIL/7SKIPPED/0PENDING/0MISSING jobs,28total. All run attempts1 and head29db9c6 independently confirmed by gh run list plus current connector job readback. No dispatch, historical retry, test retry or extra diagnostic cycle.
+
+| Workflow | Exact candidate run | Result |
+| --- | --- | --- |
+| Portable Staging Foundation exact-head | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225564) | SUCCESS |
+| Student items and prior-year concessions exact-head | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225427) | SUCCESS |
+| Cross-platform apps 1A | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225353) | SUCCESS |
+| Communication Delivery Foundation 1A exact-head | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225465) | SUCCESS |
+| Real-Data Onboarding Preparation 1A exact-head | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225364) | SUCCESS |
+| PostgreSQL readiness dual-provider gate | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225464) | SUCCESS |
+| Biometric Staff Attendance 1A | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225685) | SUCCESS |
+| Master Requirements Reconciliation 1A exact-head | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225655) | SUCCESS |
+| Real-User Access Readiness 1A exact-head | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225382) | SUCCESS |
+
+Six mandatory portable jobs remain SKIPPED: OCI image/supply-chain, release index, portable stack, distributed runtime, object-storage/recovery and full synthetic acceptance. Optional private Windows QA producer separately SKIPPED. Successful Windows compiler/Android emulator/iPhone+iPad simulator/shared TypeScript jobs are ordinary no-remote build/PIN/platform coverage, not authenticated ERP/native or physical-device acceptance. Dependency/publication/typecheck/production-build/migration/backup gates passed where executed; none transfer admission to missing artifacts.
+
+Fresh full application coverage, kept separate: Real-User Access3002PASS/3inheritedqpdf skips; Master3005PASS/0skips; Biometric3002PASS/3qpdf; PostgreSQL application2972PASS/3qpdf; LinuxSQLite3002PASS/3qpdf. Communication, onboarding and portable each3002PASS/3qpdf. Relevant native-MFA file37PASS in every listed source/service run. Full suite counts are overlapping independent jobs, not one combined acceptance count. Local PostgreSQL NOT_EXECUTED; authorized hosted PostgreSQL is fresh candidate evidence, not a workaround for the prior PowerShell policy refusal.
+
+All five hosted public metadata bundles were read back through approved GitHub artifact APIs, archive digest checked against API metadata, and exact four-file inventory, per-file digest/size, canonical schemas, source/run/attempt/job/provider, event/link graph and declared unfinished spans validated. Each has371MFA events,37PASS, selected journey END, cleanup-wait END, cleanup END and0unfinished. No raw private traces/database/font/package/key export.
+
+| Consumer / exact job | Setup ms | Selected actor hook ms | Continuous journey ms | Drain / cleanup ms | Recorder emission ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| [real-user](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225382/job/110547441814) | 1445.277 | 365.491 | 1260.272 | 0.123 / 11.791 | 13.861 |
+| [master](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225655/job/110547443026) | 1387.883 | 271.168 | 1348.920 | 0.078 / 12.988 | 11.895 |
+| [biometric](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225685/job/110547443086) | 1160.823 | 267.314 | 833.396 | 0.093 / 12.394 | 12.425 |
+| [sqlite](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225464/job/110547443626) | 785.796 | 15.439 | 172.532 | 0.086 / 9.433 | 8.036 |
+| [pg](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225464/job/110547442609) | 2870.554 | 13.089 | 201.385 | 0.084 / 650.464 | 8.590 |
+
+Windows consumers retained original image20260925.250.1/Node24.19.0/pnpm11.21.0/Vitest4.1.11/SQLite/worker1. Linux provider consumers used image20260927.320.1/Node22.23.3; their different timing is not attributed to an unobserved lock/scheduler cause. The15s body,60s setup hooks,10s cleanup hook, test set/order, cryptographic cost, factor/session policy and assertions remain unchanged. File aggregates are not body durations: RUA33428ms, Master49842ms, Biometric24193ms, PG6796ms, LinuxSQLite3721ms; all37bodies passed. RUA observed journey phases ms: TOTP131.447/initial-native414.556/refresh73.386/recovery200.734/replacement370.002. Original failure had no equivalent phase record, so no valid causal before/after speedup is claimed.
+
+Recorder emission measurement excludes total adapter/AsyncLocalStorage scheduling overhead. transaction_wait is the complete transaction call, not solely connection/lock wait. Existing real services/crypto are delegated; revocation remains a direct DB fixture, device approval is fixture preparation, no complete password-login/admin-revocation API/Windows callback claim. HARNESS_ONLY child failure/timeout/pending-work exit1 retention is distinct from37real service cases and no natural failure. Only this selected journey is drained; hard termination and unrelated promises remain explicit limits.
+
+| Safe artifact readback | ZIP bytes | ZIP SHA256 |
+| --- | ---: | --- |
+| [real-user metadata](https://api.github.com/repos/vsairohith67/nalanda-school-erp/actions/artifacts/11190717908) | 18124 | c859b9d17f22eed968ac0d78451c624ca716d6d39848c22574fb3b73d99fa016 |
+| [master metadata](https://api.github.com/repos/vsairohith67/nalanda-school-erp/actions/artifacts/11190667803) | 18175 | f9c17e63e8be229583eea68eff2c188a168f007e777cc728bd808313e4fde4af |
+| [biometric metadata](https://api.github.com/repos/vsairohith67/nalanda-school-erp/actions/artifacts/11191152219) | 17972 | 580f8d62a24bb7f383f316a30a9466146859f3e8d63be20b09e05b11df01c5bf |
+| [sqlite metadata](https://api.github.com/repos/vsairohith67/nalanda-school-erp/actions/artifacts/11191240552) | 17676 | 017141a207fc4ee4e8900d3b2134a65660a89188039e2681aaf9e0d0b2077a23 |
+| [pg metadata](https://api.github.com/repos/vsairohith67/nalanda-school-erp/actions/artifacts/11189673287) | 17888 | bd2925c8c3550f8d065d4a0b6a6d40306d37a42e9e7986e72d6b68809add83c4 |
+
+Readback limitations preserved: intermittent GitHub CLI API connection failures and one connector-generated artifact URL403 were transport/readback errors, not test or policy conclusions; the authorized exact metadata was subsequently acquired through the official artifact API. Private readback summarizer initially assumed WindowsNode forLinux and misordered a schema key; both corrected against the independent workflow/schema using retained bytes, without rerunning tests or changing public schemas. Raw diagnostics remain private.
+
+Independent READ-ONLY GPT-6 Astra source review found no material scoped defect; final direct history-read observation and evidence wording also reviewed. Final source/publication/Git/diff safeguards follow this append; reviewer did not execute tests. Successful task-owned fixture removal is observed locally/hosted; no in-flight selected journey remains in these completed receipts. Two earlier allocated roots with no identity receipt remain ambiguous and untouched. Private retained scratch/evidence and historical/denied residue are preserved; no broad temp cleanup or hard-termination cleanup promise.
+
+Separate verdicts: isolated MFA/lineage services PASS within their existing boundary; trace capability VALIDATED; historical timeout CAUSE_UNRESOLVED; finance/DENY/OpenSSL history independentlyUNRESOLVED. Native full-report security BLOCKED by9retained warnings; rustls0.23.45/chacha20.10.2 unchanged. Backend/runtime EXTERNAL_RUNTIME_BLOCKED; controller/host readiness UNVERIFIED; authenticated Windows NOT_EXECUTED; installation/release NOT_CLEARED. No operational DB/vault access/copy/hash/cleanup. Main/P1/PR29/AskNalanda/K30/PR30/FA1–FA4/v48/migrations/46IDs/25OFFflags untouched.
+
+Measured intervals: scoped work/review18:56:03–19:33:57UTC (~37.9min wall interval, not uninterrupted engineering); normal hosted CI19:34:01–20:09:09UTC (~35.1min including queues/jobs); terminal verification/handoff began20:10:29UTC and is reported separately. Account usage not measured. One next recommendation: review the supported UNIC/MSRV parent correction in its independently owned milestone at its terminal checkpoint before any recovery integration; do not duplicate that companion work or execute Windows. Remaining GTK/Stronghold groups need coordinated upstream/framework/storage support. No next milestone started here.
+
+Tracker result deltas/readbacks are appended below after successful writes; recovery remains incomplete.
+
+Tracker readbacks2026-10-01T20:19:20UTC: PR28 terminal comment actual content matches after GitHub newline normalization. Asana one short linked result comment matches; all oversized notes, prior separate handoff comment, owner/dates/name and incomplete state retained. Notion terminal paragraph content matches after native block blank-line normalization, with prior content prefix/title/icon/cover preserved. Canvs W1 text matches exactly; prior history prefix and geometry/container/bindings/style unchanged. No duplicate hub/task/board or P1 tracker edit.
+
+Final source279/publication465/Git/diff safeguards PASS after terminal appendix. Source/lock/schema/flags remain unchanged from the reviewed candidate; final tracker receipt append is validated separately before handoff. This entire post-CI observation remains unstaged; no second push. Observed handoff interval20:10:29UTC to final readback is separate from work and CI, not uninterrupted engineering. Account usage not measured.
