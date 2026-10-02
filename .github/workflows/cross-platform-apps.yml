@@ -568,9 +568,9 @@ jobs:
     runs-on: windows-2025
     timeout-minutes: 50
     env:
-      RUSTUP_HOME: ${{ runner.temp }}/nalanda-minimum-rustup
-      CARGO_HOME: ${{ runner.temp }}/nalanda-minimum-cargo
-      CARGO_TARGET_DIR: ${{ runner.temp }}/nalanda-minimum-target
+      RUSTUP_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-rustup
+      CARGO_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-cargo
+      CARGO_TARGET_DIR: ${{ github.workspace }}/tmp/nalanda-minimum-target
       RUSTUP_TOOLCHAIN: "1.90.0"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -596,9 +596,9 @@ jobs:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     env:
-      RUSTUP_HOME: ${{ runner.temp }}/nalanda-minimum-rustup
-      CARGO_HOME: ${{ runner.temp }}/nalanda-minimum-cargo
-      CARGO_TARGET_DIR: ${{ runner.temp }}/nalanda-minimum-target
+      RUSTUP_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-rustup
+      CARGO_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-cargo
+      CARGO_TARGET_DIR: ${{ github.workspace }}/tmp/nalanda-minimum-target
       RUSTUP_TOOLCHAIN: "1.90.0"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -621,9 +621,9 @@ jobs:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     env:
-      RUSTUP_HOME: ${{ runner.temp }}/nalanda-minimum-rustup
-      CARGO_HOME: ${{ runner.temp }}/nalanda-minimum-cargo
-      CARGO_TARGET_DIR: ${{ runner.temp }}/nalanda-minimum-target
+      RUSTUP_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-rustup
+      CARGO_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-cargo
+      CARGO_TARGET_DIR: ${{ github.workspace }}/tmp/nalanda-minimum-target
       RUSTUP_TOOLCHAIN: "1.90.0"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -643,9 +643,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
-      RUSTUP_HOME: ${{ runner.temp }}/nalanda-minimum-rustup
-      CARGO_HOME: ${{ runner.temp }}/nalanda-minimum-cargo
-      CARGO_TARGET_DIR: ${{ runner.temp }}/nalanda-minimum-target
+      RUSTUP_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-rustup
+      CARGO_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-cargo
+      CARGO_TARGET_DIR: ${{ github.workspace }}/tmp/nalanda-minimum-target
       RUSTUP_TOOLCHAIN: "1.90.0"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -668,9 +668,9 @@ jobs:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     env:
-      RUSTUP_HOME: ${{ runner.temp }}/nalanda-minimum-rustup
-      CARGO_HOME: ${{ runner.temp }}/nalanda-minimum-cargo
-      CARGO_TARGET_DIR: ${{ runner.temp }}/nalanda-minimum-target
+      RUSTUP_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-rustup
+      CARGO_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-cargo
+      CARGO_TARGET_DIR: ${{ github.workspace }}/tmp/nalanda-minimum-target
       RUSTUP_TOOLCHAIN: "1.90.0"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

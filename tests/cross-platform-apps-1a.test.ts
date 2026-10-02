@@ -8,6 +8,23 @@ const root = path.resolve(".");
 const source = (file: string) => readFileSync(path.join(root, file), "utf8");
 
 describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
+  it("keeps minimum-toolchain job environments within GitHub's available contexts", () => {
+    // runner is unavailable in jobs.<id>.env; GitHub rejects the whole workflow.
+    // These homes belong to this disposable checkout, not a global tool profile.
+    const workflow = source(".github/workflows/cross-platform-apps.yml");
+    const jobs = [...workflow.matchAll(/^  minimum-[a-z]+:\r?$([\s\S]*?)(?=^  [a-z][a-z-]+:\r?$|$(?![\s\S]))/gm)];
+    expect(jobs).toHaveLength(5);
+    for (const [, block] of jobs) {
+      const environment = block.match(/\n    env:\r?\n([\s\S]*?)\n    steps:/)?.[1];
+      expect(environment).toBeDefined();
+      expect(environment).not.toMatch(/\$\{\{\s*(?:runner|steps|env|job)\./);
+      for (const [key, directory] of [["RUSTUP_HOME", "rustup"], ["CARGO_HOME", "cargo"], ["CARGO_TARGET_DIR", "target"]]) {
+        expect(environment).toContain(key + ": " + "$" + "{{ github.workspace }}/tmp/nalanda-minimum-" + directory);
+      }
+      expect(environment).toContain('RUSTUP_TOOLCHAIN: "1.90.0"');
+    }
+  });
+
   it("selects Tauri 2 through a dated, scored ADR", () => {
     const adr = source("docs/adr/ADR_CROSS_PLATFORM_APP_FRAMEWORK.md");
     expect(adr).toContain("Status: Accepted");
