@@ -109,10 +109,55 @@ def scanner_policy(trivy, grype, sbom, config, exits, metadata):
         age = (dt.datetime.now(dt.timezone.utc) - updated).total_seconds()
         check(0 <= age <= 72 * 3600 and re.fullmatch(r'[a-f0-9]{64}', m['databaseSha256']), 'DATABASE_STALE_OR_UNKNOWN')
         check(m['ignoreUnfixed'] is False and m['severityThreshold'] == 'HIGH', 'SCANNER_POLICY_CHANGED')
-        check(exits[tool] in (0, 1), 'SCANNER_PROCESS_FAILED')
+        check(exits[tool] in {'trivy': (0, 1), 'grype': (0, 2)}[tool], 'SCANNER_PROCESS_FAILED')
     blocked = [r for r in rows if r[-1] not in ('LOW', 'MEDIUM', 'NEGLIGIBLE')]
     check(all(exits[t] == 0 or any(r[0] == t for r in blocked) for t in exits), 'SCANNER_FAILURE_WITHOUT_VALID_FINDINGS')
     return blocked
+
+def scanner_commands(root, layout, bins):
+    # Pinned Trivy accepts an OCI directory; its archive input is Docker-specific.
+    return {
+        'trivy': [bins['trivy'],'image','--cache-dir',str(root/'trivy-db'),'--skip-db-update','--input',str(layout),'--format','json','--output',str(root/'trivy.json'),'--list-all-pkgs','--pkg-types','os,library','--scanners','vuln','--severity','UNKNOWN,HIGH,CRITICAL','--ignore-unfixed=false','--exit-code','1'],
+        'grype': [bins['grype'],'oci-dir:'+str(layout),'-o','json','--file',str(root/'grype.json'),'--fail-on','high','--only-fixed=false'],
+    }
+
+def capture_reports(root, subject, summary):
+    raw_reports = {}
+    summary['reports'] = {}
+    summary['reportHashes'] = {}
+    # Capture every available original report before parsing any report. A missing
+    # first report must not erase independent evidence from the other scanner.
+    for name in ('trivy.json','grype.json','sbom.json','scanner-metadata.json'):
+        file = root/name
+        receipt = dict(subject=subject,name=name,status='MISSING')
+        try:
+            st = file.lstat()
+            if not stat.S_ISREG(st.st_mode) or st.st_nlink != 1 or st.st_size > PRIVATE_LIMIT:
+                receipt['status'] = 'UNSAFE'
+            else:
+                raw = file.read_bytes()
+                check(len(raw) == st.st_size and len(raw) <= PRIVATE_LIMIT, 'REPORT_BYTES_CHANGED')
+                raw_reports[name] = raw
+                receipt.update(status='CAPTURED',bytes=len(raw),sha256=sha(raw),capturedBeforeParse=stamp())
+                summary['reportHashes'][name] = sha(raw)
+        except FileNotFoundError:
+            pass
+        except Exception:
+            receipt['status'] = 'UNSAFE'
+        write(root/(name+'.bytes-receipt.json'),receipt)
+        summary['reports'][name] = {k:v for k,v in receipt.items() if k not in ('subject','name','capturedBeforeParse')}
+    parsed = {}
+    for name, raw in raw_reports.items():
+        try:
+            value = json.loads(raw)
+            check(isinstance(value,dict), 'REPORT_OBJECT_REQUIRED')
+            parsed[name] = value
+            summary['reports'][name]['status'] = 'JSON_PARSED'
+        except Exception:
+            summary['reports'][name]['status'] = 'JSON_INVALID'
+    check(len(raw_reports) == 4, 'REPORT_COLLECTION_INCOMPLETE')
+    check(len(parsed) == 4, 'REPORT_PARSE_INVALID')
+    return parsed
 
 def project_findings(rows):
     check(len(rows) <= 100, 'PUBLIC_FINDING_BOUND')
@@ -268,8 +313,7 @@ def run():
         check('nodeBinarySha256' in summary, 'CURRENT_NODE_BINARY_BYTES_MISSING')
         summary['baseConfigDigest']=manifest['config']['digest'];summary['baseManifestDigest']=selected['digest'];summary['layerDigests']=[d['digest'] for d in manifest['layers']]
         write(layout/'index.json',dict(schemaVersion=2,manifests=[selected]));write(layout/'oci-layout',dict(imageLayoutVersion='1.0.0'))
-        archive_path=root/'base-oci.tar'
-        with tarfile.open(archive_path,'w') as tar: tar.add(layout,arcname='.')
+        summary['base']='STATIC_INPUT_BYTES_VERIFIED'
         subject=manifest['config']['digest'];subject_env={'SYFT_CHECK_FOR_APP_UPDATE':'false','GRYPE_CHECK_FOR_APP_UPDATE':'false','GRYPE_DB_CACHE_DIR':str(root/'grype-db')}
         ok('sbom',[bins['syft'],'oci-dir:'+str(layout),'-o','spdx-json='+str(root/'sbom.json')],subject_env,subject)
         ok('trivy-db',[bins['trivy'],'image','--cache-dir',str(root/'trivy-db'),'--download-db-only'],subject_env,subject)
@@ -284,17 +328,14 @@ def run():
             check(parsed.tzinfo is not None, 'DATABASE_TIMESTAMP_INVALID')
             value['databaseUpdatedAt']=parsed.isoformat()
         write(root/'scanner-metadata.json',metadata);summary['scanners']=metadata
-        t_exit,_=process('trivy',[bins['trivy'],'image','--cache-dir',str(root/'trivy-db'),'--skip-db-update','--input',str(archive_path),'--format','json','--output',str(root/'trivy.json'),'--list-all-pkgs','--pkg-types','os,library','--scanners','vuln','--severity','UNKNOWN,HIGH,CRITICAL','--ignore-unfixed=false','--exit-code','1'],subject_env,subject=subject)
-        g_exit,_=process('grype',[bins['grype'],'oci-dir:'+str(layout),'-o','json','--file',str(root/'grype.json'),'--fail-on','high','--only-fixed=false'],dict(subject_env,GRYPE_DB_AUTO_UPDATE='false'),subject=subject)
-        report_bytes={}
-        for n in ('trivy.json','grype.json','sbom.json','scanner-metadata.json'):
-            file=root/n
-            check(file.is_file() and not file.is_symlink() and file.stat().st_size<=PRIVATE_LIMIT,'REPORT_UNSAFE')
-            raw=file.read_bytes();report_bytes[n]=raw
-            write(root/(n+'.bytes-receipt.json'),dict(subject=subject,name=n,bytes=len(raw),sha256=sha(raw),capturedBeforeParse=stamp()))
-        trivy,grype,sbom=[json.loads(report_bytes[n]) for n in ('trivy.json','grype.json','sbom.json')]
+        commands=scanner_commands(root,layout,bins)
+        summary['base']='SCANS_ATTEMPTED'
+        t_exit,_=process('trivy',commands['trivy'],subject_env,subject=subject)
+        g_exit,_=process('grype',commands['grype'],dict(subject_env,GRYPE_DB_AUTO_UPDATE='false'),subject=subject)
+        summary['base']='REPORT_VALIDATION_ATTEMPTED'
+        reports=capture_reports(root,subject,summary)
+        trivy,grype,sbom=[reports[n] for n in ('trivy.json','grype.json','sbom.json')]
         blocked=scanner_policy(trivy,grype,sbom,subject,dict(trivy=t_exit,grype=g_exit),metadata)
-        summary['reportHashes']={n:sha((root/n).read_bytes()) for n in ('trivy.json','grype.json','sbom.json','scanner-metadata.json')}
         # Public input package identity must come from separately inspected vendor bytes.
         public_rows=[r for r in blocked if packages.get(r[2]) == r[3]]
         summary['blockingFindingCount']=len(blocked)

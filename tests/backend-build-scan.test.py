@@ -59,7 +59,7 @@ class QualificationTests(unittest.TestCase):
         t,g,s,d,e,m=self.fixtures();t['Metadata']['ImageID']='sha256:'+'3'*64
         with self.assertRaisesRegex(ValueError,'TRIVY_SUBJECT'):q.scanner_policy(t,g,s,d,e,m)
     def test_scanner_failure(self):
-        t,g,s,d,e,m=self.fixtures();e['grype']=2
+        t,g,s,d,e,m=self.fixtures();e['grype']=1
         with self.assertRaisesRegex(ValueError,'SCANNER_PROCESS_FAILED'):q.scanner_policy(t,g,s,d,e,m)
     def test_ignored_unknown_prohibited(self):
         t,g,s,d,e,m=self.fixtures();g['ignoredMatches']=[{'vulnerability':{'id':'CVE-2026-5435','severity':'Unknown'},'artifact':{'name':'libc6','version':'2'}}]
@@ -67,6 +67,40 @@ class QualificationTests(unittest.TestCase):
     def test_nonzero_without_findings(self):
         t,g,s,d,e,m=self.fixtures();e['trivy']=1
         with self.assertRaisesRegex(ValueError,'SCANNER_FAILURE_WITHOUT'):q.scanner_policy(t,g,s,d,e,m)
+    def test_grype_threshold_exit_two_with_own_findings(self):
+        t,g,s,d,e,m=self.fixtures();e['grype']=2
+        g['matches']=[{'vulnerability':{'id':'CVE-2026-5435','severity':'High'},'artifact':{'name':'libc6','version':'2'}}]
+        self.assertEqual(len(q.scanner_policy(t,g,s,d,e,m)),1)
+        e['grype']=1
+        with self.assertRaisesRegex(ValueError,'SCANNER_PROCESS_FAILED'):q.scanner_policy(t,g,s,d,e,m)
+    def test_grype_threshold_without_own_findings(self):
+        t,g,s,d,e,m=self.fixtures();e['grype']=2
+        t['Results'][0]['Vulnerabilities']=[{'VulnerabilityID':'CVE-2026-5435','PkgName':'libc6','InstalledVersion':'2','Severity':'HIGH'}]
+        with self.assertRaisesRegex(ValueError,'SCANNER_FAILURE_WITHOUT'):q.scanner_policy(t,g,s,d,e,m)
+    def test_trivy_uses_oci_directory(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t);layout=root/'oci';layout.mkdir()
+            commands=q.scanner_commands(root,layout,{'trivy':'mock-trivy','grype':'mock-grype'})
+            self.assertEqual(commands['trivy'][commands['trivy'].index('--input')+1],str(layout))
+            self.assertIn('oci-dir:'+str(layout),commands['grype'])
+    def test_missing_first_report_preserves_other_raw_hashes(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t);summary={}
+            for name in ('grype.json','sbom.json','scanner-metadata.json'):q.write(root/name,{'private':'PRIVATE_MARKER'})
+            with self.assertRaisesRegex(ValueError,'REPORT_COLLECTION_INCOMPLETE'):q.capture_reports(root,'sha256:'+'1'*64,summary)
+            self.assertEqual(summary['reports']['trivy.json']['status'],'MISSING')
+            self.assertEqual(summary['reports']['grype.json']['status'],'JSON_PARSED')
+            self.assertEqual(summary['reportHashes']['grype.json'],q.sha((root/'grype.json').read_bytes()))
+            self.assertNotIn('PRIVATE_MARKER',json.dumps(summary))
+            self.assertEqual(len(list(root.glob('*.bytes-receipt.json'))),4)
+    def test_invalid_report_preserves_all_original_byte_receipts(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t);summary={}
+            for name in ('trivy.json','grype.json','sbom.json','scanner-metadata.json'):q.write(root/name,b'{' if name=='trivy.json' else b'{}')
+            with self.assertRaisesRegex(ValueError,'REPORT_PARSE_INVALID'):q.capture_reports(root,'sha256:'+'1'*64,summary)
+            self.assertEqual(summary['reports']['trivy.json']['status'],'JSON_INVALID')
+            self.assertEqual(len(summary['reportHashes']),4)
+            self.assertEqual(summary['reports']['grype.json']['status'],'JSON_PARSED')
     def test_missing_scope(self):
         t,g,s,d,e,m=self.fixtures();t['Results']=[{'Class':'lang-pkgs','Target':'package.json'}]
         with self.assertRaisesRegex(ValueError,'OS_COVERAGE_MISSING'):q.scanner_policy(t,g,s,d,e,m)
