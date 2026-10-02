@@ -25,7 +25,7 @@ CLASSIFICATION = 'BUILD_SCAN_ONLY_NOT_ADMITTED'
 DIGEST = re.compile(r'^sha256:[a-f0-9]{64}$')
 PRIVATE_LIMIT = 256 * 1024 * 1024
 MAX_IMAGE = 1024 * 1024 * 1024
-RUNTIME = 'gcr.io/distroless/nodejs24-debian13:nonroot@sha256:774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79'
+RUNTIME = 'gcr.io/distroless/nodejs24-debian13:nonroot@sha256:9eeb7f5887d0e239e78264b06f7f11d2e14be534050481803a9e4728fcdd278e'
 BUILDER = 'node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df'
 
 def check(value, code):
