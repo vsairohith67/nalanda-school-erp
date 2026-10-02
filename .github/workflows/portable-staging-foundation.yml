@@ -398,3 +398,42 @@ jobs:
       - name: Cleanup
         if: always()
         run: rm -rf tmp backups data
+
+  backend-build-scan:
+    # Independent byte/static-input qualification; never unholds runtime jobs.
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 28 && github.event.pull_request.head.repo.full_name == github.repository }}
+    name: Backend build/scan input qualification (${{ matrix.architecture }})
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - { architecture: amd64, runner: ubuntu-24.04 }
+          - { architecture: arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      TARGET_ARCHITECTURE: ${{ matrix.architecture }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false, fetch-depth: 0 }
+      - name: Verify HARNESS_ONLY no-launch and refusal controls
+        run: python3 tests/backend-build-scan.test.py
+      - name: Inspect and scan exact current input bytes privately
+        run: python3 scripts/portable/backend-build-scan.py
+      - name: Publish bounded qualification metadata only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: backend-build-scan-result-${{ env.EXPECTED_SHA }}-${{ matrix.architecture }}
+          path: backend-build-scan-result.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish exact filename and hash manifest only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: backend-build-scan-manifest-${{ env.EXPECTED_SHA }}-${{ matrix.architecture }}
+          path: backend-build-scan-public-manifest.json
+          if-no-files-found: error
+          retention-days: 14

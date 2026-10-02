@@ -156,7 +156,7 @@
           "sha256": "9d1e34ea325f94f57ab2ff51fbef03fe1368c7760a6e719a5d4eb9b09c8ea95c"
         }
       ],
-      "currentSha256": "c15be90123c26ecfd7eeedefce4123212286a82323eded5434b3329f13fb269c",
+      "currentSha256": "a2480378a402ebd093d2f5a63bcedc408c2c8b27536c4c4f796a521847296970",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4332,6 +4332,31 @@
         }
       ],
       "currentSha256": "34ea3960bb58369a56b73765f9504663f9da83037b63561cc14e5737ed4a3fef",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/backend-build-scan.py",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "ffa033718f439fa41cb73237a9d3379f49e7bde8f622491722e8542b3099cf6e",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
