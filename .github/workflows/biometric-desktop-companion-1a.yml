@@ -1,0 +1,45 @@
+name: Biometric Desktop Companion 1A synthetic host
+on:
+  pull_request:
+    paths:
+      - 'apps/nalanda-biometric-bridge/**'
+      - 'docs/biometric-desktop-companion-1a/**'
+      - '.github/workflows/biometric-desktop-companion-1a.yml'
+permissions:
+  contents: read
+concurrency:
+  group: biometric-companion-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  synthetic-windows:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: 'false'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: { node-version: 24.19.0 }
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with: { dotnet-version: '10.0.401' }
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm --dir apps/nalanda-biometric-bridge test
+      - run: pnpm --dir apps/nalanda-biometric-bridge typecheck
+      - run: pnpm --dir apps/nalanda-biometric-bridge build
+      - name: Compile supported SCM host
+        run: dotnet publish apps/nalanda-biometric-bridge/windows/host/Nalanda.Biometric.Service.csproj -c Release -r win-x64 --self-contained true -p:RestoreLockedMode=true -o tmp/biometric-companion-publish
+      - name: Console process ownership and DPAPI
+        run: node apps/nalanda-biometric-bridge/scripts/host-smoke.mjs dotnet tmp/biometric-companion-publish/Nalanda.Biometric.Service.dll
+      - name: Disposable runner SCM with verified cleanup
+        shell: pwsh
+        run: apps/nalanda-biometric-bridge/scripts/scm-smoke.ps1 -HostExe (Join-Path (Get-Location) 'tmp/biometric-companion-publish/Nalanda.Biometric.Service.exe') -BridgeRoot (Join-Path (Get-Location) 'apps/nalanda-biometric-bridge')
+      - name: Genuine standard-account isolation and service positive controls
+        shell: pwsh
+        run: apps/nalanda-biometric-bridge/scripts/isolation-smoke.ps1 -HostExe (Join-Path (Get-Location) 'tmp/biometric-companion-publish/Nalanda.Biometric.Service.exe') -BridgeRoot (Join-Path (Get-Location) 'apps/nalanda-biometric-bridge')
+      # No artifact upload, package publication, production secrets or deployment.
