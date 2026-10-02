@@ -1157,3 +1157,107 @@ Tracker result deltas/readbacks are appended below after successful writes; reco
 Tracker readbacks2026-10-01T20:19:20UTC: PR28 terminal comment actual content matches after GitHub newline normalization. Asana one short linked result comment matches; all oversized notes, prior separate handoff comment, owner/dates/name and incomplete state retained. Notion terminal paragraph content matches after native block blank-line normalization, with prior content prefix/title/icon/cover preserved. Canvs W1 text matches exactly; prior history prefix and geometry/container/bindings/style unchanged. No duplicate hub/task/board or P1 tracker edit.
 
 Final source279/publication465/Git/diff safeguards PASS after terminal appendix. Source/lock/schema/flags remain unchanged from the reviewed candidate; final tracker receipt append is validated separately before handoff. This entire post-CI observation remains unstaged; no second push. Observed handoff interval20:10:29UTC to final readback is separate from work and CI, not uninterrupted engineering. Account usage not measured.
+
+## RECOVERY-UNIC-MSRV-INTEGRATION-1A — primary integration, 2026-10-02
+
+Pre-CI checkpoint: integrated source and local Windows minimum/pinned validation are complete; hosted minimum/platform and exact-candidate outcomes remain PENDING. This is a DRAFT candidate support change, not native/backend admission or installation clearance.
+
+### Immutable ownership, provenance and preserved evidence
+
+Primary starting source `29db9c61c82f43ecf263cf72c03896f18af92695`, tree `c211a43c663ecb31332dfa9c09a524665a1393d6`; origin matched after fetch; branch release/recovery-integration-1a, PR28 OPEN/DRAFT. Exactly60 pre-existing unstaged ledger additions, index empty. Their complete starting file bytes remain privately retained (SHA256 `af93bc6df6c6966f6c93aceb92f587b64194f779c291baf4303638a1b0e7d827`), patch `f1075a4aa139cb6d5e3d24925e73df39158633255293f973477ccd6b0d5dedab`. Local checkpoint `6e021584cddf9358cca2b1062a187c90c3a3c240` preserves only that prior MFA terminal evidence with explicit provenance; it was not pushed alone. Byte equality against the privately captured complete file was verified immediately before this append.
+
+Common source `4f60dca86f8fe20b77bfbbd6862b3c16ed043bfe`, tree `0db07108217f2c0238cc1e6514da9cd1ff1b028a`. Companion final `a99518fc05f735f5800246566adde4c4b46ff1b8`, tree `ba21cdc97c2c544341cf206353590d81f5224ac5`, on local recovery/overnight-unic-msrv-1a; clean and idle, read-only throughout. These local objects were inspected, not assumed remotely fetchable. One primary writer; one focused read-only reviewer; no overnight restart.
+
+| Original local commit | Explicit primary result | Scope |
+| --- | --- | --- |
+| 520d86d238c3e8d16379d6f4784f1d20a921508c | df3187a9578cfb9735578443ec14431cde83f2bf | cherry-pick -x, exact three native source files |
+| deb1d23f568fa5bb812ddce07a411908cdf9c752 | 287de182535f5e4df60fabe07c8afbc6c6051c1e | cherry-pick -x, six sanitized reports |
+| a99518fc05f735f5800246566adde4c4b46ff1b8 | 29121b0a3ad099075f732998c4d5fdf4da234d48 | cherry-pick -x, seventh tracker-readback report |
+
+Seven imported [companion reports](overnight-parallel-1a/HANDOFF.md) retain their original LOCAL/UNMERGED/standalone evidence labels and feature dispositions. They do not substitute for combined validation. Source overlap review included actual origin/ACL/deep-link/build/profile consumers and primary MFA trace/publication changes since the common base. No production application code is changed by the native lib.rs delta: three regression tests only.
+
+### Supported dependency and minimum contract
+
+Exact full package/checksum/edge inventory remains in [DEPENDENCY_CANDIDATE.md](overnight-parallel-1a/DEPENDENCY_CANDIDATE.md); imported lock and three source Git blobs match the source commit. tauri-utils2.9.3→2.10.1 and urlpattern0.3.0→0.6.0 remove all five UNIC0.9 records. Immediate Tauri/build/plugin parents remain unchanged and admit the precise supported version. Required infer/cfb, ctor, compression/DOM/JSON additions and incidental Cargo resolver Windows/getrandom/toml edge rebindings remain explicit in that inventory; no fresh unrestricted update, manual checksum, framework/GTK/Stronghold/storage migration or unused direct dependency.
+
+The application declaration changes Rust1.77.2→1.90 because the actual tauri-utils2.10.1 published manifest uses edition2024 and rust-version1.90. The application edition remains2021. [Cargo minimum semantics](https://doc.rust-lang.org/cargo/reference/rust-version.html), [rustup selection](https://rust-lang.github.io/rustup/overrides.html) and [environment isolation](https://rust-lang.github.io/rustup/environment-variables.html) were read. Existing ADR/build/artifact policy pins1.97.1; those pins remain unchanged. No separately tested1.77.2 whole-graph support promise was found; any external production support commitment remains UNKNOWN/UNASSIGNED. This user-authorized DRAFT1.90 candidate is conditional on the platform outcomes below, not owner approval of a production support withdrawal. Compiler minimum is not device-OS minimum.
+
+Exact official Rust1.90.0 was installed with normal rustup integrity checks in this task's private Rust/Cargo home, never a global default/override or producer-pin bypass. rustc1.90.0 (1159e78c4,2025-09-14), Cargo1.90.0 (840b83a10,2025-07-30), LLVM20.1.8. Existing pinned rustc1.97.1 (8bab26f4f,2026-07-14), Cargo1.97.1 (c980f4866,2026-06-30). Separate target outputs; no connected-QA artifact production. Raw checkout lock SHA256 `b5c472800910c475e5d44154317c9abfde07fe943b259e3138505e83d91dabdb` (CRLF), immutable Git-blob LF hash `42e83ce078779d6d97bef9b790a853960365493a28563958b9445af278e2943b`; normalization equality independently checked. Every recorded locked command preserves the raw hash.
+
+### Finite minimum/platform matrix and concrete consumers
+
+New `scripts/portable/native-minimum-compile.mjs` verifies exact compiler/declaration/target, runs the actual application's locked graph and records source, target, command, compiler, lock before/after and process result. Windows runs `cargo +1.90.0 test --locked --target x86_64-pc-windows-msvc --lib`; other targets use `check --locked --target TARGET --lib`, not unit execution. Android consumes the disposable runner's installed NDK with explicit API28 compiler/linker paths. Existing QA compiler helper has separate explicit --minimum-test/--integration-test modes, real signed public fixtures and unchanged substituted-input/production-exclusion refusals. QA remains Windows/x64-only, enforced by existing build.rs. Existing normal Windows/Android/iOS builds explicitly retain1.97.1 and forward supported --locked runner arguments.
+
+| Target / architecture | Feature/profile | Rust1.90 local | Focused normal-CI lane | Existing1.97.1 coverage |
+| --- | --- | --- | --- | --- |
+| Windows x86_64-pc-windows-msvc | production + supported synthetic-qa | 13+13 actual unit PASS; concrete entrypoint13PASS | minimum-windows, production+QA tests | local13+13PASS; normal Windows package/PIN gate pending |
+| Linux x86_64 / aarch64-unknown-linux-gnu | production | NOT_EXECUTED locally | two native GTK/WebKit check jobs | no fabricated Linux native result |
+| macOS x86_64 / aarch64-apple-darwin | production | NOT_EXECUTED locally | two native macOS check jobs | normal iOS host Rust test pending |
+| Android aarch64 / armv7 / i686 / x86_64 | production | NOT_EXECUTED locally | four NDK target check jobs | normal Android build/emulator pending |
+| iOS aarch64 device / aarch64 simulator / x86_64 simulator | production | NOT_EXECUTED locally | three Xcode target check jobs | normal iOS build/simulator pending |
+
+Twelve production target jobs plus supported Windows QA are represented; standalone24 metadata variants are resolution evidence, not24 compilations. Hosted lanes use explicit official1.90.0, task/disposable homes, separate output, exact PR head and no artifact upload or cross-run package cache. No unsupported QA target, ignored rust-version, raised minimum or changed OS floor. Local iOS CLI is correctly unavailable on Windows; exact tagged Tauri CLI2.11.4 source was independently checked for mobile runner-argument support.
+
+### Actual combined local evidence and limitations
+
+| Attempt/receipt | Outcome | Observed elapsed |
+| --- | --- | --- |
+| minimum-windows-production | actual application Windows1.90 graph +13 unit PASS,0ignored | 488.668s cold compile; unit body9.72s |
+| minimum-windows-qa | actual Windows1.90 QA13PASS + two unchanged compiler refusals | 136.294s; unit11.53s |
+| pinned-windows-production | actual Windows1.97.1 production13PASS | 406.508s cold separate output; unit13.37s |
+| pinned-windows-qa | actual Windows1.97.1 QA13PASS + two compile refusals | 116.189s; unit10.13s |
+| minimum-entrypoint | new concrete consumer invokes correct1.90 graph,13PASS | 16.234s warm; not a new cold-platform sample |
+| harness-negative | four invalid/foreign/extra target/unknown-mode refusals before compiler/fixture start; owned temp unchanged | 0.714s, HARNESS_ONLY |
+| combined-native-regressions | ten existing files97PASS,0skips; includes full MFA service/lineage, reference, profile, admission and publication wiring | 43.018s / Vitest42.12s |
+| app-unit | six files48PASS,0skips | 11.235s / Vitest1.93s |
+| tools-core typecheck / app typecheck / web compile | PASS / PASS / PASS | 90.817s /8.084s /15.265s |
+| production + QA full locked metadata |631packages each; only application synthetic-qa feature differs; no UNIC copy |26.830s /1.293s |
+
+The three new controls exercise the real upstream ACL wrapper for exact origin/encoded separators, Unicode named segments with foreign-origin denial, and actual local-only capability JSON. Existing strict callback/profile, real isolated TLS trusted-CA success, foreign-CA/wrong-hostname/expired-leaf refusal and redirect refusal all executed in both Rust toolchains/profiles. JS transport/platform/IPC doubles remain contract evidence; fresh SQLite MFA services retain their original direct database revocation fixture and device-approval precondition boundary. No administrator-revocation UI or genuine OS callback/Windows journey is inferred. Stronghold/crypto/serialization versions and storage features remain unchanged; a new format-migration campaign is NOT_APPLICABLE.
+
+Private stdout/stderr and process receipts were captured before parsing under ignored task-owned scratch. Early minimum-production, minimum-QA and pinned-production capture-helper receipts record completion source only; exact native blobs remained unchanged throughout, including the report-only commits during the first compilation. This limitation is retained rather than inventing start SHAs. Later capture-helper receipts (including pinned-QA and the concrete minimum entrypoint) record both start/end source; audit receipts separately identify their immutable source/lock subjects. Tools/typechecks/app tests do not certify authentic Windows/backend execution. Fresh PostgreSQL is pending normal authorized hosted provider coverage; the prior local PowerShell refusal was not bypassed.
+
+### Complete audit comparison and unchanged security refusal
+
+Cargo-audit0.22.2 binary SHA256 `fc6e9d818d73ba07ecf28650793d46b74cf90aeb70c17405563c16454a4ba62d`; every receipt records command/tool/lock/DB before parsing, real exit/signal/error, start/end/monotonic duration and raw byte sizes/hashes. No ignores, target filtering, suppressed warnings or policy edits. Baseline Git-lock hash `a0d6b942f835b99cd82018d25ef52f5a5f2f09b52d9c49292c99a06ac967cf37`. Full report scope covers631 candidate packages, not only compiled Windows libraries.
+
+| Receipt | DB revision | UTC interval / duration | Exit/signal; stdout/stderr | Finding |
+| --- | --- | --- | --- | --- |
+| initial baseline-frozen |3461c0d8f85d084552dd999c58d97c7123a9e0fd |04:14:43.705–04:14:44.932 /1.227s |0/null;13953/860bytes | INCOMPLETE yanked scope:8 removed-package sparse-index entries missing; retained |
+| corrected baseline-frozen-complete |same3461,2026-10-01T09:31:41+02:00 |04:33:00.747–04:33:01.738 /0.990s |0/null;13861/0bytes | COMPLETE zero vulnerabilities,nine warnings |
+| candidate-frozen |same3461 |04:14:45.065–04:14:46.264 /1.200s |0/null;8771/0bytes | COMPLETE zero vulnerabilities,four warnings |
+| candidate-current mandated scan |3461→6de4455103aced2cba86e3b86e5c090b22827cf1,2026-10-01T22:25:27+02:00 |04:14:46.404–04:14:53.610 /7.205s |0/null;8766/0bytes | COMPLETE zero vulnerabilities,four warnings; DB1278→1279 records, warning set unchanged |
+| unchanged pure verifyNativeSecurity |current report + genuine root/app pnpm reports |04:33:42.738–04:33:43.175 /0.436s |1/null | REFUSED: NATIVE_RUST_WARNINGS_REQUIRE_REVIEW |
+
+The identified comparison-capture defect was corrected only by acquiring the eight exact registry metadata entries in the task-owned Cargo cache and recapturing baseline once at the same verified DB. An initial outside-workspace cargo-info --locked syntax error is retained; its corrected metadata-only invocation changes no application lock/manifest. Candidate/current scans were not repeated for a favorable result. Current raw audit stdout SHA256 `1ca972201a4985848bf2e78799294b194eb38d2eaf8536a2287e1db43d17ae15`; corrected baseline `3464a0115f16d3bf9c0b4fecade3bd923b9669f8d4ec7135e192d04088f46056`; candidate frozen `982dc8217ebea5ab4f4b3b4cb72d5fac06839f7cc52695da444cc621b871c6f2`. Stderr empty for complete reports. Raw reports remain private, not repository artifacts.
+
+Removed: unic-char-property/RUSTSEC-2025-0081, unic-char-range/0075, unic-common/0080, unic-ucd-ident/0100, unic-ucd-version/0098, all0.9.0/unmaintained. No new/changed remaining finding at the frozen or current DB. Remaining: bincode1.3.3/unmaintained/RUSTSEC-2025-0141; paste1.0.15/unmaintained/RUSTSEC-2024-0436; proc-macro-error1.0.4/unmaintained/RUSTSEC-2024-0370; glib0.18.5/unsound/RUSTSEC-2024-0429. rustls0.23.45 and chacha20.10.2 remain. Root/app pnpm production audits each exit0/zero vulnerabilities; these do not replace native security. No admission receipt, artifact sealing, held producer or runtime job was executed.
+
+### Review, safeguards and exact changed manifest
+
+One focused independent read-only reviewer was requested with the available GPT-6 Astra configuration; underlying runtime identity was not independently attested and no running parent model switch is claimed. Reviewer traced actual source-to-ACL/build/profile/MFA-publication consumers, all seven report imports, target/feature contract, exact tagged mobile CLI runner arguments, minimal lock delta and trust/privacy/cleanup. Two material pre-push findings were fixed: conflicting minimum/integration QA modes, and missing helper-only workflow path triggers. Independently rehashed exact three source-registration entries; no remaining material source finding at re-review. Reviewer performed no test/build/audit/writes; final evidence review and hosted results will be recorded below.
+
+Source checker PASS280entries/4original heads/4backup contracts, only exact three generated entry changes. Both existing publication scanners PASS473paths, no candidate secrets/binaries/real contacts; Git safety PASS; new Node syntax and git diff --check PASS. No local YAML parser was installed; source structure and consumers independently reviewed, with actual GitHub workflow parsing still pending. Existing test sets, crypto cost,15/30s action deadlines, concurrency rules, capture thresholds and all five MFA trace consumer finalizers/uploads remain unchanged.
+
+Exact milestone paths relative to primary, including prior60-line evidence checkpoint:
+- .github/workflows/cross-platform-apps.yml
+- apps/nalanda-cross-platform/src-tauri/Cargo.toml
+- apps/nalanda-cross-platform/src-tauri/Cargo.lock
+- apps/nalanda-cross-platform/src-tauri/src/lib.rs
+- scripts/portable/native-minimum-compile.mjs
+- scripts/portable/qa-native-profile-compile.ts
+- config/recovery-integration-source-delta.json
+- docs/evidence/RELEASE_RECOVERY_1C.md
+- docs/evidence/overnight-parallel-1a/OWNERSHIP_VALIDATION.md
+- docs/evidence/overnight-parallel-1a/DEPENDENCY_CANDIDATE.md
+- docs/evidence/overnight-parallel-1a/VALIDATION.md
+- docs/evidence/overnight-parallel-1a/FEATURE_COMPLETION.md
+- docs/evidence/overnight-parallel-1a/MORNING_UNBLOCK.md
+- docs/evidence/overnight-parallel-1a/HANDOFF.md
+- docs/evidence/overnight-parallel-1a/TRACKER_READBACK.md
+
+Catchable QA key/certificate fixture roots and service databases were removed by their existing owned finally/afterAll paths after completion. Observed task temp retains only its own tsx cache; compiler outputs, private audit/receipt material and official toolchain are retained privately, not published. No machine-wide cleanup, companion/residue cleanup or forensic-erasure claim. The two unowned MFA roots remain untouched.
+
+Normal combined-candidate CI will follow one consolidated source push only; starting29db9c6 successes are reused historical evidence. Twelve minimum-target jobs augment the actual workflow matrix; no fixed old workflow/job total is imposed. Six mandatory runtime gates plus optional private native producer remain separate held skips. Final candidate SHA/tree, all terminal workflow/job/provider/platform/trace outcomes and tracker readbacks will be appended unstaged after observation. No duplicate dispatch, historical retry, finance/DENY/OpenSSL recurrence campaign, or cosmetic second push.
+
+EXTERNAL_RUNTIME_BLOCKED/EPHEMERAL_EXACT_HEAD_CI_ONLY remain. Native security is still BLOCKED by four warnings; backend exact security/provenance and controller/host prerequisites remain independently blocked/unverified. Authenticated Windows and installation NOT_EXECUTED. Main/P1/PR29/K30/PR30/FA1–FA4/v48/migrations/46IDs/25OFFflags and Georgia Bold rendering unchanged; operational DB/vault not opened/copied/hashed/cleaned. No next package started.
