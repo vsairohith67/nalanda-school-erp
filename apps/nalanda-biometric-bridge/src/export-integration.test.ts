@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from "vitest";
+import { afterAll, afterEach, expect, it } from "vitest";
 import { createHash, createDecipheriv, generateKeyPairSync, verify } from "node:crypto";
 import { createServer } from "node:http";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -16,9 +16,17 @@ import { loadBridgeConfig } from "./config.js";
 import { previewExport } from "./export-preview.js";
 import { syncPreparedBatch } from "./sync.js";
 import type { BridgeConfig } from "./contracts.js";
-const fixtureBase=path.resolve("../../tmp/k30-export-bridge-1a/fixtures");mkdirSync(fixtureBase,{recursive:true,mode:0o700});
 const dirs:string[]=[],key=Buffer.alloc(32,13).toString("base64url");
 const sid=process.platform==="win32"?execFileSync("whoami.exe",["/user","/fo","csv","/nh"],{encoding:"utf8",windowsHide:true}).match(/S-1-[0-9-]+/)![0]:"S-1-5-21-100-100-100-1001";
+// Hosted workspace ancestry is not a private source boundary. Use only a fresh
+// disposable runner fixture; never mutate the workspace/drive ACL or production policy.
+const hostedWindows=process.platform==="win32"&&process.env.GITHUB_ACTIONS==="true";
+const hostedParent=hostedWindows?path.resolve(process.env.ProgramData!):undefined;
+const fixtureBase=hostedParent?mkdtempSync(path.join(hostedParent,"NalandaK30ExportSynthetic-")):path.resolve("../../tmp/k30-export-bridge-1a/fixtures");
+mkdirSync(fixtureBase,{recursive:true,mode:0o700});
+function removeHostedFixture(){if(!hostedParent||path.dirname(fixtureBase)!==hostedParent||!path.basename(fixtureBase).startsWith("NalandaK30ExportSynthetic-"))throw new Error("unsafe hosted cleanup");rmSync(fixtureBase,{recursive:true});expect(existsSync(fixtureBase)).toBe(false);}
+if(hostedWindows)try{execFileSync("icacls.exe",[fixtureBase,"/inheritance:r","/grant:r",`*${sid}:(OI)(CI)F`,"*S-1-5-18:(OI)(CI)F","*S-1-5-32-544:(OI)(CI)F"],{stdio:"pipe",windowsHide:true});}catch(e){removeHostedFixture();throw e;}
+afterAll(()=>{if(hostedParent){try{expect(readdirSync(fixtureBase)).toEqual([]);}finally{removeHostedFixture();}}});
 function fixture() {
   const root=mkdtempSync(path.join(fixtureBase,"nps-k30-export-synthetic-"));dirs.push(root);
   const source=path.join(root,"source"),data=path.join(root,"private");mkdirSync(source,{mode:0o700});mkdirSync(data,{mode:0o700});
