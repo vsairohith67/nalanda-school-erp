@@ -4,6 +4,7 @@
   "include": [
     "scripts/qa-support*.ts",
     "scripts/qa-shared-document-fonts.ts",
+    "scripts/qa-mobile-import-a11y-1b.ts",
     "scripts/qa-certificate-graduation*.ts",
     "scripts/qa-event-media*.ts",
     "scripts/qa-universal-search*.ts",

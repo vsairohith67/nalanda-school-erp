@@ -10,6 +10,24 @@ from pathlib import Path
 spec=importlib.util.spec_from_file_location('qualification','scripts/portable/backend-build-scan.py')
 q=importlib.util.module_from_spec(spec);spec.loader.exec_module(q)
 class QualificationTests(unittest.TestCase):
+    def test_current_policy_block_still_stops_at_inputs(self):
+        summary={'result':'BACKEND_BUILD_SCAN_QUALIFICATION_PARTIAL','product':'NOT_BUILT','admitted':False,'runtime':'NOT_EXECUTED'}
+        q.finish_input_inspection(summary,[('grype','CVE-2026-5435','libc6','2','HIGH')])
+        self.assertEqual(summary['result'],'BACKEND_BUILD_SCAN_FINDINGS_CONFIRMED_BLOCKED')
+        self.assertEqual(summary['base'],'BLOCKING_FINDINGS_CONFIRMED')
+        self.assertEqual(summary['product'],'NOT_BUILT')
+        self.assertFalse(summary['admitted'])
+        self.assertEqual(summary['runtime'],'NOT_EXECUTED')
+    def test_os_success_does_not_invent_bundled_node_qualification(self):
+        summary={'result':'BACKEND_BUILD_SCAN_QUALIFICATION_PARTIAL','product':'NOT_BUILT','admitted':False,'runtime':'NOT_EXECUTED'}
+        q.finish_input_inspection(summary,[])
+        self.assertEqual(summary['result'],'BACKEND_BUILD_SCAN_QUALIFICATION_PARTIAL')
+        self.assertEqual(summary['base'],'SCANNER_CHECKS_PASS_VENDOR_APPLICABILITY_INCOMPLETE')
+        self.assertEqual(summary['boundary'],'NODE_BUNDLED_ZLIB_CURRENT_SOURCE_BACKPORT_EVIDENCE_REQUIRED')
+        self.assertEqual(summary['productCaller'],'NOT_IMPLEMENTED_PENDING_INPUT_QUALIFICATION')
+        self.assertEqual(summary['product'],'NOT_BUILT')
+        self.assertFalse(summary['admitted'])
+        self.assertEqual(summary['runtime'],'NOT_EXECUTED')
     def test_substituted_descriptor(self):
         with self.assertRaisesRegex(ValueError,'DESCRIPTOR_SUBSTITUTED'):q.descriptor(b'{}',{'digest':'sha256:'+'0'*64,'size':2})
     def test_wrong_architecture(self):
@@ -113,7 +131,9 @@ class QualificationTests(unittest.TestCase):
         self.assertIn('COMMITTED_CLEAN_SOURCE_REQUIRED',source);self.assertIn('FROZEN_INPUTS_CHANGED',source)
         workflow=Path('.github/workflows/portable-staging-foundation.yml').read_text()
         self.assertIn('fail-fast: false',workflow);self.assertIn("github.event.pull_request.number == 28",workflow)
-        self.assertIn('raise SystemExit(run())',source)
+        self.assertIn('raise SystemExit(main())',source)
+        self.assertIn('python3 scripts/portable/backend-build-scan.py --base-only\n',workflow)
+        self.assertNotIn('python3 scripts/portable/backend-build-scan.py\n',workflow)
     def test_one_scanner_finding_cannot_excuse_other_failure(self):
         t,g,s,d,e,m=self.fixtures();e['trivy']=1
         g['matches']=[{'vulnerability':{'id':'CVE-2026-5435','severity':'High'},'artifact':{'name':'libc6','version':'2'}}]
@@ -178,4 +198,35 @@ class QualificationTests(unittest.TestCase):
         for result in ({'Class':'os-pkgs'},None):
             t,g,s,d,e,m=self.fixtures();t['Results']=[result]
             with self.subTest(result=result),self.assertRaisesRegex(ValueError,'TRIVY_RESULT_INVALID'):q.scanner_policy(t,g,s,d,e,m)
+    def test_unregistered_normal_caller_publishes_without_node_or_build(self):
+        import os
+        env={'GITHUB_ACTIONS':'true','RUNNER_ENVIRONMENT':'github-hosted','RUNNER_OS':'Linux','GITHUB_REPOSITORY':'vsairohith67/nalanda-school-erp','PORTABLE_CI_EXCEPTION':'OWNER_AUTHORIZED','EXPECTED_SHA':'a'*40,'TARGET_ARCHITECTURE':'amd64','GITHUB_RUN_ID':'1','GITHUB_RUN_ATTEMPT':'1','GITHUB_JOB':'backend-build-scan'}
+        with tempfile.TemporaryDirectory() as t:
+            previous=Path.cwd()
+            try:
+                os.chdir(t)
+                with patch.dict(q.os.environ,env,clear=True),patch.object(q.platform,'system',return_value='Linux'),patch.object(q.platform,'machine',return_value='x86_64'),patch.object(q.os,'getuid',return_value=1000,create=True),patch.object(q.subprocess,'check_output',side_effect=[b'a'*40,b'']),patch.object(q.subprocess,'Popen') as child:
+                    self.assertEqual(q.run(),1)
+                    child.assert_not_called()
+                result=json.loads(Path('backend-build-scan-result.json').read_bytes())
+                self.assertEqual(result['result'],'PRODUCTION_INPUT_TRUST_UNREGISTERED')
+                self.assertEqual(result['processes'],[])
+                self.assertEqual(result['product'],'NOT_BUILT')
+                manifest=json.loads(Path('backend-build-scan-public-manifest.json').read_bytes())
+                self.assertEqual(manifest['files'][0]['sha256'],q.sha(Path('backend-build-scan-result.json').read_bytes()))
+            finally:
+                os.chdir(previous)
+    def test_explicit_base_dispatch_never_calls_product(self):
+        with patch.object(q,'inspect_runtime_base',return_value=1) as base,patch.object(q,'run') as product:
+            self.assertEqual(q.main(['--base-only']),1)
+            base.assert_called_once_with();product.assert_not_called()
+    def test_default_dispatch_retains_guarded_product_caller(self):
+        with patch.object(q,'inspect_runtime_base') as base,patch.object(q,'run',return_value=1) as product:
+            self.assertEqual(q.main([]),1)
+            product.assert_called_once_with();base.assert_not_called()
+    def test_unknown_or_combined_arguments_refuse_before_dispatch(self):
+        for args in (['--product'],['--base-only','--base-only'],['--base-only','extra']):
+            with self.subTest(args=args),patch.object(q,'inspect_runtime_base') as base,patch.object(q,'run') as product:
+                with self.assertRaisesRegex(ValueError,'BUILD_SCAN_ARGUMENTS_INVALID'):q.main(args)
+                base.assert_not_called();product.assert_not_called()
 if __name__=='__main__':unittest.main()

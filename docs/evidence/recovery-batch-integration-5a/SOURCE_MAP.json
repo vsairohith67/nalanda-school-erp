@@ -1,0 +1,256 @@
+{
+  "version": 1,
+  "base": "7566699862c34b18e98345cdf0d3ea1342e27748",
+  "certificate": {
+    "originalSource": "ef00677315cbf38d8f3293d7ae41396b2e1c8faa",
+    "integration": "7566699862c34b18e98345cdf0d3ea1342e27748",
+    "decision": "ALREADY_PRESENT_NOT_APPLIED_AGAIN"
+  },
+  "donors": [
+    {
+      "source": "c67c146adbac066e12ce29d1e8dec90410a384e3",
+      "parent": "ef00677315cbf38d8f3293d7ae41396b2e1c8faa",
+      "tree": "01897e73dc0c8d04506a64cd11036c401980d935",
+      "method": "reviewed cherry-pick --no-commit -x; consolidated commit attribution",
+      "files": [
+        {
+          "path": "config/recovery-integration-source-delta.json",
+          "oldBlob": "49e5264199be1e863e49572252ebfc83c2e30c11",
+          "sourceBlob": "08e6feccdc68b293fc39a87ac46572a22b4fda92",
+          "candidateBlob": "428b7d84d939786df484df9d29e925df5f3abbc2"
+        },
+        {
+          "path": "scripts/portable/backend-build-scan.py",
+          "oldBlob": "d7029e87d6de0ef3005e806bc10aa1ea236df6b7",
+          "sourceBlob": "5d4a1b7a260d9cd9b6b5b6db282639bdb65cd891",
+          "candidateBlob": "e492704d2a92130d84c5a2a809da3334553c020f"
+        },
+        {
+          "path": "scripts/portable/qa-rootless-build.ts",
+          "oldBlob": "a99c0be4ba97b0fab2ca202a1edff14b798e011e",
+          "sourceBlob": "42a116d37eed462069ba95b32392309dee5e9e12",
+          "candidateBlob": "b8e3f6ad9cf4165eb0062fb508c63a4187db8cdf"
+        },
+        {
+          "path": "scripts/portable/rootless-build-command.ts",
+          "oldBlob": null,
+          "sourceBlob": "9a3e47ad59b1a3c97f9dc3338b62259421817a36",
+          "candidateBlob": "be420e932fcd9ff37e2d27d0d69037c1e5f98172"
+        },
+        {
+          "path": "tests/backend-build-scan.test.py",
+          "oldBlob": "07396282ae34eb59f53ae1aba09bbd6d71576ed8",
+          "sourceBlob": "22600569aaf1521b1dc8e3de1db7c68a5fe586fa",
+          "candidateBlob": "4bae82c02cf2807234c71278b0b3c190e396e1c7"
+        },
+        {
+          "path": "tests/product-build-command.test.ts",
+          "oldBlob": null,
+          "sourceBlob": "cacf0f6c0e7e09b8e6f584e7cc120fee29d90675",
+          "candidateBlob": "cacf0f6c0e7e09b8e6f584e7cc120fee29d90675"
+        }
+      ]
+    },
+    {
+      "source": "37dfe7ca57332e49bce64c50eda66446a0db6f55",
+      "parent": "65f7c383dcf7bedd4cace9133795a75ed362fb9f",
+      "tree": "33fbe3fe785324d9326687aedb8c237e2be5352a",
+      "method": "reviewed cherry-pick --no-commit -x; consolidated commit attribution",
+      "files": [
+        {
+          "path": "config/recovery-integration-source-delta.json",
+          "oldBlob": "08e6feccdc68b293fc39a87ac46572a22b4fda92",
+          "sourceBlob": "501a618d54b0806aeb1e5f4fc008b4d482153a6e",
+          "candidateBlob": "428b7d84d939786df484df9d29e925df5f3abbc2"
+        },
+        {
+          "path": "scripts/portable/backend-build-scan.py",
+          "oldBlob": "5d4a1b7a260d9cd9b6b5b6db282639bdb65cd891",
+          "sourceBlob": "05b88c9a2ac00f9121050cfdb4e9a5d0cb50098c",
+          "candidateBlob": "e492704d2a92130d84c5a2a809da3334553c020f"
+        },
+        {
+          "path": "scripts/portable/producer-process.ts",
+          "oldBlob": "8b2744c57f917b63dcdf24ac91fa56adefa6cb1c",
+          "sourceBlob": "d9a81f1499cf4928dda9c98fb1149c6761c725cf",
+          "candidateBlob": "d9a81f1499cf4928dda9c98fb1149c6761c725cf"
+        },
+        {
+          "path": "scripts/portable/product-build-scan.ts",
+          "oldBlob": null,
+          "sourceBlob": "dfededab3199dc7b0b5dbb6cc2b4e1aeab9b3b00",
+          "candidateBlob": "dfededab3199dc7b0b5dbb6cc2b4e1aeab9b3b00"
+        },
+        {
+          "path": "scripts/portable/product-input-contract.ts",
+          "oldBlob": null,
+          "sourceBlob": "7c5f315537d6c3f9fea190c5e5e3dfadeadcf22a",
+          "candidateBlob": "7c5f315537d6c3f9fea190c5e5e3dfadeadcf22a"
+        },
+        {
+          "path": "scripts/portable/product-scan-adapter.py",
+          "oldBlob": null,
+          "sourceBlob": "fe12b611fc324f992846c6e44bf6b0d61b8bb81b",
+          "candidateBlob": "fe12b611fc324f992846c6e44bf6b0d61b8bb81b"
+        },
+        {
+          "path": "scripts/portable/product-trust-registration.json",
+          "oldBlob": null,
+          "sourceBlob": "19765bd501b636fce433540d9e6735f51d66151d",
+          "candidateBlob": "19765bd501b636fce433540d9e6735f51d66151d"
+        },
+        {
+          "path": "scripts/portable/qa-rootless-build.ts",
+          "oldBlob": "42a116d37eed462069ba95b32392309dee5e9e12",
+          "sourceBlob": "b8e3f6ad9cf4165eb0062fb508c63a4187db8cdf",
+          "candidateBlob": "b8e3f6ad9cf4165eb0062fb508c63a4187db8cdf"
+        },
+        {
+          "path": "scripts/portable/rootless-build-command.ts",
+          "oldBlob": "9a3e47ad59b1a3c97f9dc3338b62259421817a36",
+          "sourceBlob": "be420e932fcd9ff37e2d27d0d69037c1e5f98172",
+          "candidateBlob": "be420e932fcd9ff37e2d27d0d69037c1e5f98172"
+        },
+        {
+          "path": "scripts/portable/synthetic-build-lifecycle.ts",
+          "oldBlob": "77450acae3174c2b08dcdbb02f0626c814e50d03",
+          "sourceBlob": "d64036d4e4a9fb39a24dbece3746bd803977bda3",
+          "candidateBlob": "d64036d4e4a9fb39a24dbece3746bd803977bda3"
+        },
+        {
+          "path": "tests/backend-build-scan.test.py",
+          "oldBlob": "22600569aaf1521b1dc8e3de1db7c68a5fe586fa",
+          "sourceBlob": "c84290704870127b1162c9b4234b97f277d0dd27",
+          "candidateBlob": "4bae82c02cf2807234c71278b0b3c190e396e1c7"
+        },
+        {
+          "path": "tests/helpers/product-contract-fixture.ts",
+          "oldBlob": null,
+          "sourceBlob": "87df70e06b4391fb697c08832293ff5624396e05",
+          "candidateBlob": "87df70e06b4391fb697c08832293ff5624396e05"
+        },
+        {
+          "path": "tests/product-contract-caller.test.ts",
+          "oldBlob": null,
+          "sourceBlob": "6002a6c36ede3e314147391dff3653c776e1ab00",
+          "candidateBlob": "6002a6c36ede3e314147391dff3653c776e1ab00"
+        }
+      ]
+    },
+    {
+      "source": "65f7c383dcf7bedd4cace9133795a75ed362fb9f",
+      "parent": "c67c146adbac066e12ce29d1e8dec90410a384e3",
+      "tree": "9824733ba7b5909ddecff716491a82bfdb3f4ce2",
+      "method": "reviewed cherry-pick --no-commit -x; consolidated commit attribution",
+      "files": [
+        {
+          "path": "docs/evidence/overnight-source-closure-2a/HANDOFF.md",
+          "oldBlob": null,
+          "sourceBlob": "b95f6ae48b4c2ec0c54d850fbcad13721993631a",
+          "candidateBlob": "b9e5b385349dfcc00a8895cfc41fb3645303b0b3"
+        },
+        {
+          "path": "docs/evidence/overnight-source-closure-2a/MORNING_DECISIONS.md",
+          "oldBlob": null,
+          "sourceBlob": "13edc9129803407871e636098ddc4ed7c9f27301",
+          "candidateBlob": "13edc9129803407871e636098ddc4ed7c9f27301"
+        },
+        {
+          "path": "docs/evidence/overnight-source-closure-2a/OWNERSHIP.md",
+          "oldBlob": null,
+          "sourceBlob": "7a58c3ef4932daccbdbc1247c795cb5df23c388e",
+          "candidateBlob": "7a58c3ef4932daccbdbc1247c795cb5df23c388e"
+        },
+        {
+          "path": "docs/evidence/overnight-source-closure-2a/TASK_DELTA.md",
+          "oldBlob": null,
+          "sourceBlob": "f13c414f300ae99cdd1a88f7d36a25d5e37628fd",
+          "candidateBlob": "f13c414f300ae99cdd1a88f7d36a25d5e37628fd"
+        }
+      ]
+    },
+    {
+      "source": "a6472986ce3c1b4413a138f14a7a444c2e34f14c",
+      "parent": "37dfe7ca57332e49bce64c50eda66446a0db6f55",
+      "tree": "db3042b96e2f38da1300561250a7a320a11a54cf",
+      "method": "reviewed cherry-pick --no-commit -x; consolidated commit attribution",
+      "files": [
+        {
+          "path": "docs/evidence/overnight-source-closure-2a/CONTRACT_CALLER_2B.md",
+          "oldBlob": null,
+          "sourceBlob": "9f0c390dcba3eabc30dd778f54c1f0bfb81536a2",
+          "candidateBlob": "9f0c390dcba3eabc30dd778f54c1f0bfb81536a2"
+        },
+        {
+          "path": "docs/evidence/overnight-source-closure-2a/HANDOFF.md",
+          "oldBlob": "b95f6ae48b4c2ec0c54d850fbcad13721993631a",
+          "sourceBlob": "b9e5b385349dfcc00a8895cfc41fb3645303b0b3",
+          "candidateBlob": "b9e5b385349dfcc00a8895cfc41fb3645303b0b3"
+        }
+      ]
+    },
+    {
+      "source": "c1c179d1ee8bc9a4c29f72049e1b689195f7d688",
+      "parent": "2aa461b7e0388db6b79afe1e4421a5dc1d9e8dda",
+      "tree": "b54b84a2391a492b0f1df561cc0a2c78d8196961",
+      "method": "reviewed cherry-pick --no-commit -x; consolidated commit attribution",
+      "files": [
+        {
+          "path": "components/marks-importer.tsx",
+          "oldBlob": "7874394a1d8c74fb3be28585f0280810edc66127",
+          "sourceBlob": "102d374916869bbe236afb1119796404e4336333",
+          "candidateBlob": "102d374916869bbe236afb1119796404e4336333"
+        },
+        {
+          "path": "components/onboarding-centre.tsx",
+          "oldBlob": "4498f5efcba394110f7bededcea95862d0daccf8",
+          "sourceBlob": "564420c339444235e38349cfe5042cb8c0d62560",
+          "candidateBlob": "564420c339444235e38349cfe5042cb8c0d62560"
+        },
+        {
+          "path": "components/student-import-panel.tsx",
+          "oldBlob": "8261de6d56e1e75168d8141d24e18a892854d619",
+          "sourceBlob": "4b9ce8f8fcafa51fadc25356f50ce6a86d4d9be6",
+          "candidateBlob": "4b9ce8f8fcafa51fadc25356f50ce6a86d4d9be6"
+        },
+        {
+          "path": "scripts/bulk-data-exchange-browser.ts",
+          "oldBlob": "a00b0febebb2d91b00587f1305710d1f8f5f0224",
+          "sourceBlob": "7aad27b10ae1cc17907d4e0425035299ddb67816",
+          "candidateBlob": "143e6832ab7cd0500fbbb8b9b3c1a44e04237495"
+        },
+        {
+          "path": "scripts/qa-mobile-import-a11y-1b.ts",
+          "oldBlob": null,
+          "sourceBlob": "e36372902b896d299ad53de9862d442a1257377b",
+          "candidateBlob": "0b31044c1b4bfb24ddc38dc05624983aff7111ae"
+        }
+      ]
+    },
+    {
+      "source": "5ddb1d6fd83b2a3c55fa7f735c0183580b5d11ab",
+      "parent": "c1c179d1ee8bc9a4c29f72049e1b689195f7d688",
+      "tree": "6a76cd1196f558f303e8c3290f102a4d70e69fc5",
+      "method": "reviewed cherry-pick --no-commit -x; consolidated commit attribution",
+      "files": [
+        {
+          "path": "docs/evidence/mobile-import-a11y-1b/HANDOFF.md",
+          "oldBlob": null,
+          "sourceBlob": "775a45cd08b0844e56f6c23cf2b87c834f37524c",
+          "candidateBlob": "775a45cd08b0844e56f6c23cf2b87c834f37524c"
+        }
+      ]
+    }
+  ],
+  "corrections": [
+    "strict base-only CLI dispatch and unchanged automatic base workflow selection with dispatch regressions",
+    "owned synthetic browser run label/port and fresh evidence output",
+    "exact QA-support typecheck inclusion",
+    "narrow source hash reconciliation preserving historical provenance"
+  ],
+  "excluded": [
+    "K30/PR30 in entirety",
+    "all later or dirty donor work",
+    "real production trust registration/build/runtime/device acceptance"
+  ]
+}

@@ -420,7 +420,7 @@ jobs:
       - name: Verify HARNESS_ONLY no-launch and refusal controls
         run: python3 tests/backend-build-scan.test.py
       - name: Inspect and scan exact current input bytes privately
-        run: python3 scripts/portable/backend-build-scan.py
+        run: python3 scripts/portable/backend-build-scan.py --base-only
       - name: Publish bounded qualification metadata only
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

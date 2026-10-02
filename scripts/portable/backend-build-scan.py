@@ -13,6 +13,7 @@ import platform
 import posixpath
 import re
 import shutil
+import sys
 import signal
 import stat
 import subprocess
@@ -169,6 +170,21 @@ def project_findings(rows):
         output.append(dict(tool=tool, advisory=advisory, package=package, version=version, severity=severity or 'UNKNOWN'))
     return output
 
+def finish_input_inspection(summary, blocked):
+    """Current input boundary, not a future approval/result-file protocol.
+
+    OS scanner success cannot qualify bundled Node, the builder or frontend.
+    Keep this refusal independent from later product/native admission. There
+    is deliberately no callback, ready flag or alternate executable caller.
+    """
+    if blocked:
+        summary['result'] = 'BACKEND_BUILD_SCAN_FINDINGS_CONFIRMED_BLOCKED'
+        summary['base'] = 'BLOCKING_FINDINGS_CONFIRMED'
+    else:
+        summary['base'] = 'SCANNER_CHECKS_PASS_VENDOR_APPLICABILITY_INCOMPLETE'
+        summary['boundary'] = 'NODE_BUNDLED_ZLIB_CURRENT_SOURCE_BACKPORT_EVIDENCE_REQUIRED'
+        summary['productCaller'] = 'NOT_IMPLEMENTED_PENDING_INPUT_QUALIFICATION'
+
 def validate_owner(root, parent, identity):
     check(root.parent == parent and root.resolve() == root and parent.resolve() == parent and not root.is_symlink(), 'CLEANUP_PATH_UNSAFE')
     check(read_json(root / 'owner.json') == identity and root.stat().st_uid == os.getuid(), 'CLEANUP_OWNER_MISMATCH')
@@ -235,7 +251,7 @@ def private_process(root, summary, unsettled):
         return child.returncode, raw_out
     return process
 
-def run():
+def inspect_runtime_base():
     source, arch = os.getenv('EXPECTED_SHA', ''), os.getenv('TARGET_ARCHITECTURE', '')
     check(os.getenv('GITHUB_ACTIONS') == 'true' and os.getenv('RUNNER_ENVIRONMENT') == 'github-hosted' and os.getenv('RUNNER_OS') == 'Linux' and os.getenv('GITHUB_REPOSITORY') == 'vsairohith67/nalanda-school-erp' and os.getenv('PORTABLE_CI_EXCEPTION') == 'OWNER_AUTHORIZED', 'EPHEMERAL_EXACT_HEAD_CI_REQUIRED')
     check(not os.getenv('DOCKER_HOST') and not os.getenv('DOCKER_CONTEXT') and platform.system() == 'Linux' and os.getuid() != 0, 'HOST_UNSAFE')
@@ -341,15 +357,7 @@ def run():
         summary['blockingFindingCount']=len(blocked)
         summary['findings']=project_findings(public_rows)
         summary['unpublishedFindingCount']=len(blocked)-len(public_rows)
-        if blocked:
-            summary['result']='BACKEND_BUILD_SCAN_FINDINGS_CONFIRMED_BLOCKED';summary['base']='BLOCKING_FINDINGS_CONFIRMED'
-        else:
-            # OS evidence cannot establish bundled Node zlib source backports.
-            # This qualification milestone stops at this specific unresolved input,
-            # never builds an input whose required vendored applicability is unknown.
-            summary['base']='SCANNER_CHECKS_PASS_VENDOR_APPLICABILITY_INCOMPLETE'
-            summary['boundary']='NODE_BUNDLED_ZLIB_CURRENT_SOURCE_BACKPORT_EVIDENCE_REQUIRED'
-            summary['productCaller']='NOT_IMPLEMENTED_PENDING_INPUT_QUALIFICATION'
+        finish_input_inspection(summary, blocked)
     except Exception as error:
         code=str(error)
         summary['failure']=code if re.fullmatch(r'[A-Z][A-Z0-9_]{3,90}',code) else 'INPUT_OR_TOOL_PROCESS_FAILED'
@@ -370,9 +378,72 @@ def run():
         print(CLASSIFICATION)
     return 1  # base-only or blocked/partial can never count as product qualification.
 
+
+def run():
+    """Normal caller: independent pre-build contract, never base-only approval.
+
+    The production resolver is deliberately unregistered. No environment value
+    supplies a key or switches to harness trust. Keep historical inspection
+    machinery available to focused tests without rerunning blocked base scans.
+    """
+    source, arch = os.getenv('EXPECTED_SHA', ''), os.getenv('TARGET_ARCHITECTURE', '')
+    check(os.getenv('GITHUB_ACTIONS') == 'true' and os.getenv('RUNNER_ENVIRONMENT') == 'github-hosted' and os.getenv('RUNNER_OS') == 'Linux' and os.getenv('GITHUB_REPOSITORY') == 'vsairohith67/nalanda-school-erp' and os.getenv('PORTABLE_CI_EXCEPTION') == 'OWNER_AUTHORIZED', 'EPHEMERAL_EXACT_HEAD_CI_REQUIRED')
+    check(not os.getenv('DOCKER_HOST') and not os.getenv('DOCKER_CONTEXT') and platform.system() == 'Linux' and os.getuid() != 0, 'HOST_UNSAFE')
+    check(re.fullmatch(r'[a-f0-9]{40}', source) and arch in ('amd64', 'arm64') and platform.machine() == {'amd64':'x86_64','arm64':'aarch64'}[arch], 'SOURCE_OR_NATIVE_ARCHITECTURE_INVALID')
+    check(os.getenv('GITHUB_RUN_ID', '').isdigit() and os.getenv('GITHUB_RUN_ATTEMPT', '').isdigit() and os.getenv('GITHUB_JOB') == 'backend-build-scan', 'RUN_IDENTITY_REQUIRED')
+    check(subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip() == source and not subprocess.check_output(['git','status','--porcelain']), 'COMMITTED_CLEAN_SOURCE_REQUIRED')
+    registration = Path(__file__).with_name('product-trust-registration.json')
+    check(not registration.is_symlink() and registration.stat().st_size <= 4096, 'PRODUCTION_TRUST_REGISTRATION_UNSAFE')
+    if json.loads(registration.read_bytes()) is None:
+        # A fresh hosted checkout needs no tsx installation to report the actual
+        # trust boundary. Registration/bootstrap is a later reviewed change,
+        # never a key or operational enable switch taken from the environment.
+        public = Path('backend-build-scan-result.json')
+        write(public, dict(classification=CLASSIFICATION, source=source, architecture=arch,
+                          result='PRODUCTION_INPUT_TRUST_UNREGISTERED', inputDecision='REFUSED',
+                          product='NOT_BUILT', runtime='NOT_EXECUTED', admitted=False,
+                          releaseCleared=False, cleanupComplete=True, processes=[]))
+        write(Path('backend-build-scan-public-manifest.json'), dict(classification=CLASSIFICATION,
+              files=[dict(name=public.name, sha256=sha(public.read_bytes()), bytes=public.stat().st_size)]))
+        return 1
+    effective = {k: v for k, v in os.environ.items() if k in (
+        'PATH', 'LANG', 'SystemRoot', 'GITHUB_ACTIONS', 'RUNNER_ENVIRONMENT',
+        'RUNNER_OS', 'GITHUB_REPOSITORY', 'PORTABLE_CI_EXCEPTION', 'EXPECTED_SHA',
+        'TARGET_ARCHITECTURE', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT', 'GITHUB_JOB',
+        'RUNNER_TEMP', 'DOCKER_HOST', 'DOCKER_CONTEXT')}
+    child = subprocess.Popen(['node', '--import', 'tsx', str(Path(__file__).with_name('product-build-scan.ts'))],
+                             env=effective, shell=False, start_new_session=True)
+    def interrupted(signum, frame):
+        raise KeyboardInterrupt
+    previous = signal.signal(signal.SIGTERM, interrupted)
+    try:
+        code = child.wait(timeout=2400)
+        return code if code >= 0 else 1
+    except (subprocess.TimeoutExpired, KeyboardInterrupt):
+        # Node owns/reconciles its detached scanner and builder children. Give
+        # its signal handler a bounded cleanup interval; never delete its root.
+        os.killpg(child.pid, signal.SIGTERM)
+        try:
+            child.wait(timeout=30)
+        except subprocess.TimeoutExpired:
+            os.killpg(child.pid, signal.SIGKILL)
+            child.wait(timeout=10)
+        return 1
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+def main(argv=None):
+    """Keep automatic base inspection separate from the guarded product caller."""
+    args = sys.argv[1:] if argv is None else argv
+    if args == ['--base-only']:
+        return inspect_runtime_base()
+    check(args == [], 'BUILD_SCAN_ARGUMENTS_INVALID')
+    return run()
+
+
 if __name__ == '__main__':
     try:
-        raise SystemExit(run())
+        raise SystemExit(main())
     except Exception:
         print('BUILD_SCAN_ONLY_NOT_ADMITTED_PREFLIGHT_REFUSED')
         raise SystemExit(1)
