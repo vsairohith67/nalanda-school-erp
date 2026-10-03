@@ -31,6 +31,13 @@ describe("Ask Nalanda strict canonical query",()=>{
   });
 });
 describe("precision, bounds and stale response safety",()=>{
+  it("characterizes complete 18/20, missing 17/20, confirmed zero and empty intervals",()=>{
+    const criterion={comparator:"GTE" as const,threshold:90};
+    expect(classifyAttendance({present:18,eligible:20,recorded:20,unresolved:false},criterion)).toEqual({metric:90,classification:"MEETS"});
+    expect(classifyAttendance({present:17,eligible:20,recorded:19,unresolved:false},criterion)).toEqual({metric:null,classification:"UNRESOLVED"});
+    expect(classifyAttendance({present:0,eligible:20,recorded:20,unresolved:false},criterion)).toEqual({metric:0,classification:"DOES_NOT_MEET"});
+    expect(classifyAttendance({present:0,eligible:0,recorded:0,unresolved:false},criterion)).toEqual({metric:null,classification:"UNRESOLVED"});
+  });
   it("uses stored decimal rather than rounded display",()=>{expect(decimalMatches(new Prisma.Decimal("59.999999"),q)).toBe(true);expect(decimalMatches(new Prisma.Decimal(60),q)).toBe(false);expect(decimalMatches(new Prisma.Decimal(0),q)).toBe(true);});
   it.each([[29,50,58],[7,25,28]])("compares rational %i/%i exactly at %i",(present,eligible,threshold)=>{
     const value={present,eligible,recorded:eligible,unresolved:false};

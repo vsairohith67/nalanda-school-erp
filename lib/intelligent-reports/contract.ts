@@ -1,6 +1,30 @@
 export const FAMILIES = ["ACADEMIC", "ATTENDANCE", "FEES"] as const;
 export type Family = typeof FAMILIES[number];
 export type Comparator = "LT" | "LTE" | "GT" | "GTE";
+/** Date buckets partition the interval; diagnostics can overlap and are never added as days. */
+export const ATTENDANCE_BUCKETS = ["COUNTED_PRESENT","COUNTED_ABSENT","MISSING_SESSION","SESSION_NOT_LOCKED","MISSING_RECORD","UNSUPPORTED_STATUS","UNSUPPORTED_DAY","EXCLUDED_CALENDAR","OUTSIDE_ENROLLMENT"] as const;
+export type AttendanceBucket = typeof ATTENDANCE_BUCKETS[number];
+export type AttendanceReason = "UNKNOWN_ADMISSION" | "TRANSFER_HISTORY" | "PENDING_RECONCILIATION" | "CALENDAR_BASIS_MISMATCH" | "BEFORE_ENROLLMENT" | "ON_OR_AFTER_EXIT" | "NON_WORKING_DAY" | "VACATION_DAY" | "EMERGENCY_CLOSURE" | "UNSUPPORTED_DAY" | "UNSUPPORTED_STATUS" | "MISSING_SESSION" | "SESSION_NOT_LOCKED" | "MISSING_RECORD" | "ZERO_ELIGIBLE_DAYS";
+export type AttendanceDateEvidence = {
+  date:string;
+  calendar:{scope:string;type:string;publicationReference:string;version:number;dayReference:string};
+  eligibility:"ELIGIBLE_FULL_DAY"|"OUTSIDE_ENROLLMENT"|"EXCLUDED_CALENDAR"|"UNSUPPORTED_DAY";
+  session:"MISSING"|"DRAFT"|"SUBMITTED"|"LOCKED"|"UNSUPPORTED";
+  record:"MISSING"|"PRESENT";
+  status:"PRESENT"|"ABSENT"|"LATE"|"HALF_DAY"|"EXCUSED"|"UNSUPPORTED"|null;
+  numerator:0|1;denominator:0|1;recorded:0|1;
+  bucket:AttendanceBucket;reasons:AttendanceReason[];
+};
+export type AttendanceEvidence = {
+  academicYear:string;className:string;section:string;from:string;to:string;
+  criterion:{comparator:Comparator;threshold:number};
+  state:"COMPLETE"|"INCOMPLETE"|"NO_ELIGIBLE_DAYS";
+  numerator:number;denominator:number;recorded:number;percentage:number|null;
+  coverage:Record<AttendanceBucket,number>;totalDates:number;
+  intervalReasons:AttendanceReason[];
+  transferDates:string[];
+  dates:AttendanceDateEvidence[];
+};
 export type Target = { id: string; className: string; section: string; exams: { id: string; code: string; name: string }[] };
 export type Query = {
   family: Family; schoolId: "school"; academicYear: string;

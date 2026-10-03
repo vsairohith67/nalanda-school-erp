@@ -8,7 +8,7 @@ import { logUserAction } from "@/lib/user-audit";
 import { readImportBytes, ImportRequestError } from "@/lib/import-request";
 import { authorize } from "./access";
 import { ReportError,object,keys,interpretQuestion,parseQuery,type Family } from "./contract";
-import { options,availability,execute,pageReport,reportCsv } from "@/lib/intelligent-reports/service";
+import { options,availability,execute,executeSource,pageReport,reportCsv } from "@/lib/intelligent-reports/service";
 import { resolvedTargets } from "./readers";
 
 export const HEADERS={"Cache-Control":"private, no-store, max-age=0","Pragma":"no-cache","X-Content-Type-Options":"nosniff","Referrer-Policy":"no-referrer","Vary":"Cookie","X-Robots-Tag":"noindex, nofollow, noarchive"};
@@ -48,13 +48,13 @@ export async function handle(request:NextRequest,action:"access"|"options"|"inte
     if(body.expectedRevision!==undefined&&(typeof body.expectedRevision!=="string"||!/^[a-f0-9]{64}$/.test(body.expectedRevision)))throw new ReportError("Invalid source revision.");
     const query=parseQuery(body.query);
     if((action!=="run"||query.page>1)&&!body.expectedRevision)throw new ReportError("Run and review the report first.","REFRESH_REQUIRED",409);
+    if(action==="source") {
+      const detail=await executeSource(prisma,identity,query,body.key,body.expectedRevision);
+      if(request.signal.aborted)throw new ReportError("Request cancelled.","CANCELLED",409);
+      return json(detail);
+    }
     const report=await execute(prisma,identity,query,{exporting:action==="export",expectedRevision:body.expectedRevision as string|undefined});
     if(request.signal.aborted)throw new ReportError("Request cancelled.","CANCELLED",409);
-    if(action==="source") {
-      const row=report.rows.find(r=>r.key===body.key);if(!row)throw new ReportError("Source unavailable.","SOURCE_UNAVAILABLE",404);
-      // Existing record routes perform independent domain authorization. No Student 360 link.
-      return json({row,definition:report.definition,generatedAt:report.generatedAt,sourceRevision:report.sourceRevision});
-    }
     const csv=action==="export"?reportCsv(report):undefined;
     await logUserAction(prisma,{action:action==="export"?"INTELLIGENT_REPORT_EXPORTED":"INTELLIGENT_REPORT_READ",actor:context.user,details:{family:query.family,sourceState:query.sourceState,operation:action}});
     if(csv!==undefined)return new NextResponse(csv,{headers:{...HEADERS,"Content-Type":"text/csv; charset=utf-8","Content-Disposition":`attachment; filename="nalanda-${query.family.toLowerCase()}-${query.academicYear}.csv"`}});

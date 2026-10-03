@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { parsePublishedSnapshot } from "@/lib/report-publication";
 import { allocateFees, dueDateForMonth } from "@/lib/fee-allocation";
 import { effectiveReceiptState } from "@/lib/receipt-integrity";
-import { ReportError, type Query, type Target } from "./contract";
+import { ReportError, ATTENDANCE_BUCKETS, type AttendanceEvidence, type AttendanceDateEvidence, type AttendanceReason, type Query, type Target } from "./contract";
 import type { Client } from "./access";
 
 export const MAX_COHORT = 2000;
@@ -14,6 +14,11 @@ export type ResultRow = {
   state:string; explanation:string; source:string; revision:string; href?:string;
 };
 export const digest=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).digest("hex");
+/** Source collections are sets: normalize keys and collection order, retaining duplicates. */
+export function sourceDigest(value:unknown):string {
+  const canonical=(v:unknown):unknown=>v instanceof Date?v.toISOString():Array.isArray(v)?v.map(canonical).sort((a,b)=>{const x=JSON.stringify(a),y=JSON.stringify(b);return x<y?-1:x>y?1:0;}):v&&typeof v==="object"?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([k,item])=>[k,canonical(item)])):v;
+  return digest(canonical(value));
+}
 export function bounded<T>(rows:T[], max:number, name:string):T[] { if(rows.length>max)throw new ReportError(`${name} exceeds the supported limit; narrow the scope. No partial report was returned.`,"RANGE_TOO_LARGE",413);return rows; }
 export async function targetOptions(db:Client, academicYear:string, academic:boolean):Promise<Target[]> {
   const targets=bounded(await db.timetableClassSection.findMany({where:{academicYear},select:{id:true,className:true,section:true},orderBy:[{className:"asc"},{section:"asc"}],take:501}),500,"Class/section metadata");
@@ -72,19 +77,21 @@ export function classifyAttendance(input:{eligible:number;present:number;recorde
   const meets=q.comparator==="LT"?comparison<0:q.comparator==="LTE"?comparison<=0:q.comparator==="GT"?comparison>0:comparison>=0;
   return {metric,classification:metric===null?"UNRESOLVED" as const:meets?"MEETS" as const:"DOES_NOT_MEET" as const};
 }
-export async function attendanceRows(db:Client,q:Query,targets:Resolved,enrollments:Enrollment[]) {
+export async function attendanceRows(db:Client,q:Query,targets:Resolved,enrollments:Enrollment[],sourceKey?:string) {
   const from=new Date(q.from!),to=new Date(q.to!);
   const settings=await db.schoolSettings.findUnique({where:{id:"school"},select:{academicYear:true}});
-  const days=bounded(await db.operationalCalendarDay.findMany({where:{dayDate:{gte:from,lte:to},calendarVersion:{academicYear:q.academicYear,status:"PUBLISHED",currentPublicationKey:{not:null},OR:[{effectiveScope:"SCHOOL_WIDE"},...targets.flatMap(t=>[{effectiveScope:"CLASS",className:t.className},{effectiveScope:"CLASS_SECTION",className:t.className,section:t.section}])]},OR:[{scopeType:"SCHOOL_WIDE"},...targets.flatMap(t=>[{scopeType:"CLASS",className:t.className},{scopeType:"CLASS_SECTION",className:t.className,section:t.section}])]},select:{publicKey:true,dayDate:true,dayType:true,scopeType:true,className:true,section:true,calendarVersion:{select:{publicKey:true,versionNumber:true,effectiveScope:true,className:true,section:true,attendanceReconciliationRequired:true}}},take:20001}),20000,"Calendar days");
+  const days=bounded(await db.operationalCalendarDay.findMany({where:{dayDate:{gte:from,lte:to},calendarVersion:{academicYear:q.academicYear,status:"PUBLISHED",currentPublicationKey:{not:null},OR:[{effectiveScope:"SCHOOL_WIDE"},...targets.flatMap(t=>[{effectiveScope:"CLASS",className:t.className},{effectiveScope:"CLASS_SECTION",className:t.className,section:t.section}])]},OR:[{scopeType:"SCHOOL_WIDE"},...targets.flatMap(t=>[{scopeType:"CLASS",className:t.className},{scopeType:"CLASS_SECTION",className:t.className,section:t.section}])]},select:{publicKey:true,dayDate:true,dayType:true,scopeType:true,className:true,section:true,calendarVersion:{select:{publicKey:true,versionNumber:true,currentPublicationKey:true,status:true,effectiveScope:true,className:true,section:true,attendanceReconciliationRequired:true}}},take:20001}),20000,"Calendar days");
   const sessions=bounded(await db.studentAttendanceSession.findMany({where:{academicYear:q.academicYear,attendanceDate:{gte:from,lte:to},OR:targets.map(t=>({className:t.className,section:t.section}))},select:{id:true,attendanceDate:true,className:true,section:true,status:true,updatedAt:true,operationalCalendarVersionKey:true,operationalCalendarDayKey:true,records:{where:{studentId:{in:enrollments.map(e=>e.studentId)}},select:{studentId:true,status:true},take:MAX_COHORT+1}},take:15001}),15000,"Attendance sessions");
   for(const session of sessions)bounded(session.records,MAX_COHORT,"Attendance records");
   const transfers=bounded(await db.studentLifecycleEvent.findMany({where:{studentId:{in:enrollments.map(e=>e.studentId)},effectiveDate:{gte:from,lte:to}},select:{studentId:true,eventType:true,fromClass:true,fromSection:true,toClass:true,toSection:true,effectiveDate:true},take:4001}),4000,"Lifecycle events");
+  const byDate=new Map<string,typeof days>();
+  for(const day of days){const date=day.dayDate.toISOString().slice(0,10);const group=byDate.get(date);if(group)group.push(day);else byDate.set(date,[day]);}
   const calendars=new Map<string,Map<string,typeof days[number]>>();
   for(const t of targets) {
     const map=new Map<string,typeof days[number]>();
     for(let at=from.getTime();at<=to.getTime();at+=86400000){
       const date=new Date(at).toISOString().slice(0,10);
-      const candidates=days.filter(d=>d.dayDate.toISOString().slice(0,10)===date&&(d.calendarVersion.effectiveScope==="SCHOOL_WIDE"||(d.calendarVersion.className===t.className&&(d.calendarVersion.effectiveScope==="CLASS"||d.calendarVersion.section===t.section)))&&(d.scopeType==="SCHOOL_WIDE"||(d.className===t.className&&(d.scopeType==="CLASS"||d.section===t.section))));
+      const candidates=(byDate.get(date)??[]).filter(d=>(d.calendarVersion.effectiveScope==="SCHOOL_WIDE"||(d.calendarVersion.className===t.className&&(d.calendarVersion.effectiveScope==="CLASS"||d.calendarVersion.section===t.section)))&&(d.scopeType==="SCHOOL_WIDE"||(d.className===t.className&&(d.scopeType==="CLASS"||d.section===t.section))));
       const priority=(s:string)=>s==="CLASS_SECTION"?3:s==="CLASS"?2:1;
       candidates.sort((a,b)=>priority(b.scopeType)-priority(a.scopeType)||b.calendarVersion.versionNumber-a.calendarVersion.versionNumber);
       if(!candidates.length)throw new ReportError("Published calendar coverage is missing for the selected dates. This is not a completed attendance report.","CALENDAR_UNAVAILABLE",409);
@@ -93,25 +100,50 @@ export async function attendanceRows(db:Client,q:Query,targets:Resolved,enrollme
     }calendars.set(t.id,map);
   }
   const sessionMap=new Map(sessions.map(s=>[`${s.className}|${s.section}|${s.attendanceDate.toISOString().slice(0,10)}`,{...s,byStudent:new Map(s.records.map(r=>[r.studentId,r.status]))}]));
+  const transferDates=new Map<string,string[]>();
+  for(const event of transfers)if(event.fromClass&&event.toClass&&(event.fromClass!==event.toClass||event.fromSection!==event.toSection)){
+    const date=event.effectiveDate.toISOString().slice(0,10),group=transferDates.get(event.studentId);if(group)group.push(date);else transferDates.set(event.studentId,[date]);
+  }
+  // Hash bounded inputs once, never once per pupil. No private source cache survives this request.
+  const revisions=[sourceDigest(days),sourceDigest(sessions),sourceDigest(transfers)];
+  let attendance:AttendanceEvidence|undefined;
   const rows=enrollments.map(e=>{
     const r=rowFor(e),t=targets.find(t=>t.className===e.className&&t.section===(e.section??""))!;
     let eligible=0,present=0,recorded=0,uncertain=!e.enrollmentDate;
-    if(transfers.some(v=>v.studentId===e.studentId&&v.fromClass&&v.toClass&&(v.fromClass!==v.toClass||v.fromSection!==v.toSection)))uncertain=true;
+    const intervalReasons:AttendanceReason[]=[],selected=sourceKey===r.key;
+    if(!e.enrollmentDate)intervalReasons.push("UNKNOWN_ADMISSION");
+    if(transferDates.has(e.studentId)){uncertain=true;intervalReasons.push("TRANSFER_HISTORY");}
+    const dates:AttendanceDateEvidence[]=[],coverage=Object.fromEntries(ATTENDANCE_BUCKETS.map(bucket=>[bucket,0])) as AttendanceEvidence["coverage"];
+    const start=e.enrollmentDate?.toISOString().slice(0,10),exit=e.exitDate?.toISOString().slice(0,10);
     for(const [date,day] of calendars.get(t.id)!) {
-      const type=day.dayType; if(day.calendarVersion.attendanceReconciliationRequired)uncertain=true;
-      if(e.enrollmentDate&&date<e.enrollmentDate.toISOString().slice(0,10)||e.exitDate&&date>=e.exitDate.toISOString().slice(0,10))continue;
-      if(["NON_WORKING_DAY","VACATION_DAY","EMERGENCY_CLOSURE"].includes(type))continue;
-      if(!["WORKING_DAY","SPECIAL_WORKING_DAY"].includes(type)){uncertain=true;continue;}
-      eligible++;
       const session=sessionMap.get(`${e.className}|${e.section??""}|${date}`),status=session?.byStudent.get(e.studentId);
-      if(session?.status!=="LOCKED"||!status)continue;
-      if(session.operationalCalendarVersionKey!==day.calendarVersion.publicKey||session.operationalCalendarDayKey!==day.publicKey)uncertain=true;
-      recorded++;if(status==="PRESENT")present++;else if(status!=="ABSENT")uncertain=true;
+      const reasons:AttendanceReason[]=[];
+      let bucket:AttendanceDateEvidence["bucket"],eligibility:AttendanceDateEvidence["eligibility"]="ELIGIBLE_FULL_DAY",numerator:0|1=0,denominator:0|1=0,record:0|1=0;
+      if(day.calendarVersion.attendanceReconciliationRequired){uncertain=true;reasons.push("PENDING_RECONCILIATION");}
+      if(start&&date<start||exit&&date>=exit){bucket="OUTSIDE_ENROLLMENT";eligibility=bucket;if(start&&date<start)reasons.push("BEFORE_ENROLLMENT");if(exit&&date>=exit)reasons.push("ON_OR_AFTER_EXIT");}
+      else if(["NON_WORKING_DAY","VACATION_DAY","EMERGENCY_CLOSURE"].includes(day.dayType)){bucket="EXCLUDED_CALENDAR";eligibility=bucket;reasons.push(day.dayType as AttendanceReason);}
+      else if(!["WORKING_DAY","SPECIAL_WORKING_DAY"].includes(day.dayType)){bucket="UNSUPPORTED_DAY";eligibility=bucket;uncertain=true;reasons.push(bucket);}
+      else {
+        denominator=1;
+        if(!session){bucket="MISSING_SESSION";reasons.push(bucket);}
+        else if(session.status!=="LOCKED"){bucket="SESSION_NOT_LOCKED";reasons.push(bucket);}
+        else if(!status){bucket="MISSING_RECORD";reasons.push(bucket);}
+        else {
+          record=1;
+          if(session.operationalCalendarVersionKey!==day.calendarVersion.publicKey||session.operationalCalendarDayKey!==day.publicKey){uncertain=true;reasons.push("CALENDAR_BASIS_MISMATCH");}
+          if(status==="PRESENT"){numerator=1;bucket="COUNTED_PRESENT";}
+          else if(status==="ABSENT")bucket="COUNTED_ABSENT";
+          else {bucket="UNSUPPORTED_STATUS";uncertain=true;reasons.push(bucket);}
+        }
+      }
+      eligible+=denominator;present+=numerator;recorded+=record;
+      if(selected){coverage[bucket]++;dates.push({date,calendar:{scope:day.scopeType,type:day.dayType,publicationReference:day.calendarVersion.publicKey,version:day.calendarVersion.versionNumber,dayReference:day.publicKey},eligibility,session:!session?"MISSING":["DRAFT","SUBMITTED","LOCKED"].includes(session.status)?session.status as AttendanceDateEvidence["session"]:"UNSUPPORTED",record:status?"PRESENT":"MISSING",status:!status?null:["PRESENT","ABSENT","LATE","HALF_DAY","EXCUSED"].includes(status)?status as AttendanceDateEvidence["status"]:"UNSUPPORTED",numerator,denominator,recorded:record,bucket,reasons});}
     }
     const classified=classifyAttendance({eligible,present,recorded,unresolved:uncertain},q);
-    return {...r,...classified,...(settings?.academicYear===q.academicYear?{href:`/attendance/students/reports?${new URLSearchParams({from:q.from!,to:q.to!,scope:`${e.className}|${e.section??""}`})}`} : {}),numerator:present,denominator:eligible,state:classified.metric===null?"INCOMPLETE":"LOCKED",source:`Calendar and locked attendance ${q.from}–${q.to}`,revision:digest([t.id,days,sessions.map(s=>[s.id,s.updatedAt]),e.updatedAt]),explanation:`${recorded}/${eligible} eligible full days recorded. ${uncertain?"Admission date, transfer, calendar reconciliation or partial-status policy needs resolution. ":""}Missing records are not absence; zero eligible days is unresolved.`};
+    if(selected){if(!eligible)intervalReasons.push("ZERO_ELIGIBLE_DAYS");attendance={academicYear:q.academicYear,className:e.className,section:e.section??"",from:q.from!,to:q.to!,criterion:{comparator:q.comparator,threshold:q.threshold},state:!eligible?"NO_ELIGIBLE_DAYS":classified.metric===null?"INCOMPLETE":"COMPLETE",numerator:present,denominator:eligible,recorded,percentage:classified.metric,coverage,totalDates:dates.length,intervalReasons,transferDates:[...new Set(transferDates.get(e.studentId)??[])].sort(),dates};}
+    return {...r,...classified,...(settings?.academicYear===q.academicYear?{href:`/attendance/students/reports?${new URLSearchParams({from:q.from!,to:q.to!,scope:`${e.className}|${e.section??""}`})}`} : {}),numerator:present,denominator:eligible,state:classified.metric===null?"INCOMPLETE":"LOCKED",source:`Calendar and locked attendance ${q.from}–${q.to}`,revision:digest([t.id,revisions,e]),explanation:`${recorded}/${eligible} eligible full days recorded. ${uncertain?"Admission date, transfer, calendar reconciliation or partial-status policy needs resolution. ":""}Missing records are not absence; zero eligible days is unresolved.`};
   });
-  return {rows,definition:"PRESENT / eligible full working days within enrolment dates (exit date excluded); complete LOCKED records required. Partial days/statuses and transfers require policy evidence; no attendance eligibility claim.",revisions:[digest(days),digest(sessions),digest(transfers)]};
+  return {rows,attendance,definition:"PRESENT / eligible full working days within enrolment dates (exit date excluded); complete LOCKED records required. Partial days/statuses and transfers require policy evidence; no attendance eligibility claim.",revisions};
 }
 
 export const paise=(value:number)=>{const result=Math.round((value+Number.EPSILON)*100);if(!Number.isFinite(value)||!Number.isSafeInteger(result)||value<0)throw new ReportError("Invalid financial source amount.","FINANCE_UNRESOLVED",409);return result;};

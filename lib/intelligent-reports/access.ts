@@ -14,6 +14,10 @@ export async function authorize(client: Client, identity: Identity, family?: Fam
   const snapshot = await loadAuthorizationSnapshot(client, identity);
   const role = snapshot.roleAssignment?.role;
   if (!identity.sessionId || !role || !roles.includes(role)) throw new ReportError("This selected role cannot use Ask Nalanda.","ACCESS_DENIED",403);
+  // The transport checks credentials on entry; repeat at P1's transaction/return
+  // boundaries so a password/session change during a read also fails closed.
+  const credentials=await client.user.findUnique({where:{id:identity.userId},select:{credentialVersion:true,mustChangePassword:true}});
+  if(!credentials||credentials.mustChangePassword||snapshot.session?.credentialVersion!==credentials.credentialVersion)throw new ReportError("The session is no longer current.","ACCESS_DENIED",403);
   const requirePermission = async (permission: string, explicit = false) => {
     const decision = await evaluatePermissionFromSnapshot(client,snapshot,permission,true);
     if (!decision.allowed || (explicit && !["USER_ALLOW","PROFILE_ALLOW"].includes(decision.source))) throw new ReportError("Ask Nalanda access is denied for this domain or action.","ACCESS_DENIED",403);

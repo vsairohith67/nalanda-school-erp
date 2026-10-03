@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { authorize, type Client, type Identity } from "./access";
-import { FAMILIES, ReportError, parseQuery, year, type Family, type Query } from "./contract";
+import { FAMILIES, ReportError, parseQuery, year, type AttendanceEvidence, type Family, type Query } from "./contract";
 import { academicRows, attendanceRows, feeRows, cohort, resolvedTargets, targetOptions, digest, bounded, type ResultRow } from "./readers";
 
 export async function options(db:Client,identity:Identity,family:Family,academicYear:string) {
@@ -18,11 +18,14 @@ export async function availability(db:Client,identity:Identity) {
   return {families,years,context:digest([identity.userId,identity.sessionId,identity.roleAssignmentId,access.authorizationVersion,access.role])};
 }
 export type Report=Awaited<ReturnType<typeof readReport>>;
-export async function readReport(db:Client,identity:Identity,value:unknown,exporting=false,now=new Date()) {
+export async function readReport(db:Client,identity:Identity,value:unknown,exporting=false,now=new Date(),source?:{key:string;attendance?:AttendanceEvidence}) {
   const q=parseQuery(value);await authorize(db,identity,q.family,exporting);
   const targets=await resolvedTargets(db,q),enrollments=await cohort(db,q,targets);
-  const data=q.family==="ACADEMIC"?await academicRows(db,q,targets,enrollments):q.family==="ATTENDANCE"?await attendanceRows(db,q,targets,enrollments):await feeRows(db,q,targets,enrollments,now);
-  const sourceRevision=digest([q.family,q.academicYear,targets,enrollments,data.revisions]);
+  const data:{rows:ResultRow[];definition:string;revisions:string[];attendance?:AttendanceEvidence}=q.family==="ACADEMIC"?await academicRows(db,q,targets,enrollments):q.family==="ATTENDANCE"?await attendanceRows(db,q,targets,enrollments,source?.key):await feeRows(db,q,targets,enrollments,now);
+  if(source)source.attendance=data.attendance;
+  // Paging is a view of the same report; all other canonical semantics are bound.
+  const {page:_,...semantics}=q;
+  const sourceRevision=digest([semantics,targets,enrollments,data.revisions]);
   const rows=[...data.rows].sort((a,b)=>{
     const primary=q.sort==="METRIC"?(a.metric===null?b.metric===null?0:1:b.metric===null?-1:a.metric-b.metric):a.name.localeCompare(b.name);
     return (q.direction==="DESC"?-primary:primary)||a.key.localeCompare(b.key);
@@ -38,6 +41,24 @@ export async function execute(db:PrismaClient,identity:Identity,value:unknown,in
   await authorize(db,identity,report.query.family,input.exporting);
   if(input.expectedRevision&&input.expectedRevision!==report.sourceRevision)throw new ReportError("Sources changed. Run the report again before paging, viewing details or exporting.","SOURCE_CHANGED",409);
   return report;
+}
+export type SourceDetail={row:ResultRow;definition:string;generatedAt:string;sourceRevision:string;attendance?:AttendanceEvidence};
+export async function executeSource(db:PrismaClient,identity:Identity,value:unknown,key:unknown,expectedRevision:unknown):Promise<SourceDetail> {
+  if(typeof key!=="string"||!/^[a-f0-9]{24}$/.test(key))throw new ReportError("Source unavailable.","SOURCE_UNAVAILABLE",404);
+  if(typeof expectedRevision!=="string"||!/^[a-f0-9]{64}$/.test(expectedRevision))throw new ReportError("Run and review the report first.","REFRESH_REQUIRED",409);
+  const query=parseQuery(value);
+  const detail=await db.$transaction(async tx=>{
+    const selection:{key:string;attendance?:AttendanceEvidence}={key};
+    const report=await readReport(tx,identity,query,false,new Date(),selection);
+    if(report.sourceRevision!==expectedRevision)throw new ReportError("Sources changed. Run the report again before viewing details.","SOURCE_CHANGED",409);
+    const row=report.rows.find(row=>row.key===key);
+    if(!row)throw new ReportError("Source unavailable.","SOURCE_UNAVAILABLE",404);
+    // Attendance evidence stays in this authorized historical flow; no current-year route.
+    const {href,...attendanceRow}=row;
+    return {row:query.family==="ATTENDANCE"?attendanceRow:row,definition:report.definition,generatedAt:report.generatedAt,sourceRevision:report.sourceRevision,...(selection.attendance?{attendance:selection.attendance}:{})};
+  },{isolationLevel:"Serializable",maxWait:2000,timeout:15000});
+  await authorize(db,identity,query.family);
+  return detail;
 }
 export function pageReport(report:Report) {
   const {page,pageSize}=report.query;

@@ -1,6 +1,6 @@
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {PrismaClient} from "@prisma/client";
-import {mkdtempSync,readFileSync,readdirSync,lstatSync,existsSync,realpathSync} from "node:fs";
+import {mkdtempSync,readFileSync,readdirSync,lstatSync,existsSync,realpathSync,writeFileSync} from "node:fs";
 import {randomUUID} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {DatabaseSync,backup} from "node:sqlite";
@@ -8,7 +8,7 @@ import {tmpdir} from "node:os";
 import path from "node:path";
 import {performance} from "node:perf_hooks";
 import {authorize,type Identity} from "../lib/intelligent-reports/access";
-import {execute,readReport,pageReport,reportCsv,options} from "../lib/intelligent-reports/service";
+import {execute,executeSource,readReport,pageReport,reportCsv,options} from "../lib/intelligent-reports/service";
 import type {Query} from "../lib/intelligent-reports/contract";
 import {NextRequest} from "next/server";
 import {resetAcademicCalendarExportRateLimitForTests} from "../lib/academic-calendar-export-rate-limit";
@@ -30,8 +30,9 @@ vi.mock("../lib/release-feature-flag-runtime",async(importOriginal)=>{
   }};
 });
 import {handle} from "../lib/intelligent-reports/api";
+import {POST as sourceRoute} from "../app/api/intelligent-reports/source/route";
 import {POST as exportRoute} from "../app/api/intelligent-reports/export/route";
-const dispatch=(action:Parameters<typeof handle>[1],request:NextRequest)=>action==="export"?exportRoute(request):handle(request,action);
+const dispatch=(action:Parameters<typeof handle>[1],request:NextRequest)=>action==="export"?exportRoute(request):action==="source"?sourceRoute(request):handle(request,action);
 import {previewFamilyCollection,confirmFamilyCollection,reverseFamilyCollection} from "../lib/family-collections";
 import {assertSyntheticPostgresQa} from "../scripts/postgres/synthetic-qa";
 
@@ -258,4 +259,144 @@ it("all three in-process route families preserve business data and reconcile pri
   const prior=await execute(db,actor,fees);await db.feeStructure.update({where:{id:"fee7"},data:{termAmount:10001}});
   const rejected=await call("export",{query:fees,expectedRevision:prior.sourceRevision});expect(rejected.status).toBe(409);expect((await rejected.json()).code).toBe("SOURCE_CHANGED");expect(await db.userAudit.count()).toBe(audits+6);
   await db.feeStructure.update({where:{id:"fee7"},data:{termAmount:10000}});
+});
+
+// 1B: retained historic records, migrated synthetic database, real readers and route.
+const pastYear="2023-24";
+const past:Query={...attendance,academicYear:pastYear,targets:[{id:"evidence-past7"}],from:"2024-02-01",to:"2024-02-20",comparator:"GTE",threshold:90};
+async function publishEvidenceCalendar(id:string,scope:string,className:string|null,section:string|null,days:Array<{date:string;type:string}>,version=1,reconcile=false){
+  await db.academicCalendarVersion.create({data:{id,publicKey:id,academicYear:pastYear,versionNumber:version,status:"DRAFT",effectiveScope:scope,className,section,scopeKey:`${scope}:${className??""}:${section??""}`,title:"SYNTHETIC EVIDENCE",createdByUserId:actor.userId,attendanceReconciliationRequired:reconcile}});
+  await db.operationalCalendarDay.createMany({data:days.map(d=>({publicKey:`${id}-${d.date}`,calendarVersionId:id,dayDate:date(d.date),dayType:d.type,scopeType:scope,className,section,scopeKey:`${scope}:${className??""}:${section??""}`,title:"SYNTHETIC",contentHash:`synthetic-${d.date}`,reason:"PRIVATE-CALENDAR-NARRATIVE"}))});
+  await db.academicCalendarVersion.update({where:{id},data:{status:"READY_FOR_REVIEW",submittedAt:now}});
+  await db.academicCalendarVersion.update({where:{id},data:{status:"PUBLISHED",approvedAt:now,publishedAt:now,currentPublicationKey:`published-${id}`,publicationReason:"SYNTHETIC"}});
+}
+const detailFor=async(query:Query,n=0)=>{const report=await execute(db,actor,query);const row=report.rows.find(r=>r.admission===`SYN-${n}`)!;return executeSource(db,actor,query,row.key,report.sourceRevision);};
+it("1B fixture: 50 historical enrollments and a complete leap academic year calendar",async()=>{
+  await db.timetableClassSection.create({data:{id:"evidence-past7",academicYear:pastYear,className:"7",section:"A",displayName:"SYNTHETIC retained 7A",groupName:"SYNTHETIC"}});
+  await db.academicYearEnrollment.createMany({data:Array.from({length:50},(_,n)=>({id:`evidence-enrollment-${n}`,studentId:`s${n}`,academicYear:pastYear,className:"7",section:"A",status:"ACTIVE",enrollmentDate:n===3?null:date(n===4?"2024-02-02":"2023-04-01"),exitDate:n===4?date("2024-02-20"):null,notes:"PRIVATE-ENROLLMENT-NARRATIVE"}))});
+  const days=[];for(let at=date("2023-04-01").getTime();at<=date("2024-03-31").getTime();at+=86400000){const d=new Date(at).toISOString().slice(0,10);days.push({date:d,type:d>="2024-02-01"&&d<="2024-03-04"?"WORKING_DAY":"NON_WORKING_DAY"});}
+  await publishEvidenceCalendar("evidence-calendar","SCHOOL_WIDE",null,null,days);
+  for(let n=1;n<=20;n++){
+    const d=`2024-02-${String(n).padStart(2,"0")}`;
+    await db.studentAttendanceSession.create({data:{id:`evidence-session-${n}`,attendanceDate:date(d),academicYear:pastYear,className:"7",section:"A",status:"LOCKED",operationalCalendarVersionKey:"evidence-calendar",operationalCalendarDayKey:`evidence-calendar-${d}`,notes:"PRIVATE-SESSION-NARRATIVE"}});
+    await db.studentAttendanceRecord.createMany({data:Array.from({length:50},(_,i)=>({sessionId:`evidence-session-${n}`,studentId:`s${i}`,admissionNo:`SYN-${i}`,status:i===2?"ABSENT":i===5&&n===10?"HALF_DAY":n<=18?"PRESENT":"ABSENT",remarks:"PRIVATE-LEAVE-NARRATIVE"})).filter(r=>!(r.studentId==="s1"&&n===18))});
+  }
+  await db.studentLifecycleEvent.create({data:{studentId:"s6",academicYear:pastYear,eventType:"TRANSFERRED",fromClass:"6",toClass:"7",fromSection:"B",toSection:"A",effectiveDate:date("2024-02-10"),evidenceNotes:"PRIVATE-TRANSFER-NARRATIVE"}});
+});
+it("1B real source: exactly 90%, missing date unresolved, true zero, admission and exclusive exit",async()=>{
+  const complete=await detailFor(past),missing=await detailFor(past,1),zero=await detailFor(past,2),interval=await detailFor(past,4);
+  expect(complete.row).toMatchObject({metric:90,numerator:18,denominator:20,classification:"MEETS"});
+  expect(complete.attendance).toMatchObject({state:"COMPLETE",percentage:90,numerator:18,denominator:20,recorded:20,totalDates:20,coverage:{COUNTED_PRESENT:18,COUNTED_ABSENT:2}});
+  expect(missing.row).toMatchObject({metric:null,numerator:17,denominator:20,classification:"UNRESOLVED"});
+  expect(missing.attendance?.dates.filter(d=>d.reasons.includes("MISSING_RECORD")).map(d=>d.date)).toEqual(["2024-02-18"]);
+  expect(zero.row).toMatchObject({metric:0,classification:"DOES_NOT_MEET"});expect(zero.attendance?.coverage.COUNTED_ABSENT).toBe(20);
+  expect(interval.attendance).toMatchObject({numerator:17,denominator:18,coverage:{OUTSIDE_ENROLLMENT:2}});
+  expect(interval.attendance?.dates[0].reasons).toContain("BEFORE_ENROLLMENT");expect(interval.attendance?.dates[1].denominator).toBe(1);expect(interval.attendance?.dates[19].reasons).toContain("ON_OR_AFTER_EXIT");
+  for(const d of [complete,missing,zero,interval]){expect(d.row).not.toHaveProperty("href");expect(JSON.stringify(d)).not.toContain("PRIVATE-");expect(Object.values(d.attendance!.coverage).reduce((a,b)=>a+b,0)).toBe(20);expect(d.attendance!.dates.reduce((a,b)=>a+b.numerator,0)).toBe(d.row.numerator);expect(d.attendance!.dates.reduce((a,b)=>a+b.denominator,0)).toBe(d.row.denominator);}
+  if(process.env.IR_EVIDENCE_CAPTURE_DIR){const output=realpathSync(process.env.IR_EVIDENCE_CAPTURE_DIR);expect(output).toContain("intelligent-reports-attendance-evidence-1b");writeFileSync(path.join(output,"service-fixtures.json"),JSON.stringify({label:"SYNTHETIC actual migrated SQLite service capture; transport is not login acceptance",complete,missing,zero,interval,empty:await detailFor({...past,from:"2023-12-31",to:"2024-01-01"}),report:pageReport(await execute(db,actor,past)),current:pageReport(await execute(db,actor,attendance)),currentDetail:await detailFor(attendance)},null,2));}
+});
+it("1B current and past years never borrow current Student scope or current school year",async()=>{
+  const historic=await detailFor(past,6);expect(historic.row.className).toBe("7");expect(historic.attendance?.intervalReasons).toContain("TRANSFER_HISTORY");expect(historic.attendance?.transferDates).toEqual(["2024-02-10"]);
+  const old=await execute(db,actor,past);await db.schoolSettings.update({where:{id:"school"},data:{academicYear:"2027-28"}});
+  const retained=await executeSource(db,actor,past,old.rows[0].key,old.sourceRevision);expect(retained.attendance?.academicYear).toBe(pastYear);expect(retained.row).not.toHaveProperty("href");
+  await db.schoolSettings.update({where:{id:"school"},data:{academicYear:year}});
+  const current=await execute(db,actor,attendance);await expect(executeSource(db,actor,past,current.rows[0].key,old.sourceRevision)).rejects.toMatchObject({code:"SOURCE_UNAVAILABLE"});
+  await expect(executeSource(db,actor,{...past,from:"2024-02-02"},old.rows[0].key,old.sourceRevision)).rejects.toMatchObject({code:"SOURCE_CHANGED"});
+  await expect(executeSource(db,actor,{...past,threshold:91},old.rows[0].key,old.sourceRevision)).rejects.toMatchObject({code:"SOURCE_CHANGED"});
+  await expect(executeSource(db,actor,{...past,targets:[{id:"scope7"}]},old.rows[0].key,old.sourceRevision)).rejects.toMatchObject({code:"SCOPE_UNAVAILABLE"});
+});
+it("1B unknown admission and partial statuses stay unresolved; observed counts are not official",async()=>{
+  expect((await detailFor(past,3)).attendance).toMatchObject({state:"INCOMPLETE",percentage:null,intervalReasons:["UNKNOWN_ADMISSION"]});
+  const partial=await detailFor(past,5);expect(partial.attendance?.percentage).toBeNull();expect(partial.attendance?.dates[9]).toMatchObject({status:"HALF_DAY",numerator:0,denominator:1,bucket:"UNSUPPORTED_STATUS",reasons:["UNSUPPORTED_STATUS"]});
+  const empty=await detailFor({...past,from:"2023-12-31",to:"2024-01-01"});expect(empty.attendance).toMatchObject({state:"NO_ELIGIBLE_DAYS",percentage:null,numerator:0,denominator:0,totalDates:2,coverage:{EXCLUDED_CALENDAR:2}});expect(empty.row.classification).toBe("UNRESOLVED");
+  const leap=await detailFor({...past,from:"2024-02-28",to:"2024-03-01"});expect(leap.attendance?.dates.map(d=>d.date)).toEqual(["2024-02-28","2024-02-29","2024-03-01"]);expect(leap.attendance?.coverage.MISSING_SESSION).toBe(3);
+});
+it("1B scoped calendars, special/vacation/closure/partial days and unlocked session",async()=>{
+  await publishEvidenceCalendar("evidence-class","CLASS","7",null,[{date:"2024-03-01",type:"VACATION_DAY"},{date:"2024-03-02",type:"EMERGENCY_CLOSURE"},{date:"2024-03-03",type:"HALF_DAY"}]);
+  await publishEvidenceCalendar("evidence-section","CLASS_SECTION","7","A",[{date:"2024-03-01",type:"SPECIAL_WORKING_DAY"}]);
+  await db.studentAttendanceSession.create({data:{id:"evidence-draft",attendanceDate:date("2024-03-01"),academicYear:pastYear,className:"7",section:"A",status:"DRAFT"}});
+  const d=await detailFor({...past,from:"2024-03-01",to:"2024-03-03"});expect(d.attendance?.dates.map(d=>d.calendar.scope)).toEqual(["CLASS_SECTION","CLASS","CLASS"]);expect(d.attendance?.dates.map(d=>d.bucket)).toEqual(["SESSION_NOT_LOCKED","EXCLUDED_CALENDAR","UNSUPPORTED_DAY"]);expect(d.row.metric).toBeNull();
+  const classDay=await detailFor({...past,from:"2024-03-02",to:"2024-03-02"});expect(classDay.attendance?.dates[0].reasons).toContain("EMERGENCY_CLOSURE");
+  // Provider uniqueness is the actual protection against a duplicate scope/version.
+  await expect(db.academicCalendarVersion.create({data:{publicKey:"duplicate-evidence",academicYear:pastYear,versionNumber:1,scopeKey:"CLASS_SECTION:7:A",effectiveScope:"CLASS_SECTION",className:"7",section:"A",title:"SYNTHETIC",createdByUserId:actor.userId}})).rejects.toMatchObject({code:"P2002"});
+});
+it("1B revision detects record edits without session timestamp changes, absence and deletion",async()=>{
+  const r=await execute(db,actor,past),key=r.rows.find(r=>r.admission==="SYN-0")!.key;
+  const session=await db.studentAttendanceSession.findUniqueOrThrow({where:{id:"evidence-session-1"}});
+  await db.studentAttendanceRecord.update({where:{sessionId_studentId:{sessionId:session.id,studentId:"s0"}},data:{status:"ABSENT"}});
+  expect((await db.studentAttendanceSession.findUniqueOrThrow({where:{id:session.id}})).updatedAt).toEqual(session.updatedAt);
+  await expect(executeSource(db,actor,past,key,r.sourceRevision)).rejects.toMatchObject({code:"SOURCE_CHANGED"});
+  await db.studentAttendanceRecord.update({where:{sessionId_studentId:{sessionId:session.id,studentId:"s0"}},data:{status:"PRESENT"}});
+  await db.student.update({where:{id:"s0"},data:{deletedAt:now}});await expect(executeSource(db,actor,past,key,r.sourceRevision)).rejects.toMatchObject({code:"SOURCE_CHANGED"});await db.student.update({where:{id:"s0"},data:{deletedAt:null}});
+  await expect(executeSource(db,actor,past,"f".repeat(24),r.sourceRevision)).rejects.toMatchObject({code:"SOURCE_UNAVAILABLE"});
+});
+it("1B overlapping reconciliation and basis mismatch are diagnostic flags, not extra days",async()=>{
+  const original=await db.studentAttendanceSession.findUniqueOrThrow({where:{id:"evidence-session-1"}});
+  await db.academicCalendarVersion.update({where:{id:"evidence-calendar"},data:{attendanceReconciliationRequired:true}});
+  await db.studentAttendanceSession.update({where:{id:original.id},data:{operationalCalendarDayKey:"different-retained-basis"}});
+  const d=await detailFor(past);expect(d.attendance).toMatchObject({state:"INCOMPLETE",percentage:null,numerator:18,denominator:20,totalDates:20});expect(d.attendance?.dates[0].reasons).toEqual(["PENDING_RECONCILIATION","CALENDAR_BASIS_MISMATCH"]);expect(Object.values(d.attendance!.coverage).reduce((a,b)=>a+b,0)).toBe(20);
+  await db.studentAttendanceSession.update({where:{id:original.id},data:{operationalCalendarDayKey:original.operationalCalendarDayKey}});await db.academicCalendarVersion.update({where:{id:"evidence-calendar"},data:{attendanceReconciliationRequired:false}});
+});
+it("1B deterministic source sets do not change revision when provider order changes",async()=>{
+  const report=await execute(db,actor,past);
+  const reverse=(model:any)=>new Proxy(model,{get(target,key){if(key==="findMany")return async(...args:any[])=>{const rows=await target.findMany(...args);return rows.reverse().map((row:any)=>row.records?{...row,records:[...row.records].reverse()}:row);};return target[key];}});
+  const ordered=new Proxy(db,{get(target,key){if(["operationalCalendarDay","studentAttendanceSession","studentLifecycleEvent"].includes(String(key)))return reverse((target as any)[key]);return (target as any)[key];}});
+  const shuffled=await readReport(ordered,actor,past);expect(shuffled.sourceRevision).toBe(report.sourceRevision);expect(shuffled.rows).toEqual(report.rows);
+});
+it("1B measures 50/800 cohorts, short/maximum 366-day reads and 2000-row bound",async()=>{
+  for(const size of [50,800]){
+    if(size===800)await db.academicYearEnrollment.createMany({data:Array.from({length:750},(_,i)=>({studentId:`s${i+50}`,academicYear:pastYear,className:"7",section:"A",status:"ACTIVE",enrollmentDate:date("2023-04-01")}))});
+    for(const query of [past,{...past,from:"2023-04-01",to:"2024-03-31"}]){
+      const start=performance.now(),before=queries,report=await execute(db,actor,query),reportMs=performance.now()-start,reportQueries=queries-before;
+      const detailStart=performance.now(),detailQueries=queries,detail=await executeSource(db,actor,query,report.rows[0].key,report.sourceRevision);
+      console.info(JSON.stringify({evidence:"ATTENDANCE_EVIDENCE_1B",provider:postgres?"postgresql":"sqlite",population:size,dates:detail.attendance!.totalDates,reportMs:Math.round(reportMs),reportQueries,detailMs:Math.round(performance.now()-detailStart),detailQueries:queries-detailQueries}));
+      expect(report.summary.population).toBe(size);expect(reportQueries).toBeLessThan(100);expect(queries-detailQueries).toBeLessThan(100);expect(report).not.toHaveProperty("attendance");expect(detail.attendance!.dates.length).toBe(query.from==="2023-04-01"?366:20);
+    }
+  }
+  await db.student.createMany({data:Array.from({length:1201},(_,i)=>({id:`limit-${i}`,admissionNo:`SYN-LIMIT-${i}`,studentName:"SYNTHETIC LIMIT",fatherName:"PRIVATE",phone1:"PRIVATE",academicYear:pastYear,className:"7",section:"A"}))});
+  await db.academicYearEnrollment.createMany({data:Array.from({length:1200},(_,i)=>({studentId:`limit-${i}`,academicYear:pastYear,className:"7",section:"A",enrollmentDate:date("2023-04-01")}))});
+  expect((await execute(db,actor,past)).summary.population).toBe(2000);
+  await db.academicYearEnrollment.create({data:{studentId:"limit-1200",academicYear:pastYear,className:"7",section:"A",enrollmentDate:date("2023-04-01")}});
+  await expect(execute(db,actor,past)).rejects.toMatchObject({code:"RANGE_TOO_LARGE"});
+  await db.academicYearEnrollment.deleteMany({where:{studentId:{startsWith:"limit-"}}});
+});
+it("1B SOURCE ROUTE: real authority denials, malformed input, privacy headers and no business writes",async()=>{
+  const report=await execute(db,actor,past),key=report.rows.find(r=>r.admission==="SYN-0")!.key,body={query:past,key,expectedRevision:report.sourceRevision};
+  const call=async(payload:unknown=body,raw?:string,origin="http://127.0.0.1:4179")=>{resetAcademicCalendarExportRateLimitForTests();return sourceRoute(new NextRequest("http://127.0.0.1:4179/api/intelligent-reports/source",{method:"POST",headers:{origin,"content-type":"application/json"},body:raw??JSON.stringify(payload)}));};
+  const business=async()=>JSON.stringify(await Promise.all([db.student.findMany({orderBy:{id:"asc"}}),db.academicYearEnrollment.findMany({orderBy:{id:"asc"}}),db.studentAttendanceSession.findMany({orderBy:{id:"asc"}}),db.studentAttendanceRecord.findMany({orderBy:{id:"asc"}}),db.academicCalendarVersion.findMany({orderBy:{id:"asc"}}),db.operationalCalendarDay.findMany({orderBy:{id:"asc"}}),db.studentLifecycleEvent.findMany({orderBy:{id:"asc"}})]));
+  const before=await business(),audits=await db.userAudit.count();
+  const ok=await call();expect(ok.status).toBe(200);expect(ok.headers.get("cache-control")).toContain("private, no-store");expect(ok.headers.get("x-robots-tag")).toContain("noindex");const projection=await ok.json();expect(projection.attendance.percentage).toBe(90);expect(JSON.stringify(projection)).not.toContain("PRIVATE-");
+  const other=report.rows.find(r=>r.admission==="SYN-1")!;const otherDetail=await (await call({...body,key:other.key})).json();expect(otherDetail.row.admission).toBe("SYN-1");expect(otherDetail.attendance.percentage).toBeNull();
+  expect((await call(body,"{")).status).toBe(400);expect((await call(body,"x".repeat(16001))).status).toBe(413);
+  for(const bad of [{...body,studentId:"s1"},{...body,academicYear:year},{...body,ownerId:actor.userId},{...body,query:{...past,className:"9"}},{...body,featureOverride:true}])expect((await call(bad)).status).toBe(400);
+  expect((await call({...body,key:"forged"})).status).toBe(404);expect((await call({...body,expectedRevision:"0".repeat(64)})).status).toBe(409);expect((await call(body,undefined,"https://hostile.invalid")).status).toBe(403);
+  vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED","");expect((await call()).status).toBe(403);vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED","intelligent-reports-1a,bulk-exports");
+  const off=await db.rolePermission.create({data:{role:"SUPER_ADMIN",permission:"USE_IR_ATTENDANCE",enabled:false}});expect((await call()).status).toBe(403);await db.rolePermission.delete({where:{id:off.id}});
+  for(const permission of ["USE_INTELLIGENT_REPORTS","VIEW_STUDENT_ATTENDANCE_REPORTS"]){const deny=await grant(actor,permission,"DENY");const response=await call();expect(response.status).toBe(403);expect(JSON.stringify(await response.json())).not.toContain("SYN-");await db.userPermissionOverride.delete({where:{id:deny.id}});}
+  for(const patch of [{revokedAt:now},{expiresAt:date("2020-01-01")},{authorizationVersion:0},{credentialVersion:0}]){const saved=await db.authSession.findUniqueOrThrow({where:{id:actor.sessionId}});await db.authSession.update({where:{id:actor.sessionId},data:patch});expect((await call()).status).toBe(403);await db.authSession.update({where:{id:actor.sessionId},data:{revokedAt:saved.revokedAt,expiresAt:saved.expiresAt,authorizationVersion:saved.authorizationVersion,credentialVersion:saved.credentialVersion}});}
+  const reserve=await db.user.create({data:{username:"synthetic-evidence-reserve-admin",name:"SYNTHETIC reserve admin",passwordHash:"SYNTHETIC-NOT-A-CREDENTIAL",role:"SUPER_ADMIN"}});
+  await db.userRoleAssignment.create({data:{userId:reserve.id,role:"SUPER_ADMIN",reason:"SYNTHETIC preserve last-admin invariant",validFrom:date("2020-01-01")}});
+  await db.user.update({where:{id:actor.userId},data:{isActive:false}});expect((await call()).status).toBe(403);await db.user.update({where:{id:actor.userId},data:{isActive:true}});
+  const alternate=await db.userRoleAssignment.create({data:{userId:actor.userId,role:"TEACHER",reason:"SYNTHETIC role switch",validFrom:date("2020-01-01")}});await db.authSession.update({where:{id:actor.sessionId},data:{activeRoleAssignmentId:alternate.id}});expect((await call()).status).toBe(403);await db.authSession.update({where:{id:actor.sessionId},data:{activeRoleAssignmentId:actor.roleAssignmentId}});
+  // Eligible leadership is not an automatic attendance grant; verify actual policy.
+  const director=await db.user.findUniqueOrThrow({where:{username:"synthetic-DIRECTOR"}}),assignment=await db.userRoleAssignment.findFirstOrThrow({where:{userId:director.id,role:"DIRECTOR"}});
+  const session=await db.authSession.create({data:{userId:director.id,activeRoleAssignmentId:assignment.id,tokenHash:"synthetic-evidence-director-session",credentialVersion:director.credentialVersion,authorizationVersion:director.authorizationVersion,expiresAt:new Date(Date.now()+3600000),deviceSummary:"SYNTHETIC",browserSummary:"SYNTHETIC",networkEvidenceMasked:"SYNTHETIC"}}),saved=transport.context;
+  transport.context={user:{id:director.id,name:"SYNTHETIC",role:"DIRECTOR",roleAssignmentId:session.activeRoleAssignmentId,mustChangePassword:false},sessionId:session.id};
+  const who={userId:director.id,sessionId:session.id,roleAssignmentId:session.activeRoleAssignmentId};await grant(who,"USE_IR_ATTENDANCE");
+  const denied=await grant(who,"VIEW_STUDENT_ATTENDANCE_REPORTS","DENY");expect((await call()).status).toBe(403);await db.userPermissionOverride.delete({where:{id:denied.id}});await grant(who,"VIEW_STUDENT_ATTENDANCE_REPORTS");const iam=await import("../lib/iam/effective-access");const snapshot=await iam.loadAuthorizationSnapshot(db,who);
+  // Existing global object-scope policy also denies leadership USE_IR_ATTENDANCE.
+  // A fixture grant cannot create the missing role resolver; retain the denial.
+  expect(await iam.evaluatePermissionFromSnapshot(db,snapshot,"USE_IR_ATTENDANCE",true)).toMatchObject({allowed:false,source:"SYSTEM_RESTRICTION"});expect((await call()).status).toBe(403);transport.context=saved;
+  expect((await call()).status).toBe(200);expect(await business()).toBe(before);expect(await db.userAudit.count()).toBe(audits);
+});
+it("1B report and selected detail read the same real transaction; source models never read outside it",async()=>{
+  const report=await execute(db,actor,past);let transactions=0,inside=0;const sourceModels=new Set(["timetableClassSection","academicYearEnrollment","schoolSettings","operationalCalendarDay","studentAttendanceSession","studentLifecycleEvent"]);
+  const instrumented=new Proxy(db,{get(target,key){if(key==="$transaction")return async(callback:any,options:any)=>{transactions++;expect(options).toEqual({isolationLevel:"Serializable",maxWait:2000,timeout:15000});return target.$transaction(async tx=>{inside++;try{return await callback(tx);}finally{inside--;}},options);};if(sourceModels.has(String(key))){expect(inside).toBe(1);}return (target as any)[key];}});
+  const detail=await executeSource(instrumented,actor,past,report.rows[0].key,report.sourceRevision);expect(transactions).toBe(1);expect(detail.attendance?.dates).toHaveLength(20);
+});
+it("1B global missing/ambiguous calendar refusal stays a failed full report",async()=>{
+  const report=await execute(db,actor,past);
+  // Clearly labelled adversarial reader boundary: production DB uniqueness remains unchanged.
+  for(const mode of ["missing","ambiguous"]){const adversarial=new Proxy(db,{get(target,key){if(key==="operationalCalendarDay")return {findMany:async(args:any)=>{const days=await target.operationalCalendarDay.findMany(args);return mode==="missing"?days.filter(d=>d.dayDate.toISOString().slice(0,10)!=="2024-02-01"):[...days,days[0]];}};return (target as any)[key];}});await expect(readReport(adversarial,actor,past)).rejects.toMatchObject({code:"CALENDAR_UNAVAILABLE"});}
+  expect(report.rows).toHaveLength(800);
 });
