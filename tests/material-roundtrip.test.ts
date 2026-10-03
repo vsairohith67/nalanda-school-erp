@@ -22,5 +22,6 @@ describe('HARNESS_ONLY material provenance roundtrip',()=>{
 describe('finite downloader socket targets',()=>{
  it.each(['127.0.0.1','10.1.2.3','169.254.169.254','172.16.0.2','192.168.1.1','100.100.100.200','198.19.0.1','224.0.0.1','::1','::ffff:127.0.0.1'])('refuses %s',a=>expect(publicMaterialAddress(a)).toBe(false));
  it('accepts public IPv4 and exact official HTTPS route',()=>{expect(publicMaterialAddress('104.16.31.34')).toBe(true);expect(materialDownloadURL('https://registry.npmjs.org/a').hostname).toBe('registry.npmjs.org');});
- it.each(['http://registry.npmjs.org/a','https://registry.npmjs.org.evil.invalid/a','https://user:secret@registry.npmjs.org/a','https://registry.npmjs.org/a?secret=x','https://127.0.0.1/a'])('refuses noncanonical or unapproved URL',url=>expect(()=>materialDownloadURL(url)).toThrow());
+ it('refuses credentials on an otherwise approved URL',()=>{const url=new URL('https://registry.npmjs.org/a');url.username='fixture';url.password='fixture';expect(()=>materialDownloadURL(url.href)).toThrow();});
+ it.each(['http://registry.npmjs.org/a','https://registry.npmjs.org.evil.invalid/a','https://registry.npmjs.org/a?secret=x','https://127.0.0.1/a'])('refuses noncanonical or unapproved URL',url=>expect(()=>materialDownloadURL(url)).toThrow());
 });
