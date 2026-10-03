@@ -1,0 +1,10 @@
+import { execFileSync } from "node:child_process";
+import path from "node:path";
+import { admitArtifact } from "./admit-artifact";
+import { assertRunningImage } from "./artifact-handoff";
+const receipt=admitArtifact(path.resolve("artifact-evidence"));
+const id=process.argv[2];
+if(!/^[a-f0-9]{12,64}$/.test(id??""))throw Error("CONTAINER_ID_REQUIRED");
+const containers=JSON.parse(execFileSync("docker",["--context","default","inspect",id],{encoding:"utf8",timeout:30_000}));
+if(containers.length!==1)throw Error("CONTAINER_ID_AMBIGUOUS");
+assertRunningImage(receipt,containers[0]);

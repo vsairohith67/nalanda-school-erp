@@ -90,7 +90,7 @@ jobs:
           pnpm exec prisma migrate deploy --schema prisma/schema.prisma
           Copy-Item -LiteralPath tmp\onboarding-preparation-ci\synthetic.db -Destination prisma\dev.db
       - name: Public repository, secret and private-artifact gate
-        run: pnpm qa:onboarding-preparation:public-repo-scan && pnpm audit --ignore-registry-errors --audit-level high
+        run: pnpm qa:onboarding-preparation:public-repo-scan && pnpm audit --audit-level high
       - name: Preparation mapping, packages, adversarial parser and no-write proof
         run: pnpm qa:onboarding-preparation
       - name: Existing governed onboarding, finance and Schoolknot compatibility
@@ -125,10 +125,26 @@ jobs:
           pnpm exec prisma migrate deploy --schema prisma/schema.prisma
           pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
           Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db -Force
+      - name: Prepare bounded OpenSSL fixture metadata
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts openssl-prepare
       - name: Full ERP tests, typecheck and production build
         env:
           DATABASE_URL: file:../tmp/release-ci/synthetic.db
+          NALANDA_OPENSSL_TRACE_DIR: tmp/ci-openssl-fixture
         run: pnpm test && pnpm typecheck && pnpm build
+      - name: Validate bounded OpenSSL fixture metadata
+        if: ${{ always() && hashFiles('tmp/ci-openssl-fixture/ownership.json') != '' }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts openssl-finalize
+      - name: Retain exact sanitized OpenSSL metadata
+        if: ${{ always() && hashFiles('tmp/ci-openssl-fixture-public/manifest.json') != '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: openssl-fixture-metadata-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            tmp/ci-openssl-fixture-public/openssl.json
+            tmp/ci-openssl-fixture-public/manifest.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Remove synthetic databases and reports
         if: always()
         shell: pwsh

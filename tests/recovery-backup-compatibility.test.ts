@@ -1,0 +1,271 @@
+import { randomUUID, randomBytes, createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { PrismaClient, Prisma } from "@prisma/client";
+import { beforeAll, afterAll, describe, expect, it, vi } from "vitest";
+import { eligiblePreviousYear, normalizeIncomeSupport, reconcilePriorYear, sourceProposalStatus, type PriorYearPolicy } from "@/lib/prior-year-concession-policy";
+import { authorizePriorYear, mutatePriorYear, priorYearBalance, readPriorYearIncome, type ConcessionActor } from "@/lib/prior-year-concessions";
+import { createMiscReceipt, serializeMiscReceipt, validateMiscReceiptInput } from "@/lib/misc-income";
+import { emptyPriorYearBackup, loadPriorYearBackup, restorePriorYearBackup, validatePriorYearBackup, PRIOR_YEAR_BACKUP_KEYS } from "@/lib/prior-year-concession-backup";
+import { createBackupDocument, generateFullBackup } from "@/lib/backup";
+import { parseAndValidateBackup } from "@/lib/restore";
+import { restoreValidatedBackup } from "@/lib/restore-database";
+import { assertRecoveryReadback } from "@/lib/portable-runtime/recovery-readback";
+import {validateOperatorFixture} from "@/lib/portable-runtime/operator-fixture";
+import {historicalIncomeKeys} from "@/lib/portable-runtime/recovery-key-custody";
+
+// Authentication/step-up are isolated at their service boundaries in these database tests.
+// Existing IAM and real-user-access suites separately exercise signed sessions and one-time grants.
+vi.mock("@/lib/iam/effective-access", () => ({ evaluateEffectivePermission: async (_db: unknown, input: { userId: string }) => ({ allowed: !input.userId.includes("denied"), role: input.userId.includes("teacher") ? "TEACHER" : input.userId.includes("approver") ? "DIRECTOR" : "ACCOUNTANT", source: "USER_ALLOW", roleLabel: "Finance", profileNames: input.userId.includes("marks") ? ["MARKS_ENTRY_OPERATOR"] : [] }) }));
+vi.mock("@/lib/real-user-access/step-up", () => ({ consumeStepUpGrant: async (_db: unknown, input: { stepUpToken: string }) => input.stepUpToken === "synthetic-step-up-proof" }));
+// PostgreSQL transaction tests isolate the existing SQLite-only QA flag adapter.
+// SQLite and direct API suites exercise the real OFF gate; this is not HTTP/runtime acceptance.
+vi.mock("@/lib/release-feature-flag-runtime", async (original) => {
+  const actual = await original<typeof import("@/lib/release-feature-flag-runtime")>();
+  const pgTest = () => process.env.DATABASE_PROVIDER === "postgresql" && process.env.CI === "true" && process.env.POSTGRES_READINESS_SYNTHETIC_QA === "1";
+  const enabled = (feature: { key: string }) => (process.env.RELEASE_FEATURE_FLAGS_QA_ENABLED ?? "").split(",").includes(feature.key);
+  return { ...actual, isOperationalReleaseFeatureEnabled: (feature: Parameters<typeof actual.isOperationalReleaseFeatureEnabled>[0]) => pgTest() ? enabled(feature) : actual.isOperationalReleaseFeatureEnabled(feature), assertOperationalReleaseFeature: (feature: Parameters<typeof actual.assertOperationalReleaseFeature>[0]) => { if (!pgTest()) return actual.assertOperationalReleaseFeature(feature); if (!enabled(feature)) throw new actual.ReleaseFeatureUnavailableError(); } };
+});
+
+const policy: PriorYearPolicy = { contract: "NALANDA_PRIOR_YEAR_CONCESSIONS_1A", version: 1, academicYears: [{ id: "2024-25", sequence: 40, startsOn: "2024-04-01", endsOn: "2025-03-31" }, { id: "2025-26", sequence: 41, startsOn: "2025-04-01", endsOn: "2026-03-31" }, { id: "2026-27", sequence: 42, startsOn: "2026-04-01", endsOn: "2027-03-31" }, { id: "2027-28", sequence: 43, startsOn: "2027-04-01", endsOn: "2028-03-31" }], incomeBands: [{ id: "BAND_1", label: "Synthetic annual band" }], incomeRetentionDays: 30, scholarshipsEnabled: false };
+let db: PrismaClient;
+const postgres = process.env.DATABASE_PROVIDER === "postgresql";
+const originalUrl = process.env.DATABASE_URL;
+const suffix = process.env.PORTABLE_OPERATOR_MATRIX_ID ?? randomUUID();
+if (!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(suffix)) throw Error("RECOVERY_MATRIX_ID_INVALID");
+const actor = (role: string): ConcessionActor => ({ userId: `${role}-${suffix}`, sessionId: `session-${role}`, roleAssignmentId: `assignment-${role}` });
+const prep = actor("preparer"), reviewer = actor("reviewer"), approver = actor("approver"), applier = actor("applier");
+const request = (action: string, extra: Record<string, unknown> = {}) => ({ action, requestKey: randomUUID(), reason: "Wholly invented finance review evidence", stepUpToken: "synthetic-step-up-proof", ...extra });
+const mutate = (who: ConcessionActor, input: unknown) => mutatePriorYear(db, who, input, { policy });
+async function makeStudent() {
+  const id = randomUUID();
+  const student = await db.student.create({ data: { id, admissionNo: `SYNTHETIC-${id}`, studentName: "Invented Duplicate Name", fatherName: "Invented Guardian", className: "VI", phone1: "SYNTHETIC-NO-CONTACT", academicYear: "2026-27", discountPercent: 12, academicYearEnrollments: { create: [{ academicYear: "2025-26", className: "V" }, { academicYear: "2026-27", className: "VI" }, { academicYear: "2024-25", className: "IV" }] } } });
+  return { student, enrollment: await db.academicYearEnrollment.findUniqueOrThrow({ where: { studentId_academicYear: { studentId: id, academicYear: "2025-26" } } }) };
+}
+async function liability(opening = "1000.00", paid = "200.00") {
+  const fixture = await makeStudent();
+  const payment = paid === "0" ? null : await makePayment(fixture.student.id, paid);
+  const proposed = await mutate(prep, request("PREPARE_LIABILITY", { studentId: fixture.student.id, operatingYear: "2026-27", sourceYear: "2025-26", sourceEnrollmentId: fixture.enrollment.id, identityVerified: true, openingAmount: opening, existingCredits: "50.00", sourceReferences: ["INVENTED-TERM-1-REVIEW"], provenance: "Invented opening and approved-credit review" }));
+  await mutate(reviewer, request("VERIFY", { liabilityId: proposed.liabilityId, expectedVersion: 1, identityVerified: true, balanceVerified: true, paymentIds: payment ? [payment.id] : [] }));
+  return { ...fixture, liabilityId: proposed.liabilityId, payment };
+}
+async function makePayment(studentId: string, amount: string) {
+  const student = await db.student.findUniqueOrThrow({ where: { id: studentId } });
+  return db.payment.create({ data: { date: new Date("2026-09-01Z"), receiptNo: `SYNTHETIC-${randomUUID()}`, admissionNo: student.admissionNo, studentId, studentName: student.studentName, className: student.className, amountPaid: Number(amount), paymentMode: "Cash", receivedAccount: "Cash", feeType: "Old Due" } });
+}
+async function approvedCase(liabilityId: string, amount = "300.00", kind = "SCHOOL_WAIVER") {
+  const prepared = await mutate(prep, request("PREPARE", { liabilityId, kind, requestedAmount: amount, applicantReference: "INVENTED-APPLICANT", validFrom: "2020-01-01", validTo: "2090-01-01" }));
+  await mutate(prep, request("SUBMIT", { caseId: prepared.caseId, expectedVersion: 1 }));
+  await mutate(reviewer, request("REVIEW", { caseId: prepared.caseId, expectedVersion: 2 }));
+  const balance = await priorYearBalance(db, liabilityId, policy);
+  await mutate(approver, request("APPROVE", { caseId: prepared.caseId, expectedVersion: 3, approvedAmount: amount, balanceHash: balance.hash, balanceVersion: balance.liability.version }));
+  return prepared.caseId!;
+}
+
+
+import { createRequire } from "node:module";
+import { populateCertificateRecoveryFixture } from "./helpers/recovery-certificate-fixture";
+import contracts from "@/config/recovery-source-contracts.json";
+const require=createRequire(import.meta.url);
+// New run-owned fixtures never reuse or clean the retained 1A compatibility residue.
+const owned=path.resolve("tmp/recovery-1c-restores",suffix);
+const digest=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).digest("hex");
+const matrixReceipts: Record<string,unknown>[]=[];
+const databaseIdentities=new Set<string>();
+async function sourceSnapshot(client:PrismaClient){return digest(await Promise.all([client.student.findMany({orderBy:{id:"asc"}}),client.payment.findMany({orderBy:{id:"asc"}}),client.studentCertificate.findMany({orderBy:{id:"asc"}}),client.studentCertificateVersion.findMany({orderBy:{id:"asc"}}),client.certificateIssueArtifact.findMany({orderBy:{id:"asc"}}),client.priorYearConcessionEvent.findMany({orderBy:{id:"asc"}}),client.authSession.findMany({orderBy:{id:"asc"}})]));}
+const gitText=(head:string,file:string)=>execFileSync("git",["show",head+":"+file],{encoding:"utf8",maxBuffer:64*1024*1024});
+async function freshDatabase(label:string,version=48){
+ const source=contracts.sources[String(version) as keyof typeof contracts.sources],directory=path.join(owned,label);mkdirSync(directory,{recursive:true});
+ let url="file:"+path.join(directory,"synthetic.db").replaceAll("\\","/");
+ if(postgres){if(process.env.CI!=="true"||process.env.POSTGRES_READINESS_SYNTHETIC_QA!=="1"||!originalUrl)throw Error("EPHEMERAL_CI_POSTGRES_REQUIRED");const connection=new URL(originalUrl);connection.searchParams.set("schema","recovery_"+label.slice(0,20)+"_"+suffix.replaceAll("-",""));url=connection.toString();}
+ if(!postgres)writeFileSync(path.join(directory,"synthetic.db"),"",{flag:"wx"});
+ const prefix=postgres?"prisma/postgresql/":"prisma/",schemaPath=path.join(directory,"schema.prisma");
+ writeFileSync(schemaPath,version===48?readFileSync(prefix+"schema.prisma","utf8"):gitText(source.sourceHead!,prefix+"schema.prisma"));
+ for(const migration of source.migrations.filter(m=>m.path.startsWith(prefix+"migrations/"))){const file=path.join(directory,migration.path.slice(prefix.length));mkdirSync(path.dirname(file),{recursive:true});writeFileSync(file,version===48?readFileSync(migration.path,"utf8"):gitText(source.sourceHead!,migration.path));}
+ if(databaseIdentities.has(url))throw Error("RECOVERY_TARGET_REUSED");databaseIdentities.add(url);
+ execFileSync(process.execPath,["node_modules/prisma/build/index.js","migrate","deploy","--schema",schemaPath],{env:{...process.env,DATABASE_URL:url,DIRECT_URL:url},stdio:"pipe"});return url;
+}
+async function initialise(url:string){
+ db=new PrismaClient({datasourceUrl:url});vi.stubEnv("DATABASE_URL",url);
+ await db.schoolSettings.create({data:{id:"school",schoolName:"NALANDA PUBLIC SCHOOL",addressLine1:"SYNTHETIC ONLY",city:"SYNTHETIC",phone:"NO-CONTACT",academicYear:"2026-27"}});
+ for(const role of ["preparer","reviewer","approver","applier"])await db.user.create({data:{id:actor(role).userId,name:"SYNTHETIC "+role,username:actor(role).userId,passwordHash:"SYNTHETIC-NONLOGIN",role:role==="approver"?"DIRECTOR":"ACCOUNTANT"}});
+}
+async function concessions(){
+ const f=await liability(),reversed=await approvedCase(f.liabilityId);await mutate(applier,request("APPLY",{caseId:reversed,expectedVersion:4}));await mutate(approver,request("REVERSE",{caseId:reversed,expectedVersion:5}));
+ const active=await approvedCase(f.liabilityId,"100");await mutate(applier,request("APPLY",{caseId:active,expectedVersion:4}));
+ const pending=await mutate(prep,request("PREPARE",{liabilityId:f.liabilityId,kind:"SCHOOL_WAIVER",requestedAmount:"10",applicantReference:"SYNTHETIC",validFrom:"2020-01-01",validTo:"2090-01-01"}));await mutate(prep,request("INCOME",{caseId:pending.caseId,expectedVersion:1,income:{status:"PROVIDED",exactAnnualAmount:"0.00",period:"ANNUAL",currency:"INR"}}));
+ const item=await db.miscIncomeItem.create({data:{itemCode:"BELT",name:"SYNTHETIC Belt",category:"UNIFORM_ACCESSORY",studentLinkPolicy:"REQUIRED",rates:{create:[{academicYear:"2026-27",amount:"10.25",effectiveTo:new Date("2026-06-30Z")},{academicYear:"2026-27",amount:"12.50",effectiveFrom:new Date("2026-07-01Z")}]}}});
+ for(const date of ["2026-06-01","2026-07-01"])await createMiscReceipt(db,{receiptDate:date,academicYear:"2026-27",studentId:f.student.id,paymentMethod:"CASH",lines:[{itemId:item.id,quantity:3}]},prep.userId);
+ return {liabilityId:f.liabilityId,active,reversed};
+}
+async function originalExporter(version:number){
+ const root=path.join(owned,"source-"+version);mkdirSync(root,{recursive:true});const head=contracts.sources[String(version) as "45"].sourceHead;
+ const tar=path.join(root,"source.tar");writeFileSync(tar,execFileSync("git",["archive",head,"lib","config","package.json"],{maxBuffer:96*1024*1024}));execFileSync("tar",["-xf",tar,"-C",root]);
+ writeFileSync(path.join(root,"fixture.ts"),readFileSync("tests/helpers/recovery-certificate-fixture.ts","utf8").replaceAll('"../../lib/','"@/lib/'));writeFileSync(path.join(root,"entry.ts"),'export * from "./lib/backup";'+(version===46?' export * from "./fixture";':''));
+ const testOnlyFlagAdapter=postgres&&version===46;
+ if(testOnlyFlagAdapter){const url=new URL(process.env.DATABASE_URL!);if(process.env.CI!=="true"||process.env.NODE_ENV!=="test"||process.env.POSTGRES_READINESS_SYNTHETIC_QA!=="1"||!/^recovery_source46_[a-f0-9]+$/.test(url.searchParams.get("schema")??""))throw Error("TEST_ONLY_FLAG_ADAPTER_SCOPE_DENIED");}
+ const bundlePath=path.join(root,"backup.cjs");let adapterResolutions=0,adapterLoads=0;
+ await require("esbuild").build({entryPoints:[path.join(root,"entry.ts")],outfile:bundlePath,bundle:true,platform:"node",format:"cjs",packages:"external",alias:{"@":root},logLevel:"silent",plugins:testOnlyFlagAdapter?[{name:"isolated-service-test-flags",setup(build:any){build.onResolve({filter:/release-feature-flag-runtime(?:\.ts)?$/},(args:any)=>{const imported=args.path.startsWith("@/")?path.join(root,args.path.slice(2)):path.resolve(args.resolveDir,args.path);if(!path.resolve(args.importer).startsWith(path.resolve(root)+path.sep)||imported.replace(/\.ts$/, "")!==path.join(root,"lib","release-feature-flag-runtime"))throw Error("TEST_ONLY_FLAG_IMPORT_DENIED");adapterResolutions++;return {path:"nalanda-recovery-test-flags",external:true};});}}]:[]});
+ if(!testOnlyFlagAdapter)return require(bundlePath);
+ const flags=await import("@/lib/release-feature-flag-runtime"),fallback=createRequire(bundlePath),module={exports:{}};
+ // Per-load facade for the admitted service-test seam; source bytes and global module cache are unchanged.
+ const invoke=require("node:vm").compileFunction(readFileSync(bundlePath,"utf8"),["module","exports","require","__dirname","__filename"],{filename:bundlePath});
+ invoke(module,module.exports,(id:string)=>{if(id==="nalanda-recovery-test-flags"){adapterLoads++;return flags;}return fallback(id);},root,bundlePath);
+ if(adapterResolutions===0||adapterLoads===0)throw Error("TEST_ONLY_FLAG_ADAPTER_NOT_USED");
+ console.log("TEST_ONLY_FLAG_ADAPTER: isolated original v46 PostgreSQL service fixture; no HTTP acceptance");return module.exports;
+}
+async function legacyCertificate(studentId: string) {
+ const guardian = await db.guardian.create({data:{displayName:"SYNTHETIC Guardian",primaryMobile:"0000000001",students:{create:{studentId}}}});
+ const template = await db.certificateTemplate.create({data:{templateCode:"SYNTHETIC-BONAFIDE",certificateType:"BONAFIDE",name:"Synthetic historical template",templateDefinitionJson:"{}"}});
+ const request = await db.studentCertificateRequest.create({data:{requestNumber:"SYNTHETIC-REQUEST",studentId,applicantGuardianId:guardian.id,academicYear:"2026-27",certificateType:"BONAFIDE",purpose:"Synthetic recovery proof"}});
+ // Select only original columns while using the actual v45/v47 source schema.
+ const certificate = await db.studentCertificate.create({data:{studentId,requestId:request.id,academicYear:"2026-27",certificateType:"BONAFIDE",templateId:template.id,certificateNumber:"SYNTHETIC-BON-1",status:"ISSUED",currentVersionNumber:1,draftDataJson:"{}",issuePurpose:"Synthetic recovery proof"},select:{id:true}});
+ const version = await db.studentCertificateVersion.create({data:{certificateId:certificate.id,versionNumber:1,versionType:"ORIGINAL",certificateNumber:"SYNTHETIC-BON-1",snapshotJson:JSON.stringify({studentId,original:"SYNTHETIC IMMUTABLE HISTORY"}),issuedAt:new Date("2026-09-01Z")}});
+ await db.studentCertificateEvent.create({data:{requestId:request.id,certificateId:certificate.id,versionId:version.id,eventType:"ISSUED",notes:"SYNTHETIC historical event"}});
+ return {guardian,request,certificate,version};
+}
+function originalReadClient(version:number){
+ if(version===46)return db;
+ const schema=gitText(contracts.sources[String(version) as "45"].sourceHead,"prisma/schema.prisma");const body=schema.match(/model StudentCertificate \{([\s\S]*?)\n\}/)![1];
+ const select=Object.fromEntries(body.split(/\r?\n/).map(l=>l.trim().split(/\s+/)).filter(parts=>/^(String|Int|Float|Decimal|Boolean|DateTime|Json|Bytes)\??$/.test(parts[1]??"")).map(parts=>[parts[0],true]));
+ if("workflowKey" in select||"supersedesCertificateId" in select)throw Error("SOURCE_SCHEMA_UNEXPECTED_COLUMNS");
+ return new Proxy(db,{get(target,key){if(key==="studentCertificate")return {findMany:(args:any={})=>target.studentCertificate.findMany({...args,select})};const value=Reflect.get(target,key);return typeof value==="function"?value.bind(target):value;}});
+}
+beforeAll(()=>{vi.stubEnv("NODE_ENV","test");vi.stubEnv("APP_ORIGIN","http://127.0.0.1:3000");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_MODE","SYNTHETIC_COPY_ONLY");vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED","prior-year-concessions-1a,student-linked-items-1a,certificate-graduation-exit-1a,certificate-bulk-issue-1a,certificate-verification-1a");vi.stubEnv("AUTH_SECRET","SYNTHETIC-only-recovery-test-secret-000000");vi.stubEnv("AUTH_MFA_KEYRING_JSON",JSON.stringify({active:"HISTORICAL_FIXTURE",keys:{HISTORICAL_FIXTURE:randomBytes(32).toString("base64")}}));});
+afterAll(async()=>{await db?.$disconnect();mkdirSync(owned,{recursive:true});writeFileSync(path.join(owned,"matrix.json"),JSON.stringify({classification:"SYNTHETIC_DATABASE_EVIDENCE",provider:postgres?"postgresql":"sqlite",targets:matrixReceipts},null,2));mkdirSync("tmp/recovery-1c",{recursive:true});writeFileSync("tmp/recovery-1c/restore-matrix-"+(postgres?"postgresql":"sqlite")+".json",JSON.stringify({contract:"NALANDA_RESTORE_MATRIX_1C",source:execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),provider:postgres?"postgresql":"sqlite",targets:matrixReceipts,complete:matrixReceipts.length===8,freshRestores:matrixReceipts.reduce((n,r)=>n+Number(r.freshRestores),0),repeatRestores:matrixReceipts.reduce((n,r)=>n+Number(r.repeatRestores),0)},null,2));if(matrixReceipts.length===8){const bytes=readFileSync(path.join(owned,"source-v48.json"));const receipt={contract:"NALANDA_OPERATOR_FIXTURE_V1",complete:true,source:execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),runId:process.env.GITHUB_RUN_ID??"LOCAL_CONTRACT",attempt:process.env.GITHUB_RUN_ATTEMPT??"1",sha256:createHash("sha256").update(bytes).digest("hex")};validateOperatorFixture(bytes,receipt,receipt);expect(()=>validateOperatorFixture(Buffer.concat([bytes,Buffer.from(" ")]),receipt,receipt)).toThrow("OPERATOR_FIXTURE_HASH");expect(()=>validateOperatorFixture(bytes,receipt,{...receipt,source:"0".repeat(40)})).toThrow("OPERATOR_FIXTURE_PROVENANCE");const custody={contract:"NALANDA_PRIVATE_INCOME_CUSTODY_V1",source:receipt.source,runId:receipt.runId,attempt:receipt.attempt,backupSha256:receipt.sha256,...historicalIncomeKeys(parseAndValidateBackup(bytes.toString()),process.env.AUTH_MFA_KEYRING_JSON!)};
+writeFileSync(path.join(owned,"historical-income-keys.json"),JSON.stringify(custody),{flag:"wx",mode:0o400});
+writeFileSync(path.join(owned,"operator-fixture.json"),JSON.stringify({...receipt,custodySha256:createHash("sha256").update(JSON.stringify(custody)).digest("hex")}),{flag:"wx",mode:0o400});
+if(process.env.PORTABLE_OPERATOR_FIXTURE_LOCATOR){
+ const locator=path.resolve(process.env.PORTABLE_OPERATOR_FIXTURE_LOCATOR);
+ const expected=path.resolve("tmp/recovery-1d-operator-fixture",`${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}`,"locator.json");
+ if(locator!==expected||process.env.GITHUB_ACTIONS!=="true"||process.env.RUNNER_ENVIRONMENT!=="github-hosted")throw Error("OPERATOR_FIXTURE_LOCATOR_DENIED");
+ writeFileSync(locator,JSON.stringify({root:owned,...receipt}),{flag:"wx",mode:0o600});
+}} console.log("RECOVERY_1C_MATRIX "+JSON.stringify(matrixReceipts));vi.unstubAllEnvs();});
+describe("explicit nonempty source-contract restoration",()=>{
+ it.each([45,46,47,48])("restores genuine source v%i into two independent empty v48 targets, then repeats each",async(version)=>{
+  vi.stubEnv("RELEASE_FEATURE_FLAGS_QA_ENABLED",version===46?"certificate-graduation-exit-1a,certificate-bulk-issue-1a,certificate-verification-1a":"prior-year-concessions-1a,student-linked-items-1a,certificate-graduation-exit-1a,certificate-bulk-issue-1a,certificate-verification-1a");
+  const sourceUrl=await freshDatabase("source"+version,version);await initialise(sourceUrl);
+  const baseline=await makeStudent();await makePayment(baseline.student.id,"20");
+  const sourceSession=await db.authSession.create({data:{userId:prep.userId,tokenHash:digest(randomUUID()),credentialVersion:1,expiresAt:new Date("2090-01-01Z"),deviceSummary:"SYNTHETIC",browserSummary:"SYNTHETIC",networkEvidenceMasked:"SYNTHETIC-NETWORK"}});
+  const legacy=version===45||version===47?await legacyCertificate(baseline.student.id):null;
+  const original=version!==48?await originalExporter(version):null;
+  const certificate=version===46?await original.populateCertificateRecoveryFixture(db):version===48?await populateCertificateRecoveryFixture(db):null;
+  const concession=version===47||version===48?await concessions():null;
+  const payload=version===48?await generateFullBackup(db,{generatedBy:"SYNTHETIC v48"}):await original.generateFullBackup(originalReadClient(version),{generatedBy:"SYNTHETIC ORIGINAL SOURCE v"+version});
+  expect(payload.metadata.backupVersion).toBe(version);expect(payload.students.length).toBeGreaterThan(0);expect(payload.payments.length).toBeGreaterThan(0);
+  if(certificate){expect(payload.certificateIssueArtifacts.length).toBeGreaterThan(1);expect(payload.certificateRequestCharges.length).toBeGreaterThan(0);expect(payload.certificateBulkBatches.length).toBeGreaterThan(0);}
+  if(concession)for(const key of PRIOR_YEAR_BACKUP_KEYS)expect(payload[key].length,key).toBeGreaterThan(0);
+  if(version===48){
+   const noCharges=JSON.parse(JSON.stringify(payload));noCharges.certificateRequestCharges=[];noCharges.metadata.counts.certificateRequestCharges=0;expect(()=>parseAndValidateBackup(JSON.stringify(noCharges))).toThrow("Required certificate charge proof missing or mismatched");
+   for(const field of ["approvedBy","approvedAt"]){const changed=JSON.parse(JSON.stringify(payload));const proof=JSON.parse(changed.studentCertificateVersions.find((row:any)=>JSON.parse(row.snapshotJson).charge)?.snapshotJson).charge;const charge=changed.certificateRequestCharges.find((row:any)=>row.id===proof.chargeId);charge[field]=field==="approvedBy"?"SYNTHETIC-DIFFERENT-APPROVER":"2000-01-01T00:00:00.000Z";expect(()=>parseAndValidateBackup(JSON.stringify(changed))).toThrow("Certificate charge approval proof mismatched");}
+   for(const key of ["studentCertificates","certificateIssueArtifacts"]){const invalid=JSON.parse(JSON.stringify(payload));invalid[key][0].unreviewedPrivacyMetadata="SYNTHETIC UNADMITTED FIELD";expect(()=>parseAndValidateBackup(JSON.stringify(invalid))).toThrow("CERTIFICATE_BACKUP_UNKNOWN_FIELD");}
+   const missing=JSON.parse(JSON.stringify(payload));const graduation=missing.studentCertificates.find((row:any)=>row.certificateType==="GRADUATION");delete graduation.workflowKey;missing.certificateIssueArtifacts=missing.certificateIssueArtifacts.filter((row:any)=>row.certificateId!==graduation.id);missing.metadata.counts.certificateIssueArtifacts=missing.certificateIssueArtifacts.length;expect(()=>parseAndValidateBackup(JSON.stringify(missing))).toThrow("Required Graduation workflow identity missing");
+   const cycle=JSON.parse(JSON.stringify(payload));cycle.studentCertificates[0].supersedesCertificateId=cycle.studentCertificates[0].id;expect(()=>parseAndValidateBackup(JSON.stringify(cycle))).toThrow("CERTIFICATE_SUPERSESSION_CYCLE");
+   const absent=JSON.parse(JSON.stringify(payload));absent.studentCertificateVersions[0].supersedesVersionId="synthetic-missing-version";expect(()=>parseAndValidateBackup(JSON.stringify(absent))).toThrow("CERTIFICATE_SUPERSESSION_OWNERSHIP_INVALID");
+  }
+  const validated=parseAndValidateBackup(JSON.stringify(payload));
+  if(legacy){
+   const missingEdge=JSON.parse(JSON.stringify(payload));missingEdge.studentGuardians=[];missingEdge.metadata.counts.studentGuardians=0;
+   expect(()=>parseAndValidateBackup(JSON.stringify(missingEdge))).toThrow("CERTIFICATE_REQUEST_GUARDIAN_OWNERSHIP_INVALID");
+   for(const field of ["academicYear","certificateType"]){const mismatch=JSON.parse(JSON.stringify(payload));mismatch.studentCertificates[0][field]=field==="academicYear"?"2025-26":"CONDUCT";expect(()=>parseAndValidateBackup(JSON.stringify(mismatch))).toThrow("CERTIFICATE_REQUEST_OWNERSHIP_INVALID");}
+  }
+  const sourceCounts={students:await db.student.count(),payments:await db.payment.count()};
+  for(let pass=0;pass<2;pass++)execFileSync(process.execPath,["node_modules/prisma/build/index.js","migrate","deploy","--schema",postgres?"prisma/postgresql/schema.prisma":"prisma/schema.prisma"],{env:{...process.env,DATABASE_URL:sourceUrl,DIRECT_URL:sourceUrl},stdio:"pipe"});
+  expect(await db.student.count()).toBe(sourceCounts.students);expect(await db.payment.count()).toBe(sourceCounts.payments);
+  const migrationRows=await db.$queryRawUnsafe<{migration_name:string;checksum:string}[]>('SELECT migration_name, checksum FROM "_prisma_migrations" WHERE finished_at IS NOT NULL');
+  const migrationPrefix=postgres?"prisma/postgresql/migrations/":"prisma/migrations/";
+  for(const migration of contracts.sources["48"].migrations.filter(m=>m.path.startsWith(migrationPrefix)))expect(migrationRows.find(row=>row.migration_name===migration.path.split("/").at(-2))?.checksum,migration.path).toBe(migration.sha256);
+
+  const payloadDigest=digest(payload);
+  const sourceBefore=await sourceSnapshot(db),fixturePath=path.join(owned,"source-v"+version+".json");writeFileSync(fixturePath,JSON.stringify(payload),{flag:"wx"});
+  const missingCollection=JSON.parse(JSON.stringify(payload));delete missingCollection.payments;expect(()=>parseAndValidateBackup(JSON.stringify(missingCollection))).toThrow();
+  if(certificate){const altered=JSON.parse(JSON.stringify(payload));altered.certificateIssueArtifacts[0].pdfHash="0".repeat(64);expect(()=>parseAndValidateBackup(JSON.stringify(altered))).toThrow();}
+  const completedRecords:typeof matrixReceipts=[];
+  const targets=[];for(const label of ["A","B"])targets.push({label,url:await freshDatabase("target"+version+label)});
+  expect(targets[0].url).not.toBe(targets[1].url);
+  const sibling=new PrismaClient({datasourceUrl:targets[1].url});
+  for(const selected of targets){
+  const target=new PrismaClient({datasourceUrl:selected.url});
+  try{
+   // These exact SQLite reference rows are authored by historical migrations, not restored data.
+   // PostgreSQL's baseline has no seeded rows. Every business/security table must be empty.
+   const migrationReferenceCounts:Record<string,number>=postgres?{}:{IamSafetyLock:1,SupportQueue:8,SupportCategoryPolicy:18,OperationalCheckDefinition:13};
+   for(const model of Prisma.dmmf.datamodel.models){const delegate=(target as any)[model.name[0].toLowerCase()+model.name.slice(1)];expect(await delegate.count(),model.name+" fresh baseline "+selected.label).toBe(migrationReferenceCounts[model.name]??0);}
+   const isolationId=postgres?new URL(selected.url).searchParams.get("schema"):path.relative(owned,selected.url.slice(5)).replaceAll("\\","/");
+   const record={version,provider:postgres?"postgresql":"sqlite",target:selected.label,identity:isolationId,emptyBusinessTablesBefore:true,migrationReferenceCounts,freshRestores:0,repeatRestores:0,sourceSha256:payloadDigest,artifactStorage:"inline-per-database-no-shared-object-namespace",sourceUnchanged:false,siblingIsolated:false};
+   for(let round=0;round<2;round++){
+    await restoreValidatedBackup(target,validated,{id:prep.userId,name:"SYNTHETIC RESTORE"});
+    if(version===48)await assertRecoveryReadback(target,validated);
+    expect(digest(payload)).toBe(payloadDigest);
+    expect(await target.student.count()).toBe(await db.student.count());
+    expect(await target.studentGuardian.count()).toBe(payload.studentGuardians.length);
+    expect(await target.studentCertificateVersion.count()).toBe(payload.studentCertificateVersions.length);
+    expect(await target.studentCertificateEvent.count()).toBe(payload.studentCertificateEvents.length);
+    // Fresh targets have no pre-existing login accounts: credentials must not be recreated.
+    expect(await target.authSession.findUnique({where:{id:sourceSession.id}})).toBeNull();expect(await target.user.count()).toBe(0);expect(await target.authSession.count({where:{revokedAt:null}})).toBe(0);
+    expect(await target.whatsAppIntegrationProfile.count({where:{liveSendingEnabled:true}})).toBe(0);
+    expect(await target.payment.count()).toBe(await db.payment.count());expect((await target.payment.aggregate({_sum:{amountPaid:true}}))._sum.amountPaid).toEqual((await db.payment.aggregate({_sum:{amountPaid:true}}))._sum.amountPaid);
+    if(legacy){
+     const mappedStudent=await target.student.findUniqueOrThrow({where:{admissionNo:baseline.student.admissionNo}});
+     expect(await target.studentCertificateRequest.findUniqueOrThrow({where:{id:legacy.request.id}})).toMatchObject({studentId:mappedStudent.id,applicantGuardianId:legacy.guardian.id});
+     expect(await target.studentGuardian.findUnique({where:{guardianId_studentId:{guardianId:legacy.guardian.id,studentId:mappedStudent.id}}})).not.toBeNull();
+     expect(await target.studentCertificateVersion.findUniqueOrThrow({where:{id:legacy.version.id}})).toMatchObject({snapshotJson:legacy.version.snapshotJson,certificateId:legacy.certificate.id});
+     expect(await target.studentCertificateEvent.count()).toBe(payload.studentCertificateEvents.length);
+    }
+    if(certificate){for(const row of payload.certificateIssueArtifacts){const restored=await target.certificateIssueArtifact.findUniqueOrThrow({where:{id:row.id}});expect(restored.pdfHash).toBe(row.pdfHash);expect(restored.pdfBase64).toBe(row.pdfBase64);expect(restored.snapshotHash).toBe(row.snapshotHash);}expect((await target.studentCertificate.findUniqueOrThrow({where:{id:certificate.original}})).status).toBe("CANCELLED");expect((await target.studentCertificate.findUniqueOrThrow({where:{id:certificate.replacement}})).supersedesCertificateId).toBe(certificate.original);expect(await target.miscIncomeReceipt.count()).toBe(await db.miscIncomeReceipt.count());}
+    if(concession){expect((await priorYearBalance(target,concession.liabilityId,policy)).totals.remaining.toFixed(2)).toBe("650.00");expect(await target.priorYearConcessionEvent.count()).toBe(await db.priorYearConcessionEvent.count());expect(await target.studentItemReceiptSnapshot.count()).toBe(await db.studentItemReceiptSnapshot.count());expect((await target.priorYearIncomeSupport.findMany()).map(r=>r.exactAmountEnvelope)).toEqual((await db.priorYearIncomeSupport.findMany()).map(r=>r.exactAmountEnvelope));}
+    if(selected.label==="A")expect(await sibling.student.count()).toBe(0);
+    if(round===0)record.freshRestores++;else record.repeatRestores++;
+   }
+   completedRecords.push(record);
+   // Separate mapped-account probe after both fresh/repeat checks; never counted as a fresh restore.
+   await target.user.create({data:{id:prep.userId,username:prep.userId,name:"SYNTHETIC RESTORE ACCOUNT",passwordHash:"SYNTHETIC-NONLOGIN",role:"ACCOUNTANT"}});
+   await restoreValidatedBackup(target,validated,{id:prep.userId,name:"SYNTHETIC REVOCATION PROBE"});
+   const restoredSession=await target.authSession.findUniqueOrThrow({where:{id:sourceSession.id}});expect(restoredSession.revokedAt).not.toBeNull();expect(restoredSession.tokenHash).not.toBe(sourceSession.tokenHash);expect(await target.authSession.count({where:{revokedAt:null}})).toBe(0);
+   if(legacy&&selected.label==="A"){
+    const beforeStudents=await target.student.count(),beforePayments=await target.payment.count();
+    const collision=JSON.parse(JSON.stringify(payload)),oldVersion=collision.studentCertificateVersions[0].id;
+    collision.studentCertificateVersions[0].id="SYNTHETIC-COLLIDING-VERSION";
+    for(const event of collision.studentCertificateEvents)if(event.versionId===oldVersion)event.versionId="SYNTHETIC-COLLIDING-VERSION";
+    collision.students.push({...collision.students[0],id:"SYNTHETIC-ROLLBACK-STUDENT",admissionNo:"SYNTHETIC-ROLLBACK-STUDENT"});
+    // Original v45/v47 did not declare a students count; preserve their exact envelope.
+    if("students" in collision.metadata.counts)collision.metadata.counts.students++;
+    await expect(restoreValidatedBackup(target,parseAndValidateBackup(JSON.stringify(collision)),{id:prep.userId,name:"SYNTHETIC COLLISION"})).rejects.toThrow("CERTIFICATE_RESTORE_IDENTITY_COLLISION");
+    expect(await target.student.count()).toBe(beforeStudents);expect(await target.payment.count()).toBe(beforePayments);
+    expect(await target.student.findUnique({where:{admissionNo:"SYNTHETIC-ROLLBACK-STUDENT"}})).toBeNull();
+    expect(await target.studentCertificateVersion.findUniqueOrThrow({where:{id:legacy.version.id}})).toMatchObject({snapshotJson:legacy.version.snapshotJson,certificateId:legacy.certificate.id});
+    expect(await target.studentCertificateEvent.count()).toBe(payload.studentCertificateEvents.length);
+    const isolated=new PrismaClient({datasourceUrl:await freshDatabase("legacy_omission"+version)});
+    try {
+     const missingOwnership=new Proxy(isolated,{get(client,key){if(key==="$transaction")return (callback:any,options:any)=>client.$transaction((tx:any)=>callback(new Proxy(tx,{get(transaction,field){if(field==="studentGuardian")return new Proxy(transaction[field],{get(delegate,method){if(method==="findFirst")return async()=>null;const value=delegate[method];return typeof value==="function"?value.bind(delegate):value;}});return transaction[field];}})),options);const value=Reflect.get(client,key);return typeof value==="function"?value.bind(client):value;}});
+     await expect(restoreValidatedBackup(missingOwnership,validated,{id:prep.userId,name:"SYNTHETIC OWNERSHIP FAULT"})).rejects.toThrow("CERTIFICATE_RESTORE_INCOMPLETE");
+     expect(await isolated.student.count()).toBe(0);expect(await isolated.payment.count()).toBe(0);expect(await isolated.guardian.count()).toBe(0);expect(await isolated.studentCertificateRequest.count()).toBe(0);expect(await isolated.studentCertificateVersion.count()).toBe(0);expect(await isolated.studentCertificateEvent.count()).toBe(0);
+     await restoreValidatedBackup(isolated,validated,{id:prep.userId,name:"SYNTHETIC OWNERSHIP RETRY"});
+     expect(await isolated.studentCertificateVersion.findUniqueOrThrow({where:{id:legacy.version.id}})).toMatchObject({snapshotJson:legacy.version.snapshotJson});
+    } finally {await isolated.$disconnect();}
+   }
+   if(version===48&&selected.label==="A"){
+    const failing=new PrismaClient({datasourceUrl:await freshDatabase("collision_and_interruption")});
+    try{
+     const series=payload.certificateNumberSeries[0];const collision=await failing.certificateNumberSeries.create({data:{id:"synthetic-collision",seriesCode:series.seriesCode,certificateType:series.certificateType,prefix:"SYNTHETIC",nextNumber:1}});
+     await expect(restoreValidatedBackup(failing,validated,{id:prep.userId,name:"SYNTHETIC COLLISION"})).rejects.toThrow("CERTIFICATE_RESTORE_IDENTITY_COLLISION");
+     expect(await failing.student.count()).toBe(0);expect(await failing.payment.count()).toBe(0);expect(await failing.certificateNumberSeries.count()).toBe(1);
+     await failing.certificateNumberSeries.delete({where:{id:collision.id}});
+     let artifactCreates=0;
+     const interrupted=new Proxy(failing,{get(client,key){if(key==="$transaction")return (callback:any,options:any)=>client.$transaction((tx:any)=>callback(new Proxy(tx,{get(transaction,field){if(field==="certificateIssueArtifact")return new Proxy(transaction[field],{get(delegate,method){if(method==="create")return async(args:any)=>{artifactCreates++;if(artifactCreates===2)throw Error("SYNTHETIC_INTERRUPTION");return delegate.create(args);};const value=delegate[method];return typeof value==="function"?value.bind(delegate):value;}});return transaction[field];}})),options);const value=Reflect.get(client,key);return typeof value==="function"?value.bind(client):value;}});
+     await expect(restoreValidatedBackup(interrupted,validated,{id:prep.userId,name:"SYNTHETIC INTERRUPT"})).rejects.toThrow("BACKUP_RESTORE_ATOMIC_FAILURE");
+     expect(artifactCreates).toBeGreaterThanOrEqual(2);expect(await failing.student.count()).toBe(0);expect(await failing.payment.count()).toBe(0);expect(await failing.certificateIssueArtifact.count()).toBe(0);expect(await failing.miscIncomeReceipt.count()).toBe(0);expect(await failing.studentCertificateVersion.count()).toBe(0);expect(await failing.priorYearConcessionEvent.count()).toBe(0);
+     await restoreValidatedBackup(failing,validated,{id:prep.userId,name:"SYNTHETIC RETRY"});expect(await failing.certificateIssueArtifact.count()).toBe(payload.certificateIssueArtifacts.length);expect(await failing.miscIncomeReceipt.count()).toBe(payload.miscIncomeReceipts.length);expect(await failing.studentCertificateVersion.count()).toBe(payload.studentCertificateVersions.length);expect(await failing.priorYearConcessionEvent.count()).toBe(payload.priorYearConcessionEvents.length);
+    }finally{await failing.$disconnect();}
+   }
+   const roundtrip=await generateFullBackup(target,{generatedBy:"SYNTHETIC ROUNDTRIP"});expect(roundtrip.metadata.backupVersion).toBe(48);expect(()=>parseAndValidateBackup(JSON.stringify(roundtrip))).not.toThrow();
+   for(const change of [(p:any)=>p.metadata.schemaContract="unknown",(p:any)=>p.metadata.schemaFingerprint.sqlite="0".repeat(64),(p:any)=>p.metadata.backupVersion=49]){const invalid=JSON.parse(JSON.stringify(roundtrip));change(invalid);expect(()=>parseAndValidateBackup(JSON.stringify(invalid))).toThrow();}
+  }finally{await target.$disconnect();}
+  }
+  // A write on A must not appear on populated B or the source; remove only this synthetic sentinel.
+  const first=new PrismaClient({datasourceUrl:targets[0].url});
+  try{const marker="SYNTHETIC-ISOLATION-"+version;const inserted=await first.student.create({data:{admissionNo:marker,studentName:marker,fatherName:"SYNTHETIC",phone1:"NO-CONTACT",className:"I",academicYear:"2026-27"}});expect(await sibling.student.findUnique({where:{admissionNo:marker}})).toBeNull();expect(await db.student.findUnique({where:{admissionNo:marker}})).toBeNull();await first.student.delete({where:{id:inserted.id}});expect(digest(payload)).toBe(payloadDigest);expect(digest(JSON.parse(readFileSync(fixturePath,"utf8")))).toBe(payloadDigest);expect(await sourceSnapshot(db)).toBe(sourceBefore);for(const record of completedRecords){record.sourceUnchanged=true;record.siblingIsolated=true;matrixReceipts.push(record);}}finally{await first.$disconnect();await sibling.$disconnect();await db.$disconnect();}
+ },480000);
+});

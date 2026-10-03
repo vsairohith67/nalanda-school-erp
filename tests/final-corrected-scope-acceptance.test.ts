@@ -125,9 +125,11 @@ describe("FINAL-SCOPE-QA-1A corrected-scope contract acceptance", () => {
     const backup = readFileSync("lib/backup.ts", "utf8");
     const restore = readFileSync("lib/restore.ts", "utf8");
     const backupVersion = Number(backup.match(/backupVersion:\s*(\d+)/)?.[1] ?? 0);
-    const restoreMaximum = Number(restore.match(/Number\(metadata\.backupVersion\)\s*>\s*(\d+)/)?.[1] ?? 0);
-    expect(backupVersion).toBeGreaterThan(0);
-    expect(restoreMaximum).toBe(backupVersion);
+    const registry = JSON.parse(readFileSync("config/recovery-source-contracts.json", "utf8"));
+    expect(backupVersion).toBe(48);
+    expect(Object.keys(registry.sources)).toEqual(["45", "46", "47", "48"]);
+    expect(registry.sources[String(backupVersion)].discriminator).toBe("NALANDA_RECOVERY_INTEGRATED:v48:certificates-concessions-items");
+    expect(restore).toContain("admitBackupSource(originalRoot)");
   });
 
   it("keeps the active migration graph uniquely named and complete", () => {

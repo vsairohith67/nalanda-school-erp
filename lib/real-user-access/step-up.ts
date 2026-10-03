@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { logAuthSecurityEvent } from "@/lib/auth-security";
 import { boundTokenMatches, generateBoundToken, hashBoundToken } from "@/lib/real-user-access/crypto";
 import { verifyActiveTotp } from "@/lib/real-user-access/mfa-service";
@@ -66,7 +66,7 @@ export async function completeStepUpChallenge(client: PrismaClient, input: { cha
   return { stepUpToken: `${grantId}.${grantSecret}`, expiresAt: new Date(now.getTime() + GRANT_TTL_MS) };
 }
 
-export async function consumeStepUpGrant(client: PrismaClient, input: { stepUpToken: string; userId: string; sessionId: string; action: string; environment: string; now?: Date }, env: NodeJS.ProcessEnv = process.env) {
+export async function consumeStepUpGrant(client: PrismaClient | Prisma.TransactionClient, input: { stepUpToken: string; userId: string; sessionId: string; action: string; environment: string; now?: Date }, env: NodeJS.ProcessEnv = process.env) {
   const parsed = parseToken(input.stepUpToken), now = input.now ?? new Date(), action = boundedAction(input.action);
   if (!parsed) return false;
   const grant = await client.stepUpGrant.findUnique({ where: { id: parsed.id } });

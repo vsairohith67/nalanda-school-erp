@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
+import { isRole } from "@/lib/permissions";
+import { createPersistedSession } from "@/lib/auth-sessions";
 import { logAuthSecurityEvent } from "@/lib/auth-security";
 import { accessTemplate } from "@/lib/real-user-access/catalogue";
 import { boundTokenMatches, generateBoundToken, hashBoundToken } from "@/lib/real-user-access/crypto";
@@ -36,7 +38,15 @@ export async function createLoginMfaChallenge(client: PrismaClient, input: { use
   return { required: true, enrolled: true, challengeToken: `${id}.${secret}`, expiresAt: new Date(now.getTime() + LOGIN_MFA_TTL_MS), webauthnOptions } as const;
 }
 
-export async function completeLoginMfaChallenge(client: PrismaClient, input: { challengeToken: string; environment: string; factor: "TOTP" | "RECOVERY_CODE" | "WEBAUTHN"; response: string | AuthenticationResponseJSON; now?: Date; timestamp?: number }, env: NodeJS.ProcessEnv = process.env) {
+type LoginMfaInput = { challengeToken: string; environment: string; factor: "TOTP" | "RECOVERY_CODE" | "WEBAUTHN"; response: string | AuthenticationResponseJSON; now?: Date; timestamp?: number };
+export async function completeLoginMfaChallenge(client: PrismaClient, input: LoginMfaInput, env: NodeJS.ProcessEnv = process.env) {
+  return client.$transaction(tx => verifyLoginMfa(tx, input, env));
+}
+/** Verification and issuance share a transaction, never a client-supplied proof. */
+export async function completeLoginMfaSignIn(client: PrismaClient, input: LoginMfaInput, headers: Pick<Headers, "get">, env: NodeJS.ProcessEnv = process.env) {
+  return client.$transaction(tx => verifyLoginMfa(tx, input, env, headers));
+}
+async function verifyLoginMfa(client: Prisma.TransactionClient, input: LoginMfaInput, env: NodeJS.ProcessEnv, headers?: Pick<Headers, "get">) {
   const parsed = parse(input.challengeToken), now = input.now ?? new Date();
   if (!parsed) return { verified: false, reason: "REFUSED" as const };
   const challenge = await client.mfaChallenge.findUnique({ where: { id: parsed.id }, include: { user: true } });
@@ -69,17 +79,23 @@ export async function completeLoginMfaChallenge(client: PrismaClient, input: { c
     await logAuthSecurityEvent(client, { eventType: attempts >= challenge.maxAttempts ? "MFA_RATE_LIMITED" : "MFA_FAILED", userId: challenge.userId, actorUserId: challenge.userId, subjectType: "MFA_CHALLENGE", subjectId: challenge.id, details: { factorType: input.factor, attempts } });
     return { verified: false, reason: "REFUSED" as const };
   }
-  const consumed = await client.$transaction(async (tx) => {
-    if (passkeyUpdate) {
-      const updated = await tx.mfaAuthenticator.updateMany({ where: { id: passkeyUpdate.id, credentialCounter: passkeyUpdate.previousCounter, status: "ACTIVE", revokedAt: null }, data: { credentialCounter: passkeyUpdate.nextCounter, lastUsedAt: now, version: { increment: 1 } } });
-      if (updated.count !== 1) return 0;
-    }
-    const used = await tx.mfaChallenge.updateMany({ where: { id: challenge.id, usedAt: null, revokedAt: null, expiresAt: { gt: now } }, data: { usedAt: now } });
-    if (used.count === 1) await logAuthSecurityEvent(tx, { eventType: "MFA_LOGIN_SUCCEEDED", userId: challenge.userId, actorUserId: challenge.userId, subjectType: "MFA_CHALLENGE", subjectId: challenge.id, details: { factorType: input.factor } });
-    return used.count;
-  });
-  if (consumed !== 1) return { verified: false, reason: "REPLAYED" as const };
-  return { verified: true, user: challenge.user } as const;
+  if (passkeyUpdate) {
+    const updated = await client.mfaAuthenticator.updateMany({ where: { id: passkeyUpdate.id, credentialCounter: passkeyUpdate.previousCounter, status: "ACTIVE", revokedAt: null }, data: { credentialCounter: passkeyUpdate.nextCounter, lastUsedAt: now, version: { increment: 1 } } });
+    if (updated.count !== 1) throw new Error("MFA_LOGIN_REPLAYED");
+  }
+  const used = await client.mfaChallenge.updateMany({ where: { id: challenge.id, usedAt: null, revokedAt: null, expiresAt: { gt: now } }, data: { usedAt: now } });
+  // A losing challenge CAS must roll back factor consumption too.
+  if (used.count !== 1) throw new Error("MFA_LOGIN_REPLAYED");
+  const user = await client.user.findUniqueOrThrow({ where: { id: challenge.userId } });
+  if ((headers && !isRole(user.role)) || !user.isActive || user.lifecycleStatus !== "ACTIVE" || user.credentialVersion !== challenge.user.credentialVersion || user.authorizationVersion !== challenge.user.authorizationVersion) throw new Error("MFA_LOGIN_ACCOUNT_CHANGED");
+  const session = headers ? await createPersistedSession(client, user, headers, now) : null;
+  await logAuthSecurityEvent(client, { eventType: "MFA_LOGIN_SUCCEEDED", userId: user.id, actorUserId: user.id, subjectType: "MFA_CHALLENGE", subjectId: challenge.id, details: { factorType: input.factor, environment: input.environment, verifiedAt: now.toISOString(), webSessionId: session?.sessionId ?? null } });
+  if (session) {
+    const issued = await client.authSession.findUniqueOrThrow({ where: { id: session.sessionId }, select: { activeRoleAssignmentId: true } });
+    await client.mfaChallenge.update({ where: { id: challenge.id }, data: { sessionId: session.sessionId, roleAssignmentId: issued.activeRoleAssignmentId } });
+    await logAuthSecurityEvent(client, { eventType: "MFA_LOGIN_SESSION_ISSUED", userId: user.id, actorUserId: user.id, subjectType: "AUTH_SESSION", subjectId: session.sessionId, details: { version: 1, challengeId: challenge.id, factorType: input.factor, environment: input.environment, verifiedAt: now.toISOString(), roleAssignmentId: issued.activeRoleAssignmentId, credentialVersion: user.credentialVersion, authorizationVersion: user.authorizationVersion } });
+  }
+  return { verified: true, user, session } as const;
 }
 
 function parse(token: string) { const match = /^([0-9a-f]{8}-[0-9a-f-]{27})\.([A-Za-z0-9_-]{22,128})$/i.exec(token); return match ? { id: match[1], secret: match[2] } : null; }

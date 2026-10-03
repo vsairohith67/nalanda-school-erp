@@ -1,0 +1,17 @@
+{
+  "contract": "NALANDA_QA_BUILD_TOOLS_V1",
+  "buildkitVersion": "v0.33.0",
+  "rootlesskitVersion": "v3.2.0",
+  "releaseEvidence": [
+    "https://github.com/moby/buildkit/releases/tag/v0.33.0",
+    "https://github.com/rootless-containers/rootlesskit/releases/tag/v3.2.0"
+  ],
+  "amd64": {
+    "buildkit": { "url": "https://github.com/moby/buildkit/releases/download/v0.33.0/buildkit-v0.33.0.linux-amd64.tar.gz", "sha256": "b6242896d343100808dcbe37565caf381e0a444a6a83d7255926bb1519248ead" },
+    "rootlesskit": { "url": "https://github.com/rootless-containers/rootlesskit/releases/download/v3.2.0/rootlesskit-x86_64.tar.gz", "sha256": "ff612d1d35854a52569acc4a4e9152f41504e69dcc13ff4c94cc9040dc28b3d9" }
+  },
+  "arm64": {
+    "buildkit": { "url": "https://github.com/moby/buildkit/releases/download/v0.33.0/buildkit-v0.33.0.linux-arm64.tar.gz", "sha256": "e5acfb5929f967fde3b925ddb39f79fd481a0e96774c641fab3a0e83950d7bfa" },
+    "rootlesskit": { "url": "https://github.com/rootless-containers/rootlesskit/releases/download/v3.2.0/rootlesskit-aarch64.tar.gz", "sha256": "d68815112d658affe45e1ea00a9016758ba7e92230c1e69f7ee572d053e6f9c0" }
+  }
+}

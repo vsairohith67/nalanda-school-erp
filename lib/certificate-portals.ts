@@ -1,3 +1,5 @@
+import { CERTIFICATE_GRADUATION_FEATURE } from "@/lib/certificate-graduation-policy";
+import { isOperationalReleaseFeatureEnabled } from "@/lib/release-feature-flag-runtime";
 import type { PrismaClient } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
 import { assertParentOwnsStudent, publicCertificateRequest } from "@/lib/certificate-scope";
@@ -14,7 +16,9 @@ export async function getParentCertificatePortal(client: PrismaClient, user: Aut
     (client as any).studentCertificate.findMany({ where: { studentId: selectedChild.id, status: { in: ["ISSUED", "CANCELLED"] } }, orderBy: { issuedAt: "desc" } })
   ]);
   const safeCertificates = await Promise.all(certificates.map(async (row: any) => {
+    if (row.certificateType === "GRADUATION" && !isOperationalReleaseFeatureEnabled(CERTIFICATE_GRADUATION_FEATURE)) return null;
     const version = await (client as any).studentCertificateVersion.findFirst({ where: { certificateId: row.id, versionNumber: row.currentVersionNumber } });
+    if (version && row.certificateType === "GRADUATION") return { certificateNumber: row.certificateNumber, certificateType: row.certificateType, status: row.status, issuedAt: row.issuedAt, versionNumber: version.versionNumber, downloadPath: `/api/parent/certificates/${row.id}/pdf`, snapshot: null };
     return version ? { certificateNumber: row.certificateNumber, certificateType: row.certificateType, status: row.status, issuedAt: row.issuedAt, versionNumber: version.versionNumber, snapshot: parseCertificateSnapshot(version.snapshotJson) } : null;
   }));
   return { children, selectedChild, requests: requests.map(publicCertificateRequest), certificates: safeCertificates.filter(Boolean) };

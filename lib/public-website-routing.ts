@@ -5,7 +5,7 @@ export const PUBLIC_WEBSITE_EXACT_PATHS = new Set([
 ]);
 
 export const PRIVATE_ROBOTS_EXCLUSIONS = [
-  "/docs",
+  "/docs", "/prior-year-concessions",
   "/super-admin",
   "/maintenance",
   "/release-operations",

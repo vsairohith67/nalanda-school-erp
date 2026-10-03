@@ -8,6 +8,23 @@ const root = path.resolve(".");
 const source = (file: string) => readFileSync(path.join(root, file), "utf8");
 
 describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
+  it("keeps minimum-toolchain job environments within GitHub's available contexts", () => {
+    // runner is unavailable in jobs.<id>.env; GitHub rejects the whole workflow.
+    // These homes belong to this disposable checkout, not a global tool profile.
+    const workflow = source(".github/workflows/cross-platform-apps.yml");
+    const jobs = [...workflow.matchAll(/^  minimum-[a-z]+:\r?$([\s\S]*?)(?=^  [a-z][a-z-]+:\r?$|$(?![\s\S]))/gm)];
+    expect(jobs).toHaveLength(5);
+    for (const [, block] of jobs) {
+      const environment = block.match(/\n    env:\r?\n([\s\S]*?)\n    steps:/)?.[1];
+      expect(environment).toBeDefined();
+      expect(environment).not.toMatch(/\$\{\{\s*(?:runner|steps|env|job)\./);
+      for (const [key, directory] of [["RUSTUP_HOME", "rustup"], ["CARGO_HOME", "cargo"], ["CARGO_TARGET_DIR", "target"]]) {
+        expect(environment).toContain(key + ": " + "$" + "{{ github.workspace }}/tmp/nalanda-minimum-" + directory);
+      }
+      expect(environment).toContain('RUSTUP_TOOLCHAIN: "1.90.0"');
+    }
+  });
+
   it("selects Tauri 2 through a dated, scored ADR", () => {
     const adr = source("docs/adr/ADR_CROSS_PLATFORM_APP_FRAMEWORK.md");
     expect(adr).toContain("Status: Accepted");
@@ -30,7 +47,8 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
   it("uses fixed native network operations, exact origins, no redirects and bounded responses", () => {
     const rust = source("apps/nalanda-cross-platform/src-tauri/src/lib.rs");
     expect(rust).toContain("enum NativeApiOperation");
-    expect(rust).toContain("Policy::none()");
+    expect(rust).toContain("qa_profile::client()?");
+    expect(source("apps/nalanda-cross-platform/src-tauri/src/qa_profile.rs")).toContain("Policy::none()");
     expect(rust).toContain("MAX_RESPONSE_BYTES");
     expect(rust).toMatch(/response\s*\.chunk\(\)/);
     expect(rust.indexOf("append_bounded_response_chunk(&mut bytes, &chunk)")).toBeLessThan(rust.indexOf("String::from_utf8(bytes)"));
@@ -143,6 +161,20 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
     expect(source("apps/nalanda-cross-platform/src-tauri/tauri.conf.json")).toContain('"scheme": ["nalandaps-erp"]');
   });
 
+  it("retains app packages only in explicitly private repositories while keeping public checksum receipts", () => {
+    const steps = source(".github/workflows/cross-platform-apps.yml").split(/\n      - /).filter((step) => step.startsWith("uses: actions/upload-artifact@"));
+    const packageSteps = steps.filter((step) => /\*\.exe|\*\.apk|path: apps\/nalanda-cross-platform\/src-tauri\/gen\/apple\/build\s*\n/.test(step));
+    expect(packageSteps).toHaveLength(3);
+    for (const step of packageSteps) expect(step).toContain("if: ${{ github.event.repository.private == true }}");
+    const receipts = steps.filter((step) => /name: (windows|android|ios)-package-checksums\b/.test(step));
+    expect(receipts).toHaveLength(3);
+    for (const step of receipts) {
+      expect(step).toMatch(/path: apps\/[^\n*]+\/SHA256SUMS\.txt\s*\n/);
+      expect(step).not.toContain("if:");
+      expect(step).toContain("if-no-files-found: error");
+    }
+  });
+
   it("hardens generated mobile projects before compilation", () => {
     const hardener = source("scripts/harden-cross-platform-generated-project.mjs");
     expect(hardener).toContain('android:allowBackup="false"');
@@ -224,8 +256,17 @@ class MainActivity : TauriActivity() {
     expect(rust).toContain("failed_attempts = 0");
     expect(app).toContain("Too many failed attempts");
     expect(app).toContain('minLength={8}');
-    expect(app.indexOf("await current?.lock()")).toBeLessThan(app.indexOf("setVault(null); setTokens(null); setReferencePack(null); setLocked(true)"));
+    const lock = app.slice(app.indexOf("async function lockNow()"), app.indexOf("function requestLock()"));
+    const masked = lock.indexOf("setVault(null); setTokens(null); setReferencePack(null); setLocked(true)");
+    const drained = lock.indexOf("Promise.all([refreshController.current.drain(), invalidateNativeCredentialWork(current)])");
+    const unloaded = lock.indexOf(".then(() => current.lock())");
+    expect(masked).toBeGreaterThanOrEqual(0); expect(drained).toBeGreaterThan(masked); expect(unloaded).toBeGreaterThan(drained);
+    expect(app).toContain("if (lockPending.current) await lockPending.current");
+    expect(app).toContain("generation !== vaultGeneration.current");
     expect(app).toContain("APP_LOCK_FAILED");
+    expect(app).toContain('className="secondary" onClick={requestLock}><LogOut />Lock');
+    expect(app).not.toContain('onClick={() => void lockNow()}');
+    expect(app).toContain('disabled={lockFailure || pin.length < 8 || busy || retryAfter > 0}');
     expect(app).toContain("LOCAL_RESET_FAILED");
     const auth = source("apps/nalanda-cross-platform/src/auth.ts");
     expect(auth).toContain("getCurrent");

@@ -206,7 +206,14 @@ describe("PRODUCT-EXPERIENCE-1A product contract", () => {
     expect(workflow).toContain("topResumedActivity=");
     expect(workflow).toContain("ResumedActivity:");
     expect(workflow).toContain("mResumedActivity:");
-    expect(workflow).toContain("android.webkit.WebView");
+    expect(workflow).not.toContain("grep -F 'android.webkit.WebView'");
+    expect(workflow).toContain("grep -Eq 'Welcome back|App PIN'");
+    expect(workflow).toContain("ANDROID_PIN_CONTENT_NOT_READY");
+    expect(workflow).toContain('scripts/qa-ux-native-screen-content.ts "$output" protected');
+    expect(workflow).toContain("ANDROID_PIN_OR_PROTECTED_CAPTURE_NOT_READY");
+    expect(workflow).toContain("scripts/qa-ux-native-screen-content.ts");
+    expect(workflow).toContain("capture_android tmp/platform-review/android-synthetic-phone-portrait.png");
+    expect(workflow).toContain('capture_ios "$UDID" "tmp/platform-review/ios-synthetic-$UDID-dark.png"');
     expect(workflow).toContain('adb_cmd shell am force-stop');
     expect(workflow).toContain("android-synthetic-tablet.png");
     expect(workflow).toContain("Exercise the packaged app in iPhone and iPad simulators");

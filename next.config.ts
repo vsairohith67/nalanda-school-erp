@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   ...(process.env.NALANDA_STANDALONE_BUILD === "true" ? { output: "standalone" as const } : {}),
   poweredByHeader: false,
+  serverExternalPackages: ["xlsx", "fflate"],
   experimental: {
     cpus: 1,
     memoryBasedWorkersCount: false,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ACADEMIC_REPORT_FAMILIES, BOARD_CLASS_DISCLAIMER, REPORT_FAMILY_LABELS, type AcademicReportFamily, type AcademicReportSummary } from "@/lib/academic-reporting-types";
 
 type Option = { academicYear: string; examinationCode: string; examinationName: string; className: string; section: string };
@@ -15,29 +15,32 @@ export function AcademicReportingWorkspace({ role, options }: { role: string; op
   const [className,setClassName] = useState(""), [section,setSection] = useState(""), [subjectCode,setSubjectCode] = useState("");
   const [normalizationRule,setNormalizationRule] = useState("STRICT_MATCH"), [approvalReference,setApprovalReference] = useState("");
   const [includeAverageHighest,setIncludeAverageHighest] = useState(false), [run,setRun] = useState<Run | null>(null), [error,setError] = useState(""), [busy,setBusy] = useState(false);
+  const epoch=useRef(0), pending=useRef<AbortController | null>(null);
+  const invalidate=()=>{epoch.current++;pending.current?.abort();setRun(null);setError("");setBusy(false);};
+  useEffect(()=>()=>{epoch.current++;pending.current?.abort();},[]);
   const classes = useMemo(() => unique(yearOptions.map((row) => row.className)), [yearOptions]);
   const sections = useMemo(() => unique(yearOptions.filter((row) => !className || row.className === className).map((row) => row.section)), [yearOptions,className]);
   const comparative = ["COMPARATIVE_DELTA","BOARD_CLASS_COMPARATIVE"].includes(family);
   const board = family === "BOARD_CLASS_COMPARATIVE" || ["IX","X","9","10","CLASS IX","CLASS X"].includes(className.toUpperCase());
 
   async function generate() {
-    setBusy(true); setError("");
+    const ticket=epoch.current,abort=new AbortController();pending.current?.abort();pending.current=abort;setRun(null);setBusy(true);setError("");
     try {
-      const response = await fetch("/api/academic-reports/runs", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ family, academicYear, examinationCodes: exams, className: className || null, section: section || null, subjectCode: subjectCode || null, normalizationRule: comparative ? normalizationRule : "NONE", includeAverageHighest, approvalReference: approvalReference || null }) });
-      const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Unable to generate report"); setRun(data.run);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to generate report"); }
-    finally { setBusy(false); }
+      const response = await fetch("/api/academic-reports/runs", { signal:abort.signal, method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ family, academicYear, examinationCodes: exams, className: className || null, section: section || null, subjectCode: subjectCode || null, normalizationRule: comparative ? normalizationRule : "NONE", includeAverageHighest, approvalReference: approvalReference || null }) });
+      const data = await response.json(); if(ticket!==epoch.current)return; if (!response.ok) throw new Error(data.error ?? "Unable to generate report"); setRun(data.run);
+    } catch (cause) { if(ticket===epoch.current)setError(cause instanceof Error ? cause.message : "Unable to generate report"); }
+    finally { if(ticket===epoch.current)setBusy(false); }
   }
 
   async function download(format: "CSV" | "PDF", mode: "COLOUR" | "MONOCHROME" = "MONOCHROME") {
-    if (!run) return; setBusy(true); setError("");
+    if (!run) return; const ticket=epoch.current,abort=new AbortController();pending.current?.abort();pending.current=abort;setBusy(true);setError("");
     try {
-      const response = await fetch(`/api/academic-reports/runs/${encodeURIComponent(run.runReference)}/export`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ format, mode }) });
+      const response = await fetch(`/api/academic-reports/runs/${encodeURIComponent(run.runReference)}/export`, { signal:abort.signal, method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ format, mode }) });
       if (!response.ok) { const data = await response.json(); throw new Error(data.error ?? "Unable to export report"); }
-      const blob = await response.blob(), url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = dispositionName(response.headers.get("content-disposition"), `academic-report.${format.toLowerCase()}`); document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
-      const refreshed = await fetch(`/api/academic-reports/runs/${encodeURIComponent(run.runReference)}`, { cache: "no-store" }); if (refreshed.ok) setRun((await refreshed.json()).run);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to export report"); }
-    finally { setBusy(false); }
+      const blob = await response.blob();if(ticket!==epoch.current)return;const url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = dispositionName(response.headers.get("content-disposition"), `academic-report.${format.toLowerCase()}`); document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+      const refreshed = await fetch(`/api/academic-reports/runs/${encodeURIComponent(run.runReference)}`, { cache: "no-store", signal:abort.signal }); if (refreshed.ok) {const data=await refreshed.json();if(ticket===epoch.current)setRun(data.run);}
+    } catch (cause) { if(ticket===epoch.current)setError(cause instanceof Error ? cause.message : "Unable to export report"); }
+    finally { if(ticket===epoch.current)setBusy(false); }
   }
 
   return <div className="academic-reporting-workspace">
@@ -45,15 +48,15 @@ export function AcademicReportingWorkspace({ role, options }: { role: string; op
       <h2 id="academic-report-selector">Report selector</h2>
       <p className="muted">Only locked result snapshots and current issued report versions are eligible. No raw marks are recalculated.</p>
       <div className="filter-grid academic-report-filter-grid">
-        <label>Report family<select value={family} onChange={(event)=>{const next=event.target.value as AcademicReportFamily;setFamily(next);setRun(null);}}>{families.map((item)=><option key={item} value={item}>{REPORT_FAMILY_LABELS[item]}</option>)}</select></label>
-        <label>Academic year<select value={academicYear} onChange={(event)=>{setAcademicYear(event.target.value);setExams([]);setRun(null);}}>{years.map((item)=><option key={item}>{item}</option>)}</select></label>
-        <label>Class<select value={className} onChange={(event)=>{setClassName(event.target.value);setSection("");}}><option value="">All governed classes</option>{classes.map((item)=><option key={item}>{item}</option>)}</select></label>
-        <label>Section<select value={section} onChange={(event)=>setSection(event.target.value)}><option value="">All governed sections</option>{sections.map((item)=><option key={item}>{item}</option>)}</select></label>
-        <label>Assigned subject/paper code<input value={subjectCode} onChange={(event)=>setSubjectCode(event.target.value.toUpperCase())} maxLength={60} placeholder={role === "TEACHER" ? "Optional assigned code" : "Optional exact code"}/></label>
-        {comparative ? <label>Comparison rule<select value={normalizationRule} onChange={(event)=>setNormalizationRule(event.target.value)}><option value="STRICT_MATCH">Strict match</option><option value="PERCENTAGE_NORMALIZED">Published percentage normalisation</option></select></label> : null}
+        <label>Report family<select value={family} onChange={(event)=>{invalidate();const next=event.target.value as AcademicReportFamily;setFamily(next);setRun(null);}}>{families.map((item)=><option key={item} value={item}>{REPORT_FAMILY_LABELS[item]}</option>)}</select></label>
+        <label>Academic year<select value={academicYear} onChange={(event)=>{invalidate();setAcademicYear(event.target.value);setExams([]);setRun(null);}}>{years.map((item)=><option key={item}>{item}</option>)}</select></label>
+        <label>Class<select value={className} onChange={(event)=>{invalidate();setClassName(event.target.value);setSection("");}}><option value="">All governed classes</option>{classes.map((item)=><option key={item}>{item}</option>)}</select></label>
+        <label>Section<select value={section} onChange={(event)=>{invalidate();setSection(event.target.value);}}><option value="">All governed sections</option>{sections.map((item)=><option key={item}>{item}</option>)}</select></label>
+        <label>Assigned subject/paper code<input value={subjectCode} onChange={(event)=>{invalidate();setSubjectCode(event.target.value.toUpperCase());}} maxLength={60} placeholder={role === "TEACHER" ? "Optional assigned code" : "Optional exact code"}/></label>
+        {comparative ? <label>Comparison rule<select value={normalizationRule} onChange={(event)=>{invalidate();setNormalizationRule(event.target.value);}}><option value="STRICT_MATCH">Strict match</option><option value="PERCENTAGE_NORMALIZED">Published percentage normalisation</option></select></label> : null}
       </div>
-      <fieldset className="academic-exam-selector"><legend>Published examinations (maximum 12)</legend>{examOptions.length ? examOptions.map((option)=><label key={option.examinationCode}><input type="checkbox" checked={exams.includes(option.examinationCode)} onChange={(event)=>setExams((current)=>event.target.checked ? [...new Set([...current,option.examinationCode])].slice(0,12) : current.filter((item)=>item!==option.examinationCode))}/><span>{option.examinationName} <small>({option.examinationCode})</small></span></label>) : <p className="notice">No eligible issued examination versions are available in this role scope.</p>}</fieldset>
-      {["CLASS_AVERAGE_HIGHEST","LEADERSHIP_SUMMARY"].includes(family) && leadership(role) ? <div className="approval-box"><label className="check-label"><input type="checkbox" checked={includeAverageHighest} onChange={(event)=>setIncludeAverageHighest(event.target.checked)}/>Include approved class average/highest</label>{includeAverageHighest ? <label>Approval reference<input value={approvalReference} onChange={(event)=>setApprovalReference(event.target.value)} maxLength={160}/></label> : null}</div> : null}
+      <fieldset className="academic-exam-selector"><legend>Published examinations (maximum 12)</legend>{examOptions.length ? examOptions.map((option)=><label key={option.examinationCode}><input type="checkbox" checked={exams.includes(option.examinationCode)} onChange={(event)=>{invalidate();setExams((current)=>event.target.checked ? [...new Set([...current,option.examinationCode])].slice(0,12) : current.filter((item)=>item!==option.examinationCode));}}/><span>{option.examinationName} <small>({option.examinationCode})</small></span></label>) : <p className="notice">No eligible issued examination versions are available in this role scope.</p>}</fieldset>
+      {["CLASS_AVERAGE_HIGHEST","LEADERSHIP_SUMMARY"].includes(family) && leadership(role) ? <div className="approval-box"><label className="check-label"><input type="checkbox" checked={includeAverageHighest} onChange={(event)=>{invalidate();setIncludeAverageHighest(event.target.checked);}}/>Include approved class average/highest</label>{includeAverageHighest ? <label>Approval reference<input value={approvalReference} onChange={(event)=>{invalidate();setApprovalReference(event.target.value);}} maxLength={160}/></label> : null}</div> : null}
       {board ? <p className="notice" role="note"><strong>Class IX/X boundary:</strong> {BOARD_CLASS_DISCLAIMER}</p> : null}
       {comparative ? <div className="comparison-preview" aria-live="polite"><strong>Comparison preview:</strong> {exams.length < 2 ? "Select at least two issued exams." : `${exams.join(" → ")} under ${normalizationRule.replaceAll("_"," ").toLowerCase()}. Compatibility is verified server-side before any delta is shown.`}</div> : null}
       {error ? <p className="error" role="alert">{error}</p> : null}

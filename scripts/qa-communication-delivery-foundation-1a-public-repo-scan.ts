@@ -14,7 +14,17 @@ const required = [
 const prohibitedExtensions = new Set([".db", ".sqlite", ".sqlite3", ".bak", ".dump", ".zip", ".7z", ".rar", ".pem", ".key", ".pfx", ".p12", ".exe", ".msi", ".msix", ".apk", ".ipa"]);
 const textExtensions = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs", ".json", ".md", ".sql", ".yml", ".yaml", ".toml", ".txt", ".css", ".prisma", ".ps1", ".py", ".rs", ".html", ".xml", ".sh", ".svg"]);
 const allowedRoots = ["app", "components", "config", "docs", "lib", "prisma", "scripts", "tests", "tools/release-evidence", ".github/workflows"];
-const allowedRootFiles = new Set([".env.example", "middleware.ts", "package.json", "pnpm-lock.yaml", "deploy/portable/compose.yml"]);
+const allowedRootFiles = new Set(["apps/nalanda-biometric-bridge/package.json","apps/nalanda-cross-platform/package.json",".env.example","middleware.ts","package.json","pnpm-lock.yaml","deploy/portable/compose.yml","Dockerfile","deploy/portable/Caddyfile","deploy/portable/profiles/local-single-node.json","deploy/portable/profiles/generic-vps.json","deploy/portable/profiles/managed-cloud-contract.json","next.config.ts","tsconfig.tools-qa-support.json","pnpm-workspace.yaml","vitest.config.ts"]);
+// Reviewed Windows auth-lifecycle source only; the native subtree and binaries
+// remain denied. Explicit files, including Cargo.lock, still receive all scans.
+for (const file of ["src-tauri/Cargo.lock", "src-tauri/Cargo.toml", "src/App.tsx", "src/auth.ts", "src/auth-lifecycle.test.ts"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
+// Reviewed reference-observation source/tests only; no native binary, cache,
+// vault, reference payload, or broader subtree publication is admitted.
+for (const file of ["src/offline-adapter.ts", "src/reference-refresh.ts", "src/reference-refresh.test.ts"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
+// W1B's reviewed native trust consumer; still scanned as text for every secret/contact rule.
+for (const file of ["src-tauri/build.rs", "src-tauri/src/lib.rs", "src-tauri/src/qa_profile.rs"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
+// FA1-FA4 exact reviewed source/test registration; every content check still applies.
+for (const file of ["src-tauri/src/qa_observation.rs", "src-tauri/src/qa_privacy.js", "src/App-lifecycle.test.tsx", "src/vault-unlock.test.ts", "src/vault-unlock.ts"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
 const secretPatterns: Array<[string, RegExp]> = [
   ["private-key", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
   ["github-token", /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b/],
@@ -42,7 +52,9 @@ async function main() {
       failures.push(`${normalized}:unreviewed-extension`);
       continue;
     }
-    const absolute = path.join(root, relative), metadata = await stat(absolute);
+    const absolute = path.join(root, relative);
+    const metadata = await stat(absolute).catch(() => null);
+    if (!metadata) { failures.push(`${normalized}:source-unavailable`); continue; }
     if (!metadata.isFile() || metadata.size > 5 * 1024 * 1024) { failures.push(`${normalized}:unsafe-or-oversized`); continue; }
     const source = await readFile(absolute, "utf8");
     for (const [label, pattern] of secretPatterns) if (pattern.test(source)) failures.push(`${normalized}:${label}`);

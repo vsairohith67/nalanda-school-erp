@@ -1,3 +1,4 @@
+import { assertGraduationEnabled } from "@/lib/certificate-graduation-policy";
 import { createHash } from "node:crypto";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import type { CertificateType } from "@/lib/certificate-templates";
@@ -5,6 +6,7 @@ import type { CertificateType } from "@/lib/certificate-templates";
 type Client = PrismaClient | Prisma.TransactionClient;
 
 export async function buildCertificateSourceSnapshot(client: Client, studentId: string, academicYear: string, certificateType: CertificateType, purpose: string) {
+  assertGraduationEnabled(certificateType);
   const [student, enrollments, attendance, progression] = await Promise.all([
     (client as any).student.findUnique({ where: { id: studentId }, select: { id: true, admissionNo: true, studentName: true, fatherName: true, motherName: true, className: true, section: true, dateOfBirth: true, status: true, createdAt: true } }),
     (client as any).academicYearEnrollment.findMany({ where: { studentId }, orderBy: { academicYear: "asc" }, select: { academicYear: true, className: true, section: true, status: true, enrollmentDate: true, exitDate: true, exitReason: true } }),

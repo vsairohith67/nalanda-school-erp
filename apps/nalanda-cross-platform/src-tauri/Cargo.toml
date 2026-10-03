@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Nalanda School - Secure School ERP & Operations Platform"
 authors = ["Nalanda Public School"]
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.90"
 
 [lib]
 name = "nalanda_cross_platform_lib"
@@ -12,8 +12,16 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2.5.6", features = [] }
+sha2 = "=0.10.9"
+
+[features]
+default = []
+synthetic-qa = []
 
 [dependencies]
+base64 = "=0.22.1"
+ring = "=0.17.14"
+sha2 = "=0.10.9"
 argon2 = "0.5.3"
 getrandom = "0.3.4"
 reqwest = { version = "0.12.28", default-features = false, features = ["rustls-tls"] }
@@ -27,7 +35,7 @@ tauri-plugin-stronghold = "2.3.1"
 url = "2.5.8"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-single-instance = "2.4.3"
+tauri-plugin-single-instance = { version = "2.4.3", features = ["deep-link"] }
 
 [dev-dependencies]
 tempfile = "3.26.0"

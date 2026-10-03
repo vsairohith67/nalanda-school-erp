@@ -1,6 +1,8 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { AcademicReportSummary } from "@/lib/academic-reporting-types";
 import { PRODUCT_BRAND } from "@/config/product-brand";
+import fontkit from "@pdf-lib/fontkit";
+import {georgiaBold} from "@/lib/certificate-pdf";
 
 const PAGE: [number, number] = [595.28, 841.89];
 const MARGIN = 42;
@@ -16,12 +18,18 @@ export async function renderAcademicReportPdf(summary: AcademicReportSummary, mo
   document.setCreationDate(new Date("2000-01-01T00:00:00.000Z"));
   document.setModificationDate(new Date("2000-01-01T00:00:00.000Z"));
   const regular = await document.embedFont(StandardFonts.Helvetica), bold = await document.embedFont(StandardFonts.HelveticaBold);
+  // Same locally licensed, identity/license-checked font boundary as school
+  // certificates. No fallback or font file is distributed by this source.
+  document.registerFontkit(fontkit);
+  const schoolHeader = await document.embedFont(georgiaBold().bytes,{subset:false});
   let page = document.addPage(PAGE), y = PAGE[1] - MARGIN;
+  const header=()=>{page.drawText("NALANDA PUBLIC SCHOOL",{x:MARGIN,y,size:16,font:schoolHeader,color:rgb(0,0,0)});y-=26;};
+  header();
   const colour = mode === "MONOCHROME" ? rgb(0,0,0) : rgb(0.06,0.25,0.42);
   const line = (text: string, options: { bold?: boolean; size?: number; indent?: number } = {}) => {
     const size = options.size ?? 8.5, font = options.bold ? bold : regular, indent = options.indent ?? 0;
     for (const part of wrap(text, options.bold ? 78 : 104)) {
-      if (y < MARGIN + 18) { page = document.addPage(PAGE); y = PAGE[1] - MARGIN; }
+      if (y < MARGIN + 18) { page = document.addPage(PAGE); y = PAGE[1] - MARGIN; header(); }
       page.drawText(part, { x: MARGIN + indent, y, size, font, color: options.bold ? colour : rgb(0,0,0) }); y -= size + 4;
     }
   };
