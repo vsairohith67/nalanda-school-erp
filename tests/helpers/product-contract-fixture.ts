@@ -9,7 +9,7 @@ import {sourceTree,type ProductHarness} from "../../scripts/portable/product-bui
 
 /** Generated private keys and fabricated evidence are HARNESS_ONLY. Nothing
  * from this module is imported by a production source or entrypoint. */
-export function fixture(options:{recipeTail?:string;badNodeLayer?:boolean;badToolArchive?:boolean}={}){
+export function fixture(options:{recipeTail?:string;badNodeLayer?:boolean;badToolArchive?:boolean;acquisition?:boolean;sourceFiles?:Record<string,Buffer|string>;builderFiles?:Record<string,Buffer>}={}){
  // Node's non-native realpath preserves Windows 8.3 aliases; Python resolves them.
  // Canonicalize only this newly owned fixture root, preserving production checks.
  const root=realpathSync.native(mkdtempSync(path.join(os.tmpdir(),"nalanda-HARNESS_ONLY-contract-"))),workspace=path.join(root,"source");mkdirSync(workspace);
@@ -37,7 +37,10 @@ export function fixture(options:{recipeTail?:string;badNodeLayer?:boolean;badToo
  d.configuration.frontend=d.images.frontend.reference;
  const source:Record<string,Buffer|string>={"Dockerfile":`ARG NODE_IMAGE=${d.images.builder.reference}\nARG RUNTIME_IMAGE=${d.images.runtime.reference}\nFROM scratch AS production-runtime\n${options.recipeTail??""}`,".dockerignore":".git\n","pnpm-lock.yaml":"HARNESS_ONLY\n","package.json":"{}","pnpm-workspace.yaml":"packages: []\n","config/synthetic-build-trust.json":"null","config/backend-build-scan-tools.json":"{}"};
  for(const name of ["product-scan-adapter.py","backend-build-scan.py"])source["scripts/portable/"+name]=readFileSync(path.resolve("scripts/portable",name));
- for(const [name,value] of Object.entries(source)){const raw=Buffer.from(value);mkdirSync(path.dirname(path.join(workspace,name)),{recursive:true});writeFileSync(path.join(workspace,name),raw);d.files.push({path:name,sha256:hashBytes(raw),gitBlob:createHash("sha1").update(`blob ${raw.length}\0`).update(raw).digest("hex"),mode:"100644"} satisfies SourceFile);}
+ if(options.acquisition)source.Dockerfile=readFileSync("Dockerfile","utf8").replace(/^ARG NODE_IMAGE=.*$/m,"ARG NODE_IMAGE="+d.images.builder.reference).replace(/^ARG RUNTIME_IMAGE=.*$/m,"ARG RUNTIME_IMAGE="+d.images.runtime.reference);
+ if(options.builderFiles){const image=d.images.builder,manifest=JSON.parse(get(image.manifest).toString()),layer=put(tarBytes(options.builderFiles));manifest.layers.push({digest:"sha256:"+layer,size:get(layer).length});image.manifest=put(manifest);image.index=put({schemaVersion:2,manifests:[{digest:"sha256:"+image.manifest,size:get(image.manifest).length,platform:{os:"linux",architecture:"amd64"}}]});image.reference="harness.invalid/builder@sha256:"+image.index;source.Dockerfile=String(source.Dockerfile).replace(/^ARG NODE_IMAGE=.*$/m,"ARG NODE_IMAGE="+image.reference);}
+ Object.assign(source,options.sourceFiles);
+ for(const [name,value] of Object.entries(source)){const raw=Buffer.from(value);put(raw);mkdirSync(path.dirname(path.join(workspace,name)),{recursive:true});writeFileSync(path.join(workspace,name),raw);d.files.push({path:name,sha256:hashBytes(raw),gitBlob:createHash("sha1").update(`blob ${raw.length}\0`).update(raw).digest("hex"),mode:"100644"} satisfies SourceFile);}
  d.tree=sourceTree(d.files);const commit=Buffer.from(`tree ${d.tree}\nauthor HARNESS_ONLY <harness@example.invalid> 1 +0000\ncommitter HARNESS_ONLY <harness@example.invalid> 1 +0000\n\nHARNESS_ONLY\n`);d.commit=put(commit);d.source=createHash("sha1").update(`commit ${commit.length}\0`).update(commit).digest("hex");
  d.custody={...Object.fromEntries(["repository","workflow","source","runId","attempt","job"].map(k=>[k,d[k]])),private:true};
  d.recipe={path:"Dockerfile",sha256:d.files[0].sha256,review:put({source:d.source,tree:d.tree,recipeSha256:d.files[0].sha256,configurationSha256:hashBytes(JSON.stringify(d.configuration)),filesSha256:hashBytes(JSON.stringify(d.files))})};
@@ -56,7 +59,7 @@ export function fixture(options:{recipeTail?:string;badNodeLayer?:boolean;badToo
  return {root,workspace,d:d as InputDocument,blobs,put,get,policy,envelope,verified,harness,python,dispose:()=>rmSync(root,{recursive:true,force:true})};
 }
 
-function tarBytes(files:Record<string,Buffer>){const parts:Buffer[]=[];for(const [name,bytes] of Object.entries(files)){const h=Buffer.alloc(512);h.write(name,0,100);h.write("0000644\0",100);h.write("0000000\0",108);h.write("0000000\0",116);h.write(bytes.length.toString(8).padStart(11,"0")+"\0",124);h.write("00000000000\0",136);h.fill(32,148,156);h[156]=48;h.write("ustar\0",257);h.write("00",263);const sum=h.reduce((a,b)=>a+b,0);h.write(sum.toString(8).padStart(6,"0")+"\0 ",148);parts.push(h,bytes,Buffer.alloc((512-bytes.length%512)%512));}return Buffer.concat([...parts,Buffer.alloc(1024)]);}
+export function tarBytes(files:Record<string,Buffer>){const parts:Buffer[]=[];for(const [name,bytes] of Object.entries(files)){const h=Buffer.alloc(512);h.write(name,0,100);h.write("0000644\0",100);h.write("0000000\0",108);h.write("0000000\0",116);h.write(bytes.length.toString(8).padStart(11,"0")+"\0",124);h.write("00000000000\0",136);h.fill(32,148,156);h[156]=48;h.write("ustar\0",257);h.write("00",263);const sum=h.reduce((a,b)=>a+b,0);h.write(sum.toString(8).padStart(6,"0")+"\0 ",148);parts.push(h,bytes,Buffer.alloc((512-bytes.length%512)%512));}return Buffer.concat([...parts,Buffer.alloc(1024)]);}
 
 const STANDIN=String.raw`# HARNESS_ONLY: finite children, no descendants or network.
 import sys,json,hashlib,tarfile,io,time
@@ -80,7 +83,7 @@ if stage=='build':
  if scenario=='missing-output':sys.exit(0)
  if scenario=='malformed-output':
   write('product.oci.tar',b'partial invalid tar');write('build-metadata.json',b'{');sys.exit(0)
- config=enc({'os':'linux','architecture':'arm64' if scenario=='wrong-platform' else arch,'config':{'User':'65532:65532','Labels':{'org.opencontainers.image.revision':source,'io.nalanda.artifact-purpose':'PRODUCTION_DEFAULT_OFF'}}})
+ config=enc({'os':'linux','architecture':'arm64' if scenario=='wrong-platform' else arch,'config':{'User':'65532:65532','Labels':{'org.opencontainers.image.revision':source,'io.nalanda.artifact-purpose':'PREPARED_DEPENDENCIES_ONLY' if scenario=='acquisition' else 'PRODUCTION_DEFAULT_OFF'}}})
  layer=b'HARNESS_ONLY inert layer bytes'
  manifest=enc({'schemaVersion':2,'config':{'digest':'sha256:'+sha(config),'size':len(config)},'layers':[{'digest':'sha256:'+sha(layer),'size':len(layer)}]})
  index=enc({'schemaVersion':2,'manifests':[{'digest':'sha256:'+sha(manifest),'size':len(manifest),'platform':{'os':'linux','architecture':arch}}]})

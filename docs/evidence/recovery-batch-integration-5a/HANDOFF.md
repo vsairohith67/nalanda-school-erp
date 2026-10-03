@@ -880,3 +880,181 @@ policy rejected removal of only the new disposable baseline archive and generate
 synthetic bundle before execution, with "blocked by policy". Both remain
 RESIDUE_RETAINED_POLICY_DENIED; no retry or alternate mechanism. Prior denied roots
 are untouched. Private source/hash/results/screenshots/logs remain retained.
+
+### 6A terminal source and exact-candidate CI — 3 October 2026
+
+MOBILE_R1_INTEGRATED_SOURCE_VALIDATED_RELEASE_GATED.
+
+Starting primary5c3943fa3576987042d330dee51c8433b6e88660/tree184ebb15aef86bf6854cd92c4e900dd12868ce36
+advanced once to baa49c738e009f99c5e741a04bc3fe8f8862a848/treeee2b3a2f9eb3a5b45d456eb54547a983ab5991dd.
+Local and remote agree; PR28 remains OPEN/DRAFT. One substantive push, no second
+candidate, manual dispatch, unchanged-job retry or cosmetic follow-up push.
+Original source55f5d342e094dd37135ea6ce67c949c2eb57991d and packetb8fe33ab944f460a6f98ae9ad924a00d947b9701
+were integrated selectively with original parent/old-primary/new-source/result blob
+mapping in SOURCE_MAP.json. Original mobile/certificate/backend/R1 fixes remain;
+K30/PR30 and PR29 are excluded. Donor worktree/index/ref unchanged.
+
+Exact committed manifest (11 paths):
+- components/marks-importer.tsx
+- components/onboarding-centre.tsx
+- config/recovery-integration-source-delta.json
+- docs/evidence/RELEASE_RECOVERY_1C.md
+- docs/evidence/mobile-import-a11y-1b/HANDOFF.md
+- docs/evidence/overnight-source-closure-2a/MORNING_DECISIONS.md
+- docs/evidence/recovery-batch-integration-5a/HANDOFF.md
+- docs/evidence/recovery-batch-integration-5a/SOURCE_MAP.json
+- scripts/bulk-data-exchange-browser.ts
+- scripts/qa-mobile-import-a11y-1b.ts
+- tsconfig.tools-qa-support.json
+
+The initial two dirty evidence documents and their exact private byte/diff receipts
+were preserved before edits and committed with provenance stated above. Index was
+empty after commit; final observations remain UNSTAGED in this handoff, the closure
+ledger and the existing Decision2 packet. No source/registration diff remains.
+
+Local evidence remains separately classified: disposable5c baseline5PASS/8assertionFAIL
+reproduced all three reviewed defects; integrated real-component Playwright49PASS,
+zero failures, two NOT_EXECUTED capabilities. Focused Vitest176PASS includes import50,
+certificate16, backend83 and publication-negative27. Python dispatch/refusal38PASS;
+both affected typecheck partitions, provenance287rows/4heads/4backup contracts,
+publication497paths and Git safeguards PASS. No full local suite repeated.
+Independent available/requested GPT-6 Astra specialist reviewed the integrated
+source, registry preservation, actual rendered hashes/screenshot and evidence.
+Reviewer executed no tests/builds/scans; no model identity attestation is claimed.
+
+Normal hosted cycle: all nine runs below bind sourcebaa49c738e009f99c5e741a04bc3fe8f8862a848, attempt1.
+Workflow totals:8SUCCESS/1FAILURE/0SKIPPED/0CANCELLED/0PENDING/0MISSING.
+Job totals:33SUCCESS/2FAILURE/7SKIPPED/0CANCELLED/0PENDING/0MISSING (42 actual jobs).
+Overall CI is NOT GREEN. Skips are six mandatory runtime gates plus the optional
+private native producer; none is a pass.
+
+| Workflow / exact run | State | Jobs success / failure / skipped |
+| --- | --- | --- |
+| [Biometric Staff Attendance 1A](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919224) | SUCCESS | 2 / 0 / 0 |
+| [PostgreSQL readiness dual-provider gate](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919262) | SUCCESS | 4 / 0 / 0 |
+| [Master Requirements Reconciliation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919225) | SUCCESS | 2 / 0 / 0 |
+| [Communication Delivery Foundation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919277) | SUCCESS | 2 / 0 / 0 |
+| [Real-Data Onboarding Preparation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919217) | SUCCESS | 2 / 0 / 0 |
+| [Portable Staging Foundation exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919214) | FAILURE | 1 / 2 / 6 |
+| [Cross-platform apps 1A](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919219) | SUCCESS | 16 / 0 / 1 |
+| [Real-User Access Readiness 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919253) | SUCCESS | 2 / 0 / 0 |
+| [Student items and prior-year concessions exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919299) | SUCCESS | 2 / 0 / 0 |
+
+All five recovered Windows source jobs passed their71caller cases:
+Master job111157144031, Biometric job111157143923, Communication job111157144055,
+Real-User job111157144079 and cross-platform job111157144244. Onboarding
+job111157144134 also passed71caller cases, publication497paths, actual full regression,
+typecheck and source build. Its publication pass alone was not used as clearance.
+Master full3101PASS/0skip; the other five named Windows full suites3098PASS/3inherited
+qpdf skips each. Linux SQLite and portable source3098PASS/3qpdf skips; PostgreSQL
+application3068PASS/3qpdf skips. These overlapping populations are not summed.
+Current import50/certificate16 contracts execute in those full suites.
+Financial23PASS per provider; fresh SQLite/PostgreSQL restore matrices each verify
+eight targets, eight fresh and eight repeated restores with isolated unchanged sources.
+Normal compiler, Android emulator and iOS simulator source jobs pass; this does not
+establish authenticated ERP, real devices or exact private runtime artifact admission.
+
+Five service metadata manifests (Master/Biometric/Real-User Windows, Linux SQLite,
+PostgreSQL) validate exact source/run/attempt/job/provider, every file byte/hash,
+finance1/native18/MFA37 PASS result records and zero unfinished spans.
+Onboarding's exact two-file metadata manifest validates ten original cases PASS and
+owned fixture cleanup REMOVED. Historical finance/MFA/DENY/OpenSSL causes remain
+unresolved; current passes do not recover missing earlier evidence.
+
+Current automatic base scans are policy FAILURES on both architectures:
+11 HIGH rows / five distinct CVEs each, Trivy exit0 / Grype exit2.
+This explicitly supersedes the Decision2 pre-CI 'latest7/4' wording, which was dated5c.
+Independent metadata comparison confirms unchanged base index/manifest/config/layer
+and Node-binary identities, newer scanner databases, no removed rows and four added
+CVE-2026-95619 GCC-package rows. CVE-2026-102010 was already historical.
+Both result/manifest byte hashes and seven candidate input hashes were verified.
+Private raw scanner reports ended at owned job cleanup; only metadata/hash summaries
+remain (cleanupComplete=true, durablePrivateRetention=false). No reconstruction,
+new advisory research, ad hoc scan or policy exception. Product NOT_BUILT,
+runtime NOT_EXECUTED, admitted=false, EXTERNAL_RUNTIME_BLOCKED.
+
+Decision2 is current as an implemented/source-validated draft, not registered
+production trust. Human accountable reviewer UNASSIGNED; independent key/workflow
+identity and exact subject resolver NOT APPROVED; private raw-evidence custody
+NOT APPROVED. Production registration remains null, resolver unavailable; complete
+qualified source/tool/Node/offline-recipe evidence and residual findings still block.
+Any later registration proposal can only support separately authorized exact-input
+qualification/build-static-scan work; independent runtime/native/controller/host
+admission and installation/release restrictions remain. No hosting now.
+
+Genuine zoom/text enlargement, OS picker cancellation, screen-reader/authenticated
+ERP/native/device acceptance remain NOT_EXECUTED. Four retained native warnings,
+Node bundled-library/trust gaps and host/controller/device prerequisites are separate.
+No operational DB/vault read/copy/hash, real records, provider activation, DNS/tunnel,
+demo credentials/banner, real ERP image/stack or release action occurred.
+Both owned harness listeners STOPPED. Automatic policy rejected cleanup of the new
+settled baseline snapshot and generated synthetic bundle with 'blocked by policy';
+both remain RESIDUE_RETAINED_POLICY_DENIED, without another method or retry.
+Earlier denied/historical/ambiguous residue remains untouched. Private logs,
+source snapshots and screenshots remain private.
+
+Measured intervals UTC: work/preservation/integration/local QA/review/push
+07:16:25–07:36:37.453 (20m12.453s); normal CI07:36:44–08:15:48 (39m04s),
+observed terminal08:16:36. Validation is a subset of work; evidence review during CI
+overlaps that CI interval and is not added again. Handoff timing and tracker readback
+receipts are appended below. Account usage was not measured.
+
+ONE next action: resolve existing Decision2 by naming the accountable reviewer and
+approving the independent identity/subject-resolution and private-custody inputs for
+a later bounded registration/resolver proposal. This is not approval of a key,
+unqualified inputs, findings, real build, runtime admission or hosting.
+
+
+### 6A final review, synchronization and ownership release
+
+Independent final source/evidence review CLEAR: all42 job rows,11 retained job logs,
+five service ZIP manifests, onboarding metadata and both restore ZIPs independently
+checked. No tests/builds/scans/edits by reviewer. Restore payloads bind source/provider;
+run association comes from artifact inventory and attempt/job from CI, not an intrinsic
+signed restore receipt. No material finding remains.
+
+GitHub [terminal result5967135681](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5967135681) read back exactly.
+Asana recovery comment1219124164083140 and mobile comment1219123994432481 read back;
+notes/names/incomplete status/owners/dates unchanged. Canvs batch/import text read back;
+only text/originalText/version/versionNonce changed, geometry/bindings/history retained,
+all301 other elements unchanged. Notion accepted comment3eec9801-27a8-810c-9a14-001d17066de5
+in the existing discussion, but two reads omit it: WRITE_ACCEPTED_READBACK_PENDING.
+No duplicate write; exact sanitized pending delta is retained privately.
+
+Post-CI publication scans still PASS497paths; Git safeguards and original two evidence
+byte-prefix checks PASS. Remaining diff is exactly THREE UNSTAGED evidence documents:
+this batch HANDOFF, RELEASE_RECOVERY_1C and MORNING_DECISIONS; index empty, source and
+remote unchanged at baa49c738e009f99c5e741a04bc3fe8f8862a848. No cosmetic push.
+Local measured validation window07:23:28–07:31:22UTC is within the20m12.453s work interval;
+later staged checks/review are included in work. CI39m04s is separate. Handoff interval
+08:15:48–08:26:37UTC is 649s;
+total observed task interval07:16:25–08:26:37UTC is 4212s.
+CI-time evidence review overlaps CI and is not added twice. No usage estimate.
+
+RECOVERY-MOBILE-R1-INTEGRATION-6A primary ownership RELEASED at 2026-10-03T08:26:37+00:00.
+All owned validation/listener activity settled; retained policy-denied residue untouched.
+Milestone stops here. ONE next owner decision remains existing Decision2 accountable
+reviewer plus independent identity/subject-resolution and private-custody inputs;
+no automatic registration, scan, build, hosting or new workstream follows.
+
+
+3 October 2026 — ARKAVIQ_RELEASE_INPUTS_RESOLVER_PARTIAL_REVIEW_OPEN. Local uncommitted candidate on baa49c7; owner confirmed accountable approver. Focused134 TS/38 Python PASS; final shared-helper regression71 PASS (overlap), core typecheck and standalone no-trust control PASS. Registration null; Product NOT_BUILT. Independent review retains inactive partial only: enforced acquisition egress, collector roundtrip, full Debian delta/freshness and authenticated native origins remain engineering gaps. No push/new CI/real build/scan/admission/deployment. Exact checkpoint and next work: docs/evidence/RELEASE_RECOVERY_1C.md, ARKAVIQ 1A section.
+
+### A1/A2 owner action sheet — existing Ed25519 scheme, 3 October 2026
+
+Rohith is the explicitly owner-designated private-preview approver and server/signing-credential custodian. This resolves business accountability. It does not supply a machine identity, vendor remediation, artifact approval or independent technical release review. The production registration remains literal `null`.
+
+**One next owner ceremony:** in an owner-controlled local/account workflow, bind the actual authority and attestor public identities and durable private custody to a reviewed registration proposal. Supply only public identifiers and secure approval/location references for review. Do not send private keys, passwords, OTPs or recovery material in chat. No paid service or external account enrollment is required by this source implementation.
+
+| Required binding | Existing implementation and current missing evidence |
+| --- | --- |
+| Identity to trust | Two distinct Ed25519 public keys: authority signs the operation grant; attestor signs the input envelope. Each identifier is SHA256 of DER SPKI public-key bytes, checked against its PEM key. **No real public key/fingerprint has been supplied or registered.** Synthetic test keys are never candidates. |
+| Independent expected subject | Authority reviews the exact input payload SHA256, acquisition plan/material manifest SHA256, source/recipe/lock/tree, tool pins, image set and scanner-database set independently of the attestor envelope. The loader observes clean committed Git HEAD/tree and runner workflow/run/attempt/architecture; the separately signed authority grant must match every observation. An envelope cannot choose its expected key or subject. |
+| Permitted scope | Repository `vsairohith67/nalanda-school-erp`; workflow `.github/workflows/portable-staging-foundation.yml`; job `backend-build-scan`; native Linux GitHub-hosted amd64 or arm64, each with its own exact run/attempt grant. Source/tree must be the final reviewed committed candidate recorded on PR28, not the historical baa49c7 checkpoint. Future run ID/attempt, workflow ref/SHA and architecture are **not yet bound**. Grant only `ACQUIRE_DEPENDENCIES_ONLY`, then separately `BUILD_SCAN_ONLY_NOT_ADMITTED` after material qualification. Neither grants runtime admission. |
+| Key custody/recovery/revocation | Rohith controls private signing custody outside Git, CI artifacts, image layers and chat. Actual local key store/service identity, backup/recovery reference and access controls are **not supplied**. Use the existing registration generation, key validity and `revoked` fields for reviewed revocation/rotation; reject old generations and issue fresh, short-lived operation grants. A consumed grant is never reused. No AI source reviewer is being designated an independent organizational security authority. |
+| Private evidence custody | Registration requires a durable, private, canonical same-owner Linux directory (0700; files0600) reachable by the permitted native runner. It holds qualified inputs, raw reports/OCI/material blobs, signed authorization and atomic one-use consumed receipts; completed or failed operation evidence is retained before owned cleanup. An ephemeral runner disk alone does not meet durable/replay retention. Actual storage location, authorized readers, encrypted backup/recovery, retention period and custody-approval reference are **not supplied**. Retain consumed receipts throughout their registration generation; do not delete them to retry. |
+| Reviewed registration | Record owner-approval and custody-approval HTTPS references, real public identities, validity/generation/revocation state, independently trusted Debian keyring digest/signers, and qualified Node/bootstrap/manifest hashes. Bootstrap source hashes must match the final commit. A separate reviewed configuration change is required; this task does not populate or activate it. Independent technical approval for that production binding remains missing. |
+
+Real input qualification additionally needs every supported vendor/tool/base/Node-library proof and current complete scanner evidence, original package archives/metadata and native member associations. Debian metadata must remain valid at the actual verification clock; absent or expired `Valid-Until` is refused because no historical-snapshot exception is registered. Rohith's designation cannot waive those findings or create supplier attestations. Inputs requiring an unapproved redirect or unsupported native origin remain refused.
+
+ARKAVIQ OPC incorporation is in progress; no verified final legal name, registration, DUNS or store account is asserted. Company DSC, Apple/Play credentials and domain TLS are separate from backend evidence signing. Future participants are Rohith, director, principal and accountant; no accounts/roles are created. Available Windows/Android/iPhone/iPad devices are not approved resettable test targets; no Mac is available. Suitable already-owned hardware or an explicitly approved temporary environment precedes measured hosting selection. NPS and ARKAVIQ/personal costs remain separate; Hyperscale remains a quote. No spending, DNS/tunnel/public access, real data, store publication or deployment follows from this sheet.

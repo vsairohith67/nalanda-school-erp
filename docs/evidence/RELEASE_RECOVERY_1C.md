@@ -2007,3 +2007,366 @@ policy rejected removal of only the new disposable baseline archive and generate
 synthetic bundle before execution, with "blocked by policy". Both remain
 RESIDUE_RETAINED_POLICY_DENIED; no retry or alternate mechanism. Prior denied roots
 are untouched. Private source/hash/results/screenshots/logs remain retained.
+
+### 6A terminal source and exact-candidate CI — 3 October 2026
+
+MOBILE_R1_INTEGRATED_SOURCE_VALIDATED_RELEASE_GATED.
+
+Starting primary5c3943fa3576987042d330dee51c8433b6e88660/tree184ebb15aef86bf6854cd92c4e900dd12868ce36
+advanced once to baa49c738e009f99c5e741a04bc3fe8f8862a848/treeee2b3a2f9eb3a5b45d456eb54547a983ab5991dd.
+Local and remote agree; PR28 remains OPEN/DRAFT. One substantive push, no second
+candidate, manual dispatch, unchanged-job retry or cosmetic follow-up push.
+Original source55f5d342e094dd37135ea6ce67c949c2eb57991d and packetb8fe33ab944f460a6f98ae9ad924a00d947b9701
+were integrated selectively with original parent/old-primary/new-source/result blob
+mapping in SOURCE_MAP.json. Original mobile/certificate/backend/R1 fixes remain;
+K30/PR30 and PR29 are excluded. Donor worktree/index/ref unchanged.
+
+Exact committed manifest (11 paths):
+- components/marks-importer.tsx
+- components/onboarding-centre.tsx
+- config/recovery-integration-source-delta.json
+- docs/evidence/RELEASE_RECOVERY_1C.md
+- docs/evidence/mobile-import-a11y-1b/HANDOFF.md
+- docs/evidence/overnight-source-closure-2a/MORNING_DECISIONS.md
+- docs/evidence/recovery-batch-integration-5a/HANDOFF.md
+- docs/evidence/recovery-batch-integration-5a/SOURCE_MAP.json
+- scripts/bulk-data-exchange-browser.ts
+- scripts/qa-mobile-import-a11y-1b.ts
+- tsconfig.tools-qa-support.json
+
+The initial two dirty evidence documents and their exact private byte/diff receipts
+were preserved before edits and committed with provenance stated above. Index was
+empty after commit; final observations remain UNSTAGED in this handoff, the closure
+ledger and the existing Decision2 packet. No source/registration diff remains.
+
+Local evidence remains separately classified: disposable5c baseline5PASS/8assertionFAIL
+reproduced all three reviewed defects; integrated real-component Playwright49PASS,
+zero failures, two NOT_EXECUTED capabilities. Focused Vitest176PASS includes import50,
+certificate16, backend83 and publication-negative27. Python dispatch/refusal38PASS;
+both affected typecheck partitions, provenance287rows/4heads/4backup contracts,
+publication497paths and Git safeguards PASS. No full local suite repeated.
+Independent available/requested GPT-6 Astra specialist reviewed the integrated
+source, registry preservation, actual rendered hashes/screenshot and evidence.
+Reviewer executed no tests/builds/scans; no model identity attestation is claimed.
+
+Normal hosted cycle: all nine runs below bind sourcebaa49c738e009f99c5e741a04bc3fe8f8862a848, attempt1.
+Workflow totals:8SUCCESS/1FAILURE/0SKIPPED/0CANCELLED/0PENDING/0MISSING.
+Job totals:33SUCCESS/2FAILURE/7SKIPPED/0CANCELLED/0PENDING/0MISSING (42 actual jobs).
+Overall CI is NOT GREEN. Skips are six mandatory runtime gates plus the optional
+private native producer; none is a pass.
+
+| Workflow / exact run | State | Jobs success / failure / skipped |
+| --- | --- | --- |
+| [Biometric Staff Attendance 1A](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919224) | SUCCESS | 2 / 0 / 0 |
+| [PostgreSQL readiness dual-provider gate](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919262) | SUCCESS | 4 / 0 / 0 |
+| [Master Requirements Reconciliation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919225) | SUCCESS | 2 / 0 / 0 |
+| [Communication Delivery Foundation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919277) | SUCCESS | 2 / 0 / 0 |
+| [Real-Data Onboarding Preparation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919217) | SUCCESS | 2 / 0 / 0 |
+| [Portable Staging Foundation exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919214) | FAILURE | 1 / 2 / 6 |
+| [Cross-platform apps 1A](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919219) | SUCCESS | 16 / 0 / 1 |
+| [Real-User Access Readiness 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919253) | SUCCESS | 2 / 0 / 0 |
+| [Student items and prior-year concessions exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919299) | SUCCESS | 2 / 0 / 0 |
+
+All five recovered Windows source jobs passed their71caller cases:
+Master job111157144031, Biometric job111157143923, Communication job111157144055,
+Real-User job111157144079 and cross-platform job111157144244. Onboarding
+job111157144134 also passed71caller cases, publication497paths, actual full regression,
+typecheck and source build. Its publication pass alone was not used as clearance.
+Master full3101PASS/0skip; the other five named Windows full suites3098PASS/3inherited
+qpdf skips each. Linux SQLite and portable source3098PASS/3qpdf skips; PostgreSQL
+application3068PASS/3qpdf skips. These overlapping populations are not summed.
+Current import50/certificate16 contracts execute in those full suites.
+Financial23PASS per provider; fresh SQLite/PostgreSQL restore matrices each verify
+eight targets, eight fresh and eight repeated restores with isolated unchanged sources.
+Normal compiler, Android emulator and iOS simulator source jobs pass; this does not
+establish authenticated ERP, real devices or exact private runtime artifact admission.
+
+Five service metadata manifests (Master/Biometric/Real-User Windows, Linux SQLite,
+PostgreSQL) validate exact source/run/attempt/job/provider, every file byte/hash,
+finance1/native18/MFA37 PASS result records and zero unfinished spans.
+Onboarding's exact two-file metadata manifest validates ten original cases PASS and
+owned fixture cleanup REMOVED. Historical finance/MFA/DENY/OpenSSL causes remain
+unresolved; current passes do not recover missing earlier evidence.
+
+Current automatic base scans are policy FAILURES on both architectures:
+11 HIGH rows / five distinct CVEs each, Trivy exit0 / Grype exit2.
+This explicitly supersedes the Decision2 pre-CI 'latest7/4' wording, which was dated5c.
+Independent metadata comparison confirms unchanged base index/manifest/config/layer
+and Node-binary identities, newer scanner databases, no removed rows and four added
+CVE-2026-95619 GCC-package rows. CVE-2026-102010 was already historical.
+Both result/manifest byte hashes and seven candidate input hashes were verified.
+Private raw scanner reports ended at owned job cleanup; only metadata/hash summaries
+remain (cleanupComplete=true, durablePrivateRetention=false). No reconstruction,
+new advisory research, ad hoc scan or policy exception. Product NOT_BUILT,
+runtime NOT_EXECUTED, admitted=false, EXTERNAL_RUNTIME_BLOCKED.
+
+Decision2 is current as an implemented/source-validated draft, not registered
+production trust. Human accountable reviewer UNASSIGNED; independent key/workflow
+identity and exact subject resolver NOT APPROVED; private raw-evidence custody
+NOT APPROVED. Production registration remains null, resolver unavailable; complete
+qualified source/tool/Node/offline-recipe evidence and residual findings still block.
+Any later registration proposal can only support separately authorized exact-input
+qualification/build-static-scan work; independent runtime/native/controller/host
+admission and installation/release restrictions remain. No hosting now.
+
+Genuine zoom/text enlargement, OS picker cancellation, screen-reader/authenticated
+ERP/native/device acceptance remain NOT_EXECUTED. Four retained native warnings,
+Node bundled-library/trust gaps and host/controller/device prerequisites are separate.
+No operational DB/vault read/copy/hash, real records, provider activation, DNS/tunnel,
+demo credentials/banner, real ERP image/stack or release action occurred.
+Both owned harness listeners STOPPED. Automatic policy rejected cleanup of the new
+settled baseline snapshot and generated synthetic bundle with 'blocked by policy';
+both remain RESIDUE_RETAINED_POLICY_DENIED, without another method or retry.
+Earlier denied/historical/ambiguous residue remains untouched. Private logs,
+source snapshots and screenshots remain private.
+
+Measured intervals UTC: work/preservation/integration/local QA/review/push
+07:16:25–07:36:37.453 (20m12.453s); normal CI07:36:44–08:15:48 (39m04s),
+observed terminal08:16:36. Validation is a subset of work; evidence review during CI
+overlaps that CI interval and is not added again. Handoff timing and tracker readback
+receipts are appended below. Account usage was not measured.
+
+ONE next action: resolve existing Decision2 by naming the accountable reviewer and
+approving the independent identity/subject-resolution and private-custody inputs for
+a later bounded registration/resolver proposal. This is not approval of a key,
+unqualified inputs, findings, real build, runtime admission or hosting.
+
+
+### 6A complete job-state receipt (all attempt1, candidate baa49c738)
+
+| Run | Job identity / name | Final state |
+| --- | --- | --- |
+| run37106919224 | job111157143806 — Exact-head PostgreSQL biometric migration and parity | SUCCESS |
+| run37106919224 | job111157143923 — Exact-head software, security and ERP regression | SUCCESS |
+| run37106919262 | job111157144105 — SQLite existing release gate | SUCCESS |
+| run37106919262 | job111157144282 — Cross-provider parity and recovery | SUCCESS |
+| run37106919262 | job111157144307 — PostgreSQL schema and migrations | SUCCESS |
+| run37106919262 | job111157144326 — PostgreSQL application regression | SUCCESS |
+| run37106919225 | job111157143916 — Exact-head PostgreSQL 17 migration, repeat deploy, constraints and parity | SUCCESS |
+| run37106919225 | job111157144031 — Exact-head requirements, security, shared-platform and full ERP regression | SUCCESS |
+| run37106919277 | job111157144055 — Exact-head communication, security, shared-platform and full ERP regression | SUCCESS |
+| run37106919277 | job111157144156 — Exact-head PostgreSQL 17 migration, repeat deploy, constraints and parity | SUCCESS |
+| run37106919217 | job111157143943 — Exact-head PostgreSQL 17 parity and provider-independent preparation | SUCCESS |
+| run37106919217 | job111157144134 — Exact-head synthetic validation, security and full ERP regression | SUCCESS |
+| run37106919214 | job111157143842 — Backend build/scan input qualification (arm64) | FAILURE |
+| run37106919214 | job111157143967 — 1 - server and database | SUCCESS |
+| run37106919214 | job111157143982 — Backend build/scan input qualification (amd64) | FAILURE |
+| run37106919214 | job111160700075 — 2 - OCI image and supply chain | SKIPPED |
+| run37106919214 | job111160700467 — oci-release-index | SKIPPED |
+| run37106919214 | job111160700543 — 3 - portable stack | SKIPPED |
+| run37106919214 | job111160700838 — 6 - full synthetic acceptance | SKIPPED |
+| run37106919214 | job111160700839 — 4 - distributed runtime | SKIPPED |
+| run37106919214 | job111160701058 — 5 - object storage and recovery | SKIPPED |
+| run37106919219 | job111157144066 — iOS simulator build and shared UI gate | SUCCESS |
+| run37106919219 | job111157144207 — Draft Rust 1.90 Android i686-linux-android | SUCCESS |
+| run37106919219 | job111157144224 — Draft Rust 1.90 macOS aarch64-apple-darwin | SUCCESS |
+| run37106919219 | job111157144226 — Draft Rust 1.90 Linux x86_64-unknown-linux-gnu | SUCCESS |
+| run37106919219 | job111157144230 — Android debug build and emulator UX gate | SUCCESS |
+| run37106919219 | job111157144244 — TypeScript, contracts and bundled shell | SUCCESS |
+| run37106919219 | job111157144248 — Draft Rust 1.90 Windows production and QA tests | SUCCESS |
+| run37106919219 | job111157144257 — Unsigned Windows NSIS compiler gate | SUCCESS |
+| run37106919219 | job111157144260 — Draft Rust 1.90 iOS aarch64-apple-ios | SUCCESS |
+| run37106919219 | job111157144275 — Draft Rust 1.90 macOS x86_64-apple-darwin | SUCCESS |
+| run37106919219 | job111157144287 — Draft Rust 1.90 iOS aarch64-apple-ios-sim | SUCCESS |
+| run37106919219 | job111157144300 — Draft Rust 1.90 Android x86_64-linux-android | SUCCESS |
+| run37106919219 | job111157144316 — Draft Rust 1.90 Android armv7-linux-androideabi | SUCCESS |
+| run37106919219 | job111157144318 — Draft Rust 1.90 iOS x86_64-apple-ios | SUCCESS |
+| run37106919219 | job111157144355 — Draft Rust 1.90 Android aarch64-linux-android | SUCCESS |
+| run37106919219 | job111157144437 — Draft Rust 1.90 Linux aarch64-unknown-linux-gnu | SUCCESS |
+| run37106919219 | job111157144808 — Same-run private Windows QA artifact evidence | SKIPPED |
+| run37106919253 | job111157144002 — Exact-head PostgreSQL 17 migrations, constraints and parity | SUCCESS |
+| run37106919253 | job111157144079 — Exact-head synthetic identity, security and full ERP regression | SUCCESS |
+| run37106919299 | job111157143991 — exact-head-financial-contract (sqlite) | SUCCESS |
+| run37106919299 | job111157144019 — exact-head-financial-contract (postgresql) | SUCCESS |
+
+
+### 6A final review, synchronization and ownership release
+
+Independent final source/evidence review CLEAR: all42 job rows,11 retained job logs,
+five service ZIP manifests, onboarding metadata and both restore ZIPs independently
+checked. No tests/builds/scans/edits by reviewer. Restore payloads bind source/provider;
+run association comes from artifact inventory and attempt/job from CI, not an intrinsic
+signed restore receipt. No material finding remains.
+
+GitHub [terminal result5967135681](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5967135681) read back exactly.
+Asana recovery comment1219124164083140 and mobile comment1219123994432481 read back;
+notes/names/incomplete status/owners/dates unchanged. Canvs batch/import text read back;
+only text/originalText/version/versionNonce changed, geometry/bindings/history retained,
+all301 other elements unchanged. Notion accepted comment3eec9801-27a8-810c-9a14-001d17066de5
+in the existing discussion, but two reads omit it: WRITE_ACCEPTED_READBACK_PENDING.
+No duplicate write; exact sanitized pending delta is retained privately.
+
+Post-CI publication scans still PASS497paths; Git safeguards and original two evidence
+byte-prefix checks PASS. Remaining diff is exactly THREE UNSTAGED evidence documents:
+this batch HANDOFF, RELEASE_RECOVERY_1C and MORNING_DECISIONS; index empty, source and
+remote unchanged at baa49c738e009f99c5e741a04bc3fe8f8862a848. No cosmetic push.
+Local measured validation window07:23:28–07:31:22UTC is within the20m12.453s work interval;
+later staged checks/review are included in work. CI39m04s is separate. Handoff interval
+08:15:48–08:26:37UTC is 649s;
+total observed task interval07:16:25–08:26:37UTC is 4212s.
+CI-time evidence review overlaps CI and is not added twice. No usage estimate.
+
+RECOVERY-MOBILE-R1-INTEGRATION-6A primary ownership RELEASED at 2026-10-03T08:26:37+00:00.
+All owned validation/listener activity settled; retained policy-denied residue untouched.
+Milestone stops here. ONE next owner decision remains existing Decision2 accountable
+reviewer plus independent identity/subject-resolution and private-custody inputs;
+no automatic registration, scan, build, hosting or new workstream follows.
+
+
+## 3 October 2026 — ARKAVIQ release inputs/resolver 1A source checkpoint
+
+**ARKAVIQ_RELEASE_INPUTS_RESOLVER_PARTIAL_REVIEW_OPEN.** This is an inactive,
+uncommitted local source candidate in the exclusively reserved primary worktree.
+HEAD remains `baa49c738e009f99c5e741a04bc3fe8f8862a848`; committed tree remains
+`ee2b3a2f9eb3a5b45d456eb54547a983ab5991dd`. The working source is different from
+that commit. PR28 was reread OPEN/DRAFT at the same head. No commit, push,
+workflow dispatch, real material/image build, scan, admission or deployment.
+
+The owner confirmed they are the accountable release approver and authorized
+continuing task work without repeated permission questions. This supplies no
+existing signing-key identity, secure location, bootstrap bytes or durable
+receipt storage. `product-trust-registration.json` remains literal null.
+Required Codex filesystem permission prompts are separate from owner approval.
+
+### Implemented locally; not operational qualification
+
+- Ed25519 registration/authorization resolver: distinct authority and attestor,
+  key identifiers, validity/revocation, generation, exact source/tree/architecture/
+  repository/workflow/run/attempt/job, recipe/lock/material/tool/image/database
+  binding, short grant validity, and exclusive durable one-use receipts.
+- Fixed-path private authorization loading, registered private custody, guarded
+  source/authorization bytes, operation-specific private artifact/report retention.
+- Separately authorized material acquisition recipe, pinned pnpm 11.21.0 archive,
+  explicit Debian snapshot/package versions, offline installation/lifecycle RUNs,
+  prepared dependency OCI consumption and original/effective recipe binding.
+- Offline Debian signature/index/package verification path and raw locked-tarball,
+  native-byte and installed-status requirements. These checks are incomplete in
+  the precise respects below; no automatic complete collector is claimed.
+- Qualified single-file Node bootstrap and committed-input manifest checks. An
+  actual bundle check exposed transitive QA CLI imports. Shared tool-verification
+  functions were moved unchanged into `qa-build-tool-core.ts`; existing QA CLI
+  reexports/guards are preserved. Production bundle now contains built-in external
+  imports only and its manifest names source-controlled inputs.
+- Material acquisition reports product NOT_BUILT and
+  INCOMPLETE_PROVENANCE_COLLECTION, even when its isolated build/scan completes.
+
+### Validation and failures preserved
+
+| Check | Result and boundary |
+| --- | --- |
+| Focused resolver/product/command/acquisition tests | 134/134 PASS, four files, isolated harness |
+| Python backend contract tests | 38/38 PASS, no real image execution |
+| Final acquisition status correction | 11/11 PASS; repeats part of the 134 |
+| Shared-helper extraction regression | 71/71 PASS, three files; overlapping suites, not 71 additional unique tests |
+| Core-tools TypeScript | PASS after final extraction |
+| Tests m-r TypeScript | PASS before final small extraction/status edit |
+| Standalone bootstrap | Built; SHA256 15a92859ac5f50ab70872b7124e08614d2230f675e28e076b3d19332a945e1ee |
+| Executed standalone no-registration control | Expected exit 1, PRODUCTION_INPUT_TRUST_UNREGISTERED, processes [], Product NOT_BUILT |
+| Git whitespace check | PASS before this evidence append |
+| New exact-head CI / full integrated suite / production qualification | NOT_EXECUTED; no source push |
+| Source-registration and publication clearance | NOT_COMPLETED for this WIP candidate; not cleared for publication |
+
+Earlier failures are not erased: initial focused run 122/123 passed, with a
+missing-registration classification failure subsequently corrected; initial
+bootstrap refused external dependencies, leading to the reviewed extraction.
+Sandbox dependency-link visibility failed; existing dependencies worked under
+the required filesystem approval, without installation or repair. The owned
+pnpm local-tarball/offline store experiment did not satisfy metadata resolution;
+no hand-generated store indexes or integrity override was substituted.
+
+Official pnpm 11.21.0 archive SHA256
+`87237d37eadb79dc626a0576eb3a52d23d70422c323ae5e00fc05c91f4323780`
+and registry ECDSA signature/SHA512 were checked locally. This is vendor-input
+observation, not product qualification. No Dockerfile/runtime pin was changed;
+no new zero-finding image exists. The earlier 6A base finding counts remain
+historical evidence, not a new scan from this task.
+
+### Independent review: remaining source work
+
+Read-only reviewer confirmed recipe mutation guards, bootstrap/source binding,
+retention durability, operation-separated custody, explicit material result
+classification, ELF architecture checks and exact unchanged extraction bodies.
+Reviewer performed no tests and approved retaining only an inactive partial
+candidate. Complete material-path or production activation approval was not given.
+
+1. Enforce official-source egress during acquisition; registry arguments and
+   BuildKit source policy alone do not constrain RUN HTTP traffic/redirects.
+2. Complete the collector-to-consumable-material-manifest roundtrip, retaining
+   all original receipts/tarballs/package metadata and testing substitution.
+3. Bind Debian Release freshness to the selected snapshot and prove every
+   added/upgraded package relative to the exact builder base, not just listed names.
+4. Link every native origin to authenticated archive/member bytes, including
+   schema/query engines, esbuild and sharp/libvips. ELF machine checks are not
+   vendor provenance. Test the connected prepared-material/gpgv consumer path.
+
+These are engineering gaps, not owner-approval problems. Next source work is to
+close them in this same ownership scope, then finish source registration,
+publication checks and independent review before the consolidated candidate push.
+No new implementation chat, second producer framework or admission exception.
+
+### Exact execution gates remain separate
+
+After source closure: register actual owner-approved Ed25519 authority/attestor
+public identities and custody, qualified bootstrap/tool bytes, private durable
+input/report/receipt storage and constrained native Linux acquisition environment.
+Use `python3 scripts/portable/backend-build-scan.py --acquire-materials` only for
+a separately signed ACQUIRE_DEPENDENCIES_ONLY grant and fully qualified inputs.
+Only a verified consumable manifest plus a separate signed BUILD_SCAN grant can
+lead to the no-argument product entrypoint. Current source is not ready for those
+real executions. Existing workflow remains `--base-only` on both architectures.
+
+| Mandatory/optional job | Existing entrypoint and prerequisite/proof |
+| --- | --- |
+| oci-image (mandatory) | Held `if: false`; needs server-and-database, admitted exact-architecture production evidence; existing qa-artifact-producer-cli.ts run/cleanup and same-run private stack evidence |
+| oci-release-index (mandatory) | needs oci-image; public-evidence.mjs aggregate binds both architecture metadata sets |
+| portable-stack (mandatory) | needs index; verify-stack-receipts.mjs checks the exact stack metadata, not deployable image transfer |
+| distributed-runtime (mandatory) | needs stack; qa:portable-runtime and resilience/offline-sync/cross-platform synthetic acceptance |
+| object-storage-and-recovery (mandatory) | needs distributed; isolated synthetic backup/storage/recovery and audit evidence |
+| full-synthetic-acceptance (mandatory) | needs object/recovery; same-source isolated synthetic database, full type/test/build/backup/safety/focused acceptance |
+| native-evidence (optional producer) | Cross-platform workflow dispatch on recovery ref with explicit connected inputs; build-native-qa.ts, private transport/profile, owned cleanup; separate native admission |
+
+No hold was removed. Source tests and material/product BUILD_SCAN results do not
+admit runtime, native, device, preview or release. No operational database was
+opened, hashed or changed; original three unstaged evidence files were verified
+byte-for-byte before this append. Their original prefixes and all other task
+worktrees, schemas, flags, workflows and artifact history are preserved.
+
+## ARKAVIQ-RELEASE-INPUTS-AND-RESOLVER-1A-A2 — source closure, 3 October 2026
+
+**A2_ACQUISITION_PROVENANCE_SOURCE_VALIDATED_REGISTRATION_GATED.** Continues the sole Task A candidate in `recovery-integration-1a`, branch `release/recovery-integration-1a`, from committed source `baa49c738e009f99c5e741a04bc3fe8f8862a848`, tree `ee2b3a2f9eb3a5b45d456eb54547a983ab5991dd`. The checkpoint in PR28 comment5968752022 and the complete unpublished A1 candidate were preserved. This section supersedes that checkpoint's engineering-incomplete conclusion only; historical evidence and findings remain. Final publication SHA/tree and CI run identities are recorded in the terminal PR28/tracker update and local owned publication receipt after commit, avoiding a self-referential commit hash in source.
+
+| Checkpoint gap | Connected A2 result |
+| --- | --- |
+| Acquisition egress | Signed plan digest is checked before selecting any download or consuming the grant. Direct TLS downloads accept exact official HTTPS origins, pin validated public IPv4 addresses, refuse redirects/private destinations, bound bytes/time, verify independent expected digests and never execute downloads. Every BuildKit RUN retains network=none; package hooks cannot use external networking. Finite loopback TLS replay supplies only preverified archives/metadata to pinned pnpm; it closes before offline installation. No laptop firewall/proxy/global CA/hosts change. |
+| Collector → manifest → consumer | Actual OCI collector emits native/status/process/replay records; actual packager serializes existing NALANDA_PREPARED_DEPENDENCIES_V1 with original blob closure and scanner reports. Clean consumer verifies the signed test envelope and recollects the dependency OCI, requiring exact native inventory equality. Production custody retains complete material-output blobs/manifest before cleanup. Unsigned collected material is an input candidate, never an attestor signature or admission receipt. |
+| Debian freshness and package delta | Qualified gpgv and independently registered keyring/signers authenticate Release; SHA256/size bind index and every deb. Real verification clock, snapshot/date and Valid-Until are checked. Missing/expired validity has no invented exception. Exact builder dpkg status is bound to OCI, and every installed/changed package must be covered; removals, wrong architecture/version, missing or tampered bytes refuse. |
+| Native origins | Source-lock SHA512 and registry metadata bind npm archives; roles bind exact architecture-specific esbuild/sharp/libvips package identities. Prisma engine revision/platform/URL, independently approved archive bytes and retained supplier checksum bind gzip and extracted bytes. Safe bounded archive inspection rejects duplicate/link/traversal/unsupported origins; collector checks all installed native ELF members and rejects incomplete inventories, substitutions and ambiguous overlays. |
+
+The existing Ed25519 resolver, input contract, caller, rootless lifecycle, scanner policy and publication allowlist are reused. No Dockerfile/base/dependency pin, scanner threshold, suppression, runtime hold or workflow dispatch was changed. Runtime Node and builder Node remain separately qualified; package-manager/archive verification is not bundled-library remediation. No fresh real scan was performed: earlier11-HIGH/five-CVE counts are historical, and neither unchanged base bytes nor source tests establish current scanner-database results.
+
+### Validation and independent review
+
+- Final affected TypeScript run: **196 PASS**, six suites (`material-roundtrip`, `material-acquisition`, `product-trust-policy`, `product-contract-caller`, `product-build-command`, `portable-publication-1c`). Separate shared-producer regression: **48 PASS** (`portable-qa-artifact-producer`); transport boundary suite: **6 PASS** (`material-download`, private DNS refused before request, pinned TLS socket lookup, redirects refused and truncated/substituted/overlong transfers rejected). These eight suites are disjoint. Earlier134/71/51/85/35 counts overlap and are not added again.
+- Python: **38 PASS** existing backend qualification suite and **25 PASS** new material provenance/archive suite. The latter includes an actual ephemeral synthetic Ed25519 GPG/gpgv chain and tampered-signature refusal. This is synthetic fixture trust, not Debian/vendor qualification.
+- Pinned pnpm11.21.0: **11 isolated assertions PASS**, actual loopback TLS archive retrieval followed by offline install with server closed and store-status verification; synthetic DNS/TLS mapping exists only in the test child. No global configuration changed. Earlier store-add/offline-metadata and unsupported store-status cache-dir failures were retained as findings and corrected in the connected path; the first store-add probe had placed one inert test archive in the default pnpm store, which was not pruned.
+- Core tools and tests-m-r typechecks PASS; source registry299 entries PASS (historical source hashes preserved); publication allowlist, Git safety and whitespace PASS. No operational database was opened, hashed or changed.
+- Standalone bundle `4787faad7442f57fa3df8c93b701cd499b46d1d3585f7b657477e5cef7475a8c`: normal and acquisition controls both exit1, `PRODUCTION_INPUT_TRUST_UNREGISTERED`, `processes: []`, Product NOT_BUILT. This Windows-built source-test bundle is not a qualified native production bootstrap.
+- Independent read-only agent review identified and then confirmed correction of premature plan selection, mutable verified preparation, and file-to-directory overlay substitution. Targeted regressions cover each, including collect and consume. Reviewer clears engineering/source publication conditional on the final passing tests and unchanged-source hash readback; it does not certify model identity, organizational security authority, production registration or real execution.
+
+Representative commands: `node node_modules/vitest/vitest.mjs run` with the eight named suites and `--maxWorkers=1`; `python -B tests/backend-build-scan.test.py`; `python -B tests/material-provenance.test.py`; `node tests/material-replay.test.mjs <verified-local-pnpm.cjs> <installed-openssl>`; `tsc --noEmit --project tsconfig.tools-core.json` and `tsconfig.tests-m-r.json`; `node scripts/recovery-source-evidence.mjs`; `tsx scripts/git-safety-check.ts`. Only owned synthetic targets were used. Two-heavy-job/four-worker cap respected; no laptop timing/capacity measurement was performed.
+
+### Independent states and next ceremony
+
+| State | Evidence-backed result |
+| --- | --- |
+| Resolver implemented | SOURCE_CONNECTED; independent authority/attestor, subject, exact Git/runner identity, short-lived per-operation grant and durable one-use claim checks implemented/tested |
+| Authority registered | NO; checked-in production registration remains literal null; Rohith is owner-designated approver/custodian, not an invented technical reviewer |
+| Real inputs acquired / qualified (A) | NO; real custody/key/technical binding and vendor/tool/base/material proofs unavailable; test fixtures are HARNESS_ONLY |
+| Real product built / scanned (B) | NO; Product NOT_BUILT; no new OCI product identity or complete real product reports exist |
+| Runtime admitted / executed (C) | NO / NOT_EXECUTED; no laptop/native/GitHub runtime admission inferred |
+| Six mandatory runtime jobs | Unchanged chain: oci-image remains held if:false; oci-release-index, portable-stack, distributed-runtime, object-storage-and-recovery, full-synthetic-acceptance retain dependent prerequisites. A skipped job is not passed. |
+| Optional native producer | native-evidence remains a separate explicit producer with native/profile/device acceptance gates; not a seventh mandatory runtime job |
+
+Rohith's owner facts and the single concrete Ed25519 registration/custody ceremony are in the existing recovery-batch HANDOFF, “A1/A2 owner action sheet.” That ceremony must independently bind actual public identities, final source/tree/workflow/run/attempt/architecture, operation, durable private storage/access/retention/recovery and technical review. No fingerprint, vendor approval, company registration, store account or approval date was invented. Suitable owned hardware remains a later separately approved consumer, never a substitute for native Linux/GitHub production-build policy. No GITHUB identity spoofing or WSL qualification.
+
+Publication scope is one reviewed substantive recovery-branch source push with its normal CI, after final exact staged manifest/ownership/head checks. No manual dispatch, unchanged-job retry, main merge or production activation. CI source errors and expected current scan-policy findings will be recorded separately. Parent tasks remain incomplete; P1 attendance1b78c1f/handoff3eec305, mobile/certificate history, K30/PR30, B1 private work, D1P isolated source and C1 residue are untouched. Active source closure is finished; remaining external waiting is owner binding/vendor evidence and CI queue/runtime, not another estimated3–6-hour source framework cycle.

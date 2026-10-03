@@ -36,7 +36,7 @@ def regular(file, limit=q.PRIVATE_LIMIT):
     return raw
 
 
-def inspect_oci(root, architecture, source, extract=True):
+def inspect_oci(root, architecture, source, extract=True, materials=False):
     archive = regular(root/'product.oci.tar', q.MAX_IMAGE)
     entries = {}
     with tarfile.open(fileobj=q.io.BytesIO(archive), mode='r:') as tar:
@@ -62,7 +62,7 @@ def inspect_oci(root, architecture, source, extract=True):
     q.descriptor(config_bytes, manifest['config'])
     config = strict_json(config_bytes)
     labels = config.get('config', {}).get('Labels', {})
-    q.check(config.get('os') == 'linux' and config.get('architecture') == architecture and config.get('config', {}).get('User') == '65532:65532' and labels.get('org.opencontainers.image.revision') == source and labels.get('io.nalanda.artifact-purpose') == 'PRODUCTION_DEFAULT_OFF' and not any('synthetic' in k or '.qa-' in k for k in labels), 'PRODUCT_CONFIG_IDENTITY')
+    q.check(config.get('os') == 'linux' and config.get('architecture') == architecture and (materials or config.get('config', {}).get('User') == '65532:65532') and labels.get('org.opencontainers.image.revision') == source and labels.get('io.nalanda.artifact-purpose') == ('PREPARED_DEPENDENCIES_ONLY' if materials else 'PRODUCTION_DEFAULT_OFF') and not any('synthetic' in k or '.qa-' in k for k in labels), 'PRODUCT_CONFIG_IDENTITY')
     q.check(not any('SYNTHETIC' in str(v) or 'QA_PROFILE' in str(v) for v in config.get('config', {}).get('Env', [])), 'PRODUCT_QA_ENVIRONMENT')
     required = {'index.json', 'oci-layout', 'blobs/sha256/'+selected['digest'][7:], 'blobs/sha256/'+manifest['config']['digest'][7:]}
     for layer in manifest['layers']:
@@ -103,6 +103,11 @@ def inspect_inputs(root, architecture):
         protected = ancestors + ([wanted] if wanted else [])
         whiteouts = {str(Path(p).parent / ('.wh.'+Path(p).name)) for p in protected}
         actual = None
+        material_files = {f['path']: f for f in component.get('materialFiles', [])}
+        material_actual = {}
+        for filename in material_files:
+            ancestors.extend(str(p) for p in Path(filename).parents if str(p) != '.')
+            whiteouts.update(str(Path(p).parent / ('.wh.'+Path(p).name)) for p in [filename, *Path(filename).parents] if str(p) != '.')
         total = 0
         for descriptor in manifest['layers']:
             raw = regular(layout/'blobs'/'sha256'/descriptor['digest'][7:], q.MAX_IMAGE)
@@ -123,9 +128,35 @@ def inspect_inputs(root, architecture):
                     if wanted and (path == wanted or path.endswith('/.wh.'+Path(wanted).name) or path.endswith('/.wh..wh..opq')):
                         q.check(path == wanted and member.isfile(), 'INPUT_NODE_OVERLAY_UNRESOLVED')
                         actual = layer.extractfile(member).read()
+                    if material_files and path.endswith('/.wh..wh..opq'):
+                        raise ValueError('MATERIAL_OVERLAY_UNRESOLVED')
+                    if path in material_files:
+                        q.check(member.isfile(), 'MATERIAL_NATIVE_LINK_REFUSED')
+                        material_actual[path] = layer.extractfile(member).read()
+        q.check(set(material_actual) == set(material_files), 'MATERIAL_NATIVE_FILE_MISSING')
+        for filename, raw in material_actual.items():
+            q.check(q.sha(raw) == material_files[filename]['sha256'], 'MATERIAL_NATIVE_LAYER_ASSOCIATION')
+            if material_files[filename]['native']:
+                q.check(raw[:6] == b'\x7fELF\x02\x01' and int.from_bytes(raw[18:20], 'little') == {'amd64':62,'arm64':183}[architecture], 'MATERIAL_NATIVE_ARCHITECTURE')
         if wanted:
             q.check(actual is not None and q.sha(actual) == component['nodeSha256'], 'INPUT_NODE_LAYER_ASSOCIATION')
             q.check(actual[:4] == b'\x7fELF' and actual[4:6] == b'\x02\x01' and int.from_bytes(actual[18:20], 'little') == {'amd64':62,'arm64':183}[architecture], 'INPUT_NODE_ARCHITECTURE')
+    if proof.get('pnpmMaterial'):
+        material = proof['pnpmMaterial']
+        raw = regular(root/'pnpm-material.tar.gz', q.MAX_IMAGE)
+        q.check(q.sha(raw) == material['archiveSha256'], 'MATERIAL_PNPM_ARCHIVE_SUBSTITUTED')
+        expected = {f['path']:f for f in material['files']};seen=set()
+        with tarfile.open(fileobj=q.io.BytesIO(raw),mode='r:*') as archive:
+            members=archive.getmembers();q.check(len(members)<=10000 and sum(m.size for m in members)<=128*1024*1024,'MATERIAL_PNPM_ARCHIVE_BOUND')
+            for member in members:
+                name=q.member_safe(member)
+                if member.isdir():continue
+                q.check(member.isfile() and name.startswith('package/'),'MATERIAL_PNPM_ARCHIVE_LINK')
+                destination='pnpm/'+name[len('package/'):]
+                q.check(destination in expected and destination not in seen,'MATERIAL_PNPM_ARCHIVE_COVERAGE')
+                data=archive.extractfile(member).read();staged=regular(root/'material-inputs'/destination)
+                q.check(data==staged and q.sha(data)==expected[destination]['sha256'],'MATERIAL_PNPM_ARCHIVE_ASSOCIATION');seen.add(destination)
+        q.check(seen==set(expected),'MATERIAL_PNPM_ARCHIVE_COVERAGE')
     for tool in proof['tools']:
         raw = regular(root/'input-archives'/tool['archiveSha256'], q.MAX_IMAGE)
         q.check(q.sha(raw) == tool['archiveSha256'], 'INPUT_TOOL_ARCHIVE_SUBSTITUTED')
@@ -150,8 +181,8 @@ def main():
     q.check(owner.get('contract') == 'NALANDA_PRODUCT_PRODUCER_ROOT_V1' and owner.get('target') == 'production-runtime' and owner.get('source') == source and owner.get('architecture') == architecture, 'PRODUCT_OWNER_MISMATCH')
     if action == 'inputs':
         result = inspect_inputs(root, architecture)
-    elif action in ('inspect', 'recheck'):
-        result = inspect_oci(root, architecture, source, action == 'inspect')
+    elif action in ('inspect', 'recheck', 'inspect-materials'):
+        result = inspect_oci(root, architecture, source, action != 'recheck', action == 'inspect-materials')
     elif action == 'commands':
         bins = strict_json(regular(root/'scanner-bins.json'))
         result = q.scanner_commands(root, root/'product-oci', bins)

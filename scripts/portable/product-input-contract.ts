@@ -3,10 +3,11 @@ import {hashBytes, verifyImageSecurityReports, type EvidenceFiles} from "./artif
 import {nativeJson, nativeObject} from "./native-artifact";
 import scannerPins from "../../config/backend-build-scan-tools.json";
 import builderPins from "../../config/qa-build-tools.json";
-import registration from "./product-trust-registration.json";
+import {loadProductionInputPolicy} from "./product-trust-policy";
+import {verifyMaterialManifest,type MaterialManifest} from "./product-materials";
 
 export const INPUT_CONTRACT = "NALANDA_PREBUILD_INPUTS_DRAFT_V1";
-export const TOOL_NAMES = ["buildctl","buildkitd","runc","rootlesskit","syft","trivy","grype","python","node","git"] as const;
+export const TOOL_NAMES = ["buildctl","buildkitd","runc","rootlesskit","syft","trivy","grype","python","node","git","gpgv"] as const;
 export const IMAGE_NAMES = ["runtime","builder","frontend"] as const;
 export type InputIdentity = {source:string;tree:string;architecture:"amd64"|"arm64";repository:string;workflow:string;runId:string;attempt:string;job:string};
 export type InputPolicy = {classification:"HARNESS_ONLY"|"HOSTED_PREBUILD_INPUTS";publicKey:string;identity:InputIdentity;subjectSha256:string;now:number;toolPins:Record<typeof TOOL_NAMES[number],{sha256:string;archiveSha256:string;version:string}>};
@@ -22,7 +23,7 @@ export type InputDocument = InputIdentity & {
  custody:{repository:string;workflow:string;source:string;runId:string;attempt:string;job:string;private:true};
  files:SourceFile[];recipe:{path:"Dockerfile";sha256:string;review:string};
  configuration:{target:"production-runtime";network:"none";syntheticTrust:null;epoch:string;frontend:string};
- images:Record<typeof IMAGE_NAMES[number],ImageInput>;tools:Record<typeof TOOL_NAMES[number],ToolInput>;
+ materials?:string;images:Record<typeof IMAGE_NAMES[number],ImageInput> & {dependencies?:ImageInput};tools:Record<typeof TOOL_NAMES[number],ToolInput>;
  databases:Record<"trivy"|"grype",{sha256:string;file:string;updatedAt:string;version:string;files:{file:string;sha256:string;bytes:number}[]}>;
 };
 export function requireInput(value:unknown,code:string):asserts value {if(!value)throw Error(code);}
@@ -93,7 +94,7 @@ function nodeEvidence(component:Component,reader:BlobReader,required:boolean,bin
  for(const l of n.libraries){nativeObject(l,["name","version","sourceSha256","advisories","evidence"]);requireInput(typeof l.name==="string"&&typeof l.version==="string"&&l.version.length>0&&inventory.libraries.some((x:any)=>x.name===l.name&&x.version===l.version)&&Array.isArray(l.advisories)&&l.advisories.length<=100,"INPUT_NODE_LIBRARY");readBlob(reader,l.sourceSha256);const e=json(reader,l.evidence);nativeObject(e,["binarySha256","library","version","sourceSha256","unresolved","advisories"]);requireInput(e.binarySha256===n.binarySha256&&e.library===l.name&&e.version===l.version&&e.sourceSha256===l.sourceSha256&&Array.isArray(e.unresolved)&&e.unresolved.length===0&&JSON.stringify(e.advisories)===JSON.stringify(l.advisories),"INPUT_NODE_UNRESOLVED");for(const a of l.advisories){nativeObject(a,["id","state","patchSha256"]);requireInput(/^CVE-\d{4}-\d{4,10}$/.test(a.id)&&a.state==="FIXED","INPUT_NODE_UNRESOLVED");readBlob(reader,a.patchSha256);}}
 }
 const verified=new WeakSet<object>();
-export type VerifiedInputs={document:InputDocument;classification:InputPolicy["classification"];manifestSha256:string;guard:()=>void};
+export type VerifiedInputs={document:InputDocument;classification:InputPolicy["classification"];manifestSha256:string;materials?:{manifest:MaterialManifest;recipe:Buffer};guard:()=>void};
 export function assertVerifiedInputs(input:VerifiedInputs){requireInput(verified.has(input),"INPUT_VERIFIER_RECEIPT_REQUIRED");input.guard();}
 
 /** The caller supplies policy from trusted configuration, never from this envelope.
@@ -107,7 +108,7 @@ export function verifyInputs(envelopeBytes:Buffer,reader:BlobReader,policy:Input
  requireInput(key.asymmetricKeyType==="ed25519"&&verify(null,payload,key,Buffer.from(envelope.signature,"base64url")),"INPUT_SIGNATURE_REJECTED");
  requireInput(hash(policy.subjectSha256)&&hashBytes(payload)===policy.subjectSha256,"INPUT_EXPECTED_SUBJECT_MISMATCH");
  const d=boundedJson(payload) as InputDocument;
- nativeObject(d,["contract","classification","source","tree","architecture","repository","workflow","runId","attempt","job","issuedAt","expiresAt","custody","files","recipe","configuration","images","tools","databases","commit"]);
+ nativeObject(d,["contract","classification","source","tree","architecture","repository","workflow","runId","attempt","job","issuedAt","expiresAt","custody","files","recipe","configuration","images","tools","databases","commit",...(d.materials!==undefined?["materials"]:[])]);
  requireInput(d.contract===INPUT_CONTRACT&&d.classification===policy.classification,"INPUT_SCHEMA_OR_CLASSIFICATION");identity(d,policy.identity);
  const commit=readBlob(reader,d.commit);requireInput(createHash("sha1").update(`commit ${commit.length}\0`).update(commit).digest("hex")===d.source&&commit.toString().startsWith(`tree ${d.tree}\n`),"INPUT_COMMIT_TREE_MISMATCH");
  requireInput(Number.isSafeInteger(d.issuedAt)&&Number.isSafeInteger(d.expiresAt)&&d.issuedAt<=policy.now&&d.expiresAt>policy.now&&d.expiresAt>d.issuedAt&&d.expiresAt-d.issuedAt<=6*3600000,"INPUT_EVIDENCE_STALE");
@@ -118,7 +119,7 @@ export function verifyInputs(envelopeBytes:Buffer,reader:BlobReader,policy:Input
  nativeObject(d.recipe,["path","sha256","review"]);requireInput(d.recipe.path==="Dockerfile"&&d.recipe.sha256===d.files.find(f=>f.path==="Dockerfile")?.sha256,"INPUT_RECIPE_MISMATCH");
  const review=json(reader,d.recipe.review);nativeObject(review,["source","tree","recipeSha256","configurationSha256","filesSha256"]);requireInput(review.source===d.source&&review.tree===d.tree&&review.recipeSha256===d.recipe.sha256&&review.configurationSha256===hashBytes(JSON.stringify(d.configuration))&&review.filesSha256===hashBytes(JSON.stringify(d.files)),"INPUT_REVIEW_BINDING");
  nativeObject(d.configuration,["target","network","syntheticTrust","epoch","frontend"]);requireInput(d.configuration.target==="production-runtime"&&d.configuration.network==="none"&&d.configuration.syntheticTrust===null&&/^\d{1,12}$/.test(d.configuration.epoch)&&/^docker\/dockerfile:[0-9]+(?:\.[0-9]+)*@sha256:[a-f0-9]{64}$/.test(d.configuration.frontend),"INPUT_CONFIGURATION_INVALID");
- nativeObject(d.images,[...IMAGE_NAMES]);nativeObject(d.tools,[...TOOL_NAMES]);
+ nativeObject(d.images,[...IMAGE_NAMES,...(d.images.dependencies?["dependencies"]:[])]);nativeObject(d.tools,[...TOOL_NAMES]);
  nativeObject(d.databases,["trivy","grype"]);for(const name of ["trivy","grype"] as const){const db=d.databases[name];nativeObject(db,["sha256","file","updatedAt","version","files"]);safeRelative(db.file);requireInput(db.file.startsWith(name+"-db/")&&hash(db.sha256)&&Number.isFinite(Date.parse(db.updatedAt))&&Date.parse(db.updatedAt)<=policy.now&&policy.now-Date.parse(db.updatedAt)<=72*3600000&&db.version===(name==="trivy"?"0.70.0":"0.110.0"),"INPUT_DATABASE_INVALID");readBlob(reader,db.sha256,1024*1024*1024);
   const required=name==="trivy"?["trivy-db/db/trivy.db","trivy-db/db/metadata.json"]:["grype-db/6/vulnerability.db","grype-db/6/import.json"];
   requireInput(db.file===required[0]&&Array.isArray(db.files)&&db.files.length===required.length,"INPUT_DATABASE_FILES_INCOMPLETE");const paths=new Set<string>();
@@ -129,7 +130,7 @@ export function verifyInputs(envelopeBytes:Buffer,reader:BlobReader,policy:Input
  }
  nativeObject(policy.toolPins,[...TOOL_NAMES]);
  const reports:Record<string,any>={};
- for(const name of IMAGE_NAMES){const c=d.images[name];nativeObject(c,["reference","index","manifest","config","subject","security","node"]);requireInput(digest(c.subject)&&typeof c.reference==="string"&&c.reference.endsWith("@sha256:"+c.index),"INPUT_IMAGE_PIN");const i=json(reader,c.index),m=json(reader,c.manifest),config=json(reader,c.config);requireInput(i.schemaVersion===2&&Array.isArray(i.manifests),"INPUT_IMAGE_INDEX");const matches=i.manifests.filter((x:any)=>x.platform?.os==="linux"&&x.platform?.architecture===d.architecture);requireInput(matches.length===1&&matches[0].digest==="sha256:"+c.manifest&&matches[0].size===readBlob(reader,c.manifest).length,"INPUT_PLATFORM_DESCRIPTOR");requireInput(m.schemaVersion===2&&m.config?.digest===c.subject&&c.subject==="sha256:"+c.config&&m.config.size===readBlob(reader,c.config).length&&config.os==="linux"&&config.architecture===d.architecture&&Array.isArray(m.layers)&&m.layers.length>0&&m.layers.length<=100,"INPUT_IMAGE_CONFIG");for(const layer of m.layers){requireInput(digest(layer.digest)&&Number.isSafeInteger(layer.size)&&layer.size>0&&layer.size<=1024*1024*1024,"INPUT_IMAGE_LAYER");requireInput(readBlob(reader,layer.digest.slice(7),1024*1024*1024).length===layer.size,"INPUT_IMAGE_LAYER");}if(name==="frontend")requireInput(config.config?.Labels?.["moby.buildkit.frontend.network.none"]==="true","INPUT_FRONTEND_NETWORK_NOT_DISABLED");reports[name]=security(c,reader,policy,"image");nodeEvidence(c,reader,name!=="frontend");}
+ for(const name of [...IMAGE_NAMES,...(d.images.dependencies?["dependencies" as const]:[])]){const c=d.images[name]!;nativeObject(c,["reference","index","manifest","config","subject","security","node"]);requireInput(digest(c.subject)&&typeof c.reference==="string"&&c.reference.endsWith("@sha256:"+c.index),"INPUT_IMAGE_PIN");const i=json(reader,c.index),m=json(reader,c.manifest),config=json(reader,c.config);requireInput(i.schemaVersion===2&&Array.isArray(i.manifests),"INPUT_IMAGE_INDEX");const matches=i.manifests.filter((x:any)=>x.platform?.os==="linux"&&x.platform?.architecture===d.architecture);requireInput(matches.length===1&&matches[0].digest==="sha256:"+c.manifest&&matches[0].size===readBlob(reader,c.manifest).length,"INPUT_PLATFORM_DESCRIPTOR");requireInput(m.schemaVersion===2&&m.config?.digest===c.subject&&c.subject==="sha256:"+c.config&&m.config.size===readBlob(reader,c.config).length&&config.os==="linux"&&config.architecture===d.architecture&&Array.isArray(m.layers)&&m.layers.length>0&&m.layers.length<=100,"INPUT_IMAGE_CONFIG");for(const layer of m.layers){requireInput(digest(layer.digest)&&Number.isSafeInteger(layer.size)&&layer.size>0&&layer.size<=1024*1024*1024,"INPUT_IMAGE_LAYER");requireInput(readBlob(reader,layer.digest.slice(7),1024*1024*1024).length===layer.size,"INPUT_IMAGE_LAYER");}if(name==="frontend")requireInput(config.config?.Labels?.["moby.buildkit.frontend.network.none"]==="true","INPUT_FRONTEND_NETWORK_NOT_DISABLED");reports[name]=security(c,reader,policy,"image");nodeEvidence(c,reader,name!=="frontend");}
  requireInput(d.configuration.frontend===d.images.frontend.reference,"INPUT_FRONTEND_MISMATCH");
  for(const name of TOOL_NAMES){const c=d.tools[name];nativeObject(c,["sha256","version","file","archive","subject","security","node"]);safeRelative(c.file);requireInput(hash(c.sha256)&&c.subject==="sha256:"+c.sha256&&typeof c.version==="string"&&c.version.length>0&&c.version.length<=120,"INPUT_TOOL_INVALID");readBlob(reader,c.sha256);const origin=json(reader,c.archive);nativeObject(origin,["archiveSha256","executableSha256","version","path"]);safeRelative(origin.path);readBlob(reader,origin.archiveSha256);requireInput(origin.executableSha256===c.sha256&&origin.version===c.version,"INPUT_TOOL_ARCHIVE_ASSOCIATION");const expected=policy.toolPins[name];nativeObject(expected,["sha256","archiveSha256","version"]);requireInput(hash(expected.sha256)&&hash(expected.archiveSha256)&&c.sha256===expected.sha256&&origin.archiveSha256===expected.archiveSha256&&c.version===expected.version,"INPUT_TOOL_POLICY_MISMATCH");
   if(policy.classification==="HOSTED_PREBUILD_INPUTS"){
@@ -141,12 +142,14 @@ export function verifyInputs(envelopeBytes:Buffer,reader:BlobReader,policy:Input
  for(const c of [...Object.values(d.images),...Object.values(d.tools)]){const m=json(reader,c.security.metadata);for(const name of ["trivy","grype"] as const)requireInput(m[name].databaseSha256===d.databases[name].sha256&&m[name].databaseUpdatedAt===d.databases[name].updatedAt&&m[name].version===d.databases[name].version,"INPUT_DATABASE_BINDING");}
  for(const p of Object.values(reports))for(const name of ["trivy","grype","syft"] as const)requireInput(p.outcomes[name].toolSha256===d.tools[name].sha256,"INPUT_SCANNER_EXECUTABLE_SUBSTITUTED");
  // Do not let callers mutate the authenticated document or reuse stale bytes.
- const snapshot=JSON.stringify(d);
- const result:VerifiedInputs={document:d,classification:d.classification,manifestSha256:hashBytes(payload),guard:()=>{requireInput(JSON.stringify(d)===snapshot,"INPUT_RECEIPT_MUTATED");requireInput(Date.now()<d.expiresAt,"INPUT_EVIDENCE_STALE");for(const [id,h] of seen)requireInput(hashBytes(originalReader(id))===h&&h===id,"INPUT_BYTES_SUBSTITUTED");}};
+ const materials=d.materials?verifyMaterialManifest(readBlob(reader,d.materials),d.materials,d,reader):undefined;
+ if(materials)requireInput(d.images.dependencies&&hashBytes(JSON.stringify(d.images.dependencies))===hashBytes(JSON.stringify(materials.manifest.image)),"INPUT_MATERIAL_IMAGE_MISMATCH");
+ const snapshot=JSON.stringify(d),materialSnapshot=materials?JSON.stringify(materials.manifest):null,recipeSnapshot=materials?hashBytes(materials.recipe):null;
+ const result:VerifiedInputs={document:d,classification:d.classification,manifestSha256:hashBytes(payload),materials,guard:()=>{requireInput(!materials||(JSON.stringify(materials.manifest)===materialSnapshot&&hashBytes(materials.recipe)===recipeSnapshot),"INPUT_MATERIAL_RECEIPT_MUTATED");requireInput(JSON.stringify(d)===snapshot,"INPUT_RECEIPT_MUTATED");requireInput(Date.now()<d.expiresAt,"INPUT_EVIDENCE_STALE");for(const [id,h] of seen)requireInput(hashBytes(originalReader(id))===h&&h===id,"INPUT_BYTES_SUBSTITUTED");}};
  verified.add(result);return Object.freeze(result);
 }
 
 /** Intentionally no environment/CLI key resolver. Registering a production
  * authority requires a separately reviewed configuration change. */
-export function productionInputPolicy():InputPolicy {if(registration===null)throw Error("PRODUCTION_INPUT_TRUST_UNREGISTERED");throw Error("PRODUCTION_INPUT_TRUST_RESOLVER_REVIEW_REQUIRED");}
-export function verifyProductionInputs(envelope:Buffer,reader:BlobReader){return verifyInputs(envelope,reader,productionInputPolicy());}
+export function productionInputPolicy():InputPolicy {return loadProductionInputPolicy().policy;}
+export function verifyProductionInputs(envelope:Buffer,reader:BlobReader){const authority=loadProductionInputPolicy();const result=verifyInputs(envelope,reader,authority.policy);authority.policy.checkDocument(result.document);return result;}

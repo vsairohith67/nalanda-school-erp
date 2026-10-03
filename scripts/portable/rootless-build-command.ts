@@ -42,9 +42,9 @@ export function productionBuildCommand(work:string,identity:ProducerIdentity,epo
 
 /** Verified layouts are session-local inputs. Source policy denies registry,
  * HTTP and Git fallback if an alias is not understood by the pinned frontend. */
-export function bindProductionSources(command:ProducerCommand,work:string,images:Record<"runtime"|"builder"|"frontend",{reference:string;index:string}>):ProducerCommand {
+export function bindProductionSources(command:ProducerCommand,work:string,images:Record<"runtime"|"builder"|"frontend",{reference:string;index:string}> & {dependencies?:{reference:string;index:string}}):ProducerCommand {
  const args=[...command.args,"--source-policy-file",path.join(work,"source-policy.json")];
- for(const name of ["runtime","builder","frontend"] as const){const c=images[name];if(!/^[a-zA-Z0-9./:_-]+@sha256:[a-f0-9]{64}$/.test(c.reference)||! /^[a-f0-9]{64}$/.test(c.index))throw Error("PRODUCT_MATERIAL_PIN_INVALID");const normalized=(!c.reference.includes("/")||(!c.reference.split("/")[0].includes(".")&&!c.reference.split("/")[0].includes(":")))?(c.reference.includes("/")?"docker.io/":"docker.io/library/")+c.reference:c.reference;
+ for(const name of ["runtime","builder","frontend",...(images.dependencies?["dependencies"]:[])] as ("runtime"|"builder"|"frontend"|"dependencies")[]){const c=images[name]!;if(!/^[a-zA-Z0-9./:_-]+@sha256:[a-f0-9]{64}$/.test(c.reference)||! /^[a-f0-9]{64}$/.test(c.index))throw Error("PRODUCT_MATERIAL_PIN_INVALID");const normalized=(!c.reference.includes("/")||(!c.reference.split("/")[0].includes(".")&&!c.reference.split("/")[0].includes(":")))?(c.reference.includes("/")?"docker.io/":"docker.io/library/")+c.reference:c.reference;
   args.push("--oci-layout",`${name}=${path.join(work,"inputs",name)}`);
   for(const ref of new Set([c.reference,normalized]))args.push("--opt",`context:${ref}=oci-layout://${name}@sha256:${c.index}`);
  }

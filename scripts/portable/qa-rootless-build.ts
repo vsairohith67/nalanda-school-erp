@@ -2,7 +2,7 @@ import {spawn} from "node:child_process";
 import {existsSync,mkdirSync,readFileSync,writeFileSync,lstatSync,realpathSync} from "node:fs";
 import path from "node:path";
 import {producerProcess,startProductDaemon,type ProductProcessReceipt} from "./producer-process";
-import {verifiedBuildTools} from "./qa-build-tools";
+import {verifiedBuildTools} from "./qa-build-tool-core";
 import {validateProducerRoot,type ProducerIdentity,type ProducerProfile} from "./synthetic-build-lifecycle";
 import type {ProducerCommand} from "./qa-artifact-producer";
 

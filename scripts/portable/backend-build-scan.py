@@ -379,7 +379,7 @@ def inspect_runtime_base():
     return 1  # base-only or blocked/partial can never count as product qualification.
 
 
-def run():
+def run(acquire=False):
     """Normal caller: independent pre-build contract, never base-only approval.
 
     The production resolver is deliberately unregistered. No environment value
@@ -393,7 +393,7 @@ def run():
     check(os.getenv('GITHUB_RUN_ID', '').isdigit() and os.getenv('GITHUB_RUN_ATTEMPT', '').isdigit() and os.getenv('GITHUB_JOB') == 'backend-build-scan', 'RUN_IDENTITY_REQUIRED')
     check(subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip() == source and not subprocess.check_output(['git','status','--porcelain']), 'COMMITTED_CLEAN_SOURCE_REQUIRED')
     registration = Path(__file__).with_name('product-trust-registration.json')
-    check(not registration.is_symlink() and registration.stat().st_size <= 4096, 'PRODUCTION_TRUST_REGISTRATION_UNSAFE')
+    check(not registration.is_symlink() and registration.stat().st_size <= 16384, 'PRODUCTION_TRUST_REGISTRATION_UNSAFE')
     if json.loads(registration.read_bytes()) is None:
         # A fresh hosted checkout needs no tsx installation to report the actual
         # trust boundary. Registration/bootstrap is a later reviewed change,
@@ -410,8 +410,23 @@ def run():
         'PATH', 'LANG', 'SystemRoot', 'GITHUB_ACTIONS', 'RUNNER_ENVIRONMENT',
         'RUNNER_OS', 'GITHUB_REPOSITORY', 'PORTABLE_CI_EXCEPTION', 'EXPECTED_SHA',
         'TARGET_ARCHITECTURE', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT', 'GITHUB_JOB',
-        'RUNNER_TEMP', 'DOCKER_HOST', 'DOCKER_CONTEXT')}
-    child = subprocess.Popen(['node', '--import', 'tsx', str(Path(__file__).with_name('product-build-scan.ts'))],
+        'RUNNER_TEMP', 'DOCKER_HOST', 'DOCKER_CONTEXT', 'GITHUB_WORKFLOW_REF', 'GITHUB_WORKFLOW_SHA')}
+    check(subprocess.check_output(['git', 'show', source+':scripts/portable/product-trust-registration.json']).strip() == registration.read_bytes().strip(), 'PRODUCTION_REGISTRATION_CHANGED')
+    trust = json.loads(registration.read_bytes())
+    custody = Path(trust['custodyDirectory'])
+    check(custody.is_absolute() and custody.resolve() == custody and not custody.is_symlink() and custody.is_dir() and custody.stat().st_uid == os.getuid() and custody.stat().st_mode & 0o077 == 0, 'PRODUCTION_BOOTSTRAP_CUSTODY_UNSAFE')
+    bootstrap = trust['bootstrap']
+    binaries = [custody/'node', custody/'product-build-scan.mjs']
+    for binary, expected in zip(binaries, [bootstrap['nodeSha256'], bootstrap['bundleSha256']]):
+        check(re.fullmatch(r'[a-f0-9]{64}', expected) and binary.is_file() and not binary.is_symlink() and binary.resolve() == binary and binary.stat().st_nlink == 1 and binary.stat().st_uid == os.getuid() and binary.stat().st_mode & 0o077 == 0 and binary.stat().st_size <= PRIVATE_LIMIT and sha(binary.read_bytes()) == expected, 'PRODUCTION_BOOTSTRAP_SUBSTITUTED')
+    manifest_file = custody/'bootstrap-manifest.json'
+    check(manifest_file.is_file() and not manifest_file.is_symlink() and manifest_file.resolve() == manifest_file and manifest_file.stat().st_nlink == 1 and manifest_file.stat().st_size <= 262144 and sha(manifest_file.read_bytes()) == bootstrap['manifestSha256'], 'PRODUCTION_BOOTSTRAP_MANIFEST_SUBSTITUTED')
+    manifest = json.loads(manifest_file.read_bytes())
+    check(set(manifest) == {'contract', 'bundleSha256', 'inputs', 'activation'} and manifest['contract'] == 'NALANDA_BOOTSTRAP_REVIEW_V1' and manifest['bundleSha256'] == bootstrap['bundleSha256'] and manifest['activation'] is False and isinstance(manifest['inputs'], dict) and 1 <= len(manifest['inputs']) <= 1000, 'PRODUCTION_BOOTSTRAP_MANIFEST_INVALID')
+    for filename, expected in manifest['inputs'].items():
+        check(re.fullmatch(r'[A-Za-z0-9_.@+/-]+', filename) and not filename.startswith('/') and all(p not in ('', '.', '..') for p in filename.split('/')) and re.fullmatch(r'[a-f0-9]{64}', expected), 'PRODUCTION_BOOTSTRAP_SOURCE_PATH')
+        check(sha(subprocess.check_output(['git', 'show', source+':'+filename])) == expected, 'PRODUCTION_BOOTSTRAP_SOURCE_MISMATCH')
+    child = subprocess.Popen([str(binaries[0]), str(binaries[1])] + (['--acquire-materials'] if acquire else []),
                              env=effective, shell=False, start_new_session=True)
     def interrupted(signum, frame):
         raise KeyboardInterrupt
@@ -437,6 +452,8 @@ def main(argv=None):
     args = sys.argv[1:] if argv is None else argv
     if args == ['--base-only']:
         return inspect_runtime_base()
+    if args == ['--acquire-materials']:
+        return run(acquire=True)
     check(args == [], 'BUILD_SCAN_ARGUMENTS_INVALID')
     return run()
 
