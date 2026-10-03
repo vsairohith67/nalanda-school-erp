@@ -276,6 +276,67 @@
         "historicalJob": "job111040514608",
         "change": "canonical Markdown job link; destination and failure meaning unchanged; scanner unchanged"
       }
+    },
+    {
+      "id": "RECOVERY-MOBILE-R1-INTEGRATION-6A",
+      "base": "5c3943fa3576987042d330dee51c8433b6e88660",
+      "source": "55f5d342e094dd37135ea6ce67c949c2eb57991d",
+      "sourceParent": "5ddb1d6fd83b2a3c55fa7f735c0183580b5d11ab",
+      "sourceTree": "6a129af2822d896f31bfff1b63d1c04d5ff66d60",
+      "packet": "b8fe33ab944f460a6f98ae9ad924a00d947b9701",
+      "packetTree": "00ac5c76570986d96415e99600674fda350b77c0",
+      "method": "reviewed immutable blob delta; primary isolation retained; two directly missing rendered controls added",
+      "files": [
+        {
+          "path": "components/marks-importer.tsx",
+          "sourceParentBlob": "102d374916869bbe236afb1119796404e4336333",
+          "primaryOldBlob": "102d374916869bbe236afb1119796404e4336333",
+          "sourceBlob": "cf3afc2229f4680d466c9df8d542e31bc22ea75a",
+          "candidateBlob": "cf3afc2229f4680d466c9df8d542e31bc22ea75a"
+        },
+        {
+          "path": "components/onboarding-centre.tsx",
+          "sourceParentBlob": "564420c339444235e38349cfe5042cb8c0d62560",
+          "primaryOldBlob": "564420c339444235e38349cfe5042cb8c0d62560",
+          "sourceBlob": "b2379e1cb2b701c3c9ff1a216ab988bee7ae20a3",
+          "candidateBlob": "b2379e1cb2b701c3c9ff1a216ab988bee7ae20a3"
+        },
+        {
+          "path": "scripts/bulk-data-exchange-browser.ts",
+          "sourceParentBlob": "7aad27b10ae1cc17907d4e0425035299ddb67816",
+          "primaryOldBlob": "143e6832ab7cd0500fbbb8b9b3c1a44e04237495",
+          "sourceBlob": "428a46cd61157da47df6fddde07d2570404c69f0",
+          "candidateBlob": "428a46cd61157da47df6fddde07d2570404c69f0"
+        },
+        {
+          "path": "scripts/qa-mobile-import-a11y-1b.ts",
+          "sourceParentBlob": "e36372902b896d299ad53de9862d442a1257377b",
+          "primaryOldBlob": "0b31044c1b4bfb24ddc38dc05624983aff7111ae",
+          "sourceBlob": "fd84185bc2097763534e59835fb377b32c2c7e8c",
+          "candidateBlob": "c08ff34463b3640c3324be0c78c95e3389e96c37"
+        }
+      ],
+      "excludedDonorFiles": [
+        "config/recovery-integration-source-delta.json"
+      ],
+      "reconciled": [
+        "only four current registry hashes; all283 unrelated entries/history retained",
+        "existing QA runner inclusion retained; explicit bulk harness inclusion added to QA-support"
+      ],
+      "packetDoc": {
+        "path": "docs/evidence/mobile-import-a11y-1b/HANDOFF.md",
+        "sourceBlob": "8fed5bf36cc90d93b08dcf78b6559ab672385277"
+      },
+      "unchanged": [
+        "backend/certificate source and fixture controls",
+        "workflows/default gates/pins/schemas/OFF flags"
+      ],
+      "excluded": [
+        "all other donor work",
+        "K30/PR30",
+        "hosting/preview/banner",
+        "production authority registration/real scans/build/runtime"
+      ]
     }
   ]
 }

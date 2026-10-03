@@ -112,3 +112,78 @@ Smallest serial integration: review this immutable local source, apply only thes
 - Canvs: only `bulk-data-exchange-ux-1a-status` text patched. Exact new text and unchanged old-text prefix read back; x/y/width/height/angle/font size/font family preserved. Other cards omitted from the mutation.
 - Measured interval through record readback: 21:05:07 to 21:28:07 UTC = 23 minutes (02:35:07 to 02:58:07 IST on 3 October). Earlier setup before the first clock is not included. Review-slot unavailability was re-observed from 21:19:48 through this terminal period (at least 8 minutes 19 seconds, overlapping handoff/safeguard work); no extra reviewer or idle hardware wait.
 - No push, PR-state change, parent completion, primary integration or automatic follow-on. Source registration and independent review remain required before serial adoption.
+
+## R1: Review And Regression Closure (3 October 2026)
+
+**MOBILE_IMPORT_FIXES_REVIEWED_READY_FOR_BATCH - LOCAL / UNMERGED new increment.**
+The original report above remains historical and is not overwritten.
+
+### Verified lineage and ownership
+
+Git's registered/resolved root is the managed path above, not the older suggested Documents path. Initial index, unstaged and untracked manifests were empty. Verified `2aa461b7` -> `c1c179d1` -> `5ddb1d6`; the latter changes only this handoff (114 lines), tree `6a76cd1196f558f303e8c3290f102a4d70e69fc5`. Implementation tree and component/CSS/worker blobs match the original report.
+
+New immutable source/test/registration commit: `55f5d342e094dd37135ea6ce67c949c2eb57991d`, tree `6a129af2822d896f31bfff1b63d1c04d5ff66d60`, parent `5ddb1d6fd83b2a3c55fa7f735c0183580b5d11ab`. The subsequent packet-only commit appends this R1 section; obtain its SHA/tree using `git log -1 --format="%H %T"`, also recorded in the terminal tracker comment. No source changes after final review.
+
+Batch5 already consumed both original commits at `216661af1025dc5e45a92ae0f9fae57a456dbdd6`, tree `89058805cb15880d5896024644f29a529ed5c6cd`. Its committed SOURCE_MAP verifies byte-identical production components and separately adjusted harness/runner output/port plumbing; its terminal [ownership release](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5963324601) preceded this continuation. R1 never rewrites that donor or primary. The later [batch R1 plan](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5964396323) is a separate owner/scope, not permission here to publish or integrate.
+
+Exact R1 changed files: `components/marks-importer.tsx`, `components/onboarding-centre.tsx`, `config/recovery-integration-source-delta.json`, `scripts/bulk-data-exchange-browser.ts`, `scripts/qa-mobile-import-a11y-1b.ts`, `tsconfig.tools-qa-support.json`, and this handoff. StudentImportPanel has no R1 production change. Global CSS, shared dialog, row errors, both parsing workers, business contracts, schema, flags, Georgia Bold and other owners remain unchanged.
+
+### Frozen first independent assessment
+
+Reviewer `/root/mobile_r1_review` independently reviewed immutable `5ddb1d6` against `2aa461b7`, before production correction. It inspected source, before/after JSON and a screenshot, but executed no tests or builds and edited no files. Actual reviewer capacity was available; only author plus one reviewer worked on this task. The reviewer inherited this session's model; underlying model identity is not attested and no running-model switch is claimed.
+
+- P2, introduced: marks input line48 always described feedbackId, while confirming removed its target at line55. Required: omit the inactive reference or retain a unique target. Blocks source acceptance until fixed.
+- P2, introduced presentation: onboarding line73 opened a fresh dialog without clearing prior refusal; line74 then associated that stale refusal with empty controls after Escape/Go back and reopening. Required: clear operation error on opening. Existing page-level persistence is retained; blocks source acceptance until fixed.
+- P3, pre-existing: onboarding line65 uses a literal progress heading ID; two widgets duplicate it. Literal critical-title at line74 is unused. Prevents the requested multiple-widget ID-validity claim, not an original-fix regression.
+- No parser/permission/payload drift was found. Prior 38 rendered results are valid for their narrower assertions but did not cover modal IDREF validity, refusal reopening or multiple widgets. Original dialog refusal was short English, not long Unicode. Zoom/native gaps remain real.
+
+Corrections: marks omits the inactive input IDREF only while confirming; onboarding clears error when starting each critical interaction, derives progress heading ID from useId, and removes the unused literal heading ID. No shared primitive or business rule changed. The existing harness gained a task-only second-widget control; both instances are real components. Fresh run/output parameters avoid the denied historical roots and align with the batch's already-reviewed isolation adjustment.
+
+### Closure checklist and proof
+
+| Item / exact evidence | Status | Next operation / completion proof |
+| --- | --- | --- |
+| Original lineage, HANDOFF, baseline/final JSON | PASS, readback | Original 32 PASS/3 FAIL/2 NOT_EXECUTED and final 38 PASS/2 NOT_EXECUTED retained; no aggregate unique count |
+| First review of 5ddb1d6 | CHANGES REQUIRED, frozen above | All three findings reproduced before production edits |
+| R1 red / green assertions | PASS after fixes | Private r1-red: 4 PASS/6 FAIL; r1-green: 10 PASS/0 FAIL; same findings/assertions, no relaxed deadline or business expectation |
+| Final exact source browser evidence | PASS | r1-combined: 47 PASS/0 FAIL/2 NOT_EXECUTED; all ten recorded source/CSS/worker/harness SHA256 subjects read back against final source |
+| Independent final delta review | PASS, source/evidence only | Same reviewer examined immutable55f5d34 and all ten subject hashes; no remaining material finding; all three findings resolved |
+| Focused contracts | PASS, fresh | 4 files/50 tests; bulk-data-exchange-ux-1a, onboarding-workbooks, student-import, import-action-state; Vitest maxWorkers=1, 3.11s |
+| TypeScript | PASS, fresh | Components and QA-support partitions, --noEmit --incremental false; exact harness/runner inclusion, no old cache writes |
+| Registration | PASS, fresh | recovery-source-evidence: 282 paths/4 source heads/4 backup contracts |
+| Publication / Git | PASS, fresh | Onboarding and real-user scans: 479 paths; git safety and diff --check; exact staged manifest |
+
+Registration failure was genuine new source/path drift, first at marks-importer, not an incompatible server contract. The established `node scripts/recovery-source-evidence.mjs --write` generator was used. Only five owned records changed: the three import components and two harness scripts. All 277 unrelated entries, prior base/history/source hashes, original registry date and reconciliation policy were preserved. New source remains labelled RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW; the generator does not fabricate approval. Local registration is not remote publication or combined-candidate clearance. Existing no-upstream/origin-main-wide helper restrictions are not fixed by a push.
+
+### Browser acceptance and evidence boundaries
+
+Browser plugin/skill remains absent under the installed frontend-testing instructions; permitted installed Playwright Chromium drives ONLY the isolated harness at `127.0.0.1:47835`. No supported new zoom or native chooser-cancel API was available; ineffective shortcuts were removed from the successor runner and were not repeated. The historical 38 count is unchanged. Successor 47 = prior 38 minus the one obsolete capability-probe PASS plus ten targeted scenarios; NOT_EXECUTED cells are not passes.
+
+| Acceptance | R1 result |
+| --- | --- |
+| Responsive reflow, 1366/390/320, both themes | PASS, fresh combined real-component run |
+| Reduced-motion media/computed style, visible progress | PASS, fresh; original CSS unchanged |
+| Keyboard, focus, cancellation/reopen | PASS, fresh; Escape and keyboard Go back return to invoker |
+| Multiple widgets / IDs / current descriptions | PASS, fresh; two each Student, legacy marks, onboarding; all IDREFs resolve |
+| Long Unicode modal refusal at320/390, light/dark | PASS, fresh; wraps inside original scrolling dialog, cancel focus reachable; prior error absent on reopen |
+| File replacement, clear/reselect, modes/bundles, obsolete preview | PASS, fresh; new-target preview only; pending/context tests retained; controlled contacts still blocking, legacy omissions warnings |
+| Current-target marks confirmation and onboarding refusal | PASS, synthetic only; exact current assessment/model metadata verified, marks confirm refused403; onboarding409 produces no execute/fallback request |
+| Genuine 200%/400% browser zoom / text-only enlargement | NOT_EXECUTED; requires permitted browser-level zoom/text setting plus measured layout |
+| Native file-picker cancellation | NOT_EXECUTED; programmatic empty selection is separate PASS |
+| Authenticated ERP; WebView/Safari/Android/iOS/physical device | NOT_EXECUTED; no route or device connected |
+
+Page identity/content/overlay/font, original CSS, console and interaction checks passed. One newly expected403 is counted exactly against the actual refused marks response; deliberate409 responses retained, no error suppression. Synthetic-only fixture bodies remain local; reports retain only request keys/action names/current-target booleans, no credentials or raw rows. No fonts distributed; prior observed Segoe UI fallback remains the geometry basis. Initial runner syntax/setup error is not product-red evidence; corrected before the six reproducible failed assertions.
+
+Private evidence is under `C:/Users/rohit/AppData/Local/Temp/`: `nalanda-mobile-a11y-r1-red-EPUJ9U`, `nalanda-mobile-a11y-r1-green-SojBGW`, `nalanda-mobile-a11y-r1-combined-ut6R40`. Each has results.json; combined includes source hashes and representative `r1-long-refusal-320-dark.png` and `r1-long-refusal-390-light.png`. No private capture is committed.
+
+### Cleanup and serial adoption
+
+LISTENERS_STOPPED: both new owned sessions/PIDs55624 and50304 stopped; final TCP readback found no47831/47834/47835 listener. Browser contexts restored/closed. RESIDUE_RETAINED_POLICY_DENIED: prior tmp/mobile-import-a11y-1b, tmp/bulk-exchange-browser, component cache and dependency junction are ignored and untouched. No deletion retry by any mechanism. New invented-only tmp/mobile-import-a11y-r1-red and tmp/mobile-import-a11y-r1-green are ignored and retained with private evidence. No unused synthetic database was created; no operational data read or fingerprint.
+
+Smallest new increment is commit55f5d34 plus this packet-only follow-up, NOT c1c179d/5ddb1d6 again. On a primary already containing216661af, retain its existing port/output plumbing and QA registration, apply only new R1 production/test deltas, then rederive the five touched combined registry hashes while preserving backend/certificate/other entries. Never copy this donor's older whole registry over primary. Batch owner must validate actual combined source; this task has not merged, pushed, run CI or cleared release.
+
+Final independent verdict: source increment ready for batch review. The reviewer independently matched all ten result hashes to commit55f5d34, checked the private red/final JSON and320-dark screenshot, exact refused current-target confirmation and no fallback mutation, and verified all277 unrelated registration records/provenance unchanged. This was read-only source/evidence review; no independent execution or model attestation. The original first assessment remains frozen above.
+
+Measured interval from first retained R1 clock01:55:11 to final-review observation02:13:21 UTC:18m10s, excluding earlier initial reads and subsequent tracker readback. Final review dispatch was bracketed by02:08:52 and verdict observed02:13:21 (4m29s including overlapping packet work, not reviewer CPU time). No idle-capacity loop or minimum-duration target; account usage unmeasured. Terminal tracker synchronization follows the packet commit and is verified by readback, without another source change.
+
+ONE next action: the existing batch integrator consumes the reviewed immutable R1 increment through its authorized serial process, preserving all separate zoom/native/authenticated/release gates.

@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": { "plugins": [], "incremental": true, "tsBuildInfoFile": "./tsconfig.tools-qa-support.tsbuildinfo" },
   "include": [
+    "scripts/bulk-data-exchange-browser.ts",
     "scripts/qa-support*.ts",
     "scripts/qa-shared-document-fonts.ts",
     "scripts/qa-mobile-import-a11y-1b.ts",

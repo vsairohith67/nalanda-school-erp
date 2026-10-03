@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { chromium, type Page } from "playwright";
 import { generateOnboardingTemplate } from "../lib/onboarding-workbooks";
@@ -12,6 +13,7 @@ if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error("Inv
 const origin = `http://127.0.0.1:${port}`;
 const run = process.env.IMPORT_BROWSER_RUN ?? "mobile-import-a11y-1b";
 if (!/^[a-z0-9-]+$/.test(run)) throw new Error("Invalid harness run label");
+const r1Only = process.argv.includes("--r1-only");
 const label = process.argv.find(a => a.startsWith("--label="))?.slice(8) ?? "candidate";
 if (!/^[a-z0-9-]+$/.test(label)) throw new Error("Unsafe evidence label");
 const out = mkdtempSync(path.join(tmpdir(), `nalanda-mobile-a11y-${label}-`));
@@ -19,12 +21,15 @@ const studentFile = { name: "invented.csv", mimeType: "text/csv", buffer: readFi
 const marksFile = { name: "invented-marks.csv", mimeType: "text/csv", buffer: readFileSync(`tmp/${run}/marks.csv`) };
 const workbook = { name: "invented-empty-template.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: Buffer.from(generateOnboardingTemplate({ bundle: "STUDENT_GUARDIAN" })) };
 const results: { scenario: string; status: string; detail?: unknown }[] = [];
+const sourceHashes = Object.fromEntries(["components/student-import-panel.tsx", "components/marks-importer.tsx", "components/onboarding-centre.tsx", "components/import-review-dialog.tsx", "components/import-row-errors.tsx", "app/globals.css", "lib/student-source.worker.ts", "lib/onboarding-upload.worker.ts", "scripts/bulk-data-exchange-browser.ts", "scripts/qa-mobile-import-a11y-1b.ts"].map(file => [file, createHash("sha256").update(readFileSync(file, "utf8").replaceAll("\r\n", "\n")).digest("hex")]));
 const consoleEvents: { type: string; text: string }[] = [];
-const requests: { path: string; method: string; action?: string; keys?: string[]; sentinel?: boolean }[] = [];
+const requests: { path: string; method: string; action?: string; keys?: string[]; sentinel?: boolean; currentTarget?: boolean }[] = [];
+let expectedForbidden = 0;
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 1366, height: 768 }, serviceWorkers: "block" });
 const allowed = new Set(["/", "/app.js", "/style.css", "/worker.js", "/onboarding-worker.js", "/favicon.ico", "/api/import/students", "/api/marks/import", "/api/onboarding/batches", "/api/onboarding/batches/SYNTHETIC-A11Y/approve"]);
-let holdStudent = false, holdMarks = false, refuseApproval = false;
+let holdStudent = false, holdMarks = false, holdApproval = false, refuseApproval = false;
+let refusal = "SYNTHETIC refusal: approval unavailable. No data imported.";
 let release: (() => void) | undefined, observed: (() => void) | undefined;
 await context.route("**/*", async route => {
   const req = route.request(), url = new URL(req.url());
@@ -33,12 +38,12 @@ await context.route("**/*", async route => {
     await route.abort("blockedbyclient"); return;
   }
   const body = req.method() === "POST" && req.headers()["content-type"]?.includes("application/json") ? req.postDataJSON() : null;
-  requests.push({ path: url.pathname, method: req.method(), ...(body ? { action: body.action, keys: Object.keys(body), sentinel: JSON.stringify(body).includes("FORBIDDEN_SYNTHETIC_SENTINEL_1A") } : {}) });
-  if ((holdStudent && url.pathname === "/api/import/students" || holdMarks && url.pathname === "/api/marks/import") && req.method() === "POST") {
+  requests.push({ path: url.pathname, method: req.method(), ...(body ? { action: body.action, keys: Object.keys(body), sentinel: JSON.stringify(body).includes("FORBIDDEN_SYNTHETIC_SENTINEL_1A"), currentTarget: body.assessmentId === "synthetic-assessment" && body.academicYear === "2026-27" && body.model === "LEGACY_ASSESSMENT" } : {}) });
+  if ((holdStudent && url.pathname === "/api/import/students" || holdMarks && url.pathname === "/api/marks/import" || holdApproval && url.pathname === "/api/onboarding/batches/SYNTHETIC-A11Y/approve") && req.method() === "POST") {
     observed?.(); await new Promise<void>(resolve => { release = resolve; });
   }
   if (refuseApproval && url.pathname === "/api/onboarding/batches/SYNTHETIC-A11Y/approve") {
-    await route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: "SYNTHETIC refusal: approval unavailable. No data imported." }) }); return;
+    await route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: refusal }) }); return;
   }
   try { await route.continue(); } catch (error) { if (!String(error).includes("closed")) throw error; }
 });
@@ -53,7 +58,7 @@ async function select(kind: string) {
   await page.goto(origin);
   await page.getByLabel("Harness component").selectOption(kind);
   const heading = kind === "student" ? "Student Master Import" : kind === "marks" ? "Legacy assessment CSV import" : "Governed workflow";
-  if (kind !== "errors") await page.getByRole("heading", { name: heading, exact: false }).waitFor();
+  if (kind !== "errors") await page.getByRole("heading", { name: heading, exact: false }).first().waitFor();
 }
 async function geometry() {
   return page.evaluate(() => {
@@ -69,6 +74,16 @@ async function associated(control: ReturnType<Page["getByLabel"]>, expected: str
   const described = await control.evaluate(e => (e.getAttribute("aria-describedby") ?? "").split(/\s+/).filter(Boolean).map(id => document.getElementById(id)?.textContent ?? "").join(" "));
   assert.ok(described.includes(expected), "Relevant input does not describe its visible feedback");
 }
+async function idReferences() {
+  return page.evaluate(() => {
+    const ids = [...document.querySelectorAll("[id]")].map(e => e.id);
+    const duplicate = ids.filter((id, i) => ids.indexOf(id) !== i);
+    const missing = [...document.querySelectorAll("[aria-describedby],[aria-labelledby]")].flatMap(e =>
+      ["aria-describedby", "aria-labelledby"].flatMap(attr => (e.getAttribute(attr) ?? "").split(/\s+/).filter(Boolean).filter(id => !document.getElementById(id)).map(id => ({ tag: e.tagName, attr, id }))));
+    return { duplicate, missing };
+  });
+}
+async function validReferences() { assert.deepEqual(await idReferences(), { duplicate: [], missing: [] }); }
 async function prepareStudent() {
   await select("student");
   await page.getByLabel("Academic year").selectOption("2026-27");
@@ -108,6 +123,7 @@ async function modalKeyboard(triggerName: string) {
   return focus;
 }
 try {
+  if (!r1Only) {
   await scenario("identity-fonts-console", async () => {
     await select("student");
     assert.equal(await page.title(), "Bulk exchange synthetic QA");
@@ -137,13 +153,7 @@ try {
       });
     }
   }
-  await scenario("zoom-capability-probe", async () => {
-    await page.setViewportSize({ width: 1280, height: 768 });
-    const before = await geometry(); await page.keyboard.press("Control++"); const after = await geometry(); await page.keyboard.press("Control+0");
-    assert.deepEqual(after, before);
-    results.push({ scenario: "genuine-200-percent-and-400-percent-zoom", status: "NOT_EXECUTED", detail: "Playwright has no browser zoom API; shortcut leaves 1280 CSS px, DPR 1 and visual scale 1 unchanged. Viewport checks are reflow only." });
-    return { before, after };
-  });
+  results.push({ scenario: "genuine-200-percent-and-400-percent-zoom", status: "NOT_EXECUTED", detail: "Retained measured capability limitation; no supported browser zoom API or new mechanism. Previous ineffective shortcuts are not repeated. Viewport checks are reflow only." });
   await scenario("reduced-motion-original-css", async () => {
     await select("onboarding"); await page.emulateMedia({ reducedMotion: "no-preference" });
     const before = await page.locator(".onboarding-progress > span").evaluate(e => ({ query: matchMedia("(prefers-reduced-motion: reduce)").matches, duration: getComputedStyle(e).transitionDuration }));
@@ -344,15 +354,156 @@ try {
     }
     return observations;
   });
+  }
+  for (const kind of ["student", "marks", "onboarding"]) await scenario("r1-two-widgets-" + kind, async () => {
+    await select(kind); await page.getByRole("button", { name: "Toggle second widget" }).click();
+    assert.equal(await page.getByTestId(/^import-widget-/).count(), 2);
+    for (const widget of await page.getByTestId(/^import-widget-/).all()) {
+      if (kind === "marks") await widget.getByLabel("Exact context").selectOption("synthetic-assessment");
+      await widget.locator('input[type="file"]').setInputFiles({ name: "invented-invalid.txt", mimeType: "text/plain", buffer: Buffer.from("invalid synthetic input") });
+      await widget.getByText(kind === "student" ? "Source refused." : kind === "marks" ? "Choose a CSV" : "Workbook refused locally.", { exact: false }).waitFor();
+    }
+    await validReferences();
+    return { widgets: 2, references: await idReferences() };
+  });
+  await scenario("6a-two-onboarding-dialog-names-and-stable-headings", async () => {
+    await select("onboarding-review"); await page.getByRole("button", { name: "Toggle second widget" }).click();
+    const widgets = page.getByTestId(/^import-widget-/);
+    assert.equal(await widgets.count(), 2);
+    const headings = await widgets.getByRole("heading", { name: "Governed workflow", exact: true }).evaluateAll(es => es.map(e => e.id));
+    assert.equal(new Set(headings).size, 2);
+    for (const widget of await widgets.all()) {
+      assert.equal(await widget.getByRole("region", { name: "Governed workflow", exact: true }).count(), 1);
+      const trigger = widget.getByRole("button", { name: "Approve current plan", exact: true });
+      await trigger.click();
+      const dialog = widget.getByRole("dialog", { name: "Review onboarding action", exact: true });
+      await dialog.waitFor();
+      assert.equal(await dialog.getByRole("heading", { name: "Approve Dry-run Plan", exact: true }).count(), 1);
+      assert.equal(await dialog.getByRole("textbox", { name: "Reason", exact: true }).count(), 1);
+      assert.equal(await dialog.getByLabel("Re-authentication password", { exact: true }).count(), 1);
+      await validReferences(); await page.keyboard.press("Escape"); await dialog.waitFor({ state: "detached" });
+      assert.ok(await trigger.evaluate(e => e === document.activeElement));
+    }
+    await page.getByRole("button", { name: "Toggle light/dark" }).click();
+    assert.deepEqual(await widgets.getByRole("heading", { name: "Governed workflow", exact: true }).evaluateAll(es => es.map(e => e.id)), headings);
+    return { namedDialogs: 2, distinctStableHeadingIds: true, focusReturned: true };
+  });
+  await scenario("6a-onboarding-pending-and-new-refusal-after-reopen", async () => {
+    await select("onboarding-review");
+    const trigger = page.getByRole("button", { name: "Approve current plan", exact: true });
+    await trigger.click();
+    const dialog = page.getByRole("dialog", { name: "Review onboarding action", exact: true });
+    const reason = dialog.getByRole("textbox", { name: "Reason", exact: true });
+    const password = dialog.getByLabel("Re-authentication password", { exact: true });
+    await reason.fill("Invented pending review reason"); await password.fill("SYNTHETIC-ONLY");
+    holdApproval = true; refuseApproval = true; refusal = "SYNTHETIC first operation refusal";
+    const pending = new Promise<void>(resolve => { observed = resolve; });
+    try {
+      await dialog.getByRole("button", { name: "Approve", exact: true }).click(); await pending;
+      await dialog.getByText("Request in progress.", { exact: false }).waitFor();
+      await page.keyboard.press("Escape"); assert.ok(await dialog.isVisible());
+      for (const cancel of await dialog.getByRole("button", { name: "Go back", exact: true }).all()) assert.ok(await cancel.isDisabled());
+      assert.equal(await reason.inputValue(), "Invented pending review reason");
+    } finally { holdApproval = false; release?.(); }
+    await dialog.getByRole("alert").getByText(refusal, { exact: true }).waitFor();
+    await page.keyboard.press("Escape"); await dialog.waitFor({ state: "detached" });
+    await trigger.click(); await dialog.waitFor();
+    assert.equal(await dialog.getByRole("alert").count(), 0);
+    assert.ok(await dialog.getByRole("button", { name: "Approve", exact: true }).isDisabled());
+    await reason.fill("Invented new operation reason"); await password.fill("SYNTHETIC-ONLY");
+    refusal = "SYNTHETIC new operation refusal";
+    await dialog.getByRole("button", { name: "Approve", exact: true }).click();
+    await dialog.getByRole("alert").getByText(refusal, { exact: true }).waitFor();
+    await associated(reason, refusal); await validReferences(); await page.keyboard.press("Escape");
+    return { pendingPreserved: true, obsoleteRefusalCleared: true, newRefusalVisible: true };
+  });
+  await scenario("r1-marks-dialog-idrefs-and-current-target", async () => {
+    await prepareMarks(); await validReferences();
+    await page.getByRole("button", { name: "Review and confirm draft import" }).click();
+    await validReferences();
+    const response = page.waitForResponse(r => r.url() === origin + "/api/marks/import" && r.request().method() === "POST");
+    await page.getByRole("button", { name: "Confirm draft import", exact: true }).click();
+    assert.equal((await response).status(), 403); expectedForbidden++;
+    await page.getByText("Synthetic harness refuses execution.", { exact: true }).waitFor();
+    assert.equal(requests.filter(r => r.action === "confirm").length, 1);
+    assert.ok(requests.find(r => r.action === "confirm")?.currentTarget);
+    assert.equal(await page.getByRole("dialog").count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Review and confirm draft import" }).count(), 0);
+    await validReferences();
+    return { confirmationRefused: true, staleEligibilityRemoved: true };
+  });
+  await scenario("r1-student-invalid-to-valid", async () => {
+    await select("student");
+    await page.getByLabel("Source CSV / XLSX").setInputFiles(studentFile);
+    await page.getByText("Review the mapping before validation.", { exact: false }).waitFor();
+    await page.getByRole("button", { name: "Validate approved fields locally" }).click();
+    assert.equal(await page.getByLabel("Academic year").getAttribute("aria-invalid"), "true");
+    await associated(page.getByLabel("Academic year"), "Select the academic year explicitly.");
+    await page.getByLabel("Academic year").selectOption("2026-27");
+    assert.notEqual(await page.getByLabel("Academic year").getAttribute("aria-invalid"), "true");
+    assert.equal(await page.getByText("Select the academic year explicitly.", { exact: true }).count(), 0);
+    await page.getByText("Legacy required:", { exact: false }).waitFor();
+    await validReferences();
+  });
+  await scenario("r1-file-replacement-removes-prior-preview", async () => {
+    await prepareStudent(); await page.getByRole("button", { name: "Server validation / preview" }).click();
+    await page.getByText("Server preview complete;", { exact: false }).waitFor();
+    await page.getByLabel("Source CSV / XLSX").setInputFiles({ ...studentFile, name: "invented-replacement.csv", buffer: Buffer.from(studentFile.buffer.toString().replace("00001", "00002")) });
+    await page.getByText("Review the mapping before validation.", { exact: false }).waitFor();
+    assert.equal(await page.getByRole("button", { name: "Confirm Student import" }).count(), 0);
+    await page.getByRole("button", { name: "Validate approved fields locally" }).click();
+    await page.getByRole("button", { name: "Server validation / preview" }).click();
+    await page.getByText("Server preview complete;", { exact: false }).waitFor();
+    await page.getByText("Optional preview table", { exact: true }).click();
+    assert.ok((await page.locator("table tbody").innerText()).includes("00002"));
+    assert.equal((await page.locator("table tbody").innerText()).includes("00001"), false);
+    assert.ok(await page.getByRole("button", { name: "Confirm Student import" }).isDisabled());
+    return { priorPreviewRemoved: true, newTargetOnly: true, importDisabled: true };
+  });
+  for (const width of [320, 390]) for (const theme of ["light", "dark"]) await scenario(`r1-long-refusal-${width}-${theme}`, async () => {
+    await page.setViewportSize({ width, height: 844 }); await select("onboarding-review");
+    if (theme === "dark") await page.getByRole("button", { name: "Toggle light/dark" }).click();
+    const trigger = page.getByRole("button", { name: "Approve current plan" });
+    await trigger.click();
+    await page.getByRole("textbox", { name: "Reason", exact: true }).fill("Invented review reason");
+    await page.getByLabel("Re-authentication password").fill("SYNTHETIC-ONLY");
+    refusal = "SYNTHETIC refusal: " + "విద్యార్థి हिन्दी العربية ".repeat(35); refuseApproval = true;
+    const start = requests.length;
+    await page.getByRole("button", { name: "Approve", exact: true }).click();
+    const dialog = page.getByRole("dialog"), alert = dialog.getByRole("alert");
+    await alert.waitFor();
+    await associated(page.getByRole("textbox", { name: "Reason", exact: true }), refusal);
+    await associated(page.getByLabel("Re-authentication password"), refusal);
+    await validReferences();
+    assert.deepEqual((await geometry()).offenders, []);
+    assert.deepEqual(requests.slice(start).filter(r => r.method === "POST").map(r => r.path), ["/api/onboarding/batches/SYNTHETIC-A11Y/approve"]);
+    await alert.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: path.join(out, `r1-long-refusal-${width}-${theme}.png`) });
+    const dimensions = await geometry();
+    const cancel = dialog.getByRole("button", { name: "Go back", exact: true }).last();
+    await cancel.focus();
+    assert.ok(await cancel.evaluate(e => e === document.activeElement && parseFloat(getComputedStyle(e).outlineWidth) > 0));
+    await page.keyboard.press(theme === "light" ? "Escape" : "Enter");
+    await dialog.waitFor({ state: "detached" });
+    assert.ok(await trigger.evaluate(e => e === document.activeElement));
+    await page.keyboard.press("Enter"); await dialog.waitFor();
+    assert.equal(await dialog.getByRole("alert").count(), 0, "Previous refusal describes fresh dialog controls");
+    assert.equal(await page.getByRole("textbox", { name: "Reason", exact: true }).inputValue(), "");
+    assert.equal(await page.getByLabel("Re-authentication password").inputValue(), "");
+    assert.equal(await page.getByLabel("Re-authentication password").getAttribute("aria-describedby"), null);
+    await validReferences(); await page.keyboard.press("Escape");
+    return { dimensions, refusalInside: true, onlyApprovalRefusal: true, staleErrorCleared: true };
+  });
   await scenario("final-console-no-unexplained-errors", async () => {
-    assert.deepEqual(consoleEvents.filter(e => e.type === "pageerror" || !/409 \(Conflict\)|net::ERR_ABORTED/.test(e.text)), []);
+    assert.equal(consoleEvents.filter(e => /403 \(Forbidden\)/.test(e.text)).length, expectedForbidden);
+    assert.deepEqual(consoleEvents.filter(e => e.type === "pageerror" || !/409 \(Conflict\)|403 \(Forbidden\)|net::ERR_ABORTED/.test(e.text)), []);
     return { expectedSyntheticRefusals: consoleEvents.filter(e => /409/.test(e.text)).length, pageErrors: 0 };
   });
 } finally {
   release?.();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await context.close(); await browser.close();
-  writeFileSync(path.join(out, "results.json"), JSON.stringify({ label, at: new Date().toISOString(), results, requests, consoleEvents, cleanup: "Owned browser/context closed; harness listener owned separately." }, null, 2));
+  writeFileSync(path.join(out, "results.json"), JSON.stringify({ label, at: new Date().toISOString(), sourceHashes, results, requests, consoleEvents, cleanup: "Owned browser/context closed; harness listener owned separately." }, null, 2));
 }
 console.log(JSON.stringify({ label, out, pass: results.filter(r => r.status === "PASS").length, fail: results.filter(r => r.status === "FAIL"), notExecuted: results.filter(r => r.status === "NOT_EXECUTED") }));
 process.exitCode = results.some(r => r.status === "FAIL") ? 1 : 0;
