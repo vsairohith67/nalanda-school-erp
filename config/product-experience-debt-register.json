@@ -16162,6 +16162,50 @@
       ],
       "notes": "Added to source inventory on 2026-09-12. Integrated Browser acceptance NOT_EXECUTED: EXTERNAL_RUNTIME_BLOCKED. Historical source review is retained and does not establish current visual or accessibility acceptance.",
       "roleCoverageStatus": "UNVERIFIED_NON_EXHAUSTIVE"
+    },
+    {
+      "route": "/intelligent-reports",
+      "sourceFile": "app/intelligent-reports/page.tsx",
+      "roles": [
+        "SUPER_ADMIN",
+        "DIRECTOR",
+        "PRINCIPAL",
+        "ACCOUNTANT"
+      ],
+      "roleEvidence": "P1_SERVER_GUARD_REVIEWED_DOMAIN_AND_USER_PERMISSIONS_REQUIRED",
+      "owningBundle": "INTELLIGENT-REPORTS-1A",
+      "priority": "P1",
+      "dimensions": {
+        "informationHierarchy": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "mobileResponsiveness": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "lightDarkConsistency": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "contrast": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "typography": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "spacing": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "targetSizes": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "keyboardFocus": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "reducedMotion": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "loading": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "empty": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "error": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "permissionDenied": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "blockedFeature": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "offlineDegraded": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "destructiveConfirmation": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "longContent": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "horizontalOverflow": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW",
+        "hydrationConsole": "REQUIRES_TARGETED_RUNTIME_OR_DESIGN_REVIEW"
+      },
+      "sourceStates": {
+        "empty": "EXPLICIT_IN_SCREEN",
+        "loading": "GLOBAL_SAFE_LOADING",
+        "error": "GLOBAL_SAFE_RECOVERY"
+      },
+      "sourcePermissions": [
+        "USE_INTELLIGENT_REPORTS"
+      ],
+      "notes": "P1 source and in-process service review only. All nineteen runtime/design dimensions remain unverified. Accountant attendance and academic export remain unavailable under existing global policy and are an unresolved original capability requirement. EXTERNAL_RUNTIME_BLOCKED and EPHEMERAL_EXACT_HEAD_CI_ONLY remain; no current Browser certification.",
+      "roleCoverageStatus": "UNVERIFIED_NON_EXHAUSTIVE"
     }
   ],
   "criticalDefectsFixed": [],
