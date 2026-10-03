@@ -1624,7 +1624,7 @@ CERTIFICATE_CONFIRMATION_FIX_PARTIAL. Integrated and independently source-review
 
 All9normal exact-head workflows terminal, attempt1:7SUCCESS/2FAILURE;42jobs=32SUCCESS/3FAILURE/7SKIPPED/0pending. Master37068007914/job111040514086:309files/3018testsPASS, including both certificate regression files and isolated certificate service. Onboarding37068007905/job111040513849:307passed/1failed/1skippedfiles and3014passed/1failed/3skippedtests. Sole failed case is unchanged portable-finance-browser-service.test.ts:53, Test timed out in30000ms; certificate10+6+service1passed there. Later chained typecheck/build in that job not executed. Cause unestablished; no finance investigation, retry, timeout/assertion change or source fix was performed. Therefore the entire candidate cycle is not represented as passing.
 
-Portable37068008022 automatic base-only jobs111040514734/111040514608 retain policy failures:7HIGHrows/4uniqueCVEs EACH architecture, BUILD_SCAN_ONLY_NOT_ADMITTED; exact result/manifest metadata bytes and hashes verified. ProductNOT_BUILT, runtimeNOT_EXECUTED, admitted=false. Six held runtime jobs plus independent native artifact producer remainSKIPPED. Other successful workflows:biometric37068008053,communication37068008072,cross-platform37068008070,PostgreSQL37068008025,real-user37068008085,student-items37068008030. Complete run/job identities and source mapping are in the task handoff/private ci-final.json. No manual dispatch/rescan/retry, security waiver, activation, installation or release.
+Portable37068008022 automatic base-only jobs111040514734/[arm64 job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37068008022/job/111040514608) retain policy failures:7HIGHrows/4uniqueCVEs EACH architecture, BUILD_SCAN_ONLY_NOT_ADMITTED; exact result/manifest metadata bytes and hashes verified. ProductNOT_BUILT, runtimeNOT_EXECUTED, admitted=false. Six held runtime jobs plus independent native artifact producer remainSKIPPED. Other successful workflows:biometric37068008053,communication37068008072,cross-platform37068008070,PostgreSQL37068008025,real-user37068008085,student-items37068008030. Complete run/job identities and source mapping are in the task handoff/private ci-final.json. No manual dispatch/rescan/retry, security waiver, activation, installation or release.
 
 Work including review queue/push21:06:01-21:38:08UTC=32m07s. CI observation21:38:08-22:16:04UTC=37m56s including observation latency. External handoff interval and readback receipts follow in the task HANDOFF.md. Account usage unmeasured. PR28OPEN/DRAFT; main, other owners and all previous holds unchanged. ONE next action: recovery owner dispositions the current exact-head onboarding finance timeout before treating the candidate regression cycle as validated. No continuation started here. Final post-CI evidence remains unstaged.
 
@@ -1640,3 +1640,80 @@ One reviewed integration defect corrected: automatic base job now explicitly sel
 Local backend178+Python38PASS; certificate/import170PASS; isolated rendered component38PASS with genuine browser zoom/native-picker cancellation NOT_EXECUTED. Full combined regression: Test Files  310 passed | 1 skipped (311); Tests  3098 passed | 3 skipped (3101); Duration  1619.90s (transform 14.10s, setup 0ms, import 92.23s, tests 1428.62s, environment 44ms). Affected four TypeScript partitions, provenance287/4/4, publication and Git safeguards PASS. Overlapping suites not summed. Real isolated services use fresh invented SQLite fixtures; no operational DB/vault access/hash. Independent read-only source review complete with no remaining material finding; reviewer executed no tests, model identity not attested. Source-map, exact manifest, timings and boundaries:docs/evidence/recovery-batch-integration-5a/HANDOFF.md and SOURCE_MAP.json. Original Prompt3 red/green evidence reused, not relabelled this batch.
 
 One consolidated draft-branch push/normal exact-candidate cycle pending final staged/ownership/remote checks. Expected9workflows/42jobs derived from current definitions;6runtime+1native-producer holds preserved. Automatic base-only policy failures remain failures. Production trust, actual builder/runtime/Node proof, host/controller/native/device acceptance and EXTERNAL_RUNTIME_BLOCKED remain separate. Existing MORNING_DECISIONS retained; no fabricated authority/date or project-completion claim. Plan5961546600. Final CI observations will remain unstaged; no cosmetic second push.
+
+
+## RECOVERY-BATCH-INTEGRATION-5A — terminal single cycle, 3 October 2026 IST
+
+**BATCH_INTEGRATION_PARTIAL.** One consolidated push216661af1025dc5e45a92ae0f9fae57a456dbdd6,
+tree89058805cb15880d5896024644f29a529ed5c6cd, parent7566699. Backend draft37dfe7ca/
+c67c146a and mobile c1c179d1 plus attributed terminal reports integrated; certificate
+ef006773/7566699 already present and retained; K30/PR30 excluded.32paths,3131+/82-.
+[Full mapping, validation layers and all run/job states](recovery-batch-integration-5a/HANDOFF.md).
+
+Attempt1 normal cycle:9workflows2SUCCESS/7FAILURE;42jobs27SUCCESS/8FAILURE/7SKIPPED.
+Windows backend harness15failures in each of5sourcejobs; onboarding publication
+refused a bare historical job coordinate before regression; two automatic base
+scans each7HIGHrows/4CVEs remain policy failures. Linux portable/SQLite3098PASS/
+3qpdfSKIP each; PostgreSQL3068PASS/3qpdfSKIP; typecheck/build passed there.
+Both synthetic restore matrices8fresh+8repeat/source-isolated per provider verified.
+Local initial full3098PASS/3SKIP; certificate/import170, backend178/Python38,
+isolated rendered components38PASS. Counts overlap and are not summed.
+
+Smallest corrections remain reviewed LOCAL/UNSTAGED: canonical GitHub job link
+above preserves historical arm64 identity; native canonicalization of newly owned
+HARNESS_ONLY fixture root fixes reproduced Windows8.3 alias disagreement.
+Before1positiveFAIL/70filtered; after83PASS, affected typecheck/provenancePASS.
+No production guard/assertion/timeout/scanner allowlist changed; no secondpush/CI.
+Original ledger bytes remain committed/private. Hosted corrected validation pending.
+Independent read-only source review executed no tests; no model attestation.
+
+ProductNOT_BUILT; authenticated/runtime/deviceNOT_EXECUTED. Six runtime gates and
+optional native producer held, four native warnings/Node/trust/controller/host gaps
+remain. PR28OPEN/DRAFT; main,PR29/PR30, donor checkouts, schemas/OFFflags unchanged.
+Owned settled resources cleaned; historical/ambiguous/denied residue preserved.
+Work58m59.658s throughpush; normalCI24m04s plus terminal readback; handoff from23:50:17UTC.
+ONE next action: carry both reviewed corrections into the next separately authorized
+candidate and validate Windows backend/onboarding gates. No old-head retry or
+cosmetic push. Final observations remain unstaged; release clearance not granted.
+
+
+### Tracker readback and ownership release
+
+Terminal result [PR28comment5963324601](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5963324601) was read back exactly. Asana recovery comment1219121800194445 and Notion comment3edc9801-27a8-8195-97e2-001d1a271a60 were read back with matching text; parent incomplete status, notes, owner and dates unchanged. Canvs batch text received only two dated result lines; exact text/geometry/binding and all other302elements were verified unchanged (303elements before/after). No pending synchronization delta. K30/backend/W1/P1 cards untouched.
+
+Final independent evidence review confirmed all CI totals and the published/local distinction; reviewer performed no execution. PR28 OPEN/DRAFT at216661a read back at23:57:45UTC. Handoff/readback interval23:50:17–23:57:45UTC =7m28s; final evidence/Git closure follows, with no new source work. Primary ownership is released at this terminal closure (2026-10-02 23:58:38 UTC); no implementation/review job remains active. Both corrections and post-CI observations stay unstaged for the next integrator. Usage unmeasured; no background monitoring promised.
+
+
+## RECOVERY-BATCH-INTEGRATION-5A-R1 — reviewed correction continuation
+
+Starts2026-10-03T04:00:08Z at216661af1025dc5e45a92ae0f9fae57a456dbdd6,
+tree89058805cb15880d5896024644f29a529ed5c6cd, matching remote/PR28OPEN/DRAFT.
+Prior owner explicitly released; no subsequent primary writer found. Sole primary
+integrator reacquired ownership. Actual three dirty files preserved privately with
+exact bytes/hash/diff before edits: ledger432443bytes/1684lines, handoff33794/460,
+fixture14280/102. Full hashes and attribution are in the existing batch HANDOFF.
+
+Retain two prior reviewed corrections: native canonicalization only of newly owned
+HARNESS_ONLY fixture roots; canonical arm64 historical job link with destination
+and failure meaning unchanged. Added Python Path.resolve root/workspace equality
+assertion to the existing positive connected-caller case. No production/path/trust
+contract, scanner, timeout, dependency, workflow, registry, business or OFF-flag change.
+Original donor map preserved; R1 old/new test blobs appended in SOURCE_MAP.json.
+Certificate/backend/mobile already integrated; K30 and all donor deltas excluded.
+
+Normal backend/producer/publication205PASS/7files, Python38PASS; genuine Windows8.3
+owned temporary path with spaces83PASS/2files/no skips. Retained prior1FAIL/83PASS
+reproduction remains historical; missing original hosted child stderr is not invented.
+Affected tests-m-r typecheck and provenance287/4/4PASS. Existing publication negatives
+pass. Initial new source-map bare coordinate refusal retained; corrected job-prefix
+notation passes unchanged onboarding scanner497paths, as do access/communication.
+Independent read-only final source review: no material finding, no test execution or
+model attestation. Full isolated regression and fresh exact-candidate hosted cycle
+remain pending until subsequent receipts below. Prior27success/8failure/7skip cycle
+is preserved unchanged. Six runtime gates/optional native producer remain held.
+
+R1 plan: [comment5964396323](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5964396323).
+Prior result: [comment5963324601](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5963324601).
+No operational DB/vault access/hash, real image build or runtime/device admission.
+
+R1 local full regression completed:310files/3098testsPASS, one inherited qpdf file/3testsSKIPPED,0failures;1320.484seconds from04:13:40.488472UTC. Existing synthetic SQLite8fresh+8repeat restore receipts verified. Complete focused/current-source checks and independent source review passed; no protected registry update required. Final five-path manifest and exact source mapping are in the batch HANDOFF/SOURCE_MAP. Fresh exact-head Windows/onboarding/PG CI remains pending the substantive correction push; prior failed cycle remains failed. Final post-CI observations stay unstaged.

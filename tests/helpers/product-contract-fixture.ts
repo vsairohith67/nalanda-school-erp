@@ -1,5 +1,5 @@
 import {generateKeyPairSync,sign,createHash} from "node:crypto";
-import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,rmSync} from "node:fs";
+import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,rmSync,realpathSync} from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import {execFileSync} from "node:child_process";
@@ -10,7 +10,9 @@ import {sourceTree,type ProductHarness} from "../../scripts/portable/product-bui
 /** Generated private keys and fabricated evidence are HARNESS_ONLY. Nothing
  * from this module is imported by a production source or entrypoint. */
 export function fixture(options:{recipeTail?:string;badNodeLayer?:boolean;badToolArchive?:boolean}={}){
- const root=mkdtempSync(path.join(os.tmpdir(),"nalanda-HARNESS_ONLY-contract-")),workspace=path.join(root,"source");mkdirSync(workspace);
+ // Node's non-native realpath preserves Windows 8.3 aliases; Python resolves them.
+ // Canonicalize only this newly owned fixture root, preserving production checks.
+ const root=realpathSync.native(mkdtempSync(path.join(os.tmpdir(),"nalanda-HARNESS_ONLY-contract-"))),workspace=path.join(root,"source");mkdirSync(workspace);
  const blobs=new Map<string,Buffer>(),pair=generateKeyPairSync("ed25519"),now=Date.now();
  const put=(value:unknown)=>{const raw=Buffer.isBuffer(value)?value:Buffer.from(typeof value==="string"?value:JSON.stringify(value));const id=hashBytes(raw);blobs.set(id,raw);return id;};
  const get=(id:string)=>{const b=blobs.get(id);if(!b)throw Error("FIXTURE_BLOB_MISSING");return b;};

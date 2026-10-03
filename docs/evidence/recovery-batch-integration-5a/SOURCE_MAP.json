@@ -252,5 +252,30 @@
     "K30/PR30 in entirety",
     "all later or dirty donor work",
     "real production trust registration/build/runtime/device acceptance"
+  ],
+  "continuations": [
+    {
+      "id": "RECOVERY-BATCH-INTEGRATION-5A-R1",
+      "base": "216661af1025dc5e45a92ae0f9fae57a456dbdd6",
+      "method": "retain locally reproduced fixture correction; add direct Python-native identity assertion; no donor re-import",
+      "files": [
+        {
+          "path": "tests/helpers/product-contract-fixture.ts",
+          "oldBlob": "87df70e06b4391fb697c08832293ff5624396e05",
+          "candidateBlob": "0c04b603bf18a9f722ee4eeb79b6c9a4649a49e6"
+        },
+        {
+          "path": "tests/product-contract-caller.test.ts",
+          "oldBlob": "6002a6c36ede3e314147391dff3653c776e1ab00",
+          "candidateBlob": "c8a9bbbfe024922e463d596ad99c9cdb8f256acf"
+        }
+      ],
+      "evidenceFormatting": {
+        "path": "docs/evidence/RELEASE_RECOVERY_1C.md",
+        "historicalRun": "37068008022",
+        "historicalJob": "job111040514608",
+        "change": "canonical Markdown job link; destination and failure meaning unchanged; scanner unchanged"
+      }
+    }
   ]
 }
