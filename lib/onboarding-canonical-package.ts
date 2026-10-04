@@ -11,7 +11,7 @@ export function canonicalOnboardingPackage(parsed: OnboardingWorkbookRows, bundl
     workbook.Props = { CreatedDate: canonicalTime, ModifiedDate: canonicalTime };
     const add = (name: string, values: unknown[][]) => XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(values), name);
     add("Instructions", [["NALANDA PUBLIC SCHOOL"], ["Canonical approved-field upload. Original workbook objects and non-contract cells excluded locally."]]);
-    add("Template Metadata", [["Key", "Value"], ["Template Version", ONBOARDING_TEMPLATE_VERSION], ["Application Schema Version", ONBOARDING_SCHEMA_VERSION], ["Bundle Type", bundle]]);
+    add("Template Metadata", [["Key", "Value"], ["Template Version", ONBOARDING_TEMPLATE_VERSION], ["Application Schema Version", ONBOARDING_SCHEMA_VERSION], ["Bundle Type", bundle], ...["Preparation Package Hash", "Preparation Mapping Hash", "Preparation Held Rows"].filter(key => key in parsed.metadata).map(key => [key, parsed.metadata[key]])]);
     add("Academic Years", [["Academic Year"]]); add("Classes and Sections", [["Academic Year", "Class", "Section"]]);
     const project = (name: string, headers: string[], rows: Record<string, unknown>[]) => add(name, [headers, ...rows.map(row => headers.map(h => row[h] ?? ""))]);
     project("Students", STUDENT_HEADERS, parsed.students); project("Guardians", GUARDIAN_HEADERS, parsed.guardians); project("Student-Guardian Links", LINK_HEADERS, parsed.links); project("Enrollments", ENROLLMENT_HEADERS, parsed.enrollments);
