@@ -27,6 +27,9 @@ for (const file of ["src/offline-adapter.ts", "src/reference-refresh.ts", "src/r
 for (const file of ["src-tauri/build.rs", "src-tauri/src/lib.rs", "src-tauri/src/qa_profile.rs"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
 // FA1-FA4 exact reviewed source/test registration; every content check still applies.
 for (const file of ["src-tauri/src/qa_observation.rs", "src-tauri/src/qa_privacy.js", "src/App-lifecycle.test.tsx", "src/vault-unlock.test.ts", "src/vault-unlock.ts"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
+// NATIVE-DEVICE-COMPLETION-1B: exact reviewed native test sources only.
+// Existing binary, content, contact and size checks still apply to every file.
+for (const file of ["tests/native/android.ts", "tests/native/android.test.ts", "tests/native/execute.ts", "tests/native/component.mjs", "tests/native/NativeJourney.swift", "tests/native/NativeJourney.xcodeproj/project.pbxproj", "tests/native/NativeJourney.xcodeproj/xcshareddata/xcschemes/NativeJourney.xcscheme"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
 const secretPatterns: Array<[string, RegExp]> = [
   ["private-key", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
   ["github-token", /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b/],

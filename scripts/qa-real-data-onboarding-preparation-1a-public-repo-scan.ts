@@ -14,6 +14,9 @@ const required = [
 const prohibitedExtensions = new Set([".db", ".sqlite", ".sqlite3", ".bak", ".dump", ".xls", ".xlsm", ".zip", ".7z", ".rar", ".pem", ".key", ".pfx", ".p12"]);
 const textExtensions = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs", ".json", ".md", ".csv", ".yml", ".yaml", ".toml", ".txt"]);
 const allowedRoots = ["config/onboarding", "templates/onboarding", "docs", "lib", "scripts", "tests", ".github/workflows"];
+// Exact native test sources receive the complete text scans, including uncommon
+// XCTest project formats; this grants no directory or global extension exemption.
+const reviewedNativeFiles = new Set(["apps/nalanda-cross-platform/tests/native/android.ts", "apps/nalanda-cross-platform/tests/native/android.test.ts", "apps/nalanda-cross-platform/tests/native/execute.ts", "apps/nalanda-cross-platform/tests/native/component.mjs", "apps/nalanda-cross-platform/tests/native/NativeJourney.swift", "apps/nalanda-cross-platform/tests/native/NativeJourney.xcodeproj/project.pbxproj", "apps/nalanda-cross-platform/tests/native/NativeJourney.xcodeproj/xcshareddata/xcschemes/NativeJourney.xcscheme"]);
 const onboardingScopedPaths = [
   "config/onboarding", "templates/onboarding", "docs/REAL_DATA_ONBOARDING_PREPARATION.md", "docs/prompts/REAL_DATA_ONBOARDING_1A_R1.md",
   "lib/onboarding-preparation.ts", "scripts/onboarding-preparation.ts",
@@ -41,8 +44,8 @@ async function main() {
   const onboardingScopeChanged = changed.some((relative) => onboardingScopedPaths.some((prefix) => relative === prefix || relative.startsWith(`${prefix}/`)));
   for (const relative of changed) {
     if (prohibitedExtensions.has(path.extname(relative).toLowerCase())) throw new Error(`PRIVATE_OR_BINARY_ARTIFACT_REFUSED:${relative}`);
-    if (onboardingScopeChanged && !allowedRoots.some((prefix) => relative === prefix || relative.startsWith(`${prefix}/`)) && relative !== "package.json" && relative !== "README.md") throw new Error(`OUT_OF_SCOPE_CHANGED_PATH:${relative}`);
-    if (textExtensions.has(path.extname(relative).toLowerCase())) {
+    if (onboardingScopeChanged && !allowedRoots.some((prefix) => relative === prefix || relative.startsWith(`${prefix}/`)) && relative !== "package.json" && relative !== "README.md" && !reviewedNativeFiles.has(relative)) throw new Error(`OUT_OF_SCOPE_CHANGED_PATH:${relative}`);
+    if (textExtensions.has(path.extname(relative).toLowerCase()) || reviewedNativeFiles.has(relative)) {
       const file = path.join(root, relative); const metadata = await stat(file);
       if (!metadata.isFile() || metadata.size > 1024 * 1024) throw new Error(`UNSAFE_OR_OVERSIZED_PUBLIC_ARTIFACT:${relative}`);
       const text = await readFile(file, "utf8");
