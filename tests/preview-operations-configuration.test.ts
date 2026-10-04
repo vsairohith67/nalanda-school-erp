@@ -23,7 +23,7 @@ async function fixture() {
 }
 describe("explicit offline operations preparation", () => {
   it("preserves Windows system plugin discovery without ambient user config or secrets", () => {
-    const ambient = { PATH: "SYNTHETIC-PATH", SystemRoot: "C:\\Windows", WINDIR: "C:\\Windows", ProgramFiles: "C:\\Program Files", USERPROFILE: "C:\\Users\\SYNTHETIC", HOME: "SYNTHETIC-HOME", DOCKER_CONFIG: "SYNTHETIC-PRIVATE-CONFIG", DATABASE_URL: "SYNTHETIC-SECRET", COMPOSE_FILE: "foreign.yml" };
+    const ambient = { NODE_ENV: "test" as const, PATH: "SYNTHETIC-PATH", SystemRoot: "C:\\Windows", WINDIR: "C:\\Windows", ProgramFiles: "C:\\Program Files", USERPROFILE: "C:\\Users\\SYNTHETIC", HOME: "SYNTHETIC-HOME", DOCKER_CONFIG: "SYNTHETIC-PRIVATE-CONFIG", DATABASE_URL: "SYNTHETIC-SECRET", COMPOSE_FILE: "foreign.yml" };
     const selected = operationsComposeEnvironment("SYNTHETIC-ROOT", "SYNTHETIC-IMAGE", "SYNTHETIC-SOURCE", ambient, "win32");
     expect(selected).toEqual({ NODE_ENV: "production", PATH: ambient.PATH, SystemRoot: ambient.SystemRoot, WINDIR: ambient.WINDIR, ProgramFiles: ambient.ProgramFiles, PORTABLE_CI_ROOT: "SYNTHETIC-ROOT", PORTABLE_IMAGE_ID: "SYNTHETIC-IMAGE", PORTABLE_SOURCE_SHA: "SYNTHETIC-SOURCE" });
     for (const ProgramFiles of [undefined, "", "relative", "C:\\Program Files\\..\\Users"]) expect(() => operationsComposeEnvironment("SYNTHETIC-ROOT", "SYNTHETIC-IMAGE", "SYNTHETIC-SOURCE", { ...ambient, ProgramFiles }, "win32")).toThrow("OPERATIONS_WINDOWS_SYSTEM_PLUGIN_DIRECTORY_REQUIRED");
