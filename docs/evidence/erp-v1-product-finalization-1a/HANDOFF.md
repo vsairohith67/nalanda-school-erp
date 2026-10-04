@@ -1,8 +1,8 @@
 # ERP-V1-PRODUCT-FINALIZATION-1A
 
-Working checkpoint, 4 October 2026 IST. Source implementation/validation active; no publication, primary integration or release verdict yet.
+**ERP_V1_PRODUCT_FINALIZATION_PARTIAL — LOCAL / UNPUBLISHED / UNINTEGRATED.** Current code is synchronized with published recovery; current typechecks, production compilation and rendered checks passed. Required current Windows helper execution is blocked, so no fully validated combined-source or release verdict.
 
-Worktree: `C:/Users/rohit/Documents/school-software-worktrees/erp-v1-product-finalization-1a`; branch `feature/erp-v1-product-finalization-1a`. Sole product writer chat `01a106ff-07e6-76d2-acd0-03747c8c8d43`; coordination requested with A4 owner. PR29 update reservation and inherited helper-overlap acknowledgement remain pending. No applicable AGENTS found. Two-heavy-job cap; tests/builds sequential within this lane.
+Worktree: `C:/Users/rohit/Documents/school-software-worktrees/erp-v1-product-finalization-1a`; branch `feature/erp-v1-product-finalization-1a`. Sole product writer chat `01a106ff-07e6-76d2-acd0-03747c8c8d43`. Original P1 owner confirmed exclusive PR29 update reservation after mandatory gates; original local/remote P1 checkpoint remains frozen. A4 retains sole primary ownership. No applicable AGENTS found. Two-heavy-job cap; tests/builds sequential within this lane. Native and K30 lanes informed of occupied heavy-job window and shared registration boundaries.
 
 ## Source lineage and integration
 
@@ -18,14 +18,14 @@ Source inputs: canonical fixed schema/register/audit evidence, product backlog/p
 
 | Selected criterion/source | Present source / actual missing behavior | Owner and verification | Working classification |
 | --- | --- | --- | --- |
-| IR1 / P1 approval, NPS-REQ-001 boundary | Module/role/user/domain OFF, DENY, session/credential freshness, minimal projection | Lane 2 existing services and migrated route tests; global IAM owner decides Accountant conflict | Integration pending; policy decision retained |
-| IR2 / P1 approval | Question/builder equivalence, strict unsupported refusal, exact year/scope/exam | Lane 2 contract + real service routes | Integration pending |
-| IR3 / NPS-REQ-002 and P1 | Exact issued exam, Decimal thresholds, missing/unpublished unresolved, historical enrollment | Lane 2 real service regression | Integration pending |
-| IR4 / attendance approval comment5966721518 | Aggregate and dated evidence share one path/snapshot, selected year/class/student/range, unknown coverage | Lane 2 donor + current SQLite/route + fresh PostgreSQL CI | Integration pending; provider test missing |
-| IR5 / NPS-REQ-013/015 and P1 | Exact-term liabilities/allocation/reversal, safe paise, no historical reconstruction/unallocated credit assignment | Lane 2 retained finance tests; no finance engine changes | Integration pending |
-| IR6 / P1 and existing selection/cancellation acceptance | Access refresh ignores changed year list; overlapping access responses lack ordering | Lane 2 real component failing-before/success/refusal checks | Implementation defective |
-| Students/staff/dashboard existing projection/year/search/navigation | Existing service/component boundaries; no demonstrated new defect yet | Lane 2 affordable existing tests and full isolated regression | Test missing; authenticated/device external pending |
-| NPS-REQ-007/008/009/010/015 existing certificate/items/concession acceptance | Current recovery contains reviewed confirmation/import fixes; immutable issue/rates/separation must persist | Lane 2 existing focused service tests; authenticated runtime owner | Integration pending; external/runtime acceptance pending |
+| IR1 / P1 approval, NPS-REQ-001 boundary | Module/role/user/domain OFF, DENY, session/credential freshness, minimal projection | Lane 2 existing services and migrated route tests; global IAM owner decides Accountant conflict | Source-complete for approved IR1; Accountant policy decision and external acceptance pending |
+| IR2 / P1 approval | Question/builder equivalence, strict unsupported refusal, exact year/scope/exam | Lane 2 contract + real service routes | Source-complete for approved criterion; integration/external acceptance pending |
+| IR3 / NPS-REQ-002 and P1 | Exact issued exam, Decimal thresholds, missing/unpublished unresolved, historical enrollment | Lane 2 real service regression | Source-complete for approved criterion; integration/external acceptance pending |
+| IR4 / attendance approval comment5966721518 | Aggregate and dated evidence share one path/snapshot, selected year/class/student/range, unknown coverage | Lane 2 actual SQLite/service/component tests; required fresh PostgreSQL remains NOT_EXECUTED | Source-complete on SQLite; PostgreSQL and external acceptance pending |
+| IR5 / NPS-REQ-013/015 and P1 | Exact-term liabilities/allocation/reversal, safe paise, no historical reconstruction/unallocated credit assignment | Lane 2 retained finance tests; no finance engine changes | Source-complete for approved criterion; integration/external acceptance pending |
+| IR6 / P1 and existing selection/cancellation acceptance | Changed admitted years clear obsolete selection; generation ordering rejects older access success/refusal | Lane 2 real component failing-before/success/refusal checks | Source corrected and focused/rendered validated; integration and authenticated acceptance pending |
+| Students/staff/dashboard existing projection/year/search/navigation | Existing service/component boundaries; no demonstrated new defect yet | Lane 2 affordable existing tests and full isolated regression | Source-level regression covered by retained928 full suite; relevant product source unchanged at52d9; authenticated UI/device acceptance pending |
+| NPS-REQ-007/008/009/010/015 existing certificate/items/concession acceptance | Current recovery contains reviewed confirmation/import fixes; immutable issue/rates/separation must persist | Lane 2 existing focused service tests; authenticated runtime owner | Source-level regression covered by retained928 full suite; relevant product source unchanged at52d9; external/runtime acceptance pending |
 | Existing marks/import locking/private mapping/contact/preview acceptance | Read/test current boundary; implementation/private files reserved | Other lane owns implementation; Lane 2 retained regression only | Another lane owns it |
 
 ## Original programme accounting (scope, not a completion score)
@@ -83,16 +83,96 @@ Each criterion below is the unchanged canonical missing criterion, or the existi
 
 ## Fresh execution evidence
 
-Pinned pnpm 11.21.0 restored frozen lockfile offline with no package upgrade; local own Prisma generation completed. First focused run: fixture capture directory missing, 76 PASS/1 setup FAIL, four actual files. It is not a product failing-before result. Corrected named invented-fixture directory: 77 PASS/four actual files, 15.84s; requested non-existent calendar filename was not counted. Actual academic-calendar regression remains to run. Synthetic source capture is private/ignored and drives production-component harness only; no ERP launch or real session.
+Pinned pnpm 11.21.0 restored frozen lockfile offline with no package upgrade; local own Prisma generation completed. First focused run: fixture capture directory missing, 76 PASS/1 setup FAIL, four actual files. It is not a product failing-before result. Corrected named invented-fixture directory: 77 PASS/four actual files, 15.84s; requested non-existent calendar filename was not counted. Final actual academic-calendar-inclusive run passed 86 tests/five files; these overlapping runs are not added. Synthetic source capture is private/ignored and drives production-component harness only; no ERP launch or real session.
 
-Validation, corrections, source freeze, independent review, final prelude/full regression, typechecks/build/publication scanners, helper result, owner reservation and exact candidate CI will be recorded here as actually observed. No local PostgreSQL target is inferred. No policy stop is bypassed. Flags remain default OFF/0%; no schema/migration/v48/operational DB/uploaded records access.
+Evidence below separates executed source/component checks from blocked or unexecuted acceptance. No local PostgreSQL target is inferred. No policy stop is bypassed. Flags remain default OFF/0%; no schema/migration/v48/operational DB/uploaded records access.
 
 ### Product corrections and rendered evidence
 
 Two existing IR6 current-selection/cancellation defects reproduced in real production components. `browser-year-before.log`: updated authorized year list, unchanged context/families, obsolete year remained selected (30s condition timeout). Correction compares years and clears stale review/report/detail before selecting a current admitted year. `browser-old-refusal-before.log`: deliberately ignored abort at synthetic transport, older403 arrived after newer200 and removed controls (visible-selector assertion failed). Correction uses existing RequestGeneration per access refresh with generation guards for success/failure and unmount cleanup. No grant or server policy change. A delayed older success after newer revocation already passed on original source; retained as regression, not claimed as a new defect.
 
-Final fresh focused run: **86 PASS / five actual files**,21.17s, real migrated SQLite reporting source/routes plus contract, Student attendance, academic calendar and permissions. Synthetic capture adds the actual service CSV projection for component download-byte comparison. Final rendered production Workspace/AttendanceEvidenceView/real CSS: **33 checks PASS**. Desktop1366x768/mobile390x844 light/dark,320px error states both themes, keyboard containment/Escape/return, reduced motion, selection invalidation, source/refusal/error recovery, ignored-abort late source/access responses, unchanged-context year removal, service-identical CSV bytes, denied/stale-source export with no download. Page identity/meaningful content/overlay/error/interaction checks passed. Console has only expected synthetic403/409/500 refusals; no page errors, no shared storage. Installed Playwright fallback: Browser plugin/skill absent. Viewport resizing is not browser zoom; synthetic saved download is not OS picker/authenticated ERP/native/device proof. Original donor screenshots are retained privately; current combined screenshots are newly produced in owned ignored tmp/attendance-evidence-1b.
+Initial combined checkpoint928 fresh focused run: **86 PASS / five actual files**,21.17s, real migrated SQLite reporting source/routes plus contract, Student attendance, academic calendar and permissions. Synthetic capture adds the actual service CSV projection for component download-byte comparison. Rendered production Workspace/AttendanceEvidenceView/real CSS on928: **33 checks PASS**. Desktop1366x768/mobile390x844 light/dark,320px error states both themes, keyboard containment/Escape/return, reduced motion, selection invalidation, source/refusal/error recovery, ignored-abort late source/access responses, unchanged-context year removal, service-identical CSV bytes, denied/stale-source export with no download. Page identity/meaningful content/overlay/error/interaction checks passed. Console has only expected synthetic403/409/500 refusals; no page errors, no shared storage. Installed Playwright fallback: Browser plugin/skill absent. Viewport resizing is not browser zoom; synthetic saved download is not OS picker/authenticated ERP/native/device proof. Original donor screenshots are retained privately; current combined screenshots are newly produced in owned ignored tmp/attendance-evidence-1b.
 
 Harness setup corrections retained separately: missing capture directory; a UTF-8 Python read corrected without source-policy change; ignored-abort wrapper restored after navigation for the second adversarial check (otherwise actual abort produced a harness response timeout). These are not product red tests. No test assertion, timeout or policy weakened. Synthetic listener/browser stopped by finally after every executed run.
 
-Existing actual QA prelude: fresh explicitly named owned tmp/release-ci/synthetic.db migrated via pinned Prisma; prepare-release-ci-synthetic.ts PASS (4 invented users, one existing fixture Super Admin,0 students/payments). Fresh task-owned prisma/dev.db copy supplied only for existing tests hardcoding that path. This is the supported synthetic fixture mechanism, no actual-account grant. No preexisting DB read/copy/hash. Frozen validation starts after source commit; full suite/typecheck/build and independent review remain pending.
+Existing actual QA prelude: fresh explicitly named owned tmp/release-ci/synthetic.db migrated via pinned Prisma; prepare-release-ci-synthetic.ts PASS (4 invented users, one existing fixture Super Admin,0 students/payments). Fresh task-owned prisma/dev.db copy supplied only for existing tests hardcoding that path. This is the supported synthetic fixture mechanism, no actual-account grant. No preexisting DB read/copy/hash. Frozen validation on928 passed full3321 tests/323 files in2174.23s (18:47:39–19:23:53 IST); three existing qpdf tests skipped in one file. Before/after tracked status empty. All20 actual repository typecheck partitions passed on928 (19:26:11–19:43:49 IST,17m37s). These are historical after the subsequent recovery synchronization, not exact52d9 full/typecheck passes. Independent product review covers928; current-head types/build are completed below.
+
+### Independent review, source checks and publication boundary
+
+Read-only reviewer requested with gpt-6-astra reviewed frozen code commit `928f5c03c4fd8bbde1375198b3fcaf5905c52511` / tree `c46a8f70f35eeab314d64548e34553ebbfaeac41`: no material findings. Independently executed 44 contract/permission tests in two files (1.56s), non-writing inventory366, source checker365 records/four heads/four backup contracts and diff check. Donor byte equality, merge parents and preserved recovery/P1 registry ordering independently verified. The 86 focused and 33 rendered checks were receipt/source-reviewed, not independently rerun. One nonblocking stale IR6 handoff classification corrected in final documentation. No further product-source edit after928 review; overlapping test counts are not added.
+
+Before the laterb20 synchronization, all four applicable publication checks on928 passed: communication at actual published recovery base2113fa17 (33 changed paths), communication at origin/main (596 inherited-inclusive paths), real-user at origin/main and onboarding at origin/main. Onboarding scopeChecked=false is retained and does not substitute for the other scans. Git safeguards and diff check passed. Source checker365/four heads/four backup contracts and non-writing inventory366 passed. Production dependency audit reports zero advisories at all severities; whole-tree audit passes high threshold with one moderate development finding, not zero overall. No scanner/dependency policy changed.
+
+Original P1 owner confirms exclusive PR29 reservation for this lane after every mandatory gate; original local/remote P1 remains5a3e219, OPEN/DRAFT. Unchanged prepare-qa currently BLOCKED on actual primary dirty overlaps `docs/evidence/recovery-batch-integration-5a/HANDOFF.md` and `scripts/laptop-lab/HANDOFF.md`. Both are byte-identical to published recovery in this candidate and absent its recovery-relative delta. A4 confirms these are preserved evidence, unavailable for cleanup/staging/publication to make the gate pass. Supported helper has no acknowledgement/scope parameter; owner reservation is not a waiver. No helper mutation, other-lane ledger cleanup, push, force update, cosmetic CI trigger, workflow dispatch, primary/main integration or release. CI/new-candidate PostgreSQL NOT_EXECUTED while publication remains blocked. A4 unpublished candidate is not imported.
+
+Current requirement register byte-identical to published recovery:46 IDs,8 COMPLETE/25 PARTIAL/7 MISSING/3 DEFERRED/2 BLOCKED/1 NEEDS_CONFIRMATION. All26 flags OFF/0%. Schema/migrations/v48 unchanged. Accountant attendance/academic-export permission conflicts, Director inherited object-scope, unsupported historical fee reconstruction/unallocated credit remain explicit owner/capability decisions. Authenticated HTTP/login/middleware, school-device, genuine zoom/OS picker, release/runtime/custody and real-data acceptance NOT_EXECUTED; no operational activation clearance. Synthetic receipts/residue retained privately; all rendered harness listeners settled.
+
+### Current published recovery synchronization and actual qualification limit
+
+Task A independently reviewed and published `b20b28dce795bdd2c0776190df26a4852c0a5966` / tree `55b1feb5b91e34d177ff5bce04a8778d54bfc1ea`; remote readback verified. Actual2113..b20 delta18 public paths inspected, with no private operands or unpublished source import. Ordinary clean auto-merge `52d9d1ee809da66fcec045e946e44c69feb59a21` / tree `5860269e4b46afeb63a43f6adbd10ccaa2d5e47d`, parents928f5c03+b20b28d. No manual source conflict resolution. Current353 recovery records preserved in order:350 exact unchanged plus three exact previously reviewed P1 shared records;17 exact product additions retained,370 total. Registry root metadata/provenance matchb20. Protected requirement/schema/old handoff bytes matchb20; product33-path delta remains unchanged relative to the new recovery base. Source checker370/four heads/four backup contracts and non-writing inventory366 PASS.
+
+Fresh52d9 affected qualification: **141 PASS /13 FAIL /154 tests, nine files PASS/one FAIL of10**,84.24s,19:47:12–19:48:36 IST. This includes all86 product tests passing plus55 affected guard/source tests. Every13 assertion failure is in `tests/laptop-local-custody.test.ts`: Windows PowerShell refuses the controlled.ps1 wrapper with running-scripts-disabled/UnauthorizedAccess before the helper executes. Required helper execution is BLOCKED; the test assertions actually FAILED, never skipped or called passed. Direct policy read: Windows PowerShell effectiveRestricted, all five scopesUndefined. Task A's closed specifically approved session used PROCESS RemoteSigned, not Unrestricted/Bypass; its permission is not inherited. No script-policy, launcher, wrapper, source, assertion, timeout or skip change. No unchanged retry. A fresh combined full-suite pass is unavailable at this execution boundary;928 full results are retained historically, and Task A's base-only full result does not substitute for current combined qualification. This is an execution-policy/project-scope blocker, not a demonstrated product or custody-helper semantic defect.
+
+Current52d9 **all20 repository typecheck partitions PASS**,244.32s (19:50:11–19:54:15 IST); **production compile/generate PASS**,99.07s (19:56:10–19:57:49 IST), compile50s/static358 of358. Fresh service-captured **33 production-component checks PASS** on52d9,17.92s (19:59:17–19:59:35 IST); actual listener stopped. No full ERP/application image launch. Tracked status remains empty after tests/types/build/component QA. Browser layout/error screenshots inspected; viewport/OS-picker/authenticated acceptance distinctions retained. Additional combined integration/evidence review requested through settled shared-reviewer scheduling; no duplicate or hidden reviewer spawned. The original product and published recovery reviews are reusable only for their exact unchanged source.
+
+Current base-CI snapshot (ordinary attempt1 atb20, independently fetched4 October): PostgreSQL application regression job111453397953/run37208082293 FAILED; communication full regression job111453398164/run37208082296 FAILED; onboarding full regression job111453397947/run37208082280 FAILED. Other jobs remain mixed/in progress. These are Task A's base qualifications, not product CI; cause/correction is Task A-owned, not an excuse to edit that lane. [PostgreSQL](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37208082293), [communication](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37208082296), [onboarding](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37208082280). No source qualification is inferred from job names or migration-only successes. No product CI dispatch/push/wait interval occurred.
+
+Observed intervals above are separate overlapping/serial phase records, not added into invented active hours or unique test totals. Full92836m14s, initial20types17m37s, current affected84.24s, current20types4m4s, compilation1m39s, finalcomponent17.92s. Review44tests1.56s is execution time only, not a measured whole review interval. Complete initial source-work/active time, tokens and account cost were not instrumented. Synthetic setup and queue time remain separate; K30 short window preceded initial types.
+
+### Frozen product handoff and reservations
+
+Sole primary owner remains Task A; the human-authorized master coordinator chat01a10744-e522-7e40-9fb1-52d6da3da855 may consume/review this exact frozen local product donor in its own convergence candidate. No primary/main mutation or PR29 reservation waiver. Lane2 releases the implementation reservation only for that attributed immutable consumption after this terminal handoff; no competing live writer or unreviewed partial import. PR29 exclusive FF update remains conditional on original P1 reservation and every mandatory gate; remote/original checkout untouched at5a3e219. Fresh combined integration/evidence reviewer remains queued because the shared slot is reserved for Task A's correction; no additional worker starts. Original928 product review and publishedb20 base review are retained with exact source equality; they do not claim a new combined review.
+
+No Lane2 reservation on master-owned tests/v1-completion-convergence-finance.test.ts (J2/J3), native helpers, K30, onboarding/shared modal or deployment/observability paths. Independent underlying policy and operational acceptance decisions remain with their owners. All product heavy jobs settled; lightweight scanner/tracker closeout only.
+
+Single next integration decision: sole integrator accepts this frozen local donor for serial combined qualification under the unchanged ownership and Windows execution-policy gates. Current-head PostgreSQL/full helper qualification, combined review and publication remain pending; no Lane2 policy change or automatic primary integration.
+
+### Exact recovery-relative product manifest
+
+33 paths against reviewed publishedb20; inherited18-path A4 source is excluded. Code checkpoint52d9 preserves928 product bytes; final documentation-only handoff commit is the branch tip.
+
+```text
+app/api/intelligent-reports/access/route.ts
+app/api/intelligent-reports/export/route.ts
+app/api/intelligent-reports/interpret/route.ts
+app/api/intelligent-reports/options/route.ts
+app/api/intelligent-reports/run/route.ts
+app/api/intelligent-reports/source/route.ts
+app/intelligent-reports/page.tsx
+components/intelligent-reports/attendance-evidence.tsx
+components/intelligent-reports/workspace.module.css
+components/intelligent-reports/workspace.tsx
+config/product-experience-debt-register.json
+config/product-experience-screen-register.json
+config/recovery-integration-source-delta.json
+config/release-feature-flags.json
+docs/evidence/INTELLIGENT_REPORTS_1A.md
+docs/evidence/erp-v1-product-finalization-1a/HANDOFF.md
+docs/evidence/intelligent-reports-attendance-evidence-1b/HANDOFF.md
+lib/access-rules.ts
+lib/intelligent-reports/access.ts
+lib/intelligent-reports/api.ts
+lib/intelligent-reports/contract.ts
+lib/intelligent-reports/readers.ts
+lib/intelligent-reports/request-generation.ts
+lib/intelligent-reports/service.ts
+lib/permissions.ts
+lib/public-website-routing.ts
+tests/bulk-export-governance.test.ts
+tests/intelligent-reports-browser.ts
+tests/intelligent-reports-contract.test.ts
+tests/intelligent-reports-evidence-browser.mjs
+tests/intelligent-reports-service.test.ts
+tools/release-evidence/bulk-export-contracts.json
+tools/release-evidence/final-scope-contracts.json
+```
+
+Final evidence-format correction: initial current onboarding scan rejected the new handoff’s twelve-digit public GitHub job URL segments under its existing real-like-identifier rule. Only this owned handoff changed to workflow-run links; exact job IDs retain explicit job labels above. The approved exception remains confined to the existing recovery ledger. No scanner/path exemption or other-owner ledger change; original failure log retained privately.
+
+### Final source safeguards and tracker readback
+
+Current source370/four heads/four backup contracts and non-writing inventory366 PASS. Communication scanner at actualb20 base:33 product paths PASS; communication/real-user/onboarding at origin/main:604 inherited-inclusive paths PASS, onboarding scopeChecked=false. Git safeguards/diff check PASS. The corrected owned evidence links passed the unchanged onboarding scanner; original failure and corrected log retained privately. No formats/exemptions changed.
+
+One substantive terminal comment on PR29:5981196785, exact body read back; PR OPEN/DRAFT/head5a3e219/base recovery/body unchanged. Asana P1 story1219133377262569 exact text read back; notes/name/assignee/dates/completed/parent/projects/memberships unchanged, completed=false, parent1218653844698449. Canvs existing P1 card updated/read back: old plain/rich prefixes exact; x/y/width/height, bindings/groups/frame/link/container/font/alignment unchanged, local/published/integrated/release states explicit.
+
+Notion comment creation acknowledged once:3efc9801-27a8-817e-a3d6-001d4f19bdb9, discussion3ecc9801-27a8-819b-9668-001c20290f0a. Read returned prior content without this result: **READBACK_PENDING**. No duplicate comment or synchronized-content claim. All original histories preserved. [Visible terminal product result](https://github.com/vsairohith67/nalanda-school-erp/pull/29#issuecomment-5981196785).
