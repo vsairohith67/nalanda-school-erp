@@ -1,8 +1,8 @@
 import {it,expect} from 'vitest';
 import {execFileSync} from 'node:child_process';
-import {mkdtempSync,writeFileSync,existsSync,mkdirSync} from 'node:fs';
+import {mkdtempSync,writeFileSync,existsSync,mkdirSync,readFileSync} from 'node:fs';
 import path from 'node:path';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 
 // Execute the REAL helper's validation with controlled OS metadata functions.
 // No production registration, real ACL changes, directory creation or claim.
@@ -36,11 +36,18 @@ function Get-Content {param($LiteralPath,[switch]$Raw)
  return (@{contract='NALANDA_LOCAL_RUNTIME_CONSUMED_V1';claimKey=$global:a4Case.request.claimKey;authorizationSha256=$(if($global:a4Case.name -eq 'bad-receipt'){'bad'}else{$global:a4Case.request.authorizationSha256})}|ConvertTo-Json -Compress)
 }
 [Console]::SetIn([IO.StringReader]::new(($r|ConvertTo-Json -Depth 5 -Compress)))
+$metadata=[ordered]@{executable=[Diagnostics.Process]::GetCurrentProcess().MainModule.FileName;version=$PSVersionTable.PSVersion.ToString();is64Bit=[Environment]::Is64BitProcess;languageMode=$ExecutionContext.SessionState.LanguageMode.ToString();effectivePolicy=(Get-ExecutionPolicy).ToString()}
+[IO.File]::WriteAllText('${path.join(dir,'helper-process.json').replaceAll("'","''")}',($metadata|ConvertTo-Json -Compress))
 & '${helper.replaceAll("'","''")}'
+# -File does not propagate a nested script's exit. Preserve the REAL helper exit.
+exit $LASTEXITCODE
 `;
  writeFileSync(wrapper,script,{flag:'wx'});
  const request={operation:testCase.includes('verification')||testCase==='bad-receipt'?'verify':'inspect',custody:{directory:'C:\\SYNTHETIC-A4-'+randomUUID(),userSid:'S-1-5-21-100-200-300-400',volumeSerial:'ABCDEF12',kind:'WINDOWS_NTFS_LOCAL_V1'},claimKey:'a'.repeat(64),authorizationSha256:'b'.repeat(64),authorizationName:'authorization-'+'c'.repeat(32)+'.json',endorsementName:'endorsement-123-1.json'};
- let output='',error='';try{output=execFileSync('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',['-NoProfile','-NonInteractive','-File',wrapper],{input:JSON.stringify({name:testCase,request}),encoding:'utf8',windowsHide:true,timeout:10000,stdio:'pipe'});}catch(e:any){error=e.stderr?.toString()??'FAILED';}
+ let output='',error='',exit:number|null=0;try{output=execFileSync('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',['-NoProfile','-NonInteractive','-File',wrapper],{input:JSON.stringify({name:testCase,request}),encoding:'utf8',windowsHide:true,timeout:10000,stdio:'pipe'});}catch(e:any){error=e.stderr?.toString()??'FAILED';exit=e.status??null;}
+ const sha=(file:string)=>createHash('sha256').update(readFileSync(file)).digest('hex');
+ writeFileSync(path.join(dir,'helper-execution.json'),JSON.stringify({case:testCase,helperSha256:sha(helper),wrapperSha256:sha(wrapper),expectedExit:testCase.startsWith('valid-')?0:1,actualExit:exit,stdoutContract:output?JSON.parse(output).contract:null,helperRefusal:error.includes('LOCAL_CUSTODY_REFUSED'),processMetadata:existsSync(path.join(dir,'helper-process.json'))?JSON.parse(readFileSync(path.join(dir,'helper-process.json'),'utf8')):null}),{flag:'wx'});
+ expect(exit).toBe(testCase.startsWith('valid-')?0:1);
  if(testCase.startsWith('valid-')){expect(error).toBe('');expect(JSON.parse(output).contract).toBe('NALANDA_LOCAL_CUSTODY_CHECK_V1');}else expect(error).toContain('LOCAL_CUSTODY_REFUSED');
  expect(existsSync(request.custody.directory)).toBe(false);
 });
