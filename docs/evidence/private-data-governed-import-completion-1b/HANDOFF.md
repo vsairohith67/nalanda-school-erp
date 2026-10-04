@@ -96,3 +96,11 @@ B/B1 figures remain historical owner reports, not reverified/disjoint totals. Sc
 Observed work began about19:14IST; test intervals above not summed across overlapping populations. Heavy-slot waits interleaved with source work; production build observed through20:48. Token/account usage unmeasured. Review/CI wait pending.
 
 Next: finish unchanged candidate gates and shared review, then hand one immutable delta to sole integrator; do not publish through a refused gate.
+
+## Local source freeze and recovery synchronization
+
+Coherent source checkpoint66267de1728b39a3ad0326125f8157ab901f7697/tree99f50335f0b370b48c4fa80a94db75ddfacae21d, parent2113fa17. One normal own-only merge of independently reviewed published recovery0aa1462e3758b178e2a0fb626c63fb1b80236c87 completed at f5a864299a152cc4414967222cf3cd9ad0ef6f6f/tree4144d55ca040094caface004d0f603c42d3d1626. No merge conflict; all17 own source/evidence files byte-identical to66267de. Imported only published recovery history, no dirty TaskA source or moving-head chase. Existing recovery CI/base/native custody failures remain independent and are not cleared by lane tests.
+
+Narrow source registry:11 reserved protected paths,353 existing records retained with their historical/base/source data; only owned current hashes/classification updated plus5 new records,358 total. All foreign records preserved semantically, all owned reconciliation remains REQUIRES_INDEPENDENT_REVIEW. Unchanged node scripts/recovery-source-evidence.mjs PASS/exit0,358files/4sourceHeads/4backupSourceContracts. Candidate/staged/tracked Git safety PASS before checkpoint; final repeat still pending.
+
+Heavy slot: TaskA release14:43:14.948UTC -> Lane5 claimed14:47:49UTC for sequential types/service/components/copied-harness/build. Batch actually settled by20:48IST; released to existing coordinator queue. No heavy child/listener remains. Local source/evidence preservation is not organizational approval, independent review or remote publication.
