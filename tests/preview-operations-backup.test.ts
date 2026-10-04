@@ -1,6 +1,8 @@
 import { randomBytes, randomUUID, createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { readFileSync, readdirSync } from "node:fs";
 import { lstat, mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
+import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -33,8 +35,20 @@ async function database(label: string) {
   if (postgres) {
     if (process.env.CI !== "true" || process.env.POSTGRES_READINESS_SYNTHETIC_QA !== "1" || !originalUrl) throw Error("EPHEMERAL_CI_POSTGRES_REQUIRED");
     const connection = new URL(originalUrl); connection.searchParams.set("schema", "operations_" + label + "_" + randomUUID().replaceAll("-", "")); url = connection.toString();
-  } else await writeFile(path.join(directory, "synthetic.db"), "", { flag: "wx", mode: 0o600 });
-  execFileSync(process.execPath, ["node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", postgres ? "prisma/postgresql/schema.prisma" : "prisma/schema.prisma"], { env: { ...process.env, DATABASE_URL: url, DIRECT_URL: url }, stdio: "pipe", windowsHide: true, timeout: 60000 });
+    execFileSync(process.execPath, ["node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", "prisma/postgresql/schema.prisma"], { env: { ...process.env, DATABASE_URL: url, DIRECT_URL: url }, stdio: "pipe", windowsHide: true, timeout: 60000 });
+  } else {
+    const file = path.join(directory, "synthetic.db");
+    await writeFile(file, "", { flag: "wx", mode: 0o600 });
+    // Apply the real committed SQLite migrations to each exclusive empty fixture.
+    // Repeated CLI launches timed out during combined Windows execution. The
+    // release prelude separately exercises actual fresh Prisma migration deploy.
+    const sql = new DatabaseSync(file);
+    try {
+      const migrations = readdirSync("prisma/migrations", { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name).sort();
+      for (const migration of migrations) sql.exec(readFileSync(path.join("prisma/migrations", migration, "migration.sql"), "utf8"));
+      expect(sql.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
+    } finally { sql.close(); }
+  }
   const client = new PrismaClient({ datasourceUrl: url }); clients.push(client);
   if (label === "source") vi.stubEnv("DATABASE_URL", url);
   await client.user.create({ data: { id: "synthetic-operations-actor", username: "synthetic-operations-actor", name: "SYNTHETIC Operations Actor", role: "DIRECTOR", passwordHash: "SYNTHETIC-NONLOGIN", isActive: false } });
@@ -68,8 +82,8 @@ beforeAll(async () => {
   for (const variable of ["ADMISSIONS_PRIVATE_STORAGE_ROOT", "ONBOARDING_STORAGE_ROOT", "PAYSLIP_PRIVATE_STORAGE_ROOT", "CLOUD_BACKUP_TEMP_DIR"]) vi.stubEnv(variable, path.join(root, variable.toLowerCase()));
   source = await database("source");
 }, 120000);
-// Each independently bounded migration retains its original 60s child/120s hook
-// limit. One aggregate hook otherwise races cleanup after three slow launches.
+// Each PostgreSQL migration retains its original 60s child limit; both providers
+// retain separate 120s hooks so setup cannot race aggregate-hook cleanup.
 beforeAll(async () => { target = await database("target"); }, 120000);
 beforeAll(async () => { sibling = await database("sibling"); }, 120000);
 beforeAll(async () => {

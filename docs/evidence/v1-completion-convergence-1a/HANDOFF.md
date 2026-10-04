@@ -399,3 +399,51 @@ started. Import/Operations source writes and heavy jobs are frozen during the
 corrected master run. A4 primary is explicitly released to master. Master has
 used zero of its own source publication waves; qualification, independent
 review, permitted PR28 source publication and normal CI remain the next chain.
+
+## Actual second-run failure and bounded fixture correction
+
+Corrected source4b1c196e9027e4d579f6523140edb0091513f010/tree82239748a83eef35a31dc1666cfb422cd2db649e
+passed focused72 cases and genuine fresh29-migration/empty-invented-baseline
+prelude. Full ran17:27:33.9025366–17:49:44.934UTC,1329.22s Vitest:
+3460 PASS/11 SKIP,334 passed/1 failed/1 skipped files. Eight Operations cases
+were UNEXECUTED after the second target fixture's actual Node Prisma migration
+child timed out at its unchanged60000ms limit; the other three skips are original
+qpdf conditions. Mapping validation now passes. This is another failed combined
+run, not eight accepted skips or an unchanged retry success. Types/build were
+not executed after the failure. The Process session ended17:49:44.9442736UTC;
+outside policy is byte-identical Restricted/five Undefined and no owned Node
+descendants remain. Both failed receipts and original invented baselines remain.
+
+Operations explicitly released tests/preview-operations-backup.test.ts to the
+sole coordinator in this owned checkout. Only its SQLite fixture construction
+changes: apply ALL actual committed migration SQL in sorted order to each same
+new exclusive0600 file-backed database and assert foreign_key_check. This is
+actual migrated SQLite schema construction, separately from the actual Prisma
+deployment validation already performed in the master prelude. Genuine hosted
+PostgreSQL still uses the unchanged60000ms Prisma child, separate120000ms hooks
+remain, and all eight real worker/encryption/restore/readback/cleanup assertions
+and actual Prisma clients are preserved. No fake schema, changed migration,
+weakened assertion, timeout increase, new skip or worker/CI-policy spoofing.
+Focused15 execution and independent incremental review are pending at this
+checkpoint; no next Process session consent is inferred from a closed session.
+
+Existing independent A4 combined source review on4b1c is SOURCE_ONLY ACCEPTED,
+zero tests,17:28:44.2105729–17:33:33.0817085UTC. Product source equality,
+Native optional observer/default capture behavior/private retention, exact public
+source admissions/identifier refusals,381-history preservation and six approved
+CI expressions all inspected without material findings. New fixture delta and
+final settled execution claims still require review. The current production
+dependency audit has no findings; all-dependency High/Critical threshold passes
+but reports one Moderate development fast-uri3.1.7 via ajv finding. All-severity
+JSON audit exits1. This is routed to existing A4 backlog; no zero-all-findings or
+OCI remediation inference. Pinned dependencies stay unchanged.
+
+Existing native owner received a NEW explicit R2 two-substantive-push allowance
+after the historical R1 allowance was exhausted. No R2 source is integrated or
+executed here. Shared native/workflow/registry writes wait this current master
+qualification and first publication; read-only evidence inspection continues.
+Operations own draftPR32 normal dual-provider and portable runs are terminal
+SUCCESS at9177, including actual backup8/configuration7 on SQLite and PostgreSQL.
+Seven portable held/dispatch-ineligible jobs remain skipped. Those different-source
+CI results do not clear this master fixture failure or qualify current reporting
+PostgreSQL. No additional Operations source push or donor adoption is required.
