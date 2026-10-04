@@ -35,7 +35,7 @@ export function productEnvironment(root:string):NodeJS.ProcessEnv {
 /** Same argument-array/process-group ownership as the QA runner, with complete
  * private outcomes for the product caller. Receipt storage failure leaves the
  * resource unsettled. No child output or environment enters public metadata. */
-export async function captureProductProcess(command:ProducerCommand,root:string,sequence:number,unsettled:Set<number>,signal?:AbortSignal,options?:{onChild?:(child:ChildProcess)=>void;buildkit?:boolean;maxOutputBytes?:number;stdin?:Uint8Array}):Promise<ProductProcessReceipt> {
+export async function captureProductProcess(command:ProducerCommand,root:string,sequence:number,unsettled:Set<number>,signal?:AbortSignal,options?:{onChild?:(child:ChildProcess)=>void;buildkit?:boolean;maxOutputBytes?:number;stdin?:Uint8Array;beforeSpawn?:()=>number|void}):Promise<ProductProcessReceipt> {
  if(!Number.isSafeInteger(sequence)||sequence<1||command.args.length>200||command.args.some(a=>typeof a!=="string"||a.length>8192||a.includes("\0"))||!path.isAbsolute(command.tool))throw Error("PRODUCT_COMMAND_INVALID");
  const timeoutMs=command.timeoutMs??900000;if(!Number.isSafeInteger(timeoutMs)||timeoutMs<1||timeoutMs>2400000)throw Error("PRODUCT_PROCESS_DEADLINE_INVALID");
  const maxOutputBytes=options?.maxOutputBytes??64*1024*1024;if(!Number.isSafeInteger(maxOutputBytes)||maxOutputBytes<1||maxOutputBytes>64*1024*1024)throw Error("PRODUCT_PROCESS_OUTPUT_LIMIT_INVALID");
@@ -50,14 +50,22 @@ export async function captureProductProcess(command:ProducerCommand,root:string,
  try{
   if(!r.interrupted)await new Promise<void>(resolve=>{
    let child:ReturnType<typeof spawn>;
-   try{child=spawn(command.tool,command.args,{cwd:root,env:{...productEnvironment(root),...(options?.buildkit?{PATH:path.join(root,"tools/buildkit/bin")+path.delimiter+productEnvironment(root).PATH}:{}),...command.env},shell:false,windowsHide:true,detached:process.platform!=="win32",stdio:[input===undefined?"ignore":"pipe","pipe","pipe"]});}
+   let effectiveTimeout=timeoutMs;
+   try{
+    const environment={...productEnvironment(root),...(options?.buildkit?{PATH:path.join(root,"tools/buildkit/bin")+path.delimiter+productEnvironment(root).PATH}:{}),...command.env};
+    // Local grants recheck after synchronous tool hashing, at the effect boundary.
+    const remaining=options?.beforeSpawn?.();
+    if(remaining!==undefined){effectiveTimeout=Math.floor(Math.min(timeoutMs,remaining));if(!Number.isFinite(effectiveTimeout)||effectiveTimeout<1)throw Error("PRODUCT_PROCESS_DEADLINE_INVALID");}
+    if(signal?.aborted){r.interrupted=true;r.settled=true;resolve();return;}
+    child=spawn(command.tool,command.args,{cwd:root,env:environment,shell:false,windowsHide:true,detached:process.platform!=="win32",stdio:[input===undefined?"ignore":"pipe","pipe","pipe"]});
+   }
    catch{r.startupFailed=true;r.settled=true;resolve();return;}
    options?.onChild?.(child);
    let pid:number|undefined,closed=false,termination:ReturnType<typeof setTimeout>|undefined,hardStop:ReturnType<typeof setTimeout>|undefined,killFailed=false;
    const send=(s:NodeJS.Signals)=>{try{if(process.platform!=="win32"&&pid)process.kill(-pid,s);else child.kill(s);}catch(e){if((e as NodeJS.ErrnoException).code!=="ESRCH")killFailed=true;}};
    const stop=()=>{send("SIGTERM");termination??=setTimeout(()=>send("SIGKILL"),500);hardStop??=setTimeout(()=>{if(closed)return;closed=true;clearTimeout(timer);signal?.removeEventListener("abort",abort);child.stdout?.destroy();child.stderr?.destroy();child.unref();r.settled=false;resolve();},2500);};
    const abort=()=>{r.interrupted=true;stop();};
-   const timer=setTimeout(()=>{r.timedOut=true;stop();},timeoutMs);
+   const timer=setTimeout(()=>{r.timedOut=true;stop();},effectiveTimeout);
    // Private operands go over bounded stdin, never argv, environment or receipt.
    if(input!==undefined){child.stdin?.on("error",()=>{r.ioFailed=true;stop();});child.stdin?.end(input);}
    signal?.addEventListener("abort",abort,{once:true});

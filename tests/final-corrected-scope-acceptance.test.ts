@@ -147,8 +147,13 @@ describe("FINAL-SCOPE-QA-1A corrected-scope contract acceptance", () => {
       const source = readFileSync(file, "utf8");
       expect(source, file).not.toMatch(/\b(?:test|it|describe)\.only\s*\(/);
       if (/\b(?:test|it|describe)\.skip(?:If)?\s*\(/.test(source)) skipDirectives.push(file);
+      if (file === "tests/laptop-local-custody.test.ts") {
+        // Native Windows helper cases execute on Windows; no policy/setup-failure skip.
+        expect(source.match(/\b(?:test|it|describe)\.skip(?:If)?\s*\(/g)).toHaveLength(1);
+        expect(source).toMatch(/\bconst\s+windows\s*=\s*it\.skipIf\(process\.platform\s*!==\s*['"]win32['"]\);/);
+      }
     }
-    expect(skipDirectives).toEqual(["tests/payslip-request-qpdf.test.ts"]);
+    expect(skipDirectives).toEqual(["tests/laptop-local-custody.test.ts", "tests/payslip-request-qpdf.test.ts"]);
   });
 
   it("tracks no operational databases, backups, model binaries, build output or unresolved merge markers", () => {

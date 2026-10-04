@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync, lstatSync, realpathSync } from "node:fs";
 import path from "node:path";
+import {assertProductionLocalAdmission} from '../laptop-lab/consumer-authorization';
 
 export const RUNTIME_ADMISSION_HOLD = "EXTERNAL_RUNTIME_BLOCKED" as const;
 export const ARTIFACT_CONTRACT = "NALANDA_SCANNED_ARTIFACT_V1";
@@ -8,6 +9,7 @@ const sha = /^[a-f0-9]{64}$/;
 const digest = /^sha256:[a-f0-9]{64}$/;
 export const hashBytes = (bytes: string | Buffer) => createHash("sha256").update(bytes).digest("hex");
 export type EvidenceFiles = Record<string, Buffer>;
+const verifiedArtifacts=new WeakMap<object,{snapshot:string;expiresAt:number;evidenceSha256:string;guard:(now:number)=>void}>();
 export type ArtifactContext = {source: string; architecture: "amd64"|"arm64"; runId: string; attempt: string; now: number; inputs: Record<string,string>; baseImages:string[]; purpose?:"SYNTHETIC_ACCEPTANCE_ONLY"};
 export function resolveBaseImages(dockerfile:string){
  const args=Object.fromEntries([...dockerfile.matchAll(/^ARG ([A-Z_]+)=(\S+)\s*$/gm)].map(m=>[m[1],m[2]])),stages=new Set<string>(),bases:string[]=[];
@@ -48,12 +50,19 @@ export function verifyArtifactEvidence(files: EvidenceFiles, context: ArtifactCo
   const configDigest=manifest.config.digest;
   verifyImageSecurityReports(files,configDigest,context.now,p.scannerVersions?.trivy);
   check(native.architecture===context.architecture&&native.imageConfigDigest===configDigest&&native.result==="PASSED","NATIVE_EVIDENCE_INVALID");
-  return Object.freeze({contract:ARTIFACT_CONTRACT,classification:p.classification,source:context.source,architecture:context.architecture,runId:context.runId,attempt:context.attempt,imageConfigDigest:configDigest,architectureManifestDigest:index.manifests[0].digest,architectureIndexDigest:`sha256:${hashBytes(files['index.json'])}`,provenanceSha256:hashBytes(files['provenance.json']),sbomSha256:hashBytes(files['sbom.json']),scanSha256:{trivy:hashBytes(files['trivy.json']),grype:hashBytes(files['grype.json'])},baseImages:p.baseImages,inputs:p.inputs});
+  const receipt=Object.freeze({contract:ARTIFACT_CONTRACT,classification:p.classification,source:context.source,architecture:context.architecture,runId:context.runId,attempt:context.attempt,imageConfigDigest:configDigest,architectureManifestDigest:index.manifests[0].digest,architectureIndexDigest:`sha256:${hashBytes(files['index.json'])}`,provenanceSha256:hashBytes(files['provenance.json']),sbomSha256:hashBytes(files['sbom.json']),scanSha256:{trivy:hashBytes(files['trivy.json']),grype:hashBytes(files['grype.json'])},baseImages:p.baseImages,inputs:p.inputs});
+  const evidenceSha256=hashBytes(JSON.stringify(EVIDENCE_NAMES.map(name=>[name,hashBytes(files[name])])));
+  verifiedArtifacts.set(receipt,{snapshot:JSON.stringify(receipt),expiresAt:generated+6*3600000,evidenceSha256,guard:time=>{check(hashBytes(JSON.stringify(EVIDENCE_NAMES.map(name=>[name,hashBytes(files[name])])))===evidenceSha256,'ARTIFACT_EVIDENCE_CHANGED');verifyImageSecurityReports(files,configDigest,time,p.scannerVersions?.trivy);}});return receipt;
 }
-export function assertRuntimeAdmission(receipt: ReturnType<typeof verifyArtifactEvidence>) {
+export function artifactEvidenceIdentity(receipt:ReturnType<typeof verifyArtifactEvidence>){const verified=verifiedArtifacts.get(receipt);check(verified&&verified.snapshot===JSON.stringify(receipt),'ARTIFACT_VERIFIER_RECEIPT_REQUIRED');return verified.evidenceSha256;}
+export function assertVerifiedArtifactReceipt(receipt:ReturnType<typeof verifyArtifactEvidence>,now:number){
+ const verified=verifiedArtifacts.get(receipt);check(verified&&verified.snapshot===JSON.stringify(receipt),'ARTIFACT_VERIFIER_RECEIPT_REQUIRED');check(Number.isSafeInteger(now)&&now<verified.expiresAt,'ARTIFACT_EVIDENCE_STALE');verified.guard(now);
+}
+export function assertRuntimeAdmission(receipt: ReturnType<typeof verifyArtifactEvidence>,decision?:unknown) {
   check(receipt.classification!=="HARNESS_FIXTURE_ONLY","HARNESS_FIXTURE_CANNOT_QUALIFY_RUNTIME");
-  // Deliberately no environment override. Reopening requires reviewed source plus vendor evidence.
-  throw Error(RUNTIME_ADMISSION_HOLD);
+  // Hosted/default callers retain the hold. Only the separate verified local
+  // purpose can admit this exact receipt; no environment override exists.
+  assertProductionLocalAdmission(receipt,decision);
 }
 export function assertLocalImage(receipt: ReturnType<typeof verifyArtifactEvidence>, image: any) {
   check(image.Id===receipt.imageConfigDigest&&image.Architecture===receipt.architecture&&image.Os==="linux"&&image.Config?.User==="65532:65532"&&image.Config?.Labels?.["org.opencontainers.image.revision"]===receipt.source,"LOCAL_IMAGE_SUBSTITUTED");
