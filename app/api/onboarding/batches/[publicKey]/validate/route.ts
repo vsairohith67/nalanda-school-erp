@@ -1,2 +1,20 @@
-import { NextRequest } from "next/server"; import { requireApiPermission } from "@/lib/auth"; import { prisma } from "@/lib/prisma"; import { onboardingBody, onboardingError, onboardingJson, runObservedOnboardingJob } from "@/lib/onboarding-api"; import { validateStoredBatch } from "@/lib/onboarding";
-export async function POST(request: NextRequest, context: { params: Promise<{ publicKey: string }> }) { const auth = await requireApiPermission("VALIDATE_ONBOARDING_BATCH"); if (auth.response) return auth.response; try { const body = await onboardingBody(request), { publicKey } = await context.params; const resolutions = body.resolutions && typeof body.resolutions === "object" && !Array.isArray(body.resolutions) ? body.resolutions as any : {}; const batch = await runObservedOnboardingJob({ jobType: "ONBOARDING_VALIDATION", summarySafe: "Governed onboarding validation and dry-run planning" }, () => validateStoredBatch(prisma, publicKey, auth.user!.id, resolutions)); return onboardingJson({ batch }); } catch (error) { return onboardingError(error); } }
+import { NextRequest } from "next/server";
+import { requireApiPermission } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { onboardingBody, onboardingError, onboardingJson, runObservedOnboardingJob } from "@/lib/onboarding-api";
+import { validateStoredBatch, type Resolutions } from "@/lib/onboarding";
+
+export async function POST(request: NextRequest, context: { params: Promise<{ publicKey: string }> }) {
+  const auth = await requireApiPermission("VALIDATE_ONBOARDING_BATCH");
+  if (auth.response) return auth.response;
+  try {
+    const body = await onboardingBody(request), { publicKey } = await context.params;
+    const resolutions = body.resolutions && typeof body.resolutions === "object" && !Array.isArray(body.resolutions) ? body.resolutions as Resolutions : {};
+    if (Object.keys(resolutions).length) {
+      const resolveAuth = await requireApiPermission("RESOLVE_ONBOARDING_CONFLICT");
+      if (resolveAuth.response) return resolveAuth.response;
+    }
+    const batch = await runObservedOnboardingJob({ jobType: "ONBOARDING_VALIDATION", summarySafe: "Governed onboarding validation and dry-run planning" }, () => validateStoredBatch(prisma, publicKey, auth.user!.id, resolutions));
+    return onboardingJson({ batch });
+  } catch (error) { return onboardingError(error); }
+}
