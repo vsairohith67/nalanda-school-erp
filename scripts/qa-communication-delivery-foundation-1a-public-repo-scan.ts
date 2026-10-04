@@ -1,6 +1,7 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { reviewedBiometricCompanionPublicSources } from "./reviewed-biometric-companion-publication";
 
 const root = process.cwd();
 const required = [
@@ -31,6 +32,9 @@ for (const file of ["src-tauri/src/qa_observation.rs", "src-tauri/src/qa_privacy
 // NATIVE-DEVICE-COMPLETION-1B: exact reviewed native test sources only.
 // Existing binary, content, contact and size checks still apply to every file.
 for (const file of ["tests/native/android.ts", "tests/native/android.test.ts", "tests/native/execute.ts", "tests/native/component.mjs", "tests/native/NativeJourney.swift", "tests/native/NativeJourney.xcodeproj/project.pbxproj", "tests/native/NativeJourney.xcodeproj/xcshareddata/xcschemes/NativeJourney.xcscheme"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
+// Exact frozen companion source files, including its six uncommon text formats.
+// The normal scan loop below still applies every content/artifact rule.
+for (const file of reviewedBiometricCompanionPublicSources) allowedRootFiles.add(file);
 const secretPatterns: Array<[string, RegExp]> = [
   ["private-key", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
   ["github-token", /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b/],

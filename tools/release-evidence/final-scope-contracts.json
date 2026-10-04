@@ -210,6 +210,7 @@
     }
   ],
   "featureFlagRuntimeContracts": [
+    {"key":"intelligent-reports-1a","status":"ENFORCED","evidencePaths":["lib/intelligent-reports/access.ts","tests/intelligent-reports-service.test.ts"],"boundary":"Default OFF/0%. Provider fixtures are not runtime activation. Authenticated Browser remains EXTERNAL_RUNTIME_BLOCKED; Accountant attendance and academic export remain unavailable."},
     {
       "key": "real-data-imports",
       "status": "ENFORCED",

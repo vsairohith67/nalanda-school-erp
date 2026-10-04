@@ -21,6 +21,13 @@ describe("Living Master Requirements fail-closed contracts", () => {
     expect(register.requirements).toHaveLength(46);
     expect(Object.values(register.statusCounts).reduce((a, b) => a + b, 0)).toBe(46);
   });
+  it("rejects further mapping-catalogue drift while retaining the original requirement evidence", () => {
+    const path = "config/onboarding/mapping-catalogue.json";
+    const reader = repositorySourceReader();
+    const requirement = register.requirements.find(item => item.id === "NPS-REQ-015")!;
+    expect(requirement.evidence.find(item => item.path === path)!.sha256).toBe("bdcd0f14657793a667e6c7b32950a6c4fa2c6a09b18ddb0aab7e6855eb98faa1");
+    expect(validateMasterRequirements(register, file => reader(file) + (file === path ? "\nUNREVIEWED_MAPPING_CHANGE" : ""))).toContain("EVIDENCE_DRIFT:NPS-REQ-015:" + path);
+  });
   it("records native Git-proven absence for the new dynamic API paths", () => {
     // These exact paths were absent in authorized tree 2c7f1a1, verified with
     // git cat-file --batch. Do not hash git show fallback output for [id] paths.
