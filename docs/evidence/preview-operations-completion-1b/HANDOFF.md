@@ -1,8 +1,9 @@
 # Preview operations completion 1B
 
-Status during correction: `PREVIEW_OPERATIONS_COMPLETION_PARTIAL`.
+Terminal status: `PREVIEW_OPERATIONS_OWNERSHIP_BLOCKED`.
 Task: PREVIEW-OPERATIONS-COMPLETION-1B, Lane 6. One implementation owner;
 shared independent source review is CLEAR; final broader execution remains queued.
+Own source push, draft PR and lane CI were NOT_EXECUTED. No preview was deployed.
 
 ## Source and ownership
 
@@ -19,6 +20,13 @@ After both review corrections, Task A explicitly handed off published reviewed
 `365f966f2a844c1af5b05e2b671b9e513a44b0a0`. Eight reviewed Ops blobs stayed identical
 to the correction freeze; only the four published laptop CLI/test/registry paths
 advanced. No unpublished `bc03856` evidence checkpoint was copied.
+
+Final reviewed local code/evidence checkpoint before this terminal evidence update:
+`c997e0db880b3ea73f5b7de2064a019170a68f8a`, tree
+`5f31e26e35dd2d5634f4465f295cc92b90b0ef9f`. The final evidence-only commit identity
+is recorded in the terminal tracker/coordination packet after commit creation.
+The coordinator's adoption of immutable a1994f0 is verified by Git ancestry;
+that local integration does not establish completed combined qualification.
 
 Branch `feature/preview-operations-completion-1b`; managed checkout:
 `C:/Users/rohit/.codex/worktrees/preview-operations-completion-1b/school software`.
@@ -133,7 +141,7 @@ are not summed as execution. Lane6 returned the slot with zero heavy jobs or lis
 
 ## Evidence levels and remaining qualification
 
-- CONFIGURATION_SOURCE_VALIDATED: PASS (corrected configuration/type/bundle checks); independent review closure pending.
+- CONFIGURATION_SOURCE_VALIDATED: PASS (corrected configuration/type/bundle checks); independent source review CLEAR.
 - SYNTHETIC_BACKUP_RESTORE_EXECUTED: PASS (invented SQLite / local encrypted files, four real restores across two fresh targets).
 - OPERATOR_LIFECYCLE_CONTRACT_TESTED: PASS (existing contract/filesystem adapters and actual emitted qualification refusals; no running-stack claim).
 - RUNNING_STACK_DRILL_EXECUTED: NOT_EXECUTED.
@@ -141,6 +149,7 @@ are not summed as execution. Lane6 returned the slot with zero heavy jobs or lis
 - PREVIEW_DEPLOYED: NO.
 - PostgreSQL local / real S3 provider: NOT_EXECUTED; no already approved target.
 - Exact lane CI: NOT_EXECUTED; own source publication gated.
+- Final full local SQLite regression: NOT_EXECUTED / NOT_STARTED; mandatory ownership prelude BLOCKED.
 - Independent review: CLEAR SOURCE_ONLY on corrected64e4477 and published-source merge a1994f0; original two P2 findings closed, no reviewer execution.
 
 Original focused, affected type, bundle/emitted and original-suite batch settled
@@ -159,6 +168,20 @@ full Vitest never started. Its two newly created invented database files remain
 untouched in this checkout pending the naturally resolved ownership gate. No
 existing/primary database was read or copied, and no helper override was applied.
 The final publication decision must use the then-current helper result.
+After the native owner naturally preserved its qualified correction, the actual
+terminal helper still returned BLOCKED exit2 on a clean local candidate, with
+exactly two foreign overlaps and no unreadable owners:
+`config/recovery-integration-source-delta.json` and
+`scripts/qa-real-data-onboarding-preparation-1a-public-repo-scan.ts`, both in
+`C:/Users/rohit/.codex/worktrees/v1-completion-convergence-1a/school software`.
+No premature foreign commit/staging, source-helper/scanner override or denial
+workaround was used. The unused full-run reservation was returned with zero heavy jobs.
+
+The final live GitHub read retains published PR28 at0aa1462, OPEN/DRAFT, with
+42 terminal checks:27 SUCCESS /8 FAILURE /7 SKIPPED. Those are recovery-source
+results, not this unpublished lane's CI. Task A identifies six Windows custody
+setup failures before the helper and two base-qualification refusals; no waiver,
+current13-case PASS or artifact/runtime approval is inferred.
 
 ## Coordination, cleanup and boundary
 
@@ -176,6 +199,19 @@ EBUSY was preserved; its sole known root was removed after the runner/children h
 settled. No broad cleanup, Docker/WSL restart/prune or foreign target was touched.
 Private timing/diagnostic logs remain ignored under `tmp/preview-operations-1b`;
 no logs, settings, encrypted archives, keys or database bytes are published.
+After all setup children settled and canonical exact-path/reparse checks passed,
+the two newly created invented baseline files (`tmp/release-ci/synthetic.db` and
+this checkout's `prisma/dev.db`) were removed; both absent afterward. Empty parents
+and ignored private execution logs remain. No foreign/operational database was
+opened or copied, and no full-regression test had used that baseline.
+
+Observed correction work/check interval21:02:10–21:04:57 IST; focused15 interval
+21:09:38.6764020–21:11:19.3765524 IST; baseline setup21:18:51.7405420–21:20:57.5086584
+IST. Terminal evidence rescans passed21:58:49–21:58:53 IST (three unchanged scanners
+and Git safety). Shared source review and the later ownership wait are separate intervals,
+not CPU totals. Terminal ownership wait ran from the later blocked prelude through
+the terminal check21:55:36.8748802 IST; no full-suite or own CI-wait duration exists.
+Account-wide/task usage was not measured.
 
 No operational database/secret/private archive/external D: drive/signing store/vault
 was opened/copied/hashed. No runtime/listener/hosted preview, schedule, notification,
@@ -184,7 +220,8 @@ provider/DNS/hosts/firewall/CA change, real/preview account or runtime grant was
 object bytes and credentials; measured file verification and independent database
 restore do not certify full application recovery, power loss, RPO/RTO or capacity.
 
-One next source-integration input after qualification: the shared reviewer must
-review the frozen exact delta, and Task A must provide legitimate handling for the
-unchanged prepare-qa refusal before own-branch source publication can proceed. Runtime input remains separately
-NOT_APPROVED and is not requested to finish available source qualification.
+ONE next source input: the coordinator must finish its independently qualified
+checkpoint for the two named foreign paths so the unchanged helper returns current
+SAFE; then allocate a fresh bounded slot for the untouched full SQLite regression
+before this lane's permitted consolidated source push/draft stacked PR/normal CI.
+Runtime input remains separately NOT_APPROVED and is not requested for that work.
