@@ -337,3 +337,65 @@ Normal master source publication/CI within the existing wave budget remains the
 objective after mandatory qualification and independent review, not another
 source-only terminal handoff. No primary checkout edits, runtime/signing/hosting
 activation, real record access, private-profile broadening or deployment.
+
+## Dated corrected combined qualification checkpoint
+
+The Native corrective source718e01a was published once after genuine unchanged
+SAFE and adopted through ed337c6c89045fe16756d27ddaacc766cae04964. All six
+code/test blobs are identical; no donor or driver was replayed. Native's only
+corrective push is consumed. Its ordinary platform CI is partial: all twelve
+minimum-toolchain target checks and Windows packaging PASS; Android A/B PASS,
+C local-vault assertion FAIL and later scenarios not reached. Apple packaging
+PASS but UI-runner build failed before copied-app identity or XCTest; iPad is
+not reached. Actual private child diagnostics are unavailable; causes remain
+unproved. Connected runtime remains deliberately skipped. Native's terminal
+local document-only984159 checkpoint is clean and not a third publication.
+
+First dedicated master Process session ran16:41:27.3845869–17:06:57.9575488UTC
+on ed337. Actual unchanged custody13 plus authorization36 PASS, publication35
+plus coordinate21 PASS, fresh29 SQLite migrations and invented empty baseline
+PASS, current SQLite reporting/integrated journeys103 PASS and production
+reporting component33 PASS. The full regression completed3466 PASS/1 FAIL/3
+original qpdf SKIP across336 files. Its sole failure is
+EVIDENCE_DRIFT:NPS-REQ-015:config/onboarding/mapping-catalogue.json. Types/build
+were not executed after this failure. Original receipts/logs remain retained;
+this is a failed combined run, not an integration clearance. Desktop policy
+before/after is byte-identical Restricted with five Undefined scopes; inside
+only Process was RemoteSigned. No persistent policy changed.
+
+Git proves the original mapping evidence hash against104a and all four original
+heads; its reviewed current bytes exactly match the immutable cbdd971 import
+donor. The missing current provenance record caused the failure. The correction
+adds this one exact protected configuration path and attributed record380→381,
+preserving every prior record, root metadata, historical hashes, source heads,
+ordering and original requirement evidence. A real-reader negative control
+continues to reject further unreviewed mapping drift. No allowlist/profile,
+timestamp, business rule, runtime admission or original donor is changed.
+
+Human explicitly approved the already reviewed Windows context proposal v2:
+six existing PR28 Windows full-test steps, same repository and exact recovery
+branch, attempt1 and PR event updated2026-10-04UTC only. Each has a120-minute
+step cap with shorter existing job deadlines retained. Inheriting children
+receive Process-only RemoteSigned; machine/User/GPO remain authoritative and
+unchanged. Original test/type/build commands and assertions stay unchanged.
+This covers the existing master3+1 publication budget, not an encoded wave
+counter or runtime expiry. Other PR/push/manual/retry contexts are excluded.
+
+Human also approved a corrected local Process continuation within the ORIGINAL
+18:41:27.3845869UTC deadline. It must qualify the actual evidence correction,
+all actual custody cases in current full regression, all20 types and build on
+the clean frozen corrected source. Before/inside/after policy and children'
+settlement remain mandatory. The failed run's two newly invented baseline
+databases may be archived only within this owned checkout, then fresh empty
+migrations/seed used; no operational or foreign database access is permitted.
+Unchanged reporting runtime/component inputs retain the actual103/33 receipts;
+current full reruns the service cases. Corrected results are pending here.
+
+Operations final source9177b1 is clean, same-reader SOURCE_ONLY CLEAR and has
+actual19 suites186 PASS/zero skips plus fresh genuine SAFE/source/scans/Git
+checks. Original permitted consolidated publication succeeded as draft stacked
+PR32; normal CI remains pending. No duplicate Operations full regression was
+started. Import/Operations source writes and heavy jobs are frozen during the
+corrected master run. A4 primary is explicitly released to master. Master has
+used zero of its own source publication waves; qualification, independent
+review, permitted PR28 source publication and normal CI remain the next chain.
