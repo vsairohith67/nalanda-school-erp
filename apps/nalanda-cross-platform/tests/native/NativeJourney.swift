@@ -28,18 +28,25 @@ final class NativeJourney: XCTestCase {
     func testNoRemoteJourney() {
         continueAfterFailure = false
         XCTContext.runActivity(named: "A-clean-launch") { _ in
+            print("NALANDA_NATIVE_SCENARIO:BEGIN:A-clean-launch")
             app.launch(); locked(); require("NO REMOTE SERVER CONFIGURED"); require("App 0.1.0")
+            print("NALANDA_NATIVE_SCENARIO:PASS:A-clean-launch")
         }
         XCTContext.runActivity(named: "B-invalid-pin") { _ in
+            print("NALANDA_NATIVE_SCENARIO:BEGIN:B-invalid-pin")
             XCTAssertFalse(app.buttons["Unlock app"].firstMatch.isEnabled)
             app.secureTextFields.firstMatch.tap(); app.secureTextFields.firstMatch.typeText("123")
             XCTAssertFalse(app.buttons["Unlock app"].firstMatch.isEnabled); require("Use an 8–12 digit app PIN.")
             app.terminate(); app.launch(); locked()
+            print("NALANDA_NATIVE_SCENARIO:PASS:B-invalid-pin")
         }
         XCTContext.runActivity(named: "C-local-vault-empty") { _ in
+            print("NALANDA_NATIVE_SCENARIO:BEGIN:C-local-vault-empty")
             unlock(pin); require("0 items"); require("No remote server is configured.")
+            print("NALANDA_NATIVE_SCENARIO:PASS:C-local-vault-empty")
         }
         XCTContext.runActivity(named: "F-remote-reference-draft-refusal") { _ in
+            print("NALANDA_NATIVE_SCENARIO:BEGIN:F-remote-reference-draft-refusal")
             tap("Security"); require("The server still decides")
             XCTAssertFalse(app.buttons["No remote server configured"].firstMatch.isEnabled)
             XCTAssertFalse(app.buttons["Download encrypted reference data"].firstMatch.isEnabled)
@@ -49,16 +56,22 @@ final class NativeJourney: XCTestCase {
             XCTAssertTrue(summary.exists); summary.tap(); summary.typeText("Synthetic purpose")
             XCTAssertTrue(amount.exists); amount.tap(); amount.typeText("1.00")
             tap("Save encrypted draft"); require("Connect once and download current reference data before creating an offline draft."); require("0 items")
+            print("NALANDA_NATIVE_SCENARIO:PASS:F-remote-reference-draft-refusal")
         }
         XCTContext.runActivity(named: "D-explicit-lock-and-os-background") { _ in
+            print("NALANDA_NATIVE_SCENARIO:BEGIN:D-explicit-lock-and-os-background")
             tap("Lock"); locked(); unlock(pin)
             XCUIDevice.shared.press(.home); app.activate(); locked(); unlock(pin)
+            print("NALANDA_NATIVE_SCENARIO:PASS:D-explicit-lock-and-os-background")
         }
         XCTContext.runActivity(named: "E-cold-restart-wrong-pin") { _ in
+            print("NALANDA_NATIVE_SCENARIO:BEGIN:E-cold-restart-wrong-pin")
             app.terminate(); app.launch(); locked()
             unlockWrongPin(); app.terminate(); app.launch(); unlock(pin)
+            print("NALANDA_NATIVE_SCENARIO:PASS:E-cold-restart-wrong-pin")
         }
         XCTContext.runActivity(named: "G-reset-cancel-confirm") { _ in
+            print("NALANDA_NATIVE_SCENARIO:BEGIN:G-reset-cancel-confirm")
             tap("Security"); tap("Reset app data"); tap("Cancel"); require("The server still decides")
             tap("Lock"); locked(); unlock(pin)
             tap("Security"); tap("Reset app data")
@@ -68,12 +81,15 @@ final class NativeJourney: XCTestCase {
             let replacement = pin == "31415926" ? "27182818" : "31415926"
             unlock(replacement); require("0 items") // waits for the real reset barrier
             app.terminate(); app.launch(); unlock(replacement); require("0 items")
+            print("NALANDA_NATIVE_SCENARIO:PASS:G-reset-cancel-confirm")
         }
         XCTContext.runActivity(named: "H-platform-accessibility-layout") { _ in
+            print("NALANDA_NATIVE_SCENARIO:BEGIN:H-platform-accessibility-layout")
             tap("Lock"); locked()
             XCUIDevice.shared.orientation = .landscapeLeft; locked()
             XCTAssertTrue(app.secureTextFields.firstMatch.isHittable)
             XCUIDevice.shared.orientation = .portrait; locked()
+            print("NALANDA_NATIVE_SCENARIO:PASS:H-platform-accessibility-layout")
         }
         app.terminate()
     }

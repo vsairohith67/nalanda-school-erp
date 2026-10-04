@@ -31,7 +31,7 @@ for (const file of ["src-tauri/build.rs", "src-tauri/src/lib.rs", "src-tauri/src
 for (const file of ["src-tauri/src/qa_observation.rs", "src-tauri/src/qa_privacy.js", "src/App-lifecycle.test.tsx", "src/vault-unlock.test.ts", "src/vault-unlock.ts"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
 // NATIVE-DEVICE-COMPLETION-1B: exact reviewed native test sources only.
 // Existing binary, content, contact and size checks still apply to every file.
-for (const file of ["tests/native/android.ts", "tests/native/android.test.ts", "tests/native/execute.ts", "tests/native/component.mjs", "tests/native/NativeJourney.swift", "tests/native/NativeJourney.xcodeproj/project.pbxproj", "tests/native/NativeJourney.xcodeproj/xcshareddata/xcschemes/NativeJourney.xcscheme"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
+for (const file of ["tests/native/android.ts", "tests/native/android.test.ts", "tests/native/execute.ts", "tests/native/diagnostics.ts", "tests/native/component.mjs", "tests/native/NativeJourney.swift", "tests/native/NativeJourney.xcodeproj/project.pbxproj", "tests/native/NativeJourney.xcodeproj/xcshareddata/xcschemes/NativeJourney.xcscheme"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
 // Exact frozen companion source files, including its six uncommon text formats.
 // The normal scan loop below still applies every content/artifact rule.
 for (const file of reviewedBiometricCompanionPublicSources) allowedRootFiles.add(file);
