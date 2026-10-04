@@ -14,7 +14,7 @@ export type TrustRegistration={contract:"NALANDA_BUILD_AUTHORITY_V1";namespace:"
 export type ObservedSubject={identity:InputIdentity;workflowRef:string;workflowSha:string;recipeSha256:string;lockSha256:string};
 export type ResolvedInputPolicy=InputPolicy & {authorizationSha256:string;materialsSha256:string;expiresAt:number;debianKeyringSha256:string;debianSigners:string[];checkDocument:(d:InputDocument)=>void};
 
-function key(value:Key,now:number){
+export function verifyRegisteredEd25519Key(value:Key,now:number){
  nativeObject(value,["id","algorithm","publicKey","notBefore","notAfter","revoked"]);
  requireInput(value.algorithm==="Ed25519"&&typeof value.publicKey==="string"&&value.publicKey.length<=256&&HEX.test(value.id)&&typeof value.revoked==="boolean","PRODUCTION_KEY_INVALID");
  const parsed=createPublicKey(value.publicKey);
@@ -22,6 +22,7 @@ function key(value:Key,now:number){
  requireInput(Number.isSafeInteger(value.notBefore)&&Number.isSafeInteger(value.notAfter)&&value.notBefore<=now&&now<value.notAfter&&!value.revoked,"PRODUCTION_KEY_INACTIVE");
  return parsed;
 }
+const key=verifyRegisteredEd25519Key;
 
 /** Pure cryptographic resolver. Tests use isolated generated keys, never the
  * production entrypoint or registration. No key is selected by evidence bytes. */

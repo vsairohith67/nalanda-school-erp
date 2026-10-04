@@ -1,0 +1,8 @@
+import {it,expect} from 'vitest';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync} from 'node:fs';
+import path from 'node:path';
+import {hostConfigurationIdentity,LOCAL_COMPOSE_DIRECTORY} from '../scripts/laptop-lab/consumer-host';
+function config(){const root=mkdtempSync(path.join(process.cwd(),'tmp','a4-host-')),value={currentContext:'desktop-linux',cliPluginsExtraDirs:[LOCAL_COMPOSE_DIRECTORY]};writeFileSync(path.join(root,'config.json'),JSON.stringify(value));return {root,value};}
+it('registered configuration hashing is stable, read-only and detects context-byte substitution',()=>{const f=config(),file=path.join(f.root,'config.json'),before=readFileSync(file),hash=hostConfigurationIdentity(f.root);expect(hostConfigurationIdentity(f.root)).toBe(hash);expect(readFileSync(file)).toEqual(before);mkdirSync(path.join(f.root,'contexts/meta', 'a'.repeat(64)),{recursive:true});writeFileSync(path.join(f.root,'contexts/meta','a'.repeat(64),'meta.json'),'{}');expect(hostConfigurationIdentity(f.root)).not.toBe(hash);});
+it.each(['auths','credsStore','currentContext','cliPluginsExtraDirs'])('rejects configuration substitution %s',field=>{const f=config(),v:any={...f.value};v[field]=field==='cliPluginsExtraDirs'?['C:\\SYNTHETIC-FOREIGN']:field==='currentContext'?'remote':{};writeFileSync(path.join(f.root,'config.json'),JSON.stringify(v));expect(()=>hostConfigurationIdentity(f.root)).toThrow('LOCAL_DOCKER_CONFIGURATION_UNSAFE');});
+it('rejects a private config plugin override and unrelated files',()=>{const f=config();mkdirSync(path.join(f.root,'cli-plugins'));expect(()=>hostConfigurationIdentity(f.root)).toThrow();const g=config();writeFileSync(path.join(g.root,'unreviewed.json'),'{}');expect(()=>hostConfigurationIdentity(g.root)).toThrow();});

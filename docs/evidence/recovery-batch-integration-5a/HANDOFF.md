@@ -1058,3 +1058,49 @@ Rohith is the explicitly owner-designated private-preview approver and server/si
 Real input qualification additionally needs every supported vendor/tool/base/Node-library proof and current complete scanner evidence, original package archives/metadata and native member associations. Debian metadata must remain valid at the actual verification clock; absent or expired `Valid-Until` is refused because no historical-snapshot exception is registered. Rohith's designation cannot waive those findings or create supplier attestations. Inputs requiring an unapproved redirect or unsupported native origin remain refused.
 
 ARKAVIQ OPC incorporation is in progress; no verified final legal name, registration, DUNS or store account is asserted. Company DSC, Apple/Play credentials and domain TLS are separate from backend evidence signing. Future participants are Rohith, director, principal and accountant; no accounts/roles are created. Available Windows/Android/iPhone/iPad devices are not approved resettable test targets; no Mac is available. Suitable already-owned hardware or an explicitly approved temporary environment precedes measured hosting selection. NPS and ARKAVIQ/personal costs remain separate; Hyperscale remains a quote. No spending, DNS/tunnel/public access, real data, store publication or deployment follows from this sheet.
+
+
+## A4 local runtime authorization source candidate (2026-10-04)
+
+Status: LOCAL_RUNTIME_AUTHORIZATION_PARTIAL. This is a local source increment
+from published 2113fa17bcda1acfb3edf5fa0d6ca9c2a21e8c7c, tree
+c0aca53c31abef391ce4e4f6390325b57ce8bcdb. Required Windows custody adapter
+validation is BLOCKED by the actual script execution policy. No source push,
+integration or new CI cycle is eligible while this required check is unavailable.
+
+The ordinary CLI now connects raw artifact verification to a separately registered
+artifact endorsement and an exact local-runtime grant, then to the existing
+lifecycle, certificate adapter and scheduler. Previously the two boundaries
+unconditionally refused. Unconfigured calls still refuse: the committed local
+trust registration is null. Pure cryptographic verification cannot mint the private
+production admission capability. Hosted callers retain their previous hold.
+
+The complete existing profile hash binds consumer source/code, local run, endpoint,
+origin, operations and resource limits. Signatures bind the whole raw evidence set,
+verified receipt and genuine producer source/tree/run/attempt/architecture. Existing
+Ed25519 verification, raw scanner requirements and artifact compatibility are reused.
+Expiry, key state/generation, registration/profile/evidence replacement, monotonic
+duration and deadline checks remain enforced before effects. Docker/compose bytes
+and the restricted configuration are independently pinned; actual commands bind the
+validated local endpoint explicitly. One-use claims burn before lifecycle creation.
+
+The proposed adapter requires an explicitly registered, owner-controlled local NTFS
+root with the actual Windows SID and volume serial, owner/SYSTEM-only ACLs, bounded
+private Docker configuration and fixed endorsement/grant files. Consumed run receipts
+remain in that root; failure never removes them. This task creates no such root and
+changes no ACL. Controlled metadata tests do not establish actual custody, retention,
+backup recovery, encryption or power-loss durability. Those remain unverified and
+unapproved. A3 stays unchanged: Rohith is approver/custodian and OWNER SELF-REVIEW;
+organizational independence is not established, keys remain deferred and production
+custody/retention are undecided. No private A3 proposal bytes are included here.
+
+Initial authorization/host tests passed 42 cases. The controlled Windows helper
+suite recorded 13 failures before helper execution (script execution disabled), not
+13 passing refusal tests. No bypass, alternate runtime or retry was used. Further
+permitted regression and final exact-delta review are recorded in the local closeout.
+In-process fixtures and harmless process tests are not ERP execution or real grants.
+
+The original primary handoffs, D4-R2 evidence, e534120cb0ae015dc2cbd267ff8fb1dc6916294e
+and unpublished 69ff618ca44fe6d57d9a1de19c3872de9f364cc8 remain preserved. No adapter or
+benchmark redesign, operational data, image build/pull/scan, runtime, deployment,
+real signing key, registration activation or operation grant is part of this task.
