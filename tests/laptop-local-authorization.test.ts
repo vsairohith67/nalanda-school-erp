@@ -2,7 +2,7 @@ import {it,expect} from 'vitest';
 import {generateKeyPairSync,sign,randomUUID} from 'node:crypto';
 import {mkdtempSync,openSync,closeSync,writeFileSync,readFileSync,existsSync,fsyncSync} from 'node:fs';
 import path from 'node:path';
-import {execFileSync} from 'node:child_process';
+import {spawnSync} from 'node:child_process';
 import {evidenceFixture,harnessConnection} from '../scripts/laptop-lab/consumer-test-support';
 import {executeConsumer,loadConsumerProfile} from '../scripts/laptop-lab/consumer-connection';
 import {localRuntimeSubject,loadLocalAuthorization} from '../scripts/laptop-lab/consumer-authorization';
@@ -114,6 +114,9 @@ it('profile-file replacement after load refuses before lifecycle even with valid
 });
 it('ordinary CLI absent producer inputs refuses and forged environment cannot enable execution',()=>{
  const f=fixture(),root=mkdtempSync(path.join(workspace,'tmp','a4-cli-')),file=path.join(root,'profile.json');f.profile.producer.runId=null;writeFileSync(file,JSON.stringify(f.profile));
- const run=(extra:Record<string,string>)=>{try{execFileSync(process.execPath,['scripts/laptop-lab/cli.mjs','runtime','--profile',file,'--expected-profile',profileHash(f.profile)],{cwd:workspace,env:{...process.env,...extra},stdio:'pipe',timeout:20000});throw Error('UNEXPECTED_SUCCESS');}catch(e:any){return e.stderr?.toString()??e.message;}};
- expect(run({})).toContain('PRODUCER_RAW_CI_EVIDENCE_REQUIRED');expect(run({GITHUB_ACTIONS:'true'})).toContain('LOCAL_CI_IDENTITY_REFUSED');expect(existsSync(path.join(workspace,'scripts/laptop-lab/outputs',f.profile.consumer.outputName))).toBe(false);
+ // Only this refusal fixture models a local child. Hosted identity must not
+ // silently change its baseline; the explicit negative still exercises it.
+ const environment={...process.env};for(const name of ['GITHUB_ACTIONS','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT','RUNNER_ENVIRONMENT','PORTABLE_CI_EXCEPTION','DOCKER_HOST','DOCKER_CONTEXT'])delete environment[name];
+ const run=(extra:Record<string,string>)=>spawnSync(process.execPath,['scripts/laptop-lab/cli.mjs','runtime','--profile',file,'--expected-profile',profileHash(f.profile)],{cwd:workspace,env:{...environment,...extra},encoding:'utf8',windowsHide:true,stdio:'pipe',timeout:20000});
+ for(const [extra,reason] of [[{},'PRODUCER_RAW_CI_EVIDENCE_REQUIRED'],[{GITHUB_ACTIONS:'true'},'LOCAL_CI_IDENTITY_REFUSED']] as const){const result=run(extra);expect(result.error).toBeUndefined();expect(result.status).toBe(1);expect(result.stdout).toBe('');expect(result.stderr).toContain(reason);expect(existsSync(path.join(workspace,'scripts/laptop-lab/outputs',f.profile.consumer.outputName))).toBe(false);}
 });
