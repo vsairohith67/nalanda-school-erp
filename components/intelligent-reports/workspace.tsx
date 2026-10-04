@@ -33,12 +33,12 @@ export function Workspace({initialAccess}:{initialAccess:Access}) {
   },[query.family,query.academicYear,access.context,access.families,clear]);
   useEffect(()=>{if(report)heading.current?.focus();},[report]);
   useEffect(()=>{
-    let controller=new AbortController();let stopped=false;
-    const check=async()=>{try{const latest=await request<Access>("access",undefined,controller.signal);if(stopped)return;if(latest.context!==access.context||latest.families.join()!==access.families.join()){clear();setQuestion("");setTargets([]);setQuery(fresh(latest.families[0]??"ACADEMIC",latest.years[0]??""));setAccess(latest);}}catch(e){if(!controller.signal.aborted){clear();setAccess(a=>({...a,families:[]}));setError(e instanceof Error?e.message:"Access changed.");}}};
+    const refreshes=new RequestGeneration();let stopped=false;
+    const check=async()=>{const token=refreshes.begin();try{const latest=await request<Access>("access",undefined,token.signal);if(stopped||!refreshes.current(token.generation))return;if(latest.context!==access.context||latest.families.join()!==access.families.join()||latest.years.join()!==access.years.join()){clear();setQuestion("");setTargets([]);setQuery(fresh(latest.families[0]??"ACADEMIC",latest.years[0]??""));setAccess(latest);}}catch(e){if(!stopped&&refreshes.current(token.generation)){clear();setAccess(a=>({...a,families:[]}));setError(e instanceof Error?e.message:"Access changed.");}}};
     const visibility=()=>{clear();setQuestion("");if(document.visibilityState==="visible")void check();};
     const interval=setInterval(()=>void check(),30000);window.addEventListener("pagehide",visibility);document.addEventListener("visibilitychange",visibility);
-    return()=>{stopped=true;controller.abort();clearInterval(interval);window.removeEventListener("pagehide",visibility);document.removeEventListener("visibilitychange",visibility);requests.current.invalidate();};
-  },[access.context,access.families,clear]);
+    return()=>{stopped=true;refreshes.invalidate();clearInterval(interval);window.removeEventListener("pagehide",visibility);document.removeEventListener("visibilitychange",visibility);requests.current.invalidate();};
+  },[access.context,access.families,access.years,clear]);
   const perform=async(action:"interpret"|"run"|"source"|"export",next=query,key?:string)=>{
     const token=requests.current.begin();setBusy(true);setError("");setNotice("");
     setDetail(null);setSourceError(null);setSourceRow(action==="source"?report?.rows.find(row=>row.key===key)??null:null);

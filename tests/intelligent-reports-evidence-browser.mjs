@@ -11,8 +11,9 @@ const root=path.resolve("tmp/attendance-evidence-1b"),fixtures=JSON.parse(readFi
 assert.match(fixtures.label,/SYNTHETIC actual migrated SQLite/);
 mkdirSync(root,{recursive:true});
 await build({stdin:{contents:'import React from "react";import{createRoot}from"react-dom/client";import{Workspace}from"./components/intelligent-reports/workspace";createRoot(document.getElementById("root")).render(<Workspace initialAccess={{families:["ATTENDANCE","ACADEMIC"],years:["2026-27","2023-24"],context:"synthetic-context"}}/>);',resolveDir:process.cwd(),loader:"tsx"},alias:{react:path.resolve("node_modules/react"),"react-dom":path.resolve("node_modules/react-dom")},bundle:true,platform:"browser",format:"iife",jsx:"automatic",outfile:path.join(root,"workspace.js"),define:{"process.env.NODE_ENV":'"production"'}});
-let mode="normal",accessDenied=false,sourceRequests=0;
+let mode="normal",accessDenied=false,sourceRequests=0,accessYears=["2026-27","2023-24"];
 const receipts=[],consoleMessages=[],failures=[];
+let delayedAccess=false,delayedStatus=200,accessReceived,releaseAccess;
 const apiHeaders={"content-type":"application/json","cache-control":"private, no-store, max-age=0","x-robots-tag":"noindex, nofollow, noarchive"};
 const server=createServer(async(req,res)=>{
   try{
@@ -20,13 +21,18 @@ const server=createServer(async(req,res)=>{
     if(req.method==="GET"&&url.pathname==="/"){res.writeHead(200,{"content-type":"text/html","cache-control":"no-store"});res.end('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ask Nalanda — synthetic component QA</title><link rel="stylesheet" href="/workspace.css"><style>html{font:16px Georgia,serif;color:#152b43;background:#f5f7fa}body{margin:0;padding:20px}*{box-sizing:border-box}body>header{font-family:Georgia,serif;font-weight:bold;margin-bottom:20px}.dark{color:#ecf1f7;background:#0f1727}@media(max-width:600px){body{padding:10px}}</style></head><body><header>NALANDA PUBLIC SCHOOL<small style="display:block;font:14px sans-serif">Synthetic component QA — invented service fixture</small></header><main id="root"></main><script src="/workspace.js"></script></body></html>');return;}
     if(req.method==="GET"&&["/workspace.js","/workspace.css"].includes(url.pathname)){res.writeHead(200,{"content-type":url.pathname.endsWith("js")?"text/javascript":"text/css","cache-control":"no-store"});res.end(readFileSync(path.join(root,url.pathname.slice(1))));return;}
     if(url.pathname==="/favicon.ico"){res.writeHead(204);res.end();return;}
-    if(url.pathname==="/api/intelligent-reports/access"&&req.method==="GET"){res.writeHead(accessDenied?403:200,apiHeaders);res.end(JSON.stringify(accessDenied?{code:"ACCESS_DENIED",error:"Synthetic access revoked"}:{families:["ATTENDANCE","ACADEMIC"],years:["2026-27","2023-24"],context:"synthetic-context"}));return;}
-    if(req.method!=="POST"||!new Set(["/api/intelligent-reports/options","/api/intelligent-reports/run","/api/intelligent-reports/source"]).has(url.pathname)){res.writeHead(404,apiHeaders);res.end(JSON.stringify({error:"Unknown synthetic route refused"}));return;}
+    if(url.pathname==="/api/intelligent-reports/access"&&req.method==="GET"){if(delayedAccess){delayedAccess=false;accessReceived();await new Promise(resolve=>releaseAccess=resolve);res.writeHead(delayedStatus,apiHeaders);res.end(JSON.stringify(delayedStatus===200?{families:["ATTENDANCE","ACADEMIC"],years:accessYears,context:"synthetic-context"}:{code:"ACCESS_DENIED",error:"Older synthetic refusal"}));return;}res.writeHead(accessDenied?403:200,apiHeaders);res.end(JSON.stringify(accessDenied?{code:"ACCESS_DENIED",error:"Synthetic access revoked"}:{families:["ATTENDANCE","ACADEMIC"],years:accessYears,context:"synthetic-context"}));return;}
+    if(req.method!=="POST"||!new Set(["/api/intelligent-reports/options","/api/intelligent-reports/run","/api/intelligent-reports/source","/api/intelligent-reports/export"]).has(url.pathname)){res.writeHead(404,apiHeaders);res.end(JSON.stringify({error:"Unknown synthetic route refused"}));return;}
     let raw="";for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>16000){res.writeHead(413,apiHeaders);res.end('{}');return;}}
     const body=JSON.parse(raw),action=url.pathname.split('/').at(-1),query=body.query,year=body.academicYear??query?.academicYear;
     const report=year==="2023-24"?fixtures.report:fixtures.current;
     if(action==="options"){res.writeHead(200,apiHeaders);res.end(JSON.stringify({targets:[{id:report.query.targets[0].id,className:"7",section:"A",exams:[]}]}));return;}
     if(action==="run"){assert.equal(query.academicYear,report.query.academicYear);assert.deepEqual(query.targets,report.query.targets);res.writeHead(200,apiHeaders);res.end(JSON.stringify({...report,query}));return;}
+    if(action==="export"){
+      if(mode==="denied"||mode==="changed"){res.writeHead(mode==="denied"?403:409,apiHeaders);res.end(JSON.stringify({code:mode==="denied"?"ACCESS_DENIED":"SOURCE_CHANGED",error:"Synthetic export " + mode}));return;}
+      assert.deepEqual(query,report.query);assert.equal(body.expectedRevision,report.sourceRevision);
+      res.writeHead(200,{...apiHeaders,"content-type":"text/csv; charset=utf-8","content-disposition":"attachment; filename=nalanda-attendance-2023-24.csv"});res.end(fixtures.csv);return;
+    }
     sourceRequests++;const selectedMode=mode;
     if(selectedMode==="slow"||selectedMode==="stale"&&body.key===fixtures.complete.row.key)await new Promise(r=>setTimeout(r,600));
     if(selectedMode==="changed"||selectedMode==="denied"||selectedMode==="failed"){res.writeHead(selectedMode==="changed"?409:selectedMode==="denied"?403:500,apiHeaders);res.end(JSON.stringify({code:selectedMode==="changed"?"SOURCE_CHANGED":selectedMode==="denied"?"ACCESS_DENIED":"REQUEST_FAILED",error:selectedMode==="failed"?'Synthetic failure <script>window.bad=1</script> '+"長い説明確認".repeat(70):"Synthetic source " + selectedMode}));return;}
@@ -74,6 +80,51 @@ try{
   await run();await row(0).click();await dialog.getByText("Complete",{exact:true}).waitFor();await close();await page.getByRole("combobox",{name:/Academic year/}).selectOption("2026-27");assert.equal(await page.getByRole("heading",{name:"Report results",exact:true}).count(),0);receipts.push("year change invalidates report/details");
   for(const change of ["date","scope","family","rerun"]){await run();mode="slow";await row(0).click();await dialog.getByText("Loading authorised source details…",{exact:true}).waitFor();await close();if(change==="date")await page.getByLabel("From",{exact:true}).fill("2024-02-02");else if(change==="scope")await page.getByRole("checkbox",{name:"7A",exact:true}).uncheck();else if(change==="family")await page.getByRole("button",{name:"Academic support",exact:true}).click();else {mode="normal";await page.getByRole("button",{name:"Run report",exact:true}).click();await page.getByRole("heading",{name:"Report results",exact:true}).waitFor();}await page.waitForTimeout(700);assert.equal(await dialog.count(),0);if(change!=="rerun")assert.equal(await page.getByRole("heading",{name:"Report results",exact:true}).count(),0);receipts.push(change+" invalidates obsolete detail");}
   await run();await row(0).click();await dialog.getByText("Complete",{exact:true}).waitFor();accessDenied=true;await page.evaluate(()=>document.dispatchEvent(new Event("visibilitychange")));await page.getByText("No reporting domain is available",{exact:false}).waitFor();assert.equal(await dialog.count(),0);receipts.push("access refresh invalidates visible detail");
+  await run("2026-27");await row(0).click();await dialog.getByText("Complete",{exact:true}).waitFor();await close();
+  accessYears=["2023-24"];
+  const accessUpdated=page.waitForResponse(response=>response.url().endsWith("/access")&&response.status()===200);
+  await page.evaluate(()=>document.dispatchEvent(new Event("visibilitychange")));await accessUpdated;
+  await page.waitForFunction(()=>document.querySelector('select')?.value==="2023-24");
+  assert.equal(await page.getByRole("heading",{name:"Report results",exact:true}).count(),0);
+  assert.equal(await page.getByRole("combobox",{name:/Academic year/}).locator('option').filter({hasText:"2026-27"}).count(),0);
+  receipts.push("access year removal invalidates obsolete selection without a permission-context change");
+  await run();await page.emulateMedia({reducedMotion:"reduce"});
+  assert(await page.evaluate(()=>matchMedia('(prefers-reduced-motion: reduce)').matches));
+  await row(0).click();await dialog.getByText("Complete",{exact:true}).waitFor();
+  assert.equal(await dialog.getByRole("button",{name:"Close source details"}).evaluate(el=>getComputedStyle(el).transitionProperty),"none");
+  await page.keyboard.press("Escape");receipts.push("reduced motion and keyboard dialog closure");
+  const downloaded=page.waitForEvent("download");await page.getByRole("button",{name:"Export authorised CSV",exact:true}).click();
+  const download=await downloaded;assert.equal(download.suggestedFilename(),"nalanda-attendance-2023-24.csv");
+  const csvPath=path.join(root,"synthetic-attendance.csv");await download.saveAs(csvPath);assert.equal(readFileSync(csvPath,"utf8"),fixtures.csv);
+  assert.equal(await page.locator('dialog').count(),0);receipts.push("safe separately requested CSV exactly matches service projection");
+  for(const state of ["denied","changed"]){await run();mode=state;let receivedDownload=false;const observed=()=>receivedDownload=true;page.on("download",observed);
+    await page.getByRole("button",{name:"Export authorised CSV",exact:true}).click();await page.getByRole("alert").waitFor();
+    assert.equal(receivedDownload,false);assert.equal(await page.getByRole("heading",{name:"Report results",exact:true}).count(),0);page.off("download",observed);receipts.push("export " + state + " refuses bytes and clears results");}
+  accessYears=["2026-27","2023-24"];await run();
+  // Older successful access reply arrives after a newer revocation. Ignore abort at
+  // this adversarial transport boundary so generation ordering is actually tested.
+  await page.evaluate(()=>{const original=window.fetch;window.fetch=(url,options)=>original(url,typeof url==="string"&&url.endsWith("/access")?{...options,signal:undefined}:options);});
+  delayedAccess=true;const received=new Promise(resolve=>accessReceived=resolve);
+  await page.evaluate(()=>document.dispatchEvent(new Event("visibilitychange")));await received;
+  accessDenied=true;await page.evaluate(()=>document.dispatchEvent(new Event("visibilitychange")));
+  await page.getByText("No reporting domain is available",{exact:false}).waitFor();
+  const oldReply=page.waitForResponse(response=>response.url().endsWith("/access")&&response.status()===200);
+  releaseAccess();await oldReply;await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  assert(await page.getByText("No reporting domain is available",{exact:false}).isVisible());
+  assert.equal(await page.getByRole("combobox",{name:/Academic year/}).count(),0);
+  receipts.push("late successful access reply cannot undo a newer refusal");
+  await run();
+  await page.evaluate(()=>{const original=window.fetch;window.fetch=(url,options)=>original(url,typeof url==="string"&&url.endsWith("/access")?{...options,signal:undefined}:options);});
+  delayedStatus=403;delayedAccess=true;
+  const oldRefusalReceived=new Promise(resolve=>accessReceived=resolve);
+  await page.evaluate(()=>document.dispatchEvent(new Event("visibilitychange")));await oldRefusalReceived;
+  const newerSuccess=page.waitForResponse(response=>response.url().endsWith("/access")&&response.status()===200);
+  await page.evaluate(()=>document.dispatchEvent(new Event("visibilitychange")));await newerSuccess;
+  const oldRefusal=page.waitForResponse(response=>response.url().endsWith("/access")&&response.status()===403);
+  releaseAccess();await oldRefusal;await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  assert(await page.getByRole("combobox",{name:/Academic year/}).isVisible());
+  assert.equal(await page.getByText("No reporting domain is available",{exact:false}).count(),0);
+  receipts.push("late older refusal cannot discard newly reauthorized selection");
   const ids=await page.locator('[id]').evaluateAll(elements=>elements.map(e=>e.id));assert.equal(ids.length,new Set(ids).size);
   assert.equal(await page.evaluate(()=>localStorage.length),0);assert.equal(failures.length,0);
   assert(consoleMessages.every(message=>/Failed to load resource.*(403|409|500)/.test(message)),JSON.stringify(consoleMessages));
