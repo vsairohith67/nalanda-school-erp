@@ -386,6 +386,14 @@ jobs:
           path: tmp/platform-review/native-1b-android-summary.json
           if-no-files-found: error
           retention-days: 7
+      - name: Retain bounded native child diagnostics only in private repositories
+        if: ${{ always() && github.event.repository.private == true }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-1b-android-private-process-diagnostics
+          path: ${{ runner.temp }}/native-1b-android/process-*
+          if-no-files-found: warn
+          retention-days: 7
 
   ios:
     name: iOS simulator build and shared UI gate
@@ -447,10 +455,19 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
         with:
           name: native-1b-ios-summary
           path: tmp/platform-review/native-1b-ios-*-summary.json
           if-no-files-found: error
+          retention-days: 7
+      - name: Retain bounded native child diagnostics only in private repositories
+        if: ${{ always() && github.event.repository.private == true }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-1b-ios-private-process-diagnostics
+          path: ${{ runner.temp }}/native-1b-ios-*/process-*
+          if-no-files-found: warn
           retention-days: 7
 
 

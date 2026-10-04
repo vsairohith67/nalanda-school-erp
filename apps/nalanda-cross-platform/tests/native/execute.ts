@@ -4,7 +4,7 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFile
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
-import { producerProcess } from "../../../../scripts/portable/producer-process";
+import { producerProcess, type ProducerProcessObservation } from "../../../../scripts/portable/producer-process";
 import { Android, appId, journey } from "./android";
 import { assertProtectedNativeCapture, assertNonblankNativeCapture } from "../../../../scripts/qa-ux-native-screen-content";
 
@@ -27,6 +27,31 @@ export function options(args: string[]) {
 function inside(child: string, root: string) { const r = path.relative(root, child); return r !== "" && !r.startsWith("..") && !path.isAbsolute(r); }
 function file(value: string) { assert(value && path.isAbsolute(value) && !lstatSync(value).isSymbolicLink() && lstatSync(value).isFile(), "NATIVE_TOOL_OR_PACKAGE_INVALID"); return realpathSync(value); }
 
+const processStages = new Set(["tool-version","package-metadata","android-install","android-uninstall","android-ui-command","ios-package-metadata","ios-architecture","xcode-version","ios-inventory","ios-create-owned-target","ios-boot","ios-boot-readiness","ios-theme","ios-build-ui-runner","ios-real-ui-journey","ios-dark-theme","ios-dark-locked-layout","ios-final-locked-launch","ios-final-capture","ios-owned-shutdown","ios-owned-delete","ios-cleanup-readback"]);
+export function processRecorder(output: string) {
+  let sequence=0, failure: {stage:string;cause:string}|null=null;
+  const outcomes=new Map<string,Omit<ProducerProcessObservation,"stdout"|"stderr">>();
+  const observe=(r:ProducerProcessObservation)=>{
+    assert(processStages.has(r.stage),"NATIVE_PROCESS_STAGE_NOT_ALLOWLISTED");
+    assert(++sequence<=1000,"NATIVE_PROCESS_RECORD_LIMIT");
+    let cause=r.startupFailed?"CHILD_STARTUP_FAILED":r.terminationFailed?"CHILD_GROUP_UNRECONCILED":r.timedOut?"CHILD_TIMEOUT":r.cancelled?"CHILD_CANCELLED":r.outputLimit?"CHILD_OUTPUT_LIMIT":r.exit!==0?"CHILD_EXIT_FAILED":null;
+    if(cause==="CHILD_EXIT_FAILED" && r.stage==="android-install"){
+      const installCodes=["INSTALL_FAILED_INSUFFICIENT_STORAGE","INSTALL_FAILED_NO_MATCHING_ABIS","INSTALL_FAILED_OLDER_SDK","INSTALL_FAILED_TEST_ONLY","INSTALL_FAILED_INVALID_APK","INSTALL_FAILED_USER_RESTRICTED"];
+      const detail=r.stdout.toString()+r.stderr.toString();cause=installCodes.find(code=>detail.includes(code))??cause;
+    }
+    if(cause && !failure)failure={stage:r.stage,cause};
+    const stem=path.join(output,`process-${sequence}`);
+    try {
+      writeFileSync(stem+".stdout",r.stdout,{flag:"wx",mode:0o600});
+      writeFileSync(stem+".stderr",r.stderr,{flag:"wx",mode:0o600});
+      const {stdout,stderr,...metadata}=r;
+      writeFileSync(stem+".json",JSON.stringify({...metadata,stdoutBytes:stdout.length,stderrBytes:stderr.length,stdoutSha256:createHash("sha256").update(stdout).digest("hex"),stderrSha256:createHash("sha256").update(stderr).digest("hex")}),{flag:"wx",mode:0o600});
+      outcomes.set(r.stage,metadata);
+    } catch {failure={stage:r.stage,cause:"PRIVATE_RETENTION_FAILED"};throw Error("NATIVE_PRIVATE_PROCESS_RETENTION_FAILED");}
+  };
+  return {observe,failure:()=>failure,outcome:(stage:string)=>outcomes.get(stage)};
+}
+
 export async function main(args: string[]) {
   const o = options(args), platform = o["--platform"];
   if (o["--mode"] === "list") { console.log(JSON.stringify({status:"PLANNED_NOT_EXECUTED",platform,profile:"NO_REMOTE_SERVER_CONFIGURED",scenarios, prerequisite:platform === "WINDOWS" ? "ADMITTED_EXACT_WINDOWS_PACKAGE_AND_DISPOSABLE_TARGET_RECIPE" : "ORDINARY_DISPOSABLE_HOSTED_CI_TARGET"})); return; }
@@ -43,7 +68,15 @@ export async function main(args: string[]) {
   assert(execFileSync("git", ["status", "--porcelain", "--untracked-files=no"], {encoding:"utf8",windowsHide:true}).trim() === "", "NATIVE_TRACKED_SOURCE_DIRTY");
   let packagePath = o["--package"];
   assert(packagePath && path.isAbsolute(packagePath) && inside(realpathSync(packagePath), workspace), "NATIVE_PACKAGE_OUTSIDE_WORKSPACE");
-  const run = (stage: string, executable: string, args: string[], timeoutMs = 30_000) => producerProcess({stage,tool:executable,args,timeoutMs},workspace);
+  mkdirSync(output,{mode:0o700});
+  const observations=processRecorder(output);let summaryWritten=false,targetEffectsStarted=false;
+  const emit=(summary:object)=>{summaryWritten=true;console.log(JSON.stringify(summary));};
+  const run = async(stage: string, executable: string, args: string[], timeoutMs = 30_000) => {
+    assert(processStages.has(stage),"NATIVE_PROCESS_STAGE_NOT_ALLOWLISTED");
+    try{return await producerProcess({stage,tool:executable,args,timeoutMs},workspace,undefined,observations.observe);}
+    catch{throw Error(`NATIVE_OPERATION_FAILED:${stage.replaceAll("-","_").toUpperCase()}`);}
+  };
+  try {
   const toolVersion = await run("tool-version", tool, platform === "ANDROID" ? ["version"] : ["--version"]);
   let packageHash: string;
   if (platform === "ANDROID") {
@@ -51,11 +84,10 @@ export async function main(args: string[]) {
     assert(packageHash === o["--sha256"], "NATIVE_PACKAGE_HASH_MISMATCH");
     const metadata = await run("package-metadata", metadataTool, ["dump", "badging", packagePath]);
     assert(metadata.includes(`package: name='${appId}'`) && metadata.includes("versionName='0.1.0'") && metadata.includes(`launchable-activity: name='${appId}.MainActivity'`) && metadata.includes("application-debuggable"), "ANDROID_PACKAGE_ID_VERSION_OR_DEBUG_PROFILE_REFUSED");
-    const a = new Android(tool, o["--serial"], workspace);
+    const a = new Android(tool, o["--serial"], workspace, observations.observe);
     assert((await a.run(["get-state"])).trim() === "device" && (await a.run(["shell","getprop","ro.kernel.qemu"])).trim() === "1", "ANDROID_EXACT_EMULATOR_NOT_READY");
     assert((await a.run(["emu","avd","name"])).split(/\r?\n/)[0]==="native_1b_phone","ANDROID_EMULATOR_OWNERSHIP_REFUSED");
     assert(!(await a.run(["shell","pm","list","packages",appId])).includes(`package:${appId}`), "ANDROID_EXISTING_APP_SANDBOX_REFUSED");
-    mkdirSync(output, {mode:0o700});
     const results: unknown[] = []; let installAttempted = false, cleanup = "NOT_EXECUTED", success = false;
     const record = async (scenario: string, action: () => Promise<void>) => {
       const started = new Date().toISOString(); try {
@@ -69,14 +101,14 @@ export async function main(args: string[]) {
     };
     const started = new Date().toISOString();
     try {
-      installAttempted = true; const install = await a.run(["install", packagePath]); assert(install.includes("Success"), "ANDROID_INSTALL_FAILED");
+      targetEffectsStarted = true; installAttempted = true; const install = await a.run(["install", packagePath]); assert(install.includes("Success"), "ANDROID_INSTALL_FAILED");
       await journey(a, String(randomInt(10_000_000,99_999_999)), record);
       success = true;
     } finally {
       try { if(installAttempted && (await a.run(["shell","pm","list","packages",appId])).includes(`package:${appId}`)) { await a.run(["shell","am","force-stop",appId]); const uninstall=await a.run(["uninstall",appId]); assert(uninstall.includes("Success")); } assert(!(await a.run(["shell","pm","list","packages",appId])).includes(`package:${appId}`)); await a.run(["shell","rm","-f","/sdcard/nalanda-native-1b.xml"]); cleanup="VERIFIED"; } catch {cleanup="UNRECONCILED";}
       // Same exclusive/private writer convention as the existing connected host.
       writeFileSync(path.join(output,"evidence.json"),JSON.stringify({source,tree:execFileSync("git",["show","-s","--format=%T","HEAD"],{encoding:"utf8"}).trim(),platform,profile:"NO_REMOTE_SERVER_CONFIGURED",packageHash,target:o["--serial"],tools:{toolSha256:hash(tool),metadataToolSha256:hash(metadataTool),toolVersion},started,ended:new Date().toISOString(),exit:success&&cleanup==="VERIFIED"?0:1,assertions:results,cleanup,authenticated:false,physical:false}),{flag:"wx",mode:0o600});
-      console.log(JSON.stringify({platform,status:success&&cleanup==="VERIFIED"?"PASS":"FAILED",scenarios:results,cleanup,authenticated:false,physical:false}));
+      emit({platform,status:success&&cleanup==="VERIFIED"?"PASS":"FAILED",scenarios:results,cleanup,failure:observations.failure(),authenticated:false,physical:false});
     }
     assert(success && cleanup === "VERIFIED", "NATIVE_EXECUTION_OR_CLEANUP_FAILED");
   } else {
@@ -92,17 +124,16 @@ export async function main(args: string[]) {
     const runtime=inventory.runtimes.filter((r:any)=>r.isAvailable && r.identifier.startsWith("com.apple.CoreSimulator.SimRuntime.iOS-")).sort((a:any,b:any)=>a.identifier.localeCompare(b.identifier)).at(-1);
     const deviceType=inventory.devicetypes.find((d:any)=>d.name.startsWith(o["--target-kind"]==="phone"?"iPhone":"iPad") && (!d.minRuntimeVersionString || Number(d.minRuntimeVersionString.split(".")[0])<=Number(runtime?.version.split(".")[0])));
     assert(runtime && deviceType,"IOS_SUPPORTED_RUNTIME_OR_DEVICE_TYPE_UNAVAILABLE");
-    mkdirSync(output,{mode:0o700});
     const started=new Date().toISOString();let serial:string|undefined,success=false,cleanup="NOT_EXECUTED",errorCode="",copiedHash:string|null=null;
     const processes:unknown[]=[];
     const xcode=async(stage:string,args:string[])=>{
       const started=new Date().toISOString();let status="FAILED",stdoutSha256:string|null=null;
-      try{const stdout=await producerProcess({stage,tool:metadataTool,args,timeoutMs:900_000},workspace);writeFileSync(path.join(output,`${stage}.stdout`),stdout,{flag:"wx",mode:0o600});stdoutSha256=createHash("sha256").update(stdout).digest("hex");status="PASS";}
+      try{const stdout=await producerProcess({stage,tool:metadataTool,args,timeoutMs:900_000},workspace,undefined,observations.observe);writeFileSync(path.join(output,`${stage}.stdout`),stdout,{flag:"wx",mode:0o600});stdoutSha256=createHash("sha256").update(stdout).digest("hex");status="PASS";}
       catch{throw Error("IOS_XCODE_STAGE_FAILED:"+stage);}
-      finally{processes.push({stage,started,ended:new Date().toISOString(),status,exit:status==="PASS"?0:null,stdoutSha256,failureOutput:"UNAVAILABLE_WITH_EXISTING_TRANSPORT"});}
+      finally{const observed=observations.outcome(stage);processes.push({stage,started,ended:new Date().toISOString(),status,exit:observed?.exit??null,signal:observed?.signal??null,timedOut:observed?.timedOut??null,stdoutSha256,failureOutput:observed?"RETAINED_PRIVATELY":"UNAVAILABLE"});}
     };
     try {
-      serial=(await run("ios-create-owned-target",tool,["simctl","create",`nalanda-native-${process.env.GITHUB_RUN_ID}-${o["--target-kind"]}`,deviceType.identifier,runtime.identifier])).trim();
+      targetEffectsStarted=true;serial=(await run("ios-create-owned-target",tool,["simctl","create",`nalanda-native-${process.env.GITHUB_RUN_ID}-${o["--target-kind"]}`,deviceType.identifier,runtime.identifier])).trim();
       assert(/^[A-Fa-f0-9-]{36}$/.test(serial),"IOS_OWNED_TARGET_ID_INVALID");
       await run("ios-boot",tool,["simctl","boot",serial]);await run("ios-boot-readiness",tool,["simctl","bootstatus",serial,"-b"],120_000);
       await run("ios-theme",tool,["simctl","ui",serial,"appearance","light"]);
@@ -120,9 +151,10 @@ export async function main(args: string[]) {
     finally {
       if(serial) try {await run("ios-owned-shutdown",tool,["simctl","shutdown",serial]);await run("ios-owned-delete",tool,["simctl","delete",serial]);const after=JSON.parse(await run("ios-cleanup-readback",tool,["simctl","list","devices","--json"]));assert(!Object.values(after.devices).flat().some((d:any)=>d.udid===serial));cleanup="VERIFIED";}catch{cleanup="UNRECONCILED";}
       writeFileSync(path.join(output,"evidence.json"),JSON.stringify({source,platform,profile:"NO_REMOTE_SERVER_CONFIGURED",packageHash,copiedHash,target:serial,runtime,deviceType,tools:{toolSha256:hash(tool),metadataToolSha256:hash(metadataTool),toolVersion,xcodeVersion},started,ended:new Date().toISOString(),exit:success&&cleanup==="VERIFIED"?0:1,assertions:success?scenarios.map(s=>({scenario:s,assertion:"PASS"})):[],processes,errorCode,cleanup,authenticated:false,physical:false}),{flag:"wx",mode:0o600});
-      console.log(JSON.stringify({platform,targetKind:o["--target-kind"],status:success&&cleanup==="VERIFIED"?"PASS":"FAILED",scenarios:success?scenarios:[],cleanup,authenticated:false,physical:false}));
+      emit({platform,targetKind:o["--target-kind"],status:success&&cleanup==="VERIFIED"?"PASS":"FAILED",scenarios:success?scenarios:[],cleanup,failure:observations.failure(),authenticated:false,physical:false});
     }
     assert(success&&cleanup==="VERIFIED","NATIVE_EXECUTION_OR_CLEANUP_FAILED");
   }
+  } catch(error) {if(!summaryWritten)emit({platform,status:"FAILED",scenarios:[],failure:observations.failure(),cleanup:targetEffectsStarted?"UNRECONCILED":"NOT_EXECUTED",authenticated:false,physical:false});throw error;}
 }
-if(process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main(process.argv.slice(2)).catch(error=>{console.error(error instanceof Error?error.message:"NATIVE_EXECUTION_REFUSED");process.exitCode=1;});
+if(process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main(process.argv.slice(2)).catch(error=>{const code=error instanceof Error?error.message:"";console.error(/^(NATIVE_|ANDROID_|IOS_|WINDOWS_|QA_PROCESS_)[A-Za-z0-9_:-]+$/.test(code)?code:"NATIVE_EXECUTION_FAILED_DETAILS_PRIVATE");process.exitCode=1;});

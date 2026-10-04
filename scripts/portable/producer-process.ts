@@ -4,9 +4,16 @@ import path from "node:path";
 import {hashBytes} from "./artifact-handoff";
 import type {ProducerCommand} from "./qa-artifact-producer";
 /** Output stays private/bounded. Errors never include child args, env or output. */
-export function producerProcess(command:ProducerCommand,workspace:string,signal?:AbortSignal):Promise<string>{
+export type ProducerProcessObservation={stage:string;exit:number|null;signal:string|null;timedOut:boolean;cancelled:boolean;startupFailed:boolean;outputLimit:boolean;terminationFailed:boolean;closed:boolean;durationMs:number;stdout:Buffer;stderr:Buffer};
+export type ProducerProcessObserver=(outcome:ProducerProcessObservation)=>void|Promise<void>;
+export function producerProcess(command:ProducerCommand,workspace:string,signal?:AbortSignal,observer?:ProducerProcessObserver):Promise<string>{
  return new Promise((resolve,reject)=>{
-  if(signal?.aborted){reject(Error("QA_PROCESS_CANCELLED"));return;}
+  const started=performance.now(),stdout:Buffer[]=[],stderr:Buffer[]=[];
+  let timedOut=false,cancelled=false,startupFailed=false,outputLimit=false;
+  const observe=async(exit:number|null,signal:string|null,closed:boolean,terminationFailed=false)=>{
+   if(observer)await observer({stage:command.stage,exit,signal,timedOut,cancelled,startupFailed,outputLimit,terminationFailed,closed,durationMs:Math.round(performance.now()-started),stdout:Buffer.concat(stdout),stderr:Buffer.concat(stderr)});
+  };
+  if(signal?.aborted){cancelled=true;void observe(null,null,false).then(()=>reject(Error("QA_PROCESS_CANCELLED")),()=>reject(Error("QA_PROCESS_RETENTION_FAILED")));return;}
   const child=spawn(command.tool,command.args,{cwd:workspace,env:{...process.env,...command.env},shell:false,windowsHide:true,detached:process.platform!=="win32",stdio:["ignore","pipe","pipe"]});
   let output="",size=0,failed=false,termination:Promise<void>|undefined;
   const terminate=()=>{
@@ -20,11 +27,15 @@ export function producerProcess(command:ProducerCommand,workspace:string,signal?
    });
    void termination.catch(()=>{});
   };
-  const timeout=setTimeout(terminate,command.timeoutMs??40*60_000);signal?.addEventListener("abort",terminate,{once:true});
-  const finish=()=>{clearTimeout(timeout);signal?.removeEventListener("abort",terminate);};
-  for(const stream of [child.stdout,child.stderr])stream.on("data",(bytes:Buffer)=>{size+=bytes.length;if(size>64*1024*1024){terminate();return;}if(stream===child.stdout)output+=bytes.toString();});
-  child.once("error",()=>{finish();reject(Error("QA_PROCESS_UNAVAILABLE"));});
-  child.once("close",async code=>{finish();try{await termination;}catch{reject(Error("QA_PROCESS_GROUP_UNRECONCILED"));return;}if(code!==0||failed)reject(Error("QA_PROCESS_FAILED_OR_CANCELLED"));else resolve(output);});
+  const abort=()=>{cancelled=true;terminate();};
+  const timeout=setTimeout(()=>{timedOut=true;terminate();},command.timeoutMs??40*60_000);signal?.addEventListener("abort",abort,{once:true});
+  const finish=()=>{clearTimeout(timeout);signal?.removeEventListener("abort",abort);};
+  for(const stream of [child.stdout,child.stderr])stream.on("data",(bytes:Buffer)=>{size+=bytes.length;if(size>64*1024*1024){outputLimit=true;terminate();return;}if(observer)(stream===child.stdout?stdout:stderr).push(Buffer.from(bytes));if(stream===child.stdout)output+=bytes.toString();});
+  child.once("error",()=>{startupFailed=true;finish();if(!observer)reject(Error("QA_PROCESS_UNAVAILABLE"));});
+  child.once("close",async(code,sig)=>{finish();let groupFailed=false;try{await termination;}catch{groupFailed=true;}
+   try{await observe(startupFailed?null:code,sig,true,groupFailed);}catch{reject(Error("QA_PROCESS_RETENTION_FAILED"));return;}
+   if(groupFailed)reject(Error("QA_PROCESS_GROUP_UNRECONCILED"));else if(startupFailed)reject(Error("QA_PROCESS_UNAVAILABLE"));else if(code!==0||failed)reject(Error("QA_PROCESS_FAILED_OR_CANCELLED"));else resolve(output);
+  });
  });
 }
 
