@@ -14,9 +14,13 @@ try{
     // The loader's default disk cache can prune unrelated stale cache files.
     // This process uses its in-memory cache; plan performs no storage mutation.
     process.env.TSX_DISABLE_CACHE='1';
-    const {tsImport}=await import('tsx/esm/api');
-    const {planConsumer,loadConsumerProfile,executeConsumer}=await tsImport('./consumer-connection.ts',import.meta.url);
-    const {exampleConsumerProfile,profileHash}=await tsImport('./consumer-profile.ts',import.meta.url);
+    // One ordinary module graph supports the hosted Node22 and pinned Node24
+    // callers; namespaced tsImport cannot resolve this graph on Node22.23.3.
+    const {register:registerCjs}=await import('tsx/cjs/api');
+    const {register:registerEsm}=await import('tsx/esm/api');
+    registerCjs();registerEsm();
+    const {planConsumer,loadConsumerProfile,executeConsumer}=await import('./consumer-connection.ts');
+    const {exampleConsumerProfile,profileHash}=await import('./consumer-profile.ts');
     const workspace=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
     const profile=options['--profile']?loadConsumerProfile(options['--profile'],workspace):exampleConsumerProfile(workspace,randomUUID().replaceAll('-',''));
     if(options['--expected-profile']&&(!options['--profile']||profileHash(profile)!==options['--expected-profile']))fail('LOCAL_PROFILE_IDENTITY_MISMATCH');
