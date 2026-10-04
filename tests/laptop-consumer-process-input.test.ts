@@ -18,3 +18,9 @@ it('an already-cancelled private input starts no child and records honest interr
  const receipt=await captureProductProcess({stage:'HARNESS_ONLY_STDIN_CANCELLED',tool:process.execPath,args:['-e','process.exit(99)'],timeoutMs:5000},dir,1,new Set(),controller.signal,{stdin:Buffer.from('synthetic')});
  expect(receipt.interrupted).toBe(true);expect(receipt.exit).toBeNull();expect(receipt.stdoutBytes).toBe(0);expect(receipt.settled).toBe(true);
 });
+
+it('expired pre-spawn authorization starts no child after tool hashing',async()=>{
+ const dir=root(),pending=new Set<number>();let checks=0,children=0;
+ const receipt=await captureProductProcess({stage:'HARNESS_ONLY_DEADLINE',tool:process.execPath,args:['-e','process.exit(99)'],timeoutMs:5000},dir,1,pending,undefined,{beforeSpawn:()=>{checks++;return 0;},onChild:()=>children++});
+ expect(checks).toBe(1);expect(children).toBe(0);expect(receipt.startupFailed).toBe(true);expect(receipt.exit).toBeNull();expect(receipt.settled).toBe(true);expect(pending.size).toBe(0);expect(receipt.toolSha256).toMatch(/^[a-f0-9]{64}$/);
+});

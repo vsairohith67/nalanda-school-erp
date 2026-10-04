@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { homedir } from 'node:os';
 import { readFileSync, writeFileSync, existsSync, lstatSync } from 'node:fs';
 import { captureProductProcess } from '../portable/producer-process';
 import { validateComposeBoundary, validateComposeFiles } from '../portable/operator-adapter';
@@ -13,6 +12,7 @@ import type { ConsumerProfile, ArtifactReceipt, OwnedResource, LabAdapter } from
 import {boundCertificateAdapter} from './consumer-operation-ports';
 import {stageConsumerInputs} from './consumer-inputs';
 import {prepareCertificateInputs} from './consumer-bootstrap';
+import type {LocalHost} from './consumer-host';
 export type Lifecycle={resolve():Promise<void>;reserve():Promise<void>;prepare():Promise<void>;launch():Promise<void>;bind():Promise<LabAdapter|null>;cleanup():Promise<'COMPLETE'|'RETAINED'>;record(result:any):Promise<void>;harmlessChildCaptured?():boolean};
 export type DockerProcess=(stage:string,args:string[],root:string,signal?:AbortSignal,input?:Uint8Array)=>Promise<string>;
 const labels=(p:ConsumerProfile)=>({'io.nps.consumer.run':p.consumer.runId,'io.nps.consumer.project':p.consumer.project,'io.nps.producer.run':p.producer.runId!,'io.nps.producer.source':p.producer.source});
@@ -45,8 +45,9 @@ export function localCompose(p:ConsumerProfile,r:ArtifactReceipt,base:any){
 }
 export class LocalLifecycle implements Lifecycle {
   root='';resources:OwnedResource[]=[];private config:any;private images=new Map<string,any>();private reserved=false;private mutationAttempted=false;private settled=true;private snapshot=0;private commandRecords:{stage:string;args:string[];outputSha256:string}[]=[];
-  constructor(private p:ConsumerProfile,private r:ArtifactReceipt,private process:DockerProcess,private signal?:AbortSignal,private adapterFactory:(...args:Parameters<typeof boundCertificateAdapter>)=>LabAdapter|null|Promise<LabAdapter>=boundCertificateAdapter,private inputStager:typeof stageConsumerInputs=stageConsumerInputs,private inputProvisioner:typeof prepareCertificateInputs=prepareCertificateInputs){}
+  constructor(private p:ConsumerProfile,private r:ArtifactReceipt,private process:DockerProcess,private signal?:AbortSignal,private adapterFactory:(...args:Parameters<typeof boundCertificateAdapter>)=>LabAdapter|null|Promise<LabAdapter>=boundCertificateAdapter,private inputStager:typeof stageConsumerInputs=stageConsumerInputs,private inputProvisioner:typeof prepareCertificateInputs=prepareCertificateInputs,private authorizationGuard:()=>void=()=>{}){}
   private async run(stage:string,args:string[],operationSignal?:AbortSignal,input?:Uint8Array){
+    if(!stage.startsWith('cleanup'))this.authorizationGuard();
     assert(!this.signal?.aborted||stage.startsWith('cleanup'),'LOCAL_CONSUMER_CANCELLED');
     // The process port is settled on success. Failed/partial child capture is
     // unreconciled until the production process seam proves settlement.
@@ -172,22 +173,28 @@ export class LocalLifecycle implements Lifecycle {
   markUnsettled(){this.settled=false;this.save();}
 }
 
-export function createLocalLifecycle(p:ConsumerProfile,r:ArtifactReceipt,signal?:AbortSignal):Lifecycle {
+export function createLocalLifecycle(p:ConsumerProfile,r:ArtifactReceipt,signal?:AbortSignal,guard:()=>number|void=()=>{},host?:LocalHost):Lifecycle {
+  assert(host,'LOCAL_REGISTERED_DOCKER_HOST_REQUIRED');
   let sequence=0;const unsettled=new Set<number>();
-  const docker=path.join(process.env.ProgramFiles??'C:\\Program Files','Docker/Docker/resources/bin/docker.exe');
-  const config=path.join(homedir(),'.docker');
+  const {docker,config}=host;
   const processPort:DockerProcess=async(stage,args,root,signal,input)=>{
+    host.guard(); // cleanup must never target a substituted tool/config either
+    const remaining=stage.startsWith('cleanup')?undefined:guard();
+    const timeoutMs=Math.floor(Math.min(p.scope.phaseTimeoutMs,remaining??p.scope.phaseTimeoutMs));assert(timeoutMs>0,'LOCAL_AUTHORIZATION_STALE');
+    assert(args[0]==='--context'&&args[1]===p.consumer.context,'LOCAL_CONTEXT_ARGUMENT_REQUIRED');
+    const boundArgs=['--config',config,'--host',p.consumer.endpoint,...args.slice(2)];
     assert(process.platform==='win32'&&existsSync(docker),'LOCAL_DOCKER_TOOL_UNAVAILABLE');canonicalDirectory(config);
     if(!root){
       // This early read-only phase has no owned output yet. Fixed query only,
       // no shell, bounded capture, and no caller-selected command.
       const {execFileSync}=await import('node:child_process');
-      return execFileSync(docker,['--config',config,...args],{encoding:'utf8',timeout:p.scope.phaseTimeoutMs,maxBuffer:p.scope.outputLimitBytes,windowsHide:true,env:{NODE_ENV:'production',PATH:process.env.PATH,SystemRoot:process.env.SystemRoot}});
+      const current=stage.startsWith('cleanup')?undefined:guard(),currentTimeout=Math.floor(Math.min(timeoutMs,current??timeoutMs));assert(currentTimeout>0,'LOCAL_AUTHORIZATION_STALE');
+      return execFileSync(docker,boundArgs,{encoding:'utf8',timeout:currentTimeout,maxBuffer:p.scope.outputLimitBytes,windowsHide:true,env:{NODE_ENV:'production',PATH:'C:\\Windows\\System32',SystemRoot:'C:\\Windows',HOME:path.join(config,'unused-home')}});
     }
-    const receipt=await captureProductProcess({stage,tool:docker,args:['--config',config,...args],timeoutMs:p.scope.phaseTimeoutMs},root,++sequence,unsettled,signal,{maxOutputBytes:p.scope.outputLimitBytes,stdin:input});
+    const receipt=await captureProductProcess({stage,tool:docker,args:boundArgs,timeoutMs},root,++sequence,unsettled,signal,{maxOutputBytes:p.scope.outputLimitBytes,stdin:input,beforeSpawn:stage.startsWith('cleanup')?undefined:guard});
     if(!receipt.settled){life.markUnsettled();throw Error('LOCAL_CHILD_UNSETTLED');}
     assert(receipt.exit===0&&!receipt.timedOut&&!receipt.interrupted&&!receipt.startupFailed&&!receipt.ioFailed&&receipt.stdoutBytes+receipt.stderrBytes<=p.scope.outputLimitBytes,'LOCAL_CHILD_FAILED_OR_PARTIAL');
     return readFileSync(path.join(root,'process-'+sequence+'.stdout'),'utf8');
   };
-  const life=new LocalLifecycle(p,r,processPort,signal);return life;
+  const life=new LocalLifecycle(p,r,processPort,signal,undefined,undefined,undefined,guard);return life;
 }
