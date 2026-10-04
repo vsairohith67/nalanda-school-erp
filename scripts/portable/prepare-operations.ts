@@ -78,6 +78,18 @@ export function validatePreparedCompose(config: any, workspace: string, privateR
   requireValue(config.services["backup-maintenance"].environment.DATABASE_URL_FILE === "/run/secrets/backup_maintenance_database_url", "OPERATIONS_MAINTENANCE_CREDENTIAL_ISOLATION_INVALID");
 }
 
+// Docker 29 discovers its Windows system Compose plugin through ProgramFiles.
+// Keep per-user configuration, credentials and ambient interpolation excluded.
+export function operationsComposeEnvironment(privateRoot: string, image: string, source: string, environment: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): NodeJS.ProcessEnv {
+  const selected: NodeJS.ProcessEnv = { NODE_ENV: "production", PATH: environment.PATH, SystemRoot: environment.SystemRoot, WINDIR: environment.WINDIR, PORTABLE_CI_ROOT: privateRoot, PORTABLE_IMAGE_ID: image, PORTABLE_SOURCE_SHA: source };
+  if (platform === "win32") {
+    const programFiles = environment.ProgramFiles;
+    requireValue(programFiles && path.win32.isAbsolute(programFiles) && path.win32.normalize(programFiles) === programFiles, "OPERATIONS_WINDOWS_SYSTEM_PLUGIN_DIRECTORY_REQUIRED");
+    selected.ProgramFiles = programFiles;
+  }
+  return selected;
+}
+
 export async function prepareOperations(settingsFile: string, workspace: string, output: string) {
   const settings = validateOperationsSettings(JSON.parse(await canonicalFile(settingsFile)));
   requireValue(path.isAbsolute(workspace) && path.normalize(workspace) === workspace && await realpath(workspace) === workspace, "OPERATIONS_WORKSPACE_UNSAFE");
@@ -110,11 +122,17 @@ export async function prepareOperations(settingsFile: string, workspace: string,
     await writeFile(path.join(output, "compose-interpolation.empty"), "", { flag: "wx", mode: 0o600 });
     // Only Compose's client-side config parser. No inspect/pull/up/probe/admission.
     // Empty explicit env file and allowlisted interpolation exclude ambient .env/secrets.
+    const composeEnvironment = operationsComposeEnvironment(path.join(workspace, "tmp", "portable-staging", manifest.project), manifest.image, manifest.releaseCommit);
+    const composeVersion = execFileSync("docker", ["--context", "default", "compose", "version", "--short"], {
+      cwd: workspace, env: composeEnvironment, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], windowsHide: true, timeout: 30000, maxBuffer: 4096
+    }).trim();
+    requireValue(composeVersion.length <= 64 && /^v?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?$/.test(composeVersion) && Number(composeVersion.replace(/^v/, "").split(".")[0]) >= 2, "OPERATIONS_COMPOSE_VERSION_UNSUPPORTED");
     const config = JSON.parse(execFileSync("docker", ["--context", "default", "compose", "--project-name", manifest.project, "--profile", "*", "--env-file", path.join(output, "compose-interpolation.empty"), "-f", composeFile, "config", "--format", "json", "--no-env-resolution"], {
-      cwd: workspace, env: { NODE_ENV: "production", PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, WINDIR: process.env.WINDIR, PORTABLE_CI_ROOT: path.join(workspace, "tmp", "portable-staging", manifest.project), PORTABLE_IMAGE_ID: manifest.image, PORTABLE_SOURCE_SHA: manifest.releaseCommit },
+      cwd: workspace, env: composeEnvironment,
       encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], windowsHide: true, timeout: 30000, maxBuffer: 1024 * 1024
     }));
     validatePreparedCompose(config, workspace, path.join(workspace, "tmp", "portable-staging", manifest.project), manifest);
+    report.composeVersion = composeVersion;
     report.state = "SYNTHETIC_CONFIGURATION_PREPARED_NOT_ADMITTED";
     report.secretReferences = Object.keys(config.secrets).sort();
     const operations = OPERATOR_COMMANDS.map(command => {

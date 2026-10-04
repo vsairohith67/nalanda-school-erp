@@ -46,8 +46,12 @@ beforeEach(async () => {
   db = new OwnedPrismaClient({ datasourceUrl: url });
   async function actor(role: "DIRECTOR" | "PRINCIPAL"): Promise<IamActor> {
     const user = await db.user.create({ data: { username: `synthetic-${role.toLowerCase()}`, name: `SYNTHETIC ${role}`, role, passwordHash, isActive: true, lifecycleStatus: "ACTIVE" } });
-    const assignment = await db.userRoleAssignment.create({ data: { userId: user.id, role, reason: "SYNTHETIC fixture only", activeKey: `${user.id}:${role}` } });
+    // Match the existing native-session fixture: establish already-effective
+    // synthetic authority instead of racing SQLite's default clock at sign-in.
+    const assignment = await db.userRoleAssignment.create({ data: { userId: user.id, role, validFrom: new Date(Date.now() - 60_000), reason: "SYNTHETIC fixture only", activeKey: `${user.id}:${role}` } });
+    expect(assignment.validFrom.getTime() <= Date.now()).toBe(true);
     const session = await createPersistedSession(db, user, new Headers());
+    expect((await db.authSession.findUniqueOrThrow({ where: { id: session.sessionId } })).activeRoleAssignmentId).toBe(assignment.id);
     return { sessionId: session.sessionId, user: { id: user.id, username: user.username, name: user.name, email: user.email, designation: user.designation, role, authorizationVersion: user.authorizationVersion, roleAssignmentId: assignment.id, mustChangePassword: false, guardianId: null } };
   }
   director = await actor("DIRECTOR"); principal = await actor("PRINCIPAL");

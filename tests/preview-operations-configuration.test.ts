@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import { prepareOperations, runPreparationCli, validateOperationsSettings, validatePreparedCompose } from "../scripts/portable/prepare-operations";
+import { operationsComposeEnvironment, prepareOperations, runPreparationCli, validateOperationsSettings, validatePreparedCompose } from "../scripts/portable/prepare-operations";
 import { runOperatorCli } from "../scripts/portable/operator";
 import { encryptCloudBackup } from "../lib/cloud-backup-container";
 import { makeRecoveryHandoff } from "../lib/portable-runtime/recovery-handoff";
@@ -22,6 +22,13 @@ async function fixture() {
   return { root, input: path.join(root, "settings.json"), output: path.join(root, "prepared"), async close() { expect(root.startsWith(path.join(await realpath(tmpdir()), "nalanda-operations-config-"))).toBe(true); await rm(root, { recursive: true }); } };
 }
 describe("explicit offline operations preparation", () => {
+  it("preserves Windows system plugin discovery without ambient user config or secrets", () => {
+    const ambient = { PATH: "SYNTHETIC-PATH", SystemRoot: "C:\\Windows", WINDIR: "C:\\Windows", ProgramFiles: "C:\\Program Files", USERPROFILE: "C:\\Users\\SYNTHETIC", HOME: "SYNTHETIC-HOME", DOCKER_CONFIG: "SYNTHETIC-PRIVATE-CONFIG", DATABASE_URL: "SYNTHETIC-SECRET", COMPOSE_FILE: "foreign.yml" };
+    const selected = operationsComposeEnvironment("SYNTHETIC-ROOT", "SYNTHETIC-IMAGE", "SYNTHETIC-SOURCE", ambient, "win32");
+    expect(selected).toEqual({ NODE_ENV: "production", PATH: ambient.PATH, SystemRoot: ambient.SystemRoot, WINDIR: ambient.WINDIR, ProgramFiles: ambient.ProgramFiles, PORTABLE_CI_ROOT: "SYNTHETIC-ROOT", PORTABLE_IMAGE_ID: "SYNTHETIC-IMAGE", PORTABLE_SOURCE_SHA: "SYNTHETIC-SOURCE" });
+    for (const ProgramFiles of [undefined, "", "relative", "C:\\Program Files\\..\\Users"]) expect(() => operationsComposeEnvironment("SYNTHETIC-ROOT", "SYNTHETIC-IMAGE", "SYNTHETIC-SOURCE", { ...ambient, ProgramFiles }, "win32")).toThrow("OPERATIONS_WINDOWS_SYSTEM_PLUGIN_DIRECTORY_REQUIRED");
+    expect(operationsComposeEnvironment("SYNTHETIC-ROOT", "SYNTHETIC-IMAGE", "SYNTHETIC-SOURCE", ambient, "linux")).not.toHaveProperty("ProgramFiles");
+  });
   it("keeps backup counters process-local across separate replicas and a fresh restart", () => {
     const moduleUrl = pathToFileURL(path.join(workspace, "lib", "portable-runtime", "observability.ts")).href;
     const observe = (increment: boolean) => JSON.parse(execFileSync(process.execPath, ["--import", "tsx", "--input-type=module", "-e", `import {incrementPortableMetric,portableMetricsText} from ${JSON.stringify(moduleUrl)};const before=portableMetricsText();${increment ? 'incrementPortableMetric("nalanda_backup_success_total");' : ''}console.log(JSON.stringify({before,after:portableMetricsText()}));`], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], windowsHide: true, timeout: 10000, env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, NODE_ENV: "test" } }));
@@ -144,7 +151,7 @@ describe("explicit offline operations preparation", () => {
     try {
       const empty = path.join(f.root, "empty"); await writeFile(empty, "");
       const privateRoot = path.join(workspace, "tmp", "portable-staging", selected.project);
-      const base = JSON.parse(execFileSync("docker", ["--context", "default", "compose", "--project-name", selected.project, "--profile", "*", "--env-file", empty, "-f", path.join(workspace, "deploy", "portable", "compose.yml"), "config", "--format", "json", "--no-env-resolution"], { encoding: "utf8", stdio: "pipe", env: { NODE_ENV: "test", PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, PORTABLE_IMAGE_ID: selected.image, PORTABLE_CI_ROOT: privateRoot, PORTABLE_SOURCE_SHA: selected.releaseCommit } }));
+      const base = JSON.parse(execFileSync("docker", ["--context", "default", "compose", "--project-name", selected.project, "--profile", "*", "--env-file", empty, "-f", path.join(workspace, "deploy", "portable", "compose.yml"), "config", "--format", "json", "--no-env-resolution"], { encoding: "utf8", stdio: "pipe", env: operationsComposeEnvironment(privateRoot, selected.image, selected.releaseCommit) }));
       expect(() => validatePreparedCompose(base, workspace, privateRoot, selected)).not.toThrow();
       for (const change of [
         (c: any) => c.services.postgres.ports = [{ host_ip: "127.0.0.1", published: "8443" }],
