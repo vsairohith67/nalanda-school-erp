@@ -56,3 +56,30 @@ Health separates WAITING_NO_FILES, READING/deferred write, STALE_SOURCE, PROFILE
 - Raw punches remain unapproved. Human review, leave/late policy, approved staff mapping, Teaching/Non-Teaching separation, management row order and monthly approved-summary boundary remain. The existing report retains S.No/Name/Leaves/Lates/Remarks, numeric 0.5 and Georgia Bold school-name text. No enrollment, templates, salary deductions or final attendance approval.
 
 **First on-site action:** have the authorized operator create one minimal raw Device Logs custom export from the already-working installed eTimeTrackLite into a controlled folder, with the four selected fields/settings recorded, for private preview and source comparison. Automatic collection and transport activation come later.
+
+## K30 export comparison and reconciliation 1B
+
+The existing aggregate preview remains available. For explicitly selected snapshots use `pnpm --dir apps/nalanda-biometric-bridge export:preview <absolute-config> --compare <absolute-private-request>`; add `--private-output <absolute-new-json>` only when the necessary private row references and original bytes are wanted. Built entrypoint: `node apps/nalanda-biometric-bridge/dist/export-preview.js` with the same arguments. Config must have `transportEnabled:false`; real read-only review uses `syntheticOnly:false` and an HTTPS ERP placeholder, without starting transport, loading keys or writing queue/health. Do not label real files synthetic. The profile remains an explicit proposal until its mapping reference is separately approved; preview never grants approval or releases holds.
+
+The request and optional output must be in an already private local directory separate from source, package, config/key/queue/health roots. Existing source SID/ancestor checks are reused. The command does not create directories or repair ACLs. Outputs use exclusive creation; an existing file is preserved. Unsafe output is refused while safe aggregate diagnostics remain available. A failed reservation may leave an empty output file, requiring a new explicit output filename; no data is written before ACL validation. Keep request/report JSON out of Git, CI artifacts and trackers.
+
+Request structure (paths and references below are invented):
+
+```json
+{
+  "schemaVersion": 1,
+  "file": "C:/PrivateSyntheticSource/K30_small.csv",
+  "interval": { "from": "2026-10-02T00:00:00.000Z", "to": "2026-10-02T23:59:59.000Z" },
+  "operator": { "origin": "OPERATOR_SOURCE_VIEW", "reference": "synthetic-independent-note", "totalRows": 1 }
+}
+```
+
+The interval is an explicitly selected inclusive UTC interval. Optional independent `inRows`, `outRows`, and up to 100 selected `observations` use `{opaqueDeviceUserId,punchTimestamp,punchCode,count}`; timestamps use exact `...ss.000Z`, and count preserves multiplicity. The canonical opaque user is from the explicit one-to-one mapping, not a staff name. Operator evidence must come from the separately observed source view or count, never be calculated from this parser and called independent proof. A declared origin/reference records the operator's assertion; software cannot independently attest that origin.
+
+Use optional `compareFile` for a second explicit current source file, or `previousReport` for an earlier private capture from this command, never both. Byte identity proves replay. Exact byte prefix plus matching recorded file identity/profile proves a local same-file append; copied/reformatted/reordered/replaced/overlapping files remain ambiguous. A previous report is editable local evidence, not a signed device receipt. Its exact bytes, protected current read, file/profile hashes and recorded identity remain privately traceable. No hash or bridge signature proves physical device origin or that earlier editable exports were unaltered.
+
+Every parsed row is compatible, held or rejected. All same-second collision peers are held; unmapped staff, unresolved direction/device bindings and UNKNOWN are held for review. Malformed rows are rejected. These diagnostic states do not change the ingestion queue's retained receipts or approve a mapping. Whole-file failures have unknown row totals, with explicit unexamined states. Operator mismatches, rows outside the selected interval and unresolved timestamps retain review requirements. Matching selected checks prove only those supplied checks, not hardware authenticity, complete collection or business attendance. Default stdout/stderr contains bounded counts/states/reason codes only; exact bytes/profile/mapping/device/interval and row evidence are restricted to an explicitly requested protected report.
+
+Health now distinguishes `latestPunchTimestamp`/`lastPunchAt` from `lastNewFileAt` (committed novel export bytes), `lastPollAt` and `lastSyncAt` (server acknowledgement). Source staleness measures new committed bytes. A healthy reader cannot demonstrate upstream vendor collection, staff presence or physical-device reachability. `UPSTREAM_AUTOMATIC_EXPORT_NOT_VERIFIED` remains: Desktop pages 80–81 and other products' scheduler pages do not establish an installed noninteractive raw exporter.
+
+Current published recovery source `2113fa17bcda1acfb3edf5fa0d6ca9c2a21e8c7c` refuses the export profile at envelope validation and registration. Isolated contract tests execute its exact published modules with a synthetic database stub; that is in-process qualification, not authenticated deployed ERP acceptance. The 48-hour limits concern `bridgeTime` and `bridgeReceivedTimestamp`; punch age has a separate 370-day limit, and signed request proof has five-minute freshness. Immutable unknown-outcome bodies and punch timestamps are retained; backlog disposition requires the backend owner. No automatic attendance/leave/payroll approval follows raw source comparison.

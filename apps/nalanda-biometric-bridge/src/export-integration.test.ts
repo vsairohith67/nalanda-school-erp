@@ -14,6 +14,8 @@ import { atomicWrite } from "./atomic-file.js";
 import { runBridgeCycle, safeCode } from "./agent.js";
 import { loadBridgeConfig } from "./config.js";
 import { previewExport } from "./export-preview.js";
+import { compareExport } from "./export-comparison.js";
+import { acquireExportWithBytes } from "./export-source.js";
 import { syncPreparedBatch } from "./sync.js";
 import type { BridgeConfig } from "./contracts.js";
 const dirs:string[]=[],key=Buffer.alloc(32,13).toString("base64url");
@@ -40,6 +42,62 @@ function fixture() {
   return {root,source,data,input,file,qfile,q,config,put,ingest};
 }
 afterEach(()=>{for(const d of dirs.splice(0)){if(!path.resolve(d).startsWith(fixtureBase+path.sep)||!path.basename(d).startsWith("nps-k30-export-synthetic-"))throw new Error("unsafe test cleanup");rmSync(d,{recursive:true,force:true});expect(existsSync(d)).toBe(false);}});
+function reviewFixture(f:ReturnType<typeof fixture>,synthetic=true) {
+  const review=path.join(f.root,"review");mkdirSync(review,{mode:0o700});
+  if(process.platform==="win32")execFileSync("icacls.exe",[review,"/inheritance:r","/grant:r",`*${sid}:(OI)(CI)F`,"*S-1-5-18:(OI)(CI)F","*S-1-5-32-544:(OI)(CI)F"],{stdio:"pipe",windowsHide:true});
+  const cfg=path.join(f.data,"bridge.json"),req=path.join(review,"request.json"),output=path.join(review,"review.json");
+  writeFileSync(cfg,JSON.stringify({...f.config,syntheticOnly:synthetic,privateKeyPath:"key.jwk",queuePath:"queue.enc",healthPath:"health.json"}));
+  const request={schemaVersion:1,file:f.file,interval:{from:"2026-10-02T00:00:00.000Z",to:"2026-10-02T23:59:59.000Z"},operator:{origin:"OPERATOR_SOURCE_VIEW",reference:"synthetic-independent-note",totalRows:1}};
+  writeFileSync(req,JSON.stringify(request),{mode:0o600});return {review,cfg,req,output,request};
+}
+it("explicit non-synthetic transport-disabled review creates an exclusive private report without queue or health",()=>{
+  const f=fixture();f.put();const r=reviewFixture(f,false),before=readFileSync(f.file);const result=compareExport(r.cfg,r.req,r.output);
+  expect(result).toMatchObject({synthetic:false,compatibleRows:1,heldRows:0,rejectedRows:0,operatorEvidence:"SUPPLIED_CHECKS_MATCH",privateOutput:"CREATED"});
+  const saved=JSON.parse(readFileSync(r.output,"utf8"));expect(saved.capture.bytesBase64).toBe(before.toString("base64"));expect(saved.trace.employeeIdentifierKind).toBe(f.input.profile.employeeIdentifierKind);expect(saved.trace.synthetic).toBe(false);expect(saved.trace.profileDefinition).not.toHaveProperty("employeeMapping");expect(saved.trace.profileDefinition.approvedMappingReference).toBe(f.input.profile.approvedMappingReference);expect(readFileSync(f.file)).toEqual(before);
+  expect(existsSync(f.qfile)).toBe(false);expect(existsSync(f.config.healthPath)).toBe(false);expect(JSON.stringify(result)).not.toContain(f.file);expect(JSON.stringify(result)).not.toContain("0007");
+  appendFileSync(f.file,"0007,2026-10-02 10:00:00,SYN-LOCAL-01,OUT\r\n");writeFileSync(r.req,JSON.stringify({...r.request,previousReport:r.output}));expect(compareExport(r.cfg,r.req)).toMatchObject({relation:"VERIFIED_SAME_FILE_APPEND",parsedRows:2});
+});
+it("retained private capture proves a same-file exact append while exposing operator discrepancies",()=>{
+  const f=fixture();f.put();const r=reviewFixture(f),c=acquireExportWithBytes(f.file,f.input,id);
+  c.snapshot.observedAt="2026-10-04T13:00:00.123Z";
+  writeFileSync(r.output,JSON.stringify({schemaVersion:1,mode:"PRIVATE_EXPORT_REVIEW",trace:{profileHash:c.snapshot.profileHash,synthetic:true},capture:{bytesBase64:c.bytes.toString("base64"),fileHash:c.snapshot.fileHash,sourceKey:c.snapshot.sourceKey,incarnation:c.snapshot.incarnation,observedAt:c.snapshot.observedAt}}),{mode:0o600});
+  appendFileSync(f.file,"0007,2026-10-02 10:00:00,SYN-LOCAL-01,OUT\r\n");writeFileSync(r.req,JSON.stringify({...r.request,previousReport:r.output}));
+  expect(compareExport(r.cfg,r.req)).toMatchObject({parsedRows:2,relation:"VERIFIED_SAME_FILE_APPEND",overlappingRows:1,operatorEvidence:"DISCREPANCY_OR_UNRESOLVED",reviewRequired:true});expect(existsSync(f.qfile)).toBe(false);
+});
+it("selected snapshot comparison retains overlap without operational queue writes",()=>{
+  const f=fixture();f.put();const r=reviewFixture(f),other=path.join(f.source,"K30_other.csv");f.put(bytes(["0007,2026-10-02 10:00:00,SYN-LOCAL-01,OUT","0007,2026-10-02 09:00:00,SYN-LOCAL-01,IN"]),other);writeFileSync(r.req,JSON.stringify({...r.request,file:other,compareFile:f.file}));
+  expect(compareExport(r.cfg,r.req)).toMatchObject({relation:"AMBIGUOUS_REEXPORT_OR_REPLACEMENT",overlappingRows:1,heldRows:1,compatibleRows:1,reviewRequired:true});expect(existsSync(f.qfile)).toBe(false);
+});
+it("whole-file refusal keeps row totals unknown and selected comparison unexamined",()=>{
+  const f=fixture();f.put(bytes().subarray(0,-1));const r=reviewFixture(f);expect(compareExport(r.cfg,r.req)).toMatchObject({wholeFileState:"REFUSED_UNEXAMINED",parsedRows:null,compatibleRows:null,heldRows:null,rejectedRows:null,unexaminedFiles:1,codes:["EXPORT_INCOMPLETE_WRITE"]});
+});
+it("failed second snapshot preserves current row accounting, independent checks and requested private trace",()=>{
+  const f=fixture();f.put();const r=reviewFixture(f),other=path.join(f.source,"K30_incomplete.csv");f.put(bytes().subarray(0,-1),other);writeFileSync(r.req,JSON.stringify({...r.request,compareFile:other}));
+  expect(compareExport(r.cfg,r.req,r.output)).toMatchObject({wholeFileState:"CURRENT_PARSED_COMPARISON_UNEXAMINED",parsedRows:1,compatibleRows:1,heldRows:0,rejectedRows:0,unexaminedFiles:1,operatorEvidence:"SUPPLIED_CHECKS_MATCH",privateOutput:"CREATED",reviewRequired:true});expect(JSON.parse(readFileSync(r.output,"utf8")).capture.bytesBase64).toBe(bytes().toString("base64"));
+});
+it("invalid previous report retains safely parsed current counts without inferred comparison",()=>{
+  const f=fixture();f.put();const r=reviewFixture(f);writeFileSync(r.output,"{}",{mode:0o600});writeFileSync(r.req,JSON.stringify({...r.request,previousReport:r.output}));expect(compareExport(r.cfg,r.req)).toMatchObject({parsedRows:1,compatibleRows:1,heldRows:0,rejectedRows:0,unexaminedFiles:1,relation:"COMPARISON_UNEXAMINED",reviewRequired:true,codes:["EXPORT_REVIEW_PREVIOUS_INVALID"]});
+});
+it("private output refuses existing content while preserving safe aggregates",()=>{
+  const f=fixture();f.put();const r=reviewFixture(f);writeFileSync(r.output,"existing-private-output",{mode:0o600});
+  expect(compareExport(r.cfg,r.req,r.output)).toMatchObject({compatibleRows:1,privateOutput:"REFUSED",reviewRequired:true});expect(readFileSync(r.output,"utf8")).toBe("existing-private-output");
+});
+it("private output refuses an unapproved reader without repairing ACLs or publishing rows",()=>{
+  const f=fixture();f.put();const r=reviewFixture(f),unsafe=path.join(f.root,"unapproved-output");mkdirSync(unsafe,{mode:0o755});
+  if(process.platform==="win32")execFileSync("icacls.exe",[unsafe,"/grant","*S-1-1-0:(OI)(CI)R"],{stdio:"pipe",windowsHide:true});else chmodSync(unsafe,0o755);
+  const output=path.join(unsafe,"refused.json");expect(compareExport(r.cfg,r.req,output)).toMatchObject({compatibleRows:1,privateOutput:"REFUSED",reviewRequired:true,codes:["EXPORT_REVIEW_OUTPUT_REFUSED"]});expect(existsSync(output)).toBe(false);
+});
+it("comparison rejects transport activation and private request links",()=>{
+  const f=fixture();f.put();const r=reviewFixture(f);const config=JSON.parse(readFileSync(r.cfg,"utf8"));config.transportEnabled=true;writeFileSync(r.cfg,JSON.stringify(config));expect(()=>compareExport(r.cfg,r.req)).toThrow("EXPORT_REVIEW_TRANSPORT_MUST_BE_DISABLED");
+  config.transportEnabled=false;writeFileSync(r.cfg,JSON.stringify(config));const link=path.join(f.root,"request-link");symlinkSync(r.review,link,"junction");expect(existsSync(path.join(link,"request.json"))).toBe(true);expect(()=>compareExport(r.cfg,path.join(link,"request.json"))).toThrow("EXPORT_PATH_ALIAS_REFUSED");
+});
+it("CLI comparison emits bounded aggregates and suppresses staff-bearing error paths",()=>{
+  const f=fixture();f.put();const r=reviewFixture(f);const module=path.resolve("src/export-preview.ts");
+  const child=spawnSync(process.execPath,["--import","tsx",module,r.cfg,"--compare",r.req],{encoding:"utf8",windowsHide:true});expect(child.status).toBe(0);expect(JSON.parse(child.stdout)).toMatchObject({compatibleRows:1,privateOutput:"NOT_REQUESTED"});expect(child.stdout+child.stderr).not.toContain(f.file);expect(child.stdout+child.stderr).not.toContain("0007");
+});
+it("explicit comparison selection reads beyond the ordinary first-eight scan without inspecting unrelated files",()=>{
+  const f=fixture();for(let i=0;i<9;i++)f.put(bytes().subarray(0,-1),path.join(f.source,`K30_0${i}.csv`));f.put();const r=reviewFixture(f);expect(compareExport(r.cfg,r.req)).toMatchObject({parsedRows:1,compatibleRows:1,unexaminedFiles:0,wholeFileState:"SAFELY_PARSED"});expect(existsSync(f.qfile)).toBe(false);
+});
 it("validates actual private Windows source ACL with a positive control",()=>{
   const f=fixture();expect(selectedFiles(f.input)).toEqual([]);
 });
@@ -150,7 +208,7 @@ it("oversized candidates advance fair scan progress without reading their conten
 });
 it("stale source uses committed byte novelty rather than a fresh service process or file mtime",async()=>{
   const f=fixture();f.put();const s=acquireExport(f.file,f.input,id);s.observedAt=new Date(Date.now()-120_000).toISOString();f.q.commitExport(s);await runBridgeCycle(f.config);
-  expect(JSON.parse(readFileSync(f.config.healthPath,"utf8")).exportSources[0].state).toBe("STALE_SOURCE");
+  const health=JSON.parse(readFileSync(f.config.healthPath,"utf8"));expect(health.exportSources[0].state).toBe("STALE_SOURCE");expect(health.lastPunchAt).toBe("2026-10-02T03:30:00.000Z");expect(health.exportSources[0].latestPunchTimestamp).toBe(health.lastPunchAt);expect(health.lastPunchAt).not.toBe(health.lastPollAt);
 });
 it("bounds preview double-read bytes before acquisition and excludes binary DAT by default",()=>{
   const f=fixture();for(let i=0;i<3;i++){const file=path.join(f.source,`K30_${i}.csv`);f.put(Buffer.alloc(2*1024*1024,10),file);}

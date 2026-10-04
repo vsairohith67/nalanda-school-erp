@@ -30,7 +30,7 @@ export async function runBridgeCycle(config = loadBridgeConfig(), signal?: Abort
       if (adapter instanceof EtimetrackLiteExportAdapter) {
         const health=adapter.ingest(device,queue,!!config.transportEnabled); exportSources.push(health);
         lastPollAt=new Date().toISOString();
-        if (health.acceptedRows) lastPunchAt=new Date().toISOString();
+        if (health.latestPunchTimestamp) lastPunchAt=health.latestPunchTimestamp;
         continue;
       }
       const normalized = (await adapter.poll(device)).map(event => {

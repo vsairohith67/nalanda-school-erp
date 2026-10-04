@@ -7,14 +7,15 @@ import { acquireExport, openExportScan } from "../export-source.js";
 import type { EncryptedDurableQueue } from "../encrypted-queue.js";
 
 export type ExportSourceState = "WAITING_NO_FILES" | "READING" | "STALE_SOURCE" | "PROFILE_MISMATCH" | "REVIEW_REQUIRED" | "QUEUE_HELD" | "HEALTHY_INGESTION" | "SOURCE_UNAVAILABLE";
-export type ExportHealth = { state: ExportSourceState; acceptedRows: number; rejectedRows: number; reviewRows: number; replayedRows: number; deferredFiles: number; refusedFiles?:number; lastNewFileAt?: string };
+export type ExportHealth = { state: ExportSourceState; acceptedRows: number; rejectedRows: number; reviewRows: number; replayedRows: number; deferredFiles: number; refusedFiles?:number; lastNewFileAt?: string; latestPunchTimestamp?:string };
 export class EtimetrackLiteExportAdapter implements DeviceAdapter {
   readonly profile=EXPORT_PROFILE; readonly officialProtocolRequired=false;
   async poll():Promise<NormalizedEvent[]> { throw new Error("EXPORT_ATOMIC_QUEUE_REQUIRED"); }
   ingest(device:ConfiguredDevice,queue:EncryptedDurableQueue,transportEnabled:boolean):ExportHealth {
     const input=device.exportInput; if (!input) throw new Error("EXPORT_CONFIG_INVALID");
     const {files,lease}=openExportScan(input,queue.exportScan()),ledger=queue.exportLedger();
-    const health:ExportHealth={state:"WAITING_NO_FILES",acceptedRows:0,rejectedRows:0,reviewRows:0,replayedRows:0,deferredFiles:0,lastNewFileAt:ledger.lastNewFileAt};
+    const latestPunch=(l:typeof ledger)=>Object.values(l.observations).reduce<string|undefined>((latest,o)=>!latest||o.utcTimestamp>latest?o.utcTimestamp:latest,undefined);
+    const health:ExportHealth={state:"WAITING_NO_FILES",acceptedRows:0,rejectedRows:0,reviewRows:0,replayedRows:0,deferredFiles:0,lastNewFileAt:ledger.lastNewFileAt,latestPunchTimestamp:latestPunch(ledger)};
     if (!files.length) { if (health.lastNewFileAt && Date.now()-new Date(health.lastNewFileAt).getTime()>input.staleAfterMs) health.state="STALE_SOURCE"; return health; }
     let bytes=0,processed=0; const start=queue.exportScan()%files.length;
     for (;processed<Math.min(files.length,EXPORT_LIMITS.filesPerCycle);processed++) {
@@ -34,7 +35,7 @@ export class EtimetrackLiteExportAdapter implements DeviceAdapter {
       health.acceptedRows+=result.accepted; health.rejectedRows+=result.rejected; health.reviewRows+=result.review; health.replayedRows+=result.replayed;
     }
     queue.setExportScan((start+processed)%files.length);
-    const committed=queue.exportLedger(); health.lastNewFileAt=committed.lastNewFileAt;
+    const committed=queue.exportLedger(); health.lastNewFileAt=committed.lastNewFileAt;health.latestPunchTimestamp=latestPunch(committed);
     health.refusedFiles=Object.keys(committed.refusals??{}).length;
     const historicalIssues=Object.values(committed.files).some(f=>f.rejected||f.review);
     health.state=health.refusedFiles?"PROFILE_MISMATCH":historicalIssues?"REVIEW_REQUIRED":health.deferredFiles?"READING":!health.lastNewFileAt||Date.now()-new Date(health.lastNewFileAt).getTime()>input.staleAfterMs?"STALE_SOURCE":!transportEnabled&&queue.size()>0?"QUEUE_HELD":"HEALTHY_INGESTION";

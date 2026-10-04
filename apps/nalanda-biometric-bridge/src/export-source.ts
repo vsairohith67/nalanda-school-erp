@@ -65,6 +65,11 @@ export function openExportScan(input:ExportInput,cursor=0) {
 // Two complete bounded reads, handle/path identity and metadata checks. No vendor
 // lock, writes, sidecars, renames or quiet-time-only inference.
 export function acquireExport(file:string,input:ExportInput,deviceId:string,betweenReads?:()=>void,lease?:object,remainingBytes=EXPORT_LIMITS.bytesPerCycle):AcquiredExport {
+  return acquireExportWithBytes(file,input,deviceId,betweenReads,lease,remainingBytes).snapshot;
+}
+// Review and ingestion share acquisition. Exact bytes are exposed only to the
+// explicit private-review caller, never added to queue state or general health.
+export function acquireExportWithBytes(file:string,input:ExportInput,deviceId:string,betweenReads?:()=>void,lease?:object,remainingBytes=EXPORT_LIMITS.bytesPerCycle) {
   if(path.dirname(path.resolve(file))!==path.resolve(input.sourceDirectory))throw new Error("EXPORT_SOURCE_BOUNDARY_REFUSED");
   const name=path.basename(file);if(!/^[A-Za-z0-9_.-]{1,128}$/.test(name)||name.endsWith(".")||!name.startsWith(input.profile.filenamePrefix)||!input.profile.extensions.includes(path.extname(name).toLowerCase() as any))throw new Error("EXPORT_SOURCE_FILE_REFUSED");
   let expectedSignature:string|undefined;
@@ -80,6 +85,6 @@ export function acquireExport(file:string,input:ExportInput,deviceId:string,betw
     const read=()=>{const bytes=Buffer.alloc(before.size);let offset=0;while(offset<bytes.length){const n=readSync(fd,bytes,offset,bytes.length-offset,offset);if(!n)throw new Error("EXPORT_SOURCE_CHANGED");offset+=n;}return bytes;};
     const first=read();betweenReads?.();const second=read();const after=fstatSync(fd),current=lstatSync(file);assertNoLinks(file);
     if(signature(before)!==signature(after)||signature(before)!==signature(current)||!first.equals(second))throw new Error("EXPORT_SOURCE_CHANGED");
-    const parsed=parseExport(first,input.profile,deviceId);return {...parsed,sourceKey:digest(path.resolve(file)),incarnation:digest(`${before.dev}:${before.ino}:${before.birthtimeMs}`)};
+    const parsed=parseExport(first,input.profile,deviceId);return {snapshot:{...parsed,sourceKey:digest(path.resolve(file)),incarnation:digest(`${before.dev}:${before.ino}:${before.birthtimeMs}`)},bytes:first};
   }finally{closeSync(fd);}
 }
