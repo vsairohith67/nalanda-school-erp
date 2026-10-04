@@ -6906,7 +6906,7 @@
           "sha256": "f287adcfe9f75c4644f25db2a471af4d27abaa9ce146925572a5cf1b15a0f377"
         }
       ],
-      "currentSha256": "b1b11f28ba7c06e50279aac038ba1d4c6658c528bdd13d46dcdec3f43d28ff70",
+      "currentSha256": "31af83ee9c63543b7719fe1dbfd73ba973bb19a736c76f3af142b4f0efd6c595",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -7156,7 +7156,7 @@
           "sha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc"
         }
       ],
-      "currentSha256": "d1dde628811a652de524d0d540699904e6a8931244d0bd2cadea887df656476a",
+      "currentSha256": "0cddb9224bb656384ce05d958992b5f2e8fb003a380aed0434b4106ab2d65af4",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -7181,7 +7181,7 @@
           "sha256": "11981ba3744060c4976ec1b6c0038085739ca0b24d248ce50349b897decd5d3a"
         }
       ],
-      "currentSha256": "25455fc9495dedd77bdc9299a5d0223a0b68784f3823ad54d636dad29387045f",
+      "currentSha256": "b396bdd273cc211c0a50ced9b6e46c1f0285c37cdd40a2016c835f73b3bd298b",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -8832,6 +8832,56 @@
         }
       ],
       "currentSha256": "38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": ".github/workflows/biometric-desktop-companion-1a.yml",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "f74649213a2e90542dff04d554d32ea66d96fcb0d15b547b98e13f9fb4e05117",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/reviewed-biometric-companion-publication.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "2265ed9b4af43f8d12fb01d13a03f7f57921c56dadf4d5e2149131adb19597eb",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     }
   ]
