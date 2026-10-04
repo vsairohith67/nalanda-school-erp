@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { producerProcess } from "../../../../scripts/portable/producer-process";
+import { producerProcess, type ProducerProcessObserver } from "../../../../scripts/portable/producer-process";
 
 export const appId = "com.nalandaps.erp";
 export type UiNode = Record<string, string>;
@@ -24,10 +24,13 @@ export function control(tree: UiNode[], label: string) {
 }
 /** Actual ADB accessibility/input adapter. No WebView injection or invoke mock. */
 export class Android {
-  constructor(readonly adb: string, readonly serial: string, readonly workspace: string) {
+  constructor(readonly adb: string, readonly serial: string, readonly workspace: string, readonly observer?: ProducerProcessObserver) {
     assert(/^emulator-\d{4,5}$/.test(serial), "ANDROID_DISPOSABLE_EMULATOR_REQUIRED");
   }
-  run(args: string[]) { return producerProcess({ stage: "native-android", tool: this.adb, args: ["-s", this.serial, ...args], timeoutMs: 30_000 }, this.workspace); }
+  run(args: string[]) {
+    const stage = args[0] === "install" ? "android-install" : args[0] === "uninstall" ? "android-uninstall" : "android-ui-command";
+    return producerProcess({ stage, tool: this.adb, args: ["-s", this.serial, ...args], timeoutMs: 30_000 }, this.workspace, undefined, this.observer);
+  }
   async tree() {
     await this.run(["shell", "rm", "-f", "/sdcard/nalanda-native-1b.xml"]);
     await this.run(["shell", "uiautomator", "dump", "/sdcard/nalanda-native-1b.xml"]);
