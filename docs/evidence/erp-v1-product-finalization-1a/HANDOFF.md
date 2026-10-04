@@ -176,3 +176,23 @@ Current source370/four heads/four backup contracts and non-writing inventory366 
 One substantive terminal comment on PR29:5981196785, exact body read back; PR OPEN/DRAFT/head5a3e219/base recovery/body unchanged. Asana P1 story1219133377262569 exact text read back; notes/name/assignee/dates/completed/parent/projects/memberships unchanged, completed=false, parent1218653844698449. Canvs existing P1 card updated/read back: old plain/rich prefixes exact; x/y/width/height, bindings/groups/frame/link/container/font/alignment unchanged, local/published/integrated/release states explicit.
 
 Notion comment creation acknowledged once:3efc9801-27a8-817e-a3d6-001d4f19bdb9, discussion3ecc9801-27a8-819b-9668-001c20290f0a. Read returned prior content without this result: **READBACK_PENDING**. No duplicate comment or synchronized-content claim. All original histories preserved. [Visible terminal product result](https://github.com/vsairohith67/nalanda-school-erp/pull/29#issuecomment-5981196785).
+
+### Latest clean-tree ownership refusal
+
+Final unchanged helper executed on clean docs checkpointb44cdd5: **BLOCKED/exit2**, branch matches, clean=true. Eleven actual dirty-path overlaps were reported as other lanes progressed. Only the shared source registry intersects this lane’s33-path recovery-relative product delta; ten are inherited-only relative to current recovery. No foreign content read/copied or partial source imported. Their active ownership is respected; no new acknowledgement/override exists. Missing upstream remains a warning, not a reason to bypass mandatory blockers.
+
+```text
+config/recovery-integration-source-delta.json
+lib/cloud-backup-worker.ts
+scripts/portable/bundle.mjs
+.github/workflows/real-data-onboarding-preparation.yml
+components/onboarding-centre.tsx
+lib/onboarding-canonical-package.ts
+lib/onboarding-workbooks.ts
+lib/onboarding.ts
+scripts/qa-import1a-copied-db.ts
+docs/evidence/recovery-batch-integration-5a/HANDOFF.md
+scripts/laptop-lab/HANDOFF.md
+```
+
+PR29’s same terminal comment and Canvs’s same terminal entry were refreshed/read back with the expanded11-path helper snapshot; no additional terminal comment/card was created. Asana retains its dated known-handoff snapshot and visible PR29 link; Notion remains acknowledged/READBACK_PENDING without another write. No synchronized-all-trackers claim.
