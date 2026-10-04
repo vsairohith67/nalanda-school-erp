@@ -211,4 +211,3 @@ describe("actual isolated encrypted worker backup and reference restore", () => 
     expect(summary.latestPassedRestoreRehearsalAt).toBeNull();
   });
 });
-

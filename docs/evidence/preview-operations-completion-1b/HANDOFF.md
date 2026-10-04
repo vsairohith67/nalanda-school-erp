@@ -2,7 +2,7 @@
 
 Status during correction: `PREVIEW_OPERATIONS_COMPLETION_PARTIAL`.
 Task: PREVIEW-OPERATIONS-COMPLETION-1B, Lane 6. One implementation owner;
-shared independent review remains queued, never self-attested.
+shared independent source review is CLEAR; final broader execution remains queued.
 
 ## Source and ownership
 
@@ -11,6 +11,14 @@ tree `c0aca53c31abef391ce4e4f6390325b57ce8bcdb`, OPEN/DRAFT. Task A explicitly
 handed off published successor `b20b28dce795bdd2c0776190df26a4852c0a5966`, tree
 `55b1feb5b91e34d177ff5bce04a8778d54bfc1ea`. This candidate fast-forwarded to that
 checkpoint; no unpublished A4 or other-lane source was copied.
+
+After both review corrections, Task A explicitly handed off published reviewed
+`0aa1462e3758b178e2a0fb626c63fb1b80236c87`, tree
+`0b20ce295b2717ad99f8e9a0ff36e5bd13147692`. A once-only ordinary merge yielded
+`a1994f0fbf7122cfce4c1840fada29993e2f34f5`, tree
+`365f966f2a844c1af5b05e2b671b9e513a44b0a0`. Eight reviewed Ops blobs stayed identical
+to the correction freeze; only the four published laptop CLI/test/registry paths
+advanced. No unpublished `bc03856` evidence checkpoint was copied.
 
 Branch `feature/preview-operations-completion-1b`; managed checkout:
 `C:/Users/rohit/.codex/worktrees/preview-operations-completion-1b/school software`.
@@ -76,6 +84,12 @@ The exact helper will be run again against the frozen clean candidate.
 | Review correction affected tests / tools-core types | PASS, 17.14s / 18.98s |
 | Review correction actual bundle / emitted checks | PASS, 0.38s / 3.23s; ten distinct manifests/IDs, all ten real qualification refusals before effects |
 | Review correction original operator / CLI | PASS, 2 files / 57 cases, 5.49s; no skips |
+| Complete current focused suite after review | PASS, 2 files / 15 cases, 100.70s; UTC15:39:38.6764020–15:41:19.3765524; no skips |
+| Post-merge source registration | PASS, 355 records / four source heads / four backup contracts |
+| Three unchanged publication scans | PASS, 586 main-relative changed paths; 0.65s / 0.64s / 0.61s |
+| Git safety / deterministic non-writing inventory | PASS, 2.38s / 0.49s; 365 pages registered, none omitted |
+| Full-regression baseline migration / original synthetic seed | PASS, 32.28s / 93.46s; newly created owned database, four invented users / one synthetic SuperAdmin, zero students/payments/guardians/staff; full test suite NOT_STARTED |
+| Owned delta whitespace check | FAIL, one new blank line at backup-test EOF; removed exactly that blank line, no assertion/semantic change; corrected check PASS |
 
 Corrections preserve the 60s migration child and 120s setup-hook limits, every
 business assertion, and inherited skip distinctions. Each fresh migration has its
@@ -108,6 +122,11 @@ reference restore, lifecycle refusal and privacy/evidence boundaries were inspec
    Docker operation. This is distinct from real SQLite backup/restore evidence.
 
 The corrected delta and its actual checks return to the same reviewer for closure.
+SAME K30 reviewer closed both P2 findings CLEAR SOURCE_ONLY on clean correction
+`64e4477f064ade31a04b00463d393e1301da13df`, tree
+`6ac89dd9c31bfe0083f2c20bbc0f0df8e130742c`, and independently checked the ordinary
+merge at a1994f0. No additional material finding; reviewer executed no tests,
+builds, Compose, databases, runtime or publication and made no edits.
 Narrow correction batch ran 21:02:10–21:04:57 IST on the coordinator's explicitly
 returned Lane5 slot. Actual job intervals above remain separate; gaps/review/waits
 are not summed as execution. Lane6 returned the slot with zero heavy jobs or listeners.
@@ -122,13 +141,24 @@ are not summed as execution. Lane6 returned the slot with zero heavy jobs or lis
 - PREVIEW_DEPLOYED: NO.
 - PostgreSQL local / real S3 provider: NOT_EXECUTED; no already approved target.
 - Exact lane CI: NOT_EXECUTED; own source publication gated.
-- Independent review: CHANGES_REQUESTED on clean local 34533042e8aa2b1f06ece11da863dab026be2527 / tree c7090f16f8446538e93b5bea9ff1329d877bcd5b; two material P2 findings, no reviewer execution.
+- Independent review: CLEAR SOURCE_ONLY on corrected64e4477 and published-source merge a1994f0; original two P2 findings closed, no reviewer execution.
 
 Original focused, affected type, bundle/emitted and original-suite batch settled
 at 20:31 IST; corrected review batch settled 21:04:57 IST. No Lane6 heavy job remains. One applicable broader synthetic
 regression is queued behind the master coordinator, with inspected fresh baseline
 entrypoints and no operational database fixture or fake CI identity. Final registration, all three unchanged relevant publication
 scanners, Git safety and final prepare-qa will retain their actual results.
+
+The unchanged helper first returned genuine SAFE on clean a1994f0, with no overlaps,
+unreadable owners or blockers. Later actual full prelude returned BLOCKED exit2
+while the coordinator integrated nine reviewed Ops paths and the native owner
+drafted `tests/product-experience-1a.test.ts`. Earlier SAFE is not a current receipt.
+The coordinator then clarified that the full run must wait for a new genuine SAFE.
+Owned baseline migration/seed had already settled before that clarification;
+full Vitest never started. Its two newly created invented database files remain
+untouched in this checkout pending the naturally resolved ownership gate. No
+existing/primary database was read or copied, and no helper override was applied.
+The final publication decision must use the then-current helper result.
 
 ## Coordination, cleanup and boundary
 
