@@ -1,3 +1,4 @@
+import { completeVaultUnlock } from "./vault-unlock";
 import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { AlertTriangle, CheckCircle2, CloudOff, FileClock, IndianRupee, LayoutDashboard, LockKeyhole, LogOut, RefreshCcw, ReceiptText, Settings2, ShieldCheck, Wifi } from "lucide-react";
 import { formatCurrency, stateForServerOutcome, syncGuidance, validateDraft, type LocalDraft } from "./domain";
@@ -47,6 +48,12 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    const backgroundLock = () => { if (document.visibilityState === "hidden") requestLock(); };
+    document.addEventListener("visibilitychange", backgroundLock);
+    return () => document.removeEventListener("visibilitychange", backgroundLock);
+  }, [vault]);
+
+  useEffect(() => {
     if (!vault) return;
     let dispose: (() => void) | undefined;
     let inactivityTimer = window.setTimeout(requestLock, 5 * 60 * 1000);
@@ -58,10 +65,8 @@ export function App() {
       setTokens(nextTokens); setNotice("Server authorization completed. Refreshing encrypted reference data…");
       void refreshReferenceData(nextTokens, "AUTOMATIC").catch(error => { if (!lifetime.signal.aborted && error?.message !== "REFERENCE_REFRESH_CANCELLED") setNotice("Reference data refresh failed. Retry through Security."); });
     }, (message) => { if (!lifetime.signal.aborted) setNotice(message); }, lifetime.signal).then((unlisten) => { if (lifetime.signal.aborted) unlisten(); else dispose = unlisten; }).catch(() => { if (!lifetime.signal.aborted) setNotice("Native callback observation failed."); });
-    const backgroundLock = () => { if (document.visibilityState === "hidden") requestLock(); else resetInactivity(); };
-    document.addEventListener("visibilitychange", backgroundLock);
     for (const event of ["pointerdown", "keydown"] as const) window.addEventListener(event, resetInactivity);
-    return () => { lifetime.abort(); dispose?.(); window.clearTimeout(inactivityTimer); document.removeEventListener("visibilitychange", backgroundLock); for (const event of ["pointerdown", "keydown"] as const) window.removeEventListener(event, resetInactivity); };
+    return () => { lifetime.abort(); dispose?.(); window.clearTimeout(inactivityTimer); for (const event of ["pointerdown", "keydown"] as const) window.removeEventListener(event, resetInactivity); };
   }, [vault]);
 
   async function saveDraft() {
@@ -80,27 +85,34 @@ export function App() {
     } catch (error) { setNotice(error instanceof Error ? error.message : "Draft could not be saved."); }
   }
 
+  const activeVault=useRef<VaultSession|null>(null);
+
   async function unlock(pin: string) {
     if (!isNativeRuntime()) { setLocked(false); return; }
     if (lockPending.current) await lockPending.current;
-    const session = await VaultSession.unlock(pin);
-    if (!session) throw new Error("Native secret storage is unavailable.");
-    await session.initialize();
-    const storage = new NativeOfflineStorageAdapter(session);
-    const [restored, references, saved, meta, deviceId] = await Promise.all([storage.drafts.list(), storage.references.current(), storage.referenceCommit.read(), session.getSecureJson<{ sessionId: string; publicDeviceId: string }>("native-session-meta"), session.deviceId()]);
-    // Historical records remain stored without claiming delivery history. A new
-    // observed cache may only be exposed to the session/profile that stored it.
-    const allowed = !saved || (meta && saved.binding.sessionId === meta.sessionId && saved.binding.publicDeviceId === deviceId && meta.publicDeviceId === deviceId && saved.binding.profile === `${profile.name}:${profile.origin ?? ""}`);
-    referenceSuspended.current = false;
-    setDrafts(restored); setReferencePack(allowed ? references : null); setVault(session); setLocked(false);
+    const generation=++vaultGeneration.current;
+    await completeVaultUnlock({
+      open:()=>VaultSession.unlock(pin),
+      current:()=>generation===vaultGeneration.current && document.visibilityState!=="hidden",
+      read:async session=>{
+        await session.initialize();
+        const storage=new NativeOfflineStorageAdapter(session);
+        const [restored,references,saved,meta,deviceId]=await Promise.all([storage.drafts.list(),storage.references.current(),storage.referenceCommit.read(),session.getSecureJson<{sessionId:string;publicDeviceId:string}>("native-session-meta"),session.deviceId()]);
+        const allowed=!saved || (meta && saved.binding.sessionId===meta.sessionId && saved.binding.publicDeviceId===deviceId && meta.publicDeviceId===deviceId && saved.binding.profile===`${profile.name}:${profile.origin ?? ""}`);
+        return {restored,references:allowed?references:null};
+      },
+      publish:(session,value)=>{activeVault.current=session;referenceSuspended.current=false;setDrafts(value.restored);setReferencePack(value.references);setVault(session);setLocked(false);}
+    });
   }
 
   async function lockNow() {
+    vaultGeneration.current += 1; // Also cancels unlock before a vault is published.
     if (lockPending.current) return lockPending.current;
-    const current = vault;
+    const current = activeVault.current;
     if (!current) return;
+    activeVault.current=null;
     referenceSuspended.current = true;
-    vaultGeneration.current += 1; refreshController.current.cancel(); setRefreshState(null); callbackLifetime.current?.abort();
+    refreshController.current.cancel(); setRefreshState(null); callbackLifetime.current?.abort();
     setVault(null); setTokens(null); setReferencePack(null); setLocked(true); setDrafts([]); setNotice("");
     setCompatibility("UNKNOWN");
     // Mask synchronously; failed persistence must never keep private UI open.
@@ -210,6 +222,7 @@ export function App() {
     if (!vault || confirmation !== "ERASE LOCAL DRAFTS") throw new Error("Type the exact confirmation phrase.");
     referenceSuspended.current = true;
     vaultGeneration.current++; refreshController.current.cancel(); callbackLifetime.current?.abort(); setReferencePack(null); setRefreshState(null); setCompatibility("UNKNOWN");
+    activeVault.current=null; // Detach before asynchronous wipe and later background events.
     setVault(null); setTokens(null); setReferencePack(null); setDrafts([]); setLocked(true); setNotice("");
     const pending = (async () => {
       await Promise.all([refreshController.current.drain(), invalidateNativeCredentialWork(vault)]);

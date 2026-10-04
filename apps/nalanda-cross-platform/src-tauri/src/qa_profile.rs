@@ -37,9 +37,9 @@ struct Trust {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Profile {
     contract: String,
-    source: String,
-    run_id: String,
-    attempt: String,
+    pub(crate) source: String,
+    pub(crate) run_id: String,
+    pub(crate) attempt: String,
     build_id: String,
     native_build_id: String,
     database_sha256: String,

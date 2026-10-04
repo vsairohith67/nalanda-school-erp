@@ -1,10 +1,12 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { normalizeStudentImportRows, type StudentImportPreview, type StudentImportMode } from "@/lib/student-import";
 import { projectStudentRows, suggestedStudentMapping, STUDENT_IMPORT_FIELDS, STUDENT_MAPPING_VERSION, type StudentMapping } from "@/lib/student-import-contract";
 import { CONTROLLED_SOURCE_FIELDS } from "@/lib/onboarding-source-package";
 import { ImportRowErrors } from "@/components/import-row-errors";
 export function StudentImportPanel() {
+  const feedbackId = useId();
+  const [yearError, setYearError] = useState(false);
   const [workflow, setWorkflow] = useState("legacy");
   const [source, setSource] = useState<Record<string, unknown>[]>([]), [mapping, setMapping] = useState<StudentMapping>({});
   const [preview, setPreview] = useState<StudentImportPreview | null>(null), [payload, setPayload] = useState<Record<string, string>[]>([]);
@@ -13,7 +15,7 @@ export function StudentImportPanel() {
   const [approved, setApproved] = useState(false), [serverPreview, setServerPreview] = useState(false), [result, setResult] = useState<any>(null);
   const receipt = useRef(""), actorContext = useRef("");
   const generation = useRef(0), worker = useRef<Worker | null>(null), request = useRef<AbortController | null>(null), fileInput = useRef<HTMLInputElement>(null);
-  function invalidate() { receipt.current = ""; generation.current++; request.current?.abort(); worker.current?.terminate(); worker.current = null; setPreview(null); setPayload([]); setApproved(false); setServerPreview(false); setResult(null); setBusy(false); }
+  function invalidate() { setYearError(false); receipt.current = ""; generation.current++; request.current?.abort(); worker.current?.terminate(); worker.current = null; setPreview(null); setPayload([]); setApproved(false); setServerPreview(false); setResult(null); setBusy(false); }
   function reset() { invalidate(); setSource([]); setMapping({}); setClassChoices({}); if (fileInput.current) fileInput.current.value = ""; setMessage("Review cleared. Check saved batches if a request had already been sent."); }
   useEffect(() => {
     const controller = new AbortController();
@@ -35,7 +37,7 @@ export function StudentImportPanel() {
   const sourceClasses = [...new Set(source.map(r => JSON.stringify([String(classHeader ? r[classHeader] ?? "" : "").trim(), String(sectionHeader ? r[sectionHeader] ?? "" : "").trim()])))];
   function localValidate() {
     invalidate(); try {
-      if (!year) throw new Error("Select the academic year explicitly.");
+      if (!year) { setYearError(true); throw new Error("Select the academic year explicitly."); }
       const clean = projectStudentRows(source, mapping);
       for (const row of clean) {
         if (row.academicYear && row.academicYear !== year) throw new Error("Source academic year conflicts with the selected year.");
@@ -75,8 +77,8 @@ export function StudentImportPanel() {
     <p><a href="/onboarding">Controlled onboarding XLSX template and workflow</a></p><button type="button" className="secondary" onClick={template}>Download supported legacy Student CSV template</button>
     <p>Legacy required: admission number, Student name and class. Father name and phone omissions warn. Controlled onboarding requires Student father name and phone, and Guardian primary mobile. Never enter dummy contacts. Keep admission numbers as text.</p>
     <p role="status">{capability ? `Preview available / ${capability.import ? "Import available under current authority" : "Import disabled"}` : "Access denied or capability unavailable"}</p>
-    <label>Academic year<select disabled={busy} value={year} onChange={e => { invalidate(); setYear(e.target.value); setClassChoices({}); }}><option value="">Select year</option>{[...new Set(classes.map(c => c.academicYear))].map(y => <option key={y}>{y}</option>)}</select></label>
-    <label>Source CSV / XLSX<input ref={fileInput} type="file" accept=".csv,.xlsx" disabled={busy} onChange={onFile} /></label><button type="button" className="secondary" onClick={reset}>Cancel / clear review</button>
+    <label>Academic year<select aria-describedby={feedbackId} aria-invalid={yearError || undefined} disabled={busy} value={year} onChange={e => { invalidate(); setMessage(""); setYear(e.target.value); setClassChoices({}); }}><option value="">Select year</option>{[...new Set(classes.map(c => c.academicYear))].map(y => <option key={y}>{y}</option>)}</select></label>
+    <label>Source CSV / XLSX<input ref={fileInput} aria-describedby={feedbackId} type="file" accept=".csv,.xlsx" disabled={busy} onChange={onFile} /></label><button type="button" className="secondary" onClick={reset}>Cancel / clear review</button>
     {source.length ? <><p>Mapping {STUDENT_MAPPING_VERSION}. Excluded columns: {Object.values(mapping).filter(v => !v).length}. Their values will not be uploaded.</p>
       {Object.entries(mapping).map(([header, target]) => <label key={header}>{header}<select disabled={busy} value={target} onChange={e => { invalidate(); setMapping(m => ({ ...m, [header]: e.target.value as any })); }}><option value="">Exclude locally</option>{(workflow === "controlled" ? CONTROLLED_SOURCE_FIELDS : STUDENT_IMPORT_FIELDS).map(f => <option key={f}>{f}</option>)}</select></label>)}
       {sourceClasses.map((label, i) => <label key={i}>Class/section mapping: {JSON.parse(label).join(" / ") || "missing"}<select disabled={busy} value={classChoices[label] ?? ""} onChange={e => { invalidate(); setClassChoices(c => ({ ...c, [label]: e.target.value })); }}><option value="">Use exact separate fields if unambiguous</option>{classes.filter(c => c.academicYear === year).map(c => <option key={JSON.stringify(c)} value={JSON.stringify(c)}>{c.className} / {c.section || "class-wide"}</option>)}</select></label>)}
@@ -85,6 +87,6 @@ export function StudentImportPanel() {
       <details><summary>Optional preview table</summary><div className="table-wrap"><table><thead><tr><th>Row</th><th>Admission</th><th>Student</th><th>Class / section</th></tr></thead><tbody>{preview.rows.slice(0, 50).map(r => <tr key={r.rowNumber}><td>{r.rowNumber}</td><td>{r.normalized.admissionNo}</td><td>{r.normalized.studentName}</td><td>{r.normalized.className} / {r.normalized.section}</td></tr>)}</tbody></table></div></details>
       {workflow === "controlled" ? <button disabled={busy || preview.counts.errors > 0} onClick={controlledPackage}>Download new clean canonical workbook</button> : <><button disabled={busy} onClick={() => call("preview")}>Server validation / preview</button><label><input type="checkbox" checked={approved} disabled={!serverPreview || !capability?.import || busy} onChange={e => setApproved(e.target.checked)} />I reviewed this context, mapping, mode, errors and warnings.</label>
       <button disabled={busy || !serverPreview || !capability?.import} onClick={() => call("dry-run")}>Save validation report — creates batch/audit metadata; does not change Student records</button><button disabled={busy || !approved || !serverPreview || !capability?.import || !preview.counts.valid} onClick={() => call("import")}>Confirm Student import</button></>}</> : null}
-    <p role="status">{message}</p>{result ? <><p>{result.result ? `Created ${result.result.created}; updated ${result.result.updated}; skipped ${result.result.skipped}; errors ${result.result.errors.length}.` : "Validation metadata saved."}</p><a href={`/import-verification/${result.batchId ?? result.result?.batchId}`}>Open authoritative batch reconciliation</a></> : null}
+    <p id={feedbackId} role="status">{message}</p>{result ? <><p>{result.result ? `Created ${result.result.created}; updated ${result.result.updated}; skipped ${result.result.skipped}; errors ${result.result.errors.length}.` : "Validation metadata saved."}</p><a href={`/import-verification/${result.batchId ?? result.result?.batchId}`}>Open authoritative batch reconciliation</a></> : null}
   </section>;
 }

@@ -434,3 +434,1945 @@ Validation correction: initial full local regression reported 2,873 PASS / 1 FAI
 Remaining W1 code is unchanged: native artifact provenance admission and full host factory; actual application forwarding/topology setup; instance-bound original OS callback collector; early privacy observation; fresh-device/vault bootstrap and complete journey cleanup/assembly. No QA capability bypasses those gates. No complete W1/Windows/release claim. Real Edge/WebView/system-browser and Rust connection must ultimately target the same admitted origin; probe-only SSH is not application forwarding.
 
 Protection: EXTERNAL_RUNTIME_BLOCKED, EPHEMERAL_EXACT_HEAD_CI_ONLY, 25 operational defaults OFF/0%, v48/historical contracts, schemas/migrations, 46 requirements/history and OCR exclusion are unchanged. Operational database was not accessed or freshly hashed; prior fingerprint is historical only. No denied command retry, historical deletion/residue cleanup, public native/private-profile/key/font upload, owner trust mutation, real data/provider operation, merge/tag/deployment or staff-preview activation. Parallel Ask Nalanda source/task/card are untouched. Tracker and terminal source/CI readbacks are reported separately in the final PR28 delta; no automatic next package is started.
+## 27 September 2026 — W1A native artifact admission, NA1–NA4
+
+This bounded update supersedes only the missing native-output/provenance/launch-admission connection. Starting source `1c2e1a386a445941af0d1b5cfc7bac7ec109dfb8`, tree `640a231336ead9af1ba2976fde00543aa1c8ae5d`. W1 remains incomplete; production/backend admission and all unrelated work are unchanged. Exact final source and terminal CI coordinates are recorded in the dated PR28 delta, avoiding a documentation-only follow-up push.
+
+| ID | Implementation and actual consumer | Permitted evidence / execution prerequisites |
+| --- | --- | --- |
+| NA1 | `build-native-qa.ts` creates fresh run-owned Cargo scratch, invokes pinned Tauri with locked dependencies and the retained signed QA profile, inventories the fixed x64 executable separately from the NSIS package, validates all scratch hardlink peers, copies into single-link private output, captures raw SHA-256/size, source tree/input/tool/profile/trust identities and bounded dependency reports. `native-build-origin.ts` authenticates an inventory-bound GitHub OIDC token; `native-controller.ts` reuses the admitted Linux run-owned Ed25519 signer. | UNIT_OR_CONTRACT: real crypto/filesystem/PE-shaped synthetic bytes with explicitly doubled compiler, SSH and OIDC process boundaries. REAL_BUILD_OUTPUT_VALIDATED and trusted CI production NOT_EXECUTED. No installer/app execution. |
+| NA2 | `native-artifact.ts` strictly verifies the signed inventory, exact output/support-file set, source/run/attempt/build/profile/backend relationship, expiry, raw bytes, tool identities and security reports. The public trust key is obtained from the independently provisioned pinned SSH controller after existing backend/replica admission, never accepted from an artifact-provided key. Controller checks GitHub's fixed issuer/JWKS, numeric repository/owner, exact workflow/ref/source/run/attempt and inventory audience before signing. | Real Ed25519 and RSA signature verification, substitutions, malformed/duplicate JSON, foreign/stale/profile/signer/harness/path/link/security rejection tested. Local RSA fixtures are contract evidence, not GitHub provenance. HARNESS_FIXTURE_ONLY cannot pass real admission. TRUSTED_NATIVE_ARTIFACT_ADMITTED NOT_EXECUTED. |
+| NA3 | `OwnedWindowsWebDriver.start` and `launchApp` consume `native-launch-admission.ts`; fresh native AND controller-side backend admission is required before any host startup and again after driver readiness immediately before app session creation/restart. Raw launch bytes and descendant ACLs are checked again. Existing Linux runtime checks stay on the controller. `windows-private-transport.ts` carries only the fixed native context/seal operation through the existing pinned private channel. | Missing native admission and backend denial stop before launch/sealing. Full host factory/topology is not implemented here. No claim of perfect filesystem race immunity: private owned ACLs, single-link files and immediate recheck limit substitution. AUTHENTICATED_WINDOWS_EXECUTED NOT_EXECUTED. |
+| NA4 | New `native-artifact-admission.test.ts` and `native-build-producer.test.ts` exercise the real verifier/producer orchestration, including separate installer/executable identity, byte changes, output ambiguity, scans, changed input, failed build/seal, ownership and cleanup. Existing controller/transport/host/publication/release tests remain. Source registration uses the unchanged generator/checker. | Focused independent read-only review follows producer → origin → retained signer → native verifier → fresh backend requirement → real launch guard. Final test/review/CI results are reported in PR28; skipped mandatory runtime jobs never count as PASS. |
+
+Concrete commands: `pnpm exec tsx scripts/portable/build-native-qa.ts <private-input-directory> <private-transport.json>` and `pnpm exec tsx scripts/portable/build-native-qa.ts --cleanup <private-transport.json>`. Both are bundled by the existing portable bundler. The native workflow's optional `connected_native_evidence` manual hook builds/consumes privately in one Windows job and has no artifact/cache upload. It requires already authorised, same-run inputs at the documented runner-temp path; it does not provision a Linux controller, application forwarding, SSH credentials, private CA or topology. The supplied SSH pin/configuration must originate in independently admitted environment setup, not in the untrusted native artifact bundle. Missing inputs/refused runtime remain explicit refusals.
+
+Private-key custody stays on the existing Linux signing root. Native inputs contain only approved public trust/profile material. A durable `process-unreconciled` marker is written before compiler startup; only successful synchronous completion removes it. Build failure, timeout, overflow or producer termination leave cleanup blocked rather than deleting files under potentially surviving descendants. Quiescent failures clean only the validated newly owned root and verify absence. Disposable-runner teardown/reconciliation is required for ambiguous residue; no forensic erasure or cleanup after uncatchable termination is promised. Historical packages/residue are untouched.
+
+Fresh local Cargo audit did not clear native security: exit 1 included registry/yanked-check timeouts, an observed `RUSTSEC-2024-0429` glib warning and yanked `chacha20 0.10.1`; truncated output is not a complete finding inventory. The producer rejects nonzero/malformed audit results, Critical/High package findings and Rust audit warnings. No suppression, severity change or dependency upgrade is made here. A complete fresh clean mandated native security result is still an execution prerequisite, independently of the retained backend runtime hold.
+
+Initial candidate `9e851a8` PostgreSQL application regression / run `36331457807` correctly rejected the new producer contract fixture's inherited Node 22 tool version. The real Windows producer requires 24.19.0. The explicitly doubled compiler fixture now supplies and restores that pinned version independently of its test runner, with a new unsupported-Node rejection test; no runtime pin or assertion is weakened. Initial failure is preserved, not rerun. Local pre-correction full regression: 2,893 PASS / 3 inherited qpdf skips; corrected new tests: 20 PASS. Final exact-head evidence supersedes only this fixture defect. The subsequent onboarding publication check rejected the redundant numeric job identifier in this paragraph as identifier-like content; that identifier is omitted here and retained in PR28's exact job link. No scanner exception or suppression was added.
+
+Production/no-remote PIN builds cannot substitute for connected QA. This is neither Authenticode/store signing nor malware certification. W1B profile/Rust TLS/disposable trust, MFA/revocation/reference services and original gates are reused unchanged. Remaining source gaps: full host factory, application forwarding/setup, original instance-bound OS callback, early-frame privacy, fresh-device bootstrap and complete lifecycle assembly. Missing approved controller/backend/native environment inputs are separate execution prerequisites. No P1 import, task/card mutation, operational DB access/hash, schema/migration/v48 change, flag activation, historical cleanup, public package/key/private profile, merge/tag/deployment or staff preview. Protected DB fingerprint remains historical only.
+
+### 2026-09-30 - final Windows connected assembly (FA1-FA4)
+
+This dated section supersedes only the remaining W1 engineering list immediately above. Starting source `30fc51df07c8fadaa56e6e3187834c103bad9b04`, tree `767a7936c8f050608bd0a66c5ad189016710304e`. The preceding CI-stability verdict remains PASSED_ON_BOUNDED_RETRY_CAUSE_UNRESOLVED for the finance timeout, Windows service timeout and iPad capture. No timeout, capture threshold or unchanged retry was added here. Original failure evidence remains in PR28.
+
+| Milestone | Concrete connection | Evidence and execution boundary |
+| --- | --- | --- |
+| FA1 | `windows-connected-host.ts` constructs every retained `WindowsLifecycleHost` method. `integrated-acceptance.ts --windows` and the optional native workflow consume its bounded private stdin recipe. Native receipt/bytes and controller-side backend admission remain separate. `windows-forwarding.ts` connects the pinned private controller to dual loopback application listeners, validates DNS, exact origin, public CA/TLS and backend binding. Existing profile/trust/probe/WebDriver adapters are real consumers. | UNIT_OR_CONTRACT for host/process/transport boundaries, real hashing/parsing and existing service tests. No Windows app or controller connection executed. |
+| FA2 | QA-only Rust `qa_observation.rs` records the actual app-generated request and accepted exchange without raw URLs/codes/state/tokens. Deep-link and single-instance paths record warm/cold delivery. `windows-process-observer.ps1/.ts` observes OS process-start events; `windows-observation.ts` correlates the live owned browser parent, Windows SID, process creation/hash, journal instance, original request/state hash and actual server exchange. Cold launch receives fresh admission immediately before the real browser confirmation and after attachment. | Rust/parser tests and real host-method contract tests exercise pending, wrong-instance/user/state, stale PID, missing/rejected exchange and attach failures. WMI/OS callback delivery NOT_EXECUTED. A doubled callback is not OS evidence. |
+| FA3 | QA-only Tauri document-creation initialization installs `qa_privacy.js` before frontend code. DOM mutations and animation frames observe synthetic canaries while locked, during restart/return and pending unlock. Real WebDriver checks reject a late/missing observer. Background invalidates pending unlock permission. | Boundary is DOCUMENT_CREATION_DOM_AND_RAF_NOT_COMPOSITOR_FRAMES. This does not certify compositor frames, physical devices or an interval tooling cannot observe. No actual Windows rendering claimed. |
+| FA4 | Owned known-folder profile claim, actual PIN setup and original fresh-device request precede private prerequisite provisioning. A separate cryptographically valid control-session service fixture is labelled setup. The connected WD1-WD5 driver performs real login/MFA, device governance, warm callback, manual RO1-RO4 refresh, lock/background/restart, exact-session revocation, old-session refusal and fresh browser login/MFA/cold callback. Cleanup checks exact process/SID/hash/time, listener, certificate and profile ownership. | ISOLATED_SERVICE_OR_STORAGE for genuine retained service transitions; UNIT_OR_CONTRACT for doubled OS/WebDriver boundaries. AUTHENTICATED_WINDOWS_BACKEND and OWNER_DEVICE_CERTIFICATION NOT_EXECUTED. Broader release verdict remains partial. |
+
+Input contract: `NALANDA_WINDOWS_CONNECTED_RECIPE_V1` has only `contract`, `target`, `tools`, `transport`; maximum private stdin frame is 32 KiB, including PowerShell CRLF. Canonical parsing rejects duplicate/unknown critical fields. Executable path and digest are derived from the trusted native receipt and actual output bytes rather than caller claims. The optional `connected_windows_acceptance` workflow input stays false by default and consumes same-job private inputs; it does not publish packages, profiles, vaults or traces. The portable bundle includes the real entrypoint.
+
+Application correction: an in-flight asynchronous vault unlock could finish after backgrounding while the React vault state was still empty. `src/vault-unlock.ts` and the existing `App.tsx` now check the current unlock generation before and after encrypted reads, lock discarded handles and synchronously track the active vault. Wipe clears that active reference before existing storage cleanup. Tests cover background while opening/reading, failed reads and wipe/background/new unlock. This is local masking/lifecycle correctness, not a change to PIN, server authority, storage format or offline policy.
+
+Cleanup is one attempt per owned resource; foreign or uncertain ownership is refused. A control-session creation whose response is lost leaves an explicit reconciliation requirement instead of silently replaying creation or claiming cleanup. Evidence is bounded, sanitised and retained before teardown. No promise is made for uncatchable machine loss. Historical artifacts and denied residue remain untouched.
+
+Required pre-existing execution inputs: independently admitted backend and exact native/security evidence; a source/run-bound Linux controller with pinned host key, restricted credential and PermitOpen limited to its application endpoint; approved private connectivity; disposable hosted Windows SID with actual isolated known folders; matching pinned Edge/WebView2/WebDriver/Tauri tools; signed QA profile and public CA; exact protocol handler and default Edge command; app-specific HKCU WebView runtime/user-data/debug policy; exact HKCU protocol auto-launch policy for the admitted origin; and WMI process-start permission. The implementation verifies these and refuses absent/foreign inputs. It does not install owner protocol handlers, alter owner/default-browser/trust settings, provision a controller or enable a public tunnel. The fixed forward preserves HTTPS hostname verification. Protocol launches through an unsupported or unowned broker remain a refusal.
+
+New focused tests: `windows-connected-host.test.ts`, `windows-forwarding.test.ts`, `windows-observation.test.ts`, `windows-process-observer.test.ts`, client `vault-unlock.test.ts` and `App-lifecycle.test.tsx`; affected orchestration/probe/service tests retain prior assertions. Local evidence includes 131 native/admission/governance/MFA/reference/transport/publication/recovery tests across 11 files, 66 Windows/native-profile tests across six files, 48 client tests, ten Rust tests, provider/schema/trigger parity, QA compile plus production exclusion, portable bundle and PowerShell parsing. Overlapping focused runs are not summed into a unique grand total. Process/DOM/WebDriver doubles prove only their named contracts. Root and client dependency audits returned no high finding but each retained one moderate finding; prior native-security/runtime findings are not cleared by those audits. Publication scope-scan limitations remain explicit. Final exact-head workflow results and any skips are recorded in PR28 without a documentation-only push loop.
+
+One focused read-only reviewer traced artifact/profile/TLS, forwarding, factory, original browser request, callback, readback, storage, lock/restart, revocation, fresh authentication and cleanup. Demonstrated issues were corrected and affected tests rerun. The review found no remaining blocking scoped source defect: no required host method is doubles-only; old cache cannot satisfy manual refresh; original OS correlation and accepted exchange are required; native/backend checks remain independent; foreign cleanup refuses; PIN cannot restore revoked authority; fresh authentication must produce a distinct session. Privacy conclusions remain limited to the documented earliest supported DOM/frame-observation boundary. Source registration uses the unchanged generator/checker, with changed entries independently checked.
+
+No admitted connected Windows execution occurred. EXTERNAL_RUNTIME_BLOCKED and EPHEMERAL_EXACT_HEAD_CI_ONLY remain. Six mandatory runtime gates and the optional private native producer are not passes when skipped. P1/PR29, released main, operational database, v48, schemas/migrations, original PRs/OCR exclusion and the 25 OFF operational flags remain untouched. The protected database fingerprint is historical evidence only. No authenticated Windows, release, deployment or staff-installation clearance is implied.
+
+First candidate `88e234a` exposed a publication scope-registration omission: the real-user-access gate rejected the five new native/client source files. The correction registers only those exact reviewed paths in the existing real-user-access and communication scanners. No root wildcard, secret rule, binary rule or threshold changes. Eight actual scanner-CLI regression cases in isolated synthetic Git fixtures prove acceptance of the reviewed files and rejection of private-key material, an unregistered neighbouring file and a prohibited executable. Both current source scans pass. Original candidate failure remains historical; the corrective head receives normal CI rather than an unchanged rerun.
+### 2026-10-01 — RECOVERY-FINANCE-SERVICE-STABILITY-1A
+
+**FINANCE_SERVICE_STABILITY_UNRESOLVED.** No causal repair was demonstrated. Starting and final committed source remain `aa653dec3e559c1655d15c24b71672c3b4f7d7f0`, tree `aafa3d7f228ac3525c81ad453b02d533816b438e`. Owned recovery branch/worktree and fetched remote matched; PR28 remains OPEN/DRAFT. This is a local uncommitted ledger addendum, mirrored in PR28 and existing recovery trackers; no implementation commit, push, workflow dispatch or historical retry was made merely to obtain new CI.
+
+The declared diagnostic cap was 50 minutes, with six finite slots: two unchanged focused SQLite runs, two instrumented focused runs, one instrumented single-worker full suite, and one PostgreSQL comparison if the isolated environment permitted it. The matrix exhausted its executable slots before that cap. Each executed finance journey used its existing fresh owned database. No service action was moved into setup, split, mocked anew or retried.
+
+| Attempt | Result | Measured boundary |
+| --- | --- | --- |
+| 01, unchanged focused SQLite | PASS | Action 7.491s; test file 9.94s. First process; OS caches were not forcibly cold. |
+| 02, unchanged focused SQLite | PASS | Action 9.958s; test file 11.08s. New process/database, later machine/cache state. |
+| 03, instrumented focused SQLite | PASS | Setup 0.883s; action 8.158s; in-action prepare 1.293s; 93 snapshots 3.073s; cleanup 0.038s. |
+| 04, instrumented focused SQLite | PASS | Setup 1.090s; action 10.069s; in-action prepare 2.313s; 93 snapshots 3.381s; cleanup 0.017s. |
+| 05, instrumented full SQLite suite | Finance PASS; aggregate FAIL | Finance file 10.363883s from retained Vitest result cache; successful phase output was not retained by the reporter. Full suite 1,397.86s: 2,948 PASS, one FAIL, three inherited qpdf SKIPs; 302 passed files, one failed, one skipped. |
+| 06, planned PostgreSQL comparison | NOT_EXECUTED / POLICY_BLOCKED | Windows PowerShell refused to load the new task-owned orchestration script under its execution policy. No container, database, client regeneration or test began. No alternate-shell/policy bypass was attempted. |
+
+The full-suite failure is separately named: `tests/native-session-governance.test.ts:138`, “reauthorizes absent/inactive/wrong selected role/explicit deny even on retries”, expected explicit-DENY rejection but received `{status:"REVOKED"}`. No native code or test was changed or rerun. This is an unresolved authorization assertion failure, not an established production bypass and not a demonstrated cause of the finance timeout.
+
+Retained hosted evidence stays separate: [current Biometric failure](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36683414008/job/109783796888) reached 30.020s action / 32.549s file; [same-head Master success](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36683414152/job/109783725995) took 8.316s action / 9.459s file. Both used Windows Server 2025 image windows-2025-vs2026 20260922.246.2, runner 2.337.0, Node 24.19.0 and pnpm 11.21.0. The [earlier failure](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36332401055/job/108656748994) reached 30.016s action; its [single historical retry](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36332401055/job/109733977365) passed at 9.787s action on image 20260925.250.1. Its cause-unresolved verdict is preserved. [Exact-head PostgreSQL CI](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36683414021/job/109789344838) passed finance at 4.978s action / 8.262s file on Ubuntu 24.04, Node 22; the entire provider suite retained 2,919 PASS / three qpdf SKIPs. This is reused evidence, not fresh local PostgreSQL execution.
+
+Local platform was Windows 11, Node 24.19.0, pnpm 11.21.0, Vitest 4.1.11 and Prisma 6.19.3. CI=true retained the existing one worker. The full-suite command and relevant Biometric environment were reproduced, but not the hosted runner image or every preceding workflow step. Among 34 common hosted files with successful duration at least 500ms, median failed-job/successful-job duration was 1.22x; finance was 3.44x. Broader slowdown is a hypothesis, not measured contention or causation.
+
+Aggregate instrumentation observed 4,123 queries per focused run, engine-duration totals 1.345s / 1.738s and maxima 17ms / 30ms. It logged no query text, parameters or private fixture values. CPU and event-loop observations included setup; CPU counters were process-wide, while event-loop measurements described the instrumented JavaScript event loop. They do not isolate queue, lock, engine or scheduler waits. Instrumented actions averaged 0.389s longer than baseline, but that difference is confounded by sequential-run variability, not a reliable overhead estimate. Existing 30s action and 60s setup limits stayed unchanged. Receipt values, waiver/reversal, current-year invariance, income privacy and stale-authority assertions all remained intact.
+
+**Cause classification: unresolved.** Application defect, fixture-lifecycle defect and runner contention are not established. Passing prepare timings do not justify moving fixtures, and no timeout/concurrency adjustment is supported. Missing decisive evidence is a failing hosted finance operation with pending-phase elapsed time, complete client-call boundaries, aligned query/event-loop/resource observations and cleanup outcome.
+
+One independent read-only GPT-6 Astra reviewer examined the retained logs, measurement limits, unchanged assertions, PostgreSQL refusal and restored bytes. No finding against the unresolved/no-fix conclusion remained. The test was restored byte-for-byte; temporary instrumentation, original test, result cache and bounded logs remain ignored under `tmp/finance-stability-1a/`. No raw private logs are published. Source/provenance checker passed 275 files / four heads / four backup contracts; affected tests-m-r TypeScript partition passed. Real-user and communication publication scans passed 449 changed paths, zero detected candidate secrets/contacts/binaries; Git safety passed. No dependency, production or native source changed, so previous exact-head builds/audits are reused, not reported freshly executed.
+
+Live exact-head CI remains **eight workflows SUCCESS, one FAILURE, zero pending, all nine known workflows present**. Jobs: **20 SUCCESS, one FAILURE, seven SKIPPED, zero pending**. Six skipped jobs are mandatory runtime gates; the seventh is the optional private native producer. Local source/service results do not clear this CI failure, the new local authorization assertion, runtime, Windows or installation.
+
+| Windows/runtime prerequisite | Current evidence state | Exact evidence required / next action | Owner |
+| --- | --- | --- | --- |
+| Independent backend/runtime security admission | BLOCKED; EXTERNAL_RUNTIME_BLOCKED retained | Exact architecture/image/SBOM/provenance and current unsuppressed policy-compliant scanner/native evidence, followed by the existing admission process | UNASSIGNED |
+| Independent connected-QA native provenance/security | UNVERIFIED; producer/guard code retained | Trusted exact executable/support hashes, source/build/profile bindings and complete policy-compliant native audit. Retained Cargo audit timeouts, glib warning and yanked dependency evidence are not cleared by root dependency audits | UNASSIGNED |
+| Private controller and application connectivity | MISSING approved execution inputs | Pinned controller identity/host key, restricted credential, source/run binding, exact permitted loopback HTTPS forwarding and same-serving-database verification; supply through the private channel | UNASSIGNED |
+| Disposable Windows identity/profile/tools | UNVERIFIED | Authorised disposable SID and isolated known folders; exact pinned Edge/WebView2/driver/Tauri identities, owned processes and cleanup receipts | UNASSIGNED |
+| Signed QA profile and CA trust | Code PRESENT; execution UNVERIFIED | Current signed source/run/backend-bound profile, public CA, independent Rust/browser/WebView TLS validation and owned CurrentUser trust setup/cleanup | UNASSIGNED |
+| Protocol/browser/WMI configuration | UNVERIFIED | Exact owned protocol/default-browser command, app-specific HKCU WebView policy, origin-specific protocol launch policy and WMI process-start permission | UNASSIGNED |
+
+No Windows journey, controller provisioning, trust-store change or application-stack launch occurred. Connected Windows is NOT_EXECUTED; runtime remains BLOCKED; installation/release are NOT_CLEARED. P1/PR29, K30/hardware, released main, operational database, schemas/migrations/v48, 46 IDs and 25 OFF flags remain untouched. Operational fingerprint is historical only. No new PostgreSQL resource needed cleanup; existing finance fixture cleanup assertions passed. Historical and ambiguous residue is preserved.
+
+Single next recommended milestone: obtain a reviewed, phase-complete failing-run trace in the actual hosted finance configuration, preserving the separate explicit-DENY assertion as a named security finding. Do not start Windows execution or another W1 package. A repair duration cannot be estimated responsibly until that observation exists.
+
+### 2026-10-01 — RECOVERY-NATIVE-DENY-ASSERTION-1A
+
+**NATIVE_DENY_ASSERTION_UNRESOLVED.** Starting/final committed source `aa653dec3e559c1655d15c24b71672c3b4f7d7f0`, tree `aafa3d7f228ac3525c81ad453b02d533816b438e`; fetched remote matches, PR28 remains OPEN/DRAFT. The preceding 41-line uncommitted finance addendum was captured separately and preserved byte-for-byte. This entry is another uncommitted evidence-only addendum. No implementation change, commit, push, CI dispatch or historical retry is justified by the original DENY evidence.
+
+The retained full-suite log `tmp/finance-stability-1a/attempt-05-full.log` reports the original line138 explicit-DENY expectation resolving `{status:"REVOKED"}`. It records neither the transaction decision time nor the override row observed then. Its command was `pnpm.cmd test`, CI=true, SQLite, existing single-worker Vitest configuration, synthetic-copy-only biometric flag and no application server. Finance instrumentation was present in that previous run; this native test and service were unchanged. The original failure remains evidence, not a production-bypass finding or a finance-timeout diagnosis.
+
+Initial diagnostic budget: 60–90 minutes, three declared slots with fresh owned databases. No full-suite repetition. One explicit reassessment added a single corrective diagnostic run because two newly written probes had setup mistakes; both original diagnostic errors remain retained. All attempts are below; filtered-out tests are not passes.
+
+| Attempt | Source/boundary | Result |
+| --- | --- | --- |
+| 01 | Unchanged original case selected alone | FAIL before DENY, 315ms action / 2.55s run; 15 filtered tests. Deactivating the only active Super Admin hits the existing last-admin database trigger (Prisma P2003). The case relies on the earlier positive test leaving another administrator. This is a directly demonstrated, separate TEST_ISOLATION_DEFECT; it does not explain historical REVOKED. |
+| 02 | Entire original file plus observation-only evaluator wrapper | 16 PASS, 9.17s run; DENY case471ms. Actual stored validFrom20:15:56.527Z <= exact transaction cutoff20:15:56.536Z on30SepUTC; actor matched, ACTIVE/DENY, no expiry/revocation, row returned, source USER_DENY, allowed=false. Wrapper delegates real evaluation and captures its existing query/results without extra queries/waits. It still adds instrumentation overhead, not measured independently, and cannot establish original failing timing. |
+| 03 | Three new isolated diagnostic probes | One PASS (real rollback/retry reevaluation,547ms), two FAIL in diagnostic setup,3.74s run;16 filtered tests. Normal-IAM probe lacked nullable iamPublicKey; boundary probe referenced an incorrect local fixture variable. Neither failure is application evidence. |
+| 04 | Only the two corrected diagnostic probes | Two PASS,7.73s run;17 filtered tests. Normal IAM1563ms; controlled-boundary1289ms. IAM handle supplied as fixture prerequisite and fixture variable corrected; no policy or service result forced. |
+
+**Normal IAM contract:** MANAGE_OFFLINE_SYNC_DEVICES is in SUPER_ADMIN_ONLY_PERMISSIONS and cannot be changed by an individual override. Real `mutateNamedUser` with a distinct administrator and password reauthentication rejected the requested native DENY before creating an override, changing authorizationVersion or revoking the existing web session. The direct database DENY in the original native test is an adversarial fixture, not a normal IAM-created state. The task does not authorize weakening that policy.
+
+A separately labelled ordinary VIEW_STUDENTS DENY through that same real IAM service created an ACTIVE override, incremented authorizationVersion, revoked the old web session and made the old cookie fail native revocation with AUTHENTICATION_REQUIRED without consuming its grant. A newly issued web session returned USER_DENY (validFrom20:19:53.865Z, decision20:19:53.974Z). Normal governed removal invalidated that fresh session; another newly issued session regained the base permission. Native target authority and successful-admin-revoke audit stayed unchanged. This verifies the ordinary override contract, not creation of a forbidden native override. VIEW_STUDENTS evaluation explicitly supplied objectScopeSatisfied=true; no Student route or object-scope enforcement was exercised.
+
+**Boundary and retry evidence:** real SQLite rows and the evaluator's explicit `now` seam showed not-yet-effective DENY excluded, validFrom inclusive, validUntil exclusive. A controlled Date-only service probe at validFrom refused the action without consuming step-up, revoking the target, producing a successful audit or changing the control/device state. At validFrom-minus1ms it returned REVOKED; at validFrom it then refused the already-revoked target before step-up handling. This deterministically demonstrates the suspected ordering's effect but DOES NOT establish that the historical invocation had that ordering. The host OS clock was unchanged; the application Date clock was controlled only in the diagnostic. A separate injected P2034 after the first real transaction's successful action forced rollback; an already-effective synthetic DENY installed between attempts caused the real retry to refuse. Exactly two attempts, no durable success audit, unconsumed grant, and valid target access plus token refresh were verified. Only the serialization-conflict boundary is injected; storage, services and rollback are real.
+
+**Causal conclusion:** original explicit-DENY failure remains UNRESOLVED. Clock precision/source ordering, leaked time state and neighboring interference remain hypotheses. Later successful rows do not prove historical transaction visibility. No production authorization defect is demonstrated, nor is application safety certified by these bounded passes. The separately demonstrated standalone last-admin fixture dependency is retained as an unresolved test-isolation finding; no speculative backdate or evaluator change is committed. Missing decisive observation: one naturally failing invocation with its exact persisted override, decision cutoff, selected actor/role, query result and evaluator source from the same transaction, without an added query/wait changing the ordering.
+
+Temporary instrumentation/probes and all four logs are retained privately under ignored `tmp/native-deny-assertion-1a/`; the tracked test was restored byte-for-byte to the initial copy. Actual application/IAM/service source, timeouts, concurrency, assertions and all gates remain unchanged. Fresh evidence is ISOLATED_SERVICE_OR_ROUTE plus controlled-clock/injected-conflict contract evidence, not authenticated Windows or admitted runtime execution. Fresh PostgreSQL NOT_EXECUTED: the prior PowerShell script-loading refusal is preserved; no alternate wrapper, policy change, container or DB setup was attempted. Historical PostgreSQL success is reused only.
+
+Restored-source tests-m-r TypeScript partition PASS; unchanged source checker PASS275files/4heads/4backupcontracts; real-user and communication publication scans PASS449paths with zero detected candidate secrets/contacts/binaries; Git safety PASS. No production/dependency/native source changed, so prior exact-head builds, audits and broader regressions are reused rather than rerun. Live same-head CI remains8workflowsSUCCESS/1FAILURE/0pending/all9knownpresent; jobs20SUCCESS/1FAILURE/7SKIPPED/0pending. Six skips are mandatory runtime jobs, one the optional private native producer. Biometric finance run36683414008/job109783796888 remains failed; no finance test or hosted trace was started here.
+
+One independent read-only GPT-6 Astra reviewer traced the service, evaluator, normal IAM policy and retained probes/logs. Final review found no material issue with the UNRESOLVED/no-correction verdict after clarifying controlled application Date versus unchanged OS clock and the ordinary-permission object-scope assumption. The already-revoked diagnostic used a consumed token: GOVERNANCE_DENIED proves permission reevaluation before step-up, not preservation of a fresh grant on that particular path. Owned fixture cleanup completed in all four invocations; task-owned private diagnostic files are intentionally retained. No historical or ambiguous residue was removed. Operational database untouched, fingerprint historical only. P1/PR29, K30, main, v48/migrations,46requirements,25OFFflags and completed FA1–FA4 remain unchanged. Authorization finding UNRESOLVED; finance timeout separately UNRESOLVED; connected Windows NOT_EXECUTED; EXTERNAL_RUNTIME_BLOCKED and installation/release NOT_CLEARED.
+
+Single next recommendation: a bounded same-transaction trace of the DENY failure, with an independently satisfied last-admin fixture prerequisite explicitly distinguished from the original failing setup. Do not automatically start hosted finance tracing or Windows execution.
+
+
+## 01 October 2026 — fixture isolation and bounded CI trace checkpoint
+
+`RECOVERY-FIXTURE-ISOLATION-AND-CI-TRACE-1A` starts at `aa653dec3e559c1655d15c24b71672c3b4f7d7f0`, tree `aafa3d7f228ac3525c81ad453b02d533816b438e`, existing owned recovery worktree/branch and OPEN/DRAFT PR28. The pre-existing 41-line finance and 31-line DENY addenda above are preserved byte-for-byte as received evidence; their private diagnostics were reused, not regenerated. This commit includes their provenance alongside a genuine test-only correction. No production application/service/schema/migration/flag change.
+
+**FIXTURE_DEPENDENCY_FIXED**, not **DENY_ROOT_CAUSE_FIXED**: the selected inactive-administrator case now creates its own minimal eligible synthetic control administrator and active role in the file-owned database. It asserts that prerequisite and preserves the control until verified owned database teardown. The tested actor gains no extra authority. Original DENY insertion still omits `validFrom`; all original action assertions and validity semantics remain. A separately selectable real last-admin rejection control keeps the database trigger exercised. Normal IAM rejection of an individual `MANAGE_OFFLINE_SYNC_DEVICES` override is tested separately; the inserted DENY remains an adversarial defensive fixture, not an ordinary supported IAM override. No Student-route/object-scope certification is inferred.
+
+Connection: test-only delegated revocation/effective-access wrappers → existing transaction/query inputs/results → bounded journal → `scripts/qa-recovery-service-traces.ts` strict projection → exact three-file metadata upload. Native records contain the actual decision cutoff, local actor/session/role/override labels, existing filtered query rows, decision source/result, attempt and final outcome. Inputs and returned rows persist before final evaluator completion; no extra decision-path query, clock replacement, wait or result substitution. Calls rejected before reaching the evaluator have no invented permission decision. Explicit test-case spans and allowlisted contract purposes separate defensive DENY, declared audit-rollback/route probes and expected business/refusal controls from an actual failing test RESULT; no artificial failure is called a natural application failure.
+
+Finance remains one continuous 30-second test using real fixtures/services/snapshots. Records delimit setup/migration/seed/actor preparation, service/snapshot calls, actual transaction-client and callback intervals, version lookup and owned cleanup. Durations are monotonic; native cutoff timestamps/CI coordinates provide correlation. Transaction-client time includes callback/commit/client delay and does not alone prove a database lock or scheduler cause. Observer serialization/validation/write cost is measured; proxy, projection and AsyncLocalStorage overhead is not fully isolated. Instrumentation may affect timing; later passes cannot recover the original failing transaction's missing values.
+
+Publication refuses unknown/duplicate/private fields, invalid labels/enums, foreign ownership, links, truncated/oversized records, unexpected input files and reused output directories. Both projections validate before output. Only `finance.json`, `native.json`, `manifest.json` are uploaded; no raw diagnostic directory, SQL/parameters, database, session ID/token, MFA/private key or environment dump. Bounds: 2 MB/file, 6,000 events, 16 KB/event, 32 override rows. Catchable body failure, timeout and setup failure are independently exercised in HARNESS_ONLY child tests; their nonzero exit is asserted. A failed CI test remains failed; always-finalization does not change its conclusion. Hard termination/machine loss cannot guarantee complete retention.
+
+Finite local outcomes (all logs retained privately): initial recorder 12 passed; corrected case alone 1 passed/17 deliberately unselected; native file 18 passed; finance 1 passed; reviewed setup/parent/cutoff-retention corrections followed by recorder 13 passed, standalone 1 passed/17 unselected, native+finance 19 passed, and final same-candidate native+finance+recorder **32 passed/0 skipped**. Final contract-purpose markers were rechecked with a standalone 1 pass/17 unselected and another same-candidate 32 passes/0 skips; these repeats addressed identified recorder gaps, not attempts to reproduce an intermittent failure. Initial TypeScript syntax error was preserved and corrected before acceptance. Related finance/IAM/retry/publication/source contracts **69 passed/0 skipped**. All 20 TypeScript partitions and final affected rechecks pass; source/provenance checker, Git safety and three publication/secret scans pass. Three workflow YAMLs parse; existing commands, runners, worker/provider settings and deadlines compare unchanged. No local PostgreSQL retry or execution-policy workaround; fresh provider validation is delegated to normal authorized hosted CI.
+
+Final reviewed local recorded finance setup 2,440.573 ms/action 14,607.411 ms/cleanup 40.471 ms; transaction-client total 3,490.987 ms and nested callback total 2,972.390 ms overlap and must not be added. Measured recorder cost: finance 64.122 ms/476 events; native 22.944 ms/323 events. Earlier instrumented finance action samples were 8,578.864, 6,002.049 and 9,963.070 ms under different concurrent local checks; these are not matched before/after causal performance comparisons. No natural historical failure reproduced; no finance or production authorization fix claimed.
+
+One focused independent GPT-6 Astra read-only reviewer found and verified correction of manual-dispatch SHA inheritance and setup-failure trace retention, then reported no remaining material scoped finding, including the input/row early-retention delta. The unchanged source checker registers exactly three workflow hashes and the new finalizer entry (275→276); its four changed entries were independently verified. No broad manifest waiver.
+
+One consolidated reviewed source push is authorized, followed by ONE normal exact-candidate CI cycle; hosted outcomes and validated artifact receipts will be recorded in PR28/trackers after observation, not predeclared here. No historical retry, duplicate dispatch, stress loop or requirement that a natural failure occur. Historical `REVOKED` and finance timeout root causes remain independently **UNRESOLVED**. Six mandatory runtime skips and optional native producer remain separate from source/service success; EXTERNAL_RUNTIME_BLOCKED, authenticated Windows and installation holds stay intact. FA1–FA4, P1/PR29, main, v48/migrations, 46 IDs and 25 OFF flags are untouched. The operational database was not accessed or freshly fingerprinted; retained fingerprint is historical only. Only precisely owned disposable test databases/directories were removed with identity checks; private evidence/history/denied residue retained.
+
+### 01 October 2026 — identified publication-recorder integration correction
+
+First genuine candidate `051d42c05bf2002e6789e2e12e918f482b44d1c7`, tree `a7cc7daaf86f1dd4562e6bc2163f9ce9ff9b6054`, triggered normal CI without a dispatch/retry. The [onboarding publication job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36779578311/job/110105987161) failed with `REAL_LIKE_IDENTIFIER_REFUSED` on this ledger. Direct inspection/reproduction identified five canonical GitHub job-coordinate links in the preserved pre-existing finance addendum, already present in the starting ledger, matching its broad numeric identifier detector. This is a demonstrated publication false positive, separate from both unresolved application failures. Original addendum bytes remain unchanged.
+
+The smallest correction recognizes only bounded, complete HTTPS Markdown job-link destinations for this exact repository in this exact ledger. It preserves labels and surrounding text; raw numbers, altered scheme/host/repository/path/query/fragment, other files and malformed UUID-spliced destinations remain refused. Secret/private-key checks still inspect original full text. Matching happens before the existing UUID projection, avoiding normalization of malformed URLs into allowed coordinates. No arbitrary identifier exemption, production change or scanner suppression. Nineteen focused positive/negative regressions and the actual onboarding scan pass; the affected TypeScript partition passes. The same independent read-only Astra reviewer found and verified the UUID-order correction, then reported no remaining material finding. Source registration adds only this scanner's reviewed entry (276→277).
+
+The first [hosted PostgreSQL application job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36779578368/job/110105986836) passed. Its exact three-file artifact was downloaded and schema/hash/source/run/job checked: finance 477 events, PASS, no unfinished spans; native 338 events, 18 PASS, no unfinished spans. Finance setup 2,823.798 ms/action 5,033.532 ms/cleanup 603.977 ms; measured recorder serialization/write cost 15.993 ms. Native actual DENY cutoff includes its returned active override and `USER_DENY/false`, not a later readback. These are instrumented current-candidate observations, not historical root-cause evidence or Windows/runtime acceptance. Node v22.23.2/Linux runner image 20260920.314.1 is distinct from the retained Windows finance configuration.
+
+One corrective source push is justified solely by this identified publication integration defect, after preserving the first normal cycle and local review; it is not an unchanged replay or an attempt to elicit a random failure. Terminal candidate CI and remaining hosted receipts belong in the existing PR28/tracker readbacks. No further cycle for absence of a natural failure; no historical retry or timeout change.
+
+Before that corrective push, a second recorder-specific attribution gap was identified: concurrent revocations can share actor/cutoff/attempt number, while the first candidate emitted decision/outcome span zero. Sequential DENY samples remain correctly observed; interleaved outcomes cannot be assumed attributable from proximity. The test-only correction allocates distinct call/attempt/evaluator spans, allowlisted parent links, and attaches each actual decision and outcome to its span. Attempts begin before the real transaction call so acquisition/callback/commit failure remains attributable. Retained-link validation rejects missing parents, self/cyclic/backward and duplicate links. No additional query, wait, changed result, role/date semantics or production instrumentation.
+
+A deterministic harness-only regression interleaves identical-input calls with different actual delegated rows/results and verifies each outcome maps to its own decision/rows; another preserves transaction-acquisition failure without invented evaluator evidence. Four malformed-link cases reject before handoff. One corrective four-file local validation: **57 passed/0 skipped** (native 18, finance 1, recorder 19, publication 19); both affected TypeScript partitions pass. The same focused read-only Astra reviewer found no remaining material issue in this three-file attribution delta. This is a recorder repair, not reproduction or diagnosis of either historical failure. All original acceptance assertions, timeouts, worker settings, IAM policies and fixture DENY validity setup remain unchanged. The one corrective push includes both demonstrated recorder/publication findings; no further CI cycle merely to seek a natural failure.
+
+### 01 October 2026 — fixture isolation and CI trace terminal evidence
+
+**FIXTURE_DEPENDENCY_FIXED; TRACE_CAPTURE_VALIDATED_NO_NATURAL_FAILURE_CAPTURED.** Historical unexpected REVOKED and finance timeout causes remain independently UNRESOLVED. Starting source `aa653dec3e559c1655d15c24b71672c3b4f7d7f0`, tree `aafa3d7f228ac3525c81ad453b02d533816b438e`; final pushed source `0659ff6665f1a3b0d9b93b603f1d3b07236d5470`, tree `d761530cd883da633125a19bc02bcc0f38530a6f`. PR28 remains OPEN/DRAFT. The starting 72-line finance/DENY addenda were preserved byte-for-byte and included with explicit provenance. This terminal addendum is locally uncommitted, pending the next genuinely authorized source/evidence commit; no third cosmetic push or diagnostic cycle.
+
+The isolated inactive-administrator case now supplies its own eligible independent control administrator, verifies that prerequisite and verifies owned database cleanup. The actor under test receives no added authority. The separate real last-admin rejection control remains. Production trigger/authorization, original adversarial DENY validFrom omission, action assertions, 30-second finance deadline, worker/concurrency/provider settings are unchanged. Normal IAM refusal of an individually non-overridable MANAGE_OFFLINE_SYNC_DEVICES permission remains tested; permitted override evaluator evidence does not certify a Student route or object scope.
+
+One initial source push (`051d42c`) and one justified corrective source push (`816a856` plus `0659ff6`) occurred, with no manual dispatch, historical retry or cancellation. The first cycle ended seven workflows SUCCESS/two FAILURE; jobs 19 SUCCESS/two FAILURE/seven SKIPPED. Its identified publication false positive on five pre-existing canonical job-coordinate links was corrected without altering those original bytes or private/secret checks. Its separate cross-platform runner lost communication during regression; no test conclusion/complete log or cleanup verification exists for that job. That runner-loss cause remains unresolved; no retry. The concurrent recorder attribution defect was corrected before the consolidated corrective push, with explicit call/attempt/evaluator links and deterministic interleaving/failure regressions.
+
+Final normal exact-candidate CI: **eight workflows SUCCESS, one FAILURE, zero pending/missing; 20 jobs SUCCESS, one FAILURE, seven SKIPPED, zero pending/missing**. All runs are attempt one.
+
+| Workflow | Final result / evidence |
+| --- | --- |
+| Master requirements | SUCCESS; [Windows full regression](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36785473182/job/110125719708): 2,992 PASS/zero skips, production build/typechecks/security gates pass; PostgreSQL parity job passes |
+| Biometric | SUCCESS; [Windows software gate](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36785473395/job/110125720826): 2,989 PASS/three inherited qpdf skips; provider parity passes |
+| PostgreSQL readiness | SUCCESS, four jobs; [application regression](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36785473557/job/110125720726): 2,959 PASS/three inherited qpdf skips, production build passes; schema/parity/SQLite gates pass |
+| Student items/concessions | SUCCESS, both provider jobs; [workflow](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36785473286) |
+| Communication | SUCCESS, both jobs; [workflow](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36785473406) |
+| Real-user access | SUCCESS, both jobs; [workflow](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36785473322) |
+| Portable staging | SUCCESS source job; six mandatory runtime jobs SKIPPED; [workflow](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36785473213) |
+| Cross-platform | SUCCESS Windows/Android/iOS/contracts; [iOS simulator job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36785473177/job/110125720266) retained iPhone/iPad light/dark gate passes; optional private native producer SKIPPED |
+| Onboarding | FAILURE; [source job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36785473169/job/110125719321): publication now PASS, but native-artifact-admission beforeAll OpenSSL synthetic CA generation exceeded its existing 20-second spawn deadline; 2,979 PASS/13 SKIPPED (ten affected suite cases unexecuted plus three qpdf); PostgreSQL companion passes. Why OpenSSL stalled is UNRESOLVED; no out-of-scope repair/retry |
+
+No DENY or finance natural failure occurred. Four actual hosted allowlisted artifacts were downloaded privately and validated against exact source/run/attempt/job/provider, exact three-file manifest, byte hashes/sizes, schema, sequence, complete spans and actual decision-to-row/outcome links. Every native defensive DENY recorded USER_DENY/false at its actual cutoff with the returned active override; 18 native test results PASS in each receipt. This does not reconstruct historical transaction visibility.
+
+| Hosted receipt | Finance events / action result | Setup / continuous action / cleanup ms | Native events / correlation links | Recorder cost finance / native ms |
+| --- | --- | --- | --- | --- |
+| Biometric Windows | 477 / PASS | 773.082 / 5,372.877 / 7.259 | 372 / 48 | 9.018 / 6.834 |
+| Master Windows | 477 / PASS | 1,325.770 / 10,955.695 / 7.763 | 372 / 48 | 16.764 / 10.369 |
+| PostgreSQL application | 477 / PASS | 2,795.446 / 5,063.121 / 610.877 | 381 / 50 | 15.708 / 9.902 |
+| Linux SQLite gate | 477 / PASS | 654.366 / 4,373.951 / 6.046 | 372 / 48 | 10.094 / 6.454 |
+
+Each receipt has zero unfinished spans. Only finance.json/native.json/manifest.json were retained by the reviewed upload paths; public evidence contains no raw credential/session IDs, SQL, private fixtures or directories. Recorder costs cover measured serialization/validation/write, not complete proxy/AsyncLocalStorage overhead. Nested transaction intervals overlap. Neither elapsed client intervals nor later successful samples establish scheduler/lock cause. Windows runner image advanced from historical 20260922.246.2 to 20260925.250.1 with Node v24.19.0; Linux images/Node v22 patch versions differed between jobs/cycles. These are instrumented candidates, not unchanged causal before/after experiments.
+
+Final local corrective validation: 57 PASS/zero skips; native 18, finance one, recorder 19, publication 19. Earlier relevant financial/IAM/retry/source/publication regressions: 69 PASS/zero skips. Standalone corrected case reaches its assertions; deliberately unselected tests are not passes. Deliberate child body failure, timeout and setup failure retained and assert nonzero exit, explicitly HARNESS_ONLY. One focused read-only GPT-6 Astra reviewer traced fixture independence, actual same-transaction delegation, privacy, exit/cleanup, publication exception and linked concurrent outcomes; identified findings were corrected, no material scoped finding remains. All 20 TypeScript partitions and final affected checks pass; source checker 277 files/four heads/four backup contracts; Git safety and publication scans pass. Fresh PostgreSQL is hosted only; local PowerShell refusal never bypassed.
+
+Changed-file manifest from the starting source: three workflow files (biometric, master requirements, PostgreSQL); config/recovery-integration-source-delta.json; this existing ledger; scripts/qa-real-data-onboarding-preparation-1a-public-repo-scan.ts; scripts/qa-recovery-service-traces.ts; tests/fixtures/service-trace-child.config.ts; tests/fixtures/service-trace-child.fixture.ts; tests/helpers/native-decision-trace.ts; tests/helpers/service-trace.ts; tests/native-session-governance.test.ts; tests/portable-finance-browser-service.test.ts; tests/public-evidence-identifier.test.ts; tests/service-trace.test.ts. No application authorization/finance source change.
+
+Source/isolated-service trace capture is validated; historical authorization and finance findings stay open. Connected Windows NOT_EXECUTED; runtime EXTERNAL_RUNTIME_BLOCKED; installation/release NOT_CLEARED. Six mandatory runtime skips and optional native producer are not passes. Fresh owned synthetic fixture cleanup was verified; raw private diagnostics and historical/ambiguous/denied residue retained. Hosted runner-loss cleanup cannot be verified. Main/P1/PR29/K30, operational database, v48/migrations, 46 IDs and 25 OFF flags remain untouched; operational fingerprint is reused historical evidence only.
+
+Single next recommendation: bounded diagnosis of the current native-artifact test's OpenSSL setup timeout, preserving its deadline and admission assertions. No automatic finance trace, Windows execution, retry, monitoring or next W1 package. PR28 terminal comment, Asana incomplete task, Notion appended history and W1 Canvs text were successfully read back; prior history, task assignee/dates and canvas geometry/bindings were preserved. No duplicate tracker or P1 edit.
+
+### 01 October 2026 — RECOVERY-OPENSSL-FIXTURE-STABILITY-1A implementation checkpoint
+
+Starting source `0659ff6665f1a3b0d9b93b603f1d3b07236d5470`, tree `d761530cd883da633125a19bc02bcc0f38530a6f`; local/remote match, PR28 OPEN/DRAFT. The expected 41-line prior terminal addendum, nothing staged, was copied separately under ignored `tmp/openssl-fixture-stability-1a/starting-ledger.md` and `starting-ledger.diff`; its bytes remain a prefix of this ledger and are included with prior-task provenance in the genuine implementation commit. The earlier 72-line finance/DENY evidence is already committed; no historical evidence is regenerated or overwritten.
+
+Original [onboarding failure](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36785473169/job/110125719321) remains: execFileSync ETIMEDOUT, status null, SIGTERM, stdout zero bytes/stderr 1,388 bytes; readable stderr and output-file state were not retained. The subprocess's 20,000 ms timeout fired, not an independently demonstrated 30,000 ms hook timeout. The exact req -x509 -newkey rsa:2048 -nodes invocation is once per file, with explicit subject/CA:TRUE and one-day certificate; shared generation was not repeated per case. Actual historic executable hash/version, complete dependency/config/provider resolution and timing inside OpenSSL are unavailable. The error cannot establish startup, crypto, file-write, prompting, entropy, antivirus or contention cause.
+
+Initial diagnostic budget 45–60 minutes, at most three question-driven reproductions declared before execution. Two used: unchanged original ten-case file, CI=true/single worker, **10 PASS**, 318 ms file/1.98 s run; then identical fresh execFileSync arguments/options **PASS**, 214.899 ms, real RSA-2048/private-key match/self-signed CA/one-day validity and verified owned cleanup. Third comparison not used: no observation supported a specific hypothesis. Local Windows11/Node v24.19.0/pnpm11.21.0/Vitest4.1.11/Git OpenSSL3.5.7/default provider differs from hosted Windows2025 image20260925.250.1; historical OpenSSL binary identity was not logged. No full-suite/retry/stress or historical job rerun. **Cause remains UNRESOLVED.**
+
+The warranted change is diagnostics, not a causal repair. Actual consumer: existing native-artifact beforeAll → test-only OpenSslFixture preflight/unchanged generation → normal crypto validation → ten original test outcomes/afterAll → bounded journal → existing qa-recovery-service-traces openssl-prepare/openssl-finalize commands → onboarding always-finalization → exact openssl.json/manifest.json upload. Original ten test bodies/rejection assertions are byte-equivalent after normalized line endings. Production authorization/admission, RSA strength/fresh keys, invocation/options, 20s subprocess and 30s enclosing hook remain unchanged. No fallback, retry, weaker fixture, fixed key, CA cache, concurrency/policy/trust change.
+
+Record stages distinguish preflight, generation, validation and ready; initialization persists before executable access. Records contain tool binary hash/version where observable, configuration/module-override presence only, separately timed preflight and synchronous call elapsed time, bounded error code/exit/signal/stream byte counts and lexical stderr class, post-call key/certificate file states/properties, ten run-local case states and verified cleanup. No raw stderr/stdout, argv, PID, PEM, paths or environment values are published. Synchronous elapsed time cannot identify activity while the event loop is blocked. The extra <=2s version probe warms the executable and adds measured preflight overhead; this instrumentation is not an unchanged replay or historical causal timing proof. Config/default-provider resolution is not inferred from the executable hash. Node/OpenSSL version-matched official documentation was consulted.
+
+Strict exact-field/enum/size/correlation schemas validate before public output; record bound16KB, ownership file2KB, exact two-file manifest with raw-byte SHA256. Prepare refuses existing roots; source/run/attempt/job/provider bound to existing context, not runtime/security provenance. Always-finalization does not convert failed test exit/conclusion to success. Missing/truncated/untrusted metadata fails closed. Hard machine/process loss cannot guarantee complete retention. Only exact sanitized metadata is uploaded, seven-day retention, no glob/key/private directory.
+
+Candidate validation attempt03: original10 PASS, six diagnostic cases PASS, one new harness failure test FAILED because its own100ms Node startup budget produced timeout rather than intended exit7. That failed result is retained, not an OpenSSL reproduction. Corrected only injected HARNESS_ONLY deadlines500ms hang/2000ms exit7; original20s/30s unchanged. Attempt04: **18 PASS/zero skips**. Attempt05 connected prepare→four-file validation→finalize: **43 PASS/zero skips** (original10, diagnostics8, service-recorder19, QA-profile6). Exact local two-file bytes/hashes validated; all ten case states PASS/owned root REMOVED. Instrumented generation781.890ms, preflight77.734ms; different load/instrumentation precludes causal before/after comparison.
+
+Deliberate child timeout/nonzero-exit retention verifies wrapper exit1 and actual inner null/SIGTERM or exit7, partial key file state, no certificate, all application cases NOT_EXECUTED, and verified cleanup; HARNESS_ONLY, never historical failure or application acceptance. Missing executable preflight, private/error exclusion, unknown/malformed/oversized/weakened-property projection, fixed args/deadlines, foreign linked cleanup refusal and prepublication ownership/privacy/truncation refusal are tested. No raw process output escapes. Initial TypeScript-only annotation errors retained and corrected; affected tests-m-r/tools-core typechecks, source checker277/four heads/four contracts, Git safety and onboarding/communication/real-user publication scans pass. Normal full typecheck/build/provider and exact-head results remain post-push gates.
+
+One focused independent read-only GPT-6 Astra reviewer found and verified correction of early-tool-failure retention and missing exact child-status assertions; no material scoped finding remains. Independently verified registration277→277 with only onboarding workflow and existing finalizer current hashes changed, original base/historical/source bindings unchanged. No broad manifest exception. Final narrow cleanup-error sanitization keeps private filesystem error text out of diagnostics without changing refusal/cleanup decisions.
+
+One genuine consolidated source push is planned after final staged inspection. No hosted conclusion is predeclared. Historical finance/DENY causes remain separately UNRESOLVED; fixture dependency repair/four hosted trace receipts retained. Local PostgreSQL not executed or policy-refusal bypassed; current hosted provider evidence will remain distinct. No connected Windows/app-stack run or owner/trust/controller provisioning. EXTERNAL_RUNTIME_BLOCKED; installation/release NOT_CLEARED; six mandatory runtime plus optional native producer skips are not passes. Main/P1/PR29/K30/PR30, operational DB, v48/migrations,46IDs/25OFFflags unchanged. Protected fingerprint is reused history only; precisely owned fresh crypto/temp resources cleaned, private diagnostics/history/ambiguous residue preserved.
+
+### 01 October 2026 — RECOVERY-OPENSSL-FIXTURE-STABILITY-1A terminal evidence
+
+**OPENSSL_FIXTURE_DIAGNOSTICS_VALIDATED_CAUSE_UNRESOLVED.** One reviewed source commit/push: `14084e1d0e0288ef94dec24dac23fb6a5e0e44b9`, tree `75d862f3b87f3ec86f4b3026dbe61d4ed5bd87a6`. Starting source/tree remain `0659ff6665f1a3b0d9b93b603f1d3b07236d5470` / `d761530cd883da633125a19bc02bcc0f38530a6f`. PR28 remains OPEN/DRAFT. The starting 41-line evidence addendum was preserved byte-for-byte and committed with prior-task provenance. This terminal observation is left as an unstaged ledger addendum rather than another documentation-only CI-triggering push.
+
+Original [run36785473169/job110125719321](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36785473169/job/110125719321) and comment5921436133 are preserved. ETIMEDOUT/null/SIGTERM with stderr1,388 bytes does not establish which subprocess phase stalled. Readable historical stderr/output-file state/tool hash/provider configuration remain missing. Two bounded original-source reproductions passed; no causal mechanism was demonstrated. Prompting/entropy/antivirus/contention remain unsupported hypotheses, not findings. The change closes missing failure evidence only.
+
+Actual [candidate onboarding run36823596617/job110244264857](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36823596617/job/110244264857), attempt1, SUCCESS: original ten native-artifact cases and eight diagnostic cases execute; full regression **2,997 PASS/three qpdf SKIPPED**, full typecheck and production build PASS. The metadata preparation, always-finalization, exact upload and existing synthetic cleanup steps PASS. PostgreSQL companion110244264915 SUCCESS supplies fresh migrations/parity/provider-independent preparation, not full PostgreSQL application regression.
+
+| Original native-artifact case | Local candidate | Hosted onboarding |
+| --- | --- | --- |
+| Exact raw PE/NSIS, signed QA/backend relationship | PASS | PASS |
+| Source/run/attempt/architecture/profile/target/trust/expiry rejection | PASS | PASS |
+| Signed HARNESS_FIXTURE_ONLY refusal | PASS | PASS |
+| Duplicate/unknown/oversized/truncated/path-collision rejection | PASS | PASS |
+| Correct installer cannot hide one-byte executable substitution | PASS | PASS |
+| Missing/extra/partial/support/hardlink/linked-root rejection | PASS | PASS |
+| Actual report bytes and failed/missing/substituted findings | PASS | PASS |
+| Cargo scratch hardlinks do not relax launch ownership | PASS | PASS |
+| Real RSA signatures/exact hosted workflow/attempt/audience | PASS | PASS |
+| Controller order/independent backend/origin/refusal before launch | PASS | PASS |
+
+Only artifact11145405610, `openssl-fixture-metadata-36823596617-1`, was downloaded privately for validation: exactly openssl.json/manifest.json, archive1,234 bytes, archiveSHA256336a60fd82b9a1564a400078dd266cc8936e969857a96332902e468c810aa9d1; openssl.json1,325 bytes/SHA256540fc52e60ca7d650e9b424ebb43d407e94491aa287cc3fb13f769d0290307df. Strict schema/raw hashes/canonical bytes/source/run/attempt/job/provider validated. Owner Windows image20260925.250.1/Nodev24.19.0; actual OpenSSL3.5.7/binarySHA25678340fb01dea2df5caab73dcf28833b31329226a4c9e02f717f1d399592265b9. Config/modules overrides ABSENT does not establish all provider/config resolution.
+
+Actual record: READY, exit0, stdout0, key1,704/cert1,164 bytes, RSA2048/CA/self-signed/private-key match/one-day validity, ten PASS, cleanup REMOVED. Generation463.030ms; diagnostic preflight1,457.749ms recorded separately. Success stderr unavailable through retained execFileSync return contract; failure stream counts are bounded/clamped at1MiB. These do not identify internal phase timing. The extra version/hash preflight can warm the executable and adds overhead; local214.899ms and instrumented781.890ms are not matching-condition causal before/after experiments. Original20,000ms subprocess/30,000ms hook, invocation, concurrency and ten body assertions unchanged. No retry, fallback, fixed key or global CA cache.
+
+Local final connected validation43 PASS/zero skips; injected timeout/nonzero-exit children prove HARNESS_ONLY retention/nonzero wrapper status/partial-file cleanup, not historical reproduction. Initial harness100ms startup misclassification, typing errors and private metadata-inspector import/job-label mistakes were retained and corrected; no candidate test was skipped to pass. Affected typechecks/source277 files/four heads/four backup contracts/publication/Git checks PASS. One independent read-only GPT-6 Astra reviewer verified identified capture/status/privacy corrections and exact registration deltas; no material scoped finding outstanding. Reviewer did not independently rerun tests.
+
+All nine normal pull-request workflows at exact14084e1, attempt1, are terminal; **5 SUCCESS/4 FAILURE/0 SKIPPED/0 PENDING/0 MISSING**. All28 jobs: **14 SUCCESS/7 FAILURE/7 SKIPPED/0 PENDING/0 MISSING**. No dispatch/retry/cancellation.
+
+| Workflow/run | Result |
+| --- | --- |
+| Onboarding36823596617 | SUCCESS; 2,997 PASS/3 qpdf skips; typecheck/build/metadata retention PASS |
+| Biometric36823596691 | SUCCESS; 2,997 PASS/3 qpdf skips; existing finance/DENY recorders retained |
+| Master36823596428 | SUCCESS; 3,000 PASS/zero skips; typecheck/build/trace retention PASS |
+| Communication36823596471 | SUCCESS; 2,997 PASS/3 qpdf skips; typecheck/build PASS |
+| Real-user access36823596452 | SUCCESS; 2,997 PASS/3 qpdf skips; typecheck/build PASS |
+| Cross-platform36823596604 | FAILURE; TypeScript2997/3 skips plus23/48 focused PASS, build/audit PASS, iOS simulator PASS; Windows/Android fail below |
+| Items/concessions36823596482 | FAILURE before application tests; both providers' font setup failed |
+| PostgreSQL readiness36823596520 | FAILURE; schema/parity jobs PASS, SQLite/PostgreSQL application setup failed |
+| Portable36823596593 | FAILURE before source tests; font/tool setup failed; six mandatory runtime jobs SKIPPED |
+
+Five failed Linux prerequisite jobs[retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36823596593/job/110244264878)/[retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36823596482/job/110244264452)/[retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36823596482/job/110244264751)/[retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36823596520/job/110244264881)/[retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36823596520/job/110244264895) record SourceForge corefonts/andale32.exe connection failure. Missing restore artifacts after the two financial jobs are consequences of tests never executing. Windows job[retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36823596604/job/110244265066) fails libsodium-sys-stable1.24.0 build-script hostname resolution (OS11002); Android[retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36823596604/job/110244265229) fails Kotlin2.0.21 compiler download with HTTP500. These are observed current dependency-acquisition failures, not established historical OpenSSL/finance/DENY causes. No source repair, threshold change or rerun is made for them in this milestone. Normal required CI remains **NOT GREEN**.
+
+Fresh full PostgreSQL application regression **NOT_EXECUTED** due prerequisite failure; fresh schema/trigger/migration/parity evidence remains separate. Local PowerShell refusal never bypassed. Six mandatory runtime jobs and optional native producer110244265935 SKIPPED are not passes. Existing audit/runtime admission holds remain; dependency audit PASS does not admit a native/backend artifact.
+
+Exact committed manifest (eight files): .github/workflows/real-data-onboarding-preparation.yml; config/recovery-integration-source-delta.json; docs/evidence/RELEASE_RECOVERY_1C.md; scripts/qa-recovery-service-traces.ts; tests/fixtures/openssl-child.fixture.ts; tests/helpers/openssl-fixture.ts; tests/native-artifact-admission.test.ts; tests/openssl-fixture-diagnostics.test.ts. No production/application authorization or finance change. Test-only crypto/filesystem and hosted contract evidence do not prove native artifact runtime admission or authenticated Windows execution.
+
+OpenSSL diagnostics validated/cause UNRESOLVED; finance and historical DENY causes independently UNRESOLVED; completed last-admin fixture correction/trace machinery preserved. Connected Windows NOT_EXECUTED; runtime EXTERNAL_RUNTIME_BLOCKED; installation/release NOT_CLEARED. Main/P1/PR29/K30/PR30/FA1–FA4, operational DB, v48/migrations,46IDs/25OFFflags untouched; protected fingerprint historical only. Fresh owned key/certificate roots and tested partial-failure resources removed; exact safe metadata/private historical diagnostics retained. Hard termination or historical/ambiguous/denied-residue cleanup is not claimed.
+
+Single next recommendation: bounded investigation of current CI dependency-acquisition failures, starting with the SourceForge font prerequisite shared by five jobs. Do not automatically start it, force another OpenSSL failure, retry historical jobs or execute Windows. Recovery remains incomplete.
+
+Terminal [PR28 comment5926290264](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5926290264) read back exactly. Existing Asana1218421699989887 appended history read back with completed=false/assignee/dates preserved. Notion3b6c9801-27a8-81da-bcbd-cbd62189364d asynchronous append succeeded and full old content remained a prefix on readback. Canvs W1 text BMJgKw4fEc0jGOnO6_28j append read back exactly with geometry/container/bindings/font preserved; no duplicate hub/task or unrelated card change. No connector synchronization is invented. Final terminal ledger addendum remains unstaged; no second source push or extra CI cycle.
+
+
+## 2026-10-01 — Shared Linux document-font prerequisite candidate
+
+Starting source `14084e1d0e0288ef94dec24dac23fb6a5e0e44b9`, tree `75d862f3b87f3ec86f4b3026dbe61d4ed5bd87a6`; same owned recovery branch/worktree and OPEN/DRAFT PR28. The pre-existing 53-line OpenSSL terminal addendum was copied byte-for-byte before edits into private task-owned evidence. Starting complete ledger SHA-256: `8e41f017ffa2935ea2c6635ccec10a79669b2339773a496567bd856965a0fbb7`. Its original diff and bytes remain private; the two public job-coordinate lines are displayed as existing scanner-approved GitHub links, without changing outcomes. Earlier committed evidence remains unchanged. No operational database verification was performed.
+
+Five original failures mapped: portable server/source job; items/concessions SQLite and PostgreSQL matrix; PostgreSQL readiness SQLite release and full PostgreSQL application jobs. Each used Ubuntu `ttf-mscorefonts-installer 3.8.1ubuntu1` and failed at the HTTP SourceForge `andale32.exe` prerequisite, before application coverage. Connection failure is observed; global outage, DNS and TLS root causes are not established.
+
+Three bounded local Windows transport probes: original HTTP HEAD redirected to HTTP canonical path; documented HTTPS HEAD redirected to HTTPS canonical path; canonical HTTPS GET redirected within SourceForge's official download namespace and returned 198,384-byte MZ archive with independently documented Debian package SHA-256 match. The last probe took 2,406 ms. This establishes a locally accessible alternative, not cold Linux provisioning or the historical cause. No further diagnostic download probes or historical retries.
+
+The shared Python-stdlib bootstrap works before node_modules. Existing authenticated APT metadata anchors the exact Ubuntu package; its config supplies all eleven archive and thirty installed-font SHA-256 values. Canonical HTTPS transfers retain TLS verification and permit only the exact corefonts archive paths under SourceForge's download/mirror namespace. Download limits: three total attempts per archive, five redirects per attempt, 30-second shared attempt budget, 300-second acquisition budget; only classified DNS/connection/deadline/transient HTTP failures retry. Integrity, payload, unsafe path, TLS and permanent HTTP failures refuse. No font/archive cache or upload.
+
+All eleven verified archives are supplied through the package's supported `msttcorefonts/dldir`; its normal postinst/local-copy extraction and completion stamp prevent the original HTTP downloader remaining active. Existing workflow EULA selection is preserved; no new licensing basis or redistribution right is claimed. A run-owned TMPDIR confines package extraction; owned privileged process deadlines terminate the actual command group. Installed hashes for all thirty genuine fonts are checked; direct-file fc-scan checks Arial Regular, Arial Bold and Georgia Bold before environment publication. Production certificate/report font loaders, Georgia Bold school typography, geometry, colour/monochrome and business assertions are unchanged.
+
+Consumer wiring: three workflow files, five jobs; the four formerly ubuntu-latest instances are pinned to their already-observed Ubuntu 24.04 package contract. Fonts are prepared at each existing setup position, including before pnpm installation for portable/PG readiness. `qa-shared-document-fonts.ts` uses the real Georgia certificate loader and direct Arial/fontkit/pdf-lib loading/embedding. It is a direct embedding control, not a substitute for the existing full certificate/report renderer tests. Owned cleanup purges only the newly installed font package and bounded exact job resources; ambiguous ownership or catchable cleanup failure is refused and retained. Hard termination cleanup is not promised.
+
+Local evidence: HARNESS_ONLY thirteen harmless parser/download/filesystem tests, eleven local PASS and two POSIX-only local SKIPs; POSIX process-group and sudo-descendant cases require hosted Linux and remain locally unexecuted. Initial local harness failed because Windows lacks getuid; correction doubles only that POSIX identity boundary for harmless cleanup tests. First Git diff check found one trailing blank line, removed. Existing publication check initially refused bare public job coordinates in the preserved addendum; only their display format changed to approved links. Existing secret/private-data checks are retained. Candidate-bound hosted cold provision, genuine font loading/PDF tests, both-provider finance/restoration and full PostgreSQL application coverage remain pending the single normal CI cycle.
+
+One focused independent read-only GPT-6 Astra reviewer traces APT/package integrity, licensing continuity, all-five-job wiring, real font consumers, bounded retries/processes and owned cleanup. Review-found candidate process-output, scratch isolation, nested-sudo process-group and Ubuntu-label drift defects are corrected. Final independent source readback found no material scoped issue outstanding; reviewer executed no tests. All twenty TypeScript partitions, three workflow YAML parses, 279-file source/four-head/four-backup-contract checker, publication and Git safeguards PASS. Thirty-nine existing local report/certificate/provider-wiring cases PASS; these use existing Windows test context and do not establish acquired Linux-font rendering. Two POSIX-only HARNESS cases remain locally unexecuted and are wired into all five hosted consumers. Historical finance/DENY/OpenSSL causes remain independently UNRESOLVED. Windows libsodium/Android Kotlin acquisition is separate and not repaired here. Six mandatory runtime jobs/optional native producer skips are not passes. EXTERNAL_RUNTIME_BLOCKED and EPHEMERAL_EXACT_HEAD_CI_ONLY, main/P1/K30/FA1-FA4/v48/migrations/46 IDs/25 OFF flags remain unchanged; operational fingerprint historical only. No connected Windows/app-stack execution or rollout.
+
+
+### Reviewed candidate redirect correction (same font milestone)
+
+First normal candidate `bee75228e9c1d10e780f60dcabfd6f41f4b9d48e`, tree `8928a22824405549890222dcac938c3b3d68624f`, retained. [Portable candidate failure](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834043801/job/110277046146) executes all thirteen HARNESS_ONLY cases successfully in 3.111 seconds, including real Linux child/grandchild process termination. Acquisition then correctly refuses `URL_ARCHIVE`; font readiness/application tests do not pass. Owned cleanup step succeeds.
+
+One bounded reassessment of the canonical HTTPS archive on local Windows observes the official zenlayer SourceForge mirror, exact corefonts archive path, and current delivery-query key set `viasf/fid/e/st`. Only host/path/key names were retained; opaque values and response bodies are not published and the task-owned download body is removed. This demonstrates an overly restrictive candidate query parser, not the historical connection cause or equivalence with Linux networking.
+
+The narrow correction permits exactly the observed bounded delivery-key set (or prior empty/viasf-only form), preserving values unchanged, refusing unknown/duplicate/incomplete/oversized keys, and retaining HTTPS/hostname/path/port/integrity checks. Delivery values are not an authorization or checksum trust anchor. Synthetic positive/negative regressions pass; eleven local HARNESS cases PASS/two POSIX cases remain locally SKIPPED. Independent GPT-6 Astra read-only review finds no material correction issue; no reviewer execution is claimed. Only the helper's source-registration digest changes. This is an identified implementation correction, authorizing a corrective source push and its normal exact-head CI; no dispatch, historical retry or cosmetic green-triggering commit. Final hosted acquisition/full-provider results remain separately pending.
+
+### Shared font prerequisite — terminal exact-candidate evidence
+
+RECOVERY-SHARED-FONT-PREREQUISITE-1A — 2026-10-01
+SHARED_FONT_PROVISIONING_RECOVERED_RUNTIME_GATED
+
+Starting source 14084e1d0e0288ef94dec24dac23fb6a5e0e44b9/tree75d862f3b87f3ec86f4b3026dbe61d4ed5bd87a6. Final source6c1520aa71bf27b29d34c122edd747c1511ed2a0/treea831f1d9d63a05c726e95e89103b0bca5bd677c5. PR28 OPEN/DRAFT; recovery remains incomplete.
+
+Trustworthy recovery: authenticated APT metadata anchors Ubuntu ttf-mscorefonts-installer3.8.1ubuntu1; its trusted config supplies 11 archive and 30 TTF SHA256 values. Verified canonical HTTPS downloads use exact upstream paths/allowed redirects, bounded delivery parameters, three total transport attempts/archive, a300-second acquisition budget and no integrity retry. Normal supported dldir/postinst installs genuine fonts; all30 hashes plus Arial Regular/Bold and Georgia Bold identities pass. Original license selection and document geometry/typography/assertions retained. No font/archive/cache upload.
+
+All five cold Linux consumers at this exact candidate pass setup, real application font loading/PDF embedding, intended downstream tests and owned cleanup:
+Portable run36834766828: 2,997PASS/3 inherited qpdf skips.
+PostgreSQL readiness run36834766858: SQLite2,997PASS/3 qpdf skips; full PostgreSQL application2,967PASS/3 qpdf skips; schema/parity also pass separately.
+Items/concessions run36834766883: SQLite23PASS and PostgreSQL23PASS, zero skips; source v45–v48 two-target restoration supplies16fresh/16repeat across providers.
+Thirteen harmless bootstrap contract cases pass on Linux, including owned process termination. Existing report/certificate renderer, embedding, geometry and colour/monochrome tests execute unchanged.
+
+Final normal exact-head CI:9 workflows SUCCESS,0 failed/skipped/pending/missing;28 jobs total:21SUCCESS,0FAILURE,7SKIPPED,0pending/missing. Six mandatory runtime gates and optional private native producer remain skipped, never passes. Windows libsodium and Android Kotlin builds pass this candidate; no change or historical network-cause resolution is attributed to the font recovery.
+
+Original five HTTP connection failures preserved. First source candidatebee75228 had an identified too-strict delivery-query parser; its failed CI is preserved. Reviewed bounded parser correction6c1520a triggered normal CI, without dispatch/retry. One preceding Biometric job was automatically cancelled by workflow concurrency on the corrective push, not manually cancelled. Historical connection/DENY/finance/OpenSSL causes remain independently UNRESOLVED.
+
+One focused independent read-only GPT-6 Astra reviewer checked trust/licensing/placement/five consumers/retry bounds/process cleanup and the query correction; no material scoped finding remains. Reviewer ran no tests. Local20 TypeScript partitions, workflow parses, source279 registration, publication/Git checks and39 existing regression cases pass; bootstrap11PASS/2POSIX local skips are superseded only by real hosted13PASS.
+
+Pre-existing53-line terminal evidence privately preserved byte-for-byte; committed with explicit provenance, only public job-link formatting adjusted. Terminal ledger observation stays unstaged to avoid a cosmetic CI push. Main/P1/PR29/K30/FA1–FA4/v48/migrations/46IDs/25OFFflags and operational DB untouched. Operational fingerprint historical only. EXTERNAL_RUNTIME_BLOCKED unchanged; connected Windows NOT_EXECUTED; installation/release NOT_CLEARED.
+
+Single next recommendation: review retained backend/native security-admission prerequisites under the existing policy; do not launch Windows or start another package automatically.
+
+| Cold-provision consumer | Exact candidate job | Application result |
+| --- | --- | --- |
+| Portable | [verified job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834766828/job/110279414739) | 2,997 PASS / 3 qpdf skips; font setup/loading/cleanup PASS |
+| PG readiness SQLite | [verified job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834766858/job/110279414651) | 2,997 PASS / 3 qpdf skips; font setup/loading/cleanup PASS |
+| Full PG application | [verified job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834766858/job/110279414667) | 2,967 PASS / 3 qpdf skips; font setup/loading/cleanup PASS |
+| Financial PostgreSQL | [verified job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834766883/job/110279414027) | 23 PASS / zero skips; font setup/loading/cleanup PASS |
+| Financial SQLite | [verified job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834766883/job/110279414195) | 23 PASS / zero skips; font setup/loading/cleanup PASS |
+
+Nine final workflow runs: portable36834766828; PostgreSQL36834766858; onboarding36834766877; items36834766883; biometric36834766855; cross-platform36834766846; communication36834766840; real-user36834766970; master36834767278. All SUCCESS at6c1520a; no failed/pending/missing workflow. Evidence categories: HARNESS_ONLY versus real hosted cold Linux fonts and synthetic service/PDF tests; no admitted runtime or authenticated Windows result.
+
+Terminal records: [PR28 evidence read back](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5928915068). Existing Asana history append read back exactly with completed=false, owner/dates preserved; its first full-detail append was refused as too large, then a concise append succeeded without deleting history. Notion asynchronous append succeeded; prior content remains a prefix and terminal paragraphs read back exactly after blank-line normalization. Canvs W1 append read back exactly with geometry/container/bindings/font unchanged. No duplicate record or P1 card change. Terminal addendum remains unstaged; no cosmetic source push or further workflow cycle.
+
+## 2026-10-01 — Backend/native admission review (evidence only)
+
+RECOVERY-BACKEND-NATIVE-ADMISSION-REVIEW-1A — SECURITY_ADMISSION_REVIEW_COMPLETE_BLOCKED.
+Starting/final committed source `6c1520aa71bf27b29d34c122edd747c1511ed2a0`, tree `a831f1d9d63a05c726e95e89103b0bca5bd677c5`; fetched recovery branch matches. PR28 remains OPEN/DRAFT. The pre-existing 37-line font terminal addendum was privately preserved byte-for-byte before review (full starting-ledger SHA256 `8c6d79c0bfad97dfa909a0366d24373cfc8713efa84a3a3cf0a12ed72837a519`). This review appends only to this ledger, remains unstaged and makes no source/lockfile/workflow change, commit, push, dispatch or retry. No AGENTS.md was present in the owned checkout or checked ancestor directories; applicable retained release/execution instructions and superseding 1C records govern this review.
+
+**Reused exact-head CI, re-read as metadata:** nine workflows SUCCESS, 21 jobs SUCCESS, seven SKIPPED, zero failure/pending/missing. Runs: portable `36834766828`, PostgreSQL `36834766858`, onboarding `36834766877`, items/concessions `36834766883`, biometric `36834766855`, cross-platform `36834766846`, communication `36834766840`, access `36834766970`, master `36834767278`. This milestone did not execute application tests. Five cold font consumers, SQLite 2,997 PASS/three inherited qpdf skips, full PostgreSQL application 2,967 PASS/three qpdf skips, financial 23 PASS/provider and 16-fresh/16-repeat restoration are reused evidence from [the prior terminal record](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5928915068). Later passing samples do not resolve historical finance, DENY, OpenSSL or acquisition causes. The completed fixture correction/recorders and FA1–FA4 remain unchanged.
+
+### Operative gates and evidence rules
+
+`artifact-handoff.ts` verifies `NALANDA_SCANNED_ARTIFACT_V1`: exact source/run/attempt/native architecture and raw input hashes/pinned bases; production-default-OFF versus distinct synthetic-QA purpose; raw index→manifest→config descriptors, image identity, Linux/non-root configuration and eight hashed evidence files. The exact nine-file set is provenance, SBOM, Trivy, Grype, scanner metadata, native dependency result, index, manifest and config JSON. Provenance must be HOSTED_EXACT_IMAGE_EVIDENCE, generated no later than now and at most six hours old; HARNESS_FIXTURE_ONLY cannot admit a runtime. Scanner databases must be at most 72 hours old, independently hashed/version-bound, both scanner exit codes zero, ignoreUnfixed=false and HIGH cutoff. Trivy requires OS and Node language package scopes; Grype ignored matches remain checked. HIGH/CRITICAL/unknown findings, ModifiedFindings, failed/incomplete reports or mismatched subjects refuse. SPDX and exact-architecture native dependency evidence remain required. Backend trust is the guarded exact-head ephemeral hosted producer/capture context and byte bindings; editable self-reported JSON alone is not trusted origin evidence.
+
+`assertRuntimeAdmission` deliberately still throws EXTERNAL_RUNTIME_BLOCKED after evidence verification; no environment override or implemented advisory exception exists. 1B allows independently reviewed exact-artifact non-applicability where vendor/source claims conflict, but its narrative does not implement an override in the validator. A reviewed disposition memo cannot silently turn that hard hold or raw scanner refusal into admission. Any future policy-compatible gate change requires separate explicit scope/review. This is a deliberate retained boundary, not evidence that FA1–FA4 is missing.
+
+`native-artifact.ts` requires canonical bounded signed `NALANDA_WINDOWS_NATIVE_INVENTORY_V1` (64 KiB), HOSTED_EXACT_NATIVE_BUILD, exact source/tree/run/attempt/build/backend/container/profile/trust identities, app `com.nalandaps.erp` 0.1.0/x64 and exactly two raw-byte outputs: `launch/nalanda-cross-platform.exe` and `package/Nalanda School_0.1.0_x64-setup.exe`. Exact support/output inventory, sizes, path ancestry, no links/reparse/hardlink ambiguity, owner ACL and immediate pre-launch rehash remain required. Nine build inputs and actual tool hashes bind Node24.19.0/pnpm11.21.0/Rust1.97.1/Tauri2.11.4/cargo-audit0.22.2. Inventory lifetime is bound to the signed QA profile (at most one hour); old profile/receipt cannot be carried to another attempt.
+
+Native origin is GitHub RS256 OIDC, live verified TLS JWKS, fixed repository/owner IDs, exact cross-platform workflow_dispatch/recovery branch/source/run/attempt/github-hosted claims, inventory-derived audience, five-minute issue freshness and at most ten-minute token lifetime. The run-owned Ed25519 receipt key comes independently from the admitted Linux controller's signing root over pinned private SSH; a key accompanying an untrusted receipt cannot substitute. Final hashes remain external to the executable. Root/app production pnpm reports allow no HIGH/CRITICAL/error; Rust requires zero vulnerabilities and **empty warning arrays**, including informational/unmaintained/unsound/yanked. This is stricter than the JS/OCI severity policy. Rust DB commit/dependency count is required, but the current native verifier has no independent numeric Rust DB-age threshold: do not invent one or reuse stale reports as fresh producer output. Unsigned no-remote-server compiler/PIN evidence is distinct from connected QA provenance/security admission.
+
+### Six mandatory runtime skips and the optional producer
+
+| Job / exact reused job ID | Actual skip condition and dependency | Evidence that would complete its named gate |
+| --- | --- | --- |
+| `oci-image`, 2 - OCI image and supply chain / [reused job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834766828/job/110283738983) | Explicit `if: false` under EXTERNAL_RUNTIME_BLOCKED; needs server-and-database. Intended native amd64 and arm64 runners, no emulation. | Separately authorized exact-source build/security qualification; complete raw report/provenance/OCI subjects for both architectures, then admitted native dependency/stack checks. |
+| `oci-release-index` / [reused job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834766828/job/110283740279) | Needs oci-image; upstream skipped, normal success dependency unsatisfied. | Both exact-source architecture receipts; `public-evidence.mjs aggregate` checks two platforms. Output is METADATA_ONLY_NOT_OCI_INDEX, not a retained deployable multiarch image. |
+| `portable-stack`, 3 - portable stack / [reused job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834766828/job/110283741207) | Needs oci-release-index; upstream skipped. | Both same-run immutable architecture stack/teardown receipts. Actual stack execution resides in each image runner; this compatibility job checks metadata only. |
+| `distributed-runtime`, 4 - distributed runtime / [reused job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834766828/job/110283741440) | Needs portable-stack; upstream skipped. | Existing runtime/security/offline/native source contracts on fresh checkout and isolated SQLite. Upstream success schedules the job; it does not consume artifact receipts or establish admitted-image execution. |
+| `object-storage-and-recovery`, 5 - object storage and recovery / [reused job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834766828/job/110283742418) | Needs distributed-runtime; upstream skipped. | Existing object-storage/backup/recovery source and isolated synthetic contracts. No upstream artifact/target is consumed by this job; scheduling dependency is not evidence of same-image acceptance. |
+| `full-synthetic-acceptance`, 6 - full synthetic acceptance / [reused job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834766828/job/110283744098) | Needs object-storage-and-recovery; upstream skipped. | Existing full source/isolated SQLite test/build/backup and focused-product commands. This job likewise does not consume an upstream image; its name/success alone cannot establish full admitted runtime or Windows acceptance. |
+| Optional `native-evidence`, Same-run private Windows QA artifact evidence / [reused job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36834766846/job/110279687597) | Only workflow_dispatch with connected_native_evidence OR connected_windows_acceptance, on exact recovery branch. Current event is pull_request, so false before setup. | Prior admitted same-run Linux backend/controller, authorized disposable Windows configuration/tool/profile inputs, fresh private output inventory/security/OIDC/controller seal; connected journey separately authorized. |
+
+All six runtime jobs are in run36834766828; optional native producer is in run36834766846. The optional skip is a deliberate dispatch/input condition, not a reported compiler/credential failure. No skipped gate proves its implementation absent. Native production uses private same-run build/consume and no package/cache upload. Normal Windows compiler job110279686484 passed; public checksum artifact11149631334 is 242 bytes, source6c1520a/run36834766846, created2026-10-01T08:27:21Z and not expired at metadata read. Its bytes/hash were not downloaded/reverified; it cannot qualify a connected QA executable.
+
+### One bounded current security/evidence pass
+
+On 2026-10-01 at10:50:14/15UTC, existing Node24.19.0/pnpm11.21.0 `pnpm audit --prod --audit-level high --json` at root and native client completed exit0 in750/781ms, 279-byte JSON reports, zero findings in all supplied categories. Both report SHA256 `7e106d4f06e3fe62b8178a49841b90609e5943fe575dc83db7f8f6cce1df1149`. These are workspace/lockfile/package metadata observations, not two independent artifact scans; registry advisory revision/time is not supplied by these reports. No dependencies were installed/updated.
+
+One `cargo audit --json --db <owned review scratch>/rustsec-db --file apps/nalanda-cross-platform/src-tauri/Cargo.lock` used installed cargo-audit0.22.2/Cargo1.97.1 and retained complete 16,858-byte JSON, SHA256 `73c66532e640d674b79d671a6d1500a0a864ff4336eb905f150a2bf2bcc08ce9`. RustSec DB commit `3461c0d8f85d084552dd999c58d97c7123a9e0fd`, updated2026-10-01T09:31:41+02:00, 1,278 advisories; lock dependency count630. The scratch summary serializer failed on a null advisory in a yanked row **after raw output persistence**; scanner child exit status/duration were not retained, so no successful scanner-exit claim is made. No second scan was run. Re-parsing saved output and invoking the side-effect-inspected pure `verifyNativeSecurity` against these actual reports observed `NATIVE_RUST_SECURITY_REJECTED`. This is a lockfile-report policy check, not signed artifact admission or a minted receipt.
+
+Current finding: **rustls0.23.43 / RUSTSEC-2026-0285**, Medium5.3, affected0.23.13–0.23.44; fixed0.23.45 independently corroborated by [the vendor advisory](https://github.com/rustls/rustls/security/advisories/GHSA-2mjx-qc3c-rqvc) and [RustSec](https://rustsec.org/advisories/RUSTSEC-2026-0285.html). Actual native Cargo.toml reqwest0.12.28/rustls-tls → locked rustls0.23.43 → qa_profile.rs client → lib.rs authenticated native transport. It affects a configured dependency path; no newly built Windows bytes or exploit test are claimed. Native zero-vulnerability policy rejects it even though it is Medium.
+
+Ten additional warning records remain: bincode1.3.3 [RUSTSEC-2025-0141](https://rustsec.org/advisories/RUSTSEC-2025-0141.html), paste1.0.15 [2024-0436](https://rustsec.org/advisories/RUSTSEC-2024-0436.html), proc-macro-error1.0.4 [2024-0370](https://rustsec.org/advisories/RUSTSEC-2024-0370.html), unic-char-property/range/common/ucd-ident/ucd-version0.9.0 [2025-0081](https://rustsec.org/advisories/RUSTSEC-2025-0081.html)/[0075](https://rustsec.org/advisories/RUSTSEC-2025-0075.html)/[0080](https://rustsec.org/advisories/RUSTSEC-2025-0080.html)/[0100](https://rustsec.org/advisories/RUSTSEC-2025-0100.html)/[0098](https://rustsec.org/advisories/RUSTSEC-2025-0098.html), all unmaintained with no patched versions declared; glib0.18.5 [RUSTSEC-2024-0429](https://rustsec.org/advisories/RUSTSEC-2024-0429.html) informational unsound, patched>=0.20.0; chacha20 0.10.1 yanked, no advisory ID in the report. Official crates.io metadata fetch through the web reader was inaccessible; yanking reason independently UNVERIFIED. No warning is silently suppressed, and platform-specific glib/whole-lock observations are not proof that every crate ships in a Windows binary. Fixing rustls alone does not make warnings empty or admit native output.
+
+Historical 1B vendor evidence belongs to source73d8dbd/tree5bb0bc5 and September19 inspection, not this application artifact. Current raw rehash of retained index confirms `bb6b03d81066993293a10feda7250e8e1cc034035fe9b61cfceededa7c8bf04d` (1,219 bytes); retained config hashes match historical amd64 `bdfdc9ab66032203827d6be5089d1b015c05687de6c5270295514ae76c24d477` / arm64 `6ceeae720a742b92b933398ac2315adb4daf3a8ecd2bdd7ac231ace037895a46`. Retained amd64 manifest JSON hashes to `3152c8453fe5127f6daac15a5920705758818b8fa11d7e16e5f6119aa5b7ae0e`, **not** descriptor7924c53f: normalized/changed bytes cannot reverify that raw descriptor. Arm64 raw manifest was not among the scoped retained metadata. Library-evidence metadata hash `f7a181fe4ef2a06e4b41c92c2f1d3205ad96d46f805d090ee5fb6324e61d8ddc`; available package annotations describe libc2.41-12+deb13u4/zlib1:1.3.dfsg+really1.3.1-1+b1. Their library/image bytes are not freshly verified. Current Dockerfile runtime pin is **774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79**, not bb6b03d; old vendor metadata cannot admit that pin or current app.
+
+Primary current [Debian5435](https://security-tracker.debian.org/tracker/CVE-2026-5435) still marks that trixie libc version vulnerable, while [5450](https://security-tracker.debian.org/tracker/CVE-2026-5450)/[5928](https://security-tracker.debian.org/tracker/CVE-2026-5928) are fixed by its backport. Do not infer from upstream version numbers alone. [Debian85091](https://security-tracker.debian.org/tracker/CVE-2026-85091) still marks the listed zlib packages vulnerable/unfixed; [upstream fix](https://github.com/madler/zlib/commit/df84af25dc1942490e1d1c899a07619152a46148) adds input-state reset on the failure path. [Ubuntu85091](https://ubuntu.com/security/CVE-2026-85091) deferral/applicability notes conflict with upstream/Debian interpretation and predate the September17 commit; that conflict remains exact-artifact adjudication work, not safety evidence. [Already-evaluated Node24.21.0 release](https://nodejs.org/en/blog/release/v24.21.0) reports bundled1.3.2.1-motley-8002e91; [its source](https://raw.githubusercontent.com/nodejs/node/v24.21.0/deps/zlib/gzwrite.c) lacks that reset. OS zlib and bundled Node zlib are separate scopes. No successor image comparison, image download/scan/build or version upgrade was performed. Historical Node GPG transcript SHA256 `213f3de39b5ca28431dbdf7b22af5144884abfb68afe8fb3f369dc57c8d83343` is retained historical signature evidence, not fresh binary verification. Current exact backend report/severity/applicability is MISSING; these vendor claims alone do not establish this head's shipped findings.
+
+### Admission matrix and ownership reconciliation
+
+Categories: A=demonstrated finding; B=absent/stale/mismatched evidence; C=external approval/custody/host input; D=demonstrated implementation defect. No new D was established. Known individual owners are not assigned by inference.
+
+| Requirement/gate | Governing rule | Subject/evidence | Verification status | Missing item or finding | Responsible role/known owner | Next action | Completion proof |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Source/service baseline | Exact source, required tests and source safety | 6c1520a/treea831f1d; nine reused CI runs | VERIFIED_PASS within source/service scope | Runtime jobs still skipped; historical causes open | Recovery engineering; UNASSIGNED | Reuse immutable results; no rerun now | Exact-head job metadata + retained test records |
+| JS package policy | Native prod reports zeroHIGH/CRITICAL/error | Two current workspace prod reports | VERIFIED_PASS within report scope | Not OS/bundled/native byte scans; DB revision unavailable | Dependency maintainer; UNASSIGNED | Carry scope accurately to later artifact producer | Exact lock/input-bound complete production report |
+| Rust security | All vulnerabilities and warning arrays empty | Actual current Cargo.lock/report; pure verifier refusal | VERIFIED_BLOCK (A) | rustls0.23.43 plus ten warning records | Native dependency/security maintainer; UNASSIGNED | One bounded rustls correction next; preserve other findings | Vendor-fixed locked version + required regressions + complete re-audit; no admission claim |
+| Backend runtime disposition | Current hard hold and zero unresolvedHIGH/CRITICAL policy; no implemented exception | Historical1B vs current pinned774/source6c1520a | VERIFIED_BLOCK / current applicability UNVERIFIED (A/B) | Vendor5435/85091 conflicts and bundled-copy evidence; current subject reports absent | Runtime security reviewer + release authority; UNASSIGNED | Resolve exact supported vendor/byte applicability before authorized qualification; no score/ignore workaround | Reviewed subject-bound disposition and unchanged-strength fresh required scans |
+| Backend artifact/architecture | Exact nine-file report set, amd64+arm64, 6h/72h freshness | No current artifact-evidence/QA producer output in scoped owned roots | MISSING (B) | Image/config/manifests/native results/scans/provenance and current bytes | Authorized hosted producer/custody operator; UNASSIGNED | Later authorized build-and-scan qualification; immutable private consume | Both exact subjects pass existing verifier and permitted hold disposition |
+| Native output/origin | Exact two files, OIDC + independent controller signer, raw security and profile lifetime | Current unsigned PIN compiler metadata only | MISSING (B) | Connected QA bytes, inventory/security/signature/OIDC subject and same-run backend | Native CI producer + custody operator; UNASSIGNED | After independent backend admission, private same-run producer | Verified receipt, actual owned file hashes and backend/profile relationships |
+| QA profile/capability | Signed one-hour exact origin/source/run/backend/CA/path binding; production exclusion | Implemented W1B consumers; no current admitted run profile supplied | MISSING for execution (B/C) | Approved public CA and controller-owned fresh profile tied to target | QA environment/security owner; UNASSIGNED | Supply approved public inputs/references via private owned channel after backend admit | Native/Rust/server validate identical signed context; ordinary production rejects it |
+| Private controller/custody | Fixed pinned host key/credential-file ownership; same-serving-container/replica readback | Implemented SSH/controller transport; no live target access attempted | UNVERIFIED (C) | Approved private network, fixed restricted account/host-key and credential reference; target/signer custody | Infrastructure/custody owner; UNASSIGNED | Authorize named ephemeral hosted controller topology/account restrictions; secrets stay private | Owned source/run target, verified host key/access, signed backend readback and cleanup |
+| Application connectivity/TLS | Exact portable-staging.localhost:8443 through dual-stack loopback to controller127.0.0.1:8443; separate Rust/WebView/browser trust | Implemented fixed forwarding and W1B TLS consumers | UNVERIFIED (C) | Reachable private target, approved CA, no foreign listeners, origin resolution | Disposable environment/network owner; UNASSIGNED | Prepare explicitly authorized identity/network inputs, no public tunnel/DNS change | Owned forward/listener receipt + hostname/chain-valid clients + same backend proof |
+| Disposable Windows host | Owned SID/known folders/tools/profile/ACL; protocol/Edge/WebView/WMI + exact trust cleanup | Real createConnectedWindowsHost and --windows entrypoint implemented | UNVERIFIED for execution (C) | Disposable identity; driver/runtime/tool hashes; nalandaps-erp handler/Edge policy/default; WMI/process lineage; CurrentUser CA ownership | Windows test-environment owner; UNASSIGNED | Supply authorized preconfigured disposable recipe, not owner's profile | Host preflight and owned setup/readback/cleanup receipts on actual runner |
+| Connected/authenticated acceptance | Every WD1–WD5 action through admitted host/artifacts, original OS callback and actual reference storage | FA1–FA4/ML/RO/revocation source reused | MISSING execution evidence (B/C) | All preceding admission and environment proofs; no connected run allowed now | Acceptance operator/release authority; UNASSIGNED | Run only under later explicit authorized admitted context | Actual complete journey + bounded private evidence + verified catchable cleanup |
+
+### Dependency-ordered executable handoff (not executed)
+
+1. **ONE recommended next milestone: bounded native rustls lock correction.** Input: exact current Cargo.lock, vendor/RustSec0285 and existing reqwest/rustls-TLS path. Environment: existing owned recovery worktree and already-authorized isolated source/Rust/TLS tests; no backend/Windows launch. A future explicitly authorized dependency correction may use `cargo update -p rustls --precise 0.23.45 --manifest-path apps/nalanda-cross-platform/src-tauri/Cargo.toml`, conditional on compatible minimal lock diff. It is not executed or authority granted by this review. Output: reviewed minimal dependency delta, TLS/native/profile regressions and complete current security report. Use the installed documented pnpm app:rust:test and test:cross-platform plus affected native-qa-profile/native-artifact/TLS contract checks in their already-authorized environments; subsequent normal exact-head CI remains required for that future source candidate. Criterion: 0285 absent because a vendor-fixed compatible version is locked, with all other findings retained. This removes the earliest independently actionable verified security finding; ten warnings/backend hold are still separate blockers, not part of a promised all-clear.
+2. Native remaining warning disposition and backend vendor/applicability disposition need security/dependency roles (UNASSIGNED). Inputs: full untouched reports and exact artifact/vendor annotations; output: individually supported remediation or exact-applicability conclusions, with no native warning suppression or backend hold waiver. Authorize only the bounded next correction/qualification justified by those results. Historical metadata may guide but cannot replace exact-current evidence.
+3. **Later authorization required:** exact production backend build/security qualification in owned ephemeral GitHub-hosted native Linux amd64/arm64 runners using existing Dockerfile/scan/capture mechanisms. Inputs: reviewed exact source/pins and approved qualification scope, not an already-admitted finished artifact. Output: raw nine-file set for actual built subject, native compatibility results when permitted and complete tool/database metadata. Build/scan precedes acceptance; do not enable the entire currently held workflow or run images merely to acquire approval. Existing `admit-artifact.ts` writes a receipt and is intentionally refused by the hard hold, so it was not invoked here. No circular request that production admission must precede its own authorized production build; runtime execution remains a later gate.
+4. **Later authorization required:** after production admission, `qa-artifact-producer-cli.ts run` on the same admitted hosted Linux target creates a distinct QA image and run-owned signer/profile; it correctly requires production admission before its own build. Controller then needs approved `<PRIVATE_CONTROLLER_MANIFEST_REFERENCE>`, `<PINNED_HOST_KEY_REFERENCE>`, `<OWNED_CREDENTIAL_FILE_REFERENCE>` and approved private hosted connectivity. Minimal owner decision: name/authorize the disposable target and custody operator, permit only the fixed forced-command controller plus fixed127.0.0.1:8443 forwarding, identify public CA/profile inputs and private references; do not post credential values. Completion: independently admitted QA image, serving-container/database/replica ownership, signed target and cleanup receipts. No controller contacted/provisioned by this review.
+5. **Later authorization required:** optional workflow_dispatch connected_native_evidence=true, connected_windows_acceptance=false, with exact source and authorized `$RUNNER_TEMP/nalanda-native-admission/{inputs,transport.json,windows-connected.json}`. Existing build-native-qa.ts validates already-admitted controller/backend context **before compilation**, then produces/audits exact QA outputs and requests original OIDC/controller signature. The controller must satisfy the same source/run/attempt and guarded Linux hosted identity as the Windows consumer. This optional job consumes pre-provisioned inputs and does not create a Linux controller peer; ordinary separate workflow runs or their localhost cannot satisfy that binding. The private same-run topology/custody plan itself must therefore be supplied and authorized, not assumed from successful SSH contract tests. Its output cannot be replaced by the no-remote-server NSIS compiler. No artifact is produced/sealed/downloaded now.
+6. **Separate later authorization required:** once all prior gates and disposable Windows setup pass, existing `pnpm exec tsx scripts/portable/integrated-acceptance.ts --windows` consumes the bounded private recipe on stdin and drives real WD1–WD5. No fake secret-containing command or ready credential is supplied here. Expected output: actual authenticated journey, original OS callback/session lineage, manual reference response/storage match, restart/revocation/reauth and owned cleanup. Document-creation DOM/mutation/RAF observation remains its stated boundary, not compositor-frame or owner-device certification. Staff installation/release remains separately governed even after this passes.
+
+### Review, safeguards and terminal scope
+
+Independent read-only GPT-6 Astra reviewer traced validators/producer/bootstrap/host relationships and endorsed the bounded rustls next milestone; final document review corrected two overstatements of downstream-job artifact binding. Those jobs run source/isolated SQLite contracts; dependency ordering is not subject binding. No other material scoped finding remains; applicable non-mutating publication/source/Git safeguard results are recorded at handoff. Reviewer performed no scans/builds/launches and did not grant admission. No current new implementation defect was established. Historical 1B missing-host/restoration paragraphs are superseded by later 1C implementation, not reopened.
+
+Only task-owned ignored review scratch was created for raw package-audit JSON, safe summaries and captured starting evidence; no private keys/credential values/real records/font/native/image bytes were acquired or published. Raw scanner output is retained locally, not uploaded. No signing/sealing/admission receipt, controller contact, Docker command, trust-store mutation, database access, app-stack/Windows launch, dependency rewrite, commit/push or new CI occurred. Retained diagnostics, historical artifacts and ambiguous/denied residue are preserved. Main/P1/PR29/Ask Nalanda/K30/PR30, operational DB, FA1–FA4, v48/migrations/46IDs/25OFFflags are untouched; operational fingerprint is historical only. Recovery remains incomplete.
+Separate verdicts: source/service CI reused PASS within scope; backend admission BLOCKED/MISSING exact artifact proof; native security BLOCKED and connected output MISSING; controller/host UNVERIFIED; authenticated Windows NOT_EXECUTED; installation/release NOT_CLEARED. Stop after this review; do not automatically execute the selected correction or producer/host handoff.
+
+Terminal readback: PR28 comment5930153612 matches posted body after trailing-newline normalization. Asana exact history-preserving append read back with completed=false and owner/dates unchanged; Notion async update succeeded and new terminal section was read back; Canvs text and geometry/container/bindings/font read back exactly. No connector failure or duplicate record.
+Final non-mutating checks: source registration279files/4heads/4backupcontracts PASS; both publication scans463paths PASS; Git safety and diff checks PASS. Independent final read-only review approved after the downstream-job evidence corrections; no remaining material scoped finding. Sole tracked diff is this ledger, entirely unstaged: preserved37lines plus79reviewlines plus this terminal record. Task-owned audit/advisory scratch remains ignored and locally retained for evidence; no runtime cleanup was needed or performed.
+Observed review interval approximately30minutes (10:46:18UTC start); account usage not measured. Selected next milestone remains the bounded rustls correction, not executed.
+
+
+## Native rustls security correction — reviewed candidate preparation
+
+RECOVERY-RUSTLS-SECURITY-CORRECTION-1A — 2026-10-01
+
+Starting source `6c1520aa71bf27b29d34c122edd747c1511ed2a0`, tree `a831f1d9d63a05c726e95e89103b0bca5bd677c5`; owned recovery worktree/branch and OPEN/DRAFT PR28 verified against fetched refs. Starting sole unstaged diff: 120 added ledger lines, no staged files. This preserves the preceding 37-line font terminal observation and 83 admission-review/terminal lines with their original-task provenance. Complete starting ledger bytes are retained privately with SHA256 `6f19492275378afd7798489d77d0780b53f65051df670bef2466ce000be5fd46`; original diff retained. Seven pre-existing bare public skipped-job coordinates failed the unchanged onboarding publication scanner. Only their presentation becomes its already-approved GitHub job links; original bytes and outcomes remain retained. No checker relaxation or unrelated source edit.
+
+Primary [vendor advisory](https://github.com/rustls/rustls/security/advisories/GHSA-2mjx-qc3c-rqvc) and [RustSec record](https://rustsec.org/advisories/RUSTSEC-2026-0285.html) identify TLS1.3 handshake-message acceptance across encryption-level boundaries, affected >=0.23.13 through0.23.44, fixed0.23.45, Medium/CVSS5.3. [Upstream correction](https://github.com/rustls/rustls/pull/3265) checks alignment including previously received messages; [release0.23.45](https://github.com/rustls/rustls/releases/tag/v%2F0.23.45) also contains a separate upstream backport. This is vendor-based remediation of an affected dependency, not a demonstrated ERP exploit or qualification of browser/WebView TLS.
+
+### Exact supported dependency delta
+
+Only owning `apps/nalanda-cross-platform/src-tauri/Cargo.lock` changes: one package entry, version and registry checksum. Cargo.toml stays unchanged. Installed/pinned Cargo1.97.1 and rustc1.97.1; documented package-specific dry-run succeeds without changing the lock, then `cargo update -p rustls --precise 0.23.45 --manifest-path apps/nalanda-cross-platform/src-tauri/Cargo.toml` succeeds. No unrestricted update, fork, patch override, checksum rewrite or new direct dependency.
+
+| Package | Before | After | Source/checksum |
+| --- | --- | --- | --- |
+| rustls | 0.23.43 | 0.23.45 | Same crates.io registry; old `0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06`; new `0d41d731c7d2f962d1ccc364cec258de3c0e93b38c2fb3ba97ac74513048d634` |
+
+Parent path: reqwest0.12.28 with rustls-tls/default-features=false, via hyper-rustls0.27.9 and tokio-rustls0.26.4. Real authenticated Rust transport uses existing qa_profile client builder. Production and synthetic-qa locked metadata resolve one rustls copy, 630 packages, features ring/std/tls12; all-target reverse-feature trees are unchanged after normalizing this version alone. This is graph resolution, not compilation of every target. Other TLS implementations and already-built artifacts are not updated by a lock edit. Existing HTTPS/hostname/certificate roots, QA no-proxy/explicit-CA policy, no redirects, origin/session/profile/cancellation controls remain unchanged.
+
+Starting raw Cargo.lock SHA256 `506db5fdfe9d42bec746227cb7d8994feb121f0a63012bee7eaa4e67ca523c19`; reviewed candidate raw SHA256 `e28910969f5039feef091f87291778ac34e39e3a93c911e27bc20933b2cba6f0`. Cargo emits LF instead of checkout CRLF; parsed package comparison and Git diff confirm only the one package version/checksum delta. Subsequent Cargo metadata/tree/test/check commands use --locked and every recorded before/after hash remains identical. Existing public registration already includes Cargo.lock; protected source checker excludes the apps subtree, so no gratuitous registry regeneration is performed.
+
+### Complete audit process and unchanged admission refusal
+
+One unfiltered candidate cargo-audit0.22.2 invocation: `cargo audit --json --db <owned private scratch>/rustsec-db --file apps/nalanda-cross-platform/src-tauri/Cargo.lock`. Real process starts12:06:57.128317UTC and ends12:07:06.551171UTC; elapsed9422ms, exit0, signal null, stdout14535bytes, stderr0bytes. Raw stdout/stderr, receipt/command/tool/lock hashes are persisted privately before parsing; stdout SHA256 `e165639807567ffbde68e9756c824aa61c545dd7e1cb38ae3059f8d18eaea104`. Database revision `3461c0d8f85d084552dd999c58d97c7123a9e0fd`, updated2026-10-01T09:31:41+02:00, 1278 advisories. Complete parsed report:630 dependencies, vulnerabilities found=false/count0/empty list, RUSTSEC-2026-0285 absent; no affected rustls copy in reviewed graph. Prior raw audit's exit/duration remain UNKNOWN, not reconstructed from this successful process.
+
+| Warning type | Package/version | Identifier | Candidate versus retained report |
+| --- | --- | --- | --- |
+| unmaintained | bincode1.3.3 | RUSTSEC-2025-0141 | unchanged |
+| unmaintained | paste1.0.15 | RUSTSEC-2024-0436 | unchanged |
+| unmaintained | proc-macro-error1.0.4 | RUSTSEC-2024-0370 | unchanged |
+| unmaintained | unic-char-property0.9.0 | RUSTSEC-2025-0081 | unchanged |
+| unmaintained | unic-char-range0.9.0 | RUSTSEC-2025-0075 | unchanged |
+| unmaintained | unic-common0.9.0 | RUSTSEC-2025-0080 | unchanged |
+| unmaintained | unic-ucd-ident0.9.0 | RUSTSEC-2025-0100 | unchanged |
+| unmaintained | unic-ucd-version0.9.0 | RUSTSEC-2025-0098 | unchanged |
+| unsound | glib0.18.5 | RUSTSEC-2024-0429 | unchanged |
+| yanked | chacha20 0.10.1 | no advisory ID | unchanged |
+
+Ten warnings individually compared by type/package/version/identifier; no removed/changed/new warning. No unrelated remediation, ignore, severity change or suppression. Fresh root and app production pnpm audit JSON each exit0 with all severity counts0. Safe non-launching `verifyNativeSecurity` receives actual complete raw reports and their hashes; real exit1/refusal `NATIVE_RUST_WARNINGS_REQUIRE_REVIEW` is retained. This is report-policy verification only, not provenance validation, sealing or an admission receipt. Cargo audit exit0 does not override the stricter native warning gate. NATIVE_SECURITY_BLOCKED remains; backend EXTERNAL_RUNTIME_BLOCKED is independent.
+
+### Finite local validation and boundaries
+
+Declared matrix: locked identity/graphs and one dry-run/update; one complete audit; existing production/QA Rust and isolated TLS; focused native/profile/client/publication regressions and safeguards; one normal CI cycle after reviewed push. No unchanged repetitions, old retries, duplicate dispatch, stack/controller contact or connected artifacts.
+
+Production `cargo test --locked` PASS:10 Rust bodies, zero ignored, actual test10.42s/process50032ms. Synthetic-QA `cargo test --locked --features synthetic-qa` under fresh HARNESS_FIXTURE_ONLY signed compiler inputs PASS:10 bodies/zero ignored, test10.52s/process46484ms. Task-owned helper adapts existing profile preparation/cleanup and 20s RSA2048 CA-generation/180s compiler bound to run cargo test and emit stdout; the original helper's negative compiler invocations run separately in qa-compiler. These include genuine isolated reqwest HTTPS success and wrong-hostname/foreign-CA/expired-leaf rejection, not parsing alone. Ten-test success is not protocol exploit coverage, physical device or authenticated ERP acceptance. No compiler warning suppression/allow flag changes. Production compiler stderr is captured; successful inner QA compiler stderr is not forwarded by the adapted helper and its full diagnostic bytes are not claimed retained.
+
+Existing qa-native-profile-compile PASS: valid QA compiler inputs accepted, tampered-input and production-QA injection refused; UNIT_OR_CONTRACT, no artifact admission. Eight focused native/lifecycle/profile/artifact/reference files PASS92 cases; publication-registration PASS8; app six-file suite PASS48 cases and tsc/Vite build PASS. Mocked WebDriver/IPC/client-storage boundaries stay UNIT_OR_CONTRACT; real Rust TLS checks are REAL_ISOLATED_TLS_FIXTURE. No app installation/launch or trusted native artifact produced. Applicable tools-core/tests-m-r and app TypeScript checks PASS; one additional unchanged tools-qa partition also PASS. Source279/four-head/four-backup-contract checker, publication and Git safeguards are required before staging; the initial onboarding publication failure and bounded coordinate-format correction remain recorded. Exact-head hosted OS/provider coverage is pending the normal push, not borrowed from the starting nine successful workflows.
+
+Independent focused read-only GPT-6 Astra review is required before commit. Final review/readback and safeguard results are appended below after completion. Candidate CI terminal observations will remain unstaged to avoid a cosmetic second push. Only lockfile and this evidence ledger are intended staged files; ignored task-owned raw capture is never uploaded.
+
+Protected scope: main/P1/PR29/Ask Nalanda/K30/PR30/FA1–FA4/v48/migrations/46IDs/25OFFflags unchanged. Operational DB never opened/copied/hashed/cleaned; prior fingerprint historical only. Font contracts unchanged; finance/DENY/OpenSSL/network histories independently UNRESOLVED. Retained diagnostics/ambiguous or denied residue untouched. Temporary synthetic compiler inputs clean up through existing owned finally; private task receipts/audit scratch retained locally, no promise after uncatchable termination. No controller/CA-store/DNS/profile provisioning, connected-QA production, runtime waiver, real users/providers, deployment/release/installation. Native/backend admission BLOCKED; controller/host UNVERIFIED; authenticated Windows NOT_EXECUTED; release/installation NOT_CLEARED.
+
+One next recommendation, not executed: a bounded dependency-path and policy disposition of the ten remaining native warning records, preserving the zero-warning verifier and exact artifact requirements. This is the earliest remaining native report gate; backend qualification/private custody/disposable host prerequisites remain separately required.
+
+Final independent read-only GPT-6 Astra reviewer verifies the exact one-entry lock diff, lock/report hashes, raw ten-warning comparison, both ten-test outputs, real TLS coverage, preserved prefix after seven link-format substitutions, and actual native verifier refusal. No material scoped finding remains; two QA-helper/diagnostic-retention wording limits above are corrected. Reviewer executed no tests/builds/scans and did not grant admission. Final local source279/four-head/four-backup-contract, both publication scans463paths, Git safety/diff and applicable typechecks PASS; no registry entry or threshold changes. Commit/push follows only this reviewed correction; normal exact-head CI remains pending.
+
+## Native rustls correction — terminal exact-candidate evidence
+
+RECOVERY-RUSTLS-SECURITY-CORRECTION-1A — 2026-10-01
+RUSTLS_SECURITY_CORRECTION_VALIDATED_NATIVE_ADMISSION_BLOCKED
+
+Starting source `6c1520aa71bf27b29d34c122edd747c1511ed2a0`/tree `a831f1d9d63a05c726e95e89103b0bca5bd677c5`; final source `c64e56e508d13a30ab8f57a0d8d8eac7d4da2c30`/tree `e0322142b577c84a1ace8eb2bfb15cea3b6cbf54`. Local/fetched branch and PR28 head match; PR remains OPEN/DRAFT. One reviewed commit and one normal push; no dispatch/retry/corrective push. Exact committed manifest: native Cargo.lock and this ledger only. Starting120lines retain prior-task provenance; original bytes/hash/diff are private. Seven bare public skipped-job coordinates use unchanged approved link formatting. Terminal observation remains unstaged; no cosmetic follow-up push.
+
+rustls0.23.43→0.23.45 is the sole package-entry change, same registry/dependencies/features; production/QA one-copy graph and local --locked/raw-hash checks pass. Vendor/RustSec0285 Medium5.3 correction is verified; no ERP attack claim. Actual hosted Windows/macOS/Android build logs also compile0.23.45. Browser/WebView TLS and old compiled artifacts are not certified or updated by the lockfile change.
+
+Complete candidate cargo audit: exit0/signalnull,9422ms,14535stdoutbytes/0stderrbytes; original raw output and actual process receipt retained privately before parsing. Database revision3461c0d8f85d084552dd999c58d97c7123a9e0fd/time2026-10-01T09:31:41+02:00;630dependencies/0vulnerabilities. The preceding warning table compares each of10 records:8unmaintained/1unsound/1yanked, all unchanged, none new/changed/removed. Native verifier actual exit1 NATIVE_RUST_WARNINGS_REQUIRE_REVIEW remains BLOCKED. Historical raw-audit exit/duration remain UNKNOWN. No warning suppression, policy change, admission receipt or connected-QA artifact production.
+
+Final normal exact-head CI:9SUCCESS workflows,0failure/skipped/cancelled/pending/missing;28jobs:21SUCCESS/7SKIPPED,0failure/cancelled/pending/missing. These are new candidate results, not transferred starting-head evidence.
+
+| Candidate workflow | Final result | Jobs SUCCESS / SKIPPED |
+| --- | --- | --- |
+| [Cross-platform](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36861320610) | SUCCESS | 4 / 1 |
+| [Master reconciliation](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36861320611) | SUCCESS | 2 / 0 |
+| [Items/concessions](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36861320602) | SUCCESS | 2 / 0 |
+| [PostgreSQL readiness](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36861320674) | SUCCESS | 4 / 0 |
+| [Communication](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36861320599) | SUCCESS | 2 / 0 |
+| [Portable](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36861320595) | SUCCESS | 1 / 6 |
+| [Onboarding](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36861320620) | SUCCESS | 2 / 0 |
+| [Biometric](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36861320771) | SUCCESS | 2 / 0 |
+| [Real-user access](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36861320838) | SUCCESS | 2 / 0 |
+
+Mandatory held runtime jobs remain OCI image/supply-chain, OCI release-index, portable stack, distributed runtime, object storage/recovery and full synthetic acceptance. Optional private native producer remains skipped by its unchanged dispatch/input condition. None is counted as a pass. Backend EXTERNAL_RUNTIME_BLOCKED and EPHEMERAL_EXACT_HEAD_CI_ONLY remain unchanged.
+
+Fresh full master [application job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36861320611/job/110365959547):3000PASS/0skips. Full PostgreSQL [application job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36861320674/job/110365959363):2967PASS/3 inherited qpdf skips, plus108focused cases; Linux SQLite [release job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36861320674/job/110365959496):2997PASS/3qpdf skips. Financial matrix23PASS/provider; portable2997PASS/3qpdf; other Windows source suites retain their observed individual counts rather than summing them into acceptance. Normal provider/schema/migration/restore/build/typecheck/security/publication gates succeed. No local PostgreSQL policy-refused command was retried or bypassed.
+
+Ordinary unsigned Windows NSIS, Android debug/emulator and iOS build/iPhone-iPad light-dark capture gates PASS. Actual native Windows/macOS logs each show10Rust tests PASS and compiledrustls0.23.45. These are normal no-remote compatibility/launch gates, not authenticated native acceptance. iOS log contains the existing bounded readiness observation before final successful captures; no threshold/attempt/deadline change or historical-cause conclusion. One earlier completed-job log retrieval was unavailable while its enclosing workflow remained running; its exit1/empty-log receipt is retained. Successful terminal retrieval follows the actual availability transition, not a CI rerun.
+
+Local evidence remains production10Rust/QA10Rust, real isolated trusted-CA/hostname/foreign-CA/expired-leaf TLS controls, QA compiler substitution/production-exclusion controls,92focused native/profile/lifecycle/reference/artifact cases,8publication-registration cases,48app cases and app tsc/Vite build. Pure/doubled interfaces are UNIT_OR_CONTRACT; real TLS is REAL_ISOLATED_TLS_FIXTURE. WINDOWS_TRUST_SETUP_EXECUTED,ADMITTED_BACKEND_CONNECTION,AUTHENTICATED_WINDOWS not established by these checks. Full successful inner QA compiler stderr is not retained; no suppression flag was introduced. Independent read-only GPT-6 Astra review has no material outstanding finding after precise evidence-wording corrections; reviewer ran no tests/scans/builds or admissions.
+
+Owned temporary synthetic compiler inputs/CA private keys are removed through existing checked finally cleanup; private raw receipts/audit/advisory and CI-log scratch stays ignored/local, never uploaded. Compiler caches/retained historical diagnostics/ambiguous or denied residue are preserved; no forensic erasure or cleanup after machine loss is promised. Operational DB never accessed/copied/hashed/cleaned; fingerprint historical only. Main104aacc7 and P1 reviewed5a3e219 unchanged on final fetched refs; P1/PR29/Ask Nalanda/K30/PR30/FA1–FA4/v48/migrations/46IDs/25OFFflags untouched.
+
+Separate verdicts: rustls advisory correction VALIDATED; source/service/current normal CI PASS with explicit inherited/runtime skips; native security BLOCKED by10warnings and real connected artifact proof absent; backend admission BLOCKED; controller/disposable-host execution inputs UNVERIFIED; authenticated Windows NOT_EXECUTED; installation/release NOT_CLEARED. Finance/DENY/OpenSSL/network historical causes remain independently UNRESOLVED. One next recommended milestone: bounded native warning dependency-path/policy disposition, no automatic remediation or backend/Windows execution. Account usage not measured. Task start11:58:50UTC; CI terminal observed12:59:47UTC, approximately61minutes through CI, excluding remaining tracker/readback handoff time.
+
+Terminal tracker readbacks: PR28 comment5934880489 exactly matches its posted UTF8 body after trailing-newline normalization; Asana notes exactly match the history-preserving append, completed=false and owner/dates unchanged; Notion async update succeeded, terminal link/section and entire prior content read back; Canvs exact text and geometry/container/bindings/font/style read back unchanged. No connector failure/duplicate record. Final observed UTC15:44:11 versus start11:58:50 gives approximately225minutes wall-clock elapsed (approximately61minutes through terminal CI; remaining wall-clock interval includes handoff). Account usage not measured. Final source/tree unchanged; only this post-CI ledger observation is unstaged.
+
+## Native warning remediation — bounded dependency correction
+
+RECOVERY-NATIVE-WARNING-REMEDIATION-1A — 2026-10-01
+Candidate local validation: NATIVE_WARNINGS_PARTIALLY_REMEDIATED_ADMISSION_BLOCKED; normal exact-candidate CI pending.
+
+Starting committed source `c64e56e508d13a30ab8f57a0d8d8eac7d4da2c30` / tree `e0322142b577c84a1ace8eb2bfb15cea3b6cbf54`; fetched recovery branch and OPEN/DRAFT PR28 agree. Only starting change was the prior task's 39 unstaged rustls terminal-evidence lines, nothing staged. Original working ledger bytes are preserved privately with SHA256 `1fb2e5dda8be0883cef18412af62f9ee13a9cea37ac45c340c8f03f1e07ae210`, alongside its original diff and Cargo inputs under ignored task-owned scratch. This section is appended without changing that prefix. Prior evidence provenance remains the rustls milestone, not newly executed evidence. No applicable AGENTS.md was found in the owned checkout or its ancestor chain. Release-evidence guidance is applied within the user's narrower protection rules; operational database access/hash and release actions are excluded.
+
+### Graph, target and upstream evidence
+
+Fresh locked production/QA metadata, reverse-dependency closure, exact registry manifests and HTTPS sparse-index records were inspected using existing Cargo/rustc1.97.1. This is resolution evidence, not every-target compilation. Five matched before/after tree pairs cover x64 Windows, aarch64 Android, device iOS, macOS and x64 Linux; all ten output files are byte-identical. Fourteen additional candidate trees cover the remaining configured Android architectures, iOS simulator architectures, x64 macOS and arm64 Linux in both profiles. No selected graph contains chacha20.10; all keep Stronghold's chacha20.9.1. synthetic-qa adds only the application's existing empty feature; it changes neither dependency versions nor crypto/provider features. No toolchain/JS/manifests/features were changed.
+
+All baseline warning packages have one locked version except chacha20: 0.9.1 (not warned) and yanked0.10.1. rand has0.8.8 and0.10.2; their distinct identities were retained. Every other listed warning has one copy. Root/default/dev/build graph roles are recorded below; dependencies' own development fixtures are not application dev dependencies. Target membership comes from selected trees plus target/optional declarations, not crate names or lock presence alone.
+
+`U` is the complete tauri-utils2.9.3 reverse closure: normal/build tauri2.11.5; tauri-build2.6.3 (application and tauri build dependency); tauri-codegen2.6.3 -> tauri-macros2.6.3 -> tauri; tauri-macros directly; tauri-plugin2.6.3 -> build dependencies of deep-link2.4.9, opener2.5.4 and stronghold2.3.1; normal/build deep-link2.4.9; tauri-runtime2.11.3 -> tauri/runtime-wry2.11.4; runtime-wry -> tauri. tauri reaches the application directly and through its four direct plugins: deep-link, opener, stronghold and desktop single-instance2.4.3; single-instance also reaches deep-link. This includes host-executed build/proc-macro and target runtime paths on all five OS families.
+
+`G` is the complete glib0.18.5 parent closure, including dormant tray support: immediate parents atk0.18.2, cairo-rs0.18.5, gdk0.18.2, gdk-pixbuf0.18.5, gdkx11.18.2, gio.18.4, gtk.18.2, javascriptcore-rs1.1.2, libappindicator.9.0, pango.18.3, soup3.5.0 and webkit2gtk2.0.2. atk -> gtk; cairo -> gdk/gtk/webkit; pixbuf -> gdk/gtk; gdk -> gdkx11/gtk/webkit; gdkx11 -> wry.55.1; gio -> gdk/pixbuf/gdkx11/gtk/pango/soup3/webkit; pango -> gdk/gtk; javascriptcore and soup3 -> webkit/wry; webkit -> tauri/runtime/runtime-wry/wry; gtk -> libappindicator/muda.19.3/tao.35.3/tauri/runtime/runtime-wry/webkit/wry; libappindicator -> tray-icon.24.2; muda -> tauri/tray-icon; tray-icon -> optional tauri tray feature; tao and wry -> runtime-wry -> tauri and the same direct plugin closure above. Selected Linux trees include GTK/GLib and host proc macros; Windows/Android/iOS/macOS do not select them. No claim that an unselected crate is policy-cleared: full report still covers it.
+
+| Warning | Parent paths | Targets/features/role | Upstream status | Compatible correction | Validation needed | Disposition |
+| --- | --- | --- | --- | --- | --- | --- |
+| bincode1.3.3 / RUSTSEC-2025-0141 | iota_stronghold2.1.0(^1.3) -> tauri-plugin-stronghold2.3.1 -> app | Runtime serialization, all OS/profile trees; no warning duplicate | [RustSec](https://rustsec.org/advisories/RUSTSEC-2025-0141.html): unmaintained, no patched release; registry latest iota_stronghold2.1.0 | No same-parent fix; newer plugin2.3.2 and2.4.0 still iota^2; changing serializer/format excluded | Later supported Stronghold/serializer migration needs baseline-written vault/snapshot read, candidate write/reopen, wrong-key/tamper and platform tests | UNREMEDIATED, storage migration/upstream blocker |
+| paste1.0.15 / RUSTSEC-2024-0436 | stronghold_engine2.0.1(^1.0.1) -> iota_stronghold2.1.0 -> stronghold plugin -> app | Host proc-macro used by all target Stronghold builds; no duplicate | [RustSec](https://rustsec.org/advisories/RUSTSEC-2024-0436.html): unmaintained, no patched release; latest engine2.0.1 still paste | Alternative pastey requires upstream engine replacement; no fork/overlay/rename accepted | Later published parent correction plus vault/crypto/compiler compatibility | UNREMEDIATED, engine/upstream blocker |
+| proc-macro-error1.0.4 / RUSTSEC-2024-0370 | glib-macros.18.5 -> glib G; gtk3-macros.18.2 -> gtk G | Host proc-macro dependency for selected Linux GTK; default/syn/syn-error; unselected other four OS families | [RustSec](https://rustsec.org/advisories/RUSTSEC-2024-0370.html): no patched version; current0.18 parents retain^1.0 | No same-series parent fix; gtk0.19 requires glib^0.22/MSRV1.92 while webkit2gtk2.0.2 still requires^0.18 | Later coordinated upstream GTK/WebKit generation support, all-target compiler/UI checks | UNREMEDIATED, GTK/upstream blocker |
+| unic-char-property.9.0 / RUSTSEC-2025-0081 | unic-ucd-ident.9.0 -> urlpattern.3.0 -> U | Host build/proc-macro plus runtime; all OS/profile trees; features empty | [RustSec](https://rustsec.org/advisories/RUSTSEC-2025-0081.html): no patched versions | Shared U correction described below | URL matching/origin/ACL/deep-link/compiler regressions and MSRV reconciliation | UNREMEDIATED, U policy/compatibility blocker |
+| unic-char-range.9.0 / RUSTSEC-2025-0075 | char-property and ucd-ident -> urlpattern -> U | Same targets/roles; default; one copy | [RustSec](https://rustsec.org/advisories/RUSTSEC-2025-0075.html): no patched versions | Shared U correction | Same U validation | UNREMEDIATED |
+| unic-common.9.0 / RUSTSEC-2025-0080 | ucd-version -> ucd-ident -> urlpattern -> U | Same targets/roles; default; one copy | [RustSec](https://rustsec.org/advisories/RUSTSEC-2025-0080.html): no patched versions | Shared U correction | Same U validation | UNREMEDIATED |
+| unic-ucd-ident.9.0 / RUSTSEC-2025-0100 | urlpattern.3.0 -> U | Same targets/roles; default/id/xid; one copy | [RustSec](https://rustsec.org/advisories/RUSTSEC-2025-0100.html): no patched versions | Shared U correction | Same U validation | UNREMEDIATED |
+| unic-ucd-version.9.0 / RUSTSEC-2025-0098 | ucd-ident -> urlpattern -> U | Same targets/roles; empty; one copy | [RustSec](https://rustsec.org/advisories/RUSTSEC-2025-0098.html): no patched versions | Shared U correction | Same U validation | UNREMEDIATED |
+| glib.18.5 / RUSTSEC-2024-0429 | G, including GTK/WebKit and optional tray parent closures | Selected Linux runtime; default/gio/gio_ffi/v2_58 through v2_70; no duplicate | [RustSec](https://rustsec.org/advisories/RUSTSEC-2024-0429.html): informational unsound VariantStrIter, fixed>=.20 | ^.18 constraints reject fixed leaf; duplicate fixed copy would not remove old one; gtk.19/WebKit mismatch is not a patch | Coordinated supported GTK/WebKit parent migration and affected Linux iterator/UI/compiler tests | UNREMEDIATED, framework compatibility blocker |
+| chacha20.10.1 / yanked, no advisory ID | Locked rand.10.2(^.10.0, std_rng) <- quinn-proto.11.17 <- quinn.11.11 <- optional reqwest.12.28 QUIC <- app | Lock-retained optional QUIC RNG, unselected all prod/QA target variants; warned copy separate from active .9.1 vault cipher | [Maintainer PR580](https://github.com/RustCrypto/stream-ciphers/pull/580) explicitly agrees to yank UB releases; [release changelog](https://raw.githubusercontent.com/RustCrypto/stream-ciphers/master/chacha20/CHANGELOG.md) .10.2 Aug27 fixes SSE4.1 intrinsic use in SSE2 RNG/legacy backend; authenticated registry .10.2 non-yanked | Precise .10.2 lock update fits rand constraint, same dependencies and inherited MSRV1.85; no algorithm/format replacement | Full unfiltered audit, unchanged selected graphs, existing Rust/TLS/profile/client checks and normal platform CI | REMEDIATED in lockfile; actual connected artifact not produced/admitted |
+
+Current primary registry records observed2026-10-01 show tauri-utils2.9.3 is the last1.77.2 series and requires urlpattern^0.3, whose latest matching release0.3.0 keeps UNIC. [Tauri-utils2.10 release](https://github.com/tauri-apps/tauri/releases/tag/tauri-utils-v2.10.0) and registry2.10.1 use urlpattern^0.6 and declare Rust1.90. That supported replacement is a concrete later option, but changing the application-declared1.77.2 MSRV is outside this milestone. Existing inherited rand/chacha.10 already declare1.85: 1.77.2 is not claimed as a verified whole-graph working minimum. No permissive gate exception is inferred from Tauri's own ignored warnings. No forced incompatible leaf or framework update was applied. Three blocked parent families were assessed; only one independent correction group was implemented.
+
+Mobile also selects Tauri's reqwest0.13.4 for its platform integration. Its manifest contains an optional QUIC edge, but the exact locked chacha.10 ancestry above belongs to reqwest0.12.28. Normal reqwest/rustls authenticated application transport remains unchanged, including rustls0.23.45/ring, CA/hostname/validity validation, origin/redirect restrictions and production/QA separation. Browser/WebView TLS and old compiled bytes are separate evidence scopes. No shipped ERP exploit or cryptographic compromise is claimed from a yanked record.
+
+### Exact correction, audit and validation
+
+Installed Cargo update syntax was inspected; bounded package-specific dry run and actual `cargo update -p chacha20@0.10.1 --precise 0.10.2 --manifest-path apps/nalanda-cross-platform/src-tauri/Cargo.toml` each resolve successfully. Old/new registry remains crates.io; old checksum `d524456ba66e72eb8b115ff89e01e497f8e6d11d78b70b1aa13c0fbd97540a81` -> `65c35e4b699c7e15ccbe7ee35c005e4fc0a278d22238a2857e6ce2dadeda1b06`, matching independently fetched authenticated registry metadata. Only its version/checksum and unchanged rand.10.2 dependency reference change; no other package version/checksum changes. Lock raw SHA256 `e28910969f5039feef091f87291778ac34e39e3a93c911e27bc20933b2cba6f0` -> `a0d6b942f835b99cd82018d25ef52f5a5f2f09b52d9c49292c99a06ac967cf37`. All subsequent compiler/tree/metadata commands use --locked, with matching before/after hashes. No unrestricted update, direct dependency, checksum rewrite or override.
+
+Complete final audit process was persisted before parsing: cargo-audit0.22.2 / executableSHA256 `fc6e9d818d73ba07ecf28650793d46b74cf90aeb70c17405563c16454a4ba62d`; invoked Cargo executable/launcherSHA256 `86478e53f769379d7f0ebfa7c9aa97cb76ca92233f79aa2cc0dbee2efaac73c7`; exact command `cargo audit --json --db <owned public-advisory checkout> --file <native Cargo.lock>`; start17:35:45.806572UTC/end17:35:50.692269UTC,4891ms,exit0/signalnull. Raw stdout13922bytes/SHA256 `16d43f43a90f71fd7293883f35c20b78c2988ed0ed19bb8fbaa2dd420e7bbacf`, stderr0bytes, retained privately. Both lock hashes match the candidate. DB before/after3461c0d8f85d084552dd999c58d97c7123a9e0fd, updated2026-10-01T09:31:41+02:00,1278advisories/630dependencies. Full unfiltered report:0vulnerabilities,8unmaintained+1unsound warnings. Each of the first nine table rows is unchanged in ID/type/version; only yanked chacha.10.1 removed; none new/changed. rustls0285 absent, rustls remains.23.45.
+
+All audit attempts retained: initial current scan exit0/3375ms; frozen-baseline-DB comparison exit0/984ms; final current scan exit0/4891ms. The capture helper initially omitted scanner binary hashes, so one identified receipt-completeness correction prompted the final scan; it was not a favorable-result retry. Final stdout equals initial current stdout. Same verified DB revision in all scans and retained baseline; no advisory drift is credited to the dependency change. Comparison uses --no-fetch solely to hold the prior verified DB; mandated final scan fetches normally. Historical lost audit exit/duration remains UNKNOWN.
+
+Unchanged pure verifyNativeSecurity actual exit1/1265ms: NATIVE_RUST_WARNINGS_REQUIRE_REVIEW. It consumed exact current Rust bytes and reused unchanged-input root/app production pnpm audit reports (their scope/provenance remains previous milestone), validating their hashes. No signer/launch/sealing/admission side effect. Audit exit0, compiler warnings and policy refusal are distinct. Nine findings block full native security even though target analysis describes where they are selected.
+
+Finite local validation: production Rust10PASS and synthetic-QA Rust10PASS, each includes real isolated HTTPS trusted-CA/hostname acceptance plus foreign-CA/wrong-hostname/expired-leaf rejection; existing QA compiler/profile substitution and production-injection refusal PASS. QA test helper adapts existing private input preparation/owned finally to tests; successful inner compiler stderr is not forwarded, while production compiler stderr is retained. Existing focused native/auth/profile/artifact/reference/lifecycle92PASS, Windows publication-registration8PASS, client48PASS, app tsc/Vite build PASS, affected tools-core/tests-m-r typechecks PASS. These counts are separate suites, not authenticated acceptance. No new product test/protocol framework. Synthetic fixture inputs are HARNESS_FIXTURE_ONLY; real TLS is REAL_ISOLATED_TLS_FIXTURE. No certificate-store mutation or ERP stack launch.
+
+Storage-format bridge coverage is NOT_APPLICABLE to this delta: selected encryption/Stronghold/serialization packages and features are byte-identical across before/after trees, including chacha.9.1/chacha20poly1305.10.1/iota-crypto.23.2/bincode1.3.3. Existing encrypted cache tests still execute. No claim that unselected chacha.10.2 was compiled into the app; registry bytes were integrity-verified and graph/lock warning corrected. Normal hosted Windows/macOS/Android/iOS compiler outputs will establish only their actual selected packages. Local Linux/mobile native compilation and PostgreSQL are NOT_EXECUTED; fresh existing authorized hosted jobs are pending. No denied local PostgreSQL command bypass.
+
+Independent focused read-only GPT-6 Astra review supports minimality and confirms published same-family Stronghold/GTK constraints. Reporting corrections distinguish literal locked QUIC ancestry from optional metadata edges and application-declared MSRV from an unverified whole-graph minimum. Final draft/validation review and safeguards recorded below before commit. Reviewer performs no tests/scans/builds or artifact admission.
+
+One next recommended milestone, not executed: reconcile the native declared MSRV and validate the supported tauri-utils2.10.1/urlpattern.6 parent correction as a separately authorized bounded compatibility change, targeting the five UNIC records together. Input: owner-approved actual compiler/MSRV contract (role UNASSIGNED) and current precise parent graph; environment: existing isolated compiler/hosted platform CI; proof: all five removed from complete audit, unchanged origin/ACL/callback/TLS behavior, production/QA/platform compilation and existing privacy controls. No zero-warning policy change or admission waiver. Independent GTK/glib and Stronghold migrations/upstream support remain additional blockers, not hidden by this recommendation.
+
+Protected scope: PR28 OPEN/DRAFT; fetched main remains104aacc7, P1 reviewed5a3e219 untouched; the separate local main checkout's advancement was observed read-only, not imported or changed. P1/PR29/Ask Nalanda/K30/PR30/FA1–FA4/v48/migrations/46IDs/25OFFflags unchanged. Operational DB/vault never accessed/copied/hashed/cleaned; prior fingerprint historical only. No connected-QA artifact, controller/trust/DNS/profile setup, authenticated Windows, providers, deployment/install/release or gate waiver. Synthetic QA compiler inputs/keys removed by existing ownership-checked finally; private receipts/index/audit scratch retained ignored/local, no upload. Historical/ambiguous/denied residue preserved. Backend EXTERNAL_RUNTIME_BLOCKED and EPHEMERAL_EXACT_HEAD_CI_ONLY remain; controller/host inputs UNVERIFIED; runtime/authenticated execution NOT_EXECUTED; installation/release NOT_CLEARED. Finance/DENY/OpenSSL/network historical causes independently UNRESOLVED.
+
+Timing: task start17:19:53UTC; mapping/update/current local validation through17:36:51UTC (~17minutes wall-clock, not claimed uninterrupted active engineering); CI/handoff intervals will be reported separately. Account usage not measured. Normal exact-candidate CI remains pending until the one reviewed correction push; no historical retry/duplicate dispatch is planned.
+
+Final scoped read-only GPT-6 Astra review has no material implementation finding or missed compatible same-family correction. Two evidence precisions resolved: actual downloaded chacha20.10.2 crate archive (38197 bytes) rehashes to the trusted registry checksum, and the captured Cargo path hash is labelled the invoked executable/launcher, not every toolchain binary. Source checker279entries/4originalheads/4backupcontracts, both publication scans463paths, Git safety and diff checks PASS; no registration/gate threshold changes. Original39line working prefix still byte-identical. Normal exact-head CI is pending the reviewed source push.
+
+## Native warning remediation — terminal exact-candidate evidence
+
+RECOVERY-NATIVE-WARNING-REMEDIATION-1A — 2026-10-01 UTC
+NATIVE_WARNINGS_PARTIALLY_REMEDIATED_ADMISSION_BLOCKED
+
+Starting source c64e56e508d13a30ab8f57a0d8d8eac7d4da2c30/tree e0322142b577c84a1ace8eb2bfb15cea3b6cbf54; final source 4f60dca86f8fe20b77bfbbd6862b3c16ed043bfe/tree 0db07108217f2c0238cc1e6514da9cd1ff1b028a. One reviewed two-file commit/push: native Cargo.lock and this ledger. Prior39-line rustls addendum preserves original bytes/provenance; original private prefix still matches. PR28 remains OPEN/DRAFT, recovery local/fetched/PR head match. This post-CI observation is unstaged; no cosmetic follow-up push.
+
+Validated scoped correction: chacha20.10.1 -> .10.2 only, with unchanged rand.10.2 dependency reference. Registry archive bytes match independently trusted checksum. No other package/checksum/features/manifests/toolchain change; rustls.23.45 retained. Ten matched selected before/after graph files byte-identical and14 additional candidate variants inspected. Optional QUIC .10 is not selected in the application; active vault chacha.9.1 is unchanged. Storage-format bridge is NOT_APPLICABLE, not a claimed test pass.
+
+Complete current cargo-audit0.22.2 receipt: exit0/signalnull,4891ms,13922stdout/0stderrbytes, DB3461c0d8f85d084552dd999c58d97c7123a9e0fd/time2026-10-01T09:31:41+02:00. Same verified baseline DB comparison removes exactly the yanked row;8unmaintained+1unsound rows unchanged,0new/changed,0vulnerabilities. Unchanged native report verifier actual exit1 NATIVE_RUST_WARNINGS_REQUIRE_REVIEW. Nine warnings, backend EXTERNAL_RUNTIME_BLOCKED and exact artifact/custody/controller/host prerequisites remain independent admission blockers. No receipt minted.
+
+Independent read-only GPT-6 Astra review: no material implementation finding; trust/graph/reporting precisions corrected before commit. Local production Rust10 and QA Rust10 PASS including real isolated HTTPS acceptance/wrong-CA/wrong-hostname/expired-leaf rejection; profile/production-exclusion controls PASS; focused native92, publication8, app48 PASS; affected typechecks/app build/source279/publication463/Git safeguards PASS. Reviewer ran no builds/tests/scans and granted no admission. Contract doubles and HARNESS_FIXTURE_ONLY inputs do not establish authenticated Windows.
+
+Normal exact-head CI observed 2026-10-01T18:24:47.237704+00:00: 8SUCCESS/1FAILURE workflows,0pending/0missing; 20SUCCESS/1FAILURE/7SKIPPED jobs,0pending/0missing/cancelled. Overall CI FAILURE; scoped correction validation and complete report are distinct from that failure.
+
+| Workflow | Terminal result | Jobs SUCCESS / FAILURE / SKIPPED |
+| --- | --- | --- |
+| [Portable Staging Foundation exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621450) | SUCCESS | 1 / 0 / 6 |
+| [Real-User Access Readiness 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621527) | FAILURE | 1 / 1 / 0 |
+| [Student items and prior-year concessions exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621669) | SUCCESS | 2 / 0 / 0 |
+| [PostgreSQL readiness dual-provider gate](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621390) | SUCCESS | 4 / 0 / 0 |
+| [Master Requirements Reconciliation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621484) | SUCCESS | 2 / 0 / 0 |
+| [Real-Data Onboarding Preparation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621727) | SUCCESS | 2 / 0 / 0 |
+| [Biometric Staff Attendance 1A](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621556) | SUCCESS | 2 / 0 / 0 |
+| [Cross-platform apps 1A](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621536) | SUCCESS | 4 / 0 / 1 |
+| [Communication Delivery Foundation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621438) | SUCCESS | 2 / 0 / 0 |
+
+Current failure retained in [Real-User Access job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621527/job/110501916453): tests/native-mfa-linkage.test.ts, isolated-service case "rotation preserves explicit lineage and fresh login never revives revoked history", Test timed out in15000ms. Full suite2996PASS/1FAIL/3inherited qpdf skips. Exact private failed-step log retained; causeUNRESOLVED, no claimed dependency causation or flakiness diagnosis. Combined failed test/typecheck/build step does not prove later commands executed. No retry, timeout/assertion change or in-scope expansion.
+
+Fresh independent current-candidate suites: [master](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621484/job/110501916888)3000PASS/0skips; [PostgreSQL application](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621390/job/110501916879)2967PASS/3inherited qpdf skips plus108concurrency cases; [Linux SQLite](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621390/job/110501916940)2997PASS/3qpdf skips; portable2997PASS/3qpdf skips; finance23PASS per SQLite/PostgreSQL provider; biometric/onboarding2997PASS/3qpdf skips each. Counts are separate overlapping suites, not one acceptance total. Authorized hosted PG supplies fresh provider evidence; denied local script remains NOT_EXECUTED.
+
+Cross-platform normal Windows NSIS, Android emulator/debug and iOS simulator build/check jobs PASS. Actual Windows/macOS Rust10PASS each; selected rustls.23.45 and vault chacha.9.1 appear in compiler logs. No claim unselected .10.2 compiled into the app. Existing no-remote PIN/capture checks are compatibility only; images were not independently inspected in this lockfile milestone. Six mandatory OCI/index/stack/distributed/object-storage/full-acceptance jobs and the optional private native producer remain SKIPPED, never passes. No duplicated dispatch/historical retry/second source push.
+
+The pre-CI UNIC/MSRV parent recommendation above remains a deferred warning-remediation route, not executed. Terminal next recommendation: one bounded native-MFA lineage service-timeout diagnosis using the fresh failed job/command/runner/provider evidence and finite synthetic reproductions; do not assume old finance/DENY causes or the inactive lock delta caused it. This new red source gate should be classified before another dependency correction. Later UNIC group needs an authorized compiler/MSRV contract and supported parent update; GTK/WebKit and Stronghold require coordinated published compatibility/storage support. Owners remain UNASSIGNED where unknown. No next milestone started.
+
+Separate verdicts: lock correction/isolated TLS/service compatibility VALIDATED within named scope; overall candidate CI FAILED; native full-report admission BLOCKED by9records; backend/runtime BLOCKED; controller/host UNVERIFIED; authenticated Windows NOT_EXECUTED; installation/release NOT_CLEARED. Historical finance/DENY/OpenSSL/network causes remain independently UNRESOLVED. PR28 draft/incomplete, main/P1/PR29/K30/PR30/Ask Nalanda/FA1–FA4/v48/migrations/46IDs/25OFFflags untouched by this task; operational DB/vault never accessed/copied/hashed/cleaned.
+
+Owned compiler inputs/keys removed through existing checked finally; private receipt/audit/index/CI scratch remains ignored/local, no public raw report/font/package/key upload. Retained historical/ambiguous/denied residue preserved. No controller/CA-store/profile/DNS change, ERP stack/connected artifact/Windows journey, providers, merge/tag/deploy/install/waiver. No forensic cleanup or cleanup after uncatchable machine loss claimed.
+
+Measured intervals: scoped mapping/implementation/validation/review17:19:53–17:44:27UTC (~24.6min wall interval, not uninterrupted engineering time); normal CI 2026-10-01T17:44:35+00:00–2026-10-01T18:23:31+00:00 (~38.9min including hosted queues/jobs). Handoff continues after terminal observation and is reported separately; account usage not measured. Tracker deltas/readbacks follow without a cosmetic source push.
+
+Tracker terminal readbacks2026-10-01T18:29:12UTC: PR28 comment5937841624 body matches after GitHub newline normalization. Notion append succeeded/read back with existing content prefix/title/icon/cover preserved; Canvs W1 text matches with geometry/container/bindings preserved. Asana notes append and a shorter linked delta each fail bad_request: Rich text value is too large; readback confirms all prior notes/owner/dates/name/incomplete status unchanged. Asana update PENDING; no history truncation or substitute task/comment created.
+
+Final post-CI source279/publication463/Git/diff checks PASS. Current unstaged ledger observation only; no staged files and no second push. Handoff interval began18:24:47UTC and continues separately from scoped work/CI; usage not measured.
+
+## RECOVERY-NATIVE-MFA-SERVICE-STABILITY-1A — 2026-10-02 IST / 2026-10-01 UTC
+
+Pre-CI result: necessary test-only observation implemented and locally validated; historical timeout cause UNRESOLVED. No demonstrated application/service, fixture-timing, isolation or infrastructure cause. This is not a causal repair or authorization bypass finding. Candidate/hosted trace validation remains pending below.
+
+Starting committed source4f60dca86f8fe20b77bfbbd6862b3c16ed043bfe / tree0db07108217f2c0238cc1e6514da9cd1ff1b028a; owned recovery branch/worktree and fetched/PR28 head agree, OPEN/DRAFT. No applicable AGENTS.md found in the owned checkout/ancestors. Original feature ancestry and source contracts retained. Prior-task45-line post-CI addendum was the sole unstaged starting diff; nothing staged. Its complete ledger bytes SHA256 0b55127ca731d7965d9df3c5e2c2211724bfaf1c7c929ae124cfbb24a0b81feb were saved privately before editing and retained byte-for-byte as the prefix of this working ledger. Commit includes that prior evidence with this explicit provenance, not a rewritten historical finding.
+
+Original [Real-User Access run](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621527), [failed job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36901621527/job/110501916453), [prior terminal comment](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5937841624) retained. Command pnpm test && pnpm typecheck && pnpm build; pnpm test delegates vitest run. tests/native-mfa-linkage.test.ts original blob4f14332363e389a3d4998d71b101d865acc9c4a9, case "rotation preserves explicit lineage and fresh login never revives revoked history" at original line203. Report:15000ms test-body timeout, selected case15538ms, file51290ms, full suite2996PASS/1FAIL/3qpdf skips. No assertion accepting unauthorized access was observed; later typecheck/build in the failed chained step were not established.
+
+Runner label windows-2025, actual image windows-2025-vs2026/version20260925.250.1/provisioner20260901.588; Node24.19.0/pnpm11.21.0/Vitest4.1.11, SQLite, CI=true/maxWorkers1. Installed runner code invokes beforeEach separately from the timed test body; beforeAll/beforeEach60s, body15s, default afterAll10s. A test timeout rejects its wrapper/aborts its signal but does not cancel a service promise that does not consume that signal. Official v4 timing documentation and installed4.1.11 implementation were read; no dependency/API upgrade.
+
+Actual boundary preserved: beforeEach actor/TOTP enrollment; real TOTP challenge/verification/web issuance; generated synthetic native protocol plus direct device-approval precondition; real authorization/exchange and signed refresh; exact original web/challenge/factor/time lineage; DIRECT DATABASE REVOCATION FIXTURE; real recovery-code login and distinct replacement native issuance; old revoked history and original lineage remain intact. Not complete password-login, administrator-revocation API, physical passkey, OS callback or authenticated Windows acceptance. The existing special reference-projection setup was not copied to relocate this journey.
+
+Initial45–60min diagnostic matrix declared before execution: selected original case, complete original file, optional concrete neighboring hypothesis; at most3 initial attempts. Reassessment stopped after2 because no supported neighboring hypothesis emerged. All original-source attempts used fresh owned SQLite fixtures, Node24.19.0/Vitest4.1.11/CI=true/worker1; local Windows is not the hosted image/workload. Private process receipts retain start/end/monotonic duration/exit/signal/stdout-stderr hashes before parsing.
+
+| Invocation/evidence boundary | Result | Process / Vitest test aggregation |
+| --- | --- | --- |
+| Original selected,18:59:28–18:59:32UTC | 1PASS/36filtered skips; exit0 | 3375ms /1100ms |
+| Original complete file,19:00:08–19:00:17UTC | 37PASS/0skips; exit0 | 8891ms /6660ms |
+| Optional neighbor | NOT_EXECUTED; no supported hypothesis | No third diagnostic run |
+| Instrumented selected + file,19:19UTC | Both fail BEFORE bodies; exit1 | 2234/2250ms; invalid canonical ownership metadata |
+| Canonical-custody corrected selected + file,19:20UTC | 1PASS/36filtered +37PASS/0skips; exit0 | 3907/10782ms; journeys333.176/334.239ms |
+| Final missing-read-span correction selected + file,19:26UTC | 1PASS/36filtered +37PASS/0skips; exit0 | 3813/11735ms; journeys369.264/376.792ms |
+
+The two instrumentation failures were the task-owned Python launcher's CRLF ownership-file serialization; the existing validator correctly refused it. Scratch launcher corrected to canonical raw LF bytes. Trace validation now precedes disposable fixture allocation. Two roots allocated before the identified import-time refusal have no retained identity receipts and remain ambiguous residue; no broad temp search/deletion. These failures did not execute application bodies or reproduce the historical timeout. One TypeScript implicit-any error in a new harness callback was corrected; no production type change. One private summary helper import-path error was corrected against retained output without rerunning service tests.
+
+Reused same-head successful file aggregates: master16817ms, PostgreSQL6389ms, LinuxSQLite3720ms, biometric36878ms, communication53720ms, onboarding13305ms. Different workloads/providers/images and aggregate scopes remain explicit. They neither reveal the historical selected phase nor establish contention, safety or dependency causation. Final original-versus-instrumented process differences are not a controlled overhead estimate or a performance improvement claim.
+
+Connection: tests/native-mfa-linkage.test.ts -> tests/helpers/native-mfa-trace.ts -> existing tests/helpers/service-trace.ts -> scripts/qa-recovery-service-traces.ts -> explicit workflow metadata uploads. Nested AsyncLocalStorage labels correlate the two authentication sequences and delegated transaction/callback spans without extra queries, SQL/parameters, raw IDs/rows/arguments/results/errors or modified service outcomes. Every awaited operation in the selected journey now has a bounded phase, including final old-history read. transaction_wait covers the WHOLE delegated transaction call; START-to-transaction_action START observes its pre-callback interval, not a proven database lock cause. Callback and completion intervals remain separately derivable, without engine/CPU attribution.
+
+Final standalone: setup782.453ms(migration524.433/seed254.815), actor enrollment within separate hook, journey369.264ms(TOTP52.386/initial-native116.474/refresh24.758/recovery35.396/replacement108.003), cleanup-wait0.116/cleanup7.311ms. Final full file: setup833.780ms(migration589.096/seed241.329), selected actor76.032ms recorded exactly in private receipt, journey376.792ms(TOTP35.779/initial-native107.489/refresh24.672/recovery35.702/replacement138.256), cleanup-wait0.101/cleanup13.543ms. Recorder emission/validation/write measurement5.656ms(154events) /12.415ms(370events); total wrapper/AsyncLocalStorage scheduling overhead is not isolated by that measurement.
+
+Timeout aftermath: only this continuous journey is tracked. Its captured subject prevents a later beforeEach actor substitution. afterAll event-based drain is bounded at5s WITHIN unchanged default10s hook, not a sleep, action retry or new test budget. If still pending, cleanup refuses before schema drop/disconnect/root removal, records FAIL/unfinished work and retains residue; environment is not unstubbed beneath pending work. It does not protect all unrelated fixture promises or guarantee execution after worker/machine hard termination. Successful runs validate root identity and actual absence after removal; no claimed Windows profile/trust/process cleanup.
+
+HARNESS_ONLY24PASS across existing recorder plus five new MFA recorder controls. Deliberate child failure, caught test timeout with later settlement and unresolved pending work each retain real child exit1/signalnull while finalizer succeeds; pending work has no destructive-cleanup START, completed work precedes cleanup. These are harmless synthetic promise/adapter probes, not natural service failures. Privacy/size/canonical-byte/hardlink/foreign-owner/link/manifest rejection and original result/refusal/transaction arguments are retained. Shared finalizer now validates finance/native/mfa projections BEFORE public emission and lists exactly finance.json/native.json/mfa.json/manifest.json; raw scratch/logs/databases/keys never uploaded. No complete trace promised after uncatchable termination.
+
+Five real hosted consumers wired: Master Windows, Biometric Windows, PostgreSQL workflow LinuxSQLite, PostgreSQL full application, Real-User Access Windows. Existing four prepare/finalize paths gain only explicit mfa.json output; RUA gains the same existing prepare/always-finalize mechanism immediately around its unchanged pnpm test && pnpm typecheck && pnpm build step. Setup/order/test set/provider/workers/timeouts/security gates remain. Successful finalization cannot turn a failed test step green; schema/retention failures remain job failures. Up to6000events/2MB per private input, canonical allowlisted metadata and run/source/attempt ownership. Existing finance/DENY/OpenSSL recorders are not rebuilt.
+
+Finite local candidate gates: final standalone1PASS + full37PASS; directly relevant native-auth/governance/server-service/readiness/database-retry44PASS; recorder24PASS(original candidate and final type correction checked). Affected tests-m-r/tests-s/tools-core typechecks PASS after the documented initial callback-type correction. Four edited workflows parse; source checker279paths/4heads/4backup contracts PASS, publication465paths/zero detected private binaries/secrets/real contacts PASS, Git safety/diff checks PASS. Counts are separate overlapping evidence classes, not one acceptance total. Local PostgreSQL NOT_EXECUTED; previous PowerShell refusal respected, fresh authorized hosted provider application coverage pending. Full production build/typechecks and normal native no-remote checks are left to the normal candidate CI, not a prohibited ERP launch.
+
+One independent READ-ONLY GPT-6 Astra reviewer found no material scoped source defect; verified continuous original assertions, delegated transaction inputs/results/error identity, no extra reads, strict metadata/privacy, failure preservation, all five consumers and independently recomputed all five normalized registration hashes. Reviewer ran no tests/scans/builds. Limits explicitly retained: whole-call transaction span and only-selected-journey drain; no historical root cause or hard-termination guarantee. Final evidence wording is reviewed before commit.
+
+Exact milestone files: .github/workflows/{biometric-staff-attendance,master-requirements-reconciliation,postgres-readiness,real-user-access-readiness}.yml; config/recovery-integration-source-delta.json(only5reviewed hashes); scripts/qa-recovery-service-traces.ts; tests/fixtures/service-trace-child.fixture.ts; tests/helpers/{service-trace,native-mfa-trace}.ts; tests/{native-mfa-linkage,native-mfa-trace,service-trace}.test.ts; this ledger. No application source, dependency/lock, schema/migration, timeout, concurrency or original assertion change. Prior ledger prefix preserved, explicit staging only, one reviewed normal source push planned; no historical retries/duplicate dispatch.
+
+Protected scope: rustls0.23.45/chacha20.10.2 and9Rust warnings retained; prior complete audit/verifier refusal is REUSED unchanged-input evidence, not a new scan or artifact clearance. Backend EXTERNAL_RUNTIME_BLOCKED, controller/host UNVERIFIED, authenticated Windows NOT_EXECUTED, installation/release NOT_CLEARED. Six mandatory runtime jobs plus optional private producer remain separate gated skips. P1/PR29/Ask Nalanda/K30/PR30/main/FA1–FA4/v48/migrations/46IDs/25OFFflags untouched. Operational DB/vault never accessed/copied/hashed/cleaned; historical fingerprint only. Private diagnostics retained ignored; no artifact production/public font/package/key/private report, controller/trust/DNS/profile change, provider activation, merge/tag/deployment/install or waiver.
+
+Historical MFA/finance/DENY/OpenSSL/network causes remain independently unresolved. After one normal candidate cycle, append exact workflow/job/provider/trace receipts and tracker readbacks UNSTAGED; no cosmetic second push. No monitoring or next milestone started. Measured task start18:56:03UTC; scoped work/CI/handoff intervals are recorded separately at terminal observation, not described as uninterrupted engineering. Account usage not measured.
+
+### Terminal candidate observation — 2026-10-01 UTC / 2026-10-02 IST
+
+NATIVE_MFA_TRACE_VALIDATED_CAUSE_UNRESOLVED. Necessary observation is validated on the actual previously failing hosted configuration; no natural application failure captured. No demonstrated causal timeout correction. Original failed run/job and historical finance/DENY/OpenSSL/network causes remain independently unresolved. Later passing samples do not recover their missing transaction values.
+
+Final source29db9c61c82f43ecf263cf72c03896f18af92695 / treec211a43c663ecb31332dfa9c09a524665a1393d6; one reviewed13-file commit/push. PR28 OPEN/DRAFT, remote owned branch matches, no staged files. The initial45-line evidence and47-line pre-CI task record are committed with their stated provenance. This terminal append is intentionally UNSTAGED; no cosmetic second push. Exact file manifest above is unchanged.
+
+Normal exact-head CI:9SUCCESS/0FAIL/0SKIPPED/0PENDING/0MISSING workflows;21SUCCESS/0FAIL/7SKIPPED/0PENDING/0MISSING jobs,28total. All run attempts1 and head29db9c6 independently confirmed by gh run list plus current connector job readback. No dispatch, historical retry, test retry or extra diagnostic cycle.
+
+| Workflow | Exact candidate run | Result |
+| --- | --- | --- |
+| Portable Staging Foundation exact-head | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225564) | SUCCESS |
+| Student items and prior-year concessions exact-head | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225427) | SUCCESS |
+| Cross-platform apps 1A | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225353) | SUCCESS |
+| Communication Delivery Foundation 1A exact-head | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225465) | SUCCESS |
+| Real-Data Onboarding Preparation 1A exact-head | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225364) | SUCCESS |
+| PostgreSQL readiness dual-provider gate | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225464) | SUCCESS |
+| Biometric Staff Attendance 1A | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225685) | SUCCESS |
+| Master Requirements Reconciliation 1A exact-head | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225655) | SUCCESS |
+| Real-User Access Readiness 1A exact-head | [attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225382) | SUCCESS |
+
+Six mandatory portable jobs remain SKIPPED: OCI image/supply-chain, release index, portable stack, distributed runtime, object-storage/recovery and full synthetic acceptance. Optional private Windows QA producer separately SKIPPED. Successful Windows compiler/Android emulator/iPhone+iPad simulator/shared TypeScript jobs are ordinary no-remote build/PIN/platform coverage, not authenticated ERP/native or physical-device acceptance. Dependency/publication/typecheck/production-build/migration/backup gates passed where executed; none transfer admission to missing artifacts.
+
+Fresh full application coverage, kept separate: Real-User Access3002PASS/3inheritedqpdf skips; Master3005PASS/0skips; Biometric3002PASS/3qpdf; PostgreSQL application2972PASS/3qpdf; LinuxSQLite3002PASS/3qpdf. Communication, onboarding and portable each3002PASS/3qpdf. Relevant native-MFA file37PASS in every listed source/service run. Full suite counts are overlapping independent jobs, not one combined acceptance count. Local PostgreSQL NOT_EXECUTED; authorized hosted PostgreSQL is fresh candidate evidence, not a workaround for the prior PowerShell policy refusal.
+
+All five hosted public metadata bundles were read back through approved GitHub artifact APIs, archive digest checked against API metadata, and exact four-file inventory, per-file digest/size, canonical schemas, source/run/attempt/job/provider, event/link graph and declared unfinished spans validated. Each has371MFA events,37PASS, selected journey END, cleanup-wait END, cleanup END and0unfinished. No raw private traces/database/font/package/key export.
+
+| Consumer / exact job | Setup ms | Selected actor hook ms | Continuous journey ms | Drain / cleanup ms | Recorder emission ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| [real-user](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225382/job/110547441814) | 1445.277 | 365.491 | 1260.272 | 0.123 / 11.791 | 13.861 |
+| [master](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225655/job/110547443026) | 1387.883 | 271.168 | 1348.920 | 0.078 / 12.988 | 11.895 |
+| [biometric](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225685/job/110547443086) | 1160.823 | 267.314 | 833.396 | 0.093 / 12.394 | 12.425 |
+| [sqlite](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225464/job/110547443626) | 785.796 | 15.439 | 172.532 | 0.086 / 9.433 | 8.036 |
+| [pg](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36915225464/job/110547442609) | 2870.554 | 13.089 | 201.385 | 0.084 / 650.464 | 8.590 |
+
+Windows consumers retained original image20260925.250.1/Node24.19.0/pnpm11.21.0/Vitest4.1.11/SQLite/worker1. Linux provider consumers used image20260927.320.1/Node22.23.3; their different timing is not attributed to an unobserved lock/scheduler cause. The15s body,60s setup hooks,10s cleanup hook, test set/order, cryptographic cost, factor/session policy and assertions remain unchanged. File aggregates are not body durations: RUA33428ms, Master49842ms, Biometric24193ms, PG6796ms, LinuxSQLite3721ms; all37bodies passed. RUA observed journey phases ms: TOTP131.447/initial-native414.556/refresh73.386/recovery200.734/replacement370.002. Original failure had no equivalent phase record, so no valid causal before/after speedup is claimed.
+
+Recorder emission measurement excludes total adapter/AsyncLocalStorage scheduling overhead. transaction_wait is the complete transaction call, not solely connection/lock wait. Existing real services/crypto are delegated; revocation remains a direct DB fixture, device approval is fixture preparation, no complete password-login/admin-revocation API/Windows callback claim. HARNESS_ONLY child failure/timeout/pending-work exit1 retention is distinct from37real service cases and no natural failure. Only this selected journey is drained; hard termination and unrelated promises remain explicit limits.
+
+| Safe artifact readback | ZIP bytes | ZIP SHA256 |
+| --- | ---: | --- |
+| [real-user metadata](https://api.github.com/repos/vsairohith67/nalanda-school-erp/actions/artifacts/11190717908) | 18124 | c859b9d17f22eed968ac0d78451c624ca716d6d39848c22574fb3b73d99fa016 |
+| [master metadata](https://api.github.com/repos/vsairohith67/nalanda-school-erp/actions/artifacts/11190667803) | 18175 | f9c17e63e8be229583eea68eff2c188a168f007e777cc728bd808313e4fde4af |
+| [biometric metadata](https://api.github.com/repos/vsairohith67/nalanda-school-erp/actions/artifacts/11191152219) | 17972 | 580f8d62a24bb7f383f316a30a9466146859f3e8d63be20b09e05b11df01c5bf |
+| [sqlite metadata](https://api.github.com/repos/vsairohith67/nalanda-school-erp/actions/artifacts/11191240552) | 17676 | 017141a207fc4ee4e8900d3b2134a65660a89188039e2681aaf9e0d0b2077a23 |
+| [pg metadata](https://api.github.com/repos/vsairohith67/nalanda-school-erp/actions/artifacts/11189673287) | 17888 | bd2925c8c3550f8d065d4a0b6a6d40306d37a42e9e7986e72d6b68809add83c4 |
+
+Readback limitations preserved: intermittent GitHub CLI API connection failures and one connector-generated artifact URL403 were transport/readback errors, not test or policy conclusions; the authorized exact metadata was subsequently acquired through the official artifact API. Private readback summarizer initially assumed WindowsNode forLinux and misordered a schema key; both corrected against the independent workflow/schema using retained bytes, without rerunning tests or changing public schemas. Raw diagnostics remain private.
+
+Independent READ-ONLY GPT-6 Astra source review found no material scoped defect; final direct history-read observation and evidence wording also reviewed. Final source/publication/Git/diff safeguards follow this append; reviewer did not execute tests. Successful task-owned fixture removal is observed locally/hosted; no in-flight selected journey remains in these completed receipts. Two earlier allocated roots with no identity receipt remain ambiguous and untouched. Private retained scratch/evidence and historical/denied residue are preserved; no broad temp cleanup or hard-termination cleanup promise.
+
+Separate verdicts: isolated MFA/lineage services PASS within their existing boundary; trace capability VALIDATED; historical timeout CAUSE_UNRESOLVED; finance/DENY/OpenSSL history independentlyUNRESOLVED. Native full-report security BLOCKED by9retained warnings; rustls0.23.45/chacha20.10.2 unchanged. Backend/runtime EXTERNAL_RUNTIME_BLOCKED; controller/host readiness UNVERIFIED; authenticated Windows NOT_EXECUTED; installation/release NOT_CLEARED. No operational DB/vault access/copy/hash/cleanup. Main/P1/PR29/AskNalanda/K30/PR30/FA1–FA4/v48/migrations/46IDs/25OFFflags untouched.
+
+Measured intervals: scoped work/review18:56:03–19:33:57UTC (~37.9min wall interval, not uninterrupted engineering); normal hosted CI19:34:01–20:09:09UTC (~35.1min including queues/jobs); terminal verification/handoff began20:10:29UTC and is reported separately. Account usage not measured. One next recommendation: review the supported UNIC/MSRV parent correction in its independently owned milestone at its terminal checkpoint before any recovery integration; do not duplicate that companion work or execute Windows. Remaining GTK/Stronghold groups need coordinated upstream/framework/storage support. No next milestone started here.
+
+Tracker result deltas/readbacks are appended below after successful writes; recovery remains incomplete.
+
+Tracker readbacks2026-10-01T20:19:20UTC: PR28 terminal comment actual content matches after GitHub newline normalization. Asana one short linked result comment matches; all oversized notes, prior separate handoff comment, owner/dates/name and incomplete state retained. Notion terminal paragraph content matches after native block blank-line normalization, with prior content prefix/title/icon/cover preserved. Canvs W1 text matches exactly; prior history prefix and geometry/container/bindings/style unchanged. No duplicate hub/task/board or P1 tracker edit.
+
+Final source279/publication465/Git/diff safeguards PASS after terminal appendix. Source/lock/schema/flags remain unchanged from the reviewed candidate; final tracker receipt append is validated separately before handoff. This entire post-CI observation remains unstaged; no second push. Observed handoff interval20:10:29UTC to final readback is separate from work and CI, not uninterrupted engineering. Account usage not measured.
+
+## RECOVERY-UNIC-MSRV-INTEGRATION-1A — primary integration, 2026-10-02
+
+Pre-CI checkpoint: integrated source and local Windows minimum/pinned validation are complete; hosted minimum/platform and exact-candidate outcomes remain PENDING. This is a DRAFT candidate support change, not native/backend admission or installation clearance.
+
+### Immutable ownership, provenance and preserved evidence
+
+Primary starting source `29db9c61c82f43ecf263cf72c03896f18af92695`, tree `c211a43c663ecb31332dfa9c09a524665a1393d6`; origin matched after fetch; branch release/recovery-integration-1a, PR28 OPEN/DRAFT. Exactly60 pre-existing unstaged ledger additions, index empty. Their complete starting file bytes remain privately retained (SHA256 `af93bc6df6c6966f6c93aceb92f587b64194f779c291baf4303638a1b0e7d827`), patch `f1075a4aa139cb6d5e3d24925e73df39158633255293f973477ccd6b0d5dedab`. Local checkpoint `6e021584cddf9358cca2b1062a187c90c3a3c240` preserves only that prior MFA terminal evidence with explicit provenance; it was not pushed alone. Byte equality against the privately captured complete file was verified immediately before this append.
+
+Common source `4f60dca86f8fe20b77bfbbd6862b3c16ed043bfe`, tree `0db07108217f2c0238cc1e6514da9cd1ff1b028a`. Companion final `a99518fc05f735f5800246566adde4c4b46ff1b8`, tree `ba21cdc97c2c544341cf206353590d81f5224ac5`, on local recovery/overnight-unic-msrv-1a; clean and idle, read-only throughout. These local objects were inspected, not assumed remotely fetchable. One primary writer; one focused read-only reviewer; no overnight restart.
+
+| Original local commit | Explicit primary result | Scope |
+| --- | --- | --- |
+| 520d86d238c3e8d16379d6f4784f1d20a921508c | df3187a9578cfb9735578443ec14431cde83f2bf | cherry-pick -x, exact three native source files |
+| deb1d23f568fa5bb812ddce07a411908cdf9c752 | 287de182535f5e4df60fabe07c8afbc6c6051c1e | cherry-pick -x, six sanitized reports |
+| a99518fc05f735f5800246566adde4c4b46ff1b8 | 29121b0a3ad099075f732998c4d5fdf4da234d48 | cherry-pick -x, seventh tracker-readback report |
+
+Seven imported [companion reports](overnight-parallel-1a/HANDOFF.md) retain their original LOCAL/UNMERGED/standalone evidence labels and feature dispositions. They do not substitute for combined validation. Source overlap review included actual origin/ACL/deep-link/build/profile consumers and primary MFA trace/publication changes since the common base. No production application code is changed by the native lib.rs delta: three regression tests only.
+
+### Supported dependency and minimum contract
+
+Exact full package/checksum/edge inventory remains in [DEPENDENCY_CANDIDATE.md](overnight-parallel-1a/DEPENDENCY_CANDIDATE.md); imported lock and three source Git blobs match the source commit. tauri-utils2.9.3→2.10.1 and urlpattern0.3.0→0.6.0 remove all five UNIC0.9 records. Immediate Tauri/build/plugin parents remain unchanged and admit the precise supported version. Required infer/cfb, ctor, compression/DOM/JSON additions and incidental Cargo resolver Windows/getrandom/toml edge rebindings remain explicit in that inventory; no fresh unrestricted update, manual checksum, framework/GTK/Stronghold/storage migration or unused direct dependency.
+
+The application declaration changes Rust1.77.2→1.90 because the actual tauri-utils2.10.1 published manifest uses edition2024 and rust-version1.90. The application edition remains2021. [Cargo minimum semantics](https://doc.rust-lang.org/cargo/reference/rust-version.html), [rustup selection](https://rust-lang.github.io/rustup/overrides.html) and [environment isolation](https://rust-lang.github.io/rustup/environment-variables.html) were read. Existing ADR/build/artifact policy pins1.97.1; those pins remain unchanged. No separately tested1.77.2 whole-graph support promise was found; any external production support commitment remains UNKNOWN/UNASSIGNED. This user-authorized DRAFT1.90 candidate is conditional on the platform outcomes below, not owner approval of a production support withdrawal. Compiler minimum is not device-OS minimum.
+
+Exact official Rust1.90.0 was installed with normal rustup integrity checks in this task's private Rust/Cargo home, never a global default/override or producer-pin bypass. rustc1.90.0 (1159e78c4,2025-09-14), Cargo1.90.0 (840b83a10,2025-07-30), LLVM20.1.8. Existing pinned rustc1.97.1 (8bab26f4f,2026-07-14), Cargo1.97.1 (c980f4866,2026-06-30). Separate target outputs; no connected-QA artifact production. Raw checkout lock SHA256 `b5c472800910c475e5d44154317c9abfde07fe943b259e3138505e83d91dabdb` (CRLF), immutable Git-blob LF hash `42e83ce078779d6d97bef9b790a853960365493a28563958b9445af278e2943b`; normalization equality independently checked. Every recorded locked command preserves the raw hash.
+
+### Finite minimum/platform matrix and concrete consumers
+
+New `scripts/portable/native-minimum-compile.mjs` verifies exact compiler/declaration/target, runs the actual application's locked graph and records source, target, command, compiler, lock before/after and process result. Windows runs `cargo +1.90.0 test --locked --target x86_64-pc-windows-msvc --lib`; other targets use `check --locked --target TARGET --lib`, not unit execution. Android consumes the disposable runner's installed NDK with explicit API28 compiler/linker paths. Existing QA compiler helper has separate explicit --minimum-test/--integration-test modes, real signed public fixtures and unchanged substituted-input/production-exclusion refusals. QA remains Windows/x64-only, enforced by existing build.rs. Existing normal Windows/Android/iOS builds explicitly retain1.97.1 and forward supported --locked runner arguments.
+
+| Target / architecture | Feature/profile | Rust1.90 local | Focused normal-CI lane | Existing1.97.1 coverage |
+| --- | --- | --- | --- | --- |
+| Windows x86_64-pc-windows-msvc | production + supported synthetic-qa | 13+13 actual unit PASS; concrete entrypoint13PASS | minimum-windows, production+QA tests | local13+13PASS; normal Windows package/PIN gate pending |
+| Linux x86_64 / aarch64-unknown-linux-gnu | production | NOT_EXECUTED locally | two native GTK/WebKit check jobs | no fabricated Linux native result |
+| macOS x86_64 / aarch64-apple-darwin | production | NOT_EXECUTED locally | two native macOS check jobs | normal iOS host Rust test pending |
+| Android aarch64 / armv7 / i686 / x86_64 | production | NOT_EXECUTED locally | four NDK target check jobs | normal Android build/emulator pending |
+| iOS aarch64 device / aarch64 simulator / x86_64 simulator | production | NOT_EXECUTED locally | three Xcode target check jobs | normal iOS build/simulator pending |
+
+Twelve production target jobs plus supported Windows QA are represented; standalone24 metadata variants are resolution evidence, not24 compilations. Hosted lanes use explicit official1.90.0, task/disposable homes, separate output, exact PR head and no artifact upload or cross-run package cache. No unsupported QA target, ignored rust-version, raised minimum or changed OS floor. Local iOS CLI is correctly unavailable on Windows; exact tagged Tauri CLI2.11.4 source was independently checked for mobile runner-argument support.
+
+### Actual combined local evidence and limitations
+
+| Attempt/receipt | Outcome | Observed elapsed |
+| --- | --- | --- |
+| minimum-windows-production | actual application Windows1.90 graph +13 unit PASS,0ignored | 488.668s cold compile; unit body9.72s |
+| minimum-windows-qa | actual Windows1.90 QA13PASS + two unchanged compiler refusals | 136.294s; unit11.53s |
+| pinned-windows-production | actual Windows1.97.1 production13PASS | 406.508s cold separate output; unit13.37s |
+| pinned-windows-qa | actual Windows1.97.1 QA13PASS + two compile refusals | 116.189s; unit10.13s |
+| minimum-entrypoint | new concrete consumer invokes correct1.90 graph,13PASS | 16.234s warm; not a new cold-platform sample |
+| harness-negative | four invalid/foreign/extra target/unknown-mode refusals before compiler/fixture start; owned temp unchanged | 0.714s, HARNESS_ONLY |
+| combined-native-regressions | ten existing files97PASS,0skips; includes full MFA service/lineage, reference, profile, admission and publication wiring | 43.018s / Vitest42.12s |
+| app-unit | six files48PASS,0skips | 11.235s / Vitest1.93s |
+| tools-core typecheck / app typecheck / web compile | PASS / PASS / PASS | 90.817s /8.084s /15.265s |
+| production + QA full locked metadata |631packages each; only application synthetic-qa feature differs; no UNIC copy |26.830s /1.293s |
+
+The three new controls exercise the real upstream ACL wrapper for exact origin/encoded separators, Unicode named segments with foreign-origin denial, and actual local-only capability JSON. Existing strict callback/profile, real isolated TLS trusted-CA success, foreign-CA/wrong-hostname/expired-leaf refusal and redirect refusal all executed in both Rust toolchains/profiles. JS transport/platform/IPC doubles remain contract evidence; fresh SQLite MFA services retain their original direct database revocation fixture and device-approval precondition boundary. No administrator-revocation UI or genuine OS callback/Windows journey is inferred. Stronghold/crypto/serialization versions and storage features remain unchanged; a new format-migration campaign is NOT_APPLICABLE.
+
+Private stdout/stderr and process receipts were captured before parsing under ignored task-owned scratch. Early minimum-production, minimum-QA and pinned-production capture-helper receipts record completion source only; exact native blobs remained unchanged throughout, including the report-only commits during the first compilation. This limitation is retained rather than inventing start SHAs. Later capture-helper receipts (including pinned-QA and the concrete minimum entrypoint) record both start/end source; audit receipts separately identify their immutable source/lock subjects. Tools/typechecks/app tests do not certify authentic Windows/backend execution. Fresh PostgreSQL is pending normal authorized hosted provider coverage; the prior local PowerShell refusal was not bypassed.
+
+### Complete audit comparison and unchanged security refusal
+
+Cargo-audit0.22.2 binary SHA256 `fc6e9d818d73ba07ecf28650793d46b74cf90aeb70c17405563c16454a4ba62d`; every receipt records command/tool/lock/DB before parsing, real exit/signal/error, start/end/monotonic duration and raw byte sizes/hashes. No ignores, target filtering, suppressed warnings or policy edits. Baseline Git-lock hash `a0d6b942f835b99cd82018d25ef52f5a5f2f09b52d9c49292c99a06ac967cf37`. Full report scope covers631 candidate packages, not only compiled Windows libraries.
+
+| Receipt | DB revision | UTC interval / duration | Exit/signal; stdout/stderr | Finding |
+| --- | --- | --- | --- | --- |
+| initial baseline-frozen |3461c0d8f85d084552dd999c58d97c7123a9e0fd |04:14:43.705–04:14:44.932 /1.227s |0/null;13953/860bytes | INCOMPLETE yanked scope:8 removed-package sparse-index entries missing; retained |
+| corrected baseline-frozen-complete |same3461,2026-10-01T09:31:41+02:00 |04:33:00.747–04:33:01.738 /0.990s |0/null;13861/0bytes | COMPLETE zero vulnerabilities,nine warnings |
+| candidate-frozen |same3461 |04:14:45.065–04:14:46.264 /1.200s |0/null;8771/0bytes | COMPLETE zero vulnerabilities,four warnings |
+| candidate-current mandated scan |3461→6de4455103aced2cba86e3b86e5c090b22827cf1,2026-10-01T22:25:27+02:00 |04:14:46.404–04:14:53.610 /7.205s |0/null;8766/0bytes | COMPLETE zero vulnerabilities,four warnings; DB1278→1279 records, warning set unchanged |
+| unchanged pure verifyNativeSecurity |current report + genuine root/app pnpm reports |04:33:42.738–04:33:43.175 /0.436s |1/null | REFUSED: NATIVE_RUST_WARNINGS_REQUIRE_REVIEW |
+
+The identified comparison-capture defect was corrected only by acquiring the eight exact registry metadata entries in the task-owned Cargo cache and recapturing baseline once at the same verified DB. An initial outside-workspace cargo-info --locked syntax error is retained; its corrected metadata-only invocation changes no application lock/manifest. Candidate/current scans were not repeated for a favorable result. Current raw audit stdout SHA256 `1ca972201a4985848bf2e78799294b194eb38d2eaf8536a2287e1db43d17ae15`; corrected baseline `3464a0115f16d3bf9c0b4fecade3bd923b9669f8d4ec7135e192d04088f46056`; candidate frozen `982dc8217ebea5ab4f4b3b4cb72d5fac06839f7cc52695da444cc621b871c6f2`. Stderr empty for complete reports. Raw reports remain private, not repository artifacts.
+
+Removed: unic-char-property/RUSTSEC-2025-0081, unic-char-range/0075, unic-common/0080, unic-ucd-ident/0100, unic-ucd-version/0098, all0.9.0/unmaintained. No new/changed remaining finding at the frozen or current DB. Remaining: bincode1.3.3/unmaintained/RUSTSEC-2025-0141; paste1.0.15/unmaintained/RUSTSEC-2024-0436; proc-macro-error1.0.4/unmaintained/RUSTSEC-2024-0370; glib0.18.5/unsound/RUSTSEC-2024-0429. rustls0.23.45 and chacha20.10.2 remain. Root/app pnpm production audits each exit0/zero vulnerabilities; these do not replace native security. No admission receipt, artifact sealing, held producer or runtime job was executed.
+
+### Review, safeguards and exact changed manifest
+
+One focused independent read-only reviewer was requested with the available GPT-6 Astra configuration; underlying runtime identity was not independently attested and no running parent model switch is claimed. Reviewer traced actual source-to-ACL/build/profile/MFA-publication consumers, all seven report imports, target/feature contract, exact tagged mobile CLI runner arguments, minimal lock delta and trust/privacy/cleanup. Two material pre-push findings were fixed: conflicting minimum/integration QA modes, and missing helper-only workflow path triggers. Independently rehashed exact three source-registration entries; no remaining material source finding at re-review. Reviewer performed no test/build/audit/writes; final evidence review and hosted results will be recorded below.
+
+Source checker PASS280entries/4original heads/4backup contracts, only exact three generated entry changes. Both existing publication scanners PASS473paths, no candidate secrets/binaries/real contacts; Git safety PASS; new Node syntax and git diff --check PASS. No local YAML parser was installed; source structure and consumers independently reviewed, with actual GitHub workflow parsing still pending. Existing test sets, crypto cost,15/30s action deadlines, concurrency rules, capture thresholds and all five MFA trace consumer finalizers/uploads remain unchanged.
+
+Exact milestone paths relative to primary, including prior60-line evidence checkpoint:
+- .github/workflows/cross-platform-apps.yml
+- apps/nalanda-cross-platform/src-tauri/Cargo.toml
+- apps/nalanda-cross-platform/src-tauri/Cargo.lock
+- apps/nalanda-cross-platform/src-tauri/src/lib.rs
+- scripts/portable/native-minimum-compile.mjs
+- scripts/portable/qa-native-profile-compile.ts
+- config/recovery-integration-source-delta.json
+- docs/evidence/RELEASE_RECOVERY_1C.md
+- docs/evidence/overnight-parallel-1a/OWNERSHIP_VALIDATION.md
+- docs/evidence/overnight-parallel-1a/DEPENDENCY_CANDIDATE.md
+- docs/evidence/overnight-parallel-1a/VALIDATION.md
+- docs/evidence/overnight-parallel-1a/FEATURE_COMPLETION.md
+- docs/evidence/overnight-parallel-1a/MORNING_UNBLOCK.md
+- docs/evidence/overnight-parallel-1a/HANDOFF.md
+- docs/evidence/overnight-parallel-1a/TRACKER_READBACK.md
+
+Catchable QA key/certificate fixture roots and service databases were removed by their existing owned finally/afterAll paths after completion. Observed task temp retains only its own tsx cache; compiler outputs, private audit/receipt material and official toolchain are retained privately, not published. No machine-wide cleanup, companion/residue cleanup or forensic-erasure claim. The two unowned MFA roots remain untouched.
+
+Normal combined-candidate CI will follow one consolidated source push only; starting29db9c6 successes are reused historical evidence. Twelve minimum-target jobs augment the actual workflow matrix; no fixed old workflow/job total is imposed. Six mandatory runtime gates plus optional private native producer remain separate held skips. Final candidate SHA/tree, all terminal workflow/job/provider/platform/trace outcomes and tracker readbacks will be appended unstaged after observation. No duplicate dispatch, historical retry, finance/DENY/OpenSSL recurrence campaign, or cosmetic second push.
+
+EXTERNAL_RUNTIME_BLOCKED/EPHEMERAL_EXACT_HEAD_CI_ONLY remain. Native security is still BLOCKED by four warnings; backend exact security/provenance and controller/host prerequisites remain independently blocked/unverified. Authenticated Windows and installation NOT_EXECUTED. Main/P1/PR29/K30/PR30/FA1–FA4/v48/migrations/46IDs/25OFFflags and Georgia Bold rendering unchanged; operational DB/vault not opened/copied/hashed/cleaned. No next package started.
+
+### Identified first-candidate workflow correction — 2026-10-02 05:04 UTC
+
+First consolidated push source `b66b2eee9a6088b6f33c386d9e22cf6de46ef788`, tree `ae5dac2248a394d7ea4fac339e6ff7c4483684c8`. Normal [cross-platform run36966723856](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36966723856) failed at workflow validation before any jobs; check-suite100131125717 has zero check-runs. GitHub API/CLI exposes only a workflow-file issue, not its detailed annotation; web read unavailable. Eight other normal workflows began independently. Their results/cancellations remain preserved separately.
+
+Direct source and the [official context table](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability) establish an invalid location: jobs.<id>.env cannot reference runner.temp. All15 added home fields across five minimum job families used it. The independent reviewer missed this in initial static review and explicitly acknowledged that limitation. Targeted correction uses the allowed github.workspace context with ignored task-owned tmp directories; production1.97.1, minimum1.90.0, targets, tests/deadlines/crypto/concurrency, admission and private-output gates are unchanged. One focused source-contract regression requires the five job environments, three isolated homes and exact minimum and rejects four named unavailable job-env context roots. This is a targeted textual regression, not a complete YAML/expression validator. Corrected file18PASS/0skips; prior17PASS sample did not exercise this missing contract. Actual GitHub parsing remains a hosted validation, not inferred from this regression.
+
+The correction will have one reviewed findings-based source push, not a duplicate dispatch or unchanged retry. The new test path is additional exact scope; four source-registration entries change in total. First-run failure remains visible; no historical failure deletion or unrelated repair. Focused corrected workflow regression18PASS/0skips (1.600s), affected tests-a-f typecheckPASS (40.120s), source registration280entriesPASS; actual read-only review confirmed corrected context placement and the stated regression scope. Subsequent normal current-head CI and final readbacks will be appended unstaged.
+
+### UNIC integration terminal evidence — 2026-10-02 UTC, final source f6792a3
+
+**UNIC_MSRV_INTEGRATION_VALIDATED_ADMISSION_BLOCKED.** This is PRIMARY integration/validation, not artifact admission, owner approval of a production support policy, authenticated Windows acceptance or installation. The final observations below are intentionally UNSTAGED; no cosmetic evidence-only push follows.
+
+Final committed primary `f6792a342415e0d6a989fcf673d2309626f4ce64`, tree `8e2ff8e7b5b892c9ead77000a487abb1a5760b6d`. Initial primary `29db9c61c82f43ecf263cf72c03896f18af92695`, tree `c211a43c663ecb31332dfa9c09a524665a1393d6`. Common `4f60dca86f8fe20b77bfbbd6862b3c16ed043bfe`, tree `0db07108217f2c0238cc1e6514da9cd1ff1b028a`. Companion final `a99518fc05f735f5800246566adde4c4b46ff1b8`, tree `ba21cdc97c2c544341cf206353590d81f5224ac5`, remains clean/local on its original branch; the companion worktree/index and its retained receipts/build outputs were not changed.
+
+Source mapping: local evidence checkpoint `6e02158` preserves the initial60-line MFA addendum; `520d86d -> df3187a` (cherry-pick -x, exact three source blobs); `deb1d23 -> 287de18` and `a99518f -> 29121b0` (seven exact sanitized report blobs); focused validation/wiring `b66b2ee`; demonstrated workflow-context correction `f6792a3`. The entire original ledger bytes, including its60 unstaged lines, remain an exact prefix, SHA-256 `af93bc6df6c6966f6c93aceb92f587b64194f779c291baf4303638a1b0e7d827`; prior diff SHA-256 `f1075a4aa139cb6d5e3d24925e73df39158633255293f973477ccd6b0d5dedab`. Original standalone reports are historical local/unmerged evidence; the new combined evidence is recorded separately here.
+
+Exact changed-file manifest (16), relative to the primary worktree:
+
+- .github/workflows/cross-platform-apps.yml
+- apps/nalanda-cross-platform/src-tauri/Cargo.toml
+- apps/nalanda-cross-platform/src-tauri/Cargo.lock
+- apps/nalanda-cross-platform/src-tauri/src/lib.rs
+- scripts/portable/native-minimum-compile.mjs
+- scripts/portable/qa-native-profile-compile.ts
+- tests/cross-platform-apps-1a.test.ts
+- config/recovery-integration-source-delta.json
+- docs/evidence/RELEASE_RECOVERY_1C.md
+- docs/evidence/overnight-parallel-1a/OWNERSHIP_VALIDATION.md
+- docs/evidence/overnight-parallel-1a/DEPENDENCY_CANDIDATE.md
+- docs/evidence/overnight-parallel-1a/VALIDATION.md
+- docs/evidence/overnight-parallel-1a/FEATURE_COMPLETION.md
+- docs/evidence/overnight-parallel-1a/MORNING_UNBLOCK.md
+- docs/evidence/overnight-parallel-1a/HANDOFF.md
+- docs/evidence/overnight-parallel-1a/TRACKER_READBACK.md
+
+No lock/source drift followed validation. Windows raw lock SHA-256 `b5c472800910c475e5d44154317c9abfde07fe943b259e3138505e83d91dabdb`; Git/LF form `42e83ce078779d6d97bef9b790a853960365493a28563958b9445af278e2943b`. The old/new package/checksum/edge inventory remains in DEPENDENCY_CANDIDATE.md; mandatory transitive changes were imported as reviewed, not generated by an unrestricted update.
+
+#### Demonstrated compiler scope, distinct from production pins
+
+Declaration `1.77.2 -> 1.90` matches tauri-utils2.10.1's actual minimum. Rust1.90.0 is the tested DRAFT recovery candidate minimum, not a device OS requirement or invented production-support approval. Rust/cargo1.90 verbose identities and actual target commands are retained privately. Production/native-provenance pin1.97.1 and all existing pinned platform jobs remain unchanged. Minimum lanes use task-owned Rust/Cargo/target homes and official integrity-checked components, without global default/override, shared cache or artifact admission.
+
+All12 production targets below passed in [cross-platform run36968136590, attempt1](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590) at final f6792a3. Every command builds/checks the real application graph with --locked and verifies the unchanged lock hash. Only Windows/x64 is the supported synthetic-QA target; the existing non-Windows refusal is preserved.
+
+| Target | Minimum operation / feature | Job | Command seconds | Result / scope |
+|---|---|---|---:|---|
+| x86_64-pc-windows-msvc | production test --lib; synthetic-QA test --lib | [job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236756) | 255.717 production | 13+13 tests PASS; real isolated TLS; original compiler/profile refusals PASS |
+| x86_64-unknown-linux-gnu | production check --lib, real GTK prerequisites | [job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236737) | 126.468 | PASS; compiler qualification |
+| aarch64-unknown-linux-gnu | production check --lib, real GTK prerequisites | [job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236751) | 96.487 | PASS; compiler qualification |
+| x86_64-apple-darwin | production check --lib | [job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236709) | 439.376 | PASS; compiler qualification |
+| aarch64-apple-darwin | production check --lib | [job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236754) | 125.588 | PASS; compiler qualification |
+| aarch64-linux-android | production check --lib, installed NDK/API28 | [job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236767) | 102.695 | PASS; cross-compilation check |
+| armv7-linux-androideabi | production check --lib, installed NDK/API28 | [job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236755) | 97.908 | PASS; cross-compilation check |
+| i686-linux-android | production check --lib, installed NDK/API28 | [job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236746) | 108.031 | PASS; cross-compilation check |
+| x86_64-linux-android | production check --lib, installed NDK/API28 | [job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236777) | 102.050 | PASS; cross-compilation check |
+| aarch64-apple-ios | production check --lib | [job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236798) | 155.392 | PASS; cross-compilation check |
+| aarch64-apple-ios-sim | production check --lib | [job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236781) | 144.801 | PASS; cross-compilation check |
+| x86_64-apple-ios | production check --lib | [job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236779) | 429.753 | PASS; cross-compilation check |
+
+Minimum runner images: Windows20260925.250.1; Linuxx64 20260927.320.1; Linuxarm64 20260927.135.1; IntelmacOS20260824.0482.1; ARMmacOS20260907.0337.1. Eleven non-Windows checks are not unit execution, final linking/packaging, authenticated execution or device certification. Graph inspection is not compilation; no claim of24 compiled configurations. Hosted minimum Windows unit times12.34s production/11.53s QA. Existing pinned Windows NSIS job[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236472), Android build/emulator job[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236711) and iOS build/simulator job[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236745) all PASS using their existing1.97.1 toolchain and locked graph. Pinned Windows13+13 unit controls and iOS host13 controls PASS; iPhone/iPad light/dark no-remote PIN capture gates PASS. No independent manual image-inspection or authenticated ERP claim is added.
+
+Local production and QA Rust tests PASS at both1.90 and1.97.1 (13 each; real trusted-CA success, foreign-CA/wrong-hostname/expired-leaf/redirect rejection, signed-profile/production-exclusion, callback/ACL/Unicode/crypto controls). Local cold compiler command durations488.668/136.294s at1.90 production/QA and406.508/116.189s at1.97.1; warm minimum entrypoint16.234s. These are command wall times with compilation, not isolated test-body performance. Ten-file native/service regression97PASS/0skip (43.018s), app48PASS/0skip (11.235s), workflow18PASS/0skip (1.600s), tools-core/typecheckPASS (90.817s), app typecheckPASS (8.084s), app web buildPASS (15.265s), affected tests-a-f typecheckPASS (40.120s). Four invalid helper target/mode probes are HARNESS_ONLY. Chosen storage/Stronghold/serializer/crypto features do not change; old-format migration testing NOT_APPLICABLE.
+
+#### Complete security comparison; gate remains refused
+
+Audit was executed on integrated native inputs at29121b0, before later validation/evidence/context commits. Final native3 blobs exactly match520d86d and the reviewed raw lock remains unchanged through f6792a3: this is explicitly reused unchanged-native-input audit evidence, not a newly executed final-head audit or executable scan. cargo-audit0.22.2 binary SHA-256 `fc6e9d818d73ba07ecf28650793d46b74cf90aeb70c17405563c16454a4ba62d`. Full reports include all required targets/dependencies with no ignores/filtering/suppression; raw stdout/stderr/process receipts remain private.
+
+| Receipt | Database revision | UTC interval / elapsed | Process / completeness | Full result |
+|---|---|---|---|---|
+| Baseline frozen, first attempt | 3461c0d8f85d084552dd999c58d97c7123a9e0fd | 04:14:43–44 / 1.227s | exit0; stderr860; yanked metadata INCOMPLETE | not a complete baseline; retained |
+| Baseline frozen, missing index metadata supplied | same, 2026-10-01T09:31:41+02:00 | 04:33:00.747–01.738 / .990s | exit0/signalnull; stdout13861/stderr0 | complete0 vulnerabilities /9 warnings |
+| Candidate frozen | same | 04:14:45.065–46.264 /1.200s | exit0/signalnull; stdout8771/stderr0 | complete0 vulnerabilities /4 warnings |
+| Candidate current mandated | 6de4455103aced2cba86e3b86e5c090b22827cf1, 2026-10-01T22:25:27+02:00 | 04:14:46.404–53.610 /7.205s | exit0/signalnull/errornull; stdout8766/stderr0 | complete0 vulnerabilities /4 warnings |
+| Unchanged pure native verifier | current candidate report | 04:33:42.738–43.175 /.436s | exit1/signalnull; stdout129/stderr0 | NATIVE_RUST_WARNINGS_REQUIRE_REVIEW |
+
+Current audit stdout SHA-256 `1ca972201a4985848bf2e78799294b194eb38d2eaf8536a2287e1db43d17ae15`; exact command and scanner/lock/db/process metadata were captured before parsing. Frozen/current database changed1278->1279 advisory records; relevant warning identities/types/versions unchanged. Initial outside-workspace cargo-info --locked syntax failure and incomplete yanked lookup are retained as reader/capture errors; bounded exact-version registry metadata acquisition corrected that gap, not the dependency graph or a finding. No favorable repeat of the candidate scan.
+
+Five UNIC0.9 records removed from the entire graph/report: unic-char-property RUSTSEC-2025-0081, unic-char-range0075, unic-common0080, unic-ucd-ident0100, unic-ucd-version0098. Remaining unchanged: bincode1.3.3/unmaintained/2025-0141; paste1.0.15/unmaintained/2024-0436; proc-macro-error1.0.4/unmaintained/2024-0370; glib0.18.5/unsound/2024-0429. No new relevant finding. tauri-utils2.9.3->2.10.1 and urlpattern0.3.0->0.6.0 remove the shared UNIC chain. rustls0.23.45/chacha20.10.2 and the independent Stronghold chacha20.9.1 copy/features remain intact. Production and QA each resolve631 packages; feature delta is the app's synthetic-qa feature only. Native verifier unchanged and BLOCKED; no launch, sealing, admission receipt or warning disposition masquerading as remediation. Root/app production pnpm audits exit0/0vulnerabilities are package-scope evidence only.
+
+#### Normal final-candidate CI and retained earlier failure
+
+Final exact source f6792a3: **9 workflows SUCCESS;0failure/0cancelled/0pending/0missing. 40 jobs:33SUCCESS,7SKIPPED;0failure/0cancelled/0pending/0missing.** All runs attempt1. Twelve new minimum jobs account for21->33 successes. Initial29db9c6 successes are historical only.
+
+| Workflow | Final run | Jobs | Conclusion |
+|---|---|---:|---|
+| Student items / prior-year concessions | [36968136587](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136587) | 2 | SUCCESS |
+| Portable | [36968136629](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136629) | 7 | SUCCESS;6 mandatory runtime jobs SKIPPED |
+| Onboarding | [36968136571](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136571) | 2 | SUCCESS |
+| Real-User Access | [36968136574](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136574) | 2 | SUCCESS |
+| PostgreSQL dual-provider | [36968136643](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136643) | 4 | SUCCESS |
+| Biometric | [36968136626](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136626) | 2 | SUCCESS |
+| Cross-platform | [36968136590](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590) | 17 | SUCCESS;optional private native producer SKIPPED |
+| Master | [36968136589](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136589) | 2 | SUCCESS |
+| Communication | [36968136606](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136606) | 2 | SUCCESS |
+
+Separate application counts: Master job[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136589/job/110716236245): 3,006 PASS /0skip. Real-User job[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136574/job/110716236580), Biometric[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136626/job/110716282807), Onboarding[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136571/job/110716236242), Cross-source[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716236715), Portable SQLite[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136629/job/110716236465) and provider-workflow SQLite[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136643/job/110717121521): each3,003 PASS /3 inherited skips. Full PostgreSQL job[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136643/job/110717121221): 2,973 PASS /3 inherited qpdf skips; preceding concurrency108 PASS separately. Financial/recovery SQLite job[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136587/job/110716236020):23 PASS; PostgreSQL job[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136587/job/110716236162):23 PASS, preserving16-fresh/16-repeat machinery. Onboarding executes all original ten native-artifact bodies PASS. These suites are not added into one acceptance count. Hosted fresh PostgreSQL is used; no bypass of the prior local PowerShell refusal.
+
+Mandatory skipped job IDs[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136629/job/110720833672)/[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136629/job/110720834068)/[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136629/job/110720834426)/[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136629/job/110720834648)/[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136629/job/110720835244)/[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136629/job/110720835792) retain OCI/release-index/stack/distributed-runtime/storage/full-acceptance dependencies and admission conditions. Optional producer[job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590/job/110716237896) remains skipped by its ordinary private input condition. Skips are not passes.
+
+First source b66b2ee history remains:7 workflowSUCCESS/1workflowvalidationFAILURE/1automaticconcurrencyCANCELLED;16jobSUCCESS/6SKIP/1CANCELLED. Cross run36966723856 failed before jobs (zero jobs; detailed annotation unavailable); direct source/official GitHub context contract identified runner.temp unavailable in job env. Existing Biometric concurrency automatically cancelled run36966728051 after the genuine corrective push, not a manual cancellation. f679 corrects only those15 fields to github.workspace plus the missing source-contract regression. Both pushes were actual reviewed source changes; no empty/docs-only push, dispatch, old retry, timeout increase or gate relaxation.
+
+#### Five actual hosted recorder readbacks
+
+Each allowlisted artifact contains exactly finance.json/native.json/mfa.json/manifest.json; the private derived validation.jsonl files are reader outputs rather than artifact members; all hashes/sizes, schemas, sequential spans and exact source/run/attempt/job/provider ownership validate. Each records37MFA /18native /1finance PASS,0other outcomes, and no unfinished spans. Intentional expected-negative error phases are separate from natural failure. All five actual outputs are retained; these passes do not resolve historical finance/DENY/OpenSSL/MFA causes.
+
+| Consumer | Run / artifact | Independently expected owner | Provider |
+|---|---|---|---|
+| PostgreSQL full | 36968136643 /11209889598 | postgres-application-regression | PostgreSQL |
+| SQLite full | 36968136643 /11210824461 | sqlite-release-gate | SQLite |
+| Real-User Access | 36968136574 /11211142374 | exact-head-synthetic-security-regression | SQLite |
+| Master | 36968136589 /11211173354 | exact-head-windows-full-regression | SQLite |
+| Biometric | 36968136626 /11211246681 | exact-head-software-gate | SQLite |
+
+LinuxNode22.23.3/image20260927.320.1 and WindowsNode24.19.0/image20260925.250.1 distinctions retained. Strict owner validation initially rejected a guessed Real-User job label, then accepted its independently verified actual workflow ID; no schema was relaxed. One log-API network timeout and the CLI's terminal-control-byte refusal are retained as reading failures, not test failures. The documented CLI byte option was used solely for private log capture; safe projections strip ANSI. Artifact publication is only existing allowlisted synthetic metadata; no keys/tokens/private IDs/raw traces/font/package/vault/database upload.
+
+One independent read-only reviewer checked integrated source/provenance, support claims, unchanged pins/consumer connections, full graph/security disposition and actual final evidence. Material helper-mode/trigger and workflow-context findings were corrected; its initial static context miss is explicitly preserved above. Final reviewer independently rehashed15 hosted JSON files across five artifacts and matched final source/run/job ownership, counts, empty unfinished lists,12 minimum targets and9 terminal workflows. No remaining material source/privacy/provenance/evidence-binding finding. A final extension initially hit model capacity, then completed once in the same configured session; underlying model identity is not independently attestable, and no root or overnight model switch is claimed. Review ran no tests/builds/scans or mutations.
+
+Catchable synthetic CA/profile/service fixture roots were cleaned by existing owned finally/afterAll after processes settled. Task-owned official Rust1.90 homes, build outputs and private audit/CI receipts remain private; no promised forensic erasure. Companion receipts/build outputs, historical diagnostics, two unowned MFA roots and ambiguous/denied residue remain untouched. Source/provenance registration280entries, publication scans and Git safeguards passed; final unstaged append receives non-mutating publication/diff checks separately.
+
+Verdicts: combined source/isolated services/compiler minimum VALIDATED; native exact artifact/security admission BLOCKED by four warnings/missing artifact; backend exact runtime/security/provenance admission remains BLOCKED; approved controller/connectivity/disposable host inputs UNVERIFIED/MISSING; authenticated Windows and installation NOT_EXECUTED/NOT_CLEARED. EXTERNAL_RUNTIME_BLOCKED and EPHEMERAL_EXACT_HEAD_CI_ONLY remain. PR28 OPEN/DRAFT; main/P1/PR29/AskNalanda/K30/PR30/FA1–FA4/schema/migrations/v48/46IDs/25OFFflags/GeorgiaBold unchanged. Operational DB/vault was not opened/copied/hashed/cleaned; retained fingerprint is historical only.
+
+ONE next recommended milestone: separately authorized coordinated GTK/WebKit/GLib parent compatibility/migration feasibility, addressing glib0.18.5 unsoundness and its proc-macro-error path together. Existing GTK0.18 constraints cannot consume fixed glib>=0.20 as a compatible leaf; needed role is native framework/Linux maintainer, owner UNASSIGNED. Produce a supported parent/target/storage-preservation test plan before any framework migration. Do not start it here. Independent Stronghold bincode/paste and backend/custody/host blockers remain separate, not automatically queued.
+
+Measured intervals: initial inspection/local integration/validation/review03:41:22->04:56:18UTC74m56s (includes compiler waits); first normal CI plus identified source correction04:56:18->05:15:36 19m18s; final normal CI05:15:36->05:53:31 37m55s; terminal evidence/review/tracker handoff starts05:53:31 and final observed endpoint follows below. Total wall time is not uninterrupted engineering time. Account usage not measured. Actual tracker content/geometry readbacks and final unstaged diff follow separately.
+
+### Terminal tracker/readback and safeguard receipt — 2026-10-02
+
+PR28 terminal result [comment5946648415](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5946648415) posted once and actual body read back byte-for-byte. The GitHub connector first disconnected with ambiguous outcome; a fresh comments read confirmed nothing was posted, then authenticated gh --body-file posted the same reviewed5557-character body. Connector failure is retained; no duplicate result or plan. PR state remains OPEN/DRAFT at finalf6792a3; main104aacc7 and P1 5a3e219 remain unchanged.
+
+Asana recovery task1218421699989887: one concise linked result COMMENT1219093058777131, actual content read back exactly. Existing notes/name/assignee/due date/incomplete status unchanged; no oversized notes append. Notion page3b6c9801-27a8-81da-bcbd-cbd62189364d: one bounded result comment3edc9801-27a8-8169-b4d6-001dfd3e8aa1 in existing discussion3ecc9801-27a8-819b-9668-001c20290f0a, actual text read back. Full page/history not rewritten.
+
+Canvs existing board1LzTSjaWjpOaHppTtyXqICkMbEgHbT6T-: only primaryBMJgKw4fEc0jGOnO6_28j and companionnps-overnight-parallel-1a-text-20261002 receive concise executed PRIMARY deltas. Original standalone companion text remains an exact prefix with its historical subject explicitly distinguished. Fresh all297-element readback proves exact intended text, unchanged geometry/style/container/bindings for both, and all295 other elements unchanged. Primary x7800/y54/880x812; companion x10303.5/y50/713x550. No duplicate hub/task/board, invented owner/date or completion change. No pending tracker delta remains.
+
+Final append review corrected two factual wording issues: actual published members are finance.json/native.json/mfa.json/manifest.json, while derived validation.jsonl files remain private reader outputs; unchanged worktree/index refers specifically to the companion. Non-mutating terminal access publication scan exit0 (1.360s); Git safety exit0 (4.852s). Initial onboarding publication scan exit1 (1.350s) refused plain numeric CI job coordinates in the new append; source/gate unchanged. Those coordinates were converted to the existing approved canonical GitHub job-link format, then unchanged scan exit0 (1.260s). Both failure and corrected receipts retained. No scanner exception/suppression, new source correction or push. Initial60-line bytes/native3/report7 blobs and reviewed raw lock still verified unchanged; diff --check passes and index remains empty.
+
+Observed terminal evidence/review/tracker interval05:53:31UTC through 2026-10-02 06:24:33UTC; earlier source/local interval74m56s, firstCI/correction19m18s, finalCI37m55s remain separately recorded above. These are wall intervals with waiting, not uninterrupted engineering. Account usage not measured. Final ledger observations remain unstaged only; there is no cosmetic post-CI push. The milestone stops after this handoff; the recommended GTK/GLib parent feasibility milestone is not started.
+
+Final handoff checks: both unchanged publication scanners PASS after tracker receipts (1.597s/1.630s); reviewed lock unchanged. A sandbox-SID companion Git read was refused by Git's owner check; the already-authorized owner-context read confirmed clean original companion a99518f/treeba21, without safe.directory/config/profile mutation. Primary index empty; only this terminal ledger is unstaged. Latest PR readback OPEN/DRAFT/unmerged at f6792a3. Original failures, reader errors, private receipts and held gates remain visible. No extra source push, dispatch or next milestone.
+
+Observed work through 2026-10-02 06:26:22UTC: total wall interval2h45m00s from03:41:22; terminal evidence/review/tracker interval32m51s from05:53:31. Final read-only safeguards are separate from uninterrupted engineering. Account usage remains unmeasured.
+
+## 2026-10-02 — RECOVERY-GTK-WEBKIT-PARENT-COMPATIBILITY-1A: terminal published-set feasibility
+
+GTK_PARENT_COMPATIBILITY_UPSTREAM_BLOCKED. Two coherent published Tauri-root sets were assessed; neither removes the scoped GLib/proc-macro-error paths. This is a completed bounded feasibility result, not a dependency correction, application compatibility pass or native admission. Dependency experiments stopped before builds after the required remediation predicate failed; no candidate was accepted, committed, pushed or dispatched.
+
+Starting/final committed source f6792a342415e0d6a989fcf673d2309626f4ce64, tree8e2ff8e7b5b892c9ead77000a487abb1a5760b6d; local/remote primary agree, PR28 OPEN/DRAFT. Initial132 unstaged terminal lines and empty index verified. The entire starting ledger was privately captured byte-for-byte (357956bytes, SHA2562480453fb8656a82e96a9a43b4d0d1f9d340b798d81f6a64ab05a2b425b828db); initial Git diff27359bytes/SHA2562242db202f35b5d6fef326d8d26b54ab27a2e3e46d6382de81aa9d5d343cb4eb. This new section is a separate append after that unchanged prefix, with no reformatting or staging. Prior source/evidence provenance remains intact; companiona99518fc05f735f5800246566adde4c4b46ff1b8 remains on its independent clean local branch/worktree.
+
+### Released-set/constraint closure
+
+| Published set | Actual parent closure | Resolver and scoped-remediation result |
+| --- | --- | --- |
+| A — retained application | Tauri2.11.5; runtime2.11.3/runtime-wry2.11.4; Wry0.55.1/Tao0.35.3; Muda0.19.3/optional tray0.24.2 | Unchanged locked application resolves; fourteen fresh offline target/feature projections exit0. GTK0.18.2/GLib0.18.5 and both old macro parents remain. |
+| B — latest coherent Tauri-root successor, not uniformly latest leaves | Published Tauri/runtime/runtime-wry2.12.1; Wry0.57.0/Tao0.37.1; allowed Muda0.20.0/optional tray0.25.1 | One precise Cargo1.97.1 update on an exact task-owned application copy exits0 in19.755s. Its remediation predicate FAILS: GTK0.18.2/GLib0.18.5, GLib-macros0.18.5, gtk3-macros0.18.2 and proc-macro-error1.0.4 remain. No solver error occurred; none is invented. This copy was not audited/compiled/accepted as a source candidate. |
+
+SetB command: cargo +1.97.1 update -p tauri@2.11.5 --precise 2.12.1 --manifest-path <owned-review-copy>/Cargo.toml. Existing parent constraints admitted the root update; no direct application manifest edit, forced leaf or unrestricted update. Shadow lock SHA256fe506223c5e0fcc8c9f7d2f754d95044379bc86b3affda07d9291c66b8311f6b and its complete removed/added package, registry and checksum inventory remain private. Primary lock remains SHA256b5c472800910c475e5d44154317c9abfde07fe943b259e3138505e83d91dabdb. Muda0.21/tray0.26 are outside this Tauri set's constraints and were not a third resolved set; registry inspection still finds their old GTK3 path.
+
+| Relevant immutable parent edge | Binding constraint and consequence |
+| --- | --- |
+| Tauri2.12.1, runtime2.12.1, runtime-wry2.12.1 | Each independently requires Linux GTK ^0.18; runtime crates require WebKit =2.0 with v2_40. Normal selected Tauri wry/x11/default features retained. |
+| Wry0.57.0 + Tao0.37.1 | Wry GTK/GDK-X11 ^0.18, WebKit/sys =2.0.2, JavaScriptCore =1.1.2, Soup3 ^0.5; Tao GTK/Wayland/X11-sys ^0.18. The retained set has equivalent old-generation requirements. |
+| Muda0.20.0, optional tray0.25.1/libappindicator0.9.0 | Selected GTK3 menu path requires GTK ^0.18. Optional appindicator still requires GLib/GTK ^0.18 and remains in the required full lock/report scope. GTK4 is not substituted. |
+| Published WebKit2GTK/sys2.0.2, latest stable in captured official index | WebKit requires GTK/GLib/GIO/GDK/Cairo ^0.18 and old JSC/Soup bindings; sys requires corresponding ^0.18 sys crates and Soup-sys ^0.5. This is the first missing compatible published WebKit binding edge for the newer GTK3 generation, necessary but insufficient by itself. |
+| Published GTK/gtk-sys/gtk3-macros0.19.0 | Still GTK3, not GTK4; requires core GLib/GIO/Cairo/Pango/GDK-Pixbuf ^0.22 and Rust1.92. gtk-sys0.18.2 and gtk-sys0.19.0 both declare links="gtk-3"; incompatible generations cannot be forced together, and Rust binding types must agree. No invented GLib-sys links claim. |
+| GLib/macros0.22 and newer JSC2.0.0/Soup3 0.9.0 | Fixed GLib and macro generations exist; GTK3-macros0.19 and GLib-macros0.22.9 genuinely have no proc-macro-error dependency. JSC2/Soup3.0.9 already support GLib0.22; their adoption by the released WebKit/Wry set is missing, not their publication. |
+
+The GTK ^0.18 → GLib ^0.18 constraint cannot select the advisory-fixed >=0.20 range. Adding a fixed second GLib copy leaves the affected original. Macro remediation must replace both GLib-macros0.18.5 and gtk3-macros0.18.2 parent consumers; proc-macro-error itself has no patched same-package release. No renamed crate, patch overlay, fork, vendor, GTK4 rewrite, feature/platform removal or warning-policy exception was attempted.
+
+### Source, target and security evidence boundaries
+
+Official [GLib advisory](https://rustsec.org/advisories/RUSTSEC-2024-0429.html) and [macro advisory](https://rustsec.org/advisories/RUSTSEC-2024-0370.html) reverified. Actual checksum-verified GLib0.18.5/0.20.0 VariantStrIter source confirms the out-pointer change from immutable reference to mutable reference; no exploit or historical ERP attack is claimed. This source comparison is not optimized iterator execution. Published normalized Cargo manifests are authoritative for resolution; mutable development branches were only prior leads.
+
+One bounded official sparse-index pass over seventeen named crates plus the directly needed GTK-sys index returned18HTTP200 records. Fourteen precisely named source archives returned HTTP200 and matched independently obtained authenticated crates.io index SHA256 values; no alternate mirror, insecure redirect, retry or checksum replacement. Bounded safe-text inspection rejected links/path escapes before reading manifests/source. Representative archive identities: Tauri2.12.1 ed99ee9694a2deb776d91cae48ac7411ddfc89ecae2f9b5041111d8c88f2ace9; Wry0.57.0 a819957a01b3119af85e638a38d242af76dbc87d130dca67bfd0441072e21ff0; WebKit2GTK2.0.2 a1027150013530fb2eaf806408df88461ae4815a45c541c8975e61d6f2fc4793; GTK0.19.0 a86cafafc177054a1d555a0b302044d2b5f82e1c1e23d152a7ba252dc6bfced0. Existing four old GTK/GLib/macro archives independently match current registry values too. Private receipts retain exact URLs, times, sizes, hashes and all checksums/VCS hints. Some published archives declare dirty:true; their verified release bytes are authoritative, without a claim of byte equivalence to a clean Git commit. [Immutable published WebKit manifest](https://docs.rs/crate/webkit2gtk/2.0.2/source/Cargo.toml), [Tauri manifest](https://docs.rs/crate/tauri/2.12.1/source/Cargo.toml) and [Wry manifest](https://docs.rs/crate/wry/0.57.0/source/Cargo.toml) identify the concrete upstream inputs.
+
+Complete reverse-DAG capture includes every relevant ancestor edge through direct Tauri and deep-link/opener/single-instance/Stronghold plugin parents, runtime/Wry/Tao/menu/tray, Cairo/ATK/GDK/GIO/Pango/GDK-Pixbuf/WebKit/JSC/Soup; one GLib0.18.5 copy and two proc-macro-error consumers verified. Optional/tray paths in unfiltered metadata are distinguished from selected default features. Fresh locked/offline graph-only matrix: production Windows x64, Linux x64/ARM64, macOS Intel/ARM, Android four architectures and iOS three architectures; supported Windows synthetic-QA and an additional Linux synthetic-qa feature projection (not a claim of a supported connected Linux QA artifact). All14 exit0; affected crates occur in the two production Linux and additional Linux feature projections, absent in the other11. Selected GLib/GTK macro crates execute on the build host, not as target-runtime macro libraries. Graph absence on Windows/mobile does not clear the required full-report gate. These are fourteen dependency projections, zero new compiled configurations.
+
+Current application minimum remains validated DRAFT Rust1.90; production/provenance tool pin1.97.1 unchanged. New GTK3.19/GLib.22's1.92 requirement is a future coordinated-migration/support constraint, not an accepted declaration change or device-OS requirement. Rustls0.23.45, chacha20.10.2, all five removed UNIC records, storage/crypto inputs, application behavior/features and existing TLS/profile/MFA trace wiring remain unchanged. No format migration occurred.
+
+The retained complete cargo-audit0.22.2 receipt is REUSED after exact native-source/lock comparison from29121b0a3ad099075f732998c4d5fdf4da234d48 throughf679; it is not a new scan or executable report. Original2026-10-02T04:14:46.404Z–04:14:53.610Z,7.205s, exit0/signalnull,8766stdout bytes/SHA2561ca972201a4985848bf2e78799294b194eb38d2eaf8536a2287e1db43d17ae15,0stderr; scanner SHA256fc6e9d818d73ba07ecf28650793d46b74cf90aeb70c17405563c16454a4ba62d. Advisory revision6de4455103aced2cba86e3b86e5c090b22827cf1/time2026-10-01T22:25:27+02:00; prior frozen comparison remains retained. Raw receipt bytes/hash/size verified before parsing:0 vulnerabilities/four records — bincode1.3.3 unmaintained RUSTSEC-2025-0141, paste1.0.15 unmaintained RUSTSEC-2024-0436, proc-macro-error1.0.4 unmaintained RUSTSEC-2024-0370, GLib0.18.5 unsound RUSTSEC-2024-0429. Zero records removed by this milestone. SetB's full warning count/new-advisory state was NOT audited and is not inferred from package presence.
+
+Fresh invocation of unchanged pure verifyNativeSecurity on complete reused root/app/Rust reports atf679 exits1 in1.520s, signalnull: NATIVE_RUST_WARNINGS_REQUIRE_REVIEW;129stdout/0stderr bytes. No seal, app launch, connected artifact verification or admission receipt. Audit exit0 and policy refusal remain separate. Bincode/paste remediation and backend EXTERNAL_RUNTIME_BLOCKED are independent.
+
+No accepted source candidate exists, so optimized application-resolved iterator tests, Linux x64/ARM64 final links and safe no-remote GTK/WebKit smoke, new compiler/minimum/profile/TLS/provider regressions, fresh candidate audit and candidate CI are NOT_EXECUTED in this milestone. The reused eleven non-Windows checks remain checks, not final links/UI proof. No passing baseline sample is relabeled as a correction or universal compatibility result.
+
+### Independent review, current CI and owner handoff
+
+One independent read-only specialist requested with gpt-6-astra reviewed immutable manifests/index rows, complete reverse paths, real resolver receipt, target selections, iterator source, native links, minimality, support and full-report policy. Reviewer independently rehashed14 acquired archives,18 index receipts and14 graph stream receipts without mismatch; no builds/tests or model attestation performed. Root running model was not switched or claimed attested. Material reporting distinctions corrected: latest coherent root versus out-of-range leaves; successful resolver versus failed remediation predicate; reused primary audit versus unaudited shadow set; published JSC/Soup versus missing adoption. Final reviewer found no material feasibility gap and supported UPSTREAM_BLOCKED; this is not a tested compatible candidate.
+
+Live read-only GitHub metadata confirms reused f679 attempt1 evidence:9workflows SUCCESS,33jobs SUCCESS,7SKIPPED,0failed/cancelled/pending;9expected workflows/40returned job records, no missing expected workflow. The six mandatory runtime jobs and optional private native producer are separately skipped, not passes. [Cross-platform/minimum baseline](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136590), [master baseline](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136589), [PostgreSQL baseline](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136643) and [portable baseline](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36968136629) are reused, not triggered here. Historical finance/DENY/OpenSSL/MFA/network causes remain unresolved and were not reinvestigated. Publication/source/Git safeguards and tracker terminal readbacks are recorded separately below after this append; no new full CI cycle is warranted.
+
+UNSENT maintainer request: “Please identify a supported published GTK3 release set that adopts GTK/gtk-sys/gtk3-macros0.19 and fixed GLib/macros0.22 across WebKit2GTK/sys, existing JavaScriptCore2/Soup3.0.9, appindicator and Tauri/runtime/Wry/Tao/menu/tray. Current latest coherent Tauri2.12.1 set retains GTK ^0.18, WebKit/sys =2.0.2 and JSC =1.1.2, so both RUSTSEC-2024-0429 and RUSTSEC-2024-0370 paths remain. Supply immutable compatible versions/checksums, target/features and Rust>=1.92 requirements; preserve GTK3, production/QA security contracts and all supported platforms. Before ERP integration, require full-lock advisory removal with no duplicate old path, optimized iterator controls, real Linux x64/ARM64 link/no-remote initialization and retained minimum/platform/TLS/ACL tests.” No request was sent, issue/PR filed, release promised or upstream maintainer appointed.
+
+ONE next action/owner decision: designate a native-framework/Linux dependency maintainer (UNASSIGNED) and authorize that role to obtain the coordinated published-release/support commitment described by this unsent request. Input: the exact two-set constraints above and future1.92 support impact; execution environment: maintainer communication/release planning only after later owner authorization. Completion proof: named responsible role and supported immutable WebKit/sys + all parent/appindicator versions closing every old path, with an explicit draft minimum decision and agreed acceptance matrix. WebKit's missing compatible binding is necessary but not sufficient; do not start a leaf-only upgrade or general framework/storage migration. Production-support adoption remains unapproved. This is the earliest blocker for this group; bincode/paste and exact backend/native security/custody/controller/host prerequisites remain separate.
+
+All finite review processes settled; no app/runtime, listener, test DB/vault/key/trust resource was created. New task-owned review copies/source archives/metadata/receipts remain private and ignored; no historical/companion/ambiguous/denied residue was deleted or global cache cleaned. Main104aacc/P1PR29/K30PR30/FA1–FA4/v48/migrations/46IDs/25OFFflags/GeorgiaBold and protected operational DB/vault remain untouched; fingerprint historical only. Native admission BLOCKED; backend EXTERNAL_RUNTIME_BLOCKED; controller/host UNVERIFIED/MISSING; authenticated Windows NOT_EXECUTED; installation/release NOT_CLEARED. Recovery remains incomplete.
+
+### 2026-10-02 — terminal safeguards and tracker readbacks (no source push)
+
+Current source/provenance checker PASS:280files/four original heads/four backup-source contracts. Both existing publication scans, Git safety and diff check PASS; no new typecheck/build/runtime cycle is needed for this evidence-only change. The diff check reports Git's prospective CRLF-to-LF warning; no initial bytes were normalized. Reader-only initial syntax/glob errors were corrected privately before evidence extraction; they were not application/test/resolver failures. Some web-rendered crate pages were inaccessible; independently verified official registry/archive acquisition supplied the immutable source evidence. Complete old iterator source is byte-identical to its authenticated archive.
+
+[Actual PR28 result](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5948002042) was read back with the exact6710-character posted body. One Asana result comment1219095946774801 was read back; notes, unassigned owner, null due date and incomplete state remain unchanged. One bounded Notion comment3edc9801-27a8-810d-a2c5-001d94e988da in the existing discussion was read back; the initial strict comparison detected serialization escaping of the greater-than character, decoded only that Markdown escape, then matched actual content exactly. No duplicate write or page replacement. W1 text BMJgKw4fEc0jGOnO6_28j was read back with its prior text prefix, exact geometry/fonts/container/bindings, and all296 unrelated elements unchanged; companion card untouched. All connectors succeeded; no pending result delta or CLI fallback.
+
+Evidence-only changed-file manifest: docs/evidence/RELEASE_RECOVERY_1C.md, entirely unstaged; original132-line prior-task addition retained plus this task's append. Private task receipts retain timestamped two-set resolution,14graph observations,18index/14archive records, reused audit identity, fresh pure-gate refusal, independent review, safeguards and tracker results. No private source archive/raw report/tracker history was uploaded. Owned finite processes returned; private review scratch retained, no cleanup of historical/foreign/ambiguous residue. Final source/tree/index/ref/prefix and final publication readback are checked after this append. Measured first-clock07:24:37UTC to feasibility/CI-readback clock08:02:15UTC is37m38s; subsequent document/safeguard/tracker handoff is a separate wall interval, not claimed uninterrupted engineering. CI waiting0(new cycles0); account usage not measured. Stop after this feasibility handoff; no automatic next migration/contact/Windows execution.
+
+
+## 2026-10-02 — RECOVERY-BACKEND-BUILD-SCAN-QUALIFICATION-1A: bounded input caller
+
+Starting primary f6792a342415e0d6a989fcf673d2309626f4ce64/tree8e2ff8e7b5b892c9ead77000a487abb1a5760b6d; remote/PR28 read back identical, OPEN/DRAFT. Prior194-line unstaged ledger diff privately preserved before editing: raw375307bytes/SHA25679d10a1e82a88035cc2ddda745e548b9ec0311290475fcecc84ab7a2dbae3f38; binary patch44772bytes/SHA256ffca5a8697449b38cd58dfaabf528131c49bf96bc21519923a8417ae6814aea5. Original bytes remain a prefix; ordinary Git index LF normalization is recorded separately and does not authorize rewriting those working bytes. Creator routing ended workspace work; independent reviewer is read-only. No other source writer observed.
+
+Finite current-input matrix: native ubuntu-24.04/amd64 and ubuntu-24.04-arm/arm64, fail-fast=false/max-parallel1, single normal PR28 same-repository cycle,60minutes/job. Source must be committed/clean and exact PR head. Frozen runtime index774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79 and builder indexa9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df are unchanged. Runtime target remains production-runtime/default runtime, nonroot65532, production flagsOFF and source QA trustnull; synthetic-qa target is distinct. No successor is justified by current verified vendor correction; no broad base search. Buildkit0.33.0/rootlesskit3.2.0 archive pins remain in existing config/qa-build-tools.json; Docker frontend tag1.12 and inherited apt/corepack resolutions are not claimed newly byte-qualified. Builder/frontend chain, ERP product build/scans and ABI/runtime execution remain NOT_EXECUTED at this input checkpoint.
+
+Narrow implementation: scripts/portable/backend-build-scan.py plus config/backend-build-scan-tools.json, one separately appended workflow job and focused tests/publication registration. No existing build/admission/QA/native caller is invoked. Existing pure artifact-handoff security contract was inspected; this input-only validator retains HIGH/CRITICAL/UNKNOWN rejection, ignored-match inspection, no ignore-unfixed, both os/library scopes and72h database freshness. It is not a substitute for the product verifier's required npm coverage or nine-file/native bundle. Current base scan PASS without Node-bundled source/backport applicability remains PARTIAL; conditional product caller is NOT_IMPLEMENTED_PENDING_INPUT_QUALIFICATION, not claimed complete. Genuine blocking input or incomplete current evidence stops before any ERP build. No full clean-qualification claim is possible from this caller.
+
+Pinned inherited scanner versions established from exact existing action sources: Trivy0.70.0 (action ed142fd), Syft1.42.3 (sbom-action e22c389), Grype0.110.0 (scan-action e116508); all six public release archive SHA256 values frozen in the new config. Runtime acquisition validates original raw index/descriptor/manifest/config/layer bytes before JSON parsing, checks native platform/nonroot config, statically hashes the Node ELF and verifies native machine ID. Safe virtual-root link inspection creates no filesystem links. No ERP, Node binary, migration, native probe, Compose, controller or admission execution.
+
+Custody/capacity: GitHub live repository metadata is PUBLIC. Existing baseline job confirms GitHub-hosted Linux, and [standard runner contract](https://docs.github.com/en/actions/reference/runners/github-hosted-runners) supports both free native labels with4CPU/16GB RAM/14GB disk. Actual arch/host/user and at least6GiB free are mandatory per job, with bounded public input layers<=1GiB, cumulative static decompressed bytes<=4GiB,900s/operation inspection/process deadlines,256MiB raw stdout+stderr bound and remaining-disk checks. No actual candidate runner capacity is claimed before its job receipt. Raw image/SBOM/reports/database/process bytes stay mode700/600 in precisely owned RUNNER_TEMP until settled cleanup/runner lifecycle; no durable private custody is configured. Independent same-job deterministic inspection is supported; interactive raw review after teardown is unavailable. Public14-day metadata retention cannot later admit missing private bytes.
+
+Process receipts preserve exact command/subject/start/end/duration/exit/signal and stdout/stderr byte hashes before parsing. Reports receive separate raw-byte receipts before JSON parsing. Scanner version/database timestamp/hash precede scan, automatic DB updates disabled for actual scans, failures cannot be excused by another scanner's finding. All ordinary failure messages are bounded; findings publish only approved advisory IDs and package/version independently present in current public vendor package records. Public paths are exactly backend-build-scan-result.json and backend-build-scan-public-manifest.json, with a prepublication filename/size/hash manifest. No raw/binary/cache/registry/secret/font upload; cleanup refuses changed ownership, symlinks/hardlinks or unsettled process groups and touches only this run's root.
+
+Current primary-source refresh keeps historical wording separate: [Debian5435](https://security-tracker.debian.org/tracker/CVE-2026-5435) lists trixie glibc2.41-12+deb13u4 vulnerable/no-dsa minor issue; [5450](https://security-tracker.debian.org/tracker/CVE-2026-5450) and [5928](https://security-tracker.debian.org/tracker/CVE-2026-5928) fixed by that backport. [Debian85091](https://security-tracker.debian.org/tracker/CVE-2026-85091) still lists zlib trixie/forky/sid vulnerable/unfixed, while [upstream correction](https://github.com/madler/zlib/commit/df84af25dc1942490e1d1c899a07619152a46148) resets failed-write input state. Upstream advisory description identifies1.3.1.2–1.3.2; Debian's older-package classification and Ubuntu's deferral remain scope/applicability conflicts, not safety. [Node24.21.0 release](https://nodejs.org/en/blog/release/v24.21.0) bundles motley8002e91; fresh tagged source inspection lacks that reset. These are version-specific public-source facts, not claims that current774b bytes ship those versions/findings. OS libraries, Node-bundled copies and app/native dependencies remain separate. Historical bb6b03d metadata is not reused as current byte evidence.
+
+Validation: initial21 HARNESS_ONLY refusal tests PASS; final27 controls PASS after the process/source/structure additions;23 existing publication tests PASS; relevant tests-m-r typecheck, YAML parse, both publication scans/Git safety/diff checks PASS. Initial Python ownership fixture incorrectly used Linux getuid on Windows; corrected by mocking only the test platform UID, not production guard. Initial source generator invocation used unsupported --generate and failed source-drift validation; documented --write subsequently registered281 source records, retaining four original heads/four schema-source contracts. These corrections occurred before commit/CI, no scanner/build failures fabricated or hidden. Independent read-only reviewer initially found attribution/preparse-hash/decompression/disk/cleanup/failure-publication gaps; fixes above are subject to final review. Inherited model requested, underlying model independently unattested; no reviewer tests/builds.
+
+One normal qualification cycle will supply exact candidate/run/attempt/job/architecture bytes/findings or named failure. No retry/dispatch/empty trigger commit. Existing f6799workflows/33successful jobs/7held skips are historical baseline only. Six mandatory runtime conditions/unconditional EXTERNAL_RUNTIME_BLOCKED and optional native producer remain unchanged. GTK_PARENT_COMPATIBILITY_UPSTREAM_BLOCKED, four native warnings, UNSENT coordinated release request/UNASSIGNED maintainer, historical MFA/finance/DENY/OpenSSL/network causes, controller/host missing inputs, authenticated WindowsNOT_EXECUTED and installationNOT_CLEARED remain independent. Protected main/P1/K30/schema/migrations/v48/46IDs/25OFFflags/GeorgiaBold and operational DB/vault are untouched; no native audit or operational fingerprint. Post-run result append will stay unstaged; no cosmetic second push.
+
+Final precommit review follow-up:26HARNESS_ONLY controls now pass, including actual missing/substituted-source preflight and mocked timeout/overflow/nonzero process paths, hash-only failure publication and owned HOME/TMPDIR/XDG/Syft cache paths. Three added Windows-only mocking fixtures initially lacked killpg and used POSIX path spelling; all corrected before execution without weakening Linux checks. Scanner raw layer scratch therefore belongs to the same owned cleanup root. Node binary ELF bytes are statically hash/machine-bound. Relevant typecheck/23publication cases and281-file source/four-contract checker pass. No candidate scanner/build result exists yet; original failed local harness/generator outputs remain in chat, not classified as ERP failures.
+
+Final independent review: unchanged Trivy Target/Class/OS-Type structural completeness added, including valid-JSON truncation/null cases; final27HARNESS_ONLY tests PASS. All prior findings corrected; no other material no-launch/identity/default/publication/cleanup issue identified. Review is source-only, no independent tests or model attestation. Base-only scope and missing product caller are explicit limitations, not whole-backend qualification.
+
+
+### One normal candidate cycle — terminal qualification result (source CI observation continues)
+
+BACKEND_BUILD_SCAN_QUALIFICATION_PARTIAL. Candidate cbdd6f955b3dd479ce7043452d4cad43ef0bdcc0/tree7bdc4e955af2e65ef09fe9255c5b61d765cdd281; one push/normal PR28 run36996034388 attempt1. Both native input jobs FAILED independently; neither was cancelled or represented as an ERP build failure. No correction/retry/second push is performed after this failure. Current base registry/index/platform descriptor/manifest/config/all22layers and native Node ELF hash/machine were verified on each real hosted Linux runner. Syft SBOM generation and database acquisition/status commands exited0. Raw scan completeness/subject/finding adjudication did not pass: caller reported REPORT_UNSAFE. Actual Trivy/Grype processes did execute. The public base field remains its initialized NOT_EXECUTED value because failure occurs before terminal validation; interpret it as missing qualification, not no attempted scanning. Raw metadata is not rewritten.
+
+| Architecture / native job | Exact current manifest | Exact current config | Node binary SHA256 | Scan result / ERP product |
+| --- | --- | --- | --- | --- |
+| amd64 / [native amd64 job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36996034388/job/110802835883) | sha256:23a384b4596ec311f78ac9c46af2b8cc0ed403d1f9c3c249111266d7f56319db | sha256:cec1f3ac719e3061b85e5776bfca6addc49cc1163da18c2208ba11610a466e2a | 89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7 | REPORT_UNSAFE / NOT_BUILT |
+| arm64 / [native arm64 job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36996034388/job/110802835662) | sha256:99dd2b1678678b36e0de5abe2fdd40e508786ac1044106948a533bea329c16bd | sha256:c973bfca85b7a21523f4498c588edd40087906c30ef42eec98c81e6446a4f9c7 | 23a5637c2470fde09fcc1acc77c1b92e04e3d7e3e6e80ff7df6f5831958d1477 | REPORT_UNSAFE / NOT_BUILT |
+
+The exact index is774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79. Both package-record inspections show libc6=2.41-12+deb13u3 and zlib1g=1:1.3.dfsg+really1.3.1-1+b1. This current libc record differs from historical bb6b03d/u4 metadata and must not be substituted. Debian5450/5928 fixes at u4 therefore do not establish repair of this u3 input;5435 and85091 vendor concerns remain. Scanner severity/full affected/fixed/native/Node-vendored applicability for this exact image is NOT_VALIDATED. No finding-free or confirmed scanner-finding claim is made; public findings=[] is not a clean result. No same-family successor was inspected. Builder/frontend byte qualification, production-default-OFF ERP images, product SBOM/scans, ABI/native probes, runtime/admission/controller/host/Windows/install remain missing or NOT_EXECUTED.
+
+| Architecture | Trivy0.70.0 process | Grype0.110.0 process | Private inspection wall interval | Actual preflight free bytes |
+| --- | --- | --- | --- | --- |
+| amd64 | exit1/signalnull; 206ms; stdout0/stderr818bytes; stderrSHA25627921a737958046e09db99975a3714c3650ca8d9cf168e107e8aaf415a60b65c | exit2/signalnull; 6417ms; stdout0/stderr75bytes; stderrSHA2564d4740938c42379c9d63af489817f3dd8156578d04fd217c8226004f2592dac3 | 112.976s | 92331134976 |
+| arm64 | exit1/signalnull; 105ms; stdout0/stderr641bytes; stderrSHA256318f3e734b6367ac56d9ab56f843e71972c08b3ae953d4f1f734bcdac3448202 | exit2/signalnull; 5613ms; stdout0/stderr75bytes; stderrSHA256af4e283e1c31022f99450c9f84aafa4c51ae27c38751347fcb71d3a1d563d223 | 107.893s | 115,800,293,376 |
+
+Both scanner database identities match across architectures: Trivy SHA25639d64de1ff3a945333aff7eeec9b953da8f07c1f5960936c5922a2dc7f5c93a7, updated2026-10-02T06:55:51.690179UTC; Grype SHA2561cd47ebe158b6b57b36802278d179126f62de07d28078e06c82cf33173e83dac, updated2026-10-02T06:31:53UTC. These are freshly identified databases, not evidence of successful report validation. All exact commands/raw process-byte hashes were recorded privately before parsing. Raw scan reports/SBOM/stdout/stderr/image bytes existed only within the owned job root until settled cleanup. Both roots report cleanupComplete=true; those private bytes are now unavailable for retrospective causal inspection or admission. Only approved bounded metadata was downloaded; raw reports/images were neither published nor recovered. Public result hashes: amd64 SHA25603b3b95fa56f4b8fb1976f66e7e2a1e4dcf2b31eecf1595355b1c75b99a4a3ff/7172bytes; arm64 SHA256851478ed39d47868c6df01ef8e6cb50994f64a7bf8058ebe226494493e0b57e0/7173bytes. Both prepublication filename/size/hash manifests independently verified, source/tree/run/attempt/architecture match; no extra files in either two-file metadata set. Actual public retention expires16October2026 around10:34–10:36UTC. Ephemeral cleanup is not durable retention or a forensic erasure claim.
+
+Read-only postfailure source inspection identifies a concrete caller contract defect: [exact Trivy0.70 archive dispatch](https://raw.githubusercontent.com/aquasecurity/trivy/v0.70.0/pkg/fanal/image/archive.go) accepts Docker archive or OCI directory; [OCI implementation](https://raw.githubusercontent.com/aquasecurity/trivy/v0.70.0/pkg/fanal/image/oci.go) opens layout.FromPath. The new caller passed an OCI-layout tar file. This demonstrated invocation mismatch is consistent with the early exit1 but raw stderr was not retained, so exact emitted cause is not attested. Grype exit2 must also be adjudicated from its pinned contract and actual complete raw findings; it is not automatically a tool crash. The caller currently permits0/1 in its later policy and would mishandle a valid exit2 threshold result even after the earlier report failure were repaired. These defects and missing bounded diagnostic classification require a separate reviewed correction; no report fabrication, changed severity/scope, unholding or same-cycle rerun.
+
+Qualification execution is over. Normal exact-candidate source CI remains under observation and will be recorded separately; no current9-success claim is borrowed from f679. One next executable action: repository CI/supply-chain maintainer (UNASSIGNED) repairs the exact scanner input/exit/report interoperation and failure-path bounded diagnostics, using the frozen tool revisions/current verified subject digests/process hashes above. Required proof: meaningful supported OCI-directory scanner contract/exit2/independent malformed-report/process-failure harness controls, preserved complete policy and privacy, then a separately authorized finite native input scan cycle. Conditional production build/scan remains an explicit implementation gap after inputs qualify; no automatic next task is started.
+
+
+### Explicit human continuation and one corrective retry authorization
+
+The human instruction to continue and retry failures once supersedes the immediately preceding first-cycle stop statement. First-cycle source cbdd6f955b3dd479ce7043452d4cad43ef0bdcc0/run36996034388 and both failed native input jobs remain historical failures, not relabelled or cancelled. This scoped correction changes only the demonstrated Trivy OCI-directory input, pinned Grype0.110.0 exit0/2 contract (exit1 remains operational failure; exit2 needs its own validated blocking findings), independent preparse original report byte receipts and bounded availability/parse statuses, and truthful attempt phases. No weaker coverage/severity/ignore-unfixed/subject/database policy, public raw report, Node/vendor safety exception, product build, runtime or admission is introduced. Existing public findings remain restricted to separately inspected dpkg package identities.
+
+Local32 HARNESS_ONLY controls and23 publication controls PASS. Source checker281files/fourheads/fourbackupcontracts PASS; access-publication scan and Git safety PASS. The onboarding-publication scan initially refused bare 12-digit public CI coordinates/free-byte counts; task-owned evidence formatting was corrected to approved job links and comma-separated byte counts without changing values or scanner policy, then rechecked. One independent read-only review found no remaining scoped material defect; no reviewer execution or independent model attestation claimed. Original prior194-line ledger patch remains recoverable at its recorded hash, and working raw375307-byte prefix remains byte-for-byte preserved. The additional23 first-cycle outcome lines are intentionally included in the correction commit as historical evidence. Corrective helper/test/source-registration files are the finite source delta. Await all original source CI terminal results before the ONE additional normal commit/push/native two-job qualification cycle; no manual dispatch, cancellation, same-head rerun, third cycle or automatic next package.
+
+
+First-cycle exact-head CI is now terminal before corrective push: source cbdd6f955b3dd479ce7043452d4cad43ef0bdcc0; workflow conclusions {'failure': 1, 'success': 8}; job conclusions {'failure': 2, 'success': 33, 'skipped': 7}. All nine known workflows are present, no pending/cancelled jobs. The only failures are the two backend input qualification jobs; six held runtime jobs and one optional private native producer are SKIPPED. Historical source checks are preserved in first-cycle-ci-terminal.json under ignored task scratch; they are not substituted for corrective-head results.
+
+
+### One explicitly authorized corrective cycle: current input findings confirmed blocked
+
+BACKEND_BUILD_SCAN_FINDINGS_CONFIRMED_BLOCKED. Corrective source5959b0e4dc5f5769f7ee1f261ddef6cfe6b7c5d7/tree87a2498c17fce8d771f526c517f061778d930d60; retained PR28 OPEN/DRAFT. Only four correction files committed (helper, harness, source registry and prior task outcome/authorization ledger),123 additions/15 removals. ONE additional normal push, no manual dispatch or same-head rerun; first-cycle failures are preserved. Run36999785114 attempt1 executed independent native Linux amd64/arm64 jobs. Both report complete original Trivy/Grype/SBOM/scanner-metadata JSON capture, byte hashes before parsing, exact current config subject and database freshness validation. Actual threshold exits Trivy1/Grype2 each have their own validated blocking findings, signalsnull; no generic report/operational failure is recorded. Both jobs remain FAILED, as required by blocking policy. Fifteen scanner/package rows on EACH architecture correspond to eleven distinct CVEs; these are scanner matches, not fifteen independent CVEs or proof of application exploitability. All fifteen are publicly projected against independently inspected vendor dpkg package versions; unpublished0. No finding suppression, severity override, ignore-unfixed exemption, report synthesis or changed subject.
+
+| Native qualification job | Exact base manifest/config | Node ELF SHA256 | Scan process/wall evidence | Public metadata identity |
+| --- | --- | --- | --- | --- |
+| [amd64 hosted job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36999785114/job/110814602414) | sha256:23a384b4596ec311f78ac9c46af2b8cc0ed403d1f9c3c249111266d7f56319db / sha256:cec1f3ac719e3061b85e5776bfca6addc49cc1163da18c2208ba11610a466e2a | 89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7 | Trivy exit1/1008ms; Grype exit2/6315ms; inspection 119.037s; free capacity 92,331,094,016bytes | SHA256440deb935bfabe7e7061646b1cc767fb0a518bf7954495bcdc663ec196730980; 9968bytes |
+| [arm64 hosted job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36999785114/job/110814602540) | sha256:99dd2b1678678b36e0de5abe2fdd40e508786ac1044106948a533bea329c16bd / sha256:c973bfca85b7a21523f4498c588edd40087906c30ef42eec98c81e6446a4f9c7 | 23a5637c2470fde09fcc1acc77c1b92e04e3d7e3e6e80ff7df6f5831958d1477 | Trivy exit1/806ms; Grype exit2/5614ms; inspection 111.233s; free capacity 115,800,428,544bytes | SHA256bdbe08553f33a2c16a0bd6c1bbd1fb3dfe758db134005132679dc266beea9256; 9968bytes |
+
+Both current subjects independently reproduce the exact index/platform/config/all22layers and Node native ELF identities already recorded in first-cycle evidence; no historical alternate image identity is substituted. Python3.12.3, frozen scanner/tool archive versions/hashes, production nonroot and null QA trust preserved. This is input qualification only: ERP production image NOT_BUILT, builder/frontend bytes and product SBOM/npm-language coverage/ABI/native probes NOT_QUALIFIED or NOT_EXECUTED. Production conditional build/scan caller remains an explicit implementation gap after supported inputs qualify. No successor image was inspected or substituted.
+
+| Actual scanner finding group (same independently observed versions both architectures) | Scanner records | Current primary-source finding/fix scope |
+| --- | --- | --- |
+| libc6 2.41-12+deb13u3: CVE-2026-5450 (GrypeCRITICAL), CVE-2026-5928 (GrypeHIGH) | 2 | [Debian5450](https://security-tracker.debian.org/tracker/CVE-2026-5450), [Debian5928](https://security-tracker.debian.org/tracker/CVE-2026-5928): trixie fixed2.41-12+deb13u4, which is not this input |
+| libc6 same version: CVE-2026-5435/CVE-2026-19499 (GrypeHIGH) | 2 | [Debian5435](https://security-tracker.debian.org/tracker/CVE-2026-5435), [Debian19499](https://security-tracker.debian.org/tracker/CVE-2026-19499): trixie remains vulnerable even at u4/no-dsa minor issue. Vendor urgency is not a policy waiver |
+| zlib1g 1:1.3.dfsg+really1.3.1-1+b1: CVE-2026-85091 (GrypeHIGH) | 1 | [Debian85091](https://security-tracker.debian.org/tracker/CVE-2026-85091): trixie source1.3.1 remains vulnerable/unfixed; description names1.3.1.2-through1.3.2. Exact source/build applicability disagreement remains explicit; no safe/excluded claim |
+| libssl3t64 3.5.7-1~deb13u2: CVE-2026-75804 (TrivyHIGH), CVE-2026-84782 (TrivyHIGH and GrypeHIGH), CVE-2026-54873/CVE-2026-84784/CVE-2026-72897 (GrypeHIGH) | 6 | [Debian75804](https://security-tracker.debian.org/tracker/CVE-2026-75804), [84782](https://security-tracker.debian.org/tracker/CVE-2026-84782), [54873](https://security-tracker.debian.org/tracker/CVE-2026-54873), [84784](https://security-tracker.debian.org/tracker/CVE-2026-84784), [72897](https://security-tracker.debian.org/tracker/CVE-2026-72897): actual deb13u2 vulnerable; trixie security backport fixeddeb13u3 |
+| gcc-14-base/libgcc-s1/libgomp1/libstdc++6 14.2.0-19: CVE-2026-102010 (GrypeHIGH each) | 4 | [Debian102010](https://security-tracker.debian.org/tracker/CVE-2026-102010): gcc-14 source14.2.0-19 vulnerable/unfixed; source-package matching across four binary packages does not independently establish use/reachability of erase_if in each binary |
+
+[OpenSSL29September vendor advisory](https://openssl-library.org/news/secadv/20260929.txt) assigns84782 HIGH but75804/54873/84784/72897 LOW; scannerHIGH classifications above remain unmodified and the discrepancy is retained. Deprecated glibc APIs, QUIC/DTLS/specific TLS context switching, zlib nonblocking write stalls and GCC template use have conditions; no application reachability, exploitation, or safe exemption was executed/established. Current Node version and bundled zlib/OpenSSL source/backport provenance remain missing; the historical Node24.21.0 source observation and ELF identity alone cannot close those gaps.
+
+Actual DB identities remain architecture-specific: Trivy SHA25639d64de1ff3a945333aff7eeec9b953da8f07c1f5960936c5922a2dc7f5c93a7 updated2026-10-02T06:55:51.690179UTC on both; Grype amd64 SHA2562ee64769e7d8dbc5612f9923fdd36078b7eecb768037e1db6a2fcc559576d6ac, arm64 SHA2561cd47ebe158b6b57b36802278d179126f62de07d28078e06c82cf33173e83dac, both built2026-10-02T06:31:53UTC. Equal timestamps/findings do NOT establish equal Grype database bytes; difference cause not attested. Current original report byte counts/hashes and each stdout/stderr exit/signal/time/hash are available in the bounded public metadata; raw reports/SBOM/stdout/stderr/private process receipts/image bytes were private until settled owned cleanup, not published and no longer retained. Both cleanupComplete=true. Each exact two-file metadata set passed filename/size/hash/source/tree/run/attempt/architecture readback, no extra files. Public metadata retention expires16October2026 around11:15-11:18UTC; no durable private evidence or future admission custody is claimed.
+
+Corrective native qualification is terminal; broader current-head source CI is still pending and is observed separately. No third scan/source push, repeated old failure or automatic next task. One next executable action: CI/supply-chain maintainer (UNASSIGNED) prepares one vendor remediation/applicability package for these exact eleven advisories/current binary identities and the missing Node bundled source provenance; required proof is supported same-family fixed/backported bytes or exact vendor applicability evidence, complete unsuppressed policy-valid reports and native architecture identities, before separately authorized production caller implementation. No warning/policy waiver or speculative distro loop. GTK_PARENT_COMPATIBILITY_UPSTREAM_BLOCKED, four native warnings, UNSENT request/UNASSIGNED maintainer, EXTERNAL_RUNTIME_BLOCKED/six held runtime jobs, optional native producer, controller/host/Windows/install/release holds unchanged. Runtime/admission/native app probes/windows journey NOT_EXECUTED; release NOT_CLEARED. No operational DB or real data, main/P1/PR29/K30, migrations/v48/46IDs/25OFFflags, TLS/ACL, minimum1.90/provenance1.97.1 or prior history changed.
+
+
+A distinct inherited source-CI failure occurred on the corrective head: Master run36999785186 attempt1, [original failed regression job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36999785186/job/110814602655). Full-suite result3,004PASS/2FAIL,308files/onefailedfile; tests/native-mfa-linkage.test.ts timed out at the unchanged15seconds in concurrent-distinct-login lineage and two-native-requests-from-one-login cases. Cause unresolved; no source/test/deadline/assertion change. The human's instruction to retry failed work once authorizes ONE first failed-job-only retry of this newly failed master job (attempt2), separately from the already completed one corrective input-scan cycle. Successful same-head master DB job and unrelated workflows retained; no newpush, thirdscan, portable rerun, native audit, runtime/admission or operational DB action. Original failure/logs retained privately; eventual retry outcome will not establish a causal repair.
+
+
+### Final corrective-head source CI and bounded retry readback
+
+All nine workflows at5959b0e4dc5f5769f7ee1f261ddef6cfe6b7c5d7 are terminal:8SUCCESS/1FAILURE; latest job state33SUCCESS/2FAILURE/7SKIPPED,0pending/0cancelled. The only remaining failures are the two validated input scan blockers. Six mandatory runtime jobs and optional private native producer remain SKIPPED, not passes. No legacy/f679 source outcome substitutes for these actual current results. Master run36999785186 failed-job-only attempt2/[retry regression job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/36999785186/job/110820008524) SUCCESS. Successful same-head master PostgreSQL execution retains its original11:13:10-11:14:20UTC timestamps despite its API job ID being presented anew in the latest attempt; no new database execution is claimed from that ID. Original attempt1 two15-second MFA timeouts and3,004otherpasses remain preserved; repeat success does not establish their cause or a durable fix. No test/assertion/deadline/source change after5959b0e, no second master retry, third input scan, extra push or automatic next task.
+
+Terminal local source281/4heads/4backupcontracts, both publication scans476paths, Git safety and diff checks PASS. Independent read-only outcome reviewer finds no remaining scoped conclusion/privacy/provenance issue; root separately verified both public manifests, input/tool archive hashes, and retained source/run/architecture identities. Raw reports are not independently re-parsed by the reviewer after their owned deletion. Empty index, only task-owned terminal ledger additions unstaged; original375307-byte raw prefix and194-line patch hashes verified. Committed source/tree and remote/draft PR identity remain5959b0e/87a2498; protected native/runtime/product gaps remain open. Measured initial task start10:06:30.691UTC; native corrective inspections119.037s/111.233s and CI execution timestamps are wall observations, not CPU/account/credit/cost estimates. Public artifacts retain their measured16October expiration; raw private artifacts were already cleaned on each native runner. Bounded PR28/Asana/Notion comments and existing backend Canvs card readbacks follow; no page notes/ownership/dates/completion/W1 geometry edits.
+
+
+### Final tracker readbacks and retained evidence closure
+
+ONE top-level [PR28 outcome](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5952056451), comment5952056451, published and exact UTF8 body/hash read back. Asana task1218421699989887 received ONE short linked comment1219101470430831; exact text verified, prior notes/assignee/due_at/due_on/completed unchanged (incomplete). Existing Notion discussion3ecc9801-27a8-819b-9668-001c20290f0a received ONE reply3edc9801-27a8-81ef-b1d1-001df2cdcf0a; linked outcome read back, all five prior comments retained (six total), no page-body edit. Existing Canvs backend text nps-backend-build-scan-1a-text-20261002 updated and queried:299 elements retained, all298 other elements byte-equal in returned JSON; target geometry/font/alignment/container/bindings preserved, only text/originalText and provider version metadata changed. W1 sizes/unrelated cards remain unchanged.
+
+Trackers preserve BACKEND_BUILD_SCAN_FINDINGS_CONFIRMED_BLOCKED, product NOT_BUILT, final8SUCCESS/1FAILURE workflows and33SUCCESS/2blocked/7heldSKIP jobs, Master single retry PASS with unresolved original MFA timeouts, private raw cleanup, and all runtime/native/GTK/host/Windows/install/release holds. Next prerequisite remains a vendor remediation/applicability and Node bundled-source proof package from the CI/supply-chain maintainer (UNASSIGNED). No automatic successor search, third scan, second Master retry, evidence-only commit/push or next task. Public tracker readback metadata retained under the ignored owned task root. Original375307-byte ledger prefix and194-line patch preserved; index remains empty and only terminal evidence is unstaged.
+
+
+### RECOVERY-BACKEND-VENDOR-NODE-REMEDIATION-1A - reviewed successor input
+
+Starting5959b0e/tree87a2498, actual43-line unstaged ledger delta and407001-byte prefix preserved with SHA256d7ce0e1c362498f8db63b610950b86bdf5e5fec82988334e296df1e22c6e64a5; empty index verified. [Plan5954398390](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5954398390) authorizes one supported partial successor and one normal base-only cycle, without historical retries or ERP image build. Full11-CVE disposition and binary/source chain are in [the scoped report](BACKEND_VENDOR_NODE_REMEDIATION_1A.md).
+
+One successor9eeb7f5887d0e239e78264b06f7f11d2e14be534050481803a9e4728fcdd278e passes vendor Cosign identity/issuer/transparency checks and both-architecture descriptor/layer/diff-ID/static-path review. Actual libc6u4/OpenSSLdpkgdeb13u3 payloads exactly match official pinned .debs; expected partial remediation only, scans pending. Original15rows/11CVEs each retained; zlib/GCC packages unchanged. Actual Node ELF bytes match signed official24.20.0/24.21.0 release archives; matching signed source archives and build configs identify bundled zlib/OpenSSL, independent from OS libraries. Both zlib source failure paths lack the later reset; successor bundled OpenSSL3.5.8 is not later-advisory clearance. Publisher-authenticated release/source correspondence verified; reproducibility/build-invocation attestation missing; ERP exploitability/compatibility unexecuted.
+
+Runtime pin changes only in Dockerfile/existing helper, with source hash registration and focused evidence. No scanner policy, invocation, coverage, failure finalizer, dependencies or native/compiler contract change. Independent read-only reviewer checked archive/Node hashes, descriptor chain, signature logs and source/remaining gaps; underlying model identity unattested. Existing normal CI trigger produces one successor base-only matrix; six runtime gates and optional native producer remain separate. Product NOT_BUILT/runtime NOT_EXECUTED/release NOT_CLEARED. All protected operational/main/P1/K30/native/GTK surfaces remain untouched.
+
+Precommit scoped validation:32HARNESS_ONLY controls and23publication tests PASS; source281paths/4heads/4backup contracts PASS; both publication scans477paths and Git safety/diff PASS. All11workflow YAML files parse and match starting committed bytes; the single false OCI-image gate transitively holds six runtime jobs, with the independent native producer still separately conditional. The initial optional Node YAML module was unavailable and an initial local check incorrectly counted only direct false conditions; Python parsing plus actual dependency traversal corrected that verification assumption without editing workflows. Independent read-only source/report review found no substantive issue; model identity unattested. Only five named files may be staged, including the preserved prior43-line ledger delta.
+
+
+### RECOVERY-BACKEND-VENDOR-NODE-REMEDIATION-1A - terminal candidate and authorized single retries
+
+**BACKEND_BASE_REMEDIATION_VALIDATED_ADMISSION_BLOCKED.** Source2aa461b7e0388db6b79afe1e4421a5dc1d9e8dda/tree16004fe31ae0ad8a21dcf861430859250fc1be27, parent5959b0e; five files136 additions/4 deletions, one normal push14:57:29UTC. PR28 remains OPEN/DRAFT. Pre-CI full vendor/Node report is committed; these post-CI observations remain unstaged. Original407001-byte ledger prefix and43-line patch are preserved. Later direct user instruction to continue and retry whatever failed once superseded the earlier no-retry limit only for failed current-candidate checks; no historical retry, duplicate dispatch, second candidate/push or policy change occurred.
+
+Both native base-only architectures completed attempt1 and one authorized failed-job retry attempt2 in run37023536469. Each attempt has15->7 scanner/package rows and11->4 unique CVEs per architecture compared with starting5959 scans: eight rows/seven CVEs removed, no new tool/package/advisory keys. Remaining seven HIGH rows: libc6u4 CVE-2026-5435 andCVE-2026-19499, zlib1g CVE-2026-85091, andCVE-2026-102010 across gcc-14-base/libgcc-s1/libgomp1/libstdc++6. No CRITICAL row remains in this bounded OS scan; this does not clear bundled components. Candidate findings arrays are identical across both attempts. Actual Trivy exit0, Grype exit2 with its own seven blocking rows, all four reports JSON_PARSED, zero unpublished findings, exact source/tree/input/platform/config/22-layer/Node/tool archive bindings and public filename/size/hash manifests verified. No scanner crash/incomplete report is misclassified as policy failure.
+
+Attempt1 results: amd648983bytes/SHA25659f3c38526b0bf24b9338622b0118efbcbc81b562bea9b85a5b3e0f95ff92658 (job110892328388); arm648984bytes/SHA256c3d2527be2623aaa9814d680d3475c8f1678fcf7d6f6a0e237aa191027e87355 (job110892328860). Attempt2 results: amd648983bytes/SHA2567a9d2b9e2912f56261fcdd4459b6bbc402cb1095d8a984ad75baf0be4a9dbf06 (job110902653223); arm648984bytes/SHA256d6483b3d84459e659c8b532d2008d58e7de1b4332bc17ada6e608777f1a64c42 (job110902653557). Exact bounded metadata retained separately; no third scan.
+
+Database attribution: attempt1 Grype hashes match original scans within each architecture (amd642ee64769e7d8dbc5612f9923fdd36078b7eecb768037e1db6a2fcc559576d6ac; arm641cd47ebe158b6b57b36802278d179126f62de07d28078e06c82cf33173e83dac), built06:31:53UTC. Attempt2 amd64 changes to the arm64 hash; arm64 unchanged, same recorded build instant. Cause of byte difference unknown; raw databases unavailable. Trivy changed from original39d64de1/06:55UTC tofc07a783247f127f56453c76baf92eec9573767be8f1c153b57dfc3d2bfff9bf/12:48:00.080865UTC on attempt1 and remains unchanged on attempt2. Verified vendor package/backport bytes support the partial improvement, but there is no wholly controlled same-DB two-scanner experiment or reconstructed raw-report proof.
+
+All nine current-candidate workflows are terminal:8SUCCESS/1FAILURE;42jobs=33SUCCESS/2confirmed-base-blockers/7heldSKIPs. Real-user37023535716, Communication37023536094, Biometric37023536323, Master37023536171, Cross-platform37023535775, PostgreSQL37023536964 and Student-items37023535519 pass attempt1. Onboarding37023536012 passes its single failed-job retry attempt2; portable37023536469 remains findings-blocked after attempt2. Successful jobs are carried forward, not rerun. Six runtime jobs remain held through the unchanged false OCI-image dependency chain; independent native producer remains separately conditional. Master had no current-candidate retry.
+
+Onboarding attempt1 failed OPENSSL_FIXTURE_PROPERTIES_REJECTED in the existing host native-artifact-admission fixture, with2993tests passed/13skipped. Exact1338-byte diagnostic SHA2565faa0080517cb4b6d4cba8fe83504d796fcf535e56b8c370d01d64159c1f51cc shows successful generation/regular key and certificate, stageVALIDATION/propertiesnull, ten tracked casesNOT_EXECUTED, cleanupREMOVED. The catch covers reads/parsing/property computation/strict checks; specific cause remains UNKNOWN. Attempt2 exact1314-byte diagnostic SHA256fa10fe1809945750a0d939370da5fa73862d084409de62a6306043fae2c10511 verifies READY, expected RSA2048/CA/self-signature/key-match/86400000ms validity, ten trackedPASS, cleanupREMOVED. Same host OpenSSL hash/version3.5.7 and Node24.19.0; this is not candidate-runtime execution. Full retry307filesPASS/1SKIP,3003testsPASS/3SKIP of3006; typecheck and production source buildPASS. Neither the first failure nor a speculative root cause is erased by the pass.
+
+Independent read-only reviewer verified both attempts' actual metadata/manifests, complete projected findings and descriptor/binary identities, DB drift and fixture uncertainty. It did not reconstruct deleted raw scanner reports, rerun scanners/crypto or execute images; underlying model identity remains unattested. Root performed crypto verification and Debian payload comparison before cleanup. Existing32HARNESS_ONLY+23publication tests and source281paths/4heads/4backupcontracts passed before push. No application/native compatibility or exploit-reachability claim follows from static Node association or green source CI.
+
+Node binary identity and publisher-authenticated release/source association are VERIFIED; exact producer build invocation/reproducibility attestation MISSING, selected bundled zlib reset ABSENT, bundled OpenSSL later-advisory clearance NOT_ESTABLISHED. OS vendor backports and Node bundles are separate. Product NOT_BUILT; runtime/admission NOT_EXECUTED; release NOT_CLEARED. FA1-FA4, schema/v48/migrations/46IDs/25OFFflags, Georgia Bold, Rust1.90/production1.97.1 and prior native corrections remain unchanged. Four native warnings, GTK upstream-blocked/UNSENT/unassigned request, host/Windows/install/runtime acceptance stay separate; main/P1/PR29/K30/PR30 and operational data untouched.
+
+All four runner results attest cleanupComplete=true/raw lifetime UNTIL_OWNED_JOB_CLEANUP, no durable raw archive. Independently reviewed local public raw image/archive/source/tool bytes were removed only from seven exact owned directories at15:13:47UTC; absence verified, bounded receipts/descriptors/checksums/verifier logs retained. Four attempt2 public metadata artifacts11235905442/11235478565/11235751000/11235509070 expire16October15:25:13/15:25:14/15:27:17/15:27:17UTC; these ZIP artifact identities differ from uncompressed JSON manifest hashes. Onboarding metadata artifacts11235056080/11236550456 expire9October15:08:28/15:34:18UTC. Measured base inspections111.652/119.197seconds(attempt1amd64/arm64),120.479/110.182seconds(attempt2), not CPU/account/credit/cost estimates. Initial evidence decision and candidate push occurred within the90-minute evidence budget.
+
+Smallest next prerequisite: supported vendor correction or exact applicability evidence for the four residual OS CVEs, plus official Node bundled-zlib/OpenSSL correction with authenticated source/binary material binding. CI/supply-chain maintainer UNASSIGNED; no vendor outreach, suppression, VEX, waiver, install, merge, tag, deployment, activation or automatic next task. One PR28 outcome linked to plan5954398390, one short Asana comment, one existing Notion discussion reply and only the existing Canvs backend text update/readbacks follow.
+
+### Vendor/Node terminal tracker readbacks and retained closure
+
+ONE [PR28 outcome5955900575](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5955900575) linked to plan5954398390, exact body read back. Asana task1218421699989887 receives one short comment1219109987145084, exact text read back; notes61012characters/assignee/due_at/due_on/completed unchanged, still incomplete. Existing Notion discussion3ecc9801-27a8-819b-9668-001c20290f0a receives one reply3edc9801-27a8-81d8-beaa-001df488424c; exact text and all seven prior comment blocks preserved, eight total. Canvs existing backend text nps-backend-build-scan-1a-text-20261002 updated/read back:299elements, all298other elements identical; only target text/originalText/version/versionNonce changed, geometry/font/container/bindings intact.
+
+Terminal source281paths/4heads/4backupcontracts, both publication scans477paths, Git safety and diff checks PASS. Independent final read-only review finds no substantive publication correction; root verified full test log counts, metadata retention and local cleanup receipts. The private CI snapshot's stale outer cached statuses were normalized to its fresh terminal detail records, preserving8SUCCESS/1blocked and33PASS/2blocked/7heldSKIPs. Local/remote source2aa461b7/tree16004fe3 and OPEN/DRAFT PR28 match; empty index and only this terminal ledger append remain. No second commit/push, further retry or automatic next task. Original407001-byte ledger prefix and43-line patch remain preserved; all protected runtime/native/GTK/operational holds remain.
+
+
+### CERTIFICATE-CONFIRMATION-INTEGRATION-1A - source integration and focused local proof
+
+Primary source starts at2aa461b7e0388db6b79afe1e4421a5dc1d9e8dda/tree16004fe31ae0ad8a21dcf861430859250fc1be27. Prior primary writer completed and stopped; this task holds exclusive primary integration ownership. Original418891-byte/1606-line ledger, SHA2560fa923f99b9b87d97bd96ec5c333d01dcc4b7192beab35ea0e60771221212be8, is preserved privately byte-for-byte. Its29-line initial unstaged terminal addendum belongs to the preceding vendor/Node task and is included with that attribution, not reclassified as this task's validation. No operational DB/vault read/copy/hash occurred.
+
+Immutable LOCAL sourceef00677315cbf38d8f3293d7ae41396b2e1c8faa and its parent/blobs were verified through Git objects; parent is exact primary. All three source paths applied intact by no-commit attributed cherry-pick: components/certificate-forms.tsx, tests/portable-certificate-modal.test.ts, config/recovery-integration-source-delta.json. Only the current certificate component hash changed in the shared manifest; all preceding entries and source hashes preserved. Two effects now reset dialog/reason when certificate/request recordid changes, retaining status/updatedAt invalidation. This is record context, not authenticated-user identity. Backendc67c146a/descendants and current companion work excluded; no branch merge.
+
+Owned committed baseline plus the immutable regression blob reproduced BOTH original assertion failures (reset setter zero calls),4unrelated cases filtered out. Integrated focused suite10files/153testsPASS; real synthetic certificate service1file/1scenarioPASS with fresh SQLite database and cleanup. Added10handler/hook controls for unchanged-context valid action, current target, close/status/version reset and delayed success/refusal across rapidA/B/Cswitches. These are UNIT_OR_CONTRACT, not simulated DOM or Browser acceptance. Existing route privacy and Parent/scope/immutability controls remain distinct from actual database service execution. Components andtests-m-rtypechecksPASS; initial new-mockTS2493type error corrected and affected10tests/typecheck rerunPASS. Source281paths/4heads/4contracts, two publication479pathscans, Git safety/diffPASS. Raw commands, timestamps, failures and outputs retained privately.
+
+Independent read-only source review COMPLETE with no material actionable finding after mobile task completion freed a worker slot. GPT-6 Astra requested; underlying model identity unattested; reviewer executed no tests/builds. Source/blob/ledger-prefix and hook/handler evidence independently inspected. One normal exact-candidate CI remains pending the reviewed push. Existing correction/reissue/cancel routes do not all consume expectedUpdatedAt; no universal version-enforcement or outstanding-response-isolation claim. No extra implementation writer. Workflow matrix/triggers inspected: expected9normal PRworkflows/42displayedjobs (falseOCIcondition precedes matrix expansion), including2automatic base-only scans;6runtimejobs and conditional native producer held. No manual scan/dispatch/retry, productimagebuild, calleractivation or trust/policy change authorized. PR28OPEN/DRAFT; main/PR29/PR30/backend/K30/W1/P1/native/schema/v48/migrations/history/OFFflags and GeorgiaBold geometry unchanged. Full-stack/authenticated/device acceptanceNOT_EXECUTED; EXTERNAL_RUNTIME_BLOCKED and four native warnings remain separate. Detailed source-blob map, finite matrix and limits:docs/evidence/certificate-confirmation-integration-1a/HANDOFF.md; plan5960042903.
+
+Task-owned baseline/cache cleanup was automatically rejected as blocked by policy before execution; no retry/alternate wrapper. Owned disposable baseline, archive and caches retained; service fixture cleanup had already passed.
+
+### 3 October 2026 - CERTIFICATE-CONFIRMATION-INTEGRATION-1A terminal (post-CI, unstaged)
+
+CERTIFICATE_CONFIRMATION_FIX_PARTIAL. Integrated and independently source-reviewed at7566699862c34b18e98345cdf0d3ea1342e27748/tree7208053f0532e79d26c06bf1ba758e44609cd0c2; sole parent2aa461b7. One consolidated push, no second documentation-triggering push. All three ef006773 source blobs match HEAD exactly; six committed paths/306insertions/6deletions, no companion backend contamination. Original ledger prefix retained. Local original2FAIL then integrated153PASS plus isolated real certificate service1PASS; affected typechecks/provenance/publication/Git checks and read-only review passed. No DOM/authenticated Browser/device acceptance claimed.
+
+All9normal exact-head workflows terminal, attempt1:7SUCCESS/2FAILURE;42jobs=32SUCCESS/3FAILURE/7SKIPPED/0pending. Master37068007914/job111040514086:309files/3018testsPASS, including both certificate regression files and isolated certificate service. Onboarding37068007905/job111040513849:307passed/1failed/1skippedfiles and3014passed/1failed/3skippedtests. Sole failed case is unchanged portable-finance-browser-service.test.ts:53, Test timed out in30000ms; certificate10+6+service1passed there. Later chained typecheck/build in that job not executed. Cause unestablished; no finance investigation, retry, timeout/assertion change or source fix was performed. Therefore the entire candidate cycle is not represented as passing.
+
+Portable37068008022 automatic base-only jobs111040514734/[arm64 job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37068008022/job/111040514608) retain policy failures:7HIGHrows/4uniqueCVEs EACH architecture, BUILD_SCAN_ONLY_NOT_ADMITTED; exact result/manifest metadata bytes and hashes verified. ProductNOT_BUILT, runtimeNOT_EXECUTED, admitted=false. Six held runtime jobs plus independent native artifact producer remainSKIPPED. Other successful workflows:biometric37068008053,communication37068008072,cross-platform37068008070,PostgreSQL37068008025,real-user37068008085,student-items37068008030. Complete run/job identities and source mapping are in the task handoff/private ci-final.json. No manual dispatch/rescan/retry, security waiver, activation, installation or release.
+
+Work including review queue/push21:06:01-21:38:08UTC=32m07s. CI observation21:38:08-22:16:04UTC=37m56s including observation latency. External handoff interval and readback receipts follow in the task HANDOFF.md. Account usage unmeasured. PR28OPEN/DRAFT; main, other owners and all previous holds unchanged. ONE next action: recovery owner dispositions the current exact-head onboarding finance timeout before treating the candidate regression cycle as validated. No continuation started here. Final post-CI evidence remains unstaged.
+
+Synchronization/readback complete22:21:37UTC (5m33s handoff interval): PR28comment5962367975; Asana certificate comment1219121025777253 and recovery comment1219121165095763; Notion comment3edc9801-27a8-8153-a3b1-001d610bd56c; certificate Canvs text appended with exact geometry/binding/history preservation. Both Asana tasks remain incomplete and notes/owners/dates unchanged. Concurrent backend-card append left intact; this task edited only its named certificate text. All result bodies read back. Primary ownership released at terminal handoff; only two post-CI evidence files remain unstaged, no second push.
+
+
+### 3 October 2026 — RECOVERY-BATCH-INTEGRATION-5A reviewed local candidate
+
+Exclusive primary ownership transferred after certificate terminal release. Starts7566699862c34b18e98345cdf0d3ea1342e27748/tree7208053f0532e79d26c06bf1ba758e44609cd0c2. Initial ledger426047bytes/1631lines and certificate handoff19549bytes/279lines privately preserved exactly; no historical line-count assumption. Frozen backend c67c146a+37dfe7ca (terminala6472986) and mobilec1c179d1 (terminal5ddb1d6) applied from actual Git objects, with original blob mapping. Certificateef006773 already present, not applied twice. K30 entirely excluded. Donor reports remain historical constituent evidence.
+
+One reviewed integration defect corrected: automatic base job now explicitly selects strict --base-only; guarded product caller remains unavailable-trust refusal. Three dispatch regressions preserve route/refusal distinction. Browser runner uses owned fresh output/run/port, exact QA-support include and narrow registration reconciliation. All prior source hashes retained; no security allowlist/threshold/held-job relaxation. No dependency/schema/permissions/fees/marks/native/OFF-flag or typography change.
+
+Local backend178+Python38PASS; certificate/import170PASS; isolated rendered component38PASS with genuine browser zoom/native-picker cancellation NOT_EXECUTED. Full combined regression: Test Files  310 passed | 1 skipped (311); Tests  3098 passed | 3 skipped (3101); Duration  1619.90s (transform 14.10s, setup 0ms, import 92.23s, tests 1428.62s, environment 44ms). Affected four TypeScript partitions, provenance287/4/4, publication and Git safeguards PASS. Overlapping suites not summed. Real isolated services use fresh invented SQLite fixtures; no operational DB/vault access/hash. Independent read-only source review complete with no remaining material finding; reviewer executed no tests, model identity not attested. Source-map, exact manifest, timings and boundaries:docs/evidence/recovery-batch-integration-5a/HANDOFF.md and SOURCE_MAP.json. Original Prompt3 red/green evidence reused, not relabelled this batch.
+
+One consolidated draft-branch push/normal exact-candidate cycle pending final staged/ownership/remote checks. Expected9workflows/42jobs derived from current definitions;6runtime+1native-producer holds preserved. Automatic base-only policy failures remain failures. Production trust, actual builder/runtime/Node proof, host/controller/native/device acceptance and EXTERNAL_RUNTIME_BLOCKED remain separate. Existing MORNING_DECISIONS retained; no fabricated authority/date or project-completion claim. Plan5961546600. Final CI observations will remain unstaged; no cosmetic second push.
+
+
+## RECOVERY-BATCH-INTEGRATION-5A — terminal single cycle, 3 October 2026 IST
+
+**BATCH_INTEGRATION_PARTIAL.** One consolidated push216661af1025dc5e45a92ae0f9fae57a456dbdd6,
+tree89058805cb15880d5896024644f29a529ed5c6cd, parent7566699. Backend draft37dfe7ca/
+c67c146a and mobile c1c179d1 plus attributed terminal reports integrated; certificate
+ef006773/7566699 already present and retained; K30/PR30 excluded.32paths,3131+/82-.
+[Full mapping, validation layers and all run/job states](recovery-batch-integration-5a/HANDOFF.md).
+
+Attempt1 normal cycle:9workflows2SUCCESS/7FAILURE;42jobs27SUCCESS/8FAILURE/7SKIPPED.
+Windows backend harness15failures in each of5sourcejobs; onboarding publication
+refused a bare historical job coordinate before regression; two automatic base
+scans each7HIGHrows/4CVEs remain policy failures. Linux portable/SQLite3098PASS/
+3qpdfSKIP each; PostgreSQL3068PASS/3qpdfSKIP; typecheck/build passed there.
+Both synthetic restore matrices8fresh+8repeat/source-isolated per provider verified.
+Local initial full3098PASS/3SKIP; certificate/import170, backend178/Python38,
+isolated rendered components38PASS. Counts overlap and are not summed.
+
+Smallest corrections remain reviewed LOCAL/UNSTAGED: canonical GitHub job link
+above preserves historical arm64 identity; native canonicalization of newly owned
+HARNESS_ONLY fixture root fixes reproduced Windows8.3 alias disagreement.
+Before1positiveFAIL/70filtered; after83PASS, affected typecheck/provenancePASS.
+No production guard/assertion/timeout/scanner allowlist changed; no secondpush/CI.
+Original ledger bytes remain committed/private. Hosted corrected validation pending.
+Independent read-only source review executed no tests; no model attestation.
+
+ProductNOT_BUILT; authenticated/runtime/deviceNOT_EXECUTED. Six runtime gates and
+optional native producer held, four native warnings/Node/trust/controller/host gaps
+remain. PR28OPEN/DRAFT; main,PR29/PR30, donor checkouts, schemas/OFFflags unchanged.
+Owned settled resources cleaned; historical/ambiguous/denied residue preserved.
+Work58m59.658s throughpush; normalCI24m04s plus terminal readback; handoff from23:50:17UTC.
+ONE next action: carry both reviewed corrections into the next separately authorized
+candidate and validate Windows backend/onboarding gates. No old-head retry or
+cosmetic push. Final observations remain unstaged; release clearance not granted.
+
+
+### Tracker readback and ownership release
+
+Terminal result [PR28comment5963324601](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5963324601) was read back exactly. Asana recovery comment1219121800194445 and Notion comment3edc9801-27a8-8195-97e2-001d1a271a60 were read back with matching text; parent incomplete status, notes, owner and dates unchanged. Canvs batch text received only two dated result lines; exact text/geometry/binding and all other302elements were verified unchanged (303elements before/after). No pending synchronization delta. K30/backend/W1/P1 cards untouched.
+
+Final independent evidence review confirmed all CI totals and the published/local distinction; reviewer performed no execution. PR28 OPEN/DRAFT at216661a read back at23:57:45UTC. Handoff/readback interval23:50:17–23:57:45UTC =7m28s; final evidence/Git closure follows, with no new source work. Primary ownership is released at this terminal closure (2026-10-02 23:58:38 UTC); no implementation/review job remains active. Both corrections and post-CI observations stay unstaged for the next integrator. Usage unmeasured; no background monitoring promised.
+
+
+## RECOVERY-BATCH-INTEGRATION-5A-R1 — reviewed correction continuation
+
+Starts2026-10-03T04:00:08Z at216661af1025dc5e45a92ae0f9fae57a456dbdd6,
+tree89058805cb15880d5896024644f29a529ed5c6cd, matching remote/PR28OPEN/DRAFT.
+Prior owner explicitly released; no subsequent primary writer found. Sole primary
+integrator reacquired ownership. Actual three dirty files preserved privately with
+exact bytes/hash/diff before edits: ledger432443bytes/1684lines, handoff33794/460,
+fixture14280/102. Full hashes and attribution are in the existing batch HANDOFF.
+
+Retain two prior reviewed corrections: native canonicalization only of newly owned
+HARNESS_ONLY fixture roots; canonical arm64 historical job link with destination
+and failure meaning unchanged. Added Python Path.resolve root/workspace equality
+assertion to the existing positive connected-caller case. No production/path/trust
+contract, scanner, timeout, dependency, workflow, registry, business or OFF-flag change.
+Original donor map preserved; R1 old/new test blobs appended in SOURCE_MAP.json.
+Certificate/backend/mobile already integrated; K30 and all donor deltas excluded.
+
+Normal backend/producer/publication205PASS/7files, Python38PASS; genuine Windows8.3
+owned temporary path with spaces83PASS/2files/no skips. Retained prior1FAIL/83PASS
+reproduction remains historical; missing original hosted child stderr is not invented.
+Affected tests-m-r typecheck and provenance287/4/4PASS. Existing publication negatives
+pass. Initial new source-map bare coordinate refusal retained; corrected job-prefix
+notation passes unchanged onboarding scanner497paths, as do access/communication.
+Independent read-only final source review: no material finding, no test execution or
+model attestation. Full isolated regression and fresh exact-candidate hosted cycle
+remain pending until subsequent receipts below. Prior27success/8failure/7skip cycle
+is preserved unchanged. Six runtime gates/optional native producer remain held.
+
+R1 plan: [comment5964396323](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5964396323).
+Prior result: [comment5963324601](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5963324601).
+No operational DB/vault access/hash, real image build or runtime/device admission.
+
+R1 local full regression completed:310files/3098testsPASS, one inherited qpdf file/3testsSKIPPED,0failures;1320.484seconds from04:13:40.488472UTC. Existing synthetic SQLite8fresh+8repeat restore receipts verified. Complete focused/current-source checks and independent source review passed; no protected registry update required. Final five-path manifest and exact source mapping are in the batch HANDOFF/SOURCE_MAP. Fresh exact-head Windows/onboarding/PG CI remains pending the substantive correction push; prior failed cycle remains failed. Final post-CI observations stay unstaged.
+
+
+### R1 terminal source validation — 3 October 2026 UTC
+
+**BATCH_INTEGRATION_R1_SOURCE_VALIDATED_RELEASE_GATED.** One substantive correction
+candidate published; no second candidate, dispatch, failed-job retry or cosmetic push.
+Starting SHA216661af1025dc5e45a92ae0f9fae57a456dbdd6/tree89058805cb15880d5896024644f29a529ed5c6cd
+became SHA5c3943fa3576987042d330dee51c8433b6e88660/tree184ebb15aef86bf6854cd92c4e900dd12868ce36.
+The five-path committed manifest above is exact; fixture and caller-test blobs are
+0c04b603bf18a9f722ee4eeb79b6c9a4649a49e6 and c8a9bbbfe024922e463d596ad99c9cdb8f256acf.
+SOURCE_MAP preserves all donor mappings and appends R1 old/new blobs. The initial
+three-path private byte copies, binary diff and terminal observations remain retained.
+Production/workflow/trust/dependency bytes and source registration are unchanged.
+
+At the prior216661a candidate:27successful/8failed/7skipped jobs. Five Windows jobs
+each failed15caller cases; onboarding refused the historical coordinate before full
+regression; two independent base scans failed policy. At corrected5c3943f all five
+Windows caller suites pass71cases each. Onboarding scans497paths and actually
+completes full regression, typecheck and build. Normal/real owned8.3/space-path local
+controls pass; existing source/tree/architecture/trust/report/output/foreign-path and
+cleanup refusals remain. Original hosted child stderr is unavailable: the actual
+local short-path reproduction demonstrates fixture incompatibility, not complete
+historical hosted causation. Current passes do not resolve historical MFA/finance/
+DENY/OpenSSL causes or vulnerabilities.
+
+Local205focused/83short-path/38Python controls, affected TypeScript partition,
+287file/4head/4backup-contract provenance and three497path publication scans pass.
+Full local isolated source:310files/3098testsPASS,1file/3inheritedqpdfSKIPs,0failure.
+Counts overlap; no aggregate unique-test claim. Existing negative controls remain.
+No new browser/device run: component/simulated-DOM, harmless child/file HARNESS_ONLY
+and isolated synthetic real-service execution are separate evidence layers.
+Authenticated ERP/browser/native/device acceptance remains NOT_EXECUTED.
+
+**Final exact-head normal CI:9workflows =8SUCCESS/1FAILURE;42jobs =
+33SUCCESS/2FAILURE/7SKIPPED;0cancelled/0pending/0missing. All attempt1.**
+The two failures are executed base-policy jobs, not setup failures or skips.
+Six mandatory runtime jobs and optional private Windows producer remain held.
+
+| Workflow / run | Result | Jobs success / failure / skipped |
+| --- | --- | --- |
+| [Portable Staging Foundation exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240758) | FAILURE | 1 / 2 / 6 |
+| [Master Requirements Reconciliation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240725) | SUCCESS | 2 / 0 / 0 |
+| [Communication Delivery Foundation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240730) | SUCCESS | 2 / 0 / 0 |
+| [PostgreSQL readiness dual-provider gate](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240753) | SUCCESS | 4 / 0 / 0 |
+| [Real-Data Onboarding Preparation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240789) | SUCCESS | 2 / 0 / 0 |
+| [Cross-platform apps 1A](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756) | SUCCESS | 16 / 0 / 1 |
+| [Student items and prior-year concessions exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240754) | SUCCESS | 2 / 0 / 0 |
+| [Biometric Staff Attendance 1A](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240780) | SUCCESS | 2 / 0 / 0 |
+| [Real-User Access Readiness 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240778) | SUCCESS | 2 / 0 / 0 |
+
+Required Windows receipts: Master [job111129561512](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240725/job/111129561512)
+passes311files/3101tests/0skip, including all3qpdf cases. Biometric
+[job111129561712](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240780/job/111129561712),
+Communication [job111129561671](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240730/job/111129561671),
+Real-user [job111129561824](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240778/job/111129561824),
+Cross-platform [job111129562366](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562366)
+and Onboarding [job111129561813](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240789/job/111129561813)
+each pass310files/3098tests/3inheritedqpdf skips. All six include71callerPASS.
+Onboarding publication and downstream full/typecheck/build steps are SUCCESS;
+publication alone is not the verdict.
+
+Linux portable and SQLite source gates each pass3098tests/3qpdf skips. PostgreSQL
+application passes3068tests/3qpdf skips, plus separate108concurrency controls.
+Financial/restoration23tests per provider and compiler/platform jobs pass.
+Fresh synthetic restore metadata verifies8fresh+8repeat per provider, empty targets,
+unchanged source and isolated siblings. These overlapping populations are not summed.
+
+Bounded hosted artifact ZIPs and file manifests were verified against exact source,
+run/attempt/job/provider and relevant input hashes. Base manifests/results:
+artifact11263984749/11263929899 amd64 and artifact11264169879/11265260066 arm64;
+restore artifact11264469142 SQLite/artifact11263879938 PostgreSQL;
+service sets artifact11264364961,11265540597,11265417065,11265541987,11265552486;
+onboarding artifact11265337090. Private verification JSON retains per-file bytes,
+SHA256 and owner subjects. All five service sets have finance1/native18/MFA37
+PASS result events with no unfinished spans. Expected refusal ERROR span endings
+are preserved; they are not successful actions. Onboarding's existing10-case
+fixture passes and reports owned cleanup REMOVED; this is current metadata, not
+historical cause reconstruction. No private keys/certificates or raw scanner reports were
+downloaded/published. Raw hosted scanner bytes ended at owned cleanup:
+cleanupComplete=true, durablePrivateRetention=false; bounded metadata is retained.
+
+Both normal base-only scans retain7HIGHrows/4distinctCVEs per architecture,
+Trivy0/Grype2, BUILD_SCAN_ONLY_NOT_ADMITTED, productNOT_BUILT and admitted=false.
+Node bundled-library/build applicability and production trust inputs remain missing;
+product-trust-registration.json remains null and production rejects synthetic positives.
+Four retained native warning records, controller/host/device inputs and
+EXTERNAL_RUNTIME_BLOCKED remain separate. No ERP image, runtime admission,
+installation, main merge, tag, deployment or security waiver.
+
+Independent read-only review covered exact source, attribution, production equivalence,
+negative controls, local receipts and final hosted evidence. No material scoped
+finding remains. Reviewer executed no tests and did not independently recompute
+artifact hashes. GPT-6 Astra reviewer option was available; no running-model switch
+or independently attested model identity. Existing certificate/backend/mobile
+integration retained once. New unconsumed mobile55f5d34/packetb8fe33a remains excluded,
+as do K30/PR30 and all other workstreams. No donor checkout/index was changed.
+
+Test-managed owned cleanup passed where recorded. A separate precise cleanup of
+the new synthetic SQLite database, TypeScript incremental cache and fresh short-path
+directory was rejected before execution by automatic command policy: "blocked by policy".
+All three are RETAINED_POLICY_DENIED; no retry through another tool/path/agent.
+Historical denied/ambiguous residue and two unowned MFA roots remain untouched.
+No operational database/vault read, copy or hash; no active owned test/listener remains.
+
+Work/preservation/local validation/review through push:
+2026-10-03T04:00:08Z–04:38:55.743386Z =38m47.743s.
+Full local regression04:13:40.488472Z–04:35:40.972472Z =22m00.484s is inside
+that interval, not additional elapsed time. Normal CI04:39:03Z–05:17:03Z =38m00s.
+Terminal evidence/readback interval begins05:17:41Z; final completion below.
+Account usage unmeasured. Final post-CI observations remain UNSTAGED; no evidence-only push.
+
+ONE next action: through existing MORNING_DECISIONS decision2, obtain an approved
+production pre-build trust/evidence registration decision from the CI/supply-chain
+maintainer and security/release authority (both remain UNASSIGNED), with exact
+base/builder/Node/tool/report applicability requirements and independently verifiable
+genuine inputs. Source validation neither appoints those roles nor clears findings.
+
+#### Complete final job states
+| Run | Job / current name | Result |
+| --- | --- | --- |
+| run37097240758, attempt1 | [job111129561889: Backend build/scan input qualification (arm64)](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240758/job/111129561889) | FAILURE |
+| run37097240758, attempt1 | [job111129561893: 1 - server and database](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240758/job/111129561893) | SUCCESS |
+| run37097240758, attempt1 | [job111129561917: Backend build/scan input qualification (amd64)](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240758/job/111129561917) | FAILURE |
+| run37097240758, attempt1 | [job111132405898: 2 - OCI image and supply chain](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240758/job/111132405898) | SKIPPED |
+| run37097240758, attempt1 | [job111132406298: oci-release-index](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240758/job/111132406298) | SKIPPED |
+| run37097240758, attempt1 | [job111132406388: 3 - portable stack](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240758/job/111132406388) | SKIPPED |
+| run37097240758, attempt1 | [job111132407096: 4 - distributed runtime](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240758/job/111132407096) | SKIPPED |
+| run37097240758, attempt1 | [job111132407121: 5 - object storage and recovery](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240758/job/111132407121) | SKIPPED |
+| run37097240758, attempt1 | [job111132407561: 6 - full synthetic acceptance](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240758/job/111132407561) | SKIPPED |
+| run37097240725, attempt1 | [job111129561512: Exact-head requirements, security, shared-platform and full ERP regression](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240725/job/111129561512) | SUCCESS |
+| run37097240725, attempt1 | [job111129561667: Exact-head PostgreSQL 17 migration, repeat deploy, constraints and parity](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240725/job/111129561667) | SUCCESS |
+| run37097240730, attempt1 | [job111129561671: Exact-head communication, security, shared-platform and full ERP regression](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240730/job/111129561671) | SUCCESS |
+| run37097240730, attempt1 | [job111129561867: Exact-head PostgreSQL 17 migration, repeat deploy, constraints and parity](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240730/job/111129561867) | SUCCESS |
+| run37097240753, attempt1 | [job111129561607: PostgreSQL schema and migrations](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240753/job/111129561607) | SUCCESS |
+| run37097240753, attempt1 | [job111129561736: Cross-provider parity and recovery](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240753/job/111129561736) | SUCCESS |
+| run37097240753, attempt1 | [job111129561810: SQLite existing release gate](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240753/job/111129561810) | SUCCESS |
+| run37097240753, attempt1 | [job111129561816: PostgreSQL application regression](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240753/job/111129561816) | SUCCESS |
+| run37097240789, attempt1 | [job111129561813: Exact-head synthetic validation, security and full ERP regression](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240789/job/111129561813) | SUCCESS |
+| run37097240789, attempt1 | [job111129561920: Exact-head PostgreSQL 17 parity and provider-independent preparation](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240789/job/111129561920) | SUCCESS |
+| run37097240756, attempt1 | [job111129562203: Android debug build and emulator UX gate](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562203) | SUCCESS |
+| run37097240756, attempt1 | [job111129562301: Draft Rust 1.90 Android i686-linux-android](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562301) | SUCCESS |
+| run37097240756, attempt1 | [job111129562341: Draft Rust 1.90 Windows production and QA tests](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562341) | SUCCESS |
+| run37097240756, attempt1 | [job111129562366: TypeScript, contracts and bundled shell](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562366) | SUCCESS |
+| run37097240756, attempt1 | [job111129562381: Unsigned Windows NSIS compiler gate](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562381) | SUCCESS |
+| run37097240756, attempt1 | [job111129562392: Draft Rust 1.90 Linux aarch64-unknown-linux-gnu](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562392) | SUCCESS |
+| run37097240756, attempt1 | [job111129562393: iOS simulator build and shared UI gate](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562393) | SUCCESS |
+| run37097240756, attempt1 | [job111129562400: Draft Rust 1.90 iOS aarch64-apple-ios-sim](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562400) | SUCCESS |
+| run37097240756, attempt1 | [job111129562402: Draft Rust 1.90 Linux x86_64-unknown-linux-gnu](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562402) | SUCCESS |
+| run37097240756, attempt1 | [job111129562410: Draft Rust 1.90 macOS x86_64-apple-darwin](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562410) | SUCCESS |
+| run37097240756, attempt1 | [job111129562448: Draft Rust 1.90 iOS x86_64-apple-ios](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562448) | SUCCESS |
+| run37097240756, attempt1 | [job111129562471: Draft Rust 1.90 macOS aarch64-apple-darwin](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562471) | SUCCESS |
+| run37097240756, attempt1 | [job111129562503: Draft Rust 1.90 Android armv7-linux-androideabi](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562503) | SUCCESS |
+| run37097240756, attempt1 | [job111129562536: Draft Rust 1.90 iOS aarch64-apple-ios](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562536) | SUCCESS |
+| run37097240756, attempt1 | [job111129562565: Draft Rust 1.90 Android aarch64-linux-android](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562565) | SUCCESS |
+| run37097240756, attempt1 | [job111129562574: Draft Rust 1.90 Android x86_64-linux-android](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129562574) | SUCCESS |
+| run37097240756, attempt1 | [job111129563041: Same-run private Windows QA artifact evidence](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240756/job/111129563041) | SKIPPED |
+| run37097240754, attempt1 | [job111129561543: exact-head-financial-contract (postgresql)](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240754/job/111129561543) | SUCCESS |
+| run37097240754, attempt1 | [job111129561695: exact-head-financial-contract (sqlite)](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240754/job/111129561695) | SUCCESS |
+| run37097240780, attempt1 | [job111129561712: Exact-head software, security and ERP regression](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240780/job/111129561712) | SUCCESS |
+| run37097240780, attempt1 | [job111129561974: Exact-head PostgreSQL biometric migration and parity](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240780/job/111129561974) | SUCCESS |
+| run37097240778, attempt1 | [job111129561824: Exact-head synthetic identity, security and full ERP regression](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240778/job/111129561824) | SUCCESS |
+| run37097240778, attempt1 | [job111129561988: Exact-head PostgreSQL 17 migrations, constraints and parity](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37097240778/job/111129561988) | SUCCESS |
+
+#### R1 readback and ownership release
+
+Terminal result [comment5965953126](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5965953126)
+was read back exactly. Asana comment1219123375033894 read back; task notes, name,
+assignee, dates and incomplete status unchanged. Notion comment
+3eec9801-27a8-81e2-9179-001deb684a73 read back in the existing discussion.
+Only existing Canvs batch text was updated;303elements retained,302other elements
+byte-equivalent, target geometry/bindings/style unchanged. Existing nonblank text
+preserved in order; three blank separators compacted to fit two result lines.
+No duplicate comment/page/task or change to other workstream cards.
+
+Final source/evidence reviewer confirmed all42job rows match actual run/name/state.
+One precision edit says raw scanner reports, distinguishing retained bounded JSON.
+Reviewer executed no tests or independent artifact rehash. Final local HANDOFF job
+URLs initially hit the unchanged publication rule, which allows exact job URLs only
+in the closure ledger. Only new HANDOFF links were formatted as run URLs with exact
+job-prefixed labels retained; ledger retains exact job URLs. Final497path scans pass;
+no scanner exception, source adjustment, commit or additional cycle.
+
+At final readback local/remote HEAD and PR28 match SHA5c3943fa3576987042d330dee51c8433b6e88660,
+tree184ebb15aef86bf6854cd92c4e900dd12868ce36; PR28 OPEN/DRAFT; index empty.
+Remaining local diff is only this HANDOFF and RELEASE_RECOVERY_1C.md terminal
+appendices, UNSTAGED. Prior bytes remain exact prefixes; private logs/preservation
+and policy-denied residue remain retained. Source/test/registration diff is empty.
+
+Terminal evidence/review/tracker handoff:05:17:41Z–2026-10-03T05:31:25+00:00 =
+13.741minutes; this is separate from the38m47.743s work and38m00s CI
+intervals above. No overlapping test durations added; usage unmeasured.
+**Primary ownership RELEASED at 2026-10-03T05:31:25+00:00 by RECOVERY-BATCH-INTEGRATION-5A-R1.**
+This is the terminal handoff; no next workstream, background monitoring or cleanup
+retry starts here. The single next action remains the decision2 trust/evidence input.
+
+
+### 6A integrated source freeze and local validation
+
+Starting primary SHA5c3943fa3576987042d330dee51c8433b6e88660,
+tree184ebb15aef86bf6854cd92c4e900dd12868ce36; donor source
+55f5d342e094dd37135ea6ce67c949c2eb57991d/tree6a129af2822d896f31bfff1b63d1c04d5ff66d60,
+parent5ddb1d6fd83b2a3c55fa7f735c0183580b5d11ab. Packet
+b8fe33ab944f460a6f98ae9ad924a00d947b9701/tree00ac5c76570986d96415e99600674fda350b77c0
+changes only the donor HANDOFF by75lines; its immutable R1 history is retained.
+Actual donor checkout is clean at that packet; no donor files/index/ref were changed.
+
+Initial evidence preserved privately: ledger454808bytes/1913lines,
+SHA2569f5860ec3ca711d723a6428c27fa75a61bc7d33d6e9bff5fbe3b0d6d0464e9ab;
+batch HANDOFF59948bytes/759lines,
+SHA2560e6d61202024dfd6122e7b68e6420ebbf068291576c3dff0e94e1affa2156ac9.
+Both are exact current prefixes, including all prior post-CI observations.
+
+Selective immutable integration retains primary isolation plumbing. Marks omits its
+inactive description reference during confirmation; onboarding derives its progress
+heading ID from useId, removes an unused duplicate heading ID, and clears obsolete
+refusal when opening a critical dialog. No authentication authority, permissions,
+payload, parser, service, schema, typography or business rule changed.
+SOURCE_MAP records donor-parent/primary-old/donor-new/candidate blobs. Candidate
+components match donor exactly; harness matches donor with primary run/port/output
+plumbing retained. Runner adds only two directly missing rendered controls.
+Superseding the initial reservation wording: existing QA-runner inclusion was
+retained, and one explicit bulk harness inclusion was added to QA-support.
+Primary registry remains287rows: exactly4current hashes changed;283unrelated
+entries plus all prior date/base/head/source/historical fields are unchanged.
+
+| Executed layer / command | Current result |
+| --- | --- |
+| Disposable committed5c source archive, successor harness and identical R1 assertions; node --import tsx scripts/qa-mobile-import-a11y-1b.ts --r1-only | 5PASS/8assertionFAIL, not setup failures. Reproduces all3defects; new controls also expose duplicate headings/stale reopen. |
+| Integrated real-component Playwright matrix; same runner without --r1-only | 49PASS/0FAIL/2NOT_EXECUTED: donor47 plus two direct controls. Ten normalized source/CSS/worker/harness hashes verified. |
+| Vitest10files, --maxWorkers=1: four import contracts, two certificate components, product caller/build command, two publication negative-control files | 176PASS/0skip:50import,16certificate,83backend,27publication; no aggregate with overlapping rendered coverage. |
+| python -B tests/backend-build-scan.test.py | 38PASS; base-only dispatch and normal missing-trust refusal without real builders/scanners. |
+| TypeScript components and QA-support partitions, --noEmit --incremental false | PASS; no shared incremental-cache writes. |
+| Existing provenance and three publication scanners | PASS287files/4source heads/4backup contracts;497publication paths and unchanged negative controls. |
+| Git safety / exact changed manifest | PASS; private captures/output excluded. Final staged checks precede commit. |
+
+Browser plugin is absent under the installed frontend skill; installed Playwright
+Chromium drove only isolated real components, original CSS and existing workers.
+Baseline loopback127.0.0.1:53510; combined127.0.0.1:57640. Both owned listeners are
+stopped, verified no listening socket. No dependency install or ERP/backend server.
+Private evidence includes page title/URL, meaningful content, no overlay, explained
+synthetic403/409 console responses and interaction results. Desktop1366x768 and
+390/320CSS-pixel states, both themes, reduced motion, keyboard/focus, real parsing,
+contacts/legacy warning rules and current-target preview/refusal all pass.
+Two new tests prove each instance's dialog accessible name and stable heading ID,
+plus pending-close protection and a visible new refusal after a clean reopen.
+320dark and390light screenshots inspected: long Unicode wraps inside the original
+scrolling modal; focus/cancel reachability is separately exercised. No public
+screenshots, credentials, fonts or raw rows are published.
+Genuine200/400percent zoom/text enlargement and OS picker cancellation remain
+NOT_EXECUTED, as do screen-reader/device/authenticated ERP/native acceptance.
+Programmatic clearing and responsive viewport sizes do not establish those results.
+
+Independent read-only specialist reviewed integrated source and evidence, rehashed
+all ten subjects, verified all four candidate blobs,283untouched registry records
+and original evidence prefixes, and inspected the320dark screenshot. No material
+scoped finding. No tests/builds/scans were executed by the reviewer. GPT-6 Astra
+option was actually available/requested; no model switch or identity attestation.
+Decision2 supporting analysis was cross-checked by the coordinator against current
+source; the specialist does not claim independent review of its own table.
+
+No full local suite is required by this two-component/harness-only delta or applicable
+instructions after the focused slice; the one normal hosted cycle supplies fresh
+full application/provider/platform coverage. No previous5c result validates new code.
+Actual current workflow matrix derives9workflows/42jobs; workflow bytes unchanged.
+Automatic base-only scans may execute; six runtime gates and optional private native
+producer remain held. Backend fixture/Python-native assertion, default trust refusal,
+certificate source, schema/flags/pins and historical canonical link are unchanged.
+K30/PR30, PR29 and other donor work are excluded. Hosting is deferred explicitly.
+No operational database/vault was read/copied/hashed; fixtures are invented only.
+
+Decision2's bounded current delta is appended to the existing MORNING_DECISIONS:
+implemented draft/caller versus null production registration and unimplemented
+reviewed resolver; human approver versus independently trusted identity; exact
+missing Node/tool/recipe/raw-byte inputs and metadata-only ephemeral scan retention.
+No trust key/config/receipt, authority, scanner policy, provider or runtime changes.
+ONE next decision after source validation: fill that existing decision's accountable
+reviewer and independent identity/custody fields; no real build or hosting follows.
+
+Exact planned commit paths: marks-importer.tsx, onboarding-centre.tsx, the two
+existing browser scripts, tsconfig.tools-qa-support.json, current source registry,
+mobile HANDOFF historical R1 appendix, batch HANDOFF/SOURCE_MAP, closure ledger
+and existing MORNING_DECISIONS. One substantive commit/push includes preserved
+initial evidence; no documentation-only checkpoint or duplicate donor cherry-pick.
+Final exact-candidate CI and tracker readbacks will be appended UNSTAGED.
+
+6A cleanup observation: both owned harness listeners STOPPED. Automatic command
+policy rejected removal of only the new disposable baseline archive and generated
+synthetic bundle before execution, with "blocked by policy". Both remain
+RESIDUE_RETAINED_POLICY_DENIED; no retry or alternate mechanism. Prior denied roots
+are untouched. Private source/hash/results/screenshots/logs remain retained.
+
+### 6A terminal source and exact-candidate CI — 3 October 2026
+
+MOBILE_R1_INTEGRATED_SOURCE_VALIDATED_RELEASE_GATED.
+
+Starting primary5c3943fa3576987042d330dee51c8433b6e88660/tree184ebb15aef86bf6854cd92c4e900dd12868ce36
+advanced once to baa49c738e009f99c5e741a04bc3fe8f8862a848/treeee2b3a2f9eb3a5b45d456eb54547a983ab5991dd.
+Local and remote agree; PR28 remains OPEN/DRAFT. One substantive push, no second
+candidate, manual dispatch, unchanged-job retry or cosmetic follow-up push.
+Original source55f5d342e094dd37135ea6ce67c949c2eb57991d and packetb8fe33ab944f460a6f98ae9ad924a00d947b9701
+were integrated selectively with original parent/old-primary/new-source/result blob
+mapping in SOURCE_MAP.json. Original mobile/certificate/backend/R1 fixes remain;
+K30/PR30 and PR29 are excluded. Donor worktree/index/ref unchanged.
+
+Exact committed manifest (11 paths):
+- components/marks-importer.tsx
+- components/onboarding-centre.tsx
+- config/recovery-integration-source-delta.json
+- docs/evidence/RELEASE_RECOVERY_1C.md
+- docs/evidence/mobile-import-a11y-1b/HANDOFF.md
+- docs/evidence/overnight-source-closure-2a/MORNING_DECISIONS.md
+- docs/evidence/recovery-batch-integration-5a/HANDOFF.md
+- docs/evidence/recovery-batch-integration-5a/SOURCE_MAP.json
+- scripts/bulk-data-exchange-browser.ts
+- scripts/qa-mobile-import-a11y-1b.ts
+- tsconfig.tools-qa-support.json
+
+The initial two dirty evidence documents and their exact private byte/diff receipts
+were preserved before edits and committed with provenance stated above. Index was
+empty after commit; final observations remain UNSTAGED in this handoff, the closure
+ledger and the existing Decision2 packet. No source/registration diff remains.
+
+Local evidence remains separately classified: disposable5c baseline5PASS/8assertionFAIL
+reproduced all three reviewed defects; integrated real-component Playwright49PASS,
+zero failures, two NOT_EXECUTED capabilities. Focused Vitest176PASS includes import50,
+certificate16, backend83 and publication-negative27. Python dispatch/refusal38PASS;
+both affected typecheck partitions, provenance287rows/4heads/4backup contracts,
+publication497paths and Git safeguards PASS. No full local suite repeated.
+Independent available/requested GPT-6 Astra specialist reviewed the integrated
+source, registry preservation, actual rendered hashes/screenshot and evidence.
+Reviewer executed no tests/builds/scans; no model identity attestation is claimed.
+
+Normal hosted cycle: all nine runs below bind sourcebaa49c738e009f99c5e741a04bc3fe8f8862a848, attempt1.
+Workflow totals:8SUCCESS/1FAILURE/0SKIPPED/0CANCELLED/0PENDING/0MISSING.
+Job totals:33SUCCESS/2FAILURE/7SKIPPED/0CANCELLED/0PENDING/0MISSING (42 actual jobs).
+Overall CI is NOT GREEN. Skips are six mandatory runtime gates plus the optional
+private native producer; none is a pass.
+
+| Workflow / exact run | State | Jobs success / failure / skipped |
+| --- | --- | --- |
+| [Biometric Staff Attendance 1A](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919224) | SUCCESS | 2 / 0 / 0 |
+| [PostgreSQL readiness dual-provider gate](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919262) | SUCCESS | 4 / 0 / 0 |
+| [Master Requirements Reconciliation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919225) | SUCCESS | 2 / 0 / 0 |
+| [Communication Delivery Foundation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919277) | SUCCESS | 2 / 0 / 0 |
+| [Real-Data Onboarding Preparation 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919217) | SUCCESS | 2 / 0 / 0 |
+| [Portable Staging Foundation exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919214) | FAILURE | 1 / 2 / 6 |
+| [Cross-platform apps 1A](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919219) | SUCCESS | 16 / 0 / 1 |
+| [Real-User Access Readiness 1A exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919253) | SUCCESS | 2 / 0 / 0 |
+| [Student items and prior-year concessions exact-head](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37106919299) | SUCCESS | 2 / 0 / 0 |
+
+All five recovered Windows source jobs passed their71caller cases:
+Master job111157144031, Biometric job111157143923, Communication job111157144055,
+Real-User job111157144079 and cross-platform job111157144244. Onboarding
+job111157144134 also passed71caller cases, publication497paths, actual full regression,
+typecheck and source build. Its publication pass alone was not used as clearance.
+Master full3101PASS/0skip; the other five named Windows full suites3098PASS/3inherited
+qpdf skips each. Linux SQLite and portable source3098PASS/3qpdf skips; PostgreSQL
+application3068PASS/3qpdf skips. These overlapping populations are not summed.
+Current import50/certificate16 contracts execute in those full suites.
+Financial23PASS per provider; fresh SQLite/PostgreSQL restore matrices each verify
+eight targets, eight fresh and eight repeated restores with isolated unchanged sources.
+Normal compiler, Android emulator and iOS simulator source jobs pass; this does not
+establish authenticated ERP, real devices or exact private runtime artifact admission.
+
+Five service metadata manifests (Master/Biometric/Real-User Windows, Linux SQLite,
+PostgreSQL) validate exact source/run/attempt/job/provider, every file byte/hash,
+finance1/native18/MFA37 PASS result records and zero unfinished spans.
+Onboarding's exact two-file metadata manifest validates ten original cases PASS and
+owned fixture cleanup REMOVED. Historical finance/MFA/DENY/OpenSSL causes remain
+unresolved; current passes do not recover missing earlier evidence.
+
+Current automatic base scans are policy FAILURES on both architectures:
+11 HIGH rows / five distinct CVEs each, Trivy exit0 / Grype exit2.
+This explicitly supersedes the Decision2 pre-CI 'latest7/4' wording, which was dated5c.
+Independent metadata comparison confirms unchanged base index/manifest/config/layer
+and Node-binary identities, newer scanner databases, no removed rows and four added
+CVE-2026-95619 GCC-package rows. CVE-2026-102010 was already historical.
+Both result/manifest byte hashes and seven candidate input hashes were verified.
+Private raw scanner reports ended at owned job cleanup; only metadata/hash summaries
+remain (cleanupComplete=true, durablePrivateRetention=false). No reconstruction,
+new advisory research, ad hoc scan or policy exception. Product NOT_BUILT,
+runtime NOT_EXECUTED, admitted=false, EXTERNAL_RUNTIME_BLOCKED.
+
+Decision2 is current as an implemented/source-validated draft, not registered
+production trust. Human accountable reviewer UNASSIGNED; independent key/workflow
+identity and exact subject resolver NOT APPROVED; private raw-evidence custody
+NOT APPROVED. Production registration remains null, resolver unavailable; complete
+qualified source/tool/Node/offline-recipe evidence and residual findings still block.
+Any later registration proposal can only support separately authorized exact-input
+qualification/build-static-scan work; independent runtime/native/controller/host
+admission and installation/release restrictions remain. No hosting now.
+
+Genuine zoom/text enlargement, OS picker cancellation, screen-reader/authenticated
+ERP/native/device acceptance remain NOT_EXECUTED. Four retained native warnings,
+Node bundled-library/trust gaps and host/controller/device prerequisites are separate.
+No operational DB/vault read/copy/hash, real records, provider activation, DNS/tunnel,
+demo credentials/banner, real ERP image/stack or release action occurred.
+Both owned harness listeners STOPPED. Automatic policy rejected cleanup of the new
+settled baseline snapshot and generated synthetic bundle with 'blocked by policy';
+both remain RESIDUE_RETAINED_POLICY_DENIED, without another method or retry.
+Earlier denied/historical/ambiguous residue remains untouched. Private logs,
+source snapshots and screenshots remain private.
+
+Measured intervals UTC: work/preservation/integration/local QA/review/push
+07:16:25–07:36:37.453 (20m12.453s); normal CI07:36:44–08:15:48 (39m04s),
+observed terminal08:16:36. Validation is a subset of work; evidence review during CI
+overlaps that CI interval and is not added again. Handoff timing and tracker readback
+receipts are appended below. Account usage was not measured.
+
+ONE next action: resolve existing Decision2 by naming the accountable reviewer and
+approving the independent identity/subject-resolution and private-custody inputs for
+a later bounded registration/resolver proposal. This is not approval of a key,
+unqualified inputs, findings, real build, runtime admission or hosting.
+
+
+### 6A complete job-state receipt (all attempt1, candidate baa49c738)
+
+| Run | Job identity / name | Final state |
+| --- | --- | --- |
+| run37106919224 | job111157143806 — Exact-head PostgreSQL biometric migration and parity | SUCCESS |
+| run37106919224 | job111157143923 — Exact-head software, security and ERP regression | SUCCESS |
+| run37106919262 | job111157144105 — SQLite existing release gate | SUCCESS |
+| run37106919262 | job111157144282 — Cross-provider parity and recovery | SUCCESS |
+| run37106919262 | job111157144307 — PostgreSQL schema and migrations | SUCCESS |
+| run37106919262 | job111157144326 — PostgreSQL application regression | SUCCESS |
+| run37106919225 | job111157143916 — Exact-head PostgreSQL 17 migration, repeat deploy, constraints and parity | SUCCESS |
+| run37106919225 | job111157144031 — Exact-head requirements, security, shared-platform and full ERP regression | SUCCESS |
+| run37106919277 | job111157144055 — Exact-head communication, security, shared-platform and full ERP regression | SUCCESS |
+| run37106919277 | job111157144156 — Exact-head PostgreSQL 17 migration, repeat deploy, constraints and parity | SUCCESS |
+| run37106919217 | job111157143943 — Exact-head PostgreSQL 17 parity and provider-independent preparation | SUCCESS |
+| run37106919217 | job111157144134 — Exact-head synthetic validation, security and full ERP regression | SUCCESS |
+| run37106919214 | job111157143842 — Backend build/scan input qualification (arm64) | FAILURE |
+| run37106919214 | job111157143967 — 1 - server and database | SUCCESS |
+| run37106919214 | job111157143982 — Backend build/scan input qualification (amd64) | FAILURE |
+| run37106919214 | job111160700075 — 2 - OCI image and supply chain | SKIPPED |
+| run37106919214 | job111160700467 — oci-release-index | SKIPPED |
+| run37106919214 | job111160700543 — 3 - portable stack | SKIPPED |
+| run37106919214 | job111160700838 — 6 - full synthetic acceptance | SKIPPED |
+| run37106919214 | job111160700839 — 4 - distributed runtime | SKIPPED |
+| run37106919214 | job111160701058 — 5 - object storage and recovery | SKIPPED |
+| run37106919219 | job111157144066 — iOS simulator build and shared UI gate | SUCCESS |
+| run37106919219 | job111157144207 — Draft Rust 1.90 Android i686-linux-android | SUCCESS |
+| run37106919219 | job111157144224 — Draft Rust 1.90 macOS aarch64-apple-darwin | SUCCESS |
+| run37106919219 | job111157144226 — Draft Rust 1.90 Linux x86_64-unknown-linux-gnu | SUCCESS |
+| run37106919219 | job111157144230 — Android debug build and emulator UX gate | SUCCESS |
+| run37106919219 | job111157144244 — TypeScript, contracts and bundled shell | SUCCESS |
+| run37106919219 | job111157144248 — Draft Rust 1.90 Windows production and QA tests | SUCCESS |
+| run37106919219 | job111157144257 — Unsigned Windows NSIS compiler gate | SUCCESS |
+| run37106919219 | job111157144260 — Draft Rust 1.90 iOS aarch64-apple-ios | SUCCESS |
+| run37106919219 | job111157144275 — Draft Rust 1.90 macOS x86_64-apple-darwin | SUCCESS |
+| run37106919219 | job111157144287 — Draft Rust 1.90 iOS aarch64-apple-ios-sim | SUCCESS |
+| run37106919219 | job111157144300 — Draft Rust 1.90 Android x86_64-linux-android | SUCCESS |
+| run37106919219 | job111157144316 — Draft Rust 1.90 Android armv7-linux-androideabi | SUCCESS |
+| run37106919219 | job111157144318 — Draft Rust 1.90 iOS x86_64-apple-ios | SUCCESS |
+| run37106919219 | job111157144355 — Draft Rust 1.90 Android aarch64-linux-android | SUCCESS |
+| run37106919219 | job111157144437 — Draft Rust 1.90 Linux aarch64-unknown-linux-gnu | SUCCESS |
+| run37106919219 | job111157144808 — Same-run private Windows QA artifact evidence | SKIPPED |
+| run37106919253 | job111157144002 — Exact-head PostgreSQL 17 migrations, constraints and parity | SUCCESS |
+| run37106919253 | job111157144079 — Exact-head synthetic identity, security and full ERP regression | SUCCESS |
+| run37106919299 | job111157143991 — exact-head-financial-contract (sqlite) | SUCCESS |
+| run37106919299 | job111157144019 — exact-head-financial-contract (postgresql) | SUCCESS |
+
+
+### 6A final review, synchronization and ownership release
+
+Independent final source/evidence review CLEAR: all42 job rows,11 retained job logs,
+five service ZIP manifests, onboarding metadata and both restore ZIPs independently
+checked. No tests/builds/scans/edits by reviewer. Restore payloads bind source/provider;
+run association comes from artifact inventory and attempt/job from CI, not an intrinsic
+signed restore receipt. No material finding remains.
+
+GitHub [terminal result5967135681](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5967135681) read back exactly.
+Asana recovery comment1219124164083140 and mobile comment1219123994432481 read back;
+notes/names/incomplete status/owners/dates unchanged. Canvs batch/import text read back;
+only text/originalText/version/versionNonce changed, geometry/bindings/history retained,
+all301 other elements unchanged. Notion accepted comment3eec9801-27a8-810c-9a14-001d17066de5
+in the existing discussion, but two reads omit it: WRITE_ACCEPTED_READBACK_PENDING.
+No duplicate write; exact sanitized pending delta is retained privately.
+
+Post-CI publication scans still PASS497paths; Git safeguards and original two evidence
+byte-prefix checks PASS. Remaining diff is exactly THREE UNSTAGED evidence documents:
+this batch HANDOFF, RELEASE_RECOVERY_1C and MORNING_DECISIONS; index empty, source and
+remote unchanged at baa49c738e009f99c5e741a04bc3fe8f8862a848. No cosmetic push.
+Local measured validation window07:23:28–07:31:22UTC is within the20m12.453s work interval;
+later staged checks/review are included in work. CI39m04s is separate. Handoff interval
+08:15:48–08:26:37UTC is 649s;
+total observed task interval07:16:25–08:26:37UTC is 4212s.
+CI-time evidence review overlaps CI and is not added twice. No usage estimate.
+
+RECOVERY-MOBILE-R1-INTEGRATION-6A primary ownership RELEASED at 2026-10-03T08:26:37+00:00.
+All owned validation/listener activity settled; retained policy-denied residue untouched.
+Milestone stops here. ONE next owner decision remains existing Decision2 accountable
+reviewer plus independent identity/subject-resolution and private-custody inputs;
+no automatic registration, scan, build, hosting or new workstream follows.
+
+
+## 3 October 2026 — ARKAVIQ release inputs/resolver 1A source checkpoint
+
+**ARKAVIQ_RELEASE_INPUTS_RESOLVER_PARTIAL_REVIEW_OPEN.** This is an inactive,
+uncommitted local source candidate in the exclusively reserved primary worktree.
+HEAD remains `baa49c738e009f99c5e741a04bc3fe8f8862a848`; committed tree remains
+`ee2b3a2f9eb3a5b45d456eb54547a983ab5991dd`. The working source is different from
+that commit. PR28 was reread OPEN/DRAFT at the same head. No commit, push,
+workflow dispatch, real material/image build, scan, admission or deployment.
+
+The owner confirmed they are the accountable release approver and authorized
+continuing task work without repeated permission questions. This supplies no
+existing signing-key identity, secure location, bootstrap bytes or durable
+receipt storage. `product-trust-registration.json` remains literal null.
+Required Codex filesystem permission prompts are separate from owner approval.
+
+### Implemented locally; not operational qualification
+
+- Ed25519 registration/authorization resolver: distinct authority and attestor,
+  key identifiers, validity/revocation, generation, exact source/tree/architecture/
+  repository/workflow/run/attempt/job, recipe/lock/material/tool/image/database
+  binding, short grant validity, and exclusive durable one-use receipts.
+- Fixed-path private authorization loading, registered private custody, guarded
+  source/authorization bytes, operation-specific private artifact/report retention.
+- Separately authorized material acquisition recipe, pinned pnpm 11.21.0 archive,
+  explicit Debian snapshot/package versions, offline installation/lifecycle RUNs,
+  prepared dependency OCI consumption and original/effective recipe binding.
+- Offline Debian signature/index/package verification path and raw locked-tarball,
+  native-byte and installed-status requirements. These checks are incomplete in
+  the precise respects below; no automatic complete collector is claimed.
+- Qualified single-file Node bootstrap and committed-input manifest checks. An
+  actual bundle check exposed transitive QA CLI imports. Shared tool-verification
+  functions were moved unchanged into `qa-build-tool-core.ts`; existing QA CLI
+  reexports/guards are preserved. Production bundle now contains built-in external
+  imports only and its manifest names source-controlled inputs.
+- Material acquisition reports product NOT_BUILT and
+  INCOMPLETE_PROVENANCE_COLLECTION, even when its isolated build/scan completes.
+
+### Validation and failures preserved
+
+| Check | Result and boundary |
+| --- | --- |
+| Focused resolver/product/command/acquisition tests | 134/134 PASS, four files, isolated harness |
+| Python backend contract tests | 38/38 PASS, no real image execution |
+| Final acquisition status correction | 11/11 PASS; repeats part of the 134 |
+| Shared-helper extraction regression | 71/71 PASS, three files; overlapping suites, not 71 additional unique tests |
+| Core-tools TypeScript | PASS after final extraction |
+| Tests m-r TypeScript | PASS before final small extraction/status edit |
+| Standalone bootstrap | Built; SHA256 15a92859ac5f50ab70872b7124e08614d2230f675e28e076b3d19332a945e1ee |
+| Executed standalone no-registration control | Expected exit 1, PRODUCTION_INPUT_TRUST_UNREGISTERED, processes [], Product NOT_BUILT |
+| Git whitespace check | PASS before this evidence append |
+| New exact-head CI / full integrated suite / production qualification | NOT_EXECUTED; no source push |
+| Source-registration and publication clearance | NOT_COMPLETED for this WIP candidate; not cleared for publication |
+
+Earlier failures are not erased: initial focused run 122/123 passed, with a
+missing-registration classification failure subsequently corrected; initial
+bootstrap refused external dependencies, leading to the reviewed extraction.
+Sandbox dependency-link visibility failed; existing dependencies worked under
+the required filesystem approval, without installation or repair. The owned
+pnpm local-tarball/offline store experiment did not satisfy metadata resolution;
+no hand-generated store indexes or integrity override was substituted.
+
+Official pnpm 11.21.0 archive SHA256
+`87237d37eadb79dc626a0576eb3a52d23d70422c323ae5e00fc05c91f4323780`
+and registry ECDSA signature/SHA512 were checked locally. This is vendor-input
+observation, not product qualification. No Dockerfile/runtime pin was changed;
+no new zero-finding image exists. The earlier 6A base finding counts remain
+historical evidence, not a new scan from this task.
+
+### Independent review: remaining source work
+
+Read-only reviewer confirmed recipe mutation guards, bootstrap/source binding,
+retention durability, operation-separated custody, explicit material result
+classification, ELF architecture checks and exact unchanged extraction bodies.
+Reviewer performed no tests and approved retaining only an inactive partial
+candidate. Complete material-path or production activation approval was not given.
+
+1. Enforce official-source egress during acquisition; registry arguments and
+   BuildKit source policy alone do not constrain RUN HTTP traffic/redirects.
+2. Complete the collector-to-consumable-material-manifest roundtrip, retaining
+   all original receipts/tarballs/package metadata and testing substitution.
+3. Bind Debian Release freshness to the selected snapshot and prove every
+   added/upgraded package relative to the exact builder base, not just listed names.
+4. Link every native origin to authenticated archive/member bytes, including
+   schema/query engines, esbuild and sharp/libvips. ELF machine checks are not
+   vendor provenance. Test the connected prepared-material/gpgv consumer path.
+
+These are engineering gaps, not owner-approval problems. Next source work is to
+close them in this same ownership scope, then finish source registration,
+publication checks and independent review before the consolidated candidate push.
+No new implementation chat, second producer framework or admission exception.
+
+### Exact execution gates remain separate
+
+After source closure: register actual owner-approved Ed25519 authority/attestor
+public identities and custody, qualified bootstrap/tool bytes, private durable
+input/report/receipt storage and constrained native Linux acquisition environment.
+Use `python3 scripts/portable/backend-build-scan.py --acquire-materials` only for
+a separately signed ACQUIRE_DEPENDENCIES_ONLY grant and fully qualified inputs.
+Only a verified consumable manifest plus a separate signed BUILD_SCAN grant can
+lead to the no-argument product entrypoint. Current source is not ready for those
+real executions. Existing workflow remains `--base-only` on both architectures.
+
+| Mandatory/optional job | Existing entrypoint and prerequisite/proof |
+| --- | --- |
+| oci-image (mandatory) | Held `if: false`; needs server-and-database, admitted exact-architecture production evidence; existing qa-artifact-producer-cli.ts run/cleanup and same-run private stack evidence |
+| oci-release-index (mandatory) | needs oci-image; public-evidence.mjs aggregate binds both architecture metadata sets |
+| portable-stack (mandatory) | needs index; verify-stack-receipts.mjs checks the exact stack metadata, not deployable image transfer |
+| distributed-runtime (mandatory) | needs stack; qa:portable-runtime and resilience/offline-sync/cross-platform synthetic acceptance |
+| object-storage-and-recovery (mandatory) | needs distributed; isolated synthetic backup/storage/recovery and audit evidence |
+| full-synthetic-acceptance (mandatory) | needs object/recovery; same-source isolated synthetic database, full type/test/build/backup/safety/focused acceptance |
+| native-evidence (optional producer) | Cross-platform workflow dispatch on recovery ref with explicit connected inputs; build-native-qa.ts, private transport/profile, owned cleanup; separate native admission |
+
+No hold was removed. Source tests and material/product BUILD_SCAN results do not
+admit runtime, native, device, preview or release. No operational database was
+opened, hashed or changed; original three unstaged evidence files were verified
+byte-for-byte before this append. Their original prefixes and all other task
+worktrees, schemas, flags, workflows and artifact history are preserved.
+
+## ARKAVIQ-RELEASE-INPUTS-AND-RESOLVER-1A-A2 — source closure, 3 October 2026
+
+**A2_ACQUISITION_PROVENANCE_SOURCE_VALIDATED_REGISTRATION_GATED.** Continues the sole Task A candidate in `recovery-integration-1a`, branch `release/recovery-integration-1a`, from committed source `baa49c738e009f99c5e741a04bc3fe8f8862a848`, tree `ee2b3a2f9eb3a5b45d456eb54547a983ab5991dd`. The checkpoint in PR28 comment5968752022 and the complete unpublished A1 candidate were preserved. This section supersedes that checkpoint's engineering-incomplete conclusion only; historical evidence and findings remain. Final publication SHA/tree and CI run identities are recorded in the terminal PR28/tracker update and local owned publication receipt after commit, avoiding a self-referential commit hash in source.
+
+| Checkpoint gap | Connected A2 result |
+| --- | --- |
+| Acquisition egress | Signed plan digest is checked before selecting any download or consuming the grant. Direct TLS downloads accept exact official HTTPS origins, pin validated public IPv4 addresses, refuse redirects/private destinations, bound bytes/time, verify independent expected digests and never execute downloads. Every BuildKit RUN retains network=none; package hooks cannot use external networking. Finite loopback TLS replay supplies only preverified archives/metadata to pinned pnpm; it closes before offline installation. No laptop firewall/proxy/global CA/hosts change. |
+| Collector → manifest → consumer | Actual OCI collector emits native/status/process/replay records; actual packager serializes existing NALANDA_PREPARED_DEPENDENCIES_V1 with original blob closure and scanner reports. Clean consumer verifies the signed test envelope and recollects the dependency OCI, requiring exact native inventory equality. Production custody retains complete material-output blobs/manifest before cleanup. Unsigned collected material is an input candidate, never an attestor signature or admission receipt. |
+| Debian freshness and package delta | Qualified gpgv and independently registered keyring/signers authenticate Release; SHA256/size bind index and every deb. Real verification clock, snapshot/date and Valid-Until are checked. Missing/expired validity has no invented exception. Exact builder dpkg status is bound to OCI, and every installed/changed package must be covered; removals, wrong architecture/version, missing or tampered bytes refuse. |
+| Native origins | Source-lock SHA512 and registry metadata bind npm archives; roles bind exact architecture-specific esbuild/sharp/libvips package identities. Prisma engine revision/platform/URL, independently approved archive bytes and retained supplier checksum bind gzip and extracted bytes. Safe bounded archive inspection rejects duplicate/link/traversal/unsupported origins; collector checks all installed native ELF members and rejects incomplete inventories, substitutions and ambiguous overlays. |
+
+The existing Ed25519 resolver, input contract, caller, rootless lifecycle, scanner policy and publication allowlist are reused. No Dockerfile/base/dependency pin, scanner threshold, suppression, runtime hold or workflow dispatch was changed. Runtime Node and builder Node remain separately qualified; package-manager/archive verification is not bundled-library remediation. No fresh real scan was performed: earlier11-HIGH/five-CVE counts are historical, and neither unchanged base bytes nor source tests establish current scanner-database results.
+
+### Validation and independent review
+
+- Final affected TypeScript run: **196 PASS**, six suites (`material-roundtrip`, `material-acquisition`, `product-trust-policy`, `product-contract-caller`, `product-build-command`, `portable-publication-1c`). Separate shared-producer regression: **48 PASS** (`portable-qa-artifact-producer`); transport boundary suite: **6 PASS** (`material-download`, private DNS refused before request, pinned TLS socket lookup, redirects refused and truncated/substituted/overlong transfers rejected). These eight suites are disjoint. Earlier134/71/51/85/35 counts overlap and are not added again.
+- Python: **38 PASS** existing backend qualification suite and **25 PASS** new material provenance/archive suite. The latter includes an actual ephemeral synthetic Ed25519 GPG/gpgv chain and tampered-signature refusal. This is synthetic fixture trust, not Debian/vendor qualification.
+- Pinned pnpm11.21.0: **11 isolated assertions PASS**, actual loopback TLS archive retrieval followed by offline install with server closed and store-status verification; synthetic DNS/TLS mapping exists only in the test child. No global configuration changed. Earlier store-add/offline-metadata and unsupported store-status cache-dir failures were retained as findings and corrected in the connected path; the first store-add probe had placed one inert test archive in the default pnpm store, which was not pruned.
+- Core tools and tests-m-r typechecks PASS; source registry299 entries PASS (historical source hashes preserved); publication allowlist, Git safety and whitespace PASS. No operational database was opened, hashed or changed.
+- Standalone bundle `4787faad7442f57fa3df8c93b701cd499b46d1d3585f7b657477e5cef7475a8c`: normal and acquisition controls both exit1, `PRODUCTION_INPUT_TRUST_UNREGISTERED`, `processes: []`, Product NOT_BUILT. This Windows-built source-test bundle is not a qualified native production bootstrap.
+- Independent read-only agent review identified and then confirmed correction of premature plan selection, mutable verified preparation, and file-to-directory overlay substitution. Targeted regressions cover each, including collect and consume. Reviewer clears engineering/source publication conditional on the final passing tests and unchanged-source hash readback; it does not certify model identity, organizational security authority, production registration or real execution.
+
+Representative commands: `node node_modules/vitest/vitest.mjs run` with the eight named suites and `--maxWorkers=1`; `python -B tests/backend-build-scan.test.py`; `python -B tests/material-provenance.test.py`; `node tests/material-replay.test.mjs <verified-local-pnpm.cjs> <installed-openssl>`; `tsc --noEmit --project tsconfig.tools-core.json` and `tsconfig.tests-m-r.json`; `node scripts/recovery-source-evidence.mjs`; `tsx scripts/git-safety-check.ts`. Only owned synthetic targets were used. Two-heavy-job/four-worker cap respected; no laptop timing/capacity measurement was performed.
+
+### Independent states and next ceremony
+
+| State | Evidence-backed result |
+| --- | --- |
+| Resolver implemented | SOURCE_CONNECTED; independent authority/attestor, subject, exact Git/runner identity, short-lived per-operation grant and durable one-use claim checks implemented/tested |
+| Authority registered | NO; checked-in production registration remains literal null; Rohith is owner-designated approver/custodian, not an invented technical reviewer |
+| Real inputs acquired / qualified (A) | NO; real custody/key/technical binding and vendor/tool/base/material proofs unavailable; test fixtures are HARNESS_ONLY |
+| Real product built / scanned (B) | NO; Product NOT_BUILT; no new OCI product identity or complete real product reports exist |
+| Runtime admitted / executed (C) | NO / NOT_EXECUTED; no laptop/native/GitHub runtime admission inferred |
+| Six mandatory runtime jobs | Unchanged chain: oci-image remains held if:false; oci-release-index, portable-stack, distributed-runtime, object-storage-and-recovery, full-synthetic-acceptance retain dependent prerequisites. A skipped job is not passed. |
+| Optional native producer | native-evidence remains a separate explicit producer with native/profile/device acceptance gates; not a seventh mandatory runtime job |
+
+Rohith's owner facts and the single concrete Ed25519 registration/custody ceremony are in the existing recovery-batch HANDOFF, “A1/A2 owner action sheet.” That ceremony must independently bind actual public identities, final source/tree/workflow/run/attempt/architecture, operation, durable private storage/access/retention/recovery and technical review. No fingerprint, vendor approval, company registration, store account or approval date was invented. Suitable owned hardware remains a later separately approved consumer, never a substitute for native Linux/GitHub production-build policy. No GITHUB identity spoofing or WSL qualification.
+
+Publication scope is one reviewed substantive recovery-branch source push with its normal CI, after final exact staged manifest/ownership/head checks. No manual dispatch, unchanged-job retry, main merge or production activation. CI source errors and expected current scan-policy findings will be recorded separately. Parent tasks remain incomplete; P1 attendance1b78c1f/handoff3eec305, mobile/certificate history, K30/PR30, B1 private work, D1P isolated source and C1 residue are untouched. Active source closure is finished; remaining external waiting is owner binding/vendor evidence and CI queue/runtime, not another estimated3–6-hour source framework cycle.
+
+### A2 first publication and corrected-source validation
+
+The reviewed source was published as `c602be30a4abb36db8ae742e64fcf7dd51445911`, tree `806562f7b80cafd6b6670078f5dafba776264c3e`. Normal CI runs37124535816 and37124535977 failed the existing public-repository scanner: the invented credential-bearing negative-test URL was recognized as a non-synthetic email domain. The actual public-repository scan had been omitted locally; the narrower publication checks above did not cover this case. Later steps in those failed jobs were skipped, not passed.
+
+The correction constructs the same synthetic userinfo URL through the standard URL API and retains the credential-refusal assertion. The scanner, source security policy and runtime behavior are unchanged. Local correction validation: public-repository scan PASS (zero candidate secrets/real contacts), material roundtrip39 PASS, tests-m-r typecheck PASS, source registry299 PASS, Git safety PASS and whitespace PASS. These39 tests repeat an earlier suite and do not increase the unique total. This is an A2-authorized corrected-source publication with normal CI, not a retry of unchanged jobs. Independent source review remains required before the correction push; no production registration, real material qualification, product build or runtime admission is implied.

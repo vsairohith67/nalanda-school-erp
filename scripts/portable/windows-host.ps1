@@ -4,6 +4,51 @@ try {
   $request = [Console]::In.ReadToEnd() | ConvertFrom-Json
   if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted' -or $env:RUNNER_OS -ne 'Windows') { throw 'WINDOWS_DISPOSABLE_RUNNER_REQUIRED' }
   $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+  if ($request.operation -in @('profile-claim','profile-cleanup')) {
+    $target = $request.target
+    if ($env:PORTABLE_CI_EXCEPTION -ne 'OWNER_AUTHORIZED' -or $identity.User.Value -ne $target.userSid -or $env:EXPECTED_SHA -ne $target.source -or $env:GITHUB_RUN_ID -ne $target.runId -or $env:GITHUB_RUN_ATTEMPT -ne $target.attempt) { throw 'WINDOWS_PROFILE_OWNER_REFUSED' }
+    $root = [IO.Path]::GetFullPath($target.root).TrimEnd('\')
+    if ([IO.Path]::GetFileName($root) -ne "run-$($target.runId)-$($target.attempt)" -or [Environment]::GetFolderPath('UserProfile') -ne $target.userProfile -or [Environment]::GetFolderPath('ApplicationData') -ne $target.roaming -or [Environment]::GetFolderPath('LocalApplicationData') -ne $target.local) { throw 'WINDOWS_PROFILE_ROOT_REFUSED' }
+    $directories = @((Join-Path $target.roaming 'com.nalandaps.erp'),(Join-Path $target.local 'com.nalandaps.erp'),(Join-Path $target.local 'Microsoft\Edge\User Data'))
+    if ($directories[0] -ne $target.appData -or $directories[1] -ne $target.webviewData -or $directories[2] -ne $target.browserData) { throw 'WINDOWS_PROFILE_PATH_REFUSED' }
+    $receiptPath = Join-Path $root 'windows-profile-owner.json'
+    foreach ($candidate in @($root,$receiptPath) + $directories) {
+      $absolute = [IO.Path]::GetFullPath($candidate)
+      if ($absolute -ne $root -and !$absolute.StartsWith($root + '\',[StringComparison]::OrdinalIgnoreCase)) { throw 'WINDOWS_PROFILE_ESCAPE' }
+      $cursor = $absolute
+      while ($cursor) {
+        if (Test-Path -LiteralPath $cursor) { if ((Get-Item -Force -LiteralPath $cursor).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'WINDOWS_PROFILE_REPARSE' } }
+        $cursor = [IO.Path]::GetDirectoryName($cursor)
+      }
+    }
+    $owner = @{contract='NALANDA_WINDOWS_PROFILE_OWNER_V1'; source=$target.source; runId=$target.runId; attempt=$target.attempt; userSid=$target.userSid; directories=$directories}
+    if ($request.operation -eq 'profile-claim') {
+      foreach ($dir in $directories) { if (Test-Path -LiteralPath $dir) { throw 'WINDOWS_PROFILE_ALREADY_EXISTS' } }
+      $stream = [IO.File]::Open($receiptPath,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+      try { $bytes = [Text.Encoding]::UTF8.GetBytes(($owner | ConvertTo-Json -Depth 4 -Compress)); $stream.Write($bytes,0,$bytes.Length); $stream.Flush($true) } finally { $stream.Dispose() }
+      @{state='FRESH_PROFILES_CLAIMED'} | ConvertTo-Json -Compress
+      exit 0
+    }
+    $receipt = Get-Content -Raw -LiteralPath $receiptPath | ConvertFrom-Json
+    if (@($receipt.PSObject.Properties.Name).Count -ne 6 -or $receipt.contract -ne $owner.contract -or $receipt.source -ne $owner.source -or $receipt.runId -ne $owner.runId -or $receipt.attempt -ne $owner.attempt -or $receipt.userSid -ne $owner.userSid -or ($receipt.directories -join '|') -ne ($directories -join '|')) { throw 'WINDOWS_PROFILE_RECEIPT_REFUSED' }
+    # Validate every descendant BEFORE any removal. No path comes from a glob,
+    # another shell, an unverified receipt or a user-selectable cleanup argument.
+    foreach ($dir in $directories) {
+      if (!(Test-Path -LiteralPath $dir)) { continue }
+      $entries = @((Get-Item -Force -LiteralPath $dir)) + @(Get-ChildItem -Force -Recurse -LiteralPath $dir)
+      if ($entries.Count -gt 50000) { throw 'WINDOWS_PROFILE_CLEANUP_BOUND' }
+      foreach ($entry in $entries) {
+        $full = [IO.Path]::GetFullPath($entry.FullName)
+        if (($full -ne $dir -and !$full.StartsWith($dir + '\',[StringComparison]::OrdinalIgnoreCase)) -or ($entry.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'WINDOWS_PROFILE_DESCENDANT_REFUSED' }
+        $acl = Get-Acl -LiteralPath $full
+        if ($acl.GetOwner([Security.Principal.SecurityIdentifier]).Value -ne $identity.User.Value) { throw 'WINDOWS_PROFILE_FOREIGN_OWNER' }
+      }
+    }
+    foreach ($dir in $directories) { if (Test-Path -LiteralPath $dir) { Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction Stop }; if (Test-Path -LiteralPath $dir) { throw 'WINDOWS_PROFILE_CLEANUP_INCOMPLETE' } }
+    # Retain the non-secret ownership receipt as teardown evidence.
+    @{state='OWNED_PROFILES_REMOVED'} | ConvertTo-Json -Compress
+    exit 0
+  }
   if ($request.operation -eq 'file-security') {
     $acl = Get-Acl -LiteralPath $request.file
     $rules = @($acl.GetAccessRules($true, $true, [Security.Principal.SecurityIdentifier]) | ForEach-Object { @{sid=$_.IdentityReference.Value; type=$_.AccessControlType.ToString(); inherited=$_.IsInherited} })
@@ -15,10 +60,36 @@ try {
     ConvertTo-Json -InputObject $listeners -Compress
     exit 0
   }
+  if ($request.operation -eq 'webview-policy') {
+    # Fixed executable name only; never inspect or mutate another application's
+    # browser settings. Machine/global overrides make provenance ambiguous.
+    $values = @{}
+    $machine = $false; $wildcard = $false; $environment = $false
+    foreach ($name in @('AdditionalBrowserArguments','BrowserExecutableFolder','UserDataFolder')) {
+      $suffix = "Software\Policies\Microsoft\Edge\WebView2\$name"
+      $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($suffix)
+      try { $values[$name] = if ($key) { $key.GetValue('nalanda-cross-platform.exe',$null) } else { $null }; if ($key -and $null -ne $key.GetValue('*',$null)) { $wildcard = $true } } finally { if ($key) { $key.Dispose() } }
+      $key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($suffix)
+      try { if ($key -and ($null -ne $key.GetValue('*',$null) -or $null -ne $key.GetValue('nalanda-cross-platform.exe',$null))) { $machine = $true } } finally { if ($key) { $key.Dispose() } }
+    }
+    foreach ($name in @('WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS','WEBVIEW2_BROWSER_EXECUTABLE_FOLDER','WEBVIEW2_USER_DATA_FOLDER','WEBVIEW2_PIPE_FOR_SCRIPT_DEBUGGER','WEBVIEW2_WAIT_FOR_SCRIPT_DEBUGGER')) { if ([Environment]::GetEnvironmentVariable($name)) { $environment = $true } }
+    @{arguments=$values.AdditionalBrowserArguments; folder=$values.BrowserExecutableFolder; userData=$values.UserDataFolder; machineOverride=$machine; wildcardOverride=$wildcard; environmentOverride=$environment} | ConvertTo-Json -Compress
+    exit 0
+  }
+  if ($request.operation -eq 'browser-protocol-policy') {
+    $name = 'AutoLaunchProtocolsFromOrigins'; $suffix = 'Software\Policies\Microsoft\Edge'
+    $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($suffix)
+    try { $value = if ($key) { $key.GetValue($name,$null) } else { $null } } finally { if ($key) { $key.Dispose() } }
+    $key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($suffix)
+    try { $machine = $key -and $null -ne $key.GetValue($name,$null) } finally { if ($key) { $key.Dispose() } }
+    @{value=$value; machineOverride=[bool]$machine} | ConvertTo-Json -Compress
+    exit 0
+  }
   if ($request.operation -eq 'environment') {
     $scheme = Get-ItemProperty -LiteralPath 'Registry::HKEY_CLASSES_ROOT\nalandaps-erp\shell\open\command'
     $http = Get-ItemProperty -LiteralPath 'HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice'
-    @{ userSid=$identity.User.Value; userProfile=[Environment]::GetFolderPath('UserProfile'); roaming=[Environment]::GetFolderPath('ApplicationData'); local=[Environment]::GetFolderPath('LocalApplicationData'); protocolCommand=$scheme.'(default)'; browserProgId=$http.ProgId } | ConvertTo-Json -Compress
+    $browser = Get-ItemProperty -LiteralPath 'Registry::HKEY_CLASSES_ROOT\MSEdgeHTM\shell\open\command'
+    @{ userSid=$identity.User.Value; userProfile=[Environment]::GetFolderPath('UserProfile'); roaming=[Environment]::GetFolderPath('ApplicationData'); local=[Environment]::GetFolderPath('LocalApplicationData'); protocolCommand=$scheme.'(default)'; browserProgId=$http.ProgId; browserCommand=$browser.'(default)' } | ConvertTo-Json -Compress
     exit 0
   }
   if ($request.operation -eq 'processes') {

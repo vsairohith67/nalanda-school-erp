@@ -1,0 +1,1391 @@
+{
+  "schemaVersion": 1,
+  "evidence": "HARNESS_ONLY",
+  "artifact": null,
+  "source": "baa49c738e009f99c5e741a04bc3fe8f8862a848",
+  "tree": "ee2b3a2f9eb3a5b45d456eb54547a983ab5991dd",
+  "subject": "932f77b9517425308483e495e3bf8ae281de4c0da39e65d359190ba4f04ddc73",
+  "configHash": "982e2c7a1c15ca830b7929bfb9d2383f08b0826e73335c45db45141cf0fcd652",
+  "config": {
+    "version": 1,
+    "source": "baa49c738e009f99c5e741a04bc3fe8f8862a848",
+    "tree": "ee2b3a2f9eb3a5b45d456eb54547a983ab5991dd",
+    "subject": "932f77b9517425308483e495e3bf8ae281de4c0da39e65d359190ba4f04ddc73",
+    "target": "memory://nps-d1p-fixture",
+    "profile": "in-memory-harness",
+    "scenario": "disposable-mutation",
+    "virtualUsers": 2,
+    "maxInFlight": 2,
+    "arrivalPerSecond": 20,
+    "thinkMs": 100,
+    "durationMs": 1000,
+    "timeoutMs": 150,
+    "maxActions": 12,
+    "mix": [
+      {
+        "operation": "certificate_list",
+        "weight": 4
+      },
+      {
+        "operation": "certificate_request",
+        "weight": 1
+      }
+    ],
+    "limits": {
+      "consecutiveErrors": 3,
+      "minFreeMemoryBytes": 536870912,
+      "minFreeDiskBytes": 1073741824,
+      "maxMemoryGrowthBytes": 536870912,
+      "maxTemperatureC": 85
+    }
+  },
+  "start": "2000-01-01T00:00:00.000Z",
+  "end": "2000-01-01T00:00:00.670Z",
+  "clockKind": "VIRTUAL",
+  "elapsedMs": 670,
+  "stopReason": "ACTION_LIMIT",
+  "scheduled": 12,
+  "notScheduled": 0,
+  "peakInFlight": 1,
+  "actions": [
+    {
+      "operation": "certificate_list",
+      "outcome": "success",
+      "startMs": 0,
+      "endMs": 20,
+      "latencyMs": 20,
+      "mutationUncertain": false
+    },
+    {
+      "operation": "certificate_list",
+      "outcome": "success",
+      "startMs": 50,
+      "endMs": 70,
+      "latencyMs": 20,
+      "mutationUncertain": false
+    },
+    {
+      "operation": "certificate_list",
+      "outcome": "success",
+      "startMs": 120,
+      "endMs": 140,
+      "latencyMs": 20,
+      "mutationUncertain": false
+    },
+    {
+      "operation": "certificate_list",
+      "outcome": "success",
+      "startMs": 170,
+      "endMs": 190,
+      "latencyMs": 20,
+      "mutationUncertain": false
+    },
+    {
+      "operation": "certificate_request",
+      "outcome": "success",
+      "startMs": 240,
+      "endMs": 260,
+      "latencyMs": 20,
+      "mutationUncertain": false
+    },
+    {
+      "operation": "certificate_list",
+      "outcome": "success",
+      "startMs": 290,
+      "endMs": 310,
+      "latencyMs": 20,
+      "mutationUncertain": false
+    },
+    {
+      "operation": "certificate_list",
+      "outcome": "success",
+      "startMs": 360,
+      "endMs": 380,
+      "latencyMs": 20,
+      "mutationUncertain": false
+    },
+    {
+      "operation": "certificate_list",
+      "outcome": "success",
+      "startMs": 410,
+      "endMs": 430,
+      "latencyMs": 20,
+      "mutationUncertain": false
+    },
+    {
+      "operation": "certificate_list",
+      "outcome": "success",
+      "startMs": 480,
+      "endMs": 500,
+      "latencyMs": 20,
+      "mutationUncertain": false
+    },
+    {
+      "operation": "certificate_request",
+      "outcome": "success",
+      "startMs": 530,
+      "endMs": 550,
+      "latencyMs": 20,
+      "mutationUncertain": false
+    },
+    {
+      "operation": "certificate_list",
+      "outcome": "success",
+      "startMs": 600,
+      "endMs": 620,
+      "latencyMs": 20,
+      "mutationUncertain": false
+    },
+    {
+      "operation": "certificate_list",
+      "outcome": "success",
+      "startMs": 650,
+      "endMs": 670,
+      "latencyMs": 20,
+      "mutationUncertain": false
+    }
+  ],
+  "samples": [
+    {
+      "atMs": 0,
+      "metrics": {
+        "hostCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "hostMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "freeMemoryBytes": {
+          "value": 1073741824,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "swapBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "dbCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbConnections": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbWaits": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbLocks": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbQueryMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "diskFreeBytes": {
+          "value": 10737418240,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "diskUsedBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskReadBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskWriteBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskLatencyMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "networkRxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "networkTxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "generatorMemoryBytes": {
+          "value": 1048576,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "generatorCpuMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "temperatureC": {
+          "value": null,
+          "unit": "celsius",
+          "state": "UNAVAILABLE"
+        }
+      },
+      "portable": {
+        "values": {
+          "nalanda_requests_total": 0
+        },
+        "issues": [],
+        "state": "OBSERVED"
+      }
+    },
+    {
+      "atMs": 100,
+      "metrics": {
+        "hostCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "hostMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "freeMemoryBytes": {
+          "value": 1073741824,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "swapBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "dbCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbConnections": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbWaits": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbLocks": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbQueryMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "diskFreeBytes": {
+          "value": 10737418240,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "diskUsedBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskReadBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskWriteBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskLatencyMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "networkRxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "networkTxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "generatorMemoryBytes": {
+          "value": 1048576,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "generatorCpuMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "temperatureC": {
+          "value": null,
+          "unit": "celsius",
+          "state": "UNAVAILABLE"
+        }
+      },
+      "portable": {
+        "values": {
+          "nalanda_requests_total": 2
+        },
+        "issues": [],
+        "state": "OBSERVED"
+      }
+    },
+    {
+      "atMs": 200,
+      "metrics": {
+        "hostCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "hostMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "freeMemoryBytes": {
+          "value": 1073741824,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "swapBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "dbCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbConnections": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbWaits": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbLocks": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbQueryMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "diskFreeBytes": {
+          "value": 10737418240,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "diskUsedBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskReadBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskWriteBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskLatencyMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "networkRxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "networkTxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "generatorMemoryBytes": {
+          "value": 1048576,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "generatorCpuMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "temperatureC": {
+          "value": null,
+          "unit": "celsius",
+          "state": "UNAVAILABLE"
+        }
+      },
+      "portable": {
+        "values": {
+          "nalanda_requests_total": 4
+        },
+        "issues": [],
+        "state": "OBSERVED"
+      }
+    },
+    {
+      "atMs": 300,
+      "metrics": {
+        "hostCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "hostMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "freeMemoryBytes": {
+          "value": 1073741824,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "swapBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "dbCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbConnections": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbWaits": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbLocks": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbQueryMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "diskFreeBytes": {
+          "value": 10737418240,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "diskUsedBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskReadBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskWriteBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskLatencyMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "networkRxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "networkTxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "generatorMemoryBytes": {
+          "value": 1048576,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "generatorCpuMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "temperatureC": {
+          "value": null,
+          "unit": "celsius",
+          "state": "UNAVAILABLE"
+        }
+      },
+      "portable": {
+        "values": {
+          "nalanda_requests_total": 6
+        },
+        "issues": [],
+        "state": "OBSERVED"
+      }
+    },
+    {
+      "atMs": 400,
+      "metrics": {
+        "hostCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "hostMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "freeMemoryBytes": {
+          "value": 1073741824,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "swapBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "dbCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbConnections": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbWaits": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbLocks": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbQueryMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "diskFreeBytes": {
+          "value": 10737418240,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "diskUsedBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskReadBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskWriteBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskLatencyMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "networkRxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "networkTxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "generatorMemoryBytes": {
+          "value": 1048576,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "generatorCpuMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "temperatureC": {
+          "value": null,
+          "unit": "celsius",
+          "state": "UNAVAILABLE"
+        }
+      },
+      "portable": {
+        "values": {
+          "nalanda_requests_total": 8
+        },
+        "issues": [],
+        "state": "OBSERVED"
+      }
+    },
+    {
+      "atMs": 500,
+      "metrics": {
+        "hostCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "hostMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "freeMemoryBytes": {
+          "value": 1073741824,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "swapBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "dbCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbConnections": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbWaits": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbLocks": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbQueryMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "diskFreeBytes": {
+          "value": 10737418240,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "diskUsedBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskReadBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskWriteBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskLatencyMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "networkRxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "networkTxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "generatorMemoryBytes": {
+          "value": 1048576,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "generatorCpuMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "temperatureC": {
+          "value": null,
+          "unit": "celsius",
+          "state": "UNAVAILABLE"
+        }
+      },
+      "portable": {
+        "values": {
+          "nalanda_requests_total": 10
+        },
+        "issues": [],
+        "state": "OBSERVED"
+      }
+    },
+    {
+      "atMs": 600,
+      "metrics": {
+        "hostCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "hostMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "freeMemoryBytes": {
+          "value": 1073741824,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "swapBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "appCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbMemoryBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "dbCpuPercent": {
+          "value": null,
+          "unit": "percent",
+          "state": "UNAVAILABLE"
+        },
+        "dbConnections": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbWaits": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbLocks": {
+          "value": null,
+          "unit": "count",
+          "state": "UNAVAILABLE"
+        },
+        "dbQueryMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "diskFreeBytes": {
+          "value": 10737418240,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "diskUsedBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskReadBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskWriteBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "diskLatencyMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "networkRxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "networkTxBytes": {
+          "value": null,
+          "unit": "bytes",
+          "state": "UNAVAILABLE"
+        },
+        "generatorMemoryBytes": {
+          "value": 1048576,
+          "unit": "bytes",
+          "state": "AVAILABLE"
+        },
+        "generatorCpuMs": {
+          "value": null,
+          "unit": "ms",
+          "state": "UNAVAILABLE"
+        },
+        "temperatureC": {
+          "value": null,
+          "unit": "celsius",
+          "state": "UNAVAILABLE"
+        }
+      },
+      "portable": {
+        "values": {
+          "nalanda_requests_total": 12
+        },
+        "issues": [],
+        "state": "OBSERVED"
+      }
+    }
+  ],
+  "counts": {
+    "success": 12,
+    "failed": 0,
+    "timeout": 0,
+    "cancelled": 0,
+    "refused": 0
+  },
+  "operations": [
+    {
+      "operation": "certificate_list",
+      "weight": 4,
+      "attempts": 10,
+      "successfulBusinessOperations": 10,
+      "p50Ms": 20,
+      "p95Ms": 20,
+      "p99Ms": 20,
+      "sampleState": "INSUFFICIENT_FOR_TAIL_INFERENCE"
+    },
+    {
+      "operation": "certificate_request",
+      "weight": 1,
+      "attempts": 2,
+      "successfulBusinessOperations": 2,
+      "p50Ms": 20,
+      "p95Ms": 20,
+      "p99Ms": 20,
+      "sampleState": "INSUFFICIENT_FOR_TAIL_INFERENCE"
+    }
+  ],
+  "actionCount": 12,
+  "sampleCount": 7,
+  "completedBusinessOperations": 12,
+  "errorRate": 0,
+  "cancelledRate": 0,
+  "achievedActionsPerSecond": 17.91044776119403,
+  "achievedHttpRequestsPerSecond": null,
+  "successfulBusinessOperationsPerSecond": 17.91044776119403,
+  "coverageComplete": true,
+  "resources": {
+    "hostCpuPercent": {
+      "unit": "percent",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "hostMemoryBytes": {
+      "unit": "bytes",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "freeMemoryBytes": {
+      "unit": "bytes",
+      "availableSamples": 7,
+      "unavailableSamples": 0,
+      "min": 1073741824,
+      "max": 1073741824,
+      "growth": 0
+    },
+    "swapBytes": {
+      "unit": "bytes",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "appMemoryBytes": {
+      "unit": "bytes",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "appCpuPercent": {
+      "unit": "percent",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "dbMemoryBytes": {
+      "unit": "bytes",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "dbCpuPercent": {
+      "unit": "percent",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "dbConnections": {
+      "unit": "count",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "dbWaits": {
+      "unit": "count",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "dbLocks": {
+      "unit": "count",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "dbQueryMs": {
+      "unit": "ms",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "diskFreeBytes": {
+      "unit": "bytes",
+      "availableSamples": 7,
+      "unavailableSamples": 0,
+      "min": 10737418240,
+      "max": 10737418240,
+      "growth": 0
+    },
+    "diskUsedBytes": {
+      "unit": "bytes",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "diskReadBytes": {
+      "unit": "bytes",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null,
+      "ratesPerSecond": [
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        }
+      ]
+    },
+    "diskWriteBytes": {
+      "unit": "bytes",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null,
+      "ratesPerSecond": [
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        }
+      ]
+    },
+    "diskLatencyMs": {
+      "unit": "ms",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    },
+    "networkRxBytes": {
+      "unit": "bytes",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null,
+      "ratesPerSecond": [
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        }
+      ]
+    },
+    "networkTxBytes": {
+      "unit": "bytes",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null,
+      "ratesPerSecond": [
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        }
+      ]
+    },
+    "generatorMemoryBytes": {
+      "unit": "bytes",
+      "availableSamples": 7,
+      "unavailableSamples": 0,
+      "min": 1048576,
+      "max": 1048576,
+      "growth": 0
+    },
+    "generatorCpuMs": {
+      "unit": "ms",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null,
+      "ratesPerSecond": [
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        },
+        {
+          "value": null,
+          "state": "UNAVAILABLE"
+        }
+      ]
+    },
+    "temperatureC": {
+      "unit": "celsius",
+      "availableSamples": 0,
+      "unavailableSamples": 7,
+      "min": null,
+      "max": null,
+      "growth": null
+    }
+  },
+  "portableCounters": {
+    "nalanda_requests_total": {
+      "ratesPerSecond": [
+        {
+          "value": 20,
+          "state": "AVAILABLE"
+        },
+        {
+          "value": 20,
+          "state": "AVAILABLE"
+        },
+        {
+          "value": 20,
+          "state": "AVAILABLE"
+        },
+        {
+          "value": 20,
+          "state": "AVAILABLE"
+        },
+        {
+          "value": 20,
+          "state": "AVAILABLE"
+        },
+        {
+          "value": 20,
+          "state": "AVAILABLE"
+        }
+      ],
+      "availableSamples": 7
+    }
+  },
+  "percentileConvention": "Nearest rank, successful operations only, milliseconds",
+  "limitations": [
+    "HARNESS_ONLY: virtual time and invented metrics; no ERP capacity evidence.",
+    "HTTP requests per second unavailable: transport is in-memory.",
+    "Same-host load generation consumes measured resources.",
+    "No laptop CPU to VPS vCPU conversion.",
+    "Unavailable metrics are not zero; thermal/throttling visibility is unverified.",
+    "No recovery or soak executed.",
+    "Sizing and bottleneck conclusions pending admitted ERP measurements."
+  ]
+}

@@ -123,8 +123,29 @@ jobs:
         run: pnpm security:resilience:acceptance && pnpm qa:synthetic-pilot && pnpm qa:onboarding-preparation && pnpm qa:product-experience
       - name: Shared native and browser-platform contracts
         run: pnpm test:cross-platform && pnpm app:typecheck && pnpm app:build:web && pnpm app:rust:test
+      - name: Prepare bounded service metadata
+        id: service_trace_prepare
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts prepare
       - name: Full tests, typecheck and production build
+        env:
+          NALANDA_SERVICE_TRACE_DIR: tmp/ci-service-traces
         run: pnpm test && pnpm typecheck && pnpm build
+      - name: Validate and finalize bounded service metadata
+        id: service_trace_finalize
+        if: always() && steps.service_trace_prepare.outcome == 'success'
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts finalize
+      - name: Retain allowlisted synthetic service metadata
+        if: always() && steps.service_trace_finalize.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: recovery-service-metadata-real-user-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            tmp/ci-service-trace-public/finance.json
+            tmp/ci-service-trace-public/native.json
+            tmp/ci-service-trace-public/mfa.json
+            tmp/ci-service-trace-public/manifest.json
       - name: Remove all synthetic authentication material
         if: always()
         shell: pwsh

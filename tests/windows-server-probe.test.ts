@@ -58,3 +58,13 @@ it("strict MFA readback projection rejects contradictory, private and malformed 
  const pending={...row,userId:null,deviceId:null,sessionId:null,sessionRevoked:null,activeSessions:0,role:null,tokenVersion:null,requestStatus:"PENDING_BROWSER_AUTH",mfaUsed:null,mfaObservation:"NO_SESSION_CHALLENGE_LINK_RECORDED",mfaEvidence:{status:"NOT_YET_ISSUED"}};expect(validateWindowsProbeResult("read",pending)).toEqual(pending);
  expect(()=>validateWindowsProbeResult("read",{...pending,sessionId})).toThrow("OUTPUT_REFUSED");
 });
+
+// A remote service commit followed by transport loss cannot be called cleaned.
+it("preserves uncertain control-session residue after a committed exchange loses its response",async()=>{
+ let committed=false;
+ const invoke=vi.fn(async()=>{committed=true;throw Error("WINDOWS_PRIVATE_TRANSPORT_UNCERTAIN_OUTCOME_RECONCILE");});
+ const ports=new WindowsServerPorts(binding,invoke,()=>{},secret(),secret());
+ await expect(ports.prepareControl("synthetic-user")).rejects.toThrow("UNCERTAIN_OUTCOME");expect(committed).toBe(true);
+ await expect(ports.cleanupGoverned()).rejects.toThrow("CLEANUP_REQUIRES_RECONCILIATION");
+ await expect(ports.prepareControl("synthetic-user")).rejects.toThrow();expect(invoke).toHaveBeenCalledOnce();
+});

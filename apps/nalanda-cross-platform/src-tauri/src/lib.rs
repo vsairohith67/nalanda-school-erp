@@ -162,6 +162,8 @@ struct DiagnosticExport {
 }
 
 mod qa_profile;
+#[cfg(any(test, feature = "synthetic-qa"))]
+mod qa_observation;
 
 fn configured_profile() -> AppProfile {
     if cfg!(feature = "synthetic-qa") {
@@ -557,6 +559,7 @@ fn unlock_guard_clear(state: tauri::State<'_, NativeState>) -> Result<(), String
 
 #[tauri::command]
 async fn native_api_request(
+    app: AppHandle,
     operation: NativeApiOperation,
     body: Option<String>,
     headers: HashMap<String, String>,
@@ -568,6 +571,10 @@ async fn native_api_request(
         .origin
         .ok_or_else(|| "REMOTE_SERVER_NOT_CONFIGURED".to_string())?;
     let body = body.unwrap_or_default();
+    #[cfg(feature = "synthetic-qa")]
+    let observed_request = body.clone();
+    #[cfg(not(feature = "synthetic-qa"))]
+    let _ = app;
     if body.len() > MAX_REQUEST_BYTES {
         return Err("REQUEST_TOO_LARGE".into());
     }
@@ -632,6 +639,8 @@ async fn native_api_request(
         append_bounded_response_chunk(&mut bytes, &chunk)?;
     }
     let body = String::from_utf8(bytes).map_err(|_| "NETWORK_RESPONSE_INVALID")?;
+    #[cfg(feature = "synthetic-qa")]
+    qa_observation::response(&app, operation.path(), &observed_request, status, &body)?;
     Ok(NativeApiResponse { status, body })
 }
 
@@ -648,6 +657,8 @@ fn open_authorization(app: AppHandle, url: String) -> Result<(), String> {
     if !allowed_authorization_url(&url) {
         return Err("AUTHORIZATION_URL_NOT_ALLOWED".into());
     }
+    #[cfg(feature = "synthetic-qa")]
+    qa_observation::original(&app, &url)?;
     app.opener()
         .open_url(url, None::<&str>)
         .map_err(|_| "AUTHORIZATION_OPEN_FAILED".into())
@@ -686,8 +697,20 @@ fn derive_stronghold_key(password: &str, salt: &[u8; STRONGHOLD_SALT_BYTES]) -> 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default();
+    // Before the single-instance plugin: a protocol-launched secondary process
+    // records its own identity before handing arguments to the existing instance.
+    #[cfg(feature = "synthetic-qa")]
+    let builder = builder.plugin(qa_observation::plugin());
     #[cfg(desktop)]
-    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _, _| {
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _| {
+        #[cfg(feature = "synthetic-qa")]
+        if qa_observation::delivered(app, &args, "SINGLE_INSTANCE_ARGUMENT").is_err() {
+            // Observation failure must not be mistaken for a successful QA run.
+            // Authentication continues to be governed by its ordinary handler.
+            return;
+        }
+        #[cfg(not(feature = "synthetic-qa"))]
+        let _ = args;
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.set_focus();
         }
@@ -745,6 +768,53 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn upstream_acl_url_patterns_preserve_exact_origin_and_encoded_path_boundaries() {
+        // Exercise the actual Tauri ACL wrapper used by the resolved urlpattern
+        // dependency. This fixture grants no application capability.
+        let pattern: tauri::utils::acl::RemoteUrlPattern =
+            "https://erp.example.test/api/native-auth/exchange".parse().unwrap();
+        assert!(pattern.test(&url::Url::parse(
+            "https://erp.example.test/api/native-auth/exchange").unwrap()));
+        for raw in [
+            "https://foreign.invalid/api/native-auth/exchange",
+            "https://erp.example.test.foreign.invalid/api/native-auth/exchange",
+            "http://erp.example.test/api/native-auth/exchange",
+            "https://erp.example.test:8443/api/native-auth/exchange",
+            "https://erp.example.test/api/native-auth%2Fexchange",
+            "https://erp.example.test/api/native-auth/exchange/other",
+            "nalandaps-erp://auth/callback",
+        ] {
+            assert!(!pattern.test(&url::Url::parse(raw).unwrap()), "accepted {raw}");
+        }
+        assert!("https://[".parse::<tauri::utils::acl::RemoteUrlPattern>().is_err());
+        assert!(url::Url::parse("https://[invalid").is_err());
+    }
+
+    #[test]
+    fn upstream_acl_unicode_identifier_matching_keeps_foreign_origins_denied() {
+        // UNIC -> ICU changes the tokenizer's identifier tables. Retain a
+        // non-ASCII named segment through the real upstream parser/matcher.
+        let pattern: tauri::utils::acl::RemoteUrlPattern =
+            "https://erp.example.test/api/:नाम".parse().unwrap();
+        assert!(pattern.test(&url::Url::parse("https://erp.example.test/api/student").unwrap()));
+        assert!(!pattern.test(&url::Url::parse("https://foreign.invalid/api/student").unwrap()));
+        assert!(!pattern.test(&url::Url::parse("https://erp.example.test/api/student/extra").unwrap()));
+        assert!("https://erp.example.test/api/:1invalid"
+            .parse::<tauri::utils::acl::RemoteUrlPattern>().is_err());
+    }
+
+    #[test]
+    fn production_capability_keeps_remote_permissions_absent() {
+        let capability: serde_json::Value = serde_json::from_str(include_str!(
+            "../capabilities/local-main.json")).unwrap();
+        assert_eq!(capability["local"], true);
+        assert!(capability.get("remote").is_none());
+        assert_eq!(capability["windows"], serde_json::json!(["main"]));
+        assert!(!capability["permissions"].as_array().unwrap().iter()
+            .any(|permission| permission.as_str().is_some_and(|p| p.starts_with("opener:"))));
+    }
 
     #[test]
     fn profile_origins_fail_closed() {

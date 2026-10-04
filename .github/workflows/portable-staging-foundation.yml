@@ -38,15 +38,17 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 24.19.0, cache: pnpm }
       - name: Install inherited PDF and source-scan test tools
+        id: document_fonts
+        env:
+          FONT_EXPECTED_SHA: ${{ env.EXPECTED_SHA }}
         run: |
           sudo apt-get update
           echo 'ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true' | sudo debconf-set-selections
-          sudo apt-get install -y poppler-utils ripgrep ttf-mscorefonts-installer
-          fc-cache -f
-          test -f /usr/share/fonts/truetype/msttcorefonts/Georgia_Bold.ttf
-          echo "CERTIFICATE_GEORGIA_BOLD_PATH=/usr/share/fonts/truetype/msttcorefonts/Georgia_Bold.ttf" >> "$GITHUB_ENV"
-          echo 'REPORT_CARD_FONT_DIR=/usr/share/fonts/truetype/msttcorefonts' >> "$GITHUB_ENV"
+          sudo apt-get install -y poppler-utils ripgrep cabextract fontconfig curl
+          sudo -n python3 tests/document-font-bootstrap.test.py
+          sudo -n --preserve-env=GITHUB_ACTIONS,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,GITHUB_JOB,RUNNER_TEMP,GITHUB_ENV,FONT_EXPECTED_SHA python3 scripts/bootstrap-document-fonts.py prepare
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsx scripts/qa-shared-document-fonts.ts
       - run: pnpm db:generate:postgres && pnpm qa:postgres:parity
       - run: pnpm db:generate:sqlite
       - name: Prepare isolated SQLite database for inherited copied-database tests
@@ -61,6 +63,11 @@ jobs:
       - name: Cleanup
         if: always()
         run: rm -rf tmp/portable-staging data/cloud-backup-rehearsal
+      - name: Verify owned document-font cleanup
+        if: always() && steps.document_fonts.outcome != 'skipped'
+        env:
+          FONT_EXPECTED_SHA: ${{ env.EXPECTED_SHA }}
+        run: sudo -n --preserve-env=GITHUB_ACTIONS,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,GITHUB_JOB,RUNNER_TEMP,GITHUB_ENV,FONT_EXPECTED_SHA python3 scripts/bootstrap-document-fonts.py cleanup
 
   oci-image:
     # EXTERNAL_RUNTIME_BLOCKED: upstream zlib fix exists; corrected vendor/Node24 releases pending.
@@ -391,3 +398,42 @@ jobs:
       - name: Cleanup
         if: always()
         run: rm -rf tmp backups data
+
+  backend-build-scan:
+    # Independent byte/static-input qualification; never unholds runtime jobs.
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 28 && github.event.pull_request.head.repo.full_name == github.repository }}
+    name: Backend build/scan input qualification (${{ matrix.architecture }})
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - { architecture: amd64, runner: ubuntu-24.04 }
+          - { architecture: arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      TARGET_ARCHITECTURE: ${{ matrix.architecture }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false, fetch-depth: 0 }
+      - name: Verify HARNESS_ONLY no-launch and refusal controls
+        run: python3 tests/backend-build-scan.test.py
+      - name: Inspect and scan exact current input bytes privately
+        run: python3 scripts/portable/backend-build-scan.py --base-only
+      - name: Publish bounded qualification metadata only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: backend-build-scan-result-${{ env.EXPECTED_SHA }}-${{ matrix.architecture }}
+          path: backend-build-scan-result.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish exact filename and hash manifest only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: backend-build-scan-manifest-${{ env.EXPECTED_SHA }}-${{ matrix.architecture }}
+          path: backend-build-scan-public-manifest.json
+          if-no-files-found: error
+          retention-days: 14

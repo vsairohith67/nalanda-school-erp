@@ -1,6 +1,7 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const root = process.cwd();
 const required = [
@@ -19,6 +20,13 @@ const onboardingScopedPaths = [
   "tests/real-data-onboarding-preparation-1a.test.ts"
 ];
 const withoutUuidValues = (text: string) => text.replace(/\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b/gi, "");
+export function publicIdentifierScanText(relative: string, text: string) {
+  if (relative.replaceAll("\\", "/") !== "docs/evidence/RELEASE_RECOVERY_1C.md") return withoutUuidValues(text);
+  // Approved non-secret CI coordinates in the retained recovery evidence only.
+  // Preserve labels/raw surrounding text; this is not provenance verification.
+  // Secret/private-key detection still examines the ORIGINAL complete text.
+  return withoutUuidValues(text.replace(/\[([^\]\r\n]{1,160})\]\(https:\/\/github\.com\/vsairohith67\/nalanda-school-erp\/actions\/runs\/[1-9]\d{0,19}\/job\/[1-9]\d{0,19}\)/g, "[$1](PUBLIC_GITHUB_JOB_COORDINATE)"));
+}
 
 async function filesUnder(directory: string): Promise<string[]> {
   const result: string[] = []; for (const item of await readdir(directory, { withFileTypes: true })) { const absolute = path.join(directory, item.name); if (item.isSymbolicLink()) throw new Error(`SYMLINK_REFUSED:${path.relative(root, absolute)}`); if (item.isDirectory()) result.push(...await filesUnder(absolute)); else result.push(absolute); } return result;
@@ -41,7 +49,7 @@ async function main() {
       const normalized = relative.replaceAll("\\", "/");
       const syntheticFixture = normalized.startsWith("scripts/qa") || normalized === "scripts/migration-backup-restore-check.ts" || normalized.startsWith("tests/");
       if (/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i.test(text) || (!syntheticFixture && /(?:password|secret|token)\s*[:=]\s*["'][^"']{8,}["']/i.test(text))) throw new Error(`SECRET_LIKE_CONTENT_REFUSED:${relative}`);
-      const identifierScanText = withoutUuidValues(text);
+      const identifierScanText = publicIdentifierScanText(relative, text);
       if (!syntheticFixture && (/\b(?:[6-9]\d{9})\b/.test(identifierScanText) || /\b\d{12}\b/.test(identifierScanText))) throw new Error(`REAL_LIKE_IDENTIFIER_REFUSED:${relative}`);
     }
   }
@@ -50,7 +58,7 @@ async function main() {
       const metadata = await stat(file); if (metadata.size > 1024 * 1024) throw new Error(`OVERSIZED_PUBLIC_ARTIFACT:${path.relative(root, file)}`);
       const text = await readFile(file, "utf8");
       if (/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|(?:password|secret|token)\s*[:=]\s*["'][^"']{8,}["']/i.test(text)) throw new Error(`SECRET_LIKE_CONTENT_REFUSED:${path.relative(root, file)}`);
-      const identifierScanText = withoutUuidValues(text);
+      const identifierScanText = publicIdentifierScanText(path.relative(root, file), text);
       if (/\b(?:[6-9]\d{9})\b/.test(identifierScanText) || /\b\d{12}\b/.test(identifierScanText)) throw new Error(`REAL_LIKE_IDENTIFIER_REFUSED:${path.relative(root, file)}`);
     }
   }
@@ -59,4 +67,4 @@ async function main() {
   process.stdout.write(`${JSON.stringify({ result: "REAL_DATA_ONBOARDING_PREPARATION_PUBLIC_REPO_SCAN_PASSED", changedFiles: changed.length, requiredArtifacts: required.length, scopeChecked: onboardingScopeChanged, realDataProcessed: false })}\n`);
 }
 
-main().catch((error) => { process.stderr.write(`${error instanceof Error ? error.message : "PUBLIC_REPO_SCAN_FAILED"}\n`); process.exitCode = 1; });
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((error) => { process.stderr.write(`${error instanceof Error ? error.message : "PUBLIC_REPO_SCAN_FAILED"}\n`); process.exitCode = 1; });

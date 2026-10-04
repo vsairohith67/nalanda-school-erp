@@ -116,10 +116,34 @@ jobs:
           pnpm exec prisma migrate deploy --schema prisma/schema.prisma
           pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
           Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db -Force
+      - name: Prepare owned service metadata recorders
+        id: service_trace_prepare
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts prepare
       - name: Full ERP regression
         env:
+          NALANDA_SERVICE_TRACE_DIR: tmp/ci-service-traces
           DATABASE_URL: file:../tmp/release-ci/synthetic.db
         run: pnpm test && pnpm typecheck && pnpm build
+      - name: Validate bounded service metadata even after test failure
+        id: service_trace_finalize
+        if: always() && steps.service_trace_prepare.outcome == 'success'
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts finalize
+      - name: Retain exact allowlisted service metadata
+        if: always() && steps.service_trace_finalize.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: service-metadata-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            tmp/ci-service-trace-public/finance.json
+            tmp/ci-service-trace-public/native.json
+            tmp/ci-service-trace-public/mfa.json
+            tmp/ci-service-trace-public/manifest.json
       - name: Remove ephemeral database, backup and bridge build output
         if: always()
         shell: pwsh

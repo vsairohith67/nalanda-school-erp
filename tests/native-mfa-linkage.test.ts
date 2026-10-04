@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, afterAll, describe, it, expect, vi } from "vitest";
+import { beforeAll, beforeEach, afterEach, afterAll, describe, it, expect, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import { randomUUID, randomBytes, generateKeyPairSync, sign } from "node:crypto";
 import { mkdtempSync, rmSync, readFileSync, readdirSync, lstatSync, existsSync } from "node:fs";
@@ -16,6 +16,8 @@ import { generateTotpForSyntheticQa } from "../lib/real-user-access/totp";
 import { boundAuthEnvironment } from "../lib/real-user-access/login-mfa";
 import { createNativeAuthRequest, authorizeNativeRequest, exchangeNativeAuthorization, refreshNativeSession, pkceChallenge, nativeBrowserProofMessage, nativeExchangeProofMessage, nativeRefreshProofMessage } from "../lib/native-app/auth";
 import { publicJwkHash, sha256Hex } from "../lib/offline-sync/device-trust";
+import { configuredTrace } from "./helpers/service-trace";
+import { MfaJourneyObservation, mfaPhase, observeMfaClient } from "./helpers/native-mfa-trace";
 
 // ISOLATED_SERVICE_OR_ROUTE: generated protocol inputs, real crypto, sessions,
 // MFA, step-up, permission, credential validators and transactions. No server,
@@ -24,10 +26,15 @@ const harness = vi.hoisted(() => ({ passkeyValid: true, db: null as any, cookie:
 vi.mock("../lib/prisma", () => ({ prisma: new Proxy({}, { get: (_t, key) => { const v = harness.db[key]; return typeof v === "function" ? v.bind(harness.db) : v; } }) }));
 vi.mock("../lib/native-app/feature-flag", () => ({ NATIVE_APP_ID: "com.nalandaps.erp", NATIVE_REDIRECT_URI: "nalandaps-erp://auth/callback", nativeAppEnabled: () => harness.enabled, nativeDataScopeEnabled: () => harness.enabled, operationalNativeAppEnabled: () => harness.enabled }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => ({ value: harness.cookie }) }) }));
+const trace = configuredTrace("mfa"), observation = new MfaJourneyObservation(trace);
+// Refuse invalid trace custody before allocating a disposable database root.
 const root = mkdtempSync(path.join(tmpdir(), "nalanda-mfa-linkage-")), identity = lstatSync(root), schema = `mfl_${randomUUID().replaceAll("-", "")}`, postgres = process.env.DATABASE_PROVIDER === "postgresql";
 let db: PrismaClient;
+let caseSpan = 0;
 const opaque = () => randomBytes(32).toString("base64url");
 beforeAll(async () => {
+  const setup = trace.begin("setup"), migration = trace.begin("migration");
+  try {
   let url = "file:" + path.join(root, "synthetic.db").replaceAll("\\", "/");
   if (postgres) {
     expect(process.env.CI).toBe("true"); expect(process.env.POSTGRES_READINESS_SYNTHETIC_QA).toBe("1");
@@ -37,15 +44,26 @@ beforeAll(async () => {
     const sql = new DatabaseSync(":memory:");
     try { for (const migration of readdirSync("prisma/migrations", { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name).sort()) sql.exec(readFileSync(path.join("prisma/migrations", migration, "migration.sql"), "utf8")); expect(sql.prepare("PRAGMA foreign_key_check").all()).toEqual([]); await backup(sql, path.join(root, "synthetic.db")); } finally { sql.close(); }
   }
-  db = new PrismaClient({ datasourceUrl: url }); harness.db = db;
+  trace.end(migration);
+  db = observeMfaClient(new PrismaClient({ datasourceUrl: url })); harness.db = db;
   vi.stubEnv("DATABASE_URL", url); vi.stubEnv("AUTH_SECRET", opaque() + opaque()); vi.stubEnv("APP_ORIGIN", "https://synthetic.invalid");
   vi.stubEnv("AUTH_BOUND_ENVIRONMENT", "SYNTHETIC_SERVICE");
   vi.stubEnv("AUTH_MFA_KEYRING_JSON", JSON.stringify({ active: "QA", keys: { QA: randomBytes(32).toString("base64") } }));
-  await db.rolePermission.createMany({ data: Object.entries(defaultPermissionMatrix()).flatMap(([role, entries]) => Object.entries(entries).map(([permission, enabled]) => ({ role, permission, enabled }))) });
+  await trace.phase("seed", () => db.rolePermission.createMany({ data: Object.entries(defaultPermissionMatrix()).flatMap(([role, entries]) => Object.entries(entries).map(([permission, enabled]) => ({ role, permission, enabled }))) }));
+  trace.end(setup);
+  } catch (error) { trace.end(migration, true); trace.end(setup, true); trace.result("fail"); throw error; }
 }, 60_000);
 afterAll(async () => {
-  if (db) { if (postgres) await db.$executeRawUnsafe(`DROP SCHEMA "${schema}" CASCADE`); await db.$disconnect(); }
-  const current = lstatSync(root); expect(current.isSymbolicLink()).toBe(false); expect(current.ino).toBe(identity.ino); expect(current.dev).toBe(identity.dev); expect(path.dirname(path.resolve(root))).toBe(path.resolve(tmpdir())); rmSync(root, { recursive: true }); expect(existsSync(root)).toBe(false); vi.unstubAllEnvs();
+  try {
+    // A Vitest timeout rejects its wrapper, not necessarily the real service
+    // promise. Never drop/disconnect its fixture while that promise is pending.
+    if (!await observation.drain()) throw Error("MFA_TEST_IN_FLIGHT_CLEANUP_HELD");
+    await trace.phase("cleanup", async () => {
+      if (db) { if (postgres) await db.$executeRawUnsafe(`DROP SCHEMA "${schema}" CASCADE`); await db.$disconnect(); }
+      const current = lstatSync(root); expect(current.isSymbolicLink()).toBe(false); expect(current.ino).toBe(identity.ino); expect(current.dev).toBe(identity.dev); expect(path.dirname(path.resolve(root))).toBe(path.resolve(tmpdir())); rmSync(root, { recursive: true }); expect(existsSync(root)).toBe(false);
+    });
+  } catch (error) { trace.result("fail"); throw error; }
+  finally { trace.close(); if (!observation.pendingCount) vi.unstubAllEnvs(); }
 });
 async function user(role = "SUPER_ADMIN") {
   const u = await db.user.create({ data: { username: `synthetic-${randomUUID()}`, name: "SYNTHETIC service actor", role, passwordHash: "UNUSABLE_SYNTHETIC_NO_LOGIN", isActive: true, lifecycleStatus: "ACTIVE", mustChangePassword: false } });
@@ -64,19 +82,19 @@ async function native(actor: Actor, existing?: { keys: ReturnType<typeof generat
   const keys = existing?.keys ?? generateKeyPairSync("ed25519"), deviceId = existing?.deviceId ?? randomUUID(), publicSigningKey = keys.publicKey.export({ format: "jwk" });
   const signature = (s: string) => sign(null, Buffer.from(s), keys.privateKey).toString("base64url");
   const state = opaque(), nonce = opaque(), verifier = opaque();
-  const r = await createNativeAuthRequest({ appId: "com.nalandaps.erp", appVersion: "0.1.0", redirectUri: "nalandaps-erp://auth/callback", platform: "WINDOWS", deviceLabel: "SYNTHETIC session service", publicDeviceId: deviceId, publicSigningKey, state, nonce, pkceChallenge: pkceChallenge(verifier) });
+  const r = await mfaPhase("native_request", () => createNativeAuthRequest({ appId: "com.nalandaps.erp", appVersion: "0.1.0", redirectUri: "nalandaps-erp://auth/callback", platform: "WINDOWS", deviceLabel: "SYNTHETIC session service", publicDeviceId: deviceId, publicSigningKey, state, nonce, pkceChallenge: pkceChallenge(verifier) }));
   const proof = signature(nativeBrowserProofMessage({ publicRequestId: r.requestId, challenge: r.challenge, state, publicDeviceId: deviceId, publicKeyHash: publicJwkHash(publicSigningKey) }));
-  const authorize = () => authorizeNativeRequest({ requestId: r.requestId, state, challenge: r.challenge, proof, user: { ...actor.u, roleAssignmentId: actor.assignment.id } as any, webSessionId: actor.web.sessionId });
+  const authorize = () => mfaPhase("native_authorize", () => authorizeNativeRequest({ requestId: r.requestId, state, challenge: r.challenge, proof, user: { ...actor.u, roleAssignmentId: actor.assignment.id } as any, webSessionId: actor.web.sessionId }));
   let result = await authorize();
   if (!("redirectUrl" in result)) {
     // Approved-device PRECONDITION only. Authorization/exchange, session and
     // revocation/audit outcomes below must be created by their real services.
-    await db.offlineSyncDevice.update({ where: { publicDeviceId: deviceId }, data: { status: "ACTIVE", approvedAt: new Date(), approvedByUserId: actor.u.id } }); result = await authorize();
+    await mfaPhase("device_fixture", () => db.offlineSyncDevice.update({ where: { publicDeviceId: deviceId }, data: { status: "ACTIVE", approvedAt: new Date(), approvedByUserId: actor.u.id } })); result = await authorize();
   }
   if (!("redirectUrl" in result)) throw Error("SYNTHETIC_AUTHORIZATION_FAILED");
   const code = new URL(result.redirectUrl!).searchParams.get("code")!;
   if(beforeExchange)await beforeExchange();
-  const tokens = await exchangeFn({ requestId: r.requestId, code, verifier, nonce, publicDeviceId: deviceId, proof: signature(nativeExchangeProofMessage({ requestId: r.requestId, code, verifier, nonce, publicDeviceId: deviceId })) });
+  const tokens = await mfaPhase("native_exchange", () => exchangeFn({ requestId: r.requestId, code, verifier, nonce, publicDeviceId: deviceId, proof: signature(nativeExchangeProofMessage({ requestId: r.requestId, code, verifier, nonce, publicDeviceId: deviceId })) }));
   return { keys, deviceId, tokens, signature, requestId:r.requestId };
 }
 import { createLoginMfaChallenge, completeLoginMfaSignIn } from "../lib/real-user-access/login-mfa";
@@ -88,20 +106,22 @@ vi.mock("../lib/release-feature-flag-runtime", async importOriginal => ({...awai
 // issuance and audit are real. This is NOT physical-passkey acceptance.
 vi.mock("../lib/real-user-access/webauthn", async importOriginal => ({...await importOriginal<any>(), verifyPasskeyAuthentication:async(input:any)=>({verified:harness.passkeyValid,authenticationInfo:{newCounter:input.counter+1}})}));
 async function login(actor:Actor, factor:"TOTP"|"RECOVERY_CODE"="TOTP", recoveryIndex=0) {
- const challenge=await createLoginMfaChallenge(db,{userId:actor.u.id,environment:boundAuthEnvironment()});
+ const challenge=await mfaPhase("mfa_challenge",()=>createLoginMfaChallenge(db,{userId:actor.u.id,environment:boundAuthEnvironment()}));
  if(!("challengeToken" in challenge)||!challenge.challengeToken)throw Error("SYNTHETIC_CHALLENGE_REQUIRED");
- const f=await db.mfaAuthenticator.findUniqueOrThrow({where:{id:actor.factor.id}});
+ const f=await mfaPhase("mfa_factor_lookup",()=>db.mfaAuthenticator.findUniqueOrThrow({where:{id:actor.factor.id}}));
  const timestamp=Math.max(Date.now(),(f.totpLastUsedStep!+1)*30_000);
  const input={challengeToken:challenge.challengeToken,environment:boundAuthEnvironment(),factor,response:factor==="TOTP"?generateTotpForSyntheticQa({userId:actor.u.id,authenticatorId:f.id,secretEnvelope:f.secretEnvelope!,timestamp}):actor.recoveryCodes[recoveryIndex],timestamp};
- const result=await completeLoginMfaSignIn(db,input,new Headers());
+ const result=await mfaPhase("mfa_verify",()=>completeLoginMfaSignIn(db,input,new Headers()));
  if(!result.verified||!("session" in result)||!result.session)throw Error("SYNTHETIC_LOGIN_FAILED");
  return {actor:{...actor,web:result.session},input,challengeId:challenge.challengeToken.split(".")[0]};
 }
-const evidence=(actor:Actor,n:Awaited<ReturnType<typeof native>>, extra:Record<string,any>={})=>readNativeMfaEvidence(db,{userId:actor.u.id,requestId:n.requestId,nativeSessionId:n.tokens.sessionId,environment:boundAuthEnvironment(),...extra});
+const evidence=(actor:Actor,n:Awaited<ReturnType<typeof native>>, extra:Record<string,any>={})=>mfaPhase("lineage_read",()=>readNativeMfaEvidence(db,{userId:actor.u.id,requestId:n.requestId,nativeSessionId:n.tokens.sessionId,environment:boundAuthEnvironment(),...extra}));
 let actor:Actor;
 let projectionSetup:{login:Awaited<ReturnType<typeof login>>;native:Awaited<ReturnType<typeof native>>}|undefined;
 beforeEach(async context=>{
- actor=await user("ACCOUNTANT");harness.passkeyValid=true;projectionSetup=undefined;
+ caseSpan=trace.begin("test_case");
+ trace.emit("TEST_CONTRACT","test_case",caseSpan,0,null,{case:trace.label(context.task.id),purpose:context.task.name==="rotation preserves explicit lineage and fresh login never revives revoked history"?"MFA_ROTATION_HISTORY_JOURNEY":"MFA_LINEAGE_CONTROLS"});
+ actor=await trace.phase("actor_setup",()=>user("ACCOUNTANT"));harness.passkeyValid=true;projectionSetup=undefined;
  if(context.task.name==="projection excludes credentials and readback never manufactures events"){
   // Real service-created precondition, never inserted proof. Hosted Windows
   // job108498097645's whole-test timeout included this real-service setup.
@@ -109,6 +129,7 @@ beforeEach(async context=>{
   const authenticated=await login(actor);projectionSetup={login:authenticated,native:await native(authenticated.actor)};
  }
 },60_000);
+afterEach(context=>{trace.end(caseSpan,context.task.result?.state==="fail");trace.result(context.task.result?.state);});
 describe.sequential("MFA issuance and exact native lineage (isolated services)",()=>{
  it.each(["TOTP","RECOVERY_CODE"] as const)("records the actual %s factor, exact challenge and session",async factor=>{
   const l=await login(actor,factor),n=await native(l.actor),e=await evidence(l.actor,n);
@@ -201,12 +222,15 @@ describe.sequential("MFA issuance and exact native lineage (isolated services)",
   expect(await db.nativeSession.count({where:{userId:actor.u.id}})).toBe(0);expect(await db.authSecurityEvent.count({where:{subjectId:l.actor.web.sessionId,eventType:"MFA_LOGIN_SESSION_ISSUED"}})).toBe(1);
  });
  it("rotation preserves explicit lineage and fresh login never revives revoked history",async()=>{
-  const l=await login(actor),n=await native(l.actor),before=await evidence(l.actor,n);
+  const subject=actor; // Retain this case's fixture if its timed-out promise continues.
+  await observation.run(caseSpan,async()=>{
+  const l=await mfaPhase("mfa_totp",()=>login(subject),1),n=await mfaPhase("native_initial",()=>native(l.actor),1),before=await evidence(l.actor,n);
   const timestamp=String(Date.now()),proofNonce=opaque();
-  await refreshNativeSession({sessionId:n.tokens.sessionId,refreshToken:n.tokens.refreshToken,publicDeviceId:n.deviceId,timestamp,proofNonce,proof:n.signature(nativeRefreshProofMessage({sessionId:n.tokens.sessionId,timestamp,proofNonce,refreshTokenHash:sha256Hex(n.tokens.refreshToken),publicDeviceId:n.deviceId,tokenVersion:1}))});
+  await mfaPhase("native_refresh",()=>refreshNativeSession({sessionId:n.tokens.sessionId,refreshToken:n.tokens.refreshToken,publicDeviceId:n.deviceId,timestamp,proofNonce,proof:n.signature(nativeRefreshProofMessage({sessionId:n.tokens.sessionId,timestamp,proofNonce,refreshTokenHash:sha256Hex(n.tokens.refreshToken),publicDeviceId:n.deviceId,tokenVersion:1}))}),1);
   expect(await evidence(l.actor,n)).toEqual(before);
-  await db.nativeSession.update({where:{publicSessionId:n.tokens.sessionId},data:{revokedAt:new Date(),revocationReason:"SYNTHETIC existing revocation fixture"}});
-  const fresh=await login(actor,"RECOVERY_CODE"),next=await native(fresh.actor);expect(next.tokens.sessionId===n.tokens.sessionId).toBe(false);expect((await db.nativeSession.findUniqueOrThrow({where:{publicSessionId:n.tokens.sessionId}})).revokedAt!==null).toBe(true);expect(await evidence(l.actor,n)).toEqual(before);expect(await evidence(fresh.actor,next)).toMatchObject({challengeId:fresh.challengeId,webSessionId:fresh.actor.web.sessionId});
+  await mfaPhase("revocation_fixture",()=>db.nativeSession.update({where:{publicSessionId:n.tokens.sessionId},data:{revokedAt:new Date(),revocationReason:"SYNTHETIC existing revocation fixture"}}),1);
+  const fresh=await mfaPhase("mfa_recovery",()=>login(subject,"RECOVERY_CODE"),2),next=await mfaPhase("native_replacement",()=>native(fresh.actor),2);expect(next.tokens.sessionId===n.tokens.sessionId).toBe(false);expect((await mfaPhase("lineage_read",()=>db.nativeSession.findUniqueOrThrow({where:{publicSessionId:n.tokens.sessionId}}))).revokedAt!==null).toBe(true);expect(await evidence(l.actor,n)).toEqual(before);expect(await evidence(fresh.actor,next)).toMatchObject({challengeId:fresh.challengeId,webSessionId:fresh.actor.web.sessionId});
+  });
  });
  it.each(["MFA_LOGIN_SUCCEEDED","NATIVE_SESSION_CREATED"])("missing retained %s is unknown, never invented proof",async eventType=>{
   const l=await login(actor),n=await native(l.actor);await db.authSecurityEvent.deleteMany({where:{userId:actor.u.id,eventType}});expect(await evidence(l.actor,n)).toEqual({status:"NOT_RECORDED"});

@@ -4,15 +4,16 @@ import path from "node:path";
 import { hashBytes } from "./artifact-handoff";
 import type { SyntheticBuildTrust } from "../../lib/portable-runtime/synthetic-capability";
 
+export type ProducerProfile = "qa"|"production";
 export type ProducerIdentity = {source:string;runId:string;attempt:string;architecture:"amd64"|"arm64"};
 export function producerIdentity(env:NodeJS.ProcessEnv=process.env):ProducerIdentity {
  const {EXPECTED_SHA:source,GITHUB_RUN_ID:runId,GITHUB_RUN_ATTEMPT:attempt,TARGET_ARCHITECTURE:architecture}=env;
  if(!/^[a-f0-9]{40}$/.test(source??"")||!/^\d+$/.test(runId??"")||!/^\d+$/.test(attempt??"")||!['amd64','arm64'].includes(architecture??""))throw Error("QA_PRODUCER_IDENTITY_INVALID");
  return {source:source!,runId:runId!,attempt:attempt!,architecture:architecture as ProducerIdentity['architecture']};
 }
-export function producerPaths(workspace=process.cwd(),identity=producerIdentity()) {
+export function producerPaths(workspace=process.cwd(),identity=producerIdentity(),profile:ProducerProfile="qa") {
  const parent=path.resolve(workspace,"tmp/portable-staging"),prefix=`nalanda-ci-${identity.runId}-${identity.attempt}`;
- return {parent,signing:path.join(parent,`${prefix}-capability`),work:path.join(parent,`${prefix}-qa-producer`),project:`${prefix}-qaon`};
+ return {parent,signing:path.join(parent,`${prefix}-capability`),work:path.join(parent,`${prefix}-${profile==="qa"?"qa":"production"}-producer`),project:`${prefix}-${profile==="qa"?"qaon":"production"}`};
 }
 export const syntheticEvidenceRoot=()=>path.join(producerPaths().work,"evidence");
 function safe(file:string, directory:boolean, checkPermissions=true) {
@@ -26,24 +27,25 @@ function safeAncestors(file:string) {
  let current=path.resolve(file);
  while(true){if(present(current))safe(current,true,false);const parent=path.dirname(current);if(parent===current)break;current=parent;}
 }
-function owner(workspace:string,identity:ProducerIdentity,kind:"signing"|"work",nonce:string) {
- return {contract:"NALANDA_QA_PRODUCER_ROOT_V1",workspaceSha256:hashBytes(path.resolve(workspace)),...identity,phase:"synthetic-ON",project:producerPaths(process.cwd(),identity).project,target:"synthetic-qa",kind,nonce};
+function owner(workspace:string,identity:ProducerIdentity,kind:"signing"|"work",nonce:string,profile:ProducerProfile="qa") {
+ if(profile==="production"&&kind!=="work")throw Error("PRODUCTION_SIGNING_ROOT_FORBIDDEN");
+ return {contract:profile==="qa"?"NALANDA_QA_PRODUCER_ROOT_V1":"NALANDA_PRODUCT_PRODUCER_ROOT_V1",workspaceSha256:hashBytes(path.resolve(workspace)),...identity,phase:profile==="qa"?"synthetic-ON":"production-OFF",project:producerPaths(process.cwd(),identity,profile).project,target:profile==="qa"?"synthetic-qa":"production-runtime",kind,nonce};
 }
-export function createProducerRoot(workspace:string,identity:ProducerIdentity,kind:"signing"|"work") {
- const paths=producerPaths(workspace,identity),root=paths[kind];safeAncestors(paths.parent);
+export function createProducerRoot(workspace:string,identity:ProducerIdentity,kind:"signing"|"work",profile:ProducerProfile="qa") {
+ const paths=producerPaths(workspace,identity,profile),root=paths[kind];safeAncestors(paths.parent);
  mkdirSync(paths.parent,{recursive:true,mode:0o700});safe(paths.parent,true);
  // Never adopt, overwrite or clean an existing root, including same-run residue.
  mkdirSync(root,{mode:0o700});
- const manifest=owner(workspace,identity,kind,randomBytes(32).toString("hex"));
+ const manifest=owner(workspace,identity,kind,randomBytes(32).toString("hex"),profile);
  try{writeFileSync(path.join(root,"owner.json"),JSON.stringify(manifest),{flag:"wx",mode:0o600});}
  catch{throw Error("QA_PRODUCER_OWNER_WRITE_FAILED_RECONCILIATION_REQUIRED");}
  return root;
 }
-export function validateProducerRoot(workspace:string,identity:ProducerIdentity,kind:"signing"|"work") {
- const root=producerPaths(workspace,identity)[kind];safeAncestors(root);safe(root,true);
+export function validateProducerRoot(workspace:string,identity:ProducerIdentity,kind:"signing"|"work",profile:ProducerProfile="qa") {
+ const root=producerPaths(workspace,identity,profile)[kind];safeAncestors(root);safe(root,true);
  const file=path.join(root,"owner.json");if(safe(file,false).size>4096)throw Error("QA_PRODUCER_OWNER_INVALID");
  const actual=JSON.parse(readFileSync(file,"utf8"));
- if(!/^[a-f0-9]{64}$/.test(actual.nonce??"")||JSON.stringify(actual)!==JSON.stringify(owner(workspace,identity,kind,actual.nonce)))throw Error("QA_PRODUCER_OWNER_MISMATCH");
+ if(!/^[a-f0-9]{64}$/.test(actual.nonce??"")||JSON.stringify(actual)!==JSON.stringify(owner(workspace,identity,kind,actual.nonce,profile)))throw Error("QA_PRODUCER_OWNER_MISMATCH");
  return root;
 }
 export function prepareSigningRoot(workspace:string,identity:ProducerIdentity) {
@@ -61,10 +63,10 @@ export function readSigningRoot(workspace:string,identity:ProducerIdentity) {
  if(key.asymmetricKeyType!=="ed25519"||Object.keys(trust).sort().join()!=="attempt,buildId,contract,publicKey,runId,source"||trust.contract!=="NALANDA_SYNTHETIC_BUILD_V1"||trust.source!==identity.source||trust.runId!==identity.runId||trust.attempt!==identity.attempt||!/^[a-f0-9]{64}$/.test(trust.buildId)||createPublicKey(key).export({format:"pem",type:"spki"}).toString()!==trust.publicKey)throw Error("QA_SIGNING_TRUST_MISMATCH");
  return {trust,bytes,sha256:hashBytes(bytes)};
 }
-export function cleanupProducerRoot(workspace:string,identity:ProducerIdentity,kind:"signing"|"work") {
- const root=producerPaths(workspace,identity)[kind];
+export function cleanupProducerRoot(workspace:string,identity:ProducerIdentity,kind:"signing"|"work",profile:ProducerProfile="qa") {
+ const root=producerPaths(workspace,identity,profile)[kind];
  if(!present(root)){safeAncestors(path.dirname(root));return "ABSENT" as const;}
- validateProducerRoot(workspace,identity,kind);
+ validateProducerRoot(workspace,identity,kind,profile);
  const visit=(dir:string)=>{safe(dir,true);for(const name of readdirSync(dir)){const file=path.join(dir,name),s=lstatSync(file);if(s.isSymbolicLink())throw Error("QA_CLEANUP_SYMLINK_REFUSED");if(s.isDirectory())visit(file);else safe(file,false);}};
  visit(root);
  if(kind==="signing"&&readdirSync(root).some(n=>!["owner.json","trust.json","private-key.pem"].includes(n)))throw Error("QA_CLEANUP_FOREIGN_FILE_REFUSED");

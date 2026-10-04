@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "date": "2026-09-27",
+  "date": "2026-10-03",
   "base": "104aacc7bd314cae82e60bb02b5c8a965c7ffedd",
   "heads": [
     "5bf70e4c4be07b706224debe01a27c54fd0af096",
@@ -31,7 +31,7 @@
           "sha256": "b2a05ac9e62d0cac97f80f69894b8c4e48b1961a8ed399d59d2f6a9ec5866b6b"
         }
       ],
-      "currentSha256": "7de90a88fc0cad549949b15c18f31fcf80fec7702802d597d45833d1a1ea0e7f",
+      "currentSha256": "5410e93055723b59202bdcf006278181a646011c66f36d5e6109a2b122999be8",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -106,7 +106,7 @@
           "sha256": "bbeb6ef221f618e9938f10c1a674bc159f9ff725918ef4a25b92f7c161315d8f"
         }
       ],
-      "currentSha256": "e8c4e392e3535716b9152250342e73ba421b5bc4c7612a6a657b27af544c55a5",
+      "currentSha256": "70dfcb8a18ddb0f121a56d35b76504a0bfd63e77570a8aa295a2a4ed8d23a72c",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -131,8 +131,8 @@
           "sha256": "2bdf4c58081df83d82e7393bf3e78c24ca0d9b625142d3f50a81695179bf7912"
         }
       ],
-      "currentSha256": "e9f5274fb5381f0082e26332ebecfecbf9574f5d9d7a92146cb9bb6652ec3158",
-      "reconciliation": "ADMITTED_COMMITTED_SOURCE"
+      "currentSha256": "5da27d8b720acae53c2d85b842df3a6caf3488711f39769e409c30e21a6132c3",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
       "path": ".github/workflows/portable-staging-foundation.yml",
@@ -156,7 +156,7 @@
           "sha256": "9d1e34ea325f94f57ab2ff51fbef03fe1368c7760a6e719a5d4eb9b09c8ea95c"
         }
       ],
-      "currentSha256": "ee2e82bd57e999a94b4745549aeded1d07160f573b2ed95f347b63a69a580ab7",
+      "currentSha256": "a142519e3c421d3d82cc3b4d27cf4b0808c99a2ad053be74de3efa6da2eb2525",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -181,7 +181,7 @@
           "sha256": "205c1855fdc9944d5567f58832cb94e61d52458f699a6a5cd05aa29e3adf5e45"
         }
       ],
-      "currentSha256": "3d3fbdc0fca5fab645f6fce1e165b03f75b7b0c979f861148ef0f440d095764d",
+      "currentSha256": "12725a3ac4b6271d8752253f9f512004e431e3ecf7eb6c763039a49584a5ac03",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -206,7 +206,7 @@
           "sha256": "739cb221b1a866ec28641c48611de88a7e4652116c23e447de4cb88067524fcc"
         }
       ],
-      "currentSha256": "cd7187128da4138433f61fe51ec02250d5287b1519b443808e27f6a2323f712f",
+      "currentSha256": "3f424a3a21cceb91e344ae63968d6ab152c5ffb7d3cbcc503764bd0f44ba0058",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -231,7 +231,7 @@
           "sha256": "f5da5713ac9ff0f29a2a7ad8bff0321e2be7871ad60bcc167d59072f4f9a37a5"
         }
       ],
-      "currentSha256": "e92b726bdc026a13c3d748dc8fc782a8c6e6a404c48ec5cb6ab4212c97d09c86",
+      "currentSha256": "4e3dc01acbbd13122fb7449d221895f9bcdd681fe99d66715cc8b55994702fab",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -281,7 +281,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "c0a175142b4445919d21d6af225390fa5773868cfd7ecdc841bf61f89674314d",
+      "currentSha256": "36bdcfd7b77c80a4d506345d21afc6e85f1ed310ab5337f1344c55bef319a31f",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -306,7 +306,7 @@
           "sha256": "73a5dc136224fcccc5197e8f5e7b7bde655670f28fbc2394c7fdc3bb0b5b2d4d"
         }
       ],
-      "currentSha256": "2671f7db27cf2433a50f74418d158e27ba78131c02e4f37933c185dd3e36093e",
+      "currentSha256": "da54dba3adb324e49b8c5cfed113cef9437f2df72e42c9c99c301c97596f8711",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -1531,7 +1531,7 @@
           "sha256": "e0457a3dfac63966592ff683c806a4017b0c4a2023aad06f86609d0bb3d80365"
         }
       ],
-      "currentSha256": "ca9c63b4d75eafa67771ea8791b2ed329cc8421e55b6f0f5f65ecf561e42c3c9",
+      "currentSha256": "d9fb2424ba005effbe591f2d2e161451acd6bd0f9c50643753b2cb6b65ba927c",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -1731,7 +1731,7 @@
           "sha256": "90bcfb01b343af428f4cc9d0b6ee08928b0312eac34ed4201f09b124695fb640"
         }
       ],
-      "currentSha256": "0a7b5f71502457ccce8b4e1d12a6b7dacd9b1e76a0b1f1e9a2a1089e2e367b20",
+      "currentSha256": "b427f70af00d2fb0b27064cb865a055caecbee63d40ce76edbcbffe95a67d92b",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -1781,8 +1781,8 @@
           "sha256": "bc5ffd56ed8311d113aa02c78940bb3184cdbe4517d6d892f618becec20c8194"
         }
       ],
-      "currentSha256": "bc5ffd56ed8311d113aa02c78940bb3184cdbe4517d6d892f618becec20c8194",
-      "reconciliation": "ADMITTED_COMMITTED_SOURCE"
+      "currentSha256": "a183546a98ed07e34f305a106d00e1a5bfa1bad1d0e8d9a95bc466f5b2660e22",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
       "path": "components/prior-year-case-preparation.tsx",
@@ -1881,8 +1881,8 @@
           "sha256": "df599d28b8f5db500fadaece48b3dfb250fa0f87d230ebe6f9da31580612c09e"
         }
       ],
-      "currentSha256": "df599d28b8f5db500fadaece48b3dfb250fa0f87d230ebe6f9da31580612c09e",
-      "reconciliation": "ADMITTED_COMMITTED_SOURCE"
+      "currentSha256": "cef248baf731c5a3e0bebfac535b906cd4164c8981387c779bc12746392724e5",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
       "path": "components/technical-operations-dashboard.tsx",
@@ -4131,7 +4131,7 @@
           "sha256": "66fa17c0685de0c67103d35607315ddf99dcfab6f8a48bb0a3536fe3b04dccc7"
         }
       ],
-      "currentSha256": "f04a59a434687b83ef88f655f9cea21c027fcbb7d1eb8bbc945077b0cfaa657c",
+      "currentSha256": "e820d6647ec2941c013915ef71dea4f449c20cae1860b3babd4a5ecd6ba06db2",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4385,6 +4385,31 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "scripts/bootstrap-document-fonts.py",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "09745e15f7addb9d6d7c7b5d99bc415ba384cf813ec3b3186045082501476999",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "scripts/bulk-data-exchange-browser.ts",
       "baseSha256": null,
       "historicalSha256": null,
@@ -4406,8 +4431,8 @@
           "sha256": "044745a773ee66c42f356dbbb3c8bfa76ae930494942c47ab4c7dd9c2e60ee12"
         }
       ],
-      "currentSha256": "044745a773ee66c42f356dbbb3c8bfa76ae930494942c47ab4c7dd9c2e60ee12",
-      "reconciliation": "ADMITTED_COMMITTED_SOURCE"
+      "currentSha256": "787a846200e204cf5e20cce72431f42168ff113afed35a8576583bfe03286457",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
       "path": "scripts/data0a-copied-cleanup.ts",
@@ -4581,7 +4606,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "24949f28f42f7bb65a7800f953ba919c7b5895cbfa5ed1fa6ffd502166532df0",
+      "currentSha256": "a5855a178ba03957f3eec77437a81157b1316103acfd893bb54ca9082acc5307",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4631,7 +4656,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "63ece30ded7cd1bfaa1087a3883bd3663d9df502396fbdcb8a249a66f2d20d5e",
+      "currentSha256": "0efe7d7a33c9a453ef0ac1a588c85b762fea8cb3b8d31531a2d7da526ca89ef5",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4710,6 +4735,31 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "scripts/portable/backend-build-scan.py",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "2af5af455529a5e394cc64bf11ca3113e829b1e93cab0a5c0e3c065e2b15ca8e",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "scripts/portable/browser-probe.ts",
       "baseSha256": null,
       "historicalSha256": null,
@@ -4756,7 +4806,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "0c69eb50ca7f78587e33c8b89dafa0ac9c9ec826e17065b74b3862f0ea34b173",
+      "currentSha256": "0a61c23227cafeb5ea710f1063f5c2996dcc46c4fc167a769636991932facf7b",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -4781,7 +4831,7 @@
           "sha256": "0d0b51e09e5505a4cade88bbbb3a14b2815d84d2999d8401d47528109303cf15"
         }
       ],
-      "currentSha256": "5905a2bcce911e35d6b856588e59bfcb6095022e6adc2dfe20e8c47d6c4e95ea",
+      "currentSha256": "1eb76d30cf9b069122366f33924c581089eb7dc452e956ceab4f6c689667eb7b",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5131,7 +5181,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "c91591a07624119b0d1d1feb5fa1d1f8967bc08f39054ef757d0de39e941bf9d",
+      "currentSha256": "4b7b83a8de7e20d155c0f73f58f5a37b5fef1a0bc1f22354ac25140912fafdef",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5156,7 +5206,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "93fa761d819f943386ff7de9a2868fbb3f16b95442726d4cfa5f57f2c46e0d02",
+      "currentSha256": "e9b62654d604e0cccd0b67b8c2d4d8fbf4a240bd915bf5874e9e622bdb85fdaf",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5385,6 +5435,306 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "scripts/portable/material-acquisition.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "2a1adeb1bf4bbaf05d8cf7678dcd603e723295f86dce6e39e1f8f8bff9271bdb",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/material-collector.py",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "957596f5fe295a89ea5f83f3c0478f046ed5a9195a23dfcb1b6dd773eac065a0",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/material-download.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "75945195fa2e5511a69ae1b8ab3b6104aecdde553247262d7c05debdf8c6d568",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/material-package.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "d4ca1d0016097d77f563c75b28b83abdba0f4f25222c4cf9bbd22d7fe156e677",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/material-provenance.py",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "8a6a4e7d4a4db9b2c4b1c02bb859e9311d55520433fed2e2f2ae9fff4e3e5601",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/material-replay.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "30aea49f3c3ffaa359a769b9ad9dbae6bfa469c873f97fdd704f6a460a4475a6",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/material-source.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "b8f3d0a4d3bfea430c77f93ce85657f748f73722614c9020dd757072a83b71b2",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/native-artifact.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "87a47ef0c5b6c51bb0aec3ddf9800a06e7a442b4924ecd991823341223e7a336",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/native-build-origin.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "9e5ae318aa4044717d44387b77ad309d40c5425370e280048b43a19772455464",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/native-controller.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "7eea97f253b2016e51fac2c7a1e8ab1a55b0b80e87a7ce2f990812aa19443f53",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/native-launch-admission.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "788fb2fcca6bacb499c7cf4f01a1488f97878e273f11e60a49c474cd75dbda5e",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/native-minimum-compile.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "3528fb0ebc1b5ab0c106df56642815e901f336dccc2bfb6f7f8532585cda258e",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "scripts/portable/native-probe.cjs",
       "baseSha256": null,
       "historicalSha256": null,
@@ -5456,7 +5806,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "e9474f93648c0ba0f569fb43c8427436b5a43601b64f689eedeb4f7bf287a900",
+      "currentSha256": "df6a10b92ba8a21cbbadb020946630be00e2b9133156f90247246e7d136efab8",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5731,7 +6081,207 @@
           "sha256": null
         }
       ],
-      "currentSha256": "3e1aab9d49aedf01165455e3dec72efce3ba71256610f708732e37986a608de8",
+      "currentSha256": "83be9c659cb5b10821818bc4e582c9481f100433232edb831a44d6428c65b14d",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/product-bootstrap.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "55444f9d59994ac0a6eaa3ddb42ab68144a28e4a2c3e0142b4d9cfc68a231ac8",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/product-build-scan.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "c9af4330bbc71b4cce5a33bc3d23ed74d31a04de697d32fad01b0c2ad79b47eb",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/product-custody.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "11d206ee0e758f07b8898316f8e15fe67f18d78bd10534b98ca6ae591b0e105e",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/product-input-contract.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "61f1e2e7240813099875bb13302fd83840dc3c76366e380c6106b47daf3413ef",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/product-materials.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "fe071c48af224dacfa4b070165a08d7e1acef3bfc990605b64250dfb6195d1a5",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/product-scan-adapter.py",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "c21c940f5b8bae7dfd4f191df2c473ac1792d326f1fa0c7c04ec67f84e7783e4",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/product-trust-policy.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "2e08760b0148314824eb712ecee87e9f74d47414ee9facde23028493afcdd198",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/product-trust-registration.json",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5810,6 +6360,31 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "scripts/portable/qa-build-tool-core.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "1f9a7f4aa049539b207a988b32055291b1d8416af77f9eec9ddc32bfdf2bcf91",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "scripts/portable/qa-build-tools.ts",
       "baseSha256": null,
       "historicalSha256": null,
@@ -5831,7 +6406,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "56bd0634abc075f5e988b844ecee96535f040573b74af6542a6e7860474df39f",
+      "currentSha256": "26bafa87987cb44ea2403a0a380a81a58e7c29a3ee0a6886a1ca46bae4b8176b",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5856,7 +6431,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "a8437abaa185bca2668e83cd0d4da80779f867ddbdf72f3ff5d4df2e7b3c6278",
+      "currentSha256": "738209d76672a7e65845d895000c5d451013e7b093febfc3ca9583886eb336c7",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5881,7 +6456,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "1ec86d291079e246b39fb03240fecdfff0e39eff4730c2cb99bd7c9ef4f2fbda",
+      "currentSha256": "61015c84d9096a15e3c30db81ed81667af22ff3df19175670df004b1a93163bc",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5932,6 +6507,31 @@
         }
       ],
       "currentSha256": "60e2b8f761a79e54cc4806738c33b00d4e35e8f8c82aa83988a2c6a35977210e",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/rootless-build-command.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "dd6f5ea19e23a27bed68da852afff8b813f78e81c0ea67aafae8a61757be16be",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6006,7 +6606,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "ce1953c1cbf90fd484ae13208bd31af3b4b82d5d13bf65b699cd63f28a2de296",
+      "currentSha256": "2f0b97a8331239bece9db27b1e9b0421acc4e14e968b7867a608b52bac12e723",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6081,7 +6681,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "f9de4450484141ab50eaf7713c81aac3ccd7fb80cf75df1a7ded96a38a5780e5",
+      "currentSha256": "12de01aa5fc5c682e95f76bd9a4d73456c73ac2e791de723405a0867988b6542",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6156,7 +6756,57 @@
           "sha256": null
         }
       ],
-      "currentSha256": "b3cbc53b4fcc6d222ee07ed4d688522e6eced7542ac672d709b8837db31d10c1",
+      "currentSha256": "66b47dbd5278d536ded4b570a8b3d181326e56d0bfbd07c1da24de5f021722bb",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/windows-connected-host.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "af88d11406611f118ec55d5242c601b9f50acba03052492cf0db5ed666b068e1",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/windows-control-session.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "03362005b2e6bab6412cd70c274f2594f026e7a9603a6086dfbadc6b330bbcc9",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6181,7 +6831,32 @@
           "sha256": null
         }
       ],
-      "currentSha256": "18289ae7d6a849877def8cbbfac6ba24e5ec73dce8291fc0a58f129040e4cf4d",
+      "currentSha256": "a63a45a56b748664d08a8f30fea50fc801d6caefa765f4523e48cb10d97e4ca0",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/windows-forwarding.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "03da207cd83875342466c6d1684c86f52d2cde6aebc01f1cffc29a5e8965f534",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6206,7 +6881,32 @@
           "sha256": null
         }
       ],
-      "currentSha256": "6905b85404920537e76b5bffaf6806db16e5689d8db25e01321ed3a18fd3660b",
+      "currentSha256": "1e611d9bab3b502dbcc461ac86317754cfaf54e846d42f4bfdcacafc11fe99fa",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/windows-observation.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "d4dd436bcee25bb409955897d66e386e9d364cb6d604f648438442372fd6ff71",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6231,7 +6931,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "e81b552d0a4280ad9b7c9161e1273f8182ba2bc96012021fea7da16377c8fccf",
+      "currentSha256": "fb89aead119fc6a8173738df1fbe55b0734889b30f11fc1fa7e72452d4d7d73e",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6257,6 +6957,56 @@
         }
       ],
       "currentSha256": "116d9fcfaaf67079e321f2a4f59529b8e930df4b645efb8bc9794412ad0e28d6",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/windows-process-observer.ps1",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "6ff0662d87ed017ba052890bb17a9ae4d2167835faad4317282173f95ffd3412",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/windows-process-observer.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "f5f46473a0002a4a27c024d11031cc869bedc859e51ee2719571965d40b04e19",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6356,7 +7106,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "4bb6f09c63bcc2f388d13dad878448816b9e3cdcbd614623db2fe6f50528e4f1",
+      "currentSha256": "80c076f3d236dc33d155b00fca906652a50c3b72d0154f23478c160b400784b1",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6381,7 +7131,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "ed2e90e41ad2b8829ab952f2f9f44ac8a13d3320da3828ced6299e6621a95828",
+      "currentSha256": "e2a0402e3df19c3a0098fb06bf8f1d46e899da6a976c5335f700ef3419f6b245",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6406,7 +7156,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "24c771a1ea663908c719369dcfc06b5b5ddb18e21facdb8770b4491db2eb6a36",
+      "currentSha256": "4a94716eb23f5278532d3081a8e4d896c3f5132b40d3231a23df8a34ed39496a",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6431,7 +7181,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "efcc4fc2d02494d68e488515e51c7719ec231066be19042cc44f5af62a06d7c2",
+      "currentSha256": "4771985b1faf4f805246358b4b60c716703bcc353cdac1ca0af8eed2a49c9de0",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6556,7 +7306,7 @@
           "sha256": "f287adcfe9f75c4644f25db2a471af4d27abaa9ce146925572a5cf1b15a0f377"
         }
       ],
-      "currentSha256": "5551dee258965e7db22570a1e82788bf6f471b755f695be64e298e9bb25ce6ae",
+      "currentSha256": "e88ec15bf1e856d4d7cc3f1022a3c88102e5b6413920eb13b6e977dc97e81168",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6685,6 +7435,31 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "scripts/qa-mobile-import-a11y-1b.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "0524712c0c5dafd8426b182306e3be5165cbce1b13dfee21eee2353fd6c08a77",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "scripts/qa-obs1a-copied-db.ts",
       "baseSha256": "4153ec5f8d7f1fa310cfd9f08b29710409a5d08dc07d5c2648f53d2d02628442",
       "historicalSha256": "4153ec5f8d7f1fa310cfd9f08b29710409a5d08dc07d5c2648f53d2d02628442",
@@ -6760,6 +7535,31 @@
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
+      "path": "scripts/qa-real-data-onboarding-preparation-1a-public-repo-scan.ts",
+      "baseSha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc",
+      "historicalSha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "cf76c62412dc2467f95fa541fe0b6ab025ea9253fca07bf8433807cbd07570cc"
+        }
+      ],
+      "currentSha256": "4ee35f2d15dfa7395408d05db2411c912fa87528d366ada99e070569145ea909",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
       "path": "scripts/qa-real-user-access-readiness-1a-public-repo-scan.ts",
       "baseSha256": "72e2ee81f41705a039f9d7ea573beb52e7141cfe0b0ebc990786a8ec4ed3bc91",
       "historicalSha256": "72e2ee81f41705a039f9d7ea573beb52e7141cfe0b0ebc990786a8ec4ed3bc91",
@@ -6781,7 +7581,32 @@
           "sha256": "11981ba3744060c4976ec1b6c0038085739ca0b24d248ce50349b897decd5d3a"
         }
       ],
-      "currentSha256": "25a6e253cde3bfefe8fc13f3c87c2114ac5d7d9a8a437b3d2198fdff172b36e0",
+      "currentSha256": "4ec357f49eec71c149b53f53f1f88d53bcfcdfd5cf69f08a86301a902a176b1f",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/qa-recovery-service-traces.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "7aa3aee228b89041c0751f81a0310a5017faa18955e025fd2c45c4f3ffee6e4b",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -6807,6 +7632,31 @@
         }
       ],
       "currentSha256": "d22848848076cfe2bd55f1b574834877ebd09dac5eddb34b8d106d0d0679d859",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/qa-shared-document-fonts.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "682ba6dc44adb0f9dc01f72f50a3077b698c42100c4457eeead3eb9f19bc3086",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -7032,6 +7882,1231 @@
         }
       ],
       "currentSha256": "6b5e21cc2cacb1d51f37aaa13f0dde9d20ffb71807a607545128c2dde578b6d9",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/.gitignore",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "030bfd6730ae8ef839216285745895f5b767b468548ad50e872cb75aa6f8b5bf",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/HANDOFF.md",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "05d4276a399a20d8b27fc5c1a9aa225dc854efed1bdf578661d85e703748e5bf",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/OWNERSHIP.json",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "d18f1b0d89352fb34e70dceb8b14ed3b09052770aa94b707c1500d1908cb2eea",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/README.md",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "861963137aab22ff873518de794b0d4fd997515556f918d31e4c327fb0dd3bdf",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/cli.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "3177df3a1e3125e6a8d356168aab896412e368575375c37515a1f5d67226512c",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/config.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "607ed26a18d95e9dde1dc594c5deeddbd263786f48658d0154eefea3b009ad30",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-bootstrap.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "e29599dd4dfc6bb800e0101f4f7c444c3c98adc5a2a791e5f510d660c5e80282",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-certificate-adapter.test.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "4a19b7ef9a3ed265e8c7673c0072ef0e68dae1260fd6c491f6a907a8703910c8",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-certificate-adapter.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "9f6cff7d07de1c7329228e895fb8849cdae92fa0af41132e6173cf0645d3c3fe",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-certificate-test-support.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "6e8819cbabf747266f477970efd00917c54f152033910aa82b32d1e08ddf763a",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-connection.test.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "cfd9b90e486ea143fcd45594c30830e9aa8678c1a17f738112d942a3f16d8f93",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-connection.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "33b8db2670bd01a9516512f76b6a1b76e31810d6542ac1dd3a3092f65ee55edf",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-fixture-foundation.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "d8e051c87586820cf37114c415545824898edfbc77fa056c62cf8c85840f5b67",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-identity.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "3d4c223ef9803a8b646a141ec6846170c3b84dd4a9f3e62965e211d61d1afec2",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-inputs.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "5c5c82517714247f55d2ede2e70b5ea0fba1d2371927ad12ba7c3454a3811325",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-lifecycle.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "74e7694d9b40e41440cc87f8a884a239641d1a054efb3476465c58fd98ec3353",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-operation-ports.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "ad7b70e337c7099619625a78b08ed0ac393be56ec484faa1a28472223b429e65",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-plan.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "3ba2ca0b474eff8ed84fe9154e9005ce716ea4321caf8e5e0472289e8928d62a",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-profile.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "92f1104c455a53d7e913a1d9d2cb45e1b7b00ab40684e21bb477c5c6fcaef8fd",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-runner.d.mts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "5c7c164eff422bd6ba41c7497e90cc5d300011f260d569791dcc61181e132fd1",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-runner.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "3b798f23e0b53806e5e30552cdbeec094595e81d61c1a24fe5e96a1e8563aa8e",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-session.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "265cb1a1cbf96efd2fdf13515baaa120db0982404f02fb90685829d79530ee11",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-test-support.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "ccb6023a39ba794ef1f486edcda99631b60060e20f0dfcc16703880f5b28b52b",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-types.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "753a68be00ffbf9950477d6660c46f9438c79c0cfa832dd1eecd7e7b1f95aa6f",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/container-persistence-helper.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "0182b8a686757173c52d7625783aebcab89aa535f63811cf0b8d12d11579d8dc",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/container-persistence-helper.test.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "62fb23c16010ac0d6711d8bd094a14eea7a6f4f25d54d7368d388e92a733cdaf",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/evidence/D2_HOST_STORAGE_PREFLIGHT.json",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "5a5257379a5e459116daa3833f0d3662648eab2ac18ede15927c1fcea749c556",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/evidence/D3_CONTAINER_PERSISTENCE.json",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "660f285dab33b8f77fd883ca7c43552ca08bdc2a6ec3241173e68cf95ca63757",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/evidence/D4R1_ADAPTER_CLOSURE.json",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "726f6188aaa1bc4eb55423c37ff11826d33674a3422bb5334d256d08b388cfb4",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/evidence/D4_CONSUMER_CONNECTION.json",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "98d69b298ed3333304f4dbf8e2c3d6e13fae14803e8cb089caed41f90bab34ac",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/evidence/REVIEW.md",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "c9c400b181986e84749ab4ec064864ae819056e78eb4c65ad6648653dc920af2",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/evidence/TRACKER-UPDATE.md",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "1facf079b7271f72b90d34c236169047c60d2274e8be8c1402f3795f75f3f1e7",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/evidence/host-capabilities.json",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "84fb6758d026188a37c6145a342cf5843e358dd64b24651abedd3240405ec1ca",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/evidence/source-files.json",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "ac59a7ff916be37efcb61c87cf2bdd12e18ed746e20e8da2fad0dc24c27c8009",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/examples/operations.csv",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "8f77bdc71631f13c1659c9342763bb15ec787f4847c955a8c4cbdc948e7b2058",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/examples/result.json",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "278c217fa00bd42c9f64519143ab679200e185f385e470d711d8927405d6db86",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/examples/summary.html",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "f5770bcedf6dc4358b0fcc75fb970cf7cf814a36c5e37eba16b35ca6f2583b1c",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/fixture.d.mts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "49467e0d0d26ae827e26116de96b840d453a88d81828bd5680ff1ecdd7a38d7a",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/fixture.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "83196f9be482f4c366440ccaf024dd6e24654f478a021c98742469a3dc721be5",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/host-preflight.ps1",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "79b65c946f2c1e6aeb8c55a29fba91fc9535d97d5584cb8c5f8995bd7a448b57",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/lab.test.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "29298637ddd6cce9b2fe69f67e59875118250142c482472f88f7456a378c845e",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/metrics.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "d72f12a5c370ebfaa0d16ca8d46c68c8059ce6b2d0faa5ba0d8973045e7c0e21",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/output.d.mts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "5367e01bb403d3039d23ad1e8fd5c174d765488a38c49a969714561679f3044d",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/output.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "ad333dfc9025cf26524d3ed7659f0a6cf9627678490f30464f45f63dc091e383",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/report.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "14fe3771f31a2af85d4a9bc1890fdca9ed168acbb66f71d8bca13df82d9ebe60",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/runner.mjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "30a5d4aaa3da717e367fbda024cc4abe2aff6fbd6ff5b39abd37185117376048",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/tsconfig.consumer.json",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "ba04a98df0dde6ae29da3eff3ffbda77050bb8f9a4707cceeb336539ad6268d1",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/product-experience-screen-inventory.ts",
+      "baseSha256": "251e5bd36100734a2bbf7d6c04067d285887b39c3e53f46ce5d275be0d6621a8",
+      "historicalSha256": "251e5bd36100734a2bbf7d6c04067d285887b39c3e53f46ce5d275be0d6621a8",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "251e5bd36100734a2bbf7d6c04067d285887b39c3e53f46ce5d275be0d6621a8"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "251e5bd36100734a2bbf7d6c04067d285887b39c3e53f46ce5d275be0d6621a8"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "251e5bd36100734a2bbf7d6c04067d285887b39c3e53f46ce5d275be0d6621a8"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "251e5bd36100734a2bbf7d6c04067d285887b39c3e53f46ce5d275be0d6621a8"
+        }
+      ],
+      "currentSha256": "240b0dbc62ae77f01400a282954f54b3b52e80705658f90b2dc9f03f907da2db",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/product-experience-screen-register.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "efba0b1f564f92f4034a93cc9f929c00e1e81c4fbcb1286ce8f3815f01101448",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     }
   ]

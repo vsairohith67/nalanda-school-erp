@@ -3,11 +3,19 @@ import path from "node:path";
 
 // Docker inspect data, not caller-supplied database coordinates, binds all
 // round-robin replicas and the published proxy to one owned application target.
-export function assertHttpTarget(containers:any[],containerId:string,runId:string,workspace:string,infrastructure:{proxy:{reference:string;imageConfigDigest:string};postgres:{reference:string;imageConfigDigest:string}}){
+export type LocalHttpConsumer={kind:'LOCAL_LAPTOP';runId:string;project:string;secretRoot:string};
+export function assertHttpTarget(containers:any[],containerId:string,runId:string,workspace:string,infrastructure:{proxy:{reference:string;imageConfigDigest:string};postgres:{reference:string;imageConfigDigest:string}},local?:LocalHttpConsumer){
  const selected=containers.find(c=>c.Id===containerId);assert(selected,"HTTP_CONTAINER_NOT_FOUND");
  const project=selected.Config?.Labels?.["com.docker.compose.project"];
- assert(new RegExp(`^nalanda-ci-${runId}-[a-z0-9-]+$`).test(project??""));
+ if(local){
+  assert.equal(Object.keys(local).sort().join(),'kind,project,runId,secretRoot');
+  assert(local.kind==='LOCAL_LAPTOP'&&/^[a-f0-9]{32}$/.test(local.runId)&&/^[1-9][0-9]*$/.test(runId),'HTTP_LOCAL_IDENTITY_INVALID');
+  assert.equal(local.project,'nps-laptop-'+local.runId);assert.equal(project,local.project,'HTTP_LOCAL_PROJECT_FOREIGN');
+  const root=path.join(workspace,'scripts','laptop-lab','outputs');
+  assert(path.isAbsolute(local.secretRoot)&&path.normalize(local.secretRoot)===local.secretRoot&&path.dirname(local.secretRoot)===root,'HTTP_LOCAL_SECRET_ROOT_INVALID');
+ }else assert(new RegExp(`^nalanda-ci-${runId}-[a-z0-9-]+$`).test(project??""));
  const owned=containers.filter(c=>c.Config?.Labels?.["com.docker.compose.project"]===project);
+ if(local)for(const c of owned){assert.equal(c.Config.Labels['io.nps.consumer.run'],local.runId);assert.equal(c.Config.Labels['io.nps.consumer.project'],project);assert.equal(c.Config.Labels['io.nps.producer.run'],runId);}
  const service=(name:string)=>{const matches=owned.filter(c=>c.Config?.Labels?.["com.docker.compose.service"]===name);assert.equal(matches.length,1,"HTTP_SERVICE_AMBIGUOUS");assert.equal(matches[0].State?.Running,true);return matches[0];};
  const proxy=service("reverse-proxy"),web=service("web-1");assert.equal(web.Id,selected.Id);
  const postgres=service("postgres");
@@ -36,7 +44,8 @@ export function assertHttpTarget(containers:any[],containerId:string,runId:strin
   assert(!c.Config.Env.some((e:string)=>e.startsWith("DATABASE_URL=")));
   assert(c.Config.Env.includes("APP_ORIGIN=https://portable-staging.localhost:8443"));
   const mounts=c.Mounts.filter((m:any)=>m.Destination==="/run/secrets/database_url");assert.equal(mounts.length,1);assert.equal(mounts[0].RW,false);
-  assert(mounts[0].Source.startsWith(path.join(workspace,"tmp","portable-staging")+path.sep));return mounts[0].Source;
+  if(local)assert.equal(mounts[0].Source,path.join(local.secretRoot,'secrets','database_url'),'HTTP_LOCAL_DATABASE_IDENTITY_MISMATCH');
+  else assert(mounts[0].Source.startsWith(path.join(workspace,"tmp","portable-staging")+path.sep));return mounts[0].Source;
  });
  assert.equal(new Set(databaseSecrets).size,1,"HTTP_REPLICAS_DIFFERENT_DATABASES");
  return {project,replicas,proxy};

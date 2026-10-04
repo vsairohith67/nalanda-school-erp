@@ -6,7 +6,7 @@ import { hashPassword } from "../../lib/password";
 import { ensureDefaultRolePermissions } from "../../lib/role-permissions";
 
 /** Shared supported synthetic initialisation, not a backup catalogue import. */
-export async function initializeSyntheticFoundation(prisma:PrismaClient) {
+export async function initializeSyntheticFoundation(prisma:Pick<PrismaClient,"schoolSettings"|"user"|"rolePermission"|"cloudBackupProfile"|"cloudBackupRetentionPolicy">) {
  const configuration=assertPortableRuntimeConfiguration(process.env,"seed-synthetic");
  const target=new URL(configuration.databaseUrl);
  if(configuration.environment!=="synthetic-staging"||process.env.NALANDA_SYNTHETIC_STAGING!=="true"||process.env.STAGING_SYNTHETIC_SEED_OPT_IN!=="true"||!new Set(["postgres","localhost","127.0.0.1","::1"]).has(target.hostname)||!/(?:^|_)synthetic(?:_|$)/i.test(target.pathname))throw Error("ISOLATED_SYNTHETIC_FOUNDATION_REQUIRED");

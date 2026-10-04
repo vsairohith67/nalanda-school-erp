@@ -1,0 +1,277 @@
+{
+  "task": "NPS-LAPTOP-LAB-D2",
+  "status": "D2_HOST_STORAGE_PREFLIGHT_COMPLETE",
+  "source": "94a1a82ca5d69a4e52bb6c8a3d791c44ddd57205",
+  "tree": "27da2abe1e46105f08ff83e2ce361a911b436ae5",
+  "completedUtc": "2026-10-03T17:54:07.6387095Z",
+  "host": {
+    "capturedUtc": "2026-10-03T17:47:12.912583Z",
+    "windows": "10.0.26200.9457",
+    "cpu": "11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz",
+    "physicalCores": 8.0,
+    "logicalProcessors": 16.0,
+    "usableRamGiB": 39.71,
+    "freeRamGiB": 19.2,
+    "internalFreeGiB": 105.67,
+    "internalFileSystem": "NTFS",
+    "internalBus": "NVMe"
+  },
+  "wsl": {
+    "version": "2.7.12.0",
+    "kernel": "6.18.33.2-2",
+    "defaultVersion": 2,
+    "defaultDistribution": "docker-desktop",
+    "initialAllStopped": true,
+    "ownerStartedDocker": true,
+    "finalDockerDesktop": "Running",
+    "ubuntu2404": "Stopped",
+    "ubuntu2204": "Stopped",
+    "ordinaryDistroEntered": false,
+    "managedDistroEntered": false,
+    "linuxFilesystemFreeSpace": "UNKNOWN"
+  },
+  "docker": {
+    "clientVersion": "29.7.2",
+    "composeVersion": "5.3.1",
+    "serverVersion": "29.7.2",
+    "context": "desktop-linux",
+    "endpoint": "npipe:////./pipe/dockerDesktopLinuxEngine",
+    "dockerHostOverridePresent": false,
+    "dockerContextOverridePresent": false,
+    "daemonReachable": true,
+    "osType": "linux",
+    "architecture": "x86_64",
+    "cpus": 16,
+    "memoryBytes": 20815958016,
+    "storageDriver": "overlayfs",
+    "storageRoot": "/var/lib/docker",
+    "physicalVhdLocation": "UNKNOWN",
+    "summaryActiveContainers": 1,
+    "containerStartExecuted": false,
+    "summaryImages": 54,
+    "summaryContainers": 26,
+    "summaryVolumes": 34,
+    "summaryBuildCacheItems": 213
+  },
+  "external": {
+    "ownerConfirmed": true,
+    "letter": "D",
+    "model": "Seagate Expansion HDD",
+    "bus": "USB",
+    "filesystem": "exFAT",
+    "volumeCapacityGiB": 931.48,
+    "freeGiBAtSelection": 679.03,
+    "basicReportedHealth": "Healthy",
+    "smartCertification": "UNKNOWN",
+    "physicalMediaType": "UNKNOWN",
+    "encryption": "UNKNOWN",
+    "stableIdentity": "RETAINED_IN_IGNORED_LOCAL_EVIDENCE_ONLY"
+  },
+  "archive": {
+    "state": "PASSED",
+    "payloadBytes": 1048576,
+    "copiedOutBytes": 1048576,
+    "copiedBackBytes": 1048576,
+    "totalPayloadBytesWritten": 3145728,
+    "totalDiagnosticBytesAtProbeReadback": 3164206,
+    "limitBytes": 16777216,
+    "sha256": "631B84027D6B9E52B539C4E8373622D23032DFADC64D60AF87339C9037E4F769",
+    "hashAndByteComparison": "PASSED",
+    "manifestReadback": "VERIFIED",
+    "externalDirectory": "D:\\NPS-Lab\\preflight-20261003-811b929d43fb42f5bcbef6e55c202e65",
+    "filesRetained": true,
+    "durableFlush": "NOT_TESTED",
+    "performance": "NOT_MEASURED"
+  },
+  "commands": [
+    {
+      "tag": "wsl-version",
+      "command": "wsl.exe",
+      "arguments": [
+        "--version"
+      ],
+      "startedUtc": "2026-10-03T17:47:10.630811Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "wsl-status",
+      "command": "wsl.exe",
+      "arguments": [
+        "--status"
+      ],
+      "startedUtc": "2026-10-03T17:47:10.8009162Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "wsl-list",
+      "command": "wsl.exe",
+      "arguments": [
+        "--list",
+        "--verbose"
+      ],
+      "startedUtc": "2026-10-03T17:47:10.9015748Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "docker-cli",
+      "command": "docker.exe",
+      "arguments": [
+        "--version"
+      ],
+      "startedUtc": "2026-10-03T17:47:10.9848551Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "compose-version",
+      "command": "docker.exe",
+      "arguments": [
+        "compose",
+        "version"
+      ],
+      "startedUtc": "2026-10-03T17:47:11.157078Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "docker-context-show",
+      "command": "docker.exe",
+      "arguments": [
+        "context",
+        "show"
+      ],
+      "startedUtc": "2026-10-03T17:48:19.7730997Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "docker-context-list",
+      "command": "docker.exe",
+      "arguments": [
+        "context",
+        "ls",
+        "--format",
+        "{{.Name}}"
+      ],
+      "startedUtc": "2026-10-03T17:48:20.0475745Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "docker-effective-endpoint",
+      "command": "docker.exe",
+      "arguments": [
+        "context",
+        "inspect",
+        "desktop-linux",
+        "--format",
+        "{{.Endpoints.docker.Host}}"
+      ],
+      "startedUtc": "2026-10-03T17:48:20.2493769Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "wsl-help",
+      "command": "wsl.exe",
+      "arguments": [
+        "--help"
+      ],
+      "startedUtc": "2026-10-03T17:48:20.4736005Z",
+      "exitCode": -1,
+      "timedOut": false
+    },
+    {
+      "tag": "docker-context-help",
+      "command": "docker.exe",
+      "arguments": [
+        "context",
+        "inspect",
+        "--help"
+      ],
+      "startedUtc": "2026-10-03T17:48:20.5546592Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "docker-info-help",
+      "command": "docker.exe",
+      "arguments": [
+        "info",
+        "--help"
+      ],
+      "startedUtc": "2026-10-03T17:48:21.088647Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "docker-local-version",
+      "command": "docker.exe",
+      "arguments": [
+        "--context",
+        "desktop-linux",
+        "version",
+        "--format",
+        "{\"clientVersion\":{{json .Client.Version}},\"serverVersion\":{{if .Server}}{{json .Server.Version}}{{else}}null{{end}}}"
+      ],
+      "startedUtc": "2026-10-03T17:49:58.1701382Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "docker-local-info",
+      "command": "docker.exe",
+      "arguments": [
+        "--context",
+        "desktop-linux",
+        "info",
+        "--format",
+        "{\"osType\":{{json .OSType}},\"architecture\":{{json .Architecture}},\"cpuCount\":{{json .NCPU}},\"memoryBytes\":{{json .MemTotal}},\"storageDriver\":{{json .Driver}},\"dockerRootDir\":{{json .DockerRootDir}}}"
+      ],
+      "startedUtc": "2026-10-03T17:49:58.4098435Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "docker-system-df",
+      "command": "docker.exe",
+      "arguments": [
+        "--context",
+        "desktop-linux",
+        "system",
+        "df"
+      ],
+      "startedUtc": "2026-10-03T17:49:59.0089537Z",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "tag": "wsl-list-after-owner-start",
+      "command": "wsl.exe",
+      "arguments": [
+        "--list",
+        "--verbose"
+      ],
+      "startedUtc": "2026-10-03T17:50:57.431255Z",
+      "exitCode": 0,
+      "timedOut": false
+    }
+  ],
+  "containerPersistence": "NOT_EXECUTED",
+  "erpSmokeLoadRecoverySoak": "NOT_EXECUTED",
+  "sensitiveBackupAndA3Custody": "NOT_APPROVED_BY_THIS_TASK",
+  "nextStep": "Explicitly authorize one isolated synthetic container-start/persistence test on the verified local desktop-linux engine; preserve all existing workloads.",
+  "trackerReadback": {
+    "pr28Comment": 5969185177,
+    "pr28": "VERIFIED",
+    "board": "VERIFIED",
+    "boardElementsBefore": 305,
+    "boardElementsAfter": 305,
+    "geometry": "UNCHANGED",
+    "unrelatedElementsChanged": 0,
+    "otherTrackers": "NOT_UPDATED"
+  }
+}
