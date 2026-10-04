@@ -43,6 +43,15 @@ fixed source-list helper: 355 records / four heads / four backup contracts PASS.
 An initial atomic maintenance attempt used an abbreviated nonexistent workflow
 filename and exited before writing; actual Git path corrected. No blanket regeneration.
 
+Coordinator source checkpoint: `9b0a0f1c9b17ae954e755a2071e09aa4c05b5083`,
+tree `dacd7d15959f0dc12820d7439f80e4a89575d878`, parent add3958; nine owned
+files committed with clean index/worktree. Existing native owner independently
+reviewed this source CLEAR, including the 355-record registry preservation,
+and actually reran the two finance and 23 publication cases: 25 PASS / zero SKIP,
+20:41:13.007–20:41:48.338 IST, 35.33s wall / 34.66s Vitest. Source hashes/head
+unchanged before/after and owned test cleanup asserted. These cases overlap the
+earlier 44/84 receipts; do not add their counts. PostgreSQL NOT_EXECUTED.
+
 Coordinator reserves this handoff, two new tests/v1 acceptance files, the fixed
 source-list helper, candidate-only three scanners (native explicitly released),
 narrow registry union and K30 evidence coordinate correction (K30 review approved).
@@ -55,12 +64,12 @@ A4 retains primary and its exact helper/test/registration reservations;
 
 | Lane / actual owner chat | State | Actual source | Reservation / evidence | Dependency and next action |
 | --- | --- | --- | --- | --- |
-| A4 / 01a1013d-7b21-7b00-90d0-3ad76952cc9c | Published correction INTEGRATED locally; CI ACTIVE | recovery 0aa1462 | Reviewed four-path correction; 12 actual local phases PASS, Node22 authorization36 / Node24 affected240 / connected95; exact CLI refusals/plan on both versions, types/source/scans/Git | Normal attempt1 running; first current amd64 qualification FAIL BUILD_SCAN_ONLY_NOT_ADMITTED. Primary/terminal reviewer still reserved. |
+| A4 / 01a1013d-7b21-7b00-90d0-3ad76952cc9c | Published correction INTEGRATED locally; CI TERMINAL PARTIAL | recovery 0aa1462 | Reviewed four-path correction; 12 actual local phases PASS; normal CI 27 jobs PASS / 8 FAIL / 7 SKIP | Six Windows custody setup failures before helper execution; two base-qualification refusals. Source corrective-push allowance exhausted. Own two evidence checkpoints/review settling; primary remains held. |
 | Product / 01a106ff-07e6-76d2-acd0-03747c8c8d43 | ACTIVE | candidate 52d9d1ee809da66fcec045e946e44c69feb59a21 / tree 5860269e4b46afeb63a43f6adbd10ccaa2d5e47d | 33 paths over b20; PR29 and attendance consumed once; current types/build pending; earlier 928 full suite historical | Current focused 141 PASS / 13 custody wrapper FAIL under Restricted; do not inherit A4 session authorization. Receive frozen reviewed handoff before import. |
 | K30 / 01a1070a-f16f-7f70-bf43-1965f52d9232 | INTEGRATED locally; combined qualification ACTIVE | Released PR30 40be0af6df2c6f60f856a254f21e5703835a8419 | Frozen source and independent source/log review; scoped Windows run 37208970604 attempt 1 PASS 100/100, types/build, console DPAPI/SCM/account isolation/cleanup | Fresh combined Vitest4 qualification and package merge review. Raw-export profile refused by current backend; source-admission/backlog decisions remain. Broad audit/portable/PostgreSQL jobs do not inherit scoped green. |
-| Native / 01a10716-950b-7602-b4e7-a60f549af80b | INTEGRATED locally; publication BLOCKED | d664398ad83ac6032dbcbf7052c9e0e80533654a / tree aeda159acb978fbb8d237519337b1ef75cbdcf07 | Released 14-path source; no active writer/followup; [native handoff](../native-device-completion-1b/HANDOFF.md); [PR28 receipt](https://github.com/vsairohith67/nalanda-school-erp/pull/28#issuecomment-5980950255) | Compiler/component/service evidence preserved; new package/emulator/simulator/device/backend evidence NOT_EXECUTED. Combined ownership gate remains blocked. |
-| Import / 01a10727-ab5d-74f3-86e5-947df314f0a8 | ACTIVE | feature/private-data-governed-import-completion-1b; not frozen | 11 actual SQLite service cases PASS 52.85s (20:05:58–20:06:51 IST); earlier setup failure retained; types/component/review pending | Owner confirms imported entity readback exists, cross-lane report/certificate reader proof absent. Coordinator can add separate test after frozen handoff. No B1 archive access. |
-| Operations / 01a10733-47d1-7270-b7bd-9044d45fe8bc | ACTIVE | feature/preview-operations-completion-1b; not frozen | cloud-backup-worker, technical-operations narrow status/version, bundle two entries, preparation command and two tests | Initial 13 targeted cases: 4 PASS / 9 FAIL; owner correcting config omission and backup failure. Receive reviewed freeze after correction. |
+| Native / 01a10716-950b-7602-b4e7-a60f549af80b | INTEGRATED locally; existing owner R1 publication ACTIVE, gated | Reviewed d664398; own clean recovery-sync/evidence checkpoint 8a4cfa65f30ec93e8c5252d6c9cac78009a52946 | Normal recovery merge 65b4b9f47edd44953367130139e0a68cab280d11 preserves native app/workflow/scanners; 353 records/history preserved, only published CLI hash updated; review CLEAR, four scanners PASS | Await genuine unchanged SAFE preparation after owner checkpoints, then existing one source push/draft stacked PR/normal no-remote Android/iPhone/iPad CI and allowed demonstrated correction. No driver rebuild/new native task. |
+| Import / 01a10727-ab5d-74f3-86e5-947df314f0a8 | Coherent local checkpoint CLEAN; independent release review PENDING | cbdd971ebee63b71ca8c4f4f55ed70205215f293 / tree a2eb75fc5b01a6663f7b2f51728671ecc473a346 | Actual service/component/copied-harness/current compile settled; all six native overlaps plus owned registry preserved through normal local commits; source/evidence checks ongoing | Short stable native publication window acknowledged. Own unchanged preparation reported only A4's two handoff overlaps; no SAFE claim. Coordinator J1 consumer proof follows reviewed release. No B1 archive access. |
+| Operations / 01a10733-47d1-7270-b7bd-9044d45fe8bc | CHANGES_REQUESTED; two demonstrated review corrections ACTIVE | Local 34533042e8aa2b1f06ece11da863dab026be2527 / tree c7090f16f8446538e93b5bea9ff1329d877bcd5b is not adoptable | Corrected earlier 14 SQLite cases, three type partitions/bundle and 186 affected cases PASS; K30 source-only review found two P2 defects | Missing-origin role gating and reuse of one operation ID across distinct commands; owner drafts exact role checks and per-operation manifests, tests real filesystem adapter with injected processes. One bounded qualification slot granted; receive exact corrected freeze/review before merge. |
 
 ## Scope and acceptance checklist
 
@@ -76,8 +85,8 @@ defect; D missing execution/acceptance; E owner/host/artifact input; F deferred.
 | Criterion / accepted source | Current path and actual gap | Owner / acceptance | Disposition |
 | --- | --- | --- | --- |
 | J1 / V1-STU-003, V1-IMPORT-020; lane5 | Workbook → governed batch → Student/Guardian/link/enrollment exists; lane5 is fixing stale authority/transaction/rollback; report/certificate consumer readback missing | Import freezes first; coordinator reader controls on exact imported student/year and unrelated control | C active owner; D cross-lane test |
-| J2 / NPS-REQ-010, V1-FIN-010 | Existing misc-income service freezes Student identity/rate/quantity; existing suite proves 30.75/37.50, exact Student and overflow | Coordinator same-student real persisted-authority sale/concession journey; original finance suite retained | A donor evidence; D fresh combined journey |
-| J3 / NPS-REQ-014/015/016; PR26 accepted independent previous-year scope | Existing prepare/verify/review/approve/apply/reverse with audit and balance; original DB suite doubles IAM/step-up | Coordinator real persisted sessions, actual synthetic MFA/step-up, independent actors; exact values, current/future/control isolation | D missing integrated authority journey; no finance-engine rewrite |
+| J2 / NPS-REQ-010, V1-FIN-010 | Actual Accountant sale requires exact Student, freezes 3 × 10.25 = 30.75 despite later rate change; null Student/session refusals leave no second effect | New coordinator real persisted-authority journey PASS and independently rerun; existing finance suite retained | A isolated service/route evidence; D final combined full qualification |
+| J3 / NPS-REQ-014/015/016; PR26 accepted independent previous-year scope | Same Student: independent verify/prepare/review/approve/apply/reverse with actual MFA/one-use step-up; 1000 minus 50 minus 300 = 650; reversal = 950, one idempotent effect/audits | New coordinator real persisted sessions, four independent Super Admin actors; current/future/control and item sale isolation PASS | A isolated service evidence; D final full qualification/live chronology decision; no Accountant concession-policy inference |
 | J4 / NPS-REQ-007/008/009; V1-EXAM-006, V1-DOC-012 | Existing issued-report/certificate source, charge/request/template/version/void/reissue; confirmation switch fix already in recovery | Reuse certificate/marks/attendance tests, then imported-student source reader once lane5 freezes | A source history; D combined consumer proof |
 | J5 / V1-SEC-002, V1-IMPORT-020; product/attendance followup | Stale report/import/modal behavior has reviewed source, product and import increments still active | Owners' actual component/service tests, combined context-switch regression | B/C owner active; D final combined tests |
 | J6 / issued lane4, V1-SEC-002 | Released native source integrated exactly; real server-session services vs component/native adapters remain distinct | Actual admitted package/profile/controller/target required for connected WD1–WD5; no local PIN promotion | B integrated; D/E acceptance blocked |
@@ -179,3 +188,77 @@ no account usage or total active hours inferred from the planning allowance.
 Highest-priority next action: finish the owned real-authority J2/J3 source test while
 owners qualify their increments, then consume the next frozen reviewed handoff.
 Primary publication still requires A4's explicit handoff and unchanged safe checks.
+
+## R1 ownership resolution and next source integration
+
+The human Native R1 and K30 continuation documents were read as continuation
+constraints, not as evidence that publication or acceptance had already occurred.
+The reviewed K30 40be donor is an ancestor of the actual coordinator candidate;
+all 65 companion inputs and package/dependency files still match the tested
+2f0d489 state. The existing actual 100/100 Vitest 4.1.11 receipt is reused, not
+rerun or replaced. Private receipt metadata records the original settled command
+and input hashes. The reviewed two-line documentation correction remains.
+
+Lane5 independently preserved its six overlap paths and source registry in clean
+cbdd971. A4 independently preserved its two evidence paths in clean local-only
+`bc03856b0d2da87683f526c1f0daff72c09682d8`, tree
+`bcf07bbe795a7f32b4d9377c07021a91e68987e0`, parent published 0aa. Original work,
+source history and prior evidence remain; no coordinator foreign-worktree mutation.
+The native owner then actually ran the unchanged helper: SAFE / exit 0,
+overlap [] / unreadable owners []. Its original permitted push published
+`8a4cfa65f30ec93e8c5252d6c9cac78009a52946`, tree
+`9fc40225c949d822b624a98cbfc1557db08cd660`, in
+[draft stacked PR31](https://github.com/vsairohith67/nalanda-school-erp/pull/31).
+The brief ownership window was released immediately after publication.
+Normal no-remote platform CI is actual run 37213564086 / attempt 1, pull_request,
+head 8a4cfa6; Android/iPhone/iPad jobs pending. Private connected producer SKIPPED.
+No new native task/driver rebuild, workflow dispatch/retry, real key, personal
+device install, connected-runtime activation or deployment. Existing owner retains
+the permitted one additional reviewed code-bearing correction for a demonstrated
+in-scope platform failure. Its later evidence-only local 80a28bf is not the CI head.
+
+Lane5 exact cbdd971 delta (17 source/evidence paths plus narrow registry) received
+independent K30 SOURCE_ONLY CLEAR, zero executions/private access, and explicit
+owner release. Current 12 service cases, actual component/copy/types/build receipts
+remain attributed to their original execution. Its normal nine-file preparation
+command actually passed mapping 98 / zero issues and 91 tests in 2.81s at 21:09 IST;
+populations overlap, do not add. Lane5 publication independently refuses
+OUT_OF_SCOPE_CHANGED_PATH:Dockerfile; no lane push/full/PG acceptance inferred.
+One normal coordinator merge completed at
+`910b3f696eb4e1c8a3dd68f11622393dbb635be5`, tree
+`baa4b809ee6a67559d1e386d0db11240920ffcf0`, parents 9b0a0f1 and cbdd971.
+All 16 runtime/config/test blobs match the reviewed/tested donor exactly.
+The sole source-register conflict was resolved by preserving all 355 coordinator
+records/history and adding the donor's five new records plus six existing owned
+current-hash/reconciliation changes: 360 records, no blanket regeneration.
+Three new coordinator J1 consumer cases are authored on this source but
+NOT_EXECUTED yet; a clean meaningful local checkpoint and genuine unchanged
+preparation are required before their first qualification.
+
+At 15:39:12.555 UTC A4 explicitly released primary integration to this coordinator
+after terminal partial closeout; its source writer is frozen/idle, zero heavy jobs.
+This ownership transfer grants no runtime/admission waiver, third A4 correction,
+diagnostic dispatch or publication through failed applicable gates. Its reviewed
+two-document historical evidence checkpoint is queued for normal local adoption.
+Terminal 0aa attempt 1: nine workflows, two success / seven failure; 42 jobs,
+27 success / eight failure / seven skipped. Six Windows custody jobs fail before
+the helper; both base qualifications are NOT_ADMITTED. Original closed-policy
+session 13 PASS and b20 full-suite results remain historical. No current 13 PASS.
+
+ETIMETRACKLITE_RAW_EXPORT_V1 is absent from the current seven backend profiles
+and is correctly refused. Existing A4/backend owns the explicit support and
+backlog disposition: schema/backup/profile classification need separate source
+review and default-deny handling; merely adding an enum would implicitly admit it.
+Do not label it SIMULATOR or widen admission. Existing 48-hour bridge/receipt,
+370-day punch, ten-minute future and separate trust/proof windows remain unchanged;
+original timestamps stay intact. Raw specimen acceptance and upstream automatic
+export are PENDING. No employee-master XLS or school/device action was reopened.
+
+Product current code 452fa7b has actual 20 type partitions PASS (394.14s), production
+compile/generate PASS (105.60s / 358 routes), boundary 36 PASS / 13 custody setup
+FAIL. Frozen evidence/review release pending. Operations exact correction64e4477
+has SAME reviewer SOURCE_ONLY CLEAR; both P2 findings closed, zero reviewer tests.
+Current seven configuration/actual-adapter cases, two types, bundle/emitted checks
+and 57 original operator cases PASS; broader 15-case run is separately granted,
+full regression remains NOT_EXECUTED. Only one coordinator J1 job and one operations
+targeted job may execute next; Lane5's prep slot actually settled/returned.
