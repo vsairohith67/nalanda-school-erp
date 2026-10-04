@@ -3,6 +3,7 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { reviewedBiometricCompanionPublicSources } from "./reviewed-biometric-companion-publication";
+import { reviewedV1IntegrationPublicSources } from "./reviewed-v1-integration-publication";
 
 const root = process.cwd();
 const required = [
@@ -24,10 +25,16 @@ const onboardingScopedPaths = [
   "tests/real-data-onboarding-preparation-1a.test.ts"
 ];
 const reviewedCompanionFiles = new Set<string>(reviewedBiometricCompanionPublicSources);
+const reviewedIntegrationFiles = new Set<string>(reviewedV1IntegrationPublicSources);
 const withoutUuidValues = (text: string) => text.replace(/\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b/gi, "");
 export function publicIdentifierScanText(relative: string, text: string) {
-  if (relative.replaceAll("\\", "/") !== "docs/evidence/RELEASE_RECOVERY_1C.md") return withoutUuidValues(text);
-  // Approved non-secret CI coordinates in the retained recovery evidence only.
+  const reviewedEvidence = new Set([
+    "docs/evidence/RELEASE_RECOVERY_1C.md",
+    "docs/evidence/recovery-batch-integration-5a/HANDOFF.md",
+    "scripts/laptop-lab/HANDOFF.md"
+  ]);
+  if (!reviewedEvidence.has(relative.replaceAll("\\", "/"))) return withoutUuidValues(text);
+  // Approved non-secret CI coordinates in these exact retained evidence files only.
   // Preserve labels/raw surrounding text; this is not provenance verification.
   // Secret/private-key detection still examines the ORIGINAL complete text.
   return withoutUuidValues(text.replace(/\[([^\]\r\n]{1,160})\]\(https:\/\/github\.com\/vsairohith67\/nalanda-school-erp\/actions\/runs\/[1-9]\d{0,19}\/job\/[1-9]\d{0,19}\)/g, "[$1](PUBLIC_GITHUB_JOB_COORDINATE)"));
@@ -46,8 +53,8 @@ async function main() {
   const onboardingScopeChanged = changed.some((relative) => onboardingScopedPaths.some((prefix) => relative === prefix || relative.startsWith(`${prefix}/`)));
   for (const relative of changed) {
     if (prohibitedExtensions.has(path.extname(relative).toLowerCase())) throw new Error(`PRIVATE_OR_BINARY_ARTIFACT_REFUSED:${relative}`);
-    if (onboardingScopeChanged && !allowedRoots.some((prefix) => relative === prefix || relative.startsWith(`${prefix}/`)) && relative !== "package.json" && relative !== "README.md" && !reviewedNativeFiles.has(relative) && !reviewedCompanionFiles.has(relative)) throw new Error(`OUT_OF_SCOPE_CHANGED_PATH:${relative}`);
-    if (textExtensions.has(path.extname(relative).toLowerCase()) || reviewedNativeFiles.has(relative) || reviewedCompanionFiles.has(relative)) {
+    if (onboardingScopeChanged && !allowedRoots.some((prefix) => relative === prefix || relative.startsWith(`${prefix}/`)) && relative !== "package.json" && relative !== "README.md" && !reviewedNativeFiles.has(relative) && !reviewedCompanionFiles.has(relative) && !reviewedIntegrationFiles.has(relative)) throw new Error(`OUT_OF_SCOPE_CHANGED_PATH:${relative}`);
+    if (textExtensions.has(path.extname(relative).toLowerCase()) || reviewedNativeFiles.has(relative) || reviewedCompanionFiles.has(relative) || reviewedIntegrationFiles.has(relative)) {
       const file = path.join(root, relative); const metadata = await stat(file);
       if (!metadata.isFile() || metadata.size > 1024 * 1024) throw new Error(`UNSAFE_OR_OVERSIZED_PUBLIC_ARTIFACT:${relative}`);
       const text = await readFile(file, "utf8");

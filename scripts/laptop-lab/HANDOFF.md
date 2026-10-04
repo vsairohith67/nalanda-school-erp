@@ -898,8 +898,8 @@ their actual logs show 3266 PASS / three existing qpdf SKIPs. Onboarding and
 Portable server also show all sixteen PASS and 3266 PASS / three existing
 qpdf SKIPs.
 
-Only failures are Portable base-input jobs arm64 111400082856 and amd64
-111400083036, in 'Inspect and scan exact current input bytes privately';
+Only failures are Portable base-input jobs arm64 [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024548/job/111400082856) and amd64
+[retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024548/job/111400083036), in 'Inspect and scan exact current input bytes privately';
 actual private logs report BUILD_SCAN_ONLY_NOT_ADMITTED and exit 1.
 A current CVE inventory was not derived, and no exception was applied.
 The six mandatory holds are OCI image/supply chain, OCI release index,
@@ -926,48 +926,48 @@ metadata, timing and URLs locally.
 
 | Run | Job ID | Job | Outcome |
 | --- | --- | --- | --- |
-| 37190024507 | 111400082479 | exact-head-financial-contract (postgresql) | SUCCESS |
-| 37190024507 | 111400082629 | exact-head-financial-contract (sqlite) | SUCCESS |
-| 37190024520 | 111400082671 | Exact-head PostgreSQL 17 parity and provider-independent preparation | SUCCESS |
-| 37190024520 | 111400082798 | Exact-head synthetic validation, security and full ERP regression | SUCCESS |
-| 37190024548 | 111400082856 | Backend build/scan input qualification (arm64) | FAILURE |
-| 37190024548 | 111400083032 | 1 - server and database | SUCCESS |
-| 37190024548 | 111400083036 | Backend build/scan input qualification (amd64) | FAILURE |
-| 37190024548 | 111404167877 | 2 - OCI image and supply chain | SKIPPED |
-| 37190024548 | 111404168218 | oci-release-index | SKIPPED |
-| 37190024548 | 111404168755 | 3 - portable stack | SKIPPED |
-| 37190024548 | 111404169059 | 4 - distributed runtime | SKIPPED |
-| 37190024548 | 111404169486 | 5 - object storage and recovery | SKIPPED |
-| 37190024548 | 111404169757 | 6 - full synthetic acceptance | SKIPPED |
-| 37190024541 | 111400082805 | Exact-head software, security and ERP regression | SUCCESS |
-| 37190024541 | 111400082878 | Exact-head PostgreSQL biometric migration and parity | SUCCESS |
-| 37190024516 | 111400082535 | Exact-head PostgreSQL 17 migration, repeat deploy, constraints and parity | SUCCESS |
-| 37190024516 | 111400082699 | Exact-head communication, security, shared-platform and full ERP regression | SUCCESS |
-| 37190024558 | 111400082953 | SQLite existing release gate | SUCCESS |
-| 37190024558 | 111400083077 | PostgreSQL schema and migrations | SUCCESS |
-| 37190024558 | 111400083102 | Cross-provider parity and recovery | SUCCESS |
-| 37190024558 | 111400083105 | PostgreSQL application regression | SUCCESS |
-| 37190024602 | 111400082993 | TypeScript, contracts and bundled shell | SUCCESS |
-| 37190024602 | 111400083069 | Draft Rust 1.90 Linux aarch64-unknown-linux-gnu | SUCCESS |
-| 37190024602 | 111400083103 | Draft Rust 1.90 macOS aarch64-apple-darwin | SUCCESS |
-| 37190024602 | 111400083110 | Unsigned Windows NSIS compiler gate | SUCCESS |
-| 37190024602 | 111400083123 | Draft Rust 1.90 Windows production and QA tests | SUCCESS |
-| 37190024602 | 111400083158 | Draft Rust 1.90 Linux x86_64-unknown-linux-gnu | SUCCESS |
-| 37190024602 | 111400083159 | Draft Rust 1.90 iOS aarch64-apple-ios | SUCCESS |
-| 37190024602 | 111400083161 | iOS simulator build and shared UI gate | SUCCESS |
-| 37190024602 | 111400083162 | Draft Rust 1.90 macOS x86_64-apple-darwin | SUCCESS |
-| 37190024602 | 111400083169 | Draft Rust 1.90 Android i686-linux-android | SUCCESS |
-| 37190024602 | 111400083171 | Draft Rust 1.90 Android aarch64-linux-android | SUCCESS |
-| 37190024602 | 111400083178 | Android debug build and emulator UX gate | SUCCESS |
-| 37190024602 | 111400083180 | Draft Rust 1.90 iOS x86_64-apple-ios | SUCCESS |
-| 37190024602 | 111400083215 | Draft Rust 1.90 Android x86_64-linux-android | SUCCESS |
-| 37190024602 | 111400083246 | Draft Rust 1.90 iOS aarch64-apple-ios-sim | SUCCESS |
-| 37190024602 | 111400083269 | Draft Rust 1.90 Android armv7-linux-androideabi | SUCCESS |
-| 37190024602 | 111400083855 | Same-run private Windows QA artifact evidence | SKIPPED |
-| 37190024508 | 111400082683 | Exact-head PostgreSQL 17 migrations, constraints and parity | SUCCESS |
-| 37190024508 | 111400082729 | Exact-head synthetic identity, security and full ERP regression | SUCCESS |
-| 37190024557 | 111400082850 | Exact-head PostgreSQL 17 migration, repeat deploy, constraints and parity | SUCCESS |
-| 37190024557 | 111400082935 | Exact-head requirements, security, shared-platform and full ERP regression | SUCCESS |
+| 37190024507 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024507/job/111400082479) | exact-head-financial-contract (postgresql) | SUCCESS |
+| 37190024507 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024507/job/111400082629) | exact-head-financial-contract (sqlite) | SUCCESS |
+| 37190024520 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024520/job/111400082671) | Exact-head PostgreSQL 17 parity and provider-independent preparation | SUCCESS |
+| 37190024520 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024520/job/111400082798) | Exact-head synthetic validation, security and full ERP regression | SUCCESS |
+| 37190024548 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024548/job/111400082856) | Backend build/scan input qualification (arm64) | FAILURE |
+| 37190024548 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024548/job/111400083032) | 1 - server and database | SUCCESS |
+| 37190024548 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024548/job/111400083036) | Backend build/scan input qualification (amd64) | FAILURE |
+| 37190024548 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024548/job/111404167877) | 2 - OCI image and supply chain | SKIPPED |
+| 37190024548 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024548/job/111404168218) | oci-release-index | SKIPPED |
+| 37190024548 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024548/job/111404168755) | 3 - portable stack | SKIPPED |
+| 37190024548 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024548/job/111404169059) | 4 - distributed runtime | SKIPPED |
+| 37190024548 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024548/job/111404169486) | 5 - object storage and recovery | SKIPPED |
+| 37190024548 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024548/job/111404169757) | 6 - full synthetic acceptance | SKIPPED |
+| 37190024541 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024541/job/111400082805) | Exact-head software, security and ERP regression | SUCCESS |
+| 37190024541 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024541/job/111400082878) | Exact-head PostgreSQL biometric migration and parity | SUCCESS |
+| 37190024516 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024516/job/111400082535) | Exact-head PostgreSQL 17 migration, repeat deploy, constraints and parity | SUCCESS |
+| 37190024516 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024516/job/111400082699) | Exact-head communication, security, shared-platform and full ERP regression | SUCCESS |
+| 37190024558 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024558/job/111400082953) | SQLite existing release gate | SUCCESS |
+| 37190024558 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024558/job/111400083077) | PostgreSQL schema and migrations | SUCCESS |
+| 37190024558 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024558/job/111400083102) | Cross-provider parity and recovery | SUCCESS |
+| 37190024558 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024558/job/111400083105) | PostgreSQL application regression | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400082993) | TypeScript, contracts and bundled shell | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083069) | Draft Rust 1.90 Linux aarch64-unknown-linux-gnu | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083103) | Draft Rust 1.90 macOS aarch64-apple-darwin | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083110) | Unsigned Windows NSIS compiler gate | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083123) | Draft Rust 1.90 Windows production and QA tests | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083158) | Draft Rust 1.90 Linux x86_64-unknown-linux-gnu | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083159) | Draft Rust 1.90 iOS aarch64-apple-ios | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083161) | iOS simulator build and shared UI gate | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083162) | Draft Rust 1.90 macOS x86_64-apple-darwin | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083169) | Draft Rust 1.90 Android i686-linux-android | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083171) | Draft Rust 1.90 Android aarch64-linux-android | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083178) | Android debug build and emulator UX gate | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083180) | Draft Rust 1.90 iOS x86_64-apple-ios | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083215) | Draft Rust 1.90 Android x86_64-linux-android | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083246) | Draft Rust 1.90 iOS aarch64-apple-ios-sim | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083269) | Draft Rust 1.90 Android armv7-linux-androideabi | SUCCESS |
+| 37190024602 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602/job/111400083855) | Same-run private Windows QA artifact evidence | SKIPPED |
+| 37190024508 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024508/job/111400082683) | Exact-head PostgreSQL 17 migrations, constraints and parity | SUCCESS |
+| 37190024508 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024508/job/111400082729) | Exact-head synthetic identity, security and full ERP regression | SUCCESS |
+| 37190024557 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024557/job/111400082850) | Exact-head PostgreSQL 17 migration, repeat deploy, constraints and parity | SUCCESS |
+| 37190024557 | [retained job](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024557/job/111400082935) | Exact-head requirements, security, shared-platform and full ERP regression | SUCCESS |
 
 
 Artifact producer identity remains separate from local consumer identity.

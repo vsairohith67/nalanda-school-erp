@@ -57,19 +57,19 @@ source-list helper, candidate-only three scanners (native explicitly released),
 narrow registry union and K30 evidence coordinate correction (K30 review approved).
 Product acknowledged no overlap for finance. No foreign checkout changes,
 stashes, resets or cleanup.
-A4 retains primary and its exact helper/test/registration reservations;
-**NO PRIMARY RELEASE** in its direct current coordination packet.
+A4 retained primary during the first integrations. Its later explicit15:39:12.555
+UTC release to this master is recorded below; failed applicable gates remain.
 
 ## Six lanes
 
 | Lane / actual owner chat | State | Actual source | Reservation / evidence | Dependency and next action |
 | --- | --- | --- | --- | --- |
-| A4 / 01a1013d-7b21-7b00-90d0-3ad76952cc9c | Published correction INTEGRATED locally; CI TERMINAL PARTIAL | recovery 0aa1462 | Reviewed four-path correction; 12 actual local phases PASS; normal CI 27 jobs PASS / 8 FAIL / 7 SKIP | Six Windows custody setup failures before helper execution; two base-qualification refusals. Source corrective-push allowance exhausted. Own two evidence checkpoints/review settling; primary remains held. |
-| Product / 01a106ff-07e6-76d2-acd0-03747c8c8d43 | ACTIVE | candidate 52d9d1ee809da66fcec045e946e44c69feb59a21 / tree 5860269e4b46afeb63a43f6adbd10ccaa2d5e47d | 33 paths over b20; PR29 and attendance consumed once; current types/build pending; earlier 928 full suite historical | Current focused 141 PASS / 13 custody wrapper FAIL under Restricted; do not inherit A4 session authorization. Receive frozen reviewed handoff before import. |
-| K30 / 01a1070a-f16f-7f70-bf43-1965f52d9232 | INTEGRATED locally; combined qualification ACTIVE | Released PR30 40be0af6df2c6f60f856a254f21e5703835a8419 | Frozen source and independent source/log review; scoped Windows run 37208970604 attempt 1 PASS 100/100, types/build, console DPAPI/SCM/account isolation/cleanup | Fresh combined Vitest4 qualification and package merge review. Raw-export profile refused by current backend; source-admission/backlog decisions remain. Broad audit/portable/PostgreSQL jobs do not inherit scoped green. |
-| Native / 01a10716-950b-7602-b4e7-a60f549af80b | INTEGRATED locally; existing owner R1 publication ACTIVE, gated | Reviewed d664398; own clean recovery-sync/evidence checkpoint 8a4cfa65f30ec93e8c5252d6c9cac78009a52946 | Normal recovery merge 65b4b9f47edd44953367130139e0a68cab280d11 preserves native app/workflow/scanners; 353 records/history preserved, only published CLI hash updated; review CLEAR, four scanners PASS | Await genuine unchanged SAFE preparation after owner checkpoints, then existing one source push/draft stacked PR/normal no-remote Android/iPhone/iPad CI and allowed demonstrated correction. No driver rebuild/new native task. |
-| Import / 01a10727-ab5d-74f3-86e5-947df314f0a8 | Coherent local checkpoint CLEAN; independent release review PENDING | cbdd971ebee63b71ca8c4f4f55ed70205215f293 / tree a2eb75fc5b01a6663f7b2f51728671ecc473a346 | Actual service/component/copied-harness/current compile settled; all six native overlaps plus owned registry preserved through normal local commits; source/evidence checks ongoing | Short stable native publication window acknowledged. Own unchanged preparation reported only A4's two handoff overlaps; no SAFE claim. Coordinator J1 consumer proof follows reviewed release. No B1 archive access. |
-| Operations / 01a10733-47d1-7270-b7bd-9044d45fe8bc | CHANGES_REQUESTED; two demonstrated review corrections ACTIVE | Local 34533042e8aa2b1f06ece11da863dab026be2527 / tree c7090f16f8446538e93b5bea9ff1329d877bcd5b is not adoptable | Corrected earlier 14 SQLite cases, three type partitions/bundle and 186 affected cases PASS; K30 source-only review found two P2 defects | Missing-origin role gating and reuse of one operation ID across distinct commands; owner drafts exact role checks and per-operation manifests, tests real filesystem adapter with injected processes. One bounded qualification slot granted; receive exact corrected freeze/review before merge. |
+| A4 / 01a1013d-7b21-7b00-90d0-3ad76952cc9c | Published correction and reviewed evidence INTEGRATED locally; CI TERMINAL PARTIAL | recovery 0aa1462; evidence bc03856 | Reviewed four-path correction; 12 actual local phases PASS; normal CI 27 jobs PASS / 8 FAIL / 7 SKIP | Six Windows custody setup failures before helper execution; two base-qualification refusals. A4 corrective allowance exhausted; primary explicitly released to master at 15:39:12.555 UTC. |
+| Product / 01a106ff-07e6-76d2-acd0-03747c8c8d43 | INTEGRATED locally; combined qualification PENDING | Released/reviewed8357874b, code452fa7b | Exact33paths over0aa; existing independent reader CLEAR_FOR_CANDIDATE_SOURCE_ADOPTION / zero tests; PR29/attendance consumed once | Current452all20types/build PASS; boundary36PASS/13Windows SETUP FAIL; final combined gates pending. |
+| K30 / 01a1070a-f16f-7f70-bf43-1965f52d9232 | INTEGRATED locally; existing receipt reconciled | ReleasedPR30 40be0af | Actual current100/100 Vitest4 receipt reused by65-input/package equality; hosted Windows scoped100PASS | Backend profile/backlog assigned existingA4; specimen/upstream export pending; no donor reapplication/rebuild or broadCI clearance. |
+| Native / 01a10716-950b-7602-b4e7-a60f549af80b | Original source INTEGRATED; PR31 published; reviewed correction frozen | Published 8a4cfa6; correction 718e01a/tree0743d503 | First normal platform CI 13 PASS / 3 FAIL / 1 SKIP; actual diagnostics incomplete. Correction 55 tests/types PASS, independent SOURCE_ONLY CLEAR, clean eight-path checkpoint | Corrective publication waits current actual SAFE after master scanner checkpoint; one additional corrective push unused. No new native task/driver framework/runtime admission. |
+| Import / 01a10727-ab5d-74f3-86e5-947df314f0a8 | INTEGRATED locally; SOURCE_ONLY CLEAR | Releasedcbdd971/treea2eb75 | Current12service/component/copied/types/build; preparation91PASS; existingK30 reader CLEAR/zero tests | Coordinator J1three downstream cases PASS; combinedfull/PG/laneCI pending; noB1archive access. |
+| Operations / 01a10733-47d1-7270-b7bd-9044d45fe8bc | INTEGRATED locally; bothP2 CLOSED/SOURCE_ONLY CLEAR | Released a1994f0/tree365f966; terminal evidence 534a316 | Corrected current15 cases PASS100.70s; same reader closures/zero tests; terminal documentation CLEAR | Full regression NOT_STARTED; unused reservation explicitly returned, zero jobs. Newly created invented baseline subsequently removed by owner after canonical checks; no operational access. |
 
 ## Scope and acceptance checklist
 
@@ -84,7 +84,7 @@ defect; D missing execution/acceptance; E owner/host/artifact input; F deferred.
 
 | Criterion / accepted source | Current path and actual gap | Owner / acceptance | Disposition |
 | --- | --- | --- | --- |
-| J1 / V1-STU-003, V1-IMPORT-020; lane5 | Workbook → governed batch → Student/Guardian/link/enrollment exists; lane5 is fixing stale authority/transaction/rollback; report/certificate consumer readback missing | Import freezes first; coordinator reader controls on exact imported student/year and unrelated control | C active owner; D cross-lane test |
+| J1 / V1-STU-003, V1-IMPORT-020; lane5 | Governedworkbook -> actualbatch/approval/execution -> Student/Guardian/twoexactyear enrollments -> export/certificate sources; unrelatedParent denied/missingacademic evidence unresolved | Coordinator3actualservice casesPASS with real persisted sessions/IAM; proposal pending | A isolated service proof; D finalcombined/PG/runtime; no autoissued record/accountactivation claim |
 | J2 / NPS-REQ-010, V1-FIN-010 | Actual Accountant sale requires exact Student, freezes 3 × 10.25 = 30.75 despite later rate change; null Student/session refusals leave no second effect | New coordinator real persisted-authority journey PASS and independently rerun; existing finance suite retained | A isolated service/route evidence; D final combined full qualification |
 | J3 / NPS-REQ-014/015/016; PR26 accepted independent previous-year scope | Same Student: independent verify/prepare/review/approve/apply/reverse with actual MFA/one-use step-up; 1000 minus 50 minus 300 = 650; reversal = 950, one idempotent effect/audits | New coordinator real persisted sessions, four independent Super Admin actors; current/future/control and item sale isolation PASS | A isolated service evidence; D final full qualification/live chronology decision; no Accountant concession-policy inference |
 | J4 / NPS-REQ-007/008/009; V1-EXAM-006, V1-DOC-012 | Existing issued-report/certificate source, charge/request/template/version/void/reissue; confirmation switch fix already in recovery | Reuse certificate/marks/attendance tests, then imported-student source reader once lane5 freezes | A source history; D combined consumer proof |
@@ -185,9 +185,9 @@ remain preserved. No cleanup required for coordinator runtime resources so far.
 Measured work/test/review/CI intervals will be appended from actual receipts;
 no account usage or total active hours inferred from the planning allowance.
 
-Highest-priority next action: finish the owned real-authority J2/J3 source test while
-owners qualify their increments, then consume the next frozen reviewed handoff.
-Primary publication still requires A4's explicit handoff and unchanged safe checks.
+Highest-priority next action: finish demonstrated source-publication integration
+corrections and qualify the frozen combined source after the existing native
+owner's reviewed correction. Primary is released; applicable gates/review remain.
 
 ## R1 ownership resolution and next source integration
 
@@ -231,9 +231,12 @@ All 16 runtime/config/test blobs match the reviewed/tested donor exactly.
 The sole source-register conflict was resolved by preserving all 355 coordinator
 records/history and adding the donor's five new records plus six existing owned
 current-hash/reconciliation changes: 360 records, no blanket regeneration.
-Three new coordinator J1 consumer cases are authored on this source but
-NOT_EXECUTED yet; a clean meaningful local checkpoint and genuine unchanged
-preparation are required before their first qualification.
+Three new coordinator J1 consumer cases were subsequently checkpointed at
+686f1e1ac16512286384f8b11ea3cb16b939b14e. Actual unchanged preparation returned
+SAFE, exit 0, overlap/unreadable owners empty. t-z types PASS and all three
+actual SQLite consumer cases PASS at 21:13:39 IST, 2.92s total / 1.38s tests.
+Those dated receipts remain original evidence; current combined qualification
+after the later Product/operations integrations remains required.
 
 At 15:39:12.555 UTC A4 explicitly released primary integration to this coordinator
 after terminal partial closeout; its source writer is frozen/idle, zero heavy jobs.
@@ -262,3 +265,75 @@ Current seven configuration/actual-adapter cases, two types, bundle/emitted chec
 and 57 original operator cases PASS; broader 15-case run is separately granted,
 full regression remains NOT_EXECUTED. Only one coordinator J1 job and one operations
 targeted job may execute next; Lane5's prep slot actually settled/returned.
+
+## Current combined source and qualification continuation
+
+Subsequent ordinary integrations are d362b2e2acee4f334214af5947856b3d9c5124a4
+(reviewed A4 bc03856 evidence), 237704b372852f7b66db03e2e3475f1147dd47cd
+(released Operations a1994f0), and 1fba6ce3bd3ad2b2ff852c13751707051ed7cd95
+(released Product 8357874b72dc48dd2bb600a63fdb43829758ddc7). Current source tree
+before this scanner checkpoint is 1aa32281eec25b0d44d605b1d1955a2ffec2dfec.
+Actual ancestry verifies cbdd971 through 910b3f and J1 686f1e1 in this graph;
+Product 835 is also already present. PR29/attendance donors were not replayed.
+Operations' sole inherited EOF blank-line defect was corrected on this candidate;
+no runtime/test assertion changed. The original donor remains immutable.
+
+The larger registry union preserves 379 existing records, ordering, four original
+source heads, base/historical hashes and source entries. This correction updates
+only current hashes for the changed onboarding scanner and adopted laptop-lab
+evidence, and adds the exact fixed publication helper: 380 unique records.
+The read-only checker actually PASSed 380/four heads/four contracts. The actual
+onboarding CLI PASSed 700 changed files with scopeChecked=true, realDataProcessed=false.
+These are source checks, not the pending actual-CLI test-suite results.
+
+The onboarding publication failure was inherited Dockerfile scope, not proof of
+unsafe Docker content or a runtime defect. Its actual diff preserves the reviewed
+image digest, synthetic/production build separation, default production target,
+non-root execution and companion dependency manifest. Exact 125 reviewed public
+paths outside the existing admitted roots are listed literally; no directory or
+extension exemption, runtime admission or scanner-disable option is introduced.
+All original content/secret/identifier/size/artifact/no-network controls remain.
+Actual CLI controls were authored for the exact Rust/Dockerfile formats and
+neighbour/nested/artifact/content refusals; their execution is pending current SAFE.
+
+Two adopted public evidence documents used bare non-secret CI job coordinates.
+Candidate-only formatting converts 17 and 44 occurrences into canonical official
+repository job links with descriptive labels. Eleven missing run bindings were
+verified from the actual GitHub job API; the others retain existing run/job table
+bindings. Original outcomes, times, claims and immutable bc03856 documents remain
+available. The identifier exception is limited to the original recovery ledger
+and these two exact documents and complete canonical Markdown URL destinations;
+labels, surrounding raw identifiers, foreign/noncanonical URLs and all original
+secret detectors remain checked. New refusal controls are authored, not yet tested.
+
+Native first normal CI 37213564086/attempt1 is terminal: 13 PASS, 3 FAIL, 1 SKIP.
+Windows package and Android/Apple packaging passed; Android journey failed before
+its first scenario, Apple journey had only a generic process failure with failed
+aggregate upload skipped. Actual child cause/phase remained UNKNOWN; no device or
+authenticated backend acceptance is inferred. Existing owner reserved and corrected
+the inherited native-only Product test plus bounded private child-diagnostic
+retention and failure aggregate upload. Its clean reviewed 718e01a3d7a912dfb77d52c4e8efa0d26fa07f36
+has actual 55 scoped tests/types PASS, SOURCE_ONLY CLEAR, and released eight-path
+increment. Master has not yet adopted this increment; native corrective push is
+unused and remains conditional on its actual unchanged SAFE ownership check.
+
+Human approved a NEW dedicated non-admin master Windows PowerShell5.1 Process-only
+RemoteSigned QA session, maximum two hours and ending after jobs settle, for all
+13 actual unchanged custody tests, current authentication and full regression.
+Pre-session audit: selected Desktop5.1 is Restricted with all five policy scopes
+Undefined; ambient Core7.6.5 LocalMachine RemoteSigned does not qualify that child.
+The unchanged custody helper SHA256 is
+febabe47570aee5623e6f4bdf06c44d449d2b515808c6c0479a6b740fb925a4d.
+Old approval is closed; the new session has not started. No persistent policy,
+GPO, machine scope, Bypass/Unrestricted, skipped/mocked replacement or device
+action is authorized. Record actual policy before/inside/after and close the scope.
+
+Native bounded slot settled and returned; Operations unused full slot returned
+with zero execution and zero heavy jobs. Master now schedules its own combined
+qualification after genuine current SAFE. Import/operations source remains frozen;
+B1 is unresolved, denied cleanup residue preserved, actual PostgreSQL governed
+execution remains pending where the existing approved environment permits it.
+Normal master source publication/CI within the existing wave budget remains the
+objective after mandatory qualification and independent review, not another
+source-only terminal handoff. No primary checkout edits, runtime/signing/hosting
+activation, real record access, private-profile broadening or deployment.

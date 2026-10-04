@@ -4,12 +4,13 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSy
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { reviewedBiometricCompanionPublicSources } from "../scripts/reviewed-biometric-companion-publication";
+import { reviewedV1IntegrationPublicSources } from "../scripts/reviewed-v1-integration-publication";
 
 const root = process.cwd(), parent = path.join(root, "tmp");
 const scripts = ["communication-delivery-foundation-1a", "real-user-access-readiness-1a", "real-data-onboarding-preparation-1a"] as const;
 type Kind = "reviewed" | "neighbour" | "nested-lookalike" | "binary" | "private-key" | "token" | "credential" | "oversized" | "real-contact" | "identity";
 
-function scan(name: typeof scripts[number], kind: Kind) {
+function scan(name: typeof scripts[number], kind: Kind, integration = false, dockerfile = false) {
   mkdirSync(parent, { recursive: true });
   const directory = mkdtempSync(path.join(parent, "v1-companion-publication-")), identity = lstatSync(directory);
   const script = path.join(root, `scripts/qa-${name}-public-repo-scan.ts`);
@@ -31,12 +32,13 @@ function scan(name: typeof scripts[number], kind: Kind) {
     // its less restrictive no-onboarding-change branch.
     if (name === "real-data-onboarding-preparation-1a") write("lib/onboarding-preparation.ts", "// invented changed preparation source\n");
     for (const file of reviewedBiometricCompanionPublicSources) write(file, "// invented reviewed source\n");
-    const operand = "apps/nalanda-biometric-bridge/windows/host/OwnedProcess.cs";
-    if (kind === "neighbour") write("apps/nalanda-biometric-bridge/windows/host/Unreviewed.cs", "// invented unregistered neighbour\n");
-    if (kind === "nested-lookalike") write("apps/nalanda-biometric-bridge/nested/windows/host/OwnedProcess.cs", "// invented lookalike\n");
-    if (kind === "binary") write("apps/nalanda-biometric-bridge/windows/host/package.exe", "invented forbidden package\n");
+    if (integration) for (const file of reviewedV1IntegrationPublicSources) write(file, "// invented reviewed combined source\n");
+    const operand = dockerfile ? "Dockerfile" : integration ? "apps/nalanda-cross-platform/src-tauri/src/qa_profile.rs" : "apps/nalanda-biometric-bridge/windows/host/OwnedProcess.cs";
+    if (kind === "neighbour") write(integration ? "apps/nalanda-cross-platform/src-tauri/src/unreviewed.rs" : "apps/nalanda-biometric-bridge/windows/host/Unreviewed.cs", "// invented unregistered neighbour\n");
+    if (kind === "nested-lookalike") write(integration ? "apps/nalanda-cross-platform/nested/src-tauri/src/qa_profile.rs" : "apps/nalanda-biometric-bridge/nested/windows/host/OwnedProcess.cs", "// invented lookalike\n");
+    if (kind === "binary") write(integration ? "apps/nalanda-cross-platform/private.db" : "apps/nalanda-biometric-bridge/windows/host/package.exe", "invented forbidden package\n");
     if (kind === "private-key") write(operand, ["-----BEGIN ", "PRIVATE KEY-----"].join(""));
-    if (kind === "token") write(operand, ["gh", "p_"].join("") + "A".repeat(36));
+    if (kind === "token") write(operand, integration ? 'token = "' + "SYNTHETIC-ONLY-" + "A".repeat(36) + '"' : ["gh", "p_"].join("") + "A".repeat(36));
     if (kind === "credential") write(operand, "postgresql" + "://" + "invented:" + "P".repeat(12) + "@example.invalid/synthetic");
     if (kind === "oversized") write(operand, Buffer.alloc(5 * 1024 * 1024 + 1, 32));
     if (kind === "real-contact") write(operand, ["invented", "@", "example.org"].join(""));
@@ -52,7 +54,8 @@ function scan(name: typeof scripts[number], kind: Kind) {
     } else {
       expect(result.status, result.stdout).not.toBe(0);
       const code = name === "real-data-onboarding-preparation-1a"
-        ? kind === "private-key" ? "SECRET_LIKE_CONTENT_REFUSED" : kind === "identity" ? "REAL_LIKE_IDENTIFIER_REFUSED" : "OUT_OF_SCOPE_CHANGED_PATH"
+        ? kind === "private-key" || integration && kind === "token" ? "SECRET_LIKE_CONTENT_REFUSED" : kind === "identity" ? "REAL_LIKE_IDENTIFIER_REFUSED"
+        : integration && kind === "binary" ? "PRIVATE_OR_BINARY_ARTIFACT_REFUSED" : integration && kind === "oversized" ? "UNSAFE_OR_OVERSIZED_PUBLIC_ARTIFACT" : "OUT_OF_SCOPE_CHANGED_PATH"
         : kind === "private-key" ? ":private-key" : kind === "token" ? ":github-token" : kind === "credential" ? ":database-credential-url"
         : kind === "oversized" ? ":unsafe-or-oversized" : kind === "real-contact" ? ":non-synthetic-email-domain" : kind === "binary" ? ":private-or-binary-artifact" : ":out-of-scope";
       expect(result.stderr).toContain(code);
@@ -70,4 +73,12 @@ describe.each(scripts.slice(0, 2))("V1 companion actual %s publication CLI", nam
 });
 describe("V1 companion actual onboarding changed-scope publication CLI", () => {
   it.each<Kind>(["reviewed", "neighbour", "nested-lookalike", "private-key", "identity"])("applies complete text checks even to unusual reviewed formats: %s", kind => scan("real-data-onboarding-preparation-1a", kind));
+});
+
+describe("V1 combined actual onboarding changed-scope publication CLI", () => {
+  it.each<Kind>(["reviewed", "neighbour", "nested-lookalike", "binary", "private-key", "token", "oversized", "identity"])("preserves complete checks for exact reviewed combined paths: %s", kind => scan("real-data-onboarding-preparation-1a", kind, true));
+});
+
+describe("Inherited exact Dockerfile actual onboarding publication controls", () => {
+  it.each<Kind>(["private-key", "token", "oversized", "identity"])("retains full content refusal: %s", kind => scan("real-data-onboarding-preparation-1a", kind, true, true));
 });
