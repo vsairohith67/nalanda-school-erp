@@ -4331,7 +4331,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "34ea3960bb58369a56b73765f9504663f9da83037b63561cc14e5737ed4a3fef",
+      "currentSha256": "85a1d23dd8bd15afbdff3c41d8dc8019037076b7c10270cbd53516b55e6ceefc",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5681,7 +5681,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "83be9c659cb5b10821818bc4e582c9481f100433232edb831a44d6428c65b14d",
+      "currentSha256": "7d4c93c36e7fcb819675d450559da5e0fb24de155024edd2433812ee25e2a3e9",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -5856,7 +5856,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "2e08760b0148314824eb712ecee87e9f74d47414ee9facde23028493afcdd198",
+      "currentSha256": "96d8433f04b47db924eb5bb5225af57aecf44ba0cc7e54dfdb66e1bd08fbf3ed",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -7606,7 +7606,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "3177df3a1e3125e6a8d356168aab896412e368575375c37515a1f5d67226512c",
+      "currentSha256": "ca976145a7f59f4e1d808239a54626c1852dad426ebb16d029a410f4564c9726",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -7781,7 +7781,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "33b8db2670bd01a9516512f76b6a1b76e31810d6542ac1dd3a3092f65ee55edf",
+      "currentSha256": "fa088cd0820a1baefce715bbf4d4d5d466d4e7c0e22abfdc1d4a752bda8d8ed4",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -7831,7 +7831,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "3d4c223ef9803a8b646a141ec6846170c3b84dd4a9f3e62965e211d61d1afec2",
+      "currentSha256": "6ee1785cda7606aee3b7c1316a4eac4a3502349a323120161e08c268da0c034e",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -7881,7 +7881,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "74e7694d9b40e41440cc87f8a884a239641d1a054efb3476465c58fd98ec3353",
+      "currentSha256": "949307d6a22e3a25cbf58ca689af3520a4950bc7355afb53e8abd56742c6eb21",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -7931,7 +7931,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "3ba2ca0b474eff8ed84fe9154e9005ce716ea4321caf8e5e0472289e8928d62a",
+      "currentSha256": "63c7add97fd275712c76408540b2b9d46d09fa7361f1045c11a0cd9253f5fa14",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -8707,6 +8707,131 @@
         }
       ],
       "currentSha256": "efba0b1f564f92f4034a93cc9f929c00e1e81c4fbcb1286ce8f3815f01101448",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-authorization.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "6448702673414a001d13c615e5d39fbb278540577f0383ddb5648615534fd4ee",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-custody.ps1",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "8f4d14ee91b0ec5126a5a3e85782b871c7fa27110e674fd5bb7a1cd0876d740a",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/laptop-lab/consumer-host.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "be0fddd1dc35e8c1d52e4a37112939a60239238f8db7f32413d21edecbdbba16",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/local-runtime-authorization.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "68b9457d500e537570912c3148dea71662b948c5afacad700f2f97f16f690b0a",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/local-runtime-trust-registration.json",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     }
   ]

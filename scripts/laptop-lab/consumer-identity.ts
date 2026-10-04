@@ -6,6 +6,7 @@ import {hashBytes} from '../portable/artifact-handoff';
 // Actual common source retained by both donor and recovery integration histories.
 export const LAB_BASE='baa49c738e009f99c5e741a04bc3fe8f8862a848';
 export const CONNECTION_FILES=[
+  'scripts/laptop-lab/consumer-authorization.ts','scripts/laptop-lab/consumer-custody.ps1','scripts/laptop-lab/consumer-host.ts','scripts/portable/local-runtime-authorization.ts','scripts/portable/local-runtime-trust-registration.json','scripts/portable/product-trust-policy.ts',
   'scripts/laptop-lab/consumer-types.ts','scripts/laptop-lab/consumer-identity.ts','scripts/laptop-lab/consumer-profile.ts','scripts/laptop-lab/consumer-plan.ts','scripts/laptop-lab/consumer-connection.ts','scripts/laptop-lab/consumer-lifecycle.ts','scripts/laptop-lab/consumer-runner.mjs',
   'scripts/laptop-lab/consumer-certificate-adapter.ts','scripts/laptop-lab/consumer-operation-ports.ts',
   'scripts/laptop-lab/consumer-session.ts','scripts/laptop-lab/consumer-inputs.ts','scripts/laptop-lab/consumer-bootstrap.ts','scripts/laptop-lab/consumer-fixture-foundation.ts','lib/session-token.ts',
