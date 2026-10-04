@@ -60,7 +60,7 @@ export function validatePreparedCompose(config: any, workspace: string, privateR
       if (key.endsWith("_FILE") && value) requireValue(typeof value === "string" && /^\/run\/secrets\/[a-z0-9_]+$/.test(value) && mounted.has(value.split("/").at(-1)), "OPERATIONS_SECRET_REFERENCE_INVALID");
       if (/^(?:AUTH_SECRET|AUTH_VERIFICATION_SECRET|DATABASE_URL|DIRECT_URL|VALKEY_URL|S3_ACCESS_KEY_ID|S3_SECRET_ACCESS_KEY|CLOUD_BACKUP_ENCRYPTION_KEY_V1|NALANDA_PROXY_SHARED_SECRET)$/.test(key)) requireValue(!value, "OPERATIONS_INLINE_SECRET_FORBIDDEN");
     }
-    if (environment.APP_ORIGIN) {
+    if (appServices.includes(name) && name !== "object-init") {
       requireValue(environment.APP_ORIGIN === syntheticOrigin && environment.NALANDA_ENVIRONMENT === "synthetic-staging" && environment.NALANDA_SYNTHETIC_STAGING === "true", "OPERATIONS_ENVIRONMENT_MISMATCH");
       requireValue(environment.PORTABLE_EXPECTED_POSTGRES_MIGRATION === manifest.migration && environment.DATABASE_PROVIDER === "postgresql", "OPERATIONS_DATABASE_CONTRACT_MISMATCH");
       requireValue(disabledFlags.every(flag => environment[flag] === "false") && environment.AI_ASSISTANT_PROVIDER === "DISABLED", "OPERATIONS_ACTIVATION_FORBIDDEN");
@@ -117,8 +117,17 @@ export async function prepareOperations(settingsFile: string, workspace: string,
     validatePreparedCompose(config, workspace, path.join(workspace, "tmp", "portable-staging", manifest.project), manifest);
     report.state = "SYNTHETIC_CONFIGURATION_PREPARED_NOT_ADMITTED";
     report.secretReferences = Object.keys(config.secrets).sort();
-    await write("manifest.json", manifest);
-    await write("commands.json", { cwd: workspace, qualificationRequiredBeforeDryRun: true, commands: OPERATOR_COMMANDS.map(command => ({ command, argv: ["dist/portable/operator.mjs", command, "--manifest", path.join(output, "manifest.json"), "--target", manifest!.target], requiresPreviousRelease: command === "upgrade" || command === "rollback", requiresRestoreArtifact: command === "restore" })) });
+    const operations = OPERATOR_COMMANDS.map(command => {
+      // Deterministic operation identities, not authorization. A fresh validated
+      // manifest operationId is required for another mutation; resume reuses its ID.
+      const operationId = createHash("sha256").update(`operations-v1:${manifest!.operationId}:${command}`).digest("hex").slice(0, 16);
+      const selected = validateOperatorManifest({...manifest!, operationId});
+      const manifestFile = path.join(output, `manifest-${command}.json`);
+      return {command, selected, manifestFile, operationId};
+    });
+    requireValue(new Set(operations.map(operation => operation.operationId)).size === OPERATOR_COMMANDS.length, "OPERATIONS_OPERATION_ID_COLLISION");
+    for (const operation of operations) await write(`manifest-${operation.command}.json`, operation.selected);
+    await write("commands.json", { cwd: workspace, qualificationRequiredBeforeDryRun: true, freshOperationIdRequiredForNewMutation: true, commands: operations.map(({command, manifestFile, operationId}) => ({ command, operationId, argv: ["dist/portable/operator.mjs", command, "--manifest", manifestFile, "--target", manifest!.target], requiresPreviousRelease: command === "upgrade" || command === "rollback", requiresRestoreArtifact: command === "restore" })) });
   } else report.state = "FUTURE_PREVIEW_PREPARATION_INACTIVE";
   await write("preparation.json", report);
   return report;

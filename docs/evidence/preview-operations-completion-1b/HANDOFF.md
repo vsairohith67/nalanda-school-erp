@@ -71,6 +71,11 @@ The exact helper will be run again against the frozen clean candidate.
 | Emitted entrypoint verification | PASS, 2.76s; future inactive preparation, synthetic preparation, all ten operator apply qualification refusals and invalid preparation arguments; no target/private root created |
 | Affected original suites | PASS, 19 files / 186 cases, 13.71s; no skips; backup/parser/provider/security/retention/reports/scheduling, Technical Operations and portable lifecycle/CLI/receipts/OCI/observability/publication contracts |
 | Tools-core typecheck attempted during a diagnostic | ABORTED by stopping only its uniquely identified owned node child; exit -1, no pass verdict. Brief project slot overlap acknowledged and corrected |
+| Review correction configuration first attempt | FAIL, 6 passed / 1 failed, 5.44s; actual output-overlap refusal exposed a test fixture outside the synthetic workspace's tmp directory |
+| Corrected configuration / actual filesystem lifecycle | PASS, 7 cases, 6.37s; distinct install/backup IDs, original same-ID refusal and exact-operation resume; no skips |
+| Review correction affected tests / tools-core types | PASS, 17.14s / 18.98s |
+| Review correction actual bundle / emitted checks | PASS, 0.38s / 3.23s; ten distinct manifests/IDs, all ten real qualification refusals before effects |
+| Review correction original operator / CLI | PASS, 2 files / 57 cases, 5.49s; no skips |
 
 Corrections preserve the 60s migration child and 120s setup-hook limits, every
 business assertion, and inherited skip distinctions. Each fresh migration has its
@@ -78,9 +83,38 @@ own bounded hook, preventing the aggregate-hook/cleanup race. Canonical absolute
 secret-mount targets are normalized and worker-specific disabled proxy/callback
 settings are preserved. No unchanged retry was used to manufacture green.
 
+## Independent source review and owned correction
+
+The master coordinator routed existing completed K30-owner capacity for read-only
+donor review; no new agent/team/heavy job. Immutable local code checkpoint
+`34533042e8aa2b1f06ece11da863dab026be2527`, tree
+`c7090f16f8446538e93b5bea9ff1329d877bcd5b`, was clean and was not adopted/published.
+Review outcome: CHANGES_REQUESTED, exactly two P2 findings; zero reviewer execution
+or edits. Other registry hashes, v48 metadata, provider construction handling,
+reference restore, lifecycle refusal and privacy/evidence boundaries were inspected.
+
+1. Required environment validation incorrectly depended on truthy APP_ORIGIN; a
+   removed origin could skip OFF/callback/proxy checks. Correction selects the exact
+   application-service roles independently of that input, retaining object-init's
+   distinct environment. Actual normalized removal/empty-origin plus unsafe flag,
+   callback and proxy controls are added; no runtime bypass was demonstrated.
+2. Ten generated commands shared one operation ID; the real filesystem adapter
+   correctly refused a later backup after install. Correction emits separate
+   validated command manifests and deterministic distinct IDs, preserving the
+   refusal. New mutation needs a fresh validated manifest ID; exact resume retains
+   its ID. New test drives generated install/backup through the existing actual
+   filesystem adapter with injected preflight/process fixtures, verifies the
+   original same-ID refusal and idempotent resume, and creates no CI identity or
+   Docker operation. This is distinct from real SQLite backup/restore evidence.
+
+The corrected delta and its actual checks return to the same reviewer for closure.
+Narrow correction batch ran 21:02:10–21:04:57 IST on the coordinator's explicitly
+returned Lane5 slot. Actual job intervals above remain separate; gaps/review/waits
+are not summed as execution. Lane6 returned the slot with zero heavy jobs or listeners.
+
 ## Evidence levels and remaining qualification
 
-- CONFIGURATION_SOURCE_VALIDATED: PASS (actual Compose client normalization, both profiles and all existing argv).
+- CONFIGURATION_SOURCE_VALIDATED: PASS (corrected configuration/type/bundle checks); independent review closure pending.
 - SYNTHETIC_BACKUP_RESTORE_EXECUTED: PASS (invented SQLite / local encrypted files, four real restores across two fresh targets).
 - OPERATOR_LIFECYCLE_CONTRACT_TESTED: PASS (existing contract/filesystem adapters and actual emitted qualification refusals; no running-stack claim).
 - RUNNING_STACK_DRILL_EXECUTED: NOT_EXECUTED.
@@ -88,10 +122,10 @@ settings are preserved. No unchanged retry was used to manufacture green.
 - PREVIEW_DEPLOYED: NO.
 - PostgreSQL local / real S3 provider: NOT_EXECUTED; no already approved target.
 - Exact lane CI: NOT_EXECUTED; own source publication gated.
-- Independent review: PENDING shared reviewer, no competing spawn.
+- Independent review: CHANGES_REQUESTED on clean local 34533042e8aa2b1f06ece11da863dab026be2527 / tree c7090f16f8446538e93b5bea9ff1329d877bcd5b; two material P2 findings, no reviewer execution.
 
-Corrected focused, affected type, bundle/emitted and original-suite batch settled
-at 20:31 IST; no Lane6 heavy job remains. One applicable broader synthetic
+Original focused, affected type, bundle/emitted and original-suite batch settled
+at 20:31 IST; corrected review batch settled 21:04:57 IST. No Lane6 heavy job remains. One applicable broader synthetic
 regression is queued behind the master coordinator, with inspected fresh baseline
 entrypoints and no operational database fixture or fake CI identity. Final registration, all three unchanged relevant publication
 scanners, Git safety and final prepare-qa will retain their actual results.
@@ -115,7 +149,7 @@ no logs, settings, encrypted archives, keys or database bytes are published.
 
 No operational database/secret/private archive/external D: drive/signing store/vault
 was opened/copied/hashed. No runtime/listener/hosted preview, schedule, notification,
-provider/DNS/hosts/firewall/CA change, account or runtime grant was created.
+provider/DNS/hosts/firewall/CA change, real/preview account or runtime grant was created.
 `preview-erp.nalandaps.com` remains inactive owner preference. Backup excludes private
 object bytes and credentials; measured file verification and independent database
 restore do not certify full application recovery, power loss, RPO/RTO or capacity.

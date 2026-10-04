@@ -1,13 +1,16 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { prepareOperations, runPreparationCli, validateOperationsSettings, validatePreparedCompose } from "../scripts/portable/prepare-operations";
 import { runOperatorCli } from "../scripts/portable/operator";
-import { OPERATOR_COMMANDS, type OperatorManifest } from "../lib/portable-runtime/operator";
+import { encryptCloudBackup } from "../lib/cloud-backup-container";
+import { makeRecoveryHandoff } from "../lib/portable-runtime/recovery-handoff";
+import { CiOperatorAdapter } from "../scripts/portable/operator-adapter";
+import { OPERATOR_COMMANDS, type OperatorCommand, type OperatorManifest } from "../lib/portable-runtime/operator";
 
 const workspace = process.cwd();
 async function manifest(profile: "local-single-node" | "generic-vps"): Promise<OperatorManifest> {
@@ -43,11 +46,13 @@ describe("explicit offline operations preparation", () => {
       let qualified = 0;
       for (const entry of commands.commands) {
         const effect = vi.fn();
-        const value = await runOperatorCli(entry.argv.slice(1), { qualify: m => { expect(m).toEqual(selected); qualified++; }, adapter: () => ({ preflight: async () => {}, inspectTarget: async () => {}, acquire: async () => {}, release: async () => {}, readReceipt: async () => null, writeReceipt: async () => {}, execute: effect, reconcile: async () => "UNKNOWN" }) });
+        const value = await runOperatorCli(entry.argv.slice(1), { qualify: m => { expect(m).toEqual({...selected, operationId: entry.operationId}); qualified++; }, adapter: () => ({ preflight: async () => {}, inspectTarget: async () => {}, acquire: async () => {}, release: async () => {}, readReceipt: async () => null, writeReceipt: async () => {}, execute: effect, reconcile: async () => "UNKNOWN" }) });
         expect(value.state).toBe("DRY_RUN");
         expect(effect).toHaveBeenCalledTimes(entry.command === "doctor" ? 3 : 0);
       }
       expect(qualified).toBe(10);
+      expect(new Set(commands.commands.map((entry: any) => entry.operationId)).size).toBe(10);
+      expect(commands.freshOperationIdRequiredForNewMutation).toBe(true);
       const originalReport = await readFile(path.join(f.output, "preparation.json"), "utf8");
       const another = path.join(f.root, "second"); await prepareOperations(f.input, workspace, another);
       expect(await readFile(path.join(another, "preparation.json"), "utf8")).toBe(originalReport);
@@ -57,6 +62,56 @@ describe("explicit offline operations preparation", () => {
       // Production qualification still refuses this fabricated test binding.
       await expect(runOperatorCli(commands.commands[0].argv.slice(1))).rejects.toThrow();
     } finally { vi.unstubAllEnvs(); await f.close(); }
+  });
+  it("uses generated distinct operations through the actual filesystem adapter and retains same-operation resume/refusal", async () => {
+    const f = await fixture();
+    try {
+      for (const file of ["deploy/portable/compose.yml", "deploy/portable/profiles/local-single-node.json"]) {
+        await mkdir(path.dirname(path.join(f.root, file)), {recursive: true});
+        await copyFile(path.join(workspace, file), path.join(f.root, file));
+      }
+      const base = await manifest("local-single-node");
+      const selected = {...base, target: path.join(f.root, "tmp", "portable-operator", base.project)};
+      f.output = path.join(f.root, "tmp", "prepared");
+      await mkdir(path.dirname(f.output), {recursive: true});
+      await mkdir(path.join(f.root, "prisma", "postgresql", "migrations", selected.migration), {recursive: true});
+      await writeFile(f.input, JSON.stringify({schemaVersion: 1, purpose: "synthetic-integration", profile: selected.profile, applicationOrigin: "https://portable-staging.localhost:8443", manifest: selected}));
+      await prepareOperations(f.input, f.root, f.output);
+      const commands = JSON.parse(await readFile(path.join(f.output, "commands.json"), "utf8")).commands;
+      const install = commands.find((row: any) => row.command === "install"), backup = commands.find((row: any) => row.command === "backup");
+      const calls: string[][] = [];
+      // Existing bounded process fixture: real target locks/markers/config/receipts,
+      // injected Docker responses and preflight; no fabricated CI env or daemon.
+      const processFixture = async (args: string[]) => {
+        calls.push(args);
+        if (args.includes("config")) return JSON.stringify({networks: {data: {internal: true}}, services: Object.fromEntries(["web-1", "web-2", "reverse-proxy", "backup-worker", "migrator", "seed", "backup-qa"].map(name => [name, {image: "synthetic-process-fixture", environment: {NALANDA_SYNTHETIC_STAGING: "true", PORTABLE_EXPECTED_POSTGRES_MIGRATION: selected.migration}, depends_on: {seed: {condition: "service_completed_successfully"}}}]))});
+        if (args.includes("dist/portable/operator-recovery.mjs")) {
+          const encrypted = await encryptCloudBackup(Buffer.from("{}"), {backupFormatVersion: 48, createdAt: new Date(), encryptionKeyVersion: "V1", key: randomBytes(32)});
+          const handoff = makeRecoveryHandoff(encrypted.bytes, {sourceProject: selected.project, sourceCommit: selected.releaseCommit, runId: "123", attempt: "1", artifactId: "synthetic-artifact", objectKey: `cloud-backup/${"a".repeat(24)}/${"b".repeat(24)}.npsbackup`});
+          return JSON.stringify({state: "VERIFIED", operationId: args.at(-2), backupVersion: 48, id: "synthetic-artifact", ciphertextSha256: handoff.ciphertextSha256, transfer: {manifest: handoff, container: encrypted.bytes.toString("base64")}});
+        }
+        return "";
+      };
+      class IsolatedAdapter extends CiOperatorAdapter { async preflight() {} }
+      const dependencies = {qualify(m: OperatorManifest) {expect(m.image).toBe(selected.image); expect(m.releaseCommit).toBe(selected.releaseCommit);}, adapter: (_workspace: string, m: OperatorManifest, command: OperatorCommand, resume: boolean) => new IsolatedAdapter(f.root, m, path.join(f.root, "deploy", "portable", "compose.yml"), command, processFixture, resume)};
+      await mkdir(path.join(f.root, "tmp", "portable-staging", selected.project), {recursive: true});
+      expect((await runOperatorCli([...install.argv.slice(1), "--apply"], dependencies)).state).toBe("COMPLETE");
+      const installReceipt = path.join(selected.target, `${install.operationId}.install.receipt.json`);
+      const preserved = await readFile(installReceipt, "utf8");
+      const badFile = path.join(f.output, "same-operation-backup.json");
+      await writeFile(badFile, JSON.stringify({...selected, operationId: install.operationId}));
+      const beforeRefusal = calls.length;
+      await expect(runOperatorCli(["backup", "--manifest", badFile, "--target", selected.target, "--apply"], dependencies)).rejects.toThrow("OPERATION_ID_ALREADY_USED");
+      expect(calls.length).toBe(beforeRefusal);
+      expect((await runOperatorCli([...backup.argv.slice(1), "--apply"], dependencies)).state).toBe("COMPLETE");
+      const beforeResume = calls.length;
+      expect((await runOperatorCli([...backup.argv.slice(1), "--apply", "--resume"], dependencies)).state).toBe("COMPLETE");
+      expect(calls.length).toBe(beforeResume);
+      expect(await readFile(installReceipt, "utf8")).toBe(preserved);
+      expect(JSON.parse(await readFile(path.join(selected.target, `${backup.operationId}.backup.receipt.json`), "utf8")).state).toBe("COMPLETE");
+      expect((await readdir(path.dirname(selected.target))).some(name => name.endsWith(".lock"))).toBe(false);
+      expect(calls.flat()).not.toContain("--volumes");
+    } finally {await f.close();}
   });
   it("prepares future HTTPS requirements without a manifest, secrets, daemon or executable configuration", async () => {
     const f = await fixture();
@@ -100,6 +155,12 @@ describe("explicit offline operations preparation", () => {
         (c: any) => c.services["backup-worker"].environment.TRUST_PROXY_HEADERS = "true",
         (c: any) => c.services["web-1"].environment.DIRECT_URL_FILE = "/run/secrets/direct_url",
         (c: any) => c.services["web-1"].environment.PUBLIC_ADMISSIONS_ENABLED = "true",
+        (c: any) => { delete c.services["web-1"].environment.APP_ORIGIN; },
+        (c: any) => { c.services["web-1"].environment.APP_ORIGIN = ""; },
+        (c: any) => { delete c.services["web-1"].environment.APP_ORIGIN; c.services["web-1"].environment.PUBLIC_ADMISSIONS_ENABLED = "true"; },
+        (c: any) => { c.services["web-1"].environment.APP_ORIGIN = ""; c.services["web-1"].environment.PUBLIC_ADMISSIONS_ENABLED = "true"; },
+        (c: any) => { delete c.services["web-1"].environment.APP_ORIGIN; c.services["web-1"].environment.NALANDA_NATIVE_ALLOWED_ORIGINS = "https://foreign.invalid"; },
+        (c: any) => { delete c.services["web-1"].environment.APP_ORIGIN; c.services["web-1"].environment.NALANDA_TRUSTED_PROXY_MODE = "headers-only"; },
         (c: any) => c.services["web-1"].image = "latest",
         (c: any) => c.services["web-1"].mem_limit = 0,
         (c: any) => c.services["web-1"].build = ".",

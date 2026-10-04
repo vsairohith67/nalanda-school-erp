@@ -56,13 +56,15 @@ settled cleanup; do not reuse it. An output is **not admission or runtime readin
 
 ## Qualification and first start
 
-Synthetic preparation produces `manifest.json`, `commands.json` and a safe
+Synthetic preparation produces ten `manifest-COMMAND.json` files, `commands.json` and a safe
 `preparation.json` with unresolved inputs. Command records hold exact argv arrays
-for the existing ten lifecycle commands. Run from their recorded reviewed workspace:
+for the existing ten lifecycle commands, each with its own operation ID derived
+from the explicit input seed. These IDs are not authorization. Use the exact
+command-specific manifest in `commands.json`; run from its recorded workspace:
 
 ```text
-node dist/portable/operator.mjs preflight --manifest ABS_MANIFEST_JSON --target ABS_TARGET
-node dist/portable/operator.mjs doctor --manifest ABS_MANIFEST_JSON --target ABS_TARGET
+node dist/portable/operator.mjs preflight --manifest ABS_PREFLIGHT_MANIFEST_JSON --target ABS_TARGET
+node dist/portable/operator.mjs doctor --manifest ABS_DOCTOR_MANIFEST_JSON --target ABS_TARGET
 ```
 
 Even ordinary dry-run qualifies the artifact before dispatch; preflight can inspect
@@ -72,6 +74,12 @@ execution contract. Missing admission is a stop, never a request to substitute
 `latest`, rebuild a worktree, spoof CI, use a denied wrapper or weaken classification.
 Read `commands.json` requirements: restore needs an exact restore artifact/transfer;
 upgrade and rollback need a distinct retained historical image and source.
+
+Each prepared mutation is a single operation. Repeated new backups/updates need a
+new manifest with a fresh validated operation ID through the existing manifest/CLI
+contract; preserve artifact/profile/target binding and qualification. Reuse the
+same ID only for resuming that exact operation. This initial-target preparer refuses
+occupied roots, so do not use it to overwrite an installed target or its receipts.
 
 Only after independently authorized exact artifact/profile/target/data/network/
 duration/mutations/ownership may an operator invoke `initialise` or `install` with
