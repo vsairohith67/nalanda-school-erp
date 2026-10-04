@@ -318,127 +318,46 @@ jobs:
           printf 'POST_PACKAGE_RECLAIMED_KIB=%s\n' "$((disk_after_kib - disk_before_kib))" | tee -a "$capacity_log"
           df -Pk . "$RUNNER_TEMP" | tee -a "$capacity_log"
           for packaged_apk in "${packaged_apks[@]}"; do test -f "$packaged_apk"; done
-      - name: Exercise the packaged app in an Android emulator
+      - name: Execute the finite no-remote journey in the owned Android emulator
         shell: bash
         run: |
           set -euo pipefail
-          export ANDROID_AVD_HOME="$RUNNER_TEMP/px1a-avd"
-          mkdir -p tmp/platform-review "$ANDROID_AVD_HOME"
+          export ANDROID_AVD_HOME="$RUNNER_TEMP/native-1b-avd"
+          mkdir -p "$ANDROID_AVD_HOME" tmp/platform-review
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           AVDMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
           ADB="$ANDROID_HOME/platform-tools/adb"
           "$SDKMANAGER" "platform-tools" "emulator" "system-images;android-35;google_apis;x86_64"
-          test -x "$ADB"
-          echo no | "$AVDMANAGER" create avd --force --name px1a_phone --package "system-images;android-35;google_apis;x86_64" --device "pixel_6"
-          test -f "$ANDROID_AVD_HOME/px1a_phone.ini"
-          df -Pk . "$RUNNER_TEMP" | tee -a tmp/platform-review/android-runner-capacity.txt
-          "$ANDROID_HOME/emulator/emulator" -list-avds | grep -Fx px1a_phone
+          echo no | "$AVDMANAGER" create avd --name native_1b_phone --package "system-images;android-35;google_apis;x86_64" --device pixel_6
           if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
-          EMULATOR_LOG="$RUNNER_TEMP/px1a-emulator.log"
-          nohup "$ANDROID_HOME/emulator/emulator" -avd px1a_phone -no-window -noaudio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > "$EMULATOR_LOG" 2>&1 &
-          if ! timeout 240 "$ADB" wait-for-device; then
-            cat "$EMULATOR_LOG"
-            exit 1
-          fi
-          adb_cmd() { timeout 60 "$ADB" "$@"; }
-          # Retain synthetic launch diagnostics even when readiness fails early.
-          trap 'timeout 10 "$ADB" logcat -d -t 800 AndroidRuntime:E chromium:E "*:S" > tmp/platform-review/android-launch-errors.txt || true' EXIT
+          "$ANDROID_HOME/emulator/emulator" -avd native_1b_phone -port 5580 -no-window -noaudio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > "$RUNNER_TEMP/native-1b-emulator.log" 2>&1 &
+          EMULATOR_PID=$!
+          # Stop only this invocation's owned emulator, never the shared ADB server.
+          trap 'kill "$EMULATOR_PID" 2>/dev/null || true; wait "$EMULATOR_PID" 2>/dev/null || true' EXIT
+          timeout 240 "$ADB" -s emulator-5580 wait-for-device
+          ready=0
           for attempt in $(seq 1 90); do
-            if [ "$(adb_cmd shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then break; fi
-            if [ "$attempt" = "90" ]; then cat "$EMULATOR_LOG"; exit 1; fi
+            if [ "$(timeout 10 "$ADB" -s emulator-5580 shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; then ready=1; break; fi
             sleep 2
           done
-          APK_PATH="$(find apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk -type f -name '*.apk' | head -n 1)"
-          test -n "$APK_PATH"
-          adb_cmd install -r "$APK_PATH"
-          PACKAGE="com.nalandaps.erp"
-          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          sleep 4
-          adb_cmd shell dumpsys activity activities > tmp/platform-review/android-activity-state.txt
-          grep -E -m1 '(topResumedActivity=|ResumedActivity:|mResumedActivity:)' tmp/platform-review/android-activity-state.txt | grep -F "$PACKAGE"
-          # A resumed Activity can precede its accessibility root. Require a fresh,
-          # nonempty tree for this package; a dump command's exit code alone is insufficient.
-          ui_ready=0
-          ui_deadline=$((SECONDS + 120))
-          while [ "$SECONDS" -lt "$ui_deadline" ]; do
-            if timeout 5 "$ADB" shell rm -f /sdcard/px1a-window.xml &&
-               rm -f tmp/platform-review/android-window.xml &&
-               timeout 10 "$ADB" shell uiautomator dump /sdcard/px1a-window.xml &&
-               timeout 5 "$ADB" shell test -s /sdcard/px1a-window.xml &&
-               timeout 5 "$ADB" pull /sdcard/px1a-window.xml tmp/platform-review/android-window.xml; then
-              if grep -q '<hierarchy' tmp/platform-review/android-window.xml &&
-                 grep -Fq "package=\"$PACKAGE\"" tmp/platform-review/android-window.xml &&
-                 grep -Eq 'Welcome back|App PIN' tmp/platform-review/android-window.xml; then
-                ui_ready=1
-                break
-              fi
-            fi
-            sleep 2
-          done
-          if [ "$ui_ready" -ne 1 ]; then
-            echo 'ANDROID_PIN_CONTENT_NOT_READY' >&2
-            exit 1
-          fi
-          # FLAG_SECURE deliberately masks screenshot pixels. Keep it enabled;
-          # assert live PIN content in every state and portrait masking before opening the OS keyboard.
-          capture_android() {
-            local output="$1" xml="${1%.png}.xml"
-            local deadline=$((SECONDS + 60))
-            while [ "$SECONDS" -lt "$deadline" ]; do
-              rm -f "$output" "$xml"
-              if timeout 5 "$ADB" shell rm -f /sdcard/px1a-capture.xml &&
-                 timeout 10 "$ADB" shell uiautomator dump /sdcard/px1a-capture.xml &&
-                 timeout 5 "$ADB" pull /sdcard/px1a-capture.xml "$xml" &&
-                 grep -Fq "package=\"$PACKAGE\"" "$xml" &&
-                 grep -Eq 'Welcome back|App PIN' "$xml" &&
-                 adb_cmd exec-out screencap -p > "$output"; then
-                if [[ "$output" == *phone-portrait.png ]]; then
-                  node node_modules/tsx/dist/cli.mjs scripts/qa-ux-native-screen-content.ts "$output" protected || return 1
-                fi
-                # The OS keyboard may legitimately appear in subsequent protected captures.
-                return 0
-              fi
-              sleep 2
-            done
-            echo 'ANDROID_PIN_OR_PROTECTED_CAPTURE_NOT_READY' >&2
-            return 1
-          }
-          capture_android tmp/platform-review/android-synthetic-phone-portrait.png
-          cat tmp/platform-review/android-window.xml
-          # Tap the observed PIN input, not a guessed screen coordinate.
-          read PIN_X PIN_Y < <(python3 -c 'import re,sys,xml.etree.ElementTree as E; n=next(n for n in E.parse(sys.argv[1]).iter("node") if n.get("class")=="android.widget.EditText" and n.get("password")=="true"); x1,y1,x2,y2=map(int,re.findall(r"\d+",n.attrib["bounds"])); print((x1+x2)//2,(y1+y2)//2)' tmp/platform-review/android-synthetic-phone-portrait.xml)
-          adb_cmd shell input tap "$PIN_X" "$PIN_Y"
-          sleep 1
-          capture_android tmp/platform-review/android-synthetic-soft-keyboard.png
-          adb_cmd shell settings put system accelerometer_rotation 0
-          adb_cmd shell settings put system user_rotation 1
-          sleep 2
-          capture_android tmp/platform-review/android-synthetic-landscape.png
-          adb_cmd shell input keyevent KEYCODE_HOME
-          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          adb_cmd shell input keyevent KEYCODE_BACK
-          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          adb_cmd shell am force-stop "$PACKAGE"
-          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          adb_cmd shell am start -W -a android.intent.action.VIEW -d 'nalandaps-erp://auth/callback?code=invalid&state=invalid&request_id=invalid'
-          adb_cmd shell wm size 1280x800
-          adb_cmd shell wm density 160
-          adb_cmd shell settings put system user_rotation 0
-          sleep 2
-          capture_android tmp/platform-review/android-synthetic-tablet.png
-          adb_cmd shell svc wifi disable
-          adb_cmd shell svc data disable || true
-          adb_cmd shell am force-stop "$PACKAGE"
-          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          sleep 2
-          capture_android tmp/platform-review/android-synthetic-offline.png
-          adb_cmd shell svc wifi enable
-          adb_cmd shell svc data enable || true
-          adb_cmd shell wm size reset
-          adb_cmd shell wm density reset
-          adb_cmd logcat -d -t 800 AndroidRuntime:E '*:S' > tmp/platform-review/android-runtime-errors.txt || true
-          if grep -F "$PACKAGE" tmp/platform-review/android-runtime-errors.txt; then cat tmp/platform-review/android-runtime-errors.txt; exit 1; fi
-          printf '%s\n' 'SYNTHETIC UX EVIDENCE ONLY - NO REAL RECORDS' > tmp/platform-review/ANDROID-SYNTHETIC.txt
+          test "$ready" = 1
+          # Use the packaging tool already installed for this generated build.
+          AAPT="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name aapt | sort -V | tail -n 1)"
+          test -x "$AAPT"
+          apk_root=apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk
+          APK_PATH="$(python3 - "$AAPT" "$apk_root" <<'PY'
+          import pathlib,subprocess,sys
+          matches=[]
+          for p in pathlib.Path(sys.argv[2]).rglob('*.apk'):
+              data=subprocess.check_output([sys.argv[1],'dump','badging',str(p)],text=True)
+              if "package: name='com.nalandaps.erp'" in data and 'application-debuggable' in data and "'x86_64'" in data: matches.append(p.resolve())
+          if len(matches)!=1: raise SystemExit('ANDROID_EXACT_X86_PACKAGE_NOT_UNIQUE')
+          print(matches[0])
+          PY
+          )"
+          APK_SHA="$(sha256sum "$APK_PATH" | cut -d ' ' -f1)"
+          node node_modules/tsx/dist/cli.mjs apps/nalanda-cross-platform/tests/native/execute.ts --mode execute --platform ANDROID --package "$APK_PATH" --sha256 "$APK_SHA" --serial emulator-5580 --tool "$ADB" --metadata-tool "$AAPT" --output "$RUNNER_TEMP/native-1b-android" > tmp/platform-review/native-1b-android-summary.json
+          cat tmp/platform-review/native-1b-android-summary.json
       - name: Write Android package checksums
         working-directory: apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk
         run: find . -type f -name '*.apk' -exec sha256sum {} \; > SHA256SUMS.txt
@@ -463,8 +382,8 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
-          name: synthetic-android-emulator-ux
-          path: tmp/platform-review/android-*
+          name: native-1b-android-summary
+          path: tmp/platform-review/native-1b-android-summary.json
           if-no-files-found: error
           retention-days: 7
 
@@ -491,51 +410,23 @@ jobs:
       - run: pnpm app:ios:init
       - run: pnpm app:rust:test --locked
       - run: pnpm app:ios:build -- --locked
-      - name: Exercise the packaged app in iPhone and iPad simulators
+      - name: Execute the finite no-remote journey in owned iPhone and iPad simulators
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p tmp/platform-review
-          APP_PATH="$(find apps/nalanda-cross-platform/src-tauri/gen/apple/build -type d -name '*.app' | head -n 1)"
-          test -n "$APP_PATH"
-          xcrun simctl list devices available -j > "$RUNNER_TEMP/px1a-devices.json"
-          IPHONE_UDID="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next(x["udid"] for xs in d["devices"].values() for x in xs if x.get("isAvailable") and x["name"].startswith("iPhone")))' "$RUNNER_TEMP/px1a-devices.json")"
-          IPAD_UDID="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next(x["udid"] for xs in d["devices"].values() for x in xs if x.get("isAvailable") and x["name"].startswith("iPad")))' "$RUNNER_TEMP/px1a-devices.json")"
-          # simctl launch reports process launch, not completed WebView rendering.
-          # Reject the observed blank captures; visual/content review stays required.
-          capture_ios() {
-            local udid="$1" output="$2"
-            local deadline=$((SECONDS + 60))
-            while [ "$SECONDS" -lt "$deadline" ]; do
-              rm -f "$output"
-              if xcrun simctl io "$udid" screenshot "$output" &&
-                 node node_modules/tsx/dist/cli.mjs scripts/qa-ux-native-screen-content.ts "$output"; then
-                return 0
-              fi
-              sleep 2
-            done
-            echo 'IOS_NONBLANK_CAPTURE_NOT_READY' >&2
-            return 1
-          }
-          for UDID in "$IPHONE_UDID" "$IPAD_UDID"; do
-            xcrun simctl boot "$UDID" 2>/dev/null || true
-            xcrun simctl bootstatus "$UDID" -b
-            xcrun simctl install "$UDID" "$APP_PATH"
-            xcrun simctl ui "$UDID" appearance light
-            xcrun simctl launch --terminate-running-process "$UDID" com.nalandaps.erp
-            sleep 3
-            capture_ios "$UDID" "tmp/platform-review/ios-synthetic-$UDID-light.png"
-            xcrun simctl ui "$UDID" appearance dark
-            xcrun simctl launch --terminate-running-process "$UDID" com.nalandaps.erp
-            sleep 2
-            capture_ios "$UDID" "tmp/platform-review/ios-synthetic-$UDID-dark.png"
-            xcrun simctl openurl "$UDID" 'nalandaps-erp://auth/callback?code=invalid&state=invalid&request_id=invalid'
-            xcrun simctl terminate "$UDID" com.nalandaps.erp
-            xcrun simctl launch "$UDID" com.nalandaps.erp
+          APP_PATH="$(python3 - <<'PY'
+          import pathlib
+          matches=list(pathlib.Path('apps/nalanda-cross-platform/src-tauri/gen/apple/build').rglob('*.app'))
+          if len(matches)!=1: raise SystemExit('IOS_EXACT_SIMULATOR_PACKAGE_NOT_UNIQUE')
+          print(matches[0].resolve())
+          PY
+          )"
+          APP_SHA="$(node node_modules/tsx/dist/cli.mjs -e 'import {packageDigest} from "./apps/nalanda-cross-platform/tests/native/execute.ts"; console.log(packageDigest(process.argv[1]))' "$APP_PATH")"
+          for kind in phone tablet; do
+            node node_modules/tsx/dist/cli.mjs apps/nalanda-cross-platform/tests/native/execute.ts --mode execute --platform IOS --target-kind "$kind" --package "$APP_PATH" --sha256 "$APP_SHA" --tool /usr/bin/xcrun --metadata-tool /usr/bin/xcodebuild --output "$RUNNER_TEMP/native-1b-ios-$kind" > "tmp/platform-review/native-1b-ios-$kind-summary.json"
+            cat "tmp/platform-review/native-1b-ios-$kind-summary.json"
           done
-          printf '%s\n' 'SYNTHETIC UX EVIDENCE ONLY - NO REAL RECORDS' > tmp/platform-review/IOS-SYNTHETIC.txt
-          xcrun simctl shutdown "$IPHONE_UDID" || true
-          xcrun simctl shutdown "$IPAD_UDID" || true
       - name: Write iOS simulator checksums
         working-directory: apps/nalanda-cross-platform/src-tauri/gen/apple/build
         run: find . -type f ! -name 'SHA256SUMS.txt' -exec shasum -a 256 {} \; > SHA256SUMS.txt
@@ -557,8 +448,8 @@ jobs:
           retention-days: 7
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: synthetic-ios-simulator-ux
-          path: tmp/platform-review/ios-*
+          name: native-1b-ios-summary
+          path: tmp/platform-review/native-1b-ios-*-summary.json
           if-no-files-found: error
           retention-days: 7
 
