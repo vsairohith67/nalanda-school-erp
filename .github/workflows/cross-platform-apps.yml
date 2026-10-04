@@ -436,10 +436,18 @@ jobs:
           PY
           )"
           APP_SHA="$(node node_modules/tsx/dist/cli.mjs -e 'import {packageDigest} from "./apps/nalanda-cross-platform/tests/native/execute.ts"; console.log(packageDigest(process.argv[1]))' "$APP_PATH")"
+          native_status=0
           for kind in phone tablet; do
-            node node_modules/tsx/dist/cli.mjs apps/nalanda-cross-platform/tests/native/execute.ts --mode execute --platform IOS --target-kind "$kind" --package "$APP_PATH" --sha256 "$APP_SHA" --tool /usr/bin/xcrun --metadata-tool /usr/bin/xcodebuild --output "$RUNNER_TEMP/native-1b-ios-$kind" > "tmp/platform-review/native-1b-ios-$kind-summary.json"
-            cat "tmp/platform-review/native-1b-ios-$kind-summary.json"
+            if node node_modules/tsx/dist/cli.mjs apps/nalanda-cross-platform/tests/native/execute.ts --mode execute --platform IOS --target-kind "$kind" --package "$APP_PATH" --sha256 "$APP_SHA" --tool /usr/bin/xcrun --metadata-tool /usr/bin/xcodebuild --output "$RUNNER_TEMP/native-1b-ios-$kind" > "tmp/platform-review/native-1b-ios-$kind-summary.json"; then
+              :
+            else
+              native_status=1
+            fi
+            if ! cat "tmp/platform-review/native-1b-ios-$kind-summary.json" 2>/dev/null; then
+              native_status=1
+            fi
           done
+          exit "$native_status"
       - name: Write iOS simulator checksums
         working-directory: apps/nalanda-cross-platform/src-tauri/gen/apple/build
         run: find . -type f ! -name 'SHA256SUMS.txt' -exec shasum -a 256 {} \; > SHA256SUMS.txt
