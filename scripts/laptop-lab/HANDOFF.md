@@ -704,3 +704,85 @@ registration and historical donor334 are separately labelled. One consolidated
 reviewed push and ordinary exact-source CI remain pending at this immutable
 publication checkpoint. No product/runtime/native/signing/deployment workflow
 was enabled, and the existing OCI source hold remains unconditional.
+
+## D4 R2 — publication and immutable-source CI closure (4 October 2026)
+
+Starting hosted source is e534120cb0ae015dc2cbd267ff8fb1dc6916294e,
+tree 5a4bb7f9ef26aa784867814d706fbdaa2b69d44b. The separate unpublished R1
+closeout remains 69ff618ca44fe6d57d9a1de19c3872de9f364cc8, tree
+deebede2d983fde94c8d272570e47b90a46561d3, parent 41701f7. Its three metadata
+changes were inspected and retained in its original worktree, not merged here.
+Explicit bounded R2 primary ownership was transferred by the existing release
+owner after confirming R1 return, no newer reservation, current source/index
+and unchanged reserved A3 bytes. One implementation writer; independent AI
+source review is separate from organizational registration authority.
+
+Fresh paginated e534120 readback: nine workflows terminal, four SUCCESS and
+five FAILURE; 29 successful, six failed and seven skipped jobs. P is the exact
+five-path publication refusal; I is the same sixteen fixture-identity failures
+repeated in three workflows; B is separate base-only amd64/arm64 qualification.
+No current CVE inventory or overall-green claim is inferred.
+
+The five reviewed regular text blobs are admitted only through the existing
+communication scanner exact-path mechanism: .gitignore (9 bytes),
+consumer-runner.d.mts (731), fixture.d.mts (186), output.d.mts (252) and
+examples/operations.csv (218), all under scripts/laptop-lab. Their real MJS
+declarations, generated-output exclusion and two bounded synthetic example rows
+were read and checked. Generic extensions, roots, required artifacts, size,
+prohibited extensions and every existing secret/contact check remain unchanged.
+This does not introduce a binary-signature detector or expand contact screening.
+Actual scanner controls cover reviewed files, unreviewed siblings/lookalikes,
+invented secret patterns, oversize, prohibited extension, private output and
+school-location refusal. No real secrets or records are used.
+
+Old QA was executed in this fresh owned candidate at committed e534120 before
+edits: the twelve product tests passed but only the tracked register changed,
+to SHA256 835d7e1bab887193c82a82a4b0591559a95f3d9d39b976ed28de977c8c82c78c.
+All sixteen bound-port cases then genuinely refused LOCAL_UNBOUND_SOURCE_DELTA
+during setup, before adapter assertions. The original failures and bytes/hashes
+are retained separately. No reset/restore was used to conceal the mutation.
+
+Register derivation is now separate from CLI effects. QA selects --check; the
+maintenance inventory command selects explicit --write. Default invocation
+checks; unknown/combined arguments refuse before writing. Matching, stale,
+malformed and missing checks never repair their input. Only CRLF is normalized
+for Git's Windows representation; meaningful/format drift otherwise refuses.
+Traversal and route/file ordering use documented UTF-16 ordinal comparison,
+with LF JSON output and no time/random fields. All seven original inference
+helpers are unchanged. All 365 pages remain; the resulting register is byte
+identical to the old generator's actual output above.
+
+Reconciliation is broader than a title edit: two certificate pages have six
+stale indexed property changes. The print title now follows its rendered
+Governed Graduation document heading. Graduation's index follows current
+Graduation Certificates heading, inferred roles including PRINCIPAL/ADMIN,
+VIEW_CERTIFICATES-only page literal, shared empty pattern and absent local
+form/table audit state. The former appended graduation record moves into
+canonical order. These are source-index inferences, not access grants; app,
+permission, role, schema and adapter code are untouched.
+
+New owned dependency setup reused the frozen pnpm 11.21.0 graph: 226 cached
+packages, zero downloads. Prisma 6.19.3 was generated only into this candidate.
+Package changes select the two inventory modes; dependency graph, pins, lock
+and approved build-script policy stay unchanged. Original adapter/CLI/profile/
+lifecycle/runner/reports and all 31 connection-source blobs remain unchanged.
+EXTERNAL_RUNTIME_BLOCKED and LOCAL_CONSUMER_PROFILE_NOT_AUTHORIZED remain
+unconditional. Artifact, custody, key, local profile and runtime approvals
+remain separate. Rohith's owner self-review, deferred real keys and unresolved
+production custody are preserved.
+
+Implementation controls currently pass 31 distinct new cases. An initial
+two-case test argument-table defect was corrected and retained; this was not
+an application failure. Required committed-source prelude, sixteen-case,
+full-regression, type/publication/registration and independent execution
+results are recorded only when actually observed. At this checkpoint they
+are pending, and no publication-ready or source-validation verdict is claimed.
+Diagnostics stay outside tracked inputs. The scoped current registry preserves
+foreign entries and ordering; the register's reviewed source hash above is
+explicit because the existing registry verifier does not include this config
+path in its protected-path population.
+
+Actual ERP execution and capacity measurement are NOT_EXECUTED. No Docker,
+WSL, external-drive, image, hosting, real-data, production-key or admission
+action is authorized here. Next bounded action is the committed-source real
+QA preparation sequence followed by all sixteen cases and full regression.

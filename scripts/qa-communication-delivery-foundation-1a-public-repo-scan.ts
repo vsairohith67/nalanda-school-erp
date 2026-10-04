@@ -15,6 +15,9 @@ const prohibitedExtensions = new Set([".db", ".sqlite", ".sqlite3", ".bak", ".du
 const textExtensions = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs", ".json", ".md", ".sql", ".yml", ".yaml", ".toml", ".txt", ".css", ".prisma", ".ps1", ".py", ".rs", ".html", ".xml", ".sh", ".svg"]);
 const allowedRoots = ["app", "components", "config", "docs", "lib", "prisma", "scripts", "tests", "tools/release-evidence", ".github/workflows"];
 const allowedRootFiles = new Set(["apps/nalanda-biometric-bridge/package.json","apps/nalanda-cross-platform/package.json",".env.example","middleware.ts","package.json","pnpm-lock.yaml","deploy/portable/compose.yml","Dockerfile","deploy/portable/Caddyfile","deploy/portable/profiles/local-single-node.json","deploy/portable/profiles/generic-vps.json","deploy/portable/profiles/managed-cloud-contract.json","next.config.ts","tsconfig.tools-qa-support.json","pnpm-workspace.yaml","vitest.config.ts"]);
+// R2 reviewed exact lab text blobs: output exclusion, real MJS declarations and
+// the bounded synthetic CSV. No directory/extension admission; all checks remain.
+for (const file of [".gitignore", "consumer-runner.d.mts", "fixture.d.mts", "output.d.mts", "examples/operations.csv"]) allowedRootFiles.add(`scripts/laptop-lab/${file}`);
 // Reviewed Windows auth-lifecycle source only; the native subtree and binaries
 // remain denied. Explicit files, including Cargo.lock, still receive all scans.
 for (const file of ["src-tauri/Cargo.lock", "src-tauri/Cargo.toml", "src/App.tsx", "src/auth.ts", "src/auth-lifecycle.test.ts"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
