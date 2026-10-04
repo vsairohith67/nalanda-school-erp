@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "month": "2026-08",
+  "sourceRevision": "SYNTHETIC-REVISION-1",
+  "review": { "status": "APPROVED", "reviewerReference": "SYNTHETIC-REVIEWER", "reviewedAt": "2026-09-01T00:00:00Z", "synthetic": true },
+  "staff": [
+    { "staffReference": "SYN-1", "leaves": 0.5, "lates": 0, "remarks": "Approved half day", "evidenceReferences": ["SYN-E1"] },
+    { "staffReference": "SYN-2", "leaves": 0, "lates": 1.5, "remarks": "", "evidenceReferences": [] },
+    { "staffReference": "SYN-3", "leaves": 2.5, "lates": 1, "remarks": "Approved review note", "evidenceReferences": ["SYN-E3"] }
+  ]
+}
