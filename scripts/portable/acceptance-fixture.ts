@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
-import {PrismaClient} from "@prisma/client";
+import {PrismaClient,Prisma} from "@prisma/client";
 import {servedSyntheticDatabase} from "./acceptance-target-database";
 import {hashPassword} from "../../lib/password";
 import {defaultTemplateDefinition} from "../../lib/certificate-templates";
+import {initializeSyntheticFoundation} from "./synthetic-foundation";
+import {proveEmptySyntheticTables} from "../laptop-lab/consumer-fixture-foundation";
 
 // Explicitly invoked by admitted hosted QA, never by application startup.
 async function main(){
@@ -13,11 +15,21 @@ async function main(){
  assert(!process.env.RELEASE_FEATURE_FLAGS_QA_ENABLED);
  servedSyntheticDatabase();
  let input="";for await(const chunk of process.stdin){input+=chunk.toString();assert(input.length<=2048);}
- const {password,source}=JSON.parse(input);assert(typeof password==="string"&&password.length>=48&&password.length<=128);assert(/^[a-f0-9]{40}$/.test(source));
+ const operand=JSON.parse(input),{password,source}=operand;assert(typeof password==="string"&&password.length>=48&&password.length<=128);assert(/^[a-f0-9]{40}$/.test(source));
+ if(operand.initializeEmptySynthetic!==undefined){assert.equal(operand.initializeEmptySynthetic,true);assert.equal(Object.keys(operand).sort().join(),"initializeEmptySynthetic,password,source");}
  assert.equal(process.env.NALANDA_DEPLOYMENT_ID,`portable-synthetic-${source}`);
  const passwordHash=await hashPassword(password),suffix=randomUUID();
  const db=new PrismaClient();
  try{
+  if(operand.initializeEmptySynthetic===true){
+   // Explicit small-fixture preparation only. The existing initializer retains
+   // all environment/database/opt-in/supplied-password guards. Locks and count
+   // refusal prevent its upserts from accepting an existing database.
+   await db.$transaction(async tx=>{
+    await proveEmptySyntheticTables(sql=>tx.$queryRawUnsafe(sql),sql=>tx.$executeRawUnsafe(sql));
+    await initializeSyntheticFoundation(tx);
+   },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable,timeout:30_000});
+  }
   const fixture=await db.$transaction(async tx=>{
    const school=await tx.schoolSettings.findUnique({where:{id:"school"}});
    assert(school&&/synthetic/i.test(school.schoolName),"SYNTHETIC_SCHOOL_MARKER_REQUIRED");

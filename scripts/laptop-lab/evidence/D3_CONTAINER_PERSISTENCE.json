@@ -1,0 +1,321 @@
+{
+  "task": "NPS-LAPTOP-LAB-D3",
+  "result": "D3_CONTAINER_PERSISTENCE_VALIDATED_ERP_PENDING",
+  "startingCommit": "de6b33953113e959389fa67eabf3fd8c8dfdcb11",
+  "startingTree": "2e56eb7aabd3e583fdfcd413fb3a795399bee7ad",
+  "branch": "codex/nps-laptop-lab-d1p",
+  "startedUtc": "2026-10-03T18:20:01.049Z",
+  "endedUtc": "2026-10-03T18:20:09.092Z",
+  "endpoint": {
+    "context": "desktop-linux",
+    "host": "npipe:////./pipe/dockerDesktopLinuxEngine",
+    "overridesAbsent": true,
+    "defaultUnchanged": true
+  },
+  "engine": {
+    "osType": "linux",
+    "architecture": "x86_64",
+    "cpus": 16,
+    "memoryBytes": 20815958016,
+    "driver": "overlayfs"
+  },
+  "image": {
+    "id": "sha256:774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79",
+    "repoDigest": "gcr.io/distroless/nodejs24-debian13@sha256:774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79",
+    "os": "linux",
+    "architecture": "amd64",
+    "user": "65532",
+    "entrypoint": [
+      "/nodejs/bin/node"
+    ],
+    "declaredVolumes": null,
+    "pullPolicy": "never",
+    "originBasis": "Local exact immutable reference matches retained vendor Cosign verification in docs/evidence/BACKEND_VENDOR_NODE_REMEDIATION_1A.md:33; historical authentication, not fresh scanner clearance or ERP admission.",
+    "postRunIdentityUnchanged": true
+  },
+  "source": {
+    "helperPath": "scripts/laptop-lab/container-persistence-helper.mjs",
+    "helperFileSha256": "0182b8a686757173c52d7625783aebcab89aa535f63811cf0b8d12d11579d8dc",
+    "inlineProgramSha256": "7bba953b8da4f8e3667d557b0e309205d62d665acbdbb2db1ff8c2cd79ed1ab9",
+    "executedRecipeSha256": "b5ce7dfcd60fd1928d493361976fe47f8eeb967e4a9c9e9e0e3fd02dee960f17",
+    "firstRecipeSha256": "e278a5354dcf64bbe74ad339a1dafc81ab81559da21cab0a13516bd7abdfcdbc"
+  },
+  "hostExpected": {
+    "bytes": 65536,
+    "sha256": "3e1ad9f8adf58c1ab4b4b6f5ff2f168e401400b5a55a71040704ea7fa011fc48"
+  },
+  "writer": {
+    "phase": "writer",
+    "bytes": 65536,
+    "sha256": "3e1ad9f8adf58c1ab4b4b6f5ff2f168e401400b5a55a71040704ea7fa011fc48",
+    "contentMatches": true,
+    "uid": 65532,
+    "gid": 65532,
+    "payloadMode": 384,
+    "readOnlyFailure": null,
+    "readOnlyProbeAbsent": null,
+    "fsyncExecuted": true,
+    "filesystem": {
+      "type": "61267",
+      "blockSize": "4096",
+      "blocks": "263940717",
+      "availableBlocks": "218366687",
+      "availableMiB": 852994.87109375
+    }
+  },
+  "reader": {
+    "phase": "reader",
+    "bytes": 65536,
+    "sha256": "3e1ad9f8adf58c1ab4b4b6f5ff2f168e401400b5a55a71040704ea7fa011fc48",
+    "contentMatches": true,
+    "uid": 65532,
+    "gid": 65532,
+    "payloadMode": 384,
+    "readOnlyFailure": "EROFS",
+    "readOnlyProbeAbsent": true,
+    "fsyncExecuted": false,
+    "filesystem": {
+      "type": "61267",
+      "blockSize": "4096",
+      "blocks": "263940717",
+      "availableBlocks": "218366687",
+      "availableMiB": 852994.87109375
+    }
+  },
+  "volume": {
+    "driver": "local",
+    "scope": "local",
+    "customOptionsAbsent": true,
+    "fresh": true,
+    "ownershipRecordedPrivately": true,
+    "readOnlyQuotaClaim": false
+  },
+  "stages": [
+    {
+      "phase": "init",
+      "exitCode": 0,
+      "running": false,
+      "oomKilled": false,
+      "image": "sha256:774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79",
+      "user": "0:0",
+      "network": "none",
+      "ipc": "none",
+      "pidMode": "",
+      "readOnlyRootfs": true,
+      "privileged": false,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": [
+        "CAP_CHOWN"
+      ],
+      "securityOpt": [
+        "no-new-privileges"
+      ],
+      "nanoCpus": 1000000000,
+      "memory": 268435456,
+      "memorySwap": 268435456,
+      "pidsLimit": 64,
+      "restart": "no",
+      "portBindingCount": 0,
+      "deviceCount": 0,
+      "tmpfsCount": 0,
+      "mountCount": 1,
+      "mountType": "volume",
+      "mountDestination": "/lab",
+      "mountReadWrite": true,
+      "environmentEqualsImageDefaults": true,
+      "anonymousVolumes": 0,
+      "ownershipLabelsMatched": true
+    },
+    {
+      "phase": "writer",
+      "exitCode": 0,
+      "running": false,
+      "oomKilled": false,
+      "image": "sha256:774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79",
+      "user": "65532:65532",
+      "network": "none",
+      "ipc": "none",
+      "pidMode": "",
+      "readOnlyRootfs": true,
+      "privileged": false,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": [],
+      "securityOpt": [
+        "no-new-privileges"
+      ],
+      "nanoCpus": 1000000000,
+      "memory": 268435456,
+      "memorySwap": 268435456,
+      "pidsLimit": 64,
+      "restart": "no",
+      "portBindingCount": 0,
+      "deviceCount": 0,
+      "tmpfsCount": 0,
+      "mountCount": 1,
+      "mountType": "volume",
+      "mountDestination": "/lab",
+      "mountReadWrite": true,
+      "environmentEqualsImageDefaults": true,
+      "anonymousVolumes": 0,
+      "ownershipLabelsMatched": true
+    },
+    {
+      "phase": "reader",
+      "exitCode": 0,
+      "running": false,
+      "oomKilled": false,
+      "image": "sha256:774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79",
+      "user": "65532:65532",
+      "network": "none",
+      "ipc": "none",
+      "pidMode": "",
+      "readOnlyRootfs": true,
+      "privileged": false,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": [],
+      "securityOpt": [
+        "no-new-privileges"
+      ],
+      "nanoCpus": 1000000000,
+      "memory": 268435456,
+      "memorySwap": 268435456,
+      "pidsLimit": 64,
+      "restart": "no",
+      "portBindingCount": 0,
+      "deviceCount": 0,
+      "tmpfsCount": 0,
+      "mountCount": 1,
+      "mountType": "volume",
+      "mountDestination": "/lab",
+      "mountReadWrite": false,
+      "environmentEqualsImageDefaults": true,
+      "anonymousVolumes": 0,
+      "ownershipLabelsMatched": true
+    }
+  ],
+  "writerRemovedBeforeReaderCreation": true,
+  "writerReaderDistinct": true,
+  "resourceCounts": {
+    "retest": {
+      "volumesCreated": 1,
+      "containersCreated": 3,
+      "containersRemoved": 3,
+      "volumesRemoved": 1
+    },
+    "firstAttempt": {
+      "volumesCreated": 1,
+      "stoppedContainersCreated": 1,
+      "helpersExecuted": 0,
+      "containersRemoved": 1,
+      "volumesRemoved": 1
+    }
+  },
+  "preservation": {
+    "beforeContainers": 26,
+    "afterContainers": 26,
+    "beforeRunning": 1,
+    "afterRunning": 1,
+    "allPreExistingStatesUnchanged": true,
+    "identifiers": "PRIVATE_ONLY"
+  },
+  "cleanup": {
+    "state": "COMPLETE",
+    "containersActuallyAbsent": true,
+    "volumeActuallyAbsent": true,
+    "firstAttemptContainersAbsent": true,
+    "firstAttemptVolumeAbsent": true,
+    "retainedDockerResources": 0,
+    "records": [
+      {
+        "kind": "container-remove",
+        "phase": "init",
+        "exitCode": 0,
+        "removed": true
+      },
+      {
+        "kind": "container-remove",
+        "phase": "writer",
+        "exitCode": 0,
+        "removed": true
+      },
+      {
+        "kind": "container-remove",
+        "phase": "reader",
+        "exitCode": 0,
+        "removed": true
+      },
+      {
+        "kind": "volume-remove",
+        "exitCode": 0,
+        "removed": true
+      }
+    ]
+  },
+  "firstAttempt": {
+    "result": "D3_CONTAINER_PERSISTENCE_PARTIAL",
+    "failure": {
+      "code": "ERR_ASSERTION",
+      "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   'CAP_CHOWN'\n-   'CHOWN'\n  ]\n"
+    },
+    "preStartAssertion": true,
+    "policyDenial": false,
+    "correctedDefect": "Normalize CAP_CHOWN to CHOWN for exact allowed-capability comparison; no added privilege",
+    "permittedRetestsUsed": 1,
+    "evidenceDirectory": "scripts/laptop-lab/outputs/d3-1791051003676"
+  },
+  "commands": {
+    "retestCount": 35,
+    "allRetestExitZero": true,
+    "noTimeouts": true,
+    "noLogOverruns": true,
+    "perHelperDeadlineSeconds": 60,
+    "queryDeadlineSeconds": 15,
+    "perCommandOutputLimitBytes": 262144,
+    "exactArgumentsPrivate": true
+  },
+  "evidenceDirectories": {
+    "firstAttempt": "scripts/laptop-lab/outputs/d3-1791051003676",
+    "retest": "scripts/laptop-lab/outputs/d3-retest-1791051590896",
+    "retainedBytesAtCloseout": 437657
+  },
+  "review": {
+    "state": "PASSED",
+    "scope": "Independent source and captured real execution evidence review",
+    "focusedTests": {
+      "primaryPass": 3,
+      "independentPass": 3,
+      "fail": 0
+    },
+    "independentDockerRerun": false,
+    "d1pFrameworkTestsRerun": false,
+    "findingsRemaining": 0
+  },
+  "trackerReadbacks": {
+    "pr": "VERIFIED",
+    "cardText": true,
+    "geometry": true,
+    "beforeCount": 305,
+    "afterCount": 305,
+    "unrelatedChanges": 0
+  },
+  "limitations": [
+    "Cross-container synthetic persistence only",
+    "Fsync and recreation are not power-loss proof",
+    "Read-only refusal is not comprehensive security qualification",
+    "Filesystem visibility is not VHD physical location, encryption or performance",
+    "Historical vendor authentication is not fresh scanner or ERP admission",
+    "No ERP, database, benchmark, school records, downloads, WSL/Docker restart, external write, keys, hosting, push, CI or integration"
+  ],
+  "nextStep": "Existing portable-runtime owner must supply approved laptop consumer/profile, coordinated with Task A release-input lane qualified/admitted artifact and relevant execution authorization; do not launch here",
+  "publicRepresentationR1": {
+    "originalSource": "81f34a89e906c5a132638c94ad1a5feb88b93ff5",
+    "originalPublicSha256": "192d19701e5f4f8bf37e55d2a947e9932d3b983f7e674a2920a8c3222a002fdc",
+    "reason": "Filesystem availability rendered in MiB for publication; original raw bytes and immutable D3 history retained privately. This is no new observation or repeated experiment."
+  }
+}

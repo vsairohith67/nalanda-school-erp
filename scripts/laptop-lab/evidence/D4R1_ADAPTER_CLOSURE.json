@@ -1,0 +1,123 @@
+{
+  "task": "NPS-LAPTOP-LAB-D4-R1",
+  "result": "D4_R1_VALIDATED_READY_FOR_INTEGRATION",
+  "startingSource": "4020783a752815f6066b28025e2a567f8e72ea54",
+  "startingTree": "eeea2ae0204bcf6fc1390467c71a5d4af3943958",
+  "reviewedD4Source": "be7bc8c2809e330bee8da7f07b2257464695906a",
+  "reviewedD4Tree": "febce923c7e8e5ea2f7858050301ae8fff8cd261",
+  "commonSource": "baa49c738e009f99c5e741a04bc3fe8f8862a848",
+  "commonTree": "ee2b3a2f9eb3a5b45d456eb54547a983ab5991dd",
+  "recoveryStartingSource": "a48c077cf7d803fa2e690d4fed7d0a6421924f8b",
+  "recoveryStartingTree": "d12b1745b376646fa5cba86bd9dea33a79cb9381",
+  "startedUtc": "2026-10-04T04:46:22Z",
+  "dependencySetup": {
+    "pin": "pnpm@11.21.0",
+    "command": "pnpm.cmd install --frozen-lockfile --offline",
+    "exit": 0,
+    "cachedPackagesReused": 226,
+    "packagesDownloaded": 0,
+    "manifestLockfileWorkspaceChanges": false,
+    "approvedScriptPolicyChanged": false,
+    "generatedClient": "pinned Prisma6.19.3 from existing schema; no database connection",
+    "installationLocation": "FRESH_OWNED_MANAGED_CANDIDATE",
+    "oldJunctionRemoval": "POLICY_DENIED_NOT_EXECUTED_NOT_RETRIED"
+  },
+  "closedGaps": {
+    "toolsCore": "EXACT_PREVIOUS_COMMAND_EXIT_ZERO_THREE_NATIVE_DIAGNOSTICS_GONE",
+    "publication": "EXACT_FULL_SCANNER_PASSED_RULES_UNCHANGED_CONTROLS_PRESERVED",
+    "realAdapter": "DEMONSTRATED_UNCONDITIONAL_STUB_REPLACED_BY_NORMAL_BOUND_CERTIFICATE_OPERATION",
+    "futurePreparation": "EXISTING_GUARDED_EMPTY_SYNTHETIC_FOUNDATION_OFF_FIXTURE_NORMAL_LOGIN_AFTER_READINESS",
+    "producerOperationCompatibility": "FIXED_FIVE_IMMUTABLE_HELPER_BLOBS_MATCH_REVIEWED_BYTES_BEFORE_EFFECTS_OLD_A48_IMAGE_REFUSED"
+  },
+  "historicalEvidence": {
+    "d3ExecutedPayloadAndHashes": "UNCHANGED",
+    "d2D3ExperimentsRepeated": false,
+    "futureD3Fixture": "FRESH_UUID_SAME_PROPERTIES_NOT_HISTORICAL_EXECUTED_BYTES",
+    "d1pReportExtrasFixture": "FRESH_UUID_SAME_EXCLUSION_PROPERTY",
+    "d3PublicAvailability": "DERIVED_MIB_ORIGINAL_WHOLE_JSON_PRIVATELY_RETAINED_WITH_SHA256"
+  },
+  "operations": [
+    {
+      "method": "GET",
+      "route": "/api/certificates/requests",
+      "permission": "VIEW_CERTIFICATES"
+    },
+    {
+      "method": "POST",
+      "route": "/api/certificates/requests",
+      "permission": "MANAGE_CERTIFICATE_REQUESTS",
+      "type": "BONAFIDE",
+      "retries": 0
+    }
+  ],
+  "identity": {
+    "producer": "GENUINE_SOURCE_TREE_CI_RUN_ATTEMPT_ARCHITECTURE_IMAGE_EVIDENCE",
+    "consumer": "INDEPENDENT_LOCAL_LAPTOP_TOKEN",
+    "target": "ACTUAL_SERVING_CONTAINER_PROXY_CA_DATABASE_FIXTURE_ACTOR_CURRENT_PERSISTED_SESSION",
+    "configurationHashGrantsAuthority": false,
+    "hostedDefaultsPreserved": true
+  },
+  "validation": {
+    "focused": {
+      "passed": 95,
+      "failed": 0,
+      "originalD4": 62,
+      "newAdapter": 30,
+      "producerHelperSourceControls": 3
+    },
+    "d1pAndFutureD3": {
+      "passed": 38,
+      "failed": 0,
+      "originalD1p": 35,
+      "futureD3": 3
+    },
+    "vitest": {
+      "files": 11,
+      "passed": 161,
+      "failed": 0,
+      "originalHostedPortable": 93
+    },
+    "uniqueSourceCases": 294,
+    "overlappingRerunsAdded": false,
+    "exactToolsCore": "PASS",
+    "affectedTestsTypecheck": "PASS",
+    "narrowConsumerTypecheck": "PASS",
+    "fullPublicationScanner": "PASS",
+    "gitSafety": "PASS",
+    "sourceRegistration": "PASS",
+    "classification": "HARNESS_ONLY_CONTROLLED_SOURCE_AND_HARMLESS_CHILD_NOT_ERP_PERFORMANCE",
+    "registeredProtectedFiles": 334
+  },
+  "review": {
+    "state": "INDEPENDENT_SOURCE_REVIEW_CLEAR",
+    "organizationalApproval": false,
+    "independentlyRerunDistinctTests": 256,
+    "shippingFilesUnchanged": 31
+  },
+  "ownership": {
+    "state": "EXPLICIT_EXCLUSIVE_PRIMARY_TRANSFER_WITH_THREE_NARROW_AMENDMENTS",
+    "preservedA3UnstagedSha256": "7725b5b23565871b81630e8eb0f4928ef4f021897ca0178c5fd11aab54ba480c",
+    "competingWriter": false
+  },
+  "integration": {
+    "state": "LOCAL_REVIEW_COMPLETE_EXPLICIT_TRANSFER_OBTAINED_INTEGRATION_PENDING",
+    "wholeDonorMerge": false,
+    "donorRegistryReplacement": false,
+    "mainMerged": false
+  },
+  "runtime": {
+    "artifactQualification": "GENUINE_EVIDENCE_REQUIRED",
+    "assertRuntimeAdmission": "EXTERNAL_RUNTIME_BLOCKED_UNCONDITIONAL_SOURCE_HOLD_UNCHANGED",
+    "localAuthorization": "LOCAL_CONSUMER_PROFILE_NOT_AUTHORIZED_UNCONDITIONAL_SOURCE_HOLD_UNCHANGED",
+    "adapter": "IMPLEMENTED_EXECUTION_GATED_NO_MEMORY_FALLBACK",
+    "profileApproved": false,
+    "artifactAdmitted": false,
+    "actualErp": "NOT_EXECUTED",
+    "laptopCapacity": "NOT_EXECUTED",
+    "signingKeys": "REAL_KEYS_DEFERRED_NO_GENERATION_OR_PROMOTION",
+    "productionCustodyRetention": "UNRESOLVED",
+    "realDataAccess": false
+  },
+  "elapsedInterpretation": "Observed wall intervals retained privately, not active-hour or model-account attestation. Overlapping review intervals are not added.",
+  "nextExecution": "Existing bounded CLI runtime with exact approved profile/hash only after genuine inputs and reviewed admission/authorization source amendments; not executed here."
+}
