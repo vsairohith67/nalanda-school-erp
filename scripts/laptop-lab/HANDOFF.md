@@ -623,7 +623,7 @@ duplicate/stale-source/session/cancelled results cannot count as success.
 | Enforcement point | Current behavior | Missing input or source amendment | Existing owner | Proof |
 | --- | --- | --- | --- | --- |
 | Pinned dependency/typecheck | Intended packages installed, exact check passes | None for this owned source candidate | Laptop lab | Frozen offline install and tools-core exit0 |
-| Full publication | Synthetic fixture/representation collisions corrected | None for local source; inspect combined candidate | Laptop lab / release lane | Exact scanner and refusal controls |
+| Full publication | Synthetic fixture/representation collisions corrected | None for local and combined source | Laptop lab / release lane | Exact scanner and refusal controls |
 | qualifyProducer / realSource / verifyArtifactEvidence | Genuine source/tree/run/attempt/architecture/image/scanner binding plus five reviewed operation helper blobs | Compatible producer source and genuine raw CI artifact evidence; old a48 image lacks these contracts; unresolved findings remain blocking | Existing artifact producer / release lane | Real CLI refuses missing raw evidence before effects; missing/changed helper bytes refuse PRODUCER_OPERATION_SOURCE_REQUIRED |
 | assertRuntimeAdmission / RUNTIME_ADMISSION_HOLD | Unconditional EXTERNAL_RUNTIME_BLOCKED retained | Reviewed source-level admission amendment, qualified artifact and authorized execution; JSON cannot clear it | Existing portable/release owner | Symbol and source refusal tests unchanged |
 | REAL_PORTS.authorize | Unconditional LOCAL_CONSUMER_PROFILE_NOT_AUTHORIZED retained | Separately approved exact local profile and reviewed enforcing amendment; producer receipt grants no consumer authority | Existing portable owner / Rohith | Independent identity/authorization tests |
@@ -654,3 +654,53 @@ One next execution step, only after the stated genuine inputs and reviewed sourc
 amendments exist: run the existing bounded
 `node scripts/laptop-lab/cli.mjs runtime --profile ABSOLUTE_APPROVED_PROFILE --expected-profile EXACT_APPROVED_PROFILE_SHA256`.
 This continuation does not execute it.
+
+### Managed serial integration checkpoint
+
+The reviewed local donor is79c2701aca2f0a39d8746e504c8d3648e447ca4b,
+tree5af0ef0e59dd752250ccf852d1366095922380b1. Its complete necessary
+delta from commonbaa49c738e009f99c5e741a04bc3fe8f8862a848 is57 files:
+47 existing lab source/evidence paths, five reserved portable paths, and five
+new focused test files. Private outputs and the donor registry were excluded.
+The immutable revision-two manifest retains every normalized file hash and
+patch hash. All57 imported files matched exactly before the checkpoint.
+
+Actual recoverya48c077cf7d803fa2e690d4fed7d0a6421924f8b was preserved;
+its five shared starting blobs equal the true common source, so the reviewed
+patch applied without conflict. Combined registration was recomputed from its
+current299 records to346:47 new lab records, five existing shared hash updates,
+all foreign records and their order preserved. Source, workflows, pins/lockfile,
+schema, permissions, OFF flags, A2/A3 safeguards and admission holds outside
+the exact58-path manifest (57 source/test/evidence plus registry) are unchanged.
+
+The local integration checkpoint is141d6210bacfe4c99f0810520bf9e0794fc82aaa,
+treed22f295414b068034730f64ddcc94accb7ce76b7. Its own pinned frozen offline
+setup reused226 packages with zero downloads and generated the existing pinned
+Prisma client without database access. Against its clean immutable HEAD, all294
+unique source/control cases and exact tools-core, tests-g-l and narrow consumer
+typechecks pass. This does not add reruns to the earlier294 population.
+
+A first uncommitted preparation run is retained as95 attempted/38 passed/57
+failed: the existing identity guard correctly refused old HEAD plus unbound
+historical lab files, and the new owned diagnostics root lacked the original
+runner marker. Review cleared the immutable source checkpoint, and the exact
+marker was exclusively created after proving all root contents were newly owned.
+The clean committed rerun passes without changing either safeguard.
+
+Final combined publication/registration/Git checks, independent readback and the
+single consolidated source push are recorded when observed. This checkpoint
+does not claim remote CI completion or runtime/organizational approval. Public
+source CI remains separate from the two unconditional runtime holds. The reserved
+primary A3 HANDOFF remains unstaged with its original verified SHA256; it is never
+part of this integration. Actual ERP execution and capacity remain NOT_EXECUTED.
+
+Prepublication source review and checks are now complete: independent combined
+95 focused and161 eleven-file cases, exact tools-core, full568-path scanner,
+346-file registration/four historical heads/four backup contracts, Git safety,
+and ordinary CLI plan/refusal all pass. All31 shipping hashes match the reviewed
+donor and stayed unchanged during validation. The independently rerun population
+is256 distinct cases; the complete primary population remains294. Current346
+registration and historical donor334 are separately labelled. One consolidated
+reviewed push and ordinary exact-source CI remain pending at this immutable
+publication checkpoint. No product/runtime/native/signing/deployment workflow
+was enabled, and the existing OCI source hold remains unconditional.

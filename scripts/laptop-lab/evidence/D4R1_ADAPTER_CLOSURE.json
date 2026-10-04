@@ -1,6 +1,6 @@
 {
   "task": "NPS-LAPTOP-LAB-D4-R1",
-  "result": "D4_R1_VALIDATED_READY_FOR_INTEGRATION",
+  "result": "D4_R1_LOCAL_COMBINED_SOURCE_VALIDATED_CI_PENDING",
   "startingSource": "4020783a752815f6066b28025e2a567f8e72ea54",
   "startingTree": "eeea2ae0204bcf6fc1390467c71a5d4af3943958",
   "reviewedD4Source": "be7bc8c2809e330bee8da7f07b2257464695906a",
@@ -86,10 +86,11 @@
     "gitSafety": "PASS",
     "sourceRegistration": "PASS",
     "classification": "HARNESS_ONLY_CONTROLLED_SOURCE_AND_HARMLESS_CHILD_NOT_ERP_PERFORMANCE",
-    "registeredProtectedFiles": 334
+    "registeredProtectedFiles": 346,
+    "historicalDonorRegistrationFiles": 334
   },
   "review": {
-    "state": "INDEPENDENT_SOURCE_REVIEW_CLEAR",
+    "state": "INDEPENDENT_LOCAL_AND_COMBINED_SOURCE_REVIEW_CLEAR",
     "organizationalApproval": false,
     "independentlyRerunDistinctTests": 256,
     "shippingFilesUnchanged": 31
@@ -100,10 +101,28 @@
     "competingWriter": false
   },
   "integration": {
-    "state": "LOCAL_REVIEW_COMPLETE_EXPLICIT_TRANSFER_OBTAINED_INTEGRATION_PENDING",
+    "state": "COMBINED_CHECKS_AND_INDEPENDENT_REVIEW_PASSED_ONE_PUSH_CI_PENDING",
     "wholeDonorMerge": false,
     "donorRegistryReplacement": false,
-    "mainMerged": false
+    "mainMerged": false,
+    "donorSource": "79c2701aca2f0a39d8746e504c8d3648e447ca4b",
+    "donorTree": "5af0ef0e59dd752250ccf852d1366095922380b1",
+    "validatedCheckpoint": "141d6210bacfe4c99f0810520bf9e0794fc82aaa",
+    "validatedTree": "d22f295414b068034730f64ddcc94accb7ce76b7",
+    "necessarySourcePaths": 57,
+    "combinedManifestPaths": 58,
+    "priorRegistryRecords": 299,
+    "combinedRegistryRecords": 346,
+    "foreignRecordsAndOrderPreserved": true,
+    "unchangedWorkflowsPinsSchemaPermissionsFlags": true,
+    "priorPreparationAttempt": {
+      "total": 95,
+      "passed": 38,
+      "failed": 57,
+      "retained": true,
+      "reason": "IMMUTABLE_SOURCE_BINDING_AND_NEW_OWNED_OUTPUT_ROOT_PREPARATION",
+      "sourceSafeguardsChanged": false
+    }
   },
   "runtime": {
     "artifactQualification": "GENUINE_EVIDENCE_REQUIRED",
