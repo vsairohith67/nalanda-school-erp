@@ -1058,3 +1058,228 @@ Rohith is the explicitly owner-designated private-preview approver and server/si
 Real input qualification additionally needs every supported vendor/tool/base/Node-library proof and current complete scanner evidence, original package archives/metadata and native member associations. Debian metadata must remain valid at the actual verification clock; absent or expired `Valid-Until` is refused because no historical-snapshot exception is registered. Rohith's designation cannot waive those findings or create supplier attestations. Inputs requiring an unapproved redirect or unsupported native origin remain refused.
 
 ARKAVIQ OPC incorporation is in progress; no verified final legal name, registration, DUNS or store account is asserted. Company DSC, Apple/Play credentials and domain TLS are separate from backend evidence signing. Future participants are Rohith, director, principal and accountant; no accounts/roles are created. Available Windows/Android/iPhone/iPad devices are not approved resettable test targets; no Mac is available. Suitable already-owned hardware or an explicitly approved temporary environment precedes measured hosting selection. NPS and ARKAVIQ/personal costs remain separate; Hyperscale remains a quote. No spending, DNS/tunnel/public access, real data, store publication or deployment follows from this sheet.
+
+
+### A3 owner-assisted setup — unsigned proposal, 3 October 2026
+
+**REGISTRATION_PROPOSAL_PREPARED_APPROVAL_PENDING.** A2 implementation is preserved. Local and PR28 source: `a48c077cf7d803fa2e690d4fed7d0a6421924f8b`; tree `d12b1745b376646fa5cba86bd9dea33a79cb9381`; PR28 OPEN/DRAFT. This is an appended local setup worksheet, not a source push or approval. The same Task A chat remains the sole writer; no competing active release-input writer was observed in app/worktree/ownership checks.
+
+**A2 CI closed by readback, not rerun:** all nine exact-head PR workflows completed at attempt1: eight SUCCESS, Portable Staging FAILURE. Refreshed jobs:33 SUCCESS,2 input-qualification FAILURE,7 SKIPPED. Portable run37125180560 has server/database SUCCESS, amd64 and arm64 base-only qualification FAILURE, and six runtime SKIPs. The seventh skip is the separate optional Windows native-evidence producer in Cross-platform run37125180519. No retry/dispatch. The previous artifact-transfer403 remains; unavailable reports were not inspected, current CVE counts/causes were not inferred, and historical11-HIGH/five-CVE counts are not current.
+
+#### Exact contract map and inactive proposal
+
+The public-metadata-only draft is retained locally at `tmp/arkaviq-release-inputs-1a/a3-registration-proposal.public-draft.json`; owner-only private-copy storage awaits the specific folder confirmation below. Do not add sensitive details to that draft.
+
+The unsigned review proposal lists the exact registration fields below, with unknown real values `null` and unknown signer list empty. This is intentionally **not valid registration JSON**. Its review wrapper is not a new accepted contract. Never copy it into `scripts/portable/product-trust-registration.json`, which remains literal `null`.
+
+| Actual consumer / fields | Verified requirement | Missing input, owner action and completion proof |
+| --- | --- | --- |
+| `product-trust-policy.ts`: `contract`, `namespace`, `generation`, `validUntil` | `NALANDA_BUILD_AUTHORITY_V1` / `PRODUCTION`; positive safe-integer generation; Unix epoch **milliseconds** | Actual generation/validity chosen after review; genuine approval plus reviewed configuration. No invented times. |
+| `authority` and `attestors[]`: `id`, `algorithm`, `publicKey`, `notBefore`, `notAfter`, `revoked` | Ed25519; lowercase SHA256 of DER SPKI, not PEM-file hash; distinct IDs, active/unrevoked keys, PEM <=256 characters | Identify already approved signing workflow first; otherwise confirm exact protected target/recovery and owner-operated procedure below. Proof: actual public PEMs/computed IDs, key validity/revocation and recovery record. Two keys do not establish two reviewers. |
+| `ownerApproval`, `custodyApproval` | Genuine HTTPS references, <=500 non-whitespace characters after scheme | Actual approvals after review; planning comments/forms/prompts are not evidence. Rohith is already business approver/custodian. Independent technical reviewer person/role remains missing outside the machine schema. |
+| `custodyDirectory` / `privatePath()` / `retainProductEvidence()` | Canonical absolute Linux directory, same UID as non-root runner; no symlink/group/other access;0700 directory,0600 evidence,0500 executable bootstrap; single-link regular files; exclusive-create and file+directory fsync | Approved store/admin, private runner attachment, readers, release-specific retention/recovery. Proof: specifically authorized ownership/atomicity/persistence probes plus custody approval. No target/attachment supplied or verified. |
+| `debianKeyringSha256`, `debianSigners[]` | SHA256 and1–10 independently trusted uppercase40–64-hex signer IDs | Authenticated real distribution trust evidence; no generated fixture key, missing/expired Valid-Until or historical-scan substitute. |
+| `bootstrap.nodeSha256`, `bundleSha256`, `manifestSha256` | Three SHA256 fields; manifest source checked against Git, bootstrap manifest `activation:false` | Qualified native Node/bundle/manifest missing. Windows test bundle is not production qualification. One registration pins **one native Node hash**, so both architecture binaries cannot share it. Plan one architecture initially, or separately authorize/review architecture-specific policy changes before real operation. |
+| Separate signed grant: `identity`, `workflowRef`, `workflowSha`, `subjectSha256`, recipe/lock/material/tool/image/database bindings, operation/times | Repository `vsairohith67/nalanda-school-erp`; workflow `.github/workflows/portable-staging-foundation.yml`; job `backend-build-scan`; native GitHub-hosted Linux amd64/arm64 only | Future run/attempt/architecture/workflow identity and qualified payload bytes missing. Obtain independently from reviewed Git, actual runner metadata and input review, not from the envelope under judgment. No grant in A3. Maximum implemented grant life is6hours; actual times remain unset. |
+
+Agent-calculated committed-byte baselines (owner need not calculate):
+- Dockerfile SHA256 `da54dba3adb324e49b8c5cfed113cef9437f2df72e42c9c99c301c97596f8711`.
+- pnpm-lock.yaml SHA256 `53f09ce7305a992829ac45e40fdc5f0f7fcfb6f4f73006a9e02df00383b60f5c`.
+- Workflow **file** SHA256 `a142519e3c421d3d82cc3b4d27cf4b0808c99a2ad053be74de3efa6da2eb2525`, not `GITHUB_WORKFLOW_SHA`.
+
+These identify the reviewed baseline only. Adding registration/workflow changes creates a new source/tree: derive and review again before any later grant. Completed CI run IDs are not future operation subjects. `ACQUIRE_DEPENDENCIES_ONLY` and `BUILD_SCAN_ONLY_NOT_ADMITTED` require separate later approvals/fresh grants; neither admits runtime.
+
+#### Owner-local key procedure — prepared, NOT EXECUTED
+
+Installed version/help/provider metadata inspected: `C:\Program Files\Git\usr\bin\openssl.exe`, OpenSSL3.5.7 with Ed25519; Node24.19.0. No key/credential search.
+
+First identify an existing approved Ed25519 workflow by public reference, or state none. This is the single fallback procedure, requiring **specific confirmation of the exact existing owner-controlled key directory**, access protection and encrypted recovery arrangement before generation. The key directory must be separate from the model-readable proposal, outside Git/worktrees, build contexts, synced shares and CI. Use an owner-operated terminal without recording/transcription/screenshots. The assistant does not run private-key commands. Passphrases go only into OpenSSL's non-echoing prompt, never arguments, environment, redirected input or chat.
+
+After that confirmation, Rohith uses this block locally. It does not create directories/change ACLs and refuses existing outputs. Confirm the target has no reparse/symlink ancestors or competing writer. If a command fails, stop and retain partial files; do not overwrite/delete to retry.
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$opensslExe = 'C:\Program Files\Git\usr\bin\openssl.exe'
+$keyDirectory = (Resolve-Path -LiteralPath (Read-Host 'Exact approved existing key directory')).ProviderPath
+$names = @('authority.private.pem','authority.public.pem','attestor.private.pem','attestor.public.pem')
+foreach ($name in $names) {
+    if (Test-Path -LiteralPath (Join-Path $keyDirectory $name)) { throw 'Existing output: stop; no overwrite.' }
+}
+Push-Location -LiteralPath $keyDirectory
+try {
+    & $opensslExe genpkey -algorithm ED25519 -aes-256-cbc -out authority.private.pem -outpubkey authority.public.pem
+    if ($LASTEXITCODE -ne 0) { throw 'Authority creation incomplete; retain files.' }
+    & $opensslExe pkey -in authority.private.pem -check -noout
+    if ($LASTEXITCODE -ne 0) { throw 'Authority consistency check failed.' }
+    & $opensslExe genpkey -algorithm ED25519 -aes-256-cbc -out attestor.private.pem -outpubkey attestor.public.pem
+    if ($LASTEXITCODE -ne 0) { throw 'Attestor creation incomplete; retain files.' }
+    & $opensslExe pkey -in attestor.private.pem -check -noout
+    if ($LASTEXITCODE -ne 0) { throw 'Attestor consistency check failed.' }
+} finally { Pop-Location }
+```
+
+Private PKCS#8 files are encrypted by the proposed command; permissions alone are not encryption. Installed `-outpubkey` exports the corresponding public key without a signature/grant. Only the two exported `.public.pem` files may enter the approved review record. Do not promote fixtures or company/store/TLS keys.
+
+After public exports exist, this **public-only** command checks Ed25519, distinct roles and the exact SPKI identifier used by the resolver. No signature, network, registration, receipt or write occurs. It rejects oversized/non-public input and prints public metadata only.
+
+```powershell
+$authorityPublic = Read-Host 'Approved exported authority.public.pem path'
+$attestorPublic = Read-Host 'Approved exported attestor.public.pem path'
+$publicCheck = @'
+const fs=require("node:fs"),c=require("node:crypto");const a=process.argv.slice(2);if(a.length!==2)throw Error("TWO_PUBLIC_FILES_REQUIRED");const out=a.map((p,i)=>{const s=fs.lstatSync(p);if(!s.isFile()||s.isSymbolicLink()||s.size>256)throw Error("PUBLIC_FILE_REQUIRED");const pem=fs.readFileSync(p,"utf8");if(!/^-----BEGIN PUBLIC KEY-----\r?\n[A-Za-z0-9+/=\r\n]+\r?\n-----END PUBLIC KEY-----\r?\n?$/.test(pem))throw Error("PUBLIC_PEM_ONLY");const k=c.createPublicKey(pem);if(k.asymmetricKeyType!=="ed25519")throw Error("ED25519_REQUIRED");return {role:i?"attestor":"authority",publicKey:pem,id:c.createHash("sha256").update(k.export({format:"der",type:"spki"})).digest("hex")};});if(out[0].id===out[1].id)throw Error("ROLE_COLLISION");console.log(JSON.stringify(out,null,2));
+'@
+$publicCheck | node - $authorityPublic $attestorPublic
+```
+
+Recovery is owner-operated: encrypted key backup in an approved separate store; restore into an explicitly approved isolated location; use `openssl pkey -in <recovered-file> -check -noout` and `-pubout -out <new-public-file>`, then compare public fingerprints with the same public-only procedure. Refuse existing outputs. Record result/date/reviewer/public ID only, never a recovery secret. None occurred here. On loss/compromise, block operations and obtain reviewed key revocation/rotation and generation change. Never reuse a consumed grant. Restoring evidence without all generation receipts cannot resume that generation; review revocation/new generation first.
+
+Interfaces verified from installed help and official [genpkey](https://docs.openssl.org/3.5/man1/openssl-genpkey/), [pkey](https://docs.openssl.org/3.5/man1/openssl-pkey/) and [passphrase prompting](https://docs.openssl.org/3.5/man1/openssl-passphrase-options/) documentation. These are prepared instructions, not executed key setup.
+
+#### Custody operability and one proposed arrangement
+
+**NOT_VERIFIED: no approved runner-reachable durable POSIX store.** Known Windows hardware is not the native production builder. Current workflow runs `backend-build-scan.py --base-only` and has no durable mount, bootstrap provisioning, private input staging or grant delivery. No storage probe/configuration/mount occurred.
+
+The ignored Task A folder grants inherited read/execute to `MSI\CodexSandboxUsers` as well as owner/SYSTEM/Administrators. Its ACL was inspected, not changed. Do not place keys or sensitive infrastructure locators there or in this worksheet. An ignored C: path, ephemeral runner disk, artifact or HTTPS link does not prove production custody. Encryption/backup remain unverified.
+
+**One proposed setup, not an approved installation:** a dedicated private directory on an already owner-approved durable Linux POSIX store, mounted at the same canonical absolute path by each permitted native GitHub-hosted runner. A private NFSv4 export is the candidate interface, **unvalidated** until same-UID0700/0600, exclusive-create, file/directory fsync, persistence, encrypted transport and encrypted recovery are proven. No actual server/export/private attachment exists in supplied evidence. Rohith identifies an existing store/admin; the administrator and technical reviewer approve runner attachment and recovery. If capacity/private connectivity is absent, cost/account/network approval and reviewed implementation are separate prerequisites. Do not expose the laptop, buy a host, enroll storage, create a tunnel or substitute self-hosted/WSL execution.
+
+Before probes, confirm the exact target/private attachment, administrator, permitted runner UID/architecture, readers, actions and retention. The bounded probe plan is a new dedicated directory and tiny non-sensitive0600 file: exclusive-create, fsync file+directory, second exclusive-create must fail, reconnect from another permitted runner and verify ownership/persistence. No real `authorization.json`/`consumed-*` names or school-data/DB access. Retain probe residue pending approved disposition. A smoke test is not backup/disaster-recovery proof.
+
+Fixed layout and sequencing:
+- Registered custody: native `node`, `product-build-scan.mjs`, `bootstrap-manifest.json`, later `authorization.json`; `consumed-<operation>-<run>-<attempt>-<architecture>.json` plus acquired/material/product evidence.
+- Caller reads `private-prebuild-evidence/envelope.json` and `private-prebuild-evidence/blobs/<sha256>` under checkout. Future private staging must preserve durable originals, use real canonical directories, and remain outside enumerated build inputs/publication. No staging now.
+- Fixed `authorization.json` requires serialized operations across consumers sharing custody, preserving original signed inputs before replacement. Matrix max-parallel1 does not serialize separate runs: current concurrency is per source SHA. Guards fail on replacement; they do not provide storage/scheduling.
+- Keep receipts throughout their registration generation and prevent recovery rollback from restoring a reusable grant. B1's30-day school-data proposal is not release-evidence retention.
+
+These are concrete setup/design dependencies; no A2 algorithm, trust framework, acceptance threshold or consumer policy changes are made.
+
+#### Safe-check boundary and ONE owner decision form
+
+No standalone proposal/schema-only or custody-only CLI exists in inspected package/portable entrypoints. `resolveInputPolicy()` is pure but requires signed authorization and observed subject; it cannot validate an incomplete registration alone. `loadProductionInputPolicy()` reads live registration/custody/authorization and runner/Git state. Neither was called, and no grant was fabricated.
+
+`node scripts/portable/product-bootstrap.mjs <new-owned-output>` writes review bundle files, not proposal validation; not rerun. Python backend and Node product entrypoints may acquire/build/consume a grant, and `--base-only` performs real registry/scanner work. No supported `--dry-run`/`--validate-proposal`/safe `--help` exists. None was invoked. Minimal optional future change: expose the existing registration shape/public-key checks through a reviewed read-only interface without live loader, grant, write, network or child launch. No helper/framework added here.
+
+Complete one consolidated decision; public references only in chat, sensitive locators only in an approved private record:
+1. **Private review record:** approve/decline creation of `C:\Users\rohit\AppData\Local\ARKAVIQ-Release-Registration-A3-20261003` (currently absent), with inherited access removed only on that new folder and access for Rohith/SYSTEM only. Unsigned proposal only, no keys/production evidence. Windows review storage is not Linux production custody. Creation/ACL changes remain unapproved.
+2. **Signing:** existing approved Ed25519 workflow/public reference, or `none — defer new keys`. Generation remains deferred until an exact separate protected key target, encrypted recovery and owner-local action are specifically confirmed.
+3. **Store:** approved existing Linux store reference, administrator/private runner-access arrangement, and release-evidence reader/retention/recovery policy reference, or `none/not decided`. No mount/write/probe authorized implicitly.
+4. **Technical reviewer:** actual independent person/role and process. Rohith is already business approver/custodian; no approval date/reference is invented.
+
+**Separate states:** public-key correspondence NOT_PERFORMED; proposal schema INCOMPLETE/NOT_VALIDATED; reviewed source baseline VERIFIED, future subject UNBOUND; storage/custody NOT_VERIFIED; independent technical approval PENDING; activation NOT_PERFORMED; materials qualification NOT_ESTABLISHED; grants/acquisition/product/runtime NOT_PERFORMED. Existing source tests were not repeated. No push/cosmetic CI.
+
+**ONE next operation:** following the consolidated decision, create only the specifically approved private review folder and save the unsigned proposal. Real keys, production storage changes/probes, authority activation and real operations remain separate consent boundaries.
+
+#### A3 owner response and permitted review-folder setup
+
+Rohith explicitly approved creation of the named Windows review folder and owner/SYSTEM-only access, solely for the unsigned proposal. That action is now complete: folder inheritance disabled, exactly owner and SYSTEM access verified on folder/file, and proposal content read back. No existing directory ACL was changed. The private review copy is authoritative for current decisions; the earlier public-metadata-only draft is retained as history. This is review storage, not approved signing-key or Linux production-evidence custody; encryption/backup were not established.
+
+Owner answers recorded: no known approved Ed25519 signing workflow; **defer real keys**. Durable Linux evidence store/administrator and release-evidence access/retention/recovery remain **not decided**. Rohith explicitly designates himself as the **sole technical reviewer** as well as preview approver and credential custodian. This is **owner self-review**; no independent review or completed technical approval is asserted. The reviewer is named, not unassigned. Machine approval references and all missing real identities remain null.
+
+Status remains **REGISTRATION_PROPOSAL_PREPARED_APPROVAL_PENDING**. Only the approved private review folder/file were created and the proposal updated. No keys, grants, production custody configuration/probes, registration activation, acquisition, product build, runtime, source push or CI rerun. Next: Rohith reviews the proposal's still-undecided production custody arrangement and its required runner access, retention and recovery; no provider or production target is selected automatically.
+
+
+
+
+## A4-R1 — Windows custody qualification and source publication (4 October 2026)
+
+Result: A4_WINDOWS_CUSTODY_VALIDATION_PARTIAL. Exact-source normal CI and final claims review are complete; required hosted custody/source qualification remains incomplete, and independent base failures remain. Earlier local qualification retains its original source attribution.
+
+Published corrective source 0aa1462e3758b178e2a0fb626c63fb1b80236c87, tree 0b20ce295b2717ad99f8e9a0ff36e5bd13147692; PR28 OPEN/DRAFT. Starting published baseline 2113fa17bcda1acfb3edf5fa0d6ca9c2a21e8c7c/tree c0aca53c31abef391ce4e4f6390325b57ce8bcdb; preserved earlier local checkpoint c854d69320077eb1f2bd8a0a302693c37a970abb/tree268bdf07ce9ce96a2e12f1833454bd87872d00b1. Narrow reviewed corrections 9cec542e8537746c0c408838fba25224e9a91d87/tree896c9c130cdc0cc2fca0dc4546e1019b562c9e47 and b20b28d; no other lane integrated. The final delta is exactly19 paths:
+
+- M config/recovery-integration-source-delta.json
+- M scripts/laptop-lab/cli.mjs
+- A scripts/laptop-lab/consumer-authorization.ts
+- M scripts/laptop-lab/consumer-connection.ts
+- A scripts/laptop-lab/consumer-custody.ps1
+- A scripts/laptop-lab/consumer-host.ts
+- M scripts/laptop-lab/consumer-identity.ts
+- M scripts/laptop-lab/consumer-lifecycle.ts
+- M scripts/laptop-lab/consumer-plan.ts
+- M scripts/portable/artifact-handoff.ts
+- A scripts/portable/local-runtime-authorization.ts
+- A scripts/portable/local-runtime-trust-registration.json
+- M scripts/portable/producer-process.ts
+- M scripts/portable/product-trust-policy.ts
+- M tests/final-corrected-scope-acceptance.test.ts
+- M tests/laptop-consumer-process-input.test.ts
+- A tests/laptop-local-authorization.test.ts
+- A tests/laptop-local-custody.test.ts
+- A tests/laptop-local-host.test.ts
+
+Actual Windows PowerShell5.1.26100.9444 Desktop x64 FullLanguage, current non-administrative account: effective Restricted/all five scopes Undefined before and after. An inherited bundled module autoload failed with AuthorizationManager check failed; native signed Security-module diagnostics succeeded. No managed policy or tool denial was observed; no historical causation beyond these retained observations is asserted. Helper unsigned/unmarked. The human explicitly approved one dedicated Process RemoteSigned/native-module-path session, including inheriting children, for at most two hours. No production launcher or persistent policy change. Actual helper process metadata confirmed the session.
+
+The unchanged actual helper SHA256 febabe47570aee5623e6f4bdf06c44d449d2b515808c6c0479a6b740fb925a4d ran all13 existing cases from fresh task-owned wrapper directories against simulated custody paths using controlled OS metadata functions. This establishes validation/refusal logic, not actual production ACL/volume/durability approval. Per-case process metadata, source/helper/wrapper hashes and exits are retained privately.
+
+| Case | Expected helper exit | Actual helper exit | Assertion |
+| --- | ---: | ---: | --- |
+| exfat | 1 | 1 | PASS |
+| replay | 1 | 1 | PASS |
+| valid-verification | 0 | 0 | PASS |
+| unprotected | 1 | 1 | PASS |
+| missing-inheritance | 1 | 1 | PASS |
+| valid-inspection | 0 | 0 | PASS |
+| remote-drive | 1 | 1 | PASS |
+| wide-acl | 1 | 1 | PASS |
+| wrong-volume | 1 | 1 | PASS |
+| bad-receipt | 1 | 1 | PASS |
+| foreign-owner | 1 | 1 | PASS |
+| foreign-sid | 1 | 1 | PASS |
+| reparse | 1 | 1 | PASS |
+
+Two positive cases emitted the genuine custody-check contract;11 negatives emitted genuine LOCAL_CUSTODY_REFUSED with exit1. Historical13 loader-blocked outcomes remain separate. First unchanged approved suite2PASS/11FAIL exposed outer test-wrapper exit propagation; exact failing evidence retained. The narrow test fix propagates LASTEXITCODE and records real helper execution; helper, existing refusal assertions and timeout unchanged; exact exit-code assertions added. Corrected suite13PASS0SKIP in7.73s. First full9cec regression3321PASS/1FAIL/3qpdfSKIP (1489.56s) exposed the existing skip-disclosure guard; reviewed b20 explicitly admits exactly one Windows platform guard for this file, retaining focus/other-skip protection. Affected positive/negative tests21PASS0SKIP.
+
+Earlier clean b20 qualification: 19 recorded phases, all exit0/errornull, clean source/tree before/after. Fresh synthetic migration/seed; genuine security/pilot/onboarding/product QA; combined232PASS and connected Node95PASS0SKIP; tools-core/tests-g-l/consumer/affectedtests-a-f types; full3322PASS0FAIL/3 existing qpdfSKIP,324filesPASS/1SKIP(325),2275.39s; exact353-file source registration/4heads/4contracts; four publication scanners and Git safety PASS. Populations overlap and are not summed. Ordinary production CLI absent-input and forged-CI refusal cases PASS before effects. Test-only positive paths remain unavailable to ordinary production inputs; real registration remains null.
+
+Independent read-only source reviewer accepted the b20 delta and execution claims, observed review13:53:20–13:53:47UTC; reviewer executed0tests. This is AI source/evidence review, not independent organizational credential/custody approval or a model-identity attestation.
+
+Test session parent created12:18:52.883528UTC, closed13:54:15.341518UTC; independently verified13:56:18.864UTC (95.3743minutes). No owned inheriting processes remain; default effective Restricted/all5Undefined verified. No unrelated processes terminated/persistent changes. New owned synthetic reports/wrappers/DBs and historical/denied evidence retained privately; no broad cleanup.
+
+Primary ff-only integration14:01:39.336–14:01:43.859UTC; one ordinary consolidated source push verified 2026-10-04T14:11:03.276Z. Original A3 and D4-R2 handoffs preserved byte-for-byte and unstaged at integration/push, no documentation-only push. Prior unpublished69ff618 and completed P1/mobile/certificate/K30 streams remain separate. Actual final local QA sequence13:05:29.105–13:49:53.193UTC (phase receipts authoritative; overlaps not summed). First b20 normal CI is terminal and preserved: nine attempt1 workflows, one success/eight failures; 42 jobs =24 success/11 failure/7 skipped,14:07:15–14:33:45UTC, observed14:40:23.369UTC. Nine source regressions failed in the authorization CLI and/or Windows custody tests; two independent backend input-qualification failures retained BUILD_SCAN_ONLY_NOT_ADMITTED. No fresh CVE inventory is inferred. No duplicate dispatch/unchanged retry.
+
+Resolver implemented; authority NOT_REGISTERED; real materials NOT_QUALIFIED; product NOT_BUILT/NOT_SCANNED; runtime NOT_ADMITTED/NOT_EXECUTED. No exact product OCI/platform/config/layer identities exist from this assignment. Six mandatory held job definitions (oci-image, oci-release-index, portable-stack, distributed-runtime, object-storage-and-recovery and full-synthetic-acceptance) remain distinct from the separately executed server/database source stage and optional native-evidence producer; skips never count as passes. Rohith remains designated preview approver and credential custodian, OWNER SELF-REVIEW; organizational independence not established. Real Ed25519 identities/approved signing mechanism remain absent, keys deferred, durable Linux evidence store/admin/access-retention-recovery undecided. Owner designation is not artifact admission.
+
+ONE next executable dependency: a separately authorized, bounded hosted Windows read-only Security-module diagnosis on exact0aa, with unchanged policy/helper/assertions and no ERP effects. The existing A4-R1 allowance for one code-bearing corrective push is exhausted; no third source push, unchanged-job retry or diagnostic dispatch is performed.
+
+
+Corrective integration/source publication: after preserved failing CI and independent review, exactly four paths changed versus b20: scripts/laptop-lab/cli.mjs, tests/laptop-local-authorization.test.ts, tests/laptop-local-custody.test.ts and the existing CLI registration hash. Actual standalone official Node22.23.3 Windows executable checksum/signature verified; old namespaced tsImport failed MODULE_IMPORT/ERR_MODULE_NOT_FOUND. The existing public tsx CJS/ESM registration plus ordinary imports fixes that diagnosed module graph. Runtime/environment authorization checks remain intact. The shipping authorization fixture clears exactly seven rejected child environment variables and explicitly forges GITHUB_ACTIONS, asserting actual exit1, exact refusal, empty stdout and no output. Separate Node22/24 compatibility probes individually exercise all seven override refusals. Only the custody test child PSModulePath selects WindowsPowerShell5.1 native modules; it does not set execution policy, change the unchanged helper/body/assertions/timeout or alter a production launcher. The previously closed local session was not reopened. Linux execution and this modified Windows launcher require fresh normal CI below.
+
+Corrective local qualification on clean 0aa:12 phases all exit0/errornull and unchanged source/tree; Node22 and Node24 each nine exact ordinary CLI refusals plus one effect-free planning case; Node22 authorization36PASS; Node24 affected13files240PASS; connectedNode95PASS; affected types/353-entry source registration/four publication scanners/Git safety PASS. Populations overlap, never summed. Corrective qualification ended14:43:14.948UTC; phase receipts retain exact intervals. Independent read-only review accepted the single permitted corrective integration/push14:45:11.914–14:45:44.758UTC, tests0. Prior b20 full3322PASS and original-invocation13 custody passes are not represented as executions on 0aa.
+
+Corrective ff-only primary integration14:46:56.430–14:46:56.859UTC; exactly one additional substantive corrective push, remote/PR28 verified14:54:34.599UTC at0aa/tree0b20. Original two unstaged handoffs remain byte-identical at integration/publication; index clean. PR28 OPEN/DRAFT. No third push, documentation-only push, new runtime trigger or other-lane integration.
+
+## A4-R1 terminal result — 0aa1462e3758b178e2a0fb626c63fb1b80236c87
+
+Result: A4_WINDOWS_CUSTODY_VALIDATION_PARTIAL. Exact-source normal attempt1 CI is terminal: nine workflows 2 SUCCESS/7 FAILURE; jobs 27 SUCCESS/8 FAILURE/7 SKIPPED. Overall CI NOT_GREEN. Observed 2026-10-04T15:21:50.718Z; run/job interval 2026-10-04T14:53:03Z–2026-10-04T15:19:46Z. No unchanged-job retry, duplicate dispatch or cancellation.
+
+Source failures: Exact-head synthetic validation, security and full ERP regression (job 111461742967); TypeScript, contracts and bundled shell (job 111461743147); Exact-head software, security and ERP regression (job 111461743946); Exact-head communication, security, shared-platform and full ERP regression (job 111461743221); Exact-head requirements, security, shared-platform and full ERP regression (job 111461742780); Exact-head synthetic identity, security and full ERP regression (job 111461743444). Independent base qualification failures: Backend build/scan input qualification (amd64) (job 111461743240, BUILD_SCAN_ONLY_NOT_ADMITTED=true); Backend build/scan input qualification (arm64) (job 111461743335, BUILD_SCAN_ONLY_NOT_ADMITTED=true). No current CVE inventory inferred; these are not product build/scan or runtime admission evidence.
+
+Actual mandatory downstream statuses (the server/database source stage is separate):
+
+| Job | Status | Conclusion |
+| --- | --- | --- |
+| 2 - OCI image and supply chain | completed | skipped |
+| oci-release-index | completed | skipped |
+| 3 - portable stack | completed | skipped |
+| 4 - distributed runtime | completed | skipped |
+| 5 - object storage and recovery | completed | skipped |
+| 6 - full synthetic acceptance | completed | skipped |
+
+Optional producer: Same-run private Windows QA artifact evidence =skipped. Skipped jobs are NOT_EXECUTED, not passed.
+
+Actual completed source-job test reports (overlap; never summed):
+
+- Job 111461742967 Exact-head synthetic validation, security and full ERP regression: FAILURE; Tests 91 passed (91); 71 passed (71); 49 passed (49); 10 passed (10); 225 passed (225); 13 failed | 3309 passed | 3 skipped (3325); Test Files 9 passed (9); 8 passed (8); 3 passed (3); 1 passed (1); 17 passed (17); 1 failed | 323 passed | 1 skipped (325)
+- Job 111461743147 TypeScript, contracts and bundled shell: FAILURE; Tests 49 passed (49); 13 failed | 3309 passed | 3 skipped (3325); Test Files 3 passed (3); 1 failed | 323 passed | 1 skipped (325)
+- Job 111461743946 Exact-head software, security and ERP regression: FAILURE; Tests 11 passed (11); 5 passed (5); 49 passed (49); 12 passed (12); 10 passed (10); 44 passed (44); 13 failed | 3309 passed | 3 skipped (3325); Test Files 1 passed (1); 1 passed (1); 3 passed (3); 1 passed (1); 1 passed (1); 3 passed (3); 1 failed | 323 passed | 1 skipped (325)
+- Job 111461743150 SQLite existing release gate: SUCCESS; Tests 3309 passed | 16 skipped (3325); Test Files 323 passed | 2 skipped (325)
+- Job 111461743311 PostgreSQL application regression: SUCCESS; Tests 108 passed (108); 3279 passed | 16 skipped (3295); Test Files 13 passed (13); 319 passed | 2 skipped (321)
+- Job 111461743221 Exact-head communication, security, shared-platform and full ERP regression: FAILURE; Tests 24 passed (24); 49 passed (49); 225 passed (225); 91 passed (91); 12 passed (12); 24 passed (24); 48 passed (48); 8 passed (8); 13 failed | 3309 passed | 3 skipped (3325); Test Files 1 passed (1); 3 passed (3); 17 passed (17); 9 passed (9); 1 passed (1); 2 passed (2); 6 passed (6); 1 passed (1); 1 failed | 323 passed | 1 skipped (325)
+- Job 111461743119 1 - server and database: SUCCESS; Tests 7 passed (7); 3309 passed | 16 skipped (3325); Test Files 3 passed (3); 323 passed | 2 skipped (325)
+- Job 111461742780 Exact-head requirements, security, shared-platform and full ERP regression: FAILURE; Tests 16 passed (16); 24 passed (24); 64 passed (64); 49 passed (49); 225 passed (225); 91 passed (91); 12 passed (12); 24 passed (24); 48 passed (48); 8 passed (8); 13 failed | 3312 passed (3325); Test Files 2 passed (2); 1 passed (1); 3 passed (3); 3 passed (3); 17 passed (17); 9 passed (9); 1 passed (1); 2 passed (2); 6 passed (6); 1 passed (1); 1 failed | 324 passed (325)
+- Job 111461743444 Exact-head synthetic identity, security and full ERP regression: FAILURE; Tests 45 passed (45); 49 passed (49); 225 passed (225); 91 passed (91); 12 passed (12); 24 passed (24); 48 passed (48); 13 failed | 3309 passed | 3 skipped (3325); Test Files 5 passed (5); 3 passed (3); 17 passed (17); 9 passed (9); 1 passed (1); 2 passed (2); 6 passed (6); 1 failed | 323 passed | 1 skipped (325)
+
+The final published Windows source jobs failed the 13 custody cases before actual helper execution at Get-ExecutionPolicy: Microsoft.PowerShell.Security autoload failed with CouldNotAutoloadMatchingModule. The test-only native module-path correction was insufficient on the hosted runner. No successful hosted13case execution is claimed. Original local13case passes and exact per-case receipts retain their earlier source/session attribution; they do not qualify the revised hosted launcher. Linux13custody skips and qpdf skips remain explicit.
+
+Independent final source/CI execution-claims review accepted 2026-10-04T15:26:26.038Z–2026-10-04T15:27:26.926Z; reviewer executed0tests. AI review does not establish independent organizational credential/custody authority. Published source/tree remain unchanged.
+
+One next executable dependency: the reviewed read-only hosted Windows diagnostic proposal in tmp/A4R1-HOSTED-DIAGNOSTIC-PROPOSAL.md needs separate execution/publication authorization under A4-R1 section6. A3 Linux custody and real signing identities remain undecided/deferred; no activation follows. Existing normal source CI stayed subject to its guards.

@@ -786,3 +786,220 @@ Actual ERP execution and capacity measurement are NOT_EXECUTED. No Docker,
 WSL, external-drive, image, hosting, real-data, production-key or admission
 action is authorized here. Next bounded action is the committed-source real
 QA preparation sequence followed by all sixteen cases and full regression.
+
+### R2 terminal readback — 4 October 2026, post-CI
+
+Verdict: D4_R2_INTEGRATION_SOURCE_VALIDATED_RELEASE_GATED. Published source is
+2113fa17bcda1acfb3edf5fa0d6ca9c2a21e8c7c, tree
+c0aca53c31abef391ce4e4f6390325b57ce8bcdb. This is the only
+new published code-bearing candidate; no retry, manual dispatch, cosmetic push,
+main merge or tag. The starting e534120 SHA/tree and unpublished 69ff618
+SHA/tree/parent remain as recorded above. Its exact three metadata-file delta
+was preserved separately. The original A3 working-copy SHA256 remains
+7725b5b23565871b81630e8eb0f4928ef4f021897ca0178c5fd11aab54ba480c;
+it was never copied, staged or edited by R2.
+
+The exact nine published paths are:
+- scripts/qa-communication-delivery-foundation-1a-public-repo-scan.ts
+- scripts/product-experience-screen-inventory.ts
+- scripts/product-experience-screen-register.ts
+- package.json
+- config/product-experience-screen-register.json
+- tests/laptop-publication-admission.test.ts
+- tests/product-experience-inventory.test.ts
+- config/recovery-integration-source-delta.json
+- scripts/laptop-lab/HANDOFF.md
+
+The reviewed five existing lab blobs are unchanged; admission is exact-path
+only, as described above. All 31 connection-source blobs, D3 persistence
+evidence and D4R1_ADAPTER_CLOSURE.json remain unchanged. Only two package script
+values changed, with no dependency, lock, workflow, application, schema,
+native, trust, key or profile changes. The final 348-file registry preserves
+the 346 foreign-record order; two generator records were appended and only
+three owned existing hashes changed. Tests and the register retain explicit
+manifest hashes rather than widening the existing verifier's population.
+
+Observed preparation and execution on this exact committed tree:
+- Fresh owned synthetic target: migrate deploy 08:04:00.557–08:04:31.263 UTC;
+  release-CI synthetic seed 08:04:32.007–08:05:49.679. No school records/default
+  foreign DB were selected. The compatibility DB was created only from this
+  newly owned synthetic baseline.
+- Common real-prelude superset 08:06:05.501–08:16:07.172:
+  qa:certificate-graduation; routes:list; lifecycle:backfill (DRY_RUN);
+  migration:fresh-check; migration:existing-db-check; migration:restore-check;
+  backup; Git safety; security:resilience:acceptance; qa:synthetic-pilot;
+  qa:onboarding-preparation; qa:product-experience; qa:portable-runtime;
+  qa:offline-sync; IAM/offline/security tests; test:cross-platform;
+  app:typecheck; app:build:web; app:rust:test; corrected-scope acceptance;
+  then actual qa:product-experience and all bound-port cases. Every command
+  receipt binds HEAD/tree and tracked content before/after.
+- Final non-writing QA: 12 PASS, 08:15:51.374–08:15:54.161. Then all sixteen
+  bound-port cases PASS, 08:15:55.178–08:16:07.172, including the intended
+  operation/deadline/transport assertions. This contrasts with the retained
+  old twelve-pass QA/register mutation and sixteen genuine setup refusals.
+- Regression populations, separately overlapping: baseline Node 38 PASS;
+  connected consumer/adapter Node 95 PASS; related eleven Vitest files
+  161 PASS; new scanner/inventory tests 31 PASS. The real unregistered tracked
+  delta negative still refuses LOCAL_UNBOUND_SOURCE_DELTA before effects.
+- Full unfiltered single-worker regression after preparation:
+  321 PASS / 1 SKIPPED files; 3266 PASS / 3 SKIPPED cases, 08:18:27.293–
+  08:42:20.346 UTC (1433.053 seconds). Existing deadlines, assertions,
+  provider rules and cryptographic work were retained. The three local qpdf
+  tests remain gated because QPDF_EXECUTABLE_PATH and QPDF_EXECUTABLE_SHA256
+  were absent; no local tool install or skip override was used.
+- tools-core, tests-m-r, tests-g-l and narrow consumer TypeScript PASS;
+  cross-platform app types/web/Rust prelude PASS. Native Cargo generation
+  left seven raw tracked TOML files byte-identical to HEAD; the verified
+  exact-path index-stat refresh changed no bytes, index tree or source.
+- All four required publication commands PASS with real comparison base
+  104aacc7bd314cae82e60bb02b5c8a965c7ffedd: communication 572 paths/6 required;
+  onboarding 572/10; real-user 572/8; biometric 3390 files. Registration
+  348 files/four historical heads/four backup contracts and Git safety PASS.
+  pnpm audit --audit-level high PASS with one MODERATE finding; this is
+  not a zero-vulnerability or runtime-admission verdict.
+
+Independent read-only AI source reviewer used configured GPT-6 Astra;
+this is capability reporting, not model attestation or organizational
+registration authority. Actual reviewer execution 07:52:36.473–07:56:42.084
+UTC (245.611 elapsed seconds, check durations total 158.768 separately)
+reran QA 12 -> bound 16 -> new controls 31 (59 distinct cases/four files),
+affected TypeScript partitions, actual communication scanner, registration
+and Git. It also reviewed actual five contents, nine-path manifest,
+original inference helpers, final full-suite receipts and byte-preservation
+evidence. No material finding remained; full-suite review was evidence
+review, not an independent second full execution. Final hosted review:
+independently reverified all nine terminal runs, 42 jobs and six source logs; no material finding or required source failure remains.
+
+Exact manifest SHA256:
+b12ee906f01a7ebf2b7537b9044ab7d4dd695c5c440b7ffd4f691607a1aace56.
+One serial FF/push 08:46:39.658–08:46:43.903 UTC reverified ownership,
+A3, remote ancestry, exact manifest and exclusion of 69ff618. PR28 remains
+OPEN/DRAFT; PR29/P1, PR30/K30 and main remain untouched.
+
+Fresh paginated normal PR CI on the exact published SHA, attempt 1, was
+terminal at 2026-10-04T09:25:36.858Z. Nine workflows: eight SUCCESS, one FAILURE.
+Forty-two jobs: 33 SUCCESS, two FAILURE, seven SKIPPED; zero pending, missing,
+queued, cancelled or timed-out jobs. No source-regression failure remains.
+The actual normal cycle ran from 08:46:47 to last job completion 09:24:21 UTC
+(37 minutes 34 seconds elapsed; runs updated through 09:24:22).
+Normal job coverage, provider parity, financial, native/simulator and compiler
+checks remained intact.
+
+Master's actual communication scan accepted 572 changed paths/six required
+artifacts; its non-writing check covered all 365 pages; all sixteen bound
+cases executed and passed. The subsequent full Windows suite completed
+322 files / 3269 cases PASS, zero skips, at 09:09:40 UTC. Normal pinned qpdf
+path/checksum enabled the three cases absent locally. Typecheck and production
+build passed; genuine CI service metadata preparation, final validation and
+allowlisted retention all passed. This was genuine hosted identity, not
+locally fabricated GITHUB variables. Biometric, Communication and Real-User
+each passed their real prelude and all sixteen cases in full regression;
+their actual logs show 3266 PASS / three existing qpdf SKIPs. Onboarding and
+Portable server also show all sixteen PASS and 3266 PASS / three existing
+qpdf SKIPs.
+
+Only failures are Portable base-input jobs arm64 111400082856 and amd64
+111400083036, in 'Inspect and scan exact current input bytes privately';
+actual private logs report BUILD_SCAN_ONLY_NOT_ADMITTED and exit 1.
+A current CVE inventory was not derived, and no exception was applied.
+The six mandatory holds are OCI image/supply chain, OCI release index,
+portable stack, distributed runtime, object storage/recovery and full
+synthetic acceptance. The optional same-run private Windows QA artifact
+producer is also SKIPPED. These are NOT_EXECUTED/held, not passes.
+Overall CI remains not green solely because of independent base qualification.
+
+Every run/job below binds source 2113fa17bcda1acfb3edf5fa0d6ca9c2a21e8c7c,
+attempt 1, completed status. The final paginated response retains full step
+metadata, timing and URLs locally.
+
+| Workflow run | Name | Outcome |
+| --- | --- | --- |
+| [37190024507](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024507) | Student items and prior-year concessions exact-head | SUCCESS |
+| [37190024520](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024520) | Real-Data Onboarding Preparation 1A exact-head | SUCCESS |
+| [37190024548](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024548) | Portable Staging Foundation exact-head | FAILURE |
+| [37190024541](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024541) | Biometric Staff Attendance 1A | SUCCESS |
+| [37190024516](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024516) | Communication Delivery Foundation 1A exact-head | SUCCESS |
+| [37190024558](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024558) | PostgreSQL readiness dual-provider gate | SUCCESS |
+| [37190024602](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024602) | Cross-platform apps 1A | SUCCESS |
+| [37190024508](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024508) | Real-User Access Readiness 1A exact-head | SUCCESS |
+| [37190024557](https://github.com/vsairohith67/nalanda-school-erp/actions/runs/37190024557) | Master Requirements Reconciliation 1A exact-head | SUCCESS |
+
+| Run | Job ID | Job | Outcome |
+| --- | --- | --- | --- |
+| 37190024507 | 111400082479 | exact-head-financial-contract (postgresql) | SUCCESS |
+| 37190024507 | 111400082629 | exact-head-financial-contract (sqlite) | SUCCESS |
+| 37190024520 | 111400082671 | Exact-head PostgreSQL 17 parity and provider-independent preparation | SUCCESS |
+| 37190024520 | 111400082798 | Exact-head synthetic validation, security and full ERP regression | SUCCESS |
+| 37190024548 | 111400082856 | Backend build/scan input qualification (arm64) | FAILURE |
+| 37190024548 | 111400083032 | 1 - server and database | SUCCESS |
+| 37190024548 | 111400083036 | Backend build/scan input qualification (amd64) | FAILURE |
+| 37190024548 | 111404167877 | 2 - OCI image and supply chain | SKIPPED |
+| 37190024548 | 111404168218 | oci-release-index | SKIPPED |
+| 37190024548 | 111404168755 | 3 - portable stack | SKIPPED |
+| 37190024548 | 111404169059 | 4 - distributed runtime | SKIPPED |
+| 37190024548 | 111404169486 | 5 - object storage and recovery | SKIPPED |
+| 37190024548 | 111404169757 | 6 - full synthetic acceptance | SKIPPED |
+| 37190024541 | 111400082805 | Exact-head software, security and ERP regression | SUCCESS |
+| 37190024541 | 111400082878 | Exact-head PostgreSQL biometric migration and parity | SUCCESS |
+| 37190024516 | 111400082535 | Exact-head PostgreSQL 17 migration, repeat deploy, constraints and parity | SUCCESS |
+| 37190024516 | 111400082699 | Exact-head communication, security, shared-platform and full ERP regression | SUCCESS |
+| 37190024558 | 111400082953 | SQLite existing release gate | SUCCESS |
+| 37190024558 | 111400083077 | PostgreSQL schema and migrations | SUCCESS |
+| 37190024558 | 111400083102 | Cross-provider parity and recovery | SUCCESS |
+| 37190024558 | 111400083105 | PostgreSQL application regression | SUCCESS |
+| 37190024602 | 111400082993 | TypeScript, contracts and bundled shell | SUCCESS |
+| 37190024602 | 111400083069 | Draft Rust 1.90 Linux aarch64-unknown-linux-gnu | SUCCESS |
+| 37190024602 | 111400083103 | Draft Rust 1.90 macOS aarch64-apple-darwin | SUCCESS |
+| 37190024602 | 111400083110 | Unsigned Windows NSIS compiler gate | SUCCESS |
+| 37190024602 | 111400083123 | Draft Rust 1.90 Windows production and QA tests | SUCCESS |
+| 37190024602 | 111400083158 | Draft Rust 1.90 Linux x86_64-unknown-linux-gnu | SUCCESS |
+| 37190024602 | 111400083159 | Draft Rust 1.90 iOS aarch64-apple-ios | SUCCESS |
+| 37190024602 | 111400083161 | iOS simulator build and shared UI gate | SUCCESS |
+| 37190024602 | 111400083162 | Draft Rust 1.90 macOS x86_64-apple-darwin | SUCCESS |
+| 37190024602 | 111400083169 | Draft Rust 1.90 Android i686-linux-android | SUCCESS |
+| 37190024602 | 111400083171 | Draft Rust 1.90 Android aarch64-linux-android | SUCCESS |
+| 37190024602 | 111400083178 | Android debug build and emulator UX gate | SUCCESS |
+| 37190024602 | 111400083180 | Draft Rust 1.90 iOS x86_64-apple-ios | SUCCESS |
+| 37190024602 | 111400083215 | Draft Rust 1.90 Android x86_64-linux-android | SUCCESS |
+| 37190024602 | 111400083246 | Draft Rust 1.90 iOS aarch64-apple-ios-sim | SUCCESS |
+| 37190024602 | 111400083269 | Draft Rust 1.90 Android armv7-linux-androideabi | SUCCESS |
+| 37190024602 | 111400083855 | Same-run private Windows QA artifact evidence | SKIPPED |
+| 37190024508 | 111400082683 | Exact-head PostgreSQL 17 migrations, constraints and parity | SUCCESS |
+| 37190024508 | 111400082729 | Exact-head synthetic identity, security and full ERP regression | SUCCESS |
+| 37190024557 | 111400082850 | Exact-head PostgreSQL 17 migration, repeat deploy, constraints and parity | SUCCESS |
+| 37190024557 | 111400082935 | Exact-head requirements, security, shared-platform and full ERP regression | SUCCESS |
+
+
+Artifact producer identity remains separate from local consumer identity.
+EXTERNAL_RUNTIME_BLOCKED and LOCAL_CONSUMER_PROFILE_NOT_AUTHORIZED remain
+unconditional. Owner self-review is still labelled as such; independent
+organizational registration, genuine artifact/custody/key/profile/admission
+decisions remain unresolved. Actual laptop ERP execution and capacity
+measurement remain NOT_EXECUTED. No Docker/WSL/drive probe, container/image,
+ERP listener, real data, keys, grants, hosting or new infrastructure was used.
+Owned evidence and synthetic QA resources remain retained; previous denied
+residues and unknown resources were not touched or retried for cleanup.
+
+This post-CI appendix is intentionally unstaged in the legitimate primary
+checkout; it is not part of the immutable published/qualified tree. It does
+not rewrite the source registry or trigger another CI cycle. Tracker result
+comments/readbacks and primary-ownership return are recorded separately in
+the local terminal receipt. Measured test/review/CI intervals are listed
+separately, without summing overlaps or claiming measured account usage.
+
+One next action: the existing release owner obtains the genuine owner
+decision for the already-recorded artifact, custody, local profile and
+admission prerequisites before any runtime execution. R2 authorizes no
+automatic follow-on runtime work.
+
+
+Tracker closure: PR28 comment5969185177 append/prefix/exact readback VERIFIED;
+Asana recovery1218421699989887 comment1219131803472513 exact readback VERIFIED,
+prior comments/dates preserved and task/parent1218201854539166 still incomplete.
+Canvs batch text exact readback VERIFIED: all 305 elements retained, the selected
+card history/geometry/bindings preserved and all other elements unchanged.
+Notion ledger page-level comment3efc9801-27a8-81ee-8005-001d7a26810a creation
+was acknowledged, but repeated page/discussion reads still show the older
+comment population: readback PENDING, no duplicate posted or page replaced.
+Primary source editing is finished; exclusive ownership return follows through
+the existing release owner and its recorded acknowledgement.
