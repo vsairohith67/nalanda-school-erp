@@ -1,4 +1,4 @@
-import { afterAll, afterEach, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { createHash, createDecipheriv, generateKeyPairSync, verify } from "node:crypto";
 import { createServer } from "node:http";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -15,7 +15,6 @@ import { runBridgeCycle, safeCode } from "./agent.js";
 import { loadBridgeConfig } from "./config.js";
 import { previewExport } from "./export-preview.js";
 import { compareExport } from "./export-comparison.js";
-import { acquireExportWithBytes } from "./export-source.js";
 import { syncPreparedBatch } from "./sync.js";
 import type { BridgeConfig } from "./contracts.js";
 const dirs:string[]=[],key=Buffer.alloc(32,13).toString("base64url");
@@ -41,7 +40,8 @@ function fixture() {
   process.env.NALANDA_BIOMETRIC_QUEUE_KEY=key;
   return {root,source,data,input,file,qfile,q,config,put,ingest};
 }
-afterEach(()=>{for(const d of dirs.splice(0)){if(!path.resolve(d).startsWith(fixtureBase+path.sep)||!path.basename(d).startsWith("nps-k30-export-synthetic-"))throw new Error("unsafe test cleanup");rmSync(d,{recursive:true,force:true});expect(existsSync(d)).toBe(false);}});
+function removeFixture(d:string){if(!path.resolve(d).startsWith(fixtureBase+path.sep)||!path.basename(d).startsWith("nps-k30-export-synthetic-"))throw new Error("unsafe test cleanup");rmSync(d,{recursive:true,force:true});expect(existsSync(d)).toBe(false);}
+afterEach(()=>{for(const d of dirs.splice(0))removeFixture(d);});
 function reviewFixture(f:ReturnType<typeof fixture>,synthetic=true) {
   const review=path.join(f.root,"review");mkdirSync(review,{mode:0o700});
   if(process.platform==="win32")execFileSync("icacls.exe",[review,"/inheritance:r","/grant:r",`*${sid}:(OI)(CI)F`,"*S-1-5-18:(OI)(CI)F","*S-1-5-32-544:(OI)(CI)F"],{stdio:"pipe",windowsHide:true});
@@ -50,19 +50,28 @@ function reviewFixture(f:ReturnType<typeof fixture>,synthetic=true) {
   const request={schemaVersion:1,file:f.file,interval:{from:"2026-10-02T00:00:00.000Z",to:"2026-10-02T23:59:59.000Z"},operator:{origin:"OPERATOR_SOURCE_VIEW",reference:"synthetic-independent-note",totalRows:1}};
   writeFileSync(req,JSON.stringify(request),{mode:0o600});return {review,cfg,req,output,request};
 }
+describe.sequential("actual non-synthetic private report lifecycle",()=>{
+let f:ReturnType<typeof fixture>,r:ReturnType<typeof reviewFixture>;
+beforeAll(()=>{
+  const start=dirs.length;
+  try{f=fixture();dirs.splice(dirs.indexOf(f.root),1);f.put();r=reviewFixture(f,false);}
+  catch(error){for(const d of dirs.splice(start))removeFixture(d);throw error;}
+},5000);
+// Keep this one owned fixture between the separately reported commands. No
+// comparison runs in setup; a missing/failed creation cannot skip reuse.
+afterAll(()=>{if(f)removeFixture(f.root);},5000);
 it("explicit non-synthetic transport-disabled review creates an exclusive private report without queue or health",()=>{
-  const f=fixture();f.put();const r=reviewFixture(f,false),before=readFileSync(f.file);const result=compareExport(r.cfg,r.req,r.output);
+  const before=readFileSync(f.file);const result=compareExport(r.cfg,r.req,r.output);
   expect(result).toMatchObject({synthetic:false,compatibleRows:1,heldRows:0,rejectedRows:0,operatorEvidence:"SUPPLIED_CHECKS_MATCH",privateOutput:"CREATED"});
   const saved=JSON.parse(readFileSync(r.output,"utf8"));expect(saved.capture.bytesBase64).toBe(before.toString("base64"));expect(saved.trace.employeeIdentifierKind).toBe(f.input.profile.employeeIdentifierKind);expect(saved.trace.synthetic).toBe(false);expect(saved.trace.profileDefinition).not.toHaveProperty("employeeMapping");expect(saved.trace.profileDefinition.approvedMappingReference).toBe(f.input.profile.approvedMappingReference);expect(readFileSync(f.file)).toEqual(before);
   expect(existsSync(f.qfile)).toBe(false);expect(existsSync(f.config.healthPath)).toBe(false);expect(JSON.stringify(result)).not.toContain(f.file);expect(JSON.stringify(result)).not.toContain("0007");
-  appendFileSync(f.file,"0007,2026-10-02 10:00:00,SYN-LOCAL-01,OUT\r\n");writeFileSync(r.req,JSON.stringify({...r.request,previousReport:r.output}));expect(compareExport(r.cfg,r.req)).toMatchObject({relation:"VERIFIED_SAME_FILE_APPEND",parsedRows:2});
 });
 it("retained private capture proves a same-file exact append while exposing operator discrepancies",()=>{
-  const f=fixture();f.put();const r=reviewFixture(f),c=acquireExportWithBytes(f.file,f.input,id);
-  c.snapshot.observedAt="2026-10-04T13:00:00.123Z";
-  writeFileSync(r.output,JSON.stringify({schemaVersion:1,mode:"PRIVATE_EXPORT_REVIEW",trace:{profileHash:c.snapshot.profileHash,synthetic:true},capture:{bytesBase64:c.bytes.toString("base64"),fileHash:c.snapshot.fileHash,sourceKey:c.snapshot.sourceKey,incarnation:c.snapshot.incarnation,observedAt:c.snapshot.observedAt}}),{mode:0o600});
+  const saved=JSON.parse(readFileSync(r.output,"utf8"));saved.capture.observedAt="2026-10-04T13:00:00.123Z";
+  writeFileSync(r.output,JSON.stringify(saved),{mode:0o600});
   appendFileSync(f.file,"0007,2026-10-02 10:00:00,SYN-LOCAL-01,OUT\r\n");writeFileSync(r.req,JSON.stringify({...r.request,previousReport:r.output}));
-  expect(compareExport(r.cfg,r.req)).toMatchObject({parsedRows:2,relation:"VERIFIED_SAME_FILE_APPEND",overlappingRows:1,operatorEvidence:"DISCREPANCY_OR_UNRESOLVED",reviewRequired:true});expect(existsSync(f.qfile)).toBe(false);
+  expect(compareExport(r.cfg,r.req)).toMatchObject({synthetic:false,parsedRows:2,relation:"VERIFIED_SAME_FILE_APPEND",overlappingRows:1,operatorEvidence:"DISCREPANCY_OR_UNRESOLVED",reviewRequired:true});expect(existsSync(f.qfile)).toBe(false);expect(existsSync(f.config.healthPath)).toBe(false);
+});
 });
 it("selected snapshot comparison retains overlap without operational queue writes",()=>{
   const f=fixture();f.put();const r=reviewFixture(f),other=path.join(f.source,"K30_other.csv");f.put(bytes(["0007,2026-10-02 10:00:00,SYN-LOCAL-01,OUT","0007,2026-10-02 09:00:00,SYN-LOCAL-01,IN"]),other);writeFileSync(r.req,JSON.stringify({...r.request,file:other,compareFile:f.file}));
