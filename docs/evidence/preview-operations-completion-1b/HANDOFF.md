@@ -1,9 +1,11 @@
 # Preview operations completion 1B
 
-Terminal status: `PREVIEW_OPERATIONS_OWNERSHIP_BLOCKED`.
+Current status: `PREVIEW_OPERATIONS_SOURCE_VALIDATED_INTEGRATION_PENDING`.
 Task: PREVIEW-OPERATIONS-COMPLETION-1B, Lane 6. One implementation owner;
-shared independent source review is CLEAR; final broader execution remains queued.
-Own source push, draft PR and lane CI were NOT_EXECUTED. No preview was deployed.
+shared independent source review is CLEAR; final applicable affected regression passed.
+Own source push, draft PR and lane CI are pending the final evidence review and
+fresh publication checks. No preview was deployed. The dated ownership block below
+is historical, superseded by genuine SAFE on the unchanged reviewed source.
 
 ## Source and ownership
 
@@ -149,14 +151,15 @@ are not summed as execution. Lane6 returned the slot with zero heavy jobs or lis
 - PREVIEW_DEPLOYED: NO.
 - PostgreSQL local / real S3 provider: NOT_EXECUTED; no already approved target.
 - Exact lane CI: NOT_EXECUTED; own source publication gated.
-- Final full local SQLite regression: NOT_EXECUTED / NOT_STARTED; mandatory ownership prelude BLOCKED.
+- Standalone full local SQLite regression: NOT_EXECUTED / NOT_STARTED by coordinator instruction; no duplicate combined full run. Final applicable affected regression: PASS after genuine SAFE, as recorded below.
 - Independent review: CLEAR SOURCE_ONLY on corrected64e4477 and published-source merge a1994f0; original two P2 findings closed, no reviewer execution.
 
 Original focused, affected type, bundle/emitted and original-suite batch settled
-at 20:31 IST; corrected review batch settled 21:04:57 IST. No Lane6 heavy job remains. One applicable broader synthetic
-regression is queued behind the master coordinator, with inspected fresh baseline
-entrypoints and no operational database fixture or fake CI identity. Final registration, all three unchanged relevant publication
-scanners, Git safety and final prepare-qa will retain their actual results.
+at 20:31 IST; corrected review batch settled 21:04:57 IST. No Lane6 heavy job remains.
+The final applicable broader affected regression subsequently passed after current
+genuine SAFE; the unused standalone full baseline was removed as documented below.
+Final registration, all three unchanged relevant publication scanners, Git safety
+and final prepare-qa retain their actual results.
 
 The unchanged helper first returned genuine SAFE on clean a1994f0, with no overlaps,
 unreadable owners or blockers. Later actual full prelude returned BLOCKED exit2
@@ -176,6 +179,50 @@ exactly two foreign overlaps and no unreadable owners:
 `C:/Users/rohit/.codex/worktrees/v1-completion-convergence-1a/school software`.
 No premature foreign commit/staging, source-helper/scanner override or denial
 workaround was used. The unused full-run reservation was returned with zero heavy jobs.
+
+## Current qualification transition and coordinator settlement
+
+The dated 21:55 IST terminal ownership block is preserved above. On the same clean
+reviewed `534a316c5669b4a3f04957f179da31829a244875`, tree
+`8d54e971ee13022bfea7021eeac1fa587f918bab`, the unchanged genuine prepare-qa then
+returned SAFE, exit0, clean, with no overlap, unreadable owners or blockers
+(11.4052024s). The coordinator granted one short Lane6 slot for the final applicable
+broader affected regression and explicitly instructed no duplicate Ops full run.
+
+Actual final regression on that exact source: 19 unchanged affected suites,
+186 PASS / zero SKIP, Vitest17.11s / wall18.4334096s, UTC
+2026-10-04T16:46:37.0519976Z–16:46:55.4854072Z
+(22:16:37–22:16:55 IST), exit0. The suites cover the existing operator/CLI,
+observability/runtime/OCI/recovery handoff, backup/provider/security/retention/
+reports/schedules, Technical Operations, parser/restore/import verification,
+migration readiness and publication contracts. The runner settled and the slot
+was returned; zero Lane6 heavy jobs remain. This is the final applicable broader
+regression, distinct from the separately executed 15 new focused cases.
+
+Coordinator-supplied combined result on its frozen ed337 source: first approved
+QA session settled 17:06:57.957 UTC; full regression 3466 PASS / one FAILURE /
+three original qpdf SKIP. Failure concerns Lane5 mapping-catalogue evidence
+registration. This is NOT a combined PASS and is not attributed as Ops execution.
+The coordinator already adopted immutable Ops source through its 237 integration;
+no second source adoption or combined full run is requested by this lane.
+Its separately approved policy/CI correction context is not used by this lane.
+
+The coordinator explicitly released a meaningful HANDOFF-only checkpoint and the
+original permitted publication window after that settlement, keeping its source
+frozen while this checkpoint finishes. The existing shared reviewer will inspect
+this evidence delta before fresh unchanged mandatory checks and the single own
+source push/draft stacked PR/ordinary CI. Published PR28 was rechecked unchanged
+at0aa1462, OPEN/DRAFT; no existing Ops PR was found. No release/runtime clearance
+is inferred from that window.
+
+Tracker readback: the original substantive Asana operations-parent comment
+1219134461788593 was verified exactly; parent remained incomplete and all notes,
+owners/dates/fields unchanged. The existing Notion section was amended to record
+the current SAFE/186-PASS transition and retain the dated blocked notice; prior
+content read back unchanged, one section only, local handoff path preserved as
+code. The Canvs lane text now records SOURCE VALIDATED / INTEGRATION PENDING;
+fresh readback verified exact text, original geometry/fonts/bindings and all other
+312 elements unchanged. Repository code/docs stayed frozen during coordinator QA.
 
 The final live GitHub read retains published PR28 at0aa1462, OPEN/DRAFT, with
 42 terminal checks:27 SUCCESS /8 FAILURE /7 SKIPPED. Those are recovery-source
@@ -220,8 +267,7 @@ provider/DNS/hosts/firewall/CA change, real/preview account or runtime grant was
 object bytes and credentials; measured file verification and independent database
 restore do not certify full application recovery, power loss, RPO/RTO or capacity.
 
-ONE next source input: the coordinator must finish its independently qualified
-checkpoint for the two named foreign paths so the unchanged helper returns current
-SAFE; then allocate a fresh bounded slot for the untouched full SQLite regression
-before this lane's permitted consolidated source push/draft stacked PR/normal CI.
+ONE next source step: finish same-reviewer evidence-delta review and current
+unchanged prepublication checks in the released window, then publish the single
+reviewed own source push/draft stacked PR and observe normal exact-source CI.
 Runtime input remains separately NOT_APPROVED and is not requested for that work.
