@@ -9,6 +9,7 @@ import { safeErrorFingerprint } from "@/lib/safe-logging";
 import { publishCriticalOperationalAlertNotification } from "@/lib/operational-alert-notifications";
 import { databaseIntegritySummary, databaseSizeBytes } from "@/lib/database-capabilities";
 import { databaseProviderLabel, resolveDatabaseProvider } from "@/lib/database-provider";
+import { CURRENT_CLOUD_BACKUP_VERSION } from "@/lib/cloud-backup-versions";
 import {
   OPERATIONAL_DOMAINS,
   operationalDomainLabel,
@@ -31,7 +32,7 @@ const PRIVATE_HEADERS = {
   Vary: "Cookie"
 } as const;
 const STATUS_OPEN = ["OPEN", "ACKNOWLEDGED", "INVESTIGATING", "SILENCED"];
-const BACKUP_VERSION = 44;
+const BACKUP_VERSION = CURRENT_CLOUD_BACKUP_VERSION;
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 
@@ -173,7 +174,7 @@ async function migrationHealth(client: DatabaseClient, now: Date) {
 
 async function dataProtectionHealth(client: DatabaseClient, now: Date) {
   const logical = latestLogicalBackup();
-  const latestCloudRun = await caught(() => client.cloudBackupRun.findFirst({ where: { status: "COMPLETED" }, orderBy: { completedAt: "desc" }, select: { completedAt: true } }));
+  const latestCloudRun = await caught(() => client.cloudBackupRun.findFirst({ where: { status: "VERIFIED" }, orderBy: { completedAt: "desc" }, select: { completedAt: true } }));
   const rehearsal = await caught(() => client.cloudBackupRestoreRehearsal.findFirst({ where: { status: "PASSED" }, orderBy: { completedAt: "desc" }, select: { completedAt: true } }));
   const latestBackupAt = maxDate(logical?.mtime ?? null, latestCloudRun?.completedAt ?? null);
   const backupAgeHours = latestBackupAt ? Math.floor((now.valueOf() - latestBackupAt.valueOf()) / HOUR) : null;
