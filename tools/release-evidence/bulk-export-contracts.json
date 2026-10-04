@@ -12,14 +12,14 @@
       ".next",
       "artifacts"
     ],
-    "discoveredCount": 67,
-    "bulkExportCount": 45,
+    "discoveredCount": 68,
+    "bulkExportCount": 46,
     "notBulkExportCount": 22
   },
   "bulkExportFlag": {
     "key": "bulk-exports",
     "semantics": "DEFAULT_OFF_RUNTIME_SWITCH_FOR_NEWLY_RELEASED_BULK_EXPORT_SURFACES",
-    "currentMappedSurfaceCount": 1,
+    "currentMappedSurfaceCount": 2,
     "committedDefaultState": false,
     "committedRolloutPercentage": 0
   },
@@ -1570,6 +1570,34 @@
       "audited": false,
       "featureFlag": null,
       "releaseState": "SYNTHETIC_ACCEPTANCE_PENDING"
+    },
+    {
+      "id": "intelligent-reports",
+      "sourcePath": "app/api/intelligent-reports/export/route.ts",
+      "route": "/api/intelligent-reports/export",
+      "method": "POST",
+      "module": "Ask Nalanda",
+      "format": "CSV",
+      "classification": "BULK_EXPORT",
+      "permission": "EXPORT_INTELLIGENT_REPORTS plus effective module/domain and underlying domain export permissions",
+      "objectScope": "Exact authorized school/year/class/section and exam, date window or term; source revision must match the reviewed report",
+      "sensitiveFieldExclusions": [
+        "passwordHash",
+        "sessionToken",
+        "providerCredential",
+        "secret",
+        "phone1",
+        "fatherName",
+        "rawQuestion",
+        "hiddenStudentFields"
+      ],
+      "maxRows": 2000,
+      "boundedBehavior": "Maximum 2000 cohort rows and 2 MB CSV; includes unresolved rows; exact revision checked; two concurrent reads and per-user/action rate limit",
+      "csvFormulaSafe": true,
+      "noStore": true,
+      "audited": true,
+      "featureFlag": "bulk-exports",
+      "releaseState": "DEFAULT_OFF_PENDING_INTEGRATION"
     }
   ]
 }

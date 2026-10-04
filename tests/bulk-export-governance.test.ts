@@ -33,10 +33,10 @@ describe("bulk export governance", () => {
     expect(JSON.parse(output)).toEqual({
       schemaVersion: 1,
       status: "PASS",
-      discoveredCount: 67,
-      bulkExportCount: 45,
+      discoveredCount: 68,
+      bulkExportCount: 46,
       notBulkExportCount: 22,
-      bulkExportFlagMappedSurfaceCount: 1,
+      bulkExportFlagMappedSurfaceCount: 2,
       errors: []
     });
   }, 15_000);
@@ -55,15 +55,15 @@ describe("bulk export governance", () => {
     }
   });
 
-  it("classifies bulk-exports as the real default-off switch for future new surfaces, with only the Student variant of the dynamic route mapped", () => {
+  it("classifies bulk-exports as the real default-off switch for future new surfaces, with the Student variant and Ask Nalanda mapped", () => {
     const contract = manifest();
     expect(contract.bulkExportFlag).toMatchObject({
       key: "bulk-exports",
-      currentMappedSurfaceCount: 1,
+      currentMappedSurfaceCount: 2,
       committedDefaultState: false,
       committedRolloutPercentage: 0
     });
-    expect(contract.surfaces.filter((surface) => surface.featureFlag === "bulk-exports")).toEqual([]);
+    expect(contract.surfaces.filter((surface) => surface.featureFlag === "bulk-exports").map(surface=>surface.id)).toEqual(["intelligent-reports"]);
     for (const id of ["marks-import-template", "governed-marks-roster-template"]) expect(contract.surfaces.find(s => s.id === id)).toMatchObject({classification:"BULK_EXPORT",noStore:true,csvFormulaSafe:true});
     expect(contract.surfaces.filter(s => s.conditionalFeatureFlags).map(s => ({id:s.id, mappings:s.conditionalFeatureFlags}))).toEqual([{id:"core-dynamic-exports",mappings:[{parameter:"type",value:"students",featureFlag:"bulk-exports"}]}]);
   });
