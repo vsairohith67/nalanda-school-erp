@@ -6,7 +6,7 @@ import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFi
 import os from "node:os";
 import path from "node:path";
 import {afterAll,afterEach,expect,it,vi} from "vitest";
-import {Android,appId} from "@/apps/nalanda-cross-platform/tests/native/android";
+import {Android,appId,journey} from "@/apps/nalanda-cross-platform/tests/native/android";
 import {androidCause,androidState,appleBuild,appleScenarioMarkers,nativeIdentity,nativeScenarios,nativeVersions,processMetadata,swiftSource,type PublicSource} from "@/apps/nalanda-cross-platform/tests/native/diagnostics";
 import {processRecorder,ownedSimulatorId,retainNativeEvidence} from "@/apps/nalanda-cross-platform/tests/native/execute";
 import {producerProcess,type ProducerProcessObservation} from "@/scripts/portable/producer-process";
@@ -67,6 +67,42 @@ it("distinguishes current wait acquisition exhaustion from prior successful tree
 
 it("does not hide a recorder failure in acquisition polling or bounded control recovery",async()=>{
  for(const [code,cause] of [["QA_PROCESS_RETENTION_FAILED","PRIVATE_RETENTION_FAILED"],["QA_PROCESS_GROUP_UNRECONCILED","CHILD_GROUP_UNRECONCILED"]])for(const action of ["text","tap"] as const){const a=new Android("source-only-adb","emulator-5580",root);let calls=0;a.run=async()=>{calls++;throw Error(code);};try{await a[action]("Workspace");throw Error("unexpected-source-success");}catch(e){expect(a.failure(e).cause).toBe(cause);expect(calls).toBe(1);}}
+});
+
+it.each(["RECOVERED_READ","PERSISTENT_READ","RETENTION_FAILED","GROUP_UNRECONCILED","SHORT_UNLOCK_ENABLED"] as const)("preserves B assertions and finite acquisition behavior for %s",async condition=>{
+ vi.useFakeTimers();const a=new Android("source-only-adb","emulator-5580",root);let postInput=false,reads=0,bPassed=false;
+ const calls:string[][]=[];const initialTime=Date.now();
+ const xml=(enabled=false)=>`<hierarchy><node package="${appId}" text="Welcome back"/><node package="${appId}" class="android.widget.EditText" password="true" bounds="[0,0][10,10]" text="${pin}"/><node package="${appId}" text="Unlock app" enabled="${enabled}"/></hierarchy>`;
+ a.run=async args=>{
+  calls.push(args);if(args.includes("KEYCODE_BACK"))postInput=true;
+  if(!args.includes("cat"))return "";
+  if(!postInput)return xml();reads++;
+  if(condition==="RETENTION_FAILED")throw Error("QA_PROCESS_RETENTION_FAILED");
+  if(condition==="GROUP_UNRECONCILED")throw Error("QA_PROCESS_GROUP_UNRECONCILED");
+  if(condition==="PERSISTENT_READ"||(condition==="RECOVERED_READ"&&reads===1))throw Error("QA_PROCESS_FAILED_OR_CANCELLED");
+  return xml(condition==="SHORT_UNLOCK_ENABLED");
+ };
+ // Execute the real B action through its unchanged journey ordering; no source-only double accepts C.
+ const result=journey(a,pin,async(id,action)=>{if(id==="A-clean-launch")return;if(id!=="B-invalid-pin")throw Error("SOURCE_ONLY_STOP_BEFORE_C");a.beginScenario();await action();bPassed=true;})
+  .then(()=>{throw Error("unexpected-source-success");},error=>({error,diagnostic:a.failure(error)}));
+ await vi.runAllTimersAsync();const observed=await result;
+ expect(calls.filter(args=>args.includes("text"))).toEqual([["shell","input","text","123"]]);
+ expect(Date.now()-initialTime).toBeLessThanOrEqual(60000);excluded(observed.diagnostic);
+ if(condition==="RECOVERED_READ"){
+  expect(bPassed).toBe(true);expect(reads).toBe(2);expect(observed.error.message).toBe("SOURCE_ONLY_STOP_BEFORE_C");
+  expect(calls.some(args=>args.includes("force-stop"))).toBe(true);
+  expect(observed.diagnostic.waitObservation).toMatchObject({predicate:"B_SHORT_STATE_ACQUIRE",completed:true,successfulTrees:1,acquisitionFailures:1,lastAcquisition:{predicate:"UI_TREE_READ"}});
+ }else{
+  expect(bPassed).toBe(false);expect(calls.some(args=>args.includes("force-stop"))).toBe(false);
+  if(condition==="PERSISTENT_READ"){
+   expect(Date.now()-initialTime).toBe(60000);expect(observed.diagnostic).toMatchObject({predicate:"B_SHORT_STATE_ACQUIRE",cause:"ANDROID_UI_ACQUISITION_EXHAUSTED",kind:"UI_ACQUISITION"});
+   expect(observed.diagnostic.waitObservation).toMatchObject({completed:false,successfulTrees:0,negativeObservations:0,lastAcquisition:{predicate:"UI_TREE_READ"}});expect(reads).toBeGreaterThan(1);
+  }else if(condition==="SHORT_UNLOCK_ENABLED"){
+   expect(reads).toBe(1);expect(observed.diagnostic).toMatchObject({predicate:"B_SHORT_UNLOCK_DISABLED",kind:"ASSERTION"});
+  }else{
+   expect(reads).toBe(1);expect(observed.diagnostic.cause).toBe(condition==="RETENTION_FAILED"?"PRIVATE_RETENTION_FAILED":"CHILD_GROUP_UNRECONCILED");
+  }
+ }
 });
 
 it("preserves actual closed child metadata even when its observer rejects retention",async()=>{

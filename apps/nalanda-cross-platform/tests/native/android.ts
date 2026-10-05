@@ -8,7 +8,7 @@ type Failure = {predicate:string; context:string[]; cause:string; kind:"ASSERTIO
 class AndroidFailure extends Error {
   constructor(readonly diagnostic:Failure) {super("ANDROID_FINITE_PREDICATE_FAILED");}
 }
-type NamedPredicate="B_EMPTY_UNLOCK_DISABLED"|"B_SHORT_UNLOCK_DISABLED"|"F_REMOTE_DISABLED"|"F_REFERENCE_DISABLED"|"H_FONT_SCALE_APPLIED"|"H_PIN_FIELD_READY"|"H_IME_VISIBLE"|"H_ORIGINAL_SETTING_VALID"|"H_SETTING_RESTORED";
+type NamedPredicate="B_EMPTY_UNLOCK_DISABLED"|"B_SHORT_STATE_ACQUIRE"|"B_SHORT_UNLOCK_DISABLED"|"F_REMOTE_DISABLED"|"F_REFERENCE_DISABLED"|"H_FONT_SCALE_APPLIED"|"H_PIN_FIELD_READY"|"H_IME_VISIBLE"|"H_ORIGINAL_SETTING_VALID"|"H_SETTING_RESTORED";
 
 export const appId = "com.nalandaps.erp";
 export type UiNode = Record<string, string>;
@@ -143,7 +143,7 @@ export async function journey(a: Android, pin: string, record: (id: string, acti
     const t = await a.locked();
     await a.check("B_EMPTY_UNLOCK_DISABLED",()=>assert(t.some(n => n.package === appId && (n.text === "Unlock app" || n["content-desc"] === "Unlock app") && n.enabled === "false")));
     await a.input("123", true);
-    const invalid = await a.tree();
+    const invalid = await a.check("B_SHORT_STATE_ACQUIRE",()=>a.wait(()=>true,"B_SHORT_STATE_ACQUIRE"));
     await a.check("B_SHORT_UNLOCK_DISABLED",()=>assert(invalid.some(n => n.package === appId && (n.text === "Unlock app" || n["content-desc"] === "Unlock app") && n.enabled === "false")));
     await a.run(["shell", "am", "force-stop", appId]); await a.launch(); // empty PIN after real cold start
   });
