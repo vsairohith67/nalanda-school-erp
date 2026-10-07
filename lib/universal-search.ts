@@ -230,6 +230,8 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
             AND: context.tokens.map((token) => ({ OR: [
               { applicationNumber: { contains: token } },
               { child: { is: { fullName: { contains: token } } } },
+              { child: { is: { desiredClass: { contains: token } } } },
+              { cycle: { is: { academicYear: { contains: token } } } },
               { guardians: { some: { displayName: { contains: token } } } }
             ] }))
           },
