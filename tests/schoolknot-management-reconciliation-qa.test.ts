@@ -169,7 +169,9 @@ describe("Prompt 23B-M-QA independent Management reconciliation QA", () => {
       "20260902090000_real_user_access_readiness_1a",
       "20260904120000_communication_delivery_foundation_1a", "20260908120000_certificate_graduation_exit_1a",
       "20260908220000_student_items_prior_year_concessions_1a",
+      "20261007123000_etimetracklite_raw_export_profile_1a",
     ]);
+    expect(createHash("sha256").update(read("prisma/migrations/20261007123000_etimetracklite_raw_export_profile_1a/migration.sql").replaceAll("\r\n", "\n")).digest("hex")).toBe("36a4e2ea3e2d53759d16561ddae87da061558dab653664be82d5d27b3cd432f5");
     const archivedMigrationEntries = readdirSync("prisma/migration-archives/devops1b-legacy-chain");
     expect(archivedMigrationEntries).toHaveLength(42);
     expect(archivedMigrationEntries.filter((name) => statSync(join("prisma/migration-archives/devops1b-legacy-chain", name)).isDirectory())).toHaveLength(40);

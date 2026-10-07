@@ -8,6 +8,7 @@ import audit from "@/config/master-requirements-audit-evidence.json";
 import certificateDelta from "@/config/certificate-graduation-source-delta.json";
 
 import featureDelta from "@/config/prior-year-concession-source-delta.json";
+import recoveryDelta from "@/config/recovery-integration-source-delta.json";
 import debt from "@/config/product-experience-debt-register.json";
 import screens from "@/config/product-experience-screen-register.json";
 import { MASTER_BASE, PRIOR_REGISTER_HASH, publicContentErrors, repositorySourceReader, sourceHash, validateMasterRequirements } from "@/lib/master-requirements";
@@ -137,7 +138,19 @@ describe("Living Master Requirements fail-closed contracts", () => {
     for(const old of audit.migrationFiles)expect(sourceHash(readFileSync(old.path,"utf8")),old.path).toBe(old.sha256);
     const added=[...certificateDelta.added.filter(f=>/^prisma\/(postgresql\/)?migrations\/.*\.sql$/.test(f.path)).map(f=>f.path),...featureDelta.files.filter(f=>f.baselineSha256===null&&/^prisma\/(postgresql\/)?migrations\/.*\.sql$/.test(f.path)).map(f=>f.path)];
     expect(added).toHaveLength(4);
-    expect([...audit.migrationFiles.map(f=>f.path),...added].sort()).toEqual(git("ls-files","--cached","--others","--exclude-standard","--","prisma").split(/\r?\n/).filter(f=>/^prisma\/(postgresql\/)?migrations\/.*\.sql$/.test(f)).sort());
+    const rawExportHead = "e6bfe7b2c06bf28f7320c4bd524320f22b7d974b";
+    const reviewedRawExportMigrations = [
+      { path: "prisma/migrations/20261007123000_etimetracklite_raw_export_profile_1a/migration.sql", sha256: "36a4e2ea3e2d53759d16561ddae87da061558dab653664be82d5d27b3cd432f5" },
+      { path: "prisma/postgresql/migrations/20261007123000_etimetracklite_raw_export_profile_1a/migration.sql", sha256: "fddbc8b01f9507060eddd394eeb1a688d41a934c71f397d3507e8315394dbf91" }
+    ];
+    git("merge-base", "--is-ancestor", rawExportHead, "HEAD");
+    for (const entry of reviewedRawExportMigrations) {
+      const reviewed = execFileSync("git", ["show", rawExportHead + ":" + entry.path], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+      expect(sourceHash(reviewed), entry.path).toBe(entry.sha256);
+      expect(sourceHash(readFileSync(entry.path, "utf8")), entry.path).toBe(entry.sha256);
+      expect(recoveryDelta.files.find(item => item.path === entry.path), entry.path).toMatchObject({ baseSha256: null, historicalSha256: null, currentSha256: entry.sha256 });
+    }
+    expect([...audit.migrationFiles.map(f=>f.path),...added,...reviewedRawExportMigrations.map(f=>f.path)].sort()).toEqual(git("ls-files","--cached","--others","--exclude-standard","--","prisma").split(/\r?\n/).filter(f=>/^prisma\/(postgresql\/)?migrations\/.*\.sql$/.test(f)).sort());
     expect(debt.screens.map(s=>s.sourceFile).sort()).toEqual(screens.screens.map(s=>s.file).sort());
     expect(debt.screens.every(s=>s.roles.length>0&&Object.keys(s.dimensions).length===19)).toBe(true);
     expect(debt.auditMode).toContain("NO_CURRENT_BROWSER_CERTIFICATION");
