@@ -5,6 +5,7 @@ export const BIOMETRIC_PROTOCOL_PROFILES = [
   "GENERIC_ADMS_PUSH",
   "GENERIC_LAN_POLL",
   "GENERIC_CSV_IMPORT",
+  "ETIMETRACKLITE_RAW_EXPORT_V1",
   "SIMULATOR"
 ] as const;
 
@@ -18,7 +19,9 @@ export const VENDOR_PROTOCOL_PROFILES = new Set<BiometricProtocolProfile>([
 
 export const GENERIC_CONTRACT_PROFILES = new Set<BiometricProtocolProfile>([
   "GENERIC_ADMS_PUSH",
-  "GENERIC_LAN_POLL"
+  "GENERIC_LAN_POLL",
+  // File-route contract approval is separate from physical-device provenance.
+  "ETIMETRACKLITE_RAW_EXPORT_V1"
 ]);
 
 export function biometricProtocolProfile(value: unknown): BiometricProtocolProfile {

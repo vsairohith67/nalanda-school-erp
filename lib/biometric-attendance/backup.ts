@@ -2,6 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 
 import { databaseTableExists } from "@/lib/database-capabilities";
 import { normalizeBridgeJwk } from "@/lib/biometric-attendance/jwk";
+import { BIOMETRIC_PROTOCOL_PROFILES } from "@/lib/biometric-attendance/profiles";
 
 export const BIOMETRIC_ATTENDANCE_BACKUP_KEYS = [
   "biometricBridges",
@@ -126,7 +127,7 @@ export function validateBiometricAttendanceBackupRows(root: Record<string, unkno
   });
   backup.biometricDevices.forEach((row, index) => {
     linked(bridgeIds, row.bridgeId, `biometricDevices[${index}].bridgeId`);
-    oneOf(row.protocolProfile, ["ESSL_K30_PRO_PUSH", "ESSL_ZK_LAN_SDK", "ZK_ADMS_PUSH", "GENERIC_ADMS_PUSH", "GENERIC_LAN_POLL", "GENERIC_CSV_IMPORT", "SIMULATOR"], `biometricDevices[${index}].protocolProfile`);
+    oneOf(row.protocolProfile, [...BIOMETRIC_PROTOCOL_PROFILES], `biometricDevices[${index}].protocolProfile`);
     oneOf(row.protocolProofStatus, ["NOT_PROVIDED", "NOT_REQUIRED", "OFFICIAL_VERIFIED", "ADAPTER_CONTRACT_PENDING", "ADAPTER_CONTRACT_APPROVED"], `biometricDevices[${index}].protocolProofStatus`);
     oneOf(row.status, ["PENDING_APPROVAL", "ACTIVE", "REVOKED", "RETIRED"], `biometricDevices[${index}].status`);
     oneOf(row.clockDriftStatus, ["HEALTHY", "WARNING", "UNTRUSTED_TIME", "UNKNOWN"], `biometricDevices[${index}].clockDriftStatus`);

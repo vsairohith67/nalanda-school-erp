@@ -77,6 +77,30 @@ it("selected snapshot comparison retains overlap without operational queue write
   const f=fixture();f.put();const r=reviewFixture(f),other=path.join(f.source,"K30_other.csv");f.put(bytes(["0007,2026-10-02 10:00:00,SYN-LOCAL-01,OUT","0007,2026-10-02 09:00:00,SYN-LOCAL-01,IN"]),other);writeFileSync(r.req,JSON.stringify({...r.request,file:other,compareFile:f.file}));
   expect(compareExport(r.cfg,r.req)).toMatchObject({relation:"AMBIGUOUS_REEXPORT_OR_REPLACEMENT",overlappingRows:1,heldRows:1,compatibleRows:1,reviewRequired:true});expect(existsSync(f.qfile)).toBe(false);
 });
+it("polls versioned terminal-tab DAT bytes into the existing encrypted queue with replay, append and reopen provenance",async()=>{
+  const f=fixture();
+  f.input.profile={...f.input.profile,schemaVersion:2,terminalField:"ALLOW_ONE_EMPTY_TAB_V1",header:false,separator:"\t",extensions:[".dat"]};
+  const file=path.join(f.source,"K30_terminal.dat"), row="0007\t2026-10-02 09:00:00\tSYN-LOCAL-01\tIN\t\r\n";
+  f.put(Buffer.from(row),file);
+  await runBridgeCycle(f.config);
+  expect(f.q.load()).toHaveLength(1);
+  const original=readFileSync(file),acquired=acquireExport(file,f.input,id),reopened=new EncryptedDurableQueue(f.qfile,key);
+  expect(reopened.load()).toEqual(f.q.load());expect(reopened.exportLedger()).toEqual(f.q.exportLedger());
+  expect(acquired.fileHash).toBe(createHash("sha256").update(original).digest("hex"));
+  f.put(original,path.join(f.source,"K30_renamed.dat"));await runBridgeCycle(f.config);
+  expect(reopened.load()).toHaveLength(1);
+  appendFileSync(file,"0007\t2026-10-02 10:00:00\tSYN-LOCAL-01\tOUT\t\r\n");await runBridgeCycle(f.config);
+  expect(reopened.load()).toHaveLength(2);
+  expect(new EncryptedDurableQueue(f.qfile,key).load()).toEqual(reopened.load());
+  expect(readFileSync(file).subarray(0,original.length)).toEqual(original);
+  // An overlapping new export retains review; transport Resume is not approval.
+  expect(reopened.prepareBatch()).toBeTruthy();
+  f.put(Buffer.from(row+"0007\t2026-10-02 11:00:00\tSYN-LOCAL-01\tIN\t\r\n"),path.join(f.source,"K30_overlap.dat"));
+  await runBridgeCycle(f.config);
+  expect(reopened.load()).toHaveLength(4);
+  expect(reopened.load().filter(e=>e.localState==="NEEDS_ADMIN_REVIEW")).toHaveLength(2);
+  expect(()=>reopened.resumeHeldBatch()).toThrow("SOURCE_REVIEW_REQUIRED");
+});
 it("whole-file refusal keeps row totals unknown and selected comparison unexamined",()=>{
   const f=fixture();f.put(bytes().subarray(0,-1));const r=reviewFixture(f);expect(compareExport(r.cfg,r.req)).toMatchObject({wholeFileState:"REFUSED_UNEXAMINED",parsedRows:null,compatibleRows:null,heldRows:null,rejectedRows:null,unexaminedFiles:1,codes:["EXPORT_INCOMPLETE_WRITE"]});
 });

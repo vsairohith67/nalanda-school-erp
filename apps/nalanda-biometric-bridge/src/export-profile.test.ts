@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { parseExport, validateExportProfile, exportProfileHash, type ExportProfile } from "./export-profile.js";
+import { digest, parseExport, validateExportProfile, exportProfileHash, type ExportProfile } from "./export-profile.js";
 import { id, profile, bytes } from "./export-test-fixtures.js";
 it("binds every management profile field and device identity in a stable versioned hash",()=>{
   const p=profile(); expect(validateExportProfile(p)).toEqual(p); const h=exportProfileHash(p,id);
@@ -53,4 +53,66 @@ it("rejects coerced direction types and compares same instants in UTC across pro
   const a=parseExport(bytes(),profile(),id).rows[0];
   const b=parseExport(bytes(["0007,2026-10-02 03:30:00,SYN-LOCAL-01,IN"]),{...profile(),timezone:"UTC"},id).rows[0];
   expect(a.subjectHash).toBe(b.subjectHash);expect(a.event!.eventReference).not.toBe(b.event!.eventReference);
+});
+
+function terminalProfile():ExportProfile {
+  return {...profile(),schemaVersion:2,terminalField:"ALLOW_ONE_EMPTY_TAB_V1",profileId:"synthetic-terminal-tab-v1",header:false,separator:"\t",extensions:[".dat"]};
+}
+const terminalRow="0007\t2026-10-02 09:00:00\tSYN-LOCAL-01\tIN";
+it("opts into exactly one empty terminal tab without changing strict profiles or original byte evidence",()=>{
+  const p=terminalProfile(), row=terminalRow+"\t", original=bytes([row],p);
+  const legacy:ExportProfile={...profile(),header:false,separator:"\t",extensions:[".dat"]};
+  expect(parseExport(original,legacy,id).rows[0].rejection).toBe("EXPORT_COLUMN_COUNT_INVALID");
+  const observedAt="2026-10-04T13:00:00.000Z";
+  const s=parseExport(original,p,id,observedAt), standard=parseExport(bytes([terminalRow],p),p,id,observedAt);
+  expect(s.rows[0].event).toEqual(standard.rows[0].event);
+  expect(s.rows[0].rowHash).toBe(digest(row));expect(s.fileHash).toBe(digest(original));
+  expect(s.rows[0].rowHash).not.toBe(standard.rows[0].rowHash);expect(s.fileHash).not.toBe(standard.fileHash);
+  expect(exportProfileHash(p,id)).not.toBe(exportProfileHash(legacy,id));
+  expect(parseExport(bytes([terminalRow],legacy),legacy,id).rows[0].event).toBeTruthy();
+});
+it.each([
+  {schemaVersion:1,terminalField:"ALLOW_ONE_EMPTY_TAB_V1"},
+  {schemaVersion:2}, {schemaVersion:3},
+  {terminalField:"IGNORE_EXTRAS"}, {separator:","}, {header:true}, {extensions:[".csv"]}, {extensions:[".dat",".txt"]}
+])("refuses unversioned or broader terminal policy %j",change=>{
+  const p={...terminalProfile(),...change};
+  if(Object.keys(change).length===1 && Object.hasOwn(change,"schemaVersion")) delete (p as any).terminalField;
+  expect(()=>validateExportProfile(p)).toThrow("EXPORT_PROFILE_");
+});
+it.each([
+  [terminalRow+"\tEXTRA","COLUMN_COUNT_INVALID"],
+  [terminalRow+"\t\t","COLUMN_COUNT_INVALID"],
+  [terminalRow+'\t""',"COLUMN_COUNT_INVALID"],
+  [terminalRow+"\t ","COLUMN_COUNT_INVALID"],
+  ["\t2026-10-02 09:00:00\tSYN-LOCAL-01\tIN\t","IDENTIFIER_INVALID"],
+  ["0007\t\tSYN-LOCAL-01\tIN\t","DATE_INVALID"],
+  ["0007\t2026-10-02 09:00:00\t\tIN\t","DEVICE_BINDING_MISMATCH"],
+  ["0007\t2026-10-02 09:00:00\tSYN-LOCAL-01\t\t","DIRECTION_UNRESOLVED"],
+  ['"0007\tEXTRA"\t2026-10-02 09:00:00\tSYN-LOCAL-01\tIN\t',"IDENTIFIER_INVALID"],
+  ['"0007"x\t2026-10-02 09:00:00\tSYN-LOCAL-01\tIN\t',"ROW_QUOTING_INVALID"],
+  ['"0007\t2026-10-02 09:00:00\tSYN-LOCAL-01\tIN\t',"ROW_QUOTING_INVALID"],
+  ["0007\t2026-10-02 09:00\tSYN-LOCAL-01\tIN\t","DATE_INVALID"],
+  ["0007\t2026-10-02 09:00:00\tOTHER\tIN\t","DEVICE_BINDING_MISMATCH"],
+  ["0008\t2026-10-02 09:00:00\tSYN-LOCAL-01\tIN\t","STAFF_MAPPING_UNKNOWN"]
+])("retains precise refusals for terminal-profile row %s",(row,reason)=>{
+  const p=terminalProfile(), s=parseExport(bytes([row],p),p,id);
+  expect(s.rows[0].rejection).toBe(`EXPORT_${reason}`);expect(s.rows[0].event).toBeUndefined();expect(s.rows[0].rowHash).toBe(digest(row));
+});
+it("tokenizes quoted required fields before framing and preserves duplicate observations and changed source hashes",()=>{
+  const p=terminalProfile(), quoted='"0007"\t"2026-10-02 09:00:00"\t"SYN-LOCAL-01"\t"IN"\t';
+  const s=parseExport(bytes([quoted,quoted],p),p,id);
+  expect(s.rows).toHaveLength(2);expect(s.rows.every(r=>!!r.event)).toBe(true);expect(s.rows[0].event?.eventReference).toBe(s.rows[1].event?.eventReference);
+  const changed=parseExport(bytes([quoted,quoted.replace('"IN"','"OUT"')],p),p,id);
+  expect(changed.rows).toHaveLength(2);expect(changed.fileHash).not.toBe(s.fileHash);expect(changed.rows[1].event?.punchCode).toBe("OUT");
+  expect(changed.rows[1].rowHash).not.toBe(s.rows[1].rowHash);
+});
+it("retains encoding, final-newline and resource limits with the terminal profile",()=>{
+  const p=terminalProfile();
+  expect(()=>parseExport(Buffer.from([0xc3,0x28,0x0a]),p,id)).toThrow("ENCODING_UNSUPPORTED");
+  expect(()=>parseExport(Buffer.concat([Buffer.from([239,187,191]),bytes([terminalRow+"\t"],p)]),p,id)).toThrow("ENCODING_MISMATCH");
+  expect(()=>parseExport(bytes([terminalRow+"\t"],p).subarray(0,-1),p,id)).toThrow("INCOMPLETE_WRITE");
+  expect(()=>parseExport(Buffer.alloc(2*1024*1024+1),p,id)).toThrow("FILE_SIZE_INVALID");
+  expect(()=>parseExport(bytes(["x".repeat(2049)],p),p,id)).toThrow("LINE_LIMIT");
+  expect(()=>parseExport(bytes(Array(20001).fill(terminalRow+"\t"),p),p,id)).toThrow("ROW_LIMIT");
 });

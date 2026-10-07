@@ -2,8 +2,10 @@ import { createHash } from "node:crypto";
 import { validateNormalizedEvent, type NormalizedEvent } from "./contracts.js";
 
 export const EXPORT_PROFILE = "ETIMETRACKLITE_RAW_EXPORT_V1" as const;
-export type ExportProfile = {
-  schemaVersion: 1; profileId: string; columns: string[]; header: boolean;
+export type ExportProfile = ({ schemaVersion: 1 } | {
+  schemaVersion: 2; terminalField: "ALLOW_ONE_EMPTY_TAB_V1";
+}) & {
+  profileId: string; columns: string[]; header: boolean;
   separator: "," | "\t"; encoding: "utf-8" | "utf-8-bom";
   filenamePrefix: string; extensions: Array<".csv" | ".txt" | ".dat">;
   dateFormat: "yyyy-MM-dd HH:mm:ss" | "dd/MM/yyyy HH:mm:ss" | "dd-MMM-yyyy HH:mm:ss";
@@ -23,14 +25,18 @@ function record(value: unknown): value is Record<string, unknown> { return !!val
 export function validateExportProfile(value: unknown): ExportProfile {
   if (!record(value)) fail("PROFILE_INVALID");
   const keys = ["schemaVersion", "profileId", "columns", "header", "separator", "encoding", "filenamePrefix", "extensions", "dateFormat", "culture", "timezone", "employeeIdentifierKind", "localDeviceId", "approvedMappingReference", "employeeMapping", "directionMapping"];
+  if (value.schemaVersion === 2) keys.push("terminalField");
   if (Object.keys(value).length !== keys.length || Object.keys(value).some(k => !keys.includes(k))) fail("PROFILE_FIELDS_INVALID");
   const p = value as ExportProfile;
-  if (p.schemaVersion !== 1 || typeof p.profileId !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(p.profileId)) fail("PROFILE_VERSION_INVALID");
+  if (![1,2].includes(p.schemaVersion) || typeof p.profileId !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(p.profileId)) fail("PROFILE_VERSION_INVALID");
   if (!["EmployeeDeviceCode", "EmployeeCode"].includes(p.employeeIdentifierKind)) fail("IDENTIFIER_NAMESPACE_INVALID");
   const expected = [p.employeeIdentifierKind === "EmployeeCode" ? "Employee code" : "Employee Device Code", "Punch DateTime", "Device Id", "Direction"];
   if (!Array.isArray(p.columns) || p.columns.length !== 4 || new Set(p.columns).size !== 4 || p.columns.some(c => !expected.includes(c))) fail("PROFILE_COLUMNS_INVALID");
   if (typeof p.header !== "boolean" || ![",", "\t"].includes(p.separator) || !["utf-8", "utf-8-bom"].includes(p.encoding)) fail("PROFILE_FORMAT_UNSUPPORTED");
   if (typeof p.filenamePrefix !== "string" || !/^[A-Za-z0-9_-]{1,40}$/.test(p.filenamePrefix) || !Array.isArray(p.extensions) || !p.extensions.length || p.extensions.length > 3 || new Set(p.extensions).size !== p.extensions.length || p.extensions.some(e => ![".csv", ".txt", ".dat"].includes(e))) fail("PROFILE_FILENAME_INVALID");
+  // An explicit management profile revision, restricted to the observed framing.
+  // Legacy profiles keep their exact strict four-field contract and hash bytes.
+  if (p.schemaVersion === 2 && (p.terminalField !== "ALLOW_ONE_EMPTY_TAB_V1" || p.separator !== "\t" || p.header || p.extensions.length !== 1 || p.extensions[0] !== ".dat")) fail("PROFILE_TERMINAL_FIELD_INVALID");
   if (!["yyyy-MM-dd HH:mm:ss", "dd/MM/yyyy HH:mm:ss", "dd-MMM-yyyy HH:mm:ss"].includes(p.dateFormat) || !["en-IN", "en-GB"].includes(p.culture) || !["Asia/Kolkata", "UTC"].includes(p.timezone)) fail("PROFILE_DATE_UNSUPPORTED");
   if (typeof p.localDeviceId !== "string" || !opaque.test(p.localDeviceId) || typeof p.approvedMappingReference !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(p.approvedMappingReference)) fail("PROFILE_BINDING_INVALID");
   if (!record(p.employeeMapping) || Object.keys(p.employeeMapping).length < 1 || Object.keys(p.employeeMapping).length > 10_000 || Object.entries(p.employeeMapping).some(([a,b]) => !opaque.test(a) || typeof b !== "string" || !opaque.test(b)) || new Set(Object.values(p.employeeMapping)).size !== Object.values(p.employeeMapping).length) fail("STAFF_MAPPING_INVALID");
@@ -86,7 +92,12 @@ export function parseExport(bytes: Buffer, profile: ExportProfile, deviceId: str
     const row: ExportRow = { line:i+(p.header?2:1), rowHash:digest(line) };
     try {
       if (!line || /\r/.test(line)) fail("ROW_INVALID");
-      const values=split(line,p.separator); if (values.length!==4) fail("COLUMN_COUNT_INVALID");
+      const values=split(line,p.separator);
+      // Tokenize quoting first. Only one literal terminal tab with an empty fifth
+      // token is framing; populated or multiple extras still fail. Never trim
+      // the source line: rowHash and fileHash retain the original export bytes.
+      const terminalFraming=p.schemaVersion===2 && values.length===5 && values[4]==="" && line.endsWith("\t");
+      if (values.length!==4 && !terminalFraming) fail("COLUMN_COUNT_INVALID");
       const fields=Object.fromEntries(p.columns.map((c,j)=>[c,values[j]]));
       const code=fields[p.employeeIdentifierKind === "EmployeeCode" ? "Employee code" : "Employee Device Code"];
       if (!opaque.test(code)) fail("IDENTIFIER_INVALID");
