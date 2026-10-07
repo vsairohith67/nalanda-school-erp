@@ -4356,7 +4356,7 @@
           "sha256": "11fa935d830e694199041a4421fd4c7f546df7f28cd6a3c82f3c8572c195479e"
         }
       ],
-      "currentSha256": "d6ce9824a0d9e036723dae066895cd1efad3db3ac4343b5361c3d960a3eb49b7",
+      "currentSha256": "bbb0da2ad8c30e11364d78eb5b2732980840a096892973eb359bafcc5111526c",
       "reconciliation": "ADMITTED_COMMITTED_SOURCE"
     },
     {
@@ -4381,7 +4381,7 @@
           "sha256": "db931a69a0dccd5f73abac5edc005d825594feb5b653a0740bc7261774ca5ecf"
         }
       ],
-      "currentSha256": "9b40d8ed92d0f73c9109a6ab65e4c1ce33e0a2c64ce035c786abfe890cbd1655",
+      "currentSha256": "a7a82ba6e9639176d413a2983ee4a887a93064d354ecd51aab1cebd81335d31d",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -9506,7 +9506,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "ff0a1b014ead8014a22bdfba5639dfcecce7c912c23bd199403f32d3ba688074",
+      "currentSha256": "1bb6fe3b25884a1a666da8165a54e777fec6ff5818e8944f104e1745c9fc7408",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -9532,6 +9532,106 @@
         }
       ],
       "currentSha256": "0ca6dbe48be04d705455bab667373a150fb04e924fba64fa60a79a8575accf8f",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "lib/biometric-attendance/backup.ts",
+      "baseSha256": "e5e9af87fc3e7a8c999aeeddb6a05b62f54ef8b9c67968c2f6ec62941471f21b",
+      "historicalSha256": "e5e9af87fc3e7a8c999aeeddb6a05b62f54ef8b9c67968c2f6ec62941471f21b",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "e5e9af87fc3e7a8c999aeeddb6a05b62f54ef8b9c67968c2f6ec62941471f21b"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "e5e9af87fc3e7a8c999aeeddb6a05b62f54ef8b9c67968c2f6ec62941471f21b"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "e5e9af87fc3e7a8c999aeeddb6a05b62f54ef8b9c67968c2f6ec62941471f21b"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "e5e9af87fc3e7a8c999aeeddb6a05b62f54ef8b9c67968c2f6ec62941471f21b"
+        }
+      ],
+      "currentSha256": "9ecd5fd880af3b415b9ba9bce2e529f5e2a15614f533a68243c45876cdec489d",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "lib/biometric-attendance/profiles.ts",
+      "baseSha256": "b6dd739934ab565588ec7411d122b206a49e9e25e0b02749896ea911a6c5da63",
+      "historicalSha256": "b6dd739934ab565588ec7411d122b206a49e9e25e0b02749896ea911a6c5da63",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "b6dd739934ab565588ec7411d122b206a49e9e25e0b02749896ea911a6c5da63"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "b6dd739934ab565588ec7411d122b206a49e9e25e0b02749896ea911a6c5da63"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "b6dd739934ab565588ec7411d122b206a49e9e25e0b02749896ea911a6c5da63"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "b6dd739934ab565588ec7411d122b206a49e9e25e0b02749896ea911a6c5da63"
+        }
+      ],
+      "currentSha256": "76cc2bc2dd042417341da4208620321eb22505be327f579bd5a9b809c86185b8",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "prisma/migrations/20261007123000_etimetracklite_raw_export_profile_1a/migration.sql",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "36a4e2ea3e2d53759d16561ddae87da061558dab653664be82d5d27b3cd432f5",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "prisma/postgresql/migrations/20261007123000_etimetracklite_raw_export_profile_1a/migration.sql",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "fddbc8b01f9507060eddd394eeb1a688d41a934c71f397d3507e8315394dbf91",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     }
   ]

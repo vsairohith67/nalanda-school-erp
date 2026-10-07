@@ -1,10 +1,10 @@
 {
   "contractVersion": 1,
   "source": "synthetic fresh SQLite migration deploy",
-  "sourceSha256": "D7AA133ECA217429A1F5F8151E0FD90EA5583B650B7C28DBD352CA28C4F50B6E",
+  "sourceSha256": "13860625BF847043892A4B1259D0948DEFA5018B2BC56BCA889EEF1E3B6A7740",
   "views": 0,
   "triggerCount": 201,
-  "sqlSha256": "D6CE9824A0D9E036723DAE066895CD1EFAD3DB3AC4343B5361C3D960A3EB49B7",
+  "sqlSha256": "BBB0DA2AD8C30E11364D78EB5B2732980840A096892973EB359BAFCC5111526C",
   "triggers": [
     {
       "name": "academic_calendar_audit_append_only_delete",
@@ -308,7 +308,7 @@
       "event": "INSERT",
       "columns": null,
       "statementCount": 1,
-      "sqliteSqlSha256": "F23FA22256DE4E97654EF2F6CACE84F505A9DA3BD668A7B0FD9BFF70DCD95B85"
+      "sqliteSqlSha256": "BFAF43F0E87ED666FFBFFB3627E050F1446D4C3C3EC6D49109C961FFD8C336EF"
     },
     {
       "name": "BiometricDevice_transition",
@@ -316,7 +316,7 @@
       "event": "UPDATE",
       "columns": "\"status\",\"protocolProfile\",\"protocolProofStatus\"",
       "statementCount": 1,
-      "sqliteSqlSha256": "C723E8C0D04117A42FE21D2B043CF401514D7F756A3121EDB3A7EBB6EA836612"
+      "sqliteSqlSha256": "73ECC69C32BED7C84FD65F31C77FEC9AD25170A7AC21B1F3FB5BBAD0BD18E35B"
     },
     {
       "name": "BiometricMapping_no_delete",

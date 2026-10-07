@@ -1,8 +1,12 @@
 // Exact public source paths from reviewed combined source 1fba6ce3bd3ad2b2ff852c13751707051ed7cd95.
+// The two exact additive raw-profile migrations below also received independent
+// post-integration source review; historical paths and admission remain intact.
 // Scope admission only: full content/secret/identifier/size/artifact checks still apply.
 // No subtree, extension, runtime/profile or operational-data admission is granted.
 export const reviewedV1IntegrationPublicSources = Object.freeze([
   "Dockerfile",
+  "prisma/migrations/20261007123000_etimetracklite_raw_export_profile_1a/migration.sql",
+  "prisma/postgresql/migrations/20261007123000_etimetracklite_raw_export_profile_1a/migration.sql",
   "app/api/auth/login/mfa/route.ts",
   "app/api/backup/route.ts",
   "app/api/certificates/[id]/pdf/route.ts",
