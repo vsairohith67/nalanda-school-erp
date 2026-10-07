@@ -144,6 +144,9 @@ describe("explicit offline operations preparation", () => {
       // A substituted migration cannot become valid by matching its own config.
       for (const migration of ["20260908220000_student_items_prior_year_concessions_1a", "20261007123001_substituted"]){
         await writeFile(f.input, JSON.stringify({ ...base, manifest: { ...base.manifest, migration } }));
+        await expect(prepareOperations(f.input, workspace, f.output)).rejects.toThrow("ROLLBACK_SCHEMA_INCOMPATIBLE");
+        expect(await readdir(f.root)).toEqual(["settings.json"]);
+        await writeFile(f.input, JSON.stringify({ ...base, manifest: { ...base.manifest, migration, previous: { ...base.manifest.previous, migration } } }));
         await expect(prepareOperations(f.input, workspace, f.output)).rejects.toThrow("MIGRATION_PROVENANCE_MISMATCH");
         expect(await readdir(f.root)).toEqual(["settings.json"]);
       }
