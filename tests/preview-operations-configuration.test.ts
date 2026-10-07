@@ -141,6 +141,12 @@ describe("explicit offline operations preparation", () => {
       await writeFile(f.input, JSON.stringify({ ...base, manifest: { ...base.manifest, composeSha256: "0".repeat(64) } }));
       await expect(prepareOperations(f.input, workspace, f.output)).rejects.toThrow("COMPOSE_PROVENANCE_MISMATCH");
       expect(await readdir(f.root)).toEqual(["settings.json"]);
+      // A substituted migration cannot become valid by matching its own config.
+      for (const migration of ["20260908220000_student_items_prior_year_concessions_1a", "20261007123001_substituted"]){
+        await writeFile(f.input, JSON.stringify({ ...base, manifest: { ...base.manifest, migration } }));
+        await expect(prepareOperations(f.input, workspace, f.output)).rejects.toThrow("MIGRATION_PROVENANCE_MISMATCH");
+        expect(await readdir(f.root)).toEqual(["settings.json"]);
+      }
       await expect(prepareOperations("relative.json", workspace, f.output)).rejects.toThrow("OPERATIONS_ABSOLUTE_PATH_REQUIRED");
       await expect(prepareOperations(f.input, workspace, path.join(workspace, "lib", "operations-output"))).rejects.toThrow("OPERATIONS_OUTPUT_OVERLAP");
     } finally { await f.close(); }
@@ -153,6 +159,23 @@ describe("explicit offline operations preparation", () => {
       const privateRoot = path.join(workspace, "tmp", "portable-staging", selected.project);
       const base = JSON.parse(execFileSync("docker", ["--context", "default", "compose", "--project-name", selected.project, "--profile", "*", "--env-file", empty, "-f", path.join(workspace, "deploy", "portable", "compose.yml"), "config", "--format", "json", "--no-env-resolution"], { encoding: "utf8", stdio: "pipe", env: operationsComposeEnvironment(privateRoot, selected.image, selected.releaseCommit) }));
       expect(() => validatePreparedCompose(base, workspace, privateRoot, selected)).not.toThrow();
+      // Each application service must retain both independently checked values.
+      // object-init has no database contract; the original guard excludes it.
+      for (const name of ["web-1", "web-2", "migrator", "backup-worker", "backup-qa", "runtime-qa", "backup-maintenance", "backup-maintenance-plan", "seed"]){
+        for (const provider of ["sqlite", "", undefined]){
+          const bad = structuredClone(base);
+          if (provider === undefined) delete bad.services[name].environment.DATABASE_PROVIDER;
+          else bad.services[name].environment.DATABASE_PROVIDER = provider;
+          expect(() => validatePreparedCompose(bad, workspace, privateRoot, selected)).toThrow("OPERATIONS_DATABASE_CONTRACT_MISMATCH");
+        }
+        for (const migration of ["20260908220000_student_items_prior_year_concessions_1a", "20261007123001_substituted", "", undefined]){
+          const bad = structuredClone(base);
+          if (migration === undefined) delete bad.services[name].environment.PORTABLE_EXPECTED_POSTGRES_MIGRATION;
+          else bad.services[name].environment.PORTABLE_EXPECTED_POSTGRES_MIGRATION = migration;
+          expect(() => validatePreparedCompose(bad, workspace, privateRoot, selected)).toThrow("OPERATIONS_DATABASE_CONTRACT_MISMATCH");
+        }
+      }
+      expect(() => validatePreparedCompose(base, workspace, privateRoot, {...selected, migration: "20261007123001_substituted"})).toThrow("OPERATIONS_DATABASE_CONTRACT_MISMATCH");
       for (const change of [
         (c: any) => c.services.postgres.ports = [{ host_ip: "127.0.0.1", published: "8443" }],
         (c: any) => c.services["web-1"].environment.NALANDA_TRUSTED_PROXY_MODE = "headers-only",
