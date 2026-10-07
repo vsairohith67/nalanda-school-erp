@@ -5,7 +5,21 @@ const certificateKeys = ["certificateRequestCharges", "certificateBulkBatches", 
 const concessionKeys = ["priorYearLiabilities", "priorYearPaymentAttributions", "priorYearConcessionCases", "priorYearIncomeSupports", "priorYearConcessionEvents", "studentItemReceiptSnapshots"];
 const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
 
+// Frozen v45-48 identities do not cover the additive raw-export profile guards.
+// The current biometric component backup remains separate from these envelopes.
+function assertFrozenProfileCompatibility(document: object) {
+  const root = document as Record<string, unknown>;
+  for (const key of ["biometricDevices", "biometricRawPunches"]) {
+    const rows = root[key];
+    if (Array.isArray(rows) && rows.some(row => row !== null && typeof row === "object" &&
+      row.protocolProfile === "ETIMETRACKLITE_RAW_EXPORT_V1")) {
+      throw new Error("BACKUP_RAW_EXPORT_REQUIRES_NEW_SOURCE_CONTRACT");
+    }
+  }
+}
+
 export function sealIntegratedBackup<T extends { metadata: Record<string, unknown> }>(document: T) {
+  assertFrozenProfileCompatibility(document);
   const contract = contracts.sources["48"];
   return { ...document, metadata: { ...document.metadata,
     counts: { ...(document.metadata.counts as Record<string, number>),
@@ -44,6 +58,7 @@ export function admitBackupSource(root: Record<string, unknown>) {
       if ("workflowKey" in row || "supersedesCertificateId" in row) throw new Error("BACKUP_CERTIFICATE_SOURCE_FIELDS_MISMATCH");
     }
   }
+  assertFrozenProfileCompatibility(root);
   // The adapters add only collections absent from that exact source contract.
   const adapted = { ...root };
   if (version === 45 || version === 47) for (const key of certificateKeys) adapted[key] = [];
