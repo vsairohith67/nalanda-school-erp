@@ -1,4 +1,7 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
+import { attendanceDateBelongsToAcademicYear } from "@/lib/teacher-attendance-scope";
+
+type SubstituteClient = PrismaClient | Prisma.TransactionClient;
 
 export const SUBSTITUTE_REASONS = ["APPROVED_LEAVE", "STAFF_ABSENT", "EMERGENCY", "MANUAL", "OTHER"] as const;
 export const SUBSTITUTE_STATUSES = ["DRAFT", "ASSIGNED", "CONFIRMED", "COMPLETED", "CANCELLED"] as const;
@@ -88,19 +91,24 @@ export function substituteWhere(filters: { date?: string | null; status?: string
   return where;
 }
 
-export async function validateSubstituteLinks(client: PrismaClient, input: ReturnType<typeof validateSubstituteInput>, options: { requireSubstitute?: boolean; excludeId?: string } = {}) {
+export async function validateSubstituteLinks(client: SubstituteClient, input: ReturnType<typeof validateSubstituteInput>, options: { requireSubstitute?: boolean; excludeId?: string } = {}) {
   const [absent, substitute, leave] = await Promise.all([
-    client.staffMember.findUnique({ where: { id: input.absentStaffMemberId }, select: { id: true, status: true } }),
+    client.staffMember.findUnique({ where: { id: input.absentStaffMemberId }, select: { id: true, status: true, timetableTeacherId: true } }),
     input.substituteStaffMemberId ? client.staffMember.findUnique({ where: { id: input.substituteStaffMemberId }, select: { id: true, status: true } }) : null,
     input.leaveRequestId ? client.staffLeaveRequest.findUnique({ where: { id: input.leaveRequestId }, select: { id: true, staffMemberId: true, status: true, startDate: true, endDate: true } }) : null
   ]);
   if (!absent || absent.status !== "ACTIVE") throw new Error("Choose an active absent staff member");
+  if (input.timetableAssignmentId) {
+    const timetable = await client.timetableAssignment.findUnique({ where: { id: input.timetableAssignmentId }, include: { teacher: true, subject: true, classSection: true } });
+    if (!timetable || timetable.academicYear !== input.academicYear || timetable.teacherId !== absent.timetableTeacherId || !timetable.teacher.isActive || !timetable.subject.isActive || !timetable.classSection.isActive || timetable.classSection.academicYear !== input.academicYear || timetable.classSection.className !== input.className || timetable.classSection.section !== (input.section ?? "") || timetable.subject.name !== input.subject) throw new Error("Choose the active timetable assignment for this absent teacher, year, class, section and subject");
+  }
   if (input.leaveRequestId && (!leave || leave.status !== "APPROVED" || leave.staffMemberId !== input.absentStaffMemberId || leave.startDate > input.assignmentDate || leave.endDate < input.assignmentDate)) throw new Error("Choose an approved leave request for this absent staff member and date");
   if (options.requireSubstitute && !input.substituteStaffMemberId) throw new Error("Choose a substitute staff member before assigning");
   const duplicateCoverage = await client.substituteAssignment.findMany({ where: { id: options.excludeId ? { not: options.excludeId } : undefined, absentStaffMemberId: input.absentStaffMemberId, assignmentDate: input.assignmentDate, status: { not: "CANCELLED" } }, select: { periodLabel: true, periodStartTime: true, periodEndTime: true } });
   if (duplicateCoverage.some((row) => periodsConflict(input, row))) throw new Error("Coverage already exists for this absent staff member on the same date and period");
   if (!input.substituteStaffMemberId) return;
   if (!substitute || substitute.status !== "ACTIVE") throw new Error("Choose an active substitute staff member");
+  const availability = validateSubstituteAvailability(input);
   const [leaveConflict, attendance, assignments] = await Promise.all([
     client.staffLeaveRequest.count({ where: { staffMemberId: input.substituteStaffMemberId, status: "APPROVED", startDate: { lte: input.assignmentDate }, endDate: { gte: input.assignmentDate } } }),
     client.staffAttendanceRecord.findFirst({ where: { staffMemberId: input.substituteStaffMemberId, session: { attendanceDate: input.assignmentDate }, status: { in: ["ABSENT", "ON_LEAVE"] } }, select: { status: true } }),
@@ -109,6 +117,49 @@ export async function validateSubstituteLinks(client: PrismaClient, input: Retur
   if (leaveConflict) throw new Error("This substitute is on approved leave for the selected date");
   if (attendance) throw new Error(`This substitute is marked ${substituteLabel(attendance.status)} in staff attendance for the selected date`);
   if (assignments.some((row) => periodsConflict(input, row))) throw new Error("This substitute already has another duty at the same date and period");
+  const regularDuties = await regularSubstituteDuties(client, availability, [input.substituteStaffMemberId]);
+  if (regularDuties.some((duty) => !duty.determined) || (regularDuties.length && !(availability.periodStartTime && availability.periodEndTime))) throw new Error("Regular timetable availability cannot be verified: review the configured teaching period and provide both period times");
+  if (regularDuties.some((duty) => periodsConflict(input, duty))) throw new Error("This substitute has a regular timetable duty at the same date and period");
+}
+
+type SubstituteAvailability = { assignmentDate: Date; academicYear?: string | null; periodLabel?: string | null; periodStartTime?: string | null; periodEndTime?: string | null };
+
+/** Use the already-established April-March attendance year and half-open
+ * period intervals; a blank or mismatched year is never a free-period proof. */
+export function validateSubstituteAvailability(input: SubstituteAvailability) {
+  const academicYear = String(input.academicYear ?? "").trim();
+  if (!attendanceDateBelongsToAcademicYear(input.assignmentDate, academicYear)) throw new Error("Choose the academic year containing this assignment date");
+  const periodStartTime = optionalTime(input.periodStartTime, "Period start time");
+  const periodEndTime = optionalTime(input.periodEndTime, "Period end time");
+  if (Boolean(periodStartTime) !== Boolean(periodEndTime)) throw new Error("Enter both period start and end times");
+  if (periodStartTime && periodEndTime && periodEndTime <= periodStartTime) throw new Error("Period end time must be after the start time");
+  const periodLabel = String(input.periodLabel ?? "").trim() || null;
+  if (!periodLabel && !(periodStartTime && periodEndTime)) throw new Error("Enter a period label or both period start and end times");
+  return { ...input, academicYear, periodLabel, periodStartTime, periodEndTime };
+}
+
+/** Reads only the existing staff-to-timetable link and operational ACTIVE
+ * entries. Workload assignments and unreviewed drafts are not booked periods.
+ * The occupied entry kinds and Friday template group match timetable print /
+ * free-period summaries. Missing or ambiguous timing is unavailable evidence. */
+export async function regularSubstituteDuties(client: SubstituteClient, input: ReturnType<typeof validateSubstituteAvailability>, staffIds: string[]) {
+  if (!staffIds.length) return [];
+  const staff = await client.staffMember.findMany({ where: { id: { in: staffIds }, status: "ACTIVE", timetableTeacherId: { not: null } }, select: { id: true, timetableTeacherId: true } });
+  const teacherIds = staff.flatMap((member) => member.timetableTeacherId ? [member.timetableTeacherId] : []);
+  if (!teacherIds.length) return [];
+  const dayOfWeek = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"][input.assignmentDate.getUTCDay()];
+  const entries = await client.timetableEntry.findMany({
+    where: { academicYear: input.academicYear, dayOfWeek, teacherId: { in: teacherIds }, teacher: { isActive: true }, draft: { status: "ACTIVE", academicYear: input.academicYear }, classSection: { isActive: true, academicYear: input.academicYear }, entryType: { in: ["TEACHING", "FIXED", "ACTIVITY", "SUBSTITUTION"] }, OR: [{ subjectId: null }, { subject: { isActive: true } }] },
+    select: { teacherId: true, periodNumber: true, label: true, classSection: { select: { groupName: true } } }
+  });
+  if (!entries.length) return [];
+  const templates = await client.timetablePeriodTemplate.findMany({ where: { academicYear: input.academicYear, dayOfWeek, isTeachingPeriod: true, periodNumber: { in: entries.map((entry) => entry.periodNumber) } }, select: { groupName: true, periodNumber: true, label: true, startTime: true, endTime: true } });
+  return entries.map((entry) => {
+    const matching = templates.filter((template) => template.periodNumber === entry.periodNumber && template.groupName === (dayOfWeek === "FRIDAY" ? "FRIDAY" : entry.classSection.groupName));
+    const template = matching.length === 1 ? matching[0] : null;
+    const determined = Boolean(template && /^([01]\d|2[0-3]):[0-5]\d$/.test(template.startTime) && /^([01]\d|2[0-3]):[0-5]\d$/.test(template.endTime) && template.startTime < template.endTime);
+    return { staffMemberId: staff.find((member) => member.timetableTeacherId === entry.teacherId)!.id, periodLabel: template?.label ?? entry.label ?? `Period ${entry.periodNumber}`, periodStartTime: determined ? template!.startTime : null, periodEndTime: determined ? template!.endTime : null, determined };
+  });
 }
 
 export type SuggestionCandidate = { id: string; staffCode: string | null; fullName: string; displayName: string | null; designation: string; department: string | null; primarySubject: string | null; dutyCount: number; reasons: string[] };
@@ -121,17 +172,19 @@ export function rankSuggestionCandidates(candidates: SuggestionCandidate[], cont
   });
 }
 
-export async function suggestSubstituteStaff(client: PrismaClient, input: { assignmentDate: Date; absentStaffMemberId: string; subject?: string | null; department?: string | null; periodLabel?: string | null; periodStartTime?: string | null; periodEndTime?: string | null; excludeId?: string }) {
+export async function suggestSubstituteStaff(client: SubstituteClient, input: { assignmentDate: Date; academicYear?: string | null; absentStaffMemberId: string; subject?: string | null; department?: string | null; periodLabel?: string | null; periodStartTime?: string | null; periodEndTime?: string | null; excludeId?: string }) {
+  const availability = validateSubstituteAvailability(input);
   const [staff, leaves, attendance, assignments] = await Promise.all([
     client.staffMember.findMany({ where: { status: "ACTIVE", id: { not: input.absentStaffMemberId } }, select: { id: true, staffCode: true, fullName: true, displayName: true, designation: true, department: true, primarySubject: true }, orderBy: { fullName: "asc" } }),
     client.staffLeaveRequest.findMany({ where: { status: "APPROVED", startDate: { lte: input.assignmentDate }, endDate: { gte: input.assignmentDate } }, select: { staffMemberId: true } }),
     client.staffAttendanceRecord.findMany({ where: { session: { attendanceDate: input.assignmentDate }, status: { in: ["ABSENT", "ON_LEAVE"] } }, select: { staffMemberId: true } }),
     client.substituteAssignment.findMany({ where: { id: input.excludeId ? { not: input.excludeId } : undefined, assignmentDate: input.assignmentDate, status: { not: "CANCELLED" }, substituteStaffMemberId: { not: null } }, select: { substituteStaffMemberId: true, periodLabel: true, periodStartTime: true, periodEndTime: true } })
   ]);
+  const regularDuties = await regularSubstituteDuties(client, availability, staff.map((member) => member.id));
   const unavailable = new Set([...leaves.map((row) => row.staffMemberId), ...attendance.map((row) => row.staffMemberId)]);
   const dutyCount = new Map<string, number>();
   for (const row of assignments) if (row.substituteStaffMemberId) dutyCount.set(row.substituteStaffMemberId, (dutyCount.get(row.substituteStaffMemberId) ?? 0) + 1);
-  const candidates = staff.filter((member) => !unavailable.has(member.id) && !assignments.some((row) => row.substituteStaffMemberId === member.id && periodsConflict(input, row))).map((member) => {
+  const candidates = staff.filter((member) => !unavailable.has(member.id) && !assignments.some((row) => row.substituteStaffMemberId === member.id && periodsConflict(input, row)) && !regularDuties.some((duty) => duty.staffMemberId === member.id && (!duty.determined || !(availability.periodStartTime && availability.periodEndTime) || periodsConflict(availability, duty)))).map((member) => {
     const count = dutyCount.get(member.id) ?? 0; const reasons: string[] = [];
     if (input.subject && member.primarySubject?.toLowerCase() === input.subject.toLowerCase()) reasons.push(`Same subject: ${member.primarySubject}`);
     else if (input.department && member.department?.toLowerCase() === input.department.toLowerCase()) reasons.push(`Same department: ${member.department}`);
