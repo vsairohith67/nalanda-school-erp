@@ -11,7 +11,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const auth = await requireApiPermission(permission); if (auth.response) return auth.response;
   try {
     const { id } = await params; const actor = { id: auth.user.id, name: auth.user.name };
-    const row = action === "pay" ? await recordExpensePayment(prisma, id, body, actor) : await transitionExpense(prisma, id, action as "submit" | "approve" | "reject" | "cancel", actor, body.reason);
+    const row = action === "pay" ? await recordExpensePayment(prisma, id, body, actor) : await transitionExpense(prisma, id, action as "submit" | "approve" | "reject" | "cancel", actor, body.reason, body.expectedUpdatedAt);
     return NextResponse.json({ expense: serializeExpense(row) });
   } catch (error) { return NextResponse.json({ error: safeClientError(error, "Unable to update expense workflow") }, { status: 409 }); }
 }
