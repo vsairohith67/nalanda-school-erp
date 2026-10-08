@@ -1,10 +1,35 @@
-import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { lstat, mkdir, readFile, readdir, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { OPERATOR_COMMANDS, PORTABLE_PROFILES, validateOperatorManifest, type OperatorManifest } from "../../lib/portable-runtime/operator";
 import { validateComposeBoundary } from "./operator-adapter";
+import { OperationsProcessError, OperationsProcessOwner, type OperationsProcessObservation } from "./operations-preparation-process";
+
+export type PreparationPhase = "settings-validate" | "filesystem-check" | "provenance-check" | "output-create" | "compose-version" | "compose-config" | "compose-parse" | "boundary-validate" | "manifests-write" | "commands-write" | "preparation-write";
+export type PreparationObserver = {
+  begin(phase: PreparationPhase, attempt: 0 | 1 | 2): unknown;
+  end(span: unknown, status: "PASS" | "FAIL", process?: OperationsProcessObservation): void;
+};
+export type PreparationExecution = { signal?: AbortSignal; observer?: PreparationObserver; attempt?: 0 | 1 | 2; processOwner?: OperationsProcessOwner };
+function checkCancellation(signal?: AbortSignal) { if (signal?.aborted) throw Error("OPERATIONS_PREPARATION_CANCELLED"); }
+async function observed<T>(execution: PreparationExecution, phase: PreparationPhase, action: () => T | Promise<T>, process?: (value: T) => OperationsProcessObservation) {
+  // begin is synchronous: durable capture must precede every awaited operation.
+  const span = execution.observer?.begin(phase, execution.attempt ?? 0);
+  let value: T;
+  let returned = false;
+  try {
+    checkCancellation(execution.signal);
+    value = await action();
+    returned = true;
+    checkCancellation(execution.signal);
+  } catch (primary) {
+    try { execution.observer?.end(span, "FAIL", primary instanceof OperationsProcessError ? primary.observation : returned ? process?.(value!) : undefined); } catch { /* Retain the primary failure; an unfinished journal is finalized as incomplete. */ }
+    throw primary;
+  }
+  execution.observer?.end(span, "PASS", process?.(value));
+  return value;
+}
 
 type Settings = {
   schemaVersion: 1;
@@ -90,48 +115,54 @@ export function operationsComposeEnvironment(privateRoot: string, image: string,
   return selected;
 }
 
-export async function prepareOperations(settingsFile: string, workspace: string, output: string) {
-  const settings = validateOperationsSettings(JSON.parse(await canonicalFile(settingsFile)));
-  requireValue(path.isAbsolute(workspace) && path.normalize(workspace) === workspace && await realpath(workspace) === workspace, "OPERATIONS_WORKSPACE_UNSAFE");
-  requireValue(path.isAbsolute(output) && path.normalize(output) === output && output !== path.parse(output).root && await realpath(path.dirname(output)) === path.dirname(output), "OPERATIONS_OUTPUT_UNSAFE");
-  requireValue((!within(workspace, output) || within(path.join(workspace, "tmp"), output)) && !within(output, workspace) && !within(output, settingsFile) && !within(path.join(workspace, "deploy"), output) && !within(path.join(workspace, "prisma"), output) && !within(path.join(workspace, "public"), output), "OPERATIONS_OUTPUT_OVERLAP");
+export async function prepareOperations(settingsFile: string, workspace: string, output: string, execution: PreparationExecution = {}) {
+  const settings = await observed(execution, "settings-validate", async () => {
+    const text = await canonicalFile(settingsFile);
+    let parsed: unknown;
+    try { parsed = JSON.parse(text); } catch { throw Error("OPERATIONS_SETTINGS_JSON_INVALID"); }
+    return validateOperationsSettings(parsed);
+  });
+  await observed(execution, "filesystem-check", async () => {
+    requireValue(path.isAbsolute(workspace) && path.normalize(workspace) === workspace && await realpath(workspace) === workspace, "OPERATIONS_WORKSPACE_UNSAFE");
+    requireValue(path.isAbsolute(output) && path.normalize(output) === output && output !== path.parse(output).root && await realpath(path.dirname(output)) === path.dirname(output), "OPERATIONS_OUTPUT_UNSAFE");
+    requireValue((!within(workspace, output) || within(path.join(workspace, "tmp"), output)) && !within(output, workspace) && !within(output, settingsFile) && !within(path.join(workspace, "deploy"), output) && !within(path.join(workspace, "prisma"), output) && !within(path.join(workspace, "public"), output), "OPERATIONS_OUTPUT_OVERLAP");
+  });
   const composeFile = path.join(workspace, "deploy", "portable", "compose.yml");
-  const composeText = await canonicalFile(composeFile);
-  const composeSha256 = createHash("sha256").update(composeText).digest("hex");
-  const profile = JSON.parse(await canonicalFile(path.join(workspace, "deploy", "portable", "profiles", settings.profile + ".json")));
-  const contract = PORTABLE_PROFILES[settings.profile];
-  requireValue(profile.profile === settings.profile && profile.postgresMajor === contract.postgresMajor && profile.webReplicas === contract.replicas && profile.minimum.cpu === contract.minCpu && profile.minimum.memoryMiB === contract.minMemoryMiB && profile.minimum.freeStorageMiB === contract.minFreeMiB && profile.operationalActivation === false, "OPERATIONS_PROFILE_CONTRACT_MISMATCH");
   const unresolved = ["ARTIFACT_ADMISSION", "EXACT_RUNTIME_AUTHORIZATION", "REQUIRED_SECRET_FILES", "TARGET_RESOURCE_MEASUREMENT", "PERSISTENT_VOLUME_OWNERSHIP", "RUNNING_TLS_AUTH_FIREWALL_ACCEPTANCE"];
+  const { composeSha256, profile, manifest } = await observed(execution, "provenance-check", async () => {
+    const composeText = await canonicalFile(composeFile);
+    const composeSha256 = createHash("sha256").update(composeText).digest("hex");
+    const profile = JSON.parse(await canonicalFile(path.join(workspace, "deploy", "portable", "profiles", settings.profile + ".json")));
+    const contract = PORTABLE_PROFILES[settings.profile];
+    requireValue(profile.profile === settings.profile && profile.postgresMajor === contract.postgresMajor && profile.webReplicas === contract.replicas && profile.minimum.cpu === contract.minCpu && profile.minimum.memoryMiB === contract.minMemoryMiB && profile.minimum.freeStorageMiB === contract.minFreeMiB && profile.operationalActivation === false, "OPERATIONS_PROFILE_CONTRACT_MISMATCH");
+    let manifest: OperatorManifest | undefined;
+    if (settings.purpose === "synthetic-integration") {
+      manifest = validateOperatorManifest(settings.manifest);
+      requireValue(manifest.composeSha256 === composeSha256, "COMPOSE_PROVENANCE_MISMATCH");
+      requireValue(manifest.target === path.join(workspace, "tmp", "portable-operator", manifest.project), "OPERATOR_TARGET_INVALID");
+      const privateRoot = path.join(workspace, "tmp", "portable-staging", manifest.project);
+      requireValue(!within(manifest.target, output) && !within(output, manifest.target) && !within(privateRoot, output) && !within(output, privateRoot), "OPERATIONS_OUTPUT_OVERLAP");
+      for (const target of [manifest.target, privateRoot]) requireValue(!await lstat(target).then(() => true, error => { if (error.code === "ENOENT") return false; throw error; }), "OPERATIONS_TARGET_OCCUPIED");
+      const migration = (await readdir(path.join(workspace, "prisma", "postgresql", "migrations"))).filter(name => /^\d{14}_/.test(name)).sort().at(-1);
+      requireValue(manifest.migration === migration, "MIGRATION_PROVENANCE_MISMATCH");
+    } else unresolved.push("PRIVATE_PREVIEW_CLASSIFICATION_AND_CONSUMER_CONTRACT", "IMMUTABLE_IMAGE_SOURCE_ARCHITECTURE", "APPROVED_INDEPENDENT_DATA_NAMESPACE", "REMOTE_DATABASE_TLS_AND_PROVIDER_SETTINGS", "APPROVED_PROXY_ORIGIN_CALLBACK_CONFIGURATION");
+    return { composeSha256, profile, manifest };
+  });
   const report: Record<string, unknown> = { schemaVersion: 1, purpose: settings.purpose, profile: settings.profile, applicationOrigin: settings.applicationOrigin, composeSha256, resourceFloor: profile.minimum, capacityEvidence: profile.capacityEvidence, executable: false, admitted: false, unresolved };
-  let manifest: OperatorManifest | undefined;
-  if (settings.purpose === "synthetic-integration") {
-    manifest = validateOperatorManifest(settings.manifest);
-    requireValue(manifest.composeSha256 === composeSha256, "COMPOSE_PROVENANCE_MISMATCH");
-    requireValue(manifest.target === path.join(workspace, "tmp", "portable-operator", manifest.project), "OPERATOR_TARGET_INVALID");
-    const privateRoot = path.join(workspace, "tmp", "portable-staging", manifest.project);
-    requireValue(!within(manifest.target, output) && !within(output, manifest.target) && !within(privateRoot, output) && !within(output, privateRoot), "OPERATIONS_OUTPUT_OVERLAP");
-    for (const target of [manifest.target, privateRoot]) requireValue(!await lstat(target).then(() => true, error => { if (error.code === "ENOENT") return false; throw error; }), "OPERATIONS_TARGET_OCCUPIED");
-    const migration = (await readdir(path.join(workspace, "prisma", "postgresql", "migrations"))).filter(name => /^\d{14}_/.test(name)).sort().at(-1);
-    requireValue(manifest.migration === migration, "MIGRATION_PROVENANCE_MISMATCH");
-  } else {
-    unresolved.push("PRIVATE_PREVIEW_CLASSIFICATION_AND_CONSUMER_CONTRACT", "IMMUTABLE_IMAGE_SOURCE_ARCHITECTURE", "APPROVED_INDEPENDENT_DATA_NAMESPACE", "REMOTE_DATABASE_TLS_AND_PROVIDER_SETTINGS", "APPROVED_PROXY_ORIGIN_CALLBACK_CONFIGURATION");
-  }
-  await mkdir(output, { mode: 0o700 }); // exclusive directory; never reuse a partial output
+  await observed(execution, "output-create", () => mkdir(output, { mode: 0o700 })); // exclusive; never reuse a partial output
   const write = (name: string, value: unknown) => writeFile(path.join(output, name), JSON.stringify(value, null, 2) + "\n", { flag: "wx", mode: 0o600 });
   if (manifest) {
-    await writeFile(path.join(output, "compose-interpolation.empty"), "", { flag: "wx", mode: 0o600 });
+    await observed(execution, "filesystem-check", () => writeFile(path.join(output, "compose-interpolation.empty"), "", { flag: "wx", mode: 0o600 }));
     // Only Compose's client-side config parser. No inspect/pull/up/probe/admission.
     // Empty explicit env file and allowlisted interpolation exclude ambient .env/secrets.
     const composeEnvironment = operationsComposeEnvironment(path.join(workspace, "tmp", "portable-staging", manifest.project), manifest.image, manifest.releaseCommit);
-    const composeVersion = execFileSync("docker", ["--context", "default", "compose", "version", "--short"], {
-      cwd: workspace, env: composeEnvironment, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], windowsHide: true, timeout: 30000, maxBuffer: 4096
-    }).trim();
-    requireValue(composeVersion.length <= 64 && /^v?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?$/.test(composeVersion) && Number(composeVersion.replace(/^v/, "").split(".")[0]) >= 2, "OPERATIONS_COMPOSE_VERSION_UNSUPPORTED");
-    const config = JSON.parse(execFileSync("docker", ["--context", "default", "compose", "--project-name", manifest.project, "--profile", "*", "--env-file", path.join(output, "compose-interpolation.empty"), "-f", composeFile, "config", "--format", "json", "--no-env-resolution"], {
-      cwd: workspace, env: composeEnvironment,
-      encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], windowsHide: true, timeout: 30000, maxBuffer: 1024 * 1024
-    }));
-    validatePreparedCompose(config, workspace, path.join(workspace, "tmp", "portable-staging", manifest.project), manifest);
+    const owner = execution.processOwner ?? new OperationsProcessOwner();
+    const version = await observed(execution, "compose-version", () => owner.run("docker", ["--context", "default", "compose", "version", "--short"], { cwd: workspace, env: composeEnvironment, timeoutMs: 30000, maxBuffer: 4096, signal: execution.signal }), value => value.observation);
+    const composeVersion = version.stdout.trim();
+    await observed(execution, "compose-parse", () => requireValue(composeVersion.length <= 64 && /^v?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?$/.test(composeVersion) && Number(composeVersion.replace(/^v/, "").split(".")[0]) >= 2, "OPERATIONS_COMPOSE_VERSION_UNSUPPORTED"));
+    const normalized = await observed(execution, "compose-config", () => owner.run("docker", ["--context", "default", "compose", "--project-name", manifest.project, "--profile", "*", "--env-file", path.join(output, "compose-interpolation.empty"), "-f", composeFile, "config", "--format", "json", "--no-env-resolution"], { cwd: workspace, env: composeEnvironment, timeoutMs: 30000, maxBuffer: 1024 * 1024, signal: execution.signal }), value => value.observation);
+    const config = await observed(execution, "compose-parse", () => { try { return JSON.parse(normalized.stdout); } catch { throw Error("OPERATIONS_COMPOSE_JSON_INVALID"); } });
+    await observed(execution, "boundary-validate", () => validatePreparedCompose(config, workspace, path.join(workspace, "tmp", "portable-staging", manifest.project), manifest));
     report.composeVersion = composeVersion;
     report.state = "SYNTHETIC_CONFIGURATION_PREPARED_NOT_ADMITTED";
     report.secretReferences = Object.keys(config.secrets).sort();
@@ -144,21 +175,21 @@ export async function prepareOperations(settingsFile: string, workspace: string,
       return {command, selected, manifestFile, operationId};
     });
     requireValue(new Set(operations.map(operation => operation.operationId)).size === OPERATOR_COMMANDS.length, "OPERATIONS_OPERATION_ID_COLLISION");
-    for (const operation of operations) await write(`manifest-${operation.command}.json`, operation.selected);
-    await write("commands.json", { cwd: workspace, qualificationRequiredBeforeDryRun: true, freshOperationIdRequiredForNewMutation: true, commands: operations.map(({command, manifestFile, operationId}) => ({ command, operationId, argv: ["dist/portable/operator.mjs", command, "--manifest", manifestFile, "--target", manifest!.target], requiresPreviousRelease: command === "upgrade" || command === "rollback", requiresRestoreArtifact: command === "restore" })) });
+    await observed(execution, "manifests-write", async () => { for (const operation of operations) { checkCancellation(execution.signal); await write(`manifest-${operation.command}.json`, operation.selected); } });
+    await observed(execution, "commands-write", () => write("commands.json", { cwd: workspace, qualificationRequiredBeforeDryRun: true, freshOperationIdRequiredForNewMutation: true, commands: operations.map(({command, manifestFile, operationId}) => ({ command, operationId, argv: ["dist/portable/operator.mjs", command, "--manifest", manifestFile, "--target", manifest!.target], requiresPreviousRelease: command === "upgrade" || command === "rollback", requiresRestoreArtifact: command === "restore" })) }));
   } else report.state = "FUTURE_PREVIEW_PREPARATION_INACTIVE";
-  await write("preparation.json", report);
+  await observed(execution, "preparation-write", () => write("preparation.json", report));
   return report;
 }
 
-export async function runPreparationCli(argv: string[]) {
+export async function runPreparationCli(argv: string[], execution: PreparationExecution = {}) {
   const options = new Map<string, string>();
   for (let i = 0; i < argv.length; i += 2) {
     requireValue(["--settings", "--workspace", "--output"].includes(argv[i]) && !options.has(argv[i]) && argv[i + 1] && !argv[i + 1].startsWith("--"), "OPERATIONS_ARGUMENT_INVALID");
     options.set(argv[i], argv[i + 1]);
   }
   requireValue(options.size === 3, "OPERATIONS_ARGUMENT_INVALID");
-  return prepareOperations(options.get("--settings")!, options.get("--workspace")!, options.get("--output")!);
+  return prepareOperations(options.get("--settings")!, options.get("--workspace")!, options.get("--output")!, execution);
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   runPreparationCli(process.argv.slice(2)).then(result => console.log(JSON.stringify({ state: result.state, executable: false, admitted: false, unresolved: result.unresolved }))).catch(error => {

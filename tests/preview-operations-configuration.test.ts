@@ -11,6 +11,7 @@ import { encryptCloudBackup } from "../lib/cloud-backup-container";
 import { makeRecoveryHandoff } from "../lib/portable-runtime/recovery-handoff";
 import { CiOperatorAdapter } from "../scripts/portable/operator-adapter";
 import { OPERATOR_COMMANDS, type OperatorCommand, type OperatorManifest } from "../lib/portable-runtime/operator";
+import { observedOperationsCase } from "./helpers/operations-preparation-observation";
 
 const workspace = process.cwd();
 async function manifest(profile: "local-single-node" | "generic-vps"): Promise<OperatorManifest> {
@@ -39,17 +40,18 @@ describe("explicit offline operations preparation", () => {
     }
     expect(observe(false).after).not.toContain("nalanda_backup_success_total");
   });
-  it.each(["local-single-node", "generic-vps"] as const)("parses effective canonical Compose and connects all existing argv for %s", async profile => {
-    const f = await fixture();
+  it.for(["local-single-node", "generic-vps"] as const)("parses effective canonical Compose and connects all existing argv for %s", async (profile, context) => observedOperationsCase(context, profile, async scope => {
+    const f = await scope.fixture(fixture, f => f.close());
     try {
-      const selected = await manifest(profile);
-      await writeFile(f.input, JSON.stringify({ schemaVersion: 1, purpose: "synthetic-integration", profile, applicationOrigin: "https://portable-staging.localhost:8443", manifest: selected }));
+      const selected = await scope.phase("provenance-check", () => manifest(profile));
+      await scope.phase("filesystem-check", () => writeFile(f.input, JSON.stringify({ schemaVersion: 1, purpose: "synthetic-integration", profile, applicationOrigin: "https://portable-staging.localhost:8443", manifest: selected })));
       vi.stubEnv("DATABASE_URL", "must-not-be-discovered"); vi.stubEnv("PORTABLE_IMAGE_ID", "latest"); vi.stubEnv("COMPOSE_FILE", "foreign.yml");
-      const result = await runPreparationCli(["--settings", f.input, "--workspace", workspace, "--output", f.output]);
+      const result = await runPreparationCli(["--settings", f.input, "--workspace", workspace, "--output", f.output], scope.execution(1));
       expect(result).toMatchObject({ state: "SYNTHETIC_CONFIGURATION_PREPARED_NOT_ADMITTED", executable: false, admitted: false, profile });
       expect(result.unresolved).toContain("REQUIRED_SECRET_FILES");
-      const commands = JSON.parse(await readFile(path.join(f.output, "commands.json"), "utf8"));
+      const commands = JSON.parse(await scope.phase("filesystem-check", () => readFile(path.join(f.output, "commands.json"), "utf8"), 1));
       expect(commands.commands.map((entry: any) => entry.command)).toEqual([...OPERATOR_COMMANDS]);
+      await scope.phase("operator-dry-run", async () => {
       let qualified = 0;
       for (const entry of commands.commands) {
         const effect = vi.fn();
@@ -60,19 +62,32 @@ describe("explicit offline operations preparation", () => {
       expect(qualified).toBe(10);
       expect(new Set(commands.commands.map((entry: any) => entry.operationId)).size).toBe(10);
       expect(commands.freshOperationIdRequiredForNewMutation).toBe(true);
-      const originalReport = await readFile(path.join(f.output, "preparation.json"), "utf8");
-      const another = path.join(f.root, "second"); await prepareOperations(f.input, workspace, another);
+      });
+      const originalReport = await scope.phase("filesystem-check", () => readFile(path.join(f.output, "preparation.json"), "utf8"), 1);
+      const another = path.join(f.root, "second"); await prepareOperations(f.input, workspace, another, scope.execution(2));
+      await scope.phase("outputs-equivalent", async () => {
       expect(await readFile(path.join(another, "preparation.json"), "utf8")).toBe(originalReport);
       expect(originalReport).not.toContain("must-not-be-discovered");
-      await expect(prepareOperations(f.input, workspace, f.output)).rejects.toThrow();
+      const files = (await readdir(f.output)).sort();
+      expect((await readdir(another)).sort()).toEqual(files);
+      expect(files).toEqual(["commands.json", "compose-interpolation.empty", ...OPERATOR_COMMANDS.map(command => `manifest-${command}.json`), "preparation.json"].sort());
+      for (const file of files) {
+        const first = await readFile(path.join(f.output, file), "utf8"), second = await readFile(path.join(another, file), "utf8");
+        // commands.json contains each output's own absolute manifest paths.
+        if (file === "commands.json") expect(second.split(JSON.stringify(another).slice(1, -1)).join("OUTPUT_ROOT")).toBe(first.split(JSON.stringify(f.output).slice(1, -1)).join("OUTPUT_ROOT"));
+        else expect(second).toBe(first);
+      }
+      });
+      await scope.phase("occupied-output-refusal", async () => { await expect(prepareOperations(f.input, workspace, f.output, scope.execution(0))).rejects.toThrow();
       expect(await readFile(path.join(f.output, "preparation.json"), "utf8")).toBe(originalReport);
+      });
       // Production qualification still refuses this fabricated test binding.
-      await expect(runOperatorCli(commands.commands[0].argv.slice(1))).rejects.toThrow();
-    } finally { vi.unstubAllEnvs(); await f.close(); }
-  });
-  it("uses generated distinct operations through the actual filesystem adapter and retains same-operation resume/refusal", async () => {
-    const f = await fixture();
-    try {
+      await scope.phase("artifact-refusal", () => expect(runOperatorCli(commands.commands[0].argv.slice(1))).rejects.toThrow());
+    } finally { vi.unstubAllEnvs(); }
+  }));
+  it("uses generated distinct operations through the actual filesystem adapter and retains same-operation resume/refusal", async context => observedOperationsCase(context, "filesystem-adapter-controls", async scope => {
+    const f = await scope.fixture(fixture, f => f.close());
+    const selected = await scope.phase("filesystem-check", async () => {
       for (const file of ["deploy/portable/compose.yml", "deploy/portable/profiles/local-single-node.json"]) {
         await mkdir(path.dirname(path.join(f.root, file)), {recursive: true});
         await copyFile(path.join(workspace, file), path.join(f.root, file));
@@ -83,8 +98,11 @@ describe("explicit offline operations preparation", () => {
       await mkdir(path.dirname(f.output), {recursive: true});
       await mkdir(path.join(f.root, "prisma", "postgresql", "migrations", selected.migration), {recursive: true});
       await writeFile(f.input, JSON.stringify({schemaVersion: 1, purpose: "synthetic-integration", profile: selected.profile, applicationOrigin: "https://portable-staging.localhost:8443", manifest: selected}));
-      await prepareOperations(f.input, f.root, f.output);
-      const commands = JSON.parse(await readFile(path.join(f.output, "commands.json"), "utf8")).commands;
+      return selected;
+    });
+      await prepareOperations(f.input, f.root, f.output, scope.execution(1));
+      const commands = JSON.parse(await scope.phase("filesystem-check", () => readFile(path.join(f.output, "commands.json"), "utf8"))).commands;
+      await scope.phase("operator-dry-run", async () => {
       const install = commands.find((row: any) => row.command === "install"), backup = commands.find((row: any) => row.command === "backup");
       const calls: string[][] = [];
       // Existing bounded process fixture: real target locks/markers/config/receipts,
@@ -118,8 +136,8 @@ describe("explicit offline operations preparation", () => {
       expect(JSON.parse(await readFile(path.join(selected.target, `${backup.operationId}.backup.receipt.json`), "utf8")).state).toBe("COMPLETE");
       expect((await readdir(path.dirname(selected.target))).some(name => name.endsWith(".lock"))).toBe(false);
       expect(calls.flat()).not.toContain("--volumes");
-    } finally {await f.close();}
-  });
+      });
+  }));
   it("prepares future HTTPS requirements without a manifest, secrets, daemon or executable configuration", async () => {
     const f = await fixture();
     try {
@@ -154,13 +172,14 @@ describe("explicit offline operations preparation", () => {
       await expect(prepareOperations(f.input, workspace, path.join(workspace, "lib", "operations-output"))).rejects.toThrow("OPERATIONS_OUTPUT_OVERLAP");
     } finally { await f.close(); }
   });
-  it("rejects dangerous changes after real Compose normalization", async () => {
-    const selected = await manifest("local-single-node");
-    const f = await fixture();
-    try {
-      const empty = path.join(f.root, "empty"); await writeFile(empty, "");
+  it("rejects dangerous changes after real Compose normalization", async context => observedOperationsCase(context, "normalized-refusals", async scope => {
+    const selected = await scope.phase("provenance-check", () => manifest("local-single-node"));
+    const f = await scope.fixture(fixture, f => f.close());
+      const empty = path.join(f.root, "empty"); await scope.phase("filesystem-check", () => writeFile(empty, ""));
       const privateRoot = path.join(workspace, "tmp", "portable-staging", selected.project);
-      const base = JSON.parse(execFileSync("docker", ["--context", "default", "compose", "--project-name", selected.project, "--profile", "*", "--env-file", empty, "-f", path.join(workspace, "deploy", "portable", "compose.yml"), "config", "--format", "json", "--no-env-resolution"], { encoding: "utf8", stdio: "pipe", env: operationsComposeEnvironment(privateRoot, selected.image, selected.releaseCommit) }));
+      const normalized = await scope.phase("compose-config", () => scope.owner.run("docker", ["--context", "default", "compose", "--project-name", selected.project, "--profile", "*", "--env-file", empty, "-f", path.join(workspace, "deploy", "portable", "compose.yml"), "config", "--format", "json", "--no-env-resolution"], { cwd: workspace, env: operationsComposeEnvironment(privateRoot, selected.image, selected.releaseCommit), timeoutMs: 30000, maxBuffer: 1024 * 1024, signal: scope.signal }));
+      const base = await scope.phase("compose-parse", () => JSON.parse(normalized.stdout));
+      await scope.phase("boundary-validate", async () => {
       expect(() => validatePreparedCompose(base, workspace, privateRoot, selected)).not.toThrow();
       // Each application service must retain both independently checked values.
       // object-init has no database contract; the original guard excludes it.
@@ -202,6 +221,6 @@ describe("explicit offline operations preparation", () => {
         (c: any) => c.services["web-1"].volumes = [{ type: "bind", source: "/var/run/docker.sock", read_only: true }],
         (c: any) => c.secrets.database_url.file = path.join(workspace, "prisma", "dev.db")
       ]) { const bad = structuredClone(base); change(bad); expect(() => validatePreparedCompose(bad, workspace, privateRoot, selected)).toThrow(); }
-    } finally { await f.close(); }
-  });
+      });
+  }));
 });
