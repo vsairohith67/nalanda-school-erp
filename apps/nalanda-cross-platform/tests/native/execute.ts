@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
 import { producerProcess, type ProducerProcessObservation } from "../../../../scripts/portable/producer-process";
 import { Android, appId, journey } from "./android";
-import { appleBuild, appleScenarioMarkers, appleCause, childCause, processMetadata, androidCause, nativeIdentity, nativeVersions, swiftSource, type PublicSource } from "./diagnostics";
+import { appleBuild, appleScenarioMarkers, appleCause, childCause, processMetadata, androidCause, nativeIdentity, nativeVersions, swiftSource, appleProjectSource, type PublicSource, type AppleInputBinding } from "./diagnostics";
 import { assertProtectedNativeCapture, assertNonblankNativeCapture } from "../../../../scripts/qa-ux-native-screen-content";
 
 const scenarios = ["A-clean-launch", "B-invalid-pin", "C-local-vault-empty", "D-explicit-lock-and-os-background", "E-cold-restart-wrong-pin", "F-remote-reference-draft-refusal", "G-reset-cancel-confirm", "H-platform-accessibility-layout"];
@@ -29,6 +29,14 @@ function inside(child: string, root: string) { const r = path.relative(root, chi
 function file(value: string) { assert(value && path.isAbsolute(value) && !lstatSync(value).isSymbolicLink() && lstatSync(value).isFile(), "NATIVE_TOOL_OR_PACKAGE_INVALID"); return realpathSync(value); }
 
 const processStages = new Set(["tool-version","package-metadata","android-install","android-uninstall","android-ui-command","ios-package-metadata","ios-architecture","xcode-version","ios-inventory","ios-create-owned-target","ios-boot","ios-boot-readiness","ios-theme","ios-build-ui-runner","ios-real-ui-journey","ios-dark-theme","ios-dark-locked-layout","ios-final-locked-launch","ios-final-capture","ios-owned-shutdown","ios-owned-delete","ios-cleanup-readback"]);
+export function appleInputBindings(workspace:string,derived:string,projectSource:string):AppleInputBinding[] {
+  // The checked-in project defines these exact target/product/source identities. Do not infer a
+  // missing compiler input from them: a later actual diagnostic must match its private path too.
+  assert(projectSource.includes('name = CompiledNalanda; productName = "Nalanda School";')&&projectSource.includes('PRODUCT_NAME = "Nalanda School";')&&projectSource.includes('name = NativeJourney; productName = NativeJourney;')&&projectSource.includes('path = NativeJourney.swift;'),"IOS_PUBLIC_INPUT_SOURCE_BINDING_REFUSED");
+  assert(path.isAbsolute(workspace)&&path.isAbsolute(derived),"IOS_PUBLIC_INPUT_SOURCE_BINDING_REFUSED");
+  const product=path.join(derived,"Build/Products/Debug-iphonesimulator/Nalanda School.app");
+  return [{absolutePath:path.join(workspace,...swiftSource.split("/")),identity:"SWIFT_SOURCE"},{absolutePath:path.join(product,"Nalanda School"),identity:"COMPILED_APP_EXECUTABLE"},{absolutePath:path.join(product,"Info.plist"),identity:"COMPILED_APP_PLIST"}];
+}
 export function processRecorder(output: string, publicSource?:PublicSource) {
   let sequence=0, failure: {stage:string;cause:string}|null=null;
   const outcomes=new Map<string,ReturnType<typeof processMetadata>>();
@@ -89,7 +97,8 @@ export async function main(args: string[]) {
   mkdirSync(output,{mode:0o700});
   const sourceTree=execFileSync("git",["show","-s","--format=%T","HEAD"],{encoding:"utf8",windowsHide:true}).trim();
   const sourceText=execFileSync("git",["show",`${source}:${swiftSource}`],{encoding:"utf8",windowsHide:true});
-  const observations=processRecorder(output,{absolutePath:path.join(workspace,...swiftSource.split("/")),relativePath:swiftSource,lineCount:sourceText.split(/\r?\n/).length});let summaryWritten=false,targetEffectsStarted=false;
+  const publicSource:PublicSource={absolutePath:path.join(workspace,...swiftSource.split("/")),relativePath:swiftSource,lineCount:sourceText.split(/\r?\n/).length};
+  const observations=processRecorder(output,publicSource);let summaryWritten=false,targetEffectsStarted=false;
   const identity=(packageHash:string)=>nativeIdentity({source,tree:sourceTree,packageHash,run:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT});
   const emit=(summary:object)=>{summaryWritten=true;console.log(JSON.stringify(summary));};
   let activeOperation="NATIVE_PREFLIGHT";
@@ -147,6 +156,9 @@ export async function main(args: string[]) {
     assert(plist.CFBundleIdentifier===appId && plist.CFBundleShortVersionString==="0.1.0" && plist.DTPlatformName==="iphonesimulator" && plist.CFBundleExecutable && !String(plist.CFBundleExecutable).includes("/"),"IOS_SIMULATOR_PACKAGE_METADATA_REFUSED");
     const arch=await run("ios-architecture",tool,["lipo","-archs",path.join(packagePath,plist.CFBundleExecutable)]);
     assert(arch.trim()==="arm64","IOS_SIMULATOR_ARCHITECTURE_REFUSED");
+    const projectSource=execFileSync("git",["show",`${source}:${appleProjectSource}`],{encoding:"utf8",windowsHide:true});
+    publicSource.inputs=appleInputBindings(workspace,path.join(output,"derived"),projectSource);
+    const appInput={configuredExecutablePresent:existsSync(path.join(packagePath,"Nalanda School")),metadataExecutableMatchesConfigured:plist.CFBundleExecutable==="Nalanda School"};
     const xcodeVersion=await run("xcode-version",metadataTool,["-version"]);
     const inventory=JSON.parse(await run("ios-inventory",tool,["simctl","list","--json"]));
     const runtime=inventory.runtimes.filter((r:any)=>r.isAvailable && r.identifier.startsWith("com.apple.CoreSimulator.SimRuntime.iOS-")).sort((a:any,b:any)=>a.identifier.localeCompare(b.identifier)).at(-1);
@@ -184,7 +196,7 @@ export async function main(args: string[]) {
       else if(serial) try {await run("ios-owned-shutdown",tool,["simctl","shutdown",serial]);await run("ios-owned-delete",tool,["simctl","delete",serial]);const after=JSON.parse(await run("ios-cleanup-readback",tool,["simctl","list","devices","--json"]));assert(!Object.values(after.devices).flat().some((d:any)=>d.udid===serial));cleanup="VERIFIED";}catch{cleanup="UNRECONCILED";cleanupFailure={cause:"IOS_OWNED_CLEANUP_FAILED",lastProcess:observations.latest()};}
       else {cleanup="UNRECONCILED";cleanupFailure={cause:"IOS_CREATED_TARGET_OWNERSHIP_UNVERIFIED",operations:"NOT_EXECUTED_WITH_UNVERIFIED_TARGET"};}
       const retention=retainNativeEvidence(output,{source,platform,profile:"NO_REMOTE_SERVER_CONFIGURED",packageHash,copiedHash,target:serial,runtime,deviceType,tools:{toolSha256:hash(tool),metadataToolSha256:hash(metadataTool),toolVersion,xcodeVersion},started,ended:new Date().toISOString(),exit:success&&cleanup==="VERIFIED"?0:1,assertions:observations.journey("ios-real-ui-journey")?.scenarios??[],processes,errorCode,terminal,cleanup,cleanupFailure,authenticated:false,physical:false},success,cleanup);
-      emit({platform,targetKind:o["--target-kind"],...retention,identity:identity(packageHash),versions:nativeVersions(toolVersion,xcodeVersion,runtime.version),scenarios:observations.journey("ios-real-ui-journey")?.scenarios??[],scenarioEvidence:observations.journey("ios-real-ui-journey")?.status??"NOT_EXECUTED",cleanup,cleanupFailure,failure:terminal,observedChildFailure:originalProcessFailure,build:observations.build("ios-build-ui-runner")??null,buildProcess:observations.outcome("ios-build-ui-runner")??null,authenticated:false,physical:false});
+      emit({platform,targetKind:o["--target-kind"],...retention,identity:identity(packageHash),versions:nativeVersions(toolVersion,xcodeVersion,runtime.version),scenarios:observations.journey("ios-real-ui-journey")?.scenarios??[],scenarioEvidence:observations.journey("ios-real-ui-journey")?.status??"NOT_EXECUTED",cleanup,cleanupFailure,failure:terminal,observedChildFailure:originalProcessFailure,appInput,build:observations.build("ios-build-ui-runner")??null,buildProcess:observations.outcome("ios-build-ui-runner")??null,authenticated:false,physical:false});
       assert(retention.evidenceRetention==="LOCAL_PRIVATE","NATIVE_PRIVATE_OUTPUT_WRITE_FAILED");
     }
     assert(success&&cleanup==="VERIFIED","NATIVE_EXECUTION_OR_CLEANUP_FAILED");

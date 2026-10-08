@@ -8,7 +8,7 @@ type Failure = {predicate:string; context:string[]; cause:string; kind:"ASSERTIO
 class AndroidFailure extends Error {
   constructor(readonly diagnostic:Failure) {super("ANDROID_FINITE_PREDICATE_FAILED");}
 }
-type NamedPredicate="B_EMPTY_UNLOCK_DISABLED"|"B_SHORT_STATE_ACQUIRE"|"B_SHORT_UNLOCK_DISABLED"|"F_REMOTE_DISABLED"|"F_REFERENCE_DISABLED"|"H_FONT_SCALE_APPLIED"|"H_PIN_FIELD_READY"|"H_IME_VISIBLE"|"H_ORIGINAL_SETTING_VALID"|"H_SETTING_RESTORED";
+type NamedPredicate="B_EMPTY_UNLOCK_DISABLED"|"B_SHORT_STATE_ACQUIRE"|"B_SHORT_UNLOCK_DISABLED"|"C_LOCKED_FORM_READY"|"F_REMOTE_DISABLED"|"F_REFERENCE_DISABLED"|"H_FONT_SCALE_APPLIED"|"H_PIN_FIELD_READY"|"H_IME_VISIBLE"|"H_ORIGINAL_SETTING_VALID"|"H_SETTING_RESTORED";
 
 export const appId = "com.nalandaps.erp";
 export type UiNode = Record<string, string>;
@@ -147,7 +147,11 @@ export async function journey(a: Android, pin: string, record: (id: string, acti
     await a.check("B_SHORT_UNLOCK_DISABLED",()=>assert(invalid.some(n => n.package === appId && (n.text === "Unlock app" || n["content-desc"] === "Unlock app") && n.enabled === "false")));
     await a.run(["shell", "am", "force-stop", appId]); await a.launch(); // empty PIN after real cold start
   });
-  await record("C-local-vault-empty", async () => { await a.unlock(pin); await a.text("0 items"); await a.text("No remote server is configured."); });
+  await record("C-local-vault-empty", async () => {
+    // B starts a fresh activity. am start -W does not establish the WebView form's readiness.
+    await a.check("C_LOCKED_FORM_READY",()=>a.locked());
+    await a.unlock(pin); await a.text("0 items"); await a.text("No remote server is configured.");
+  });
   await record("F-remote-reference-draft-refusal", async () => {
     await a.tap("Security");
     const t = await a.text("No remote server configured");

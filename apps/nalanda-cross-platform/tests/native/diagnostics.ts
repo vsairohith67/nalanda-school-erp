@@ -31,7 +31,8 @@ export function androidState(tree: readonly UiNode[]) {
     return [key, {count: bound(rows.length), actionable: bound(rows.filter(n => n.clickable === "true").length), enabled: bound(rows.filter(n => n.enabled === "true").length)}];
   }));
   const states = Object.fromEntries(Object.entries(stateLabels).map(([key, label]) => [key, display.some(n => n.text?.includes(label) || n["content-desc"]?.includes(label))]));
-  return {controls, states, passwordFields: bound(own.filter(n => n.class === "android.widget.EditText" && n.password === "true").length), focusedPasswordFields: bound(own.filter(n => n.class === "android.widget.EditText" && n.password === "true" && n.focused === "true").length), network: states.ONLINE && !states.OFFLINE ? "ONLINE" : states.OFFLINE && !states.ONLINE ? "OFFLINE" : "UNKNOWN"};
+  const appUi={nodes:bound(own.length),webViews:bound(own.filter(n=>n.class==="android.webkit.WebView").length),editableFields:bound(own.filter(n=>n.class==="android.widget.EditText").length),focusedEditableFields:bound(own.filter(n=>n.class==="android.widget.EditText"&&n.focused==="true").length)};
+  return {controls, states, appUi, passwordFields: bound(own.filter(n => n.class === "android.widget.EditText" && n.password === "true").length), focusedPasswordFields: bound(own.filter(n => n.class === "android.widget.EditText" && n.password === "true" && n.focused === "true").length), network: states.ONLINE && !states.OFFLINE ? "ONLINE" : states.OFFLINE && !states.ONLINE ? "OFFLINE" : "UNKNOWN"};
 }
 
 const processCauses = new Set(["CHILD_STARTUP_FAILED", "CHILD_GROUP_UNRECONCILED", "CHILD_TIMEOUT", "CHILD_CANCELLED", "CHILD_OUTPUT_LIMIT", "CHILD_EXIT_FAILED", "PRIVATE_RETENTION_FAILED"]);
@@ -57,7 +58,26 @@ export function childCause(r: Parameters<typeof processMetadata>[0]) {
 }
 
 export const swiftSource = "apps/nalanda-cross-platform/tests/native/NativeJourney.swift";
-export type PublicSource = {absolutePath: string; relativePath: typeof swiftSource; lineCount: number};
+export const appleProjectSource = "apps/nalanda-cross-platform/tests/native/NativeJourney.xcodeproj/project.pbxproj";
+const appleInputCatalog = {
+ SWIFT_SOURCE:{source:swiftSource,target:"NativeJourney",kind:"REPOSITORY_SOURCE",name:"NativeJourney.swift"},
+ COMPILED_APP_EXECUTABLE:{source:appleProjectSource,target:"CompiledNalanda",kind:"OWNED_DERIVED_PRODUCT",name:"Nalanda School.app/Nalanda School"},
+ COMPILED_APP_PLIST:{source:appleProjectSource,target:"CompiledNalanda",kind:"OWNED_DERIVED_PRODUCT",name:"Nalanda School.app/Info.plist"},
+} as const;
+export type AppleInputBinding = {absolutePath:string;identity:keyof typeof appleInputCatalog};
+export type PublicSource = {absolutePath: string; relativePath: typeof swiftSource; lineCount: number; inputs?:readonly AppleInputBinding[]};
+function appleMissingInput(message:string,source:PublicSource) {
+ // Extract only this diagnostic's path, then require an exact source-validated input binding.
+ // Unknown filenames, arbitrary target names and the rest of the compiler message never escape.
+ const at=/^Build input file cannot be found: '([^'\r\n]+)'(?:\..*)?$/.exec(message);
+ if(!at)return null;
+ const matches=source.inputs?.filter(binding=>binding.absolutePath===at[1]&&Object.hasOwn(appleInputCatalog,binding.identity))??[];
+ if(matches.length!==1)return null;
+ const known=appleInputCatalog[matches[0].identity];
+ const target=/\(in target '([^'\r\n]+)' from project '([^'\r\n]+)'\)$/.exec(message);
+ if(!target||target[1]!==known.target||target[2]!=="NativeJourney")return null;
+ return {identity:matches[0].identity,...known};
+}
 const copySteps = ["SOURCE", "DESTINATION", "DIRECTORY", "COPY"] as const;
 type BuildStage = "UNKNOWN"|"SWIFT_COMPILE"|"SWIFT_MODULE"|"LINK"|"COPY_SCRIPT"|"PLIST"|"TARGET_VALIDATION"|"SIGNING"|"DESTINATION_OR_CONFIGURATION";
 function buildStage(line: string, current: BuildStage): BuildStage {
@@ -95,7 +115,7 @@ function compilerCategory(message: string): string {
 }
 export function appleCause(error: unknown) {
   const message=error instanceof Error?error.message.split(/\r?\n/,1)[0]:"";
-  const known=new Set(["IOS_TEST_TARGET_PACKAGE_SUBSTITUTED","IOS_REQUIRED_SCENARIO_EVIDENCE_MISSING","IOS_FINAL_CAPTURE_READINESS_TIMEOUT","IOS_OWNED_TARGET_ID_INVALID","IOS_SIMULATOR_PACKAGE_METADATA_REFUSED","IOS_SIMULATOR_ARCHITECTURE_REFUSED","IOS_SUPPORTED_RUNTIME_OR_DEVICE_TYPE_UNAVAILABLE","NATIVE_PRIVATE_OUTPUT_WRITE_FAILED","NATIVE_PRIVATE_PROCESS_RETENTION_FAILED","QA_PROCESS_RETENTION_FAILED","NATIVE_PACKAGE_HASH_MISMATCH"]);
+  const known=new Set(["IOS_PUBLIC_INPUT_SOURCE_BINDING_REFUSED","IOS_TEST_TARGET_PACKAGE_SUBSTITUTED","IOS_REQUIRED_SCENARIO_EVIDENCE_MISSING","IOS_FINAL_CAPTURE_READINESS_TIMEOUT","IOS_OWNED_TARGET_ID_INVALID","IOS_SIMULATOR_PACKAGE_METADATA_REFUSED","IOS_SIMULATOR_ARCHITECTURE_REFUSED","IOS_SUPPORTED_RUNTIME_OR_DEVICE_TYPE_UNAVAILABLE","NATIVE_PRIVATE_OUTPUT_WRITE_FAILED","NATIVE_PRIVATE_PROCESS_RETENTION_FAILED","QA_PROCESS_RETENTION_FAILED","NATIVE_PACKAGE_HASH_MISMATCH"]);
   if(known.has(message))return message;
   if(/^IOS_XCODE_STAGE_FAILED:(?:ios-build-ui-runner|ios-real-ui-journey|ios-dark-locked-layout)$/.test(message))return "IOS_XCODE_STAGE_FAILED";
   if(/^NATIVE_OPERATION_FAILED:IOS_(?:CREATE_OWNED_TARGET|BOOT|BOOT_READINESS|THEME|DARK_THEME|FINAL_LOCKED_LAUNCH|FINAL_CAPTURE)$/.test(message))return "IOS_CHILD_OPERATION_FAILED";
@@ -103,7 +123,7 @@ export function appleCause(error: unknown) {
 }
 export function appleStream(stream: Buffer, source: PublicSource) {
   let stage: BuildStage = "UNKNOWN";
-  let first: {stage: BuildStage; category: string; location: {path: typeof swiftSource; line: number; column: number|null}|null}|null = null;
+  let first: {stage: BuildStage; category: string; location: {path: typeof swiftSource; line: number; column: number|null}|null;errorCode?:"XCODE_BUILD_INPUT_FILE_NOT_FOUND";input?:ReturnType<typeof appleMissingInput>}|null = null;
   const copy: {step: typeof copySteps[number]; status: "BEGIN"|"PASS"|"FAIL"}[] = [];
   for (const raw of stream.toString("utf8").split(/\r?\n/)) {
     stage = buildStage(raw, stage);
@@ -123,7 +143,8 @@ export function appleStream(stream: Buffer, source: PublicSource) {
         const column = at[3] && Number.isSafeInteger(Number(at[3])) && Number(at[3]) >= 1 && Number(at[3]) <= 10000 ? Number(at[3]) : null;
         location = {path: swiftSource, line: Number(at[2]), column};
       }
-      first = {stage, category: compilerCategory(at?.[4] ?? generic?.[1] ?? raw), location};
+      const message=at?.[4]??generic?.[1]??raw,category=compilerCategory(message);
+      first = {stage, category, location,...(category==="BUILD_INPUT_UNAVAILABLE"?{errorCode:"XCODE_BUILD_INPUT_FILE_NOT_FOUND" as const,input:appleMissingInput(message,source)}:{})};
     }
   }
   return {firstDiagnostic: first, copy};

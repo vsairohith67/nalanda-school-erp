@@ -7,8 +7,8 @@ import os from "node:os";
 import path from "node:path";
 import {afterAll,afterEach,expect,it,vi} from "vitest";
 import {Android,appId,journey} from "@/apps/nalanda-cross-platform/tests/native/android";
-import {androidCause,androidState,appleBuild,appleScenarioMarkers,nativeIdentity,nativeScenarios,nativeVersions,processMetadata,swiftSource,type PublicSource} from "@/apps/nalanda-cross-platform/tests/native/diagnostics";
-import {processRecorder,ownedSimulatorId,retainNativeEvidence} from "@/apps/nalanda-cross-platform/tests/native/execute";
+import {androidCause,androidState,appleBuild,appleScenarioMarkers,nativeIdentity,nativeScenarios,nativeVersions,processMetadata,swiftSource,appleProjectSource,type PublicSource} from "@/apps/nalanda-cross-platform/tests/native/diagnostics";
+import {appleInputBindings,processRecorder,ownedSimulatorId,retainNativeEvidence} from "@/apps/nalanda-cross-platform/tests/native/execute";
 import {producerProcess,type ProducerProcessObservation} from "@/scripts/portable/producer-process";
 const root=mkdtempSync(path.join(os.tmpdir(),"native-projection-r2-"));
 afterAll(()=>{expect(path.relative(os.tmpdir(),path.resolve(root))).toMatch(/^native-projection-r2-[^\\/]+$/);rmSync(root,{recursive:true,force:true});});
@@ -105,6 +105,52 @@ it.each(["RECOVERED_READ","PERSISTENT_READ","RETENTION_FAILED","GROUP_UNRECONCIL
  }
 });
 
+it.each(["DELAYED_FORM","FORM_ABSENT","PIN_ABSENT","PIN_DUPLICATE","FOREIGN_PIN_ONLY","WRONG_EMPTY_STATE","LOCKED_CONTENT_LEAK","RETENTION_FAILED"] as const)("executes A/B then the cold-start C readiness boundary without relaxing PIN or empty-state assertions: %s",async condition=>{
+ vi.useFakeTimers();const a=new Android("source-only-adb","emulator-5580",root);
+ let launches=0,pinValue="",coldReads=0,workspaceVisible=false,cPassed=false,cReads=0;
+ const completed:string[]=[],typed:string[]=[];
+ const own=(label:string,attributes="")=>`<node package="${appId}" class="android.widget.TextView" text="${label}" ${attributes}/>`;
+ const password=(pkg=appId)=>`<node package="${pkg}" class="android.widget.EditText" password="true" text="${pinValue}" bounds="[0,0][10,10]"/>`;
+ const locked=()=>`<hierarchy>${own("Welcome back")}${own("NO REMOTE SERVER CONFIGURED")}${own("App 0.1.0")}${password()}${own("Unlock app",`clickable="true" enabled="${pinValue.length>=8}" bounds="[30,0][50,10]"`)}</hierarchy>`;
+ a.run=async args=>{
+  if(args.includes("force-stop")){pinValue="";workspaceVisible=false;return "";}
+  if(args.includes("start")){launches++;return "Status: ok";}
+  if(args.includes("text")){pinValue=args.at(-1)!;typed.push(pinValue);return "";}
+  if(args.includes("tap")&&args.at(-2)==="40"&&pinValue.length>=8)workspaceVisible=true;
+  if(!args.includes("cat")){
+   if(launches===2&&condition==="RETENTION_FAILED"&&args.includes("rm")){cReads++;throw Error("QA_PROCESS_RETENTION_FAILED");}
+   return "";
+  }
+  if(workspaceVisible)return `<hierarchy>${own("Workspace",'clickable="true" enabled="true" bounds="[60,0][80,10]"')}${own("Recent drafts")}${own(condition==="WRONG_EMPTY_STATE"?"1 item":"0 items")}${own("No remote server is configured.")}</hierarchy>`;
+  if(launches===2){
+   coldReads++;
+   if(condition==="FORM_ABSENT"||(condition==="DELAYED_FORM"&&coldReads<=2))return "<hierarchy></hierarchy>";
+   if(condition==="PIN_ABSENT")return `<hierarchy>${own("Welcome back")}</hierarchy>`;
+   if(condition==="PIN_DUPLICATE")return locked().replace("</hierarchy>",password()+"</hierarchy>");
+   if(condition==="FOREIGN_PIN_ONLY")return `<hierarchy>${own("Welcome back")}${password("foreign.app")}</hierarchy>`;
+   if(condition==="LOCKED_CONTENT_LEAK")return locked().replace("</hierarchy>",own("Recent drafts")+"</hierarchy>");
+  }
+  return locked();
+ };
+ const pending=journey(a,pin,async(id,action)=>{
+  if(id==="F-remote-reference-draft-refusal")throw Error("SOURCE_ONLY_STOP_AFTER_C");
+  a.beginScenario();await action();completed.push(id);if(id==="C-local-vault-empty")cPassed=true;
+ }).then(()=>{throw Error("unexpected-source-success");},error=>({error,diagnostic:a.failure(error)}));
+ await vi.runAllTimersAsync();const result=await pending;
+ expect(completed.slice(0,2)).toEqual(["A-clean-launch","B-invalid-pin"]);expect(launches).toBe(2);excluded(result.diagnostic);
+ if(condition==="DELAYED_FORM"){
+  expect(cPassed).toBe(true);expect(completed).toEqual(["A-clean-launch","B-invalid-pin","C-local-vault-empty"]);expect(typed).toEqual(["123",pin]);expect(coldReads).toBeGreaterThanOrEqual(3);expect(result.error.message).toBe("SOURCE_ONLY_STOP_AFTER_C");
+ }else{
+  expect(cPassed).toBe(false);expect(completed).toHaveLength(2);
+  if(condition==="FORM_ABSENT")expect(result.diagnostic).toMatchObject({predicate:"STATE_LOCKED_WAIT",context:["C_LOCKED_FORM_READY","STATE_LOCKED_WAIT"],cause:"ANDROID_EXPECTED_ACCESSIBILITY_STATE_NOT_READY",elapsedMs:60000,state:{passwordFields:0,appUi:{nodes:0}}});
+  else if(condition==="WRONG_EMPTY_STATE")expect(result.diagnostic).toMatchObject({predicate:"STATE_EMPTY_QUEUE_WAIT",cause:"ANDROID_EXPECTED_ACCESSIBILITY_STATE_NOT_READY",elapsedMs:60000});
+  else if(condition==="LOCKED_CONTENT_LEAK")expect(result.diagnostic).toMatchObject({predicate:"C_LOCKED_FORM_READY",cause:"ANDROID_LOCKED_CONTENT_LEAK"});
+  else if(condition==="RETENTION_FAILED"){expect(result.diagnostic.cause).toBe("PRIVATE_RETENTION_FAILED");expect(cReads).toBe(1);}
+  else expect(result.diagnostic).toMatchObject({predicate:"PIN_FIELD_UNIQUE",cause:"ANDROID_INPUT_NOT_UNIQUE",state:{passwordFields:condition==="PIN_DUPLICATE"?2:0}});
+  expect(typed).toEqual(condition==="WRONG_EMPTY_STATE"?["123",pin]:["123"]);
+ }
+});
+
 it("preserves actual closed child metadata even when its observer rejects retention",async()=>{
  // Node deliberately refuses the ADB-only argv; this is a source transport control, no native target.
  const a=new Android(process.execPath,"emulator-5580",root,()=>{throw Error(secret);});
@@ -152,6 +198,43 @@ it("projects actual nonzero child timeout through the unchanged optional observe
  const output=path.join(root,"actual-timeout");mkdirSync(output);const capture=processRecorder(output);
  await expect(producerProcess({stage:"android-ui-command",tool:process.execPath,args:["-e",`process.stdout.write(${JSON.stringify(secret)});setInterval(()=>{},100)`],timeoutMs:100},root,undefined,capture.observe)).rejects.toThrow("QA_PROCESS_FAILED_OR_CANCELLED");
  expect(capture.outcome("android-ui-command")).toMatchObject({timedOut:true,cancelled:false,closed:true});expect(capture.failure()?.cause).toBe("CHILD_TIMEOUT");expect(readdirSync(output)).toEqual(["process-1.json"]);excluded(capture.outcome("android-ui-command"));
+});
+
+it.each(["COMPILED_APP_EXECUTABLE","COMPILED_APP_PLIST","SWIFT_SOURCE"] as const)("identifies only the actual source-bound missing Apple input %s without publishing compiler paths",identity=>{
+ const projectSource=readFileSync(path.join(process.cwd(),appleProjectSource),"utf8"),inputs=appleInputBindings(path.resolve(hostPath),path.resolve(hostPath,"owned-derived"),projectSource);
+ const binding=inputs.find(input=>input.identity===identity)!;
+ const target=identity==="SWIFT_SOURCE"?"NativeJourney":"CompiledNalanda";
+ const scoped:PublicSource={...source,inputs};
+ const result=appleBuild(streams(`Validate product\nerror: Build input file cannot be found: '${binding.absolutePath}'. Did you forget to declare this file as an output? (in target '${target}' from project 'NativeJourney')\nerror: ${secret} ${pin}`),Buffer.alloc(0),scoped);
+ expect(result.stdout.firstDiagnostic).toMatchObject({stage:"TARGET_VALIDATION",category:"BUILD_INPUT_UNAVAILABLE",errorCode:"XCODE_BUILD_INPUT_FILE_NOT_FOUND",input:{identity,target,source:identity==="SWIFT_SOURCE"?swiftSource:appleProjectSource}});
+ excluded(result);expect(JSON.stringify(result)).not.toContain(binding.absolutePath);
+});
+
+it.each(["FOREIGN_DIRECTORY","UNKNOWN_FILENAME","TRAVERSAL","UNKNOWN_TARGET","UNKNOWN_PROJECT","MISSING_TARGET","DUPLICATE_BINDING","UNKNOWN_IDENTITY"] as const)("keeps unverified missing Apple input identity unknown: %s",condition=>{
+ const projectSource=readFileSync(path.join(process.cwd(),appleProjectSource),"utf8"),inputs=appleInputBindings(path.resolve(hostPath),path.resolve(hostPath,"owned-derived"),projectSource);
+ const known=inputs.find(input=>input.identity==="COMPILED_APP_EXECUTABLE")!;
+ let missing=known.absolutePath,target="CompiledNalanda",project="NativeJourney";
+ if(condition==="FOREIGN_DIRECTORY")missing=path.join(root,"foreign","Nalanda School.app","Nalanda School");
+ if(condition==="UNKNOWN_FILENAME")missing=path.join(path.dirname(missing),secret);
+ if(condition==="TRAVERSAL")missing=path.dirname(missing)+path.sep+".."+path.sep+"Nalanda School.app"+path.sep+"Nalanda School";
+ if(condition==="UNKNOWN_TARGET")target=secret;
+ if(condition==="UNKNOWN_PROJECT")project=secret;
+ if(condition==="DUPLICATE_BINDING")inputs.push({...known});
+ if(condition==="UNKNOWN_IDENTITY"){inputs.length=0;inputs.push({...known,identity:secret} as unknown as typeof known);}
+ const suffix=condition==="MISSING_TARGET"?"":` (in target '${target}' from project '${project}')`;
+ const result=appleBuild(streams(`Validate product\nerror: Build input file cannot be found: '${missing}'. ${secret} ${pin}${suffix}\nerror: Build input file cannot be found: '${known.absolutePath}'. (in target 'CompiledNalanda' from project 'NativeJourney')`),Buffer.alloc(0),{...source,inputs});
+ expect(result.stdout.firstDiagnostic).toMatchObject({category:"BUILD_INPUT_UNAVAILABLE",errorCode:"XCODE_BUILD_INPUT_FILE_NOT_FOUND",input:null});excluded(result);expect(JSON.stringify(result)).not.toContain(missing);
+});
+
+it("refuses Apple bindings outside the verified checked-in target identity and keeps actual failed observer metadata",()=>{
+ const projectSource=readFileSync(path.join(process.cwd(),appleProjectSource),"utf8"),workspace=path.resolve(hostPath),derived=path.resolve(hostPath,"owned-derived");
+ for(const altered of ["",projectSource.replaceAll("CompiledNalanda",secret),projectSource.replaceAll('PRODUCT_NAME = "Nalanda School";',`PRODUCT_NAME = "${secret}";`)])expect(()=>appleInputBindings(workspace,derived,altered)).toThrow("IOS_PUBLIC_INPUT_SOURCE_BINDING_REFUSED");
+ expect(()=>appleInputBindings("relative-workspace",derived,projectSource)).toThrow("IOS_PUBLIC_INPUT_SOURCE_BINDING_REFUSED");
+ const inputs=appleInputBindings(workspace,derived,projectSource),binding=inputs.find(input=>input.identity==="COMPILED_APP_EXECUTABLE")!;
+ const output=path.join(root,"actual-apple-input-observer");mkdirSync(output);const capture=processRecorder(output,{...source,inputs});
+ capture.observe({...observation("ios-build-ui-runner"),exit:65,stdout:streams(`Validate product\nerror: Build input file cannot be found: '${binding.absolutePath}'. (in target 'CompiledNalanda' from project 'NativeJourney')`)});
+ expect(capture.failure()).toEqual({stage:"ios-build-ui-runner",cause:"CHILD_EXIT_FAILED"});expect(capture.outcome("ios-build-ui-runner")).toMatchObject({exit:65,closed:true});expect(capture.build("ios-build-ui-runner")?.stdout.firstDiagnostic?.input?.identity).toBe("COMPILED_APP_EXECUTABLE");excluded(capture.build("ios-build-ui-runner"));
+ expect(readFileSync(path.join(output,"process-1.stdout"),"utf8")).toContain(binding.absolutePath);expect(capture.retained("ios-build-ui-runner")).toBe(true);
 });
 
 it("projects the first diagnostic in each stream without disclosing compiler fragments",()=>{
