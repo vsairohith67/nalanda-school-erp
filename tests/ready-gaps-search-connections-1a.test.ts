@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+import { assertSyntheticPostgresQa } from "../scripts/postgres/synthetic-qa";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import { randomUUID } from "node:crypto";
@@ -19,9 +21,9 @@ import { UniversalSearchWorkspace } from "../components/universal-search-workspa
 import { POST } from "../app/api/super-admin/search/route";
 
 // ISOLATED_SERVICE_OR_ROUTE: the real Search route, persisted session/IAM
-// decisions and Prisma readers run on a fresh migrated SQLite fixture. Only
+// decisions and Prisma readers run on a fresh provider-specific migrated fixture. Only
 // Next's cookie transport and Prisma singleton routing are doubled. No server,
-// login, real data, PostgreSQL or operational acceptance is claimed.
+// login, real data or operational acceptance is claimed.
 const harness = vi.hoisted(() => ({ db: null as PrismaClient | null, cookie: undefined as string | undefined }));
 vi.mock("../lib/prisma", () => ({ prisma: new Proxy({}, { get: (_target, key) => {
   const value = Reflect.get(harness.db!, key);
@@ -44,6 +46,9 @@ vi.mock("next/link", () => ({ default: ({ children, ...props }: { children: Reac
 
 const root = mkdtempSync(path.join(tmpdir(), "nalanda-ready-gaps-search-1a-"));
 const rootIdentity = lstatSync(root);
+const postgres = process.env.DATABASE_PROVIDER === "postgresql";
+const postgresUrl = process.env.DATABASE_URL;
+let ownedSchema: string;
 const template = path.join(root, "empty-migrated.db");
 let db: PrismaClient;
 let actor: AuthUser;
@@ -53,6 +58,7 @@ const year = "2026-27";
 const sourceClass = "SyntheticClassSeven";
 
 beforeAll(async () => {
+  if (postgres) { expect(process.env.CI).toBe("true"); assertSyntheticPostgresQa(); return; }
   // Existing SQLite migration harness, starting from an empty in-memory DB.
   // No operational DB is opened, copied, seeded or used as fallback.
   const sql = new DatabaseSync(":memory:");
@@ -75,10 +81,14 @@ async function identity(role: AuthUser["role"] = "SUPER_ADMIN") {
 
 beforeEach(async () => {
   casePath = path.join(root, `synthetic-${randomUUID()}.db`);
-  copyFileSync(template, casePath);
-  const url = `file:${casePath.replaceAll("\\", "/")}`;
+  let url = `file:${casePath.replaceAll("\\", "/")}`;
+  if (postgres) {
+    ownedSchema = `nps_search_${randomUUID().replaceAll("-", "")}`;
+    const target = new URL(postgresUrl!); target.searchParams.set("schema", ownedSchema); url = target.toString();
+    execFileSync(process.execPath, ["node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", "prisma/postgresql/schema.prisma"], { env: { ...process.env, DATABASE_URL: url, DIRECT_URL: url }, stdio: "pipe", windowsHide: true, timeout: 60_000 });
+  } else copyFileSync(template, casePath);
   vi.stubEnv("DATABASE_URL", url);
-  vi.stubEnv("DATABASE_PROVIDER", "sqlite");
+  vi.stubEnv("DATABASE_PROVIDER", postgres ? "postgresql" : "sqlite");
   vi.stubEnv("NODE_ENV", "test");
   vi.stubEnv("APP_ORIGIN", "http://127.0.0.1:47839");
   vi.stubEnv("AUTH_SECRET", "SYNTHETIC-SEARCH-ONLY-SECRET-NEVER-DEPLOY-000000");
@@ -88,6 +98,10 @@ beforeEach(async () => {
   resetSecurityRateLimitStoresForTests();
 });
 afterEach(async () => {
+  if (postgres && db) {
+    if (!/^nps_search_[a-f0-9]{32}$/.test(ownedSchema)) throw new Error("OWNED_SCHEMA_REQUIRED");
+    await db.$executeRawUnsafe(`DROP SCHEMA "${ownedSchema}" CASCADE`);
+  }
   if (db) await db.$disconnect(); harness.db = null; harness.cookie = undefined;
   hooks.values = []; hooks.changes = []; hooks.index = 0;
   resetSecurityRateLimitStoresForTests(); vi.unstubAllGlobals(); vi.unstubAllEnvs();

@@ -117,9 +117,7 @@ export async function validateSubstituteLinks(client: SubstituteClient, input: R
   if (leaveConflict) throw new Error("This substitute is on approved leave for the selected date");
   if (attendance) throw new Error(`This substitute is marked ${substituteLabel(attendance.status)} in staff attendance for the selected date`);
   if (assignments.some((row) => periodsConflict(input, row))) throw new Error("This substitute already has another duty at the same date and period");
-  const regularDuties = await regularSubstituteDuties(client, availability, [input.substituteStaffMemberId]);
-  if (regularDuties.some((duty) => !duty.determined) || (regularDuties.length && !(availability.periodStartTime && availability.periodEndTime))) throw new Error("Regular timetable availability cannot be verified: review the configured teaching period and provide both period times");
-  if (regularDuties.some((duty) => periodsConflict(input, duty))) throw new Error("This substitute has a regular timetable duty at the same date and period");
+  await assertNoRegularTimetableConflict(client, availability, input.substituteStaffMemberId);
 }
 
 type SubstituteAvailability = { assignmentDate: Date; academicYear?: string | null; periodLabel?: string | null; periodStartTime?: string | null; periodEndTime?: string | null };
@@ -136,6 +134,16 @@ export function validateSubstituteAvailability(input: SubstituteAvailability) {
   const periodLabel = String(input.periodLabel ?? "").trim() || null;
   if (!periodLabel && !(periodStartTime && periodEndTime)) throw new Error("Enter a period label or both period start and end times");
   return { ...input, academicYear, periodLabel, periodStartTime, periodEndTime };
+}
+
+/** Shared by substitute assignment and the reverse timetable mutation guard.
+ * Both callers execute this reader within the same Serializable transaction as
+ * their write, so neither direction relies on a stale advisory preflight. */
+export async function assertNoRegularTimetableConflict(client: SubstituteClient, input: SubstituteAvailability, staffMemberId: string) {
+  const availability = validateSubstituteAvailability(input);
+  const duties = await regularSubstituteDuties(client, availability, [staffMemberId]);
+  if (duties.some((duty) => !duty.determined) || (duties.length && !(availability.periodStartTime && availability.periodEndTime))) throw new Error("Regular timetable availability cannot be verified: review the configured teaching period and provide both period times");
+  if (duties.some((duty) => periodsConflict(availability, duty))) throw new Error("This substitute has a regular timetable duty at the same date and period");
 }
 
 /** Reads only the existing staff-to-timetable link and operational ACTIVE

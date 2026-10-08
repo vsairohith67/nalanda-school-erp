@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+import { assertSyntheticPostgresQa } from "../scripts/postgres/synthetic-qa";
 import { randomUUID, randomBytes } from "node:crypto";
 import { mkdtempSync, readFileSync, readdirSync, lstatSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -24,16 +26,23 @@ vi.mock("@/lib/prisma", () => ({ prisma: new Proxy({}, { get: (_target, key) => 
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => ({ value: harness.cookie }) }) }));
 
 // Actual production services and transactions on a freshly migrated invented
-// SQLite file. No copied operational database, payroll/payee mapping, signature,
+// provider target. No copied operational database, payroll/payee mapping, signature,
 // receipt acknowledgement, server launch or school disbursement is exercised.
+const postgres = process.env.DATABASE_PROVIDER === "postgresql";
+const ownedSchema = `nps_cash_draft_${randomUUID().replaceAll("-", "")}`;
 let db: PrismaClient;
 let root: string;
 let identity: ReturnType<typeof lstatSync>;
 let maker: { id: string; name: string }, checker: { id: string; name: string };
 let vendorId: string, categoryId: string, departmentId: string;
 beforeAll(async () => {
-  if (process.env.DATABASE_PROVIDER === "postgresql") throw new Error("THIS_FIXTURE_REQUIRES_OWNED_SQLITE");
   root = mkdtempSync(path.join(tmpdir(), "nalanda-ready-gaps-annual-cash-")); identity = lstatSync(root);
+  let providerUrl = `file:${path.join(root, "synthetic.db").replaceAll("\\", "/")}`;
+  if (postgres) {
+    expect(process.env.CI).toBe("true"); assertSyntheticPostgresQa();
+    const target = new URL(process.env.DATABASE_URL!); target.searchParams.set("schema", ownedSchema); providerUrl = target.toString();
+    execFileSync(process.execPath, ["node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", "prisma/postgresql/schema.prisma"], { env: { ...process.env, DATABASE_URL: providerUrl, DIRECT_URL: providerUrl }, stdio: "pipe", windowsHide: true, timeout: 60_000 });
+  } else {
   const sql = new DatabaseSync(":memory:");
   try {
     for (const name of readdirSync("prisma/migrations", { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name).sort())
@@ -41,7 +50,8 @@ beforeAll(async () => {
     expect(sql.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
     await backup(sql, path.join(root, "synthetic.db"));
   } finally { sql.close(); }
-  db = new PrismaClient({ datasourceUrl: `file:${path.join(root, "synthetic.db").replaceAll("\\", "/")}` });
+  }
+  db = new PrismaClient({ datasourceUrl: providerUrl });
   harness.db = db;
   vi.stubEnv("AUTH_SECRET", randomBytes(48).toString("base64url"));
   await db.schoolSettings.create({ data: { id: "school", schoolName: "Invented School", addressLine1: "Synthetic", city: "Synthetic", phone: "NO-CONTACT", academicYear: "2026-27" } });
@@ -57,8 +67,12 @@ beforeAll(async () => {
   await db.salaryStructureVersion.create({ data: { structureCode: "INVENTED-UNRELATED-SALARY", versionNumber: 1, name: "Invented unrelated salary sentinel", policyVersionId: unrelatedPolicy.id, effectiveFrom: new Date("2026-01-01"), estimatedGrossPaise: 432100 } });
 });
 afterAll(async () => {
+  if (postgres && db) {
+    if (!/^nps_cash_draft_[a-f0-9]{32}$/.test(ownedSchema)) throw new Error("OWNED_SCHEMA_REQUIRED");
+    await db.$executeRawUnsafe(`DROP SCHEMA "${ownedSchema}" CASCADE`);
+  }
   await db?.$disconnect();
-  vi.unstubAllEnvs();
+  vi.unstubAllEnvs(); vi.unstubAllGlobals();
   if (root) {
     if (!identity) throw new Error("Owned synthetic fixture identity is missing; cleanup refused");
     const current = lstatSync(root);
@@ -160,7 +174,9 @@ describe.sequential("019 bounded annual CASH expense service", () => {
     expect(await db.expensePayment.count({ where: { expenseRecordId: row.id } })).toBe(0);
   });
   it("executes draft, submit, independent approval, payment and ONE cash-book outflow without payroll effects", async () => {
-    const salaryBefore = await db.$queryRawUnsafe<Array<{ name: string }>>("SELECT name FROM sqlite_master WHERE type='table' AND (name LIKE '%Payroll%' OR name LIKE '%Salary%') ORDER BY name");
+    const salaryBefore = await db.$queryRawUnsafe<Array<{ name: string }>>(postgres
+      ? `SELECT table_name AS name FROM information_schema.tables WHERE table_schema = '${ownedSchema}' AND (table_name LIKE '%Payroll%' OR table_name LIKE '%Salary%') ORDER BY table_name`
+      : "SELECT name FROM sqlite_master WHERE type='table' AND (name LIKE '%Payroll%' OR name LIKE '%Salary%') ORDER BY name");
     const salarySnapshot = async () => Promise.all(salaryBefore.map(async table => ({ table: table.name, rows: await db.$queryRawUnsafe(`SELECT * FROM \"${table.name}\" ORDER BY id`) })));
     const payrollBefore = await salarySnapshot();
     expect(await db.payrollPolicyVersion.count()).toBe(1); expect(await db.salaryStructureVersion.count()).toBe(1);
