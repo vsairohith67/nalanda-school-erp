@@ -148,6 +148,12 @@ describe("NPS-READY-GAPS-IMPLEMENTATION-1A requirement004 approved connections",
     expect(response.status).toBe(200); expect(body.total).toBe(1);
     expect(body.results).toEqual([expect.objectContaining({ source: "ADMISSIONS", type: "Admission application", title: "SYNTHETIC Rowan", subtitle: expect.stringContaining(row.applicationNumber), href: "/admission-crm" })]);
     expect(body.sources[0]).toMatchObject({ source: "ADMISSIONS", state: "OK", count: 1 });
+    for (const query of [sourceClass.toLowerCase(), sourceClass.toUpperCase()]) {
+      const variant = await search(query);
+      expect(variant.response.status).toBe(200);
+      expect(variant.body.results).toEqual(body.results);
+      expect(variant.body.sources[0]).toMatchObject({ source: "ADMISSIONS", state: "OK", count: 1 });
+    }
   });
   it("connects approved application academic-year-only queries without returning another year", async () => {
     const row = await application(); await application("2027-28", "SyntheticClassEight");
