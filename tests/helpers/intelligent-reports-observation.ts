@@ -1,7 +1,19 @@
 import type { TestContext } from "vitest";
-import { configuredQaTrace, reportingCases, type QaCase, type QaPhase, type QaStatus, type QaTrace } from "./qa-reliability";
+import { configuredQaTrace, reportingCases, validateQaEvent, type QaCase, type QaPhase, type QaStatus, type QaTrace } from "./qa-reliability";
 
 const activeBodies = new Set<Promise<void>>();
+
+export function localReportingDiagnostic(trace: QaTrace, provider: "sqlite" | "postgresql") {
+  if (trace.family !== "reporting" || !(reportingCases as readonly string[]).includes(trace.caseId)) return null;
+  if (!["sqlite", "postgresql"].includes(provider)) throw Error("REPORTING_PROVIDER_INVALID");
+  trace.events.forEach(validateQaEvent);
+  return {
+    evidence: "INTELLIGENT_REPORTS_ROLE_PHASES_V1", execution: "LOCAL_OBSERVATIONS_ONLY", provider, caseId: trace.caseId,
+    declaredResult: trace.events.find(event => event.kind === "RESULT")?.status ?? "UNKNOWN",
+    phases: trace.events.filter(event => event.kind === "END").map(event => ({ phase: event.phase, status: event.status, durationMs: event.durationMs })),
+    unfinished: [...trace.pending.values()].map(value => value.phase)
+  };
+}
 
 async function settledWithin(body: Promise<void>) {
   let timer: NodeJS.Timeout | undefined;
@@ -54,11 +66,10 @@ export async function observedReportingRole(context: Pick<TestContext, "signal" 
       trace.finish(outcome);
       // Local diagnostics reuse these finite events without inventing a hosted
       // run/job identity. Configured CI uses the existing journal/finalizer.
-      if (!trace.directory && (reportingCases as readonly string[]).includes(trace.caseId)) console.info(JSON.stringify({
-        evidence: "INTELLIGENT_REPORTS_ROLE_PHASES_V1", provider: process.env.DATABASE_PROVIDER === "postgresql" ? "postgresql" : "sqlite", caseId: trace.caseId, declaredResult: outcome,
-        phases: trace.events.filter(event => event.kind === "END").map(event => ({ phase: event.phase, status: event.status, durationMs: event.durationMs })),
-        unfinished: [...trace.pending.values()].map(value => value.phase)
-      }));
+      if (!trace.directory) {
+        const diagnostic = localReportingDiagnostic(trace, process.env.DATABASE_PROVIDER === "postgresql" ? "postgresql" : "sqlite");
+        if (diagnostic) console.info(JSON.stringify(diagnostic));
+      }
     } catch (primary) {
       try { trace.end(span, "FAIL"); trace.finish("FAIL"); } catch { /* Keep partial capture for the existing finalizer. */ }
       throw primary;

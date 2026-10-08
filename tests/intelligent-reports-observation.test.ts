@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi, type TestContext } from "vitest";
-import { IntelligentReportsObservation, observedReportingRole, reportingBodiesSettled } from "./helpers/intelligent-reports-observation";
+import { IntelligentReportsObservation, localReportingDiagnostic, observedReportingRole, reportingBodiesSettled } from "./helpers/intelligent-reports-observation";
 import * as reliability from "./helpers/qa-reliability";
 
 // Control callbacks are HARNESS_ONLY; these checks never claim an actual IAM or
@@ -17,6 +17,19 @@ function deferred() {
   const promise = new Promise<void>(done => { resolve = done; });
   return { promise, resolve };
 }
+
+it("local role projection has a finite identity and rejects arbitrary private event fields", () => {
+  const trace = new reliability.QaTrace("reporting", "role-director"), span = trace.begin("report-authorization");
+  trace.end(span, "FAIL"); trace.finish("FAIL");
+  const diagnostic = localReportingDiagnostic(trace, "sqlite")!;
+  expect(Object.keys(diagnostic).sort()).toEqual(["caseId", "declaredResult", "evidence", "execution", "phases", "provider", "unfinished"]);
+  expect(diagnostic).toMatchObject({ caseId: "role-director", provider: "sqlite", execution: "LOCAL_OBSERVATIONS_ONLY", declaredResult: "FAIL", unfinished: [] });
+  expect(diagnostic.phases).toEqual([{ phase: "report-authorization", status: "FAIL", durationMs: expect.any(Number) }]);
+  expect(JSON.stringify(diagnostic)).not.toMatch(/userId|sessionId|sql|queryText|pid|stderr/);
+  Object.assign(trace.events[0], { privateError: "HARNESS_PRIVATE_SQL_OR_USER" });
+  expect(() => localReportingDiagnostic(trace, "sqlite")).toThrow("QA_RELIABILITY_SCHEMA_INVALID");
+  expect(localReportingDiagnostic(new reliability.QaTrace("reporting", "harness-clean"), "sqlite")).toBeNull();
+});
 
 it("records finite durations without returning private action data into capture", async test => {
   const c = control(test);
