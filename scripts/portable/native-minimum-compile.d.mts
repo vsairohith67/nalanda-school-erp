@@ -8,4 +8,7 @@ export type SodiumFileReceipt = {name:string;bytes:number;sha256:string};
 export type SodiumDownload = (name:string,destination:string)=>Promise<SodiumFileReceipt>;
 export function sodiumArchiveDownload(name:string,destination:string,request?:SodiumRequestFactory):Promise<SodiumFileReceipt>;
 export function prepareWindowsSodium(lockText:string,environment:Readonly<Record<string,string|undefined>>,download?:SodiumDownload):Promise<{directory:string;files:SodiumFileReceipt[];cleanup:()=>void}>;
+export type SodiumCompilation<T> = {status:"RETURNED";value:T}|{status:"THREW";error:unknown};
+export type SodiumCompilationReceipt<T> = {compilation:SodiumCompilation<T>;files:SodiumFileReceipt[];dependencyCleanup:"VERIFIED"|"UNRECONCILED";dependencyCleanupFailure:string|null};
+export function withPreparedWindowsSodium<T>(lockText:string,environment:Readonly<Record<string,string|undefined>>,compile:(environment:Record<string,string|undefined>,files:SodiumFileReceipt[])=>T|Promise<T>,download?:SodiumDownload):Promise<SodiumCompilationReceipt<T>>;
 export function minimumCompile():Promise<void>;

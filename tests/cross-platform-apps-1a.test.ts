@@ -6,7 +6,7 @@ import {createHash} from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import {prepareWindowsSodium,sodiumArchiveDownload,type SodiumResponse} from "../scripts/portable/native-minimum-compile.mjs";
+import {prepareWindowsSodium,sodiumArchiveDownload,withPreparedWindowsSodium,type SodiumResponse} from "../scripts/portable/native-minimum-compile.mjs";
 
 const root = path.resolve(".");
 const source = (file: string) => readFileSync(path.join(root, file), "utf8");
@@ -44,10 +44,10 @@ describe("SOURCE_ONLY pinned Windows libsodium acquisition; no compiler or signa
    await pending;expect(calls).toHaveLength(1);expect(existsSync(file)).toBe(false);
   }finally{vi.useRealTimers();rmSync(directory,{recursive:true});}
  });
- it("allocates exact pinned pair and cleans only its newly owned directory",async()=>{
+ it("allocates signed source and MSVC fallback pairs in upstream dispatch order",async()=>{
   const downloads:string[]=[];
   const prepared=await prepareWindowsSodium(lock(),{},async(name:string,destination:string)=>{downloads.push(destination);writeFileSync(destination,bytes,{flag:"wx"});return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};});
-  expect(downloads.map(file=>path.basename(file))).toEqual([archive,archive+".minisig"]);expect(downloads.every(file=>path.dirname(file)===prepared.directory)).toBe(true);expect(prepared.files).toHaveLength(2);prepared.cleanup();expect(existsSync(prepared.directory)).toBe(false);
+  expect(downloads.map(file=>path.basename(file))).toEqual(["LATEST.tar.gz","LATEST.tar.gz.minisig",archive,archive+".minisig"]);expect(downloads.every(file=>path.dirname(file)===prepared.directory)).toBe(true);expect(prepared.files).toHaveLength(4);prepared.cleanup();expect(existsSync(prepared.directory)).toBe(false);
  });
  it("cleans both owned files after a signature acquisition failure without retry",async()=>{
   let directory="",calls=0;
@@ -58,7 +58,7 @@ describe("SOURCE_ONLY pinned Windows libsodium acquisition; no compiler or signa
   let directory="",moved="",original:ReturnType<typeof lstatSync>|undefined,replacement:ReturnType<typeof lstatSync>|undefined,prepared:Awaited<ReturnType<typeof prepareWindowsSodium>>|undefined;
   const downloads=async(name:string,destination:string)=>{
    directory=path.dirname(destination);
-   if(name.endsWith(".minisig")){
+   if(name.endsWith(".minisig")&&!original){
     original=lstatSync(directory);moved=directory+"-SOURCE_ONLY-original";renameSync(directory,moved);mkdirSync(directory);writeFileSync(path.join(directory,"SOURCE_ONLY-replacement"),bytes);replacement=lstatSync(directory);
     if(failAcquisition)throw Error("MINIMUM_SODIUM_TRANSPORT_FAILED");
    }
@@ -83,7 +83,35 @@ describe("SOURCE_ONLY pinned Windows libsodium acquisition; no compiler or signa
  });
  it("does not broaden library selection or execute a compiler on module import",()=>{
   expect(()=>sodiumArchiveDownload("../foreign.zip","unowned")).toThrow("MINIMUM_SODIUM_FILE_REFUSED");
-  const helper=source("scripts/portable/native-minimum-compile.mjs");expect(helper).toContain('timeout:2100000');expect(helper).toContain('env.SODIUM_DIST_DIR=sodium.directory');expect(helper).not.toMatch(/rejectUnauthorized|SODIUM_LIB_DIR\s*=/);expect(helper).toContain('"ACQUIRED_SIGNATURE_VERIFICATION_PENDING"');
+  const helper=source("scripts/portable/native-minimum-compile.mjs");expect(helper).toContain('timeout:2100000');expect(helper).toContain('SODIUM_DIST_DIR:sodium.directory');expect(helper).not.toMatch(/rejectUnauthorized|SODIUM_LIB_DIR\s*=/);expect(helper).toContain('"ACQUIRED_SIGNATURE_VERIFICATION_PENDING"');
+ });
+ it.each(["LATEST.tar.gz","LATEST.tar.gz.minisig",archive,archive+".minisig"])("refuses incomplete acquisition at %s before compiler callback",async failedName=>{
+  let directory="";const names:string[]=[],compile=vi.fn();
+  await expect(withPreparedWindowsSodium(lock(),{},compile,async(name,destination)=>{directory=path.dirname(destination);names.push(name);if(name===failedName)throw Error("MINIMUM_SODIUM_TRANSPORT_FAILED");writeFileSync(destination,bytes);return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};})).rejects.toThrow("MINIMUM_SODIUM_TRANSPORT_FAILED");
+  expect(names.at(-1)).toBe(failedName);expect(new Set(names).size).toBe(names.length);expect(compile).not.toHaveBeenCalled();expect(existsSync(directory)).toBe(false);
+ });
+ it.each([false,true])("keeps callback result/error and child environment separate from cleanup; throws=%s",async throws=>{
+  const environment={SOURCE_ONLY:"invented"},originalError=Error("invented private compiler stream"),value={exit:101};let directory="",calls=0;
+  const result=await withPreparedWindowsSodium(lock(),environment,async(childEnv,files)=>{
+   calls++;directory=childEnv.SODIUM_DIST_DIR!;expect(childEnv).not.toBe(environment);expect(childEnv.SOURCE_ONLY).toBe("invented");expect(files).toHaveLength(4);expect(files.every(file=>existsSync(path.join(directory,file.name)))).toBe(true);expect(process.env.SODIUM_DIST_DIR).toBeUndefined();
+   if(throws)throw originalError;return value;
+  },async(name,destination)=>{writeFileSync(destination,bytes);return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};});
+  expect(calls).toBe(1);expect(environment).toEqual({SOURCE_ONLY:"invented"});expect(existsSync(directory)).toBe(false);expect(result.dependencyCleanup).toBe("VERIFIED");expect(result.dependencyCleanupFailure).toBeNull();
+  if(result.compilation.status==="THREW"){expect(throws).toBe(true);expect(result.compilation.error).toBe(originalError);}else{expect(throws).toBe(false);expect(result.compilation.value).toBe(value);}
+ });
+ it.each([false,true])("retains cleanup refusal separately from callback completion; throws=%s",async throws=>{
+  let directory="",moved="",original:ReturnType<typeof lstatSync>|undefined,replacement:ReturnType<typeof lstatSync>|undefined;const originalError=Error("invented primary compiler failure");
+  try{
+   const result=await withPreparedWindowsSodium(lock(),{},childEnv=>{
+    directory=childEnv.SODIUM_DIST_DIR!;moved=directory+"-SOURCE_ONLY-original";original=lstatSync(directory);renameSync(directory,moved);mkdirSync(directory);writeFileSync(path.join(directory,"SOURCE_ONLY-replacement"),bytes);replacement=lstatSync(directory);
+    if(throws)throw originalError;return 0;
+   },async(name,destination)=>{writeFileSync(destination,bytes);return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};});
+   expect(result.dependencyCleanup).toBe("UNRECONCILED");expect(result.dependencyCleanupFailure).toBe("MINIMUM_SODIUM_CLEANUP_REFUSED");expect(readFileSync(path.join(directory,"SOURCE_ONLY-replacement"))).toEqual(bytes);
+   if(result.compilation.status==="THREW"){expect(throws).toBe(true);expect(result.compilation.error).toBe(originalError);}else{expect(throws).toBe(false);expect(result.compilation.value).toBe(0);}
+  }finally{
+   if(original){const now=lstatSync(moved);expect([now.dev,now.ino,now.birthtimeMs]).toEqual([original.dev,original.ino,original.birthtimeMs]);expect(now.isDirectory()&&!now.isSymbolicLink()).toBe(true);rmSync(moved,{recursive:true});}
+   if(replacement){const now=lstatSync(directory);expect([now.dev,now.ino,now.birthtimeMs]).toEqual([replacement.dev,replacement.ino,replacement.birthtimeMs]);expect(now.isDirectory()&&!now.isSymbolicLink()).toBe(true);rmSync(directory,{recursive:true});}
+  }
  });
 });
 
