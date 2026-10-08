@@ -33,6 +33,8 @@ for (const file of ["src-tauri/src/qa_observation.rs", "src-tauri/src/qa_privacy
 for (const file of ["tests/native/android.ts", "tests/native/android.test.ts", "tests/native/execute.ts", "tests/native/diagnostics.ts", "tests/native/component.mjs", "tests/native/NativeJourney.swift", "tests/native/NativeJourney.xcodeproj/project.pbxproj", "tests/native/NativeJourney.xcodeproj/xcshareddata/xcschemes/NativeJourney.xcscheme"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
 // Exact source admission only; complete content checks remain in the scan loop.
 for (const file of reviewedBiometricCompanionPublicSources) allowedRootFiles.add(file);
+// Exact reviewed declaration receives full text checks, not an extension bypass.
+allowedRootFiles.add("scripts/portable/native-minimum-compile.d.mts");
 const secretPatterns: Array<[string, RegExp]> = [
   ["private-key", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
   ["github-token", /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b/],
