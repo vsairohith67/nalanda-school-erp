@@ -6,7 +6,7 @@ import {createHash} from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import {prepareWindowsSodium,sodiumArchiveDownload,withPreparedWindowsSodium,type SodiumResponse} from "../scripts/portable/native-minimum-compile.mjs";
+import {prepareWindowsSodium,sodiumArchiveDownload,withPreparedWindowsSodium,minimumCompilerExitCode,type SodiumResponse} from "../scripts/portable/native-minimum-compile.mjs";
 
 const root = path.resolve(".");
 const source = (file: string) => readFileSync(path.join(root, file), "utf8");
@@ -99,19 +99,25 @@ describe("SOURCE_ONLY pinned Windows libsodium acquisition; no compiler or signa
   expect(calls).toBe(1);expect(environment).toEqual({SOURCE_ONLY:"invented"});expect(existsSync(directory)).toBe(false);expect(result.dependencyCleanup).toBe("VERIFIED");expect(result.dependencyCleanupFailure).toBeNull();
   if(result.compilation.status==="THREW"){expect(throws).toBe(true);expect(result.compilation.error).toBe(originalError);}else{expect(throws).toBe(false);expect(result.compilation.value).toBe(value);}
  });
- it.each([false,true])("retains cleanup refusal separately from callback completion; throws=%s",async throws=>{
+ it.each([0,101,"THREW"] as const)("preserves actual callback and cleanup dual failure; compiler=%s",async mode=>{
   let directory="",moved="",original:ReturnType<typeof lstatSync>|undefined,replacement:ReturnType<typeof lstatSync>|undefined;const originalError=Error("invented primary compiler failure");
   try{
    const result=await withPreparedWindowsSodium(lock(),{},childEnv=>{
     directory=childEnv.SODIUM_DIST_DIR!;moved=directory+"-SOURCE_ONLY-original";original=lstatSync(directory);renameSync(directory,moved);mkdirSync(directory);writeFileSync(path.join(directory,"SOURCE_ONLY-replacement"),bytes);replacement=lstatSync(directory);
-    if(throws)throw originalError;return 0;
+    if(mode==="THREW")throw originalError;return {status:mode,signal:null};
    },async(name,destination)=>{writeFileSync(destination,bytes);return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};});
    expect(result.dependencyCleanup).toBe("UNRECONCILED");expect(result.dependencyCleanupFailure).toBe("MINIMUM_SODIUM_CLEANUP_REFUSED");expect(readFileSync(path.join(directory,"SOURCE_ONLY-replacement"))).toEqual(bytes);
-   if(result.compilation.status==="THREW"){expect(throws).toBe(true);expect(result.compilation.error).toBe(originalError);}else{expect(throws).toBe(false);expect(result.compilation.value).toBe(0);}
+   if(result.compilation.status==="THREW"){expect(mode).toBe("THREW");expect(result.compilation.error).toBe(originalError);}else{expect(mode).not.toBe("THREW");expect(result.compilation.value.status).toBe(mode);expect(minimumCompilerExitCode(result.compilation.value,result.dependencyCleanup)).toBe(mode===0?1:mode);}
   }finally{
    if(original){const now=lstatSync(moved);expect([now.dev,now.ino,now.birthtimeMs]).toEqual([original.dev,original.ino,original.birthtimeMs]);expect(now.isDirectory()&&!now.isSymbolicLink()).toBe(true);rmSync(moved,{recursive:true});}
    if(replacement){const now=lstatSync(directory);expect([now.dev,now.ino,now.birthtimeMs]).toEqual([replacement.dev,replacement.ino,replacement.birthtimeMs]);expect(now.isDirectory()&&!now.isSymbolicLink()).toBe(true);rmSync(directory,{recursive:true});}
   }
+ });
+ it("does not accept signal/startup failure as compiler success or invent a zero exit",()=>{
+  expect(minimumCompilerExitCode({status:null,signal:"SIGTERM"},"VERIFIED")).toBe(1);
+  expect(minimumCompilerExitCode({status:0,error:Error("invented startup detail")},"VERIFIED")).toBe(1);
+  expect(minimumCompilerExitCode({status:0},"VERIFIED")).toBe(0);
+  expect(minimumCompilerExitCode({status:0},"NOT_EXECUTED")).toBe(0);
  });
 });
 

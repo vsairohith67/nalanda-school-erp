@@ -11,4 +11,5 @@ export function prepareWindowsSodium(lockText:string,environment:Readonly<Record
 export type SodiumCompilation<T> = {status:"RETURNED";value:T}|{status:"THREW";error:unknown};
 export type SodiumCompilationReceipt<T> = {compilation:SodiumCompilation<T>;files:SodiumFileReceipt[];dependencyCleanup:"VERIFIED"|"UNRECONCILED";dependencyCleanupFailure:string|null};
 export function withPreparedWindowsSodium<T>(lockText:string,environment:Readonly<Record<string,string|undefined>>,compile:(environment:Record<string,string|undefined>,files:SodiumFileReceipt[])=>T|Promise<T>,download?:SodiumDownload):Promise<SodiumCompilationReceipt<T>>;
+export function minimumCompilerExitCode(result:{status:number|null;signal?:string|null;error?:unknown},dependencyCleanup:"NOT_EXECUTED"|"VERIFIED"|"UNRECONCILED"):number;
 export function minimumCompile():Promise<void>;

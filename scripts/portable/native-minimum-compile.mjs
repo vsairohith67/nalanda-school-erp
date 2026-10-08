@@ -66,6 +66,13 @@ export async function withPreparedWindowsSodium(lockText,environment,compile,dow
  return {compilation,files:sodium.files,dependencyCleanup,dependencyCleanupFailure};
 }
 
+/** Preserve a failed compiler's exit; cleanup can only turn compiler success into failure. */
+export function minimumCompilerExitCode(result,dependencyCleanup) {
+ if(result.status!==null&&result.status!==0)return result.status;
+ if(result.status===null||result.signal||result.error)return 1;
+ return dependencyCleanup==="NOT_EXECUTED"||dependencyCleanup==="VERIFIED"?0:1;
+}
+
 export async function minimumCompile() {
 const target=process.argv[2];
 const targets={
@@ -126,7 +133,6 @@ if(target==="x86_64-pc-windows-msvc"){
 const after=hash();
 console.log(JSON.stringify({evidence:"MINIMUM_COMPILER_COMPATIBILITY_ONLY",source,target,profile:"production",compiler:"1.90.0",startUtc,endUtc:new Date().toISOString(),elapsedMs:Math.round(performance.now()-start),exitCode:result.status,signal:result.signal,errorCode:result.error?.code??null,lockBefore:before,lockAfter:after,dependencyCleanup,dependencyCleanupFailure,applicationExecuted:false,artifactAdmission:false}));
 if(before!==after) throw Error("MINIMUM_LOCKFILE_CHANGED");
-process.exitCode=result.status??1;
-if(dependencyCleanup!=="NOT_EXECUTED"&&dependencyCleanup!=="VERIFIED")throw Error("MINIMUM_SODIUM_CLEANUP_REFUSED");
+process.exitCode=minimumCompilerExitCode(result,dependencyCleanup);
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))await minimumCompile();

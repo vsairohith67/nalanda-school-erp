@@ -24,13 +24,17 @@ import { withPostgresJobLock } from "../lib/portable-runtime/job-lock";
 
 function syntheticEnvironment(): NodeJS.ProcessEnv {
   const secret = "synthetic-portable-secret-value-with-48-characters-123456";
+  // Invented configuration only; never a connected database or a real credential.
+  const database = new URL("postgresql://postgres:5432/nalanda_portable_synthetic?connection_limit=20&pool_timeout=20&connect_timeout=10");
+  database.username = "nalanda_runtime";
+  database.password = "synthetic";
   return {
     NODE_ENV: "production",
     NALANDA_ENVIRONMENT: "synthetic-staging",
     NALANDA_SYNTHETIC_STAGING: "true",
     APP_ORIGIN: "https://portable-staging.localhost:8443",
     DATABASE_PROVIDER: "postgresql",
-    DATABASE_URL: "postgresql://nalanda_runtime:synthetic@postgres:5432/nalanda_portable_synthetic?connection_limit=20&pool_timeout=20&connect_timeout=10",
+    DATABASE_URL: database.href,
     VALKEY_MODE: "distributed",
     VALKEY_URL: "redis://:synthetic@valkey:6379/0",
     PRIVATE_OBJECT_STORAGE_PROVIDER: "S3_COMPATIBLE",
