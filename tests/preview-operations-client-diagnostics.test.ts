@@ -7,7 +7,7 @@ import { OperationsPreparationObservation } from "./helpers/operations-preparati
 import { QaTrace } from "./helpers/qa-reliability";
 import { finalizeQaReliability, prepareQaReliability } from "../scripts/qa-recovery-service-traces";
 
-const options = { cwd: process.cwd(), env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot }, timeoutMs: 3000, maxBuffer: 4096 };
+const options = { cwd: process.cwd(), env: { NODE_ENV: "test" as const, PATH: process.env.PATH, SystemRoot: process.env.SystemRoot }, timeoutMs: 3000, maxBuffer: 4096 };
 const owner = { contract: "NALANDA_SERVICE_TRACE_V1" as const, source: "a".repeat(40), run: "1", attempt: "1", job: "operations-diagnostic-harness", provider: "sqlite", node: process.version, image: "unavailable", runner: "unavailable" };
 
 // Node controls prove event/privacy behavior only, never real Compose startup,
