@@ -130,7 +130,7 @@ jobs:
         # PR28-only process environment; no machine/GPO policy or other PR context.
         timeout-minutes: 120
         env:
-          PSExecutionPolicyPreference: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 28 && github.event.pull_request.head.ref == 'release/recovery-integration-1a' && github.event.pull_request.head.repo.full_name == github.repository && github.run_attempt == 1 && startsWith(github.event.pull_request.updated_at, '2026-10-05') && 'RemoteSigned' || '' }}
+          PSExecutionPolicyPreference: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 28 && github.event.pull_request.head.ref == 'release/recovery-integration-1a' && github.event.pull_request.head.repo.full_name == github.repository && github.run_attempt == 1 && startsWith(github.event.pull_request.updated_at, '2026-10-08') && 'RemoteSigned' || '' }}
           NALANDA_SERVICE_TRACE_DIR: tmp/ci-service-traces
         run: pnpm test && pnpm typecheck && pnpm build
       - name: Validate and finalize bounded service metadata
