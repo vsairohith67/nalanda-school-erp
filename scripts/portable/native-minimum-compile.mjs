@@ -1,10 +1,52 @@
 /** DRAFT Rust minimum compatibility only. No artifact production or admission. */
 import {execFileSync, spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
-import {readFileSync, existsSync} from "node:fs";
+import {readFileSync, existsSync, mkdtempSync, writeFileSync, rmSync, lstatSync, realpathSync} from "node:fs";
+import {request as httpsRequest} from "node:https";
+import os from "node:os";
 import path from "node:path";
 import {performance} from "node:perf_hooks";
+import {fileURLToPath} from "node:url";
 
+const sodiumFiles=["libsodium-1.0.22-stable-msvc.zip","libsodium-1.0.22-stable-msvc.zip.minisig"];
+const sodiumChecksum="72b04bf6da2c98b727af37ab62cb505f4d751b975b034a9b9ad491d333b0564e";
+const sodiumCauses=new Set(["MINIMUM_SODIUM_FILE_REFUSED","MINIMUM_SODIUM_LOCK_REFUSED","MINIMUM_SODIUM_ENVIRONMENT_REFUSED","MINIMUM_SODIUM_CLEANUP_REFUSED","MINIMUM_SODIUM_DOWNLOAD_TIMEOUT","MINIMUM_SODIUM_HTTP_REFUSED","MINIMUM_SODIUM_SIZE_REFUSED","MINIMUM_SODIUM_TRANSPORT_FAILED","MINIMUM_SODIUM_BODY_REFUSED","MINIMUM_SODIUM_WRITE_REFUSED"]);
+export function sodiumArchiveDownload(name,destination,request=httpsRequest) {
+ if(!sodiumFiles.includes(name))throw Error("MINIMUM_SODIUM_FILE_REFUSED");
+ const limit=name.endsWith(".minisig")?4096:40*1024*1024;
+ // Direct HTTPS requests do not import Docker/proxy credentials, follow redirects, or retry.
+ return new Promise((resolve,reject)=>{
+  let child,response,done=false,bytes=0;const chunks=[];
+  const finish=(error)=>{if(done)return;done=true;clearTimeout(timer);if(error){response?.destroy();child?.destroy();reject(Error(error));}else resolve({name,bytes,sha256:createHash("sha256").update(Buffer.concat(chunks)).digest("hex")});};
+  const timer=setTimeout(()=>finish("MINIMUM_SODIUM_DOWNLOAD_TIMEOUT"),30000);
+  try{
+   child=request(`https://download.libsodium.org/libsodium/releases/${name}`,{method:"GET",agent:false,headers:{Accept:"application/octet-stream"}},incoming=>{
+    response=incoming;
+    if(incoming.statusCode!==200){finish("MINIMUM_SODIUM_HTTP_REFUSED");return;}
+    const length=incoming.headers["content-length"];
+    if(length!==undefined&&(!/^\d+$/.test(String(length))||Number(length)>limit)){finish("MINIMUM_SODIUM_SIZE_REFUSED");return;}
+    incoming.on("data",chunk=>{if(done)return;bytes+=chunk.length;if(bytes>limit){finish("MINIMUM_SODIUM_SIZE_REFUSED");return;}chunks.push(Buffer.from(chunk));});
+    incoming.on("error",()=>finish("MINIMUM_SODIUM_TRANSPORT_FAILED"));
+    incoming.on("aborted",()=>finish("MINIMUM_SODIUM_TRANSPORT_FAILED"));
+    incoming.on("end",()=>{if(done)return;if(!bytes||(length!==undefined&&bytes!==Number(length))){finish("MINIMUM_SODIUM_BODY_REFUSED");return;}try{writeFileSync(destination,Buffer.concat(chunks),{flag:"wx",mode:0o600});finish();}catch{finish("MINIMUM_SODIUM_WRITE_REFUSED");}});
+   });
+   child.on("error",()=>finish("MINIMUM_SODIUM_TRANSPORT_FAILED"));child.end();
+  }catch{finish("MINIMUM_SODIUM_TRANSPORT_FAILED");}
+ });
+}
+export async function prepareWindowsSodium(lockText,environment,download=sodiumArchiveDownload) {
+ const entry=lockText.split(/\r?\n\[\[package\]\]\r?\n/).find(block=>/^name = "libsodium-sys-stable"\r?$/m.test(block));
+ if(!entry||!/^version = "1\.24\.0"\r?$/m.test(entry)||!/^source = "registry\+https:\/\/github.com\/rust-lang\/crates.io-index"\r?$/m.test(entry)||!entry.includes(`checksum = "${sodiumChecksum}"`))throw Error("MINIMUM_SODIUM_LOCK_REFUSED");
+ for(const key of ["SODIUM_DIST_DIR","SODIUM_LIB_DIR","SODIUM_SHARED","SODIUM_USE_PKG_CONFIG"])if(environment[key]!==undefined)throw Error("MINIMUM_SODIUM_ENVIRONMENT_REFUSED");
+ const parent=realpathSync(os.tmpdir()),directory=mkdtempSync(path.join(parent,"nalanda-minimum-sodium-"));
+ const cleanup=()=>{if(path.dirname(directory)!==parent||!path.basename(directory).startsWith("nalanda-minimum-sodium-")||lstatSync(directory).isSymbolicLink()||realpathSync(directory)!==directory)throw Error("MINIMUM_SODIUM_CLEANUP_REFUSED");rmSync(directory,{recursive:true});};
+ try{
+  const files=[];for(const name of sodiumFiles)files.push(await download(name,path.join(directory,name)));
+  return {directory,files,cleanup};
+ }catch(error){cleanup();throw error;}
+}
+
+export async function minimumCompile() {
 const target=process.argv[2];
 const targets={
  "x86_64-pc-windows-msvc":"win32",
@@ -47,8 +89,18 @@ const command=["+1.90.0",target==="x86_64-pc-windows-msvc"?"test":"check","--loc
 const startUtc=new Date().toISOString(),start=performance.now();
 console.log(JSON.stringify({evidence:"MINIMUM_COMPILER_COMPATIBILITY_ONLY",source,target,profile:"production",compiler:"1.90.0",command:["cargo",...command],lockSha256:before}));
 process.stdout.write(rustc);process.stdout.write(cargo);
-const result=spawnSync("cargo",command,{env,stdio:"inherit",windowsHide:true,timeout:2100000});
+let sodium,result;
+try{
+ if(target==="x86_64-pc-windows-msvc"){
+  try{sodium=await prepareWindowsSodium(readFileSync(lock,"utf8"),env);}catch(error){const cause=sodiumCauses.has(error?.message)?error.message:"MINIMUM_SODIUM_PREPARATION_FAILED";console.log(JSON.stringify({evidence:"MINIMUM_SIGNED_DEPENDENCY_PREPARATION",source,target,stage:"OFFICIAL_ARCHIVE_ACQUISITION",status:"FAIL",cause}));throw Error(cause);}
+  env.SODIUM_DIST_DIR=sodium.directory;
+  console.log(JSON.stringify({evidence:"MINIMUM_SIGNED_DEPENDENCY_PREPARATION",source,target,crate:"libsodium-sys-stable",version:"1.24.0",crateChecksum:sodiumChecksum,files:sodium.files,status:"ACQUIRED_SIGNATURE_VERIFICATION_PENDING",verification:"UNCHANGED_UPSTREAM_BUILD_SCRIPT"}));
+ }
+ result=spawnSync("cargo",command,{env,stdio:"inherit",windowsHide:true,timeout:2100000});
+}finally{if(sodium)sodium.cleanup();}
 const after=hash();
 console.log(JSON.stringify({evidence:"MINIMUM_COMPILER_COMPATIBILITY_ONLY",source,target,profile:"production",compiler:"1.90.0",startUtc,endUtc:new Date().toISOString(),elapsedMs:Math.round(performance.now()-start),exitCode:result.status,signal:result.signal,errorCode:result.error?.code??null,lockBefore:before,lockAfter:after,applicationExecuted:false,artifactAdmission:false}));
 if(before!==after) throw Error("MINIMUM_LOCKFILE_CHANGED");
 process.exitCode=result.status??1;
+}
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))await minimumCompile();

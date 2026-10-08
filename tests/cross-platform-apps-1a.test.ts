@@ -1,11 +1,70 @@
-import { describe, expect, it } from "vitest";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { describe, expect, it, vi } from "vitest";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import {EventEmitter} from "node:events";
+import {PassThrough} from "node:stream";
+import {createHash} from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import {prepareWindowsSodium,sodiumArchiveDownload} from "../scripts/portable/native-minimum-compile.mjs";
 
 const root = path.resolve(".");
 const source = (file: string) => readFileSync(path.join(root, file), "utf8");
+
+describe("SOURCE_ONLY pinned Windows libsodium acquisition; no compiler or signature acceptance",()=>{
+ const archive="libsodium-1.0.22-stable-msvc.zip",lock=()=>source("apps/nalanda-cross-platform/src-tauri/Cargo.lock");
+ const bytes=Buffer.from("invented archive control; not a signed library");
+ function requestControl(kind:string,calls:unknown[]) {
+  return (url:string,options:unknown,callback:(incoming:unknown)=>void)=>{
+   calls.push({url,options});const child=new EventEmitter() as EventEmitter&{end:()=>void;destroy:()=>void};child.destroy=vi.fn();
+   child.end=()=>queueMicrotask(()=>{
+    if(kind==="DNS"){child.emit("error",Error("invented private DNS detail"));return;}
+    if(kind==="TIMEOUT")return;
+    const incoming=new PassThrough() as PassThrough&{statusCode:number;headers:Record<string,string>};incoming.statusCode=kind==="REDIRECT"?302:200;
+    incoming.headers=kind==="SIZE"?{"content-length":"41943041"}:kind==="TRUNCATED"?{"content-length":String(bytes.length+1)}:{};
+    callback(incoming);if(!incoming.destroyed)incoming.end(kind==="EMPTY"?Buffer.alloc(0):bytes);
+   });return child;
+  };
+ }
+ it("acquires exactly one HTTPS response with finite digest and exclusive owned output",async()=>{
+  const directory=mkdtempSync(path.join(tmpdir(),"nps-sodium-transport-control-")),file=path.join(directory,archive),calls:unknown[]=[];
+  try{
+   const result=await sodiumArchiveDownload(archive,file,requestControl("PASS",calls));
+   expect(result).toEqual({name:archive,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")});expect(readFileSync(file)).toEqual(bytes);
+   expect(calls).toEqual([{url:`https://download.libsodium.org/libsodium/releases/${archive}`,options:{method:"GET",agent:false,headers:{Accept:"application/octet-stream"}}}]);
+   await expect(sodiumArchiveDownload(archive,file,requestControl("PASS",calls))).rejects.toThrow("MINIMUM_SODIUM_WRITE_REFUSED");expect(readFileSync(file)).toEqual(bytes);
+  }finally{rmSync(directory,{recursive:true});}
+ });
+ it.each([["DNS","TRANSPORT_FAILED"],["REDIRECT","HTTP_REFUSED"],["SIZE","SIZE_REFUSED"],["TRUNCATED","BODY_REFUSED"],["EMPTY","BODY_REFUSED"],["TIMEOUT","DOWNLOAD_TIMEOUT"]])("refuses %s without retry or output",async(kind,cause)=>{
+  const directory=mkdtempSync(path.join(tmpdir(),"nps-sodium-transport-control-")),file=path.join(directory,archive),calls:unknown[]=[];
+  try{
+   if(kind==="TIMEOUT")vi.useFakeTimers();
+   const pending=expect(sodiumArchiveDownload(archive,file,requestControl(kind,calls))).rejects.toThrow(`MINIMUM_SODIUM_${cause}`);
+   if(kind==="TIMEOUT")await vi.advanceTimersByTimeAsync(30000);
+   await pending;expect(calls).toHaveLength(1);expect(existsSync(file)).toBe(false);
+  }finally{vi.useRealTimers();rmSync(directory,{recursive:true});}
+ });
+ it("allocates exact pinned pair and cleans only its newly owned directory",async()=>{
+  const downloads:string[]=[];
+  const prepared=await prepareWindowsSodium(lock(),{},async(name:string,destination:string)=>{downloads.push(destination);writeFileSync(destination,bytes,{flag:"wx"});return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};});
+  expect(downloads.map(file=>path.basename(file))).toEqual([archive,archive+".minisig"]);expect(downloads.every(file=>path.dirname(file)===prepared.directory)).toBe(true);expect(prepared.files).toHaveLength(2);prepared.cleanup();expect(existsSync(prepared.directory)).toBe(false);
+ });
+ it("cleans both owned files after a signature acquisition failure without retry",async()=>{
+  let directory="",calls=0;
+  await expect(prepareWindowsSodium(lock(),{},async(name:string,destination:string)=>{directory=path.dirname(destination);calls++;if(name.endsWith(".minisig"))throw Error("MINIMUM_SODIUM_TRANSPORT_FAILED");writeFileSync(destination,bytes);return {name};})).rejects.toThrow("MINIMUM_SODIUM_TRANSPORT_FAILED");
+  expect(calls).toBe(2);expect(existsSync(directory)).toBe(false);
+ });
+ it.each(["SODIUM_DIST_DIR","SODIUM_LIB_DIR","SODIUM_SHARED","SODIUM_USE_PKG_CONFIG"])("refuses ambient %s before acquisition",async key=>{
+  const download=vi.fn();await expect(prepareWindowsSodium(lock(),{[key]:"invented-private-value"},download)).rejects.toThrow("MINIMUM_SODIUM_ENVIRONMENT_REFUSED");expect(download).not.toHaveBeenCalled();
+ });
+ it.each(["version = \"1.24.0\"","72b04bf6da2c98b727af37ab62cb505f4d751b975b034a9b9ad491d333b0564e"])("refuses a changed crate binding %s",async binding=>{
+  const download=vi.fn();await expect(prepareWindowsSodium(lock().replace(binding,"changed"),{},download)).rejects.toThrow("MINIMUM_SODIUM_LOCK_REFUSED");expect(download).not.toHaveBeenCalled();
+ });
+ it("does not broaden library selection or execute a compiler on module import",()=>{
+  expect(()=>sodiumArchiveDownload("../foreign.zip","unowned")).toThrow("MINIMUM_SODIUM_FILE_REFUSED");
+  const helper=source("scripts/portable/native-minimum-compile.mjs");expect(helper).toContain('timeout:2100000');expect(helper).toContain('env.SODIUM_DIST_DIR=sodium.directory');expect(helper).not.toMatch(/rejectUnauthorized|SODIUM_LIB_DIR\s*=/);expect(helper).toContain('"ACQUIRED_SIGNATURE_VERIFICATION_PENDING"');
+ });
+});
 
 describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
   it("keeps minimum-toolchain job environments within GitHub's available contexts", () => {
