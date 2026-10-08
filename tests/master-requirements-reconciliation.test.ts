@@ -130,7 +130,7 @@ describe("Living Master Requirements fail-closed contracts", () => {
     const current=JSON.parse(readFileSync("config/release-feature-flags.json","utf8"));
     for(const flag of current){expect(flag.defaultState).toBe(false);expect(flag.rolloutPercentage).toBe(0);}
     const packageNow=JSON.parse(readFileSync("package.json","utf8"));
-    expect(packageNow.dependencies).toEqual({...audit.productionDependencies,next:"15.5.25",sharp:"0.35.4"});
+    expect(packageNow.dependencies).toEqual({...audit.productionDependencies,next:"15.5.25",sharp:"0.35.5"});
     expect(Object.keys(packageNow.dependencies).some(k=>/opentelemetry|sentry|posthog/i.test(k))).toBe(false);
   }, 250000);
   it("preserves every historical migration checksum and adds both original feature migrations",()=>{
