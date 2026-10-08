@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readTrace, checkedDirectory } from "../tests/helpers/service-trace";
 import { opensslTraceRoot, opensslPublicRoot, validateOpenSslMetadata } from "../tests/helpers/openssl-fixture";
-import { classification, custodyCases, qaCases, qaPhases, readQaJournal, validateQaOwner, type QaOwner, type QaFamily, type QaCase } from "../tests/helpers/qa-reliability";
+import { classification, custodyCases, reportingCases, qaCases, qaPhases, readQaJournal, validateQaOwner, type QaOwner, type QaFamily, type QaCase } from "../tests/helpers/qa-reliability";
 import { readCustodyStages } from "../tests/helpers/custody-execution";
 
 export const privateRoot = path.resolve("tmp/ci-service-traces");
@@ -80,7 +80,7 @@ export function inspectQaRoot(root: string, expected: QaOwner) {
   for (const name of readdirSync(root).sort()) {
     if (name === "ownership.json") continue;
     let selected: { family: QaFamily; caseId: QaCase } | undefined;
-    for (const family of ["operations", "custody"] as const) for (const caseId of qaCases) {
+    for (const family of ["operations", "custody", "reporting"] as const) for (const caseId of qaCases) {
       if (name === `${family}-${caseId}`) { classification(family, caseId); selected = { family, caseId }; }
     }
     check(null, !!selected); const directory = path.join(root, name); checkedDirectory(directory);
@@ -93,7 +93,7 @@ export function inspectQaRoot(root: string, expected: QaOwner) {
     cases.push({ ...selected!, classification: classification(selected!.family, selected!.caseId), execution: journal.state === "VALID" ? "OBSERVATIONS_ONLY" as const : "OBSERVATIONS_INCOMPLETE" as const, ...journal, childStages }); observed.add(name);
   }
   // Absence is evidence missing, not a fabricated test execution or policy refusal.
-  for (const [family, ids] of [["operations", ["local-single-node", "generic-vps"]], ["custody", custodyCases]] as const) {
+  for (const [family, ids] of [["operations", ["local-single-node", "generic-vps"]], ["custody", custodyCases], ["reporting", reportingCases]] as const) {
     for (const caseId of ids) if (!observed.has(`${family}-${caseId}`)) cases.push({ family, caseId, classification: classification(family, caseId), execution: "NOT_EXECUTED" as const, state: "MISSING" as const, events: [], unfinished: [], declaredResult: "UNKNOWN" as const, result: "UNKNOWN" as const, processSettlement: "UNKNOWN" as const, childStages: [] });
   }
   return cases;

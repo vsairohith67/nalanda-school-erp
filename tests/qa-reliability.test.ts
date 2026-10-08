@@ -18,6 +18,24 @@ function owned() {
 function prepared(base: string) { const root = path.join(base, "private", "qa-reliability"); prepareQaReliability(root, owner); return root; }
 function caseTrace(root: string, id: QaCase) { const directory = path.join(root, `custody-${id}`); mkdirSync(directory); return { directory, trace: new QaTrace("custody", id, directory) }; }
 
+it("retains only finite reporting phases and distinguishes completed expected refusal from unfinished authorization", async () => {
+  const r = owned();
+  try {
+    const root = prepared(r.root), directory = path.join(root, "reporting-role-accountant"); mkdirSync(directory);
+    const trace = new QaTrace("reporting", "role-accountant", directory);
+    await trace.phase("report-expected-refusal", async () => { await expect(Promise.reject(new Error("SYNTHETIC_EXPECTED_DENIAL"))).rejects.toThrow("SYNTHETIC_EXPECTED_DENIAL"); });
+    trace.begin("report-authorization"); trace.finish("UNKNOWN");
+    const destination = path.join(r.root, "public"); finalizeQaReliability(root, destination, owner);
+    const raw = readFileSync(path.join(destination, "qa-reliability.json"), "utf8");
+    const projected = JSON.parse(raw).cases.find((item: any) => item.family === "reporting" && item.caseId === "role-accountant");
+    expect(projected.classification).toBe("REAL_SYNTHETIC_DATABASE_SERVICE");
+    expect(projected.result).toBe("UNKNOWN"); expect(projected.processSettlement).toBe("UNKNOWN");
+    expect(projected.events.find((event: any) => event.kind === "END" && event.phase === "report-expected-refusal").status).toBe("PASS");
+    expect(projected.unfinished).toMatchObject([{ phase: "report-authorization" }]);
+    expect(raw).not.toContain("SYNTHETIC_EXPECTED_DENIAL");
+  } finally { r.cleanup(); }
+});
+
 it("preserves nonempty JSON string stdin and raw Buffer streams in the actual capture path", () => {
   const r = owned();
   try {
@@ -61,7 +79,7 @@ process.stdout.write('{"partial":');process.stderr.write('PRIVATE_CHILD_DIAGNOST
     expect(readdirSync(dest).sort()).toEqual(["manifest.json", "qa-reliability.json"]);
     const manifest = JSON.parse(readFileSync(path.join(dest, "manifest.json"), "utf8"));
     expect(manifest.files).toEqual([{ file: "qa-reliability.json", size: Buffer.byteLength(raw), sha256: createHash("sha256").update(raw).digest("hex") }]);
-    expect(JSON.parse(raw).cases.filter((c: any) => c.state === "MISSING")).toHaveLength(15);
+    expect(JSON.parse(raw).cases.filter((c: any) => c.state === "MISSING")).toHaveLength(26);
   } finally { r.cleanup(); }
 });
 

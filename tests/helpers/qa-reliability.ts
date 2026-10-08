@@ -5,13 +5,14 @@ import { closeSync, lstatSync, mkdirSync, openSync, readFileSync, writeSync } fr
 import path from "node:path";
 import { checkedDirectory } from "./service-trace";
 
-export const qaPhases = ["fixture-create", "settings-validate", "provenance-check", "filesystem-check", "output-create", "compose-version", "compose-config", "compose-parse", "boundary-validate", "manifests-write", "commands-write", "preparation-write", "operator-dry-run", "outputs-equivalent", "occupied-output-refusal", "artifact-refusal", "cancellation", "fixture-settlement", "finalize", "custody-parent-launch", "wrapper-start", "module-initialize", "process-metadata", "helper-entry", "helper-exit", "parent-finalize"] as const;
+export const qaPhases = ["fixture-create", "settings-validate", "provenance-check", "filesystem-check", "output-create", "compose-version", "compose-config", "compose-parse", "boundary-validate", "manifests-write", "commands-write", "preparation-write", "operator-dry-run", "outputs-equivalent", "occupied-output-refusal", "artifact-refusal", "cancellation", "fixture-settlement", "finalize", "custody-parent-launch", "wrapper-start", "module-initialize", "process-metadata", "helper-entry", "helper-exit", "parent-finalize", "report-user-create", "report-role-create", "report-session-create", "report-grant-create", "report-authorization", "report-expected-refusal", "compose-spawn", "compose-first-stdout", "compose-first-stderr", "compose-exit", "compose-close", "report-body-settlement"] as const;
 export type QaPhase = typeof qaPhases[number];
 export const custodyCases = ["valid-inspection", "foreign-sid", "exfat", "remote-drive", "wrong-volume", "reparse", "foreign-owner", "wide-acl", "unprotected", "missing-inheritance", "replay", "bad-receipt", "valid-verification"] as const;
 export const harnessCases = ["harness-clean", "harness-startup", "harness-nonzero", "harness-timeout", "harness-partial", "harness-missing", "harness-malformed", "harness-initialization", "harness-output-limit", "invalid-process-controls", "filesystem-adapter-controls"] as const;
-export const qaCases = ["local-single-node", "generic-vps", "normalized-refusals", ...custodyCases, ...harnessCases] as const;
+export const reportingCases = ["role-director", "role-principal", "role-accountant", "role-admin", "role-teacher", "role-parent", "role-student", "role-viewer", "role-computer-operator", "role-gate-staff", "role-custom"] as const;
+export const qaCases = ["local-single-node", "generic-vps", "normalized-refusals", ...custodyCases, ...harnessCases, ...reportingCases] as const;
 export type QaCase = typeof qaCases[number];
-export type QaFamily = "operations" | "custody";
+export type QaFamily = "operations" | "custody" | "reporting";
 export type QaStatus = "PASS" | "FAIL" | "UNKNOWN";
 export const qaSignals = ["SIGHUP", "SIGINT", "SIGQUIT", "SIGILL", "SIGTRAP", "SIGABRT", "SIGIOT", "SIGBUS", "SIGFPE", "SIGKILL", "SIGUSR1", "SIGSEGV", "SIGUSR2", "SIGPIPE", "SIGALRM", "SIGTERM", "SIGSTKFLT", "SIGCHLD", "SIGCONT", "SIGSTOP", "SIGTSTP", "SIGTTIN", "SIGTTOU", "SIGURG", "SIGXCPU", "SIGXFSZ", "SIGVTALRM", "SIGPROF", "SIGWINCH", "SIGIO", "SIGPOLL", "SIGPWR", "SIGSYS", "SIGBREAK", "SIGLOST", "SIGUNUSED"] as const;
 export function projectQaSignal(value: string | null | undefined): typeof qaSignals[number] | "UNKNOWN" | null { return value == null ? null : (qaSignals as readonly string[]).includes(value) ? value as typeof qaSignals[number] : "UNKNOWN"; }
@@ -28,10 +29,11 @@ export function validateQaOwner(v: unknown): asserts v is QaOwner {
   if (x.contract !== "NALANDA_QA_RELIABILITY_V1" || !/^[a-f0-9]{40}$/.test(x.source) || !/^[1-9][0-9]{0,19}$/.test(x.run) || !/^[1-9][0-9]{0,19}$/.test(x.attempt) || !/^[a-zA-Z0-9_-]{1,100}$/.test(x.job) || !["sqlite", "postgresql"].includes(x.provider) || !/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(x.node) || !/^[a-zA-Z0-9._-]{1,80}$/.test(x.image) || !["Windows", "Linux", "macOS", "unavailable"].includes(x.runner)) fail();
 }
 export function classification(family: QaFamily, caseId: QaCase) {
-  if (!["operations", "custody"].includes(family) || !qaCases.includes(caseId)) fail();
+  if (!["operations", "custody", "reporting"].includes(family) || !qaCases.includes(caseId)) fail();
   if ((harnessCases as readonly string[]).includes(caseId)) return "HARNESS_ONLY" as const;
   if (family === "operations" && ["local-single-node", "generic-vps", "normalized-refusals"].includes(caseId)) return "REAL_CLIENT_ONLY_COMPOSE" as const;
   if (family === "custody" && (custodyCases as readonly string[]).includes(caseId)) return "REAL_HELPER_CONTROLLED_METADATA" as const;
+  if (family === "reporting" && (reportingCases as readonly string[]).includes(caseId)) return "REAL_SYNTHETIC_DATABASE_SERVICE" as const;
   return fail();
 }
 export function validateQaEvent(v: unknown): asserts v is QaEvent {
