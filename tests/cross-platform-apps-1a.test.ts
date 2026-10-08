@@ -6,7 +6,7 @@ import {createHash} from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import {prepareWindowsSodium,sodiumArchiveDownload} from "../scripts/portable/native-minimum-compile.mjs";
+import {prepareWindowsSodium,sodiumArchiveDownload,type SodiumResponse} from "../scripts/portable/native-minimum-compile.mjs";
 
 const root = path.resolve(".");
 const source = (file: string) => readFileSync(path.join(root, file), "utf8");
@@ -15,7 +15,7 @@ describe("SOURCE_ONLY pinned Windows libsodium acquisition; no compiler or signa
  const archive="libsodium-1.0.22-stable-msvc.zip",lock=()=>source("apps/nalanda-cross-platform/src-tauri/Cargo.lock");
  const bytes=Buffer.from("invented archive control; not a signed library");
  function requestControl(kind:string,calls:unknown[]) {
-  return (url:string,options:unknown,callback:(incoming:unknown)=>void)=>{
+  return (url:string,options:unknown,callback:(incoming:SodiumResponse)=>void)=>{
    calls.push({url,options});const child=new EventEmitter() as EventEmitter&{end:()=>void;destroy:()=>void};child.destroy=vi.fn();
    child.end=()=>queueMicrotask(()=>{
     if(kind==="DNS"){child.emit("error",Error("invented private DNS detail"));return;}
@@ -51,7 +51,7 @@ describe("SOURCE_ONLY pinned Windows libsodium acquisition; no compiler or signa
  });
  it("cleans both owned files after a signature acquisition failure without retry",async()=>{
   let directory="",calls=0;
-  await expect(prepareWindowsSodium(lock(),{},async(name:string,destination:string)=>{directory=path.dirname(destination);calls++;if(name.endsWith(".minisig"))throw Error("MINIMUM_SODIUM_TRANSPORT_FAILED");writeFileSync(destination,bytes);return {name};})).rejects.toThrow("MINIMUM_SODIUM_TRANSPORT_FAILED");
+  await expect(prepareWindowsSodium(lock(),{},async(name:string,destination:string)=>{directory=path.dirname(destination);calls++;if(name.endsWith(".minisig"))throw Error("MINIMUM_SODIUM_TRANSPORT_FAILED");writeFileSync(destination,bytes);return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};})).rejects.toThrow("MINIMUM_SODIUM_TRANSPORT_FAILED");
   expect(calls).toBe(2);expect(existsSync(directory)).toBe(false);
  });
  it.each(["SODIUM_DIST_DIR","SODIUM_LIB_DIR","SODIUM_SHARED","SODIUM_USE_PKG_CONFIG"])("refuses ambient %s before acquisition",async key=>{
