@@ -45,7 +45,9 @@ export function captureCustodyChild(options: { command: string; args: string[]; 
   // contents are never recorded, and parent identity is never child identity.
   atomicPrivateJson(path.join(options.directory, "parent-launch.json"), { mode: options.mode, command: options.command, args: options.args, timeoutMs, streamLimitBytes: custodyStreamLimit, parentPid: process.pid });
   let result: ReturnType<typeof spawnSync> | undefined, thrown: unknown;
-  try { result = spawnSync(options.command, options.args, { input: options.input, env: options.env, timeout: timeoutMs, maxBuffer: custodyStreamLimit, encoding: "buffer", stdio: ["pipe", "pipe", "pipe"], windowsHide: true }); } catch (error) { thrown = error; }
+  // The supported default retains Buffer output and encodes string stdin as
+  // UTF-8. The output sentinel "buffer" is not a valid string-input encoding.
+  try { result = spawnSync(options.command, options.args, { input: options.input, env: options.env, timeout: timeoutMs, maxBuffer: custodyStreamLimit, stdio: ["pipe", "pipe", "pipe"], windowsHide: true }); } catch (error) { thrown = error; }
   const error = (result?.error ?? thrown) as (NodeJS.ErrnoException & { stdout?: Buffer; stderr?: Buffer; status?: number; signal?: string; pid?: number }) | undefined;
   const code = typeof error?.code === "string" ? error.code.slice(0, 80) : null;
   const exit = Number.isSafeInteger(result?.status ?? error?.status) ? (result?.status ?? error?.status)! : null;

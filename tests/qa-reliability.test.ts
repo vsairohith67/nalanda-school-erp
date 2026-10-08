@@ -18,6 +18,29 @@ function owned() {
 function prepared(base: string) { const root = path.join(base, "private", "qa-reliability"); prepareQaReliability(root, owner); return root; }
 function caseTrace(root: string, id: QaCase) { const directory = path.join(root, `custody-${id}`); mkdirSync(directory); return { directory, trace: new QaTrace("custody", id, directory) }; }
 
+it("preserves nonempty JSON string stdin and raw Buffer streams in the actual capture path", () => {
+  const r = owned();
+  try {
+    const root = prepared(r.root), { directory, trace } = caseTrace(root, "harness-clean"), script = path.join(directory, "child-control.cjs");
+    // Same string-input envelope/field types as the actual helper parent. This
+    // fixed Node echo program never invokes PowerShell or makes custody effects.
+    const request = { operation: "inspect", custody: { directory: "C:\\SYNTHETIC-A4-input-\u03b4", userSid: "S-1-5-21-100-200-300-400", volumeSerial: "ABCDEF12", kind: "WINDOWS_NTFS_LOCAL_V1" }, claimKey: "a".repeat(64), authorizationSha256: "b".repeat(64), authorizationName: "authorization-" + "c".repeat(32) + ".json", endorsementName: "endorsement-123-1.json" };
+    const input = JSON.stringify({ name: "valid-inspection", request });
+    writeFileSync(script, "const fs=require('node:fs');const input=fs.readFileSync(0);JSON.parse(input.toString('utf8'));process.stdout.write(input);process.stderr.write(Buffer.from([0xff,0,0xfe]));");
+    const result = captureCustodyChild({ command: process.execPath, args: [script], input, env: { ...process.env }, directory, trace, mode: "HARNESS_ONLY", timeoutMs: 10000 }); trace.finish(result.process.errorCategory === "NONE" ? "PASS" : "FAIL");
+    expect(result.process.exit).toBe(0); expect(result.process.signal).toBeNull(); expect(result.process.errorCategory).toBe("NONE");
+    expect(result.receipt.errorCode).toBeNull(); expect(result.receipt.directReturnObserved).toBe(true); expect(result.process.closed).toBe(true); expect(result.process.settled).toBe("UNKNOWN");
+    expect(result.stdout).toBe(input); expect(result.output).toEqual({ state: "VALID", value: { name: "valid-inspection", request } });
+    expect(readFileSync(path.join(directory, "stdout.bin"))).toEqual(Buffer.from(input, "utf8"));
+    expect(readFileSync(path.join(directory, "stderr.bin"))).toEqual(Buffer.from([0xff, 0, 0xfe]));
+    expect(result.receipt.stdoutObservedBytes).toBe(Buffer.byteLength(input, "utf8")); expect(result.receipt.stderrObservedBytes).toBe(3);
+    expect(result.evidenceComplete).toBe(true); expect(result.nativeMetadataValid).toBe(false);
+    expect(readCustodyStages(directory).every(stage => stage.state === "MISSING")).toBe(true);
+    const launch = safePrivateJson(path.join(directory, "parent-launch.json"));
+    expect(launch.value?.timeoutMs).toBe(10000); expect(launch.value?.streamLimitBytes).toBe(custodyStreamLimit);
+  } finally { r.cleanup(); }
+});
+
 it("persists launch intent before blocking and retains exit/stdout without parse masking", () => {
   const r = owned();
   try {
