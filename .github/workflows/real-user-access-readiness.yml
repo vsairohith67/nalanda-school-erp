@@ -126,13 +126,31 @@ jobs:
       - name: Prepare bounded service metadata
         id: service_trace_prepare
         run: pnpm exec tsx scripts/qa-recovery-service-traces.ts prepare
+      - name: Prepare bounded Windows QA reliability evidence
+        id: qa_reliability_prepare
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts qa-prepare
       - name: Full tests, typecheck and production build
         # PR28-only process environment; no machine/GPO policy or other PR context.
         timeout-minutes: 120
         env:
+          NALANDA_QA_RELIABILITY_TRACE_DIR: tmp/ci-service-traces/qa-reliability
           PSExecutionPolicyPreference: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 28 && github.event.pull_request.head.ref == 'release/recovery-integration-1a' && github.event.pull_request.head.repo.full_name == github.repository && github.run_attempt == 1 && startsWith(github.event.pull_request.updated_at, '2026-10-08') && 'RemoteSigned' || '' }}
           NALANDA_SERVICE_TRACE_DIR: tmp/ci-service-traces
         run: pnpm test && pnpm typecheck && pnpm build
+      - name: Finalize bounded Windows QA reliability evidence after success or failure
+        id: qa_reliability_finalize
+        if: always() && steps.qa_reliability_prepare.outcome == 'success'
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts qa-finalize
+      - name: Retain only validated Windows QA reliability projection
+        if: always() && steps.qa_reliability_finalize.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-qa-reliability-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            tmp/ci-qa-reliability-public/qa-reliability.json
+            tmp/ci-qa-reliability-public/manifest.json
       - name: Validate and finalize bounded service metadata
         id: service_trace_finalize
         if: always() && steps.service_trace_prepare.outcome == 'success'
