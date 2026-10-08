@@ -7,5 +7,5 @@ export type SodiumRequestFactory = (url:string,options:{method:"GET";agent:false
 export type SodiumFileReceipt = {name:string;bytes:number;sha256:string};
 export type SodiumDownload = (name:string,destination:string)=>Promise<SodiumFileReceipt>;
 export function sodiumArchiveDownload(name:string,destination:string,request?:SodiumRequestFactory):Promise<SodiumFileReceipt>;
-export function prepareWindowsSodium(lockText:string,environment:Readonly<NodeJS.ProcessEnv>,download?:SodiumDownload):Promise<{directory:string;files:SodiumFileReceipt[];cleanup:()=>void}>;
+export function prepareWindowsSodium(lockText:string,environment:Readonly<Record<string,string|undefined>>,download?:SodiumDownload):Promise<{directory:string;files:SodiumFileReceipt[];cleanup:()=>void}>;
 export function minimumCompile():Promise<void>;
