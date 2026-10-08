@@ -1,5 +1,5 @@
 import type { TestContext } from "vitest";
-import { configuredQaTrace, type QaCase, type QaPhase, type QaStatus, type QaTrace } from "./qa-reliability";
+import { configuredQaTrace, reportingCases, type QaCase, type QaPhase, type QaStatus, type QaTrace } from "./qa-reliability";
 
 const activeBodies = new Set<Promise<void>>();
 
@@ -52,6 +52,13 @@ export async function observedReportingRole(context: Pick<TestContext, "signal" 
       trace.end(settlement, bodySettled ? "PASS" : "UNKNOWN");
       trace.end(span, bodySettled ? "PASS" : "UNKNOWN");
       trace.finish(outcome);
+      // Local diagnostics reuse these finite events without inventing a hosted
+      // run/job identity. Configured CI uses the existing journal/finalizer.
+      if (!trace.directory && (reportingCases as readonly string[]).includes(trace.caseId)) console.info(JSON.stringify({
+        evidence: "INTELLIGENT_REPORTS_ROLE_PHASES_V1", provider: process.env.DATABASE_PROVIDER === "postgresql" ? "postgresql" : "sqlite", caseId: trace.caseId, declaredResult: outcome,
+        phases: trace.events.filter(event => event.kind === "END").map(event => ({ phase: event.phase, status: event.status, durationMs: event.durationMs })),
+        unfinished: [...trace.pending.values()].map(value => value.phase)
+      }));
     } catch (primary) {
       try { trace.end(span, "FAIL"); trace.finish("FAIL"); } catch { /* Keep partial capture for the existing finalizer. */ }
       throw primary;
