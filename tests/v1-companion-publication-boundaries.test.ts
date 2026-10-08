@@ -10,7 +10,7 @@ const root = process.cwd(), parent = path.join(root, "tmp");
 const scripts = ["communication-delivery-foundation-1a", "real-user-access-readiness-1a", "real-data-onboarding-preparation-1a"] as const;
 type Kind = "reviewed" | "neighbour" | "nested-lookalike" | "binary" | "private-key" | "token" | "credential" | "oversized" | "real-contact" | "identity";
 
-function scan(name: typeof scripts[number], kind: Kind, integration = false, dockerfile = false) {
+function scan(name: typeof scripts[number], kind: Kind, integration = false, dockerfile = false, overnight = false) {
   mkdirSync(parent, { recursive: true });
   const directory = mkdtempSync(path.join(parent, "v1-companion-publication-")), identity = lstatSync(directory);
   const script = path.join(root, `scripts/qa-${name}-public-repo-scan.ts`);
@@ -33,9 +33,9 @@ function scan(name: typeof scripts[number], kind: Kind, integration = false, doc
     if (name === "real-data-onboarding-preparation-1a") write("lib/onboarding-preparation.ts", "// invented changed preparation source\n");
     for (const file of reviewedBiometricCompanionPublicSources) write(file, "// invented reviewed source\n");
     if (integration) for (const file of reviewedV1IntegrationPublicSources) write(file, "// invented reviewed combined source\n");
-    const operand = dockerfile ? "Dockerfile" : integration ? "apps/nalanda-cross-platform/src-tauri/src/qa_profile.rs" : "apps/nalanda-biometric-bridge/windows/host/OwnedProcess.cs";
-    if (kind === "neighbour") write(integration ? "apps/nalanda-cross-platform/src-tauri/src/unreviewed.rs" : "apps/nalanda-biometric-bridge/windows/host/Unreviewed.cs", "// invented unregistered neighbour\n");
-    if (kind === "nested-lookalike") write(integration ? "apps/nalanda-cross-platform/nested/src-tauri/src/qa_profile.rs" : "apps/nalanda-biometric-bridge/nested/windows/host/OwnedProcess.cs", "// invented lookalike\n");
+    const operand = overnight ? "app/api/expenses/[id]/payment-record/route.ts" : dockerfile ? "Dockerfile" : integration ? "apps/nalanda-cross-platform/src-tauri/src/qa_profile.rs" : "apps/nalanda-biometric-bridge/windows/host/OwnedProcess.cs";
+    if (kind === "neighbour") write(overnight ? "app/api/expenses/[id]/unreviewed/route.ts" : integration ? "apps/nalanda-cross-platform/src-tauri/src/unreviewed.rs" : "apps/nalanda-biometric-bridge/windows/host/Unreviewed.cs", "// invented unregistered neighbour\n");
+    if (kind === "nested-lookalike") write(overnight ? "app/api/expenses/nested/[id]/payment-record/route.ts" : integration ? "apps/nalanda-cross-platform/nested/src-tauri/src/qa_profile.rs" : "apps/nalanda-biometric-bridge/nested/windows/host/OwnedProcess.cs", "// invented lookalike\n");
     if (kind === "binary") write(integration ? "apps/nalanda-cross-platform/private.db" : "apps/nalanda-biometric-bridge/windows/host/package.exe", "invented forbidden package\n");
     if (kind === "private-key") write(operand, ["-----BEGIN ", "PRIVATE KEY-----"].join(""));
     if (kind === "token") write(operand, integration ? 'token = "' + "SYNTHETIC-ONLY-" + "A".repeat(36) + '"' : ["gh", "p_"].join("") + "A".repeat(36));
@@ -81,4 +81,8 @@ describe("V1 combined actual onboarding changed-scope publication CLI", () => {
 
 describe("Inherited exact Dockerfile actual onboarding publication controls", () => {
   it.each<Kind>(["private-key", "token", "oversized", "identity"])("retains full content refusal: %s", kind => scan("real-data-onboarding-preparation-1a", kind, true, true));
+});
+
+describe("Overnight exact product source actual onboarding publication controls", () => {
+  it.each<Kind>(["reviewed", "neighbour", "nested-lookalike", "binary", "private-key", "token", "oversized", "identity"])("retains scope and content refusal: %s", kind => scan("real-data-onboarding-preparation-1a", kind, true, false, true));
 });

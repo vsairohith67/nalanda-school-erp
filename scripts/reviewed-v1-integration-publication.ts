@@ -4,6 +4,28 @@
 // Scope admission only: full content/secret/identifier/size/artifact checks still apply.
 // No subtree, extension, runtime/profile or operational-data admission is granted.
 export const reviewedV1IntegrationPublicSources = Object.freeze([
+  // Independently reviewed overnight product and exact hosted-window sources.
+  // Exact paths only; every existing content and private-artifact check applies.
+  "app/api/expenses/[id]/payment-record/route.ts",
+  "app/api/expenses/[id]/route.ts",
+  "app/api/expenses/[id]/workflow/route.ts",
+  "app/api/staff/[id]/links/route.ts",
+  "app/api/staff/[id]/route.ts",
+  "app/api/substitutes/[id]/route.ts",
+  "app/api/substitutes/route.ts",
+  "app/api/substitutes/suggestions/route.ts",
+  "app/api/timetable/[resource]/[id]/route.ts",
+  "app/api/timetable/drafts/[id]/fixed-periods/route.ts",
+  "app/api/timetable/drafts/[id]/route.ts",
+  "app/api/timetable/entries/route.ts",
+  "app/expenses/[id]/page.tsx",
+  "app/expenses/[id]/payment-record/page.tsx",
+  "app/substitutes/[id]/page.tsx",
+  "components/books-finance-forms.tsx",
+  "components/expense-form.tsx",
+  "components/expense-payment-record.tsx",
+  "components/substitute-form.tsx",
+  "config/overnight-repair-product-1a-window.json",
   "Dockerfile",
   "prisma/migrations/20261007123000_etimetracklite_raw_export_profile_1a/migration.sql",
   "prisma/postgresql/migrations/20261007123000_etimetracklite_raw_export_profile_1a/migration.sql",
