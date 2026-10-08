@@ -42,6 +42,15 @@ it("a capture failure rejects the owned process without an unhandled event excep
   expect(JSON.stringify(failure)).not.toContain("HARNESS_PRIVATE_CAPTURE_FAILURE");
 });
 
+it.each(["exit", "close"] as const)("a capture failure at %s preserves the actual nonzero exit as primary", async stage => {
+  let failure: unknown;
+  try { await operationsPreparationProcess(process.execPath, ["-e", "process.exit(7)"], { ...options, onEvent: event => { if (event.stage === stage) throw Error("HARNESS_PRIVATE_SECONDARY_CAPTURE_FAILURE"); } }); }
+  catch (error) { failure = error; }
+  expect(failure).toBeInstanceOf(OperationsProcessError);
+  expect((failure as OperationsProcessError).observation).toMatchObject({ exit: 7, signal: null, errorCategory: "NONZERO_EXIT", closed: true, settled: "PASS" });
+  expect(JSON.stringify(failure)).not.toContain("HARNESS_PRIVATE_SECONDARY_CAPTURE_FAILURE");
+});
+
 it("the existing finalizer projects finite events while retaining PID and unknown plugin identity privately", async () => {
   const root = mkdtempSync(path.join(tmpdir(), "nalanda-operations-diagnostic-control-"));
   try {
