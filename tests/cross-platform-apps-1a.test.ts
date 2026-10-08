@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync, renameSync, lstatSync } from "node:fs";
 import {EventEmitter} from "node:events";
 import {PassThrough} from "node:stream";
 import {createHash} from "node:crypto";
@@ -53,6 +53,27 @@ describe("SOURCE_ONLY pinned Windows libsodium acquisition; no compiler or signa
   let directory="",calls=0;
   await expect(prepareWindowsSodium(lock(),{},async(name:string,destination:string)=>{directory=path.dirname(destination);calls++;if(name.endsWith(".minisig"))throw Error("MINIMUM_SODIUM_TRANSPORT_FAILED");writeFileSync(destination,bytes);return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};})).rejects.toThrow("MINIMUM_SODIUM_TRANSPORT_FAILED");
   expect(calls).toBe(2);expect(existsSync(directory)).toBe(false);
+ });
+ it.each([false,true])("refuses substituted directory; original transport failure preserved=%s",async failAcquisition=>{
+  let directory="",moved="",original:ReturnType<typeof lstatSync>|undefined,replacement:ReturnType<typeof lstatSync>|undefined,prepared:Awaited<ReturnType<typeof prepareWindowsSodium>>|undefined;
+  const downloads=async(name:string,destination:string)=>{
+   directory=path.dirname(destination);
+   if(name.endsWith(".minisig")){
+    original=lstatSync(directory);moved=directory+"-SOURCE_ONLY-original";renameSync(directory,moved);mkdirSync(directory);writeFileSync(path.join(directory,"SOURCE_ONLY-replacement"),bytes);replacement=lstatSync(directory);
+    if(failAcquisition)throw Error("MINIMUM_SODIUM_TRANSPORT_FAILED");
+   }
+   writeFileSync(destination,bytes);return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};
+  };
+  try{
+   if(failAcquisition)await expect(prepareWindowsSodium(lock(),{},downloads)).rejects.toMatchObject({message:"MINIMUM_SODIUM_TRANSPORT_FAILED",cleanupCause:"MINIMUM_SODIUM_CLEANUP_REFUSED"});
+   else{prepared=await prepareWindowsSodium(lock(),{},downloads);expect(()=>prepared!.cleanup()).toThrow("MINIMUM_SODIUM_CLEANUP_REFUSED");}
+   expect(readFileSync(path.join(directory,"SOURCE_ONLY-replacement"))).toEqual(bytes);expect(existsSync(moved)).toBe(true);
+  }finally{
+   // Both directories were invented by this fixture. Independently prove each identity
+   // before fixture-owned settlement; never retry the production helper's refused cleanup.
+   if(original){const now=lstatSync(moved);expect([now.dev,now.ino,now.birthtimeMs]).toEqual([original.dev,original.ino,original.birthtimeMs]);expect(now.isDirectory()&&!now.isSymbolicLink()).toBe(true);rmSync(moved,{recursive:true});}
+   if(replacement){const now=lstatSync(directory);expect([now.dev,now.ino,now.birthtimeMs]).toEqual([replacement.dev,replacement.ino,replacement.birthtimeMs]);expect(now.isDirectory()&&!now.isSymbolicLink()).toBe(true);rmSync(directory,{recursive:true});}
+  }
  });
  it.each(["SODIUM_DIST_DIR","SODIUM_LIB_DIR","SODIUM_SHARED","SODIUM_USE_PKG_CONFIG"])("refuses ambient %s before acquisition",async key=>{
   const download=vi.fn();await expect(prepareWindowsSodium(lock(),{[key]:"invented-private-value"},download)).rejects.toThrow("MINIMUM_SODIUM_ENVIRONMENT_REFUSED");expect(download).not.toHaveBeenCalled();

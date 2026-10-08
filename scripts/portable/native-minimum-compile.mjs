@@ -10,7 +10,9 @@ import {fileURLToPath} from "node:url";
 
 const sodiumFiles=["libsodium-1.0.22-stable-msvc.zip","libsodium-1.0.22-stable-msvc.zip.minisig"];
 const sodiumChecksum="72b04bf6da2c98b727af37ab62cb505f4d751b975b034a9b9ad491d333b0564e";
-const sodiumCauses=new Set(["MINIMUM_SODIUM_FILE_REFUSED","MINIMUM_SODIUM_LOCK_REFUSED","MINIMUM_SODIUM_ENVIRONMENT_REFUSED","MINIMUM_SODIUM_CLEANUP_REFUSED","MINIMUM_SODIUM_DOWNLOAD_TIMEOUT","MINIMUM_SODIUM_HTTP_REFUSED","MINIMUM_SODIUM_SIZE_REFUSED","MINIMUM_SODIUM_TRANSPORT_FAILED","MINIMUM_SODIUM_BODY_REFUSED","MINIMUM_SODIUM_WRITE_REFUSED"]);
+const sodiumCauses=new Set(["MINIMUM_SODIUM_FILE_REFUSED","MINIMUM_SODIUM_LOCK_REFUSED","MINIMUM_SODIUM_ENVIRONMENT_REFUSED","MINIMUM_SODIUM_CLEANUP_REFUSED","MINIMUM_SODIUM_CLEANUP_FAILED","MINIMUM_SODIUM_DOWNLOAD_TIMEOUT","MINIMUM_SODIUM_HTTP_REFUSED","MINIMUM_SODIUM_SIZE_REFUSED","MINIMUM_SODIUM_TRANSPORT_FAILED","MINIMUM_SODIUM_BODY_REFUSED","MINIMUM_SODIUM_WRITE_REFUSED"]);
+const sodiumCause=error=>sodiumCauses.has(error?.message)?error.message:"MINIMUM_SODIUM_PREPARATION_FAILED";
+const sodiumCleanupCause=error=>error?.message==="MINIMUM_SODIUM_CLEANUP_REFUSED"?error.message:"MINIMUM_SODIUM_CLEANUP_FAILED";
 export function sodiumArchiveDownload(name,destination,request=httpsRequest) {
  if(!sodiumFiles.includes(name))throw Error("MINIMUM_SODIUM_FILE_REFUSED");
  const limit=name.endsWith(".minisig")?4096:40*1024*1024;
@@ -39,11 +41,16 @@ export async function prepareWindowsSodium(lockText,environment,download=sodiumA
  if(!entry||!/^version = "1\.24\.0"\r?$/m.test(entry)||!/^source = "registry\+https:\/\/github.com\/rust-lang\/crates.io-index"\r?$/m.test(entry)||!entry.includes(`checksum = "${sodiumChecksum}"`))throw Error("MINIMUM_SODIUM_LOCK_REFUSED");
  for(const key of ["SODIUM_DIST_DIR","SODIUM_LIB_DIR","SODIUM_SHARED","SODIUM_USE_PKG_CONFIG"])if(environment[key]!==undefined)throw Error("MINIMUM_SODIUM_ENVIRONMENT_REFUSED");
  const parent=realpathSync(os.tmpdir()),directory=mkdtempSync(path.join(parent,"nalanda-minimum-sodium-"));
- const cleanup=()=>{if(path.dirname(directory)!==parent||!path.basename(directory).startsWith("nalanda-minimum-sodium-")||lstatSync(directory).isSymbolicLink()||realpathSync(directory)!==directory)throw Error("MINIMUM_SODIUM_CLEANUP_REFUSED");rmSync(directory,{recursive:true});};
+ const allocated=lstatSync(directory,{bigint:true});
+ const cleanup=()=>{
+  let current;try{current=lstatSync(directory,{bigint:true});}catch{throw Error("MINIMUM_SODIUM_CLEANUP_REFUSED");}
+  if(path.dirname(directory)!==parent||!path.basename(directory).startsWith("nalanda-minimum-sodium-")||!current.isDirectory()||current.isSymbolicLink()||realpathSync(directory)!==directory||current.dev!==allocated.dev||current.ino!==allocated.ino||(allocated.birthtimeNs>0n&&current.birthtimeNs!==allocated.birthtimeNs)||(allocated.ino===0n&&allocated.birthtimeNs<=0n))throw Error("MINIMUM_SODIUM_CLEANUP_REFUSED");
+  rmSync(directory,{recursive:true});
+ };
  try{
   const files=[];for(const name of sodiumFiles)files.push(await download(name,path.join(directory,name)));
   return {directory,files,cleanup};
- }catch(error){cleanup();throw error;}
+ }catch(error){try{cleanup();}catch(cleanupError){const failure=Error(sodiumCause(error));failure.cleanupCause=sodiumCleanupCause(cleanupError);throw failure;}throw error;}
 }
 
 export async function minimumCompile() {
@@ -89,18 +96,19 @@ const command=["+1.90.0",target==="x86_64-pc-windows-msvc"?"test":"check","--loc
 const startUtc=new Date().toISOString(),start=performance.now();
 console.log(JSON.stringify({evidence:"MINIMUM_COMPILER_COMPATIBILITY_ONLY",source,target,profile:"production",compiler:"1.90.0",command:["cargo",...command],lockSha256:before}));
 process.stdout.write(rustc);process.stdout.write(cargo);
-let sodium,result;
+let sodium,result,dependencyCleanup="NOT_EXECUTED",dependencyCleanupFailure=null;
 try{
  if(target==="x86_64-pc-windows-msvc"){
-  try{sodium=await prepareWindowsSodium(readFileSync(lock,"utf8"),env);}catch(error){const cause=sodiumCauses.has(error?.message)?error.message:"MINIMUM_SODIUM_PREPARATION_FAILED";console.log(JSON.stringify({evidence:"MINIMUM_SIGNED_DEPENDENCY_PREPARATION",source,target,stage:"OFFICIAL_ARCHIVE_ACQUISITION",status:"FAIL",cause}));throw Error(cause);}
+  try{sodium=await prepareWindowsSodium(readFileSync(lock,"utf8"),env);}catch(error){const cause=sodiumCause(error);console.log(JSON.stringify({evidence:"MINIMUM_SIGNED_DEPENDENCY_PREPARATION",source,target,stage:"OFFICIAL_ARCHIVE_ACQUISITION",status:"FAIL",cause,cleanupFailure:sodiumCauses.has(error?.cleanupCause)?error.cleanupCause:null}));throw Error(cause);}
   env.SODIUM_DIST_DIR=sodium.directory;
   console.log(JSON.stringify({evidence:"MINIMUM_SIGNED_DEPENDENCY_PREPARATION",source,target,crate:"libsodium-sys-stable",version:"1.24.0",crateChecksum:sodiumChecksum,files:sodium.files,status:"ACQUIRED_SIGNATURE_VERIFICATION_PENDING",verification:"UNCHANGED_UPSTREAM_BUILD_SCRIPT"}));
  }
  result=spawnSync("cargo",command,{env,stdio:"inherit",windowsHide:true,timeout:2100000});
-}finally{if(sodium)sodium.cleanup();}
+}finally{if(sodium){try{sodium.cleanup();dependencyCleanup="VERIFIED";}catch(error){dependencyCleanup="UNRECONCILED";dependencyCleanupFailure=sodiumCleanupCause(error);}}}
 const after=hash();
-console.log(JSON.stringify({evidence:"MINIMUM_COMPILER_COMPATIBILITY_ONLY",source,target,profile:"production",compiler:"1.90.0",startUtc,endUtc:new Date().toISOString(),elapsedMs:Math.round(performance.now()-start),exitCode:result.status,signal:result.signal,errorCode:result.error?.code??null,lockBefore:before,lockAfter:after,applicationExecuted:false,artifactAdmission:false}));
+console.log(JSON.stringify({evidence:"MINIMUM_COMPILER_COMPATIBILITY_ONLY",source,target,profile:"production",compiler:"1.90.0",startUtc,endUtc:new Date().toISOString(),elapsedMs:Math.round(performance.now()-start),exitCode:result.status,signal:result.signal,errorCode:result.error?.code??null,lockBefore:before,lockAfter:after,dependencyCleanup,dependencyCleanupFailure,applicationExecuted:false,artifactAdmission:false}));
 if(before!==after) throw Error("MINIMUM_LOCKFILE_CHANGED");
 process.exitCode=result.status??1;
+if(dependencyCleanup!=="NOT_EXECUTED"&&dependencyCleanup!=="VERIFIED")throw Error("MINIMUM_SODIUM_CLEANUP_REFUSED");
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))await minimumCompile();
