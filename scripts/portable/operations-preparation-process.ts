@@ -91,7 +91,15 @@ export async function operationsPreparationProcess(executable: string, argv: str
     const deadline = setTimeout(() => terminate("TIMEOUT"), options.timeoutMs);
     const notify = (stage: OperationsProcessEvent["stage"]) => {
       try { options.onEvent?.({ stage, pid: child.pid ?? null }); }
-      catch { terminate("IO"); } // A failed capture never becomes an unhandled event exception.
+      catch {
+        // An actual failed exit precedes this secondary recorder failure. Keep
+        // its cause and do not terminate a leader that has already exited.
+        if (category === "NONE" && (actualSignal || actualExit !== null && actualExit !== 0)) {
+          category = actualSignal ? "UNKNOWN" : "NONZERO_EXIT";
+          if (category === "NONZERO_EXIT") return;
+        }
+        terminate("IO"); // A failed capture never becomes an unhandled event exception.
+      }
     };
     let stdoutObserved = false, stderrObserved = false;
     child.once("spawn", () => notify("spawn"));
