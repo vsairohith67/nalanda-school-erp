@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { link, lstat, mkdir, open, readFile, realpath, rm } from "node:fs/promises";
 import path from "node:path";
+import { Readable } from "node:stream";
 import {
   CopyObjectCommand,
   DeleteObjectCommand,
@@ -319,7 +320,6 @@ export function createS3CompatiblePrivateObjectStore(environment: NodeJS.Process
     },
     async streamPrivateObject(key, maximumBytes = MAX_OBJECT_BYTES) {
       const object = await this.getPrivateObject(key, maximumBytes);
-      const { Readable } = await import("node:stream");
       return { stream: Readable.from(object.bytes), metadata: object.metadata };
     },
     statPrivateObject: stat,
