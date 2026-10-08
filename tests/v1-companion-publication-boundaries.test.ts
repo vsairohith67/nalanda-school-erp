@@ -10,7 +10,7 @@ const root = process.cwd(), parent = path.join(root, "tmp");
 const scripts = ["communication-delivery-foundation-1a", "real-user-access-readiness-1a", "real-data-onboarding-preparation-1a"] as const;
 type Kind = "reviewed" | "neighbour" | "nested-lookalike" | "binary" | "private-key" | "token" | "credential" | "oversized" | "real-contact" | "identity" | "declaration-neighbour";
 
-function scan(name: typeof scripts[number], kind: Kind, integration = false, dockerfile = false, overnight = false, declaration = false) {
+function scan(name: typeof scripts[number], kind: Kind, integration = false, dockerfile = false, overnight = false, declaration: boolean | "windows-compiler" = false) {
   mkdirSync(parent, { recursive: true });
   const directory = mkdtempSync(path.join(parent, "v1-companion-publication-")), identity = lstatSync(directory);
   const script = path.join(root, `scripts/qa-${name}-public-repo-scan.ts`);
@@ -33,8 +33,9 @@ function scan(name: typeof scripts[number], kind: Kind, integration = false, doc
     if (name === "real-data-onboarding-preparation-1a") write("lib/onboarding-preparation.ts", "// invented changed preparation source\n");
     for (const file of reviewedBiometricCompanionPublicSources) write(file, "// invented reviewed source\n");
     if (integration) for (const file of reviewedV1IntegrationPublicSources) write(file, "// invented reviewed combined source\n");
-    if (declaration) write("scripts/portable/native-minimum-compile.d.mts", "export declare const invented: string;\n");
-    const operand = declaration ? "scripts/portable/native-minimum-compile.d.mts" : overnight ? "app/api/expenses/[id]/payment-record/route.ts" : dockerfile ? "Dockerfile" : integration ? "apps/nalanda-cross-platform/src-tauri/src/qa_profile.rs" : "apps/nalanda-biometric-bridge/windows/host/OwnedProcess.cs";
+    const declarationPath = declaration === "windows-compiler" ? "scripts/portable/windows-compiler-ci.d.mts" : "scripts/portable/native-minimum-compile.d.mts";
+    if (declaration) write(declarationPath, "export declare const invented: string;\n");
+    const operand = declaration ? declarationPath : overnight ? "app/api/expenses/[id]/payment-record/route.ts" : dockerfile ? "Dockerfile" : integration ? "apps/nalanda-cross-platform/src-tauri/src/qa_profile.rs" : "apps/nalanda-biometric-bridge/windows/host/OwnedProcess.cs";
     if (kind === "neighbour") write(overnight ? "app/api/expenses/[id]/unreviewed/route.ts" : integration ? "apps/nalanda-cross-platform/src-tauri/src/unreviewed.rs" : "apps/nalanda-biometric-bridge/windows/host/Unreviewed.cs", "// invented unregistered neighbour\n");
     if (kind === "nested-lookalike") write(overnight ? "app/api/expenses/nested/[id]/payment-record/route.ts" : integration ? "apps/nalanda-cross-platform/nested/src-tauri/src/qa_profile.rs" : "apps/nalanda-biometric-bridge/nested/windows/host/OwnedProcess.cs", "// invented lookalike\n");
     if (kind === "binary") write(integration ? "apps/nalanda-cross-platform/private.db" : "apps/nalanda-biometric-bridge/windows/host/package.exe", "invented forbidden package\n");
@@ -98,3 +99,10 @@ describe("Exact native declaration actual onboarding publication controls", () =
 });
 
 it("does not admit neighbouring native declarations through a global extension exemption", () => scan("communication-delivery-foundation-1a", "declaration-neighbour", false, false, false, true));
+
+describe.each(scripts)("Exact compiler-wrapper declaration actual %s publication controls", name => {
+  const kinds: Kind[] = ["reviewed", "private-key", "token", "oversized", name === "real-data-onboarding-preparation-1a" ? "identity" : "credential"];
+  it.each(kinds)("keeps full text checks: %s", kind => {
+    scan(name, kind, name === "real-data-onboarding-preparation-1a", false, false, "windows-compiler");
+  });
+});

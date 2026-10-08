@@ -226,10 +226,10 @@ jobs:
       - name: Record Windows compiler environment
         shell: pwsh
         run: node --version; pnpm --version; rustc --version; cargo --version; Get-ComputerInfo -Property WindowsProductName,WindowsVersion,OsArchitecture
-      - run: pnpm app:rust:test --locked
-      - name: Compile separate QA profile and reject substituted or production inputs
-        run: pnpm exec tsx scripts/portable/qa-native-profile-compile.ts --integration-test
-      - run: pnpm app:windows:build -- --locked
+      - name: Run unchanged Windows compiler gates with prepared signed dependency inputs
+        # pnpm app:rust:test --locked, then the separate QA-profile check,
+        # then pnpm app:windows:build -- --locked; same toolchain and job cap.
+        run: node scripts/portable/windows-compiler-ci.mjs
       - name: Write Windows package checksum
         shell: pwsh
         run: Get-ChildItem apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/*.exe | Get-FileHash -Algorithm SHA256 | ForEach-Object { "$($_.Hash) *$([IO.Path]::GetFileName($_.Path))" } | Set-Content apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/SHA256SUMS.txt

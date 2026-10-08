@@ -37,6 +37,7 @@ for (const file of ["tests/native/android.ts", "tests/native/android.test.ts", "
 for (const file of reviewedBiometricCompanionPublicSources) allowedRootFiles.add(file);
 // Exact reviewed declaration; no global .mts exemption, all text guards apply.
 allowedRootFiles.add("scripts/portable/native-minimum-compile.d.mts");
+allowedRootFiles.add("scripts/portable/windows-compiler-ci.d.mts");
 const secretPatterns: Array<[string, RegExp]> = [
   ["private-key", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
   ["github-token", /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b/],

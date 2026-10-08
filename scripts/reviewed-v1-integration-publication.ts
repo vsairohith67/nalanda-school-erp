@@ -27,6 +27,7 @@ export const reviewedV1IntegrationPublicSources = Object.freeze([
   "components/substitute-form.tsx",
   "config/overnight-repair-product-1a-window.json",
   "scripts/portable/native-minimum-compile.d.mts",
+  "scripts/portable/windows-compiler-ci.d.mts",
   "Dockerfile",
   "prisma/migrations/20261007123000_etimetracklite_raw_export_profile_1a/migration.sql",
   "prisma/postgresql/migrations/20261007123000_etimetracklite_raw_export_profile_1a/migration.sql",
