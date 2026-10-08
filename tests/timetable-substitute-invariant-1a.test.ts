@@ -218,4 +218,3 @@ describe("requirement025 bidirectional timetable invariant on actual provider tr
     expect((await db.timetableDraft.findUniqueOrThrow({ where: { id: f.draft.id } })).notes).toBeNull();
   });
 });
-
