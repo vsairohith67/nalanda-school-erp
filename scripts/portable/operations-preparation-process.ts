@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { performance } from "node:perf_hooks";
 
 export type OperationsProcessCategory = "NONE" | "STARTUP" | "NONZERO_EXIT" | "TIMEOUT" | "CANCELLED" | "OUTPUT_LIMIT" | "IO" | "UNKNOWN";
+export type OperationsProcessEvent = { stage: "spawn" | "first-stdout" | "first-stderr" | "exit" | "close"; pid: number | null };
 export type OperationsProcessObservation = {
   exit: number | null;
   signal: NodeJS.Signals | null;
@@ -23,6 +24,9 @@ type ProcessOptions = {
   timeoutMs: number;
   maxBuffer: number;
   signal?: AbortSignal;
+  // Actual boundaries only. PID belongs in an owned private capture, never the
+  // public process projection; no path/plugin identity is inferred from it.
+  onEvent?: (event: OperationsProcessEvent) => void;
 };
 
 /** Client-only process runner. A result is released only after close or a bounded
@@ -85,12 +89,20 @@ export async function operationsPreparationProcess(executable: string, argv: str
     };
     const abort = () => terminate("CANCELLED");
     const deadline = setTimeout(() => terminate("TIMEOUT"), options.timeoutMs);
+    const notify = (stage: OperationsProcessEvent["stage"]) => {
+      try { options.onEvent?.({ stage, pid: child.pid ?? null }); }
+      catch { terminate("IO"); } // A failed capture never becomes an unhandled event exception.
+    };
+    let stdoutObserved = false, stderrObserved = false;
+    child.once("spawn", () => notify("spawn"));
     child.stdout.on("data", (bytes: Buffer) => {
+      if (bytes.length && !stdoutObserved) { stdoutObserved = true; notify("first-stdout"); }
       stdoutSize += bytes.length;
       if (stdoutSize > options.maxBuffer) terminate("OUTPUT_LIMIT");
       else if (category === "NONE") stdout.push(bytes);
     });
     child.stderr.on("data", (bytes: Buffer) => {
+      if (bytes.length && !stderrObserved) { stderrObserved = true; notify("first-stderr"); }
       stderrSize += bytes.length;
       if (stderrSize > options.maxBuffer) terminate("OUTPUT_LIMIT");
     });
@@ -100,9 +112,10 @@ export async function operationsPreparationProcess(executable: string, argv: str
       if (!child.pid) category = "STARTUP";
       else terminate("IO");
     });
-    child.on("exit", (code, signal) => { actualExit = code; actualSignal = signal; });
+    child.on("exit", (code, signal) => { actualExit = code; actualSignal = signal; notify("exit"); });
     child.on("close", (code, signal) => {
       closed = true;
+      notify("close");
       // Startup failures have no actual exit observation, even when Node supplies
       // an errno-like close code. Keep absent observations explicitly null.
       if (category !== "STARTUP") { actualExit = code; actualSignal = signal; }

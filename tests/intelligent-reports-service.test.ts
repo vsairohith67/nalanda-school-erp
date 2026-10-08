@@ -35,6 +35,7 @@ import {POST as exportRoute} from "../app/api/intelligent-reports/export/route";
 const dispatch=(action:Parameters<typeof handle>[1],request:NextRequest)=>action==="export"?exportRoute(request):action==="source"?sourceRoute(request):handle(request,action);
 import {previewFamilyCollection,confirmFamilyCollection,reverseFamilyCollection} from "../lib/family-collections";
 import {assertSyntheticPostgresQa} from "../scripts/postgres/synthetic-qa";
+import {observedReportingRole,reportingBodiesSettled,type IntelligentReportsObservation} from "./helpers/intelligent-reports-observation";
 
 // Same assertions/readers/routes on both providers; unique migrated fixture only.
 // No authority doubles, copied database, server, runtime admission or login claim.
@@ -45,13 +46,19 @@ const year="2026-27",now=new Date("2026-09-27T00:00:00Z"),date=(s:string)=>new D
 const q:Query={family:"ACADEMIC",schoolId:"school",academicYear:year,targets:[{id:"scope7",examId:"exam7"}],sourceState:"ISSUED",comparator:"LT",threshold:60,sort:"NAME",direction:"ASC",page:1,pageSize:25};
 const fees:Query={...q,family:"FEES",targets:[{id:"scope7"}],sourceState:"CURRENT",comparator:"GT",threshold:0,term:2};
 const attendance:Query={...q,family:"ATTENDANCE",targets:[{id:"scope7"}],sourceState:"LOCKED",threshold:80,from:"2026-06-01",to:"2026-06-03"};
-async function identity(role:string) {
-  const user=await db.user.create({data:{name:`SYNTHETIC ${role}`,username:`synthetic-${role}`,passwordHash:"SYNTHETIC-NOT-A-CREDENTIAL",role}});
-  const assignment=await db.userRoleAssignment.create({data:{userId:user.id,role,reason:"SYNTHETIC",validFrom:date("2026-01-01")}});
-  const session=await db.authSession.create({data:{userId:user.id,activeRoleAssignmentId:assignment.id,tokenHash:`synthetic-${role}`,credentialVersion:1,authorizationVersion:1,expiresAt:new Date(Date.now()+3600000),deviceSummary:"SYNTHETIC",browserSummary:"SYNTHETIC",networkEvidenceMasked:"SYNTHETIC"}});
+async function identity(role:string,scope?:IntelligentReportsObservation) {
+  const userCreate=()=>db.user.create({data:{name:`SYNTHETIC ${role}`,username:`synthetic-${role}`,passwordHash:"SYNTHETIC-NOT-A-CREDENTIAL",role}});
+  const user=await(scope?scope.phase("report-user-create",userCreate):userCreate());
+  const roleCreate=()=>db.userRoleAssignment.create({data:{userId:user.id,role,reason:"SYNTHETIC",validFrom:date("2026-01-01")}});
+  const assignment=await(scope?scope.phase("report-role-create",roleCreate):roleCreate());
+  const sessionCreate=()=>db.authSession.create({data:{userId:user.id,activeRoleAssignmentId:assignment.id,tokenHash:`synthetic-${role}`,credentialVersion:1,authorizationVersion:1,expiresAt:new Date(Date.now()+3600000),deviceSummary:"SYNTHETIC",browserSummary:"SYNTHETIC",networkEvidenceMasked:"SYNTHETIC"}});
+  const session=await(scope?scope.phase("report-session-create",sessionCreate):sessionCreate());
   return {userId:user.id,roleAssignmentId:assignment.id,sessionId:session.id};
 }
-async function grant(who:Identity,permission:string,effect="ALLOW") {return db.userPermissionOverride.create({data:{userId:who.userId,permission,effect,reason:"SYNTHETIC test grant",createdByUserId:actor.userId,validFrom:date("2026-01-01")}});}
+async function grant(who:Identity,permission:string,effect="ALLOW",scope?:IntelligentReportsObservation) {
+  const create=()=>db.userPermissionOverride.create({data:{userId:who.userId,permission,effect,reason:"SYNTHETIC test grant",createdByUserId:actor.userId,validFrom:date("2026-01-01")}});
+  return scope?scope.phase("report-grant-create",create):create();
+}
 async function publication(index:number,percentage:string,state="PRESENT") {
   const id=`s${index}`;
   await db.studentResultSnapshot.create({data:{id:`result-${id}`,calculationRunId:`run-${id}`,inputFingerprint:`fixture-${id}`,runNumber:1,runStatus:"LOCKED",examinationId:"exam7",classScopeId:"exam-scope7",studentId:id,schemeVersionId:"scheme7",snapshotVersion:1,totalObtained:percentage,totalMaximum:100,percentage,formulaVersion:"RC05",roundingPolicyVersion:"RC05_V1_DECIMAL6_HALF_UP2",warningsJson:"[]",sourceSheetVersionsJson:"[]",sourceSchemeVersionsJson:"[]",snapshotJson:"{}",calculatedByUserId:actor.userId,calculatedAt:now,lockedAt:now}});
@@ -101,7 +108,7 @@ beforeAll(async()=>{
   await db.payment.createMany({data:[{studentId:"s0",admissionNo:"SYN-0",amountPaid:25000},{studentId:"s1",admissionNo:"SYN-1",amountPaid:15000}].map((v,i)=>({...v,id:`payment${i}`,receiptNo:`SYN-FAMILY-${i}`,date:date("2026-06-01"),studentName:"SYNTHETIC",className:"7",paymentMode:"CASH",receivedAccount:"SYNTHETIC",feeType:"Current Year Fee"}))});
   await db.payment.create({data:{id:"old",studentId:"s0",admissionNo:"SYN-0",amountPaid:9000,receiptNo:"SYN-OLD",date:date("2026-06-01"),studentName:"SYNTHETIC",className:"7",paymentMode:"CASH",receivedAccount:"SYNTHETIC",feeType:"Old Due"}});
 },60000);
-afterAll(async()=>{await db?.$disconnect();vi.unstubAllEnvs();/* Unique synthetic fixture retained; hosted schema dies with the job's disposable service. No shared cleanup. */});
+afterAll(async()=>{if(await reportingBodiesSettled())await db?.$disconnect();vi.unstubAllEnvs();/* Unique synthetic fixture retained; an unfinished observed body also retains its connection. No shared cleanup. */});
 
 it("classifies exact issued Decimal sources, preserves zero/incomplete and historical enrolment",async()=>{
   const report=await execute(db,actor,q);expect(report.summary).toMatchObject({population:800,meets:3,doesNotMeet:2,unresolved:795});
@@ -143,21 +150,26 @@ it("enforces production OFF, role OFF, user deny, export OFF and stale sessions"
   const domainDeny=await grant(actor,"USE_IR_ACADEMIC","DENY");await expect(authorize(db,actor,"ACADEMIC")).rejects.toMatchObject({code:"ACCESS_DENIED"});await authorize(db,actor,"FEES");await db.userPermissionOverride.delete({where:{id:domainDeny.id}});
   await db.authSession.update({where:{id:actor.sessionId},data:{authorizationVersion:0}});await expect(authorize(db,actor)).rejects.toMatchObject({code:"ACCESS_DENIED"});await db.authSession.update({where:{id:actor.sessionId},data:{authorizationVersion:1}});
 });
-it("eligible leadership needs module grants; Accountant academics require explicit underlying grant",async()=>{
-  for(const role of ["DIRECTOR","PRINCIPAL","ACCOUNTANT","ADMIN","TEACHER","PARENT","STUDENT","VIEWER","COMPUTER_OPERATOR","GATE_STAFF"]){
-    const who=await identity(role);await expect(authorize(db,who)).rejects.toMatchObject({code:"ACCESS_DENIED"});
-    await grant(who,"USE_INTELLIGENT_REPORTS");await grant(who,"USE_IR_ACADEMIC");await grant(who,"USE_IR_FEES");await grant(who,"VIEW_PENDING_DUES");
+it("eligible leadership needs module grants; Accountant academics require explicit underlying grant",async(context)=>{
+  for(const [role,caseId] of [["DIRECTOR","role-director"],["PRINCIPAL","role-principal"],["ACCOUNTANT","role-accountant"],["ADMIN","role-admin"],["TEACHER","role-teacher"],["PARENT","role-parent"],["STUDENT","role-student"],["VIEWER","role-viewer"],["COMPUTER_OPERATOR","role-computer-operator"],["GATE_STAFF","role-gate-staff"]] as const){
+    await observedReportingRole(context,caseId,async scope=>{
+    const who=await identity(role,scope);await scope.phase("report-expected-refusal",async()=>{await expect(authorize(db,who)).rejects.toMatchObject({code:"ACCESS_DENIED"});});
+    const roleGrant=(permission:string)=>grant(who,permission,"ALLOW",scope);
+    await roleGrant("USE_INTELLIGENT_REPORTS");await roleGrant("USE_IR_ACADEMIC");await roleGrant("USE_IR_FEES");await roleGrant("VIEW_PENDING_DUES");
     if(["DIRECTOR","PRINCIPAL","ACCOUNTANT"].includes(role)){
-      await authorize(db,who,"FEES");
-      if(role==="ACCOUNTANT")await expect(authorize(db,who,"ACADEMIC")).rejects.toMatchObject({code:"ACCESS_DENIED"});
-      await grant(who,"VIEW_EXAM_REPORTS");await authorize(db,who,"ACADEMIC");
-      if(role==="ACCOUNTANT"){await grant(who,"USE_IR_ATTENDANCE");await grant(who,"VIEW_STUDENT_ATTENDANCE_REPORTS");await expect(authorize(db,who,"ATTENDANCE")).rejects.toMatchObject({code:"ACCESS_DENIED"});await grant(who,"EXPORT_INTELLIGENT_REPORTS");await grant(who,"EXPORT_EXAM_REPORTS");await expect(authorize(db,who,"ACADEMIC",true)).rejects.toMatchObject({code:"ACCESS_DENIED"});}
-    }else await expect(authorize(db,who,"FEES")).rejects.toMatchObject({code:"ACCESS_DENIED"});
+      await scope.phase("report-authorization",()=>authorize(db,who,"FEES"));
+      if(role==="ACCOUNTANT")await scope.phase("report-expected-refusal",async()=>{await expect(authorize(db,who,"ACADEMIC")).rejects.toMatchObject({code:"ACCESS_DENIED"});});
+      await roleGrant("VIEW_EXAM_REPORTS");await scope.phase("report-authorization",()=>authorize(db,who,"ACADEMIC"));
+      if(role==="ACCOUNTANT"){await roleGrant("USE_IR_ATTENDANCE");await roleGrant("VIEW_STUDENT_ATTENDANCE_REPORTS");await scope.phase("report-expected-refusal",async()=>{await expect(authorize(db,who,"ATTENDANCE")).rejects.toMatchObject({code:"ACCESS_DENIED"});});await roleGrant("EXPORT_INTELLIGENT_REPORTS");await roleGrant("EXPORT_EXAM_REPORTS");await scope.phase("report-expected-refusal",async()=>{await expect(authorize(db,who,"ACADEMIC",true)).rejects.toMatchObject({code:"ACCESS_DENIED"});});}
+    }else await scope.phase("report-expected-refusal",async()=>{await expect(authorize(db,who,"FEES")).rejects.toMatchObject({code:"ACCESS_DENIED"});});
+    });
   }
   // Existing provider schemas differ on insertion; the reporting boundary must
   // still deny an unsupported role even if the database accepts its assignment.
-  if(postgres){const custom=await identity("CUSTOM");await grant(custom,"USE_INTELLIGENT_REPORTS");await expect(authorize(db,custom)).rejects.toMatchObject({code:"ACCESS_DENIED"});}
-  else await expect(identity("CUSTOM")).rejects.toThrow("UserRoleAssignment_role_check");
+  await observedReportingRole(context,"role-custom",async scope=>{
+    if(postgres){const custom=await identity("CUSTOM",scope);await grant(custom,"USE_INTELLIGENT_REPORTS","ALLOW",scope);await scope.phase("report-expected-refusal",async()=>{await expect(authorize(db,custom)).rejects.toMatchObject({code:"ACCESS_DENIED"});});}
+    else await scope.phase("report-expected-refusal",async()=>{await expect(identity("CUSTOM",scope)).rejects.toThrow("UserRoleAssignment_role_check");});
+  });
 });
 it("measures 800-student complete scope, pagination parity and business read-only behavior",async()=>{
   const business=async()=>JSON.stringify(await Promise.all([db.student.findMany({orderBy:{id:"asc"}}),db.payment.findMany({orderBy:{id:"asc"}}),db.studentAttendanceRecord.findMany({orderBy:{id:"asc"}}),db.studentResultSnapshot.findMany({orderBy:{id:"asc"}})]));

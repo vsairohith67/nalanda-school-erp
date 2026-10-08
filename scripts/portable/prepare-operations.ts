@@ -4,12 +4,13 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { OPERATOR_COMMANDS, PORTABLE_PROFILES, validateOperatorManifest, type OperatorManifest } from "../../lib/portable-runtime/operator";
 import { validateComposeBoundary } from "./operator-adapter";
-import { OperationsProcessError, OperationsProcessOwner, type OperationsProcessObservation } from "./operations-preparation-process";
+import { OperationsProcessError, OperationsProcessOwner, type OperationsProcessEvent, type OperationsProcessObservation } from "./operations-preparation-process";
 
 export type PreparationPhase = "settings-validate" | "filesystem-check" | "provenance-check" | "output-create" | "compose-version" | "compose-config" | "compose-parse" | "boundary-validate" | "manifests-write" | "commands-write" | "preparation-write";
 export type PreparationObserver = {
   begin(phase: PreparationPhase, attempt: 0 | 1 | 2): unknown;
   end(span: unknown, status: "PASS" | "FAIL", process?: OperationsProcessObservation): void;
+  processEvent?(event: OperationsProcessEvent, attempt: 0 | 1 | 2): void;
 };
 export type PreparationExecution = { signal?: AbortSignal; observer?: PreparationObserver; attempt?: 0 | 1 | 2; processOwner?: OperationsProcessOwner };
 function checkCancellation(signal?: AbortSignal) { if (signal?.aborted) throw Error("OPERATIONS_PREPARATION_CANCELLED"); }
@@ -157,10 +158,11 @@ export async function prepareOperations(settingsFile: string, workspace: string,
     // Empty explicit env file and allowlisted interpolation exclude ambient .env/secrets.
     const composeEnvironment = operationsComposeEnvironment(path.join(workspace, "tmp", "portable-staging", manifest.project), manifest.image, manifest.releaseCommit);
     const owner = execution.processOwner ?? new OperationsProcessOwner();
-    const version = await observed(execution, "compose-version", () => owner.run("docker", ["--context", "default", "compose", "version", "--short"], { cwd: workspace, env: composeEnvironment, timeoutMs: 30000, maxBuffer: 4096, signal: execution.signal }), value => value.observation);
+    const onEvent = execution.observer?.processEvent ? (event: OperationsProcessEvent) => execution.observer!.processEvent!(event, execution.attempt ?? 0) : undefined;
+    const version = await observed(execution, "compose-version", () => owner.run("docker", ["--context", "default", "compose", "version", "--short"], { cwd: workspace, env: composeEnvironment, timeoutMs: 30000, maxBuffer: 4096, signal: execution.signal, onEvent }), value => value.observation);
     const composeVersion = version.stdout.trim();
     await observed(execution, "compose-parse", () => requireValue(composeVersion.length <= 64 && /^v?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?$/.test(composeVersion) && Number(composeVersion.replace(/^v/, "").split(".")[0]) >= 2, "OPERATIONS_COMPOSE_VERSION_UNSUPPORTED"));
-    const normalized = await observed(execution, "compose-config", () => owner.run("docker", ["--context", "default", "compose", "--project-name", manifest.project, "--profile", "*", "--env-file", path.join(output, "compose-interpolation.empty"), "-f", composeFile, "config", "--format", "json", "--no-env-resolution"], { cwd: workspace, env: composeEnvironment, timeoutMs: 30000, maxBuffer: 1024 * 1024, signal: execution.signal }), value => value.observation);
+    const normalized = await observed(execution, "compose-config", () => owner.run("docker", ["--context", "default", "compose", "--project-name", manifest.project, "--profile", "*", "--env-file", path.join(output, "compose-interpolation.empty"), "-f", composeFile, "config", "--format", "json", "--no-env-resolution"], { cwd: workspace, env: composeEnvironment, timeoutMs: 30000, maxBuffer: 1024 * 1024, signal: execution.signal, onEvent }), value => value.observation);
     const config = await observed(execution, "compose-parse", () => { try { return JSON.parse(normalized.stdout); } catch { throw Error("OPERATIONS_COMPOSE_JSON_INVALID"); } });
     await observed(execution, "boundary-validate", () => validatePreparedCompose(config, workspace, path.join(workspace, "tmp", "portable-staging", manifest.project), manifest));
     report.composeVersion = composeVersion;

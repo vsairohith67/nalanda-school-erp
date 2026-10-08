@@ -1,4 +1,6 @@
 import type { TestContext } from "vitest";
+import { writeFileSync } from "node:fs";
+import path from "node:path";
 import type { PreparationExecution, PreparationObserver } from "../../scripts/portable/prepare-operations";
 import { OperationsProcessError, OperationsProcessOwner, type OperationsProcessObservation } from "../../scripts/portable/operations-preparation-process";
 import { configuredQaTrace, projectQaSignal, type QaCase, type QaPhase, type QaProcess, type QaStatus, type QaTrace } from "./qa-reliability";
@@ -14,11 +16,25 @@ export class OperationsPreparationObservation {
   private fixtureClose?: () => Promise<void>;
   private fixtureExpected = false;
   private owners = new Set<OperationsProcessOwner>([this.owner]);
+  private processEvents = 0;
   constructor(readonly trace: QaTrace) { trace.signal.addEventListener("abort", () => this.controller.abort(), { once: true }); }
   cancel(cause: "TEST_FAILURE" | "UNKNOWN") { try { this.trace.cancel(cause); } finally { this.controller.abort(); } }
   readonly observer: PreparationObserver = {
     begin: (phase, attempt) => this.trace.begin(phase, attempt),
-    end: (span, status, process) => this.trace.end(span as number, status, process ? publicProcess(process) : null)
+    end: (span, status, process) => this.trace.end(span as number, status, process ? publicProcess(process) : null),
+    processEvent: (event, attempt) => {
+      const phases = { spawn: "compose-spawn", "first-stdout": "compose-first-stdout", "first-stderr": "compose-first-stderr", exit: "compose-exit", close: "compose-close" } as const;
+      const phase = phases[event.stage];
+      // PASS marks the occurrence of this event, not successful Compose startup
+      // or discovery of a particular plugin. The enclosing process retains that outcome.
+      const span = this.trace.begin(phase, attempt);
+      if (this.trace.directory) {
+        const sequence = ++this.processEvents;
+        if (sequence > 99) throw Error("OPERATIONS_PROCESS_CAPTURE_BOUND_EXCEEDED");
+        writeFileSync(path.join(this.trace.directory, `process-${phase}-${attempt}-${sequence}.json`), JSON.stringify({ stage: event.stage, pid: event.pid, selectedComposePlugin: "UNKNOWN" }) + "\n", { flag: "wx", mode: 0o600 });
+      }
+      this.trace.end(span, "PASS");
+    }
   };
   execution(attempt: 0 | 1 | 2): PreparationExecution { return { signal: this.signal, observer: this.observer, processOwner: this.owner, attempt }; }
   registerProcessOwner(owner: OperationsProcessOwner) { this.owners.add(owner); }
