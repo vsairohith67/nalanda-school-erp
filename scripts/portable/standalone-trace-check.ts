@@ -9,7 +9,7 @@ const traces=[
  ".next/server/app/(public)/event-gallery/[albumKey]/page.js.nft.json",
  ".next/server/app/api/admissions/documents/[publicKey]/route.js.nft.json"
 ] as const;
-const fail=(code:string):never=>{throw Error(code);};
+function fail(code:string):never {throw Error(code);}
 const inside=(root:string,file:string)=>{const rel=path.relative(root,file);return rel!==""&&!path.isAbsolute(rel)&&rel!==".."&&!rel.startsWith(".."+path.sep);};
 
 export function checkStandaloneTraceChunks(projectRoot:string) {
