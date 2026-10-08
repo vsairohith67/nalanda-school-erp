@@ -25,7 +25,7 @@ it("local role projection has a finite identity and rejects arbitrary private ev
   expect(Object.keys(diagnostic).sort()).toEqual(["caseId", "declaredResult", "evidence", "execution", "phases", "provider", "unfinished"]);
   expect(diagnostic).toMatchObject({ caseId: "role-director", provider: "sqlite", execution: "LOCAL_OBSERVATIONS_ONLY", declaredResult: "FAIL", unfinished: [] });
   expect(diagnostic.phases).toEqual([{ phase: "report-authorization", status: "FAIL", durationMs: expect.any(Number) }]);
-  expect(JSON.stringify(diagnostic)).not.toMatch(/userId|sessionId|sql|queryText|pid|stderr/);
+  expect(JSON.stringify(diagnostic)).not.toMatch(/userId|sessionId|"sql"|queryText|"pid"|stderr/);
   Object.assign(trace.events[0], { privateError: "HARNESS_PRIVATE_SQL_OR_USER" });
   expect(() => localReportingDiagnostic(trace, "sqlite")).toThrow("QA_RELIABILITY_SCHEMA_INVALID");
   expect(localReportingDiagnostic(new reliability.QaTrace("reporting", "harness-clean"), "sqlite")).toBeNull();
