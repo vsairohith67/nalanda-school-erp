@@ -124,12 +124,15 @@ jobs:
       - name: Prepare bounded Windows QA reliability evidence
         id: qa_reliability_prepare
         run: pnpm exec tsx scripts/qa-recovery-service-traces.ts qa-prepare
+      - name: Verify the bounded overnight publication event
+        id: overnight_windows_context
+        run: node scripts/portable/windows-qa-window.mjs
       - name: Full ERP regression
         # PR28-only process environment; no machine/GPO policy or other PR context.
         timeout-minutes: 120
         env:
           NALANDA_QA_RELIABILITY_TRACE_DIR: tmp/ci-service-traces/qa-reliability
-          PSExecutionPolicyPreference: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 28 && github.event.pull_request.head.ref == 'release/recovery-integration-1a' && github.event.pull_request.head.repo.full_name == github.repository && github.run_attempt == 1 && startsWith(github.event.pull_request.updated_at, '2026-10-08') && 'RemoteSigned' || '' }}
+          PSExecutionPolicyPreference: ${{ steps.overnight_windows_context.outputs.policy }}
           NALANDA_SERVICE_TRACE_DIR: tmp/ci-service-traces
           DATABASE_URL: file:../tmp/release-ci/synthetic.db
         run: pnpm test && pnpm typecheck && pnpm build
