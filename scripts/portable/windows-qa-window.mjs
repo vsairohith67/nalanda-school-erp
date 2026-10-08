@@ -16,7 +16,7 @@ export function admittedWindowsQaPolicy(event, environment, actualHead, window) 
       window.eventEndExclusiveUtc !== '2026-10-09T05:02:43.000Z') return denied;
   if (environment.GITHUB_ACTIONS !== 'true' || environment.RUNNER_OS !== 'Windows' ||
       environment.GITHUB_EVENT_NAME !== 'pull_request' || environment.GITHUB_REPOSITORY !== window.repository ||
-      environment.GITHUB_RUN_ATTEMPT !== '1' || event?.number !== 28 || event.pull_request?.number !== 28 ||
+      environment.GITHUB_RUN_ATTEMPT !== '1' || event?.action !== 'synchronize' || event?.number !== 28 || event.pull_request?.number !== 28 ||
       event.pull_request?.head?.ref !== window.branch || event.pull_request?.head?.repo?.full_name !== window.repository ||
       event.pull_request?.base?.repo?.full_name !== window.repository || !/^[a-f0-9]{40}$/.test(actualHead) ||
       event.pull_request?.head?.sha !== actualHead) return denied;

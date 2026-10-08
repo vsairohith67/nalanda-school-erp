@@ -6,7 +6,7 @@ import { admittedWindowsQaPolicy } from "../scripts/portable/windows-qa-window.m
 const window = JSON.parse(readFileSync("config/overnight-repair-product-1a-window.json", "utf8"));
 const head = "a".repeat(40), repository = "vsairohith67/nalanda-school-erp";
 const env = { GITHUB_ACTIONS: "true", RUNNER_OS: "Windows", GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: repository, GITHUB_RUN_ATTEMPT: "1" };
-const event = (time: string) => ({ number: 28, pull_request: { number: 28, updated_at: time, head: { sha: head, ref: "release/recovery-integration-1a", repo: { full_name: repository } }, base: { repo: { full_name: repository } } } });
+const event = (time: string) => ({ action: "synchronize", number: 28, pull_request: { number: 28, updated_at: time, head: { sha: head, ref: "release/recovery-integration-1a", repo: { full_name: repository } }, base: { repo: { full_name: repository } } } });
 
 it.each(["2026-10-08T19:02:43Z", "2026-10-08T23:59:59Z", "2026-10-09T00:00:00Z", "2026-10-09T05:02:42.999Z"])("admits only exact ordinary publication inside the single approved interval: %s", time => {
   expect(admittedWindowsQaPolicy(event(time), env, head, window).policy).toBe("RemoteSigned");
@@ -30,4 +30,8 @@ it("refuses forks, other heads/branches/PRs and any silently extended source win
   expect(admittedWindowsQaPolicy(valid, env, "b".repeat(40), window).policy).toBe("");
   expect(admittedWindowsQaPolicy(valid, env, head, { ...window, eventEndExclusiveUtc: "2026-10-10T05:02:43.000Z" }).policy).toBe("");
   expect(admittedWindowsQaPolicy(valid, env, head, { ...window, policy: "Bypass" }).policy).toBe("");
+});
+
+it.each(["reopened", "edited", "labeled", "opened", "closed", ""])("does not spend source-publication policy authority on a %s event", action => {
+  expect(admittedWindowsQaPolicy({ ...event("2026-10-08T20:00:00Z"), action }, env, head, window).policy).toBe("");
 });
