@@ -16,8 +16,15 @@ export function producerProcess(command:ProducerCommand,workspace:string,signal?
   if(signal?.aborted){cancelled=true;void observe(null,null,false).then(()=>reject(Error("QA_PROCESS_CANCELLED")),()=>reject(Error("QA_PROCESS_RETENTION_FAILED")));return;}
   const child=spawn(command.tool,command.args,{cwd:workspace,env:{...process.env,...command.env},shell:false,windowsHide:true,detached:process.platform!=="win32",stdio:["ignore","pipe","pipe"]});
   let output="",size=0,failed=false,termination:Promise<void>|undefined;
+  let finalized=false,hardStop:ReturnType<typeof setTimeout>|undefined;
   const terminate=()=>{
    if(termination)return;failed=true;
+   hardStop=setTimeout(()=>{
+    // Match the existing product runner's finite cleanup barrier. A missing
+    // close is UNKNOWN, never fabricated successful descendant settlement.
+    child.stdout.destroy();child.stderr.destroy();child.unref();
+    void complete(null,null,false,true);
+   },2500);
    termination=new Promise<void>((resolve,reject)=>{
     const send=(signal:NodeJS.Signals)=>{try{if(process.platform!=="win32"&&child.pid)process.kill(-child.pid,signal);else child.kill(signal);}catch(error){if((error as NodeJS.ErrnoException).code!=="ESRCH")throw error;}};
     try{send("SIGTERM");}catch{reject(Error("QA_PROCESS_GROUP_UNRECONCILED"));return;}
@@ -29,13 +36,15 @@ export function producerProcess(command:ProducerCommand,workspace:string,signal?
   };
   const abort=()=>{cancelled=true;terminate();};
   const timeout=setTimeout(()=>{timedOut=true;terminate();},command.timeoutMs??40*60_000);signal?.addEventListener("abort",abort,{once:true});
-  const finish=()=>{clearTimeout(timeout);signal?.removeEventListener("abort",abort);};
-  for(const stream of [child.stdout,child.stderr])stream.on("data",(bytes:Buffer)=>{size+=bytes.length;if(size>64*1024*1024){outputLimit=true;terminate();return;}if(observer)(stream===child.stdout?stdout:stderr).push(Buffer.from(bytes));if(stream===child.stdout)output+=bytes.toString();});
-  child.once("error",()=>{startupFailed=true;finish();if(!observer)reject(Error("QA_PROCESS_UNAVAILABLE"));});
-  child.once("close",async(code,sig)=>{finish();let groupFailed=false;try{await termination;}catch{groupFailed=true;}
-   try{await observe(startupFailed?null:code,sig,true,groupFailed);}catch{reject(Error("QA_PROCESS_RETENTION_FAILED"));return;}
+  const finish=()=>{clearTimeout(timeout);clearTimeout(hardStop);signal?.removeEventListener("abort",abort);};
+  for(const stream of [child.stdout,child.stderr])stream.on("data",(bytes:Buffer)=>{if(finalized)return;size+=bytes.length;if(size>64*1024*1024){outputLimit=true;terminate();return;}if(observer)(stream===child.stdout?stdout:stderr).push(Buffer.from(bytes));if(stream===child.stdout)output+=bytes.toString();});
+  const complete=async(code:number|null,sig:string|null,closed:boolean,groupFailed=false)=>{
+   if(finalized)return;finalized=true;finish();try{await termination;}catch{groupFailed=true;}
+   try{await observe(startupFailed?null:code,sig,closed,groupFailed);}catch{reject(Error("QA_PROCESS_RETENTION_FAILED"));return;}
    if(groupFailed)reject(Error("QA_PROCESS_GROUP_UNRECONCILED"));else if(startupFailed)reject(Error("QA_PROCESS_UNAVAILABLE"));else if(code!==0||failed)reject(Error("QA_PROCESS_FAILED_OR_CANCELLED"));else resolve(output);
-  });
+  };
+  child.once("error",()=>{startupFailed=true;terminate();});
+  child.once("close",(code,sig)=>{void complete(code,sig,true);});
  });
 }
 
