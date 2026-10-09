@@ -38,7 +38,7 @@ function fixture() {
   if (process.platform==="win32") execFileSync("icacls.exe",[source,"/inheritance:r","/grant:r",`*${sid}:(OI)(CI)F`,"*S-1-5-18:(OI)(CI)F","*S-1-5-32-544:(OI)(CI)F"],{stdio:"pipe",windowsHide:true,timeout:5000});
   const input:ExportInput={sourceDirectory:source,sourceAccessSids:[sid],staleAfterMs:60_000,profile:profile()};
   const file=path.join(source,"K30_2026.csv"),qfile=path.join(data,"queue.enc"),q=new EncryptedDurableQueue(qfile,key);
-  const config:BridgeConfig={bridgeId:id,erpUrl:"https://example.invalid",privateKeyPath:path.join(data,"key.jwk"),queuePath:qfile,healthPath:path.join(data,"health.json"),pollIntervalMs:5000,transportEnabled:false,syntheticOnly:true,devices:[{deviceId:id,host:"127.0.0.1",port:1,profile:EXPORT_PROFILE,exportInput:input}]};
+  const config:BridgeConfig & {transportEnabled:boolean;syntheticOnly:boolean}={bridgeId:id,erpUrl:"https://example.invalid",privateKeyPath:path.join(data,"key.jwk"),queuePath:qfile,healthPath:path.join(data,"health.json"),pollIntervalMs:5000,transportEnabled:false,syntheticOnly:true,devices:[{deviceId:id,host:"127.0.0.1",port:1,profile:EXPORT_PROFILE,exportInput:input}]};
   const put=(content=bytes(),target=file)=>writeFileSync(target,content,{mode:0o600});
   const ingest=()=>q.commitExport(acquireExport(file,input,id));
   process.env.NALANDA_BIOMETRIC_QUEUE_KEY=key;
