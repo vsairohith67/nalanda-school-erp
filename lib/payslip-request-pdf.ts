@@ -62,8 +62,8 @@ export class PdfProtectionAdapter {
     }
     const executable = await validatedQpdfExecutable();
     const temporary = await protectedTemporaryDirectory();
-    const source = path.join(temporary, "source.pdf");
-    const derivative = path.join(temporary, "protected.pdf");
+    const source = path.join(/* turbopackIgnore: true */ temporary, "source.pdf");
+    const derivative = path.join(/* turbopackIgnore: true */ temporary, "protected.pdf");
     try {
       await writeFile(source, input.bytes, { flag: "wx", mode: 0o600 });
       await runQpdf(executable, [
@@ -83,7 +83,7 @@ export class PdfProtectionAdapter {
         "--assemble=n",
         "--"
       ]);
-      const bytes = await readFile(derivative);
+      const bytes = await readFile(/* turbopackIgnore: true */ derivative);
       if (bytes.length < 1 || bytes.length > PAYSLIP_PDF_MAX_BYTES + 2 * 1024 * 1024) throw new PayslipPdfError("The protected PDF has an invalid size.", 500, "PDF_PROTECTION_FAILED");
       const inspection = await runQpdf(executable, ["--show-encryption", `--password=${openingPassword}`, derivative]);
       if (!/(R\s*=\s*6|AESv3|256-bit)/i.test(inspection.stdout) || !/print.*allowed/i.test(inspection.stdout) || !/(modify|modify document).*not allowed/i.test(inspection.stdout)) {
@@ -104,8 +104,8 @@ export class PdfProtectionAdapter {
 async function qpdfCheckAndInspect(bytes: Buffer) {
   const executable = await validatedQpdfExecutable();
   const temporary = await protectedTemporaryDirectory();
-  const source = path.join(temporary, "intake.pdf");
-  const expanded = path.join(temporary, "expanded.pdf");
+  const source = path.join(/* turbopackIgnore: true */ temporary, "intake.pdf");
+  const expanded = path.join(/* turbopackIgnore: true */ temporary, "expanded.pdf");
   try {
     await writeFile(source, bytes, { flag: "wx", mode: 0o600 });
     await runQpdf(executable, ["--check", source]);
@@ -113,11 +113,11 @@ async function qpdfCheckAndInspect(bytes: Buffer) {
     // object streams with the reviewed parser, then apply the same fail-closed
     // deny-list to the parsed representation before the source is accepted.
     await runQpdf(executable, [source, expanded, "--warning-exit-0", "--object-streams=disable", "--stream-data=preserve"]);
-    const expandedStat = await stat(expanded);
+    const expandedStat = await stat(/* turbopackIgnore: true */ expanded);
     if (expandedStat.size < 1 || expandedStat.size > PAYSLIP_PDF_MAX_BYTES + 2 * 1024 * 1024) {
       throw new PayslipPdfError("The parsed PDF structure exceeds the supported processing limit.", 413, "PDF_STRUCTURE_LIMIT");
     }
-    rejectUnsafePdfObjects(await readFile(expanded));
+    rejectUnsafePdfObjects(await readFile(/* turbopackIgnore: true */ expanded));
   } finally {
     await removeProtectedTemporaryDirectory(temporary);
   }
@@ -135,11 +135,11 @@ async function validatedQpdfExecutable() {
   const configured = process.env.QPDF_EXECUTABLE_PATH?.trim();
   const expectedSha256 = process.env.QPDF_EXECUTABLE_SHA256?.trim().toLowerCase();
   if (!configured || !path.isAbsolute(configured) || !expectedSha256 || !/^[a-f0-9]{64}$/.test(expectedSha256)) throw new PayslipPdfError("The reviewed PDF protection utility and pinned SHA-256 identity are unavailable.", 503, "PDF_PROTECTION_UNAVAILABLE");
-  const resolved = path.resolve(configured);
-  const stat = await lstat(resolved).catch(() => null);
+  const resolved = path.resolve(/* turbopackIgnore: true */ configured);
+  const stat = await lstat(/* turbopackIgnore: true */ resolved).catch(() => null);
   if (!stat?.isFile() || stat.isSymbolicLink()) throw new PayslipPdfError("The reviewed PDF protection utility is unavailable.", 503, "PDF_PROTECTION_UNAVAILABLE");
   await assertNoSymlinkPath(path.dirname(resolved));
-  if (sha256(await readFile(resolved)) !== expectedSha256) throw new PayslipPdfError("The reviewed PDF protection utility failed SHA-256 identity verification.", 503, "PDF_PROTECTION_UNAVAILABLE");
+  if (sha256(await readFile(/* turbopackIgnore: true */ resolved)) !== expectedSha256) throw new PayslipPdfError("The reviewed PDF protection utility failed SHA-256 identity verification.", 503, "PDF_PROTECTION_UNAVAILABLE");
   const version = await runQpdf(resolved, ["--version"]);
   const match = /qpdf version (\d+)\.(\d+)\.(\d+)/i.exec(version.stdout);
   if (!match || Number(match[1]) < 11 || Number(match[1]) === 11 && Number(match[2]) < 7) {
@@ -149,17 +149,17 @@ async function validatedQpdfExecutable() {
 }
 
 async function protectedTemporaryDirectory() {
-  const root = path.resolve(process.env.PAYSLIP_REQUEST_TEMP_ROOT?.trim() || path.join(process.cwd(), "tmp", "payslip-request-processing"));
+  const root = path.resolve(/* turbopackIgnore: true */ process.env.PAYSLIP_REQUEST_TEMP_ROOT?.trim() || path.join(/* turbopackIgnore: true */ process.cwd(), "tmp", "payslip-request-processing"));
   await mkdir(root, { recursive: true, mode: 0o700 });
   await assertNoSymlinkPath(root);
-  const target = path.join(root, randomUUID());
+  const target = path.join(/* turbopackIgnore: true */ root, randomUUID());
   await mkdir(target, { mode: 0o700 });
   return target;
 }
 
 async function removeProtectedTemporaryDirectory(target: string) {
-  const root = path.resolve(process.env.PAYSLIP_REQUEST_TEMP_ROOT?.trim() || path.join(process.cwd(), "tmp", "payslip-request-processing"));
-  const resolved = path.resolve(target);
+  const root = path.resolve(/* turbopackIgnore: true */ process.env.PAYSLIP_REQUEST_TEMP_ROOT?.trim() || path.join(/* turbopackIgnore: true */ process.cwd(), "tmp", "payslip-request-processing"));
+  const resolved = path.resolve(/* turbopackIgnore: true */ target);
   if (!resolved.startsWith(`${root}${path.sep}`) || resolved === root) throw new PayslipPdfError("The protected PDF temporary path is invalid.", 500);
   await rm(resolved, { recursive: true, force: true });
 }
@@ -169,17 +169,17 @@ async function assertNoSymlinkPath(target: string) {
   const relative = path.relative(root, target).split(path.sep).filter(Boolean);
   let current = root;
   for (const part of relative) {
-    current = path.join(current, part);
-    const stat = await lstat(current).catch(() => null);
+    current = path.join(/* turbopackIgnore: true */ current, part);
+    const stat = await lstat(/* turbopackIgnore: true */ current).catch(() => null);
     if (stat?.isSymbolicLink()) throw new PayslipPdfError("PDF processing paths may not contain symlinks.", 500);
   }
-  await realpath(target).catch(() => null);
+  await realpath(/* turbopackIgnore: true */ target).catch(() => null);
 }
 
 async function runQpdf(executable: string, argumentsViaStdin: string[], acceptedCodes = [0]) {
   if (argumentsViaStdin.some((value) => /[\r\n\u0000]/.test(value))) throw new PayslipPdfError("The PDF utility arguments are invalid.", 500);
   return new Promise<{ stdout: string; stderr: string; code: number }>((resolve, reject) => {
-    const child = spawn(executable, ["@-"], { shell: false, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
+    const child = spawn(/* turbopackIgnore: true */ executable, ["@-"], { shell: false, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
     let stdout = "", stderr = "", settled = false;
     const timer = setTimeout(() => {
       if (settled) return;

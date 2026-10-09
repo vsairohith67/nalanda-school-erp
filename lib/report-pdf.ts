@@ -1348,11 +1348,11 @@ function profileRows(report: RenderableReport): Array<[string, string]> {
 
 async function embeddedFonts(document: PDFDocument): Promise<PdfFonts> {
   const fontRoot = process.env.REPORT_CARD_FONT_DIR?.trim() || path.join(process.env.WINDIR || "C:\\Windows", "Fonts");
-  const regularPath = FONT_REGULAR_CANDIDATES.map((name) => path.join(fontRoot, name))
+  const regularPath = FONT_REGULAR_CANDIDATES.map((name) => path.join(/* turbopackIgnore: true */ fontRoot, name))
     .find((candidate) => existsSync(candidate));
-  const boldPath = FONT_BOLD_CANDIDATES.map((name) => path.join(fontRoot, name))
+  const boldPath = FONT_BOLD_CANDIDATES.map((name) => path.join(/* turbopackIgnore: true */ fontRoot, name))
     .find((candidate) => existsSync(candidate));
-  const schoolBoldPath = SCHOOL_BOLD_CANDIDATES.map((name) => path.join(fontRoot, name))
+  const schoolBoldPath = SCHOOL_BOLD_CANDIDATES.map((name) => path.join(/* turbopackIgnore: true */ fontRoot, name))
     .find((candidate) => existsSync(candidate));
   if (regularPath && boldPath) {
     document.registerFontkit(fontkit);

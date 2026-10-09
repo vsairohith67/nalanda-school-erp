@@ -1,6 +1,6 @@
 import { appendFileSync, closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { sha256Bytes } from "@/lib/release-manifest";
+import { sha256Bytes } from "@/lib/release-hash";
 import { REQUIRED_RELEASE_GATES, releaseGateTemplate, type ReleaseAuditEvent, type ReleaseCandidateState, type ReleaseEnvironment, type ReleasePhase } from "@/lib/release-operations-types";
 
 export type ReleaseLock = {
@@ -17,7 +17,7 @@ const SAFE_TOKEN = /^[A-Za-z0-9][A-Za-z0-9._@-]{2,119}$/;
 const PRIVATE_TEXT = /(?:password|secret|token|cookie|[A-Za-z]:\\|\/home\/|database.*hash|backup.*path)/i;
 
 export function releaseStateRoot(workspaceRoot: string, configured?: string) {
-  const root = path.resolve(configured?.trim() || path.join(workspaceRoot, ".codex", "release-ops"));
+  const root = path.resolve(/* turbopackIgnore: true */ configured?.trim() || path.join(workspaceRoot, ".codex", "release-ops"));
   const relative = path.relative(path.resolve(workspaceRoot), root);
   if (configured && !path.isAbsolute(configured)) throw new Error("RELEASE_STATE_ROOT_NOT_ABSOLUTE");
   if (relative === ".." || relative.startsWith(`..${path.sep}`)) {

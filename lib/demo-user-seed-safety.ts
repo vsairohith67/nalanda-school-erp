@@ -62,8 +62,8 @@ export function demoUserSeedDecision(
   }
 
   const workspace = canonicalPath(workspaceRoot);
-  const prismaRoot = canonicalPath(path.join(workspace, "prisma"));
-  const operationalDatabase = canonicalPath(path.join(prismaRoot, "dev.db"));
+  const prismaRoot = canonicalPath(path.join(/* turbopackIgnore: true */ workspace, "prisma"));
+  const operationalDatabase = canonicalPath(path.join(/* turbopackIgnore: true */ prismaRoot, "dev.db"));
   const ignoredTestRoot = canonicalPath(path.join(/* turbopackIgnore: true */ workspace, "tmp"));
   const rootValue = environment[DEMO_USER_DATABASE_ROOT]?.trim();
   if (!rootValue || !path.isAbsolute(rootValue)) {
