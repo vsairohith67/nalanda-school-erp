@@ -101,7 +101,8 @@ function isolatedQaDatabase(value: string | undefined) {
     if (parsed.protocol !== "file:" || (parsed.hostname && parsed.hostname !== "localhost")) return false;
     const resolved = path.resolve(fileURLToPath(parsed));
     if (new RegExp(`(?:^|[\\\\/])prisma[\\\\/]dev\\.db$`, "i").test(resolved)) return false;
-    const allowedRoots = [path.resolve(process.cwd(), "tmp"), path.resolve(process.cwd(), ".qa-artifacts"), path.resolve(os.tmpdir())];
+    // These roots constrain runtime QA inputs; they are not build assets.
+    const allowedRoots = [path.resolve(/* turbopackIgnore: true */ process.cwd(), "tmp"), path.resolve(/* turbopackIgnore: true */ process.cwd(), ".qa-artifacts"), path.resolve(/* turbopackIgnore: true */ os.tmpdir())];
     return allowedRoots.some((root) => inside(root, resolved));
   } catch {
     return false;
