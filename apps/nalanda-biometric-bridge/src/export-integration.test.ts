@@ -1,4 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import type { TestContext } from "vitest";
+import { performance } from "node:perf_hooks";
 import { createHash, createDecipheriv, generateKeyPairSync, verify } from "node:crypto";
 import { createServer } from "node:http";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -54,26 +56,67 @@ function reviewFixture(f:ReturnType<typeof fixture>,synthetic=true) {
 }
 describe.sequential("actual non-synthetic private report lifecycle",()=>{
 let f:ReturnType<typeof fixture>,r:ReturnType<typeof reviewFixture>;
-beforeAll(()=>{
+// Observe the existing coupled fixture without moving either comparison into
+// setup, changing a deadline, or treating a closed leader as tree settlement.
+let started:number|null=null,startUnixMs:number|null=null;
+let taskIds:string[]=[];
+const setup={startMs:null as number|null,endMs:null as number|null,returned:false};
+const teardown={startMs:null as number|null,endMs:null as number|null,returned:false};
+const actions:Array<{caseId:"create"|"reuse";context:TestContext;startMs:number;endMs:number|null;assertionsReturned:boolean}>=[];
+const elapsed=()=>started===null?null:Math.max(0,performance.now()-started);
+function reportAction(context:TestContext,caseId:"create"|"reuse",action:()=>void){
+  const row={caseId,context,startMs:elapsed()!,endMs:null as number|null,assertionsReturned:false};actions.push(row);
+  // Publish before this actual task's test-finished RPC. The coupled teardown
+  // has not happened yet, so this immutable metadata is explicitly partial.
+  context.onTestFinished(()=>{
+    const partial=Object.freeze({evidence:"BRIDGE_PRIVATE_REPORT_LIFECYCLE_V1",stage:"BODY_FINISHED",caseId,taskId:context.task.id,startUnixMs,
+      setup:Object.freeze({...setup}),action:Object.freeze({startMs:row.startMs,endMs:row.endMs,assertionsReturned:row.assertionsReturned}),testAbortObserved:context.signal.aborted,descendantSettlement:"UNKNOWN"});
+    Object.defineProperty(context.task.meta,"bridgePrivateReportLifecycle",{value:partial,enumerable:true,writable:false,configurable:false});
+  },1000);
+  try{action();row.assertionsReturned=true;}finally{row.endMs=elapsed();}
+}
+function finishObservation(){
+  const clock=(row:typeof setup)=>Object.freeze({...row});
+  const finitePhase=(row:typeof setup)=>row.returned&&row.startMs!==null&&row.endMs!==null&&Number.isFinite(row.startMs)&&Number.isFinite(row.endMs)&&row.endMs>=row.startMs&&row.endMs-row.startMs<=5000;
+  const totalObservedMs=elapsed();
+  const actionRows=actions.map(row=>Object.freeze({caseId:row.caseId,taskId:row.context.task.id,startMs:row.startMs,endMs:row.endMs,assertionsReturned:row.assertionsReturned,testAbortObserved:row.context.signal.aborted,frameworkState:row.context.task.result?.state??"UNKNOWN"}));
+  const receipt=Object.freeze({evidence:"BRIDGE_PRIVATE_REPORT_LIFECYCLE_V1",scope:"REAL_SYNTHETIC_BRIDGE_INTEGRATION_OBSERVATION",stage:"FINISHED",
+    startUnixMs,taskIds:Object.freeze([...taskIds]),
+    contract:Object.freeze({state:"ORIGINAL_TEST_CONTRACT",setupMs:5000,createBodyMs:5000,reuseBodyMs:5000,teardownMs:5000}),
+    setup:clock(setup),actions:Object.freeze(actionRows),teardown:clock(teardown),totalObservedMs,
+    descendantSettlement:"UNKNOWN",declaredResult:finitePhase(setup)&&finitePhase(teardown)&&totalObservedMs!==null&&totalObservedMs<=20000&&actionRows.length===2&&actionRows.every(row=>row.assertionsReturned&&!row.testAbortObserved&&row.frameworkState==="pass"&&row.endMs!==null&&row.endMs>=row.startMs&&row.endMs-row.startMs<=5000)?"PASS":"FAIL"});
+  // The controlled command capture joins START/FINISHED to the same two IDs
+  // retained in JSON's BODY_FINISHED metadata, without console-order inference.
+  // No private paths, employee values, environment or PID enters these rows.
+  console.info(JSON.stringify(receipt));
+}
+beforeAll((_context,suite)=>{
+  startUnixMs=Date.now();started=performance.now();setup.startMs=0;taskIds=suite.tasks.map(task=>task.id);
+  console.info(JSON.stringify({evidence:"BRIDGE_PRIVATE_REPORT_LIFECYCLE_V1",scope:"REAL_SYNTHETIC_BRIDGE_INTEGRATION_OBSERVATION",stage:"START",startUnixMs,taskIds,elapsedMs:elapsed()}));
   const start=dirs.length;
-  try{f=fixture();dirs.splice(dirs.indexOf(f.root),1);f.put();r=reviewFixture(f,false);}
+  try{f=fixture();dirs.splice(dirs.indexOf(f.root),1);f.put();r=reviewFixture(f,false);setup.returned=true;}
   catch(error){for(const d of dirs.splice(start))removeFixture(d);throw error;}
+  finally{setup.endMs=elapsed();}
 },5000);
 // Keep this one owned fixture between the separately reported commands. No
 // comparison runs in setup; a missing/failed creation cannot skip reuse.
-afterAll(()=>{if(f)removeFixture(f.root);},5000);
-it("explicit non-synthetic transport-disabled review creates an exclusive private report without queue or health",()=>{
+afterAll(()=>{
+  teardown.startMs=elapsed();
+  try{if(f)removeFixture(f.root);teardown.returned=true;}
+  finally{teardown.endMs=elapsed();finishObservation();}
+},5000);
+it("explicit non-synthetic transport-disabled review creates an exclusive private report without queue or health",context=>reportAction(context,"create",()=>{
   const before=readFileSync(f.file);const result=compareExport(r.cfg,r.req,r.output);
   expect(result).toMatchObject({synthetic:false,compatibleRows:1,heldRows:0,rejectedRows:0,operatorEvidence:"SUPPLIED_CHECKS_MATCH",privateOutput:"CREATED"});
   const saved=JSON.parse(readFileSync(r.output,"utf8"));expect(saved.capture.bytesBase64).toBe(before.toString("base64"));expect(saved.trace.employeeIdentifierKind).toBe(f.input.profile.employeeIdentifierKind);expect(saved.trace.synthetic).toBe(false);expect(saved.trace.profileDefinition).not.toHaveProperty("employeeMapping");expect(saved.trace.profileDefinition.approvedMappingReference).toBe(f.input.profile.approvedMappingReference);expect(readFileSync(f.file)).toEqual(before);
   expect(existsSync(f.qfile)).toBe(false);expect(existsSync(f.config.healthPath)).toBe(false);expect(JSON.stringify(result)).not.toContain(f.file);expect(JSON.stringify(result)).not.toContain("0007");
-});
-it("retained private capture proves a same-file exact append while exposing operator discrepancies",()=>{
+}));
+it("retained private capture proves a same-file exact append while exposing operator discrepancies",context=>reportAction(context,"reuse",()=>{
   const saved=JSON.parse(readFileSync(r.output,"utf8"));saved.capture.observedAt="2026-10-04T13:00:00.123Z";
   writeFileSync(r.output,JSON.stringify(saved),{mode:0o600});
   appendFileSync(f.file,"0007,2026-10-02 10:00:00,SYN-LOCAL-01,OUT\r\n");writeFileSync(r.req,JSON.stringify({...r.request,previousReport:r.output}));
   expect(compareExport(r.cfg,r.req)).toMatchObject({synthetic:false,parsedRows:2,relation:"VERIFIED_SAME_FILE_APPEND",overlappingRows:1,operatorEvidence:"DISCREPANCY_OR_UNRESOLVED",reviewRequired:true});expect(existsSync(f.qfile)).toBe(false);expect(existsSync(f.config.healthPath)).toBe(false);
-});
+}));
 });
 it("selected snapshot comparison retains overlap without operational queue writes",()=>{
   const f=fixture();f.put();const r=reviewFixture(f),other=path.join(f.source,"K30_other.csv");f.put(bytes(["0007,2026-10-02 10:00:00,SYN-LOCAL-01,OUT","0007,2026-10-02 09:00:00,SYN-LOCAL-01,IN"]),other);writeFileSync(r.req,JSON.stringify({...r.request,file:other,compareFile:f.file}));
