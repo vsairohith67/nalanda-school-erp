@@ -138,9 +138,23 @@ def apk_packages(raw):
     check(packages, 'APK_PACKAGE_DATABASE_MISSING')
     return packages
 
+def canonical_candidate_name(member):
+    name=member_safe(member)
+    if member.isdir(): name=name.rstrip('/') or '.'
+    check(name == posixpath.normpath(name) and (name == '.' or all(part not in ('','.','..') for part in name.split('/'))), 'CANDIDATE_PATH_NONCANONICAL')
+    return name
+
+def final_candidate_regular(inventory, retained, name):
+    check(inventory.get(name,{}).get('type') == 'file' and name in retained, 'FINAL_CANDIDATE_FILE_MISSING')
+    parent=posixpath.dirname(name)
+    while parent:
+        check(parent not in inventory or inventory[parent]['type'] == 'directory', 'FINAL_CANDIDATE_ANCESTOR_INVALID')
+        parent=posixpath.dirname(parent)
+    return retained[name]
+
 def record_candidate_member(layer, member, inventory, retained):
     """Inspect complete virtual layers; never extract or execute image files."""
-    name = member_safe(member)
+    name = canonical_candidate_name(member)
     parent, basename = posixpath.split(name)
     if basename.startswith('.wh.'):
         check(member.isfile() and member.size == 0, 'WHITEOUT_RECORD_INVALID')
@@ -175,12 +189,14 @@ def record_candidate_member(layer, member, inventory, retained):
 def candidate_layer_members(layer, inventory, retained):
     members=layer.getmembers()
     check(len(members)<=100000, 'LAYER_INSPECTION_BOUND')
+    names=[canonical_candidate_name(member) for member in members]
+    check(len(names)==len(set(names)), 'CANDIDATE_LAYER_DUPLICATE_PATH')
     # Whiteouts affect lower-layer state; new entries are applied afterwards,
     # independent of the whiteout's position inside the archive.
     for member in members:
-        if posixpath.basename(member_safe(member)).startswith('.wh.'):
+        if posixpath.basename(canonical_candidate_name(member)).startswith('.wh.'):
             record_candidate_member(layer,member,inventory,retained)
-    return [member for member in members if not posixpath.basename(member_safe(member)).startswith('.wh.')]
+    return [member for member in members if not posixpath.basename(canonical_candidate_name(member)).startswith('.wh.')]
 
 def scanner_policy(trivy, grype, sbom, config, exits, metadata):
     check(trivy.get('SchemaVersion') == 2 and trivy.get('Metadata', {}).get('ImageID') == config and isinstance(trivy.get('Results'), list) and trivy['Results'], 'TRIVY_SUBJECT_OR_REPORT_INVALID')
@@ -439,11 +455,10 @@ def inspect_runtime_base():
                         name_match=re.search(r'^Package: (.+)$',text,re.M);version_match=re.search(r'^Version: (.+)$',text,re.M)
                         if name_match and version_match: packages[name_match[1]]=version_match[1]
         if candidate:
-            check(all(inventory.get(name,{}).get('type') == 'file' for name in (candidate['nodePath'],'lib/apk/db/installed')), 'FINAL_CANDIDATE_FILE_MISSING')
-            binary=retained.get(candidate['nodePath'],b'')
+            binary=final_candidate_regular(inventory,retained,candidate['nodePath'])
             check(binary[:4] == b'\x7fELF' and binary[4:6] == b'\x02\x01' and int.from_bytes(binary[18:20],'little') == {'amd64':62,'arm64':183}[arch], 'NODE_STATIC_ARCHITECTURE_MISMATCH')
             summary['nodeBinarySha256'] = sha(binary)
-            packages=apk_packages(retained.get('lib/apk/db/installed',b''))
+            packages=apk_packages(final_candidate_regular(inventory,retained,'lib/apk/db/installed'))
             check('musl' in packages and 'libstdc++' in packages and 'libgcc' in packages, 'CANDIDATE_RUNTIME_PACKAGES_MISSING')
             write(root/'final-filesystem.json',inventory)
             summary['finalFilesystemSha256']=sha((root/'final-filesystem.json').read_bytes())

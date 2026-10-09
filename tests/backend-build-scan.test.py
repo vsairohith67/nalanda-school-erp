@@ -293,6 +293,18 @@ class QualificationTests(unittest.TestCase):
         with tarfile.open(fileobj=io.BytesIO(raw.getvalue()),mode='r:') as a:
             inventory,retained={},{};q.record_candidate_member(a,a.getmembers()[0],inventory,retained)
         self.assertEqual(retained['lib/apk/db/installed'],data);self.assertEqual(inventory['lib/apk/db/installed']['sha256'],q.sha(data))
+    def test_candidate_path_aliases_and_duplicate_layer_paths_refuse(self):
+        for name in ('usr//node','usr/./node','usr/node/'):
+            with self.subTest(name=name),self.assertRaisesRegex(ValueError,'CANDIDATE_PATH_NONCANONICAL'):q.canonical_candidate_name(tarfile.TarInfo(name))
+        raw=io.BytesIO()
+        with tarfile.open(fileobj=raw,mode='w') as a:
+            a.addfile(tarfile.TarInfo('./usr/node'));a.addfile(tarfile.TarInfo('usr/node'))
+        with tarfile.open(fileobj=io.BytesIO(raw.getvalue()),mode='r:') as a,self.assertRaisesRegex(ValueError,'CANDIDATE_LAYER_DUPLICATE_PATH'):q.candidate_layer_members(a,{}, {})
+    def test_final_candidate_requires_current_regular_bytes_and_valid_ancestors(self):
+        name='usr/local/bin/node';inventory={name:{'type':'file'},'usr/local':{'type':'link'}}
+        with self.assertRaisesRegex(ValueError,'FINAL_CANDIDATE_ANCESTOR_INVALID'):q.final_candidate_regular(inventory,{name:b'new'},name)
+        for inventory,retained in (({},{}),({name:{'type':'link'}},{name:b'old'}),({name:{'type':'file'}},{})):
+            with self.assertRaisesRegex(ValueError,'FINAL_CANDIDATE_FILE_MISSING'):q.final_candidate_regular(inventory,retained,name)
     def test_retained_file_type_transition_cannot_reuse_old_bytes(self):
         for kind in (tarfile.SYMTYPE,tarfile.DIRTYPE,tarfile.LNKTYPE):
             with self.subTest(kind=kind):
