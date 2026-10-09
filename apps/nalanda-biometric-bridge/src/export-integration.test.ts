@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { TestContext } from "vitest";
 import { performance } from "node:perf_hooks";
 import { createHash, createDecipheriv, generateKeyPairSync, verify } from "node:crypto";
@@ -46,6 +46,22 @@ function fixture() {
 }
 function removeFixture(d:string){if(!path.resolve(d).startsWith(fixtureBase+path.sep)||!path.basename(d).startsWith("nps-k30-export-synthetic-"))throw new Error("unsafe test cleanup");rmSync(d,{recursive:true,force:true});expect(existsSync(d)).toBe(false);}
 afterEach(()=>{for(const d of dirs.splice(0))removeFixture(d);});
+// Private progress survives an incomplete whole-file report. These callback
+// observations never accept a final test result, shared teardown or owned close.
+// Existing case bodies, fixture cleanup and enclosing deadlines stay unchanged.
+beforeEach(({task,signal,onTestFinished})=>{
+  const started=performance.now(),startUnixMs=Date.now();
+  const common=Object.freeze({evidence:"BRIDGE_EXPORT_CASE_PROGRESS_V1",scope:"PRIVATE_TEST_CALLBACK_OBSERVATION_NOT_ACCEPTANCE",
+    taskId:task.id,caseHash:createHash("sha256").update(task.name).digest("hex"),startUnixMs});
+  onTestFinished(()=>{
+    const row=Object.freeze({...common,stage:"END",observationPoint:"ON_TEST_FINISHED_CALLBACK",observedUnixMs:Date.now(),
+      elapsedAtObservationMs:Math.max(0,performance.now()-started),observedFrameworkState:task.result?.state??"UNKNOWN",
+      testAbortObserved:signal.aborted,descendantSettlement:"UNKNOWN",sharedSuiteTeardownIncluded:false,terminalResultAccepted:false});
+    Object.defineProperty(task.meta,"bridgeExportCaseProgress",{value:row,enumerable:true,writable:false,configurable:false});
+    process.stdout.write(JSON.stringify(row)+"\n");
+  },1000);
+  process.stdout.write(JSON.stringify({...common,stage:"START",observationPoint:"BEFORE_EACH_HOOK"})+"\n");
+},1000);
 function reviewFixture(f:ReturnType<typeof fixture>,synthetic=true) {
   const review=path.join(f.root,"review");mkdirSync(review,{mode:0o700});
   if(process.platform==="win32")execFileSync("icacls.exe",[review,"/inheritance:r","/grant:r",`*${sid}:(OI)(CI)F`,"*S-1-5-18:(OI)(CI)F","*S-1-5-32-544:(OI)(CI)F"],{stdio:"pipe",windowsHide:true,timeout:5000});
