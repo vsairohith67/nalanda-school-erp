@@ -35,6 +35,7 @@ export const reviewedV1IntegrationPublicSources = Object.freeze([
   "apps/nalanda-biometric-bridge/scripts/owned-test-job.cs",
   "apps/nalanda-biometric-bridge/scripts/owned-test-observer.mjs",
   "apps/nalanda-biometric-bridge/scripts/controlled-tests.ps1",
+  "apps/nalanda-biometric-bridge/scripts/harmless-timeout-child.mjs",
   "apps/nalanda-biometric-bridge/scripts/run-controlled-tests.mjs",
   "apps/nalanda-biometric-bridge/scripts/controlled-test-contract.mjs",
   "apps/nalanda-biometric-bridge/scripts/controlled-test-contract.test.mjs",

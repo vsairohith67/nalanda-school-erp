@@ -30,7 +30,7 @@ const dir=path.join(root,'tmp','bridge-owned-test-controls',randomUUID());
 fs.mkdirSync(path.dirname(dir),{recursive:true});fs.mkdirSync(dir,{mode:0o700});
 assert.equal(fs.realpathSync.native(dir),dir);
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
-const pinned=['owned-test-job.cs','owned-test-observer.mjs','controlled-tests.ps1','controlled-test-contract.mjs','run-controlled-tests.mjs'].map(f=>path.join(root,'apps/nalanda-biometric-bridge/scripts',f));
+const pinned=['owned-test-job.cs','owned-test-observer.mjs','controlled-tests.ps1','controlled-test-contract.mjs','run-controlled-tests.mjs','harmless-timeout-child.mjs'].map(f=>path.join(root,'apps/nalanda-biometric-bridge/scripts',f));
 pinned.push(path.join(root,'apps/nalanda-biometric-bridge/src/export-integration.test.ts'));
 const inputs=Object.fromEntries(pinned.map(f=>[path.relative(root,f).replaceAll('\\','/'),sha(fs.readFileSync(f))]));
 fs.writeFileSync(path.join(dir,'input.json'),JSON.stringify({head,tree,mode,enteredUtc:new Date(entered).toISOString(),wholeDeadlineUtc:new Date(wholeDeadline).toISOString(),inputs},null,2)+'\n',{flag:'wx',mode:0o600});

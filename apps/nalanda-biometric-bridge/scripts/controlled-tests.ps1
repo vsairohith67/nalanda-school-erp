@@ -32,7 +32,7 @@ try {
     & node.exe -e 'setTimeout(()=>{},100)'
   } elseif($Mode -eq 'control-timeout') {
     # Fixed two-level descendants; the enclosing observer must end this job.
-    & node.exe -e 'const cp=require("node:child_process");const p=cp.spawn(process.execPath,["-e","setTimeout(()=>{},30000)"],{stdio:"ignore",windowsHide:true});process.stdout.write("OWNED_HARMLESS_CHILDREN_READY\n");setTimeout(()=>{},30000)'
+    & node.exe (Join-Path $PSScriptRoot 'harmless-timeout-child.mjs')
   } else {
     $taskArgs=@('--dir','apps/nalanda-biometric-bridge','test')
     if($Mode -eq 'focused') {$taskArgs+=@('src/export-integration.test.ts')}
