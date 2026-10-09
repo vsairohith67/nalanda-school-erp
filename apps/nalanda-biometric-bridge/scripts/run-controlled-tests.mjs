@@ -23,7 +23,7 @@ const readJson=(file,max=8000000)=>JSON.parse(readBytes(file,max).toString('utf8
 if(process.env.GITHUB_ACTIONS==='true'){
  assert.equal(process.env.RUNNER_ENVIRONMENT,'github-hosted');
  const event=readJson(process.env.GITHUB_EVENT_PATH,2000000);
- const window=readJson(path.join(root,'config/release-blocker-removal-2a-window.json'));
+ const window=readJson(path.join(root,'config/bridge-packaging-qualification-3a-window.json'));
  assert.equal(admittedWindowsQaPolicy(event,process.env,head,window).reason,'EXACT_REVIEWED_PUBLICATION_EVENT');
 }
 const dir=path.join(root,'tmp','bridge-owned-test-controls',randomUUID());
