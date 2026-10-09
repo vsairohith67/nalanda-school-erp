@@ -310,7 +310,7 @@ jobs:
       - name: Record Android compiler environment
         run: node --version && pnpm --version && rustc --version && cargo --version && java -version && "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --version
       - run: pnpm app:android:init
-      - run: pnpm app:android:build -- --locked
+      - run: pnpm app:android:build --target x86_64 --split-per-abi -- --locked
       - name: Reclaim packaged Android build intermediates
         shell: bash
         run: |
@@ -377,11 +377,12 @@ jobs:
           test -x "$AAPT"
           apk_root=apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk
           APK_PATH="$(python3 - "$AAPT" "$apk_root" <<'PY'
-          import pathlib,subprocess,sys
+          import pathlib,re,subprocess,sys
           matches=[]
           for p in pathlib.Path(sys.argv[2]).rglob('*.apk'):
               data=subprocess.check_output([sys.argv[1],'dump','badging',str(p)],text=True)
-              if "package: name='com.nalandaps.erp'" in data and 'application-debuggable' in data and "'x86_64'" in data: matches.append(p.resolve())
+              native=re.findall(r"^native-code: (.+)$",data,re.MULTILINE)
+              if "package: name='com.nalandaps.erp'" in data and 'application-debuggable' in data and native==["'x86_64'"]: matches.append(p.resolve())
           if len(matches)!=1: raise SystemExit('ANDROID_EXACT_X86_PACKAGE_NOT_UNIQUE')
           print(matches[0])
           PY
