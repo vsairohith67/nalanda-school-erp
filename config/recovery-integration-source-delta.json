@@ -10658,6 +10658,81 @@
       ],
       "currentSha256": "4d49f0b3740c55cd31a0087bb8a0fc5e358a3d02c380fdf747a9c2c6fb03cf7e",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "lib/demo-user-seed-safety.ts",
+      "baseSha256": "e8a18af647f0426c4f1596e8dbf36ec7826e55d86fef5f8b5c8508c0db5ad093",
+      "historicalSha256": "e8a18af647f0426c4f1596e8dbf36ec7826e55d86fef5f8b5c8508c0db5ad093",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "e8a18af647f0426c4f1596e8dbf36ec7826e55d86fef5f8b5c8508c0db5ad093"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "e8a18af647f0426c4f1596e8dbf36ec7826e55d86fef5f8b5c8508c0db5ad093"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "e8a18af647f0426c4f1596e8dbf36ec7826e55d86fef5f8b5c8508c0db5ad093"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "e8a18af647f0426c4f1596e8dbf36ec7826e55d86fef5f8b5c8508c0db5ad093"
+        }
+      ],
+      "currentSha256": "3426b4c56422b85d9706780c16501eacf6271f9e717a90da119eafd32c943ce6",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "lib/release-feature-flags.ts",
+      "baseSha256": "0c6fbb6d66a545f35c2831a821db72bad40fcb8566cd5228edd676a937ad2a1e",
+      "historicalSha256": "0c6fbb6d66a545f35c2831a821db72bad40fcb8566cd5228edd676a937ad2a1e",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "0c6fbb6d66a545f35c2831a821db72bad40fcb8566cd5228edd676a937ad2a1e"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "0c6fbb6d66a545f35c2831a821db72bad40fcb8566cd5228edd676a937ad2a1e"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "0c6fbb6d66a545f35c2831a821db72bad40fcb8566cd5228edd676a937ad2a1e"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "0c6fbb6d66a545f35c2831a821db72bad40fcb8566cd5228edd676a937ad2a1e"
+        }
+      ],
+      "currentSha256": "2de9a45c9237e7c0cdcdc83ddda16f6ec403df9bfa9b893bf0c8250e8e437a3a",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "lib/release-hash.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "3511e9edff99c2411d50297a7bf0264c8ebc993a08e7c5b83c6feaa310dbba5c",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     }
   ]
 }

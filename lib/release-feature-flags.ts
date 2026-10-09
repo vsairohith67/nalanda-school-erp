@@ -1,6 +1,6 @@
 import flagsJson from "@/config/release-feature-flags.json";
 import type { ReleaseEnvironment } from "@/lib/release-operations-types";
-import { sha256Bytes } from "@/lib/release-manifest";
+import { sha256Bytes } from "@/lib/release-hash";
 
 export type ReleaseFeatureFlag = {
   key: string;
