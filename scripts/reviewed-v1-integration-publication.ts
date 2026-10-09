@@ -26,6 +26,10 @@ export const reviewedV1IntegrationPublicSources = Object.freeze([
   "components/expense-payment-record.tsx",
   "components/substitute-form.tsx",
   "config/overnight-repair-product-1a-window.json",
+  // Exact 2A assessment and hosted-event controls, independently source reviewed.
+  // This grants no image, runtime, credential or private-evidence admission.
+  "config/release-blocker-removal-2a-window.json",
+  "config/runtime-base-candidates.json",
   "scripts/portable/native-minimum-compile.d.mts",
   "scripts/portable/windows-compiler-ci.d.mts",
   "Dockerfile",
