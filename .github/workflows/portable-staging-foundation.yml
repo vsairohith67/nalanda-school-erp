@@ -402,7 +402,7 @@ jobs:
   backend-build-scan:
     # Independent byte/static-input qualification; never unholds runtime jobs.
     if: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 28 && github.event.pull_request.head.repo.full_name == github.repository }}
-    name: Backend build/scan input qualification (${{ matrix.architecture }})
+    name: Base-only Alpine candidate assessment (${{ matrix.architecture }})
     strategy:
       fail-fast: false
       max-parallel: 1
@@ -414,6 +414,8 @@ jobs:
     timeout-minutes: 60
     env:
       TARGET_ARCHITECTURE: ${{ matrix.architecture }}
+      # Sealed source selection; no production pin, image build or admission.
+      BASE_CANDIDATE_ID: official-node-alpine324
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false, fetch-depth: 0 }
