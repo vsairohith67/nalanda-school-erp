@@ -13,7 +13,7 @@ export function validatedPrivateStorageRoot(value: string, label: string) {
     path.join(workspace, ".next", "static"),
     path.join(workspace, "release-artifacts"),
     path.join(workspace, "artifacts")
-  ].map((entry) => path.resolve(entry));
+  ].map((entry) => path.resolve(/* turbopackIgnore: true */ entry));
   if (forbiddenRoots.some((entry) => resolved === entry || resolved.startsWith(`${entry}${path.sep}`))) {
     throw new Error(`${label} must not overlap a public or release-artifact directory`);
   }
