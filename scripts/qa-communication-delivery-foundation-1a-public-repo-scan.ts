@@ -46,7 +46,7 @@ for (const file of [
   "apps/nalanda-biometric-bridge/scripts/run-controlled-tests.mjs",
   "apps/nalanda-biometric-bridge/scripts/controlled-test-contract.mjs",
   "apps/nalanda-biometric-bridge/scripts/controlled-test-contract.test.mjs"
-]) {
+] as const) {
   if (!reviewedV1IntegrationPublicSources.includes(file)) throw new Error("REVIEWED_OWNED_TEST_SOURCE_REGISTRATION_REQUIRED");
   allowedRootFiles.add(file);
 }
