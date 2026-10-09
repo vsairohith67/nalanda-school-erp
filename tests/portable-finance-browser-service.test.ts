@@ -56,7 +56,22 @@ it("ISOLATED_SERVICE: actual source-bound fixtures, item receipts, scoped waiver
  await trace.phase("finance_journey",async()=>{
  const probe=(operation:string,extra:any={})=>trace.phase(operation==="snapshot"?"snapshot":"fixture",()=>financeBrowserProbe(db,{...bound,operation,...extra})),f:any=await probe("prepare",{password:"HARNESS_FIXTURE_ONLY_"+randomUUID()+randomUUID(),matrixIndex:0});
  const read=async()=>JSON.parse(JSON.stringify(await probe("snapshot"))),initial=await read();expect(initial.payments).toHaveLength(2);expect(initial.receipts).toEqual([]);expect(initial.cases).toEqual([]);await expect(probe("prepare",{password:"x".repeat(60),matrixIndex:0})).rejects.toThrow("FIXTURE_REUSE");
- const actors:Record<string,any>={};await trace.phase("actor_setup",async()=>{for(const [name,user] of Object.entries(f.actors) as [string,any][]){const session=await db.authSession.create({data:{userId:user.id,activeRoleAssignmentId:user.assignmentId,tokenHash:"HARNESS_"+randomUUID(),credentialVersion:1,authorizationVersion:1,expiresAt:new Date(Date.now()+3600000),deviceSummary:"HARNESS",browserSummary:"HARNESS",networkEvidenceMasked:"HARNESS"}});actors[name]={userId:user.id,roleAssignmentId:user.assignmentId,sessionId:session.id};}});
+ const actors:Record<string,any>={};await trace.phase("actor_setup",async()=>{
+  // Independent direct session fixtures precede every tested business action.
+  // Keep all eight actors and Prisma defaults; read back each persisted binding.
+  const entries=Object.entries(f.actors) as [string,any][];
+  expect(entries.map(([name])=>name).sort()).toEqual(["applier","approver","general","parent","preparer","reviewer","teacher","viewer"]);
+  expect(new Set(entries.map(([,user])=>user.id)).size).toBe(8);
+  const data=entries.map(([,user])=>({userId:user.id,activeRoleAssignmentId:user.assignmentId,tokenHash:"HARNESS_"+randomUUID(),credentialVersion:1,authorizationVersion:1,expiresAt:new Date(Date.now()+3600000),deviceSummary:"HARNESS",browserSummary:"HARNESS",networkEvidenceMasked:"HARNESS"}));
+  expect((await db.authSession.createMany({data})).count).toBe(8);
+  const sessions=await db.authSession.findMany({where:{tokenHash:{in:data.map(row=>row.tokenHash)}}});
+  expect(sessions).toHaveLength(8);expect(new Set(sessions.map(row=>row.id)).size).toBe(8);
+  for(const [index,[name,user]] of entries.entries()){
+   const session=sessions.find(row=>row.tokenHash===data[index].tokenHash)!;
+   expect(session).toMatchObject({userId:user.id,activeRoleAssignmentId:user.assignmentId,credentialVersion:1,authorizationVersion:1,contextVersion:1,version:1,expiresAt:data[index].expiresAt,activeChildLinkId:null,revokedAt:null,revocationReason:null,deviceSummary:"HARNESS",browserSummary:"HARNESS",networkEvidenceMasked:"HARNESS"});
+   actors[name]={userId:user.id,roleAssignmentId:user.assignmentId,sessionId:session.id};
+  }
+ });
  const sale={receiptDate:f.firstDate,academicYear:f.academicYear,studentId:f.studentId,paymentMethod:"CASH",lines:[{itemId:f.itemId,quantity:3}]};let b=await read();await createMiscReceipt(db,sale,f.actors.preparer.id);assertSale(b,await read(),{actor:f.actors.preparer.id,studentId:f.studentId,itemId:f.itemId,rateId:f.firstRateId,rate:"10.25",quantity:3,total:"30.75",date:f.firstDate});
  const rate=await db.miscIncomeRate.create({data:{itemId:f.itemId,academicYear:f.academicYear,amount:"12.50",effectiveFrom:new Date(f.secondDate),effectiveTo:new Date(f.secondDate),notes:f.scope}});b=await read();await createMiscReceipt(db,{...sale,receiptDate:f.secondDate},f.actors.preparer.id);assertSale(b,await read(),{actor:f.actors.preparer.id,studentId:f.studentId,itemId:f.itemId,rateId:rate.id,rate:"12.50",quantity:3,total:"37.50",date:f.secondDate});
  for(const quantity of [0,-1,1.5,10001]){b=await read();await expect(createMiscReceipt(db,{...sale,lines:[{itemId:f.itemId,quantity}]},f.actors.preparer.id)).rejects.toThrow("positive whole number");assertFinanceUnchanged(b,await read());}

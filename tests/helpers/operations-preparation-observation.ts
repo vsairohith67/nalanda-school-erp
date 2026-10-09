@@ -87,8 +87,10 @@ export async function observedOperationsCase(context: Pick<TestContext, "signal"
         await Promise.race([bodyDone, new Promise<void>(resolve => { timer = setTimeout(resolve, 3000); })]);
       }
       const fixtureSettled = await scope.settleFixture(bodySettled);
+      if (!fixtureSettled || context.signal.aborted) outcome = "FAIL";
       trace.end(span, fixtureSettled ? "PASS" : "UNKNOWN");
       trace.finish(outcome);
+      if (!fixtureSettled) throw Error("OPERATIONS_PREPARATION_SETTLEMENT_UNRECONCILED");
     } catch (error) { try { trace.end(span, "FAIL"); trace.finish("FAIL"); } catch { /* Failed/partial journals remain available to the finalizer. */ } throw error; }
     finally { clearTimeout(timer); context.signal.removeEventListener("abort", abort); }
   })();
@@ -98,7 +100,7 @@ export async function observedOperationsCase(context: Pick<TestContext, "signal"
     if (!bodySettled) { outcome = "FAIL"; abort(); }
     try { await finalize(); } catch (cleanup) { if (!primaryFailed && !context.signal.aborted) throw cleanup; }
   });
-  try { if (context.signal.aborted) abort(); await body(scope); outcome = "PASS"; }
+  try { if (context.signal.aborted) abort(); await body(scope); if (context.signal.aborted || scope.signal.aborted) throw Error("OPERATIONS_PREPARATION_CANCELLED"); outcome = "PASS"; }
   catch (primary) { primaryFailed = true; outcome = "FAIL"; try { scope.cancel("TEST_FAILURE"); } catch { /* Preserve the primary assertion/process error. */ } throw primary; }
   finally {
     bodySettled = true; resolveBody();

@@ -3,12 +3,34 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect, it } from "vitest";
 import { operationsPreparationProcess, OperationsProcessError, type OperationsProcessEvent } from "../scripts/portable/operations-preparation-process";
-import { OperationsPreparationObservation } from "./helpers/operations-preparation-observation";
+import { OperationsPreparationObservation, observedOperationsCase } from "./helpers/operations-preparation-observation";
 import { QaTrace } from "./helpers/qa-reliability";
 import { finalizeQaReliability, prepareQaReliability } from "../scripts/qa-recovery-service-traces";
 
 const options = { cwd: process.cwd(), env: { NODE_ENV: "test" as const, PATH: process.env.PATH, SystemRoot: process.env.SystemRoot }, timeoutMs: 3000, maxBuffer: 4096 };
 const owner = { contract: "NALANDA_SERVICE_TRACE_V1" as const, source: "a".repeat(40), run: "1", attempt: "1", job: "operations-diagnostic-harness", provider: "sqlite", node: process.version, image: "unavailable", runner: "unavailable" };
+
+it("an unregistered expected fixture cannot turn a resolved body into a successful case", async () => {
+  let trace!: QaTrace;
+  const configuredDirectory = process.env.NALANDA_QA_RELIABILITY_TRACE_DIR;
+  // Pure refusal control: no directory or process is allocated. The actual
+  // observer must reject its incomplete lifecycle and retain UNKNOWN settlement.
+  // Isolate this expected failure from the real integration journal, restoring
+  // only this recorder setting before any subsequent test can execute.
+  delete process.env.NALANDA_QA_RELIABILITY_TRACE_DIR;
+  try {
+  await expect(observedOperationsCase({ signal: new AbortController().signal, onTestFinished: () => {} }, "harness-clean", async scope => {
+    trace = scope.trace;
+    await scope.phase("fixture-create", async () => undefined);
+  })).rejects.toThrow("OPERATIONS_PREPARATION_SETTLEMENT_UNRECONCILED");
+  expect(trace.events.find(event => event.kind === "RESULT")?.status).toBe("FAIL");
+  expect(trace.events.find(event => event.kind === "END" && event.phase === "fixture-settlement")?.status).toBe("UNKNOWN");
+  expect(trace.directory).toBeUndefined();
+  } finally {
+    if (configuredDirectory === undefined) delete process.env.NALANDA_QA_RELIABILITY_TRACE_DIR;
+    else process.env.NALANDA_QA_RELIABILITY_TRACE_DIR = configuredDirectory;
+  }
+});
 
 // Node controls prove event/privacy behavior only, never real Compose startup,
 // executable trust, plugin selection or Windows process-tree settlement.
