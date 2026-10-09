@@ -29,7 +29,19 @@ jobs:
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
         with: { dotnet-version: '10.0.401' }
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: pnpm --dir apps/nalanda-biometric-bridge test
+      - name: Actual bridge assertions with bounded owned-process settlement
+        id: controlled_bridge
+        run: node apps/nalanda-biometric-bridge/scripts/run-controlled-tests.mjs full
+      - name: Retain only bounded bridge assertion and settlement projection
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bridge-controlled-tests-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            tmp/bridge-owned-test-public/*/report.json
+            tmp/bridge-owned-test-public/*/manifest.json
       - run: pnpm --dir apps/nalanda-biometric-bridge typecheck
       - run: pnpm --dir apps/nalanda-biometric-bridge build
       - name: Compile supported SCM host
@@ -42,4 +54,5 @@ jobs:
       - name: Genuine standard-account isolation and service positive controls
         shell: pwsh
         run: apps/nalanda-biometric-bridge/scripts/isolation-smoke.ps1 -HostExe (Join-Path (Get-Location) 'tmp/biometric-companion-publish/Nalanda.Biometric.Service.exe') -BridgeRoot (Join-Path (Get-Location) 'apps/nalanda-biometric-bridge')
-      # No artifact upload, package publication, production secrets or deployment.
+      # Only finite allowlisted metadata above; no private streams, fixture/task
+      # JSON, binaries, package publication, production secrets or deployment.

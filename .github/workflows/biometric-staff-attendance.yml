@@ -85,7 +85,18 @@ jobs:
           pnpm exec prisma migrate deploy --schema prisma/schema.prisma
           Copy-Item -LiteralPath tmp\biometric-ci\synthetic.db -Destination prisma\dev.db
       - name: Focused bridge and application contracts
-        run: pnpm test:biometric && pnpm bridge:typecheck && pnpm bridge:build
+        id: controlled_bridge
+        run: pnpm exec vitest run tests/biometric-staff-attendance-1a.test.ts && node apps/nalanda-biometric-bridge/scripts/run-controlled-tests.mjs full && pnpm bridge:typecheck && pnpm bridge:build
+      - name: Retain only bounded bridge assertion and settlement projection
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bridge-controlled-tests-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            tmp/bridge-owned-test-public/*/report.json
+            tmp/bridge-owned-test-public/*/manifest.json
       - name: Copied-database simulator, ingestion, reconciliation, security and restore
         run: pnpm qa:biometric
       - name: Migration and backup-restore gates
