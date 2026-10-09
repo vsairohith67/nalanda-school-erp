@@ -143,11 +143,17 @@ def record_candidate_member(layer, member, inventory, retained):
     name = member_safe(member)
     parent, basename = posixpath.split(name)
     if basename.startswith('.wh.'):
+        check(member.isfile() and member.size == 0, 'WHITEOUT_RECORD_INVALID')
         target = parent if basename == '.wh..wh..opq' else posixpath.join(parent,basename[4:])
         for old in list(inventory):
             if old == target or old.startswith(target+'/') or (basename == '.wh..wh..opq' and not target):
                 inventory.pop(old); retained.pop(old,None)
         return
+    retained.pop(name,None)
+    if not member.isdir():
+        for old in list(inventory):
+            if old.startswith(name+'/'):
+                inventory.pop(old);retained.pop(old,None)
     record = dict(type='file' if member.isfile() else 'directory' if member.isdir() else 'link', bytes=member.size)
     if member.isfile():
         digest = hashlib.sha256()
@@ -165,6 +171,16 @@ def record_candidate_member(layer, member, inventory, retained):
         record['target'] = member.linkname
     inventory[name] = record
     check(len(inventory) <= 100000, 'FINAL_FILESYSTEM_BOUND')
+
+def candidate_layer_members(layer, inventory, retained):
+    members=layer.getmembers()
+    check(len(members)<=100000, 'LAYER_INSPECTION_BOUND')
+    # Whiteouts affect lower-layer state; new entries are applied afterwards,
+    # independent of the whiteout's position inside the archive.
+    for member in members:
+        if posixpath.basename(member_safe(member)).startswith('.wh.'):
+            record_candidate_member(layer,member,inventory,retained)
+    return [member for member in members if not posixpath.basename(member_safe(member)).startswith('.wh.')]
 
 def scanner_policy(trivy, grype, sbom, config, exits, metadata):
     check(trivy.get('SchemaVersion') == 2 and trivy.get('Metadata', {}).get('ImageID') == config and isinstance(trivy.get('Results'), list) and trivy['Results'], 'TRIVY_SUBJECT_OR_REPORT_INVALID')
@@ -405,21 +421,13 @@ def inspect_runtime_base():
             write(layout/'blobs'/'sha256'/d['digest'][7:],data)
             with tarfile.open(fileobj=io.BytesIO(data),mode='r:*') as layer:
                 count=0
-                members=layer.getmembers() if candidate else layer
-                if candidate:
-                    check(len(members)<=100000, 'LAYER_INSPECTION_BOUND')
-                    # OCI whiteouts apply to lower layers, regardless of the
-                    # whiteout's order relative to this layer's new entries.
-                    for m in members:
-                        if posixpath.basename(member_safe(m)).startswith('.wh.'):
-                            record_candidate_member(layer,m,inventory,retained)
+                members=candidate_layer_members(layer,inventory,retained) if candidate else layer
                 for m in members:
                     count+=1;uncompressed+=m.size
                     check(count<=100000 and m.size<=MAX_IMAGE and uncompressed<=4*1024**3 and time.monotonic()<inspection_deadline,'LAYER_INSPECTION_BOUND')
                     name=member_safe(m)
                     if candidate:
-                        if not posixpath.basename(name).startswith('.wh.'):
-                            record_candidate_member(layer,m,inventory,retained)
+                        record_candidate_member(layer,m,inventory,retained)
                         continue
                     if m.isfile() and name == 'nodejs/bin/node':
                         binary=layer.extractfile(m).read()
@@ -431,6 +439,7 @@ def inspect_runtime_base():
                         name_match=re.search(r'^Package: (.+)$',text,re.M);version_match=re.search(r'^Version: (.+)$',text,re.M)
                         if name_match and version_match: packages[name_match[1]]=version_match[1]
         if candidate:
+            check(all(inventory.get(name,{}).get('type') == 'file' for name in (candidate['nodePath'],'lib/apk/db/installed')), 'FINAL_CANDIDATE_FILE_MISSING')
             binary=retained.get(candidate['nodePath'],b'')
             check(binary[:4] == b'\x7fELF' and binary[4:6] == b'\x02\x01' and int.from_bytes(binary[18:20],'little') == {'amd64':62,'arm64':183}[arch], 'NODE_STATIC_ARCHITECTURE_MISMATCH')
             summary['nodeBinarySha256'] = sha(binary)

@@ -293,4 +293,30 @@ class QualificationTests(unittest.TestCase):
         with tarfile.open(fileobj=io.BytesIO(raw.getvalue()),mode='r:') as a:
             inventory,retained={},{};q.record_candidate_member(a,a.getmembers()[0],inventory,retained)
         self.assertEqual(retained['lib/apk/db/installed'],data);self.assertEqual(inventory['lib/apk/db/installed']['sha256'],q.sha(data))
+    def test_retained_file_type_transition_cannot_reuse_old_bytes(self):
+        for kind in (tarfile.SYMTYPE,tarfile.DIRTYPE,tarfile.LNKTYPE):
+            with self.subTest(kind=kind):
+                name='usr/local/bin/node';inventory={name:{'type':'file'}};retained={name:b'old'}
+                m=tarfile.TarInfo(name);m.type=kind;m.linkname='/usr/local/bin/other'
+                q.record_candidate_member(None,m,inventory,retained)
+                self.assertNotIn(name,retained);self.assertNotEqual(inventory[name]['type'],'file')
+    def test_directory_replaced_by_link_clears_descendants(self):
+        inventory={'lib/apk':{'type':'directory'},'lib/apk/db/installed':{'type':'file'}};retained={'lib/apk/db/installed':b'old'}
+        m=tarfile.TarInfo('lib/apk');m.type=tarfile.SYMTYPE;m.linkname='/new-apk'
+        q.record_candidate_member(None,m,inventory,retained)
+        self.assertEqual(set(inventory),{'lib/apk'});self.assertFalse(retained)
+    def test_whiteout_archive_order_does_not_delete_new_layer_file(self):
+        for opaque in (False,True):
+            results=[]
+            for whiteout_first in (False,True):
+                raw=io.BytesIO();file=tarfile.TarInfo('lib/apk/db/installed');file.size=3
+                whiteout=tarfile.TarInfo('lib/apk/db/'+('.wh..wh..opq' if opaque else '.wh.installed'))
+                order=[whiteout,file] if whiteout_first else [file,whiteout]
+                with tarfile.open(fileobj=raw,mode='w') as a:
+                    for m in order:a.addfile(m,io.BytesIO(b'new') if m is file else None)
+                inventory={'lib/apk/db/installed':{'type':'file'},'lib/apk/db/old':{'type':'file'}};retained={'lib/apk/db/installed':b'old'}
+                with tarfile.open(fileobj=io.BytesIO(raw.getvalue()),mode='r:') as a:
+                    for m in q.candidate_layer_members(a,inventory,retained):q.record_candidate_member(a,m,inventory,retained)
+                self.assertEqual(retained['lib/apk/db/installed'],b'new');results.append((inventory,retained))
+            self.assertEqual(results[0],results[1])
 if __name__=='__main__':unittest.main()
