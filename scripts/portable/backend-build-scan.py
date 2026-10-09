@@ -597,9 +597,65 @@ def run(acquire=False):
     finally:
         signal.signal(signal.SIGTERM, previous)
 
+PRIOR_BASE_SOURCE = '9a832583b0f4bfea37d1942d19e6578930c9be8b'
+PRIOR_BASE_TREE = 'd8dcb248e93c4a30df58784e4227dc9db65df770'
+PRIOR_BASE_HASHES = {'amd64':'aa5d1b48248357abcae2e258d584b9a1618bd29b413c62ffba090aea77d22f3e', 'arm64':'7829b60c6ebfbd44ae86219df9bdb107bafe34867a36b7ad982a9c78ffdea624'}
+
+def validate_prior_producer(config, raw):
+    check(sha(raw) == config.get('priorProducerSha256') == 'ee6b60881704444f50a43f1606003558cceabce4b5152641cdfed06669bcdd69', 'PRIOR_PRODUCER_SUBSTITUTED')
+
+def validate_prior_blocked_base(config, arch, inputs):
+    """Negative historical evidence only. Never qualification or a fresh scan."""
+    check(arch in PRIOR_BASE_HASHES, 'PRIOR_ARCH_INVALID')
+    check(config.get('contract') == 'NPS_PRIOR_BLOCKED_BASE_EVIDENCE_V1' and config.get('assignment') == 'NPS-RELEASE-BLOCKER-REMOVAL-AND-ACCEPTANCE-2A' and config.get('priorSource') == PRIOR_BASE_SOURCE and config.get('priorTree') == PRIOR_BASE_TREE and config.get('priorRun') == '37892264896' and config.get('priorAttempt') == '1', 'PRIOR_IDENTITY_INVALID')
+    report = config.get('reports', {}).get(arch, {})
+    raw = report.get('raw', '').encode('utf8')
+    check(len(raw) <= 32768 and report.get('sha256') == PRIOR_BASE_HASHES[arch] and sha(raw) == PRIOR_BASE_HASHES[arch], 'PRIOR_REPORT_SUBSTITUTED')
+    prior = json.loads(raw)
+    check(prior.get('source') == PRIOR_BASE_SOURCE and prior.get('tree') == PRIOR_BASE_TREE and prior.get('runId') == '37892264896' and prior.get('attempt') == '1' and prior.get('architecture') == arch, 'PRIOR_REPORT_IDENTITY_INVALID')
+    check(prior.get('result') == 'BACKEND_BUILD_SCAN_FINDINGS_CONFIRMED_BLOCKED' and prior.get('blockingFindingCount') == 25 and len(prior.get('findings', [])) == 9 and prior.get('unpublishedFindingCount') == 16 and prior.get('cleanupComplete') is True and prior.get('admitted') is False and prior.get('product') == 'NOT_BUILT' and prior.get('runtime') == 'NOT_EXECUTED', 'PRIOR_BLOCK_REQUIRED')
+    check(set(inputs) == set(prior['inputs']) and inputs == prior['inputs'], 'PRIOR_MATERIAL_CHANGED')
+    check(set(prior.get('reports', {})) == {'sbom.json','grype.json','trivy.json','scanner-metadata.json'} and all(r.get('status') == 'JSON_PARSED' for r in prior['reports'].values()), 'PRIOR_REPORTS_INCOMPLETE')
+    check(all(prior['scanners'][s]['severityThreshold'] == 'HIGH' and prior['scanners'][s]['ignoreUnfixed'] is False for s in ('trivy','grype')), 'PRIOR_POLICY_CHANGED')
+    return prior
+
+def retain_prior_blocked_base():
+    """Exact-input refusal, before network, scanner, image or process acquisition."""
+    source, arch = os.getenv('EXPECTED_SHA', ''), os.getenv('TARGET_ARCHITECTURE', '')
+    check(os.getenv('GITHUB_ACTIONS') == 'true' and os.getenv('RUNNER_ENVIRONMENT') == 'github-hosted' and os.getenv('RUNNER_OS') == 'Linux' and os.getenv('GITHUB_REPOSITORY') == 'vsairohith67/nalanda-school-erp' and os.getenv('PORTABLE_CI_EXCEPTION') == 'OWNER_AUTHORIZED', 'EPHEMERAL_EXACT_HEAD_CI_REQUIRED')
+    check(not os.getenv('DOCKER_HOST') and not os.getenv('DOCKER_CONTEXT') and platform.system() == 'Linux' and os.getuid() != 0, 'HOST_UNSAFE')
+    check(re.fullmatch(r'[a-f0-9]{40}', source) and arch in PRIOR_BASE_HASHES and platform.machine() == {'amd64':'x86_64','arm64':'aarch64'}[arch], 'SOURCE_OR_NATIVE_ARCHITECTURE_INVALID')
+    check(os.getenv('GITHUB_JOB') == 'backend-build-scan' and os.getenv('GITHUB_RUN_ID', '').isdigit(), 'RUN_IDENTITY_REQUIRED')
+    check(subprocess.check_output(['git','rev-parse','HEAD']).decode().strip() == source and not subprocess.check_output(['git','status','--porcelain']), 'COMMITTED_CLEAN_SOURCE_REQUIRED')
+    candidate = selected_base_candidate(source, arch)  # Existing exact event/window/pin guard.
+    check(candidate is not None, 'PRIOR_CANDIDATE_REQUIRED')
+    file = Path('config/runtime-base-prior-blocked.json')
+    st = file.lstat()
+    check(stat.S_ISREG(st.st_mode) and not file.is_symlink() and st.st_nlink == 1 and st.st_size <= 65536, 'PRIOR_CONFIG_UNSAFE')
+    raw = file.read_bytes()
+    check(sha(raw) == '95953887844a270364ca4166f40b16cbe3d7a6c7b5ccb8e6ab852be5f30213bb' and subprocess.check_output(['git','show',source+':config/runtime-base-prior-blocked.json']) == raw, 'PRIOR_CONFIG_SUBSTITUTED')
+    config = json.loads(raw)
+    check(subprocess.check_output(['git','show','-s','--format=%T',PRIOR_BASE_SOURCE]).decode().strip() == PRIOR_BASE_TREE, 'PRIOR_GRAPH_SUBSTITUTED')
+    validate_prior_producer(config, subprocess.check_output(['git','show',PRIOR_BASE_SOURCE+':scripts/portable/backend-build-scan.py']))
+    inputs = {}
+    for name in ('Dockerfile','.dockerignore','pnpm-lock.yaml','package.json','pnpm-workspace.yaml','config/synthetic-build-trust.json','config/backend-build-scan-tools.json','config/runtime-base-candidates.json'):
+        item = Path(name); st = item.lstat()
+        check(stat.S_ISREG(st.st_mode) and not item.is_symlink() and st.st_nlink == 1 and st.st_size <= PRIVATE_LIMIT, 'PRIOR_INPUT_UNSAFE')
+        data = item.read_bytes()
+        check(subprocess.check_output(['git','show',source+':'+name]) == data, 'PRIOR_INPUT_UNCOMMITTED')
+        inputs[name] = sha(data)
+    prior = validate_prior_blocked_base(config, arch, inputs)
+    summary = dict(classification=CLASSIFICATION, source=source, tree=subprocess.check_output(['git','show','-s','--format=%T',source]).decode().strip(), architecture=arch, runId=os.environ['GITHUB_RUN_ID'], attempt='1', job='backend-build-scan', result='PRIOR_EXACT_INPUT_BLOCKED_NO_RESCAN', base='BLOCKING_FINDINGS_CONFIRMED', product='NOT_BUILT', runtime='NOT_EXECUTED', admitted=False, newAcquisition=False, newScan=False, inputIndex=candidate['indexDigest'], blockingFindingCount=25, unpublishedFindingCount=16, findings=prior['findings'], unknownIdentityDisposition='UNKNOWN_NOT_DISCARDED', priorResult=prior, priorResultSha256=PRIOR_BASE_HASHES[arch], priorProducerSha256=config['priorProducerSha256'], reuseGuardSha256=sha(Path(__file__).read_bytes()), priorConfigSha256=sha(raw), validatedInputs=inputs, recordedUtc=stamp(), historicalScanTimeNotRenewed=True)
+    public = Path('backend-build-scan-result.json')
+    write(public, summary)
+    write(Path('backend-build-scan-public-manifest.json'), dict(classification=CLASSIFICATION, files=[dict(name=public.name, bytes=public.stat().st_size, sha256=sha(public.read_bytes()))]))
+    return 1  # Genuine retained refusal; never a green substitute for qualification.
+
 def main(argv=None):
     """Keep automatic base inspection separate from the guarded product caller."""
     args = sys.argv[1:] if argv is None else argv
+    if args == ['--retain-prior-block']:
+        return retain_prior_blocked_base()
     if args == ['--base-only']:
         return inspect_runtime_base()
     if args == ['--acquire-materials']:

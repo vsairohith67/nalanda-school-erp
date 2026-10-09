@@ -30,6 +30,7 @@ export const reviewedV1IntegrationPublicSources = Object.freeze([
   // This grants no image, runtime, credential or private-evidence admission.
   "config/release-blocker-removal-2a-window.json",
   "config/runtime-base-candidates.json",
+  "config/runtime-base-prior-blocked.json",
   // Exact owned-process test connections; no private capture/artifact admission.
   "apps/nalanda-biometric-bridge/scripts/owned-test-job.cs",
   "apps/nalanda-biometric-bridge/scripts/owned-test-observer.mjs",

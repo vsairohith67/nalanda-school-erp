@@ -4,6 +4,7 @@ import io
 import json
 import tarfile
 import tempfile
+import subprocess
 import unittest
 from unittest.mock import patch, MagicMock
 from pathlib import Path
@@ -338,4 +339,43 @@ class QualificationTests(unittest.TestCase):
                     for m in q.candidate_layer_members(a,inventory,retained):q.record_candidate_member(a,m,inventory,retained)
                 self.assertEqual(retained['lib/apk/db/installed'],b'new');results.append((inventory,retained))
             self.assertEqual(results[0],results[1])
+class PriorBlockedEvidenceTests(unittest.TestCase):
+    def setUp(self):
+        self.config=json.loads(Path('config/runtime-base-prior-blocked.json').read_text())
+        self.prior=json.loads(self.config['reports']['amd64']['raw'])
+        self.inputs=dict(self.prior['inputs'])
+    def test_exact_old_negative_evidence_retains_all_unknown_rows_and_dates(self):
+        for arch in ('amd64','arm64'):
+            original=json.loads(self.config['reports'][arch]['raw'])
+            result=q.validate_prior_blocked_base(self.config,arch,original['inputs'])
+            self.assertEqual(result,original)
+            self.assertEqual(result['blockingFindingCount'],len(result['findings'])+result['unpublishedFindingCount'])
+            self.assertFalse(result['admitted']);self.assertEqual(result['runtime'],'NOT_EXECUTED')
+    def test_changed_material_refuses_without_acquisition(self):
+        for name in self.inputs:
+            changed=dict(self.inputs);changed[name]='0'*64
+            with self.subTest(name=name),patch.object(q,'request',side_effect=AssertionError('network forbidden')),self.assertRaisesRegex(ValueError,'PRIOR_MATERIAL_CHANGED'):
+                q.validate_prior_blocked_base(self.config,'amd64',changed)
+    def test_missing_material_refuses(self):
+        self.inputs.pop('pnpm-lock.yaml')
+        with self.assertRaisesRegex(ValueError,'PRIOR_MATERIAL_CHANGED'):q.validate_prior_blocked_base(self.config,'amd64',self.inputs)
+    def test_unassessed_architecture_refuses(self):
+        with self.assertRaisesRegex(ValueError,'PRIOR_ARCH_INVALID'):q.validate_prior_blocked_base(self.config,'riscv64',self.inputs)
+    def test_wrong_prior_identity_refuses(self):
+        self.config['priorRun']='1'
+        with self.assertRaisesRegex(ValueError,'PRIOR_IDENTITY_INVALID'):q.validate_prior_blocked_base(self.config,'amd64',self.inputs)
+    def test_truncated_or_substituted_report_refuses(self):
+        for value in ('{',self.config['reports']['amd64']['raw']+' '):
+            self.config['reports']['amd64']['raw']=value
+            with self.assertRaisesRegex(ValueError,'PRIOR_REPORT_SUBSTITUTED'):q.validate_prior_blocked_base(self.config,'amd64',self.inputs)
+    def test_cross_architecture_report_substitution_refuses(self):
+        self.config['reports']['amd64']=self.config['reports']['arm64']
+        with self.assertRaisesRegex(ValueError,'PRIOR_REPORT_SUBSTITUTED'):q.validate_prior_blocked_base(self.config,'amd64',self.inputs)
+    def test_retained_refusal_caller_cannot_fall_back_to_scan(self):
+        with patch.object(q,'retain_prior_blocked_base',return_value=1) as retained,patch.object(q,'inspect_runtime_base',side_effect=AssertionError('rescan forbidden')),patch.object(q,'request',side_effect=AssertionError('network forbidden')):
+            self.assertEqual(q.main(['--retain-prior-block']),1);retained.assert_called_once_with()
+    def test_actual_prior_git_producer_bytes_and_substitution(self):
+        raw=subprocess.check_output(['git','show',q.PRIOR_BASE_SOURCE+':scripts/portable/backend-build-scan.py'])
+        q.validate_prior_producer(self.config,raw)
+        with self.assertRaisesRegex(ValueError,'PRIOR_PRODUCER_SUBSTITUTED'):q.validate_prior_producer(self.config,raw+b' ')
 if __name__=='__main__':unittest.main()

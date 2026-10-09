@@ -421,8 +421,8 @@ jobs:
         with: { ref: "${{ env.EXPECTED_SHA }}", persist-credentials: false, fetch-depth: 0 }
       - name: Verify HARNESS_ONLY no-launch and refusal controls
         run: python3 tests/backend-build-scan.test.py
-      - name: Inspect and scan exact current input bytes privately
-        run: python3 scripts/portable/backend-build-scan.py --base-only
+      - name: Retain exact prior blocking evidence without rescanning rejected bytes
+        run: python3 scripts/portable/backend-build-scan.py --retain-prior-block
       - name: Publish bounded qualification metadata only
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
