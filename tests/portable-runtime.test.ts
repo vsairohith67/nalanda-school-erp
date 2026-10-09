@@ -95,6 +95,39 @@ describe("SOURCE_ONLY stream import and targeted standalone chunk-copy proof",()
  it("proves exact generated-byte copies across both route traces and deduplicates shared chunks",async()=>{
   const f=await fixture();try{const proof=checkStandaloneTraceChunks(f.root);expect(proof).toMatchObject({status:"PASS",scope:"TWO_ROUTE_GENERATED_CHUNK_COPIES_ONLY",tracesChecked:2,generatedChunksChecked:1,sourceBytesChecked:27,nonChunkEntriesExcluded:0,runtimeExecuted:false});expect(proof.proofSha256).toMatch(/^[a-f0-9]{64}$/);expect(JSON.stringify(proof)).not.toContain(f.root);}finally{await f.cleanup();}
  });
+ it("excludes invented processing evidence from standalone traces while preserving runtime code and dependencies",async()=>{
+  const prior=process.env.NALANDA_STANDALONE_BUILD;
+  try{
+   process.env.NALANDA_STANDALONE_BUILD="true";vi.resetModules();
+   const config=(await import("../next.config")).default;
+   const require=(await import("node:module")).createRequire(import.meta.url);
+   const picomatch=require("next/dist/compiled/picomatch") as (patterns:string[],options:{dot:boolean;contains:boolean})=>(file:string)=>boolean;
+   const root=path.resolve("SOURCE_ONLY-tracing-fixture"),patterns=config.outputFileTracingExcludes?.["/*"];
+   expect(patterns).toEqual(["./tmp/**/*"]);
+   const excluded=picomatch(patterns!.map(p=>path.join(root,p)),{dot:true,contains:true});
+   for(const item of ["tmp/qa-evidence/private.json","tmp/.owned/nested/result.bin","tmp/report-publication/invented.pdf"]){expect(excluded(path.join(root,item))).toBe(true);}
+   for(const item of [".next/server/chunks/owned.js","lib/report-pdf-jobs.ts","templates/receipt.html","prisma/schema.prisma","node_modules/.prisma/client/query-engine.node","node_modules/sharp/lib/index.js","public/icons/icon.png","attempts/tmp-name.js"]){expect(excluded(path.join(root,item))).toBe(false);}
+   process.env.NALANDA_STANDALONE_BUILD="false";vi.resetModules();
+   const normal=(await import("../next.config")).default;expect(normal.output).toBeUndefined();expect(normal.outputFileTracingExcludes).toBeUndefined();
+  }finally{if(prior===undefined)delete process.env.NALANDA_STANDALONE_BUILD;else process.env.NALANDA_STANDALONE_BUILD=prior;vi.resetModules();}
+ });
+ it("retains the fifty-thousand trace guard and exact copied-chunk proof when only invented tmp entries are excluded",async()=>{
+  const f=await fixture(),prior=process.env.NALANDA_STANDALONE_BUILD;
+  try{
+   process.env.NALANDA_STANDALONE_BUILD="true";vi.resetModules();const config=(await import("../next.config")).default;
+   const require=(await import("node:module")).createRequire(import.meta.url);
+   const picomatch=require("next/dist/compiled/picomatch") as (patterns:string[],options:{dot:boolean;contains:boolean})=>(file:string)=>boolean;
+   const excluded=picomatch(config.outputFileTracingExcludes!["/*"].map(p=>path.join(f.root,p)),{dot:true,contains:true});
+   for(const name of traceNames){const file=path.join(f.root,...name.split("/")),directory=path.dirname(file),chunk=path.relative(directory,f.source);
+    const files=[chunk,...Array.from({length:50000},(_,i)=>path.relative(directory,path.join(f.root,"tmp","SOURCE_ONLY-private-processing",String(i)+".json")))];
+    await f.put(name,JSON.stringify({files}));
+   }
+   expect(()=>checkStandaloneTraceChunks(f.root)).toThrow("STANDALONE_TRACE_INVALID");
+   for(const name of traceNames){const file=path.join(f.root,...name.split("/")),trace=JSON.parse(await readFile(file,"utf8"));const files=(trace.files as string[]).filter(entry=>!excluded(path.join(path.dirname(file),entry)));expect(files).toHaveLength(1);await f.put(name,JSON.stringify({files}));}
+   expect(checkStandaloneTraceChunks(f.root)).toMatchObject({status:"PASS",tracesChecked:2,generatedChunksChecked:1,sourceBytesChecked:27,runtimeExecuted:false});
+   await writeFile(f.copy,"SOURCE_ONLY corrupt chunk");expect(()=>checkStandaloneTraceChunks(f.root)).toThrow("STANDALONE_COPIED_CHUNK_MISMATCH");
+  }finally{if(prior===undefined)delete process.env.NALANDA_STANDALONE_BUILD;else process.env.NALANDA_STANDALONE_BUILD=prior;vi.resetModules();await f.cleanup();}
+ });
  it.each(["MISSING_COPY","MISMATCH","MISSING_SOURCE","EMPTY_COPY","OVERSIZE_SOURCE","MISSING_TRACE","BAD_JSON","EMPTY_CHUNKS","OUTSIDE_ROOT","ABSOLUTE_ENTRY","COLON_CHUNK","DIRECTORY_COPY"])("refuses %s instead of treating compile success as artifact proof",async mode=>{
   const f=await fixture();let code="";
   try{
