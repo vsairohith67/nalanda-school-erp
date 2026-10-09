@@ -28,7 +28,7 @@ export function options(args: string[]) {
 function inside(child: string, root: string) { const r = path.relative(root, child); return r !== "" && !r.startsWith("..") && !path.isAbsolute(r); }
 function file(value: string) { assert(value && path.isAbsolute(value) && !lstatSync(value).isSymbolicLink() && lstatSync(value).isFile(), "NATIVE_TOOL_OR_PACKAGE_INVALID"); return realpathSync(value); }
 
-const processStages = new Set(["tool-version","package-metadata","android-install","android-uninstall","android-ui-command","ios-package-metadata","ios-architecture","xcode-version","ios-sdk-version","ios-inventory","ios-create-owned-target","ios-created-readback","ios-boot","ios-boot-readiness","ios-target-readback","ios-theme-read","ios-theme","ios-theme-readback","ios-build-ui-runner","ios-real-ui-journey","ios-dark-theme-read","ios-dark-theme","ios-dark-theme-readback","ios-dark-locked-layout","ios-final-locked-launch","ios-final-capture","ios-owned-shutdown","ios-shutdown-readback","ios-owned-delete","ios-cleanup-readback"]);
+const processStages = new Set(["tool-version","package-metadata","android-install","android-uninstall","android-ui-command","ios-package-metadata","ios-architecture","xcode-version","ios-sdk-version","ios-inventory","ios-create-owned-target","ios-created-readback","ios-boot","ios-boot-readiness","ios-target-readback","ios-theme-read","ios-theme","ios-theme-readback","ios-build-ui-runner","ios-real-ui-journey","ios-dark-theme-read","ios-dark-theme","ios-dark-theme-readback","ios-dark-locked-layout","ios-final-locked-launch","ios-final-capture","ios-cleanup-ownership-readback","ios-owned-shutdown","ios-shutdown-readback","ios-owned-delete","ios-cleanup-readback"]);
 export function androidSetupEvidence() {
   return {transport:false,emulator:false,ownedAvd:false,bootCompleted:false,api:null as number|null,abi:null as "x86_64"|"x86"|"arm64-v8a"|"armeabi-v7a"|"UNKNOWN"|null,minimumApi:null as number|null,packageCompatible:false,packageManagerResponsive:false,sandboxAbsent:false,installAttempts:0,installed:false};
 }
@@ -103,9 +103,11 @@ export async function verifyAppleAppearance(command:AppleCommand,serial:string,m
 }
 export async function cleanupAppleTarget(command:AppleCommand,serial:string,runtime:string,name:string,unsettled:()=>boolean) {
   ownedSimulatorId(serial);
-  const result={status:"UNRECONCILED",shutdownCommand:"NOT_EXECUTED",shutdownState:"NOT_OBSERVED",deleteCommand:"NOT_EXECUTED",finalState:"NOT_OBSERVED",cause:null as string|null};
+  const result={status:"UNRECONCILED",initialState:"NOT_OBSERVED",shutdownCommand:"NOT_EXECUTED",shutdownState:"NOT_OBSERVED",deleteCommand:"NOT_EXECUTED",finalState:"NOT_OBSERVED",cause:null as string|null};
   if(unsettled()){result.cause="CHILD_GROUP_UNRECONCILED";return result;}
-  try{await command("ios-owned-shutdown",["simctl","shutdown",serial]);result.shutdownCommand="PASS";}catch{result.shutdownCommand="FAILED";result.cause="IOS_SHUTDOWN_COMMAND_FAILED";}
+  try{result.initialState=appleOwnedState(JSON.parse(await command("ios-cleanup-ownership-readback",["simctl","list","devices","--json"])),serial,runtime,name);assert(result.initialState==="Booted" || result.initialState==="Shutdown","IOS_OWNED_STATE_UNVERIFIED");}catch{result.cause="IOS_CLEANUP_OWNERSHIP_UNVERIFIED";return result;}
+  if(unsettled()){result.cause="CHILD_GROUP_UNRECONCILED";return result;}
+  if(result.initialState==="Booted")try{await command("ios-owned-shutdown",["simctl","shutdown",serial]);result.shutdownCommand="PASS";}catch{result.shutdownCommand="FAILED";result.cause="IOS_SHUTDOWN_COMMAND_FAILED";}
   // A closed/failed shutdown child is not simulator state. Read the same owned ID
   // once; never issue a second shutdown or delete a still-booted/unknown target.
   if(unsettled()){result.cause="CHILD_GROUP_UNRECONCILED";return result;}

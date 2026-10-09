@@ -367,8 +367,17 @@ it.each(["READ_UNKNOWN","READ_CHILD_FAILED","WRITE_CHILD_FAILED","READBACK_MISMA
 });
 it.each(["PASS","CLOSED_SHUTDOWN_FAILED","STILL_BOOTED","UNSETTLED","DELETE_FAILED_ABSENT","DELETE_FAILED_PRESENT"])("separates owned simulator cleanup state from child closure: %s",async condition=>{
  const calls:string[]=[];let unsettled=condition==="UNSETTLED";
- const result=await cleanupAppleTarget(async stage=>{calls.push(stage);if(stage==="ios-owned-shutdown"&&condition==="CLOSED_SHUTDOWN_FAILED")throw Error(secret);if(stage==="ios-owned-delete"&&condition.startsWith("DELETE_FAILED"))throw Error(secret);if(stage==="ios-shutdown-readback")return JSON.stringify(ownedInventory(condition==="STILL_BOOTED"?"Booted":"Shutdown"));if(stage==="ios-cleanup-readback")return JSON.stringify(condition==="DELETE_FAILED_PRESENT"?ownedInventory("Shutdown"):{devices:{}});return "";},ownedId,ownedRuntime,ownedName,()=>unsettled);
+ const result=await cleanupAppleTarget(async stage=>{calls.push(stage);if(stage==="ios-cleanup-ownership-readback")return JSON.stringify(ownedInventory("Booted"));if(stage==="ios-owned-shutdown"&&condition==="CLOSED_SHUTDOWN_FAILED")throw Error(secret);if(stage==="ios-owned-delete"&&condition.startsWith("DELETE_FAILED"))throw Error(secret);if(stage==="ios-shutdown-readback")return JSON.stringify(ownedInventory(condition==="STILL_BOOTED"?"Booted":"Shutdown"));if(stage==="ios-cleanup-readback")return JSON.stringify(condition==="DELETE_FAILED_PRESENT"?ownedInventory("Shutdown"):{devices:{}});return "";},ownedId,ownedRuntime,ownedName,()=>unsettled);
  expect(result.status).toBe(["STILL_BOOTED","UNSETTLED","DELETE_FAILED_PRESENT"].includes(condition)?"UNRECONCILED":"VERIFIED");
  if(condition==="UNSETTLED")expect(calls).toEqual([]);else expect(calls.filter(c=>c==="ios-owned-shutdown")).toHaveLength(1);
  if(condition==="STILL_BOOTED")expect(calls).not.toContain("ios-owned-delete");if(condition==="CLOSED_SHUTDOWN_FAILED")expect(result).toMatchObject({shutdownCommand:"FAILED",shutdownState:"Shutdown",finalState:"ABSENT",cause:"IOS_SHUTDOWN_COMMAND_FAILED"});if(condition.startsWith("DELETE_FAILED"))expect(result.deleteCommand).toBe("FAILED");excluded(result);
+});
+it.each(["FOREIGN_NAME","FOREIGN_RUNTIME","DUPLICATE_ID","UNKNOWN_STATE","ABSENT"])("never mutates an unverified Apple cleanup target: %s",async condition=>{
+ let inventory:any=ownedInventory("Booted");if(condition==="FOREIGN_NAME")inventory=ownedInventory("Booted",secret);if(condition==="FOREIGN_RUNTIME")inventory={devices:{[runtimeId("26.2")]:inventory.devices[ownedRuntime]}};if(condition==="DUPLICATE_ID")inventory.devices[ownedRuntime].push({...inventory.devices[ownedRuntime][0]});if(condition==="UNKNOWN_STATE")inventory=ownedInventory(secret);if(condition==="ABSENT")inventory={devices:{}};
+ const calls:string[]=[];const result=await cleanupAppleTarget(async stage=>{calls.push(stage);return JSON.stringify(inventory);},ownedId,ownedRuntime,ownedName,()=>false);
+ expect(calls).toEqual(["ios-cleanup-ownership-readback"]);expect(result).toMatchObject({status:"UNRECONCILED",shutdownCommand:"NOT_EXECUTED",deleteCommand:"NOT_EXECUTED",cause:"IOS_CLEANUP_OWNERSHIP_UNVERIFIED"});excluded(result);
+});
+it("does not repeat shutdown for an already-shutdown verified owned target",async()=>{
+ const calls:string[]=[];const result=await cleanupAppleTarget(async stage=>{calls.push(stage);return JSON.stringify(stage==="ios-cleanup-readback"?{devices:{}}:ownedInventory("Shutdown"));},ownedId,ownedRuntime,ownedName,()=>false);
+ expect(result).toMatchObject({status:"VERIFIED",initialState:"Shutdown",shutdownCommand:"NOT_EXECUTED",shutdownState:"Shutdown",finalState:"ABSENT"});expect(calls).not.toContain("ios-owned-shutdown");
 });
