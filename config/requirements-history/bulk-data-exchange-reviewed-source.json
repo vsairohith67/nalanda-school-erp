@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "task": "BULK-DATA-EXCHANGE-UX-1A",
+  "sourceBase": "104aacc7bd314cae82e60bb02b5c8a965c7ffedd",
+  "historicalAuditSha256": "7fc97ccad26f949a1d2edb71e4f21829bba2fea01a1e2c77f4a0cc8665269254",
+  "changes": [
+    {
+      "path": "app/api/exam-marks/sheets/[assignmentId]/route.ts",
+      "previousSha256": "e7bc3f1d77e150b2eea954ccca2497ae9e8aca550b7754d42d6fa58621c024b8",
+      "sha256": "18bb453c77fd77184e86d63b087739af803365d135d1070ba7db70a797e68a7f"
+    },
+    {
+      "path": "app/api/export/[type]/route.ts",
+      "previousSha256": "7995298cc8782dfd7d067fba512e3744b3a3fd9fa40cfa90f42a9aa91c6b19f4",
+      "sha256": "cec01c7a5842c00f1f359e0fe541edaa63957750a21fcc01d159ec9c73230588"
+    },
+    {
+      "path": "app/api/import/students/route.ts",
+      "previousSha256": "b997e4544b56c584196d866b8f1bb058b327b713626c908bacbda7e4bffded80",
+      "sha256": "4a5c3414e4ae3b581087aa0ef72c432f8904486149d78c987304c75776fdcd4e"
+    },
+    {
+      "path": "app/api/marks/import/route.ts",
+      "previousSha256": "ec81acf05572edbde07d745bdf33b18fbbb6461e7749c9cbe4621dc8a7499870",
+      "sha256": "09f880d42e36eaae0b244b8506ff4b77fc84bb9ceceb882656659260f2cccb70"
+    },
+    {
+      "path": "app/api/marks/import/template/route.ts",
+      "previousSha256": "9d9205f7340edfe8d3ce7144307cd8c29a2e90f662259abf2153790304829588",
+      "sha256": "ac8ae1d8192bdc702581b2a641d7d732a881cdfa503e64ba69ecf36b957b809b"
+    },
+    {
+      "path": "app/api/onboarding/batches/route.ts",
+      "previousSha256": "fd3f0446bf20090409f09f52c9085da37cb775f29dbbdfbe3c841df99c10cb00",
+      "sha256": "1f8248711803503c54bf40eba801e4b16fd51e041c71a5e51831ed7750f67249"
+    },
+    {
+      "path": "app/import-export/page.tsx",
+      "previousSha256": "9d7692b19a08237a08a9111555630c7bee49d043badc7229474616af268cfdf3",
+      "sha256": "04cf413b23fe8bbc221678bed18f1c0c3d7695bbb6b06371cbb2251c17cbe1b4"
+    },
+    {
+      "path": "app/marks/governed/page.tsx",
+      "previousSha256": "419eaeb90d6c7b4b50f494a7bd42bf9505a94c72e3a9ad1ba52a9c9ab2a67227",
+      "sha256": "c8fb7a6f5244cf8dcfc8fef832395403fb08eb994c5c07730b2f39e83eecf233"
+    },
+    {
+      "path": "app/students/page.tsx",
+      "previousSha256": "141ebe67f9c00496e0fb8cca0d6e96c460e4ca1383e0a54fe74f9d565bf689fb",
+      "sha256": "56f03753d5472dcf8bde5a7d12dfeab4dcbbff73f6ea8716030645a7f8a2c429"
+    },
+    {
+      "path": "components/import-export.tsx",
+      "previousSha256": "c93655d7b6ee0416172bec06d3f87fae855143e288aa63d478eb38e138b7632a",
+      "sha256": "318e3a3c234c1ff8af445b97f22de493289c7630f107aaeed0a6b11ac381c997"
+    },
+    {
+      "path": "components/import-review-dialog.tsx",
+      "previousSha256": null,
+      "sha256": "fbeb8ae7370a23379f57d2b76edb44a9ab5a08ded48e0c98ac34e0cad932f63f"
+    },
+    {
+      "path": "components/import-row-errors.tsx",
+      "previousSha256": null,
+      "sha256": "04d1a50bae5c668ad4bcf68c449a55eef1f0e8ad31f2631a52c00bfcb9e66ba6"
+    },
+    {
+      "path": "components/marks-importer.tsx",
+      "previousSha256": "99a9f776e773662ee1b3104553320f8f68b6bcb5e631f0565bd045964076361a",
+      "sha256": "90bcfb01b343af428f4cc9d0b6ee08928b0312eac34ed4201f09b124695fb640"
+    },
+    {
+      "path": "components/onboarding-centre.tsx",
+      "previousSha256": "44012fdafc2d41fd8fe7eb54e9f107e7897a4611ea0c699fa82d0b009ba8a6c1",
+      "sha256": "bc5ffd56ed8311d113aa02c78940bb3184cdbe4517d6d892f618becec20c8194"
+    },
+    {
+      "path": "components/student-import-panel.tsx",
+      "previousSha256": "39e2f3b8603ac5bf2716a4fc0aa3f865c52f1a23cea3d443f791685233cdafcb",
+      "sha256": "df599d28b8f5db500fadaece48b3dfb250fa0f87d230ebe6f9da31580612c09e"
+    },
+    {
+      "path": "lib/exam-marks.ts",
+      "previousSha256": "d7c26262ec0da7809a01aa87868667decae2454b5fe10890675df556ec89bb6b",
+      "sha256": "d8c94421ac6ad119a9d2b77d261daf7f35bcf66e62fdb6085e8e8238ff7f38fc"
+    },
+    {
+      "path": "lib/governed-marks-import.ts",
+      "previousSha256": null,
+      "sha256": "d9cc3023bc5bff744602c3a21ea5adf1056f18ca843b1e35737fc879c7fd634c"
+    },
+    {
+      "path": "lib/import-preview-receipt.ts",
+      "previousSha256": null,
+      "sha256": "faa659f8b3936492e5f2c4c87ba8ad21b81d81d926d30461cc5ccf126be40a0b"
+    },
+    {
+      "path": "lib/import-request.ts",
+      "previousSha256": null,
+      "sha256": "d1a791eeb1b1a09b9f00ae235494f3947eb38b10e61167d8d7a3be96676bdd60"
+    },
+    {
+      "path": "lib/legacy-marks-import-context.ts",
+      "previousSha256": null,
+      "sha256": "09cc855c7a1b514c0df0127c4a68eea1e480d8e834ac3f54a1dcd88f17312ddc"
+    },
+    {
+      "path": "lib/marks-import-csv.ts",
+      "previousSha256": null,
+      "sha256": "92fead68827807f14e83deb3ceb1ec54d5bdbe1c93448bbea4c70d40e0594eb3"
+    },
+    {
+      "path": "lib/marks-import.ts",
+      "previousSha256": "2f4b6d3e729611d347f348137891146794ba3a285c02fdf8d98e61f0dcba2351",
+      "sha256": "66731465dbfeff47a05c442c2fd5d223cef0d3ea64b799af643815a1fad7c96f"
+    },
+    {
+      "path": "lib/onboarding-canonical-package.ts",
+      "previousSha256": null,
+      "sha256": "b0741245c21d3324dabd3d175093e56f57f6ef3c24fddac033bf7aa092c1a289"
+    },
+    {
+      "path": "lib/onboarding-source-package.ts",
+      "previousSha256": null,
+      "sha256": "a0291595a579e857ac89cfcf68d0a19e44b71f31f54cfd13fa50c087f6e2d75a"
+    },
+    {
+      "path": "lib/onboarding-upload.worker.ts",
+      "previousSha256": null,
+      "sha256": "e4acfa5b4c8f598adf2bc6be3e3a9498b7025a88adebe469d0f622bcacd4a2c5"
+    },
+    {
+      "path": "lib/onboarding-workbooks.ts",
+      "previousSha256": "b7f2eb5ff89798676443b6830f398763cd53eba9b76410fc3c515a274bfb2020",
+      "sha256": "d006ef3f25e568f84ee474cc8a6021716af50ff8e174e67799b3df11840d9b55"
+    },
+    {
+      "path": "lib/student-export-scope.ts",
+      "previousSha256": null,
+      "sha256": "a8f5605c9aeb6bfa84396fcdc5c70bb44a297b309bfd11065472780da9364ba6"
+    },
+    {
+      "path": "lib/student-import-contract.ts",
+      "previousSha256": null,
+      "sha256": "7639e3c1f3b2776c62f93c5034c5c594d6304315c7a3ec5e6adb82b1322127e8"
+    },
+    {
+      "path": "lib/student-import.ts",
+      "previousSha256": "3be1b08b336af0acfb8b3b8d79b70203269dc0e81588bd33435dbbd280506b57",
+      "sha256": "3a6a1f5e7ee3b40e2181f471c7f8e8c3dd608c056a24d557276ebb65c158e5f7"
+    },
+    {
+      "path": "lib/student-source.worker.ts",
+      "previousSha256": null,
+      "sha256": "024afef754064bac39889331ee7fc8c1adb0bfa0d3b970e49d7b8ff80ca45f04"
+    }
+  ],
+  "productionDependencyChanges": {
+    "next": {
+      "previous": "15.5.21",
+      "current": "15.5.24"
+    },
+    "sharp": {
+      "previous": "0.35.2",
+      "current": "0.35.4"
+    }
+  }
+}

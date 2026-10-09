@@ -146,11 +146,15 @@ function migrationInventory() {
   };
 }
 
+function maximumRestoreVersionFromSource(source) {
+  return Math.max(Number(source.match(/Number\(metadata\.backupVersion\)\s*>\s*(\d+)/)?.[1] ?? 0), ...[...source.matchAll(/Number\(metadata\.backupVersion\)\s*!==\s*(\d+)/g)].map((match) => Number(match[1])));
+}
+
 function backupContract() {
   const backupSource = readFileSync(path.join(workspaceRoot, "lib", "backup.ts"), "utf8");
   const restoreSource = readFileSync(path.join(workspaceRoot, "lib", "restore.ts"), "utf8");
   const backupVersion = Number(backupSource.match(/backupVersion:\s*(\d+)/)?.[1] ?? 0);
-  const maximumRestoreVersion = Number(restoreSource.match(/Number\(metadata\.backupVersion\)\s*>\s*(\d+)/)?.[1] ?? 0);
+  const maximumRestoreVersion = maximumRestoreVersionFromSource(restoreSource);
   return { backupVersion, maximumRestoreVersion, compatible: backupVersion > 0 && backupVersion === maximumRestoreVersion };
 }
 
@@ -202,7 +206,7 @@ function refInventory(ref) {
     migrations: migrationList,
     duplicateMigrationNames: normalizedMigrations.filter((entry, index) => normalizedMigrations.indexOf(entry) !== index),
     backupVersion: Number(backupSource.match(/backupVersion:\s*(\d+)/)?.[1] ?? 0),
-    restoreMaximumBackupVersion: Number(restoreSource.match(/Number\(metadata\.backupVersion\)\s*>\s*(\d+)/)?.[1] ?? 0),
+    restoreMaximumBackupVersion: maximumRestoreVersionFromSource(restoreSource),
     testFileCount: files.filter((file) => file.startsWith("tests/") && file.endsWith(".test.ts")).length,
     roles: extractStringArray(permissionsSource, "ROLES"),
     permissions: extractStringArray(permissionsSource, "PERMISSIONS"),

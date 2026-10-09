@@ -1,0 +1,15 @@
+{
+  "assignment": "NPS-OVERNIGHT-REPAIR-AND-PRODUCT-DELIVERY-1A",
+  "instructionSha256": "32bed8bcd9d8125e61f88527161f6835be0762f7863df8fb435eb71b7f401965",
+  "repository": "vsairohith67/nalanda-school-erp",
+  "pullRequest": 28,
+  "branch": "release/recovery-integration-1a",
+  "eventStartInclusiveUtc": "2026-10-08T19:02:43.000Z",
+  "eventEndExclusiveUtc": "2026-10-09T05:02:43.000Z",
+  "attempt": "1",
+  "policy": "RemoteSigned",
+  "policyScope": "Process",
+  "maximumStepMinutes": 120,
+  "shorterExistingJobCapsRetained": true,
+  "previousAllowancesRemainConsumed": true
+}

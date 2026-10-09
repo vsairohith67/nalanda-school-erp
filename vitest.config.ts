@@ -5,8 +5,9 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
-    // PDF rasterization and clean-install migration suites run concurrently
-    // with lightweight contract tests in the canonical full regression.
+    // Serialize hosted migration/PDF fixtures to avoid resource contention and
+    // overlapping timed-out database operations. Keep every test and timeout.
+    maxWorkers: process.env.CI === "true" ? 1 : 2,
     testTimeout: 15_000
   },
   resolve: {

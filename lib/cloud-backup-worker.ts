@@ -16,6 +16,7 @@ import {
 import { indiaDateKey, nextCloudBackupDueAt } from "@/lib/cloud-backup-schedules";
 import { verifyStoredCloudBackupArtifact } from "@/lib/cloud-backup-verification";
 import { CURRENT_CLOUD_BACKUP_VERSION } from "@/lib/cloud-backup-versions";
+import { incrementPortableMetric, portableLog } from "@/lib/portable-runtime/observability";
 
 const ACTIVE_RUN_STATUSES = [
   "PENDING", "CREATING_BACKUP", "VALIDATING", "COMPRESSING",
@@ -93,9 +94,10 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
     return existing;
   }
   let run = await prisma.cloudBackupRun.findUniqueOrThrow({ where: { id: runId }, include: { profile: true, schedule: true } });
-  const provider = createCloudBackupProvider(run.profile);
+  let provider: ReturnType<typeof createCloudBackupProvider> | undefined;
   let safeStage = "PROVIDER_HEALTH";
   try {
+    provider = createCloudBackupProvider(run.profile);
     if (run.profile.status !== "ACTIVE" || !allowedProviderProfile(run.profile)) {
       throw new Error("PROFILE_NOT_ACTIVE");
     }
@@ -119,13 +121,13 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
     const plaintext = Buffer.from(serializeBackup(backup), "utf8");
     const validated = parseAndValidateBackup(plaintext.toString("utf8"));
     if (validated.metadata.backupVersion !== CURRENT_CLOUD_BACKUP_VERSION) throw new Error("BACKUP_VERSION_INVALID");
-    await event(prisma, { profileId: run.profileId, runId, eventType: "BACKUP_VALIDATED", safeMetadataJson: JSON.stringify({ backupVersion: 45 }) });
+    await event(prisma, { profileId: run.profileId, runId, eventType: "BACKUP_VALIDATED", safeMetadataJson: JSON.stringify({ backupVersion: validated.metadata.backupVersion }) });
 
     await transition(prisma, runId, "VALIDATING", "COMPRESSING");
     await transition(prisma, runId, "COMPRESSING", "ENCRYPTING");
     safeStage = "BACKUP_ENCRYPTION";
     const encrypted = await encryptCloudBackup(plaintext, {
-      backupFormatVersion: 36,
+      backupFormatVersion: validated.metadata.backupVersion,
       createdAt: generatedAt,
       encryptionKeyVersion: run.profile.encryptionKeyVersion
     });
@@ -155,7 +157,7 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
       })
     } });
     await prisma.cloudBackupRun.update({ where: { id: runId }, data: {
-      sourceBackupVersion: 36,
+      sourceBackupVersion: validated.metadata.backupVersion,
       sourceGeneratedAt: generatedAt,
       sourcePlaintextSha256: encrypted.header.plaintextSha256,
       ciphertextSha256: encrypted.header.ciphertextSha256,
@@ -195,7 +197,7 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
     await verification(prisma, runId, artifact.id, "PLAINTEXT_HASH", "PASSED", "Decrypted exact-byte SHA-256 matches the validated source.");
     const readbackBackup = parseAndValidateBackup(decrypted.plaintext.toString("utf8"));
     if (readbackBackup.metadata.backupVersion !== CURRENT_CLOUD_BACKUP_VERSION) throw new Error("BACKUP_SCHEMA_INVALID");
-    await verification(prisma, runId, artifact.id, "BACKUP_SCHEMA", "PASSED", "Read-back payload is a supported Nalanda backup version 45.");
+    await verification(prisma, runId, artifact.id, "BACKUP_SCHEMA", "PASSED", `Read-back payload is a supported Nalanda backup version ${readbackBackup.metadata.backupVersion}.`);
     await verification(prisma, runId, artifact.id, "RESTORE_COMPATIBILITY", "PASSED", "Backup passed schema and link validation required before restore rehearsal.");
 
     const completedAt = new Date();
@@ -207,6 +209,8 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
       } })] : [])
     ]);
     await event(prisma, { profileId: run.profileId, scheduleId: run.scheduleId, runId, artifactId: artifact.id, eventType: "BACKUP_VERIFIED" });
+    incrementPortableMetric("nalanda_backup_success_total");
+    portableLog("info", "PORTABLE_BACKUP_VERIFIED", { command: "backup", result: "VERIFIED" });
   } catch (error) {
     const providerFailure = safeProviderError(error);
     const runtimeErrorCode = error && typeof error === "object" && "code" in error &&
@@ -219,7 +223,7 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
         ? providerFailure.code
         : `${safeStage}${runtimeErrorCode ? `_${runtimeErrorCode}` : ""}_FAILED`;
     const safeMessage = code === providerFailure.code ? providerFailure.safeMessage : safeFailureMessage(code);
-    const retryable = provider.classifyRetryability(error) || providerFailure.retryable;
+    const retryable = provider?.classifyRetryability(error) || providerFailure.retryable;
     const current = await prisma.cloudBackupRun.findUnique({ where: { id: runId } });
     const nextRetryAt = retryable && current && current.retryCount < run.profile.maximumRetryCount
       ? new Date(Date.now() + Math.min(60, 5 * 2 ** current.retryCount) * 60_000)
@@ -231,6 +235,8 @@ export async function executeCloudBackupRun(prisma: PrismaClient, runId: string)
     if (run.scheduleId) await prisma.cloudBackupSchedule.update({ where: { id: run.scheduleId }, data: { consecutiveFailureCount: { increment: 1 } } });
     await event(prisma, { profileId: run.profileId, scheduleId: run.scheduleId, runId, eventType: "BACKUP_FAILED", reason: code });
     if (nextRetryAt) await event(prisma, { profileId: run.profileId, runId, eventType: "BACKUP_RETRY_SCHEDULED", safeMetadataJson: JSON.stringify({ retryAt: nextRetryAt.toISOString() }) });
+    incrementPortableMetric("nalanda_backup_failure_total");
+    portableLog("error", "PORTABLE_BACKUP_FAILED", { command: "backup", result: "FAILED" });
   }
   return prisma.cloudBackupRun.findUniqueOrThrow({ where: { id: runId }, include: { artifacts: true, verifications: true } });
 }

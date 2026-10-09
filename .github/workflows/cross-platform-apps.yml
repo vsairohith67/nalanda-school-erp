@@ -17,6 +17,10 @@ on:
       - "lib/security-resilience.ts"
       - "lib/trusted-client.ts"
       - "scripts/harden-cross-platform-generated-project.mjs"
+      - "scripts/portable/native-minimum-compile.mjs"
+      - "scripts/portable/qa-native-profile-compile.ts"
+      - "scripts/qa-ux-native-screen-content.ts"
+      - "tests/bulk-ci-runtime.test.ts"
       - "config/release-feature-flags.json"
       - ".env.example"
       - "package.json"
@@ -24,6 +28,15 @@ on:
       - "pnpm-workspace.yaml"
       - ".github/workflows/cross-platform-apps.yml"
   workflow_dispatch:
+    inputs:
+      connected_native_evidence:
+        description: Produce private connected QA evidence only with an already admitted controller and disposable target
+        type: boolean
+        default: false
+      connected_windows_acceptance:
+        description: Run connected WD1-WD5 only with admitted same-run artifacts and an authorised disposable private Windows environment
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -37,6 +50,51 @@ env:
   NALANDA_NATIVE_PROFILE: "NO_REMOTE_SERVER_CONFIGURED"
 
 jobs:
+  native-evidence:
+    name: Same-run private Windows QA artifact evidence
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.connected_native_evidence || inputs.connected_windows_acceptance) && github.ref == 'refs/heads/release/recovery-integration-1a' }}
+    runs-on: windows-2025
+    timeout-minutes: 50
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      EXPECTED_SHA: ${{ github.sha }}
+      PORTABLE_CI_EXCEPTION: OWNER_AUTHORIZED
+      RUSTUP_TOOLCHAIN: "1.97.1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ github.sha }}", fetch-depth: 0, persist-credentials: false }
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0 }
+      - run: pnpm install --frozen-lockfile
+      - run: rustup toolchain install 1.97.1 --profile minimal
+      - run: cargo install cargo-audit --version 0.22.2 --locked
+      # This hook consumes an already authorised private environment. It does
+      # not provision a controller, tunnel, user profile, CA or SSH credential.
+      - name: Produce exact private QA bytes and controller-sealed evidence
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $inputRoot = Join-Path $env:RUNNER_TEMP 'nalanda-native-admission'
+          pnpm exec tsx scripts/portable/build-native-qa.ts (Join-Path $inputRoot 'inputs') (Join-Path $inputRoot 'transport.json')
+      - name: Execute the admitted connected Windows journey
+        if: ${{ inputs.connected_windows_acceptance }}
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $recipe = Join-Path $env:RUNNER_TEMP 'nalanda-native-admission/windows-connected.json'
+          Get-Content -Raw -LiteralPath $recipe | pnpm exec tsx scripts/portable/integrated-acceptance.ts --windows
+      - name: Clean only owned same-run native outputs
+        if: always()
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $transport = Join-Path $env:RUNNER_TEMP 'nalanda-native-admission/transport.json'
+          if (Test-Path -LiteralPath $transport) { pnpm exec tsx scripts/portable/build-native-qa.ts --cleanup $transport }
+      # No upload-artifact or native-output cache, even for a private repository.
   contracts:
     name: TypeScript, contracts and bundled shell
     runs-on: windows-2025
@@ -61,6 +119,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with: { version: 11.21.0 }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -95,13 +154,44 @@ jobs:
           pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
           Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db
       - run: pnpm git:safety-check
-      - run: pnpm audit --ignore-registry-errors --prod --audit-level high
+      - run: pnpm audit --prod --audit-level high
       - run: pnpm security:resilience:acceptance
       - name: Route and lifecycle inventory
         run: |
           pnpm routes:list
           pnpm lifecycle:backfill
-      - run: pnpm test
+      - name: Prepare bounded Windows QA reliability evidence
+        id: qa_reliability_prepare
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts qa-prepare
+      - name: Verify the bounded overnight publication event
+        id: overnight_windows_context
+        run: node scripts/portable/windows-qa-window.mjs
+      - name: Full ERP regression in the explicitly approved PR28 process context
+        # PR28-only process environment; no machine/GPO policy or other PR context.
+        timeout-minutes: 120
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          NALANDA_QA_RELIABILITY_TRACE_DIR: tmp/ci-service-traces/qa-reliability
+          PSExecutionPolicyPreference: ${{ steps.overnight_windows_context.outputs.policy }}
+        run: pnpm test
+      - name: Finalize bounded Windows QA reliability evidence after success or failure
+        id: qa_reliability_finalize
+        if: always() && steps.qa_reliability_prepare.outcome == 'success'
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts qa-finalize
+      - name: Retain only validated Windows QA reliability projection
+        if: always() && steps.qa_reliability_finalize.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-qa-reliability-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            tmp/ci-qa-reliability-public/qa-reliability.json
+            tmp/ci-qa-reliability-public/manifest.json
       - name: Migration and restore-twice acceptance
         run: |
           pnpm migration:inventory
@@ -120,10 +210,13 @@ jobs:
     name: Unsigned Windows NSIS compiler gate
     runs-on: windows-2025
     timeout-minutes: 45
+    env:
+      RUSTUP_TOOLCHAIN: "1.97.1"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with: { version: 11.21.0 }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -133,8 +226,10 @@ jobs:
       - name: Record Windows compiler environment
         shell: pwsh
         run: node --version; pnpm --version; rustc --version; cargo --version; Get-ComputerInfo -Property WindowsProductName,WindowsVersion,OsArchitecture
-      - run: pnpm app:rust:test
-      - run: pnpm app:windows:build
+      - name: Run unchanged Windows compiler gates with prepared signed dependency inputs
+        # pnpm app:rust:test --locked, then the separate QA-profile check,
+        # then pnpm app:windows:build -- --locked; same toolchain and job cap.
+        run: node scripts/portable/windows-compiler-ci.mjs
       - name: Write Windows package checksum
         shell: pwsh
         run: Get-ChildItem apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/*.exe | Get-FileHash -Algorithm SHA256 | ForEach-Object { "$($_.Hash) *$([IO.Path]::GetFileName($_.Path))" } | Set-Content apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/SHA256SUMS.txt
@@ -143,6 +238,7 @@ jobs:
         working-directory: apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis
         run: Get-Content SHA256SUMS.txt | ForEach-Object { $parts = $_ -split ' \*', 2; if ((Get-FileHash -Algorithm SHA256 -LiteralPath $parts[1]).Hash -ne $parts[0]) { throw "Windows package checksum mismatch" } }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ github.event.repository.private == true }}
         with:
           name: unsigned-windows-nsis
           path: |
@@ -150,15 +246,24 @@ jobs:
             apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-package-checksums
+          path: apps/nalanda-cross-platform/src-tauri/target/release/bundle/nsis/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
 
   android:
     name: Android debug build and emulator UX gate
     runs-on: ubuntu-24.04
     timeout-minutes: 80
+    env:
+      RUSTUP_TOOLCHAIN: "1.97.1"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with: { version: 11.21.0 }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -205,7 +310,7 @@ jobs:
       - name: Record Android compiler environment
         run: node --version && pnpm --version && rustc --version && cargo --version && java -version && "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --version
       - run: pnpm app:android:init
-      - run: pnpm app:android:build
+      - run: pnpm app:android:build -- --locked
       - name: Reclaim packaged Android build intermediates
         shell: bash
         run: |
@@ -244,81 +349,46 @@ jobs:
           printf 'POST_PACKAGE_RECLAIMED_KIB=%s\n' "$((disk_after_kib - disk_before_kib))" | tee -a "$capacity_log"
           df -Pk . "$RUNNER_TEMP" | tee -a "$capacity_log"
           for packaged_apk in "${packaged_apks[@]}"; do test -f "$packaged_apk"; done
-      - name: Exercise the packaged app in an Android emulator
+      - name: Execute the finite no-remote journey in the owned Android emulator
         shell: bash
         run: |
           set -euo pipefail
-          export ANDROID_AVD_HOME="$RUNNER_TEMP/px1a-avd"
-          mkdir -p tmp/platform-review "$ANDROID_AVD_HOME"
+          export ANDROID_AVD_HOME="$RUNNER_TEMP/native-1b-avd"
+          mkdir -p "$ANDROID_AVD_HOME" tmp/platform-review
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           AVDMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
           ADB="$ANDROID_HOME/platform-tools/adb"
           "$SDKMANAGER" "platform-tools" "emulator" "system-images;android-35;google_apis;x86_64"
-          test -x "$ADB"
-          echo no | "$AVDMANAGER" create avd --force --name px1a_phone --package "system-images;android-35;google_apis;x86_64" --device "pixel_6"
-          test -f "$ANDROID_AVD_HOME/px1a_phone.ini"
-          df -Pk . "$RUNNER_TEMP" | tee -a tmp/platform-review/android-runner-capacity.txt
-          "$ANDROID_HOME/emulator/emulator" -list-avds | grep -Fx px1a_phone
+          echo no | "$AVDMANAGER" create avd --name native_1b_phone --package "system-images;android-35;google_apis;x86_64" --device pixel_6
           if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
-          EMULATOR_LOG="$RUNNER_TEMP/px1a-emulator.log"
-          nohup "$ANDROID_HOME/emulator/emulator" -avd px1a_phone -no-window -noaudio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > "$EMULATOR_LOG" 2>&1 &
-          if ! timeout 240 "$ADB" wait-for-device; then
-            cat "$EMULATOR_LOG"
-            exit 1
-          fi
-          adb_cmd() { timeout 60 "$ADB" "$@"; }
+          "$ANDROID_HOME/emulator/emulator" -avd native_1b_phone -port 5580 -no-window -noaudio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > "$RUNNER_TEMP/native-1b-emulator.log" 2>&1 &
+          EMULATOR_PID=$!
+          # Stop only this invocation's owned emulator, never the shared ADB server.
+          trap 'kill "$EMULATOR_PID" 2>/dev/null || true; wait "$EMULATOR_PID" 2>/dev/null || true' EXIT
+          timeout 240 "$ADB" -s emulator-5580 wait-for-device
+          ready=0
           for attempt in $(seq 1 90); do
-            if [ "$(adb_cmd shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then break; fi
-            if [ "$attempt" = "90" ]; then cat "$EMULATOR_LOG"; exit 1; fi
+            if [ "$(timeout 10 "$ADB" -s emulator-5580 shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; then ready=1; break; fi
             sleep 2
           done
-          APK_PATH="$(find apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk -type f -name '*.apk' | head -n 1)"
-          test -n "$APK_PATH"
-          adb_cmd install -r "$APK_PATH"
-          PACKAGE="com.nalandaps.erp"
-          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          sleep 4
-          adb_cmd shell dumpsys activity activities > tmp/platform-review/android-activity-state.txt
-          grep -E -m1 '(topResumedActivity=|ResumedActivity:|mResumedActivity:)' tmp/platform-review/android-activity-state.txt | grep -F "$PACKAGE"
-          adb_cmd shell uiautomator dump /sdcard/px1a-window.xml
-          adb_cmd pull /sdcard/px1a-window.xml tmp/platform-review/android-window.xml
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-phone-portrait.png
-          cat tmp/platform-review/android-window.xml
-          if ! grep -Eq 'Nalanda|Welcome back|App PIN' tmp/platform-review/android-window.xml; then
-            grep -F 'android.webkit.WebView' tmp/platform-review/android-window.xml
-          fi
-          adb_cmd shell input tap 540 900
-          sleep 1
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-soft-keyboard.png
-          adb_cmd shell settings put system accelerometer_rotation 0
-          adb_cmd shell settings put system user_rotation 1
-          sleep 2
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-landscape.png
-          adb_cmd shell input keyevent KEYCODE_HOME
-          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          adb_cmd shell input keyevent KEYCODE_BACK
-          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          adb_cmd shell am force-stop "$PACKAGE"
-          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          adb_cmd shell am start -W -a android.intent.action.VIEW -d 'nalandaps-erp://auth/callback?code=invalid&state=invalid&request_id=invalid'
-          adb_cmd shell wm size 1280x800
-          adb_cmd shell wm density 160
-          adb_cmd shell settings put system user_rotation 0
-          sleep 2
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-tablet.png
-          adb_cmd shell svc wifi disable
-          adb_cmd shell svc data disable || true
-          adb_cmd shell am force-stop "$PACKAGE"
-          adb_cmd shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-          sleep 2
-          adb_cmd exec-out screencap -p > tmp/platform-review/android-synthetic-offline.png
-          adb_cmd shell svc wifi enable
-          adb_cmd shell svc data enable || true
-          adb_cmd shell wm size reset
-          adb_cmd shell wm density reset
-          adb_cmd logcat -d -t 800 AndroidRuntime:E '*:S' > tmp/platform-review/android-runtime-errors.txt || true
-          if grep -F "$PACKAGE" tmp/platform-review/android-runtime-errors.txt; then cat tmp/platform-review/android-runtime-errors.txt; exit 1; fi
-          printf '%s\n' 'SYNTHETIC UX EVIDENCE ONLY - NO REAL RECORDS' > tmp/platform-review/ANDROID-SYNTHETIC.txt
+          test "$ready" = 1
+          # Use the packaging tool already installed for this generated build.
+          AAPT="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name aapt | sort -V | tail -n 1)"
+          test -x "$AAPT"
+          apk_root=apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk
+          APK_PATH="$(python3 - "$AAPT" "$apk_root" <<'PY'
+          import pathlib,subprocess,sys
+          matches=[]
+          for p in pathlib.Path(sys.argv[2]).rglob('*.apk'):
+              data=subprocess.check_output([sys.argv[1],'dump','badging',str(p)],text=True)
+              if "package: name='com.nalandaps.erp'" in data and 'application-debuggable' in data and "'x86_64'" in data: matches.append(p.resolve())
+          if len(matches)!=1: raise SystemExit('ANDROID_EXACT_X86_PACKAGE_NOT_UNIQUE')
+          print(matches[0])
+          PY
+          )"
+          APK_SHA="$(sha256sum "$APK_PATH" | cut -d ' ' -f1)"
+          node node_modules/tsx/dist/cli.mjs apps/nalanda-cross-platform/tests/native/execute.ts --mode execute --platform ANDROID --package "$APK_PATH" --sha256 "$APK_SHA" --serial emulator-5580 --tool "$ADB" --metadata-tool "$AAPT" --output "$RUNNER_TEMP/native-1b-android" > tmp/platform-review/native-1b-android-summary.json
+          cat tmp/platform-review/native-1b-android-summary.json
       - name: Write Android package checksums
         working-directory: apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk
         run: find . -type f -name '*.apk' -exec sha256sum {} \; > SHA256SUMS.txt
@@ -326,6 +396,7 @@ jobs:
         working-directory: apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk
         run: sha256sum --check SHA256SUMS.txt
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ github.event.repository.private == true }}
         with:
           name: unsigned-android-debug-apk
           path: |
@@ -334,21 +405,38 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-package-checksums
+          path: apps/nalanda-cross-platform/src-tauri/gen/android/app/build/outputs/apk/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
-          name: synthetic-android-emulator-ux
-          path: tmp/platform-review/android-*
+          name: native-1b-android-summary
+          path: tmp/platform-review/native-1b-android-summary.json
           if-no-files-found: error
+          retention-days: 7
+      - name: Retain bounded native child diagnostics only in private repositories
+        if: ${{ always() && github.event.repository.private == true }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-1b-android-private-process-diagnostics
+          path: ${{ runner.temp }}/native-1b-android/process-*
+          if-no-files-found: warn
           retention-days: 7
 
   ios:
     name: iOS simulator build and shared UI gate
     runs-on: macos-15
     timeout-minutes: 70
+    env:
+      RUSTUP_TOOLCHAIN: "1.97.1"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with: { version: 11.21.0 }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -359,36 +447,33 @@ jobs:
       - name: Record iOS compiler environment
         run: node --version && pnpm --version && rustc --version && cargo --version && xcodebuild -version && xcrun --sdk iphonesimulator --show-sdk-version
       - run: pnpm app:ios:init
-      - run: pnpm app:rust:test
-      - run: pnpm app:ios:build
-      - name: Exercise the packaged app in iPhone and iPad simulators
+      - run: pnpm app:rust:test --locked
+      - run: pnpm app:ios:build -- --locked
+      - name: Execute the finite no-remote journey in owned iPhone and iPad simulators
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p tmp/platform-review
-          APP_PATH="$(find apps/nalanda-cross-platform/src-tauri/gen/apple/build -type d -name '*.app' | head -n 1)"
-          test -n "$APP_PATH"
-          xcrun simctl list devices available -j > "$RUNNER_TEMP/px1a-devices.json"
-          IPHONE_UDID="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next(x["udid"] for xs in d["devices"].values() for x in xs if x.get("isAvailable") and x["name"].startswith("iPhone")))' "$RUNNER_TEMP/px1a-devices.json")"
-          IPAD_UDID="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next(x["udid"] for xs in d["devices"].values() for x in xs if x.get("isAvailable") and x["name"].startswith("iPad")))' "$RUNNER_TEMP/px1a-devices.json")"
-          for UDID in "$IPHONE_UDID" "$IPAD_UDID"; do
-            xcrun simctl boot "$UDID" 2>/dev/null || true
-            xcrun simctl bootstatus "$UDID" -b
-            xcrun simctl install "$UDID" "$APP_PATH"
-            xcrun simctl launch --terminate-running-process "$UDID" com.nalandaps.erp
-            sleep 3
-            xcrun simctl io "$UDID" screenshot "tmp/platform-review/ios-synthetic-$UDID-light.png"
-            xcrun simctl ui "$UDID" appearance dark
-            xcrun simctl launch --terminate-running-process "$UDID" com.nalandaps.erp
-            sleep 2
-            xcrun simctl io "$UDID" screenshot "tmp/platform-review/ios-synthetic-$UDID-dark.png"
-            xcrun simctl openurl "$UDID" 'nalandaps-erp://auth/callback?code=invalid&state=invalid&request_id=invalid'
-            xcrun simctl terminate "$UDID" com.nalandaps.erp
-            xcrun simctl launch "$UDID" com.nalandaps.erp
+          APP_PATH="$(python3 - <<'PY'
+          import pathlib
+          matches=list(pathlib.Path('apps/nalanda-cross-platform/src-tauri/gen/apple/build').rglob('*.app'))
+          if len(matches)!=1: raise SystemExit('IOS_EXACT_SIMULATOR_PACKAGE_NOT_UNIQUE')
+          print(matches[0].resolve())
+          PY
+          )"
+          APP_SHA="$(node node_modules/tsx/dist/cli.mjs -e 'import {packageDigest} from "./apps/nalanda-cross-platform/tests/native/execute.ts"; console.log(packageDigest(process.argv[1]))' "$APP_PATH")"
+          native_status=0
+          for kind in phone tablet; do
+            if node node_modules/tsx/dist/cli.mjs apps/nalanda-cross-platform/tests/native/execute.ts --mode execute --platform IOS --target-kind "$kind" --package "$APP_PATH" --sha256 "$APP_SHA" --tool /usr/bin/xcrun --metadata-tool /usr/bin/xcodebuild --output "$RUNNER_TEMP/native-1b-ios-$kind" > "tmp/platform-review/native-1b-ios-$kind-summary.json"; then
+              :
+            else
+              native_status=1
+            fi
+            if ! cat "tmp/platform-review/native-1b-ios-$kind-summary.json" 2>/dev/null; then
+              native_status=1
+            fi
           done
-          printf '%s\n' 'SYNTHETIC UX EVIDENCE ONLY - NO REAL RECORDS' > tmp/platform-review/IOS-SYNTHETIC.txt
-          xcrun simctl shutdown "$IPHONE_UDID" || true
-          xcrun simctl shutdown "$IPAD_UDID" || true
+          exit "$native_status"
       - name: Write iOS simulator checksums
         working-directory: apps/nalanda-cross-platform/src-tauri/gen/apple/build
         run: find . -type f ! -name 'SHA256SUMS.txt' -exec shasum -a 256 {} \; > SHA256SUMS.txt
@@ -396,6 +481,7 @@ jobs:
         working-directory: apps/nalanda-cross-platform/src-tauri/gen/apple/build
         run: shasum -a 256 --check SHA256SUMS.txt
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ github.event.repository.private == true }}
         with:
           name: unsigned-ios-simulator
           path: apps/nalanda-cross-platform/src-tauri/gen/apple/build
@@ -403,7 +489,141 @@ jobs:
           retention-days: 7
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: synthetic-ios-simulator-ux
-          path: tmp/platform-review/ios-*
+          name: ios-package-checksums
+          path: apps/nalanda-cross-platform/src-tauri/gen/apple/build/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: native-1b-ios-summary
+          path: tmp/platform-review/native-1b-ios-*-summary.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain bounded native child diagnostics only in private repositories
+        if: ${{ always() && github.event.repository.private == true }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-1b-ios-private-process-diagnostics
+          path: ${{ runner.temp }}/native-1b-ios-*/process-*
+          if-no-files-found: warn
+          retention-days: 7
+
+
+  minimum-windows:
+    name: Draft Rust 1.90 Windows production and QA tests
+    runs-on: windows-2025
+    timeout-minutes: 50
+    env:
+      RUSTUP_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-rustup
+      CARGO_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-cargo
+      CARGO_TARGET_DIR: ${{ github.workspace }}/tmp/nalanda-minimum-target
+      RUSTUP_TOOLCHAIN: "1.90.0"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ github.event.pull_request.head.sha || github.sha }}", fetch-depth: 0 }
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0 }
+      - run: pnpm install --frozen-lockfile
+      - run: rustup toolchain install 1.90.0 --profile minimal --no-self-update
+      - run: node scripts/portable/native-minimum-compile.mjs x86_64-pc-windows-msvc
+      - name: Minimum QA unit tests and unchanged compiler-refusal controls
+        run: pnpm exec tsx scripts/portable/qa-native-profile-compile.ts --minimum-test
+
+  minimum-linux:
+    name: Draft Rust 1.90 Linux ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-24.04, target: x86_64-unknown-linux-gnu }
+          - { runner: ubuntu-24.04-arm, target: aarch64-unknown-linux-gnu }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      RUSTUP_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-rustup
+      CARGO_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-cargo
+      CARGO_TARGET_DIR: ${{ github.workspace }}/tmp/nalanda-minimum-target
+      RUSTUP_TOOLCHAIN: "1.90.0"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ github.event.pull_request.head.sha || github.sha }}", fetch-depth: 0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0 }
+      - name: Native GTK and WebKit compiler prerequisites on the disposable runner
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev librsvg2-dev libayatana-appindicator3-dev
+      - run: rustup toolchain install 1.90.0 --profile minimal --no-self-update --target ${{ matrix.target }}
+      - run: node scripts/portable/native-minimum-compile.mjs ${{ matrix.target }}
+
+  minimum-macos:
+    name: Draft Rust 1.90 macOS ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: macos-15-intel, target: x86_64-apple-darwin }
+          - { runner: macos-15, target: aarch64-apple-darwin }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      RUSTUP_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-rustup
+      CARGO_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-cargo
+      CARGO_TARGET_DIR: ${{ github.workspace }}/tmp/nalanda-minimum-target
+      RUSTUP_TOOLCHAIN: "1.90.0"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ github.event.pull_request.head.sha || github.sha }}", fetch-depth: 0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0 }
+      - run: rustup toolchain install 1.90.0 --profile minimal --no-self-update --target ${{ matrix.target }}
+      - run: xcodebuild -version
+      - run: node scripts/portable/native-minimum-compile.mjs ${{ matrix.target }}
+
+  minimum-android:
+    name: Draft Rust 1.90 Android ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [aarch64-linux-android, armv7-linux-androideabi, i686-linux-android, x86_64-linux-android]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      RUSTUP_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-rustup
+      CARGO_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-cargo
+      CARGO_TARGET_DIR: ${{ github.workspace }}/tmp/nalanda-minimum-target
+      RUSTUP_TOOLCHAIN: "1.90.0"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ github.event.pull_request.head.sha || github.sha }}", fetch-depth: 0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0 }
+      - run: rustup toolchain install 1.90.0 --profile minimal --no-self-update --target ${{ matrix.target }}
+      - name: Use the hosted runner's installed NDK for API 28 compiler checks
+        run: node scripts/portable/native-minimum-compile.mjs ${{ matrix.target }}
+
+  minimum-ios:
+    name: Draft Rust 1.90 iOS ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: macos-15, target: aarch64-apple-ios }
+          - { runner: macos-15, target: aarch64-apple-ios-sim }
+          - { runner: macos-15-intel, target: x86_64-apple-ios }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      RUSTUP_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-rustup
+      CARGO_HOME: ${{ github.workspace }}/tmp/nalanda-minimum-cargo
+      CARGO_TARGET_DIR: ${{ github.workspace }}/tmp/nalanda-minimum-target
+      RUSTUP_TOOLCHAIN: "1.90.0"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ github.event.pull_request.head.sha || github.sha }}", fetch-depth: 0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24.19.0 }
+      - run: rustup toolchain install 1.90.0 --profile minimal --no-self-update --target ${{ matrix.target }}
+      - run: xcodebuild -version && xcrun --sdk iphoneos --show-sdk-version && xcrun --sdk iphonesimulator --show-sdk-version
+      - run: node scripts/portable/native-minimum-compile.mjs ${{ matrix.target }}

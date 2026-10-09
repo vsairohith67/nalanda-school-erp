@@ -8,11 +8,16 @@ import { generateFullBackup } from "../lib/backup";
 import { parseAndValidateBackup } from "../lib/restore";
 import { restoreValidatedBackup } from "../lib/restore-database";
 import type { IamActor } from "../lib/iam/security";
+import { createPersistedSession } from "../lib/auth-sessions";
+import { randomBytes } from "node:crypto";
 
 const RESTORE_URL = process.env.IMPORT1A_RESTORE_DATABASE_URL;
 const QA_PASSWORD = process.env.IMPORT1A_QA_PASSWORD || "Import1a-QA-Only!2026";
 const PREFIX = `${process.env.IMPORT1A_FIXTURE_PREFIX || "IMPORT1A"}-${Date.now()}`;
 if (!RESTORE_URL) throw new Error("IMPORT1A_RESTORE_DATABASE_URL_REQUIRED");
+// This harness already requires empty synthetic source/restore databases.
+// Its actors must exercise current persisted-session authority too.
+if (!process.env.AUTH_SECRET && !process.env.SESSION_SECRET) process.env.AUTH_SECRET = randomBytes(32).toString("hex");
 
 function invariant(value: unknown, code: string): asserts value {
   if (!value) throw new Error(code);
@@ -81,7 +86,7 @@ async function main() {
 
     const backup = parseAndValidateBackup(await generateFullBackup(source as never, { generatedBy: "IMPORT1A copied database QA" }));
     const serialized = JSON.stringify(backup);
-    invariant(backup.metadata.backupVersion === 45 && backup.onboardingBatches.length === 2, "IMPORT1A_BACKUP_METADATA_MISSING");
+    invariant(backup.metadata.backupVersion === 48 && backup.onboardingBatches.length === 2, "IMPORT1A_BACKUP_METADATA_MISSING");
     invariant(!serialized.includes("private-workbook") && !serialized.includes(QA_PASSWORD) && !serialized.includes("Copied database synthetic execution proof"), "IMPORT1A_BACKUP_PRIVATE_VALUE_LEAK");
 
     const targetActor = await ensureRestoreActor(target);
@@ -121,7 +126,8 @@ async function createActors(client: PrismaClient) {
     const id = `${PREFIX}-${role.toLowerCase()}`;
     const user = await client.user.create({ data: { id, name: `${PREFIX} ${role}`, username: id.toLowerCase(), passwordHash, role, isActive: true, lifecycleStatus: "ACTIVE", designation: role } });
     const assignment = await client.userRoleAssignment.create({ data: { id: `${id}-assignment`, publicKey: `${PREFIX}-${role.toLowerCase()}-assignment`, userId: user.id, role, status: "ACTIVE", reason: "IMPORT1A copied-database synthetic actor", assignedByUserId: user.id, activeKey: `${user.id}:${role}` } });
-    result[role.toLowerCase()] = { sessionId: `${id}-session`, user: { id: user.id, name: user.name, username: user.username, email: user.email, designation: user.designation, role, roleAssignmentId: assignment.id, authorizationVersion: user.authorizationVersion, mustChangePassword: user.mustChangePassword, guardianId: null } };
+    const session = await createPersistedSession(client, user, new Headers());
+    result[role.toLowerCase()] = { sessionId: session.sessionId, user: { id: user.id, name: user.name, username: user.username, email: user.email, designation: user.designation, role, roleAssignmentId: assignment.id, authorizationVersion: user.authorizationVersion, mustChangePassword: user.mustChangePassword, guardianId: null } };
   }
   return result as { director: IamActor; principal: IamActor };
 }
@@ -197,7 +203,9 @@ async function runStressBatch(client: PrismaClient, actor: IamActor) {
   const batch = await client.onboardingBatch.create({ data: { bundleType: "COMBINED", uploadedByUserId: actor.user.id, originalFileNameHash: sha256(`${PREFIX}-STRESS`), storageKey: stored.storageKey, workbookSha256: stored.sha256, mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", byteSize: bytes.length, templateVersion: "1.0", schemaVersion: "IMPORT-1A-2026-08-10", purgeAfter: new Date(Date.now() + 24 * 60 * 60 * 1000), auditEvents: { create: { sequence: 1, eventType: "UPLOADED", newStatus: "UPLOADED", actorUserId: actor.user.id, evidenceHash: stored.sha256 } } } });
   const planned = await validateStoredBatch(client, batch.publicKey, actor.user.id);
   const expectedOutcomes = profile.students + profile.guardians + profile.staff + profile.students + profile.students * profile.enrollmentsPerStudent;
-  const issueCodes = Object.entries((planned.issues ?? []).reduce((counts: Record<string, number>, issue: any) => ({ ...counts, [issue.code]: (counts[issue.code] ?? 0) + 1 }), {})).sort((a,b) => b[1] - a[1]).slice(0, 8);
+  const issueCounts: Record<string, number> = {};
+  for (const issue of planned.issues ?? []) issueCounts[issue.code] = (issueCounts[issue.code] ?? 0) + 1;
+  const issueCodes = Object.entries(issueCounts).sort((a,b) => b[1] - a[1]).slice(0, 8);
   invariant(planned.status === "APPROVAL_REQUIRED" && planned.plan?.estimatedExecutionSize === expectedOutcomes && planned.plan?.blockingErrorCount === 0, `IMPORT1A_STRESS_PLAN_INVALID:${JSON.stringify({ status: planned.status, estimatedExecutionSize: planned.plan?.estimatedExecutionSize, blockingErrorCount: planned.plan?.blockingErrorCount, expectedOutcomes, issueCodes })}`);
   const approved = await approveOnboardingBatch(client, batch.publicKey, actor, approvalInput(planned));
   const input = { reason: "Copied database specified scale execution proof", reauthPassword: QA_PASSWORD, planHash: String(approved.planHash), workbookHash: approved.workbookHash, idempotencyKey: `${PREFIX.replaceAll("-", "")}STRESS001` };

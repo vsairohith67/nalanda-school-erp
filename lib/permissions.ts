@@ -14,6 +14,23 @@ export const ROLES = [
 export type Role = (typeof ROLES)[number];
 
 export const PERMISSIONS = [
+  "USE_INTELLIGENT_REPORTS",
+  "USE_IR_ACADEMIC",
+  "USE_IR_ATTENDANCE",
+  "USE_IR_FEES",
+  "EXPORT_INTELLIGENT_REPORTS",
+  "VIEW_PRIOR_YEAR_CONCESSIONS",
+  "PREPARE_PRIOR_YEAR_CONCESSIONS",
+  "VERIFY_PRIOR_YEAR_LIABILITIES",
+  "REVIEW_PRIOR_YEAR_CONCESSIONS",
+  "APPROVE_PRIOR_YEAR_CONCESSIONS",
+  "APPLY_PRIOR_YEAR_CONCESSIONS",
+  "REVERSE_PRIOR_YEAR_CONCESSIONS",
+  "VIEW_PRIOR_YEAR_INCOME",
+  "MANAGE_PRIOR_YEAR_INCOME",
+  "VIEW_EXACT_PRIOR_YEAR_INCOME",
+  "EXPORT_PRIOR_YEAR_CONCESSIONS",
+  "EXPORT_PRIOR_YEAR_INCOME",
   "VIEW_DASHBOARD",
   "VIEW_STUDENTS",
   "CREATE_STUDENTS",
@@ -588,6 +605,17 @@ export type PermissionGroup = {
 };
 
 export const PERMISSION_GROUPS: PermissionGroup[] = [
+  {
+    id: "intelligent-reports",
+    title: "Ask Nalanda — management reports",
+    permissions: [
+      { permission: "USE_INTELLIGENT_REPORTS", label: "Open Ask Nalanda", description: "Read-only management reports; selected management role and underlying domain authority are also required." },
+      { permission: "USE_IR_ACADEMIC", label: "Academic reports", description: "Permit issued-result threshold reporting within existing academic authority." },
+      { permission: "USE_IR_ATTENDANCE", label: "Attendance reports", description: "Permit attendance thresholds within existing attendance authority." },
+      { permission: "USE_IR_FEES", label: "Fee outstanding reports", description: "Permit current exact-term balances within existing finance authority." },
+      { permission: "EXPORT_INTELLIGENT_REPORTS", label: "Export Ask Nalanda", description: "Separately permit bounded formula-safe exports; underlying domain export permission is also required." }
+    ]
+  },
   {
     id: "dashboard",
     title: "Dashboard",
@@ -1382,6 +1410,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
 
 const directorPermissions = new Set<CanonicalPermission>(
   PERMISSIONS.filter((permission) => ![
+    "USE_INTELLIGENT_REPORTS", "USE_IR_ACADEMIC", "USE_IR_ATTENDANCE", "USE_IR_FEES", "EXPORT_INTELLIGENT_REPORTS",
     "MANAGE_ROLE_PERMISSIONS",
     "MANAGE_IAM_USERS",
     "MANAGE_PERMISSION_PROFILES",

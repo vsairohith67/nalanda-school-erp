@@ -1,0 +1,199 @@
+{
+  "task": "NPS-LAPTOP-LAB-D4",
+  "result": "D4_LAPTOP_CONSUMER_SOURCE_VALIDATED_EXECUTION_GATED",
+  "localOnly": true,
+  "unmerged": true,
+  "publicationClearance": "BLOCKED_PREEXISTING_SYNTHETIC_TEST_LITERAL",
+  "startingCommit": "81f34a89e906c5a132638c94ad1a5feb88b93ff5",
+  "startingTree": "cc3aabccc69fec2673697d3ee142b6199fba78d8",
+  "sourceCheckpoint": "be7bc8c2809e330bee8da7f07b2257464695906a",
+  "sourceCheckpointTree": "febce923c7e8e5ea2f7858050301ae8fff8cd261",
+  "reviewedReleaseCommit": "a48c077cf7d803fa2e690d4fed7d0a6421924f8b",
+  "reviewedReleaseTree": "d12b1745b376646fa5cba86bd9dea33a79cb9381",
+  "startedUtc": "2026-10-04T03:20:30.000Z",
+  "sourceValidationObservedThroughUtc": "2026-10-04T04:18:02.428Z",
+  "elapsedInterpretation": "Wall interval through observed validation; not active-hour or CPU attestation. Final closeout interval is in the local terminal record.",
+  "implementation": "CONNECTED_SOURCE_VALIDATED_CONDITIONAL_LIFECYCLE",
+  "profileApproval": "PENDING",
+  "artifactAdmission": "BLOCKED",
+  "actualErpExecution": "NOT_EXECUTED",
+  "runtimeEnforcement": [
+    "EXTERNAL_RUNTIME_BLOCKED",
+    "LOCAL_CONSUMER_PROFILE_NOT_AUTHORIZED",
+    "REAL_OPERATION_ADAPTER_UNAVAILABLE"
+  ],
+  "identity": {
+    "producer": "GENUINE_CI_SOURCE_RUN_ATTEMPT_EVIDENCE",
+    "consumer": "INDEPENDENT_LOCAL_LAPTOP_TOKEN",
+    "profileHashGrantsAuthority": false,
+    "hostedDefaultsPreserved": true
+  },
+  "ownership": {
+    "coordination": "READ_ONLY_OVERLAP_CHECKS_COMPLETE_NO_ACTIVE_SHARED_EDIT_FOUND",
+    "reservationTransferred": false,
+    "integrationApproved": false,
+    "futureSerialIntegrator": "EXISTING_TASK_A_RELEASE_LANE"
+  },
+  "validation": {
+    "focusedFinal": {
+      "tests": 62,
+      "passed": 62,
+      "failed": 0,
+      "independentlyRerun": true,
+      "durationMs": 25699.2747
+    },
+    "d1p": {
+      "tests": 35,
+      "passed": 35,
+      "failed": 0
+    },
+    "hostedPortable": {
+      "files": 4,
+      "tests": 93,
+      "passed": 93,
+      "failed": 0
+    },
+    "uniqueSourceTests": 190,
+    "narrowTypecheck": {
+      "state": "PASS",
+      "reviewerExit": 0,
+      "reviewerSeconds": 7.1903
+    },
+    "toolsCoreTypecheck": {
+      "state": "BLOCKED_PREEXISTING_LOCAL_NATIVE_DEPENDENCIES",
+      "exit": 2,
+      "missing": [
+        "@tauri-apps/api/core",
+        "@tauri-apps/plugin-stronghold"
+      ],
+      "diagnosticCodes": [
+        2307,
+        2307,
+        7006
+      ],
+      "startingSourceOverlay": "SAME_THREE_DIAGNOSTICS",
+      "flaggedNativeFilesUnchanged": true
+    },
+    "gitSafety": "PASS",
+    "publication": {
+      "state": "BLOCKED_PREEXISTING_SYNTHETIC_TEST_LITERAL",
+      "exit": 1,
+      "code": "SECRET_LIKE_CONTENT_REFUSED",
+      "path": "scripts/laptop-lab/container-persistence-helper.test.mjs",
+      "startingSourceUnchanged": true,
+      "checkerWeakened": false
+    },
+    "registration": {
+      "state": "PASS",
+      "files": 325,
+      "sourceHeads": 4,
+      "backupSourceContracts": 4,
+      "scopedPaths": 40,
+      "newExactEntries": 38,
+      "updatedSharedEntries": 2,
+      "foreignOrderPreserved": true,
+      "schemaUnchanged": true,
+      "foreignEntriesPreserved": true,
+      "candidateOnly": true
+    }
+  },
+  "review": {
+    "state": "CLEAR_NO_MATERIAL_SOURCE_FINDINGS",
+    "reviewer": "ONE_INDEPENDENT_READ_ONLY_REVIEWER",
+    "testsActuallyRun": [
+      "FOCUSED_62",
+      "NARROW_CONSUMER_TYPECHECK"
+    ],
+    "organizationalApproval": false,
+    "reviewedSha256": {
+      "scripts/laptop-lab/consumer-identity.ts": "e197d8ff0f79135de26e6b1fbb9148e767e42aad4426b99507627c72ce772fba",
+      "scripts/laptop-lab/consumer-lifecycle.ts": "d50c4de406daf4741eaf6dd1e8f88dc8b9d615fdcc145d1ea16545029805a747",
+      "scripts/laptop-lab/consumer-connection.ts": "356bbf02a8f2f84b031fa2e541ecdbed01a337b13a85d76a9b9c46c122831bfe",
+      "scripts/laptop-lab/consumer-connection.test.ts": "b7fdda3bde8a97954281119c1437183a6dab0a63787bb4132a3636c021134fd6",
+      "scripts/laptop-lab/cli.mjs": "3177df3a1e3125e6a8d356168aab896412e368575375c37515a1f5d67226512c",
+      "scripts/laptop-lab/report.mjs": "4be318af832b7e9954e89e09428fe9ba1dcc827e4d30328caef037df3673315b",
+      "scripts/portable/http-target.ts": "4b7b83a8de7e20d155c0f73f58f5a37b5fef1a0bc1f22354ac25140912fafdef",
+      "scripts/portable/producer-process.ts": "086d335c55adea6048250f5d875f402fe15c3bd3ce54b926cd143914076f52bc"
+    }
+  },
+  "observedPlan": {
+    "classification": "PLANNED_NOT_EXECUTED",
+    "runtimeSideEffects": 0,
+    "codeFingerprint": "8b37cb32ea8076808f0e6e3945d4861d17985add05aa58fed648635ab6d3a469",
+    "profileSha256": "8e73ae4a3fad7d4c404763d338bed8a92d1c68f4ec25edaf3cb8e17089c9eeee",
+    "producerRun": null,
+    "architecture": "amd64",
+    "context": "desktop-linux",
+    "endpointProbed": false,
+    "containers": 9,
+    "networks": 4,
+    "volumes": 2,
+    "cpuPerService": 1,
+    "memoryAndSwapBytesPerService": 1610612736,
+    "pidsPerService": 128,
+    "phaseDeadlineMs": 60000,
+    "combinedCommandOutputCeilingBytes": 1048576,
+    "exposure": "127.0.0.1:8443",
+    "actualAdapter": "UNAVAILABLE",
+    "fallback": false,
+    "missingInputs": [
+      "PRODUCER_RAW_CI_EVIDENCE",
+      "QUALIFIED_ARTIFACT_ADMISSION",
+      "LOCAL_CONSUMER_PROFILE_AUTHORIZATION",
+      "TASK_BOUND_PRIVATE_FIXTURE_AND_SECRET_BUNDLE",
+      "AUTHENTICATED_SCENARIO_ADAPTER"
+    ],
+    "ordinaryCliExit": 1,
+    "ordinaryCliRefusal": "PRODUCER_RAW_CI_EVIDENCE_REQUIRED",
+    "outputCreated": false,
+    "regenerateAfterCommit": true
+  },
+  "preservation": {
+    "d2d3Evidence": "UNCHANGED",
+    "d3HelperAndTests": "UNCHANGED",
+    "existingWorkloads": "NO_D4_DOCKER_INTERACTION",
+    "externalDrive": "NO_D4_ACCESS_OR_WRITES",
+    "dockerWslRestarted": false,
+    "schoolRecordsAccessed": false,
+    "keysReadOrGenerated": false,
+    "imagesPulledOrBuilt": false,
+    "erpStarted": false,
+    "hostingCreated": false,
+    "sourcePushed": false,
+    "ciDispatched": false,
+    "otherOwnerFilesChanged": false
+  },
+  "trackers": {
+    "pr28ExistingLabComment": "VERIFIED_SINGLE_APPEND_EXACT_BODY_READBACK",
+    "existingCanvsCard": "VERIFIED_SINGLE_APPEND_EXACT_TEXT_GEOMETRY_AND_UNRELATED_ELEMENTS_PRESERVED",
+    "pr28CommentCharacters": 9397,
+    "boardElementsBeforeAfter": 305,
+    "unrelatedBoardChanges": 0,
+    "pr28State": "OPEN_DRAFT_AT_REVIEWED_RELEASE_HEAD",
+    "asanaNotion": "NOT_UPDATED_NO_EXACT_LAB_IDENTITIES"
+  },
+  "nextExecution": "After approved profile/artifact/fixture inputs and reviewed authorization/admission/actual adapter amendments, one bounded existing CLI runtime invocation with exact approved profile SHA256.",
+  "changedPaths": [
+    "config/recovery-integration-source-delta.json",
+    "scripts/laptop-lab/HANDOFF.md",
+    "scripts/laptop-lab/README.md",
+    "scripts/laptop-lab/cli.mjs",
+    "scripts/laptop-lab/consumer-connection.test.ts",
+    "scripts/laptop-lab/consumer-connection.ts",
+    "scripts/laptop-lab/consumer-identity.ts",
+    "scripts/laptop-lab/consumer-lifecycle.ts",
+    "scripts/laptop-lab/consumer-plan.ts",
+    "scripts/laptop-lab/consumer-profile.ts",
+    "scripts/laptop-lab/consumer-runner.d.mts",
+    "scripts/laptop-lab/consumer-runner.mjs",
+    "scripts/laptop-lab/consumer-test-support.ts",
+    "scripts/laptop-lab/consumer-types.ts",
+    "scripts/laptop-lab/evidence/D4_CONSUMER_CONNECTION.json",
+    "scripts/laptop-lab/fixture.d.mts",
+    "scripts/laptop-lab/output.d.mts",
+    "scripts/laptop-lab/report.mjs",
+    "scripts/laptop-lab/tsconfig.consumer.json",
+    "scripts/portable/http-target.ts",
+    "scripts/portable/producer-process.ts"
+  ]
+}

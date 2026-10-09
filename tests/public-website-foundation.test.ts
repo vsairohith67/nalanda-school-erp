@@ -216,7 +216,7 @@ describe("Prompt 20D public website foundation", () => {
     }
   });
 
-  it("backs up seven website arrays at v40 and accepts v36 without them", () => {
+  it("restores empty module collections in v48 and rejects unsupported historical format (public-website-foundation)", () => {
     const backup = createBackupDocument({
       generatedAt: new Date("2026-07-20T00:00:00.000Z"),
       generatedBy: "Prompt20D",
@@ -227,14 +227,14 @@ describe("Prompt 20D public website foundation", () => {
       "publicWebsitePosts", "publicWebsitePostVersions", "publicWebsiteNavigationItems",
       "publicWebsiteEvents"
     ] as const;
-      expect(backup.metadata.backupVersion).toBe(45);
+      expect(backup.metadata.backupVersion).toBe(48);
     for (const key of keys) expect(backup[key]).toEqual([]);
 
     const old = structuredClone(backup) as Record<string, any>;
-    old.metadata.backupVersion = 36;
+    expect(() => parseAndValidateBackup({ ...old, metadata: { ...old.metadata, backupVersion: 36 } })).toThrow("BACKUP_SOURCE_CONTRACT_UNSUPPORTED");
     for (const key of keys) {
-      delete old[key];
-      delete old.metadata.counts[key];
+      old[key] = [];
+      old.metadata.counts[key] = 0;
     }
     const parsed = parseAndValidateBackup(old);
     for (const key of keys) expect(parsed[key]).toEqual([]);

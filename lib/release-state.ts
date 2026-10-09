@@ -1,7 +1,7 @@
 import { appendFileSync, closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { sha256Bytes } from "@/lib/release-manifest";
-import { releaseGateTemplate, type ReleaseAuditEvent, type ReleaseCandidateState, type ReleaseEnvironment, type ReleasePhase } from "@/lib/release-operations-types";
+import { REQUIRED_RELEASE_GATES, releaseGateTemplate, type ReleaseAuditEvent, type ReleaseCandidateState, type ReleaseEnvironment, type ReleasePhase } from "@/lib/release-operations-types";
 
 export type ReleaseLock = {
   contractVersion: 1;
@@ -167,8 +167,9 @@ const PRE_MAINTENANCE_GATES = [
 
 function unresolvedGates(state: ReleaseCandidateState, keys: readonly string[]) {
   return keys.filter((key) => {
-    const gate = state.gates.find((row) => row.key === key);
-    return !gate || (gate.status !== "PASSED" && gate.status !== "WAIVED");
+    const gates = state.gates.filter((row) => row.key === key);
+    // Missing, duplicate, skipped/unknown and waived evidence cannot clear a prerequisite.
+    return gates.length !== 1 || gates[0].status !== "PASSED";
   });
 }
 
@@ -178,7 +179,8 @@ export function assertReleasePhaseAllowed(state: ReleaseCandidateState, phase: R
   if (phase === "backup") required = [...PRE_MAINTENANCE_GATES, "maintenance-window"];
   if (phase === "migrate") required = [...PRE_MAINTENANCE_GATES, "backup-created", "restore-rehearsed"];
   if (phase === "switch-release") required = [...PRE_MAINTENANCE_GATES, "backup-created", "restore-rehearsed"];
-  if (phase === "complete") required = state.gates.map((gate) => gate.key);
+  // Saved candidates cannot remove a mandatory gate by omitting it from their JSON.
+  if (phase === "complete") required = [...new Set([...REQUIRED_RELEASE_GATES, ...state.gates.map((gate) => gate.key)])];
   const missing = unresolvedGates(state, required);
   if (missing.length) throw new Error(`RELEASE_REQUIRED_GATES_INCOMPLETE:${missing.join(",")}`);
   if (["enter-maintenance", "backup", "migrate", "switch-release", "health-check", "smoke-test", "complete"].includes(phase)) {

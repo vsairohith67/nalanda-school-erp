@@ -6,6 +6,19 @@ export const EXPENSE_APPROVAL_STATUSES = ["DRAFT", "PENDING_APPROVAL", "APPROVED
 export const EXPENSE_PAYMENT_STATUSES = ["UNPAID", "PARTIALLY_PAID", "PAID", "CANCELLED"] as const;
 export type ExpensePaymentMethod = (typeof EXPENSE_PAYMENT_METHODS)[number];
 
+// Reuse the existing persisted creation provenance. A caller cannot remove
+// this guard by editing a dropdown, description, or payrollUsed assertion.
+export function isAnnualCashServiceExpense(row: { audits?: Array<{ action: string }> }) {
+  return row.audits?.some(audit => audit.action === "CREATED_FROM_LIBRARY_SERVICE_TEMPLATE") === true;
+}
+function assertExpenseVersion(current: { updatedAt: Date }, expected: unknown) {
+  if (typeof expected !== "string" || expected !== current.updatedAt.toISOString())
+    throw new Error("Expense changed or its review version is missing. Refresh and review it.");
+}
+function nextExpenseReviewVersion(current: { updatedAt: Date }) {
+  return new Date(Math.max(Date.now(), current.updatedAt.getTime() + 1));
+}
+
 function requiredText(value: unknown, label: string, max: number) {
   const result = String(value ?? "").trim();
   if (!result || result.length > max) throw new Error(`${label} is required and must be at most ${max} characters`);
@@ -122,6 +135,7 @@ export function buildExpenseReports(rows: ExpenseReportRow[]) {
 
 export function serializeExpense(row: any, includeSensitive = true) {
   const safe = {
+    annualCashService: isAnnualCashServiceExpense(row),
     id: row.id, expenseNumber: row.expenseNumber, expenseDate: row.expenseDate, academicYear: row.academicYear,
     vendor: row.vendor ? { id: row.vendor.id, vendorCode: row.vendor.vendorCode, name: row.vendor.name } : null,
     category: row.category ? { id: row.category.id, name: row.category.name, code: row.category.code } : null,
@@ -151,16 +165,46 @@ export const expenseDetailInclude = {
 };
 
 type Actor = { id: string; name: string };
-export async function transitionExpense(client: PrismaClient, id: string, action: "submit" | "approve" | "reject" | "cancel", actor: Actor, reason?: string) {
+export async function updateExpenseDraft(client: PrismaClient, id: string, input: unknown, actor: Actor) {
+  const data = validateExpenseInput(input);
+  const expected = (input as Record<string, unknown>).expectedUpdatedAt;
+  return client.$transaction(async tx => {
+    const current = await tx.expenseRecord.findUnique({ where: { id }, include: { audits: { select: { action: true } } } });
+    if (!current || current.approvalStatus !== "DRAFT" || current.paymentStatus !== "UNPAID") throw new Error("Only an unpaid draft expense can be edited");
+    if (isAnnualCashServiceExpense(current)) {
+      assertExpenseVersion(current, expected);
+      if (data.paymentMethod !== "CASH") throw new Error("This annual service expense requires CASH");
+      for (const key of ["vendorId", "academicYear", "description", "categoryId", "departmentId"] as const)
+        if (data[key] !== current[key]) throw new Error("The annual service payee, combined purpose and period cannot be replaced. Cancel and prepare a new reviewed draft.");
+    }
+    await validateActiveExpenseMasters(tx, data);
+    const update = await tx.expenseRecord.updateMany({ where: { id, approvalStatus: "DRAFT", paymentStatus: "UNPAID", updatedAt: current.updatedAt }, data: { ...data, ...(isAnnualCashServiceExpense(current) ? { updatedAt: nextExpenseReviewVersion(current) } : {}) } });
+    if (update.count !== 1) throw new Error("Expense changed while its draft was being saved. Refresh and review it.");
+    await tx.expenseAudit.create({ data: { expenseRecordId: id, action: "DRAFT_UPDATED", fromStatus: "DRAFT", toStatus: "DRAFT", actorUserId: actor.id, actorName: actor.name } });
+    return tx.expenseRecord.findUniqueOrThrow({ where: { id }, include: expenseDetailInclude });
+  });
+}
+
+export async function transitionExpense(client: PrismaClient, id: string, action: "submit" | "approve" | "reject" | "cancel", actor: Actor, reason?: string, expectedUpdatedAt?: unknown) {
   const config = action === "submit" ? { from: "DRAFT", to: "PENDING_APPROVAL", data: { submittedByUserId: actor.id, submittedAt: new Date(), rejectionReason: null } }
     : action === "approve" ? { from: "PENDING_APPROVAL", to: "APPROVED", data: { approvedByUserId: actor.id, approvedAt: new Date(), rejectionReason: null } }
       : action === "reject" ? { from: "PENDING_APPROVAL", to: "REJECTED", data: { rejectionReason: requiredText(reason, "Rejection reason", 1000) } }
         : { from: null, to: "CANCELLED", data: { cancellationReason: requiredText(reason, "Cancellation reason", 1000), cancelledByUserId: actor.id, cancelledAt: new Date(), paymentStatus: "CANCELLED" } };
   return client.$transaction(async (tx) => {
-    const current = await tx.expenseRecord.findUnique({ where: { id }, select: { approvalStatus: true } });
+    const current = await tx.expenseRecord.findUnique({ where: { id }, include: { audits: { select: { action: true } } } });
     if (!current) throw new Error("Expense not found");
+    if (isAnnualCashServiceExpense(current)) {
+      assertExpenseVersion(current, expectedUpdatedAt);
+      if (action === "submit" || action === "approve") {
+        if (!current.vendorId) throw new Error("The selected service payee is required");
+        await validateActiveExpenseMasters(tx, current);
+        if (current.paymentMethod !== "CASH") throw new Error("This annual service expense requires CASH");
+      }
+      if (action === "approve" && (actor.id === current.createdByUserId || actor.id === current.submittedByUserId))
+        throw new Error("An independent approver must review this annual service expense");
+    }
     if (action === "cancel" ? current.approvalStatus === "CANCELLED" : current.approvalStatus !== config.from) throw new Error(`Cannot ${action} an expense in ${current.approvalStatus} status`);
-    const updated = await tx.expenseRecord.updateMany({ where: { id, approvalStatus: current.approvalStatus }, data: { ...config.data, approvalStatus: config.to } });
+    const updated = await tx.expenseRecord.updateMany({ where: { id, approvalStatus: current.approvalStatus, ...(isAnnualCashServiceExpense(current) ? { updatedAt: current.updatedAt } : {}) }, data: { ...config.data, approvalStatus: config.to, ...(isAnnualCashServiceExpense(current) ? { updatedAt: nextExpenseReviewVersion(current) } : {}) } });
     if (updated.count !== 1) throw new Error("Expense changed while this action was being processed. Refresh and review it.");
     await tx.expenseAudit.create({ data: { expenseRecordId: id, action: action.toUpperCase(), fromStatus: current.approvalStatus, toStatus: config.to, detailsJson: reason ? JSON.stringify({ reason }) : null, actorUserId: actor.id, actorName: actor.name } });
     return tx.expenseRecord.findUniqueOrThrow({ where: { id }, include: expenseDetailInclude });
@@ -175,15 +219,24 @@ export async function recordExpensePayment(client: PrismaClient, id: string, inp
   const reference = validatePaymentReference(row, true);
   const notes = optionalText(row.notes, 1000, "Payment notes");
   return client.$transaction(async (tx) => {
-    const current = await tx.expenseRecord.findUnique({ where: { id }, include: { payments: { select: { amount: true } } } });
+    const current = await tx.expenseRecord.findUnique({ where: { id }, include: { payments: { select: { amount: true } }, audits: { select: { action: true } } } });
     if (!current) throw new Error("Expense not found");
+    if (isAnnualCashServiceExpense(current)) {
+      assertExpenseVersion(current, row.expectedUpdatedAt);
+      if (reference.paymentMethod !== "CASH" || current.paymentMethod !== "CASH") throw new Error("This annual service expense requires CASH");
+      if (!moneyDecimal(row.expectedNetAmount, "Reviewed net amount", false).equals(current.netAmount)) throw new Error("The reviewed expense amount changed");
+      if (!current.vendorId) throw new Error("The selected service payee is required");
+      await validateActiveExpenseMasters(tx, current);
+      if (!current.approvedByUserId || current.approvedByUserId === current.createdByUserId || current.approvedByUserId === current.submittedByUserId)
+        throw new Error("An independent approver must review this annual service expense");
+    }
     if (current.approvalStatus !== "APPROVED" || current.paymentStatus === "CANCELLED" || current.paymentStatus === "PAID") throw new Error("Only an approved unpaid or partially paid expense can be marked paid");
     const paid = current.payments.reduce((sum, payment) => sum.add(payment.amount), new Prisma.Decimal(0));
     const remaining = current.netAmount.sub(paid);
     if (amount.gt(remaining)) throw new Error(`Payment exceeds the remaining amount of ${remaining.toFixed(2)}`);
     await tx.expensePayment.create({ data: { expenseRecordId: id, paymentDate, amount, ...reference, notes, recordedByUserId: actor.id } });
     const paymentStatus = amount.equals(remaining) ? "PAID" : "PARTIALLY_PAID";
-    const update = await tx.expenseRecord.updateMany({ where: { id, approvalStatus: "APPROVED", paymentStatus: current.paymentStatus }, data: { paymentStatus, paymentMethod: reference.paymentMethod, transactionReference: reference.transactionReference, chequeNumber: reference.chequeNumber, chequeDate: reference.chequeDate, paidDate: paymentStatus === "PAID" ? paymentDate : null, paidAt: paymentStatus === "PAID" ? new Date() : null, paidByUserId: actor.id } });
+    const update = await tx.expenseRecord.updateMany({ where: { id, approvalStatus: "APPROVED", paymentStatus: current.paymentStatus, ...(isAnnualCashServiceExpense(current) ? { updatedAt: current.updatedAt } : {}) }, data: { paymentStatus, paymentMethod: reference.paymentMethod, transactionReference: reference.transactionReference, chequeNumber: reference.chequeNumber, chequeDate: reference.chequeDate, paidDate: paymentStatus === "PAID" ? paymentDate : null, paidAt: paymentStatus === "PAID" ? new Date() : null, paidByUserId: actor.id, ...(isAnnualCashServiceExpense(current) ? { updatedAt: nextExpenseReviewVersion(current) } : {}) } });
     if (update.count !== 1) throw new Error("Expense changed while payment was being recorded. Refresh and review it.");
     await tx.expenseAudit.create({ data: { expenseRecordId: id, action: "PAYMENT_RECORDED", fromStatus: current.paymentStatus, toStatus: paymentStatus, detailsJson: JSON.stringify({ amount: amount.toFixed(2), paymentMethod: reference.paymentMethod }), actorUserId: actor.id, actorName: actor.name } });
     return tx.expenseRecord.findUniqueOrThrow({ where: { id }, include: expenseDetailInclude });

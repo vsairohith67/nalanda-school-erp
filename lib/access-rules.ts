@@ -132,6 +132,7 @@ export const NAV_ITEMS = [
   { href: "/report-cards", label: "Report Cards", icon: "timetable", permission: "VIEW_REPORT_CARDS", group: "communication" },
   { href: "/report-cards/reports", label: "Report Card Reports", icon: "collection", permission: "VIEW_REPORT_CARD_REPORTS", group: "communication" },
   { href: "/academic-reports", label: "Academic Reporting", icon: "collection", permission: "VIEW_REPORT_CARD_REPORTS", group: "communication", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "VIEWER"] as Role[] },
+  { href: "/intelligent-reports", label: "Ask Nalanda", icon: "collection", permission: "USE_INTELLIGENT_REPORTS", group: "communication", allowedRoles: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ACCOUNTANT"] as Role[] },
   { href: "/student/results", label: "Published Progress", icon: "collection", permission: "VIEW_OWN_REPORT_CARDS", group: "studentsParents", requiredRole: "STUDENT" },
   { href: "/certificates", label: "Certificates", icon: "timetable", permission: "VIEW_CERTIFICATES", group: "communication" },
   { href: "/certificates/reports", label: "Certificate Reports", icon: "collection", permission: "VIEW_CERTIFICATE_REPORTS", group: "communication" },

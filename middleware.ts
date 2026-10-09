@@ -3,6 +3,7 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/session-token";
 import { isPublicWebsitePath } from "@/lib/public-website-routing";
 import {
   applicationOrigin,
+  certificateUploadAdmission,
   contentSecurityPolicy,
   isProviderWebhookPath,
   requestQueryBudgetIssue,
@@ -176,6 +177,13 @@ export async function middleware(request: NextRequest) {
     }
     const response = NextResponse.redirect(new URL("/maintenance", applicationOrigin(request)));
     response.headers.set("cache-control", "no-store");
+    return applySecurityHeaders(response);
+  }
+
+  const certificateUploadIssue = await certificateUploadAdmission(request);
+  if (certificateUploadIssue) {
+    const response = NextResponse.json({ error: certificateUploadIssue.error }, { status: certificateUploadIssue.status });
+    response.headers.set("cache-control", "private, no-store");
     return applySecurityHeaders(response);
   }
 

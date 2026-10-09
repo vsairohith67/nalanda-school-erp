@@ -15,9 +15,19 @@ on:
       - "docs/PRIVATE_STAGING_IMPORT_RUNBOOK.md"
       - "docs/REAL_DATA_PRIVACY_AND_RETENTION_GATES.md"
       - "lib/onboarding-preparation.ts"
+      - "lib/onboarding-review-draft.ts"
+      - "lib/onboarding.ts"
+      - "lib/onboarding-workbooks.ts"
+      - "lib/onboarding-canonical-package.ts"
+      - "components/onboarding-centre.tsx"
+      - "app/api/onboarding/**"
       - "scripts/onboarding-preparation.ts"
       - "scripts/qa-real-data-onboarding-preparation-1a-public-repo-scan.ts"
       - "tests/real-data-onboarding-preparation-1a.test.ts"
+      - "tests/onboarding-review-draft.test.ts"
+      - "tests/onboarding-service-execution.test.ts"
+      - "tests/onboarding-validation-route.test.ts"
+      - "tests/helpers/onboarding-review-fixture.ts"
       - "package.json"
       - "pnpm-lock.yaml"
   workflow_dispatch:
@@ -90,9 +100,9 @@ jobs:
           pnpm exec prisma migrate deploy --schema prisma/schema.prisma
           Copy-Item -LiteralPath tmp\onboarding-preparation-ci\synthetic.db -Destination prisma\dev.db
       - name: Public repository, secret and private-artifact gate
-        run: pnpm qa:onboarding-preparation:public-repo-scan && pnpm audit --ignore-registry-errors --audit-level high
+        run: pnpm qa:onboarding-preparation:public-repo-scan && pnpm audit --audit-level high
       - name: Preparation mapping, packages, adversarial parser and no-write proof
-        run: pnpm qa:onboarding-preparation
+        run: pnpm qa:onboarding-preparation && pnpm exec vitest run tests/onboarding-review-draft.test.ts tests/onboarding-validation-route.test.ts tests/onboarding-service-execution.test.ts
       - name: Existing governed onboarding, finance and Schoolknot compatibility
         run: pnpm exec vitest run tests/import-verification.test.ts tests/import-action-state.test.ts tests/student-import.test.ts tests/guardians.test.ts tests/staff.test.ts tests/payment-import.test.ts tests/schoolknot-management-reconciliation.test.ts tests/sec1-import-boundaries.test.ts
       - name: Governed copied-database import lifecycle
@@ -125,10 +135,50 @@ jobs:
           pnpm exec prisma migrate deploy --schema prisma/schema.prisma
           pnpm exec tsx scripts/prepare-release-ci-synthetic.ts
           Copy-Item -LiteralPath tmp\release-ci\synthetic.db -Destination prisma\dev.db -Force
+      - name: Prepare bounded OpenSSL fixture metadata
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts openssl-prepare
+      - name: Prepare bounded Windows QA reliability evidence
+        id: qa_reliability_prepare
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts qa-prepare
+      - name: Verify the bounded overnight publication event
+        id: overnight_windows_context
+        run: node scripts/portable/windows-qa-window.mjs
       - name: Full ERP tests, typecheck and production build
+        # PR28-only process environment; no machine/GPO policy or other PR context.
+        timeout-minutes: 120
         env:
+          NALANDA_QA_RELIABILITY_TRACE_DIR: tmp/ci-service-traces/qa-reliability
+          PSExecutionPolicyPreference: ${{ steps.overnight_windows_context.outputs.policy }}
           DATABASE_URL: file:../tmp/release-ci/synthetic.db
+          NALANDA_OPENSSL_TRACE_DIR: tmp/ci-openssl-fixture
         run: pnpm test && pnpm typecheck && pnpm build
+      - name: Finalize bounded Windows QA reliability evidence after success or failure
+        id: qa_reliability_finalize
+        if: always() && steps.qa_reliability_prepare.outcome == 'success'
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts qa-finalize
+      - name: Retain only validated Windows QA reliability projection
+        if: always() && steps.qa_reliability_finalize.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-qa-reliability-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            tmp/ci-qa-reliability-public/qa-reliability.json
+            tmp/ci-qa-reliability-public/manifest.json
+      - name: Validate bounded OpenSSL fixture metadata
+        if: ${{ always() && hashFiles('tmp/ci-openssl-fixture/ownership.json') != '' }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts openssl-finalize
+      - name: Retain exact sanitized OpenSSL metadata
+        if: ${{ always() && hashFiles('tmp/ci-openssl-fixture-public/manifest.json') != '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: openssl-fixture-metadata-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            tmp/ci-openssl-fixture-public/openssl.json
+            tmp/ci-openssl-fixture-public/manifest.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Remove synthetic databases and reports
         if: always()
         shell: pwsh
@@ -186,4 +236,4 @@ jobs:
       - name: PostgreSQL migrations, schema/trigger parity and readiness QA
         run: pnpm db:migrate:postgres && pnpm db:migrate:postgres && pnpm db:status:postgres && pnpm qa:postgres:parity && pnpm qa:postgres
       - name: Provider-independent preparation and no-write proof
-        run: pnpm qa:onboarding-preparation
+        run: pnpm qa:onboarding-preparation && pnpm exec vitest run tests/onboarding-review-draft.test.ts tests/onboarding-validation-route.test.ts

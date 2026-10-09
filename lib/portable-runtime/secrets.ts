@@ -18,6 +18,7 @@ function nodeBuiltins() {
 export const PORTABLE_SECRET_NAMES = [
   "AUTH_SECRET",
   "AUTH_VERIFICATION_SECRET",
+  "AUTH_MFA_KEYRING_JSON",
   "CLOUD_BACKUP_ENCRYPTION_KEY_V1",
   "DATABASE_URL",
   "DIRECT_URL",
@@ -84,6 +85,7 @@ export function readPortableSecret(
   const absolute = assertWithinAllowedRoot(fileReference, environment);
   const { fs } = nodeBuiltins();
   const stat = fs.lstatSync(absolute);
+  if (process.platform !== "win32" && (stat.mode & 0o022) !== 0) throw new PortableSecretError("SECRET_FILE_WRITABLE_BY_OTHERS");
   if (!stat.isFile() || stat.isSymbolicLink() || stat.size < 1 || stat.size > MAX_SECRET_BYTES) {
     throw new PortableSecretError("SECRET_FILE_UNSAFE");
   }

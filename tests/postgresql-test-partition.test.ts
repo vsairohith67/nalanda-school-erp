@@ -45,11 +45,13 @@ describe("PostgreSQL application regression partition", () => {
     expect(syntheticSqliteSeed).toContain('randomBytes(24).toString("hex")');
     expect(portabilityAudit).toContain('relative.replaceAll("\\\\", "/") !== outputRelative');
     expect(workflow.match(/Install governed QA utilities and report fonts/g)).toHaveLength(2);
-    expect(workflow.match(/poppler-utils ripgrep ttf-mscorefonts-installer/g)).toHaveLength(2);
+    expect(workflow.match(/poppler-utils ripgrep cabextract fontconfig curl/g)).toHaveLength(2);
+    expect(workflow.match(/python3 scripts\/bootstrap-document-fonts\.py prepare/g)).toHaveLength(2);
+    expect(workflow.match(/pnpm exec tsx scripts\/qa-shared-document-fonts\.ts/g)).toHaveLength(2);
     expect(workflow.match(/REPORT_CARD_FONT_DIR: \/usr\/share\/fonts\/truetype\/msttcorefonts/g)).toHaveLength(2);
     expect(crossProviderJob).toContain("restored_table_count=");
     expect(crossProviderJob).toContain("table_schema='public'");
-    expect(crossProviderJob).toContain('test "$restored_table_count" = "366"');
+    expect(crossProviderJob).toContain('test "$restored_table_count" = "375"');
     for (const source of evidenceWriters) {
       expect(source).toMatch(/mkdirSync\(path\.dirname\(output(?:Path)?\), \{ recursive: true \}\)/);
     }

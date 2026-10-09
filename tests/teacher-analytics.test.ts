@@ -83,15 +83,15 @@ describe("Teacher Performance Analytics foundation", () => {
   });
 
   it("backs up version 26, preserves immutable analytics arrays, and excludes actor IDs and passwords", () => {
-    const backup = analyticsBackup(); expect(backup.metadata.backupVersion).toBe(45);
+    const backup = analyticsBackup(); expect(backup.metadata.backupVersion).toBe(48);
     expect(backup.teacherAnalyticsReviewCycles).toHaveLength(1); expect(backup.teacherAnalyticsSnapshots).toHaveLength(1); expect(backup.teacherAnalyticsReviews).toHaveLength(1); expect(backup.teacherAnalyticsEvents).toHaveLength(1);
     expect(JSON.stringify(backup)).not.toContain("passwordHash"); expect(backup.teacherAnalyticsSnapshots[0]).not.toHaveProperty("createdByUserId"); expect(backup.teacherAnalyticsEvents[0]).not.toHaveProperty("recordedByUserId");
     const parsed = parseAndValidateBackup(backup); expect(parsed.teacherAnalyticsSnapshots[0].snapshotHash).toBe("a".repeat(64));
   });
 
-  it("keeps version 25 backups compatible when analytics arrays are absent", () => {
-    const old: any = analyticsBackup(); old.metadata.backupVersion = 25;
-    for (const key of ["teacherAnalyticsReviewCycles","teacherAnalyticsSnapshots","teacherAnalyticsReviews","teacherAnalyticsEvents"]) { delete old[key]; delete old.metadata.counts[key]; }
+  it("restores empty module collections in v48 and rejects unsupported historical format (teacher-analytics)", () => {
+    const old: any = analyticsBackup(); expect(() => parseAndValidateBackup({ ...old, metadata: { ...old.metadata, backupVersion: 25 } })).toThrow("BACKUP_SOURCE_CONTRACT_UNSUPPORTED");
+    for (const key of ["teacherAnalyticsReviewCycles","teacherAnalyticsSnapshots","teacherAnalyticsReviews","teacherAnalyticsEvents"]) { old[key] = []; old.metadata.counts[key] = 0; }
     const parsed = parseAndValidateBackup(old); expect(parsed.teacherAnalyticsReviewCycles).toEqual([]); expect(parsed.teacherAnalyticsSnapshots).toEqual([]);
   });
 

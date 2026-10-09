@@ -32,7 +32,6 @@ export type StudentImportPreviewRow = {
   providedFields: string[];
   errors: string[];
   warnings: string[];
-  originalValues: ImportRow;
 };
 
 export type StudentImportPreview = {
@@ -50,6 +49,11 @@ export type StudentImportPreview = {
 const FIELD_ALIASES: Record<string, keyof NormalizedStudentImport> = {
   academicyear: "academicYear",
   admissionno: "admissionNo",
+  admisionno: "admissionNo",
+  studentadmissionnumber: "admissionNo",
+  fullname: "studentName",
+  fathersmobile: "phone1",
+  mothersmobile: "phone2",
   admno: "admissionNo",
   studentname: "studentName",
   nameofthestudent: "studentName",
@@ -102,6 +106,7 @@ export function normalizeStudentImportRows(
   const unknownHeaders = new Set<string>();
   const rows = rawRows.map((raw, index) => {
     const mapped: ImportRow = {};
+    const conflicts: string[] = [];
     const providedFields = new Set<string>();
 
     for (const [header, value] of Object.entries(raw)) {
@@ -110,11 +115,12 @@ export function normalizeStudentImportRows(
         if (header.trim()) unknownHeaders.add(header.trim());
         continue;
       }
-      mapped[field] = value;
+      if (hasValue(mapped[field]) && hasValue(value) && String(mapped[field]) !== String(value)) conflicts.push(`Conflicting populated aliases for ${field}`);
+      if (!hasValue(mapped[field])) mapped[field] = value;
       providedFields.add(field);
     }
 
-    const errors: string[] = [];
+    const errors: string[] = [...conflicts];
     const warnings: string[] = [];
     const admissionNo = cleanText(mapped.admissionNo);
     const studentName = normalizePersonName(mapped.studentName);
@@ -173,13 +179,12 @@ export function normalizeStudentImportRows(
       },
       providedFields: [...providedFields],
       errors,
-      warnings,
-      originalValues: raw
+      warnings
     };
   });
 
   const fileWarnings = unknownHeaders.size
-    ? [`Unknown optional columns ignored: ${[...unknownHeaders].join(", ")}`]
+    ? [`Excluded optional column count: ${unknownHeaders.size}`]
     : [];
   return {
     rows,
@@ -285,11 +290,7 @@ function cleanDigits(value: unknown) {
   return cleanText(value).replace(/\D/g, "");
 }
 
-function normalizePersonName(value: unknown) {
-  const text = cleanText(value).replace(/\s+/g, " ");
-  if (!text || text !== text.toUpperCase()) return text;
-  return text.toLowerCase().replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
-}
+function normalizePersonName(value: unknown) { return cleanText(value); }
 
 function normalizeDate(value: unknown) {
   if (!hasValue(value)) return null;

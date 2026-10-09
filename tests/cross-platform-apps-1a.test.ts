@@ -1,13 +1,144 @@
-import { describe, expect, it } from "vitest";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { describe, expect, it, vi } from "vitest";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync, renameSync, lstatSync } from "node:fs";
+import {EventEmitter} from "node:events";
+import {PassThrough} from "node:stream";
+import {createHash} from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import {prepareWindowsSodium,sodiumArchiveDownload,withPreparedWindowsSodium,minimumCompilerExitCode,type SodiumResponse} from "../scripts/portable/native-minimum-compile.mjs";
 
 const root = path.resolve(".");
 const source = (file: string) => readFileSync(path.join(root, file), "utf8");
 
+describe("SOURCE_ONLY pinned Windows libsodium acquisition; no compiler or signature acceptance",()=>{
+ const archive="libsodium-1.0.22-stable-msvc.zip",lock=()=>source("apps/nalanda-cross-platform/src-tauri/Cargo.lock");
+ const bytes=Buffer.from("invented archive control; not a signed library");
+ function requestControl(kind:string,calls:unknown[]) {
+  return (url:string,options:unknown,callback:(incoming:SodiumResponse)=>void)=>{
+   calls.push({url,options});const child=new EventEmitter() as EventEmitter&{end:()=>void;destroy:()=>void};child.destroy=vi.fn();
+   child.end=()=>queueMicrotask(()=>{
+    if(kind==="DNS"){child.emit("error",Error("invented private DNS detail"));return;}
+    if(kind==="TIMEOUT")return;
+    const incoming=new PassThrough() as PassThrough&{statusCode:number;headers:Record<string,string>};incoming.statusCode=kind==="REDIRECT"?302:200;
+    incoming.headers=kind==="SIZE"?{"content-length":"41943041"}:kind==="TRUNCATED"?{"content-length":String(bytes.length+1)}:{};
+    callback(incoming);if(!incoming.destroyed)incoming.end(kind==="EMPTY"?Buffer.alloc(0):bytes);
+   });return child;
+  };
+ }
+ it("acquires exactly one HTTPS response with finite digest and exclusive owned output",async()=>{
+  const directory=mkdtempSync(path.join(tmpdir(),"nps-sodium-transport-control-")),file=path.join(directory,archive),calls:unknown[]=[];
+  try{
+   const result=await sodiumArchiveDownload(archive,file,requestControl("PASS",calls));
+   expect(result).toEqual({name:archive,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")});expect(readFileSync(file)).toEqual(bytes);
+   expect(calls).toEqual([{url:`https://download.libsodium.org/libsodium/releases/${archive}`,options:{method:"GET",agent:false,headers:{Accept:"application/octet-stream"}}}]);
+   await expect(sodiumArchiveDownload(archive,file,requestControl("PASS",calls))).rejects.toThrow("MINIMUM_SODIUM_WRITE_REFUSED");expect(readFileSync(file)).toEqual(bytes);
+  }finally{rmSync(directory,{recursive:true});}
+ });
+ it.each([["DNS","TRANSPORT_FAILED"],["REDIRECT","HTTP_REFUSED"],["SIZE","SIZE_REFUSED"],["TRUNCATED","BODY_REFUSED"],["EMPTY","BODY_REFUSED"],["TIMEOUT","DOWNLOAD_TIMEOUT"]])("refuses %s without retry or output",async(kind,cause)=>{
+  const directory=mkdtempSync(path.join(tmpdir(),"nps-sodium-transport-control-")),file=path.join(directory,archive),calls:unknown[]=[];
+  try{
+   if(kind==="TIMEOUT")vi.useFakeTimers();
+   const pending=expect(sodiumArchiveDownload(archive,file,requestControl(kind,calls))).rejects.toThrow(`MINIMUM_SODIUM_${cause}`);
+   if(kind==="TIMEOUT")await vi.advanceTimersByTimeAsync(30000);
+   await pending;expect(calls).toHaveLength(1);expect(existsSync(file)).toBe(false);
+  }finally{vi.useRealTimers();rmSync(directory,{recursive:true});}
+ });
+ it("allocates signed source and MSVC fallback pairs in upstream dispatch order",async()=>{
+  const downloads:string[]=[];
+  const prepared=await prepareWindowsSodium(lock(),{},async(name:string,destination:string)=>{downloads.push(destination);writeFileSync(destination,bytes,{flag:"wx"});return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};});
+  expect(downloads.map(file=>path.basename(file))).toEqual(["LATEST.tar.gz","LATEST.tar.gz.minisig",archive,archive+".minisig"]);expect(downloads.every(file=>path.dirname(file)===prepared.directory)).toBe(true);expect(prepared.files).toHaveLength(4);prepared.cleanup();expect(existsSync(prepared.directory)).toBe(false);
+ });
+ it("cleans both owned files after a signature acquisition failure without retry",async()=>{
+  let directory="",calls=0;
+  await expect(prepareWindowsSodium(lock(),{},async(name:string,destination:string)=>{directory=path.dirname(destination);calls++;if(name.endsWith(".minisig"))throw Error("MINIMUM_SODIUM_TRANSPORT_FAILED");writeFileSync(destination,bytes);return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};})).rejects.toThrow("MINIMUM_SODIUM_TRANSPORT_FAILED");
+  expect(calls).toBe(2);expect(existsSync(directory)).toBe(false);
+ });
+ it.each([false,true])("refuses substituted directory; original transport failure preserved=%s",async failAcquisition=>{
+  let directory="",moved="",original:ReturnType<typeof lstatSync>|undefined,replacement:ReturnType<typeof lstatSync>|undefined,prepared:Awaited<ReturnType<typeof prepareWindowsSodium>>|undefined;
+  const downloads=async(name:string,destination:string)=>{
+   directory=path.dirname(destination);
+   if(name.endsWith(".minisig")&&!original){
+    original=lstatSync(directory);moved=directory+"-SOURCE_ONLY-original";renameSync(directory,moved);mkdirSync(directory);writeFileSync(path.join(directory,"SOURCE_ONLY-replacement"),bytes);replacement=lstatSync(directory);
+    if(failAcquisition)throw Error("MINIMUM_SODIUM_TRANSPORT_FAILED");
+   }
+   writeFileSync(destination,bytes);return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};
+  };
+  try{
+   if(failAcquisition)await expect(prepareWindowsSodium(lock(),{},downloads)).rejects.toMatchObject({message:"MINIMUM_SODIUM_TRANSPORT_FAILED",cleanupCause:"MINIMUM_SODIUM_CLEANUP_REFUSED"});
+   else{prepared=await prepareWindowsSodium(lock(),{},downloads);expect(()=>prepared!.cleanup()).toThrow("MINIMUM_SODIUM_CLEANUP_REFUSED");}
+   expect(readFileSync(path.join(directory,"SOURCE_ONLY-replacement"))).toEqual(bytes);expect(existsSync(moved)).toBe(true);
+  }finally{
+   // Both directories were invented by this fixture. Independently prove each identity
+   // before fixture-owned settlement; never retry the production helper's refused cleanup.
+   if(original){const now=lstatSync(moved);expect([now.dev,now.ino,now.birthtimeMs]).toEqual([original.dev,original.ino,original.birthtimeMs]);expect(now.isDirectory()&&!now.isSymbolicLink()).toBe(true);rmSync(moved,{recursive:true});}
+   if(replacement){const now=lstatSync(directory);expect([now.dev,now.ino,now.birthtimeMs]).toEqual([replacement.dev,replacement.ino,replacement.birthtimeMs]);expect(now.isDirectory()&&!now.isSymbolicLink()).toBe(true);rmSync(directory,{recursive:true});}
+  }
+ });
+ it.each(["SODIUM_DIST_DIR","SODIUM_LIB_DIR","SODIUM_SHARED","SODIUM_USE_PKG_CONFIG"])("refuses ambient %s before acquisition",async key=>{
+  const download=vi.fn();await expect(prepareWindowsSodium(lock(),{[key]:"invented-private-value"},download)).rejects.toThrow("MINIMUM_SODIUM_ENVIRONMENT_REFUSED");expect(download).not.toHaveBeenCalled();
+ });
+ it.each(["version = \"1.24.0\"","72b04bf6da2c98b727af37ab62cb505f4d751b975b034a9b9ad491d333b0564e"])("refuses a changed crate binding %s",async binding=>{
+  const download=vi.fn();await expect(prepareWindowsSodium(lock().replace(binding,"changed"),{},download)).rejects.toThrow("MINIMUM_SODIUM_LOCK_REFUSED");expect(download).not.toHaveBeenCalled();
+ });
+ it("does not broaden library selection or execute a compiler on module import",()=>{
+  expect(()=>sodiumArchiveDownload("../foreign.zip","unowned")).toThrow("MINIMUM_SODIUM_FILE_REFUSED");
+  const helper=source("scripts/portable/native-minimum-compile.mjs");expect(helper).toContain('timeout:2100000');expect(helper).toContain('SODIUM_DIST_DIR:sodium.directory');expect(helper).not.toMatch(/rejectUnauthorized|SODIUM_LIB_DIR\s*=/);expect(helper).toContain('"ACQUIRED_SIGNATURE_VERIFICATION_PENDING"');
+ });
+ it.each(["LATEST.tar.gz","LATEST.tar.gz.minisig",archive,archive+".minisig"])("refuses incomplete acquisition at %s before compiler callback",async failedName=>{
+  let directory="";const names:string[]=[],compile=vi.fn();
+  await expect(withPreparedWindowsSodium(lock(),{},compile,async(name,destination)=>{directory=path.dirname(destination);names.push(name);if(name===failedName)throw Error("MINIMUM_SODIUM_TRANSPORT_FAILED");writeFileSync(destination,bytes);return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};})).rejects.toThrow("MINIMUM_SODIUM_TRANSPORT_FAILED");
+  expect(names.at(-1)).toBe(failedName);expect(new Set(names).size).toBe(names.length);expect(compile).not.toHaveBeenCalled();expect(existsSync(directory)).toBe(false);
+ });
+ it.each([false,true])("keeps callback result/error and child environment separate from cleanup; throws=%s",async throws=>{
+  const environment={SOURCE_ONLY:"invented"},originalError=Error("invented private compiler stream"),value={exit:101};let directory="",calls=0;
+  const result=await withPreparedWindowsSodium(lock(),environment,async(childEnv,files)=>{
+   calls++;directory=childEnv.SODIUM_DIST_DIR!;expect(childEnv).not.toBe(environment);expect(childEnv.SOURCE_ONLY).toBe("invented");expect(files).toHaveLength(4);expect(files.every(file=>existsSync(path.join(directory,file.name)))).toBe(true);expect(process.env.SODIUM_DIST_DIR).toBeUndefined();
+   if(throws)throw originalError;return value;
+  },async(name,destination)=>{writeFileSync(destination,bytes);return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};});
+  expect(calls).toBe(1);expect(environment).toEqual({SOURCE_ONLY:"invented"});expect(existsSync(directory)).toBe(false);expect(result.dependencyCleanup).toBe("VERIFIED");expect(result.dependencyCleanupFailure).toBeNull();
+  if(result.compilation.status==="THREW"){expect(throws).toBe(true);expect(result.compilation.error).toBe(originalError);}else{expect(throws).toBe(false);expect(result.compilation.value).toBe(value);}
+ });
+ it.each([0,101,"THREW"] as const)("preserves actual callback and cleanup dual failure; compiler=%s",async mode=>{
+  let directory="",moved="",original:ReturnType<typeof lstatSync>|undefined,replacement:ReturnType<typeof lstatSync>|undefined;const originalError=Error("invented primary compiler failure");
+  try{
+   const result=await withPreparedWindowsSodium(lock(),{},childEnv=>{
+    directory=childEnv.SODIUM_DIST_DIR!;moved=directory+"-SOURCE_ONLY-original";original=lstatSync(directory);renameSync(directory,moved);mkdirSync(directory);writeFileSync(path.join(directory,"SOURCE_ONLY-replacement"),bytes);replacement=lstatSync(directory);
+    if(mode==="THREW")throw originalError;return {status:mode,signal:null};
+   },async(name,destination)=>{writeFileSync(destination,bytes);return {name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};});
+   expect(result.dependencyCleanup).toBe("UNRECONCILED");expect(result.dependencyCleanupFailure).toBe("MINIMUM_SODIUM_CLEANUP_REFUSED");expect(readFileSync(path.join(directory,"SOURCE_ONLY-replacement"))).toEqual(bytes);
+   if(result.compilation.status==="THREW"){expect(mode).toBe("THREW");expect(result.compilation.error).toBe(originalError);}else{expect(mode).not.toBe("THREW");expect(result.compilation.value.status).toBe(mode);expect(minimumCompilerExitCode(result.compilation.value,result.dependencyCleanup)).toBe(mode===0?1:mode);}
+  }finally{
+   if(original){const now=lstatSync(moved);expect([now.dev,now.ino,now.birthtimeMs]).toEqual([original.dev,original.ino,original.birthtimeMs]);expect(now.isDirectory()&&!now.isSymbolicLink()).toBe(true);rmSync(moved,{recursive:true});}
+   if(replacement){const now=lstatSync(directory);expect([now.dev,now.ino,now.birthtimeMs]).toEqual([replacement.dev,replacement.ino,replacement.birthtimeMs]);expect(now.isDirectory()&&!now.isSymbolicLink()).toBe(true);rmSync(directory,{recursive:true});}
+  }
+ });
+ it("does not accept signal/startup failure as compiler success or invent a zero exit",()=>{
+  expect(minimumCompilerExitCode({status:null,signal:"SIGTERM"},"VERIFIED")).toBe(1);
+  expect(minimumCompilerExitCode({status:0,error:Error("invented startup detail")},"VERIFIED")).toBe(1);
+  expect(minimumCompilerExitCode({status:0},"VERIFIED")).toBe(0);
+  expect(minimumCompilerExitCode({status:0},"NOT_EXECUTED")).toBe(0);
+ });
+});
+
 describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
+  it("keeps minimum-toolchain job environments within GitHub's available contexts", () => {
+    // runner is unavailable in jobs.<id>.env; GitHub rejects the whole workflow.
+    // These homes belong to this disposable checkout, not a global tool profile.
+    const workflow = source(".github/workflows/cross-platform-apps.yml");
+    const jobs = [...workflow.matchAll(/^  minimum-[a-z]+:\r?$([\s\S]*?)(?=^  [a-z][a-z-]+:\r?$|$(?![\s\S]))/gm)];
+    expect(jobs).toHaveLength(5);
+    for (const [, block] of jobs) {
+      const environment = block.match(/\n    env:\r?\n([\s\S]*?)\n    steps:/)?.[1];
+      expect(environment).toBeDefined();
+      expect(environment).not.toMatch(/\$\{\{\s*(?:runner|steps|env|job)\./);
+      for (const [key, directory] of [["RUSTUP_HOME", "rustup"], ["CARGO_HOME", "cargo"], ["CARGO_TARGET_DIR", "target"]]) {
+        expect(environment).toContain(key + ": " + "$" + "{{ github.workspace }}/tmp/nalanda-minimum-" + directory);
+      }
+      expect(environment).toContain('RUSTUP_TOOLCHAIN: "1.90.0"');
+    }
+  });
+
   it("selects Tauri 2 through a dated, scored ADR", () => {
     const adr = source("docs/adr/ADR_CROSS_PLATFORM_APP_FRAMEWORK.md");
     expect(adr).toContain("Status: Accepted");
@@ -30,7 +161,8 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
   it("uses fixed native network operations, exact origins, no redirects and bounded responses", () => {
     const rust = source("apps/nalanda-cross-platform/src-tauri/src/lib.rs");
     expect(rust).toContain("enum NativeApiOperation");
-    expect(rust).toContain("Policy::none()");
+    expect(rust).toContain("qa_profile::client()?");
+    expect(source("apps/nalanda-cross-platform/src-tauri/src/qa_profile.rs")).toContain("Policy::none()");
     expect(rust).toContain("MAX_RESPONSE_BYTES");
     expect(rust).toMatch(/response\s*\.chunk\(\)/);
     expect(rust.indexOf("append_bounded_response_chunk(&mut bytes, &chunk)")).toBeLessThan(rust.indexOf("String::from_utf8(bytes)"));
@@ -143,6 +275,20 @@ describe("CROSS-PLATFORM-APPS-1A software boundary", () => {
     expect(source("apps/nalanda-cross-platform/src-tauri/tauri.conf.json")).toContain('"scheme": ["nalandaps-erp"]');
   });
 
+  it("retains app packages only in explicitly private repositories while keeping public checksum receipts", () => {
+    const steps = source(".github/workflows/cross-platform-apps.yml").split(/\n      - /).filter((step) => step.startsWith("uses: actions/upload-artifact@"));
+    const packageSteps = steps.filter((step) => /\*\.exe|\*\.apk|path: apps\/nalanda-cross-platform\/src-tauri\/gen\/apple\/build\s*\n/.test(step));
+    expect(packageSteps).toHaveLength(3);
+    for (const step of packageSteps) expect(step).toContain("if: ${{ github.event.repository.private == true }}");
+    const receipts = steps.filter((step) => /name: (windows|android|ios)-package-checksums\b/.test(step));
+    expect(receipts).toHaveLength(3);
+    for (const step of receipts) {
+      expect(step).toMatch(/path: apps\/[^\n*]+\/SHA256SUMS\.txt\s*\n/);
+      expect(step).not.toContain("if:");
+      expect(step).toContain("if-no-files-found: error");
+    }
+  });
+
   it("hardens generated mobile projects before compilation", () => {
     const hardener = source("scripts/harden-cross-platform-generated-project.mjs");
     expect(hardener).toContain('android:allowBackup="false"');
@@ -224,8 +370,17 @@ class MainActivity : TauriActivity() {
     expect(rust).toContain("failed_attempts = 0");
     expect(app).toContain("Too many failed attempts");
     expect(app).toContain('minLength={8}');
-    expect(app.indexOf("await current?.lock()")).toBeLessThan(app.indexOf("setVault(null); setTokens(null); setReferencePack(null); setLocked(true)"));
+    const lock = app.slice(app.indexOf("async function lockNow()"), app.indexOf("function requestLock()"));
+    const masked = lock.indexOf("setVault(null); setTokens(null); setReferencePack(null); setLocked(true)");
+    const drained = lock.indexOf("Promise.all([refreshController.current.drain(), invalidateNativeCredentialWork(current)])");
+    const unloaded = lock.indexOf(".then(() => current.lock())");
+    expect(masked).toBeGreaterThanOrEqual(0); expect(drained).toBeGreaterThan(masked); expect(unloaded).toBeGreaterThan(drained);
+    expect(app).toContain("if (lockPending.current) await lockPending.current");
+    expect(app).toContain("generation !== vaultGeneration.current");
     expect(app).toContain("APP_LOCK_FAILED");
+    expect(app).toContain('className="secondary" onClick={requestLock}><LogOut />Lock');
+    expect(app).not.toContain('onClick={() => void lockNow()}');
+    expect(app).toContain('disabled={lockFailure || pin.length < 8 || busy || retryAfter > 0}');
     expect(app).toContain("LOCAL_RESET_FAILED");
     const auth = source("apps/nalanda-cross-platform/src/auth.ts");
     expect(auth).toContain("getCurrent");

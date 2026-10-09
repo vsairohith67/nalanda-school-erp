@@ -92,7 +92,7 @@ export type MappingEntry = {
 };
 
 export type MappingCatalogue = { schemaVersion: "1.0"; entries: MappingEntry[] };
-export type ParsedTable = { fileId: string; domain: string; headers: string[]; rows: string[][]; warnings: ValidationIssue[] };
+export type ParsedTable = { fileId: string; domain: string; headers: string[]; rows: string[][]; warnings: ValidationIssue[]; sourceSheet?: string; sourceRows?: number[] };
 
 export type DryRunResult = {
   version: string;
@@ -192,7 +192,7 @@ function decodeCsv(bytes: Uint8Array, declaredEncoding: string): { text?: string
   try { return { text: new TextDecoder(declared.replace("cp", "windows-"), { fatal: true }).decode(bytes), encoding: declared.toUpperCase() }; } catch { return { issue: "DECLARED_ENCODING_INVALID" }; }
 }
 
-function parseDelimited(text: string, deadline: number): { rows?: string[][]; delimiter?: string; issue?: string } {
+function parseDelimited(text: string, deadline: number): { rows?: string[][]; sourceRows?: number[]; delimiter?: string; issue?: string } {
   const candidates = [",", "\t", ";"].map((delimiter) => ({ delimiter, parsed: parseWithDelimiter(text, delimiter, deadline, 10) }));
   const viable = candidates.filter((candidate) => candidate.parsed.rows && candidate.parsed.rows.length > 0 && candidate.parsed.rows[0].length > 1 && candidate.parsed.rows.slice(0, 9).every((row) => row.length === candidate.parsed.rows![0].length));
   if (!viable.length) {
@@ -202,15 +202,16 @@ function parseDelimited(text: string, deadline: number): { rows?: string[][]; de
   const maximumColumns = Math.max(...viable.map((candidate) => candidate.parsed.rows![0].length)); const strongest = viable.filter((candidate) => candidate.parsed.rows![0].length === maximumColumns);
   if (strongest.length !== 1) return { issue: "DELIMITER_AMBIGUOUS" };
   const parsed = parseWithDelimiter(text, strongest[0].delimiter, deadline);
-  return parsed.rows ? { rows: parsed.rows, delimiter: strongest[0].delimiter } : { issue: parsed.issue };
+  return parsed.rows ? { rows: parsed.rows, sourceRows: parsed.sourceRows, delimiter: strongest[0].delimiter } : { issue: parsed.issue };
 }
 
-function parseWithDelimiter(text: string, delimiter: string, deadline: number, stopAfterRows?: number): { rows?: string[][]; issue?: string } {
-  const rows: string[][] = []; let row: string[] = []; let cell = ""; let quoted = false;
+function parseWithDelimiter(text: string, delimiter: string, deadline: number, stopAfterRows?: number): { rows?: string[][]; sourceRows?: number[]; issue?: string } {
+  const rows: string[][] = [], sourceRows: number[] = []; let row: string[] = []; let cell = ""; let quoted = false, line = 1, rowStart = 1;
   for (let index = 0; index < text.length; index += 1) {
     if ((index & 4095) === 0 && Date.now() > deadline) return { issue: "PROCESSING_TIME_LIMIT_EXCEEDED" };
     const char = text[index];
     if (quoted) {
+      if (char === "\n" || char === "\r" && text[index + 1] !== "\n") line++;
       if (char === '"' && text[index + 1] === '"') { cell += '"'; index += 1; }
       else if (char === '"') quoted = false;
       else cell += char;
@@ -223,18 +224,18 @@ function parseWithDelimiter(text: string, delimiter: string, deadline: number, s
       if (char === "\r" && text[index + 1] === "\n") index += 1;
       row.push(cell);
       if (row.some((value) => value.length)) {
-        rows.push(row);
-        if (stopAfterRows && rows.length >= stopAfterRows) return { rows };
+        rows.push(row); sourceRows.push(rowStart);
+        if (stopAfterRows && rows.length >= stopAfterRows) return { rows, sourceRows };
         if (rows.length > ONBOARDING_PREPARATION_LIMITS.maxRowsPerSheet + 1) return { issue: "ROW_LIMIT_EXCEEDED" };
       }
-      row = []; cell = ""; continue;
+      line++; rowStart = line; row = []; cell = ""; continue;
     }
     cell += char;
     if (cell.length > ONBOARDING_PREPARATION_LIMITS.maxCellLength) return { issue: "CELL_LENGTH_LIMIT_EXCEEDED" };
   }
   if (quoted) return { issue: "CSV_UNCLOSED_QUOTE" };
-  row.push(cell); if (row.some((value) => value.length)) { rows.push(row); if (rows.length > ONBOARDING_PREPARATION_LIMITS.maxRowsPerSheet + 1) return { issue: "ROW_LIMIT_EXCEEDED" }; }
-  return { rows };
+  row.push(cell); if (row.some((value) => value.length)) { rows.push(row); sourceRows.push(rowStart); if (rows.length > ONBOARDING_PREPARATION_LIMITS.maxRowsPerSheet + 1) return { issue: "ROW_LIMIT_EXCEEDED" }; }
+  return { rows, sourceRows };
 }
 
 function tableChecks(file: PackageFile, headers: string[], rows: string[][]): ValidationIssue[] {
@@ -267,13 +268,13 @@ async function parsePackageFile(root: string, file: PackageFile, declaredEncodin
   if (metadata.size !== file.sizeBytes || metadata.size > ONBOARDING_PREPARATION_LIMITS.maxFileBytes) return { issues: [{ state: "CONFLICTING_SOURCE", fileId: file.fileId, row: 0, code: "FILE_SIZE_MISMATCH", severity: "ERROR" }] };
   const bytes = await readFile(absolute);
   if (hash(bytes) !== file.sha256.toLowerCase()) return { issues: [{ state: "CONFLICTING_SOURCE", fileId: file.fileId, row: 0, code: "CHECKSUM_MISMATCH", severity: "ERROR" }] };
-  let headers: string[] = [], rows: string[][] = [], warnings: ValidationIssue[] = [];
+  let headers: string[] = [], rows: string[][] = [], warnings: ValidationIssue[] = [], sourceSheet: string | undefined, sourceRows: number[] | undefined;
   if (file.format === "CSV") {
     const decoded = decodeCsv(bytes, file.declaredEncoding ?? declaredEncoding);
     if (!decoded.text) return { issues: [{ state: "AMBIGUOUS", fileId: file.fileId, row: 0, code: decoded.issue ?? "ENCODING_REFUSED", severity: "ERROR" }] };
     const parsed = parseDelimited(decoded.text, deadline);
     if (!parsed.rows) return { issues: [{ state: parsed.issue?.includes("LIMIT") ? "UNSUPPORTED" : "INVALID_FORMAT", fileId: file.fileId, row: 0, code: parsed.issue ?? "CSV_PARSE_FAILED", severity: "ERROR" }] };
-    headers = parsed.rows[0] ?? []; rows = parsed.rows.slice(1);
+    headers = parsed.rows[0] ?? []; rows = parsed.rows.slice(1); sourceRows = parsed.sourceRows?.slice(1);
   } else {
     try { inspectXlsxContainer(bytes); } catch (error) { return { issues: [{ state: "UNSUPPORTED", fileId: file.fileId, row: 0, code: error instanceof Error ? error.message : "XLSX_REFUSED", severity: "ERROR" }] }; }
     const workbook = XLSX.read(bytes, { type: "buffer", raw: true, cellDates: false, cellFormula: true, cellHTML: false, cellNF: false, cellStyles: false, WTF: false });
@@ -281,14 +282,18 @@ async function parsePackageFile(root: string, file: PackageFile, declaredEncodin
     const hidden = (workbook.Workbook?.Sheets ?? []).find((item) => item.Hidden);
     if (hidden) return { issues: [{ state: "UNSUPPORTED", fileId: file.fileId, row: 0, code: "HIDDEN_SHEET_REFUSED", severity: "ERROR" }] };
     if (workbook.SheetNames.length !== 1) return { issues: [{ state: "AMBIGUOUS", fileId: file.fileId, row: 0, code: "MULTI_SHEET_DOMAIN_FILE_REQUIRES_MAPPING", severity: "ERROR" }] };
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    sourceSheet = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sourceSheet];
+    const range = XLSX.utils.decode_range(sheet["!ref"] ?? "A1");
+    if (range.e.r > ONBOARDING_PREPARATION_LIMITS.maxRowsPerSheet || range.e.c >= ONBOARDING_PREPARATION_LIMITS.maxColumns) return { issues: [{ state: "UNSUPPORTED", fileId: file.fileId, row: 0, code: "SHEET_RANGE_LIMIT_EXCEEDED", severity: "ERROR" }] };
     if ((sheet["!merges"] ?? []).length) return { issues: [{ state: "UNSUPPORTED", fileId: file.fileId, row: 0, code: "MERGED_CELLS_REFUSED", severity: "ERROR" }] };
     for (const [address, cell] of Object.entries(sheet)) if (!address.startsWith("!") && (cell as XLSX.CellObject).f) warnings.push({ state: "UNSUPPORTED", fileId: file.fileId, row: XLSX.utils.decode_cell(address).r + 1, fieldId: address, code: "FORMULA_CELL_REFUSED", severity: "ERROR" });
-    const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", raw: true, blankrows: false }).map((row) => row.map((value) => String(value ?? "")));
-    headers = matrix[0] ?? []; rows = matrix.slice(1);
+    const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", raw: true, blankrows: true, range: 0 }).map((row) => row.map((value) => String(value ?? "")));
+    const populated = matrix.slice(1).map((row, i) => ({ row, number: i + 2 })).filter(item => item.row.some(value => value !== ""));
+    headers = matrix[0] ?? []; rows = populated.map(item => item.row); sourceRows = populated.map(item => item.number);
   }
   const issues = [...warnings, ...tableChecks(file, headers, rows)];
-  return { table: { fileId: file.fileId, domain: file.domain, headers, rows, warnings }, issues };
+  return { table: { fileId: file.fileId, domain: file.domain, headers, rows, warnings, sourceSheet, sourceRows }, issues: issues.map(issue => issue.code === "FORMULA_CELL_REFUSED" ? issue : { ...issue, row: issue.row >= 2 ? sourceRows?.[issue.row - 2] ?? issue.row : issue.row }) };
 }
 
 export async function packageDigest(rootInput: string, manifest: PackageManifest) {
@@ -347,8 +352,10 @@ function mappingIndex(catalogue: MappingCatalogue) {
 function proposed(value: string, entry: MappingEntry) {
   const trimmed = value.normalize("NFC").trim();
   if (/CONTROLLED_CODE|UPPERCASE/.test(entry.transformation)) return trimmed.toUpperCase();
+  if (/LOWERCASE/.test(entry.transformation)) return trimmed.toLowerCase();
   return trimmed;
 }
+export { proposed as proposeOnboardingMappedValue };
 
 function validDeclaredDate(value: string) {
   const input = value.trim(); let year: number, month: number, day: number;
@@ -376,7 +383,7 @@ export async function dryRunPackage(root: string, catalogue: MappingCatalogue): 
     normalizedHeaders.forEach((header) => { if (domainMappings.has(header)) mappedFields += 1; else { unmappedFields += 1; issues.push({ state: "UNMAPPED_VALUE", fileId: table.fileId, row: 1, fieldId: header, code: "UNMAPPED_HEADER", severity: "REVIEW" }); } if (SENSITIVE_HEADERS.has(header)) sensitive.add(header); });
     let financialTotal = 0n, acceptedFinancialTotal = 0n;
     for (const [rowIndex, row] of table.rows.entries()) {
-      rowsReceived += 1; let blocked = false, rowFinancialTotal = 0n; const rowNumber = rowIndex + 2; const rowValues = new Map<string, string>();
+      rowsReceived += 1; let blocked = false, rowFinancialTotal = 0n; const rowNumber = table.sourceRows?.[rowIndex] ?? rowIndex + 2; const rowValues = new Map<string, string>();
       for (const [columnIndex, raw] of row.entries()) {
         const fieldId = normalizedHeaders[columnIndex] ?? `column_${columnIndex + 1}`; const entry = domainMappings.get(fieldId); rowValues.set(fieldId, raw.normalize("NFC").trim());
         if (SENSITIVE_HEADERS.has(fieldId)) { sensitive.add(fieldId); issues.push({ state: "SENSITIVE_REQUIRES_APPROVAL", fileId: table.fileId, row: rowNumber, fieldId, code: "SENSITIVE_FIELD_GATE", severity: "REVIEW" }); }

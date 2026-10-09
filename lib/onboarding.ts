@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import * as XLSX from "xlsx";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
-import { requireCriticalReauthentication, type IamActor } from "@/lib/iam/security";
+import { assertActorPermission, requireCriticalReauthentication, type IamActor } from "@/lib/iam/security";
 import { parseOnboardingWorkbook } from "@/lib/onboarding-workbooks";
 import { readOnboardingWorkbook, sha256 } from "@/lib/onboarding-storage";
 import type { OnboardingBundle, OnboardingIssue, OnboardingWorkbookRows } from "@/lib/onboarding-types";
@@ -10,7 +10,7 @@ import { REAL_DATA_IMPORTS_FEATURE, assertOperationalReleaseFeature } from "@/li
 
 type Client = PrismaClient | Prisma.TransactionClient;
 type Resolution = "CREATE_NEW" | "LINK_EXISTING" | "UPDATE_EXISTING" | "SKIP" | "REJECT_ROW";
-type Resolutions = Record<string, { decision: Resolution; reason: string }>;
+export type Resolutions = Record<string, { decision: Resolution; reason: string }>;
 type NormalizedPlan = ReturnType<typeof normalizeWorkbook>;
 export const ONBOARDING_PLAN_TTL_MS = 30 * 60 * 1000;
 export const PRIVILEGED_ROLE_PROPOSALS = new Set(["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ADMIN"]);
@@ -20,6 +20,11 @@ export class OnboardingError extends Error { constructor(message: string, public
 export async function createDryRunPlan(client: Client, batch: any, rows: OnboardingWorkbookRows, resolutions: Resolutions = {}) {
   const normalized = normalizeWorkbook(rows);
   const issues: OnboardingIssue[] = [...normalized.issues];
+  if ("Preparation Held Rows" in rows.metadata && (!/^\d+$/.test(rows.metadata["Preparation Held Rows"]) || Number(rows.metadata["Preparation Held Rows"]) !== 0)) issues.push(issue("PREPARATION_ROWS_HELD", "BLOCKING_ERROR", "Template Metadata", 0, "", "Preparation Held Rows", "The source review ledger has held records. Correct the explicitly selected source package and regenerate a new draft before target validation."));
+  for (const [rowKey, resolution] of Object.entries(resolutions)) {
+    const known = [...normalized.students, ...normalized.guardians, ...normalized.staff].some(row => row.rowKey === rowKey);
+    if (!known || !["CREATE_NEW", "LINK_EXISTING", "SKIP", "REJECT_ROW"].includes(resolution?.decision) || typeof resolution?.reason !== "string" || !resolution.reason.trim() || resolution.reason.length > 500) issues.push(issue("RESOLUTION_INVALID", "BLOCKING_ERROR", "Decisions", 0, rowKey, "Decision", "Use a supported decision for a current entity row and record a bounded reason."));
+  }
   const [classSections, students, guardians, staff, profiles] = await Promise.all([
     client.timetableClassSection.findMany({ select: { academicYear: true, className: true, section: true, isActive: true, updatedAt: true } }),
     client.student.findMany({ select: { id: true, admissionNo: true, studentName: true, dateOfBirth: true, phone1: true, updatedAt: true } }),
@@ -27,8 +32,8 @@ export async function createDryRunPlan(client: Client, batch: any, rows: Onboard
     client.staffMember.findMany({ select: { id: true, staffCode: true, fullName: true, mobile: true, email: true, department: true, designation: true, updatedAt: true } }),
     client.permissionProfile.findMany({ where: { status: "ACTIVE" }, select: { name: true, updatedAt: true } })
   ]);
-  const referenceHash = stableHash({ classSections, profiles: profiles.map((r) => r.name), departments: unique(staff.map((r) => r.department).filter((value): value is string => Boolean(value))), designations: unique(staff.map((r) => r.designation)) });
-  const targetHash = stableHash({ students: students.map(targetVersion), guardians: guardians.map(targetVersion), staff: staff.map(targetVersion) });
+  const referenceHash = stableHash({ classSections: [...classSections].sort((a, b) => stableHash(a).localeCompare(stableHash(b))), profiles: profiles.map((r) => r.name).sort(), departments: unique(staff.map((r) => r.department).filter((value): value is string => Boolean(value))), designations: unique(staff.map((r) => r.designation)) });
+  const targetHash = stableHash({ students: students.map(targetVersion).sort((a, b) => String(a[0]).localeCompare(String(b[0]))), guardians: guardians.map(targetVersion).sort((a, b) => String(a[0]).localeCompare(String(b[0]))), staff: staff.map(targetVersion).sort((a, b) => String(a[0]).localeCompare(String(b[0]))) });
   const references = new Map(classSections.map((r) => [`${key(r.academicYear)}|${key(r.className)}|${key(r.section)}`, r]));
   const studentByAdmission = new Map(students.map((r) => [key(r.admissionNo), r]));
   const guardianByMobile = new Map(guardians.map((r) => [digits(r.primaryMobile), r]));
@@ -40,6 +45,11 @@ export async function createDryRunPlan(client: Client, batch: any, rows: Onboard
   const guardianKeys = new Map(normalized.guardians.map((r) => [r.rowKey, r]));
 
   for (const row of normalized.students) {
+    const reference = references.get(`${key(row.academicYear)}|${key(row.className)}|${key(row.section)}`);
+    if (!reference) issues.push(issue("REFERENCE_SETUP_REQUIRED", "BLOCKING_ERROR", "Students", row.rowNumber, row.rowKey, "Class", "Academic year, class and section must exactly match configured reference data."));
+    else if (!reference.isActive) issues.push(issue("REFERENCE_INACTIVE", "BLOCKING_ERROR", "Students", row.rowNumber, row.rowKey, "Class", "The configured class/section is inactive."));
+    const currentEnrollments = normalized.enrollments.filter(enrollment => enrollment.studentRowKey === row.rowKey && key(enrollment.academicYear) === key(row.academicYear));
+    if (currentEnrollments.some(enrollment => key(enrollment.className) !== key(row.className) || key(enrollment.section) !== key(row.section))) issues.push(issue("STUDENT_ENROLLMENT_REFERENCE_CONFLICT", "BLOCKING_ERROR", "Students", row.rowNumber, row.rowKey, "Class", "Student and enrollment values conflict for the selected academic year. Preserve both sources and correct the reviewed workbook."));
     const existing = studentByAdmission.get(key(row.admissionNo));
     if (existing) duplicateIssue(issues, "STUDENT_ADMISSION_EXISTS", "Students", row.rowNumber, row.rowKey, "Admission Number", row.admissionNo, resolutions, "An existing Student has this admission number.");
     else {
@@ -90,12 +100,13 @@ export async function createDryRunPlan(client: Client, batch: any, rows: Onboard
   const decisionRows = issues.filter((r) => r.severity === "REQUIRES_USER_DECISION").length;
   const blocking = issues.filter((r) => r.severity === "BLOCKING_ERROR").length;
   const warnings = issues.filter((r) => r.severity === "WARNING" || r.severity === "POSSIBLE_DUPLICATE").length;
+  const entityRows = [...normalized.students, ...normalized.guardians, ...normalized.staff];
   const summary = {
     workbookHash: batch.workbookSha256, templateVersion: batch.templateVersion,
     sheetRows: { Students: normalized.students.length, Guardians: normalized.guardians.length, "Student-Guardian Links": normalized.links.length, Enrollments: normalized.enrollments.length, Staff: normalized.staff.length },
-    createCount: normalized.students.length + normalized.guardians.length + normalized.staff.length,
+    createCount: entityRows.filter(row => !["LINK_EXISTING", "SKIP", "REJECT_ROW"].includes(resolutions[row.rowKey]?.decision ?? "")).length,
     updateCount: 0, linkCount: normalized.links.length, enrollmentCount: normalized.enrollments.length,
-    skipCount: Object.values(resolutions).filter((r) => r.decision === "SKIP" || r.decision === "REJECT_ROW").length,
+    skipCount: Object.values(resolutions).filter((r) => r?.decision === "SKIP" || r?.decision === "REJECT_ROW").length,
     warningCount: warnings, blockingErrorCount: blocking, duplicateCount: issues.filter((r) => r.severity === "POSSIBLE_DUPLICATE" || r.severity === "REQUIRES_USER_DECISION").length,
     unresolvedDecisionCount: decisionRows,
     accountProposalCount: normalized.guardians.filter((r) => r.parentAccountProposal).length + normalized.staff.filter((r) => r.portalAccountProposal).length,
@@ -120,7 +131,7 @@ export async function validateStoredBatch(client: PrismaClient, publicKey: strin
   const plan = await createDryRunPlan(client, batch, rows, resolutions);
   const expiresAt = new Date(Date.now() + ONBOARDING_PLAN_TTL_MS);
   const updated = await client.$transaction(async (tx) => {
-    const changed = await tx.onboardingBatch.updateMany({ where: { id: batch.id, version: batch.version, status: { in: ["UPLOADED", "VALIDATED", "APPROVAL_REQUIRED", "REJECTED"] } }, data: { status: plan.summary.blockingErrorCount || plan.summary.unresolvedDecisionCount ? "VALIDATED" : "APPROVAL_REQUIRED", version: { increment: 1 }, planVersion: { increment: 1 }, planHash: plan.planHash, planSummaryJson: JSON.stringify({ ...plan.summary, issues: plan.issues, resolutions }), referenceVersionHash: plan.referenceHash, targetVersionHash: plan.targetHash, planExpiresAt: expiresAt, approvedAt: null, approvedByUserId: null, approvalReason: null } });
+    const changed = await tx.onboardingBatch.updateMany({ where: { id: batch.id, version: batch.version, status: { in: ["UPLOADED", "VALIDATED", "APPROVAL_REQUIRED", "APPROVED", "REJECTED"] } }, data: { status: plan.summary.blockingErrorCount || plan.summary.unresolvedDecisionCount ? "VALIDATED" : "APPROVAL_REQUIRED", version: { increment: 1 }, planVersion: { increment: 1 }, planHash: plan.planHash, planSummaryJson: JSON.stringify({ ...plan.summary, issues: plan.issues, resolutions }), referenceVersionHash: plan.referenceHash, targetVersionHash: plan.targetHash, planExpiresAt: expiresAt, approvedAt: null, approvedByUserId: null, approvalReason: null } });
     if (changed.count !== 1) throw new OnboardingError("The batch changed while validation was running.", 409, "BATCH_VERSION_CHANGED");
     const next = await tx.onboardingBatch.findUniqueOrThrow({ where: { id: batch.id } });
     await appendAudit(tx, next.id, "VALIDATED", batch.status, next.status, actorUserId, null, plan.planHash);
@@ -130,11 +141,12 @@ export async function validateStoredBatch(client: PrismaClient, publicKey: strin
 }
 
 export async function approveOnboardingBatch(client: PrismaClient, publicKey: string, actor: IamActor, input: { reason: string; reauthPassword: string; planHash: string; workbookHash: string }) {
+  const authority = await assertActorPermission(client, actor, "APPROVE_ONBOARDING_BATCH");
   await requireCriticalReauthentication(client, actor, input.reauthPassword);
   const reason = bounded(input.reason, "Approval reason", 12, 500);
   const batch = await client.onboardingBatch.findUnique({ where: { publicKey } });
   if (!batch || batch.status !== "APPROVAL_REQUIRED") throw new OnboardingError("A current approval-ready plan is required.", 409, "PLAN_NOT_APPROVABLE");
-  if (actor.user.role === "PRINCIPAL" && batch.bundleType !== "STUDENT_GUARDIAN") throw new OnboardingError("Principal approval is limited to the Student and Guardian onboarding bundle.", 403, "BUNDLE_APPROVAL_SCOPE_REFUSED");
+  if (authority.role === "PRINCIPAL" && batch.bundleType !== "STUDENT_GUARDIAN") throw new OnboardingError("Principal approval is limited to the Student and Guardian onboarding bundle.", 403, "BUNDLE_APPROVAL_SCOPE_REFUSED");
   if (batch.planExpiresAt == null || batch.planExpiresAt <= new Date()) throw new OnboardingError("The dry-run plan has expired.", 409, "PLAN_EXPIRED");
   if (batch.planHash !== input.planHash || batch.workbookSha256 !== input.workbookHash) throw new OnboardingError("The workbook or plan changed.", 409, "PLAN_HASH_CHANGED");
   const summary = JSON.parse(batch.planSummaryJson ?? "{}") as any;
@@ -142,15 +154,21 @@ export async function approveOnboardingBatch(client: PrismaClient, publicKey: st
   const privileged = Array.isArray(summary.issues) && summary.issues.some((r: any) => r.code === "PRIVILEGED_ROLE_PROPOSAL");
   if (privileged && batch.uploadedByUserId === actor.user.id) throw new OnboardingError("A privileged IAM proposal requires separation of duties.", 403, "SELF_APPROVAL_REFUSED");
   return client.$transaction(async (tx) => {
-    const changed = await tx.onboardingBatch.updateMany({ where: { id: batch.id, version: batch.version, status: "APPROVAL_REQUIRED" }, data: { status: "APPROVED", approvedByUserId: actor.user.id, approvalReason: reason, approvedAt: new Date(), version: { increment: 1 } } });
+    const currentAuthority = await assertActorPermission(tx, actor, "APPROVE_ONBOARDING_BATCH");
+    if (currentAuthority.role === "PRINCIPAL" && batch.bundleType !== "STUDENT_GUARDIAN") throw new OnboardingError("Principal approval is limited to the Student and Guardian onboarding bundle.", 403, "BUNDLE_APPROVAL_SCOPE_REFUSED");
+    const bytes = await readOnboardingWorkbook(batch.storageKey, batch.workbookSha256);
+    const currentPlan = await createDryRunPlan(tx, batch, parseOnboardingWorkbook(bytes, batch.bundleType as OnboardingBundle), summary.resolutions ?? {});
+    if (currentPlan.planHash !== batch.planHash || currentPlan.referenceHash !== batch.referenceVersionHash || currentPlan.targetHash !== batch.targetVersionHash) throw new OnboardingError("Reference or target data changed; validate again.", 409, "PLAN_STALE");
+    const changed = await tx.onboardingBatch.updateMany({ where: { id: batch.id, version: batch.version, status: "APPROVAL_REQUIRED", planExpiresAt: { gt: new Date() } }, data: { status: "APPROVED", approvedByUserId: actor.user.id, approvalReason: reason, approvedAt: new Date(), version: { increment: 1 } } });
     if (changed.count !== 1) throw new OnboardingError("The batch changed before approval.", 409, "BATCH_VERSION_CHANGED");
     await appendAudit(tx, batch.id, "APPROVED", batch.status, "APPROVED", actor.user.id, reason, batch.planHash);
     return presentBatch(await tx.onboardingBatch.findUniqueOrThrow({ where: { id: batch.id } }));
-  });
+  }, { isolationLevel: "Serializable" });
 }
 
 export async function executeOnboardingBatch(client: PrismaClient, publicKey: string, actor: IamActor, input: { reason: string; reauthPassword: string; planHash: string; workbookHash: string; idempotencyKey: string }) {
   assertOperationalReleaseFeature(REAL_DATA_IMPORTS_FEATURE);
+  await assertActorPermission(client, actor, "EXECUTE_ONBOARDING_BATCH");
   await requireCriticalReauthentication(client, actor, input.reauthPassword);
   const reason = bounded(input.reason, "Execution reason", 12, 500), idempotencyKey = opaqueKey(input.idempotencyKey);
   const batch = await client.onboardingBatch.findUnique({ where: { publicKey } });
@@ -169,20 +187,25 @@ export async function executeOnboardingBatch(client: PrismaClient, publicKey: st
   if (plan.planHash !== batch.planHash || plan.referenceHash !== batch.referenceVersionHash || plan.targetHash !== batch.targetVersionHash) throw new OnboardingError("Reference or target data changed; validate again.", 409, "PLAN_STALE");
   if (plan.summary.blockingErrorCount || plan.summary.unresolvedDecisionCount) throw new OnboardingError("The approved plan contains unresolved issues.", 409, "PLAN_HAS_BLOCKERS");
   return client.$transaction(async (tx) => {
-    const claim = await tx.onboardingBatch.updateMany({ where: { id: batch.id, version: batch.version, status: "APPROVED", executionIdempotencyKey: null }, data: { status: "EXECUTING", executionIdempotencyKey: idempotencyKey, executionPayloadHash: payloadHash, executedByUserId: actor.user.id, version: { increment: 1 } } });
+    await assertActorPermission(tx, actor, "EXECUTE_ONBOARDING_BATCH");
+    assertOperationalReleaseFeature(REAL_DATA_IMPORTS_FEATURE);
+    const currentPlan = await createDryRunPlan(tx, batch, rows, saved.resolutions ?? {});
+    if (currentPlan.planHash !== batch.planHash || currentPlan.referenceHash !== batch.referenceVersionHash || currentPlan.targetHash !== batch.targetVersionHash) throw new OnboardingError("Reference or target data changed; validate again.", 409, "PLAN_STALE");
+    const claim = await tx.onboardingBatch.updateMany({ where: { id: batch.id, version: batch.version, status: "APPROVED", planExpiresAt: { gt: new Date() }, approvedAt: { not: null }, approvedByUserId: { not: null }, executionIdempotencyKey: null }, data: { status: "EXECUTING", executionIdempotencyKey: idempotencyKey, executionPayloadHash: payloadHash, executedByUserId: actor.user.id, version: { increment: 1 } } });
     if (claim.count !== 1) {
       const existing = await tx.onboardingBatch.findUniqueOrThrow({ where: { id: batch.id } });
       if (existing.executionIdempotencyKey === idempotencyKey && existing.executionPayloadHash === payloadHash && existing.executionResultJson) return presentBatch(existing);
       throw new OnboardingError("This batch is already being executed.", 409, "CONCURRENT_EXECUTION_REFUSED");
     }
-    const result = await applyPlan(tx, batch.id, plan, saved.resolutions ?? {});
+    const result = await applyPlan(tx, batch.id, currentPlan, saved.resolutions ?? {});
     const completed = await tx.onboardingBatch.update({ where: { id: batch.id }, data: { status: "COMPLETED", executedAt: new Date(), executionResultJson: JSON.stringify({ ...result, checksum: stableHash(result), reason }), version: { increment: 1 } } });
     await appendAudit(tx, batch.id, "EXECUTED", "APPROVED", "COMPLETED", actor.user.id, reason, stableHash(result));
     return presentBatch(completed, result);
-  }, { maxWait: 10_000, timeout: 120_000 });
+  }, { maxWait: 10_000, timeout: 120_000, isolationLevel: "Serializable" });
 }
 
 export async function rollbackOnboardingBatch(client: PrismaClient, publicKey: string, actor: IamActor, input: { reason: string; reauthPassword: string; execute?: boolean }) {
+  await assertActorPermission(client, actor, "ROLLBACK_ONBOARDING_BATCH");
   await requireCriticalReauthentication(client, actor, input.reauthPassword);
   const reason = bounded(input.reason, "Rollback reason", 12, 500);
   const batch = await client.onboardingBatch.findUnique({ where: { publicKey }, include: { rowOutcomes: true } });
@@ -193,13 +216,21 @@ export async function rollbackOnboardingBatch(client: PrismaClient, publicKey: s
   const preview = { eligible: dependencies.length === 0, dependencies, counts: Object.fromEntries(Object.entries(ids).map(([k, v]) => [k, v.length])), manualReconciliationRequired: dependencies.length > 0 };
   if (!input.execute) {
     return client.$transaction(async (tx) => {
-      await tx.onboardingBatch.update({ where: { id: batch.id }, data: { rollbackPreviewJson: JSON.stringify(preview), version: { increment: 1 } } });
-      await appendAudit(tx, batch.id, preview.eligible ? "ROLLBACK_PREVIEW_ELIGIBLE" : "ROLLBACK_PREVIEW_BLOCKED", "COMPLETED", "COMPLETED", actor.user.id, reason, stableHash(preview));
-      return preview;
-    });
+      await assertActorPermission(tx, actor, "ROLLBACK_ONBOARDING_BATCH");
+      const currentDependencies = await rollbackDependencies(tx, ids, createdOutcomes);
+      const currentPreview = { ...preview, dependencies: currentDependencies, eligible: currentDependencies.length === 0, manualReconciliationRequired: currentDependencies.length > 0 };
+      const changed = await tx.onboardingBatch.updateMany({ where: { id: batch.id, version: batch.version, status: "COMPLETED" }, data: { rollbackPreviewJson: JSON.stringify(currentPreview), version: { increment: 1 } } });
+      if (changed.count !== 1) throw new OnboardingError("The batch changed before rollback preview.", 409, "BATCH_VERSION_CHANGED");
+      await appendAudit(tx, batch.id, currentPreview.eligible ? "ROLLBACK_PREVIEW_ELIGIBLE" : "ROLLBACK_PREVIEW_BLOCKED", "COMPLETED", "COMPLETED", actor.user.id, reason, stableHash(currentPreview));
+      return currentPreview;
+    }, { isolationLevel: "Serializable" });
   }
   if (!preview.eligible) throw new OnboardingError("Later business activity blocks automatic rollback. Use manual reconciliation.", 409, "ROLLBACK_DEPENDENCY_EXISTS");
   return client.$transaction(async (tx) => {
+    await assertActorPermission(tx, actor, "ROLLBACK_ONBOARDING_BATCH");
+    const claimed = await tx.onboardingBatch.updateMany({ where: { id: batch.id, version: batch.version, status: "COMPLETED" }, data: { version: { increment: 1 } } });
+    if (claimed.count !== 1) throw new OnboardingError("The batch changed before rollback.", 409, "BATCH_VERSION_CHANGED");
+    if ((await rollbackDependencies(tx, ids, createdOutcomes)).length) throw new OnboardingError("Later business activity blocks automatic rollback.", 409, "ROLLBACK_DEPENDENCY_EXISTS");
     await tx.studentGuardian.deleteMany({ where: { id: { in: ids.LINK } } });
     await tx.academicYearEnrollment.deleteMany({ where: { id: { in: ids.ENROLLMENT } } });
     await tx.staffMember.deleteMany({ where: { id: { in: ids.STAFF } } });
@@ -209,7 +240,7 @@ export async function rollbackOnboardingBatch(client: PrismaClient, publicKey: s
     const rolled = await tx.onboardingBatch.update({ where: { id: batch.id }, data: { status: "ROLLED_BACK", rolledBackAt: new Date(), rolledBackByUserId: actor.user.id, rollbackReason: reason, rollbackPreviewJson: JSON.stringify(preview), version: { increment: 1 } } });
     await appendAudit(tx, batch.id, "ROLLED_BACK", "COMPLETED", "ROLLED_BACK", actor.user.id, reason, stableHash(preview));
     return presentBatch(rolled, preview);
-  });
+  }, { isolationLevel: "Serializable" });
 }
 
 export function buildErrorWorkbook(batchPublicKey: string, issues: OnboardingIssue[]) {
@@ -232,6 +263,11 @@ function normalizeWorkbook(rows: OnboardingWorkbookRows) {
   duplicateValues(links, "linkIdentity", "Student-Guardian Links", "DUPLICATE_RELATIONSHIP", issues);
   duplicateValues(enrollments, "enrollmentIdentity", "Enrollments", "DUPLICATE_ENROLLMENT", issues);
   duplicateValues(enrollments, "rollIdentity", "Enrollments", "DUPLICATE_ROLL_NUMBER", issues);
+  for (const problem of issues) if (!problem.rowKey && problem.row >= 2) {
+    const records = ({ Students: students, Guardians: guardians, Staff: staff, Enrollments: enrollments, "Student-Guardian Links": links } as Record<string, Array<{ rowKey: string; rowNumber: number }>>)[problem.sheet];
+    problem.rowKey = records?.find(row => row.rowNumber === problem.row)?.rowKey;
+    problem.suggestion ??= "Supply the verified required value in the source workbook. Upload the corrected workbook and validate a new batch; previous approval does not transfer.";
+  }
   return { students, guardians, links, enrollments, staff, issues };
 }
 function normalizeStudent(r: any, rowNumber: number, issues: OnboardingIssue[], seen: Set<string>) { const rowKey = required(r["Import Row Key"], "STUDENT_ROW_KEY_REQUIRED", "Students", rowNumber, issues); uniqueKey(rowKey, seen, "Students", rowNumber, issues); const dateOfBirth = date(r["Date of Birth"], "Students", rowNumber, rowKey, issues); if (dateOfBirth && dateOfBirth > new Date()) issues.push(issue("DOB_IN_FUTURE", "BLOCKING_ERROR", "Students", rowNumber, rowKey, "Date of Birth", "Date of birth cannot be in the future.")); return { rowNumber, rowKey, candidateId: null as string | null, admissionNo: required(r["Admission Number"], "ADMISSION_NUMBER_REQUIRED", "Students", rowNumber, issues), studentName: required(r["Student Full Name"], "STUDENT_NAME_REQUIRED", "Students", rowNumber, issues), fatherName: required(r["Father Name"], "FATHER_NAME_REQUIRED", "Students", rowNumber, issues), motherName: optional(r["Mother Name"]), phone1: phone(r["Phone"], "Students", rowNumber, rowKey, issues, true), phone2: phone(r["Alternate Phone"], "Students", rowNumber, rowKey, issues), dateOfBirth, academicYear: required(r["Academic Year"], "ACADEMIC_YEAR_REQUIRED", "Students", rowNumber, issues), className: required(r.Class, "CLASS_REQUIRED", "Students", rowNumber, issues), section: optional(r.Section), rollNo: optional(r["Roll Number"]), status: enumText(r["Student Status"], ["ACTIVE", "INACTIVE"], "ACTIVE", "Students", rowNumber, rowKey, issues), notes: optional(r.Notes) }; }
@@ -250,8 +286,21 @@ async function applyPlan(tx: Prisma.TransactionClient, batchId: string, plan: Aw
   return counts;
 }
 
-async function rollbackDependencies(client: PrismaClient, ids: ReturnType<typeof groupOutcomeIds>, createdOutcomes: any[]) {
+async function rollbackDependencies(client: Client, ids: ReturnType<typeof groupOutcomeIds>, createdOutcomes: any[]) {
   const reasons: string[] = [];
+  const externalLinks = await client.studentGuardian.count({ where: { id: { notIn: ids.LINK }, OR: [{ studentId: { in: ids.STUDENT } }, { guardianId: { in: ids.GUARDIAN } }] } });
+  const externalEnrollments = await client.academicYearEnrollment.count({ where: { id: { notIn: ids.ENROLLMENT }, studentId: { in: ids.STUDENT } } });
+  if (externalLinks) reasons.push(`LATER_RELATIONSHIP:${externalLinks}`);
+  if (externalEnrollments) reasons.push(`LATER_ENROLLMENT:${externalEnrollments}`);
+  // These relations use SetNull, so database FK rejection alone cannot protect
+  // the unrelated downstream record from being silently changed by deletion.
+  const [progressionSources, rawPunches, substituteDuties, transportDuties] = await Promise.all([
+    client.studentProgressionDecision.count({ where: { sourceEnrollmentId: { in: ids.ENROLLMENT } } }),
+    client.biometricRawPunch.count({ where: { staffMemberId: { in: ids.STAFF } } }),
+    client.substituteAssignment.count({ where: { substituteStaffMemberId: { in: ids.STAFF } } }),
+    client.transportRoute.count({ where: { OR: [{ driverStaffMemberId: { in: ids.STAFF } }, { attendantStaffMemberId: { in: ids.STAFF } }] } })
+  ]);
+  for (const [label, count] of [["PROGRESSION_SOURCE", progressionSources], ["BIOMETRIC_PUNCH", rawPunches], ["SUBSTITUTE_DUTY", substituteDuties], ["TRANSPORT_DUTY", transportDuties]] as const) if (count) reasons.push(`${label}:${count}`);
   const [payments, attendance, marks, cards, classwork, departures, support, payroll, parentAccounts, staffAccounts, students, guardians, links, enrollments, staff] = await Promise.all([
     client.payment.count({ where: { studentId: { in: ids.STUDENT } } }),
     client.studentAttendanceRecord.count({ where: { studentId: { in: ids.STUDENT } } }),
@@ -261,7 +310,7 @@ async function rollbackDependencies(client: PrismaClient, ids: ReturnType<typeof
     client.studentDepartureRequest.count({ where: { studentId: { in: ids.STUDENT } } }),
     client.supportRequestLinkedChild.count({ where: { studentId: { in: ids.STUDENT } } }),
     client.employeePayrollResult.count({ where: { staffMemberId: { in: ids.STAFF } } }),
-    client.user.count({ where: { guardianId: { in: ids.GUARDIAN }, isActive: true } }),
+    client.user.count({ where: { guardianId: { in: ids.GUARDIAN } } }),
     client.staffMember.count({ where: { id: { in: ids.STAFF }, userId: { not: null } } }),
     client.student.findMany({ where: { id: { in: ids.STUDENT } } }),
     client.guardian.findMany({ where: { id: { in: ids.GUARDIAN } } }),
@@ -282,13 +331,13 @@ async function outcome(tx: Prisma.TransactionClient, batchId: string, entityType
 async function appendAudit(tx: Prisma.TransactionClient, batchId: string, eventType: string, previousStatus: string | null, newStatus: string | null, actorUserId: string, reasonSafe: string | null, evidenceHash: string | null) { const last = await tx.onboardingAuditEvent.findFirst({ where: { batchId }, orderBy: { sequence: "desc" }, select: { sequence: true } }); await tx.onboardingAuditEvent.create({ data: { batchId, sequence: (last?.sequence ?? 0) + 1, eventType, previousStatus, newStatus, actorUserId, reasonSafe, evidenceHash } }); }
 export function presentBatch(batch: any, result?: any, issues?: OnboardingIssue[], resolutions?: Resolutions) { return { batchReference: batch.publicKey, bundleType: batch.bundleType, mode: batch.mode, status: batch.status, version: batch.version, workbookHash: batch.workbookSha256, templateVersion: batch.templateVersion, schemaVersion: batch.schemaVersion, planHash: batch.planHash, planVersion: batch.planVersion, planExpiresAt: batch.planExpiresAt, approvedAt: batch.approvedAt, executedAt: batch.executedAt, rolledBackAt: batch.rolledBackAt, createdAt: batch.createdAt, result: result ?? safeJson(batch.executionResultJson), plan: safeJson(batch.planSummaryJson), issues, resolutions } as const; }
 function safeJson(value: string | null | undefined) { try { return value ? JSON.parse(value) : null; } catch { return null; } }
-function duplicateIssue(issues: OnboardingIssue[], code: string, sheet: string, row: number, rowKey: string, column: string, value: string, resolutions: Resolutions, message: string, allowCreateNew = false, linkUnambiguous = true) { const decision = resolutions[rowKey]; if (!decision) issues.push({ code, severity: "REQUIRES_USER_DECISION", sheet, row, rowKey, column, submittedValue: value, message, suggestion: allowCreateNew ? "Choose CREATE_NEW, LINK_EXISTING, SKIP or REJECT_ROW and record a reason." : "Choose LINK_EXISTING, SKIP or REJECT_ROW and record a reason." }); else if (!decision.reason?.trim()) issues.push(issue("DECISION_REASON_REQUIRED", "BLOCKING_ERROR", sheet, row, rowKey, column, "A duplicate decision requires a reason.")); else if (decision.decision === "UPDATE_EXISTING") issues.push(issue("UPDATE_MODE_NOT_AUTHORISED", "BLOCKING_ERROR", sheet, row, rowKey, column, "Updates require a separately authorised correction workbook.")); else if (decision.decision === "CREATE_NEW" && !allowCreateNew) issues.push(issue("CREATE_DUPLICATE_REFUSED", "BLOCKING_ERROR", sheet, row, rowKey, column, "Create-new is not safe for an existing governed identifier; link, skip or reject the row.")); else if (decision.decision === "LINK_EXISTING" && !linkUnambiguous) issues.push(issue("AMBIGUOUS_LINK_REFUSED", "BLOCKING_ERROR", sheet, row, rowKey, column, "More than one possible target exists; linking is refused until the workbook is corrected.")); }
+function duplicateIssue(issues: OnboardingIssue[], code: string, sheet: string, row: number, rowKey: string, column: string, value: string, resolutions: Resolutions, message: string, allowCreateNew = false, linkUnambiguous = true) { const decision = resolutions[rowKey]; if (!decision) issues.push({ code, severity: "REQUIRES_USER_DECISION", sheet, row, rowKey, column, submittedValue: value, message, suggestion: allowCreateNew ? "Choose CREATE_NEW, LINK_EXISTING, SKIP or REJECT_ROW and record a reason." : "Choose LINK_EXISTING, SKIP or REJECT_ROW and record a reason." }); else if (typeof decision.reason !== "string" || !decision.reason.trim()) issues.push(issue("DECISION_REASON_REQUIRED", "BLOCKING_ERROR", sheet, row, rowKey, column, "A duplicate decision requires a reason.")); else if (decision.decision === "UPDATE_EXISTING") issues.push(issue("UPDATE_MODE_NOT_AUTHORISED", "BLOCKING_ERROR", sheet, row, rowKey, column, "Updates require a separately authorised correction workbook.")); else if (decision.decision === "CREATE_NEW" && !allowCreateNew) issues.push(issue("CREATE_DUPLICATE_REFUSED", "BLOCKING_ERROR", sheet, row, rowKey, column, "Create-new is not safe for an existing governed identifier; link, skip or reject the row.")); else if (decision.decision === "LINK_EXISTING" && !linkUnambiguous) issues.push(issue("AMBIGUOUS_LINK_REFUSED", "BLOCKING_ERROR", sheet, row, rowKey, column, "More than one possible target exists; linking is refused until the workbook is corrected.")); }
 function issue(code: string, severity: OnboardingIssue["severity"], sheet: string, row: number, rowKey: string, column: string, message: string): OnboardingIssue { return { code, severity, sheet, row, rowKey, column, message }; }
 function required(value: unknown, code: string, sheet: string, row: number, issues: OnboardingIssue[]) { const result = text(value); if (!result) issues.push(issue(code, "BLOCKING_ERROR", sheet, row, "", "", `${code.replaceAll("_", " ").toLowerCase()} is required.`)); return result; }
 function optional(value: unknown) { return text(value) || null; }
 function text(value: unknown) { return String(value ?? "").trim().normalize("NFC").slice(0, 500); }
 function uniqueKey(value: string, seen: Set<string>, sheet: string, row: number, issues: OnboardingIssue[]) { const normalized = key(value); if (normalized && seen.has(normalized)) issues.push(issue("DUPLICATE_ROW_KEY", "BLOCKING_ERROR", sheet, row, value, "Row Key", "The row key is duplicated.")); seen.add(normalized); }
-function phone(value: unknown, sheet: string, row: number, rowKey: string, issues: OnboardingIssue[], requiredValue = false) { const raw = text(value); if (!raw) { if (requiredValue) issues.push(issue("PHONE_REQUIRED", "BLOCKING_ERROR", sheet, row, rowKey, "Phone", "A phone number is required.")); return ""; } const result = digits(raw); if (result.length === 12 && result.startsWith("91")) return result.slice(2); if (result.length !== 10 || !/^[6-9]/.test(result)) issues.push(issue("PHONE_INVALID", "BLOCKING_ERROR", sheet, row, rowKey, "Phone", "Use a valid 10-digit Indian mobile number.")); return result; }
+function phone(value: unknown, sheet: string, row: number, rowKey: string, issues: OnboardingIssue[], requiredValue = false) { const raw = text(value); if (!raw) { if (requiredValue) issues.push(issue("PHONE_REQUIRED", "BLOCKING_ERROR", sheet, row, rowKey, "Phone", "A phone number is required.")); return ""; } let result = digits(raw); if (result.length === 12 && result.startsWith("91")) result = result.slice(2); if (result.length !== 10 || !/^[6-9]/.test(result)) issues.push(issue("PHONE_INVALID", "BLOCKING_ERROR", sheet, row, rowKey, "Phone", "Use a valid 10-digit Indian mobile number.")); return result; }
 function email(value: unknown, sheet: string, row: number, rowKey: string, issues: OnboardingIssue[]) { const result = text(value).toLowerCase(); if (result && (!/^\S+@\S+\.\S+$/.test(result) || result.length > 254)) issues.push(issue("EMAIL_INVALID", "BLOCKING_ERROR", sheet, row, rowKey, "Email", "The email format is invalid.")); return result || null; }
 function date(value: unknown, sheet: string, row: number, rowKey: string, issues: OnboardingIssue[]) { if (value == null || value === "") return null; let result: Date | null = null, parts: [number, number, number] | null = null; if (typeof value === "number" && Number.isFinite(value)) result = new Date(Date.UTC(1899, 11, 30) + value * 86400000); else { const raw = text(value), m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$|^(\d{1,2})[/.](\d{1,2})[/.](\d{4})$/); if (m) { parts = [Number(m[1] ?? m[6]), Number(m[2] ?? m[5]), Number(m[3] ?? m[4])]; result = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2])); } } if (!result || Number.isNaN(result.getTime()) || parts && (result.getUTCFullYear() !== parts[0] || result.getUTCMonth() + 1 !== parts[1] || result.getUTCDate() !== parts[2])) { issues.push(issue("DATE_INVALID", "BLOCKING_ERROR", sheet, row, rowKey, "Date", "Use a valid YYYY-MM-DD or DD/MM/YYYY date.")); return null; } return result; }
 function bool(value: unknown, sheet: string, row: number, rowKey: string, issues: OnboardingIssue[], defaultValue = false) { const raw = key(value); if (!raw) return defaultValue; if (["YES", "TRUE", "1"].includes(raw)) return true; if (["NO", "FALSE", "0"].includes(raw)) return false; issues.push(issue("BOOLEAN_INVALID", "BLOCKING_ERROR", sheet, row, rowKey, "Boolean", "Use YES or NO.")); return defaultValue; }

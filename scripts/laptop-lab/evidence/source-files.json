@@ -1,0 +1,51 @@
+{
+  "baseSource": "baa49c738e009f99c5e741a04bc3fe8f8862a848",
+  "evidence": "HARNESS_ONLY",
+  "files": [
+    {
+      "path": "scripts/laptop-lab/cli.mjs",
+      "bytes": 2625,
+      "sha256": "b3fb74c45934c09194e5c5edf4bf3ef005e895dc54153bd66ff3b5665f91d757"
+    },
+    {
+      "path": "scripts/laptop-lab/config.mjs",
+      "bytes": 4136,
+      "sha256": "aceed644302aef1aae07ac2cdb0a106ee86a48334589730084433b120a3502cc"
+    },
+    {
+      "path": "scripts/laptop-lab/fixture.mjs",
+      "bytes": 2578,
+      "sha256": "83196f9be482f4c366440ccaf024dd6e24654f478a021c98742469a3dc721be5"
+    },
+    {
+      "path": "scripts/laptop-lab/host-preflight.ps1",
+      "bytes": 1257,
+      "sha256": "79b65c946f2c1e6aeb8c55a29fba91fc9535d97d5584cb8c5f8995bd7a448b57"
+    },
+    {
+      "path": "scripts/laptop-lab/lab.test.mjs",
+      "bytes": 12396,
+      "sha256": "6635500c6793b5979fad1a16d5202506e131ff1bea8e68f6383e1767ddf3e19d"
+    },
+    {
+      "path": "scripts/laptop-lab/metrics.mjs",
+      "bytes": 4509,
+      "sha256": "d72f12a5c370ebfaa0d16ca8d46c68c8059ce6b2d0faa5ba0d8973045e7c0e21"
+    },
+    {
+      "path": "scripts/laptop-lab/output.mjs",
+      "bytes": 3475,
+      "sha256": "ad333dfc9025cf26524d3ed7659f0a6cf9627678490f30464f45f63dc091e383"
+    },
+    {
+      "path": "scripts/laptop-lab/report.mjs",
+      "bytes": 7029,
+      "sha256": "cab942d8f804329c6fcb05899054dfd5e2b164d29f83fc0001290c83e8e0d62c"
+    },
+    {
+      "path": "scripts/laptop-lab/runner.mjs",
+      "bytes": 5317,
+      "sha256": "b3ccba537f3b002b16a876c363f5d3ea1d48de1d50d8c055345ec7266aa2e221"
+    }
+  ]
+}
