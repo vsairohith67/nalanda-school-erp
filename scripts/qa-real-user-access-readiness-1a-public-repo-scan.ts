@@ -2,6 +2,7 @@ import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { reviewedBiometricCompanionPublicSources } from "./reviewed-biometric-companion-publication";
+import { reviewedV1IntegrationPublicSources } from "./reviewed-v1-integration-publication";
 
 const root = process.cwd();
 const required = [
@@ -33,6 +34,21 @@ for (const file of ["src-tauri/src/qa_observation.rs", "src-tauri/src/qa_privacy
 for (const file of ["tests/native/android.ts", "tests/native/android.test.ts", "tests/native/execute.ts", "tests/native/diagnostics.ts", "tests/native/component.mjs", "tests/native/NativeJourney.swift", "tests/native/NativeJourney.xcodeproj/project.pbxproj", "tests/native/NativeJourney.xcodeproj/xcshareddata/xcschemes/NativeJourney.xcscheme"]) allowedRootFiles.add(`apps/nalanda-cross-platform/${file}`);
 // Exact source admission only; complete content checks remain in the scan loop.
 for (const file of reviewedBiometricCompanionPublicSources) allowedRootFiles.add(file);
+// Exact independently reviewed 2A test-control sources only; every existing
+// binary, size, secret and contact check remains in the complete scan loop.
+for (const file of [
+  "apps/nalanda-biometric-bridge/scripts/owned-test-job.cs",
+  "apps/nalanda-biometric-bridge/scripts/owned-test-observer.mjs",
+  "apps/nalanda-biometric-bridge/scripts/controlled-tests.ps1",
+  "apps/nalanda-biometric-bridge/scripts/harmless-timeout-child.mjs",
+  "apps/nalanda-biometric-bridge/scripts/run-controlled-tests.mjs",
+  "apps/nalanda-biometric-bridge/scripts/controlled-test-contract.mjs",
+  "apps/nalanda-biometric-bridge/scripts/controlled-test-contract.test.mjs"
+]) {
+  if (!reviewedV1IntegrationPublicSources.includes(file)) throw new Error("REVIEWED_OWNED_TEST_SOURCE_REGISTRATION_REQUIRED");
+  allowedRootFiles.add(file);
+}
+
 // Exact reviewed declaration receives full text checks, not an extension bypass.
 allowedRootFiles.add("scripts/portable/native-minimum-compile.d.mts");
 allowedRootFiles.add("scripts/portable/windows-compiler-ci.d.mts");
