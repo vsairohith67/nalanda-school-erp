@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   ...(process.env.NALANDA_STANDALONE_BUILD === "true" ? {
     output: "standalone" as const,
     // Runtime processing and retained QA evidence are not deployment inputs.
-    outputFileTracingExcludes: { "/*": ["./tmp/**/*"] }
+    outputFileTracingExcludes: { "**/*": ["./tmp/**/*"] }
   } : {}),
   poweredByHeader: false,
   serverExternalPackages: ["xlsx", "fflate"],
