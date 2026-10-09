@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect, it, vi, type TestContext } from "vitest";
 import { operationsPreparationProcess, OperationsProcessError, OperationsProcessOwner, type OperationsProcessEvent } from "../scripts/portable/operations-preparation-process";
-import { OperationsPreparationObservation, observedOperationsCase } from "./helpers/operations-preparation-observation";
+import { OperationsPreparationObservation, observedOperationsCase, type OperationsCaseContext } from "./helpers/operations-preparation-observation";
 import { QaTrace } from "./helpers/qa-reliability";
 import { finalizeQaReliability, prepareQaReliability } from "../scripts/qa-recovery-service-traces";
 
@@ -12,28 +12,33 @@ const owner = { contract: "NALANDA_SERVICE_TRACE_V1" as const, source: "a".repea
 
 // HARNESS_ONLY clock/lifecycle controls: the real observer and its registered
 // finished callback execute, with no Compose client or configured CI journal.
-async function isolatedLifecycleControl(assertions: (context: Pick<TestContext, "signal" | "onTestFinished">, finish: () => Promise<void>, receipts: any[], controller: AbortController) => Promise<void>) {
+async function isolatedLifecycleControl(assertions: (context: OperationsCaseContext, finish: () => Promise<void>, receipts: any[], controller: AbortController) => Promise<void>, task?: TestContext["task"]) {
   const saved = process.env.NALANDA_QA_RELIABILITY_TRACE_DIR, receipts: any[] = [], controller = new AbortController();
   let finished!: Parameters<TestContext["onTestFinished"]>[0];
-  const context: Pick<TestContext, "signal" | "onTestFinished"> = { signal: controller.signal, onTestFinished(handler, timeout) { expect(timeout).toBe(3000); finished = handler; } };
+  const context: OperationsCaseContext = { signal: controller.signal, ...(task ? { task } : {}), onTestFinished(handler, timeout) { expect(timeout).toBe(3000); finished = handler; } };
   const capture = vi.spyOn(console, "info").mockImplementation(message => { receipts.push(JSON.parse(String(message))); });
   delete process.env.NALANDA_QA_RELIABILITY_TRACE_DIR;
   try { await assertions(context, async () => { expect(finished).toBeTypeOf("function"); await finished({} as TestContext); }, receipts, controller); }
   finally { capture.mockRestore(); if (saved === undefined) delete process.env.NALANDA_QA_RELIABILITY_TRACE_DIR; else process.env.NALANDA_QA_RELIABILITY_TRACE_DIR = saved; }
 }
 
-it("HARNESS_ONLY: the revised case declares PASS only after its actual finished callback", async () => isolatedLifecycleControl(async (context, finish, receipts) => {
+it("HARNESS_ONLY: the revised case declares PASS only after its actual finished callback", async testContext => isolatedLifecycleControl(async (context, finish, receipts) => {
   let trace!: QaTrace;
   await observedOperationsCase(context, "local-single-node", async scope => { trace = scope.trace; scope.registerFixture(async () => {}); scope.execution(1); });
   expect(trace.directory).toBeUndefined();expect(trace.events.some(event => event.kind === "RESULT")).toBe(false);
+  expect(Object.getOwnPropertyDescriptor(testContext.task.meta, "operationsLifecycle")).toBeUndefined();
   await finish();
   expect(trace.events.find(event => event.kind === "RESULT")?.status).toBe("PASS");
   const receipt = receipts.find(row => row.stage === "FINISHED");
   expect(receipt).toMatchObject({ scope: "HARNESS_ONLY", declaredResult: "PASS", bodySettled: true, fixtureSettled: true, ownedWorkSettled: true, cancelled: false });
   for (const phase of [receipt.setup, receipt.action, receipt.teardown, receipt.finishedHook]) { expect(phase.startMs).toBeTypeOf("number");expect(phase.endMs).toBeGreaterThanOrEqual(phase.startMs); }
   expect(receipt.totalObservedMs).toBeLessThanOrEqual(48000);
+  const binding = Object.getOwnPropertyDescriptor(testContext.task.meta, "operationsLifecycle")!;
+  expect(binding).toMatchObject({ enumerable: true, writable: false, configurable: false, value: receipt });
+  expect(Object.isFrozen(binding.value)).toBe(true);expect(Object.isFrozen(binding.value.action)).toBe(true);
+  expect(JSON.parse(JSON.stringify(testContext.task.meta)).operationsLifecycle).toEqual(receipt);
   expect(JSON.stringify(receipts)).not.toMatch(/"pid"|"env"|"stdout"|"stderr"|"path"/);
-}));
+}), testContext.task));
 
 it("HARNESS_ONLY: work becoming unsettled after finalization still rejects the finished callback", async () => isolatedLifecycleControl(async (context, finish, receipts) => {
   class UnsettledControlOwner extends OperationsProcessOwner { override get settled() { return false; } }

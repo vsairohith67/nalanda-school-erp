@@ -18,7 +18,9 @@ import { compareExport } from "./export-comparison.js";
 import { syncPreparedBatch } from "./sync.js";
 import type { BridgeConfig } from "./contracts.js";
 const dirs:string[]=[],key=Buffer.alloc(32,13).toString("base64url");
-const sid=process.platform==="win32"?execFileSync("whoami.exe",["/user","/fo","csv","/nh"],{encoding:"utf8",windowsHide:true}).match(/S-1-[0-9-]+/)![0]:"S-1-5-21-100-100-100-1001";
+// Bound fixture-only CLI work by the existing five-second setup allowance.
+// Production ACL verification and both original case deadlines stay unchanged.
+const sid=process.platform==="win32"?execFileSync("whoami.exe",["/user","/fo","csv","/nh"],{encoding:"utf8",windowsHide:true,timeout:5000}).match(/S-1-[0-9-]+/)![0]:"S-1-5-21-100-100-100-1001";
 // Hosted workspace ancestry is not a private source boundary. Use only a fresh
 // disposable runner fixture; never mutate the workspace/drive ACL or production policy.
 const hostedWindows=process.platform==="win32"&&process.env.GITHUB_ACTIONS==="true";
@@ -26,12 +28,12 @@ const hostedParent=hostedWindows?path.resolve(process.env.ProgramData!):undefine
 const fixtureBase=hostedParent?mkdtempSync(path.join(hostedParent,"NalandaK30ExportSynthetic-")):path.resolve("../../tmp/k30-export-bridge-1a/fixtures");
 mkdirSync(fixtureBase,{recursive:true,mode:0o700});
 function removeHostedFixture(){if(!hostedParent||path.dirname(fixtureBase)!==hostedParent||!path.basename(fixtureBase).startsWith("NalandaK30ExportSynthetic-"))throw new Error("unsafe hosted cleanup");rmSync(fixtureBase,{recursive:true});expect(existsSync(fixtureBase)).toBe(false);}
-if(hostedWindows)try{execFileSync("icacls.exe",[fixtureBase,"/inheritance:r","/grant:r",`*${sid}:(OI)(CI)F`,"*S-1-5-18:(OI)(CI)F","*S-1-5-32-544:(OI)(CI)F"],{stdio:"pipe",windowsHide:true});}catch(e){removeHostedFixture();throw e;}
+if(hostedWindows)try{execFileSync("icacls.exe",[fixtureBase,"/inheritance:r","/grant:r",`*${sid}:(OI)(CI)F`,"*S-1-5-18:(OI)(CI)F","*S-1-5-32-544:(OI)(CI)F"],{stdio:"pipe",windowsHide:true,timeout:5000});}catch(e){removeHostedFixture();throw e;}
 afterAll(()=>{if(hostedParent){try{expect(readdirSync(fixtureBase)).toEqual([]);}finally{removeHostedFixture();}}});
 function fixture() {
   const root=mkdtempSync(path.join(fixtureBase,"nps-k30-export-synthetic-"));dirs.push(root);
   const source=path.join(root,"source"),data=path.join(root,"private");mkdirSync(source,{mode:0o700});mkdirSync(data,{mode:0o700});
-  if (process.platform==="win32") execFileSync("icacls.exe",[source,"/inheritance:r","/grant:r",`*${sid}:(OI)(CI)F`,"*S-1-5-18:(OI)(CI)F","*S-1-5-32-544:(OI)(CI)F"],{stdio:"pipe",windowsHide:true});
+  if (process.platform==="win32") execFileSync("icacls.exe",[source,"/inheritance:r","/grant:r",`*${sid}:(OI)(CI)F`,"*S-1-5-18:(OI)(CI)F","*S-1-5-32-544:(OI)(CI)F"],{stdio:"pipe",windowsHide:true,timeout:5000});
   const input:ExportInput={sourceDirectory:source,sourceAccessSids:[sid],staleAfterMs:60_000,profile:profile()};
   const file=path.join(source,"K30_2026.csv"),qfile=path.join(data,"queue.enc"),q=new EncryptedDurableQueue(qfile,key);
   const config:BridgeConfig={bridgeId:id,erpUrl:"https://example.invalid",privateKeyPath:path.join(data,"key.jwk"),queuePath:qfile,healthPath:path.join(data,"health.json"),pollIntervalMs:5000,transportEnabled:false,syntheticOnly:true,devices:[{deviceId:id,host:"127.0.0.1",port:1,profile:EXPORT_PROFILE,exportInput:input}]};
@@ -44,7 +46,7 @@ function removeFixture(d:string){if(!path.resolve(d).startsWith(fixtureBase+path
 afterEach(()=>{for(const d of dirs.splice(0))removeFixture(d);});
 function reviewFixture(f:ReturnType<typeof fixture>,synthetic=true) {
   const review=path.join(f.root,"review");mkdirSync(review,{mode:0o700});
-  if(process.platform==="win32")execFileSync("icacls.exe",[review,"/inheritance:r","/grant:r",`*${sid}:(OI)(CI)F`,"*S-1-5-18:(OI)(CI)F","*S-1-5-32-544:(OI)(CI)F"],{stdio:"pipe",windowsHide:true});
+  if(process.platform==="win32")execFileSync("icacls.exe",[review,"/inheritance:r","/grant:r",`*${sid}:(OI)(CI)F`,"*S-1-5-18:(OI)(CI)F","*S-1-5-32-544:(OI)(CI)F"],{stdio:"pipe",windowsHide:true,timeout:5000});
   const cfg=path.join(f.data,"bridge.json"),req=path.join(review,"request.json"),output=path.join(review,"review.json");
   writeFileSync(cfg,JSON.stringify({...f.config,syntheticOnly:synthetic,privateKeyPath:"key.jwk",queuePath:"queue.enc",healthPath:"health.json"}));
   const request={schemaVersion:1,file:f.file,interval:{from:"2026-10-02T00:00:00.000Z",to:"2026-10-02T23:59:59.000Z"},operator:{origin:"OPERATOR_SOURCE_VIEW",reference:"synthetic-independent-note",totalRows:1}};

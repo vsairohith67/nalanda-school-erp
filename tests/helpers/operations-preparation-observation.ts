@@ -14,6 +14,7 @@ function publicProcess(value: OperationsProcessObservation): QaProcess {
 // The original failed 15s results and every child/cancellation limit remain.
 export const operationsCaseContract = Object.freeze({ state: "TEST_CONTRACT_CHANGED", bodyMs: 45000, finishedHookMs: 3000, totalMs: 48000 });
 const revisedCases = ["local-single-node", "generic-vps", "filesystem-adapter-controls", "normalized-refusals"] as const;
+export type OperationsCaseContext = Pick<TestContext, "signal" | "onTestFinished"> & Partial<Pick<TestContext, "task">>;
 
 export class OperationsPreparationObservation {
   readonly owner = new OperationsProcessOwner();
@@ -80,7 +81,7 @@ export class OperationsPreparationObservation {
 
 /** All work and assertions stay in the original case. A timeout hook cancels and
  * waits for the body/owned process barrier before it can remove a fixture. */
-export async function observedOperationsCase(context: Pick<TestContext, "signal" | "onTestFinished">, caseId: QaCase, body: (scope: OperationsPreparationObservation) => Promise<void>) {
+export async function observedOperationsCase(context: OperationsCaseContext, caseId: QaCase, body: (scope: OperationsPreparationObservation) => Promise<void>) {
   const started = performance.now(), revised = (revisedCases as readonly string[]).includes(caseId);
   const trace = configuredQaTrace("operations", caseId);
   const scope = new OperationsPreparationObservation(trace, started);
@@ -95,13 +96,17 @@ export async function observedOperationsCase(context: Pick<TestContext, "signal"
     emitted.add(stage);
     // Aggregate clocks only. Actual source/job binding comes from the existing
     // job's retained console and QA owner; no paths, PID, env or child bytes.
-    console.info(JSON.stringify({ evidence: "OPERATIONS_CASE_LIFECYCLE_V1", scope: trace.directory ? "BOUND_INTEGRATION_JOURNAL" : "HARNESS_ONLY", contract: operationsCaseContract, caseId, stage,
-      setup: { startMs: 0, endMs: rounded(scope.actionStartedMs ?? bodyEnded) },
-      action: { startMs: rounded(scope.actionStartedMs), endMs: rounded(bodyEnded) },
-      teardown: { startMs: rounded(teardownStarted), endMs: rounded(teardownEnded) },
-      finishedHook: { startMs: rounded(hookStarted), endMs: rounded(hookEnded) },
+    const row = Object.freeze({ evidence: "OPERATIONS_CASE_LIFECYCLE_V1", scope: trace.directory ? "BOUND_INTEGRATION_JOURNAL" : "HARNESS_ONLY", contract: operationsCaseContract, caseId, stage,
+      setup: Object.freeze({ startMs: 0, endMs: rounded(scope.actionStartedMs ?? bodyEnded) }),
+      action: Object.freeze({ startMs: rounded(scope.actionStartedMs), endMs: rounded(bodyEnded) }),
+      teardown: Object.freeze({ startMs: rounded(teardownStarted), endMs: rounded(teardownEnded) }),
+      finishedHook: Object.freeze({ startMs: rounded(hookStarted), endMs: rounded(hookEnded) }),
       totalObservedMs: rounded(elapsed()), bodySettled, fixtureSettled, ownedWorkSettled: scope.ownedWorkSettled,
-      cancelled: context.signal.aborted || scope.signal.aborted, declaredResult: stage === "START" ? "UNKNOWN" : outcome }));
+      cancelled: context.signal.aborted || scope.signal.aborted, declaredResult: stage === "START" ? "UNKNOWN" : outcome });
+    // Existing Vitest JSON emits this same task's meta and complete duration.
+    // Bind exactly one final aggregate; partial stages remain in finite logs.
+    if (stage === "FINISHED" && context.task) Object.defineProperty(context.task.meta, "operationsLifecycle", { value: row, enumerable: true, writable: false, configurable: false });
+    console.info(JSON.stringify(row));
   };
   const finishTrace = () => { if (!traceFinished) { trace.finish(outcome); traceFinished = true; } };
   let resolveBody!: () => void;

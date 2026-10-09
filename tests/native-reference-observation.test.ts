@@ -48,10 +48,20 @@ afterAll(async () => {
   const current = lstatSync(root); expect(current.isSymbolicLink()).toBe(false); expect(current.ino).toBe(identity.ino); expect(current.dev).toBe(identity.dev); expect(path.dirname(path.resolve(root))).toBe(path.resolve(tmpdir())); rmSync(root, { recursive: true }); expect(existsSync(root)).toBe(false); vi.unstubAllEnvs();
 });
 async function user(role = "SUPER_ADMIN") {
-  const u = await db.user.create({ data: { username: `synthetic-${randomUUID()}`, name: "SYNTHETIC service actor", role, passwordHash: "UNUSABLE_SYNTHETIC_NO_LOGIN", isActive: true, lifecycleStatus: "ACTIVE", mustChangePassword: false } });
   // Establish already-effective fixture authority explicitly, rather than race
   // the database-generated validFrom against the application's sign-in clock.
-  const assignment = await db.userRoleAssignment.create({ data: { userId: u.id, role, validFrom: new Date(Date.now() - 60_000), reason: "SYNTHETIC service preparation", activeKey: `${u.id}:${role}` } });
+  // Only these two direct precondition writes share a transaction. Preserve
+  // generated IDs/defaults and the derived activeKey; actual session, MFA and
+  // native services below still execute independently after committed setup.
+  const validFrom = new Date(Date.now() - 60_000);
+  const { u, assignment } = await db.$transaction(async tx => {
+    const u = await tx.user.create({ data: { username: `synthetic-${randomUUID()}`, name: "SYNTHETIC service actor", role, passwordHash: "UNUSABLE_SYNTHETIC_NO_LOGIN", isActive: true, lifecycleStatus: "ACTIVE", mustChangePassword: false } });
+    const assignment = await tx.userRoleAssignment.create({ data: { userId: u.id, role, validFrom, reason: "SYNTHETIC service preparation", activeKey: `${u.id}:${role}` } });
+    return { u, assignment };
+  });
+  const persisted = await db.userRoleAssignment.findUniqueOrThrow({ where: { id: assignment.id }, include: { user: true } });
+  expect(persisted).toMatchObject({ userId: u.id, role, status: "ACTIVE", validFrom, validUntil: null, reason: "SYNTHETIC service preparation", activeKey: `${u.id}:${role}`, version: 1, contextVersion: 1, assignedByUserId: null, endedByUserId: null, endedAt: null,
+    user: { id: u.id, username: u.username, name: "SYNTHETIC service actor", role, passwordHash: "UNUSABLE_SYNTHETIC_NO_LOGIN", isActive: true, lifecycleStatus: "ACTIVE", mustChangePassword: false } });
   expect(assignment.validFrom.getTime() <= Date.now()).toBe(true);
   const web = await createPersistedSession(db, u, new Headers());
   const enrollment = await beginTotpEnrollment(db, { userId: u.id, displayName: "SYNTHETIC factor", accountLabel: "synthetic@example.invalid" });
