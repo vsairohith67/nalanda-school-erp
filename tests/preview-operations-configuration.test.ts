@@ -40,7 +40,7 @@ describe("explicit offline operations preparation", () => {
     }
     expect(observe(false).after).not.toContain("nalanda_backup_success_total");
   });
-  it.for(["local-single-node", "generic-vps"] as const)("parses effective canonical Compose and connects all existing argv for %s", async (profile, context) => observedOperationsCase(context, profile, async scope => {
+  it.for(["local-single-node", "generic-vps"] as const)("parses effective canonical Compose and connects all existing argv for %s", { timeout: operationsCaseContract.bodyMs }, async (profile, context) => observedOperationsCase(context, profile, async scope => {
     const f = await scope.fixture(fixture, f => f.close());
     try {
       const selected = await scope.phase("provenance-check", () => manifest(profile));
@@ -84,7 +84,7 @@ describe("explicit offline operations preparation", () => {
       // Production qualification still refuses this fabricated test binding.
       await scope.phase("artifact-refusal", () => expect(runOperatorCli(commands.commands[0].argv.slice(1))).rejects.toThrow());
     } finally { vi.unstubAllEnvs(); }
-  }), operationsCaseContract.bodyMs);
+  }));
   it("uses generated distinct operations through the actual filesystem adapter and retains same-operation resume/refusal", async context => observedOperationsCase(context, "filesystem-adapter-controls", async scope => {
     const f = await scope.fixture(fixture, f => f.close());
     const selected = await scope.phase("filesystem-check", async () => {
