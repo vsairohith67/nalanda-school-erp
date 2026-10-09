@@ -1,0 +1,41 @@
+// HARNESS_ONLY adversarial controller checks. These are not actual custody,
+// bridge service, operating-policy or platform acceptance receipts.
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {EventEmitter} from 'node:events';import {PassThrough} from 'node:stream';
+import {observeOwnedChild,fullyClosed} from './owned-test-observer.mjs';
+import {acceptStart,validateActualReport,lifecycleEvidence,completionAdmitted} from './controlled-test-contract.mjs';
+const handle=kill=>Object.assign(new EventEmitter(),{stdout:new PassThrough(),stderr:new PassThrough(),kill:kill??(()=>true),unref(){this.unrefCalled=true;}});
+const options=()=>({deadlineMs:Date.now()+60,softReserveMs:40,hardReserveMs:10,maxBytes:16});
+for(const [name,kill]of [['never-close',()=>true],['kill-false',()=>false],['kill-throws',()=>{throw Error('private');}]])test(name,async()=>{
+ const c=handle(kill),r=await observeOwnedChild(c,options());assert.equal(r.closeObserved,false);assert.equal(r.timedOut,true);assert.equal(c.unrefCalled,true);assert.equal(c.stdout.destroyed,true);
+ if(name!=='never-close')assert.ok(r.terminationError);c.emit('close',0,null);assert.equal(r.closeObserved,false);
+});
+test('overflow and late close cannot create success',async()=>{const c=handle(),pending=observeOwnedChild(c,options());c.stdout.emit('data',Buffer.alloc(17));const r=await pending;assert.equal(r.captureError,'BOUNDED_PRIVATE_CAPTURE_FAILED');assert.equal(r.closeObserved,false);c.emit('close',0,null);assert.equal(r.exit,null);});
+test('capture denial survives an actual normal close',async()=>{const c=handle(),pending=observeOwnedChild(c,{...options(),onBytes(){throw Error('private');}});c.stdout.emit('data',Buffer.from('x'));c.emit('close',0,null);assert.ok((await pending).captureError);});
+test('only actual normal close records closure and closes rebinding',async()=>{const c=handle(),pending=observeOwnedChild(c,options());c.emit('close',0,null);const r=await pending;assert.equal(r.closeObserved,true);assert.equal(r.timedOut,false);assert.throws(()=>pending.shortenDeadline(Date.now()+1),/CLOSED/);});
+test('phase admission can shorten but cannot extend or revive a deadline',async()=>{const c=handle(),original=Date.now()+1000,pending=observeOwnedChild(c,{...options(),deadlineMs:original});assert.throws(()=>pending.shortenDeadline(original+1),/EXTENSION/);pending.shortenDeadline(Date.now()+60);const r=await pending;assert.equal(r.closeObserved,false);assert.equal(r.timedOut,true);assert.throws(()=>pending.shortenDeadline(Date.now()+1),/CLOSED/);});
+test('an unclosed policy observation remains finite and unobserved',async()=>{const c=handle(),start=Date.now(),r=await observeOwnedChild(c,options());assert.equal(r.closeObserved,false);assert.equal(r.closedUtc,null);assert.ok(Date.now()-start<500);});
+test('actual failed observer exit is not equality evidence',async()=>{const c=handle(),pending=observeOwnedChild(c,options());c.emit('close',1,null);const r=await pending;assert.equal(r.exit,1);assert.equal(r.closeObserved,true);});
+test('missing either actual closure cannot settle an enclosing context',()=>{for(const[a,b]of[[false,false],[true,false],[false,true]])assert.equal(fullyClosed({closeObserved:a},{closeObserved:b}),false);assert.equal(fullyClosed({closeObserved:true},null),false);assert.equal(fullyClosed({closeObserved:true},{closeObserved:true}),true);});
+const start=()=>({evidence:lifecycleEvidence,stage:'START',startUnixMs:2000,taskIds:['id_create','id_reuse']});
+test('stale, future, duplicate task and malformed starts refuse an interval',()=>{for(const change of [{startUnixMs:999},{startUnixMs:3001},{taskIds:['same','same']},{taskIds:['private/path','id_reuse']},{stage:'FINISHED'}])assert.throws(()=>acceptStart({...start(),...change},1000,3000));assert.equal(acceptStart(start(),1000,3000),62000);});
+test('expired reporting, absent reserve and invalid completion clocks refuse final success',()=>{assert.equal(completionAdmitted(1000,6000,2000,3000),true);for(const now of [700,3000,6000,7000,NaN])assert.equal(completionAdmitted(1000,6000,now,3000),false);assert.equal(completionAdmitted(1000,6000,5999),true);assert.equal(completionAdmitted(1000,6000,6000),false);});
+function fixture(){
+ const s=start(),setup={startMs:0,endMs:2,returned:true},teardown={startMs:10,endMs:12,returned:true};
+ const actions=['create','reuse'].map((caseId,i)=>({caseId,taskId:s.taskIds[i],startMs:2+i*4,endMs:4+i*4,assertionsReturned:true,testAbortObserved:false,frameworkState:'pass'}));
+ const titles=['explicit non-synthetic transport-disabled review creates an exclusive private report without queue or health','retained private capture proves a same-file exact append while exposing operator discrepancies'];
+ const assertions=actions.map((a,i)=>({title:titles[i],status:'passed',meta:{bridgePrivateReportLifecycle:{evidence:lifecycleEvidence,stage:'BODY_FINISHED',caseId:a.caseId,taskId:a.taskId,startUnixMs:2000,setup,action:{startMs:a.startMs,endMs:a.endMs,assertionsReturned:true},testAbortObserved:false}}}));
+ assertions.push({title:'bounds directory enumeration and cleans private atomic-write residue after failed rename',status:'passed'});
+ for(let i=3;i<44;i++)assertions.push({title:'HARNESS numeric-coverage fixture '+i,status:'passed'});
+ const finish={evidence:lifecycleEvidence,stage:'FINISHED',startUnixMs:2000,taskIds:s.taskIds,declaredResult:'PASS',totalObservedMs:12,setup,teardown,actions,contract:{state:'TEST_CONTRACT_CHANGED',setupMs:5000,createBodyMs:45000,reuseBodyMs:5000,teardownMs:5000}};
+ const report={success:true,numTotalTests:44,numFailedTests:0,numPendingTests:0,numPassedTests:44,testResults:[{name:'C:/owned/src/export-integration.test.ts',status:'passed',assertionResults:assertions}]};
+ return {s,finish,report};
+}
+test('final actual file failure cannot be hidden by a partial PASS marker',()=>{const f=fixture();f.report.testResults[0].status='failed';assert.throws(()=>validateActualReport(f.report,f.s,f.finish,'focused'));});
+test('missing body metadata or task binding cannot qualify from other assertions',()=>{for(const remove of [true,false]){const f=fixture();if(remove)delete f.report.testResults[0].assertionResults[0].meta;else f.report.testResults[0].assertionResults[0].meta.bridgePrivateReportLifecycle.taskId='unbound';assert.throws(()=>validateActualReport(f.report,f.s,f.finish,'focused'));}});
+test('an expected count does not hide a skipped original case',()=>{const f=fixture();f.report.testResults[0].assertionResults[2].status='pending';assert.throws(()=>validateActualReport(f.report,f.s,f.finish,'focused'));});
+test('passing export-only rows and a forged full summary cannot qualify full context',()=>{const f=fixture();f.report.numTotalTests=127;f.report.numPassedTests=127;assert.throws(()=>validateActualReport(f.report,f.s,f.finish,'full'));});
+test('raw passed-count mismatch or a duplicate body identity refuses a passing summary',()=>{for(const kind of ['count','identity']){const f=fixture();if(kind==='count')f.report.numPassedTests=43;else f.report.testResults[0].assertionResults[1].meta.bridgePrivateReportLifecycle.taskId='id_create';assert.throws(()=>validateActualReport(f.report,f.s,f.finish,'focused'));}});
+test('swapped action identities cannot pass using otherwise increasing clocks',()=>{const f=fixture();[f.finish.actions[0].caseId,f.finish.actions[1].caseId]=['reuse','create'];[f.finish.actions[0].taskId,f.finish.actions[1].taskId]=['id_reuse','id_create'];assert.throws(()=>validateActualReport(f.report,f.s,f.finish,'focused'));});
+test('late hook, overlapping phase and incorrect budget refuse the amended contract',()=>{for(const change of ['late','overlap','old']){const f=fixture();if(change==='late')f.finish.teardown.endMs=90000;else if(change==='overlap')f.finish.actions[1].startMs=0;else f.finish.contract.createBodyMs=5000;assert.throws(()=>validateActualReport(f.report,f.s,f.finish,'focused'));}});
+test('exact body/file results are necessary but never sufficient for process qualification',()=>{const f=fixture();const r=validateActualReport(f.report,f.s,f.finish,'focused');assert.equal(r.tests,44);assert.equal(r.taskIds.length,2);assert.equal(r.processSettlement,undefined);});
