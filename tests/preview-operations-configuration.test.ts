@@ -11,7 +11,7 @@ import { encryptCloudBackup } from "../lib/cloud-backup-container";
 import { makeRecoveryHandoff } from "../lib/portable-runtime/recovery-handoff";
 import { CiOperatorAdapter } from "../scripts/portable/operator-adapter";
 import { OPERATOR_COMMANDS, type OperatorCommand, type OperatorManifest } from "../lib/portable-runtime/operator";
-import { observedOperationsCase } from "./helpers/operations-preparation-observation";
+import { observedOperationsCase, operationsCaseContract } from "./helpers/operations-preparation-observation";
 
 const workspace = process.cwd();
 async function manifest(profile: "local-single-node" | "generic-vps"): Promise<OperatorManifest> {
@@ -84,7 +84,7 @@ describe("explicit offline operations preparation", () => {
       // Production qualification still refuses this fabricated test binding.
       await scope.phase("artifact-refusal", () => expect(runOperatorCli(commands.commands[0].argv.slice(1))).rejects.toThrow());
     } finally { vi.unstubAllEnvs(); }
-  }));
+  }), operationsCaseContract.bodyMs);
   it("uses generated distinct operations through the actual filesystem adapter and retains same-operation resume/refusal", async context => observedOperationsCase(context, "filesystem-adapter-controls", async scope => {
     const f = await scope.fixture(fixture, f => f.close());
     const selected = await scope.phase("filesystem-check", async () => {
@@ -137,7 +137,7 @@ describe("explicit offline operations preparation", () => {
       expect((await readdir(path.dirname(selected.target))).some(name => name.endsWith(".lock"))).toBe(false);
       expect(calls.flat()).not.toContain("--volumes");
       });
-  }));
+  }), operationsCaseContract.bodyMs);
   it("prepares future HTTPS requirements without a manifest, secrets, daemon or executable configuration", async () => {
     const f = await fixture();
     try {
@@ -222,5 +222,5 @@ describe("explicit offline operations preparation", () => {
         (c: any) => c.secrets.database_url.file = path.join(workspace, "prisma", "dev.db")
       ]) { const bad = structuredClone(base); change(bad); expect(() => validatePreparedCompose(bad, workspace, privateRoot, selected)).toThrow(); }
       });
-  }));
+  }), operationsCaseContract.bodyMs);
 });

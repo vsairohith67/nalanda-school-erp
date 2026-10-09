@@ -1,6 +1,7 @@
 import type { TestContext } from "vitest";
 import { writeFileSync } from "node:fs";
 import path from "node:path";
+import { performance } from "node:perf_hooks";
 import type { PreparationExecution, PreparationObserver } from "../../scripts/portable/prepare-operations";
 import { OperationsProcessError, OperationsProcessOwner, type OperationsProcessObservation } from "../../scripts/portable/operations-preparation-process";
 import { configuredQaTrace, projectQaSignal, type QaCase, type QaPhase, type QaProcess, type QaStatus, type QaTrace } from "./qa-reliability";
@@ -8,6 +9,11 @@ import { configuredQaTrace, projectQaSignal, type QaCase, type QaPhase, type QaP
 function publicProcess(value: OperationsProcessObservation): QaProcess {
   return { exit: value.exit, signal: projectQaSignal(value.signal), errorCategory: value.errorCategory, durationMs: value.durationMs, closed: value.closed, settled: value.settled };
 }
+
+// A changed integration-harness contract, not an operator/product response SLA.
+// The original failed 15s results and every child/cancellation limit remain.
+export const operationsCaseContract = Object.freeze({ state: "TEST_CONTRACT_CHANGED", bodyMs: 45000, finishedHookMs: 3000, totalMs: 48000 });
+const revisedCases = ["local-single-node", "generic-vps", "filesystem-adapter-controls", "normalized-refusals"] as const;
 
 export class OperationsPreparationObservation {
   readonly owner = new OperationsProcessOwner();
@@ -17,7 +23,11 @@ export class OperationsPreparationObservation {
   private fixtureExpected = false;
   private owners = new Set<OperationsProcessOwner>([this.owner]);
   private processEvents = 0;
-  constructor(readonly trace: QaTrace) { trace.signal.addEventListener("abort", () => this.controller.abort(), { once: true }); }
+  private actionStarted: number | null = null;
+  constructor(readonly trace: QaTrace, readonly startedAt = performance.now()) { trace.signal.addEventListener("abort", () => this.controller.abort(), { once: true }); }
+  get actionStartedMs() { return this.actionStarted; }
+  get ownedWorkSettled() { return [...this.owners].every(owner => owner.settled); }
+  private startAction() { this.actionStarted ??= performance.now() - this.startedAt; }
   cancel(cause: "TEST_FAILURE" | "UNKNOWN") { try { this.trace.cancel(cause); } finally { this.controller.abort(); } }
   readonly observer: PreparationObserver = {
     begin: (phase, attempt) => this.trace.begin(phase, attempt),
@@ -36,13 +46,14 @@ export class OperationsPreparationObservation {
       this.trace.end(span, "PASS");
     }
   };
-  execution(attempt: 0 | 1 | 2): PreparationExecution { return { signal: this.signal, observer: this.observer, processOwner: this.owner, attempt }; }
+  execution(attempt: 0 | 1 | 2): PreparationExecution { this.startAction(); return { signal: this.signal, observer: this.observer, processOwner: this.owner, attempt }; }
   registerProcessOwner(owner: OperationsProcessOwner) { this.owners.add(owner); }
   registerFixture(close: () => Promise<void>) { if (this.fixtureClose) throw Error("OPERATIONS_FIXTURE_ALREADY_REGISTERED"); this.fixtureExpected = true; this.fixtureClose = close; }
   async fixture<T>(allocate: () => Promise<T>, close: (fixture: T) => Promise<void>): Promise<T> {
     return this.phase("fixture-create", async () => { const fixture = await allocate(); this.registerFixture(() => close(fixture)); return fixture; });
   }
   async phase<T>(phase: QaPhase, action: () => T | Promise<T>, attempt: 0 | 1 | 2 = 0): Promise<T> {
+    if (["compose-version", "compose-config", "operator-dry-run"].includes(phase)) this.startAction();
     if (phase === "fixture-create") this.fixtureExpected = true;
     const span = this.trace.begin(phase, attempt);
     let returned = false, value: T;
@@ -70,15 +81,36 @@ export class OperationsPreparationObservation {
 /** All work and assertions stay in the original case. A timeout hook cancels and
  * waits for the body/owned process barrier before it can remove a fixture. */
 export async function observedOperationsCase(context: Pick<TestContext, "signal" | "onTestFinished">, caseId: QaCase, body: (scope: OperationsPreparationObservation) => Promise<void>) {
+  const started = performance.now(), revised = (revisedCases as readonly string[]).includes(caseId);
   const trace = configuredQaTrace("operations", caseId);
-  const scope = new OperationsPreparationObservation(trace);
+  const scope = new OperationsPreparationObservation(trace, started);
   let bodySettled = false, outcome: QaStatus = "UNKNOWN", primaryFailed = false;
+  let bodyEnded: number | null = null, teardownStarted: number | null = null, teardownEnded: number | null = null;
+  let hookStarted: number | null = null, hookEnded: number | null = null, fixtureSettled: boolean | null = null, traceFinished = false;
+  const elapsed = () => performance.now() - started;
+  const rounded = (value: number | null) => value === null ? null : Math.round(value * 1000) / 1000;
+  const emitted = new Set<string>();
+  const receipt = (stage: "START" | "ABORTED_PARTIAL" | "FINISHED") => {
+    if (!revised || emitted.has(stage)) return;
+    emitted.add(stage);
+    // Aggregate clocks only. Actual source/job binding comes from the existing
+    // job's retained console and QA owner; no paths, PID, env or child bytes.
+    console.info(JSON.stringify({ evidence: "OPERATIONS_CASE_LIFECYCLE_V1", scope: trace.directory ? "BOUND_INTEGRATION_JOURNAL" : "HARNESS_ONLY", contract: operationsCaseContract, caseId, stage,
+      setup: { startMs: 0, endMs: rounded(scope.actionStartedMs ?? bodyEnded) },
+      action: { startMs: rounded(scope.actionStartedMs), endMs: rounded(bodyEnded) },
+      teardown: { startMs: rounded(teardownStarted), endMs: rounded(teardownEnded) },
+      finishedHook: { startMs: rounded(hookStarted), endMs: rounded(hookEnded) },
+      totalObservedMs: rounded(elapsed()), bodySettled, fixtureSettled, ownedWorkSettled: scope.ownedWorkSettled,
+      cancelled: context.signal.aborted || scope.signal.aborted, declaredResult: stage === "START" ? "UNKNOWN" : outcome }));
+  };
+  const finishTrace = () => { if (!traceFinished) { trace.finish(outcome); traceFinished = true; } };
   let resolveBody!: () => void;
   const bodyDone = new Promise<void>(resolve => { resolveBody = resolve; });
   let finalization: Promise<void> | undefined;
-  const abort = () => { try { scope.cancel("UNKNOWN"); } catch { /* Incomplete capture cannot prevent cancellation delivery. */ } };
+  const abort = () => { outcome = "FAIL"; try { scope.cancel("UNKNOWN"); } catch { /* Incomplete capture cannot prevent cancellation delivery. */ } finally { receipt("ABORTED_PARTIAL"); } };
   context.signal.addEventListener("abort", abort, { once: true });
   const finalize = () => finalization ??= (async () => {
+    teardownStarted = elapsed();
     const span = trace.begin("finalize");
     let timer: NodeJS.Timeout | undefined;
     try {
@@ -86,24 +118,39 @@ export async function observedOperationsCase(context: Pick<TestContext, "signal"
         abort();
         await Promise.race([bodyDone, new Promise<void>(resolve => { timer = setTimeout(resolve, 3000); })]);
       }
-      const fixtureSettled = await scope.settleFixture(bodySettled);
+      fixtureSettled = await scope.settleFixture(bodySettled);
       if (!fixtureSettled || context.signal.aborted) outcome = "FAIL";
       trace.end(span, fixtureSettled ? "PASS" : "UNKNOWN");
-      trace.finish(outcome);
+      if (!revised) finishTrace();
       if (!fixtureSettled) throw Error("OPERATIONS_PREPARATION_SETTLEMENT_UNRECONCILED");
-    } catch (error) { try { trace.end(span, "FAIL"); trace.finish("FAIL"); } catch { /* Failed/partial journals remain available to the finalizer. */ } throw error; }
-    finally { clearTimeout(timer); context.signal.removeEventListener("abort", abort); }
+    } catch (error) { outcome = "FAIL"; try { trace.end(span, "FAIL"); if (!revised) finishTrace(); } catch { /* Failed/partial journals remain available to the finalizer. */ } throw error; }
+    finally { teardownEnded = elapsed(); clearTimeout(timer); context.signal.removeEventListener("abort", abort); }
   })();
-  // Arm before fixture allocation. This runs even when Vitest's 15s deadline
+  // Arm before fixture allocation. This runs even when Vitest's case deadline
   // rejects the case before its asynchronous body has unwound.
   context.onTestFinished(async () => {
+    hookStarted = elapsed();
+    let hookFailure: unknown;
     if (!bodySettled) { outcome = "FAIL"; abort(); }
-    try { await finalize(); } catch (cleanup) { if (!primaryFailed && !context.signal.aborted) throw cleanup; }
-  });
+    try { await finalize(); } catch (cleanup) { hookFailure = cleanup; }
+    hookEnded = elapsed();
+    const exceeded = revised && (teardownEnded === null || teardownEnded > operationsCaseContract.bodyMs || hookEnded - hookStarted > operationsCaseContract.finishedHookMs || hookEnded > operationsCaseContract.totalMs);
+    const unsafe = revised && (exceeded || !bodySettled || fixtureSettled !== true || !scope.ownedWorkSettled || context.signal.aborted || scope.signal.aborted);
+    if (revised) {
+      if (unsafe) {
+        outcome = "FAIL"; try { scope.cancel("UNKNOWN"); } catch { /* No future work is permitted after failed finalization. */ }
+      }
+      finishTrace(); receipt("FINISHED");
+    }
+    if (hookFailure && !primaryFailed && !context.signal.aborted) throw hookFailure;
+    if (exceeded && !primaryFailed && !context.signal.aborted) throw Error("OPERATIONS_CASE_CONTRACT_EXCEEDED");
+    if (unsafe && !primaryFailed && !context.signal.aborted) throw Error("OPERATIONS_CASE_SETTLEMENT_UNRECONCILED");
+  }, revised ? operationsCaseContract.finishedHookMs : undefined);
+  receipt("START");
   try { if (context.signal.aborted) abort(); await body(scope); if (context.signal.aborted || scope.signal.aborted) throw Error("OPERATIONS_PREPARATION_CANCELLED"); outcome = "PASS"; }
   catch (primary) { primaryFailed = true; outcome = "FAIL"; try { scope.cancel("TEST_FAILURE"); } catch { /* Preserve the primary assertion/process error. */ } throw primary; }
   finally {
-    bodySettled = true; resolveBody();
+    bodySettled = true; bodyEnded = elapsed(); resolveBody();
     try { await finalize(); } catch (cleanup) { if (!primaryFailed) throw cleanup; }
   }
 }
