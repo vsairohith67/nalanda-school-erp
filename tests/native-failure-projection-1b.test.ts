@@ -8,7 +8,7 @@ import path from "node:path";
 import {afterAll,afterEach,expect,it,vi} from "vitest";
 import {Android,appId,journey} from "@/apps/nalanda-cross-platform/tests/native/android";
 import {androidCause,androidState,appleBuild,appleScenarioMarkers,nativeIdentity,nativeScenarios,nativeVersions,processMetadata,swiftSource,appleProjectSource,type PublicSource} from "@/apps/nalanda-cross-platform/tests/native/diagnostics";
-import {appleInputBindings,processRecorder,ownedSimulatorId,retainNativeEvidence} from "@/apps/nalanda-cross-platform/tests/native/execute";
+import {appleInputBindings,processRecorder,ownedSimulatorId,retainNativeEvidence,androidSetupEvidence,installReadyAndroid,selectAppleTarget,appleOwnedState,appleSetupEvidence,appleAvailableRuntimes,verifyAppleAppearance,cleanupAppleTarget} from "@/apps/nalanda-cross-platform/tests/native/execute";
 import {producerProcess,type ProducerProcessObservation} from "@/scripts/portable/producer-process";
 const root=mkdtempSync(path.join(os.tmpdir(),"native-projection-r2-"));
 afterAll(()=>{expect(path.relative(os.tmpdir(),path.resolve(root))).toMatch(/^native-projection-r2-[^\\/]+$/);rmSync(root,{recursive:true,force:true});});
@@ -300,4 +300,75 @@ it("drops unknown process/identity/version fields and arbitrary signal/version s
  const safe=processMetadata({...observation(),signal:secret,unknownField:secret} as ProducerProcessObservation);expect(safe.signal).toBe("UNKNOWN");excluded(safe);
  const identity=nativeIdentity({source:"a".repeat(40),tree:"b".repeat(40),packageHash:"c".repeat(64),run:"37217435807",attempt:"1",unknownField:secret} as Parameters<typeof nativeIdentity>[0]);expect(identity.run).toBe(37217435807);excluded(identity);
  expect(nativeVersions(`Android Debug Bridge version 1.0.41\n${hostPath}`,`Xcode 16.2\nBuild version ${secret}`,"18.2")).toEqual({adb:"1.0.41",xcode:"16.2",iosRuntime:"18.2",application:"0.1.0"});excluded(nativeVersions(secret,hostPath,pin));
+});
+
+const apkMetadata="sdkVersion:'24'\nnative-code: 'arm64-v8a' 'x86_64'\n";
+const androidReplies:Record<string,string>={"get-state":"device\n","shell getprop ro.kernel.qemu":"1\n","emu avd name":"native_1b_phone\nOK\n","shell getprop sys.boot_completed":"1\n","shell getprop ro.build.version.sdk":"35\n","shell getprop ro.product.cpu.abi":"x86_64\n","shell pm path android":"package:/system/framework/framework-res.apk\n",[`shell pm list packages ${appId}`]:"","install owned-debug.apk":"Performing Streamed Install\nSuccess\n"};
+it.each([
+ ["get-state","offline","SETUP_ADB_TARGET","ANDROID_EXACT_EMULATOR_NOT_READY"],
+ ["shell getprop ro.kernel.qemu","0","SETUP_EMULATOR_RUNTIME","ANDROID_EXACT_EMULATOR_NOT_READY"],
+ ["emu avd name",secret,"SETUP_OWNED_AVD","ANDROID_EMULATOR_OWNERSHIP_REFUSED"],
+ ["shell getprop sys.boot_completed","0","SETUP_BOOT_COMPLETED","ANDROID_BOOT_NOT_COMPLETED"],
+ ["shell getprop ro.build.version.sdk","34","SETUP_API_ABI","ANDROID_RUNTIME_API_OR_ABI_REFUSED"],
+ ["shell getprop ro.product.cpu.abi",secret,"SETUP_API_ABI","ANDROID_RUNTIME_API_OR_ABI_REFUSED"],
+ ["shell pm path android",secret,"SETUP_PACKAGE_MANAGER","ANDROID_PACKAGE_MANAGER_NOT_RESPONSIVE"],
+ [`shell pm list packages ${appId}`,`package:${appId}`,"SETUP_EMPTY_SANDBOX","ANDROID_EXISTING_APP_SANDBOX_REFUSED"],
+])("stops Android setup at first condition %s before any installation",async(key,value,predicate,cause)=>{
+ const a=new Android("source-only-adb","emulator-5580",root),setup=androidSetupEvidence(),calls:string[]=[];
+ a.run=async args=>{const command=args.join(" ");calls.push(command);return command===key?value:androidReplies[command];};
+ const failure=await installReadyAndroid(a,apkMetadata,"owned-debug.apk",setup).then(()=>{throw Error("unexpected-source-success");},e=>a.failure(e));
+ expect(failure).toMatchObject({predicate,cause});expect(setup.installAttempts).toBe(0);expect(calls.at(-1)).toBe(key);expect(calls.some(c=>c.startsWith("install "))).toBe(false);excluded({failure,setup});
+});
+it.each(["sdkVersion:'36'\nnative-code: 'x86_64'","sdkVersion:'24'\nnative-code: 'arm64-v8a'",`sdkVersion:'${pin}'\nnative-code: '${secret}'`])("refuses actual package/API/ABI mismatches before contacting PackageManager: %s",async metadata=>{
+ const a=new Android("source-only-adb","emulator-5580",root),setup=androidSetupEvidence(),calls:string[]=[];a.run=async args=>{const key=args.join(" ");calls.push(key);return androidReplies[key];};
+ await expect(installReadyAndroid(a,metadata,"owned-debug.apk",setup)).rejects.toThrow("ANDROID_FINITE_PREDICATE_FAILED");expect(calls.some(c=>c.includes("pm ")||c.startsWith("install "))).toBe(false);excluded(setup);
+});
+it("verifies responsive PackageManager then installs the exact package once without increasing the child cap",async()=>{
+ const a=new Android("source-only-adb","emulator-5580",root),setup=androidSetupEvidence(),calls:string[]=[];a.run=async args=>{const key=args.join(" ");calls.push(key);return androidReplies[key];};
+ await installReadyAndroid(a,apkMetadata,"owned-debug.apk",setup);expect(setup).toMatchObject({api:35,abi:"x86_64",minimumApi:24,packageManagerResponsive:true,sandboxAbsent:true,installAttempts:1,installed:true});
+ expect(calls.indexOf("shell pm path android")).toBeLessThan(calls.indexOf("install owned-debug.apk"));
+ await expect(installReadyAndroid(a,apkMetadata,"owned-debug.apk",setup)).rejects.toThrow("ANDROID_FINITE_PREDICATE_FAILED");expect(calls.filter(c=>c.startsWith("install "))).toEqual(["install owned-debug.apk"]);expect(setup.installAttempts).toBe(1);excluded(setup);
+});
+it("localizes an installation child failure separately from readiness and never launches a journey",async()=>{
+ const a=new Android("source-only-adb","emulator-5580",root),setup=androidSetupEvidence(),calls:string[]=[];a.run=async args=>{const key=args.join(" ");calls.push(key);if(args[0]==="install")throw Error("QA_PROCESS_FAILED_OR_CANCELLED");return androidReplies[key];};
+ const failure=await installReadyAndroid(a,apkMetadata,"owned-debug.apk",setup).then(()=>{throw Error("unexpected-source-success");},e=>a.failure(e));expect(failure).toMatchObject({predicate:"SETUP_EXACT_PACKAGE_INSTALL",kind:"CHILD_PROCESS",lastMilestone:"SETUP_EMPTY_SANDBOX"});expect(setup).toMatchObject({installAttempts:1,installed:false,packageManagerResponsive:true});expect(calls.at(-1)).toBe("install owned-debug.apk");excluded({failure,setup});
+});
+const runtimeId=(version:string)=>"com.apple.CoreSimulator.SimRuntime.iOS-"+version.replaceAll(".","-");
+const runtime=(version:string)=>({identifier:runtimeId(version),version,isAvailable:true});
+const device=(name="iPhone 16",min="18.0.0",max="65535.255.255")=>({name,identifier:"com.apple.CoreSimulator.SimDeviceType."+name.replaceAll(" ","-"),minRuntimeVersionString:min,maxRuntimeVersionString:max});
+it.each(["phone","tablet"])("selects an installed numeric SDK-aligned %s target with full version bounds",kind=>{
+ const inventory={runtimes:[runtime("26.2"),runtime("18.9"),runtime("18.10")],devicetypes:[device("iPhone 17","26.0.0"),device("iPhone 16","18.0.0","18.9.0"),device("iPhone 16e"),device("iPad Air")]};
+ const result=selectAppleTarget(inventory,"18.10","15.0",kind);expect(result.runtime.version).toBe("18.10");expect(result.deviceType.name).toBe(kind==="phone"?"iPhone 16e":"iPad Air");expect(result.policy).toBe("INSTALLED_SDK_ALIGNED_TARGET");
+ expect(appleAvailableRuntimes({...inventory,runtimes:[...inventory.runtimes,runtime(secret),{...runtime("18.5"),isAvailable:false}]})).toEqual(["18.9","18.10","26.2"]);
+});
+it.each(["NO_SDK_ALIGNED_RUNTIME","APP_MIN_TOO_NEW","DEVICE_MINOR_MIN","DEVICE_MAX","MISSING_BOUNDS","FOREIGN_FAMILY","MALFORMED_VERSION","OVERSIZE"])("fails closed on Apple selection prerequisite %s",condition=>{
+ const inventory={runtimes:[runtime("18.5")],devicetypes:[device()]};let sdk="18.5",minimum="15.0";
+ if(condition==="NO_SDK_ALIGNED_RUNTIME")inventory.runtimes=[runtime("26.2")];if(condition==="APP_MIN_TOO_NEW")minimum="18.6";
+ if(condition==="DEVICE_MINOR_MIN")inventory.devicetypes=[device("iPhone 16","18.6.0")];if(condition==="DEVICE_MAX")inventory.devicetypes=[device("iPhone 16","18.0.0","18.4.9")];
+ if(condition==="MISSING_BOUNDS")delete (inventory.devicetypes[0] as any).maxRuntimeVersionString;if(condition==="FOREIGN_FAMILY")inventory.devicetypes=[device("iPad Air")];if(condition==="MALFORMED_VERSION")sdk=secret;if(condition==="OVERSIZE")inventory.runtimes=Array.from({length:101},()=>runtime("18.5"));
+ expect(()=>selectAppleTarget(inventory,sdk,minimum,"phone")).toThrow(/^IOS_/);
+});
+const ownedId="12345678-1234-1234-1234-123456789abc",ownedName="nalanda-native-source-only-phone",ownedRuntime=runtimeId("18.5");
+const ownedInventory=(state:string,name=ownedName)=>({devices:{[ownedRuntime]:[{udid:ownedId,name,state}]}});
+it("requires exact created ID/name/runtime for finite owned-state readback",()=>{
+ expect(appleOwnedState(ownedInventory("Booted"),ownedId,ownedRuntime,ownedName)).toBe("Booted");expect(appleOwnedState({devices:{}},ownedId,ownedRuntime,ownedName)).toBe("ABSENT");
+ expect(appleOwnedState(ownedInventory(secret),ownedId,ownedRuntime,ownedName)).toBe("UNKNOWN");
+ expect(()=>appleOwnedState(ownedInventory("Booted",secret),ownedId,ownedRuntime,ownedName)).toThrow("IOS_OWNED_STATE_UNVERIFIED");expect(()=>appleOwnedState(ownedInventory("Booted"),ownedId,runtimeId("26.2"),ownedName)).toThrow("IOS_OWNED_STATE_UNVERIFIED");
+ expect(()=>appleOwnedState({devices:{[ownedRuntime]:[...ownedInventory("Booted").devices[ownedRuntime],...ownedInventory("Booted").devices[ownedRuntime]]}},ownedId,ownedRuntime,ownedName)).toThrow("IOS_OWNED_STATE_UNVERIFIED");
+});
+it.each(["light","dark"] as const)("checks actual %s appearance through target-specific read/write/readback",async mode=>{
+ const setup=appleSetupEvidence(),calls:string[][]=[];await verifyAppleAppearance(async(stage,args)=>{calls.push(args);return stage.endsWith("-read")?(mode==="light"?"dark":"light"):stage.endsWith("-readback")?mode:"";},ownedId,mode,setup);
+ expect(calls).toEqual([["simctl","ui",ownedId,"appearance"],["simctl","ui",ownedId,"appearance",mode],["simctl","ui",ownedId,"appearance"]]);expect(setup[mode]).toMatchObject({writePassed:true,verified:true});excluded(setup);
+});
+it.each(["READ_UNKNOWN","READ_CHILD_FAILED","WRITE_CHILD_FAILED","READBACK_MISMATCH"])("retains Apple appearance's first failed condition %s without proceeding",async condition=>{
+ const setup=appleSetupEvidence(),calls:string[]=[];
+ const action=verifyAppleAppearance(async stage=>{calls.push(stage);if(condition==="READ_UNKNOWN"&&stage.endsWith("-read"))return secret;if(condition==="READ_CHILD_FAILED"&&stage.endsWith("-read")||condition==="WRITE_CHILD_FAILED"&&stage==="ios-theme")throw Error("NATIVE_OPERATION_FAILED:IOS_THEME");return stage.endsWith("-readback")&&condition==="READBACK_MISMATCH"?"dark":"light";},ownedId,"light",setup);
+ await expect(action).rejects.toThrow();expect(setup.light.verified).toBe(false);expect(calls).toHaveLength(condition.startsWith("READ_")?1:condition==="WRITE_CHILD_FAILED"?2:3);excluded(setup);
+});
+it.each(["PASS","CLOSED_SHUTDOWN_FAILED","STILL_BOOTED","UNSETTLED","DELETE_FAILED_ABSENT","DELETE_FAILED_PRESENT"])("separates owned simulator cleanup state from child closure: %s",async condition=>{
+ const calls:string[]=[];let unsettled=condition==="UNSETTLED";
+ const result=await cleanupAppleTarget(async stage=>{calls.push(stage);if(stage==="ios-owned-shutdown"&&condition==="CLOSED_SHUTDOWN_FAILED")throw Error(secret);if(stage==="ios-owned-delete"&&condition.startsWith("DELETE_FAILED"))throw Error(secret);if(stage==="ios-shutdown-readback")return JSON.stringify(ownedInventory(condition==="STILL_BOOTED"?"Booted":"Shutdown"));if(stage==="ios-cleanup-readback")return JSON.stringify(condition==="DELETE_FAILED_PRESENT"?ownedInventory("Shutdown"):{devices:{}});return "";},ownedId,ownedRuntime,ownedName,()=>unsettled);
+ expect(result.status).toBe(["STILL_BOOTED","UNSETTLED","DELETE_FAILED_PRESENT"].includes(condition)?"UNRECONCILED":"VERIFIED");
+ if(condition==="UNSETTLED")expect(calls).toEqual([]);else expect(calls.filter(c=>c==="ios-owned-shutdown")).toHaveLength(1);
+ if(condition==="STILL_BOOTED")expect(calls).not.toContain("ios-owned-delete");if(condition==="CLOSED_SHUTDOWN_FAILED")expect(result).toMatchObject({shutdownCommand:"FAILED",shutdownState:"Shutdown",finalState:"ABSENT",cause:"IOS_SHUTDOWN_COMMAND_FAILED"});if(condition.startsWith("DELETE_FAILED"))expect(result.deleteCommand).toBe("FAILED");excluded(result);
 });

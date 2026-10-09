@@ -38,10 +38,10 @@ export async function installReadyAndroid(a:Android,metadata:string,packagePath:
   await a.check("SETUP_OWNED_AVD",async()=>{assert((await a.run(["emu","avd","name"])).split(/\r?\n/)[0]==="native_1b_phone","ANDROID_EMULATOR_OWNERSHIP_REFUSED");setup.ownedAvd=true;});
   await a.check("SETUP_BOOT_COMPLETED",async()=>{assert((await a.run(["shell","getprop","sys.boot_completed"])).trim()==="1","ANDROID_BOOT_NOT_COMPLETED");setup.bootCompleted=true;});
   await a.check("SETUP_API_ABI",async()=>{
-    const api=(await a.run(["shell","getprop","ro.build.version.sdk"])).trim();setup.api=/^[1-9][0-9]{0,2}$/.test(api)?Number(api):null;
+    const api=(await a.run(["shell","getprop","ro.build.version.sdk"])).trim();setup.api=/^[1-9][0-9]{0,2}$/.test(api)?Number(api):null;assert(setup.api===35,"ANDROID_RUNTIME_API_OR_ABI_REFUSED");
     const abi=(await a.run(["shell","getprop","ro.product.cpu.abi"])).trim();setup.abi=["x86_64","x86","arm64-v8a","armeabi-v7a"].includes(abi)?abi as Exclude<typeof setup.abi,null|"UNKNOWN">:"UNKNOWN";
     // Bind to the existing owned workflow's android-35/google_apis/x86_64 image.
-    assert(setup.api===35 && setup.abi==="x86_64","ANDROID_RUNTIME_API_OR_ABI_REFUSED");
+    assert(setup.abi==="x86_64","ANDROID_RUNTIME_API_OR_ABI_REFUSED");
   });
   await a.check("SETUP_PACKAGE_COMPATIBILITY",()=>{
     const minimum=/^sdkVersion:'([1-9][0-9]{0,2})'$/m.exec(metadata),native=/^native-code:\s*(.+)$/m.exec(metadata);
@@ -54,7 +54,7 @@ export async function installReadyAndroid(a:Android,metadata:string,packagePath:
     assert(packages.length>0 && packages.length<=16 && packages.every(p=>/^package:\/[A-Za-z0-9_./-]+\.apk$/.test(p)),"ANDROID_PACKAGE_MANAGER_NOT_RESPONSIVE");setup.packageManagerResponsive=true;
   });
   await a.check("SETUP_EMPTY_SANDBOX",async()=>{const packages=(await a.run(["shell","pm","list","packages",appId])).trim();assert(packages==="","ANDROID_EXISTING_APP_SANDBOX_REFUSED");setup.sandboxAbsent=true;});
-  await a.check("SETUP_EXACT_PACKAGE_INSTALL",async()=>{setup.installAttempts++;assert(setup.installAttempts===1,"ANDROID_INSTALL_ATTEMPT_LIMIT");assert((await a.run(["install",packagePath])).split(/\r?\n/).some(line=>line==="Success"),"ANDROID_INSTALL_FAILED");setup.installed=true;});
+  await a.check("SETUP_EXACT_PACKAGE_INSTALL",async()=>{assert(setup.installAttempts===0,"ANDROID_INSTALL_ATTEMPT_LIMIT");setup.installAttempts=1;assert((await a.run(["install",packagePath])).split(/\r?\n/).some(line=>line==="Success"),"ANDROID_INSTALL_FAILED");setup.installed=true;});
 }
 function numericVersion(value:unknown) {
   assert(typeof value==="string" && /^[0-9]{1,5}(?:\.[0-9]{1,3}){0,2}$/.test(value),"IOS_NUMERIC_VERSION_UNAVAILABLE");
@@ -63,7 +63,7 @@ function numericVersion(value:unknown) {
 function versionOrder(a:readonly number[],b:readonly number[]) {return a[0]-b[0] || a[1]-b[1] || a[2]-b[2];}
 export function selectAppleTarget(inventory:any,sdkVersion:string,minimumOS:string,kind:string) {
   assert(kind==="phone" || kind==="tablet","IOS_EXPLICIT_TARGET_KIND_REQUIRED");
-  const sdk=numericVersion(sdkVersion),minimum=numericVersion(minimumOS);
+  const sdk=numericVersion(sdkVersion),minimum=numericVersion(minimumOS);if(versionOrder(minimum,[15,0,0])<0)minimum.splice(0,3,15,0,0); // Existing XCTest project deployment target.
   assert(Array.isArray(inventory?.runtimes) && inventory.runtimes.length<=100 && Array.isArray(inventory?.devicetypes) && inventory.devicetypes.length<=1000,"IOS_INVENTORY_SCHEMA_REFUSED");
   // Select an installed target aligned with the actual selected SDK, not an arbitrary
   // lexically latest runtime. This is a scope choice, not a claim that newer OSes fail.
@@ -90,6 +90,10 @@ export function appleOwnedState(inventory:any,serial:string,runtime:string,name:
 }
 type AppleCommand=(stage:string,args:string[],timeoutMs?:number)=>Promise<string>;
 export function appleSetupEvidence() {return {createdState:"NOT_OBSERVED",bootState:"NOT_OBSERVED",light:{before:null as "light"|"dark"|null,writePassed:false,verified:false},dark:{before:null as "light"|"dark"|null,writePassed:false,verified:false}};}
+export function appleAvailableRuntimes(inventory:any) {
+  assert(Array.isArray(inventory?.runtimes) && inventory.runtimes.length<=100,"IOS_INVENTORY_SCHEMA_REFUSED");
+  return [...new Set<string>(inventory.runtimes.filter((r:any)=>r?.isAvailable===true && typeof r.identifier==="string" && /^com\.apple\.CoreSimulator\.SimRuntime\.iOS-[0-9-]+$/.test(r.identifier) && typeof r.version==="string" && /^[0-9]{1,5}(?:\.[0-9]{1,3}){0,2}$/.test(r.version)).map((r:any)=>r.version))].sort((a,b)=>versionOrder(numericVersion(a),numericVersion(b))).slice(0,20);
+}
 export async function verifyAppleAppearance(command:AppleCommand,serial:string,mode:"light"|"dark",setup:ReturnType<typeof appleSetupEvidence>) {
   ownedSimulatorId(serial);const stage=mode==="light"?"ios-theme":"ios-dark-theme";
   const before=(await command(stage+"-read",["simctl","ui",serial,"appearance"])).trim();
@@ -108,7 +112,8 @@ export async function cleanupAppleTarget(command:AppleCommand,serial:string,runt
   try {
     result.shutdownState=appleOwnedState(JSON.parse(await command("ios-shutdown-readback",["simctl","list","devices","--json"])),serial,runtime,name);
     assert(result.shutdownState==="Shutdown","IOS_OWNED_SHUTDOWN_UNVERIFIED");
-    await command("ios-owned-delete",["simctl","delete",serial]);result.deleteCommand="PASS";
+    try{result.deleteCommand="FAILED";await command("ios-owned-delete",["simctl","delete",serial]);result.deleteCommand="PASS";}catch{result.cause??="IOS_DELETE_COMMAND_FAILED";}
+    if(unsettled()){result.cause="CHILD_GROUP_UNRECONCILED";return result;}
     result.finalState=appleOwnedState(JSON.parse(await command("ios-cleanup-readback",["simctl","list","devices","--json"])),serial,runtime,name);
     assert(result.finalState==="ABSENT","IOS_OWNED_DELETE_UNVERIFIED");
     result.status="VERIFIED";
@@ -185,6 +190,8 @@ export async function main(args: string[]) {
   const sourceText=execFileSync("git",["show",`${source}:${swiftSource}`],{encoding:"utf8",windowsHide:true});
   const publicSource:PublicSource={absolutePath:path.join(workspace,...swiftSource.split("/")),relativePath:swiftSource,lineCount:sourceText.split(/\r?\n/).length};
   const observations=processRecorder(output,publicSource);let summaryWritten=false,targetEffectsStarted=false;
+  let boundPackageHash:string|null=null,androidSetup:ReturnType<typeof androidSetupEvidence>|null=null,appleSetup:ReturnType<typeof appleSetupEvidence>|null=null;
+  let appleEnvironment:{sdk:string|null;availableRuntimes:string[];selectionPolicy:string;runtime:string|null;deviceFamily:string|null}|null=null;
   const identity=(packageHash:string)=>nativeIdentity({source,tree:sourceTree,packageHash,run:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT});
   const emit=(summary:object)=>{summaryWritten=true;console.log(JSON.stringify(summary));};
   let activeOperation="NATIVE_PREFLIGHT";
@@ -198,15 +205,13 @@ export async function main(args: string[]) {
   const toolVersion = await run("tool-version", tool, platform === "ANDROID" ? ["version"] : ["--version"]);
   let packageHash: string;
   if (platform === "ANDROID") {
-    packagePath = file(packagePath); packageHash = hash(packagePath);
+    packagePath = file(packagePath); packageHash = hash(packagePath);boundPackageHash=packageHash;
     assert(packageHash === o["--sha256"], "NATIVE_PACKAGE_HASH_MISMATCH");
     const metadata = await run("package-metadata", metadataTool, ["dump", "badging", packagePath]);
     assert(metadata.includes(`package: name='${appId}'`) && metadata.includes("versionName='0.1.0'") && metadata.includes(`launchable-activity: name='${appId}.MainActivity'`) && metadata.includes("application-debuggable"), "ANDROID_PACKAGE_ID_VERSION_OR_DEBUG_PROFILE_REFUSED");
     const a = new Android(tool, o["--serial"], workspace, observations.observe);
-    assert((await a.run(["get-state"])).trim() === "device" && (await a.run(["shell","getprop","ro.kernel.qemu"])).trim() === "1", "ANDROID_EXACT_EMULATOR_NOT_READY");
-    assert((await a.run(["emu","avd","name"])).split(/\r?\n/)[0]==="native_1b_phone","ANDROID_EMULATOR_OWNERSHIP_REFUSED");
-    assert(!(await a.run(["shell","pm","list","packages",appId])).includes(`package:${appId}`), "ANDROID_EXISTING_APP_SANDBOX_REFUSED");
-    const results: unknown[] = []; let installAttempted = false, cleanup = "NOT_EXECUTED", success = false;
+    const setup=androidSetup=androidSetupEvidence();
+    const results: unknown[] = []; let cleanup = "NOT_EXECUTED", success = false;
     let terminal:ReturnType<Android["failure"]>|null=null,cleanupFailure:object|null=null;
     const record = async (scenario: string, action: () => Promise<void>) => {
       a.beginScenario();const started = new Date().toISOString(); try {
@@ -220,23 +225,23 @@ export async function main(args: string[]) {
     };
     const started = new Date().toISOString();
     try {
-      targetEffectsStarted = true; installAttempted = true; const install = await a.run(["install", packagePath]); assert(install.includes("Success"), "ANDROID_INSTALL_FAILED");
+      await installReadyAndroid(a,metadata,packagePath,setup);targetEffectsStarted=true;
       await journey(a, String(randomInt(10_000_000,99_999_999)), record);
       success = true;
     } catch(error) {if(!terminal)terminal=a.failure(error);throw error;
     } finally {
       const originalProcessFailure=observations.failure();
       if(observations.unreconciled()){cleanup="UNRECONCILED";cleanupFailure={cause:"CHILD_GROUP_UNRECONCILED",operations:"NOT_EXECUTED_WITH_UNSETTLED_CHILD_GROUP"};}
-      else try { if(installAttempted && (await a.run(["shell","pm","list","packages",appId])).includes(`package:${appId}`)) { await a.run(["shell","am","force-stop",appId]); const uninstall=await a.run(["uninstall",appId]); assert(uninstall.includes("Success")); } assert(!(await a.run(["shell","pm","list","packages",appId])).includes(`package:${appId}`)); await a.run(["shell","rm","-f","/sdcard/nalanda-native-1b.xml"]); cleanup="VERIFIED"; } catch(error) {cleanup="UNRECONCILED";cleanupFailure={cause:androidCause(error),lastProcess:observations.latest()};}
+      else if(setup.installAttempts===1) try { if((await a.run(["shell","pm","list","packages",appId])).includes(`package:${appId}`)) { await a.run(["shell","am","force-stop",appId]); const uninstall=await a.run(["uninstall",appId]); assert(uninstall.includes("Success")); } assert(!(await a.run(["shell","pm","list","packages",appId])).includes(`package:${appId}`)); await a.run(["shell","rm","-f","/sdcard/nalanda-native-1b.xml"]); cleanup="VERIFIED"; } catch(error) {cleanup="UNRECONCILED";cleanupFailure={cause:androidCause(error),lastProcess:observations.latest()};}
       // Same exclusive/private writer convention as the existing connected host.
       const retention=retainNativeEvidence(output,{source,tree:sourceTree,platform,profile:"NO_REMOTE_SERVER_CONFIGURED",packageHash,target:o["--serial"],tools:{toolSha256:hash(tool),metadataToolSha256:hash(metadataTool),toolVersion},started,ended:new Date().toISOString(),exit:success&&cleanup==="VERIFIED"?0:1,assertions:results,terminal,cleanup,cleanupFailure,authenticated:false,physical:false},success,cleanup);
-      emit({platform,...retention,identity:identity(packageHash),versions:nativeVersions(toolVersion),scenarios:results,cleanup,cleanupFailure,settingsRestoration:a.settingsRestoration(),failure:success?null:terminal??originalProcessFailure,observedChildFailure:originalProcessFailure?{...originalProcessFailure,relationship:success?"RECOVERED_DURING_SUCCESSFUL_JOURNEY":"OBSERVED_SEPARATELY_FROM_TERMINAL_PREDICATE"}:null,authenticated:false,physical:false});
+      emit({platform,...retention,identity:identity(packageHash),versions:nativeVersions(toolVersion),setup,scenarios:results,cleanup,cleanupFailure,settingsRestoration:a.settingsRestoration(),failure:success?null:terminal??originalProcessFailure,observedChildFailure:originalProcessFailure?{...originalProcessFailure,relationship:success?"RECOVERED_DURING_SUCCESSFUL_JOURNEY":"OBSERVED_SEPARATELY_FROM_TERMINAL_PREDICATE"}:null,authenticated:false,physical:false});
       assert(retention.evidenceRetention==="LOCAL_PRIVATE","NATIVE_PRIVATE_OUTPUT_WRITE_FAILED");
     }
     assert(success && cleanup === "VERIFIED", "NATIVE_EXECUTION_OR_CLEANUP_FAILED");
   } else {
     assert(["phone","tablet"].includes(o["--target-kind"]), "IOS_EXPLICIT_TARGET_KIND_REQUIRED");
-    packagePath=realpathSync(packagePath); packageHash=packageDigest(packagePath);
+    packagePath=realpathSync(packagePath); packageHash=packageDigest(packagePath);boundPackageHash=packageHash;
     assert(packageHash===o["--sha256"] && packagePath.endsWith(".app"),"NATIVE_PACKAGE_HASH_MISMATCH");
     const plist=JSON.parse(await run("ios-package-metadata",tool,["plutil","-convert","json","-o","-",path.join(packagePath,"Info.plist")]));
     assert(plist.CFBundleIdentifier===appId && plist.CFBundleShortVersionString==="0.1.0" && plist.DTPlatformName==="iphonesimulator" && plist.CFBundleExecutable && !String(plist.CFBundleExecutable).includes("/"),"IOS_SIMULATOR_PACKAGE_METADATA_REFUSED");
@@ -246,10 +251,11 @@ export async function main(args: string[]) {
     publicSource.inputs=appleInputBindings(workspace,path.join(output,"derived"),projectSource);
     const appInput={configuredExecutablePresent:existsSync(path.join(packagePath,"Nalanda School")),metadataExecutableMatchesConfigured:plist.CFBundleExecutable==="Nalanda School"};
     const xcodeVersion=await run("xcode-version",metadataTool,["-version"]);
+    const sdkVersion=(await run("ios-sdk-version",tool,["--sdk","iphonesimulator","--show-sdk-version"])).trim();numericVersion(sdkVersion);
     const inventory=JSON.parse(await run("ios-inventory",tool,["simctl","list","--json"]));
-    const runtime=inventory.runtimes.filter((r:any)=>r.isAvailable && r.identifier.startsWith("com.apple.CoreSimulator.SimRuntime.iOS-")).sort((a:any,b:any)=>a.identifier.localeCompare(b.identifier)).at(-1);
-    const deviceType=inventory.devicetypes.find((d:any)=>d.name.startsWith(o["--target-kind"]==="phone"?"iPhone":"iPad") && (!d.minRuntimeVersionString || Number(d.minRuntimeVersionString.split(".")[0])<=Number(runtime?.version.split(".")[0])));
-    assert(runtime && deviceType,"IOS_SUPPORTED_RUNTIME_OR_DEVICE_TYPE_UNAVAILABLE");
+    appleEnvironment={sdk:sdkVersion,availableRuntimes:appleAvailableRuntimes(inventory),selectionPolicy:"INSTALLED_SDK_ALIGNED_TARGET",runtime:null,deviceFamily:o["--target-kind"]};
+    activeOperation="IOS_TARGET_SELECTION";const {runtime,deviceType}=selectAppleTarget(inventory,sdkVersion,plist.MinimumOSVersion,o["--target-kind"]);appleEnvironment.runtime=runtime.version;
+    const setup=appleSetup=appleSetupEvidence(),ownedName=`nalanda-native-${process.env.GITHUB_RUN_ID}-${o["--target-kind"]}`;
     const started=new Date().toISOString();let serial:string|undefined,success=false,cleanup="NOT_EXECUTED",errorCode="",copiedHash:string|null=null;
     const processes:unknown[]=[];let cleanupFailure:object|null=null,terminal:object|null=null;
     const xcode=async(stage:string,args:string[])=>{
@@ -260,17 +266,21 @@ export async function main(args: string[]) {
       finally{const observed=observations.outcome(stage);processes.push({stage,started,ended:new Date().toISOString(),status,exit:observed?.exit??null,signal:observed?.signal??null,timedOut:observed?.timedOut??null,stdoutSha256,failureOutput:observations.retained(stage)?"RETAINED_PRIVATELY":"UNAVAILABLE"});}
     };
     try {
-      targetEffectsStarted=true;const created=(await run("ios-create-owned-target",tool,["simctl","create",`nalanda-native-${process.env.GITHUB_RUN_ID}-${o["--target-kind"]}`,deviceType.identifier,runtime.identifier])).trim();
+      targetEffectsStarted=true;const created=(await run("ios-create-owned-target",tool,["simctl","create",ownedName,deviceType.identifier,runtime.identifier])).trim();
       serial=ownedSimulatorId(created);
+      setup.createdState=appleOwnedState(JSON.parse(await run("ios-created-readback",tool,["simctl","list","devices","--json"])),serial,runtime.identifier,ownedName);assert(setup.createdState==="Shutdown","IOS_CREATED_TARGET_STATE_REFUSED");
       await run("ios-boot",tool,["simctl","boot",serial]);await run("ios-boot-readiness",tool,["simctl","bootstatus",serial,"-b"],120_000);
-      await run("ios-theme",tool,["simctl","ui",serial,"appearance","light"]);
+      const command:AppleCommand=(stage,args,timeout)=>run(stage,tool,args,timeout);
+      setup.bootState=appleOwnedState(JSON.parse(await command("ios-target-readback",["simctl","list","devices","--json"])),serial,runtime.identifier,ownedName);assert(setup.bootState==="Booted","IOS_OWNED_BOOT_STATE_REFUSED");
+      await verifyAppleAppearance(command,serial,"light",setup);
       const derived=path.join(output,"derived"),project=path.join(workspace,"apps/nalanda-cross-platform/tests/native/NativeJourney.xcodeproj");
       await xcode("ios-build-ui-runner",["build-for-testing","-project",project,"-scheme","NativeJourney","-destination",`platform=iOS Simulator,id=${serial}`,"-derivedDataPath",derived,"CODE_SIGNING_ALLOWED=NO",`NALANDA_SIM_APP=${packagePath}`]);
       activeOperation="IOS_COPIED_PACKAGE_DIGEST";const copied=path.join(derived,"Build/Products/Debug-iphonesimulator/Nalanda School.app");copiedHash=packageDigest(copied);assert(copiedHash===packageHash,"IOS_TEST_TARGET_PACKAGE_SUBSTITUTED");
       const testArgs=["test-without-building","-project",project,"-scheme","NativeJourney","-destination",`platform=iOS Simulator,id=${serial}`,"-derivedDataPath",derived,"-parallel-testing-enabled","NO","-maximum-concurrent-test-simulator-destinations","1","CODE_SIGNING_ALLOWED=NO"];
       await xcode("ios-real-ui-journey",[...testArgs,"-resultBundlePath",path.join(output,"journey.xcresult"),"-only-testing:NativeJourney/NativeJourney/testNoRemoteJourney"]);
       activeOperation="IOS_REQUIRED_SCENARIO_MARKERS";assert(observations.journey("ios-real-ui-journey")?.status==="OBSERVED" && observations.journey("ios-real-ui-journey")?.scenarios.length===scenarios.length,"IOS_REQUIRED_SCENARIO_EVIDENCE_MISSING");
-      await run("ios-dark-theme",tool,["simctl","ui",serial,"appearance","dark"]);
+      setup.bootState=appleOwnedState(JSON.parse(await command("ios-target-readback",["simctl","list","devices","--json"])),serial,runtime.identifier,ownedName);assert(setup.bootState==="Booted","IOS_OWNED_BOOT_STATE_REFUSED");
+      await verifyAppleAppearance(command,serial,"dark",setup);
       await xcode("ios-dark-locked-layout",[...testArgs,"-resultBundlePath",path.join(output,"dark-layout.xcresult"),"-only-testing:NativeJourney/NativeJourney/testDarkLockedLayout"]);
       await run("ios-final-locked-launch",tool,["simctl","launch",serial,appId]);
       const capture=path.join(output,"locked-dark.png"); let captureReady=false; const captureDeadline=Date.now()+60_000; while(Date.now()<captureDeadline){await run("ios-final-capture",tool,["simctl","io",serial,"screenshot",capture]);try{await assertNonblankNativeCapture(capture);captureReady=true;break;}catch{await new Promise(resolve=>setTimeout(resolve,1_000));}} activeOperation="IOS_FINAL_CAPTURE_READINESS";assert(captureReady,"IOS_FINAL_CAPTURE_READINESS_TIMEOUT");
@@ -279,14 +289,14 @@ export async function main(args: string[]) {
     finally {
       const originalProcessFailure=observations.failure();
       if(observations.unreconciled()){cleanup="UNRECONCILED";cleanupFailure={cause:"CHILD_GROUP_UNRECONCILED",operations:"NOT_EXECUTED_WITH_UNSETTLED_CHILD_GROUP"};}
-      else if(serial) try {await run("ios-owned-shutdown",tool,["simctl","shutdown",serial]);await run("ios-owned-delete",tool,["simctl","delete",serial]);const after=JSON.parse(await run("ios-cleanup-readback",tool,["simctl","list","devices","--json"]));assert(!Object.values(after.devices).flat().some((d:any)=>d.udid===serial));cleanup="VERIFIED";}catch{cleanup="UNRECONCILED";cleanupFailure={cause:"IOS_OWNED_CLEANUP_FAILED",lastProcess:observations.latest()};}
+      else if(serial) {const settled=await cleanupAppleTarget((stage,args,timeout)=>run(stage,tool,args,timeout),serial,runtime.identifier,ownedName,observations.unreconciled);cleanup=settled.status;cleanupFailure={...settled,shutdownProcess:observations.outcome("ios-owned-shutdown")??null,deleteProcess:observations.outcome("ios-owned-delete")??null,lastProcess:observations.latest()};}
       else {cleanup="UNRECONCILED";cleanupFailure={cause:"IOS_CREATED_TARGET_OWNERSHIP_UNVERIFIED",operations:"NOT_EXECUTED_WITH_UNVERIFIED_TARGET"};}
       const retention=retainNativeEvidence(output,{source,platform,profile:"NO_REMOTE_SERVER_CONFIGURED",packageHash,copiedHash,target:serial,runtime,deviceType,tools:{toolSha256:hash(tool),metadataToolSha256:hash(metadataTool),toolVersion,xcodeVersion},started,ended:new Date().toISOString(),exit:success&&cleanup==="VERIFIED"?0:1,assertions:observations.journey("ios-real-ui-journey")?.scenarios??[],processes,errorCode,terminal,cleanup,cleanupFailure,authenticated:false,physical:false},success,cleanup);
-      emit({platform,targetKind:o["--target-kind"],...retention,identity:identity(packageHash),versions:nativeVersions(toolVersion,xcodeVersion,runtime.version),scenarios:observations.journey("ios-real-ui-journey")?.scenarios??[],scenarioEvidence:observations.journey("ios-real-ui-journey")?.status??"NOT_EXECUTED",cleanup,cleanupFailure,failure:terminal,observedChildFailure:originalProcessFailure,appInput,build:observations.build("ios-build-ui-runner")??null,buildProcess:observations.outcome("ios-build-ui-runner")??null,authenticated:false,physical:false});
+      emit({platform,targetKind:o["--target-kind"],...retention,identity:identity(packageHash),versions:nativeVersions(toolVersion,xcodeVersion,runtime.version),environment:appleEnvironment,setup,scenarios:observations.journey("ios-real-ui-journey")?.scenarios??[],scenarioEvidence:observations.journey("ios-real-ui-journey")?.status??"NOT_EXECUTED",cleanup,cleanupFailure,failure:terminal,observedChildFailure:originalProcessFailure,appInput,build:observations.build("ios-build-ui-runner")??null,buildProcess:observations.outcome("ios-build-ui-runner")??null,authenticated:false,physical:false});
       assert(retention.evidenceRetention==="LOCAL_PRIVATE","NATIVE_PRIVATE_OUTPUT_WRITE_FAILED");
     }
     assert(success&&cleanup==="VERIFIED","NATIVE_EXECUTION_OR_CLEANUP_FAILED");
   }
-  } catch(error) {if(!summaryWritten)emit({platform,status:"FAILED",scenarios:[],failure:{operation:activeOperation,cause:platform==="IOS"?appleCause(error):androidCause(error),process:observations.outcome(activeOperation)??null,childFailure:observations.failure()},cleanup:targetEffectsStarted?"UNRECONCILED":"NOT_EXECUTED",authenticated:false,physical:false});throw error;}
+  } catch(error) {if(!summaryWritten)emit({platform,status:"FAILED",...(boundPackageHash?{identity:identity(boundPackageHash)}:{}),setup:platform==="IOS"?appleSetup:androidSetup,environment:appleEnvironment,scenarios:[],failure:{operation:activeOperation,cause:platform==="IOS"?appleCause(error):androidCause(error),process:observations.outcome(activeOperation)??null,childFailure:observations.failure()},cleanup:targetEffectsStarted?"UNRECONCILED":"NOT_EXECUTED",authenticated:false,physical:false});throw error;}
 }
 if(process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main(process.argv.slice(2)).catch(error=>{const code=error instanceof Error?error.message:"";console.error(/^(NATIVE_|ANDROID_|IOS_|WINDOWS_|QA_PROCESS_)[A-Za-z0-9_:-]+$/.test(code)?code:"NATIVE_EXECUTION_FAILED_DETAILS_PRIVATE");process.exitCode=1;});
