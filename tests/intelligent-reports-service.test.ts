@@ -59,6 +59,23 @@ async function grant(who:Identity,permission:string,effect="ALLOW",scope?:Intell
   const create=()=>db.userPermissionOverride.create({data:{userId:who.userId,permission,effect,reason:"SYNTHETIC test grant",createdByUserId:actor.userId,validFrom:date("2026-01-01")}});
   return scope?scope.phase("report-grant-create",create):create();
 }
+async function initialRoleGrants(who:Identity,scope:IntelligentReportsObservation) {
+  // These four direct fixture writes have no intervening authorization action.
+  // Preserve Prisma defaults/constraints and verify the persisted dataset before
+  // running the unchanged real IAM calls. Each await retains the abort guard.
+  const permissions=["USE_INTELLIGENT_REPORTS","USE_IR_ACADEMIC","USE_IR_FEES","VIEW_PENDING_DUES"];
+  await scope.phase("report-grant-create",async()=>{
+    const result=await db.userPermissionOverride.createMany({data:permissions.map(permission=>({userId:who.userId,permission,effect:"ALLOW",reason:"SYNTHETIC test grant",createdByUserId:actor.userId,validFrom:date("2026-01-01")}))});
+    expect(result.count).toBe(4);
+  });
+  await scope.phase("report-grant-create",async()=>{
+    const rows=await db.userPermissionOverride.findMany({where:{userId:who.userId},orderBy:{permission:"asc"}});
+    expect(rows.map(row=>row.permission)).toEqual(["USE_INTELLIGENT_REPORTS","USE_IR_ACADEMIC","USE_IR_FEES","VIEW_PENDING_DUES"]);
+    expect(new Set(rows.map(row=>row.id)).size).toBe(4);
+    expect(new Set(rows.map(row=>row.publicKey)).size).toBe(4);
+    for(const row of rows)expect(row).toMatchObject({userId:who.userId,effect:"ALLOW",status:"ACTIVE",reason:"SYNTHETIC test grant",createdByUserId:actor.userId,validFrom:new Date("2026-01-01T00:00:00Z"),validUntil:null,revokedByUserId:null,revokedAt:null,supersedesId:null,activeKey:null,version:1});
+  });
+}
 async function publication(index:number,percentage:string,state="PRESENT") {
   const id=`s${index}`;
   await db.studentResultSnapshot.create({data:{id:`result-${id}`,calculationRunId:`run-${id}`,inputFingerprint:`fixture-${id}`,runNumber:1,runStatus:"LOCKED",examinationId:"exam7",classScopeId:"exam-scope7",studentId:id,schemeVersionId:"scheme7",snapshotVersion:1,totalObtained:percentage,totalMaximum:100,percentage,formulaVersion:"RC05",roundingPolicyVersion:"RC05_V1_DECIMAL6_HALF_UP2",warningsJson:"[]",sourceSheetVersionsJson:"[]",sourceSchemeVersionsJson:"[]",snapshotJson:"{}",calculatedByUserId:actor.userId,calculatedAt:now,lockedAt:now}});
@@ -155,7 +172,7 @@ it("eligible leadership needs module grants; Accountant academics require explic
     await observedReportingRole(context,caseId,async scope=>{
     const who=await identity(role,scope);await scope.phase("report-expected-refusal",async()=>{await expect(authorize(db,who)).rejects.toMatchObject({code:"ACCESS_DENIED"});});
     const roleGrant=(permission:string)=>grant(who,permission,"ALLOW",scope);
-    await roleGrant("USE_INTELLIGENT_REPORTS");await roleGrant("USE_IR_ACADEMIC");await roleGrant("USE_IR_FEES");await roleGrant("VIEW_PENDING_DUES");
+    await initialRoleGrants(who,scope);
     if(["DIRECTOR","PRINCIPAL","ACCOUNTANT"].includes(role)){
       await scope.phase("report-authorization",()=>authorize(db,who,"FEES"));
       if(role==="ACCOUNTANT")await scope.phase("report-expected-refusal",async()=>{await expect(authorize(db,who,"ACADEMIC")).rejects.toMatchObject({code:"ACCESS_DENIED"});});
