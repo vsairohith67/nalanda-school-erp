@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
 import { producerProcess, type ProducerProcessObservation } from "../../../../scripts/portable/producer-process";
 import { Android, appId, journey } from "./android";
-import { appleBuild, appleScenarioMarkers, appleCause, childCause, processMetadata, androidCause, androidInstallCodes, androidInstallProjection, nativeIdentity, nativeVersions, swiftSource, appleProjectSource, type PublicSource, type AppleInputBinding } from "./diagnostics";
+import { appleBuild, appleScenarioMarkers, appleCause, appleDeviceQuerySupport, childCause, processMetadata, androidCause, androidInstallCodes, androidInstallProjection, nativeIdentity, nativeVersions, swiftSource, appleProjectSource, type PublicSource, type AppleInputBinding } from "./diagnostics";
 import { assertProtectedNativeCapture, assertNonblankNativeCapture } from "../../../../scripts/qa-ux-native-screen-content";
 
 const scenarios = ["A-clean-launch", "B-invalid-pin", "C-local-vault-empty", "D-explicit-lock-and-os-background", "E-cold-restart-wrong-pin", "F-remote-reference-draft-refusal", "G-reset-cancel-confirm", "H-platform-accessibility-layout"];
@@ -28,9 +28,9 @@ export function options(args: string[]) {
 function inside(child: string, root: string) { const r = path.relative(root, child); return r !== "" && !r.startsWith("..") && !path.isAbsolute(r); }
 function file(value: string) { assert(value && path.isAbsolute(value) && !lstatSync(value).isSymbolicLink() && lstatSync(value).isFile(), "NATIVE_TOOL_OR_PACKAGE_INVALID"); return realpathSync(value); }
 
-const processStages = new Set(["tool-version","package-metadata","android-install","android-uninstall","android-ui-command","ios-package-metadata","ios-architecture","xcode-version","ios-sdk-version","ios-inventory","ios-create-owned-target","ios-created-readback","ios-boot","ios-boot-readiness","ios-target-readback","ios-theme-read","ios-theme","ios-theme-readback","ios-build-ui-runner","ios-real-ui-journey","ios-dark-theme-read","ios-dark-theme","ios-dark-theme-readback","ios-dark-locked-layout","ios-final-locked-launch","ios-final-capture","ios-cleanup-ownership-readback","ios-owned-shutdown","ios-shutdown-readback","ios-owned-delete","ios-cleanup-readback"]);
+const processStages = new Set(["tool-version","package-metadata","android-install","android-uninstall","android-ui-command","ios-package-metadata","ios-architecture","xcode-version","ios-sdk-version","ios-inventory","ios-device-query-support","ios-create-owned-target","ios-created-readback","ios-boot","ios-boot-readiness","ios-target-readback","ios-theme-read","ios-theme","ios-theme-readback","ios-build-ui-runner","ios-real-ui-journey","ios-dark-theme-read","ios-dark-theme","ios-dark-theme-readback","ios-dark-locked-layout","ios-final-locked-launch","ios-final-capture","ios-cleanup-ownership-readback","ios-owned-shutdown","ios-shutdown-readback","ios-owned-delete","ios-cleanup-readback"]);
 export function androidSetupEvidence() {
-  return {transport:false,emulator:false,ownedAvd:false,bootCompleted:false,api:null as number|null,abi:null as "x86_64"|"x86"|"arm64-v8a"|"armeabi-v7a"|"UNKNOWN"|null,minimumApi:null as number|null,packageCompatible:false,packageManagerResponsive:false,sandboxAbsent:false,installAttempts:0,installed:false};
+  return {transport:false,emulator:false,ownedAvd:false,bootCompleted:false,api:null as number|null,abi:null as "x86_64"|"x86"|"arm64-v8a"|"armeabi-v7a"|"UNKNOWN"|null,minimumApi:null as number|null,packageAbis:[] as Array<"x86_64"|"x86"|"arm64-v8a"|"armeabi-v7a"|"UNKNOWN">,packageCompatible:false,packageManagerResponsive:false,sandboxAbsent:false,installAttempts:0,installed:false};
 }
 export async function installReadyAndroid(a:Android,metadata:string,packagePath:string,setup:ReturnType<typeof androidSetupEvidence>) {
   await a.check("SETUP_ADB_TARGET",async()=>{assert((await a.run(["get-state"])).trim()==="device","ANDROID_EXACT_EMULATOR_NOT_READY");setup.transport=true;});
@@ -46,7 +46,12 @@ export async function installReadyAndroid(a:Android,metadata:string,packagePath:
   await a.check("SETUP_PACKAGE_COMPATIBILITY",()=>{
     const minimum=/^sdkVersion:'([1-9][0-9]{0,2})'$/m.exec(metadata),native=/^native-code:\s*(.+)$/m.exec(metadata);
     setup.minimumApi=minimum?Number(minimum[1]):null;
-    assert(setup.minimumApi!==null && setup.minimumApi<=setup.api! && native && [...native[1].matchAll(/'([^']+)'/g)].some(m=>m[1]===setup.abi),"ANDROID_PACKAGE_RUNTIME_MISMATCH");setup.packageCompatible=true;
+    const abis=native?[...native[1].matchAll(/'([^']+)'/g)].map(m=>m[1]):[];
+    setup.packageAbis=abis.slice(0,4).map(abi=>["x86_64","x86","arm64-v8a","armeabi-v7a"].includes(abi)?abi as Exclude<typeof setup.packageAbis[number],"UNKNOWN">:"UNKNOWN");
+    assert(setup.minimumApi!==null && setup.minimumApi<=setup.api! && native && abis.some(abi=>abi===setup.abi),"ANDROID_PACKAGE_RUNTIME_MISMATCH");
+    // The hosted journey needs one x86_64 debug package, not a universal APK.
+    // Other architecture compiler coverage remains in the independent jobs.
+    assert(abis.length===1 && abis[0]==="x86_64" && native[1].trim()==="'x86_64'","ANDROID_PACKAGE_ABI_SCOPE_REFUSED");setup.packageCompatible=true;
   });
   await a.check("SETUP_PACKAGE_MANAGER",async()=>{
     // A responsive ADB shell/boot property does not establish PackageManager readiness.
@@ -88,8 +93,17 @@ export function appleOwnedState(inventory:any,serial:string,runtime:string,name:
   assert(matches.length===1 && matches[0].id===runtime && matches[0].d.name===name,"IOS_OWNED_STATE_UNVERIFIED");
   return ["Booted","Shutdown"].includes(matches[0].d.state)?matches[0].d.state as "Booted"|"Shutdown":"UNKNOWN" as const;
 }
+export function appleDeviceQuery(serial:string) {
+  ownedSimulatorId(serial);return ["simctl","list","--json","devices",serial];
+}
+export function appleQueriedOwnedState(inventory:any,serial:string,runtime:string,name:string) {
+  const state=appleOwnedState(inventory,serial,runtime,name);
+  // A global response containing the owned ID does not prove filtering worked.
+  assert(Object.values(inventory.devices).flat().every((device:any)=>device?.udid===serial),"IOS_DEVICE_QUERY_SCOPE_REFUSED");
+  return state;
+}
 type AppleCommand=(stage:string,args:string[],timeoutMs?:number)=>Promise<string>;
-export function appleSetupEvidence() {return {createdState:"NOT_OBSERVED",bootState:"NOT_OBSERVED",light:{before:null as "light"|"dark"|null,writePassed:false,verified:false},dark:{before:null as "light"|"dark"|null,writePassed:false,verified:false}};}
+export function appleSetupEvidence() {return {deviceQuery:"NOT_VERIFIED" as "NOT_VERIFIED"|"OWNED_UUID_FILTER",createdState:"NOT_OBSERVED",bootState:"NOT_OBSERVED",light:{before:null as "light"|"dark"|null,writePassed:false,verified:false},dark:{before:null as "light"|"dark"|null,writePassed:false,verified:false}};}
 export function appleAvailableRuntimes(inventory:any) {
   assert(Array.isArray(inventory?.runtimes) && inventory.runtimes.length<=100,"IOS_INVENTORY_SCHEMA_REFUSED");
   return [...new Set<string>(inventory.runtimes.filter((r:any)=>r?.isAvailable===true && typeof r.identifier==="string" && /^com\.apple\.CoreSimulator\.SimRuntime\.iOS-[0-9-]+$/.test(r.identifier) && typeof r.version==="string" && /^[0-9]{1,5}(?:\.[0-9]{1,3}){0,2}$/.test(r.version)).map((r:any)=>r.version))].sort((a,b)=>versionOrder(numericVersion(a),numericVersion(b))).slice(0,20);
@@ -105,18 +119,18 @@ export async function cleanupAppleTarget(command:AppleCommand,serial:string,runt
   ownedSimulatorId(serial);
   const result={status:"UNRECONCILED",initialState:"NOT_OBSERVED",shutdownCommand:"NOT_EXECUTED",shutdownState:"NOT_OBSERVED",deleteCommand:"NOT_EXECUTED",finalState:"NOT_OBSERVED",cause:null as string|null};
   if(unsettled()){result.cause="CHILD_GROUP_UNRECONCILED";return result;}
-  try{result.initialState=appleOwnedState(JSON.parse(await command("ios-cleanup-ownership-readback",["simctl","list","devices","--json"])),serial,runtime,name);assert(result.initialState==="Booted" || result.initialState==="Shutdown","IOS_OWNED_STATE_UNVERIFIED");}catch{result.cause="IOS_CLEANUP_OWNERSHIP_UNVERIFIED";return result;}
+  try{result.initialState=appleQueriedOwnedState(JSON.parse(await command("ios-cleanup-ownership-readback",appleDeviceQuery(serial))),serial,runtime,name);assert(result.initialState==="Booted" || result.initialState==="Shutdown","IOS_OWNED_STATE_UNVERIFIED");}catch{result.cause="IOS_CLEANUP_OWNERSHIP_UNVERIFIED";return result;}
   if(unsettled()){result.cause="CHILD_GROUP_UNRECONCILED";return result;}
   if(result.initialState==="Booted")try{await command("ios-owned-shutdown",["simctl","shutdown",serial]);result.shutdownCommand="PASS";}catch{result.shutdownCommand="FAILED";result.cause="IOS_SHUTDOWN_COMMAND_FAILED";}
   // A closed/failed shutdown child is not simulator state. Read the same owned ID
   // once; never issue a second shutdown or delete a still-booted/unknown target.
   if(unsettled()){result.cause="CHILD_GROUP_UNRECONCILED";return result;}
   try {
-    result.shutdownState=appleOwnedState(JSON.parse(await command("ios-shutdown-readback",["simctl","list","devices","--json"])),serial,runtime,name);
+    result.shutdownState=appleQueriedOwnedState(JSON.parse(await command("ios-shutdown-readback",appleDeviceQuery(serial))),serial,runtime,name);
     assert(result.shutdownState==="Shutdown","IOS_OWNED_SHUTDOWN_UNVERIFIED");
     try{result.deleteCommand="FAILED";await command("ios-owned-delete",["simctl","delete",serial]);result.deleteCommand="PASS";}catch{result.cause??="IOS_DELETE_COMMAND_FAILED";}
     if(unsettled()){result.cause="CHILD_GROUP_UNRECONCILED";return result;}
-    result.finalState=appleOwnedState(JSON.parse(await command("ios-cleanup-readback",["simctl","list","devices","--json"])),serial,runtime,name);
+    result.finalState=appleQueriedOwnedState(JSON.parse(await command("ios-cleanup-readback",appleDeviceQuery(serial))),serial,runtime,name);
     assert(result.finalState==="ABSENT","IOS_OWNED_DELETE_UNVERIFIED");
     result.status="VERIFIED";
   }catch{result.cause??="IOS_OWNED_CLEANUP_FAILED";}
@@ -137,6 +151,7 @@ export function processRecorder(output: string, publicSource?:PublicSource) {
   const builds=new Map<string,ReturnType<typeof appleBuild>>();
   const journeys=new Map<string,ReturnType<typeof appleScenarioMarkers>>();
   let installation:ReturnType<typeof androidInstallProjection>|null=null;
+  let deviceQuerySupported:boolean|null=null;
   let unreconciled=false;
   let latest: {stage:string;process:ReturnType<typeof processMetadata>;cause:string|null}|null=null;
   const observe=(r:ProducerProcessObservation)=>{
@@ -150,6 +165,7 @@ export function processRecorder(output: string, publicSource?:PublicSource) {
     if(cause && !failure)failure={stage:r.stage,cause};
     const metadata=processMetadata(r);outcomes.set(r.stage,metadata);retained.set(r.stage,false);latest={stage:r.stage,process:metadata,cause};
     if(r.stage==="android-install")installation=androidInstallProjection(r.stdout,r.stderr);
+    if(r.stage==="ios-device-query-support")deviceQuerySupported=cause===null && appleDeviceQuerySupport(r.stdout,r.stderr);
     if(r.stage==="ios-build-ui-runner" && publicSource)builds.set(r.stage,appleBuild(r.stdout,r.stderr,publicSource));
     if(r.stage==="ios-real-ui-journey")journeys.set(r.stage,appleScenarioMarkers(r.stdout,r.stderr,cause===null));
     const stem=path.join(output,`process-${sequence}`);
@@ -161,7 +177,7 @@ export function processRecorder(output: string, publicSource?:PublicSource) {
       retained.set(r.stage,true);
     } catch {failure={stage:r.stage,cause:"PRIVATE_RETENTION_FAILED"};throw Error("NATIVE_PRIVATE_PROCESS_RETENTION_FAILED");}
   };
-  return {observe,failure:()=>failure,outcome:(stage:string)=>outcomes.get(stage),retained:(stage:string)=>retained.get(stage)===true,build:(stage:string)=>builds.get(stage),journey:(stage:string)=>journeys.get(stage),installation:()=>installation,latest:()=>latest,unreconciled:()=>unreconciled};
+  return {observe,failure:()=>failure,outcome:(stage:string)=>outcomes.get(stage),retained:(stage:string)=>retained.get(stage)===true,build:(stage:string)=>builds.get(stage),journey:(stage:string)=>journeys.get(stage),installation:()=>installation,deviceQuerySupported:()=>deviceQuerySupported,latest:()=>latest,unreconciled:()=>unreconciled};
 }
 export function ownedSimulatorId(value:string) {
   assert(/^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$/.test(value),"IOS_OWNED_TARGET_ID_INVALID");return value;
@@ -260,6 +276,8 @@ export async function main(args: string[]) {
     appleEnvironment={sdk:sdkVersion,availableRuntimes:appleAvailableRuntimes(inventory),selectionPolicy:"INSTALLED_SDK_ALIGNED_TARGET",runtime:null,deviceFamily:o["--target-kind"]};
     activeOperation="IOS_TARGET_SELECTION";const {runtime,deviceType}=selectAppleTarget(inventory,sdkVersion,plist.MinimumOSVersion,o["--target-kind"]);appleEnvironment.runtime=runtime.version;
     const setup=appleSetup=appleSetupEvidence(),ownedName=`nalanda-native-${process.env.GITHUB_RUN_ID}-${o["--target-kind"]}`;
+    await run("ios-device-query-support",tool,["simctl","help","list"]);
+    assert(observations.deviceQuerySupported()===true,"IOS_DEVICE_QUERY_UNSUPPORTED");setup.deviceQuery="OWNED_UUID_FILTER";
     const started=new Date().toISOString();let serial:string|undefined,success=false,cleanup="NOT_EXECUTED",errorCode="",copiedHash:string|null=null;
     const processes:unknown[]=[];let cleanupFailure:object|null=null,terminal:object|null=null;
     const xcode=async(stage:string,args:string[])=>{
@@ -272,10 +290,10 @@ export async function main(args: string[]) {
     try {
       targetEffectsStarted=true;const created=(await run("ios-create-owned-target",tool,["simctl","create",ownedName,deviceType.identifier,runtime.identifier])).trim();
       serial=ownedSimulatorId(created);
-      setup.createdState=appleOwnedState(JSON.parse(await run("ios-created-readback",tool,["simctl","list","devices","--json"])),serial,runtime.identifier,ownedName);assert(setup.createdState==="Shutdown","IOS_CREATED_TARGET_STATE_REFUSED");
+      setup.createdState=appleQueriedOwnedState(JSON.parse(await run("ios-created-readback",tool,appleDeviceQuery(serial))),serial,runtime.identifier,ownedName);assert(setup.createdState==="Shutdown","IOS_CREATED_TARGET_STATE_REFUSED");
       await run("ios-boot",tool,["simctl","boot",serial]);await run("ios-boot-readiness",tool,["simctl","bootstatus",serial,"-b"],120_000);
       const command:AppleCommand=(stage,args,timeout)=>run(stage,tool,args,timeout);
-      setup.bootState=appleOwnedState(JSON.parse(await command("ios-target-readback",["simctl","list","devices","--json"])),serial,runtime.identifier,ownedName);assert(setup.bootState==="Booted","IOS_OWNED_BOOT_STATE_REFUSED");
+      setup.bootState=appleQueriedOwnedState(JSON.parse(await command("ios-target-readback",appleDeviceQuery(serial))),serial,runtime.identifier,ownedName);assert(setup.bootState==="Booted","IOS_OWNED_BOOT_STATE_REFUSED");
       await verifyAppleAppearance(command,serial,"light",setup);
       const derived=path.join(output,"derived"),project=path.join(workspace,"apps/nalanda-cross-platform/tests/native/NativeJourney.xcodeproj");
       await xcode("ios-build-ui-runner",["build-for-testing","-project",project,"-scheme","NativeJourney","-destination",`platform=iOS Simulator,id=${serial}`,"-derivedDataPath",derived,"CODE_SIGNING_ALLOWED=NO",`NALANDA_SIM_APP=${packagePath}`]);
@@ -283,7 +301,7 @@ export async function main(args: string[]) {
       const testArgs=["test-without-building","-project",project,"-scheme","NativeJourney","-destination",`platform=iOS Simulator,id=${serial}`,"-derivedDataPath",derived,"-parallel-testing-enabled","NO","-maximum-concurrent-test-simulator-destinations","1","CODE_SIGNING_ALLOWED=NO"];
       await xcode("ios-real-ui-journey",[...testArgs,"-resultBundlePath",path.join(output,"journey.xcresult"),"-only-testing:NativeJourney/NativeJourney/testNoRemoteJourney"]);
       activeOperation="IOS_REQUIRED_SCENARIO_MARKERS";assert(observations.journey("ios-real-ui-journey")?.status==="OBSERVED" && observations.journey("ios-real-ui-journey")?.scenarios.length===scenarios.length,"IOS_REQUIRED_SCENARIO_EVIDENCE_MISSING");
-      setup.bootState=appleOwnedState(JSON.parse(await command("ios-target-readback",["simctl","list","devices","--json"])),serial,runtime.identifier,ownedName);assert(setup.bootState==="Booted","IOS_OWNED_BOOT_STATE_REFUSED");
+      setup.bootState=appleQueriedOwnedState(JSON.parse(await command("ios-target-readback",appleDeviceQuery(serial))),serial,runtime.identifier,ownedName);assert(setup.bootState==="Booted","IOS_OWNED_BOOT_STATE_REFUSED");
       await verifyAppleAppearance(command,serial,"dark",setup);
       await xcode("ios-dark-locked-layout",[...testArgs,"-resultBundlePath",path.join(output,"dark-layout.xcresult"),"-only-testing:NativeJourney/NativeJourney/testDarkLockedLayout"]);
       await run("ios-final-locked-launch",tool,["simctl","launch",serial,appId]);
