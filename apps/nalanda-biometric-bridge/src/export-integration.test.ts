@@ -75,7 +75,8 @@ let f:ReturnType<typeof fixture>,r:ReturnType<typeof reviewFixture>;
 // Neither comparison moves into setup. The creation harness allowance covers
 // four distinct existing 10000ms ACL children plus 5000ms for remaining body work.
 // Historical slow-call cause remains UNKNOWN. Setup, reuse and teardown stay
-// at 5000ms; the owned caller bounds START through full command settlement at 60s.
+// at 5000ms; this coupled lifecycle retains its 60s assertion. The owned caller
+// separately applies the reviewed whole-population aggregate suite budget.
 let started:number|null=null,startUnixMs:number|null=null;
 let taskIds:string[]=[];
 const setup={startMs:null as number|null,endMs:null as number|null,returned:false};

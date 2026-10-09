@@ -4,14 +4,14 @@ import fs from 'node:fs';import path from 'node:path';import assert from 'node:a
 import {fileURLToPath} from 'node:url';import {randomUUID,createHash} from 'node:crypto';
 import {spawn,execFileSync} from 'node:child_process';import {StringDecoder} from 'node:string_decoder';
 import {observeOwnedChild} from './owned-test-observer.mjs';
-import {acceptStart,validateActualReport,lifecycleEvidence,completionAdmitted} from './controlled-test-contract.mjs';
+import {acceptStart,validateActualReport,lifecycleEvidence,completionAdmitted,suiteBudget} from './controlled-test-contract.mjs';
 import {admittedWindowsQaPolicy} from '../../../scripts/portable/windows-qa-window.mjs';
 const entered=Date.now(),mode=process.argv[2]??'full';
 assert(process.argv.length<=3&&['focused','full','control-success','control-timeout'].includes(mode));
 assert.equal(process.platform,'win32');assert.equal(process.arch,'x64');
 const root=fs.realpathSync.native(fileURLToPath(new URL('../../../',import.meta.url)));
 assert.equal(fs.realpathSync.native(process.cwd()),root);
-const diagnostic=mode.startsWith('control-'),wholeDeadline=entered+(diagnostic?20000:120000);
+const diagnostic=mode.startsWith('control-'),budget=diagnostic?null:suiteBudget(mode),wholeDeadline=entered+(diagnostic?20000:budget.launchMs);
 let finalDeadline=wholeDeadline;
 const remaining=()=>Math.floor(finalDeadline-Date.now());
 const boundedTimeout=cap=>{const ms=Math.min(cap,remaining()-1000);assert(ms>0,'CONTROL_INTERVAL_EXPIRED');return ms;};
@@ -50,7 +50,7 @@ function line(text){
  assert(!diagnostic&&bound,'OWNED_JOB_BEFORE_ACTUAL_CASE_REQUIRED');
  if(row.stage==='START'){
   assert(!start&&!finish,'DUPLICATE_OR_OUT_OF_ORDER_START');
-  finalDeadline=Math.min(wholeDeadline,acceptStart(row,entered,Date.now()));start=row;
+  finalDeadline=Math.min(wholeDeadline,acceptStart(row,entered,Date.now(),mode));start=row;
   observing.shortenDeadline(finalDeadline);
  }else if(row.stage==='FINISHED'){
   assert(start&&!finish,'MATCHED_ONE_FINISH_REQUIRED');assert.equal(row.startUnixMs,start.startUnixMs);assert.deepEqual(row.taskIds,start.taskIds);finish=row;
@@ -99,7 +99,7 @@ try{
  assert(completionAdmitted(entered,finalDeadline,Date.now(),3000),'FINITE_REPORTING_RESERVE_REQUIRED');
 }catch{passed=false;error='ACTUAL_RESULT_SOURCE_OR_SETTLEMENT_NOT_QUALIFIED';}
 const ended=Date.now();
-const publicRow={contract:'BRIDGE_CONTROLLED_TEST_COMMAND_V1',source:head,tree,mode,scope:diagnostic?'DECLARED_HARMLESS_CHILD_CONTROL_NOT_FEATURE_ACCEPTANCE':'ACTUAL_SYNTHETIC_BRIDGE_ASSERTIONS',validationPassedAtReceipt:passed,requiresActualSuccessfulCallerExit:true,error,startedUtc:new Date(entered).toISOString(),validatedBeforeReportingUtc:new Date(ended).toISOString(),elapsedAtValidationMs:ended-entered,requiredCallerDeadlineUtc:new Date(finalDeadline).toISOString(),launchMaximumMs:diagnostic?20000:120000,startToFullValidationAndSettlementMaximumMs:diagnostic?null:60000,startToValidationAndSettlementMs:start?ended-start.startUnixMs:null,observed:{exit:observed.exit,signal:observed.signal,closeObserved:observed.closeObserved,timedOut:observed.timedOut,captureError:observed.captureError,terminationError:observed.terminationError},settlement,counts,reportSha256:reportHash,lifecycleObservedMs:finish?.totalObservedMs??null,caseDescendantSettlement:'UNKNOWN',runtimeExecuted:false,realDataAccessed:false};
+const publicRow={contract:'BRIDGE_CONTROLLED_TEST_COMMAND_V1',source:head,tree,mode,scope:diagnostic?'DECLARED_HARMLESS_CHILD_CONTROL_NOT_FEATURE_ACCEPTANCE':'ACTUAL_SYNTHETIC_BRIDGE_ASSERTIONS',validationPassedAtReceipt:passed,requiresActualSuccessfulCallerExit:true,error,startedUtc:new Date(entered).toISOString(),validatedBeforeReportingUtc:new Date(ended).toISOString(),elapsedAtValidationMs:ended-entered,requiredCallerDeadlineUtc:new Date(finalDeadline).toISOString(),launchMaximumMs:diagnostic?20000:budget.launchMs,startToFullValidationAndSettlementMaximumMs:diagnostic?null:budget.aggregateMs,aggregateContract:diagnostic?null:'TEST_CONTRACT_CHANGED_AGGREGATE_ONLY_3A',retainedCoupledLifecycleMaximumMs:diagnostic?null:60000,startToValidationAndSettlementMs:start?ended-start.startUnixMs:null,observed:{exit:observed.exit,signal:observed.signal,closeObserved:observed.closeObserved,timedOut:observed.timedOut,captureError:observed.captureError,terminationError:observed.terminationError},settlement,counts,reportSha256:reportHash,lifecycleObservedMs:finish?.totalObservedMs??null,caseDescendantSettlement:'UNKNOWN',runtimeExecuted:false,realDataAccessed:false};
 fs.writeFileSync(path.join(dir,'command-receipt.json'),JSON.stringify({publicRow,observed,job,inputs,markerError},null,2)+'\n',{flag:'wx',mode:0o600});
 // Only this allowlisted aggregate projection is publishable. Raw task JSON,
 // fixture traces, process identities and streams remain in the private root.

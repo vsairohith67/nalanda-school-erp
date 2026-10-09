@@ -1,14 +1,21 @@
 import assert from 'node:assert/strict';
 export const lifecycleEvidence='BRIDGE_PRIVATE_REPORT_LIFECYCLE_V1';
 export const requiredTitles={create:'explicit non-synthetic transport-disabled review creates an exclusive private report without queue or health',reuse:'retained private capture proves a same-file exact append while exposing operator discrepancies'};
+// Independently reviewed 3A aggregate composition, not individual case limits.
+// The original 60-second failed command remains retained as historical evidence.
+export function suiteBudget(mode){
+ assert(['focused','full'].includes(mode),'EXACT_ORIGINAL_SUITE_MODE_REQUIRED');
+ return Object.freeze({aggregateMs:mode==='focused'?155000:175000,launchMs:mode==='focused'?215000:235000,softReserveMs:15000,hardReserveMs:12000});
+}
 export function completionAdmitted(entered,deadline,now,reserveMs=0){
  return [entered,deadline,now,reserveMs].every(Number.isSafeInteger)&&entered<=now&&reserveMs>=0&&now+reserveMs<deadline;
 }
-export function acceptStart(row,entered,now){
+export function acceptStart(row,entered,now,mode='focused'){
+ const budget=suiteBudget(mode);
  assert.equal(row.evidence,lifecycleEvidence);assert.equal(row.stage,'START');
  assert(Number.isSafeInteger(row.startUnixMs)&&row.startUnixMs>=entered&&row.startUnixMs<=now,'FRESH_ACTUAL_START_REQUIRED');
  assert(Array.isArray(row.taskIds)&&row.taskIds.length===2&&new Set(row.taskIds).size===2&&row.taskIds.every(x=>typeof x==='string'&&/^[a-zA-Z0-9_-]{1,128}$/.test(x)),'EXACT_TWO_TASK_IDS_REQUIRED');
- return row.startUnixMs+60000;
+ return row.startUnixMs+budget.aggregateMs;
 }
 export function validateActualReport(report,start,finish,mode){
  const expected=mode==='focused'?44:127;

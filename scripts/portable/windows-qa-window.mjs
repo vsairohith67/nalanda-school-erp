@@ -3,17 +3,19 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 
-const windowPath = fileURLToPath(new URL('../../config/release-blocker-removal-2a-window.json', import.meta.url));
+const windowPath = fileURLToPath(new URL('../../config/bridge-packaging-qualification-3a-window.json', import.meta.url));
 export function admittedWindowsQaPolicy(event, environment, actualHead, window) {
   const denied = { policy: '', reason: 'WINDOW_CONTEXT_NOT_ADMITTED' };
-  if (window?.assignment !== 'NPS-RELEASE-BLOCKER-REMOVAL-AND-ACCEPTANCE-2A' ||
-      window.instructionSha256 !== 'e4eb9c73a378da990cbd6545f36cf88f60395036cff242c004c64bd86be63091' ||
+  if (window?.assignment !== 'NPS-3A-BRIDGE-PACKAGING-AND-CANDIDATE-QUALIFICATION' ||
+      window.instructionSha256 !== '81dfde8c0bec55211dba811602562fc932cad101af2b752029105da3f7796794' ||
       window.repository !== 'vsairohith67/nalanda-school-erp' || window.pullRequest !== 28 ||
       window.branch !== 'release/recovery-integration-1a' || window.attempt !== '1' ||
       window.policy !== 'RemoteSigned' || window.policyScope !== 'Process' || window.maximumStepMinutes !== 120 ||
       window.shorterExistingJobCapsRetained !== true || window.previousAllowancesRemainConsumed !== true ||
-      window.eventStartInclusiveUtc !== '2026-10-09T03:09:05.000Z' ||
-      window.eventEndExclusiveUtc !== '2026-10-09T13:09:05.000Z') return denied;
+      window.eventStartInclusiveUtc !== '2026-10-09T12:17:23.000Z' ||
+      window.eventEndExclusiveUtc !== '2026-10-09T22:17:23.000Z' ||
+      window.publicationCeiling !== 2 || window.additionalPublicationBudgetCreated !== false ||
+      JSON.stringify(window.transferredPublicationSlots) !== '[2,3]') return denied;
   if (environment.GITHUB_ACTIONS !== 'true' || environment.RUNNER_OS !== 'Windows' ||
       environment.GITHUB_EVENT_NAME !== 'pull_request' || environment.GITHUB_REPOSITORY !== window.repository ||
       environment.GITHUB_RUN_ATTEMPT !== '1' || event?.action !== 'synchronize' || event?.number !== 28 || event.pull_request?.number !== 28 ||
