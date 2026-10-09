@@ -223,7 +223,13 @@ describe("PRODUCT-EXPERIENCE-1A product contract", () => {
     expect(workflow).toContain('--mode execute --platform IOS --target-kind "$kind"');
     expect(native).toContain("IOS_TEST_TARGET_PACKAGE_SUBSTITUTED");
     expect(native).toContain('"-only-testing:NativeJourney/NativeJourney/testNoRemoteJourney"');
-    expect(native).toContain('["simctl","ui",serial,"appearance","dark"]');
+    expect(native).toContain('await verifyAppleAppearance(command,serial,"light",setup)');
+    expect(native).toContain('await verifyAppleAppearance(command,serial,"dark",setup)');
+    expect(native).toContain('await command(stage,["simctl","ui",serial,"appearance",mode])');
+    expect(native).toContain('command(stage+"-read",["simctl","ui",serial,"appearance"])');
+    expect(native).toContain('command(stage+"-readback",["simctl","ui",serial,"appearance"])');
+    expect(native).toContain("IOS_APPEARANCE_READ_UNAVAILABLE");
+    expect(native).toContain("IOS_APPEARANCE_READBACK_MISMATCH");
     expect(native).toContain("await assertNonblankNativeCapture(capture)");
     expect(apple).toContain('app = XCUIApplication(bundleIdentifier: "com.nalandaps.erp")');
     expect(apple).toContain("continueAfterFailure = false");
