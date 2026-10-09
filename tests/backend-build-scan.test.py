@@ -133,7 +133,8 @@ class QualificationTests(unittest.TestCase):
         workflow=Path('.github/workflows/portable-staging-foundation.yml').read_text()
         self.assertIn('fail-fast: false',workflow);self.assertIn("github.event.pull_request.number == 28",workflow)
         self.assertIn('raise SystemExit(main())',source)
-        self.assertIn('python3 scripts/portable/backend-build-scan.py --base-only\n',workflow)
+        self.assertIn('python3 scripts/portable/backend-build-scan.py --retain-prior-block\n',workflow)
+        self.assertNotIn('python3 scripts/portable/backend-build-scan.py --base-only\n',workflow)
         self.assertNotIn('python3 scripts/portable/backend-build-scan.py\n',workflow)
     def test_one_scanner_finding_cannot_excuse_other_failure(self):
         t,g,s,d,e,m=self.fixtures();e['trivy']=1
