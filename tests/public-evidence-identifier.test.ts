@@ -40,3 +40,50 @@ it.each(adoptedLedgers)("retains strict coordinate and content boundaries for ad
   const key = ["-----BEGIN", "PRIVATE KEY-----"].join(" ");
   expect(publicIdentifierScanText(file, `[job](${url}) ${key}`)).toContain(key);
 });
+
+const capacityPacketPath = "config/runtime-base-prior-blocked.json";
+async function capacityPacket() { return (await import("node:fs/promises")).readFile(capacityPacketPath, "utf8"); }
+it("projects only reviewed digest-bound capacity bytes while preserving complete public source", async () => {
+  const text = await capacityPacket(), prior = text;
+  expect(forbidden(capacityPacketPath, text)).toBe(false); expect(text).toBe(prior);
+  const projected = publicIdentifierScanText(capacityPacketPath, text);
+  expect(projected).toContain("PUBLIC_CAPACITY_BYTE_COUNT");
+  expect(projected).toContain("BLOCKING_FINDINGS_CONFIRMED"); expect(JSON.parse(JSON.parse(projected).reports.arm64.raw).scanners.trivy.ignoreUnfixed).toBe(false);
+});
+it.each(["config/onboarding/example.json", "docs/evidence/other.md", "config/runtime-base-prior-blocked-copy.json"])("retains capacity-shaped identifiers outside exact reviewed file %s", async file => {
+  expect(forbidden(file, await capacityPacket())).toBe(true);
+});
+it.each(["contract", "priorSource", "priorTree", "priorRun", "priorAttempt"])("refuses altered public packet binding %s", async field => {
+  const packet = JSON.parse(await capacityPacket()); packet[field] = "ALTERED";
+  expect(forbidden(capacityPacketPath, JSON.stringify(packet, null, 2) + "\n")).toBe(true);
+});
+it("refuses changed raw reports even when the caller updates their claimed digest", async () => {
+  const packet = JSON.parse(await capacityPacket()); packet.reports.arm64.raw += " ";
+  packet.reports.arm64.sha256 = (await import("node:crypto")).createHash("sha256").update(packet.reports.arm64.raw).digest("hex");
+  expect(forbidden(capacityPacketPath, JSON.stringify(packet, null, 2) + "\n")).toBe(true);
+});
+it("preserves additional identifiers, labels, phone-shaped values and private-key-like text", async () => {
+  const original = await capacityPacket(), packet = JSON.parse(original);
+  for (const value of [id, "9" + "1".repeat(9)]) { packet.additional = value; expect(forbidden(capacityPacketPath, JSON.stringify(packet, null, 2) + "\n")).toBe(true); }
+  const key = ["-----BEGIN", "PRIVATE KEY-----"].join(" "); packet.additional = key;
+  expect(publicIdentifierScanText(capacityPacketPath, JSON.stringify(packet, null, 2) + "\n")).toContain(key);
+  expect(forbidden(capacityPacketPath, original + " " + id)).toBe(true);
+});
+it("does not conceal duplicate unknown populated outer columns", async () => {
+  const original = await capacityPacket(); expect(original.trimEnd().endsWith("}")).toBe(true); const adversarial = original.trimEnd().slice(0, -1) + ',"unreviewed":"' + id + '","unreviewed":"safe"}';
+  expect(JSON.parse(adversarial).unreviewed).toBe("safe");
+  expect(forbidden(capacityPacketPath, adversarial)).toBe(true);
+});
+
+it("refuses a changed capacity value even with a recomputed report digest", async () => {
+  const packet = JSON.parse(await capacityPacket()), report = JSON.parse(packet.reports.arm64.raw); report.capacityFreeBytes += 1;
+  packet.reports.arm64.raw = JSON.stringify(report); packet.reports.arm64.sha256 = (await import("node:crypto")).createHash("sha256").update(packet.reports.arm64.raw).digest("hex");
+  expect(forbidden(capacityPacketPath, JSON.stringify(packet, null, 2) + "\n")).toBe(true);
+});
+
+it("does not project capacity inside an unknown outer copy of the complete raw report", async () => {
+  const packet = JSON.parse(await capacityPacket()); packet.unreviewedRawCopy = packet.reports.arm64.raw;
+  const text = JSON.stringify(packet, null, 2) + "\n";
+  expect(forbidden(capacityPacketPath, text)).toBe(true);
+  expect(publicIdentifierScanText(capacityPacketPath, text)).toBe(text);
+});
