@@ -1,8 +1,11 @@
 # Preview operations completion 1B
 
-Status during correction: `PREVIEW_OPERATIONS_COMPLETION_PARTIAL`.
+Current status: `PREVIEW_OPERATIONS_SOURCE_VALIDATED_INTEGRATION_PENDING`.
 Task: PREVIEW-OPERATIONS-COMPLETION-1B, Lane 6. One implementation owner;
-shared independent review remains queued, never self-attested.
+shared independent source review is CLEAR; final applicable affected regression passed.
+Own source push, draft PR and lane CI are pending the final evidence review and
+fresh publication checks. No preview was deployed. The dated ownership block below
+is historical, superseded by genuine SAFE on the unchanged reviewed source.
 
 ## Source and ownership
 
@@ -11,6 +14,21 @@ tree `c0aca53c31abef391ce4e4f6390325b57ce8bcdb`, OPEN/DRAFT. Task A explicitly
 handed off published successor `b20b28dce795bdd2c0776190df26a4852c0a5966`, tree
 `55b1feb5b91e34d177ff5bce04a8778d54bfc1ea`. This candidate fast-forwarded to that
 checkpoint; no unpublished A4 or other-lane source was copied.
+
+After both review corrections, Task A explicitly handed off published reviewed
+`0aa1462e3758b178e2a0fb626c63fb1b80236c87`, tree
+`0b20ce295b2717ad99f8e9a0ff36e5bd13147692`. A once-only ordinary merge yielded
+`a1994f0fbf7122cfce4c1840fada29993e2f34f5`, tree
+`365f966f2a844c1af5b05e2b671b9e513a44b0a0`. Eight reviewed Ops blobs stayed identical
+to the correction freeze; only the four published laptop CLI/test/registry paths
+advanced. No unpublished `bc03856` evidence checkpoint was copied.
+
+Final reviewed local code/evidence checkpoint before this terminal evidence update:
+`c997e0db880b3ea73f5b7de2064a019170a68f8a`, tree
+`5f31e26e35dd2d5634f4465f295cc92b90b0ef9f`. The final evidence-only commit identity
+is recorded in the terminal tracker/coordination packet after commit creation.
+The coordinator's adoption of immutable a1994f0 is verified by Git ancestry;
+that local integration does not establish completed combined qualification.
 
 Branch `feature/preview-operations-completion-1b`; managed checkout:
 `C:/Users/rohit/.codex/worktrees/preview-operations-completion-1b/school software`.
@@ -76,6 +94,12 @@ The exact helper will be run again against the frozen clean candidate.
 | Review correction affected tests / tools-core types | PASS, 17.14s / 18.98s |
 | Review correction actual bundle / emitted checks | PASS, 0.38s / 3.23s; ten distinct manifests/IDs, all ten real qualification refusals before effects |
 | Review correction original operator / CLI | PASS, 2 files / 57 cases, 5.49s; no skips |
+| Complete current focused suite after review | PASS, 2 files / 15 cases, 100.70s; UTC15:39:38.6764020–15:41:19.3765524; no skips |
+| Post-merge source registration | PASS, 355 records / four source heads / four backup contracts |
+| Three unchanged publication scans | PASS, 586 main-relative changed paths; 0.65s / 0.64s / 0.61s |
+| Git safety / deterministic non-writing inventory | PASS, 2.38s / 0.49s; 365 pages registered, none omitted |
+| Full-regression baseline migration / original synthetic seed | PASS, 32.28s / 93.46s; newly created owned database, four invented users / one synthetic SuperAdmin, zero students/payments/guardians/staff; full test suite NOT_STARTED |
+| Owned delta whitespace check | FAIL, one new blank line at backup-test EOF; removed exactly that blank line, no assertion/semantic change; corrected check PASS |
 
 Corrections preserve the 60s migration child and 120s setup-hook limits, every
 business assertion, and inherited skip distinctions. Each fresh migration has its
@@ -108,13 +132,18 @@ reference restore, lifecycle refusal and privacy/evidence boundaries were inspec
    Docker operation. This is distinct from real SQLite backup/restore evidence.
 
 The corrected delta and its actual checks return to the same reviewer for closure.
+SAME K30 reviewer closed both P2 findings CLEAR SOURCE_ONLY on clean correction
+`64e4477f064ade31a04b00463d393e1301da13df`, tree
+`6ac89dd9c31bfe0083f2c20bbc0f0df8e130742c`, and independently checked the ordinary
+merge at a1994f0. No additional material finding; reviewer executed no tests,
+builds, Compose, databases, runtime or publication and made no edits.
 Narrow correction batch ran 21:02:10–21:04:57 IST on the coordinator's explicitly
 returned Lane5 slot. Actual job intervals above remain separate; gaps/review/waits
 are not summed as execution. Lane6 returned the slot with zero heavy jobs or listeners.
 
 ## Evidence levels and remaining qualification
 
-- CONFIGURATION_SOURCE_VALIDATED: PASS (corrected configuration/type/bundle checks); independent review closure pending.
+- CONFIGURATION_SOURCE_VALIDATED: PASS (corrected configuration/type/bundle checks); independent source review CLEAR.
 - SYNTHETIC_BACKUP_RESTORE_EXECUTED: PASS (invented SQLite / local encrypted files, four real restores across two fresh targets).
 - OPERATOR_LIFECYCLE_CONTRACT_TESTED: PASS (existing contract/filesystem adapters and actual emitted qualification refusals; no running-stack claim).
 - RUNNING_STACK_DRILL_EXECUTED: NOT_EXECUTED.
@@ -122,13 +151,84 @@ are not summed as execution. Lane6 returned the slot with zero heavy jobs or lis
 - PREVIEW_DEPLOYED: NO.
 - PostgreSQL local / real S3 provider: NOT_EXECUTED; no already approved target.
 - Exact lane CI: NOT_EXECUTED; own source publication gated.
-- Independent review: CHANGES_REQUESTED on clean local 34533042e8aa2b1f06ece11da863dab026be2527 / tree c7090f16f8446538e93b5bea9ff1329d877bcd5b; two material P2 findings, no reviewer execution.
+- Standalone full local SQLite regression: NOT_EXECUTED / NOT_STARTED by coordinator instruction; no duplicate combined full run. Final applicable affected regression: PASS after genuine SAFE, as recorded below.
+- Independent review: CLEAR SOURCE_ONLY on corrected64e4477 and published-source merge a1994f0; original two P2 findings closed, no reviewer execution.
 
 Original focused, affected type, bundle/emitted and original-suite batch settled
-at 20:31 IST; corrected review batch settled 21:04:57 IST. No Lane6 heavy job remains. One applicable broader synthetic
-regression is queued behind the master coordinator, with inspected fresh baseline
-entrypoints and no operational database fixture or fake CI identity. Final registration, all three unchanged relevant publication
-scanners, Git safety and final prepare-qa will retain their actual results.
+at 20:31 IST; corrected review batch settled 21:04:57 IST. No Lane6 heavy job remains.
+The final applicable broader affected regression subsequently passed after current
+genuine SAFE; the unused standalone full baseline was removed as documented below.
+Final registration, all three unchanged relevant publication scanners, Git safety
+and final prepare-qa retain their actual results.
+
+The unchanged helper first returned genuine SAFE on clean a1994f0, with no overlaps,
+unreadable owners or blockers. Later actual full prelude returned BLOCKED exit2
+while the coordinator integrated nine reviewed Ops paths and the native owner
+drafted `tests/product-experience-1a.test.ts`. Earlier SAFE is not a current receipt.
+The coordinator then clarified that the full run must wait for a new genuine SAFE.
+Owned baseline migration/seed had already settled before that clarification;
+full Vitest never started. Its two newly created invented database files remain
+untouched in this checkout pending the naturally resolved ownership gate. No
+existing/primary database was read or copied, and no helper override was applied.
+The final publication decision must use the then-current helper result.
+After the native owner naturally preserved its qualified correction, the actual
+terminal helper still returned BLOCKED exit2 on a clean local candidate, with
+exactly two foreign overlaps and no unreadable owners:
+`config/recovery-integration-source-delta.json` and
+`scripts/qa-real-data-onboarding-preparation-1a-public-repo-scan.ts`, both in
+`C:/Users/rohit/.codex/worktrees/v1-completion-convergence-1a/school software`.
+No premature foreign commit/staging, source-helper/scanner override or denial
+workaround was used. The unused full-run reservation was returned with zero heavy jobs.
+
+## Current qualification transition and coordinator settlement
+
+The dated 21:55 IST terminal ownership block is preserved above. On the same clean
+reviewed `534a316c5669b4a3f04957f179da31829a244875`, tree
+`8d54e971ee13022bfea7021eeac1fa587f918bab`, the unchanged genuine prepare-qa then
+returned SAFE, exit0, clean, with no overlap, unreadable owners or blockers
+(11.4052024s). The coordinator granted one short Lane6 slot for the final applicable
+broader affected regression and explicitly instructed no duplicate Ops full run.
+
+Actual final regression on that exact source: 19 unchanged affected suites,
+186 PASS / zero SKIP, Vitest17.11s / wall18.4334096s, UTC
+2026-10-04T16:46:37.0519976Z–16:46:55.4854072Z
+(22:16:37–22:16:55 IST), exit0. The suites cover the existing operator/CLI,
+observability/runtime/OCI/recovery handoff, backup/provider/security/retention/
+reports/schedules, Technical Operations, parser/restore/import verification,
+migration readiness and publication contracts. The runner settled and the slot
+was returned; zero Lane6 heavy jobs remain. This is the final applicable broader
+regression, distinct from the separately executed 15 new focused cases.
+
+Coordinator-supplied combined result on its frozen ed337 source: first approved
+QA session settled 17:06:57.957 UTC; full regression 3466 PASS / one FAILURE /
+three original qpdf SKIP. Failure concerns Lane5 mapping-catalogue evidence
+registration. This is NOT a combined PASS and is not attributed as Ops execution.
+The coordinator already adopted immutable Ops source through its 237 integration;
+no second source adoption or combined full run is requested by this lane.
+Its separately approved policy/CI correction context is not used by this lane.
+
+The coordinator explicitly released a meaningful HANDOFF-only checkpoint and the
+original permitted publication window after that settlement, keeping its source
+frozen while this checkpoint finishes. The existing shared reviewer will inspect
+this evidence delta before fresh unchanged mandatory checks and the single own
+source push/draft stacked PR/ordinary CI. Published PR28 was rechecked unchanged
+at0aa1462, OPEN/DRAFT; no existing Ops PR was found. No release/runtime clearance
+is inferred from that window.
+
+Tracker readback: the original substantive Asana operations-parent comment
+1219134461788593 was verified exactly; parent remained incomplete and all notes,
+owners/dates/fields unchanged. The existing Notion section was amended to record
+the current SAFE/186-PASS transition and retain the dated blocked notice; prior
+content read back unchanged, one section only, local handoff path preserved as
+code. The Canvs lane text now records SOURCE VALIDATED / INTEGRATION PENDING;
+fresh readback verified exact text, original geometry/fonts/bindings and all other
+312 elements unchanged. Repository code/docs stayed frozen during coordinator QA.
+
+The final live GitHub read retains published PR28 at0aa1462, OPEN/DRAFT, with
+42 terminal checks:27 SUCCESS /8 FAILURE /7 SKIPPED. Those are recovery-source
+results, not this unpublished lane's CI. Task A identifies six Windows custody
+setup failures before the helper and two base-qualification refusals; no waiver,
+current13-case PASS or artifact/runtime approval is inferred.
 
 ## Coordination, cleanup and boundary
 
@@ -146,6 +246,19 @@ EBUSY was preserved; its sole known root was removed after the runner/children h
 settled. No broad cleanup, Docker/WSL restart/prune or foreign target was touched.
 Private timing/diagnostic logs remain ignored under `tmp/preview-operations-1b`;
 no logs, settings, encrypted archives, keys or database bytes are published.
+After all setup children settled and canonical exact-path/reparse checks passed,
+the two newly created invented baseline files (`tmp/release-ci/synthetic.db` and
+this checkout's `prisma/dev.db`) were removed; both absent afterward. Empty parents
+and ignored private execution logs remain. No foreign/operational database was
+opened or copied, and no full-regression test had used that baseline.
+
+Observed correction work/check interval21:02:10–21:04:57 IST; focused15 interval
+21:09:38.6764020–21:11:19.3765524 IST; baseline setup21:18:51.7405420–21:20:57.5086584
+IST. Terminal evidence rescans passed21:58:49–21:58:53 IST (three unchanged scanners
+and Git safety). Shared source review and the later ownership wait are separate intervals,
+not CPU totals. Terminal ownership wait ran from the later blocked prelude through
+the terminal check21:55:36.8748802 IST; no full-suite or own CI-wait duration exists.
+Account-wide/task usage was not measured.
 
 No operational database/secret/private archive/external D: drive/signing store/vault
 was opened/copied/hashed. No runtime/listener/hosted preview, schedule, notification,
@@ -154,7 +267,7 @@ provider/DNS/hosts/firewall/CA change, real/preview account or runtime grant was
 object bytes and credentials; measured file verification and independent database
 restore do not certify full application recovery, power loss, RPO/RTO or capacity.
 
-One next source-integration input after qualification: the shared reviewer must
-review the frozen exact delta, and Task A must provide legitimate handling for the
-unchanged prepare-qa refusal before own-branch source publication can proceed. Runtime input remains separately
-NOT_APPROVED and is not requested to finish available source qualification.
+ONE next source step: finish same-reviewer evidence-delta review and current
+unchanged prepublication checks in the released window, then publish the single
+reviewed own source push/draft stacked PR and observe normal exact-source CI.
+Runtime input remains separately NOT_APPROVED and is not requested for that work.
