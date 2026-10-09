@@ -28,7 +28,93 @@ export function options(args: string[]) {
 function inside(child: string, root: string) { const r = path.relative(root, child); return r !== "" && !r.startsWith("..") && !path.isAbsolute(r); }
 function file(value: string) { assert(value && path.isAbsolute(value) && !lstatSync(value).isSymbolicLink() && lstatSync(value).isFile(), "NATIVE_TOOL_OR_PACKAGE_INVALID"); return realpathSync(value); }
 
-const processStages = new Set(["tool-version","package-metadata","android-install","android-uninstall","android-ui-command","ios-package-metadata","ios-architecture","xcode-version","ios-inventory","ios-create-owned-target","ios-boot","ios-boot-readiness","ios-theme","ios-build-ui-runner","ios-real-ui-journey","ios-dark-theme","ios-dark-locked-layout","ios-final-locked-launch","ios-final-capture","ios-owned-shutdown","ios-owned-delete","ios-cleanup-readback"]);
+const processStages = new Set(["tool-version","package-metadata","android-install","android-uninstall","android-ui-command","ios-package-metadata","ios-architecture","xcode-version","ios-sdk-version","ios-inventory","ios-create-owned-target","ios-created-readback","ios-boot","ios-boot-readiness","ios-target-readback","ios-theme-read","ios-theme","ios-theme-readback","ios-build-ui-runner","ios-real-ui-journey","ios-dark-theme-read","ios-dark-theme","ios-dark-theme-readback","ios-dark-locked-layout","ios-final-locked-launch","ios-final-capture","ios-owned-shutdown","ios-shutdown-readback","ios-owned-delete","ios-cleanup-readback"]);
+export function androidSetupEvidence() {
+  return {transport:false,emulator:false,ownedAvd:false,bootCompleted:false,api:null as number|null,abi:null as "x86_64"|"x86"|"arm64-v8a"|"armeabi-v7a"|"UNKNOWN"|null,minimumApi:null as number|null,packageCompatible:false,packageManagerResponsive:false,sandboxAbsent:false,installAttempts:0,installed:false};
+}
+export async function installReadyAndroid(a:Android,metadata:string,packagePath:string,setup:ReturnType<typeof androidSetupEvidence>) {
+  await a.check("SETUP_ADB_TARGET",async()=>{assert((await a.run(["get-state"])).trim()==="device","ANDROID_EXACT_EMULATOR_NOT_READY");setup.transport=true;});
+  await a.check("SETUP_EMULATOR_RUNTIME",async()=>{assert((await a.run(["shell","getprop","ro.kernel.qemu"])).trim()==="1","ANDROID_EXACT_EMULATOR_NOT_READY");setup.emulator=true;});
+  await a.check("SETUP_OWNED_AVD",async()=>{assert((await a.run(["emu","avd","name"])).split(/\r?\n/)[0]==="native_1b_phone","ANDROID_EMULATOR_OWNERSHIP_REFUSED");setup.ownedAvd=true;});
+  await a.check("SETUP_BOOT_COMPLETED",async()=>{assert((await a.run(["shell","getprop","sys.boot_completed"])).trim()==="1","ANDROID_BOOT_NOT_COMPLETED");setup.bootCompleted=true;});
+  await a.check("SETUP_API_ABI",async()=>{
+    const api=(await a.run(["shell","getprop","ro.build.version.sdk"])).trim();setup.api=/^[1-9][0-9]{0,2}$/.test(api)?Number(api):null;
+    const abi=(await a.run(["shell","getprop","ro.product.cpu.abi"])).trim();setup.abi=["x86_64","x86","arm64-v8a","armeabi-v7a"].includes(abi)?abi as Exclude<typeof setup.abi,null|"UNKNOWN">:"UNKNOWN";
+    // Bind to the existing owned workflow's android-35/google_apis/x86_64 image.
+    assert(setup.api===35 && setup.abi==="x86_64","ANDROID_RUNTIME_API_OR_ABI_REFUSED");
+  });
+  await a.check("SETUP_PACKAGE_COMPATIBILITY",()=>{
+    const minimum=/^sdkVersion:'([1-9][0-9]{0,2})'$/m.exec(metadata),native=/^native-code:\s*(.+)$/m.exec(metadata);
+    setup.minimumApi=minimum?Number(minimum[1]):null;
+    assert(setup.minimumApi!==null && setup.minimumApi<=setup.api! && native && [...native[1].matchAll(/'([^']+)'/g)].some(m=>m[1]===setup.abi),"ANDROID_PACKAGE_RUNTIME_MISMATCH");setup.packageCompatible=true;
+  });
+  await a.check("SETUP_PACKAGE_MANAGER",async()=>{
+    // A responsive ADB shell/boot property does not establish PackageManager readiness.
+    const packages=(await a.run(["shell","pm","path","android"])).trim().split(/\r?\n/);
+    assert(packages.length>0 && packages.length<=16 && packages.every(p=>/^package:\/[A-Za-z0-9_./-]+\.apk$/.test(p)),"ANDROID_PACKAGE_MANAGER_NOT_RESPONSIVE");setup.packageManagerResponsive=true;
+  });
+  await a.check("SETUP_EMPTY_SANDBOX",async()=>{const packages=(await a.run(["shell","pm","list","packages",appId])).trim();assert(packages==="","ANDROID_EXISTING_APP_SANDBOX_REFUSED");setup.sandboxAbsent=true;});
+  await a.check("SETUP_EXACT_PACKAGE_INSTALL",async()=>{setup.installAttempts++;assert(setup.installAttempts===1,"ANDROID_INSTALL_ATTEMPT_LIMIT");assert((await a.run(["install",packagePath])).split(/\r?\n/).some(line=>line==="Success"),"ANDROID_INSTALL_FAILED");setup.installed=true;});
+}
+function numericVersion(value:unknown) {
+  assert(typeof value==="string" && /^[0-9]{1,5}(?:\.[0-9]{1,3}){0,2}$/.test(value),"IOS_NUMERIC_VERSION_UNAVAILABLE");
+  const v=value.split(".").map(Number);while(v.length<3)v.push(0);return v;
+}
+function versionOrder(a:readonly number[],b:readonly number[]) {return a[0]-b[0] || a[1]-b[1] || a[2]-b[2];}
+export function selectAppleTarget(inventory:any,sdkVersion:string,minimumOS:string,kind:string) {
+  assert(kind==="phone" || kind==="tablet","IOS_EXPLICIT_TARGET_KIND_REQUIRED");
+  const sdk=numericVersion(sdkVersion),minimum=numericVersion(minimumOS);
+  assert(Array.isArray(inventory?.runtimes) && inventory.runtimes.length<=100 && Array.isArray(inventory?.devicetypes) && inventory.devicetypes.length<=1000,"IOS_INVENTORY_SCHEMA_REFUSED");
+  // Select an installed target aligned with the actual selected SDK, not an arbitrary
+  // lexically latest runtime. This is a scope choice, not a claim that newer OSes fail.
+  const runtimes=inventory.runtimes.filter((r:any)=>r?.isAvailable===true && typeof r.identifier==="string" && /^com\.apple\.CoreSimulator\.SimRuntime\.iOS-[0-9-]+$/.test(r.identifier))
+    .map((runtime:any)=>({runtime,version:numericVersion(runtime.version)}))
+    .filter((r:any)=>r.version[0]===sdk[0] && versionOrder(r.version,sdk)<=0 && versionOrder(r.version,minimum)>=0)
+    .sort((a:any,b:any)=>versionOrder(b.version,a.version)||a.runtime.identifier.localeCompare(b.runtime.identifier));
+  for(const candidate of runtimes) {
+    const types=inventory.devicetypes.filter((d:any)=>typeof d?.name==="string" && d.name.startsWith(kind==="phone"?"iPhone":"iPad") && typeof d.identifier==="string" && /^com\.apple\.CoreSimulator\.SimDeviceType\.[A-Za-z0-9-]+$/.test(d.identifier))
+      .filter((d:any)=>{if(typeof d.minRuntimeVersionString!=="string" || typeof d.maxRuntimeVersionString!=="string")return false;return versionOrder(candidate.version,numericVersion(d.minRuntimeVersionString))>=0 && versionOrder(candidate.version,numericVersion(d.maxRuntimeVersionString))<=0;})
+      .sort((a:any,b:any)=>a.identifier.localeCompare(b.identifier));
+    if(types.length)return {runtime:candidate.runtime,deviceType:types[0],sdkVersion,policy:"INSTALLED_SDK_ALIGNED_TARGET" as const};
+  }
+  throw Error("IOS_SUPPORTED_RUNTIME_OR_DEVICE_TYPE_UNAVAILABLE");
+}
+export function appleOwnedState(inventory:any,serial:string,runtime:string,name:string) {
+  ownedSimulatorId(serial);
+  assert(inventory?.devices && typeof inventory.devices==="object" && !Array.isArray(inventory.devices),"IOS_OWNED_STATE_UNVERIFIED");
+  const groups=Object.entries(inventory.devices);assert(groups.length<=100 && groups.every(([,ds])=>Array.isArray(ds) && ds.length<=1000),"IOS_OWNED_STATE_UNVERIFIED");
+  const matches=groups.flatMap(([id,ds])=>(ds as any[]).filter(d=>d?.udid===serial).map(d=>({id,d})));
+  if(matches.length===0)return "ABSENT" as const;
+  assert(matches.length===1 && matches[0].id===runtime && matches[0].d.name===name,"IOS_OWNED_STATE_UNVERIFIED");
+  return ["Booted","Shutdown"].includes(matches[0].d.state)?matches[0].d.state as "Booted"|"Shutdown":"UNKNOWN" as const;
+}
+type AppleCommand=(stage:string,args:string[],timeoutMs?:number)=>Promise<string>;
+export function appleSetupEvidence() {return {createdState:"NOT_OBSERVED",bootState:"NOT_OBSERVED",light:{before:null as "light"|"dark"|null,writePassed:false,verified:false},dark:{before:null as "light"|"dark"|null,writePassed:false,verified:false}};}
+export async function verifyAppleAppearance(command:AppleCommand,serial:string,mode:"light"|"dark",setup:ReturnType<typeof appleSetupEvidence>) {
+  ownedSimulatorId(serial);const stage=mode==="light"?"ios-theme":"ios-dark-theme";
+  const before=(await command(stage+"-read",["simctl","ui",serial,"appearance"])).trim();
+  assert(before==="light" || before==="dark","IOS_APPEARANCE_READ_UNAVAILABLE");setup[mode].before=before;
+  await command(stage,["simctl","ui",serial,"appearance",mode]);setup[mode].writePassed=true;
+  assert((await command(stage+"-readback",["simctl","ui",serial,"appearance"])).trim()===mode,"IOS_APPEARANCE_READBACK_MISMATCH");setup[mode].verified=true;
+}
+export async function cleanupAppleTarget(command:AppleCommand,serial:string,runtime:string,name:string,unsettled:()=>boolean) {
+  ownedSimulatorId(serial);
+  const result={status:"UNRECONCILED",shutdownCommand:"NOT_EXECUTED",shutdownState:"NOT_OBSERVED",deleteCommand:"NOT_EXECUTED",finalState:"NOT_OBSERVED",cause:null as string|null};
+  if(unsettled()){result.cause="CHILD_GROUP_UNRECONCILED";return result;}
+  try{await command("ios-owned-shutdown",["simctl","shutdown",serial]);result.shutdownCommand="PASS";}catch{result.shutdownCommand="FAILED";result.cause="IOS_SHUTDOWN_COMMAND_FAILED";}
+  // A closed/failed shutdown child is not simulator state. Read the same owned ID
+  // once; never issue a second shutdown or delete a still-booted/unknown target.
+  if(unsettled()){result.cause="CHILD_GROUP_UNRECONCILED";return result;}
+  try {
+    result.shutdownState=appleOwnedState(JSON.parse(await command("ios-shutdown-readback",["simctl","list","devices","--json"])),serial,runtime,name);
+    assert(result.shutdownState==="Shutdown","IOS_OWNED_SHUTDOWN_UNVERIFIED");
+    await command("ios-owned-delete",["simctl","delete",serial]);result.deleteCommand="PASS";
+    result.finalState=appleOwnedState(JSON.parse(await command("ios-cleanup-readback",["simctl","list","devices","--json"])),serial,runtime,name);
+    assert(result.finalState==="ABSENT","IOS_OWNED_DELETE_UNVERIFIED");
+    result.status="VERIFIED";
+  }catch{result.cause??="IOS_OWNED_CLEANUP_FAILED";}
+  return result;
+}
 export function appleInputBindings(workspace:string,derived:string,projectSource:string):AppleInputBinding[] {
   // The checked-in project defines these exact target/product/source identities. Do not infer a
   // missing compiler input from them: a later actual diagnostic must match its private path too.
