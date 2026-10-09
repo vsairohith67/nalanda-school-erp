@@ -38,7 +38,7 @@ it("HARNESS_ONLY: the revised case declares PASS only after its actual finished 
   expect(Object.isFrozen(binding.value)).toBe(true);expect(Object.isFrozen(binding.value.action)).toBe(true);
   expect(JSON.parse(JSON.stringify(testContext.task.meta)).operationsLifecycle).toEqual(receipt);
   expect(JSON.stringify(receipts)).not.toMatch(/"pid"|"env"|"stdout"|"stderr"|"path"/);
-}), testContext.task));
+}, testContext.task));
 
 it("HARNESS_ONLY: work becoming unsettled after finalization still rejects the finished callback", async () => isolatedLifecycleControl(async (context, finish, receipts) => {
   class UnsettledControlOwner extends OperationsProcessOwner { override get settled() { return false; } }
