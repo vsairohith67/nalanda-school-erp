@@ -6,7 +6,8 @@ import path from "node:path";
  */
 export function validatedPrivateStorageRoot(value: string, label: string) {
   const resolved = path.resolve(value);
-  const workspace = path.resolve(process.cwd());
+  // Preserve the runtime containment check without tracing the whole workspace.
+  const workspace = path.resolve(/* turbopackIgnore: true */ process.cwd());
   const forbiddenRoots = [
     path.join(workspace, "public"),
     path.join(workspace, ".next", "static"),

@@ -10456,7 +10456,7 @@
           "sha256": null
         }
       ],
-      "currentSha256": "fced2a7450d19506dbc6147c9f72b47a681f5c70c35ead66bc2db75c99e3b816",
+      "currentSha256": "63a8f9105f278ae0912064e5012c96d164cd630b4c8041362e2bee3b17a884b3",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
@@ -10607,6 +10607,56 @@
         }
       ],
       "currentSha256": "6b5e21cc2cacb1d51f37aaa13f0dde9d20ffb71807a607545128c2dde578b6d9",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "lib/private-storage-root.ts",
+      "baseSha256": "491aebee2fb496149f92c47a0baf23c6d068d93cccff7afdd0e2088793535d24",
+      "historicalSha256": "491aebee2fb496149f92c47a0baf23c6d068d93cccff7afdd0e2088793535d24",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "491aebee2fb496149f92c47a0baf23c6d068d93cccff7afdd0e2088793535d24"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "491aebee2fb496149f92c47a0baf23c6d068d93cccff7afdd0e2088793535d24"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "491aebee2fb496149f92c47a0baf23c6d068d93cccff7afdd0e2088793535d24"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "491aebee2fb496149f92c47a0baf23c6d068d93cccff7afdd0e2088793535d24"
+        }
+      ],
+      "currentSha256": "e8aa5f4074b513872d00a0d19bd2dffa28cedae882eaecd0b8e26df8d4c0038f",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "tests/standalone-runtime-storage-trace.test.ts",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "4d49f0b3740c55cd31a0087bb8a0fc5e358a3d02c380fdf747a9c2c6fb03cf7e",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     }
   ]
