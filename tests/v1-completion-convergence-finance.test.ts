@@ -111,10 +111,22 @@ afterAll(async () => {
   } finally { harness.db = null; harness.cookie = undefined; vi.unstubAllEnvs(); }
 });
 async function actor(role: "SUPER_ADMIN" | "ACCOUNTANT" | "TEACHER" = "SUPER_ADMIN") {
-  const user = await db.user.create({ data: { username: `synthetic-${randomUUID()}`, name: "Invented finance actor", role,
-    passwordHash: "UNUSABLE_SYNTHETIC_NO_LOGIN", mustChangePassword: false, isActive: true, lifecycleStatus: "ACTIVE" } });
-  const assignment = await db.userRoleAssignment.create({ data: { userId: user.id, role, validFrom: new Date(Date.now() - 60_000),
-    reason: "SYNTHETIC already-effective fixture authority", activeKey: `${user.id}:${role}` } });
+  const fixtureValidFrom = new Date(Date.now() - 60_000);
+  // Pair only the direct fixture writes. Generated identities/defaults and the
+  // existing transaction settings remain; real sessions/MFA/grants follow below.
+  const { user, assignment } = await db.$transaction(async tx => {
+    const user = await tx.user.create({ data: { username: `synthetic-${randomUUID()}`, name: "Invented finance actor", role,
+      passwordHash: "UNUSABLE_SYNTHETIC_NO_LOGIN", mustChangePassword: false, isActive: true, lifecycleStatus: "ACTIVE" } });
+    const assignment = await tx.userRoleAssignment.create({ data: { userId: user.id, role, validFrom: fixtureValidFrom,
+      reason: "SYNTHETIC already-effective fixture authority", activeKey: `${user.id}:${role}` } });
+    return { user, assignment };
+  });
+  const persisted = await db.userRoleAssignment.findUniqueOrThrow({ where: { id: assignment.id },
+    include: { user: { select: { id: true, role: true, isActive: true, lifecycleStatus: true, mustChangePassword: true } } } });
+  expect(persisted).toMatchObject({ userId: user.id, role, status: "ACTIVE", validUntil: null, endedAt: null,
+    version: 1, contextVersion: 1, reason: "SYNTHETIC already-effective fixture authority", activeKey: `${user.id}:${role}`,
+    user: { id: user.id, role, isActive: true, lifecycleStatus: "ACTIVE", mustChangePassword: false } });
+  expect(persisted.validFrom.getTime()).toBe(fixtureValidFrom.getTime());
   const session = await createPersistedSession(db, user, new Headers());
   const enrollment = await beginTotpEnrollment(db, { userId: user.id, displayName: "Invented factor", accountLabel: "synthetic@example.invalid" });
   const factor = await db.mfaAuthenticator.findUniqueOrThrow({ where: { publicKey: enrollment.factorHandle } });
