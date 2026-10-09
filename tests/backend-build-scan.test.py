@@ -300,6 +300,13 @@ class QualificationTests(unittest.TestCase):
         with tarfile.open(fileobj=raw,mode='w') as a:
             a.addfile(tarfile.TarInfo('./usr/node'));a.addfile(tarfile.TarInfo('usr/node'))
         with tarfile.open(fileobj=io.BytesIO(raw.getvalue()),mode='r:') as a,self.assertRaisesRegex(ValueError,'CANDIDATE_LAYER_DUPLICATE_PATH'):q.candidate_layer_members(a,{}, {})
+    def test_candidate_first_pass_bounds_apply_before_any_addition(self):
+        for budget,size in (({'uncompressed':0,'deadline':0},1),({'uncompressed':4*1024**3,'deadline':q.time.monotonic()+900},1),({'uncompressed':0,'deadline':q.time.monotonic()+900},q.MAX_IMAGE+1)):
+            inventory={'original':{'type':'file'}};retained={};m=tarfile.TarInfo('new');m.size=size
+            with self.assertRaisesRegex(ValueError,'LAYER_INSPECTION_BOUND'):q.candidate_layer_members(iter([m]),inventory,retained,budget)
+            self.assertEqual(set(inventory),{'original'})
+    def test_candidate_hashing_refuses_expired_inspection_clock(self):
+        with self.assertRaisesRegex(ValueError,'LAYER_INSPECTION_BOUND'):q.record_candidate_member(None,tarfile.TarInfo('new'),{}, {},0)
     def test_final_candidate_requires_current_regular_bytes_and_valid_ancestors(self):
         name='usr/local/bin/node';inventory={name:{'type':'file'},'usr/local':{'type':'link'}}
         with self.assertRaisesRegex(ValueError,'FINAL_CANDIDATE_ANCESTOR_INVALID'):q.final_candidate_regular(inventory,{name:b'new'},name)

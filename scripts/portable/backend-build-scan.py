@@ -152,9 +152,11 @@ def final_candidate_regular(inventory, retained, name):
         parent=posixpath.dirname(parent)
     return retained[name]
 
-def record_candidate_member(layer, member, inventory, retained):
+def record_candidate_member(layer, member, inventory, retained, deadline=None):
     """Inspect complete virtual layers; never extract or execute image files."""
     name = canonical_candidate_name(member)
+    deadline = time.monotonic()+900 if deadline is None else deadline
+    check(time.monotonic()<deadline, 'LAYER_INSPECTION_BOUND')
     parent, basename = posixpath.split(name)
     if basename.startswith('.wh.'):
         check(member.isfile() and member.size == 0, 'WHITEOUT_RECORD_INVALID')
@@ -173,8 +175,10 @@ def record_candidate_member(layer, member, inventory, retained):
         digest = hashlib.sha256()
         parts = []
         keep = name in ('usr/local/bin/node','lib/apk/db/installed')
+        check(not keep or member.size<=PRIVATE_LIMIT, 'RETAINED_CANDIDATE_FILE_BOUND')
         stream = layer.extractfile(member)
         while True:
+            check(time.monotonic()<deadline, 'LAYER_INSPECTION_BOUND')
             chunk = stream.read(1024*1024)
             if not chunk: break
             digest.update(chunk)
@@ -186,16 +190,20 @@ def record_candidate_member(layer, member, inventory, retained):
     inventory[name] = record
     check(len(inventory) <= 100000, 'FINAL_FILESYSTEM_BOUND')
 
-def candidate_layer_members(layer, inventory, retained):
-    members=layer.getmembers()
-    check(len(members)<=100000, 'LAYER_INSPECTION_BOUND')
-    names=[canonical_candidate_name(member) for member in members]
-    check(len(names)==len(set(names)), 'CANDIDATE_LAYER_DUPLICATE_PATH')
+def candidate_layer_members(layer, inventory, retained, budget=None):
+    budget=dict(uncompressed=0,deadline=time.monotonic()+900) if budget is None else budget
+    members,names=[],set()
+    for member in layer:
+        budget['uncompressed']+=member.size
+        check(len(members)<100000 and member.size<=MAX_IMAGE and budget['uncompressed']<=4*1024**3 and time.monotonic()<budget['deadline'], 'LAYER_INSPECTION_BOUND')
+        name=canonical_candidate_name(member)
+        check(name not in names, 'CANDIDATE_LAYER_DUPLICATE_PATH')
+        names.add(name);members.append(member)
     # Whiteouts affect lower-layer state; new entries are applied afterwards,
     # independent of the whiteout's position inside the archive.
     for member in members:
         if posixpath.basename(canonical_candidate_name(member)).startswith('.wh.'):
-            record_candidate_member(layer,member,inventory,retained)
+            record_candidate_member(layer,member,inventory,retained,budget['deadline'])
     return [member for member in members if not posixpath.basename(canonical_candidate_name(member)).startswith('.wh.')]
 
 def scanner_policy(trivy, grype, sbom, config, exits, metadata):
@@ -437,13 +445,16 @@ def inspect_runtime_base():
             write(layout/'blobs'/'sha256'/d['digest'][7:],data)
             with tarfile.open(fileobj=io.BytesIO(data),mode='r:*') as layer:
                 count=0
-                members=candidate_layer_members(layer,inventory,retained) if candidate else layer
+                budget=dict(uncompressed=uncompressed,deadline=inspection_deadline)
+                members=candidate_layer_members(layer,inventory,retained,budget) if candidate else layer
+                if candidate: uncompressed=budget['uncompressed']
                 for m in members:
-                    count+=1;uncompressed+=m.size
+                    count+=1
+                    if not candidate: uncompressed+=m.size
                     check(count<=100000 and m.size<=MAX_IMAGE and uncompressed<=4*1024**3 and time.monotonic()<inspection_deadline,'LAYER_INSPECTION_BOUND')
                     name=member_safe(m)
                     if candidate:
-                        record_candidate_member(layer,m,inventory,retained)
+                        record_candidate_member(layer,m,inventory,retained,inspection_deadline)
                         continue
                     if m.isfile() and name == 'nodejs/bin/node':
                         binary=layer.extractfile(m).read()
