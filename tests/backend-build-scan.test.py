@@ -229,4 +229,68 @@ class QualificationTests(unittest.TestCase):
             with self.subTest(args=args),patch.object(q,'inspect_runtime_base') as base,patch.object(q,'run') as product:
                 with self.assertRaisesRegex(ValueError,'BUILD_SCAN_ARGUMENTS_INVALID'):q.main(args)
                 base.assert_not_called();product.assert_not_called()
+    def candidate_fixture(self, root):
+        config=json.loads(Path('config/runtime-base-candidates.json').read_bytes())
+        event={'action':'synchronize','number':28,'pull_request':{'number':28,'updated_at':'2026-10-09T04:00:00Z','head':{'sha':'a'*40,'ref':'release/recovery-integration-1a','repo':{'full_name':'vsairohith67/nalanda-school-erp'}},'base':{'repo':{'full_name':'vsairohith67/nalanda-school-erp'}}}}
+        file=root/'event.json';file.write_text(json.dumps(event))
+        env={'BASE_CANDIDATE_ID':'official-node-alpine324','GITHUB_EVENT_NAME':'pull_request','GITHUB_RUN_ATTEMPT':'1','GITHUB_EVENT_PATH':str(file)}
+        return config,event,env,file
+    def test_candidate_is_explicit_base_only_and_preserves_production_pins(self):
+        with tempfile.TemporaryDirectory() as t:
+            config,event,env,file=self.candidate_fixture(Path(t))
+            with patch.dict(q.os.environ,env,clear=True),patch.object(q.subprocess,'check_output',return_value=Path('config/runtime-base-candidates.json').read_bytes()):
+                c=q.selected_base_candidate('a'*40,'amd64')
+            self.assertTrue(c['candidateOnly']);self.assertFalse(c['productionCompatible'])
+            self.assertEqual(c['packageFormat'],'apk');self.assertEqual(c['defaultUser'],'')
+            self.assertIn('ARG RUNTIME_IMAGE='+q.RUNTIME,Path('Dockerfile').read_text())
+            self.assertIn('ARG NODE_IMAGE='+q.BUILDER,Path('Dockerfile').read_text())
+    def test_candidate_rejects_unknown_without_git_or_network(self):
+        with patch.dict(q.os.environ,{'BASE_CANDIDATE_ID':'https://foreign/image:latest'},clear=True),patch.object(q.subprocess,'check_output') as git,patch.object(q,'request') as network:
+            with self.assertRaisesRegex(ValueError,'BASE_CANDIDATE_UNKNOWN'):q.selected_base_candidate('a'*40,'amd64')
+            git.assert_not_called();network.assert_not_called()
+    def test_no_selector_retains_original_current_base_path(self):
+        with patch.dict(q.os.environ,{},clear=True):self.assertIsNone(q.selected_base_candidate('a'*40,'amd64'))
+        registry,headers=q.base_registry(None)
+        self.assertEqual(registry,'https://gcr.io/v2/distroless/nodejs24-debian13/')
+        self.assertNotIn('Authorization',headers)
+    def test_candidate_event_scope_and_deadline_refusals(self):
+        for change in ('fork','retry','other-head','other-branch','other-pr','expired','before-start','dispatch'):
+            with self.subTest(change=change),tempfile.TemporaryDirectory() as t:
+                config,event,env,file=self.candidate_fixture(Path(t))
+                if change=='fork':event['pull_request']['head']['repo']['full_name']='foreign/repo'
+                if change=='retry':env['GITHUB_RUN_ATTEMPT']='2'
+                if change=='other-head':event['pull_request']['head']['sha']='b'*40
+                if change=='other-branch':event['pull_request']['head']['ref']='main'
+                if change=='other-pr':event['number']=29
+                if change=='expired':event['pull_request']['updated_at']='2026-10-09T13:09:05Z'
+                if change=='before-start':event['pull_request']['updated_at']='2026-10-09T03:09:04.999Z'
+                if change=='dispatch':env['GITHUB_EVENT_NAME']='workflow_dispatch'
+                file.write_text(json.dumps(event))
+                with patch.dict(q.os.environ,env,clear=True),patch.object(q.subprocess,'check_output',return_value=Path('config/runtime-base-candidates.json').read_bytes()),self.assertRaises(ValueError):q.selected_base_candidate('a'*40,'amd64')
+    def test_candidate_working_config_cannot_override_committed_config(self):
+        with tempfile.TemporaryDirectory() as t:
+            config,event,env,file=self.candidate_fixture(Path(t))
+            with patch.dict(q.os.environ,env,clear=True),patch.object(q.subprocess,'check_output',return_value=b'{}'),self.assertRaisesRegex(ValueError,'BASE_CANDIDATE_CONFIG_CHANGED'):q.selected_base_candidate('a'*40,'amd64')
+    def test_apk_records_are_actual_final_database_versions(self):
+        self.assertEqual(q.apk_packages(b'P:musl\nV:1.2.5-r1\n\nP:libgcc\nV:15.2.0-r0\n\n'),{'musl':'1.2.5-r1','libgcc':'15.2.0-r0'})
+        for raw in (b'',b'P:musl\n',b'P:musl\nV:1\n\nP:musl\nV:2\n'):
+            with self.subTest(raw=raw),self.assertRaises(ValueError):q.apk_packages(raw)
+    def test_virtual_final_filesystem_whiteout_preserves_no_stale_node(self):
+        inventory={'usr/local/bin/node':{'type':'file','sha256':'old'},'usr/local/bin/other':{'type':'file'}}
+        retained={'usr/local/bin/node':b'old'}
+        m=tarfile.TarInfo('usr/local/bin/.wh.node');m.size=0
+        q.record_candidate_member(None,m,inventory,retained)
+        self.assertNotIn('usr/local/bin/node',inventory);self.assertNotIn('usr/local/bin/node',retained)
+        self.assertIn('usr/local/bin/other',inventory)
+    def test_virtual_opaque_directory_removes_lower_entries(self):
+        inventory={'lib/apk/db/installed':{'type':'file'},'lib/apk/db/other':{'type':'file'},'usr/node':{'type':'file'}};retained={'lib/apk/db/installed':b'old'}
+        q.record_candidate_member(None,tarfile.TarInfo('lib/apk/db/.wh..wh..opq'),inventory,retained)
+        self.assertEqual(set(inventory),{'usr/node'});self.assertFalse(retained)
+    def test_virtual_member_inspection_hashes_without_extraction(self):
+        raw=io.BytesIO();data=b'P:musl\nV:1.2.5-r1\n\n'
+        with tarfile.open(fileobj=raw,mode='w') as a:
+            m=tarfile.TarInfo('lib/apk/db/installed');m.size=len(data);a.addfile(m,io.BytesIO(data))
+        with tarfile.open(fileobj=io.BytesIO(raw.getvalue()),mode='r:') as a:
+            inventory,retained={},{};q.record_candidate_member(a,a.getmembers()[0],inventory,retained)
+        self.assertEqual(retained['lib/apk/db/installed'],data);self.assertEqual(inventory['lib/apk/db/installed']['sha256'],q.sha(data))
 if __name__=='__main__':unittest.main()

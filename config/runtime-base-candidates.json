@@ -1,0 +1,82 @@
+{
+  "contract": "NPS_BASE_ONLY_CANDIDATE_V1",
+  "assignment": "NPS-RELEASE-BLOCKER-REMOVAL-AND-ACCEPTANCE-2A",
+  "instructionSha256": "e4eb9c73a378da990cbd6545f36cf88f60395036cff242c004c64bd86be63091",
+  "eventStartInclusiveUtc": "2026-10-09T03:09:05.000Z",
+  "eventEndExclusiveUtc": "2026-10-09T13:09:05.000Z",
+  "candidates": {
+    "official-node-alpine324": {
+      "publisher": "Docker Official Images / nodejs/docker-node",
+      "image": "docker.io/library/node:24.21.0-alpine3.24@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1",
+      "indexDigest": "sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1",
+      "sourceGitCommit": "93a7bafc324a85ac1ee461604cff87cffacb6d7a",
+      "sourceDockerfileSha256": "13d963885341e2bacab8c72cca9b314152d44747e03d88855e8ce06f8a99fe68",
+      "sourceDockerfileUrl": "https://raw.githubusercontent.com/nodejs/docker-node/93a7bafc324a85ac1ee461604cff87cffacb6d7a/24/alpine3.24/Dockerfile",
+      "nodeVersion": "24.21.0",
+      "nodePath": "usr/local/bin/node",
+      "packageFormat": "apk",
+      "defaultUser": "",
+      "entrypoint": [
+        "docker-entrypoint.sh"
+      ],
+      "candidateOnly": true,
+      "productionCompatible": false,
+      "supportBoundary": "Maintained official Docker image; Node musl amd64 experimental and arm64 not tested before release. No product/runtime acceptance.",
+      "platforms": {
+        "amd64": {
+          "manifest": {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "amd64",
+              "org.opencontainers.image.base.digest": "sha256:d56c381f961d307a21b3ca004cf1e3910f106644aefb1f43e654c8a56c4fd395",
+              "org.opencontainers.image.base.name": "alpine:3.24",
+              "org.opencontainers.image.created": "2026-09-17T21:47:15Z",
+              "org.opencontainers.image.revision": "93a7bafc324a85ac1ee461604cff87cffacb6d7a",
+              "org.opencontainers.image.source": "https://github.com/nodejs/docker-node.git#93a7bafc324a85ac1ee461604cff87cffacb6d7a:24/alpine3.24",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/node",
+              "org.opencontainers.image.version": "24-alpine"
+            },
+            "digest": "sha256:83f1c388c31fb2e51f7cbd4dea949b96260798c98f206e8e4696bc93bd964e3a",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "amd64",
+              "os": "linux"
+            },
+            "size": 1720
+          },
+          "config": {
+            "mediaType": "application/vnd.oci.image.config.v1+json",
+            "digest": "sha256:c10884952bb8c37122fcc3fe6f97af3ab0a80e5eb02ee5df707406b4e11a7e3e",
+            "size": 6438
+          }
+        },
+        "arm64": {
+          "manifest": {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm64v8",
+              "org.opencontainers.image.base.digest": "sha256:260479a1cfaf304c4c20da7f8405d3ce313513dcd534bb743257bdd2fe0f3e2d",
+              "org.opencontainers.image.base.name": "alpine:3.24",
+              "org.opencontainers.image.created": "2026-09-17T21:47:23Z",
+              "org.opencontainers.image.revision": "93a7bafc324a85ac1ee461604cff87cffacb6d7a",
+              "org.opencontainers.image.source": "https://github.com/nodejs/docker-node.git#93a7bafc324a85ac1ee461604cff87cffacb6d7a:24/alpine3.24",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/node",
+              "org.opencontainers.image.version": "24-alpine"
+            },
+            "digest": "sha256:38a36422dc7de80f3ced964270f23b3b17f73af816728d21a5fbbf84bf8be46f",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "arm64",
+              "os": "linux",
+              "variant": "v8"
+            },
+            "size": 1722
+          },
+          "config": {
+            "mediaType": "application/vnd.oci.image.config.v1+json",
+            "digest": "sha256:0e3c736f1019ffbaeae857a7dda44ef56fe107e25623053697d71d8d3bdbcfc1",
+            "size": 6455
+          }
+        }
+      }
+    }
+  }
+}

@@ -90,6 +90,82 @@ def select_platform(index, arch):
     check(len(candidates) == 1, 'ARCHITECTURE_AMBIGUOUS')
     return candidates[0]
 
+def selected_base_candidate(source, arch):
+    """A single reviewed, committed investigation target; never production pins."""
+    key = os.getenv('BASE_CANDIDATE_ID', '')
+    if not key:
+        return None
+    check(key == 'official-node-alpine324', 'BASE_CANDIDATE_UNKNOWN')
+    file = Path('config/runtime-base-candidates.json')
+    check(not file.is_symlink() and file.stat().st_size <= 32768, 'BASE_CANDIDATE_CONFIG_UNSAFE')
+    raw = file.read_bytes()
+    check(subprocess.check_output(['git','show',source+':config/runtime-base-candidates.json']) == raw, 'BASE_CANDIDATE_CONFIG_CHANGED')
+    config = json.loads(raw)
+    check(config.get('contract') == 'NPS_BASE_ONLY_CANDIDATE_V1' and config.get('assignment') == 'NPS-RELEASE-BLOCKER-REMOVAL-AND-ACCEPTANCE-2A' and config.get('instructionSha256') == 'e4eb9c73a378da990cbd6545f36cf88f60395036cff242c004c64bd86be63091', 'BASE_CANDIDATE_AUTHORITY_INVALID')
+    check(config.get('eventStartInclusiveUtc') == '2026-10-09T03:09:05.000Z' and config.get('eventEndExclusiveUtc') == '2026-10-09T13:09:05.000Z', 'BASE_CANDIDATE_WINDOW_CHANGED')
+    check(os.getenv('GITHUB_EVENT_NAME') == 'pull_request' and os.getenv('GITHUB_RUN_ATTEMPT') == '1', 'BASE_CANDIDATE_EVENT_REQUIRED')
+    event = read_json(Path(os.environ['GITHUB_EVENT_PATH']))
+    pr = event.get('pull_request', {})
+    check(event.get('action') == 'synchronize' and event.get('number') == 28 and pr.get('number') == 28 and pr.get('head', {}).get('sha') == source and pr['head'].get('ref') == 'release/recovery-integration-1a' and pr['head'].get('repo', {}).get('full_name') == 'vsairohith67/nalanda-school-erp' and pr.get('base', {}).get('repo', {}).get('full_name') == 'vsairohith67/nalanda-school-erp', 'BASE_CANDIDATE_EVENT_IDENTITY')
+    when = pr.get('updated_at', '')
+    check(isinstance(when,str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z', when), 'BASE_CANDIDATE_EVENT_TIME')
+    check(config['eventStartInclusiveUtc'] <= dt.datetime.fromisoformat(when.replace('Z','+00:00')).isoformat(timespec='milliseconds').replace('+00:00','Z') < config['eventEndExclusiveUtc'], 'BASE_CANDIDATE_EVENT_OUTSIDE_WINDOW')
+    candidate = config.get('candidates', {}).get(key, {})
+    digest = 'sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1'
+    check(candidate.get('image') == 'docker.io/library/node:24.21.0-alpine3.24@'+digest and candidate.get('indexDigest') == digest and candidate.get('sourceGitCommit') == '93a7bafc324a85ac1ee461604cff87cffacb6d7a' and candidate.get('sourceDockerfileSha256') == '13d963885341e2bacab8c72cca9b314152d44747e03d88855e8ce06f8a99fe68', 'BASE_CANDIDATE_PIN_CHANGED')
+    check(candidate.get('nodeVersion') == '24.21.0' and candidate.get('nodePath') == 'usr/local/bin/node' and candidate.get('packageFormat') == 'apk' and candidate.get('candidateOnly') is True and candidate.get('productionCompatible') is False and candidate.get('defaultUser') == '' and candidate.get('entrypoint') == ['docker-entrypoint.sh'], 'BASE_CANDIDATE_CONTRACT_CHANGED')
+    check(arch in candidate.get('platforms', {}), 'BASE_CANDIDATE_PLATFORM_MISSING')
+    return dict(candidate, id=key, configSha256=sha(raw))
+
+def base_registry(candidate):
+    headers = {'Accept':'application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json'}
+    if candidate is None:
+        return 'https://gcr.io/v2/distroless/nodejs24-debian13/', headers
+    # Standard anonymous pull authentication, fixed publisher/repository only.
+    token = json.loads(request('https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/node:pull', 32768)).get('token')
+    check(isinstance(token,str) and 1 <= len(token) <= 16384, 'BASE_REGISTRY_TOKEN_INVALID')
+    headers['Authorization'] = 'Bearer '+token
+    return 'https://registry-1.docker.io/v2/library/node/', headers
+
+def apk_packages(raw):
+    check(len(raw) <= 4*1024*1024, 'PACKAGE_RECORD_BOUND')
+    packages = {}
+    for record in raw.decode('utf8').split('\n\n'):
+        fields = dict(line.split(':',1) for line in record.splitlines() if ':' in line)
+        if 'P' in fields:
+            check('V' in fields and fields['P'] not in packages, 'APK_PACKAGE_RECORD_INVALID')
+            packages[fields['P']] = fields['V']
+    check(packages, 'APK_PACKAGE_DATABASE_MISSING')
+    return packages
+
+def record_candidate_member(layer, member, inventory, retained):
+    """Inspect complete virtual layers; never extract or execute image files."""
+    name = member_safe(member)
+    parent, basename = posixpath.split(name)
+    if basename.startswith('.wh.'):
+        target = parent if basename == '.wh..wh..opq' else posixpath.join(parent,basename[4:])
+        for old in list(inventory):
+            if old == target or old.startswith(target+'/') or (basename == '.wh..wh..opq' and not target):
+                inventory.pop(old); retained.pop(old,None)
+        return
+    record = dict(type='file' if member.isfile() else 'directory' if member.isdir() else 'link', bytes=member.size)
+    if member.isfile():
+        digest = hashlib.sha256()
+        parts = []
+        keep = name in ('usr/local/bin/node','lib/apk/db/installed')
+        stream = layer.extractfile(member)
+        while True:
+            chunk = stream.read(1024*1024)
+            if not chunk: break
+            digest.update(chunk)
+            if keep: parts.append(chunk)
+        record['sha256'] = digest.hexdigest()
+        if keep: retained[name] = b''.join(parts)
+    elif member.issym() or member.islnk():
+        record['target'] = member.linkname
+    inventory[name] = record
+    check(len(inventory) <= 100000, 'FINAL_FILESYSTEM_BOUND')
+
 def scanner_policy(trivy, grype, sbom, config, exits, metadata):
     check(trivy.get('SchemaVersion') == 2 and trivy.get('Metadata', {}).get('ImageID') == config and isinstance(trivy.get('Results'), list) and trivy['Results'], 'TRIVY_SUBJECT_OR_REPORT_INVALID')
     check(all(isinstance(r,dict) and isinstance(r.get('Target'),str) and isinstance(r.get('Class'),str) for r in trivy['Results']), 'TRIVY_RESULT_INVALID')
@@ -259,6 +335,7 @@ def inspect_runtime_base():
     run_id, attempt, job = os.getenv('GITHUB_RUN_ID', ''), os.getenv('GITHUB_RUN_ATTEMPT', ''), os.getenv('GITHUB_JOB', '')
     check(run_id.isdigit() and attempt.isdigit() and job == 'backend-build-scan', 'RUN_IDENTITY_REQUIRED')
     check(subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip() == source and not subprocess.check_output(['git','status','--porcelain']), 'COMMITTED_CLEAN_SOURCE_REQUIRED')
+    candidate = selected_base_candidate(source, arch)
     parent = Path(os.environ['RUNNER_TEMP']).resolve()
     check(parent.is_dir() and shutil.disk_usage(parent).free >= 6 * 1024**3, 'RUNNER_DISK_CAPACITY_MISSING')
     identity = dict(classification=CLASSIFICATION, source=source, architecture=arch, runId=run_id, attempt=attempt, job=job)
@@ -266,6 +343,10 @@ def inspect_runtime_base():
     root.mkdir(mode=0o700)
     write(root / 'owner.json', identity)
     summary = dict(identity, tree=subprocess.check_output(['git','show','-s','--format=%T','HEAD']).decode().strip(), started=stamp(), result='BACKEND_BUILD_SCAN_QUALIFICATION_PARTIAL', base='NOT_EXECUTED', product='NOT_BUILT', runtime='NOT_EXECUTED', nativeExecution='NOT_EXECUTED', admitted=False, durablePrivateRetention=False, rawRetention='UNTIL_OWNED_JOB_CLEANUP', pythonVersion=platform.python_version(), capacityFreeBytes=shutil.disk_usage(parent).free, inputIndex=RUNTIME.split('@')[1], inputs={}, processes=[], findings=[], cleanupComplete=False)
+    if candidate:
+        summary.update(candidateId=candidate['id'], inputIndex=candidate['indexDigest'], candidateOnly=True,
+                       candidateNodeVersion=candidate['nodeVersion'], productionCompatible=False,
+                       defaultUser='ROOT_NOT_RUNTIME_QUALIFIED', nodeSupport='MUSL_AMD64_EXPERIMENTAL_ARM64_NOT_TESTED_BEFORE_RELEASE')
     unsettled = set()
     process=private_process(root,summary,unsettled)
     def ok(label,args,env=None,subject=None):
@@ -277,6 +358,12 @@ def inspect_runtime_base():
         check('ARG RUNTIME_IMAGE=' + RUNTIME in dockerfile and 'ARG NODE_IMAGE=' + BUILDER in dockerfile and json.loads(Path('config/synthetic-build-trust.json').read_text()) is None, 'FROZEN_INPUTS_CHANGED')
         for name in ('Dockerfile','.dockerignore','pnpm-lock.yaml','package.json','pnpm-workspace.yaml','config/synthetic-build-trust.json','config/backend-build-scan-tools.json'):
             summary['inputs'][name] = sha(Path(name).read_bytes())
+        if candidate:
+            summary['inputs']['config/runtime-base-candidates.json'] = candidate['configSha256']
+            vendor_source = request('https://raw.githubusercontent.com/nodejs/docker-node/93a7bafc324a85ac1ee461604cff87cffacb6d7a/24/alpine3.24/Dockerfile', 262144)
+            check(sha(vendor_source) == candidate['sourceDockerfileSha256'], 'BASE_VENDOR_SOURCE_SUBSTITUTED')
+            write(root/'vendor-Dockerfile',vendor_source)
+            summary['vendorSourceSha256'] = sha(vendor_source)
         pins = json.loads(Path('config/backend-build-scan-tools.json').read_text())['tools']
         bins = {}
         for name,pin in pins.items():
@@ -290,31 +377,50 @@ def inspect_runtime_base():
             check(pin['version'] in version.decode(), 'TOOL_VERSION_MISMATCH')
             summary.setdefault('toolArchives',{})[name]=dict(version=pin['version'],sha256=selected['sha256'])
         # Raw registry bytes only: hashes are checked before JSON parsing.
-        headers={'Accept':'application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json'}
-        registry='https://gcr.io/v2/distroless/nodejs24-debian13/'
+        registry,headers = base_registry(candidate)
         index_bytes=request(registry+'manifests/'+summary['inputIndex'],headers=headers)
         check('sha256:'+sha(index_bytes)==summary['inputIndex'],'INDEX_SUBSTITUTED')
         write(root/'vendor-index.json',index_bytes)
         selected=select_platform(json.loads(index_bytes),arch)
+        if candidate:
+            check(selected == candidate['platforms'][arch]['manifest'] and selected.get('annotations',{}).get('org.opencontainers.image.revision') == candidate['sourceGitCommit'], 'BASE_VENDOR_PLATFORM_SUBSTITUTED')
         manifest_bytes=request(registry+'manifests/'+selected['digest'],headers=headers);descriptor(manifest_bytes,selected)
         manifest=json.loads(manifest_bytes)
         layout=root/'base-oci';(layout/'blobs'/'sha256').mkdir(parents=True,mode=0o700)
         write(layout/'blobs'/'sha256'/selected['digest'][7:],manifest_bytes)
         check(isinstance(manifest.get('layers'),list) and 0<len(manifest['layers'])<100 and sum(d['size'] for d in manifest['layers'])<MAX_IMAGE,'LAYER_SET_INVALID')
-        config_data=request(registry+'blobs/'+manifest['config']['digest']);descriptor(config_data,manifest['config'])
-        config=json.loads(config_data);check(config.get('os')=='linux' and config.get('architecture')==arch and config.get('config',{}).get('User') in ('65532','65532:65532'),'BASE_CONFIG_INVALID')
+        config_data=request(registry+'blobs/'+manifest['config']['digest'],headers=headers);descriptor(config_data,manifest['config'])
+        config=json.loads(config_data)
+        check(config.get('os')=='linux' and config.get('architecture')==arch,'BASE_CONFIG_INVALID')
+        if candidate:
+            check(manifest['config'] == candidate['platforms'][arch]['config'] and config.get('config',{}).get('User','') == candidate['defaultUser'] and config['config'].get('Entrypoint') == candidate['entrypoint'] and 'NODE_VERSION='+candidate['nodeVersion'] in config['config'].get('Env',[]), 'BASE_CANDIDATE_CONFIG_SUBSTITUTED')
+        else:
+            check(config.get('config',{}).get('User') in ('65532','65532:65532'),'BASE_CONFIG_INVALID')
         write(layout/'blobs'/'sha256'/manifest['config']['digest'][7:],config_data)
         packages={};uncompressed=0;inspection_deadline=time.monotonic()+900
+        inventory,retained = {},{}
         for d in manifest['layers']:
             check(shutil.disk_usage(root).free >= d['size'] + 2*1024**3, 'RUNNER_DISK_CAPACITY_EXHAUSTED')
-            data=request(registry+'blobs/'+d['digest'],MAX_IMAGE);descriptor(data,d)
+            data=request(registry+'blobs/'+d['digest'],MAX_IMAGE,headers=headers);descriptor(data,d)
             write(layout/'blobs'/'sha256'/d['digest'][7:],data)
             with tarfile.open(fileobj=io.BytesIO(data),mode='r:*') as layer:
                 count=0
-                for m in layer:
+                members=layer.getmembers() if candidate else layer
+                if candidate:
+                    check(len(members)<=100000, 'LAYER_INSPECTION_BOUND')
+                    # OCI whiteouts apply to lower layers, regardless of the
+                    # whiteout's order relative to this layer's new entries.
+                    for m in members:
+                        if posixpath.basename(member_safe(m)).startswith('.wh.'):
+                            record_candidate_member(layer,m,inventory,retained)
+                for m in members:
                     count+=1;uncompressed+=m.size
                     check(count<=100000 and m.size<=MAX_IMAGE and uncompressed<=4*1024**3 and time.monotonic()<inspection_deadline,'LAYER_INSPECTION_BOUND')
                     name=member_safe(m)
+                    if candidate:
+                        if not posixpath.basename(name).startswith('.wh.'):
+                            record_candidate_member(layer,m,inventory,retained)
+                        continue
                     if m.isfile() and name == 'nodejs/bin/node':
                         binary=layer.extractfile(m).read()
                         check(binary[:4] == b'\x7fELF' and binary[4:6] == b'\x02\x01' and int.from_bytes(binary[18:20],'little') == {'amd64':62,'arm64':183}[arch], 'NODE_STATIC_ARCHITECTURE_MISMATCH')
@@ -324,8 +430,17 @@ def inspect_runtime_base():
                         text=layer.extractfile(m).read().decode()
                         name_match=re.search(r'^Package: (.+)$',text,re.M);version_match=re.search(r'^Version: (.+)$',text,re.M)
                         if name_match and version_match: packages[name_match[1]]=version_match[1]
+        if candidate:
+            binary=retained.get(candidate['nodePath'],b'')
+            check(binary[:4] == b'\x7fELF' and binary[4:6] == b'\x02\x01' and int.from_bytes(binary[18:20],'little') == {'amd64':62,'arm64':183}[arch], 'NODE_STATIC_ARCHITECTURE_MISMATCH')
+            summary['nodeBinarySha256'] = sha(binary)
+            packages=apk_packages(retained.get('lib/apk/db/installed',b''))
+            check('musl' in packages and 'libstdc++' in packages and 'libgcc' in packages, 'CANDIDATE_RUNTIME_PACKAGES_MISSING')
+            write(root/'final-filesystem.json',inventory)
+            summary['finalFilesystemSha256']=sha((root/'final-filesystem.json').read_bytes())
+            summary['finalFilesystemEntries']=len(inventory)
         write(root/'static-packages.json',packages)
-        summary['osPackages'] = {k:v for k,v in packages.items() if k in ('libc6','zlib1g') and re.fullmatch(r'[A-Za-z0-9_+.:~=-]{1,100}',v)}
+        summary['osPackages'] = {k:v for k,v in packages.items() if k in ('libc6','zlib1g','musl','libstdc++','libgcc','zlib','ca-certificates-bundle') and re.fullmatch(r'[A-Za-z0-9_+.:~=-]{1,100}',v)}
         check('nodeBinarySha256' in summary, 'CURRENT_NODE_BINARY_BYTES_MISSING')
         summary['baseConfigDigest']=manifest['config']['digest'];summary['baseManifestDigest']=selected['digest'];summary['layerDigests']=[d['digest'] for d in manifest['layers']]
         write(layout/'index.json',dict(schemaVersion=2,manifests=[selected]));write(layout/'oci-layout',dict(imageLayoutVersion='1.0.0'))
