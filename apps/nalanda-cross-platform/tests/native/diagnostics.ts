@@ -57,6 +57,19 @@ export function processMetadata(r: {exit: number|null; signal: string|null; dura
 export function childCause(r: Parameters<typeof processMetadata>[0]) {
   return r.startupFailed ? "CHILD_STARTUP_FAILED" : r.terminationFailed ? "CHILD_GROUP_UNRECONCILED" : r.timedOut ? "CHILD_TIMEOUT" : r.cancelled ? "CHILD_CANCELLED" : r.outputLimit ? "CHILD_OUTPUT_LIMIT" : r.exit !== 0 ? "CHILD_EXIT_FAILED" : null;
 }
+export const androidInstallCodes=["INSTALL_FAILED_INSUFFICIENT_STORAGE","INSTALL_FAILED_NO_MATCHING_ABIS","INSTALL_FAILED_OLDER_SDK","INSTALL_FAILED_TEST_ONLY","INSTALL_FAILED_INVALID_APK","INSTALL_FAILED_USER_RESTRICTED"] as const;
+export function androidInstallProjection(stdout:Buffer,stderr:Buffer) {
+  const modes=new Set<string>(),failures=new Set<typeof androidInstallCodes[number]>();let reportedSuccess=false;
+  for(const stream of [stdout,stderr])for(const line of stream.toString("utf8").split(/\r?\n/)) {
+    const mode=/^Performing (Streamed|Incremental|Push) Install$/.exec(line);
+    if(mode)modes.add(mode[1].toUpperCase());
+    if(line==="Success")reportedSuccess=true;
+    for(const code of androidInstallCodes)if(new RegExp(`\\b${code}\\b`).test(line))failures.add(code);
+  }
+  // Only fixed operational markers escape. They do not prove package admission,
+  // command success, upload completion, launch, or the cause of a later timeout.
+  return {mode:modes.size===1?[...modes][0]:modes.size>1?"AMBIGUOUS":"UNKNOWN",reportedSuccess,knownFailureCodes:androidInstallCodes.filter(code=>failures.has(code))};
+}
 
 export const swiftSource = "apps/nalanda-cross-platform/tests/native/NativeJourney.swift";
 export const appleProjectSource = "apps/nalanda-cross-platform/tests/native/NativeJourney.xcodeproj/project.pbxproj";

@@ -7,7 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import {afterAll,afterEach,expect,it,vi} from "vitest";
 import {Android,appId,journey} from "@/apps/nalanda-cross-platform/tests/native/android";
-import {androidCause,androidState,appleBuild,appleScenarioMarkers,nativeIdentity,nativeScenarios,nativeVersions,processMetadata,swiftSource,appleProjectSource,type PublicSource} from "@/apps/nalanda-cross-platform/tests/native/diagnostics";
+import {androidCause,androidState,androidInstallProjection,appleBuild,appleScenarioMarkers,nativeIdentity,nativeScenarios,nativeVersions,processMetadata,swiftSource,appleProjectSource,type PublicSource} from "@/apps/nalanda-cross-platform/tests/native/diagnostics";
 import {appleInputBindings,processRecorder,ownedSimulatorId,retainNativeEvidence,androidSetupEvidence,installReadyAndroid,selectAppleTarget,appleOwnedState,appleSetupEvidence,appleAvailableRuntimes,verifyAppleAppearance,cleanupAppleTarget} from "@/apps/nalanda-cross-platform/tests/native/execute";
 import {producerProcess,type ProducerProcessObservation} from "@/scripts/portable/producer-process";
 const root=mkdtempSync(path.join(os.tmpdir(),"native-projection-r2-"));
@@ -303,6 +303,20 @@ it("drops unknown process/identity/version fields and arbitrary signal/version s
 });
 
 const apkMetadata="sdkVersion:'24'\nnative-code: 'arm64-v8a' 'x86_64'\n";
+it.each(["Streamed","Incremental","Push"])("projects only actual fixed Android %s install markers",mode=>{
+ const result=androidInstallProjection(streams(`${hostPath}\n${pin}\nPerforming ${mode} Install\n${secret}\nSuccess\n`),streams(`adb: failed to install ${hostPath}: Failure [INSTALL_FAILED_INVALID_APK: ${secret}]`));
+ expect(result).toEqual({mode:mode.toUpperCase(),reportedSuccess:true,knownFailureCodes:["INSTALL_FAILED_INVALID_APK"]});excluded(result);
+});
+it("keeps absent/conflicting/embedded install markers finite and unknown codes private",()=>{
+ const unknown=androidInstallProjection(streams(`${secret} Performing Streamed Install\nSuccess ${pin}\nINSTALL_FAILED_PRIVATE_${secret}`),Buffer.alloc(0));expect(unknown).toEqual({mode:"UNKNOWN",reportedSuccess:false,knownFailureCodes:[]});excluded(unknown);
+ const conflict=androidInstallProjection(streams("Performing Streamed Install\n"),streams("Performing Incremental Install\n"));expect(conflict.mode).toBe("AMBIGUOUS");excluded(conflict);
+});
+it("retains observed install progress separately from the actual timeout and cleanup verdict",()=>{
+ const dir=path.join(root,"finite-install-progress");mkdirSync(dir);const recorder=processRecorder(dir);
+ recorder.observe({...observation("android-install"),stdout:streams(`Performing Streamed Install\n${pin} ${secret}`),stderr:streams(hostPath),timedOut:true,exit:null,signal:"SIGTERM",durationMs:30528});
+ expect(recorder.failure()).toEqual({stage:"android-install",cause:"CHILD_TIMEOUT"});expect(recorder.installation()).toEqual({mode:"STREAMED",reportedSuccess:false,knownFailureCodes:[]});expect(recorder.outcome("android-install")).toMatchObject({timedOut:true,closed:true});excluded({failure:recorder.failure(),installation:recorder.installation()});
+ recorder.observe({...observation("android-uninstall"),exit:0,stdout:streams("Success"),stderr:Buffer.alloc(0)});expect(recorder.installation()?.reportedSuccess).toBe(false);expect(recorder.failure()?.cause).toBe("CHILD_TIMEOUT");
+});
 const androidReplies:Record<string,string>={"get-state":"device\n","shell getprop ro.kernel.qemu":"1\n","emu avd name":"native_1b_phone\nOK\n","shell getprop sys.boot_completed":"1\n","shell getprop ro.build.version.sdk":"35\n","shell getprop ro.product.cpu.abi":"x86_64\n","shell pm path android":"package:/system/framework/framework-res.apk\n",[`shell pm list packages ${appId}`]:"","install owned-debug.apk":"Performing Streamed Install\nSuccess\n"};
 it.each([
  ["get-state","offline","SETUP_ADB_TARGET","ANDROID_EXACT_EMULATOR_NOT_READY"],

@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
 import { producerProcess, type ProducerProcessObservation } from "../../../../scripts/portable/producer-process";
 import { Android, appId, journey } from "./android";
-import { appleBuild, appleScenarioMarkers, appleCause, childCause, processMetadata, androidCause, nativeIdentity, nativeVersions, swiftSource, appleProjectSource, type PublicSource, type AppleInputBinding } from "./diagnostics";
+import { appleBuild, appleScenarioMarkers, appleCause, childCause, processMetadata, androidCause, androidInstallCodes, androidInstallProjection, nativeIdentity, nativeVersions, swiftSource, appleProjectSource, type PublicSource, type AppleInputBinding } from "./diagnostics";
 import { assertProtectedNativeCapture, assertNonblankNativeCapture } from "../../../../scripts/qa-ux-native-screen-content";
 
 const scenarios = ["A-clean-launch", "B-invalid-pin", "C-local-vault-empty", "D-explicit-lock-and-os-background", "E-cold-restart-wrong-pin", "F-remote-reference-draft-refusal", "G-reset-cancel-confirm", "H-platform-accessibility-layout"];
@@ -136,6 +136,7 @@ export function processRecorder(output: string, publicSource?:PublicSource) {
   const retained=new Map<string,boolean>();
   const builds=new Map<string,ReturnType<typeof appleBuild>>();
   const journeys=new Map<string,ReturnType<typeof appleScenarioMarkers>>();
+  let installation:ReturnType<typeof androidInstallProjection>|null=null;
   let unreconciled=false;
   let latest: {stage:string;process:ReturnType<typeof processMetadata>;cause:string|null}|null=null;
   const observe=(r:ProducerProcessObservation)=>{
@@ -144,11 +145,11 @@ export function processRecorder(output: string, publicSource?:PublicSource) {
     assert(++sequence<=1000,"NATIVE_PROCESS_RECORD_LIMIT");
     let cause:string|null=childCause(r);
     if(cause==="CHILD_EXIT_FAILED" && r.stage==="android-install"){
-      const installCodes=["INSTALL_FAILED_INSUFFICIENT_STORAGE","INSTALL_FAILED_NO_MATCHING_ABIS","INSTALL_FAILED_OLDER_SDK","INSTALL_FAILED_TEST_ONLY","INSTALL_FAILED_INVALID_APK","INSTALL_FAILED_USER_RESTRICTED"];
-      const detail=r.stdout.toString()+r.stderr.toString();cause=installCodes.find(code=>detail.includes(code))??cause;
+      const detail=r.stdout.toString()+r.stderr.toString();cause=androidInstallCodes.find(code=>detail.includes(code))??cause;
     }
     if(cause && !failure)failure={stage:r.stage,cause};
     const metadata=processMetadata(r);outcomes.set(r.stage,metadata);retained.set(r.stage,false);latest={stage:r.stage,process:metadata,cause};
+    if(r.stage==="android-install")installation=androidInstallProjection(r.stdout,r.stderr);
     if(r.stage==="ios-build-ui-runner" && publicSource)builds.set(r.stage,appleBuild(r.stdout,r.stderr,publicSource));
     if(r.stage==="ios-real-ui-journey")journeys.set(r.stage,appleScenarioMarkers(r.stdout,r.stderr,cause===null));
     const stem=path.join(output,`process-${sequence}`);
@@ -160,7 +161,7 @@ export function processRecorder(output: string, publicSource?:PublicSource) {
       retained.set(r.stage,true);
     } catch {failure={stage:r.stage,cause:"PRIVATE_RETENTION_FAILED"};throw Error("NATIVE_PRIVATE_PROCESS_RETENTION_FAILED");}
   };
-  return {observe,failure:()=>failure,outcome:(stage:string)=>outcomes.get(stage),retained:(stage:string)=>retained.get(stage)===true,build:(stage:string)=>builds.get(stage),journey:(stage:string)=>journeys.get(stage),latest:()=>latest,unreconciled:()=>unreconciled};
+  return {observe,failure:()=>failure,outcome:(stage:string)=>outcomes.get(stage),retained:(stage:string)=>retained.get(stage)===true,build:(stage:string)=>builds.get(stage),journey:(stage:string)=>journeys.get(stage),installation:()=>installation,latest:()=>latest,unreconciled:()=>unreconciled};
 }
 export function ownedSimulatorId(value:string) {
   assert(/^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$/.test(value),"IOS_OWNED_TARGET_ID_INVALID");return value;
@@ -212,6 +213,7 @@ export async function main(args: string[]) {
     const metadata = await run("package-metadata", metadataTool, ["dump", "badging", packagePath]);
     assert(metadata.includes(`package: name='${appId}'`) && metadata.includes("versionName='0.1.0'") && metadata.includes(`launchable-activity: name='${appId}.MainActivity'`) && metadata.includes("application-debuggable"), "ANDROID_PACKAGE_ID_VERSION_OR_DEBUG_PROFILE_REFUSED");
     const a = new Android(tool, o["--serial"], workspace, observations.observe);
+    const packageBytes=lstatSync(packagePath).size;assert(Number.isSafeInteger(packageBytes) && packageBytes>0,"ANDROID_PACKAGE_SIZE_INVALID");
     const setup=androidSetup=androidSetupEvidence();
     const results: unknown[] = []; let cleanup = "NOT_EXECUTED", success = false;
     let terminal:ReturnType<Android["failure"]>|null=null,cleanupFailure:object|null=null;
@@ -237,7 +239,7 @@ export async function main(args: string[]) {
       else if(setup.installAttempts===1) try { if((await a.run(["shell","pm","list","packages",appId])).includes(`package:${appId}`)) { await a.run(["shell","am","force-stop",appId]); const uninstall=await a.run(["uninstall",appId]); assert(uninstall.includes("Success")); } assert(!(await a.run(["shell","pm","list","packages",appId])).includes(`package:${appId}`)); await a.run(["shell","rm","-f","/sdcard/nalanda-native-1b.xml"]); cleanup="VERIFIED"; } catch(error) {cleanup="UNRECONCILED";cleanupFailure={cause:androidCause(error),lastProcess:observations.latest()};}
       // Same exclusive/private writer convention as the existing connected host.
       const retention=retainNativeEvidence(output,{source,tree:sourceTree,platform,profile:"NO_REMOTE_SERVER_CONFIGURED",packageHash,target:o["--serial"],tools:{toolSha256:hash(tool),metadataToolSha256:hash(metadataTool),toolVersion},started,ended:new Date().toISOString(),exit:success&&cleanup==="VERIFIED"?0:1,assertions:results,terminal,cleanup,cleanupFailure,authenticated:false,physical:false},success,cleanup);
-      emit({platform,...retention,identity:identity(packageHash),versions:nativeVersions(toolVersion),setup,scenarios:results,cleanup,cleanupFailure,settingsRestoration:a.settingsRestoration(),failure:success?null:terminal??originalProcessFailure,observedChildFailure:originalProcessFailure?{...originalProcessFailure,relationship:success?"RECOVERED_DURING_SUCCESSFUL_JOURNEY":"OBSERVED_SEPARATELY_FROM_TERMINAL_PREDICATE"}:null,authenticated:false,physical:false});
+      emit({platform,...retention,identity:identity(packageHash),versions:nativeVersions(toolVersion),packageBytes,setup,installation:observations.installation(),scenarios:results,cleanup,cleanupFailure,settingsRestoration:a.settingsRestoration(),failure:success?null:terminal??originalProcessFailure,observedChildFailure:originalProcessFailure?{...originalProcessFailure,relationship:success?"RECOVERED_DURING_SUCCESSFUL_JOURNEY":"OBSERVED_SEPARATELY_FROM_TERMINAL_PREDICATE"}:null,authenticated:false,physical:false});
       assert(retention.evidenceRetention==="LOCAL_PRIVATE","NATIVE_PRIVATE_OUTPUT_WRITE_FAILED");
     }
     assert(success && cleanup === "VERIFIED", "NATIVE_EXECUTION_OR_CLEANUP_FAILED");
