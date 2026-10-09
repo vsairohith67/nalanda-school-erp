@@ -88,11 +88,11 @@ function finishObservation(){
   // The controlled command capture joins START/FINISHED to the same two IDs
   // retained in JSON's BODY_FINISHED metadata, without console-order inference.
   // No private paths, employee values, environment or PID enters these rows.
-  console.info(JSON.stringify(receipt));
+  process.stdout.write(JSON.stringify(receipt)+"\n");
 }
-beforeAll((_context,suite)=>{
+beforeAll(({},suite)=>{
   startUnixMs=Date.now();started=performance.now();setup.startMs=0;taskIds=suite.tasks.map(task=>task.id);
-  console.info(JSON.stringify({evidence:"BRIDGE_PRIVATE_REPORT_LIFECYCLE_V1",scope:"REAL_SYNTHETIC_BRIDGE_INTEGRATION_OBSERVATION",stage:"START",startUnixMs,taskIds,elapsedMs:elapsed()}));
+  process.stdout.write(JSON.stringify({evidence:"BRIDGE_PRIVATE_REPORT_LIFECYCLE_V1",scope:"REAL_SYNTHETIC_BRIDGE_INTEGRATION_OBSERVATION",stage:"START",startUnixMs,taskIds,elapsedMs:elapsed()})+"\n");
   const start=dirs.length;
   try{f=fixture();dirs.splice(dirs.indexOf(f.root),1);f.put();r=reviewFixture(f,false);setup.returned=true;}
   catch(error){for(const d of dirs.splice(start))removeFixture(d);throw error;}
