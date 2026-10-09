@@ -26,8 +26,7 @@ it.each(["missing-close","kill-false","kill-throws"])("refuses a %s without wait
  child.emit("close",0,null);child.stdout.emit("data",Buffer.from("late-private"));await vi.advanceTimersByTimeAsync(10);
  expect(rows).toHaveLength(1);expect(rows[0].stdout.length).toBe(0);
 });
-it("retains cancellation and overflow as failed unclosed outcomes",async()=>{
- for(const kind of ["cancel","overflow"]){
+it.each(["cancel","overflow"])("retains %s as a failed unclosed outcome",async kind=>{
   const rows:ProducerProcessObservation[]=[];const controller=new AbortController();
   const pending=producerProcess({...command,timeoutMs:10000},process.cwd(),controller.signal,row=>{rows.push(row);});
   const failure=expect(pending).rejects.toThrow(/^QA_PROCESS_GROUP_UNRECONCILED$/);
@@ -35,5 +34,4 @@ it("retains cancellation and overflow as failed unclosed outcomes",async()=>{
   await vi.advanceTimersByTimeAsync(2500);await failure;
   expect(rows).toHaveLength(1);expect(rows[0]).toMatchObject({closed:false,terminationFailed:true,cancelled:kind==="cancel",outputLimit:kind==="overflow"});
   expect(rows[0].stdout.length).toBe(0);
- }
 });
