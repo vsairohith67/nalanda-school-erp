@@ -44,7 +44,9 @@ export async function installReadyAndroid(a:Android,metadata:string,packagePath:
     assert(setup.abi==="x86_64","ANDROID_RUNTIME_API_OR_ABI_REFUSED");
   });
   await a.check("SETUP_PACKAGE_COMPATIBILITY",()=>{
-    const minimum=/^sdkVersion:'([1-9][0-9]{0,2})'$/m.exec(metadata),native=/^native-code:\s*(.+)$/m.exec(metadata);
+    const minimum=/^sdkVersion:'([1-9][0-9]{0,2})'$/m.exec(metadata),nativeRows=[...metadata.matchAll(/^native-code:[^\r\n]*$/gm)];
+    assert(nativeRows.length===1,"ANDROID_PACKAGE_ABI_SCOPE_REFUSED");
+    const native=/^native-code:[ \t]*(.+)$/.exec(nativeRows[0][0]);
     setup.minimumApi=minimum?Number(minimum[1]):null;
     const abis=native?[...native[1].matchAll(/'([^']+)'/g)].map(m=>m[1]):[];
     setup.packageAbis=abis.slice(0,4).map(abi=>["x86_64","x86","arm64-v8a","armeabi-v7a"].includes(abi)?abi as Exclude<typeof setup.packageAbis[number],"UNKNOWN">:"UNKNOWN");
@@ -277,7 +279,7 @@ export async function main(args: string[]) {
     activeOperation="IOS_TARGET_SELECTION";const {runtime,deviceType}=selectAppleTarget(inventory,sdkVersion,plist.MinimumOSVersion,o["--target-kind"]);appleEnvironment.runtime=runtime.version;
     const setup=appleSetup=appleSetupEvidence(),ownedName=`nalanda-native-${process.env.GITHUB_RUN_ID}-${o["--target-kind"]}`;
     await run("ios-device-query-support",tool,["simctl","help","list"]);
-    assert(observations.deviceQuerySupported()===true,"IOS_DEVICE_QUERY_UNSUPPORTED");setup.deviceQuery="OWNED_UUID_FILTER";
+    assert(observations.deviceQuerySupported()===true,"IOS_DEVICE_QUERY_UNSUPPORTED");
     const started=new Date().toISOString();let serial:string|undefined,success=false,cleanup="NOT_EXECUTED",errorCode="",copiedHash:string|null=null;
     const processes:unknown[]=[];let cleanupFailure:object|null=null,terminal:object|null=null;
     const xcode=async(stage:string,args:string[])=>{
@@ -291,6 +293,7 @@ export async function main(args: string[]) {
       targetEffectsStarted=true;const created=(await run("ios-create-owned-target",tool,["simctl","create",ownedName,deviceType.identifier,runtime.identifier])).trim();
       serial=ownedSimulatorId(created);
       setup.createdState=appleQueriedOwnedState(JSON.parse(await run("ios-created-readback",tool,appleDeviceQuery(serial))),serial,runtime.identifier,ownedName);assert(setup.createdState==="Shutdown","IOS_CREATED_TARGET_STATE_REFUSED");
+      setup.deviceQuery="OWNED_UUID_FILTER";
       await run("ios-boot",tool,["simctl","boot",serial]);await run("ios-boot-readiness",tool,["simctl","bootstatus",serial,"-b"],120_000);
       const command:AppleCommand=(stage,args,timeout)=>run(stage,tool,args,timeout);
       setup.bootState=appleQueriedOwnedState(JSON.parse(await command("ios-target-readback",appleDeviceQuery(serial))),serial,runtime.identifier,ownedName);assert(setup.bootState==="Booted","IOS_OWNED_BOOT_STATE_REFUSED");

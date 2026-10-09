@@ -434,6 +434,7 @@ it("binds every filtered query to the validated owned UUID and refuses shorthand
  expect(appleQueriedOwnedState({devices:{[ownedRuntime]:[]}},ownedId,ownedRuntime,ownedName)).toBe("ABSENT");
  const source=readFileSync(path.resolve("apps/nalanda-cross-platform/tests/native/execute.ts"),"utf8");
  expect(source.indexOf('await run("ios-device-query-support"')).toBeLessThan(source.indexOf('run("ios-create-owned-target"'));
+ expect(source.indexOf('setup.deviceQuery="OWNED_UUID_FILTER"')).toBeGreaterThan(source.indexOf('assert(setup.createdState==="Shutdown"'));
  expect(source.match(/appleDeviceQuery\(serial\)/g)).toHaveLength(6);
  expect(source).not.toContain('["simctl","list","devices","--json"]');
 });
@@ -456,4 +457,15 @@ it.each(["ios-cleanup-ownership-readback","ios-shutdown-readback","ios-cleanup-r
  if(refusedStage==="ios-cleanup-ownership-readback")expect(calls.map(c=>c.stage)).toEqual([refusedStage]);
  if(refusedStage!=="ios-cleanup-readback")expect(calls.some(c=>c.stage==="ios-owned-delete")).toBe(false);
  expect(result.finalState).not.toBe("ABSENT");excluded(result);
+});
+it.each([
+ {label:"DUPLICATE_EQUAL_ROWS",rows:"native-code: 'x86_64'\nnative-code: 'x86_64'"},
+ {label:"FOREIGN_SECOND_ROW",rows:"native-code: 'x86_64'\nnative-code: 'arm64-v8a'"},
+ {label:"MALFORMED_SECOND_ROW",rows:"native-code: 'x86_64'\nnative-code:"},
+])("refuses $label before selecting the first APK architecture row",async({rows})=>{
+ const a=new Android("source-only-adb","emulator-5580",root),setup=androidSetupEvidence(),calls:string[]=[];
+ a.run=async args=>{const key=args.join(" ");calls.push(key);return androidReplies[key];};
+ const failure=await installReadyAndroid(a,`sdkVersion:'24'\n${rows}\n`,"owned-debug.apk",setup).then(()=>{throw Error("unexpected-source-success");},error=>a.failure(error));
+ expect(failure).toMatchObject({predicate:"SETUP_PACKAGE_COMPATIBILITY",cause:"ANDROID_PACKAGE_ABI_SCOPE_REFUSED"});
+ expect(calls.some(c=>c.includes("pm ")||c.startsWith("install "))).toBe(false);expect(setup.installAttempts).toBe(0);excluded({failure,setup});
 });
