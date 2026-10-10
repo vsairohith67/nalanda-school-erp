@@ -33,7 +33,7 @@ export async function runCloudBackupRestoreRehearsal(
   } });
   const sourcePath = operationalDatabasePath();
   const tempRoot = rehearsalDatabaseRoot();
-  const tempPath = path.join(tempRoot, `${rehearsal.id}.db`);
+  const tempPath = path.join(/* turbopackIgnore: true */ tempRoot, `${rehearsal.id}.db`);
   let rehearsalClient: PrismaClient | null = null;
   try {
     const provider = createCloudBackupProvider(artifact.run.profile);

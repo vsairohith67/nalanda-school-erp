@@ -40,7 +40,7 @@ function safeSummary(value: string) {
 }
 
 function lockPath(root: string) { return path.join(root, "release.lock.json"); }
-function statePath(root: string) { return path.join(root, "candidate.json"); }
+function statePath(root: string) { return path.join(/* turbopackIgnore: true */ root, "candidate.json"); }
 function auditPath(root: string) { return path.join(root, "audit.jsonl"); }
 
 export function readReleaseLock(root: string): ReleaseLock | null {
