@@ -69,7 +69,7 @@ function databasePath(databaseUrl: string, dataRoot: string) {
   if (!databaseUrl.startsWith("file:") || databaseUrl.includes("?")) return null;
   const raw = databaseUrl.slice(5).trim();
   if (!raw) return null;
-  return path.resolve(dataRoot, raw);
+  return path.resolve(/* turbopackIgnore: true */ dataRoot, raw);
 }
 
 export function validateDeploymentEnvironment(
@@ -141,7 +141,7 @@ export function validateDeploymentEnvironment(
   }
 
   const dataRootValue = value(environment, "STAGING_DATA_DIR");
-  const dataRoot = dataRootValue ? path.resolve(dataRootValue) : "";
+  const dataRoot = dataRootValue ? path.resolve(/* turbopackIgnore: true */ dataRootValue) : "";
   const localRehearsal = value(environment, "NALANDA_LOCAL_REHEARSAL") === "true";
   const localRateLimitRehearsal = localRehearsal &&
     value(environment, "QA20C_ISOLATED_DATABASE") === "true" &&
@@ -205,7 +205,7 @@ export function validateDeploymentEnvironment(
       add("PERSISTENT_PATH_NOT_ABSOLUTE", name, "Must be an absolute path inside STAGING_DATA_DIR.");
       continue;
     }
-    const resolved = path.resolve(configured);
+    const resolved = path.resolve(/* turbopackIgnore: true */ configured);
     paths[name] = resolved;
     if (dataRoot && !within(dataRoot, resolved)) {
       add("PERSISTENT_PATH_ESCAPE", name, "Must resolve inside STAGING_DATA_DIR.");
@@ -396,7 +396,7 @@ export function validateReleaseEnvironmentContract(environment: NodeJS.ProcessEn
   for (const [name, configured] of roots) {
     if (!configured || !path.isAbsolute(configured)) add("RELEASE_PATH_NOT_ABSOLUTE", name, "Use an absolute environment-specific path.");
     else {
-      const relative = path.relative(path.resolve(workspaceRoot), path.resolve(configured));
+      const relative = path.relative(path.resolve(workspaceRoot), path.resolve(/* turbopackIgnore: true */ configured));
       if (productionShaped && (relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative)))) add("RELEASE_PATH_INSIDE_SOURCE", name, "Runtime data must be outside the release source tree.");
     }
   }
@@ -404,10 +404,10 @@ export function validateReleaseEnvironmentContract(environment: NodeJS.ProcessEn
   const productionDatabase = value(environment, "NALANDA_PRODUCTION_DATABASE_URL");
   if (stagingDatabase && productionDatabase && (databaseProvider === "postgresql"
     ? stagingDatabase === productionDatabase
-    : path.resolve(stagingDatabase.replace(/^file:/, "")) === path.resolve(productionDatabase.replace(/^file:/, "")))) add("ENVIRONMENT_DATABASE_SHARED", "DATABASE_URL", "Staging and production must not share a database.");
+    : path.resolve(/* turbopackIgnore: true */ stagingDatabase.replace(/^file:/, "")) === path.resolve(/* turbopackIgnore: true */ productionDatabase.replace(/^file:/, "")))) add("ENVIRONMENT_DATABASE_SHARED", "DATABASE_URL", "Staging and production must not share a database.");
   const stagingStorage = value(environment, "NALANDA_STAGING_STORAGE_ROOT");
   const productionStorage = value(environment, "NALANDA_PRODUCTION_STORAGE_ROOT");
-  if (stagingStorage && productionStorage && path.resolve(stagingStorage) === path.resolve(productionStorage)) add("ENVIRONMENT_STORAGE_SHARED", "PRIVATE_STORAGE_ROOT", "Staging and production must not share private storage.");
+  if (stagingStorage && productionStorage && path.resolve(/* turbopackIgnore: true */ stagingStorage) === path.resolve(/* turbopackIgnore: true */ productionStorage)) add("ENVIRONMENT_STORAGE_SHARED", "PRIVATE_STORAGE_ROOT", "Staging and production must not share private storage.");
 
   if (productionShaped) {
     for (const name of ["AUTH_SECRET", "CLOUD_BACKUP_ENCRYPTION_KEY_V1"] as const) {

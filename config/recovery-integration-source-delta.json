@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "date": "2026-10-09",
+  "date": "2026-10-10",
   "base": "104aacc7bd314cae82e60bb02b5c8a965c7ffedd",
   "heads": [
     "5bf70e4c4be07b706224debe01a27c54fd0af096",
@@ -10807,6 +10807,56 @@
         }
       ],
       "currentSha256": "4e7243873cc3fc89fc3bac7a0b887053c48e6c0acccd21fb32b687d0fb7def0b",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "lib/deployment-environment.ts",
+      "baseSha256": "5df2f8beaaefb321783f20bb706a704fbda5132a0f3a1ab216d82ea6144bfb7a",
+      "historicalSha256": "5df2f8beaaefb321783f20bb706a704fbda5132a0f3a1ab216d82ea6144bfb7a",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "5df2f8beaaefb321783f20bb706a704fbda5132a0f3a1ab216d82ea6144bfb7a"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "5df2f8beaaefb321783f20bb706a704fbda5132a0f3a1ab216d82ea6144bfb7a"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "5df2f8beaaefb321783f20bb706a704fbda5132a0f3a1ab216d82ea6144bfb7a"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "5df2f8beaaefb321783f20bb706a704fbda5132a0f3a1ab216d82ea6144bfb7a"
+        }
+      ],
+      "currentSha256": "c452a25472584270e1b986a2c14e9990bebf864d08e9130910a84f78a718fc33",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "lib/release-operations-view.ts",
+      "baseSha256": "90d8faaf76e5b5a15c8d4a24c84077f9d636dde3668c093998b0d0caa8563c8f",
+      "historicalSha256": "90d8faaf76e5b5a15c8d4a24c84077f9d636dde3668c093998b0d0caa8563c8f",
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": "90d8faaf76e5b5a15c8d4a24c84077f9d636dde3668c093998b0d0caa8563c8f"
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": "90d8faaf76e5b5a15c8d4a24c84077f9d636dde3668c093998b0d0caa8563c8f"
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": "90d8faaf76e5b5a15c8d4a24c84077f9d636dde3668c093998b0d0caa8563c8f"
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": "90d8faaf76e5b5a15c8d4a24c84077f9d636dde3668c093998b0d0caa8563c8f"
+        }
+      ],
+      "currentSha256": "7017127967016595856af334c30e1f026429e52ccf4295233e41abacc426c6d4",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     }
   ]
