@@ -21,8 +21,8 @@ function inside(parent: string, candidate: string) {
 }
 
 function canonicalPath(candidate: string) {
-  const resolved = path.resolve(candidate);
-  return existsSync(resolved) ? realpathSync.native(resolved) : resolved;
+  const resolved = path.resolve(/* turbopackIgnore: true */ candidate);
+  return existsSync(/* turbopackIgnore: true */ resolved) ? realpathSync.native(resolved) : resolved;
 }
 
 function databasePathFromUrl(databaseUrl: string, workspaceRoot: string) {
