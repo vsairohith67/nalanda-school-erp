@@ -5131,8 +5131,8 @@
           "sha256": "d1a8ebbcde6c45a4492b214810c7e3b120891210aa01fde9bd429faf9b931262"
         }
       ],
-      "currentSha256": "62cfcf4f4d4c34a82504b47ca13f70b943ed21bdcb15b211a0fe53989891f397",
-      "reconciliation": "ADMITTED_COMMITTED_SOURCE"
+      "currentSha256": "bf94b522481771fc2485bb810ce5bf6747780a8c4b078df3e98bc90ea507ecf1",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     },
     {
       "path": "package.json",
@@ -10857,6 +10857,31 @@
         }
       ],
       "currentSha256": "7017127967016595856af334c30e1f026429e52ccf4295233e41abacc426c6d4",
+      "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
+    },
+    {
+      "path": "scripts/portable/windows-standalone-copy.cjs",
+      "baseSha256": null,
+      "historicalSha256": null,
+      "sources": [
+        {
+          "head": "5bf70e4c4be07b706224debe01a27c54fd0af096",
+          "sha256": null
+        },
+        {
+          "head": "67c504be6230f763663cf19faf50d9bc46dc6902",
+          "sha256": null
+        },
+        {
+          "head": "d784262ccc78ae431a72a3934ced45198e4bfb4c",
+          "sha256": null
+        },
+        {
+          "head": "05e6b5c6021d57f6081f2df692a8d29dd9e784f9",
+          "sha256": null
+        }
+      ],
+      "currentSha256": "cc16ee6b4ab89c1fa67c69d5e0fa2107f8d753b9b4b260d304c5ba8ca02c8b99",
       "reconciliation": "RECOVERY_RECONCILIATION_REQUIRES_INDEPENDENT_REVIEW"
     }
   ]
