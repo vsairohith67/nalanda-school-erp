@@ -23,7 +23,8 @@ const blob=(head,path)=>{
  return sourceCaches.get(head).get(path)??null;
 };
 const exact3APaths = ["apps/nalanda-biometric-bridge/scripts/controlled-test-contract.mjs","apps/nalanda-biometric-bridge/scripts/controlled-test-contract.test.mjs","apps/nalanda-biometric-bridge/scripts/run-controlled-tests.mjs","apps/nalanda-biometric-bridge/src/export-integration.test.ts","config/bridge-packaging-qualification-3a-window.json","tests/windows-qa-window.test.ts","tests/standalone-runtime-storage-trace.test.ts"];
-const protectedPath = p => exact3APaths.includes(p) || /^(app|components|prisma|deploy|lib|scripts|\.github\/workflows)\//.test(p) || ['config/release-feature-flags.json','config/onboarding/mapping-catalogue.json','Dockerfile','package.json','pnpm-lock.yaml','pnpm-workspace.yaml','middleware.ts','next.config.ts','vitest.config.ts'].includes(p);
+const exact5APaths = ["config/current-candidate-qualification-5a-window.json"];
+const protectedPath = p => exact3APaths.includes(p) || exact5APaths.includes(p) || /^(app|components|prisma|deploy|lib|scripts|\.github\/workflows)\//.test(p) || ['config/release-feature-flags.json','config/onboarding/mapping-catalogue.json','Dockerfile','package.json','pnpm-lock.yaml','pnpm-workspace.yaml','middleware.ts','next.config.ts','vitest.config.ts'].includes(p);
 const files = [...new Set(git('ls-files','--cached','--others','--exclude-standard').trim().split(/\r?\n/))].filter(protectedPath).sort();
 if (process.argv[2] === '--write') {
   const historical = JSON.parse(readFileSync('config/master-requirements-audit-evidence.json','utf8'));

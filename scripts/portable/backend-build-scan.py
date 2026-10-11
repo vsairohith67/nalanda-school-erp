@@ -90,7 +90,18 @@ def select_platform(index, arch):
     check(len(candidates) == 1, 'ARCHITECTURE_AMBIGUOUS')
     return candidates[0]
 
-def selected_base_candidate(source, arch):
+def prior_retention_window(source):
+    """5A metadata retention only; never a renewed material acquisition window."""
+    file = Path('config/current-candidate-qualification-5a-window.json')
+    st = file.lstat()
+    check(stat.S_ISREG(st.st_mode) and not file.is_symlink() and st.st_nlink == 1 and st.st_size <= 32768, 'PRIOR_RETENTION_WINDOW_UNSAFE')
+    raw = file.read_bytes()
+    check(subprocess.check_output(['git', 'show', source + ':config/current-candidate-qualification-5a-window.json']) == raw, 'PRIOR_RETENTION_WINDOW_UNCOMMITTED')
+    check(sha(raw) == '95ec4647b412a126033ac0fd7cc9bc8db8c774aa2c571b95b6551bd63eee5fcf', 'PRIOR_RETENTION_WINDOW_CHANGED')
+    return json.loads(raw)
+
+
+def selected_base_candidate(source, arch, *, retention_only=False):
     """A single reviewed, committed investigation target; never production pins."""
     key = os.getenv('BASE_CANDIDATE_ID', '')
     if not key:
@@ -103,13 +114,16 @@ def selected_base_candidate(source, arch):
     config = json.loads(raw)
     check(config.get('contract') == 'NPS_BASE_ONLY_CANDIDATE_V1' and config.get('assignment') == 'NPS-RELEASE-BLOCKER-REMOVAL-AND-ACCEPTANCE-2A' and config.get('instructionSha256') == 'e4eb9c73a378da990cbd6545f36cf88f60395036cff242c004c64bd86be63091', 'BASE_CANDIDATE_AUTHORITY_INVALID')
     check(config.get('eventStartInclusiveUtc') == '2026-10-09T03:09:05.000Z' and config.get('eventEndExclusiveUtc') == '2026-10-09T13:09:05.000Z', 'BASE_CANDIDATE_WINDOW_CHANGED')
+    window = prior_retention_window(source) if retention_only else config
     check(os.getenv('GITHUB_EVENT_NAME') == 'pull_request' and os.getenv('GITHUB_RUN_ATTEMPT') == '1', 'BASE_CANDIDATE_EVENT_REQUIRED')
     event = read_json(Path(os.environ['GITHUB_EVENT_PATH']))
     pr = event.get('pull_request', {})
     check(event.get('action') == 'synchronize' and event.get('number') == 28 and pr.get('number') == 28 and pr.get('head', {}).get('sha') == source and pr['head'].get('ref') == 'release/recovery-integration-1a' and pr['head'].get('repo', {}).get('full_name') == 'vsairohith67/nalanda-school-erp' and pr.get('base', {}).get('repo', {}).get('full_name') == 'vsairohith67/nalanda-school-erp', 'BASE_CANDIDATE_EVENT_IDENTITY')
     when = pr.get('updated_at', '')
     check(isinstance(when,str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z', when), 'BASE_CANDIDATE_EVENT_TIME')
-    check(config['eventStartInclusiveUtc'] <= dt.datetime.fromisoformat(when.replace('Z','+00:00')).isoformat(timespec='milliseconds').replace('+00:00','Z') < config['eventEndExclusiveUtc'], 'BASE_CANDIDATE_EVENT_OUTSIDE_WINDOW')
+    event_time = dt.datetime.fromisoformat(when.replace('Z','+00:00')).isoformat(timespec='milliseconds').replace('+00:00','Z')
+    admitted = (window['eventStartInclusiveUtc'] <= event_time and (retention_only or event_time < window['eventEndExclusiveUtc']))
+    check(admitted, 'BASE_CANDIDATE_EVENT_OUTSIDE_WINDOW')
     candidate = config.get('candidates', {}).get(key, {})
     digest = 'sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1'
     check(candidate.get('image') == 'docker.io/library/node:24.21.0-alpine3.24@'+digest and candidate.get('indexDigest') == digest and candidate.get('sourceGitCommit') == '93a7bafc324a85ac1ee461604cff87cffacb6d7a' and candidate.get('sourceDockerfileSha256') == '13d963885341e2bacab8c72cca9b314152d44747e03d88855e8ce06f8a99fe68', 'BASE_CANDIDATE_PIN_CHANGED')
@@ -627,7 +641,7 @@ def retain_prior_blocked_base():
     check(re.fullmatch(r'[a-f0-9]{40}', source) and arch in PRIOR_BASE_HASHES and platform.machine() == {'amd64':'x86_64','arm64':'aarch64'}[arch], 'SOURCE_OR_NATIVE_ARCHITECTURE_INVALID')
     check(os.getenv('GITHUB_JOB') == 'backend-build-scan' and os.getenv('GITHUB_RUN_ID', '').isdigit(), 'RUN_IDENTITY_REQUIRED')
     check(subprocess.check_output(['git','rev-parse','HEAD']).decode().strip() == source and not subprocess.check_output(['git','status','--porcelain']), 'COMMITTED_CLEAN_SOURCE_REQUIRED')
-    candidate = selected_base_candidate(source, arch)  # Existing exact event/window/pin guard.
+    candidate = selected_base_candidate(source, arch, retention_only=True)  # New metadata-only event; historical acquisition remains closed.
     check(candidate is not None, 'PRIOR_CANDIDATE_REQUIRED')
     file = Path('config/runtime-base-prior-blocked.json')
     st = file.lstat()

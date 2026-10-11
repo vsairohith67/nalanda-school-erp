@@ -1,0 +1,20 @@
+{
+  "assignment": "NPS-5A-CURRENT-CANDIDATE-QUALIFICATION-AND-PARALLEL-DELIVERY",
+  "instructionSha256": "01b6174e2900c94fbb0c532ab742704ae0257121a2d9a3134950010a7a4a7e15",
+  "repository": "vsairohith67/nalanda-school-erp",
+  "pullRequest": 28,
+  "branch": "release/recovery-integration-1a",
+  "eventStartInclusiveUtc": "2026-10-11T03:10:00.961Z",
+  "eventEndExclusiveUtc": null,
+  "attempt": "1",
+  "policy": "RemoteSigned",
+  "policyScope": "Process",
+  "maximumStepMinutes": 120,
+  "shorterExistingJobCapsRetained": true,
+  "previousAllowancesRemainConsumed": true,
+  "transferredPublicationSlots": [],
+  "publicationCeiling": null,
+  "additionalPublicationBudgetCreated": true,
+  "amendmentSha256": "4208d45251071b09425e9a4ef171754dfe9bda53d0cbe3692569756a276a8ee2",
+  "taskDurationAndPublicationQuotasSuperseded": true
+}

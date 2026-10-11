@@ -379,4 +379,59 @@ class PriorBlockedEvidenceTests(unittest.TestCase):
         raw=subprocess.check_output(['git','show',q.PRIOR_BASE_SOURCE+':scripts/portable/backend-build-scan.py'])
         q.validate_prior_producer(self.config,raw)
         with self.assertRaisesRegex(ValueError,'PRIOR_PRODUCER_SUBSTITUTED'):q.validate_prior_producer(self.config,raw+b' ')
+
+class PriorRetentionWindow5ATests(unittest.TestCase):
+    source = 'a' * 40
+
+    def event(self, when='2026-10-11T05:00:00Z'):
+        repo = {'full_name': 'vsairohith67/nalanda-school-erp'}
+        return {'action': 'synchronize', 'number': 28, 'pull_request': {'number': 28, 'updated_at': when, 'head': {'sha': self.source, 'ref': 'release/recovery-integration-1a', 'repo': repo}, 'base': {'repo': repo}}}
+
+    def select(self, event, arch='amd64', *, retention_only=True, environment=None):
+        env = {'BASE_CANDIDATE_ID': 'official-node-alpine324', 'GITHUB_EVENT_NAME': 'pull_request', 'GITHUB_RUN_ATTEMPT': '1', 'GITHUB_EVENT_PATH': 'synthetic-event.json'}
+        env.update(environment or {})
+        def committed(args):
+            self.assertEqual(args[:2], ['git', 'show'])
+            self.assertTrue(args[2].startswith(self.source + ':config/'))
+            return Path(args[2].split(':', 1)[1]).read_bytes()
+        with patch.dict(q.os.environ, env, clear=True), patch.object(q.subprocess, 'check_output', side_effect=committed), patch.object(q, 'read_json', return_value=event), patch.object(q, 'request', side_effect=AssertionError('NETWORK_NOT_PERMITTED')):
+            return q.selected_base_candidate(self.source, arch, retention_only=retention_only)
+
+    def test_current_retention_boundaries_both_architectures_without_acquisition(self):
+        for arch in ('amd64', 'arm64'):
+            for when in ('2026-10-11T03:10:00.961Z', '2026-10-12T00:00:00Z', '2026-11-01T00:00:00Z'):
+                with self.subTest(arch=arch, when=when):
+                    result = self.select(self.event(when), arch)
+                    self.assertEqual(result['id'], 'official-node-alpine324')
+                    self.assertTrue(result['candidateOnly'])
+                    self.assertFalse(result['productionCompatible'])
+
+    def test_current_retention_never_reopens_normal_acquisition(self):
+        with self.assertRaisesRegex(ValueError, 'BASE_CANDIDATE_EVENT_OUTSIDE_WINDOW'):
+            self.select(self.event(), retention_only=False)
+
+    def test_consumed_or_outside_retention_events_refused(self):
+        for when in ('2026-10-09T05:00:00Z', '2026-10-11T03:10:00.960Z'):
+            with self.subTest(when=when), self.assertRaisesRegex(ValueError, 'BASE_CANDIDATE_EVENT_OUTSIDE_WINDOW'):
+                self.select(self.event(when))
+
+    def test_retention_does_not_admit_retry_dispatch_fork_or_other_source(self):
+        for changed in ({'GITHUB_RUN_ATTEMPT': '2'}, {'GITHUB_EVENT_NAME': 'workflow_dispatch'}):
+            with self.subTest(changed=changed), self.assertRaisesRegex(ValueError, 'BASE_CANDIDATE_EVENT_REQUIRED'):
+                self.select(self.event(), environment=changed)
+        for field, value in (('sha', 'b' * 40), ('ref', 'main'), ('repo', {'full_name': 'foreign/fork'})):
+            event = self.event(); event['pull_request']['head'][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'BASE_CANDIDATE_EVENT_IDENTITY'):
+                self.select(event)
+        event = self.event(); event['action'] = 'opened'
+        with self.assertRaisesRegex(ValueError, 'BASE_CANDIDATE_EVENT_IDENTITY'):
+            self.select(event)
+
+    def test_retention_window_bytes_and_commit_identity_are_exact(self):
+        raw = Path('config/current-candidate-qualification-5a-window.json').read_bytes()
+        with patch.object(q.subprocess, 'check_output', return_value=raw + b' '), self.assertRaisesRegex(ValueError, 'PRIOR_RETENTION_WINDOW_UNCOMMITTED'):
+            q.prior_retention_window(self.source)
+        with patch.object(q.subprocess, 'check_output', return_value=raw), patch.object(q, 'sha', return_value='0' * 64), self.assertRaisesRegex(ValueError, 'PRIOR_RETENTION_WINDOW_CHANGED'):
+            q.prior_retention_window(self.source)
+
 if __name__=='__main__':unittest.main()

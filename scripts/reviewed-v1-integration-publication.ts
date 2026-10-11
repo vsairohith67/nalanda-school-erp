@@ -31,6 +31,8 @@ export const reviewedV1IntegrationPublicSources = Object.freeze([
   "config/release-blocker-removal-2a-window.json",
   // Exact 3A transfer of the two held opportunities; historical 2A remains closed.
   "config/bridge-packaging-qualification-3a-window.json",
+  // Exact reviewed 5A event window; historical sessions remain closed.
+  "config/current-candidate-qualification-5a-window.json",
   "config/runtime-base-candidates.json",
   "config/runtime-base-prior-blocked.json",
   // Exact owned-process test connections; no private capture/artifact admission.
