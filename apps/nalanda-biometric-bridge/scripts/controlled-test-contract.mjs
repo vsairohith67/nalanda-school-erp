@@ -52,3 +52,17 @@ export function validateActualReport(report,start,finish,mode){
  assert(assertions.every(a=>a.status==='passed'),'EVERY_ORIGINAL_EXPORT_CASE_REQUIRED');
  return {tests:expected,passed:report.numPassedTests,failed:0,pending:0,taskIds:bound};
 }
+
+// Private-only bounded diagnostic classification. Never retain messages, stacks or row text.
+const markerFailureCodes=new Set(['DUPLICATE_OR_OUT_OF_ORDER_START','OWNED_JOB_BEFORE_ACTUAL_CASE_REQUIRED','FRESH_ACTUAL_START_REQUIRED','EXACT_TWO_TASK_IDS_REQUIRED','MATCHED_ONE_FINISH_REQUIRED','UNEXPECTED_LIFECYCLE_MARKER','CLOSED_OWNED_OBSERVER_NOT_REUSABLE','OWNED_DEADLINE_EXTENSION_REFUSED']);
+const markerFailurePhases=new Set(['PARSE_MARKER_JSON','JOB_BOUND_VALIDATION','LIFECYCLE_OWNERSHIP_VALIDATION','START_ORDER_VALIDATION','START_CONTRACT_VALIDATION','START_DEADLINE_SHORTENING','FINISH_ORDER_VALIDATION','FINISH_START_TIME_BINDING','FINISH_TASK_BINDING','LIFECYCLE_STAGE_REFUSAL']);
+export function privateMarkerFailure(error,context){
+ const message=typeof error?.message==='string'?error.message:'';
+ const code=markerFailureCodes.has(message)?message:error?.code==='ERR_ASSERTION'?'ASSERTION_REFUSED_UNCLASSIFIED':error?.name==='SyntaxError'?'MARKER_JSON_PARSE_REFUSED':error?.name==='TypeError'?'MARKER_CONNECTION_TYPE_ERROR':'MARKER_CALLBACK_FAILED_UNCLASSIFIED';
+ const number=value=>Number.isSafeInteger(value)?value:null;
+ return Object.freeze({schema:'BRIDGE_PRIVATE_MARKER_FAILURE_V1',code,phase:markerFailurePhases.has(context?.phase)?context.phase:'UNKNOWN',
+  enteredUnixMs:number(context?.enteredUnixMs),observedUnixMs:number(context?.observedUnixMs),markerStartUnixMs:number(context?.markerStartUnixMs),
+  wholeDeadlineUnixMs:number(context?.wholeDeadlineUnixMs),finalDeadlineUnixMs:number(context?.finalDeadlineUnixMs),
+  mode:['focused','full','control-success','control-timeout'].includes(context?.mode)?context.mode:'UNKNOWN',
+  originalGuardsRetained:true,historicalFailureCause:'UNKNOWN',privateOnly:true});
+}

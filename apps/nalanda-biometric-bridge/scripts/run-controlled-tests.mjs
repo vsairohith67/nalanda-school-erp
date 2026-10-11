@@ -4,7 +4,7 @@ import fs from 'node:fs';import path from 'node:path';import assert from 'node:a
 import {fileURLToPath} from 'node:url';import {randomUUID,createHash} from 'node:crypto';
 import {spawn,execFileSync} from 'node:child_process';import {StringDecoder} from 'node:string_decoder';
 import {observeOwnedChild} from './owned-test-observer.mjs';
-import {acceptStart,validateActualReport,lifecycleEvidence,completionAdmitted,suiteBudget} from './controlled-test-contract.mjs';
+import {acceptStart,validateActualReport,lifecycleEvidence,completionAdmitted,suiteBudget,privateMarkerFailure} from './controlled-test-contract.mjs';
 import {admittedWindowsQaPolicy} from '../../../scripts/portable/windows-qa-window.mjs';
 const entered=Date.now(),mode=process.argv[2]??'full';
 assert(process.argv.length<=3&&['focused','full','control-success','control-timeout'].includes(mode));
@@ -23,7 +23,7 @@ const readJson=(file,max=8000000)=>JSON.parse(readBytes(file,max).toString('utf8
 if(process.env.GITHUB_ACTIONS==='true'){
  assert.equal(process.env.RUNNER_ENVIRONMENT,'github-hosted');
  const event=readJson(process.env.GITHUB_EVENT_PATH,2000000);
- const window=readJson(path.join(root,'config/bridge-packaging-qualification-3a-window.json'));
+ const window=readJson(path.join(root,'config/current-candidate-qualification-5a-window.json'));
  assert.equal(admittedWindowsQaPolicy(event,process.env,head,window).reason,'EXACT_REVIEWED_PUBLICATION_EVENT');
 }
 const dir=path.join(root,'tmp','bridge-owned-test-controls',randomUUID());
@@ -39,29 +39,38 @@ fs.writeFileSync(path.join(dir,'input.json'),JSON.stringify({head,tree,mode,ente
 const executable=process.env.GITHUB_ACTIONS==='true'?'pwsh.exe':path.join(process.env.SystemRoot,'System32/WindowsPowerShell/v1.0/powershell.exe');
 const child=spawn(executable,['-NoProfile','-NonInteractive','-File',path.join(root,'apps/nalanda-biometric-bridge/scripts/controlled-tests.ps1'),'-Mode',mode,'-OutputDirectory',dir,'-ExpectedHead',head,'-ExpectedTree',tree],{windowsHide:true,stdio:['ignore','pipe','pipe']});
 const log=path.join(dir,'private-command.log');fs.writeFileSync(log,'',{flag:'wx',mode:0o600});
-let start=null,finish=null,bound=null,markerError=null,buffer='',observing;
+let start=null,finish=null,bound=null,markerError=null,markerFailure=null,markerPhase='UNKNOWN',markerObservedUnixMs=null,markerStartUnixMs=null,buffer='',observing;
 const decoder=new StringDecoder('utf8');
 function line(text){
  if(!text.includes(lifecycleEvidence)&&!text.includes('BRIDGE_TEST_COMMAND_OWNERSHIP_V1'))return;
- const row=JSON.parse(text.trim());
+ markerPhase='PARSE_MARKER_JSON';markerObservedUnixMs=Date.now();markerStartUnixMs=null;
+ const row=JSON.parse(text.trim());markerStartUnixMs=row.startUnixMs;
+
  if(row.evidence==='BRIDGE_TEST_COMMAND_OWNERSHIP_V1'){
+  markerPhase='JOB_BOUND_VALIDATION';
   assert(!bound&&row.stage==='JOB_BOUND'&&row.head===head&&row.tree===tree&&row.initialActive===1);bound=row;return;
  }
+ markerPhase='LIFECYCLE_OWNERSHIP_VALIDATION';
  assert(!diagnostic&&bound,'OWNED_JOB_BEFORE_ACTUAL_CASE_REQUIRED');
  if(row.stage==='START'){
+  markerPhase='START_ORDER_VALIDATION';
   assert(!start&&!finish,'DUPLICATE_OR_OUT_OF_ORDER_START');
-  finalDeadline=Math.min(wholeDeadline,acceptStart(row,entered,Date.now(),mode));start=row;
+  markerPhase='START_CONTRACT_VALIDATION';markerObservedUnixMs=Date.now();
+  finalDeadline=Math.min(wholeDeadline,acceptStart(row,entered,markerObservedUnixMs,mode));start=row;
+  markerPhase='START_DEADLINE_SHORTENING';
   observing.shortenDeadline(finalDeadline);
  }else if(row.stage==='FINISHED'){
-  assert(start&&!finish,'MATCHED_ONE_FINISH_REQUIRED');assert.equal(row.startUnixMs,start.startUnixMs);assert.deepEqual(row.taskIds,start.taskIds);finish=row;
+  markerPhase='FINISH_ORDER_VALIDATION';assert(start&&!finish,'MATCHED_ONE_FINISH_REQUIRED');
+  markerPhase='FINISH_START_TIME_BINDING';assert.equal(row.startUnixMs,start.startUnixMs);
+  markerPhase='FINISH_TASK_BINDING';assert.deepEqual(row.taskIds,start.taskIds);finish=row;
   // Do not cancel or reset the START-bound enclosing clock. Final report,
   // source checks and actual process settlement remain inside this interval.
- }else throw Error('UNEXPECTED_LIFECYCLE_MARKER');
+ }else{markerPhase='LIFECYCLE_STAGE_REFUSAL';throw Error('UNEXPECTED_LIFECYCLE_MARKER');}
 }
 observing=observeOwnedChild(child,{deadlineMs:wholeDeadline,softReserveMs:15000,hardReserveMs:12000,onBytes:bytes=>{
  fs.appendFileSync(log,bytes);buffer+=decoder.write(bytes);
  if(buffer.length>65536&&!buffer.includes('\n'))throw Error('BOUNDED_LINE_CAPTURE_FAILED');
- let index;while((index=buffer.indexOf('\n'))>=0){const row=buffer.slice(0,index);buffer=buffer.slice(index+1);try{line(row);}catch(error){markerError='STRICT_ACTUAL_MARKER_INVALID';throw error;}}
+ let index;while((index=buffer.indexOf('\n'))>=0){const row=buffer.slice(0,index);buffer=buffer.slice(index+1);try{line(row);}catch(error){markerError='STRICT_ACTUAL_MARKER_INVALID';markerFailure=privateMarkerFailure(error,{phase:markerPhase,enteredUnixMs:entered,observedUnixMs:markerObservedUnixMs,markerStartUnixMs,wholeDeadlineUnixMs:wholeDeadline,finalDeadlineUnixMs:finalDeadline,mode});throw error;}}
 }});
 const observed=await observing;
 let passed=false,error=null,counts=null,settlement=null,job=null,reportHash=null;
@@ -100,7 +109,7 @@ try{
 }catch{passed=false;error='ACTUAL_RESULT_SOURCE_OR_SETTLEMENT_NOT_QUALIFIED';}
 const ended=Date.now();
 const publicRow={contract:'BRIDGE_CONTROLLED_TEST_COMMAND_V1',source:head,tree,mode,scope:diagnostic?'DECLARED_HARMLESS_CHILD_CONTROL_NOT_FEATURE_ACCEPTANCE':'ACTUAL_SYNTHETIC_BRIDGE_ASSERTIONS',validationPassedAtReceipt:passed,requiresActualSuccessfulCallerExit:true,error,startedUtc:new Date(entered).toISOString(),validatedBeforeReportingUtc:new Date(ended).toISOString(),elapsedAtValidationMs:ended-entered,requiredCallerDeadlineUtc:new Date(finalDeadline).toISOString(),launchMaximumMs:diagnostic?20000:budget.launchMs,startToFullValidationAndSettlementMaximumMs:diagnostic?null:budget.aggregateMs,aggregateContract:diagnostic?null:'TEST_CONTRACT_CHANGED_AGGREGATE_ONLY_3A',retainedCoupledLifecycleMaximumMs:diagnostic?null:60000,startToValidationAndSettlementMs:start?ended-start.startUnixMs:null,observed:{exit:observed.exit,signal:observed.signal,closeObserved:observed.closeObserved,timedOut:observed.timedOut,captureError:observed.captureError,terminationError:observed.terminationError},settlement,counts,reportSha256:reportHash,lifecycleObservedMs:finish?.totalObservedMs??null,caseDescendantSettlement:'UNKNOWN',runtimeExecuted:false,realDataAccessed:false};
-fs.writeFileSync(path.join(dir,'command-receipt.json'),JSON.stringify({publicRow,observed,job,inputs,markerError},null,2)+'\n',{flag:'wx',mode:0o600});
+fs.writeFileSync(path.join(dir,'command-receipt.json'),JSON.stringify({publicRow,observed,job,inputs,markerError,markerFailure},null,2)+'\n',{flag:'wx',mode:0o600});
 // Only this allowlisted aggregate projection is publishable. Raw task JSON,
 // fixture traces, process identities and streams remain in the private root.
 const publicRoot=path.join(root,'tmp','bridge-owned-test-public',path.basename(dir));fs.mkdirSync(path.dirname(publicRoot),{recursive:true});fs.mkdirSync(publicRoot,{mode:0o700});

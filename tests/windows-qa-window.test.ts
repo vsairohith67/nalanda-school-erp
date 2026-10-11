@@ -48,3 +48,20 @@ it("refuses forks, other heads/branches/PRs and any substituted source authority
 it.each(["reopened", "edited", "labeled", "opened", "closed", ""])("does not spend source-publication policy authority on a %s event", action => {
   expect(admittedWindowsQaPolicy({ ...event("2026-10-11T05:00:00Z"), action }, env, head, window).policy).toBe("");
 });
+
+// Source caller coupling only. Never executes the bridge caller or changes a policy.
+it("actual bridge caller selects the same approved window accepted by its real imported policy verifier", () => {
+  const source = readFileSync("apps/nalanda-biometric-bridge/scripts/run-controlled-tests.mjs", "utf8");
+  const selections = [...source.matchAll(/const\s+window\s*=\s*readJson\(path\.join\(root,\s*["']([^"']+)["']\)\)/g)];
+  expect(selections).toHaveLength(1);
+  const selectedPath = selections[0][1];
+  expect(selectedPath).toBe("config/current-candidate-qualification-5a-window.json");
+  const actualSelectedWindow = JSON.parse(readFileSync(selectedPath, "utf8"));
+  expect(admittedWindowsQaPolicy(event("2026-10-11T05:00:00Z"), env, head, actualSelectedWindow)).toEqual({ policy: "RemoteSigned", reason: "EXACT_REVIEWED_PUBLICATION_EVENT" });
+  expect(admittedWindowsQaPolicy(event("2026-10-11T05:00:00Z"), { ...env, GITHUB_RUN_ATTEMPT: "2" }, head, actualSelectedWindow).policy).toBe("");
+  expect(admittedWindowsQaPolicy(event("2026-10-11T05:00:00Z"), env, "b".repeat(40), actualSelectedWindow).policy).toBe("");
+});
+it("the old bridge caller window remains refused by the actual current verifier", () => {
+  const oldCallerWindow = JSON.parse(readFileSync("config/bridge-packaging-qualification-3a-window.json", "utf8"));
+  expect(admittedWindowsQaPolicy(event("2026-10-11T05:00:00Z"), env, head, oldCallerWindow)).toEqual({ policy: "", reason: "WINDOW_CONTEXT_NOT_ADMITTED" });
+});
