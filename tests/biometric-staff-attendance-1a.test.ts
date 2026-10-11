@@ -58,13 +58,16 @@ describe("BIOMETRIC-STAFF-ATTENDANCE-1A", () => {
   });
 
   it("keeps all vendor profiles fail-closed without official documentation", () => {
-    expect(BIOMETRIC_PROTOCOL_PROFILES).toEqual(["ESSL_K30_PRO_PUSH", "ESSL_ZK_LAN_SDK", "ZK_ADMS_PUSH", "GENERIC_ADMS_PUSH", "GENERIC_LAN_POLL", "GENERIC_CSV_IMPORT", "SIMULATOR"]);
+    expect(BIOMETRIC_PROTOCOL_PROFILES).toEqual(["ESSL_K30_PRO_PUSH", "ESSL_ZK_LAN_SDK", "ZK_ADMS_PUSH", "GENERIC_ADMS_PUSH", "GENERIC_LAN_POLL", "GENERIC_CSV_IMPORT", "ETIMETRACKLITE_RAW_EXPORT_V1", "SIMULATOR"]);
     for (const profile of ["ESSL_K30_PRO_PUSH", "ESSL_ZK_LAN_SDK", "ZK_ADMS_PUSH"] as const) {
       expect(() => assertProtocolActivation(profile, "NOT_PROVIDED")).toThrow("BIOMETRIC_VENDOR_PROTOCOL_NOT_VERIFIED");
       expect(protocolProfileStatus(profile)).toMatchObject({ ingestionAllowed: false, hardwareCertified: false });
     }
     expect(() => assertProtocolActivation("GENERIC_ADMS_PUSH", "ADAPTER_CONTRACT_PENDING")).toThrow("BIOMETRIC_GENERIC_ADAPTER_CONTRACT_NOT_APPROVED");
     expect(protocolProfileStatus("GENERIC_LAN_POLL", "ADAPTER_CONTRACT_PENDING").ingestionAllowed).toBe(false);
+    expect(protocolProfileStatus("ETIMETRACKLITE_RAW_EXPORT_V1")).toMatchObject({ingestionAllowed:false,adapterContractStatus:"NOT_PROVIDED",hardwareCertified:false});
+    expect(()=>assertProtocolActivation("ETIMETRACKLITE_RAW_EXPORT_V1","NOT_REQUIRED")).toThrow("BIOMETRIC_GENERIC_ADAPTER_CONTRACT_NOT_APPROVED");
+    expect(()=>assertProtocolActivation("ETIMETRACKLITE_RAW_EXPORT_V1","ADAPTER_CONTRACT_APPROVED")).not.toThrow();
     expect(() => assertProtocolActivation("SIMULATOR", "NOT_PROVIDED")).not.toThrow();
   });
 

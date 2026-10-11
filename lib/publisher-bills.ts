@@ -34,6 +34,7 @@ export async function createLibraryManagementServiceDraft(client: PrismaClient, 
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Library-management service details are required");
   const row = input as Record<string, unknown>;
   const vendorId = requiredText(row.vendorId, "Approved service-provider vendor", 80);
+  if (row.paymentMethod != null && String(row.paymentMethod).toUpperCase() !== "CASH") throw new Error("This annual service expense requires CASH");
   const amount = moneyDecimal(row.amount, "Service amount", false);
   const academicYear = requiredText(row.academicYear, "Academic year", 20);
   const servicePeriod = requiredText(row.servicePeriod, "Service period", 120);
@@ -43,7 +44,11 @@ export async function createLibraryManagementServiceDraft(client: PrismaClient, 
       tx.expenseDepartment.findFirst({ where: { code: "LIBRARY", status: "ACTIVE" }, select: { id: true } })
     ]);
     if (!category || !department) throw new Error("Active Professional Fees and Library expense masters are required");
-    const data = { expenseDate: localDate(row.expenseDate, "Expense date"), academicYear, vendorId, categoryId: category.id, departmentId: department.id, description: `Library management service - ${academicYear} - ${servicePeriod}`, invoiceNumber: optionalText(row.invoiceNumber, "Invoice number", 100), invoiceDate: row.invoiceDate ? localDate(row.invoiceDate, "Invoice date") : null, grossAmount: amount, taxAmount: new Prisma.Decimal(0), deductionAmount: new Prisma.Decimal(0), netAmount: amount, paymentMethod: "CASH", transactionReference: null, chequeNumber: null, chequeDate: null, notes: optionalText(row.notes, "Notes", 2000) };
+    // The supplied period is explicit; academicYear is ledger scope, not an
+    // inferred annual interval or uniqueness policy. The one existing Vendor
+    // remains the payee for all three duties; real teacher eligibility is a
+    // separate school decision.
+    const data = { expenseDate: localDate(row.expenseDate, "Expense date"), academicYear, vendorId, categoryId: category.id, departmentId: department.id, description: `Books + Examination Cell + library annual service - ${academicYear} - ${servicePeriod}`, invoiceNumber: optionalText(row.invoiceNumber, "Invoice number", 100), invoiceDate: row.invoiceDate ? localDate(row.invoiceDate, "Invoice date") : null, grossAmount: amount, taxAmount: new Prisma.Decimal(0), deductionAmount: new Prisma.Decimal(0), netAmount: amount, paymentMethod: "CASH", transactionReference: null, chequeNumber: null, chequeDate: null, notes: optionalText(row.notes, "Notes", 2000) };
     await validateActiveExpenseMasters(tx, data);
     const expense = await tx.expenseRecord.create({ data: { ...data, expenseNumber: newExpenseNumber(), createdByUserId: actor.id } });
     await tx.expenseAudit.create({ data: { expenseRecordId: expense.id, action: "CREATED_FROM_LIBRARY_SERVICE_TEMPLATE", toStatus: "DRAFT", detailsJson: JSON.stringify({ academicYear, servicePeriod, payrollUsed: false }), actorUserId: actor.id, actorName: actor.name } });

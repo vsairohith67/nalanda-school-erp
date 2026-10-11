@@ -1,0 +1,8 @@
+{
+  "classification": "BUILD_SCAN_ONLY_NOT_ADMITTED",
+  "tools": {
+    "trivy": {"version":"0.70.0","repo":"aquasecurity/trivy","amd64":{"file":"trivy_0.70.0_Linux-64bit.tar.gz","sha256":"8b4376d5d6befe5c24d503f10ff136d9e0c49f9127a4279fd110b727929a5aa9"},"arm64":{"file":"trivy_0.70.0_Linux-ARM64.tar.gz","sha256":"2f6bb988b553a1bbac6bdd1ce890f5e412439564e17522b88a4541b4f364fc8d"}},
+    "syft": {"version":"1.42.3","repo":"anchore/syft","amd64":{"file":"syft_1.42.3_linux_amd64.tar.gz","sha256":"0d6be741479eddd2c8644a288990c04f3df0d609bbc1599a005532a9dff63509"},"arm64":{"file":"syft_1.42.3_linux_arm64.tar.gz","sha256":"dc630590c953347789d08f8ebf57c7d8094db89100785fcd94b1cddeac791804"}},
+    "grype": {"version":"0.110.0","repo":"anchore/grype","amd64":{"file":"grype_0.110.0_linux_amd64.tar.gz","sha256":"aaa98d27d2d7efd9317c6a1ad6d9b15f3e65bab320e7d03bde41e251387bb71c"},"arm64":{"file":"grype_0.110.0_linux_arm64.tar.gz","sha256":"804041ee69f119022e3e866741a558eae6f2df372a5dc1a5376d456d16f8c931"}}
+  }
+}

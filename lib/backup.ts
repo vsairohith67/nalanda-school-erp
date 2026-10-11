@@ -1,4 +1,7 @@
+import { INTEGRATED_BACKUP_CONTRACT, sealIntegratedBackup } from "./backup-source-contracts";
+import { validateCertificateExtensionBackup } from "@/lib/certificate-extension-backup";
 import type { PrismaClient } from "@prisma/client";
+import { PRIOR_YEAR_BACKUP_KEYS, PRIOR_YEAR_BACKUP_VERSION, PRIOR_YEAR_BACKUP_CONTRACT, validatePriorYearBackup, loadPriorYearBackup, type PriorYearBackup } from "./prior-year-concession-backup";
 import { createHash } from "node:crypto";
 import packageJson from "../package.json";
 import {
@@ -205,6 +208,9 @@ type BackupDocumentInput = {
   teacherAnalyticsSnapshots?: readonly object[];
   teacherAnalyticsReviews?: readonly object[];
   teacherAnalyticsEvents?: readonly object[];
+  certificateRequestCharges?: readonly object[];
+  certificateBulkBatches?: readonly object[];
+  certificateIssueArtifacts?: readonly object[];
   certificateNumberSeries?: readonly object[];
   certificateTemplates?: readonly object[];
   studentCertificateRequests?: readonly object[];
@@ -295,7 +301,7 @@ type BackupDocumentInput = {
   timetableEntries?: readonly unknown[];
   academicYear?: string;
   technicalOperations?: TechnicalOperationsBackup;
-} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup> & Partial<OfflineSyncBackup> & Partial<NativeAppBackup> & Partial<BiometricAttendanceBackup> & Partial<CommunicationBackup>;
+} & Partial<ClassworkBackup> & Partial<AcademicReportingBackup> & Partial<AdmissionsBackup> & Partial<PayrollBackup> & Partial<PayslipRequestBackup> & Partial<SupportBackup> & Partial<SafeExitBackup> & Partial<FamilyCollectionBackup> & Partial<OptionalOperationsBackup> & Partial<EventMediaBackup> & Partial<ParentMeetingBackup> & Partial<OfflineSyncBackup> & Partial<NativeAppBackup> & Partial<BiometricAttendanceBackup> & Partial<CommunicationBackup> & Partial<PriorYearBackup>;
 
 export function createBackupDocument(input: BackupDocumentInput) {
   const onboardingBatches = sanitizeOnboardingBatches(input.onboardingBatches ?? []);
@@ -409,12 +415,15 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const biometricAttendanceBackup = validateBiometricAttendanceBackupRows(input as unknown as Record<string, unknown>);
   const biometricAttendanceCounts = Object.fromEntries(BIOMETRIC_ATTENDANCE_BACKUP_KEYS.map((key) => [key, biometricAttendanceBackup[key].length])) as Record<BiometricAttendanceBackupKey, number>;
   const communicationBackup = validateCommunicationBackupRows(input as unknown as Record<string, unknown>);
+  const priorYearBackup = validatePriorYearBackup(input as unknown as Record<string, unknown>);
+  const priorYearCounts = Object.fromEntries(PRIOR_YEAR_BACKUP_KEYS.map((key) => [key, priorYearBackup[key].length]));
   const communicationCounts = Object.fromEntries(COMMUNICATION_BACKUP_KEYS.map((key) => [key, communicationBackup[key].length])) as Record<CommunicationBackupKey, number>;
   const technicalOperations = validateTechnicalOperationsBackup(input.technicalOperations);
   const teacherAnalyticsReviewCycles = sanitizeActorFields(input.teacherAnalyticsReviewCycles ?? []);
   const teacherAnalyticsSnapshots = sanitizeActorFields(input.teacherAnalyticsSnapshots ?? []);
   const teacherAnalyticsReviews = sanitizeActorFields(input.teacherAnalyticsReviews ?? []);
   const teacherAnalyticsEvents = sanitizeActorFields(input.teacherAnalyticsEvents ?? []);
+  const { certificateRequestCharges, certificateBulkBatches, certificateIssueArtifacts } = validateCertificateExtensionBackup(input as unknown as Record<string, any>);
   const certificateNumberSeries = sanitizeActorFields(input.certificateNumberSeries ?? []);
   const certificateTemplates = sanitizeActorFields(input.certificateTemplates ?? []);
   const studentCertificateRequests = sanitizeActorFields(input.studentCertificateRequests ?? []);
@@ -491,14 +500,15 @@ export function createBackupDocument(input: BackupDocumentInput) {
   const publicWebsitePostVersions = sanitizeActorFields(input.publicWebsitePostVersions ?? []);
   const publicWebsiteNavigationItems = sanitizeActorFields(input.publicWebsiteNavigationItems ?? []);
   const publicWebsiteEvents = sanitizeActorFields(input.publicWebsiteEvents ?? []);
-  return {
+  return sealIntegratedBackup({
     metadata: {
       appName: APP_NAME,
       academicYear: input.academicYear ?? "2026-27",
       generatedAt: input.generatedAt.toISOString(),
       generatedBy: input.generatedBy,
       appVersion: packageJson.version,
-      backupVersion: 45,
+      backupVersion: 48,
+      schemaContract: INTEGRATED_BACKUP_CONTRACT,
       counts: {
         schoolSettings: input.schoolSettings ? 1 : 0,
         authSecurityRecords: authSecurityRecordCount(authSecurity),
@@ -609,6 +619,9 @@ export function createBackupDocument(input: BackupDocumentInput) {
         teacherAnalyticsSnapshots: teacherAnalyticsSnapshots.length,
         teacherAnalyticsReviews: teacherAnalyticsReviews.length,
         teacherAnalyticsEvents: teacherAnalyticsEvents.length,
+        certificateRequestCharges: certificateRequestCharges.length,
+        certificateBulkBatches: certificateBulkBatches.length,
+        certificateIssueArtifacts: certificateIssueArtifacts.length,
         certificateNumberSeries: certificateNumberSeries.length,
         certificateTemplates: certificateTemplates.length,
         studentCertificateRequests: studentCertificateRequests.length,
@@ -690,6 +703,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
         ...nativeAppCounts,
         ...biometricAttendanceCounts,
         ...communicationCounts,
+        ...priorYearCounts,
         timetableTeachers: timetableTeachers.length,
         timetableSubjects: timetableSubjects.length,
         timetableClassSections: timetableClassSections.length,
@@ -712,6 +726,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     ...nativeAppBackup,
     ...biometricAttendanceBackup,
     ...communicationBackup,
+    ...priorYearBackup,
     users: sanitizeUsers(input.users),
     authSecurity,
     iamAccess,
@@ -797,6 +812,9 @@ export function createBackupDocument(input: BackupDocumentInput) {
     teacherAnalyticsSnapshots,
     teacherAnalyticsReviews,
     teacherAnalyticsEvents,
+    certificateRequestCharges,
+    certificateBulkBatches,
+    certificateIssueArtifacts,
     certificateNumberSeries,
     certificateTemplates,
     studentCertificateRequests,
@@ -885,7 +903,7 @@ export function createBackupDocument(input: BackupDocumentInput) {
     timetableFixedPeriods: [...(input.timetableFixedPeriods ?? [])],
     timetableDrafts,
     timetableEntries
-  };
+  });
 }
 
 async function databaseSchemaHas(client: BackupClient, table: string, column?: string) {
@@ -900,6 +918,16 @@ export async function generateFullBackup(
   client: BackupClient,
   options: { generatedBy: string; generatedAt?: Date; excludeCloudBackupRunId?: string }
 ) {
+  if (typeof (client as any).$queryRaw !== "function") throw new Error("INTEGRATED_BACKUP_SCHEMA_PROBE_REQUIRED");
+  for (const delegate of ["certificateRequestCharge", "certificateBulkBatch", "certificateIssueArtifact", "priorYearLiability", "priorYearPaymentAttribution", "priorYearConcessionCase", "priorYearIncomeSupport", "priorYearConcessionEvent", "studentItemReceiptSnapshot"]) {
+    if (typeof (client as any)[delegate]?.findMany !== "function") throw new Error("INTEGRATED_BACKUP_CLIENT_INCOMPLETE");
+  }
+  for (const column of ["workflowKey", "supersedesCertificateId"]) {
+    if (!await databaseColumnExists(client as unknown as PrismaClient, "StudentCertificate", column)) throw new Error("INTEGRATED_BACKUP_SCHEMA_INCOMPLETE");
+  }
+  for (const table of ["CertificateRequestCharge", "CertificateBulkBatch", "CertificateIssueArtifact", "PriorYearLiability", "PriorYearPaymentAttribution", "PriorYearConcessionCase", "PriorYearIncomeSupport", "PriorYearConcessionEvent", "StudentItemReceiptSnapshot"]) {
+    if (!await databaseTableExists(client as unknown as PrismaClient, table)) throw new Error("INTEGRATED_BACKUP_SCHEMA_INCOMPLETE");
+  }
   const [attendanceCalendarBasisAvailable, reportCalendarBasisAvailable, academicCalendarAvailable, classworkAvailable, academicReportingAvailable, admissionsAvailable, payrollAvailable, payslipRequestAvailable, supportAvailable, safeExitAvailable, onboardingBatchesAvailable, onboardingRowsAvailable, onboardingAuditsAvailable] = await Promise.all([
     databaseSchemaHas(client, "StudentAttendanceSession", "operationalCalendarVersionKey"),
     databaseSchemaHas(client, "StudentReportCardVersion", "calendarBasisVersionKey"),
@@ -1010,6 +1038,9 @@ export async function generateFullBackup(
     teacherAnalyticsSnapshots,
     teacherAnalyticsReviews,
     teacherAnalyticsEvents,
+    certificateRequestCharges,
+    certificateBulkBatches,
+    certificateIssueArtifacts,
     certificateNumberSeries,
     certificateTemplates,
     studentCertificateRequests,
@@ -1193,6 +1224,9 @@ export async function generateFullBackup(
     (client as any).teacherAnalyticsSnapshot?.findMany ? (client as any).teacherAnalyticsSnapshot.findMany({ orderBy: [{ reviewCycleId: "asc" }, { staffMemberId: "asc" }] }) : Promise.resolve([]),
     (client as any).teacherAnalyticsReview?.findMany ? (client as any).teacherAnalyticsReview.findMany({ orderBy: [{ snapshotId: "asc" }] }) : Promise.resolve([]),
     (client as any).teacherAnalyticsEvent?.findMany ? (client as any).teacherAnalyticsEvent.findMany({ orderBy: [{ reviewCycleId: "asc" }, { eventDate: "asc" }, { createdAt: "asc" }] }) : Promise.resolve([]),
+    (client as any).certificateRequestCharge?.findMany ? (client as any).certificateRequestCharge.findMany({ orderBy: { createdAt: "asc" } }) : Promise.resolve([]),
+    (client as any).certificateBulkBatch?.findMany ? (client as any).certificateBulkBatch.findMany({ orderBy: { createdAt: "asc" } }) : Promise.resolve([]),
+    (client as any).certificateIssueArtifact?.findMany ? (client as any).certificateIssueArtifact.findMany({ orderBy: { createdAt: "asc" } }) : Promise.resolve([]),
     (client as any).certificateNumberSeries?.findMany ? (client as any).certificateNumberSeries.findMany({ orderBy: [{ certificateType: "asc" }, { seriesCode: "asc" }] }) : Promise.resolve([]),
     (client as any).certificateTemplate?.findMany ? (client as any).certificateTemplate.findMany({ orderBy: [{ certificateType: "asc" }, { templateCode: "asc" }] }) : Promise.resolve([]),
     (client as any).studentCertificateRequest?.findMany ? (client as any).studentCertificateRequest.findMany({ orderBy: [{ createdAt: "asc" }, { requestNumber: "asc" }] }) : Promise.resolve([]),
@@ -1377,6 +1411,7 @@ export async function generateFullBackup(
   const biometricAttendanceBackup = await biometricAttendanceSchemaAvailable(client as unknown as PrismaClient)
     ? await loadBiometricAttendanceBackup(client as unknown as PrismaClient)
     : emptyBiometricAttendanceBackup();
+  const priorYearBackup = await loadPriorYearBackup(client as unknown as PrismaClient);
   const communicationBackup = await communicationSchemaAvailable(client as unknown as PrismaClient)
     ? await loadCommunicationBackup(client as unknown as PrismaClient)
     : emptyCommunicationBackup();
@@ -1431,6 +1466,7 @@ export async function generateFullBackup(
     ...nativeAppBackup,
     ...biometricAttendanceBackup,
     ...communicationBackup,
+    ...priorYearBackup,
     technicalOperations,
     rolePermissions,
     guardians,
@@ -1501,6 +1537,9 @@ export async function generateFullBackup(
     teacherAnalyticsSnapshots,
     teacherAnalyticsReviews,
     teacherAnalyticsEvents,
+    certificateRequestCharges,
+    certificateBulkBatches,
+    certificateIssueArtifacts,
     certificateNumberSeries,
     certificateTemplates,
     studentCertificateRequests,

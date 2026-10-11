@@ -9,6 +9,7 @@ import { safeErrorFingerprint } from "@/lib/safe-logging";
 import { publishCriticalOperationalAlertNotification } from "@/lib/operational-alert-notifications";
 import { databaseIntegritySummary, databaseSizeBytes } from "@/lib/database-capabilities";
 import { databaseProviderLabel, resolveDatabaseProvider } from "@/lib/database-provider";
+import { CURRENT_CLOUD_BACKUP_VERSION } from "@/lib/cloud-backup-versions";
 import {
   OPERATIONAL_DOMAINS,
   operationalDomainLabel,
@@ -31,7 +32,7 @@ const PRIVATE_HEADERS = {
   Vary: "Cookie"
 } as const;
 const STATUS_OPEN = ["OPEN", "ACKNOWLEDGED", "INVESTIGATING", "SILENCED"];
-const BACKUP_VERSION = 44;
+const BACKUP_VERSION = CURRENT_CLOUD_BACKUP_VERSION;
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 
@@ -173,7 +174,7 @@ async function migrationHealth(client: DatabaseClient, now: Date) {
 
 async function dataProtectionHealth(client: DatabaseClient, now: Date) {
   const logical = latestLogicalBackup();
-  const latestCloudRun = await caught(() => client.cloudBackupRun.findFirst({ where: { status: "COMPLETED" }, orderBy: { completedAt: "desc" }, select: { completedAt: true } }));
+  const latestCloudRun = await caught(() => client.cloudBackupRun.findFirst({ where: { status: "VERIFIED" }, orderBy: { completedAt: "desc" }, select: { completedAt: true } }));
   const rehearsal = await caught(() => client.cloudBackupRestoreRehearsal.findFirst({ where: { status: "PASSED" }, orderBy: { completedAt: "desc" }, select: { completedAt: true } }));
   const latestBackupAt = maxDate(logical?.mtime ?? null, latestCloudRun?.completedAt ?? null);
   const backupAgeHours = latestBackupAt ? Math.floor((now.valueOf() - latestBackupAt.valueOf()) / HOUR) : null;
@@ -581,20 +582,20 @@ function sumStatuses(counts: Record<string, number>, statuses: string[]) {
 
 function latestLogicalBackup() {
   const configured = process.env.BACKUP_DIRECTORY?.trim();
-  const root = path.resolve(configured || path.join(process.cwd(), "backups"));
+  const root = path.resolve(/* turbopackIgnore: true */ configured || path.join(process.cwd(), "backups"));
   if (!isWithinWorkspace(root) || !existsSync(root)) return null;
-  return readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
-    .map((entry) => statSync(path.join(root, entry.name))).sort((a, b) => b.mtimeMs - a.mtimeMs)[0] ?? null;
+  return readdirSync(/* turbopackIgnore: true */ root, { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+    .map((entry) => statSync(path.join(/* turbopackIgnore: true */ root, entry.name))).sort((a, b) => b.mtimeMs - a.mtimeMs)[0] ?? null;
 }
 
 function approvedStorageRoots() {
   const root = process.cwd();
   const candidates: Array<readonly [string, string]> = [
-    ["Backups", path.resolve(process.env.BACKUP_DIRECTORY?.trim() || path.join(root, "backups"))],
-    ["Private uploads", path.resolve(process.env.ADMISSIONS_PRIVATE_STORAGE_ROOT?.trim() || path.join(root, "data", "private"))],
-    ["Governed onboarding private workbooks", path.resolve(process.env.ONBOARDING_STORAGE_ROOT?.trim() || path.join(root, "storage", "onboarding"))],
-    ["Generated documents", path.resolve(process.env.PAYSLIP_PRIVATE_STORAGE_ROOT?.trim() || path.join(root, "data", "generated"))],
-    ["Temporary processing", path.resolve(process.env.CLOUD_BACKUP_TEMP_DIR?.trim() || path.join(root, "tmp"))],
+    ["Backups", path.resolve(/* turbopackIgnore: true */ process.env.BACKUP_DIRECTORY?.trim() || path.join(root, "backups"))],
+    ["Private uploads", path.resolve(/* turbopackIgnore: true */ process.env.ADMISSIONS_PRIVATE_STORAGE_ROOT?.trim() || path.join(root, "data", "private"))],
+    ["Governed onboarding private workbooks", path.resolve(/* turbopackIgnore: true */ process.env.ONBOARDING_STORAGE_ROOT?.trim() || path.join(root, "storage", "onboarding"))],
+    ["Generated documents", path.resolve(/* turbopackIgnore: true */ process.env.PAYSLIP_PRIVATE_STORAGE_ROOT?.trim() || path.join(root, "data", "generated"))],
+    ["Temporary processing", path.resolve(/* turbopackIgnore: true */ process.env.CLOUD_BACKUP_TEMP_DIR?.trim() || path.join(/* turbopackIgnore: true */ root, "tmp"))],
     ["Application cache", path.join(root, ".next")]
   ];
   if (resolveDatabaseProvider() === "sqlite") candidates.unshift(["Operational database", path.dirname(operationalDatabasePath())]);
@@ -606,8 +607,8 @@ function boundedDirectoryAggregate(root: string) {
   const stack = [root]; let bytes = 0; let files = 0; let staleFiles = 0; let truncated = false;
   while (stack.length && files < 5000) {
     const current = stack.pop()!;
-    for (const entry of readdirSync(current, { withFileTypes: true })) {
-      const target = path.join(current, entry.name);
+    for (const entry of readdirSync(/* turbopackIgnore: true */ current, { withFileTypes: true })) {
+      const target = path.join(/* turbopackIgnore: true */ current, entry.name);
       if (entry.isSymbolicLink()) continue;
       if (entry.isDirectory()) stack.push(target);
       else if (entry.isFile()) {
@@ -623,11 +624,11 @@ function boundedDirectoryAggregate(root: string) {
 function operationalDatabasePath() {
   const value = process.env.DATABASE_URL?.trim() || "file:./dev.db";
   if (!value.startsWith("file:") || value.includes("?")) throw new Error("OPERATIONAL_DATABASE_PATH_UNSUPPORTED");
-  return path.resolve(process.cwd(), "prisma", value.slice(5));
+  return path.resolve(/* turbopackIgnore: true */ process.cwd(), "prisma", value.slice(5));
 }
 
 function isWithinWorkspace(target: string) {
-  const root = path.resolve(process.cwd());
+  const root = path.resolve(/* turbopackIgnore: true */ process.cwd());
   const relative = path.relative(root, path.resolve(target));
   return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
 }

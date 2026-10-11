@@ -196,15 +196,15 @@ describe("Prompt 20A permissions and server guards", () => {
 describe("Prompt 20A backup version 34", () => {
   it("exports all six arrays without secrets, prompts or answers", () => {
     const backup = baseBackup();
-    expect(backup.metadata.backupVersion).toBe(45);
+    expect(backup.metadata.backupVersion).toBe(48);
     for (const key of ["aiAssistantProfiles","aiAssistantSourcePolicies","aiAssistantQueryAudits","aiAssistantSafetyEvents","aiAssistantEvaluationCases","aiAssistantEvaluationRuns"] as const) expect(backup[key]).toHaveLength(1);
     const text = JSON.stringify(backup);
     expect(text).not.toContain("must-not-export");
     expect(text).not.toMatch(/fullQuestion|fullAnswer|providerPayload|retrievedBody/);
   });
-  it("remains compatible with version 33 backups", () => {
-    const backup: any = baseBackup(); backup.metadata.backupVersion = 33;
-    for (const key of ["aiAssistantProfiles","aiAssistantSourcePolicies","aiAssistantQueryAudits","aiAssistantSafetyEvents","aiAssistantEvaluationCases","aiAssistantEvaluationRuns"]) { delete backup[key]; delete backup.metadata.counts[key]; }
+  it("restores empty module collections in v48 and rejects unsupported historical format (ai-assistant-foundation)", () => {
+    const backup: any = baseBackup(); expect(() => parseAndValidateBackup({ ...backup, metadata: { ...backup.metadata, backupVersion: 33 } })).toThrow("BACKUP_SOURCE_CONTRACT_UNSUPPORTED");
+    for (const key of ["aiAssistantProfiles","aiAssistantSourcePolicies","aiAssistantQueryAudits","aiAssistantSafetyEvents","aiAssistantEvaluationCases","aiAssistantEvaluationRuns"]) { backup[key] = []; backup.metadata.counts[key] = 0; }
     expect(parseAndValidateBackup(backup).aiAssistantProfiles).toEqual([]);
   });
   it("validates ownership and profile links", () => {

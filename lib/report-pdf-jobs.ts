@@ -659,3 +659,12 @@ function hash(value: string) {
 function hashBuffer(value: Buffer) {
   return createHash("sha256").update(value).digest("hex").toUpperCase();
 }
+
+// Certificate rendering shares the existing per-process admission budget. Reject
+// excess work before starting a transaction-bound render; callers retry safely.
+export async function runWithReportPdfCapacity<T>(work: () => Promise<T>): Promise<T> {
+  const state = reportPdfQueueState();
+  if (state.active >= MAX_ACTIVE_REPORT_PDF_JOBS || state.queue.length) throw new ReportPublicationError("PDF capacity is temporarily exhausted. Retry shortly.", 503, "PDF_QUEUE_SATURATED");
+  state.active++;
+  try { return await work(); } finally { state.active--; void drainQueue(state); }
+}

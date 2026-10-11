@@ -2,13 +2,16 @@ import { requireApiPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { recordOfflineEvent, safeDevice } from "@/lib/offline-sync/device-trust";
 import { requireOfflineSyncForApi } from "@/lib/offline-sync/feature-flag";
+import { syntheticNativeOperation } from "@/lib/portable-runtime/synthetic-capability";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const unavailable = requireOfflineSyncForApi(); if (unavailable) return unavailable;
+  const unavailable = requireOfflineSyncForApi();
+  if (unavailable && !syntheticNativeOperation("DEVICE_APPROVE")) return unavailable;
   const auth = await requireApiPermission("MANAGE_OFFLINE_SYNC_DEVICES"); if (auth.response) return auth.response;
   const { id } = await params;
   const body = await request.json() as Record<string, unknown>;
   const action = String(body.action ?? "").toUpperCase();
+  if (unavailable && action !== "APPROVE") return unavailable;
   const reason = String(body.reason ?? "").trim();
   if (!["APPROVE", "REVOKE", "RETIRE"].includes(action)) return Response.json({ error: "Unsupported device action", code: "DEVICE_ACTION_INVALID" }, { status: 400 });
   if (action !== "APPROVE" && (reason.length < 4 || reason.length > 500)) return Response.json({ error: "A reason of 4 to 500 characters is required", code: "DEVICE_REASON_REQUIRED" }, { status: 400 });

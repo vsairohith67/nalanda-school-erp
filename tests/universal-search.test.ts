@@ -389,6 +389,50 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
     }
   });
 
+  it.each(["sqlite", "postgresql"] as const)("constructs compatible case-insensitive text predicates for %s without changing source ownership", async (provider) => {
+    // Query-contract controls only. The migrated service/route suite supplies
+    // actual provider execution; these delegates do not claim database proof.
+    const previous = process.env.DATABASE_PROVIDER;
+    process.env.DATABASE_PROVIDER = provider;
+    try {
+      const client = {
+        admissionEnquiry: { findMany: vi.fn(async () => []) },
+        admissionApplication: { findMany: vi.fn(async () => []) },
+        superAdminDiaryEntry: { findMany: vi.fn(async () => []) },
+        superAdminTask: { findMany: vi.fn(async () => []) },
+        superAdminContact: { findMany: vi.fn(async () => []) }
+      };
+      for (const source of ["ADMISSIONS", "DIARY", "TASKS", "CONTACTS"] as const) {
+        await sourceAdapter(client, source, "super-admin-a").search(context("MiXeD"));
+      }
+      for (const delegate of Object.values(client)) {
+        const call = (delegate.findMany.mock.calls as unknown as Array<Array<{ where: unknown; take: number }>>)[0][0];
+        expect(call.take).toBe(UNIVERSAL_SEARCH_LIMITS.candidateLimit);
+        const predicates: Array<Record<string, unknown>> = [];
+        const visit = (value: unknown) => {
+          if (!value || typeof value !== "object") return;
+          if ("contains" in value) predicates.push(value as Record<string, unknown>);
+          for (const child of Object.values(value)) visit(child);
+        };
+        visit(call.where);
+        expect(predicates.length).toBeGreaterThan(0);
+        for (const predicate of predicates) {
+          expect(predicate).toEqual(provider === "postgresql"
+            ? { contains: "mixed", mode: "insensitive" }
+            : { contains: "mixed" });
+        }
+      }
+      for (const delegate of [client.superAdminDiaryEntry, client.superAdminTask, client.superAdminContact]) {
+        expect(delegate.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ ownerUserId: "super-admin-a" }) }));
+      }
+      for (const delegate of [client.admissionEnquiry, client.admissionApplication]) {
+        expect(delegate.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ archivedAt: null }) }));
+      }
+    } finally {
+      restoreEnvironment("DATABASE_PROVIDER", previous);
+    }
+  });
+
   it("does not match prohibited IAM or Contact fields that are absent from the safe adapter contract", async () => {
     const users = { user: { findMany: vi.fn(async () => [{ name: "Safe User", designation: null, role: "ADMIN", lifecycleStatus: "ACTIVE", isActive: true, username: "safe-user", email: null, updatedAt: now, passwordHash: "PASSWORD-HASH-ONLY" }]) } };
     const contacts = { superAdminContact: { findMany: vi.fn(async () => [{ name: "Safe Supplier", contactPerson: null, category: "OTHER", phone: null, alternatePhone: null, email: null, tagsJson: "[]", status: "ACTIVE", preferred: false, updatedAt: now, notes: "PRIVATE-ATTACHMENT-PATH-ONLY" }]) } };
@@ -403,7 +447,14 @@ describe("UNIVERSAL-SEARCH-1A permission-scoped deterministic retrieval", () => 
   it("keeps the service read-only with no AI, provider, export, report generation or query-history write", () => {
     const service = readFileSync("lib/universal-search.ts", "utf8");
     expect(service).not.toMatch(/client\.[a-zA-Z0-9_]+\.(?:create|createMany|update|updateMany|upsert|delete|deleteMany)\s*\(/);
-    expect(service).not.toMatch(/\bfetch\s*\(|openai|anthropic|gemini|embedding|vector|generateText|notification|provider/i);
+    // The existing read-only database selector is not an external AI/provider
+    // call. Permit exactly its one import and invocation, retaining the full
+    // external-effect refusal for every other part of the search source.
+    const databaseImport = 'import { resolveDatabaseProvider } from "@/lib/database-provider";';
+    expect(service.split(databaseImport)).toHaveLength(2);
+    expect([...service.matchAll(/\bresolveDatabaseProvider\(\)/g)]).toHaveLength(1);
+    const externalEffectsSource = service.replace(databaseImport, "").replace("resolveDatabaseProvider()", "databaseDialect");
+    expect(externalEffectsSource).not.toMatch(/\bfetch\s*\(|openai|anthropic|gemini|embedding|vector|generateText|notification|provider/i);
     expect(service).not.toMatch(/\$queryRaw|\$executeRaw|generatePdf|createExport|exportReport/i);
     expect(service).toContain("ownerUserId");
     expect(service).toContain("candidateLimit");

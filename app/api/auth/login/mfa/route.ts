@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { assertBoundedJsonValue } from "@/lib/request-security";
-import { createPersistedSession } from "@/lib/auth-sessions";
 import { SESSION_MAX_AGE_SECONDS, sessionCookieName, sessionCookieSecure } from "@/lib/session-token";
 import { defaultPathForRole } from "@/lib/navigation";
 import { isRole } from "@/lib/permissions";
-import { boundAuthEnvironment, completeLoginMfaChallenge } from "@/lib/real-user-access/login-mfa";
+import { boundAuthEnvironment, completeLoginMfaSignIn } from "@/lib/real-user-access/login-mfa";
 import { isOperationalReleaseFeatureEnabled, REAL_USER_ACCESS_READINESS_FEATURE } from "@/lib/release-feature-flag-runtime";
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
@@ -19,10 +18,10 @@ export async function POST(request: NextRequest) {
     const factor = String(body.factor ?? "") as "TOTP" | "RECOVERY_CODE" | "WEBAUTHN";
     if (!(["TOTP", "RECOVERY_CODE", "WEBAUTHN"] as const).includes(factor)) return json({ error: GENERIC_ERROR }, 400);
     const factorResponse = factor === "WEBAUTHN" ? body.response as AuthenticationResponseJSON : String(body.response ?? "");
-    const result = await completeLoginMfaChallenge(prisma, { challengeToken: String(body.challengeToken ?? ""), environment: boundAuthEnvironment(), factor, response: factorResponse });
-    if (!result.verified || !result.user || !isRole(result.user.role)) return json({ error: GENERIC_ERROR }, 401);
+    const result = await completeLoginMfaSignIn(prisma, { challengeToken: String(body.challengeToken ?? ""), environment: boundAuthEnvironment(), factor, response: factorResponse }, request.headers);
+    if (!result.verified || !result.user || !result.session || !isRole(result.user.role)) return json({ error: GENERIC_ERROR }, 401);
     const user = result.user;
-    const session = await prisma.$transaction(async (tx) => createPersistedSession(tx, user, request.headers, new Date()));
+    const session = result.session;
     const response = NextResponse.json({ user: { name: user.name, username: user.username }, homePath: defaultPathForRole(user.role), mustChangePassword: user.mustChangePassword });
     response.cookies.set(sessionCookieName(), session.cookieValue, { httpOnly: true, sameSite: "strict", secure: sessionCookieSecure(), path: "/", maxAge: SESSION_MAX_AGE_SECONDS });
     response.headers.set("cache-control", "private, no-store");

@@ -1,4 +1,5 @@
-import { randomUUID } from "node:crypto";
+import { assertGraduationEnabled } from "@/lib/certificate-graduation-policy";
+import { createHash, randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { isCertificateType } from "@/lib/certificate-templates";
 
@@ -11,18 +12,28 @@ export function validateRequestInput(input: any) {
   if (!isCertificateType(input?.certificateType)) throw new CertificateWorkflowError("Choose a supported certificate type.");
   if (!purpose || purpose.length > 500) throw new CertificateWorkflowError("Purpose is required and must be at most 500 characters.");
   if (!Number.isInteger(requestedCopies) || requestedCopies < 1 || requestedCopies > 3) throw new CertificateWorkflowError("Requested copies must be from 1 to 3.");
-  return { studentId: String(input.studentId ?? ""), academicYear: String(input.academicYear ?? "2026-27"), certificateType: String(input.certificateType), purpose, requestedCopies, urgency: input.urgency === "URGENT" ? "URGENT" : "NORMAL" };
+  return { studentId: String(input.studentId ?? ""), academicYear: String(input.academicYear ?? "2026-27"), certificateType: String(input.certificateType).toUpperCase(), purpose, requestedCopies, urgency: input.urgency === "URGENT" ? "URGENT" : "NORMAL" };
 }
 
 export async function createCertificateRequest(client: Client, input: any, actor: { id: string; guardianId?: string | null; source?: "INTERNAL" | "PARENT_PORTAL" }) {
   const data = validateRequestInput(input);
+  assertGraduationEnabled(data.certificateType);
   if (!data.studentId) throw new CertificateWorkflowError("Student is required.");
   if (actor.source === "PARENT_PORTAL") {
     if (!actor.guardianId) throw new CertificateWorkflowError("Parent account is not linked to a Guardian.", 403);
     const owned = await (client as any).studentGuardian.findUnique({ where: { guardianId_studentId: { guardianId: actor.guardianId, studentId: data.studentId } } });
     if (!owned) throw new CertificateWorkflowError("The selected Student is not linked to this Parent account.", 403);
   }
-  const requestNumber = `CR-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${randomUUID().slice(0, 8).toUpperCase()}`;
+  if (data.certificateType === "GRADUATION" && !/^[A-Za-z0-9_-]{20,80}$/.test(String(input.idempotencyKey ?? ""))) throw new CertificateWorkflowError("A stable request idempotency key is required.");
+  const stableNumber = data.certificateType === "GRADUATION" ? `CR-G-${createHash("sha256").update(`${actor.id}:${input.idempotencyKey}`).digest("hex")}` : null;
+  if (stableNumber) {
+    const existing = await (client as any).studentCertificateRequest.findUnique({ where: { requestNumber: stableNumber } });
+    if (existing) {
+      if (existing.studentId !== data.studentId || existing.academicYear !== data.academicYear || existing.purpose !== data.purpose) throw new CertificateWorkflowError("Request key is bound to different values.", 409);
+      return existing;
+    }
+  }
+  const requestNumber = stableNumber ?? `CR-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${randomUUID().slice(0, 8).toUpperCase()}`;
   const row = await (client as any).studentCertificateRequest.create({ data: { ...data, requestNumber, requestSource: actor.source ?? "INTERNAL", status: "SUBMITTED", applicantGuardianId: actor.source === "PARENT_PORTAL" ? actor.guardianId : null, createdByUserId: actor.id, submittedAt: new Date() } });
   await (client as any).studentCertificateEvent.create({ data: { requestId: row.id, eventType: "REQUEST_CREATED", newStatus: "SUBMITTED", recordedByUserId: actor.id } });
   return row;
@@ -39,6 +50,8 @@ export async function transitionCertificateRequest(client: Client, id: string, a
   const rule = REQUEST_TRANSITIONS[action]; if (!rule) throw new CertificateWorkflowError("Unsupported request action.");
   if (rule.reason && !String(reason ?? "").trim()) throw new CertificateWorkflowError("A reason is required.");
   const row = await (client as any).studentCertificateRequest.findUnique({ where: { id } }); if (!row) throw new CertificateWorkflowError("Certificate request not found.", 404);
+  assertGraduationEnabled(row.certificateType);
+  if (row.certificateType === "GRADUATION" && action === "approve" && row.createdByUserId === actorId) throw new CertificateWorkflowError("A different authorized reviewer must approve the request.", 403);
   if (!rule.from.includes(row.status)) throw new CertificateWorkflowError(`Request cannot ${action} from ${row.status}.`, 409);
   if (expectedUpdatedAt && row.updatedAt.toISOString() !== expectedUpdatedAt) throw new CertificateWorkflowError("Request changed since it was opened. Refresh and retry.", 409);
   const now = new Date(), actorField = action === "approve" ? "approvedByUserId" : action === "reject" ? "rejectedByUserId" : action === "cancel" ? "cancelledByUserId" : "reviewedByUserId";

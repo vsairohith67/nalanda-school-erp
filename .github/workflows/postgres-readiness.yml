@@ -21,7 +21,7 @@ env:
 jobs:
   sqlite-release-gate:
     name: SQLite existing release gate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
       DATABASE_PROVIDER: sqlite
@@ -37,20 +37,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
           persist-credentials: false
+      - name: Require exact admitted source
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Install governed QA utilities and report fonts
+        id: document_fonts
+        env:
+          FONT_EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           sudo apt-get update
           echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | sudo debconf-set-selections
-          sudo apt-get install -y --no-install-recommends poppler-utils ripgrep ttf-mscorefonts-installer
-          test -f "$REPORT_CARD_FONT_DIR/Arial.ttf"
-          test -f "$REPORT_CARD_FONT_DIR/Arial_Bold.ttf"
-          test -f "$REPORT_CARD_FONT_DIR/Georgia_Bold.ttf"
-      - run: corepack enable
+          sudo apt-get install -y --no-install-recommends poppler-utils ripgrep cabextract fontconfig curl
+          sudo -n python3 tests/document-font-bootstrap.test.py
+          sudo -n --preserve-env=GITHUB_ACTIONS,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,GITHUB_JOB,RUNNER_TEMP,GITHUB_ENV,FONT_EXPECTED_SHA python3 scripts/bootstrap-document-fonts.py prepare
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsx scripts/qa-shared-document-fonts.ts
       - name: Fresh SQLite migration and seed
         run: |
           mkdir -p tmp/postgres-ci
@@ -67,10 +76,41 @@ jobs:
       - run: pnpm routes:list
       - run: pnpm lifecycle:backfill
       - run: pnpm typecheck
+      - name: Prepare owned service metadata recorders
+        id: service_trace_prepare
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts prepare
       - run: pnpm test
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          NALANDA_SERVICE_TRACE_DIR: tmp/ci-service-traces
+      - name: Validate bounded service metadata even after test failure
+        id: service_trace_finalize
+        if: always() && steps.service_trace_prepare.outcome == 'success'
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts finalize
+      - name: Retain exact allowlisted service metadata
+        if: always() && steps.service_trace_finalize.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: service-metadata-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            tmp/ci-service-trace-public/finance.json
+            tmp/ci-service-trace-public/native.json
+            tmp/ci-service-trace-public/mfa.json
+            tmp/ci-service-trace-public/manifest.json
       - run: pnpm build
       - run: pnpm backup
       - run: pnpm git:safety-check
+      - name: Verify owned document-font cleanup
+        if: always() && steps.document_fonts.outcome != 'skipped'
+        env:
+          FONT_EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: sudo -n --preserve-env=GITHUB_ACTIONS,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,GITHUB_JOB,RUNNER_TEMP,GITHUB_ENV,FONT_EXPECTED_SHA python3 scripts/bootstrap-document-fonts.py cleanup
 
   postgres-schema-migrations:
     name: PostgreSQL schema and migrations
@@ -99,11 +139,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
           persist-credentials: false
+      - name: Require exact admitted source
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: corepack enable
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
       - run: pnpm install --frozen-lockfile
       - name: Configure synthetic PostgreSQL connection
         shell: bash
@@ -129,7 +175,7 @@ jobs:
 
   postgres-application-regression:
     name: PostgreSQL application regression
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     services:
       postgres:
@@ -158,20 +204,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
           persist-credentials: false
+      - name: Require exact admitted source
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Install governed QA utilities and report fonts
+        id: document_fonts
+        env:
+          FONT_EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           sudo apt-get update
           echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | sudo debconf-set-selections
-          sudo apt-get install -y --no-install-recommends poppler-utils ripgrep ttf-mscorefonts-installer
-          test -f "$REPORT_CARD_FONT_DIR/Arial.ttf"
-          test -f "$REPORT_CARD_FONT_DIR/Arial_Bold.ttf"
-          test -f "$REPORT_CARD_FONT_DIR/Georgia_Bold.ttf"
-      - run: corepack enable
+          sudo apt-get install -y --no-install-recommends poppler-utils ripgrep cabextract fontconfig curl
+          sudo -n python3 tests/document-font-bootstrap.test.py
+          sudo -n --preserve-env=GITHUB_ACTIONS,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,GITHUB_JOB,RUNNER_TEMP,GITHUB_ENV,FONT_EXPECTED_SHA python3 scripts/bootstrap-document-fonts.py prepare
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsx scripts/qa-shared-document-fonts.ts
       - name: Configure synthetic PostgreSQL connection
         shell: bash
         run: |
@@ -190,8 +245,39 @@ jobs:
       - run: pnpm db:migrate:postgres
       - run: pnpm qa:postgres:performance
       - run: pnpm qa:postgres:concurrency
+      - name: Prepare owned service metadata recorders
+        id: service_trace_prepare
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts prepare
       - run: pnpm test:postgres
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          NALANDA_SERVICE_TRACE_DIR: tmp/ci-service-traces
+      - name: Validate bounded service metadata even after test failure
+        id: service_trace_finalize
+        if: always() && steps.service_trace_prepare.outcome == 'success'
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec tsx scripts/qa-recovery-service-traces.ts finalize
+      - name: Retain exact allowlisted service metadata
+        if: always() && steps.service_trace_finalize.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: service-metadata-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            tmp/ci-service-trace-public/finance.json
+            tmp/ci-service-trace-public/native.json
+            tmp/ci-service-trace-public/mfa.json
+            tmp/ci-service-trace-public/manifest.json
       - run: pnpm build
+      - name: Verify owned document-font cleanup
+        if: always() && steps.document_fonts.outcome != 'skipped'
+        env:
+          FONT_EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: sudo -n --preserve-env=GITHUB_ACTIONS,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,GITHUB_JOB,RUNNER_TEMP,GITHUB_ENV,FONT_EXPECTED_SHA python3 scripts/bootstrap-document-fonts.py cleanup
 
   cross-provider-parity-recovery:
     name: Cross-provider parity and recovery
@@ -217,7 +303,7 @@ jobs:
       POSTGRES_CI_PASSWORD: postgres-ci-local-only
       POSTGRES_CI_DATABASE: nalanda_parity_ci
       SQLITE_URL: file:../tmp/postgres-ci/sqlite.db
-      POSTGRES_TRANSFER_FILE: ${{ github.workspace }}/tmp/postgres-ci/synthetic-transfer-v45.json
+      POSTGRES_TRANSFER_FILE: ${{ github.workspace }}/tmp/postgres-ci/synthetic-transfer-v46.json
       ALLOW_DEMO_USERS: "true"
       ALLOW_DEMO_BUSINESS_DATA: "true"
       DEMO_USER_DATABASE_ROOT: ${{ github.workspace }}/tmp/postgres-ci
@@ -225,11 +311,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
           persist-credentials: false
+      - name: Require exact admitted source
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: corepack enable
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11.21.0 }
       - run: pnpm install --frozen-lockfile
       - name: Configure synthetic PostgreSQL connection
         shell: bash
@@ -264,5 +356,5 @@ jobs:
           docker exec "$POSTGRES_CONTAINER_ID" createdb -U nalanda_migrator nalanda_parity_restore_ci
           docker exec "$POSTGRES_CONTAINER_ID" pg_restore -U nalanda_migrator -d nalanda_parity_restore_ci --no-owner --exit-on-error /tmp/postgres-readiness-ci.dump
           restored_table_count="$(docker exec "$POSTGRES_CONTAINER_ID" psql -U nalanda_migrator -d nalanda_parity_restore_ci -At -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' AND table_name<>'_prisma_migrations';")"
-          test "$restored_table_count" = "366"
+          test "$restored_table_count" = "375"
           docker exec "$POSTGRES_CONTAINER_ID" rm -f /tmp/postgres-readiness-ci.dump

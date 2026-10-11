@@ -21,8 +21,8 @@ function inside(parent: string, candidate: string) {
 }
 
 function canonicalPath(candidate: string) {
-  const resolved = path.resolve(candidate);
-  return existsSync(resolved) ? realpathSync.native(resolved) : resolved;
+  const resolved = path.resolve(/* turbopackIgnore: true */ candidate);
+  return existsSync(/* turbopackIgnore: true */ resolved) ? realpathSync.native(resolved) : resolved;
 }
 
 function databasePathFromUrl(databaseUrl: string, workspaceRoot: string) {
@@ -62,9 +62,9 @@ export function demoUserSeedDecision(
   }
 
   const workspace = canonicalPath(workspaceRoot);
-  const prismaRoot = canonicalPath(path.join(workspace, "prisma"));
-  const operationalDatabase = canonicalPath(path.join(prismaRoot, "dev.db"));
-  const ignoredTestRoot = canonicalPath(path.join(workspace, "tmp"));
+  const prismaRoot = canonicalPath(path.join(/* turbopackIgnore: true */ workspace, "prisma"));
+  const operationalDatabase = canonicalPath(path.join(/* turbopackIgnore: true */ prismaRoot, "dev.db"));
+  const ignoredTestRoot = canonicalPath(path.join(/* turbopackIgnore: true */ workspace, "tmp"));
   const rootValue = environment[DEMO_USER_DATABASE_ROOT]?.trim();
   if (!rootValue || !path.isAbsolute(rootValue)) {
     throw new Error("DEMO_USER_DATABASE_ROOT_MUST_BE_ABSOLUTE");

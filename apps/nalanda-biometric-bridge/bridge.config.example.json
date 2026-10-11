@@ -4,8 +4,10 @@
   "privateKeyPath": "private/bridge-private.jwk",
   "queuePath": "data/queue.enc",
   "healthPath": "data/health.json",
-  "pollIntervalMs": 30000,
+  "pollIntervalMs": 60000,
+  "transportEnabled": false,
+  "syntheticOnly": true,
   "devices": [
-    { "deviceId": "00000000-0000-4000-8000-000000000002", "host": "192.168.1.50", "port": 4370, "profile": "SIMULATOR" }
+    { "deviceId": "00000000-0000-4000-8000-000000000002", "host": "127.0.0.1", "port": 1, "profile": "SIMULATOR" }
   ]
 }

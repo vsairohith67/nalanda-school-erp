@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
 
 const nextConfig: NextConfig = {
   ...(process.env.NALANDA_STANDALONE_BUILD === "true" ? { output: "standalone" as const } : {}),
   poweredByHeader: false,
+  serverExternalPackages: ["xlsx", "fflate"],
   experimental: {
     cpus: 1,
     memoryBasedWorkersCount: false,
@@ -63,4 +65,20 @@ const nextConfig: NextConfig = {
   }
 };
 
-export default nextConfig;
+export default function configureNext(phase: string): NextConfig {
+  if (
+    phase === PHASE_PRODUCTION_BUILD &&
+    process.platform === "win32" &&
+    process.env.NALANDA_STANDALONE_BUILD === "true"
+  ) {
+    // Build-only directory-copy compatibility; no runtime or admission hook.
+    const { installWindowsStandaloneDirectoryCopy } = require(
+      "./scripts/portable/windows-standalone-copy.cjs"
+    );
+    installWindowsStandaloneDirectoryCopy({
+      root: require("node:fs").realpathSync.native(process.cwd()),
+      phase
+    });
+  }
+  return nextConfig;
+}

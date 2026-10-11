@@ -1,0 +1,10 @@
+{
+  "task": "NPS-LAPTOP-LAB-D1P",
+  "owner": "01a101a9-50f2-73f0-bc64-724876f081a2",
+  "branch": "codex/nps-laptop-lab-d1p",
+  "baseSource": "baa49c738e009f99c5e741a04bc3fe8f8862a848",
+  "baseTree": "ee2b3a2f9eb3a5b45d456eb54547a983ab5991dd",
+  "reservedPaths": ["scripts/laptop-lab/"],
+  "scope": "source and tiny non-network HARNESS_ONLY tests",
+  "runtimePermission": false
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "version": "SYNTHETIC-ORDER-1",
+  "month": "2026-08",
+  "approvalReference": "SYNTHETIC-APPROVAL",
+  "synthetic": true,
+  "rows": [
+    { "staffReference": "SYN-1", "displayName": "Zeta Synthetic", "group": "Teaching", "include": true, "position": 2 },
+    { "staffReference": "SYN-2", "displayName": "Alpha Synthetic", "group": "Non-Teaching", "include": true, "position": 1 },
+    { "staffReference": "SYN-3", "displayName": "Beta Synthetic", "group": "Teaching", "include": true, "position": 1 }
+  ]
+}

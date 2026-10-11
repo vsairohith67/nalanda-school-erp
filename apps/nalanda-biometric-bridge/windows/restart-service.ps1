@@ -1,1 +1,2 @@
-$ErrorActionPreference='Stop';Restart-Service -Name 'NalandaBiometricBridge' -Force;Get-Service -Name 'NalandaBiometricBridge'
+param([Parameter(Mandatory=$true)][string]$HostConfig,[string]$TargetComputer,[string]$ConfirmApply,[switch]$Apply)
+& "$PSScriptRoot\companion.ps1" -Action Restart @PSBoundParameters

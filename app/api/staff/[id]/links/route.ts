@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireApiPermission } from "@/lib/auth";
+import { getCurrentAuthContext, requireApiPermission } from "@/lib/auth";
+import { withTimetableMutation, TimetableMutationError } from "@/lib/timetable-mutation-service";
+import type { Prisma } from "@prisma/client";
 import { friendlyStaffError } from "@/lib/staff";
 import { normalizeAliasValue } from "@/lib/auth-identifiers";
 
@@ -12,7 +14,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (action === "create-login") throw new Error("Create pending Teacher access through the governed Named Users workflow");
     if (!["unlink-user", "link-user", "link-timetable"].includes(action)) throw new Error("Unknown staff link action");
     const username = action === "link-user" ? normalizeAliasValue("USERNAME", required(body.username, "Teacher username")) : null;
-    await prisma.$transaction(async (tx) => {
+    const mutate = async (tx: Prisma.TransactionClient) => {
       const staff = await tx.staffMember.findUnique({ where: { id } });
       if (!staff) throw new Error("Staff member not found");
       if (action === "unlink-user") {
@@ -46,8 +48,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         if (occupied && occupied.id !== id) throw new Error("This timetable teacher is already linked to another staff profile");
         await tx.staffMember.update({ where: { id }, data: { timetableTeacherId } });
       }
-    });
+    };
+    if (action === "link-timetable") {
+      const context = await getCurrentAuthContext();
+      if (!context) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+      await withTimetableMutation(prisma, { userId: context.user.id, sessionId: context.sessionId, roleAssignmentId: context.user.roleAssignmentId }, "MANAGE_STAFF", { kind: "staff", id }, mutate);
+    } else await prisma.$transaction(mutate);
     return NextResponse.json({ ok: true });
-  } catch (error) { return NextResponse.json({ error: friendlyStaffError(error) }, { status: 400 }); }
+  } catch (error) { return NextResponse.json({ error: friendlyStaffError(error) }, { status: error instanceof TimetableMutationError ? error.status : 400 }); }
 }
 function required(value: unknown, label: string) { const text = String(value ?? "").trim(); if (!text) throw new Error(`${label} is required`); return text; }

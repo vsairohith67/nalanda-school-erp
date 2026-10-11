@@ -1,0 +1,199 @@
+{
+  "classification": "LOCAL_SOURCE_AND_SYNTHETIC_COMPONENT_SERVICE_EVIDENCE",
+  "base": "7566699862c34b18e98345cdf0d3ea1342e27748",
+  "combinedSummary": [
+    "Test Files  310 passed | 1 skipped (311)",
+    "Tests  3098 passed | 3 skipped (3101)",
+    "Duration  1619.90s (transform 14.10s, setup 0ms, import 92.23s, tests 1428.62s, environment 44ms)"
+  ],
+  "commands": [
+    {
+      "label": "backend-python",
+      "command": [
+        "python",
+        "-B",
+        "tests/backend-build-scan.test.py"
+      ],
+      "started": "2026-10-02T22:41:17.803745+00:00",
+      "seconds": 0.4379999999946449,
+      "exit": 0
+    },
+    {
+      "label": "backend-focused",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "tests/product-contract-caller.test.ts",
+        "tests/product-build-command.test.ts",
+        "tests/portable-qa-artifact-producer.test.ts",
+        "tests/portable-artifact-handoff.test.ts",
+        "tests/portable-publication-1c.test.ts",
+        "--maxWorkers=1",
+        "--reporter=dot"
+      ],
+      "started": "2026-10-02T22:41:19.070874+00:00",
+      "seconds": 93.59399999998277,
+      "exit": 0
+    },
+    {
+      "label": "component-focused",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "tests/portable-certificate-modal.test.ts",
+        "tests/portable-certificate-context.test.ts",
+        "tests/import-action-state.test.ts",
+        "tests/bulk-data-exchange-ux-1a.test.ts",
+        "tests/student-certificates.test.ts",
+        "tests/student-certificates-security-backup.test.ts",
+        "tests/certificate-graduation-exit-1a.test.ts",
+        "tests/certificate-http-privacy.test.ts",
+        "tests/portable-certificate-browser.test.ts",
+        "tests/portable-publication-1c.test.ts",
+        "tests/onboarding-workbooks.test.ts",
+        "tests/student-import.test.ts",
+        "--maxWorkers=1",
+        "--reporter=dot"
+      ],
+      "started": "2026-10-02T22:43:36.700318+00:00",
+      "seconds": 16.07799999997951,
+      "exit": 0
+    },
+    {
+      "label": "rendered-components",
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "scripts/qa-mobile-import-a11y-1b.ts",
+        "--label=batch-5a"
+      ],
+      "started": "2026-10-02T22:49:53.067471+00:00",
+      "seconds": 15.34399999998277,
+      "exit": 0
+    },
+    {
+      "label": "types-components",
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "tsconfig.components.json",
+        "--tsBuildInfoFile",
+        "tmp/recovery-batch-integration-5a/components.tsbuildinfo"
+      ],
+      "started": "2026-10-02T22:44:03.150556+00:00",
+      "seconds": 55.796999999991385,
+      "exit": 0
+    },
+    {
+      "label": "types-tools",
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "tsconfig.tools-core.json",
+        "--tsBuildInfoFile",
+        "tmp/recovery-batch-integration-5a/tools.tsbuildinfo"
+      ],
+      "started": "2026-10-02T22:45:00.755445+00:00",
+      "seconds": 74.48399999999674,
+      "exit": 0
+    },
+    {
+      "label": "types-tests",
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "tsconfig.tests-m-r.json",
+        "--tsBuildInfoFile",
+        "tmp/recovery-batch-integration-5a/tests.tsbuildinfo"
+      ],
+      "started": "2026-10-02T22:46:52.853231+00:00",
+      "seconds": 78.5,
+      "exit": 0
+    },
+    {
+      "label": "types-support",
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "tsconfig.tools-qa-support.json",
+        "--tsBuildInfoFile",
+        "tmp/recovery-batch-integration-5a/support.tsbuildinfo"
+      ],
+      "started": "2026-10-02T22:48:19.938529+00:00",
+      "seconds": 57.21899999998277,
+      "exit": 0
+    },
+    {
+      "label": "source-provenance",
+      "command": [
+        "node",
+        "scripts/recovery-source-evidence.mjs"
+      ],
+      "started": "2026-10-02T22:50:55.345442+00:00",
+      "seconds": 15.812999999994645,
+      "exit": 0
+    },
+    {
+      "label": "publication-communication",
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "scripts/qa-communication-delivery-foundation-1a-public-repo-scan.ts"
+      ],
+      "started": "2026-10-02T22:48:30.507364+00:00",
+      "seconds": 1.2650000000139698,
+      "exit": 0
+    },
+    {
+      "label": "publication-access",
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "scripts/qa-real-user-access-readiness-1a-public-repo-scan.ts"
+      ],
+      "started": "2026-10-02T22:48:49.029611+00:00",
+      "seconds": 1.125,
+      "exit": 0
+    },
+    {
+      "label": "git-safeguards",
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "scripts/git-safety-check.ts"
+      ],
+      "started": "2026-10-02T22:54:03.915110+00:00",
+      "seconds": 6.344000000011874,
+      "exit": 0
+    },
+    {
+      "label": "combined-regression",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--maxWorkers=1",
+        "--reporter=dot"
+      ],
+      "started": "2026-10-02T22:51:52.861667+00:00",
+      "seconds": 1620.9690000000119,
+      "exit": 0
+    }
+  ],
+  "independentExecution": false,
+  "runtimeAcceptance": "NOT_EXECUTED"
+}

@@ -1,0 +1,15 @@
+{
+  "assignment": "NPS-RELEASE-BLOCKER-REMOVAL-AND-ACCEPTANCE-2A",
+  "instructionSha256": "e4eb9c73a378da990cbd6545f36cf88f60395036cff242c004c64bd86be63091",
+  "repository": "vsairohith67/nalanda-school-erp",
+  "pullRequest": 28,
+  "branch": "release/recovery-integration-1a",
+  "eventStartInclusiveUtc": "2026-10-09T03:09:05.000Z",
+  "eventEndExclusiveUtc": "2026-10-09T13:09:05.000Z",
+  "attempt": "1",
+  "policy": "RemoteSigned",
+  "policyScope": "Process",
+  "maximumStepMinutes": 120,
+  "shorterExistingJobCapsRetained": true,
+  "previousAllowancesRemainConsumed": true
+}

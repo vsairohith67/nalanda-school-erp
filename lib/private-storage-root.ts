@@ -6,13 +6,14 @@ import path from "node:path";
  */
 export function validatedPrivateStorageRoot(value: string, label: string) {
   const resolved = path.resolve(value);
-  const workspace = path.resolve(process.cwd());
+  // Preserve the runtime containment check without tracing the whole workspace.
+  const workspace = path.resolve(/* turbopackIgnore: true */ process.cwd());
   const forbiddenRoots = [
     path.join(workspace, "public"),
     path.join(workspace, ".next", "static"),
     path.join(workspace, "release-artifacts"),
     path.join(workspace, "artifacts")
-  ].map((entry) => path.resolve(entry));
+  ].map((entry) => path.resolve(/* turbopackIgnore: true */ entry));
   if (forbiddenRoots.some((entry) => resolved === entry || resolved.startsWith(`${entry}${path.sep}`))) {
     throw new Error(`${label} must not overlap a public or release-artifact directory`);
   }

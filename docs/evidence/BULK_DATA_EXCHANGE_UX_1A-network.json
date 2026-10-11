@@ -1,0 +1,48 @@
+[
+  {
+    "path": "/api/onboarding/batches",
+    "action": "canonical-upload",
+    "keys": [
+      "bundle",
+      "workbook"
+    ],
+    "forbiddenSentinelObserved": false
+  },
+  {
+    "path": "/api/import/students",
+    "action": "preview",
+    "keys": [
+      "action",
+      "rows",
+      "mode",
+      "confirmed",
+      "fileName",
+      "mappingVersion",
+      "receipt"
+    ],
+    "rowKeys": [
+      [
+        "admissionNo",
+        "studentName",
+        "className",
+        "section",
+        "academicYear"
+      ]
+    ],
+    "forbiddenSentinelObserved": false
+  },
+  {
+    "path": "/api/marks/import",
+    "action": "preview",
+    "keys": [
+      "action",
+      "csv",
+      "receipt",
+      "model",
+      "assessmentId",
+      "academicYear"
+    ],
+    "rowKeys": [],
+    "forbiddenSentinelObserved": false
+  }
+]

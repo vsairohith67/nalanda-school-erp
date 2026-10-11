@@ -8,7 +8,7 @@ import { createStudentCertificateDraft, updateCertificateDraft } from "@/lib/stu
 import { can } from "@/lib/permissions";
 
 describe("certificate template and numbering safety",()=>{
-  it("supports only the four prompt-authorised types",()=>expect(CERTIFICATE_TYPES).toEqual(["BONAFIDE","STUDY","CONDUCT","TRANSFER"]));
+  it("supports the released types and governed Graduation addition",()=>expect(CERTIFICATE_TYPES).toEqual(["BONAFIDE","STUDY","CONDUCT","TRANSFER","GRADUATION"]));
   it("normalises codes and rejects empty codes",()=>{expect(normalizeCode(" qa bon 1 ")).toBe("QA-BON-1");expect(()=>normalizeCode("!!!")).toThrow(/Code/);});
   it.each(CERTIFICATE_TYPES)("creates a safe default %s definition",(type)=>expect(()=>validateCertificateTemplateDefinition(type,defaultTemplateDefinition(type))).not.toThrow());
   it("rejects executable HTML and sensitive fields",()=>{expect(()=>validateCertificateTemplateDefinition("BONAFIDE",{heading:"X",body:"<script>alert(1)</script>"})).toThrow(/unsafe/);expect(()=>validateCertificateTemplateDefinition("BONAFIDE",{heading:"X",body:"Safe",enabledFields:["aadhaar"]})).toThrow(/unsafe|Unsupported/);});

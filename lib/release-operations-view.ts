@@ -6,7 +6,7 @@ import { readReleaseAudit, readReleaseCandidate, releaseStateRoot } from "@/lib/
 export type ReleaseOperationsView = ReturnType<typeof getReleaseOperationsView>;
 
 export function getReleaseOperationsView(input: { workspaceRoot?: string; summaryOnly: boolean }) {
-  const workspaceRoot = path.resolve(input.workspaceRoot || process.cwd());
+  const workspaceRoot = path.resolve(/* turbopackIgnore: true */ input.workspaceRoot || process.cwd());
   const root = releaseStateRoot(workspaceRoot, process.env.NALANDA_RELEASE_STATE_ROOT);
   const candidate = readReleaseCandidate(root);
   const currentRelease = process.env.NALANDA_RELEASE_ID?.trim() || process.env.NEXT_PUBLIC_PWA_BUILD_VERSION?.trim() || String(packageJson.version);

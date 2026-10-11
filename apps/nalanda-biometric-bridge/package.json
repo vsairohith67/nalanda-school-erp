@@ -9,12 +9,15 @@
     "test": "vitest run --config vitest.config.ts",
     "simulate": "tsx src/cli.ts simulate",
     "start": "node dist/agent.js",
-    "credentials": "tsx src/credentials.ts"
+    "credentials": "tsx src/credentials.ts",
+    "report:monthly": "tsx src/monthly-report.ts",
+    "config:validate": "tsx src/validate-config.ts",
+    "export:preview": "tsx src/export-preview.ts"
   },
   "devDependencies": {
     "@types/node": "^22.19.21",
     "tsx": "^4.23.12",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.7"
+    "vitest": "4.1.11"
   }
 }

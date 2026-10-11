@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "plugins": [], "incremental": false },
+  "include": ["consumer-*.ts", "consumer-*.d.mts", "output.d.mts"],
+  "exclude": ["outputs", "node_modules"]
+}

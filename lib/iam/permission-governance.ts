@@ -180,6 +180,7 @@ export function permissionDelegability(permission: CanonicalPermission): Permiss
 }
 
 export function immutablePermissionDenial(role: Role, rawPermission: string) {
+  if (rawPermission.includes("PRIOR_YEAR") && ["TEACHER", "PARENT", "STUDENT", "VIEWER", "GATE_STAFF"].includes(role)) return "Previous-year finance administration is unavailable in this role";
   const permission = normalizePermission(rawPermission);
   if (!permission) return "Unknown permissions always default to deny.";
   if (role === "TEACHER" && ACADEMIC_INTEGRITY_MARKS_WRITE_PERMISSIONS.has(permission)) {

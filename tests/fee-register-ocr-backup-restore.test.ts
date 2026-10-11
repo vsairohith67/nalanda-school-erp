@@ -59,7 +59,7 @@ function fixture() {
 describe("Prompt 20B backup and restore validation", () => {
   it("uses version 37, includes all seven OCR arrays, and excludes bytes, raw page text, and actors", () => {
     const backup = fixture();
-    expect(backup.metadata.backupVersion).toBe(45);
+    expect(backup.metadata.backupVersion).toBe(48);
     for (const key of [
       "feeRegisterOcrProfiles", "feeRegisterOcrBatches", "feeRegisterOcrPages",
       "feeRegisterOcrRows", "feeRegisterOcrRowRevisions", "feeRegisterOcrPostingRuns",

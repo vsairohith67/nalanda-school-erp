@@ -1,0 +1,21 @@
+{
+  "evidence": "HOST_CAPABILITY_ONLY",
+  "capturedUtc": "2026-10-03T12:26:36.7814477Z",
+  "os": "Microsoft Windows 11 Home Single Language",
+  "osVersion": "10.0.26200",
+  "cpu": "11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz",
+  "physicalCores": 8.0,
+  "logicalProcessors": 16.0,
+  "usableRamGiB": 39.71,
+  "freeRamGiB": 16.05,
+  "diskSizeGiB": 932.85,
+  "diskFreeGiB": 106.86,
+  "dockerCliPresent": true,
+  "wslCliPresent": true,
+  "containerDaemon": "NOT_PROBED",
+  "wslDistribution": "NOT_PROBED",
+  "temperature": "UNAVAILABLE",
+  "throttling": "UNAVAILABLE",
+  "uncontendedWindow": "NOT_ESTABLISHED",
+  "runtimePermission": "NOT_ADMITTED"
+}

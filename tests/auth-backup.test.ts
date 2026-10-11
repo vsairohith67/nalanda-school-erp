@@ -30,11 +30,7 @@ describe("AUTH-2B backup boundary", () => {
   });
 
   it("rejects secret-bearing or cross-user auth rows", () => {
-    const base = {
-      metadata: { appName: "Nalanda Fee Control", academicYear: "2026-27", generatedAt: at, generatedBy: "AUTH2BQA", backupVersion: 37 },
-      students: [], feeStructures: [], payments: [], paymentAudits: [],
-      users: [{ id: "user-1", username: "auth2bqa" }], receiptNotes: []
-    };
+    const base = createBackupDocument({ generatedAt: new Date(at), generatedBy: "AUTH2BQA", students: [], feeStructures: [], payments: [], paymentAudits: [], users: [{ id: "user-1", username: "auth2bqa" }] });
     expect(() => parseAndValidateBackup({ ...base, authSecurity: { aliases: [], verificationHistory: [], resetHistory: [], sessions: [{ id: "s", userId: "user-1", tokenHash: "secret" }], events: [] } }))
       .toThrow("tokenHash is not supported");
     expect(() => parseAndValidateBackup({ ...base, authSecurity: { aliases: [{ id: "a", userId: "other", type: "WORK_EMAIL", normalizedValue: "qa@example.test", displayMasked: "q***", status: "VERIFIED", isSchoolGoverned: false, version: 1 }], verificationHistory: [], resetHistory: [], sessions: [], events: [] } }))

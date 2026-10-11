@@ -32,7 +32,7 @@ export async function confirmTotpEnrollment(client: PrismaClient, input: { userI
   return { verified: true, recoveryCodes: recoveryCodes.map((entry) => entry.code) };
 }
 
-export async function verifyActiveTotp(client: PrismaClient, input: { userId: string; token: string; timestamp?: number }, env: NodeJS.ProcessEnv = process.env) {
+export async function verifyActiveTotp(client: MfaClient, input: { userId: string; token: string; timestamp?: number }, env: NodeJS.ProcessEnv = process.env) {
   const factors = await client.mfaAuthenticator.findMany({ where: { userId: input.userId, type: "TOTP", status: "ACTIVE", revokedAt: null }, orderBy: { createdAt: "asc" }, take: 4 });
   for (const factor of factors) {
     if (!factor.secretEnvelope) continue;
@@ -44,7 +44,7 @@ export async function verifyActiveTotp(client: PrismaClient, input: { userId: st
   return { verified: false } as const;
 }
 
-export async function consumeRecoveryCode(client: PrismaClient, input: { userId: string; code: string; environment: string }, env: NodeJS.ProcessEnv = process.env) {
+export async function consumeRecoveryCode(client: MfaClient, input: { userId: string; code: string; environment: string }, env: NodeJS.ProcessEnv = process.env) {
   const codes = await client.mfaRecoveryCode.findMany({ where: { userId: input.userId, status: "ACTIVE", usedAt: null, revokedAt: null }, take: 24 });
   let matchId: string | null = null;
   for (const row of codes) if (recoveryCodeMatches(input.code, row.codeHash, input.userId, input.environment, env)) matchId = row.id;

@@ -33,7 +33,7 @@ export async function runCloudBackupRestoreRehearsal(
   } });
   const sourcePath = operationalDatabasePath();
   const tempRoot = rehearsalDatabaseRoot();
-  const tempPath = path.join(tempRoot, `${rehearsal.id}.db`);
+  const tempPath = path.join(/* turbopackIgnore: true */ tempRoot, `${rehearsal.id}.db`);
   let rehearsalClient: PrismaClient | null = null;
   try {
     const provider = createCloudBackupProvider(artifact.run.profile);
@@ -106,15 +106,15 @@ function operationalDatabasePath() {
   const url = process.env.DATABASE_URL?.trim() || "file:./dev.db";
   if (!url.startsWith("file:") || url.includes("?")) throw new Error("OPERATIONAL_DATABASE_PATH_UNSUPPORTED");
   const value = url.slice(5);
-  const resolved = path.resolve(process.cwd(), "prisma", value);
-  const expectedRoot = path.resolve(process.cwd());
+  const resolved = path.resolve(/* turbopackIgnore: true */ process.cwd(), "prisma", value);
+  const expectedRoot = path.resolve(/* turbopackIgnore: true */ process.cwd());
   if (!resolved.startsWith(`${expectedRoot}${path.sep}`)) throw new Error("OPERATIONAL_DATABASE_PATH_UNSAFE");
   return resolved;
 }
 
 function rehearsalDatabaseRoot() {
   const configured = process.env.CLOUD_BACKUP_REHEARSAL_DIR?.trim();
-  const root = path.resolve(configured || path.join(process.cwd(), "data", "cloud-backup-rehearsal"));
+  const root = path.resolve(/* turbopackIgnore: true */ configured || path.join(process.cwd(), "data", "cloud-backup-rehearsal"));
   const publicRoot = path.resolve(process.cwd(), "public");
   if (root === publicRoot || root.startsWith(`${publicRoot}${path.sep}`)) {
     throw new Error("REHEARSAL_DATABASE_PATH_UNSAFE");

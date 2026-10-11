@@ -1,0 +1,1391 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width"><title>NPS lab source fixture</title><style>body{max-width:72rem;margin:2rem auto;padding:1rem;font:16px system-ui;line-height:1.5}pre{white-space:pre-wrap;overflow-wrap:anywhere}h1{color:#194a4a}</style><h1>HARNESS_ONLY</h1><p>Source validation with virtual time and invented records. This is not ERP performance.</p><pre>{
+  &quot;schemaVersion&quot;: 1,
+  &quot;evidence&quot;: &quot;HARNESS_ONLY&quot;,
+  &quot;artifact&quot;: null,
+  &quot;source&quot;: &quot;baa49c738e009f99c5e741a04bc3fe8f8862a848&quot;,
+  &quot;tree&quot;: &quot;ee2b3a2f9eb3a5b45d456eb54547a983ab5991dd&quot;,
+  &quot;subject&quot;: &quot;932f77b9517425308483e495e3bf8ae281de4c0da39e65d359190ba4f04ddc73&quot;,
+  &quot;configHash&quot;: &quot;982e2c7a1c15ca830b7929bfb9d2383f08b0826e73335c45db45141cf0fcd652&quot;,
+  &quot;config&quot;: {
+    &quot;version&quot;: 1,
+    &quot;source&quot;: &quot;baa49c738e009f99c5e741a04bc3fe8f8862a848&quot;,
+    &quot;tree&quot;: &quot;ee2b3a2f9eb3a5b45d456eb54547a983ab5991dd&quot;,
+    &quot;subject&quot;: &quot;932f77b9517425308483e495e3bf8ae281de4c0da39e65d359190ba4f04ddc73&quot;,
+    &quot;target&quot;: &quot;memory://nps-d1p-fixture&quot;,
+    &quot;profile&quot;: &quot;in-memory-harness&quot;,
+    &quot;scenario&quot;: &quot;disposable-mutation&quot;,
+    &quot;virtualUsers&quot;: 2,
+    &quot;maxInFlight&quot;: 2,
+    &quot;arrivalPerSecond&quot;: 20,
+    &quot;thinkMs&quot;: 100,
+    &quot;durationMs&quot;: 1000,
+    &quot;timeoutMs&quot;: 150,
+    &quot;maxActions&quot;: 12,
+    &quot;mix&quot;: [
+      {
+        &quot;operation&quot;: &quot;certificate_list&quot;,
+        &quot;weight&quot;: 4
+      },
+      {
+        &quot;operation&quot;: &quot;certificate_request&quot;,
+        &quot;weight&quot;: 1
+      }
+    ],
+    &quot;limits&quot;: {
+      &quot;consecutiveErrors&quot;: 3,
+      &quot;minFreeMemoryBytes&quot;: 536870912,
+      &quot;minFreeDiskBytes&quot;: 1073741824,
+      &quot;maxMemoryGrowthBytes&quot;: 536870912,
+      &quot;maxTemperatureC&quot;: 85
+    }
+  },
+  &quot;start&quot;: &quot;2000-01-01T00:00:00.000Z&quot;,
+  &quot;end&quot;: &quot;2000-01-01T00:00:00.670Z&quot;,
+  &quot;clockKind&quot;: &quot;VIRTUAL&quot;,
+  &quot;elapsedMs&quot;: 670,
+  &quot;stopReason&quot;: &quot;ACTION_LIMIT&quot;,
+  &quot;scheduled&quot;: 12,
+  &quot;notScheduled&quot;: 0,
+  &quot;peakInFlight&quot;: 1,
+  &quot;actions&quot;: [
+    {
+      &quot;operation&quot;: &quot;certificate_list&quot;,
+      &quot;outcome&quot;: &quot;success&quot;,
+      &quot;startMs&quot;: 0,
+      &quot;endMs&quot;: 20,
+      &quot;latencyMs&quot;: 20,
+      &quot;mutationUncertain&quot;: false
+    },
+    {
+      &quot;operation&quot;: &quot;certificate_list&quot;,
+      &quot;outcome&quot;: &quot;success&quot;,
+      &quot;startMs&quot;: 50,
+      &quot;endMs&quot;: 70,
+      &quot;latencyMs&quot;: 20,
+      &quot;mutationUncertain&quot;: false
+    },
+    {
+      &quot;operation&quot;: &quot;certificate_list&quot;,
+      &quot;outcome&quot;: &quot;success&quot;,
+      &quot;startMs&quot;: 120,
+      &quot;endMs&quot;: 140,
+      &quot;latencyMs&quot;: 20,
+      &quot;mutationUncertain&quot;: false
+    },
+    {
+      &quot;operation&quot;: &quot;certificate_list&quot;,
+      &quot;outcome&quot;: &quot;success&quot;,
+      &quot;startMs&quot;: 170,
+      &quot;endMs&quot;: 190,
+      &quot;latencyMs&quot;: 20,
+      &quot;mutationUncertain&quot;: false
+    },
+    {
+      &quot;operation&quot;: &quot;certificate_request&quot;,
+      &quot;outcome&quot;: &quot;success&quot;,
+      &quot;startMs&quot;: 240,
+      &quot;endMs&quot;: 260,
+      &quot;latencyMs&quot;: 20,
+      &quot;mutationUncertain&quot;: false
+    },
+    {
+      &quot;operation&quot;: &quot;certificate_list&quot;,
+      &quot;outcome&quot;: &quot;success&quot;,
+      &quot;startMs&quot;: 290,
+      &quot;endMs&quot;: 310,
+      &quot;latencyMs&quot;: 20,
+      &quot;mutationUncertain&quot;: false
+    },
+    {
+      &quot;operation&quot;: &quot;certificate_list&quot;,
+      &quot;outcome&quot;: &quot;success&quot;,
+      &quot;startMs&quot;: 360,
+      &quot;endMs&quot;: 380,
+      &quot;latencyMs&quot;: 20,
+      &quot;mutationUncertain&quot;: false
+    },
+    {
+      &quot;operation&quot;: &quot;certificate_list&quot;,
+      &quot;outcome&quot;: &quot;success&quot;,
+      &quot;startMs&quot;: 410,
+      &quot;endMs&quot;: 430,
+      &quot;latencyMs&quot;: 20,
+      &quot;mutationUncertain&quot;: false
+    },
+    {
+      &quot;operation&quot;: &quot;certificate_list&quot;,
+      &quot;outcome&quot;: &quot;success&quot;,
+      &quot;startMs&quot;: 480,
+      &quot;endMs&quot;: 500,
+      &quot;latencyMs&quot;: 20,
+      &quot;mutationUncertain&quot;: false
+    },
+    {
+      &quot;operation&quot;: &quot;certificate_request&quot;,
+      &quot;outcome&quot;: &quot;success&quot;,
+      &quot;startMs&quot;: 530,
+      &quot;endMs&quot;: 550,
+      &quot;latencyMs&quot;: 20,
+      &quot;mutationUncertain&quot;: false
+    },
+    {
+      &quot;operation&quot;: &quot;certificate_list&quot;,
+      &quot;outcome&quot;: &quot;success&quot;,
+      &quot;startMs&quot;: 600,
+      &quot;endMs&quot;: 620,
+      &quot;latencyMs&quot;: 20,
+      &quot;mutationUncertain&quot;: false
+    },
+    {
+      &quot;operation&quot;: &quot;certificate_list&quot;,
+      &quot;outcome&quot;: &quot;success&quot;,
+      &quot;startMs&quot;: 650,
+      &quot;endMs&quot;: 670,
+      &quot;latencyMs&quot;: 20,
+      &quot;mutationUncertain&quot;: false
+    }
+  ],
+  &quot;samples&quot;: [
+    {
+      &quot;atMs&quot;: 0,
+      &quot;metrics&quot;: {
+        &quot;hostCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;hostMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;freeMemoryBytes&quot;: {
+          &quot;value&quot;: 1073741824,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;swapBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbConnections&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbWaits&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbLocks&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbQueryMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskFreeBytes&quot;: {
+          &quot;value&quot;: 10737418240,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;diskUsedBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskReadBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskWriteBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskLatencyMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkRxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkTxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;generatorMemoryBytes&quot;: {
+          &quot;value&quot;: 1048576,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;generatorCpuMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;temperatureC&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;celsius&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        }
+      },
+      &quot;portable&quot;: {
+        &quot;values&quot;: {
+          &quot;nalanda_requests_total&quot;: 0
+        },
+        &quot;issues&quot;: [],
+        &quot;state&quot;: &quot;OBSERVED&quot;
+      }
+    },
+    {
+      &quot;atMs&quot;: 100,
+      &quot;metrics&quot;: {
+        &quot;hostCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;hostMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;freeMemoryBytes&quot;: {
+          &quot;value&quot;: 1073741824,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;swapBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbConnections&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbWaits&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbLocks&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbQueryMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskFreeBytes&quot;: {
+          &quot;value&quot;: 10737418240,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;diskUsedBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskReadBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskWriteBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskLatencyMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkRxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkTxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;generatorMemoryBytes&quot;: {
+          &quot;value&quot;: 1048576,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;generatorCpuMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;temperatureC&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;celsius&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        }
+      },
+      &quot;portable&quot;: {
+        &quot;values&quot;: {
+          &quot;nalanda_requests_total&quot;: 2
+        },
+        &quot;issues&quot;: [],
+        &quot;state&quot;: &quot;OBSERVED&quot;
+      }
+    },
+    {
+      &quot;atMs&quot;: 200,
+      &quot;metrics&quot;: {
+        &quot;hostCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;hostMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;freeMemoryBytes&quot;: {
+          &quot;value&quot;: 1073741824,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;swapBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbConnections&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbWaits&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbLocks&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbQueryMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskFreeBytes&quot;: {
+          &quot;value&quot;: 10737418240,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;diskUsedBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskReadBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskWriteBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskLatencyMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkRxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkTxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;generatorMemoryBytes&quot;: {
+          &quot;value&quot;: 1048576,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;generatorCpuMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;temperatureC&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;celsius&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        }
+      },
+      &quot;portable&quot;: {
+        &quot;values&quot;: {
+          &quot;nalanda_requests_total&quot;: 4
+        },
+        &quot;issues&quot;: [],
+        &quot;state&quot;: &quot;OBSERVED&quot;
+      }
+    },
+    {
+      &quot;atMs&quot;: 300,
+      &quot;metrics&quot;: {
+        &quot;hostCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;hostMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;freeMemoryBytes&quot;: {
+          &quot;value&quot;: 1073741824,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;swapBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbConnections&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbWaits&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbLocks&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbQueryMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskFreeBytes&quot;: {
+          &quot;value&quot;: 10737418240,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;diskUsedBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskReadBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskWriteBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskLatencyMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkRxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkTxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;generatorMemoryBytes&quot;: {
+          &quot;value&quot;: 1048576,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;generatorCpuMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;temperatureC&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;celsius&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        }
+      },
+      &quot;portable&quot;: {
+        &quot;values&quot;: {
+          &quot;nalanda_requests_total&quot;: 6
+        },
+        &quot;issues&quot;: [],
+        &quot;state&quot;: &quot;OBSERVED&quot;
+      }
+    },
+    {
+      &quot;atMs&quot;: 400,
+      &quot;metrics&quot;: {
+        &quot;hostCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;hostMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;freeMemoryBytes&quot;: {
+          &quot;value&quot;: 1073741824,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;swapBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbConnections&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbWaits&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbLocks&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbQueryMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskFreeBytes&quot;: {
+          &quot;value&quot;: 10737418240,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;diskUsedBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskReadBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskWriteBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskLatencyMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkRxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkTxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;generatorMemoryBytes&quot;: {
+          &quot;value&quot;: 1048576,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;generatorCpuMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;temperatureC&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;celsius&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        }
+      },
+      &quot;portable&quot;: {
+        &quot;values&quot;: {
+          &quot;nalanda_requests_total&quot;: 8
+        },
+        &quot;issues&quot;: [],
+        &quot;state&quot;: &quot;OBSERVED&quot;
+      }
+    },
+    {
+      &quot;atMs&quot;: 500,
+      &quot;metrics&quot;: {
+        &quot;hostCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;hostMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;freeMemoryBytes&quot;: {
+          &quot;value&quot;: 1073741824,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;swapBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbConnections&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbWaits&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbLocks&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbQueryMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskFreeBytes&quot;: {
+          &quot;value&quot;: 10737418240,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;diskUsedBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskReadBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskWriteBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskLatencyMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkRxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkTxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;generatorMemoryBytes&quot;: {
+          &quot;value&quot;: 1048576,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;generatorCpuMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;temperatureC&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;celsius&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        }
+      },
+      &quot;portable&quot;: {
+        &quot;values&quot;: {
+          &quot;nalanda_requests_total&quot;: 10
+        },
+        &quot;issues&quot;: [],
+        &quot;state&quot;: &quot;OBSERVED&quot;
+      }
+    },
+    {
+      &quot;atMs&quot;: 600,
+      &quot;metrics&quot;: {
+        &quot;hostCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;hostMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;freeMemoryBytes&quot;: {
+          &quot;value&quot;: 1073741824,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;swapBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;appCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbMemoryBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbCpuPercent&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;percent&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbConnections&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbWaits&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbLocks&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;count&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;dbQueryMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskFreeBytes&quot;: {
+          &quot;value&quot;: 10737418240,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;diskUsedBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskReadBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskWriteBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;diskLatencyMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkRxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;networkTxBytes&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;generatorMemoryBytes&quot;: {
+          &quot;value&quot;: 1048576,
+          &quot;unit&quot;: &quot;bytes&quot;,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        &quot;generatorCpuMs&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;ms&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        &quot;temperatureC&quot;: {
+          &quot;value&quot;: null,
+          &quot;unit&quot;: &quot;celsius&quot;,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        }
+      },
+      &quot;portable&quot;: {
+        &quot;values&quot;: {
+          &quot;nalanda_requests_total&quot;: 12
+        },
+        &quot;issues&quot;: [],
+        &quot;state&quot;: &quot;OBSERVED&quot;
+      }
+    }
+  ],
+  &quot;counts&quot;: {
+    &quot;success&quot;: 12,
+    &quot;failed&quot;: 0,
+    &quot;timeout&quot;: 0,
+    &quot;cancelled&quot;: 0,
+    &quot;refused&quot;: 0
+  },
+  &quot;operations&quot;: [
+    {
+      &quot;operation&quot;: &quot;certificate_list&quot;,
+      &quot;weight&quot;: 4,
+      &quot;attempts&quot;: 10,
+      &quot;successfulBusinessOperations&quot;: 10,
+      &quot;p50Ms&quot;: 20,
+      &quot;p95Ms&quot;: 20,
+      &quot;p99Ms&quot;: 20,
+      &quot;sampleState&quot;: &quot;INSUFFICIENT_FOR_TAIL_INFERENCE&quot;
+    },
+    {
+      &quot;operation&quot;: &quot;certificate_request&quot;,
+      &quot;weight&quot;: 1,
+      &quot;attempts&quot;: 2,
+      &quot;successfulBusinessOperations&quot;: 2,
+      &quot;p50Ms&quot;: 20,
+      &quot;p95Ms&quot;: 20,
+      &quot;p99Ms&quot;: 20,
+      &quot;sampleState&quot;: &quot;INSUFFICIENT_FOR_TAIL_INFERENCE&quot;
+    }
+  ],
+  &quot;actionCount&quot;: 12,
+  &quot;sampleCount&quot;: 7,
+  &quot;completedBusinessOperations&quot;: 12,
+  &quot;errorRate&quot;: 0,
+  &quot;cancelledRate&quot;: 0,
+  &quot;achievedActionsPerSecond&quot;: 17.91044776119403,
+  &quot;achievedHttpRequestsPerSecond&quot;: null,
+  &quot;successfulBusinessOperationsPerSecond&quot;: 17.91044776119403,
+  &quot;coverageComplete&quot;: true,
+  &quot;resources&quot;: {
+    &quot;hostCpuPercent&quot;: {
+      &quot;unit&quot;: &quot;percent&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;hostMemoryBytes&quot;: {
+      &quot;unit&quot;: &quot;bytes&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;freeMemoryBytes&quot;: {
+      &quot;unit&quot;: &quot;bytes&quot;,
+      &quot;availableSamples&quot;: 7,
+      &quot;unavailableSamples&quot;: 0,
+      &quot;min&quot;: 1073741824,
+      &quot;max&quot;: 1073741824,
+      &quot;growth&quot;: 0
+    },
+    &quot;swapBytes&quot;: {
+      &quot;unit&quot;: &quot;bytes&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;appMemoryBytes&quot;: {
+      &quot;unit&quot;: &quot;bytes&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;appCpuPercent&quot;: {
+      &quot;unit&quot;: &quot;percent&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;dbMemoryBytes&quot;: {
+      &quot;unit&quot;: &quot;bytes&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;dbCpuPercent&quot;: {
+      &quot;unit&quot;: &quot;percent&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;dbConnections&quot;: {
+      &quot;unit&quot;: &quot;count&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;dbWaits&quot;: {
+      &quot;unit&quot;: &quot;count&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;dbLocks&quot;: {
+      &quot;unit&quot;: &quot;count&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;dbQueryMs&quot;: {
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;diskFreeBytes&quot;: {
+      &quot;unit&quot;: &quot;bytes&quot;,
+      &quot;availableSamples&quot;: 7,
+      &quot;unavailableSamples&quot;: 0,
+      &quot;min&quot;: 10737418240,
+      &quot;max&quot;: 10737418240,
+      &quot;growth&quot;: 0
+    },
+    &quot;diskUsedBytes&quot;: {
+      &quot;unit&quot;: &quot;bytes&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;diskReadBytes&quot;: {
+      &quot;unit&quot;: &quot;bytes&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null,
+      &quot;ratesPerSecond&quot;: [
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        }
+      ]
+    },
+    &quot;diskWriteBytes&quot;: {
+      &quot;unit&quot;: &quot;bytes&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null,
+      &quot;ratesPerSecond&quot;: [
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        }
+      ]
+    },
+    &quot;diskLatencyMs&quot;: {
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    },
+    &quot;networkRxBytes&quot;: {
+      &quot;unit&quot;: &quot;bytes&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null,
+      &quot;ratesPerSecond&quot;: [
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        }
+      ]
+    },
+    &quot;networkTxBytes&quot;: {
+      &quot;unit&quot;: &quot;bytes&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null,
+      &quot;ratesPerSecond&quot;: [
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        }
+      ]
+    },
+    &quot;generatorMemoryBytes&quot;: {
+      &quot;unit&quot;: &quot;bytes&quot;,
+      &quot;availableSamples&quot;: 7,
+      &quot;unavailableSamples&quot;: 0,
+      &quot;min&quot;: 1048576,
+      &quot;max&quot;: 1048576,
+      &quot;growth&quot;: 0
+    },
+    &quot;generatorCpuMs&quot;: {
+      &quot;unit&quot;: &quot;ms&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null,
+      &quot;ratesPerSecond&quot;: [
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: null,
+          &quot;state&quot;: &quot;UNAVAILABLE&quot;
+        }
+      ]
+    },
+    &quot;temperatureC&quot;: {
+      &quot;unit&quot;: &quot;celsius&quot;,
+      &quot;availableSamples&quot;: 0,
+      &quot;unavailableSamples&quot;: 7,
+      &quot;min&quot;: null,
+      &quot;max&quot;: null,
+      &quot;growth&quot;: null
+    }
+  },
+  &quot;portableCounters&quot;: {
+    &quot;nalanda_requests_total&quot;: {
+      &quot;ratesPerSecond&quot;: [
+        {
+          &quot;value&quot;: 20,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: 20,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: 20,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: 20,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: 20,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        },
+        {
+          &quot;value&quot;: 20,
+          &quot;state&quot;: &quot;AVAILABLE&quot;
+        }
+      ],
+      &quot;availableSamples&quot;: 7
+    }
+  },
+  &quot;percentileConvention&quot;: &quot;Nearest rank, successful operations only, milliseconds&quot;,
+  &quot;limitations&quot;: [
+    &quot;HARNESS_ONLY: virtual time and invented metrics; no ERP capacity evidence.&quot;,
+    &quot;HTTP requests per second unavailable: transport is in-memory.&quot;,
+    &quot;Same-host load generation consumes measured resources.&quot;,
+    &quot;No laptop CPU to VPS vCPU conversion.&quot;,
+    &quot;Unavailable metrics are not zero; thermal/throttling visibility is unverified.&quot;,
+    &quot;No recovery or soak executed.&quot;,
+    &quot;Sizing and bottleneck conclusions pending admitted ERP measurements.&quot;
+  ]
+}</pre></html>

@@ -37,7 +37,7 @@ describe("HR-PAYSLIP-REQ-1 governed workflow", () => {
 
   it("uses qpdf through stdin without a shell and fails closed", () => {
     const pdf = source("lib/payslip-request-pdf.ts");
-    expect(pdf).toContain('spawn(executable, ["@-"]');
+    expect(pdf).toContain('spawn(/* turbopackIgnore: true */ executable, ["@-"]');
     expect(pdf).toContain("shell: false");
     expect(pdf).toContain("windowsHide: true");
     expect(pdf).toContain("PDF_PROTECTION_UNAVAILABLE");

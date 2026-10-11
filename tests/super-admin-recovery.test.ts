@@ -21,16 +21,17 @@ import {
   SuperAdminRecoveryRefusal
 } from "@/lib/super-admin-recovery";
 import {
+  ensureSeedUsers,
   documentedSeedPasswordForAudit,
   SEED_USER_DEFINITIONS
 } from "@/lib/seed-users";
 import { hashPassword, verifyPassword } from "@/lib/password";
 
 const WORKSPACE = path.resolve(".");
-const OPERATIONAL_DATABASE = path.join(WORKSPACE, "prisma", "dev.db");
 const TMP_ROOT = path.join(WORKSPACE, "tmp");
 const ROOT = path.join(TMP_ROOT, `auth-recovery-${process.pid}-${randomUUID()}`);
 const TEMPLATE_DATABASE = path.join(ROOT, "scenario-template.db");
+const SYNTHETIC_BASELINE = path.join(ROOT, "synthetic-baseline.db");
 
 type Scenario = {
   databasePath: string;
@@ -105,17 +106,29 @@ async function expectCode(run: Promise<unknown>, code: string) {
 }
 
 describe("local Super Admin recovery utility", { timeout: 15_000 }, () => {
-  const operationalBefore = {
+  const syntheticBefore = {
     sha256: "",
     size: 0,
     mtime: 0
   };
 
-  beforeAll(() => {
+  beforeAll(async () => {
     mkdirSync(TMP_ROOT, { recursive: true });
     if (existsSync(ROOT)) throw new Error("AUTH_RECOVERY_QA_ROOT_ALREADY_EXISTS");
     mkdirSync(ROOT, { recursive: true });
-    copyFileSync(OPERATIONAL_DATABASE, TEMPLATE_DATABASE);
+    const baseline = new DatabaseSync(SYNTHETIC_BASELINE);
+    try {
+      for (const migration of readdirSync(path.join(WORKSPACE, "prisma", "migrations"), { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name).sort()) baseline.exec(readFileSync(path.join(WORKSPACE, "prisma", "migrations", migration, "migration.sql"), "utf8"));
+    } finally { baseline.close(); }
+    const seedClient = prismaFor(SYNTHETIC_BASELINE);
+    try {
+      const environment: NodeJS.ProcessEnv = { NODE_ENV: "development", DATABASE_URL: databaseUrl(SYNTHETIC_BASELINE), ALLOW_DEMO_USERS: "true", DEMO_USER_DATABASE_ROOT: ROOT };
+      for (const definition of SEED_USER_DEFINITIONS) environment[definition.env] = strongPassword(definition.name);
+      const seeded = await ensureSeedUsers(seedClient, environment, WORKSPACE);
+      expect(seeded.enabled).toBe(true);
+      await seedClient.user.update({ where: { username: "director" }, data: { role: "SUPER_ADMIN" } });
+    } finally { await seedClient.$disconnect(); }
+    copyFileSync(SYNTHETIC_BASELINE, TEMPLATE_DATABASE);
     const migrationPath = path.join(WORKSPACE, "prisma", "migrations", "20260731130549_auth_verified_recovery_session_registry", "migration.sql");
     const iamMigrationPath = path.join(WORKSPACE, "prisma", "migrations", "20260801110000_iam_named_users_permission_contexts", "migration.sql");
     const migrationDatabase = new DatabaseSync(TEMPLATE_DATABASE);
@@ -127,17 +140,17 @@ describe("local Super Admin recovery utility", { timeout: 15_000 }, () => {
     } finally {
       migrationDatabase.close();
     }
-    const stat = statSync(OPERATIONAL_DATABASE);
-    operationalBefore.sha256 = fileSha256(OPERATIONAL_DATABASE);
-    operationalBefore.size = stat.size;
-    operationalBefore.mtime = stat.mtimeMs;
-  });
+    const stat = statSync(SYNTHETIC_BASELINE);
+    syntheticBefore.sha256 = fileSha256(SYNTHETIC_BASELINE);
+    syntheticBefore.size = stat.size;
+    syntheticBefore.mtime = stat.mtimeMs;
+  }, 120_000);
 
   afterAll(() => {
-    const stat = statSync(OPERATIONAL_DATABASE);
-    expect(fileSha256(OPERATIONAL_DATABASE)).toBe(operationalBefore.sha256);
-    expect(stat.size).toBe(operationalBefore.size);
-    expect(stat.mtimeMs).toBe(operationalBefore.mtime);
+    const stat = statSync(SYNTHETIC_BASELINE);
+    expect(fileSha256(SYNTHETIC_BASELINE)).toBe(syntheticBefore.sha256);
+    expect(stat.size).toBe(syntheticBefore.size);
+    expect(stat.mtimeMs).toBe(syntheticBefore.mtime);
     rmSync(ROOT, { recursive: true, force: true });
   });
 
@@ -316,8 +329,8 @@ describe("local Super Admin recovery utility", { timeout: 15_000 }, () => {
     mkdirSync(unsafeDirectory, { recursive: true });
     const unsafeDatabase = path.join(unsafeDirectory, "unsafe.db");
     const unsafeRollback = path.join(unsafeDirectory, "unsafe-rollback.db");
-    copyFileSync(OPERATIONAL_DATABASE, unsafeDatabase);
-    copyFileSync(OPERATIONAL_DATABASE, unsafeRollback);
+    copyFileSync(SYNTHETIC_BASELINE, unsafeDatabase);
+    copyFileSync(SYNTHETIC_BASELINE, unsafeRollback);
     const unsafeEnvironment: NodeJS.ProcessEnv = {
       NODE_ENV: "test",
       DATABASE_URL: databaseUrl(unsafeDatabase),

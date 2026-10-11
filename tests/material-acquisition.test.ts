@@ -1,0 +1,17 @@
+import {describe,it,expect} from "vitest";
+import {hashBytes} from "../scripts/portable/artifact-handoff";
+import {verifyAcquisitionPlan} from "../scripts/portable/material-acquisition";
+import {materialAcquisitionRecipe} from "../scripts/portable/product-materials";
+import {runProductBuildScan} from "../scripts/portable/product-build-scan";
+import {fixture,tarBytes} from "./helpers/product-contract-fixture";
+
+function setup(){const f=fixture({acquisition:true}),elf=Buffer.alloc(64);elf.set([127,69,76,70,2,1]);elf.writeUInt16LE(62,18);const engine=f.put(elf),manager=f.put("TEST ONLY inert pnpm");
+ const p={contract:"NALANDA_MATERIAL_ACQUISITION_V1",source:f.d.source,tree:f.d.tree,architecture:f.d.architecture,recipeSha256:f.d.recipe.sha256,lockSha256:f.d.files.find(x=>x.path==="pnpm-lock.yaml")!.sha256,effectiveRecipeSha256:"",snapshot:"20261001T000000Z",packages:[{name:"ca-certificates",version:"1"},{name:"openssl",version:"1"}],environmentApproval:"https://example.invalid/TEST-ONLY-material",preparation:null,pnpmArchive:f.put(tarBytes({"package/bin/pnpm.cjs":f.get(manager)})),files:[{path:"engines/query-engine.node",sha256:engine,bytes:64},{path:"engines/schema-engine",sha256:engine,bytes:64},{path:"pnpm/bin/pnpm.cjs",sha256:manager,bytes:f.get(manager).length}]};p.effectiveRecipeSha256=hashBytes(materialAcquisitionRecipe(f.get(p.recipeSha256),p));const raw=()=>Buffer.from(JSON.stringify(p));return {f,p,raw,verify:()=>verifyAcquisitionPlan(raw(),hashBytes(raw()),f.d,f.get)};}
+describe("TEST ONLY material acquisition connected producer",()=>{
+ it("executes existing isolated caller/adapter/scanner harness and retains product NOT_BUILT",async()=>{const s=setup();try{const r=await runProductBuildScan(s.f.workspace,s.f.verified(),s.f.get,s.f.harness("acquisition"),undefined,undefined,s.verify());expect(r.complete).toBe(true);expect(r.product).toBe("NOT_BUILT");expect(r.productDecision).toBe("NOT_BUILT");expect(r.materialQualification).toBe("INCOMPLETE_PROVENANCE_COLLECTION");expect(r.classification).toBe("HARNESS_ONLY");expect(r.processes.some(p=>p.stage==="build"&&p.exit===0)).toBe(true);expect(r.admitted).toBe(false);}finally{s.f.dispose();}});
+ it.each(["source","tree","architecture","recipeSha256","lockSha256","effectiveRecipeSha256"])("refuses changed %s",field=>{const s=setup();try{(s.p as any)[field]="wrong";expect(s.verify).toThrow();}finally{s.f.dispose();}});
+ it("refuses missing engine material",()=>{const s=setup();try{s.p.files.shift();expect(s.verify).toThrow("MATERIAL_ACQUISITION_ENGINES_MISSING");}finally{s.f.dispose();}});
+ it("refuses material substitution after verification",()=>{const s=setup();try{const a=s.verify();s.f.blobs.set(s.p.files[0].sha256,Buffer.from("tampered"));expect(a.guard).toThrow("MATERIAL_ACQUISITION_FILE_SUBSTITUTED");}finally{s.f.dispose();}});
+ it("refuses recipe mutation after verification",()=>{const s=setup();try{const a=s.verify();a.recipe[0]^=1;expect(a.guard).toThrow("MATERIAL_ACQUISITION_MUTATED");}finally{s.f.dispose();}});
+ it("retains artifact substitution from actual adapter",async()=>{const s=setup();try{s.p.files[2].sha256=s.f.put("substitute");s.p.files[2].bytes=s.f.get(s.p.files[2].sha256).length;const r=await runProductBuildScan(s.f.workspace,s.f.verified(),s.f.get,s.f.harness("acquisition"),undefined,undefined,s.verify());expect(r.complete).toBe(false);expect(r.processes.some(p=>p.stage==="build")).toBe(false);}finally{s.f.dispose();}});
+});

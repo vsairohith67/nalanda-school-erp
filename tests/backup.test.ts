@@ -48,8 +48,9 @@ describe("full backup", () => {
       generatedBy: "Director"
     });
     expect(backup.metadata.appVersion).toBeTruthy();
-    expect(backup.metadata.backupVersion).toBe(45);
+    expect(backup.metadata.backupVersion).toBe(48);
     expect(backup.metadata.counts).toEqual({
+      priorYearLiabilities: 0, priorYearPaymentAttributions: 0, priorYearConcessionCases: 0, priorYearIncomeSupports: 0, priorYearConcessionEvents: 0, studentItemReceiptSnapshots: 0,
       schoolSettings: 0,
       authSecurityRecords: 0,
       iamAccessRecords: 0,
@@ -107,6 +108,7 @@ describe("full backup", () => {
       teacherAnalyticsReviewCycles: 0, teacherAnalyticsSnapshots: 0, teacherAnalyticsReviews: 0, teacherAnalyticsEvents: 0,
       certificateNumberSeries: 0, certificateTemplates: 0, studentCertificateRequests: 0,
       studentCertificates: 0, studentCertificateVersions: 0, studentCertificateEvents: 0,
+      certificateRequestCharges: 0, certificateBulkBatches: 0, certificateIssueArtifacts: 0,
       classXPackageTemplates: 0, classXDocumentPackages: 0, classXPackageDocumentItems: 0,
       classXPackageChargeRules: 0, classXPackageCharges: 0, classXPackageHandovers: 0, classXPackageEvents: 0,
       identityCardNumberSeries: 0, identityCardTemplates: 0, identityCardBatches: 0,
@@ -255,7 +257,20 @@ describe("full backup", () => {
       parentMeetingParticipants: 0,
       parentMeetingNotes: 0,
       parentMeetingFollowUps: 0,
-      parentMeetingEvents: 0
+      parentMeetingEvents: 0,
+      feeStructures: 1,
+      goLiveChecklist: 1,
+      importBatches: 1,
+      onboardingAuditEvents: 0,
+      onboardingBatches: 0,
+      onboardingRowOutcomes: 0,
+      paymentAudits: 1,
+      payments: 1,
+      receiptNotes: 1,
+      students: 1,
+      timetableFixedPeriods: 1,
+      timetableTeacherUnavailability: 1,
+      users: 1,
     });
     expect(backup.students).toHaveLength(1);
     expect(backup.feeStructures).toHaveLength(1);
@@ -296,7 +311,10 @@ describe("full backup", () => {
 
   it("uses the shared full-backup generator for timetable data", async () => {
     const findMany = (rows: unknown[]) => ({ findMany: async () => rows });
+    const integratedTables = new Set(["StudentCertificate", "CertificateRequestCharge", "CertificateBulkBatch", "CertificateIssueArtifact", "PriorYearLiability", "PriorYearPaymentAttribution", "PriorYearConcessionCase", "PriorYearIncomeSupport", "PriorYearConcessionEvent", "StudentItemReceiptSnapshot"]);
     const client = {
+      $queryRaw: async (query: { values: unknown[] }) => integratedTables.has(String(query.values[0])) ? [{ present: 1 }] : [],
+      certificateRequestCharge: findMany([]), certificateBulkBatch: findMany([]), certificateIssueArtifact: findMany([]), priorYearLiability: findMany([]), priorYearPaymentAttribution: findMany([]), priorYearConcessionCase: findMany([]), priorYearIncomeSupport: findMany([]), priorYearConcessionEvent: findMany([]), studentItemReceiptSnapshot: findMany([]),
       student: findMany([]),
       feeStructure: findMany([]),
       payment: findMany([]),

@@ -1,3 +1,6 @@
+import { issueImportReceipt, requireImportReceipt, importDigest } from "@/lib/import-preview-receipt";
+import { assertStudentPayloadRows, STUDENT_MAPPING_VERSION } from "@/lib/student-import-contract";
+import { readImportJson } from "@/lib/import-request";
 import { safeClientError } from "@/lib/client-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -20,7 +23,9 @@ export async function POST(request: NextRequest) {
   const auth = await requireApiPermission("IMPORT_STUDENTS");
   if (auth.response) return auth.response;
   try {
-    const body = await request.json();
+    const body = await readImportJson(request, ["action", "rows", "mode", "confirmed", "fileName", "notes", "mappingVersion", "receipt"]);
+    if (body.mappingVersion !== STUDENT_MAPPING_VERSION) throw new Error("Review the current field mapping version.");
+    assertStudentPayloadRows(body.rows);
     const rows = Array.isArray(body.rows) ? body.rows : [];
     if (!rows.length) throw new Error("No student rows supplied");
     const existingRows = await prisma.student.findMany({ select: { admissionNo: true } });
@@ -29,8 +34,10 @@ export async function POST(request: NextRequest) {
       existingRows.map((row) => [row.admissionNo.toLowerCase(), row.admissionNo])
     );
     const preview = normalizeStudentImportRows(rows, existingAdmissions);
+    const binding = { actor: auth.user.id, role: auth.user.role, rows, mode: body.mode, mappingVersion: body.mappingVersion };
 
-    if (body.action === "preview") return NextResponse.json({ preview });
+    if (body.action === "preview") return NextResponse.json({ preview, receipt: issueImportReceipt(binding) });
+    requireImportReceipt(body.receipt, binding);
     const featureUnavailable = requireOperationalReleaseFeatureForApi(REAL_DATA_IMPORTS_FEATURE);
     if (featureUnavailable) return featureUnavailable;
     const mode: StudentImportMode =
@@ -175,6 +182,13 @@ function errorRow(
     studentName: row.normalized.studentName,
     className: row.normalized.className,
     reason,
-    originalValuesJson: JSON.stringify(row.originalValues)
+    originalValuesJson: ""
   };
+}
+
+export async function GET() {
+ const auth = await requireApiPermission("IMPORT_STUDENTS");
+ if (auth.response) return auth.response;
+ const classes = await prisma.timetableClassSection.findMany({ where: { isActive: true }, select: { academicYear: true, className: true, section: true }, orderBy: [{ academicYear: "asc" }, { className: "asc" }, { section: "asc" }] });
+ return NextResponse.json({ actorContext: importDigest([auth.user.id, auth.user.role, auth.user.roleAssignmentId]), classes, preview: true, import: !requireOperationalReleaseFeatureForApi(REAL_DATA_IMPORTS_FEATURE), mappingVersion: STUDENT_MAPPING_VERSION }, { headers: { "cache-control": "private, no-store" } });
 }

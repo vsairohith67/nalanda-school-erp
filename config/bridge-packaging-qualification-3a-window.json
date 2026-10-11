@@ -1,0 +1,18 @@
+{
+  "assignment": "NPS-3A-BRIDGE-PACKAGING-AND-CANDIDATE-QUALIFICATION",
+  "instructionSha256": "81dfde8c0bec55211dba811602562fc932cad101af2b752029105da3f7796794",
+  "repository": "vsairohith67/nalanda-school-erp",
+  "pullRequest": 28,
+  "branch": "release/recovery-integration-1a",
+  "eventStartInclusiveUtc": "2026-10-09T12:17:23.000Z",
+  "eventEndExclusiveUtc": "2026-10-09T22:17:23.000Z",
+  "attempt": "1",
+  "policy": "RemoteSigned",
+  "policyScope": "Process",
+  "maximumStepMinutes": 120,
+  "shorterExistingJobCapsRetained": true,
+  "previousAllowancesRemainConsumed": true,
+  "transferredPublicationSlots": [2, 3],
+  "publicationCeiling": 2,
+  "additionalPublicationBudgetCreated": false
+}

@@ -1,8 +1,12 @@
 import { createHash } from "node:crypto";
 import { EventEmitter } from "node:events";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile, lstat, truncate } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { S3Client } from "@aws-sdk/client-s3";
+import { Readable } from "node:stream";
+import { checkStandaloneTraceChunks } from "../scripts/portable/standalone-trace-check";
 import { isRetryableS3PrivateObjectStoreError } from "@/lib/cloud-backup-provider-s3";
 import { PrivateObjectStoreError } from "@/lib/portable-runtime/private-object-store";
 import type Valkey from "iovalkey";
@@ -10,6 +14,7 @@ import { validatePortableRuntimeConfiguration } from "../lib/portable-runtime/co
 import { readPortableSecret } from "../lib/portable-runtime/secrets";
 import {
   createFileSystemPrivateObjectStore,
+  createS3CompatiblePrivateObjectStore,
   modulePrivateObjectKey,
   validatePrivateObjectKey
 } from "../lib/portable-runtime/private-object-store";
@@ -19,13 +24,17 @@ import { withPostgresJobLock } from "../lib/portable-runtime/job-lock";
 
 function syntheticEnvironment(): NodeJS.ProcessEnv {
   const secret = "synthetic-portable-secret-value-with-48-characters-123456";
+  // Invented configuration only; never a connected database or a real credential.
+  const database = new URL("postgresql://postgres:5432/nalanda_portable_synthetic?connection_limit=20&pool_timeout=20&connect_timeout=10");
+  database.username = "nalanda_runtime";
+  database.password = "synthetic";
   return {
     NODE_ENV: "production",
     NALANDA_ENVIRONMENT: "synthetic-staging",
     NALANDA_SYNTHETIC_STAGING: "true",
     APP_ORIGIN: "https://portable-staging.localhost:8443",
     DATABASE_PROVIDER: "postgresql",
-    DATABASE_URL: "postgresql://nalanda_runtime:synthetic@postgres:5432/nalanda_portable_synthetic?connection_limit=20&pool_timeout=20&connect_timeout=10",
+    DATABASE_URL: database.href,
     VALKEY_MODE: "distributed",
     VALKEY_URL: "redis://:synthetic@valkey:6379/0",
     PRIVATE_OBJECT_STORAGE_PROVIDER: "S3_COMPATIBLE",
@@ -60,6 +69,51 @@ function syntheticEnvironment(): NodeJS.ProcessEnv {
     SMS_EMAIL_EMAIL_LIVE_ENABLED: "false"
   };
 }
+
+describe("SOURCE_ONLY stream import and targeted standalone chunk-copy proof",()=>{
+ it("keeps the real core Readable and invented bytes without connecting an S3 backend",async()=>{
+  const send=vi.spyOn(S3Client.prototype,"send").mockImplementation(()=>{throw Error("SOURCE_ONLY_NETWORK_REFUSED");});
+  const store=createS3CompatiblePrivateObjectStore(syntheticEnvironment()),bytes=Buffer.from("SOURCE_ONLY invented streamed attachment"),key=modulePrivateObjectKey("classwork","aa/bb/11111111-2222-4333-8444-555555555555.pdf");
+  const metadata={key,byteSize:bytes.length,contentType:"application/pdf",sha256:createHash("sha256").update(bytes).digest("hex"),version:null,lastModified:null};
+  const get=vi.spyOn(store,"getPrivateObject").mockResolvedValue({bytes,metadata});
+  try{
+   const result=await store.streamPrivateObject(key,1024);expect(result.stream).toBeInstanceOf(Readable);expect(result.metadata).toEqual(metadata);
+   const pieces:Buffer[]=[];for await(const piece of result.stream)pieces.push(Buffer.from(piece));expect(Buffer.concat(pieces)).toEqual(bytes);expect(get).toHaveBeenCalledWith(key,1024);expect(send).not.toHaveBeenCalled();
+   get.mockRejectedValueOnce(Error("SOURCE_ONLY_GET_REFUSED"));await expect(store.streamPrivateObject(key,1024)).rejects.toThrow("SOURCE_ONLY_GET_REFUSED");expect(send).not.toHaveBeenCalled();
+  }finally{get.mockRestore();store.close();send.mockRestore();}
+ });
+ const traceNames=[".next/server/app/(public)/event-gallery/[albumKey]/page.js.nft.json",".next/server/app/api/admissions/documents/[publicKey]/route.js.nft.json"];
+ async function fixture() {
+  const parent=await import("node:fs/promises").then(f=>f.realpath(os.tmpdir())),root=await mkdtemp(path.join(parent,"nps-standalone-SOURCE_ONLY-")),allocated=await lstat(root,{bigint:true});
+  const put=async(relative:string,value:string|Buffer)=>{const file=path.join(root,...relative.split("/"));await mkdir(path.dirname(file),{recursive:true});await writeFile(file,value);return file;};
+  const source=await put(".next/server/chunks/ssr/source-only.js","SOURCE_ONLY generated chunk"),copy=await put(".next/standalone/.next/server/chunks/ssr/source-only.js","SOURCE_ONLY generated chunk");
+  await put(".next/standalone/server.js","SOURCE_ONLY server artifact, never executed");
+  for(const name of traceNames){const relative=path.relative(path.dirname(path.join(root,...name.split("/"))),source);await put(name,JSON.stringify({version:1,files:[relative,relative]}));}
+  const cleanup=async()=>{const current=await lstat(root,{bigint:true});expect(path.dirname(root)).toBe(parent);expect(current.isDirectory()&&!current.isSymbolicLink()).toBe(true);expect([current.dev,current.ino,current.birthtimeNs]).toEqual([allocated.dev,allocated.ino,allocated.birthtimeNs]);await rm(root,{recursive:true});};
+  return {root,put,source,copy,cleanup};
+ }
+ it("proves exact generated-byte copies across both route traces and deduplicates shared chunks",async()=>{
+  const f=await fixture();try{const proof=checkStandaloneTraceChunks(f.root);expect(proof).toMatchObject({status:"PASS",scope:"TWO_ROUTE_GENERATED_CHUNK_COPIES_ONLY",tracesChecked:2,generatedChunksChecked:1,sourceBytesChecked:27,nonChunkEntriesExcluded:0,runtimeExecuted:false});expect(proof.proofSha256).toMatch(/^[a-f0-9]{64}$/);expect(JSON.stringify(proof)).not.toContain(f.root);}finally{await f.cleanup();}
+ });
+ it.each(["MISSING_COPY","MISMATCH","MISSING_SOURCE","EMPTY_COPY","OVERSIZE_SOURCE","MISSING_TRACE","BAD_JSON","EMPTY_CHUNKS","OUTSIDE_ROOT","ABSOLUTE_ENTRY","COLON_CHUNK","DIRECTORY_COPY"])("refuses %s instead of treating compile success as artifact proof",async mode=>{
+  const f=await fixture();let code="";
+  try{
+   if(mode==="MISSING_COPY"){await rm(f.copy);code="STANDALONE_COPIED_CHUNK_MISSING";}
+   if(mode==="MISMATCH"){await writeFile(f.copy,"SOURCE_ONLY corrupt chunk");code="STANDALONE_COPIED_CHUNK_MISMATCH";}
+   if(mode==="MISSING_SOURCE"){await rm(f.source);code="STANDALONE_SOURCE_CHUNK_MISSING";}
+   if(mode==="EMPTY_COPY"){await truncate(f.copy,0);code="STANDALONE_ARTIFACT_SIZE_REFUSED";}
+   if(mode==="OVERSIZE_SOURCE"){await truncate(f.source,8*1024*1024+1);code="STANDALONE_ARTIFACT_SIZE_REFUSED";}
+   if(mode==="MISSING_TRACE"){await rm(path.join(f.root,...traceNames[0].split("/")));code="STANDALONE_TRACE_MISSING";}
+   if(mode==="BAD_JSON"){await f.put(traceNames[0],"invented invalid trace");code="STANDALONE_TRACE_INVALID";}
+   if(mode==="EMPTY_CHUNKS"){await f.put(traceNames[0],JSON.stringify({files:["page.js"]}));code="STANDALONE_ROUTE_CHUNKS_MISSING";}
+   if(mode==="OUTSIDE_ROOT"){await f.put(traceNames[0],JSON.stringify({files:["../../../../../../../../SOURCE_ONLY-foreign"]}));code="STANDALONE_TRACE_OUTSIDE_ROOT";}
+   if(mode==="ABSOLUTE_ENTRY"){await f.put(traceNames[0],JSON.stringify({files:[f.source]}));code="STANDALONE_TRACE_INVALID";}
+   if(mode==="COLON_CHUNK"){const entry=path.relative(path.dirname(path.join(f.root,...traceNames[0].split("/"))),path.join(f.root,".next/server/chunks/ssr/[externals]_node:stream_SOURCE_ONLY.js"));await f.put(traceNames[0],JSON.stringify({files:[entry]}));code="STANDALONE_NONPORTABLE_CHUNK_REFUSED";}
+   if(mode==="DIRECTORY_COPY"){await rm(f.copy);await mkdir(f.copy);code="STANDALONE_ARTIFACT_LINK_OR_TYPE_REFUSED";}
+   expect(()=>checkStandaloneTraceChunks(f.root)).toThrow(code);
+  }finally{await f.cleanup();}
+ });
+});
 
 describe("PORTABLE-STAGING-FOUNDATION-1A runtime contracts", () => {
   it("isolates backup-prefix credentials in a dedicated queue worker", async () => {

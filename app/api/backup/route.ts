@@ -16,6 +16,15 @@ export async function GET() {
       generatedBy: `${auth.user.name} (${auth.user.username})`
     });
 
+    if (backup.priorYearConcessionCases.length > 0) {
+      const finance = await requireApiPermission("EXPORT_PRIOR_YEAR_CONCESSIONS");
+      if (finance.response) return finance.response;
+      if (backup.priorYearIncomeSupports.length > 0) {
+        const income = await requireApiPermission("EXPORT_PRIOR_YEAR_INCOME");
+        if (income.response) return income.response;
+      }
+    }
+
     return new NextResponse(serializeBackup(backup), {
       headers: {
         "cache-control": "no-store",

@@ -15,7 +15,7 @@ export function assertBrowserRestoreExecutionSafe(
     environment.DATABASE_URL,
     "Browser restore requires an explicit copied-QA database"
   ));
-  const operationalDatabase = canonicalExistingPath(path.join(projectRoot, "prisma", "dev.db"));
+  const operationalDatabase = canonicalExistingPath(path.join(/* turbopackIgnore: true */ projectRoot, "prisma", "dev.db"));
 
   if (samePath(databasePath, operationalDatabase)) {
     throw new Error("Browser restore refuses the operational database");

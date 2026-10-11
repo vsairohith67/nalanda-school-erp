@@ -24,8 +24,8 @@ describe("student import upgrade", () => {
 
     expect(preview.rows[0].normalized).toMatchObject({
       admissionNo: "8350/26",
-      studentName: "Anaya Begum",
-      fatherName: "Farhan Begum",
+      studentName: "ANAYA BEGUM",
+      fatherName: "FARHAN BEGUM",
       className: "VI",
       section: "C",
       studentType: "Faculty Child",

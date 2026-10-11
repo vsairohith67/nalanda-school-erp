@@ -7,7 +7,17 @@ await mkdir(output, { recursive: true });
 
 await build({
   entryPoints: {
+    "operator": "scripts/portable/operator.ts",
+    "prepare-operations": "scripts/portable/prepare-operations.ts",
+    "windows-connected-host": "scripts/portable/windows-connected-host.ts",
+    "build-native-qa": "scripts/portable/build-native-qa.ts",
+    "windows-controller": "scripts/portable/windows-controller.ts",
+    "integrated-bulk": "scripts/portable/integrated-bulk.ts",
+    "browser-probe": "scripts/portable/browser-probe.ts",
+    "acceptance-readback": "scripts/portable/acceptance-readback.ts",
+    "acceptance-fixture": "scripts/portable/acceptance-fixture.ts",
     "runtime-command": "scripts/portable/runtime-command.ts",
+    "operator-recovery": "scripts/portable/operator-recovery.ts",
     "seed-synthetic": "scripts/portable/seed-synthetic.ts",
     "object-store-init": "scripts/portable/object-store-init.ts",
     "scheduled-job": "scripts/portable/scheduled-job.ts",

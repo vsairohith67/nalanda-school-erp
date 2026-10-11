@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import type { AuthUser } from "@/lib/auth";
+import { resolveDatabaseProvider } from "@/lib/database-provider";
 import { eventMediaPublicGalleryEnabled } from "@/lib/event-media";
 import { CAFETERIA_V1_5, optionalOperationsFeatureEnabled, TRANSPORT_V1_5 } from "@/lib/optional-operations-feature-flags";
 import { parentMeetingsEnabled } from "@/lib/parent-meeting-feature";
@@ -228,9 +229,11 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
           where: {
             archivedAt: null,
             AND: context.tokens.map((token) => ({ OR: [
-              { applicationNumber: { contains: token } },
-              { child: { is: { fullName: { contains: token } } } },
-              { guardians: { some: { displayName: { contains: token } } } }
+              { applicationNumber: textContains(token) },
+              { child: { is: { fullName: textContains(token) } } },
+              { child: { is: { desiredClass: textContains(token) } } },
+              { cycle: { is: { academicYear: textContains(token) } } },
+              { guardians: { some: { displayName: textContains(token) } } }
             ] }))
           },
           select: { applicationNumber: true, status: true, updatedAt: true, cycle: { select: { academicYear: true } }, child: { select: { fullName: true, desiredClass: true } }, guardians: { where: { isPrimary: true }, select: { displayName: true }, take: 1 } },
@@ -352,11 +355,11 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
     adapter("REPORT_CARDS", async (context) => {
       const rows = await client.studentReportCard.findMany({
         where: { reportType: { not: "KG_RUBRIC" }, AND: context.tokens.map((token) => ({ OR: [
-          { reportCardNumber: { contains: token } },
-          { academicYear: { contains: token } },
-          { className: { contains: token } },
-          { student: { is: { studentName: { contains: token } } } },
-          { student: { is: { admissionNo: { contains: token } } } }
+          { reportCardNumber: textContains(token) },
+          { academicYear: textContains(token) },
+          { className: textContains(token) },
+          { student: { is: { studentName: textContains(token) } } },
+          { student: { is: { admissionNo: textContains(token) } } }
         ] })) },
         select: { id: true, reportCardNumber: true, academicYear: true, className: true, section: true, reportType: true, status: true, updatedAt: true, student: { select: { studentName: true, admissionNo: true } } },
         orderBy: { updatedAt: "desc" }, take: context.candidateLimit
@@ -388,10 +391,10 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
         where: {
           restricted: false,
           AND: context.tokens.map((token) => ({ OR: [
-            { requestNumber: { contains: token } },
-            { verificationReference: { contains: token } },
-            { student: { is: { studentName: { contains: token } } } },
-            { student: { is: { admissionNo: { contains: token } } } }
+            { requestNumber: textContains(token) },
+            { verificationReference: textContains(token) },
+            { student: { is: { studentName: textContains(token) } } },
+            { student: { is: { admissionNo: textContains(token) } } }
           ] }))
         },
         select: { requestNumber: true, verificationReference: true, departureType: true, status: true, intendedDepartureAt: true, student: { select: { studentName: true, admissionNo: true, className: true, section: true } } },
@@ -422,13 +425,13 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
     adapter("PARENT_MEETINGS", async (context) => {
       const rows = await client.parentMeeting.findMany({
         where: { AND: context.tokens.map((token) => ({ OR: [
-          { publicKey: { contains: token } },
-          { academicYear: { contains: token } },
-          { category: { contains: token } },
-          { status: { contains: token } },
-          { student: { is: { studentName: { contains: token } } } },
-          { student: { is: { admissionNo: { contains: token } } } },
-          { followUps: { some: { status: { contains: token } } } }
+          { publicKey: textContains(token) },
+          { academicYear: textContains(token) },
+          { category: textContains(token) },
+          { status: textContains(token) },
+          { student: { is: { studentName: textContains(token) } } },
+          { student: { is: { admissionNo: textContains(token) } } },
+          { followUps: { some: { status: textContains(token) } } }
         ] })) },
         select: {
           publicKey: true, academicYear: true, category: true, status: true, scheduledStartAt: true, mode: true, followUpRequired: true, updatedAt: true,
@@ -460,8 +463,8 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
       const [routes, vehicles, stops, assignments] = await Promise.all([
         client.transportRoute.findMany({
           where: { AND: context.tokens.map((token) => ({ OR: [
-            { publicKey: { contains: token } }, { code: { contains: token } }, { name: { contains: token } }, { status: { contains: token } },
-            { vehicle: { is: { registrationCode: { contains: token } } } }, { vehicle: { is: { displayName: { contains: token } } } }
+            { publicKey: textContains(token) }, { code: textContains(token) }, { name: textContains(token) }, { status: textContains(token) },
+            { vehicle: { is: { registrationCode: textContains(token) } } }, { vehicle: { is: { displayName: textContains(token) } } }
           ] })) },
           select: { publicKey: true, code: true, name: true, directionMode: true, status: true, updatedAt: true, vehicle: { select: { registrationCode: true, displayName: true } } },
           orderBy: [{ status: "asc" }, { code: "asc" }], take: context.candidateLimit
@@ -478,9 +481,9 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
         }),
         client.transportStudentAssignment.findMany({
           where: { AND: context.tokens.map((token) => ({ OR: [
-            { publicKey: { contains: token } },
-            { student: { is: { studentName: { contains: token } } } },
-            { student: { is: { admissionNo: { contains: token } } } }
+            { publicKey: textContains(token) },
+            { student: { is: { studentName: textContains(token) } } },
+            { student: { is: { admissionNo: textContains(token) } } }
           ] })) },
           select: {
             publicKey: true, routeCodeSnapshot: true, routeNameSnapshot: true, pickupStopSnapshot: true, dropStopSnapshot: true,
@@ -534,18 +537,18 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
         }),
         client.cafeteriaStudentEnrollment.findMany({
           where: { AND: context.tokens.map((token) => ({ OR: [
-            { publicKey: { contains: token } },
-            { student: { is: { studentName: { contains: token } } } },
-            { student: { is: { admissionNo: { contains: token } } } }
+            { publicKey: textContains(token) },
+            { student: { is: { studentName: textContains(token) } } },
+            { student: { is: { admissionNo: textContains(token) } } }
           ] })) },
           select: { publicKey: true, effectiveFrom: true, effectiveTo: true, active: true, updatedAt: true, student: { select: { studentName: true, admissionNo: true, className: true, section: true } } },
           orderBy: [{ active: "desc" }, { effectiveFrom: "desc" }], take: context.candidateLimit
         }),
         client.cafeteriaMealRecord.findMany({
           where: { AND: context.tokens.map((token) => ({ OR: [
-            { publicKey: { contains: token } },
-            { student: { is: { studentName: { contains: token } } } },
-            { student: { is: { admissionNo: { contains: token } } } }
+            { publicKey: textContains(token) },
+            { student: { is: { studentName: textContains(token) } } },
+            { student: { is: { admissionNo: textContains(token) } } }
           ] })) },
           select: {
             publicKey: true, serviceDateKey: true, mealSlot: true, recordType: true, status: true, recordedAt: true,
@@ -590,12 +593,12 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
     adapter("KG_REPORTS", async (context) => {
       const rows = await client.studentReportCard.findMany({
         where: { reportType: "KG_RUBRIC", status: "ISSUED", AND: context.tokens.map((token) => ({ OR: [
-          { reportCardNumber: { contains: token } },
-          { academicYear: { contains: token } },
-          { className: { contains: token } },
-          { student: { is: { studentName: { contains: token } } } },
-          { student: { is: { admissionNo: { contains: token } } } },
-          { batch: { is: { reportingPeriod: { contains: token } } } }
+          { reportCardNumber: textContains(token) },
+          { academicYear: textContains(token) },
+          { className: textContains(token) },
+          { student: { is: { studentName: textContains(token) } } },
+          { student: { is: { admissionNo: textContains(token) } } },
+          { batch: { is: { reportingPeriod: textContains(token) } } }
         ] })) },
         select: {
           reportCardNumber: true, academicYear: true, className: true, section: true, status: true, currentVersionNumber: true, issuedAt: true, updatedAt: true,
@@ -619,16 +622,16 @@ export function createUniversalSearchAdapters(client: PrismaClient, ownerUserId:
       const [albums, assets] = await Promise.all([
         client.eventMediaAlbum.findMany({
           where: { archivedAt: null, AND: context.tokens.map((token) => ({ OR: [
-            { publicKey: { contains: token } }, { visibility: { contains: token } },
-            { status: { contains: token } }, { reviewStatus: { contains: token } }, { publicationState: { contains: token } }
+            { publicKey: textContains(token) }, { visibility: textContains(token) },
+            { status: textContains(token) }, { reviewStatus: textContains(token) }, { publicationState: textContains(token) }
           ] })) },
           select: { publicKey: true, eventDate: true, visibility: true, status: true, reviewStatus: true, publicationState: true, updatedAt: true, _count: { select: { assets: true } } },
           orderBy: [{ eventDate: "desc" }, { publicKey: "asc" }], take: context.candidateLimit
         }),
         client.eventMediaAsset.findMany({
           where: { archivedAt: null, AND: context.tokens.map((token) => ({ OR: [
-            { publicKey: { contains: token } }, { originalMediaType: { contains: token } }, { reviewStatus: { contains: token } },
-            { publicationStatus: { contains: token } }, { album: { is: { publicKey: { contains: token } } } }
+            { publicKey: textContains(token) }, { originalMediaType: textContains(token) }, { reviewStatus: textContains(token) },
+            { publicationStatus: textContains(token) }, { album: { is: { publicKey: textContains(token) } } }
           ] })) },
           select: {
             publicKey: true, originalMediaType: true, originalWidth: true, originalHeight: true, reviewStatus: true, publicationStatus: true, uploadedAt: true,
@@ -778,7 +781,16 @@ function compareResults(left: UniversalSearchResult, right: UniversalSearchResul
 }
 
 function textWhere(fields: string[], tokens: string[]) {
-  return { AND: tokens.map((token) => ({ OR: fields.map((field) => ({ [field]: { contains: token } })) })) };
+  return { AND: tokens.map((token) => ({ OR: fields.map((field) => ({ [field]: textContains(token) })) })) };
+}
+
+function textContains(token: string) {
+  // Search tokens are lower-cased before retrieval. PostgreSQL's default
+  // contains filter is case-sensitive; SQLite does not accept Prisma's mode.
+  // Keep the same bounded fields, owner predicates and subsequent ranking.
+  return resolveDatabaseProvider() === "postgresql"
+    ? { contains: token, mode: "insensitive" as const }
+    : { contains: token };
 }
 
 function normalized(values: Array<string | null | undefined> | undefined) {

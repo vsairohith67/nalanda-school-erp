@@ -44,7 +44,7 @@ export function assertQa20cIsolatedEnvironment(
   if (!samePath(providerRoot, canonicalPath(path.join(isolatedRoot, "provider")))) {
     throw new Error("QA20C_PROVIDER_ROOT_MISMATCH");
   }
-  if (!samePath(tempRoot, canonicalPath(path.join(isolatedRoot, "temp")))) {
+  if (!samePath(tempRoot, canonicalPath(path.join(/* turbopackIgnore: true */ isolatedRoot, "temp")))) {
     throw new Error("QA20C_TEMP_ROOT_MISMATCH");
   }
   if (!samePath(rehearsalRoot, canonicalPath(path.join(isolatedRoot, "rehearsal")))) {

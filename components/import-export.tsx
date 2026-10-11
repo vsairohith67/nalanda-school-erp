@@ -28,7 +28,7 @@ export function ImportExport(props: ImportExportProps) {
         <section className="card card-pad">
           <h3>Exports</h3>
           <div className="top-actions" style={{ flexWrap: "wrap" }}>
-            {props.canExportStudents ? <a className="button secondary" href="/api/export/students">Student Master CSV</a> : null}
+            {props.canExportStudents ? <a className="button secondary" href="/api/export/students">Student Master CSV — all master records</a> : null}
             {props.canExportPayments ? <a className="button secondary" href="/api/export/payments">Payment Entry CSV</a> : null}
             {props.canExportReports ? <a className="button secondary" href="/api/export/pending-dues">Pending Dues CSV</a> : null}
             {props.canExportReports ? (

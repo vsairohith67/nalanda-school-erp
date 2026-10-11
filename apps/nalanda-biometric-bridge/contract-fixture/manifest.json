@@ -1,0 +1,41 @@
+{
+  "source": "2113fa17bcda1acfb3edf5fa0d6ca9c2a21e8c7c",
+  "category": "IMMUTABLE_PUBLISHED_SOURCE_WITH_SYNTHETIC_DATABASE_STUB",
+  "files": [
+    {
+      "path": "lib/biometric-attendance/profiles.ts",
+      "blob": "a5887eeda5398d34fcc2caa98aabc8affd52fca2",
+      "sha256": "b6dd739934ab565588ec7411d122b206a49e9e25e0b02749896ea911a6c5da63"
+    },
+    {
+      "path": "lib/biometric-attendance/contracts.ts",
+      "blob": "8844103a5c301a49b16c15f0ceb88ec26e2ea7ac",
+      "sha256": "2fcd1254629f62e1bf831c54ce35c91276e415a5b3e01d68dc5b67cd7bd1d6b7"
+    },
+    {
+      "path": "lib/biometric-attendance/trust.ts",
+      "blob": "cd6f40ac9b577fcdfa02c1548bf35a14721f697a",
+      "sha256": "e7f345a9a7935952fcac2b5c4242533d96ee556ba37391069ae425d1c6ea142a"
+    },
+    {
+      "path": "lib/biometric-attendance/ingestion.ts",
+      "blob": "0a04b28d7cc814e3e7ca9978d937d7eaa43b7902",
+      "sha256": "dbb783f1e6bb4557ef540b6dbac6fc78f468203c8d1cc909e27044d0fd143184"
+    },
+    {
+      "path": "lib/biometric-attendance/feature-flag.ts",
+      "blob": "5430a30b7d5a4f4ee26916e2a37e4eb718fe6413",
+      "sha256": "8dfb0101fa99073df3d34598ad7a9887b08b41b1b0b951c3282ea9f5a0224611"
+    },
+    {
+      "path": "lib/biometric-attendance/jwk.ts",
+      "blob": "8375750dd28d10501ac0c928fd5215f30d6c1f41",
+      "sha256": "1eeb08bb2f855d10cf0bfadbfd3783f4eac9e67983f6d0480b65af4c727cf5cf"
+    },
+    {
+      "path": "lib/biometric-attendance/governance.ts",
+      "blob": "f572300f5a10557d772040b697c24ca9555c0d5a",
+      "sha256": "6855a5c0512a5cf5a6db84d441cbb17ac22656c2544699c2ff9bf55042f8e714"
+    }
+  ]
+}

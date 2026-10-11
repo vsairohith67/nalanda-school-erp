@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { operationalReleaseFeatureAvailability, type OperationalReleaseFeature } from "@/lib/release-feature-flag-runtime";
 import { isOfflineSyncEnabled } from "@/lib/offline-sync/feature-flag";
+import { syntheticNativeOperation } from "@/lib/portable-runtime/synthetic-capability";
 
 export const CROSS_PLATFORM_APPS_FEATURE = {
   key: "cross-platform-apps-1a",
@@ -18,7 +19,18 @@ export function crossPlatformAppsAvailability(environment: NodeJS.ProcessEnv = p
 }
 
 export function nativeAppEnabled(environment: NodeJS.ProcessEnv = process.env) {
+  return operationalNativeAppEnabled(environment) || syntheticNativeOperation("AUTH",environment);
+}
+
+export function operationalNativeAppEnabled(environment: NodeJS.ProcessEnv = process.env) {
   return crossPlatformAppsAvailability(environment).enabled && isOfflineSyncEnabled(environment);
+}
+
+export function nativeDataScopeEnabled(scope:string|undefined, environment:NodeJS.ProcessEnv=process.env) {
+  if(operationalNativeAppEnabled(environment))return true;
+  return scope===undefined ? syntheticNativeOperation("AUTH",environment)
+    : scope==="offline:context" ? syntheticNativeOperation("CONTEXT",environment)
+    : scope==="offline:reference" && syntheticNativeOperation("REFERENCE",environment);
 }
 
 export function requireNativeAppForApi() {
